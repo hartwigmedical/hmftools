@@ -3,9 +3,9 @@ package com.hartwig.hmftools.common.purple.qc;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.List;
+import java.util.Locale;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class PurpleQCFile {
 
-    private static final NumberFormat formatter = new DecimalFormat("#0.00");
+    private static final NumberFormat FORMATTER = NumberFormat.getNumberInstance(Locale.ENGLISH);
     private static final String DELIMITER = "\t";
     private static final String EXTENSION = ".purple.qc";
 
@@ -63,7 +63,7 @@ public final class PurpleQCFile {
         result.add("GenderPass" + DELIMITER + check.genderPass());
         result.add("SegmentScore" + DELIMITER + check.segmentScore());
         result.add("UnsupportedSegments" + DELIMITER + check.unsupportedSegments());
-        result.add("Ploidy" + DELIMITER + formatter.format(check.ploidy()));
+        result.add("Ploidy" + DELIMITER + FORMATTER.format(check.ploidy()));
         result.add("AmberGender" + DELIMITER + check.amberGender());
         result.add("CobaltGender" + DELIMITER + check.cobaltGender());
 

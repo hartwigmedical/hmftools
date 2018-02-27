@@ -8,6 +8,7 @@ import java.util.Set;
 
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
+import com.hartwig.hmftools.common.gene.CanonicalTranscript;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
@@ -16,7 +17,7 @@ import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 
 import org.apache.logging.log4j.LogManager;
@@ -52,6 +53,8 @@ public class DatabaseAccess {
     private final ClinicalDAO clinicalDAO;
     @NotNull
     private final ValidationFindingDAO validationFindingsDAO;
+    @NotNull
+    private final CanonicalTranscriptDAO canonicalTranscriptDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // MIVO: disable annoying jooq self-ad message
@@ -69,6 +72,7 @@ public class DatabaseAccess {
         ecrfDAO = new EcrfDAO(context);
         clinicalDAO = new ClinicalDAO(context);
         validationFindingsDAO = new ValidationFindingDAO(context);
+        canonicalTranscriptDAO = new CanonicalTranscriptDAO(context);
     }
 
     @NotNull
@@ -78,8 +82,14 @@ public class DatabaseAccess {
 
     @Nullable
     private Settings settings(final String catalog) {
-        return !catalog.equals(DEV_CATALOG) ? new Settings().withRenderMapping(
-                new RenderMapping().withSchemata(new MappedSchema().withInput("hmfpatients").withOutput(catalog))) : null;
+        return !catalog.equals(DEV_CATALOG)
+                ? new Settings().withRenderMapping(new RenderMapping().withSchemata(new MappedSchema().withInput("hmfpatients")
+                .withOutput(catalog)))
+                : null;
+    }
+
+    public void writeCanonicalTranscripts(@NotNull final List<CanonicalTranscript> transcripts) {
+        canonicalTranscriptDAO.write(transcripts);
     }
 
     public void writePurity(@NotNull final String sampleId, @NotNull final PurityContext context, @NotNull final PurpleQC checks) {
@@ -103,13 +113,16 @@ public class DatabaseAccess {
         structuralVariantDAO.write(sampleId, variants);
     }
 
-    @NotNull
-    public List<StructuralVariant> readStructuralVariants(@NotNull final String sample) {
-        return structuralVariantDAO.read(sample);
-    }
-
     public void writeCopynumbers(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
         copyNumberDAO.writeCopyNumber(sample, copyNumbers);
+    }
+
+    public List<StructuralVariantData> readStructuralVariantData(@NotNull final String sample) {
+        return structuralVariantDAO.readData(sample);
+    }
+
+    public List<EnrichedStructuralVariant> readStructuralVariants(@NotNull final String sample) {
+        return structuralVariantDAO.read(sample);
     }
 
     public void writeGermlineCopynumbers(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {

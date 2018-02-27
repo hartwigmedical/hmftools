@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.patientreporter.report.data;
 
-import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.alleleFrequency;
 import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.exonDescription;
-import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.formatNullablePercent;
-import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.positionString;
+import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.ploidyToCopiesString;
+
+import java.util.List;
 
 import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 import com.hartwig.hmftools.svannotation.annotations.Transcript;
@@ -16,48 +16,66 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class GeneFusionData {
-
-    public abstract String type();
-
-    public abstract String start();
-
+    @NotNull
     public abstract String geneStart();
 
+    @NotNull
+    public abstract List<Integer> geneStartEntrezIds();
+
+    @NotNull
     public abstract String geneContextStart();
 
-    public abstract String transcriptStart();
+    @NotNull
+    public abstract String geneStartTranscript();
 
-    public abstract String end();
-
+    @NotNull
     public abstract String geneEnd();
 
+    @NotNull
+    public abstract List<Integer> geneEndEntrezIds();
+
+    @NotNull
     public abstract String geneContextEnd();
 
-    public abstract String transcriptEnd();
+    @NotNull
+    public abstract String geneEndTranscript();
 
-    public abstract String vaf();
+    @NotNull
+    public abstract String copies();
 
-    @Nullable
+    @NotNull
     public abstract String cosmicURL();
 
+    @NotNull
     public static GeneFusionData from(@NotNull final GeneFusion fusion) {
         final Transcript upstream = fusion.upstreamLinkedAnnotation();
         final Transcript downstream = fusion.downstreamLinkedAnnotation();
 
         return ImmutableGeneFusionData.builder()
-                .type(upstream.getVariant().type().toString())
-                .start(positionString(upstream.getGeneAnnotation()))
-                .geneStart(upstream.getGeneName())
-                .geneContextStart(exonDescription(upstream, true))
-                .transcriptStart(upstream.getTranscriptId())
-                .end(positionString(downstream.getGeneAnnotation()))
-                .geneEnd(downstream.getGeneName())
-                .geneContextEnd(exonDescription(downstream, false))
-                .transcriptEnd(downstream.getTranscriptId())
-                .vaf(formatNullablePercent(alleleFrequency(upstream.getGeneAnnotation())) + " " + formatNullablePercent(
-                        alleleFrequency(downstream.getGeneAnnotation())))
+                .geneStart(upstream.geneName())
+                .geneStartEntrezIds(upstream.parent().entrezIds())
+                .geneContextStart(exonDescription(upstream))
+                .geneStartTranscript(upstream.transcriptId())
+                .geneEnd(downstream.geneName())
+                .geneEndEntrezIds(downstream.parent().entrezIds())
+                .geneContextEnd(exonDescription(downstream))
+                .geneEndTranscript(downstream.transcriptId())
+                .copies(ploidyToCopiesString(fusionPloidy(fusion)))
                 .cosmicURL(fusion.cosmicURL())
                 .build();
+    }
 
+    @Nullable
+    private static Double fusionPloidy(@NotNull GeneFusion fusion) {
+        Double upstreamPloidy = fusion.upstreamLinkedAnnotation().parent().variant().ploidy();
+        Double downstreamPloidy = fusion.downstreamLinkedAnnotation().parent().variant().ploidy();
+
+        if (upstreamPloidy == null || downstreamPloidy == null) {
+            return null;
+        }
+
+        assert upstreamPloidy.equals(downstreamPloidy);
+
+        return upstreamPloidy;
     }
 }

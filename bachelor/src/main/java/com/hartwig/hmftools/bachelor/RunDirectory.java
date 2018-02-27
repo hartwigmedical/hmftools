@@ -11,11 +11,11 @@ import org.jetbrains.annotations.Nullable;
 
 class RunDirectory {
 
-    final Path prefix;
-    final File germline;
-    final File somatic;
-    final File copyNumber;
-    final File structuralVariants;
+    private final Path prefix;
+    private final File germline;
+    private final File somatic;
+    private final File copyNumber;
+    private final File structuralVariants;
 
     RunDirectory(final Path runDirectory) {
         prefix = runDirectory;
@@ -23,6 +23,26 @@ class RunDirectory {
         somatic = findSomatic();
         copyNumber = findCopyNumber();
         structuralVariants = findStructuralVariants();
+    }
+
+    public File germline() {
+        return germline;
+    }
+
+    public File somatic() {
+        return somatic;
+    }
+
+    public File copyNumber() {
+        return copyNumber;
+    }
+
+    public File structuralVariants() {
+        return structuralVariants;
+    }
+
+    public Path prefix() {
+        return prefix;
     }
 
     @Nullable

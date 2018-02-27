@@ -2,8 +2,9 @@ package com.hartwig.hmftools.patientdb.validators;
 
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FORM_TREATMENT;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_ASSESSMENT_DATE;
-import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_MEASUREMENT_YN;
+import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_MEASUREMENT_DONE;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_RESPONSE;
+import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_RESPONSE_DATE;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FORM_TUMOR_MEASUREMENT;
 import static com.hartwig.hmftools.patientdb.validators.PatientValidator.fields;
 
@@ -37,17 +38,17 @@ public class TreatmentResponseValidationTest {
     private final static BiopsyTreatmentData TREATMENT_JAN_JAN =
             ImmutableBiopsyTreatmentData.of("Yes", JAN2015, JAN2015, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentResponseData RESPONSE_JAN2015 =
-            ImmutableBiopsyTreatmentResponseData.of(JAN2015, JAN2015, "NE", "Yes", FormStatusState.UNKNOWN, false);
+            ImmutableBiopsyTreatmentResponseData.of(JAN2015, JAN2015, "NE", "Yes", "No", FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentResponseData RESPONSE_FEB2015 =
-            ImmutableBiopsyTreatmentResponseData.of(FEB2015, FEB2015, "NE", "Yes", FormStatusState.UNKNOWN, false);
+            ImmutableBiopsyTreatmentResponseData.of(FEB2015, FEB2015, "NE", "Yes", "No", FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentResponseData RESPONSE_NULL =
-            ImmutableBiopsyTreatmentResponseData.of(null, null, null, null, FormStatusState.UNKNOWN, false);
+            ImmutableBiopsyTreatmentResponseData.of(null, null, null, null, null, FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentResponseData RESPONSE_ONLY =
-            ImmutableBiopsyTreatmentResponseData.of(null, null, "NE", null, FormStatusState.UNKNOWN, false);
+            ImmutableBiopsyTreatmentResponseData.of(null, null, "NE", null, null, FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentResponseData RESPONSE_MISSING_DATA =
-            ImmutableBiopsyTreatmentResponseData.of(null, null, null, "yes", FormStatusState.UNKNOWN, false);
+            ImmutableBiopsyTreatmentResponseData.of(null, null, null, "Yes", "No", FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentResponseData RESPONSE_MEASUREMENT_NO_WITH_DATA =
-            ImmutableBiopsyTreatmentResponseData.of(JAN2015, JAN2015, "NE", "no", FormStatusState.UNKNOWN, false);
+            ImmutableBiopsyTreatmentResponseData.of(JAN2015, JAN2015, "NE", "No", "No", FormStatusState.UNKNOWN, false);
 
     @Test
     public void reportsMeasurementDoneNull() {
@@ -55,7 +56,7 @@ public class TreatmentResponseValidationTest {
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(FIELD_MEASUREMENT_YN));
+        assertTrue(findingsFields.contains(FIELD_MEASUREMENT_DONE));
     }
 
     @Test
@@ -64,8 +65,8 @@ public class TreatmentResponseValidationTest {
         assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(FIELD_MEASUREMENT_YN));
-        assertTrue(findingsFields.contains(FIELD_ASSESSMENT_DATE));
+        assertTrue(findingsFields.contains(FIELD_MEASUREMENT_DONE));
+        assertTrue(findingsFields.contains(fields(FIELD_ASSESSMENT_DATE, FIELD_RESPONSE_DATE)));
     }
 
     @Test
@@ -75,7 +76,7 @@ public class TreatmentResponseValidationTest {
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
         assertTrue(findingsFields.contains(FIELD_RESPONSE));
-        assertTrue(findingsFields.contains(FIELD_ASSESSMENT_DATE));
+        assertTrue(findingsFields.contains(fields(FIELD_ASSESSMENT_DATE, FIELD_RESPONSE_DATE)));
     }
 
     @Test
@@ -84,12 +85,13 @@ public class TreatmentResponseValidationTest {
         assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(FIELD_MEASUREMENT_YN));
+        assertTrue(findingsFields.contains(FIELD_MEASUREMENT_DONE));
     }
 
     @Test
     public void reportsFirstMeasurementAfterTreatmentStart() {
-        final List<ValidationFinding> findings = PatientValidator.validateTreatmentResponses(CPCT_ID, Lists.newArrayList(TREATMENT_JAN_MAR),
+        final List<ValidationFinding> findings = PatientValidator.validateTreatmentResponses(CPCT_ID,
+                Lists.newArrayList(TREATMENT_JAN_MAR),
                 Lists.newArrayList(RESPONSE_FEB2015));
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));

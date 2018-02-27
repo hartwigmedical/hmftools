@@ -34,13 +34,6 @@ class ExtendGermline {
     }
 
     @NotNull
-    List<CombinedRegion> extendGermlineAmplificationsAndDeletions(@NotNull final List<CombinedRegion> regions) {
-        final EnumSet<GermlineStatus> eligibleStatus =
-                EnumSet.of(GermlineStatus.AMPLIFICATION, GermlineStatus.HET_DELETION, GermlineStatus.HOM_DELETION);
-        return extendGermline(eligibleStatus, regions);
-    }
-
-    @NotNull
     List<CombinedRegion> extractGermlineDeletions(@NotNull final List<CombinedRegion> regions) {
         final EnumSet<GermlineStatus> eligibleStatus = EnumSet.of(GermlineStatus.HET_DELETION, GermlineStatus.HOM_DELETION);
 

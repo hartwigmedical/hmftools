@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.purple;
 
 import static com.hartwig.hmftools.common.numeric.Doubles.greaterThan;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.numeric.Doubles;
@@ -12,10 +11,6 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import org.jetbrains.annotations.NotNull;
 
 public class PurityAdjuster {
-
-    private static final double AMBIGUOUS_BAF = 0.542;
-    private static final double CLONAL_DISTANCE = 0.25;
-    private static final double MAX_DEVIATION_ADJUSTMENT = 0.20;
 
     public static double impliedSamplePloidy(final double purity, final double normFactor) {
         return new PurityAdjuster(Gender.FEMALE, purity, normFactor).purityAdjustedCopyNumber("1", 1);
@@ -69,42 +64,7 @@ public class PurityAdjuster {
         return purityAdjustedFrequency(copyNumber, observedFrequency, typicalCopyNumber, 0);
     }
 
-    public double purityAdjustedBAF(@NotNull final String chromosomeName, final double copyNumber, final double observedFrequency) {
-
-        int normalCopyNumber = typicalCopyNumber(chromosomeName);
-        if (normalCopyNumber == 1 || (Doubles.positive(observedFrequency) && Doubles.lessOrEqual(copyNumber, 1))) {
-            return 1;
-        }
-
-        if (Doubles.isZero(observedFrequency)) {
-            return 0;
-        }
-
-        double typicalFrequency = 0.5;
-        double rawAdjustedBaf = purityAdjustedFrequency(copyNumber, observedFrequency, normalCopyNumber, typicalFrequency);
-
-        int ploidy = (int) Math.round(copyNumber);
-        if (Doubles.lessOrEqual(observedFrequency, AMBIGUOUS_BAF) && isClonal(copyNumber) && ploidy > 0) {
-            int minBetaAllele = BAFUtils.minAlleleCount(ploidy);
-            double modelBAF = BAFUtils.modelBAF(purity, ploidy, minBetaAllele);
-            if (Doubles.lessThan(modelBAF, AMBIGUOUS_BAF)) {
-                return (double) minBetaAllele / ploidy;
-            }
-        }
-
-        return rawAdjustedBaf;
-    }
-
-    public double purityAdjustedMaxCopyNumberDeviation(double maxCopyNumberDeviation) {
-        return maxCopyNumberDeviation * Math.max(1, MAX_DEVIATION_ADJUSTMENT / purity);
-    }
-
-    @VisibleForTesting
-    static boolean isClonal(final double copyNumber) {
-        return Doubles.lessOrEqual(Doubles.distanceFromInteger(copyNumber), CLONAL_DISTANCE);
-    }
-
-    private double purityAdjustedFrequency(final double tumorCopyNumber, final double observedFrequency, final int normalCopyNumber,
+    double purityAdjustedFrequency(final double tumorCopyNumber, final double observedFrequency, final int normalCopyNumber,
             final double normalFrequency) {
         assert (greaterThan(tumorCopyNumber, 0));
         assert (greaterThan(purity, 0));
@@ -115,4 +75,5 @@ public class PurityAdjuster {
 
         return (observedFrequency * (normalTotalAllele + tumorTotalAllele) - normalBetaAllele) / tumorCopyNumber / purity;
     }
+
 }

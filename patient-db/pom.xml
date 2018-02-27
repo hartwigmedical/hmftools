@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>patient-db</artifactId>
-    <version>1.4</version>
+    <version>1.10</version>
     <packaging>jar</packaging>
     <name>HMF Tools - Patient Database</name>
 
@@ -17,6 +17,10 @@
         <dependency>
             <groupId>com.hartwig</groupId>
             <artifactId>hmf-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>hmf-gene-panel</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-cli</groupId>
@@ -116,6 +120,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <mainClass>com.hartwig.hmftools.patientdb.LoadClinicalData</mainClass>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
                     <descriptorRefs>

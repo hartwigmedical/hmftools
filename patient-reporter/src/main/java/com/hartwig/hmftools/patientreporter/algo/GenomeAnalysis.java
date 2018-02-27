@@ -1,46 +1,26 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
-import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
+import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalysis;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
 
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-class GenomeAnalysis {
+@Value.Immutable
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class },
+             allParameters = true)
+abstract class GenomeAnalysis {
     @NotNull
-    private final String sample;
-    @NotNull
-    private final VariantAnalysis variantAnalysis;
-    @NotNull
-    private final PurpleAnalysis purpleAnalysis;
-    @NotNull
-    private final StructuralVariantAnalysis structuralVariantAnalysis;
-
-    GenomeAnalysis(@NotNull final String sample, @NotNull final VariantAnalysis variantAnalysis,
-            @NotNull final PurpleAnalysis purpleAnalysis, @NotNull final StructuralVariantAnalysis structuralVariantAnalysis) {
-        this.sample = sample;
-        this.variantAnalysis = variantAnalysis;
-        this.purpleAnalysis = purpleAnalysis;
-        this.structuralVariantAnalysis = structuralVariantAnalysis;
-    }
+    abstract String sample();
 
     @NotNull
-    PurpleAnalysis purpleAnalysis() {
-        return purpleAnalysis;
-    }
+    abstract VariantAnalysis variantAnalysis();
 
     @NotNull
-    String sample() {
-        return sample;
-    }
+    abstract PurpleAnalysis purpleAnalysis();
 
     @NotNull
-    VariantAnalysis variantAnalysis() {
-        return variantAnalysis;
-    }
-
-    @NotNull
-    StructuralVariantAnalysis structuralVariantAnalysis() {
-        return structuralVariantAnalysis;
-    }
+    abstract StructuralVariantAnalysis structuralVariantAnalysis();
 }

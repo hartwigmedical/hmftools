@@ -1,12 +1,10 @@
 package com.hartwig.hmftools.svannotation.annotations;
 
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-
 import org.jetbrains.annotations.NotNull;
 
 public class Transcript {
 
-    private final GeneAnnotation geneAnnotation;
+    private final GeneAnnotation parent;
     private final String transcriptId;
     private final int exonUpstream;
     private final int exonUpstreamPhase;
@@ -15,10 +13,10 @@ public class Transcript {
     private final int exonMax;
     private final boolean canonical;
 
-    public Transcript(final GeneAnnotation geneAnnotation, @NotNull final String transcriptId, final int exonUpstream,
+    public Transcript(final GeneAnnotation parent, @NotNull final String transcriptId, final int exonUpstream,
             final int exonUpstreamPhase, final int exonDownstream, final int exonDownstreamPhase, final int exonMax,
             final boolean canonical) {
-        this.geneAnnotation = geneAnnotation;
+        this.parent = parent;
         this.transcriptId = transcriptId;
         this.exonUpstream = exonUpstream;
         this.exonUpstreamPhase = exonUpstreamPhase;
@@ -29,7 +27,7 @@ public class Transcript {
     }
 
     @NotNull
-    public String getTranscriptId() {
+    public String transcriptId() {
         return transcriptId;
     }
 
@@ -49,33 +47,31 @@ public class Transcript {
         return canonical;
     }
 
-    public GeneAnnotation getGeneAnnotation() {
-        return geneAnnotation;
+    public GeneAnnotation parent() {
+        return parent;
     }
 
-    public StructuralVariant getVariant() { return geneAnnotation.getVariant(); }
-
-    public String getGeneName() {
-        return geneAnnotation.getGeneName();
+    public String geneName() {
+        return parent.geneName();
     }
 
-    public int getExonUpstream() {
+    public int exonUpstream() {
         return exonUpstream;
     }
 
-    public int getExonUpstreamPhase() {
+    public int exonUpstreamPhase() {
         return exonUpstreamPhase;
     }
 
-    public int getExonDownstream() {
+    public int exonDownstream() {
         return exonDownstream;
     }
 
-    public int getExonDownstreamPhase() {
+    public int exonDownstreamPhase() {
         return exonDownstreamPhase;
     }
 
-    public int getExonMax() {
+    public int exonMax() {
         return exonMax;
     }
 }

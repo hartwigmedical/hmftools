@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -56,12 +57,13 @@ import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.filter.SGTFilter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.version.VersionInfo;
-import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
+import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.config.CircosConfig;
 import com.hartwig.hmftools.purple.config.CommonConfig;
@@ -85,7 +87,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
-import htsjdk.variant.variantcontext.filter.SnpFilter;
 
 public class PurityPloidyEstimateApplication {
 
@@ -99,8 +100,6 @@ public class PurityPloidyEstimateApplication {
 
     private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
     private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
-
-    private static final String PLOIDY_PENALTY_EXPERIMENT = "ploidy_penalty_experiment";
 
     private static final String OBSERVED_BAF_EXPONENT = "observed_baf_exponent";
     private static final double OBSERVED_BAF_EXPONENT_DEFAULT = 1;
@@ -134,7 +133,12 @@ public class PurityPloidyEstimateApplication {
             final List<HmfGenomeRegion> genePanel = HmfGenePanelSupplier.allGeneList();
 
             // JOBA: Load BAFs from AMBER
-            final Multimap<String, AmberBAF> bafs = AmberBAFFile.read(configSupplier.bafConfig().bafFile().toString());
+            final String amberFile = configSupplier.bafConfig().bafFile().toString();
+            LOGGER.info("Reading amber bafs from {}", amberFile);
+            final Multimap<String, AmberBAF> bafs = AmberBAFFile.read(amberFile);
+            int averageTumorDepth =
+                    (int) Math.round(bafs.values().stream().mapToInt(AmberBAF::tumorDepth).filter(x -> x > 0).average().orElse(100));
+            LOGGER.info("Average amber tumor depth is {} reads", averageTumorDepth);
 
             // JOBA: Load Ratios from COBALT
             final String ratioFilename = CobaltRatioFile.generateFilename(config.cobaltDirectory(), config.tumorSample());
@@ -171,13 +175,9 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Fitting purity");
             final FittingConfig fittingConfig = configSupplier.fittingConfig();
             final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
-            final boolean ploidyPenaltyExperiment = cmd.hasOption(PLOIDY_PENALTY_EXPERIMENT);
             final double observedBafExponent = defaultValue(cmd, OBSERVED_BAF_EXPONENT, OBSERVED_BAF_EXPONENT_DEFAULT);
-            final FittedRegionFactory fittedRegionFactory = new FittedRegionFactory(amberGender,
-                    fittingConfig.maxPloidy(),
-                    cnvRatioWeight,
-                    ploidyPenaltyExperiment,
-                    observedBafExponent);
+            final FittedRegionFactory fittedRegionFactory =
+                    new FittedRegionFactory(amberGender, fittingConfig.maxPloidy(), cnvRatioWeight, averageTumorDepth, observedBafExponent);
 
             final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
                     fittingConfig.maxPloidy(),
@@ -193,11 +193,12 @@ public class PurityPloidyEstimateApplication {
             final List<FittedPurity> bestFitPerPurity = fittedPurityFactory.bestFitPerPurity();
 
             final SomaticConfig somaticConfig = configSupplier.somaticConfig();
-            final BestFitFactory bestFitFactory = new BestFitFactory(somaticConfig.minTotalVariants(),
-                    somaticConfig.minPeakVariants(),
-                    bestFitPerPurity,
-                    somaticVariants);
+            final List<SomaticVariant> snps =
+                    somaticVariants.stream().filter(x -> x.type() == VariantType.SNP).collect(Collectors.toList());
+            final BestFitFactory bestFitFactory =
+                    new BestFitFactory(somaticConfig.minTotalVariants(), somaticConfig.minPeakVariants(), bestFitPerPurity, snps);
             final FittedPurity bestFit = bestFitFactory.bestFit();
+
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
 
             final PurityAdjuster purityAdjuster = new PurityAdjuster(amberGender, bestFit.purity(), bestFit.normFactor());
@@ -211,8 +212,6 @@ public class PurityPloidyEstimateApplication {
                     structuralVariants);
             final List<PurpleCopyNumber> copyNumbers = copyNumberFactory.copyNumbers();
             final List<PurpleCopyNumber> germlineDeletions = copyNumberFactory.germlineDeletions();
-            final List<GeneCopyNumber> geneCopyNumbers =
-                    GeneCopyNumberFactory.geneCopyNumbers(genePanel, copyNumberFactory.copyNumbersWithDeletions());
 
             final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, copyNumbers);
 
@@ -227,6 +226,12 @@ public class PurityPloidyEstimateApplication {
 
             LOGGER.info("Generating QC Stats");
             final PurpleQC qcChecks = PurpleQCFactory.create(bestFitFactory.bestFit(), copyNumbers, amberGender, cobaltGender);
+
+            final List<PurityAdjustedSomaticVariant> enrichedSomatics =
+                    new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers, enrichedFittedRegions).create(somaticVariants);
+
+            final List<GeneCopyNumber> geneCopyNumbers =
+                    GeneCopyNumberFactory.geneCopyNumbers(genePanel, copyNumbers, germlineDeletions, enrichedSomatics);
 
             final DBConfig dbConfig = configSupplier.dbConfig();
             if (dbConfig.enabled()) {
@@ -248,9 +253,6 @@ public class PurityPloidyEstimateApplication {
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateGermlineFilename(outputDirectory, tumorSample), germlineDeletions);
             FittedRegionFile.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
-
-            final List<PurityAdjustedSomaticVariant> enrichedSomatics =
-                    new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers, enrichedFittedRegions).create(somaticVariants);
 
             final CircosConfig circosConfig = configSupplier.circosConfig();
             LOGGER.info("Writing plots to: {}", circosConfig.plotDirectory());
@@ -292,8 +294,7 @@ public class PurityPloidyEstimateApplication {
             String filename = config.file().get().toString();
             LOGGER.info("Loading somatic variants from {}", filename);
 
-            SomaticVariantFactory factory =
-                    new SomaticVariantFactory(new PassingVariantFilter(), new SnpFilter(), new NTFilter(), new SGTFilter());
+            SomaticVariantFactory factory = new SomaticVariantFactory(new PassingVariantFilter(), new NTFilter(), new SGTFilter());
 
             return factory.fromVCFFile(configSupplier.commonConfig().tumorSample(), filename);
         } else {
@@ -318,7 +319,6 @@ public class PurityPloidyEstimateApplication {
         ConfigSupplier.addOptions(options);
 
         options.addOption(OBSERVED_BAF_EXPONENT, true, "Observed baf exponent. Default 1");
-        options.addOption(PLOIDY_PENALTY_EXPERIMENT, false, "Use experimental ploidy penality.");
         options.addOption(CNV_RATIO_WEIGHT_FACTOR, true, "CNV ratio deviation scaling.");
 
         options.addOption(THREADS, true, "Number of threads (default 2)");

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.report;
 
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.mockedAlterations;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReporterData;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testHmfReporterData;
 
@@ -10,18 +11,22 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ecrf.doid.TumorLocationDoidMapping;
+import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantImpl;
 import com.hartwig.hmftools.patientreporter.BaseReporterData;
@@ -35,15 +40,12 @@ import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
-import com.hartwig.hmftools.patientreporter.civic.CivicAnalysis;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReportType;
-import com.hartwig.hmftools.patientreporter.copynumber.ImmutableCopyNumberReport;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
 import com.hartwig.hmftools.patientreporter.report.data.ImmutableGeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.ImmutableGeneFusionData;
+import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableVariantReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
@@ -55,48 +57,53 @@ import net.sf.dynamicreports.report.exception.DRException;
 
 public class PDFWriterTest {
 
+    private static final boolean RUN_CIVIC_ANALYSIS = false;
     private static final boolean SHOW_AND_PRINT = false;
     private static final boolean WRITE_TO_PDF = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
 
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy");
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
 
     @Test
     public void canGenerateSequenceReport() throws DRException, IOException, HartwigException {
+        final double pathologyTumorPercentage = 0.6;
+        final double impliedTumorPurity = 0.58;
+        final int mutationalLoad = 361;
+        final double microsatelliteIndicator = 2.1;
+
         final HmfReporterData reporterData = testHmfReporterData();
         final BaseReporterData baseReporterData = testBaseReporterData();
-        final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
-
-        final FittedPurity fittedPurity =
-                ImmutableFittedPurity.builder().purity(0.58).diploidProportion(0).normFactor(0).score(0).ploidy(2).build();
+        final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity);
 
         final List<VariantReport> variants = createTestVariants(new PurityAdjuster(Gender.MALE, fittedPurity));
-        final List<CopyNumberReport> copyNumbers = createTestCopyNumbers();
-
-        final List<GeneFusionData> fusions = createTestFusions();
+        final List<GeneCopyNumber> copyNumbers = createTestCopyNumbers();
         final List<GeneDisruptionData> disruptions = createTestDisruptions();
+        final List<GeneFusionData> fusions = createTestFusions();
 
-        final SampleReport sampleReport = testSampleReport(0.6);
-        final List<Alteration> alterations =
-                CivicAnalysis.run(variants, copyNumbers, reporterData.geneModel(), doidMapping.doidsForTumorType(sampleReport.tumorType()));
+        final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
+        final List<Alteration> alterations = RUN_CIVIC_ANALYSIS ? PatientReporterTestUtil.runCivicAnalysis(variants,
+                copyNumbers,
+                disruptions,
+                fusions,
+                reporterData.panelGeneModel(),
+                sampleReport.tumorType()) : mockedAlterations();
 
         final SequencedPatientReport patientReport = ImmutableSequencedPatientReport.of(sampleReport,
                 variants,
-                fusions,
-                disruptions,
+                mutationalLoad,
+                microsatelliteIndicator,
                 copyNumbers,
-                361,
-                "58%",
+                disruptions,
+                fusions,
+                PatientReportFormat.formatPercent(impliedTumorPurity),
                 alterations,
+                Resources.getResource("circos" + File.separator + "circos_example.png").getPath(),
                 Optional.of("this is a test report and does not relate to any real CPCT patient"),
                 baseReporterData.signaturePath());
 
         final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport, reporterData);
         assertNotNull(mainReport);
-
-        final JasperReportBuilder supplement = PDFWriter.generateSupplementaryReport(patientReport);
-        assertNotNull(supplement);
 
         final JasperReportBuilder evidenceReport = EvidenceReport.generate(patientReport);
         assertNotNull(evidenceReport);
@@ -107,9 +114,13 @@ public class PDFWriterTest {
 
         if (WRITE_TO_PDF) {
             mainReport.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "test_report.pdf"));
-            supplement.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "test_supplement.pdf"));
             evidenceReport.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "test_evidence_report.pdf"));
         }
+    }
+
+    @NotNull
+    private static FittedPurity createFittedPurity(double impliedPurity) {
+        return ImmutableFittedPurity.builder().purity(impliedPurity).diploidProportion(0).normFactor(0).score(0).ploidy(2).build();
     }
 
     @NotNull
@@ -157,112 +168,144 @@ public class PDFWriterTest {
         return Lists.newArrayList(variant1, variant2, variant3);
     }
 
+    @NotNull
     private static SomaticVariant createTestVariant(@NotNull final String chromosome, final long position, @NotNull final String ref,
             @NotNull final String alt) {
         return new SomaticVariantImpl.Builder().chromosome(chromosome).position(position).ref(ref).alt(alt).build();
     }
 
     @NotNull
-    private static List<CopyNumberReport> createTestCopyNumbers() {
-        final CopyNumberReport copyNumber1 = ImmutableCopyNumberReport.builder()
-                .chromosome("9")
-                .chromosomeBand("p21.3")
-                .gene("CDKN2A")
-                .copyNumber(0)
-                .type(CopyNumberReportType.LOSS)
-                .build();
-        final CopyNumberReport copyNumber2 = ImmutableCopyNumberReport.builder()
-                .chromosome("17")
-                .chromosomeBand("q12")
-                .gene("ERBB2")
-                .copyNumber(9)
-                .type(CopyNumberReportType.GAIN)
-                .build();
+    private static List<GeneCopyNumber> createTestCopyNumbers() {
+        final GeneCopyNumber copyNumber1 =
+                createCopyNumberBuilder().chromosome("9").chromosomeBand("p21.3").gene("CDKN2A").minCopyNumber(0).build();
+        final GeneCopyNumber copyNumber2 =
+                createCopyNumberBuilder().chromosome("17").chromosomeBand("q12").gene("ERBB2").minCopyNumber(9).build();
         return Lists.newArrayList(copyNumber1, copyNumber2);
     }
 
     @NotNull
+    private static ImmutableGeneCopyNumber.Builder createCopyNumberBuilder() {
+        return ImmutableGeneCopyNumber.builder()
+                .start(1)
+                .end(2)
+                .minRegionStart(0)
+                .minRegionStartSupport(SegmentSupport.NONE)
+                .minRegionEnd(0)
+                .minRegionEndSupport(SegmentSupport.NONE)
+                .minRegionMethod(CopyNumberMethod.UNKNOWN)
+                .minRegions(1)
+                .germlineHet2HomRegions(0)
+                .germlineHomRegions(0)
+                .somaticRegions(1)
+                .maxCopyNumber(0)
+                .transcriptID("trans")
+                .transcriptVersion(0)
+                .nonsenseBiallelicCount(0)
+                .nonsenseNonBiallelicCount(0)
+                .nonsenseNonBiallelicPloidy(0)
+                .spliceBiallelicCount(0)
+                .spliceNonBiallelicCount(0)
+                .spliceNonBiallelicPloidy(0)
+                .missenseBiallelicCount(0)
+                .missenseNonBiallelicCount(0)
+                .missenseNonBiallelicPloidy(0)
+                .minMinorAllelePloidy(0);
+    }
+
+    @NotNull
     private static List<GeneFusionData> createTestFusions() {
-        return Collections.singletonList(ImmutableGeneFusionData.builder()
-                .start("chr21:42872140")
-                .geneStart("TMPRSS2")
-                .geneContextStart("Exon 1")
-                .transcriptStart("ENST00000398585")
-                .end("chr9:140404459")
-                .geneEnd("PNPLA7")
-                .geneContextEnd("Exon 13")
-                .transcriptEnd("ENST00000406427")
-                .type("BND")
-                .vaf("38% 40%")
-                .build());
+        return Lists.newArrayList(ImmutableGeneFusionData.builder()
+                        .geneStart("TMPRSS2")
+                        .geneStartTranscript("ENST00000398585.7")
+                        .geneStartEntrezIds(Lists.newArrayList(7113))
+                        .geneContextStart("Exon 1")
+                        .geneEnd("PNPLA7")
+                        .geneEndTranscript("ENST00000406427.5")
+                        .geneEndEntrezIds(Lists.newArrayList(375775))
+                        .geneContextEnd("Exon 13")
+                        .copies("1.0")
+                        .cosmicURL("")
+                        .build(),
+                ImmutableGeneFusionData.builder()
+                        .geneStart("BRAF")
+                        .geneStartTranscript("ENST00000288602.10")
+                        .geneStartEntrezIds(Lists.newArrayList(673))
+                        .geneContextStart("Exon 1")
+                        .geneEnd("ZKSCAN1")
+                        .geneEndTranscript("ENST00000324306.10")
+                        .geneEndEntrezIds(Lists.newArrayList(7586))
+                        .geneContextEnd("Exon 13")
+                        .copies("1.0")
+                        .cosmicURL("")
+                        .build(),
+                ImmutableGeneFusionData.builder()
+                        .geneStart("CLCN6")
+                        .geneStartTranscript("ENST00000346436.10")
+                        .geneStartEntrezIds(Lists.newArrayList(1185))
+                        .geneContextStart("Exon 1")
+                        .geneEnd("BRAF")
+                        .geneEndTranscript("ENST00000288602.10")
+                        .geneEndEntrezIds(Lists.newArrayList(673))
+                        .geneContextEnd("Exon 13")
+                        .copies("1.0")
+                        .cosmicURL("http://cancer.sanger.ac.uk/cosmic/fusion/overview?fid=2&gid=54500")
+                        .build());
     }
 
     @NotNull
     private static List<GeneDisruptionData> createTestDisruptions() {
         final GeneDisruptionData disruption1 = ImmutableGeneDisruptionData.builder()
-                .geneName("ERBB4")
-                .transcript("ENST00000342788")
-                .location("chr2:212381802")
-                .geneContext("Intron 20")
-                .orientation("3'")
-                .partner("chr2:212643300")
-                .type("DUP")
-                .vaf("19%")
+                .chromosome("2")
+                .gene("ERBB4")
+                .geneContext("Intron 4")
+                .type("INV")
+                .copies("1.0")
+                .chromosomeBand("q13")
                 .build();
 
         final GeneDisruptionData disruption2 = ImmutableGeneDisruptionData.builder()
-                .geneName("ERBB4")
-                .transcript("ENST00000342788")
-                .location("chr2:212643300")
-                .geneContext("Intron 4")
-                .orientation("5'")
-                .partner("chr2:212381802")
-                .type("DUP")
-                .vaf("22%")
+                .chromosome("2")
+                .gene("ERBB4")
+                .geneContext("Intron 20")
+                .type("INV")
+                .copies("1.0")
+                .chromosomeBand("q14")
                 .build();
 
         final GeneDisruptionData disruption3 = ImmutableGeneDisruptionData.builder()
-                .geneName("NRG1")
-                .transcript("ENST00000356819")
-                .location("chr8:32440124")
+                .chromosome("3")
+                .gene("PIK3CB")
                 .geneContext("Intron 1")
-                .orientation("3'")
-                .partner("chr8:142709799")
-                .type("INV")
-                .vaf("7%")
+                .type("INS")
+                .copies("3.0")
+                .chromosomeBand("q15")
                 .build();
 
         final GeneDisruptionData disruption4 = ImmutableGeneDisruptionData.builder()
-                .geneName("NRG1")
-                .transcript("ENST00000356819")
-                .location("chr8:32440762")
+                .chromosome("8")
+                .gene("NRG1")
                 .geneContext("Intron 1")
-                .orientation("5'")
-                .partner("chr8:66361264")
-                .type("DEL")
-                .vaf("9%")
+                .type("DUP")
+                .copies("0.3")
+                .chromosomeBand("q16")
                 .build();
 
         final GeneDisruptionData disruption5 = ImmutableGeneDisruptionData.builder()
-                .geneName("PIK3CB")
-                .transcript("ENST00000477593")
-                .location("chr3:138513398")
+                .chromosome("8")
+                .gene("NRG1")
                 .geneContext("Intron 1")
-                .orientation("3'")
-                .partner("chr3:138887286")
-                .type("DUP")
-                .vaf("20%")
+                .type("DEL")
+                .copies("0.2")
+                .chromosomeBand("q17.3")
                 .build();
 
         final GeneDisruptionData disruption6 = ImmutableGeneDisruptionData.builder()
-                .geneName("CDK12")
-                .transcript("ENST00000447079")
-                .location("chr17:37681264")
+                .chromosome("17")
+                .gene("CDK12")
                 .geneContext("Intron 12")
-                .orientation("3'")
-                .partner("chr17:37906886")
-                .type("DUP")
-                .vaf("68%")
+                .type("BND")
+                .copies("1.0")
+                .chromosomeBand("q32")
                 .build();
 
         return Lists.newArrayList(disruption1, disruption2, disruption3, disruption4, disruption5, disruption6);

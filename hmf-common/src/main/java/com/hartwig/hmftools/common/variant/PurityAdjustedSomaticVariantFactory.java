@@ -26,16 +26,15 @@ public class PurityAdjustedSomaticVariantFactory {
     public PurityAdjustedSomaticVariantFactory(@NotNull PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
             @NotNull final List<FittedRegion> fittedRegions) {
         this.purityAdjuster = purityAdjuster;
-        copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers);
-        fittedRegionSelector = GenomeRegionSelectorFactory.create(fittedRegions);
+        this.copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers);
+        this.fittedRegionSelector = GenomeRegionSelectorFactory.create(fittedRegions);
     }
 
     public PurityAdjustedSomaticVariantFactory(@NotNull PurityAdjuster purityAdjuster,
-            @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers,
-            @NotNull final Multimap<String, FittedRegion> fittedRegions) {
+            @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers, @NotNull final Multimap<String, FittedRegion> fittedRegions) {
         this.purityAdjuster = purityAdjuster;
-        copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers);
-        fittedRegionSelector = GenomeRegionSelectorFactory.create(fittedRegions);
+        this.copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers);
+        this.fittedRegionSelector = GenomeRegionSelectorFactory.create(fittedRegions);
     }
 
     @NotNull
@@ -48,8 +47,9 @@ public class PurityAdjustedSomaticVariantFactory {
                     .adjustedCopyNumber(0)
                     .adjustedVAF(0)
                     .ploidy(0)
+                    .minorAllelePloidy(0)
                     .germlineStatus(GermlineStatus.UNKNOWN)
-                    .lossOfHeterozygosity(false);
+                    .biallelic(false);
 
             copyNumberSelector.select(variant).ifPresent(x -> purityAdjustment(x, variant, builder));
             fittedRegionSelector.select(variant).ifPresent(x -> builder.germlineStatus(x.status()));
@@ -70,7 +70,9 @@ public class PurityAdjustedSomaticVariantFactory {
         double variantPloidy = adjustedCopyNumber * adjustedVAF;
         builder.ploidy(variantPloidy);
 
-        boolean loh = Doubles.lessOrEqual(adjustedCopyNumber, 0) || Doubles.greaterOrEqual(variantPloidy, adjustedCopyNumber - 0.5);
-        builder.lossOfHeterozygosity(loh);
+        boolean biallelic = Doubles.lessOrEqual(adjustedCopyNumber, 0) || Doubles.greaterOrEqual(variantPloidy, adjustedCopyNumber - 0.5);
+        builder.biallelic(biallelic);
+
+        builder.minorAllelePloidy(copyNumber.minorAllelePloidy());
     }
 }

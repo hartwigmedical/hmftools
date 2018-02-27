@@ -11,9 +11,13 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
+import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
+import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
+import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotationFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,15 +32,11 @@ import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class SomaticVariantFactory {
+    private static final HotspotFilter HOTSPOT_FILTER = new HotspotFilter();
     private static final String DBSNP_IDENTIFIER = "rs";
     private static final String COSMIC_IDENTIFIER = "COSM";
     private static final String ID_SEPARATOR = ";";
     private static final String MAPPABILITY_TAG = "MAPPABILITY";
-
-    private static final String CALLER_ALGO_IDENTIFIER = "set";
-    private static final String CALLER_ALGO_SEPARATOR = "-";
-    private static final String CALLER_FILTERED_IDENTIFIER = "filterIn";
-    private static final String CALLER_INTERSECTION_IDENTIFIER = "Intersection";
 
     @NotNull
     private final CompoundFilter filter;
@@ -87,83 +87,86 @@ public class SomaticVariantFactory {
         if (filter.test(context)) {
             final Genotype genotype = context.getGenotype(sample);
             if (genotype.hasAD() && genotype.getAD().length > 1) {
-                final AlleleFrequencyData frequencyData = VariantFactoryFunctions.determineAlleleFrequencies(genotype);
-                SomaticVariantImpl.Builder builder = new SomaticVariantImpl.Builder().chromosome(context.getContig())
-                        .annotations(Collections.emptyList())
-                        .position(context.getStart())
-                        .ref(context.getReference().getBaseString())
-                        .alt(alt(context))
-                        .alleleReadCount(frequencyData.alleleReadCount())
-                        .totalReadCount(frequencyData.totalReadCount())
-                        .totalReadCount(frequencyData.totalReadCount())
-                        .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0));
+                final AllelicDepth frequencyData = determineAlleleFrequencies(genotype);
+                if (frequencyData.totalReadCount() > 0) {
+                    SomaticVariantImpl.Builder builder = new SomaticVariantImpl.Builder().chromosome(context.getContig())
+                            .annotations(Collections.emptyList())
+                            .position(context.getStart())
+                            .ref(context.getReference().getBaseString())
+                            .alt(alt(context))
+                            .alleleReadCount(frequencyData.alleleReadCount())
+                            .totalReadCount(frequencyData.totalReadCount())
+                            .totalReadCount(frequencyData.totalReadCount())
+                            .hotspot(HOTSPOT_FILTER.test(context))
+                            .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0));
 
-                attachCallers(builder, context);
-                attachAnnotations(builder, context);
-                attachFilter(builder, context);
-                attachID(builder, context);
-                attachType(builder, context);
-                return Optional.of(builder.build());
+                    attachAnnotations(builder, context);
+                    attachFilter(builder, context);
+                    attachID(builder, context);
+                    attachType(builder, context);
+                    return Optional.of(builder.build());
+                }
             }
         }
         return Optional.empty();
     }
 
-    private static SomaticVariantImpl.Builder attachAnnotations(@NotNull final SomaticVariantImpl.Builder builder,
-            @NotNull VariantContext context) {
-        return builder.annotations(VariantAnnotationFactory.fromContext(context));
-    }
+    private void attachAnnotations(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
 
-    private static SomaticVariantImpl.Builder attachCallers(@NotNull final SomaticVariantImpl.Builder builder,
-            @NotNull VariantContext context) {
-        if (context.getCommonInfo().hasAttribute(CALLER_ALGO_IDENTIFIER)) {
-            return builder.callers(extractCallers(context.getCommonInfo().getAttributeAsString(CALLER_ALGO_IDENTIFIER, "")));
-        }
+        final List<VariantAnnotation> allAnnotations = VariantAnnotationFactory.fromContext(context);
+        builder.annotations(allAnnotations);
 
-        return builder.callers(Collections.emptyList());
-    }
+        final List<VariantAnnotation> transcriptAnnotations =
+                allAnnotations.stream().filter(x -> x.featureType().equals("transcript")).collect(Collectors.toList());
 
-    @NotNull
-    private static List<String> extractCallers(@NotNull final String callers) {
-
-        final String[] allCallers = callers.split(CALLER_ALGO_SEPARATOR);
-        final List<String> finalCallers = Lists.newArrayList();
-        if (allCallers.length > 0 && allCallers[0].equals(CALLER_INTERSECTION_IDENTIFIER)) {
-            finalCallers.addAll(SomaticVariantConstants.ALL_CALLERS);
+        if (!transcriptAnnotations.isEmpty()) {
+            final VariantAnnotation variantAnnotation = transcriptAnnotations.get(0);
+            builder.gene(variantAnnotation.gene());
+            builder.worstEffect(variantAnnotation.consequenceString());
+            builder.worstCodingEffect(CodingEffect.effect(variantAnnotation.consequences()).toString());
+            builder.worstEffectTranscript(variantAnnotation.featureID());
         } else {
-            finalCallers.addAll(Arrays.stream(allCallers)
-                    .filter(caller -> !caller.startsWith(CALLER_FILTERED_IDENTIFIER))
-                    .collect(Collectors.toList()));
+            builder.gene("");
+            builder.worstEffect("");
+            builder.worstCodingEffect(CodingEffect.NONE.toString());
+            builder.worstEffectTranscript("");
         }
-        return finalCallers;
+
+        builder.genesEffected((int) transcriptAnnotations.stream()
+                .map(VariantAnnotation::gene)
+                .filter(x -> !x.isEmpty())
+                .distinct()
+                .count());
     }
 
-    private static SomaticVariantImpl.Builder attachFilter(@NotNull final SomaticVariantImpl.Builder builder,
-            @NotNull VariantContext context) {
+    private static void attachFilter(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
         if (context.isFiltered()) {
             StringJoiner joiner = new StringJoiner(";");
             context.getFilters().forEach(joiner::add);
-            return builder.filter(joiner.toString());
+            builder.filter(joiner.toString());
+        } else {
+            builder.filter("PASS");
         }
-
-        return builder.filter("PASS");
     }
 
-    private static SomaticVariantImpl.Builder attachType(@NotNull final SomaticVariantImpl.Builder builder,
-            @NotNull VariantContext context) {
+    @NotNull
+    private static VariantType type(@NotNull VariantContext context) {
         switch (context.getType()) {
             case MNP:
-                return builder.type(VariantType.MNP);
+                return VariantType.MNP;
             case SNP:
-                return builder.type(VariantType.SNP);
+                return VariantType.SNP;
             case INDEL:
-                return builder.type(VariantType.INDEL);
+                return VariantType.INDEL;
         }
-
-        return builder.type(VariantType.UNDEFINED);
+        return VariantType.UNDEFINED;
     }
 
-    private static SomaticVariantImpl.Builder attachID(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
+    private static void attachType(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
+        builder.type(type(context));
+    }
+
+    private static void attachID(@NotNull SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
         final String ID = context.getID();
         if (!ID.isEmpty()) {
             final String[] ids = ID.split(ID_SEPARATOR);
@@ -175,8 +178,6 @@ public class SomaticVariantFactory {
                 }
             }
         }
-
-        return builder;
     }
 
     private static boolean sampleInFile(@NotNull final String sample, @NotNull final VCFHeader header) {
@@ -186,5 +187,19 @@ public class SomaticVariantFactory {
     @NotNull
     private static String alt(@NotNull final VariantContext context) {
         return String.join(",", context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.toList()));
+    }
+
+    @NotNull
+    private static AllelicDepth determineAlleleFrequencies(@NotNull final Genotype genotype) {
+        Preconditions.checkArgument(genotype.hasAD());
+
+        int[] adFields = genotype.getAD();
+        int totalReadCount = 0;
+        final int alleleReadCount = adFields[1];
+        for (final int afField : adFields) {
+            totalReadCount += afField;
+        }
+
+        return new AllelicDepthImpl(alleleReadCount, totalReadCount);
     }
 }

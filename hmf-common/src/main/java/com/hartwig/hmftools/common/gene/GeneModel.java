@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.SortedSetMultimap;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
@@ -15,21 +16,33 @@ import org.jetbrains.annotations.NotNull;
 
 public class GeneModel {
 
-    private final Map<String, HmfGenomeRegion> transcriptMap;
+    @NotNull
     private final Collection<HmfGenomeRegion> regions;
-    private final Set<String> panel;
+    @NotNull
     private final Slicer slicer;
+    @NotNull
+    private final Map<String, HmfGenomeRegion> transcriptMap;
+    @NotNull
+    private final Set<String> panel;
 
-    public GeneModel(@NotNull final SortedSetMultimap<String, HmfGenomeRegion> regions) {
+    public GeneModel(@NotNull SortedSetMultimap<String, HmfGenomeRegion> regions) {
         this.regions = regions.values();
-        slicer = SlicerFactory.fromRegions(regions);
-        transcriptMap = extractTranscriptMap(regions.values());
-        panel = regions.values().stream().map(GeneRegion::gene).collect(Collectors.toSet());
+        this.slicer = SlicerFactory.fromRegions(regions);
+        this.transcriptMap = extractTranscriptMap(regions.values());
+        this.panel = regions.values().stream().map(TranscriptRegion::gene).collect(Collectors.toSet());
     }
 
     @NotNull
-    public Collection<HmfGenomeRegion> hmfRegions() {
+    public Collection<HmfGenomeRegion> regions() {
         return regions;
+    }
+
+    public long numberOfBases() {
+        return regions.stream().mapToLong(GenomeRegion::bases).sum();
+    }
+
+    public int numberOfRegions() {
+        return regions.size();
     }
 
     @NotNull
@@ -51,8 +64,8 @@ public class GeneModel {
         return transcriptMap;
     }
 
+    @NotNull
     public Set<String> panel() {
         return panel;
     }
-
 }

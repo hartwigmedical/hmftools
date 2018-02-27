@@ -18,16 +18,16 @@ public class FittedRegionFactory {
     private final Gender gender;
     private final int maxPloidy;
     private final double cnvRatioWeightFactor;
-    private final boolean ploidyPenaltyExperiment;
     private final double observedBafExponent;
+    private final BAFUtils bafUtils;
 
     public FittedRegionFactory(final Gender gender, final int maxPloidy, final double cnvRatioWeightFactor,
-            final boolean ploidyPenaltyExperiment, final double observedBafExponent) {
+            final int averageReadDepth, final double observedBafExponent) {
         this.gender = gender;
         this.maxPloidy = maxPloidy;
         this.cnvRatioWeightFactor = cnvRatioWeightFactor;
-        this.ploidyPenaltyExperiment = ploidyPenaltyExperiment;
         this.observedBafExponent = observedBafExponent;
+        bafUtils = new BAFUtils(averageReadDepth);
     }
 
     @NotNull
@@ -47,7 +47,7 @@ public class FittedRegionFactory {
         double observedTumorRatio = observedRegion.observedTumorRatio();
         double purityAdjustedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedRegion.chromosome(), observedTumorRatio);
         double refNormalisedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedTumorRatio, observedRegion.observedNormalRatio());
-        double tumorBAF = purityAdjuster.purityAdjustedBAF(observedRegion.chromosome(), purityAdjustedCopyNumber, observedBAF);
+        double tumorBAF = bafUtils.purityAdjustedBAF(purityAdjuster, observedRegion.chromosome(), purityAdjustedCopyNumber, observedBAF);
 
         ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()
                 .from(observedRegion)
@@ -62,13 +62,13 @@ public class FittedRegionFactory {
             double cnvDeviation = cnvDeviation(cnvRatioWeightFactor, modelRatio, observedTumorRatio);
 
             double[] modelBAFWithDeviation =
-                    observedRegion.bafCount() == 0 ? new double[] { 0, 0, 0 } : modelBAFToMinimizeDeviation(purity, ploidy, observedBAF);
+                    observedRegion.bafCount() == 0 ? new double[] { 0, 0, 0 } : bafUtils.modelBAFToMinimizeDeviation(purity, ploidy, observedBAF);
 
             double modelBAF = modelBAFWithDeviation[0];
             double bafDeviation = modelBAFWithDeviation[1];
 
             double ploidyPenalty = PloidyPenalty.penalty(ploidy, (int) modelBAFWithDeviation[2]);
-            double deviation = ploidyPenalty * (bafDeviation + cnvDeviation) * Math.pow(observedBAF, observedBafExponent);
+            double deviation = (bafDeviation + cnvDeviation) * Math.pow(observedBAF, observedBafExponent);
 
             if (ploidy == 1 || deviation < minDeviation) {
                 builder.modelPloidy(ploidy)
@@ -76,6 +76,7 @@ public class FittedRegionFactory {
                         .modelTumorRatio(modelRatio)
                         .bafDeviation(bafDeviation)
                         .cnvDeviation(cnvDeviation)
+                        .ploidyPenalty(ploidyPenalty)
                         .deviation(deviation);
                 minDeviation = deviation;
             }
@@ -94,30 +95,4 @@ public class FittedRegionFactory {
         return cnvRatioWeighFactor * Math.abs(modelCNVRatio - actualRatio);
     }
 
-    @VisibleForTesting
-    static double bafDeviation(final double modelBAF, final double actualBAF) {
-        return Math.abs(modelBAF - actualBAF);
-    }
-
-    @VisibleForTesting
-    static double[] modelBAFToMinimizeDeviation(final double purity, final int ploidy, final double actualBAF) {
-        double finalBAF = 0;
-        double finalDeviation = 0;
-        int finalMajorAllele = 0;
-
-        int minBetaAllele = BAFUtils.minAlleleCount(ploidy);
-        for (int betaAllele = minBetaAllele; betaAllele < ploidy + 1; betaAllele++) {
-
-            double modelBAF = BAFUtils.modelBAF(purity, ploidy, betaAllele);
-            double modelDeviation = bafDeviation(modelBAF, actualBAF);
-
-            if (betaAllele == minBetaAllele || modelDeviation < finalDeviation) {
-                finalBAF = modelBAF;
-                finalDeviation = modelDeviation;
-                finalMajorAllele = betaAllele;
-            }
-        }
-
-        return new double[] { finalBAF, finalDeviation, finalMajorAllele };
-    }
 }

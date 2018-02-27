@@ -4,68 +4,92 @@ import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class GeneAnnotation {
 
-    private final StructuralVariantAnnotation parent;
+    @NotNull
+    private final EnrichedStructuralVariant variant;
     private final boolean isStart;
+    @NotNull
     private final String geneName;
+    @NotNull
     private final String stableId;
     private final int strand;
+    @NotNull
     private final List<Transcript> transcripts = Lists.newArrayList();
+    @NotNull
     private final List<String> synonyms;
+    @NotNull
+    private final List<Integer> entrezIds;
+    @NotNull
+    private final String karyotypeBand;
 
-    public GeneAnnotation(final StructuralVariantAnnotation parent, final boolean isStart, final String geneName,
-            final List<String> synonyms, final String stableId, final int strand) {
-        this.parent = parent;
+    public GeneAnnotation(@NotNull final EnrichedStructuralVariant variant, final boolean isStart, @NotNull final String geneName,
+            @NotNull final String stableId, final int strand, @NotNull final List<String> synonyms, @NotNull final List<Integer> entrezIds,
+            @NotNull final String karyotypeBand) {
+        this.variant = variant;
         this.isStart = isStart;
         this.geneName = geneName;
-        this.synonyms = synonyms;
         this.stableId = stableId;
         this.strand = strand;
+        this.synonyms = synonyms;
+        this.entrezIds = entrezIds;
+        this.karyotypeBand = karyotypeBand;
     }
 
-    public StructuralVariantAnnotation getAnnotation() {
-        return parent;
-    }
-
-    public StructuralVariant getVariant() {
-        return parent.getVariant();
+    @NotNull
+    public EnrichedStructuralVariant variant() {
+        return variant;
     }
 
     public boolean isStart() {
         return isStart;
     }
 
-    public String getGeneName() {
+    @NotNull
+    public String geneName() {
         return geneName;
     }
 
-    public String getStableId() {
+    @NotNull
+    public String stableId() {
         return stableId;
     }
 
-    public int getStrand() {
+    public int strand() {
         return strand;
     }
 
-    public void addTranscript(final Transcript a) {
-        transcripts.add(a);
+    public void addTranscript(@NotNull Transcript transcript) {
+        transcripts.add(transcript);
     }
 
-    public List<Transcript> getTranscripts() {
+    @NotNull
+    public List<Transcript> transcripts() {
         return ImmutableList.copyOf(transcripts);
     }
 
     @Nullable
-    public Transcript getCanonical() {
+    public Transcript canonical() {
         return transcripts.stream().filter(Transcript::isCanonical).findFirst().orElse(null);
     }
 
-    public List<String> getSynonyms() {
+    @NotNull
+    public List<String> synonyms() {
         return ImmutableList.copyOf(synonyms);
+    }
+
+    @NotNull
+    public List<Integer> entrezIds() {
+        return entrezIds;
+    }
+
+    @NotNull
+    public String karyotypeBand() {
+        return karyotypeBand;
     }
 }

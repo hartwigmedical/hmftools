@@ -2,7 +2,9 @@ package com.hartwig.hmftools.patientreporter.algo;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -18,7 +20,9 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.patientreporter.BaseReporterData;
@@ -27,10 +31,9 @@ import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
-import com.hartwig.hmftools.patientreporter.civic.CivicAnalysis;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
-import com.hartwig.hmftools.patientreporter.purple.ImmutablePurpleAnalysis;
-import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
+import com.hartwig.hmftools.patientreporter.civic.AlterationAnalyzer;
+import com.hartwig.hmftools.patientreporter.copynumber.ImmutablePurpleAnalysis;
+import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
@@ -40,6 +43,9 @@ import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
+import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
+import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
+import com.hartwig.hmftools.svannotation.annotations.Transcript;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -66,6 +72,9 @@ public abstract class PatientReporter {
     public abstract StructuralVariantAnalyzer structuralVariantAnalyzer();
 
     @NotNull
+    public abstract AlterationAnalyzer civicAnalyzer();
+
+    @NotNull
     public SequencedPatientReport run(@NotNull final String runDirectory, @Nullable final String comments)
             throws IOException, HartwigException {
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
@@ -74,26 +83,32 @@ public abstract class PatientReporter {
 
         final String tumorSample = genomeAnalysis.sample();
         final VariantAnalysis variantAnalysis = genomeAnalysis.variantAnalysis();
-        final CopyNumberAnalysis copyNumberAnalysis = genomeAnalysis.purpleAnalysis().copyNumberAnalysis();
         final PurpleAnalysis purpleAnalysis = genomeAnalysis.purpleAnalysis();
-        final StructuralVariantAnalysis svAnalysis = genomeAnalysis.structuralVariantAnalysis();
-        final List<GeneFusionData> reportableFusions =
-                svAnalysis.reportableFusions().stream().map(GeneFusionData::from).collect(Collectors.toList());
-        final List<GeneDisruptionData> reportableDisruptions =
-                svAnalysis.reportableDisruptions().stream().map(GeneDisruptionData::from).collect(Collectors.toList());
+        final StructuralVariantAnalysis structuralVariantAnalysis = genomeAnalysis.structuralVariantAnalysis();
+        final List<GeneFusionData> reportableFusions = structuralVariantAnalysis.reportableFusions()
+                .stream()
+                .sorted(fusionComparator())
+                .map(GeneFusionData::from)
+                .collect(Collectors.toList());
+        final List<GeneDisruptionData> reportableDisruptions = structuralVariantAnalysis.reportableDisruptions()
+                .stream()
+                .sorted(disruptionComparator(reporterData().panelGeneModel().transcriptMap()))
+                .map(GeneDisruptionData::from)
+                .collect(Collectors.toList());
 
         final int totalVariantCount = variantAnalysis.allVariants().size();
         final int passedVariantCount = variantAnalysis.passedVariants().size();
         final int mutationalLoad = variantAnalysis.mutationalLoad();
         final int consequentialVariantCount = variantAnalysis.consequentialVariants().size();
-        final int potentialMNVCount = variantAnalysis.potentialConsequentialMNVs().size();
-        final int svCount = svAnalysis.annotations().size();
-        final String tumorType = PatientReporterHelper.extractTumorType(baseReporterData().cpctEcrfModel(), tumorSample);
+        final int structuralVariantCount = structuralVariantAnalysis.annotations().size();
+        final String tumorType = PatientReporterHelper.extractTumorType(baseReporterData().patientsCancerTypes(), tumorSample);
 
         final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
-        final List<Alteration> alterations = CivicAnalysis.run(variantAnalysis.findings(),
-                copyNumberAnalysis.findings(),
-                reporterData().geneModel(),
+        final List<Alteration> alterations = civicAnalyzer().run(variantAnalysis.findings(),
+                purpleAnalysis.reportableGeneCopyNumbers(),
+                reportableDisruptions,
+                reportableFusions,
+                reporterData().panelGeneModel(),
                 doidMapping.doidsForTumorType(tumorType));
 
         LOGGER.info(" Printing analysis results:");
@@ -101,21 +116,17 @@ public abstract class PatientReporter {
         LOGGER.info("  Number of variants after applying pass-only filter : " + Integer.toString(passedVariantCount));
         LOGGER.info("  Number of missense variants (mutational load) : " + Integer.toString(mutationalLoad));
         LOGGER.info("  Number of consequential variants to report : " + Integer.toString(consequentialVariantCount));
-        LOGGER.info("  Number of potential consequential MNVs : " + Integer.toString(potentialMNVCount));
-        if (potentialMNVCount > 0) {
-            LOGGER.warn(" !! Non-zero number of potentials MNV ");
-            LOGGER.warn(variantAnalysis.potentialConsequentialMNVs());
-        }
-        LOGGER.info("  Determined copy number stats for " + Integer.toString(copyNumberAnalysis.genePanelSize()) + " genes which led to "
-                + Integer.toString(copyNumberAnalysis.findings().size()) + " findings.");
-        LOGGER.info("  Number of unreported structural variants : " + Integer.toString(svCount));
+        LOGGER.info(" Determined copy number stats for " + Integer.toString(purpleAnalysis.genePanelSize()) + " genes which led to "
+                + Integer.toString(purpleAnalysis.reportableGeneCopyNumbers().size()) + " copy numbers.");
+        LOGGER.info("  Number of unreported structural variants : " + Integer.toString(structuralVariantCount));
         LOGGER.info("  Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
         LOGGER.info("  Number of gene disruptions to report : " + Integer.toString(reportableDisruptions.size()));
         LOGGER.info("  Number of CIViC alterations to report : " + alterations.size());
+        LOGGER.info("  Microsatellite analysis results: " + variantAnalysis.indelsPerMb() + " indels per MB");
 
         final Lims lims = baseReporterData().limsModel();
         final Double tumorPercentage = lims.tumorPercentageForSample(tumorSample);
-        final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrich(variantAnalysis.findings());
+        final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrichSomaticVariants(variantAnalysis.findings());
         final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(tumorSample);
         final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample,
                 tumorType,
@@ -126,12 +137,14 @@ public abstract class PatientReporter {
                 sampleRecipient);
         return ImmutableSequencedPatientReport.of(sampleReport,
                 purpleEnrichedVariants,
-                reportableFusions,
-                reportableDisruptions,
-                copyNumberAnalysis.findings(),
                 mutationalLoad,
+                variantAnalysis.indelsPerMb(),
+                purpleAnalysis.reportableGeneCopyNumbers(),
+                reportableDisruptions,
+                reportableFusions,
                 purpleAnalysis.purityString(),
                 alterations,
+                PatientReporterHelper.findCircosPlotPath(runDirectory, tumorSample),
                 Optional.ofNullable(comments),
                 baseReporterData().signaturePath());
     }
@@ -154,9 +167,9 @@ public abstract class PatientReporter {
         final FittedPurity purity = context.bestFit();
         final FittedPurityScore purityScore = context.score();
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
-        final List<GeneCopyNumber> geneCopyNumbers = PatientReporterHelper.loadPurpleGeneCopyNumbers(runDirectory, sample)
+        final List<GeneCopyNumber> panelGeneCopyNumbers = PatientReporterHelper.loadPurpleGeneCopyNumbers(runDirectory, sample)
                 .stream()
-                .filter(x -> reporterData().geneModel().panel().contains(x.gene()))
+                .filter(x -> reporterData().panelGeneModel().panel().contains(x.gene()))
                 .collect(Collectors.toList());
 
         LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
@@ -167,19 +180,45 @@ public abstract class PatientReporter {
                 .fittedPurity(purity)
                 .fittedScorePurity(purityScore)
                 .copyNumbers(purpleCopyNumbers)
-                .geneCopyNumbers(geneCopyNumbers)
+                .panelGeneCopyNumbers(panelGeneCopyNumbers)
                 .build();
         if (Doubles.greaterThan(purpleAnalysis.purityUncertainty(), 0.05)) {
             LOGGER.warn("Purity uncertainty (" + PatientReportFormat.formatPercent(purpleAnalysis.purityUncertainty())
                     + ") range exceeds 5%. Proceed with caution.");
         }
 
-        final Path svVcfPath = PatientReporterHelper.findStructuralVariantVCF(runDirectory);
+        final Path structuralVariantVCF = PatientReporterHelper.findStructuralVariantVCF(runDirectory);
         LOGGER.info(" Loading structural variants...");
-        final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(svVcfPath.toString());
+        final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(structuralVariantVCF.toString());
+        LOGGER.info(" Enriching structural variants with purple data.");
+        final List<EnrichedStructuralVariant> enrichedStructuralVariants = purpleAnalysis.enrichStructuralVariants(structuralVariants);
         LOGGER.info(" Analysing structural variants...");
-        final StructuralVariantAnalysis svAnalysis = structuralVariantAnalyzer().run(structuralVariants);
+        final StructuralVariantAnalysis structuralVariantAnalysis = structuralVariantAnalyzer().run(enrichedStructuralVariants, false);
+        return ImmutableGenomeAnalysis.of(sample, variantAnalysis, purpleAnalysis, structuralVariantAnalysis);
+    }
 
-        return new GenomeAnalysis(sample, variantAnalysis, purpleAnalysis, svAnalysis);
+    @NotNull
+    private static Comparator<GeneDisruption> disruptionComparator(@NotNull final Map<String, HmfGenomeRegion> transcriptMap) {
+        return Comparator.comparing(GeneDisruption::linkedAnnotation, Comparator.comparing((Transcript transcript) -> {
+            final HmfGenomeRegion transcriptRegion = transcriptMap.get(transcript.transcriptId());
+            final long startPosition = transcript.parent().variant().start().position();
+            if (startPosition >= transcriptRegion.geneStart() && startPosition <= transcriptRegion.geneEnd()) {
+                return transcript.parent().variant().start();
+            } else {
+                return transcript.parent().variant().end();
+            }
+        }));
+    }
+
+    @NotNull
+    private static Comparator<GeneFusion> fusionComparator() {
+        return Comparator.comparing(GeneFusion::upstreamLinkedAnnotation, transcriptComparator())
+                .thenComparing(GeneFusion::downstreamLinkedAnnotation, transcriptComparator());
+    }
+
+    @NotNull
+    private static Comparator<Transcript> transcriptComparator() {
+        return Comparator.comparing((Transcript transcript) -> transcript.parent().variant().start())
+                .thenComparing((Transcript transcript) -> transcript.parent().variant().end());
     }
 }

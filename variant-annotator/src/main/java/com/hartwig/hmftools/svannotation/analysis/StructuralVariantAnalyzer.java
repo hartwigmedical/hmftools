@@ -5,14 +5,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.cosmicfusions.COSMICGeneFusionData;
-import com.hartwig.hmftools.common.cosmicfusions.COSMICGeneFusionModel;
+import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusionData;
+import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusionModel;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
 import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
@@ -24,116 +24,81 @@ import com.hartwig.hmftools.svannotation.annotations.StructuralVariantAnnotation
 import com.hartwig.hmftools.svannotation.annotations.Transcript;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class StructuralVariantAnalyzer {
 
+    @NotNull
     private final VariantAnnotator annotator;
-    private final Collection<HmfGenomeRegion> regions;
-    private final COSMICGeneFusionModel fusionModel;
+    @NotNull
+    private final Collection<HmfGenomeRegion> hmfGenePanelRegions;
+    @NotNull
+    private final CosmicFusionModel cosmicFusionModel;
 
-    public StructuralVariantAnalyzer(final VariantAnnotator annotator, final Collection<HmfGenomeRegion> regions,
-            final COSMICGeneFusionModel fusionModel) {
+    private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnalyzer.class);
+
+    public StructuralVariantAnalyzer(@NotNull final VariantAnnotator annotator,
+            @NotNull final Collection<HmfGenomeRegion> hmfGenePanelRegions, @NotNull final CosmicFusionModel cosmicFusionModel) {
         this.annotator = annotator;
-        this.regions = regions;
-        this.fusionModel = fusionModel;
+        this.hmfGenePanelRegions = hmfGenePanelRegions;
+        this.cosmicFusionModel = cosmicFusionModel;
     }
 
-    private boolean inHmfPanel(final GeneAnnotation g) {
-        return regions.stream().anyMatch(r -> g.getSynonyms().contains(r.geneID()));
+    @NotNull
+    public StructuralVariantAnalysis run(@NotNull final List<EnrichedStructuralVariant> variants, boolean skipAnnotations) {
+
+        if(skipAnnotations)
+        {
+            final List<StructuralVariantAnnotation> annotations = Lists.newArrayList();
+            final List<GeneFusion> fusions = Lists.newArrayList();
+            final List<GeneDisruption> disruptions = Lists.newArrayList();
+            return ImmutableStructuralVariantAnalysis.of(annotations, fusions, disruptions);
+        }
+
+        LOGGER.debug("annotating variants");
+        final List<StructuralVariantAnnotation> annotations = annotator.annotateVariants(variants);
+
+        final List<StructuralVariantAnnotation> copy = Lists.newArrayList(annotations);
+
+        LOGGER.debug("calling process fusions");
+        final List<GeneFusion> fusions = processFusions(copy);
+
+        LOGGER.debug("calling process disruptions");
+        final List<GeneDisruption> disruptions = processDisruptions(copy);
+
+        return ImmutableStructuralVariantAnalysis.of(annotations, fusions, disruptions);
     }
 
-    private boolean transcriptsMatchKnownFusion(final COSMICGeneFusionData fusion, final Transcript five, final Transcript three) {
-        final boolean fiveValid = fusion.fiveTranscript() == null
-                ? five.getGeneAnnotation().getSynonyms().stream().anyMatch(s -> s.equals(fusion.fiveGene()))
-                : fusion.fiveTranscript().equals(five.getTranscriptId());
-        final boolean threeValid = fusion.threeTranscript() == null ? three.getGeneAnnotation()
-                .getSynonyms()
-                .stream()
-                .anyMatch(s -> s.equals(fusion.threeGene())) : fusion.threeTranscript().equals(three.getTranscriptId());
-        return fiveValid && threeValid;
-    }
-
-    private COSMICGeneFusionData transcriptsMatchKnownFusion(final Transcript five, final Transcript three) {
-        return fusionModel.fusions().stream().filter(f -> transcriptsMatchKnownFusion(f, five, three)).findFirst().orElse(null);
-    }
-
-    private boolean isPromiscuous(final GeneAnnotation gene) {
-        return Stream.of(fusionModel.promiscuousFivePrime(), fusionModel.promiscuousThreePrime())
-                .anyMatch(l -> l.stream().anyMatch(g -> gene.getSynonyms().contains(g.geneName())));
-    }
-
-    private boolean oneEndPromiscuous(final Transcript five, final Transcript three) {
-        final boolean promiscuousFive = fusionModel.promiscuousFivePrime()
-                .stream()
-                .anyMatch(p -> p.transcript() != null
-                        ? p.transcript().equals(five.getTranscriptId())
-                        : p.geneName().equals(five.getGeneName()));
-        final boolean promiscuousThree = fusionModel.promiscuousThreePrime()
-                .stream()
-                .anyMatch(p -> p.transcript() != null
-                        ? p.transcript().equals(three.getTranscriptId())
-                        : p.geneName().equals(three.getGeneName()));
-        return promiscuousFive || promiscuousThree;
-    }
-
-    private boolean intronicDisruption(final Transcript a, final Transcript b) {
-        final boolean sameTranscript = a.getTranscriptId().equals(b.getTranscriptId());
-        final boolean bothIntronic = a.isIntronic() && b.isIntronic();
-        final boolean sameExonUpstream = a.getExonUpstream() == b.getExonUpstream();
-        return sameTranscript && bothIntronic && sameExonUpstream;
-    }
-
-    private static int orientation(final GeneAnnotation g) {
-        final StructuralVariant sv = g.getVariant();
-        return sv.orientation(g.isStart());
-    }
-
-    private static List<Transcript> intronic(final List<Transcript> list) {
-        return list.stream().filter(Transcript::isIntronic).collect(Collectors.toList());
-    }
-
+    @NotNull
     private List<GeneFusion> processFusions(final List<StructuralVariantAnnotation> annotations) {
-
-        // left is upstream, right is downstream
-
+        // NERA: left is upstream, right is downstream
         final List<List<Pair<Transcript, Transcript>>> fusionsPerVariant = Lists.newArrayList();
-        for (final StructuralVariantAnnotation sv : annotations) {
-
+        for (final StructuralVariantAnnotation annotation : annotations) {
             final List<Pair<Transcript, Transcript>> fusions = Lists.newArrayList();
 
-            for (final GeneAnnotation g : sv.getStart()) {
+            for (final GeneAnnotation startGene : annotation.start()) {
+                final boolean startUpstream = isUpstream(startGene);
 
-                final boolean g_upstream = g.getStrand() * orientation(g) > 0;
-
-                for (final GeneAnnotation o : sv.getEnd()) {
-
-                    final boolean o_upstream = o.getStrand() * orientation(o) > 0;
-                    if (g_upstream == o_upstream) {
+                for (final GeneAnnotation endGene : annotation.end()) {
+                    final boolean endUpstream = isUpstream(endGene);
+                    if (startUpstream == endUpstream) {
                         continue;
                     }
 
-                    for (final Transcript t1 : intronic(g.getTranscripts())) {
-                        for (final Transcript t2 : intronic(o.getTranscripts())) {
-
-                            final boolean sameGene = t1.getGeneName().equals(t2.getGeneName());
-                            if (sameGene) {
-                                // skip fusions between different transcripts in the same gene,
-                                if (!t1.getTranscriptId().equals(t2.getTranscriptId())) {
-                                    continue;
-                                }
-                                // skip fusions within the same intron
-                                if (intronicDisruption(t1, t2)) {
-                                    continue;
-                                }
+                    for (final Transcript t1 : intronic(startGene.transcripts())) {
+                        for (final Transcript t2 : intronic(endGene.transcripts())) {
+                            if (!isPotentiallyRelevantFusion(t1, t2)) {
+                                continue;
                             }
 
-                            if (g_upstream && t1.getExonUpstreamPhase() == t2.getExonDownstreamPhase()) {
+                            if (startUpstream && t1.exonUpstreamPhase() == t2.exonDownstreamPhase()) {
                                 fusions.add(Pair.of(t1, t2));
-                            } else if (!g_upstream && t2.getExonUpstreamPhase() == t1.getExonDownstreamPhase()) {
+                            } else if (!startUpstream && t2.exonUpstreamPhase() == t1.exonDownstreamPhase()) {
                                 fusions.add(Pair.of(t2, t1));
                             }
-
                         }
                     }
                 }
@@ -142,84 +107,105 @@ public class StructuralVariantAnalyzer {
             fusionsPerVariant.add(fusions);
         }
 
-        // transform results to reported details
+        return toReportableGeneFusions(fusionsPerVariant);
+    }
 
+    private static boolean isPotentiallyRelevantFusion(@NotNull Transcript t1, @NotNull Transcript t2) {
+        final boolean sameGene = t1.geneName().equals(t2.geneName());
+        if (sameGene) {
+            // NERA: skip fusions between different transcripts in the same gene,
+            if (!t1.transcriptId().equals(t2.transcriptId())) {
+                return false;
+            }
+            // NERA: skip fusions within the same intron
+            if (intronicDisruptionOnSameTranscript(t1, t2)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @NotNull
+    private List<GeneFusion> toReportableGeneFusions(@NotNull List<List<Pair<Transcript, Transcript>>> fusionsPerVariant) {
         final List<GeneFusion> result = Lists.newArrayList();
         for (final List<Pair<Transcript, Transcript>> fusions : fusionsPerVariant) {
-
-            // from here, select either the canonical -> canonical transcript fusion
-            // then the longest where one end is canonical
-            // then the longest combined transcript
-
-            Optional<Pair<Transcript, Transcript>> reportableFusion =
-                    fusions.stream().filter(p -> p.getLeft().isCanonical() && p.getRight().isCanonical()).findFirst();
-
-            if (!reportableFusion.isPresent()) {
-                reportableFusion = fusions.stream()
-                        .filter(p -> p.getLeft().isCanonical() || p.getRight().isCanonical())
-                        .sorted(Comparator.comparingInt(a -> a.getLeft().getExonMax() + a.getRight().getExonMax()))
-                        .reduce((a, b) -> b); // get longest
-            }
-
-            if (!reportableFusion.isPresent()) {
-                reportableFusion = fusions.stream()
-                        .sorted(Comparator.comparingInt(a -> a.getLeft().getExonMax() + a.getRight().getExonMax()))
-                        .reduce((a, b) -> b); // get longest
-            }
+            Optional<Pair<Transcript, Transcript>> reportableFusion = determineReportableFusion(fusions);
 
             for (final Pair<Transcript, Transcript> fusion : fusions) {
-                final Transcript upstream = fusion.getLeft(), downstream = fusion.getRight();
+                final Transcript upstream = fusion.getLeft();
+                final Transcript downstream = fusion.getRight();
 
-                final COSMICGeneFusionData cosmic = transcriptsMatchKnownFusion(upstream, downstream);
+                final CosmicFusionData cosmic = transcriptsMatchKnownFusion(upstream, downstream);
                 final boolean promiscuousEnd = oneEndPromiscuous(upstream, downstream);
                 final boolean reportable =
                         reportableFusion.isPresent() && reportableFusion.get() == fusion && (cosmic != null || promiscuousEnd);
 
-                final GeneFusion details = ImmutableGeneFusion.builder()
+                final GeneFusion geneFusion = ImmutableGeneFusion.builder()
                         .reportable(reportable)
                         .upstreamLinkedAnnotation(upstream)
                         .downstreamLinkedAnnotation(downstream)
                         .cosmicURL(cosmic != null ? cosmic.cosmicURL() : "")
                         .build();
 
-                result.add(details);
+                result.add(geneFusion);
             }
-
         }
-
         return result;
     }
 
+    @NotNull
+    private static Optional<Pair<Transcript, Transcript>> determineReportableFusion(@NotNull List<Pair<Transcript, Transcript>> fusions) {
+        // NERA: Select either the canonical -> canonical transcript fusion
+        //  then the one with the most exons where one end is canonical
+        //  then the one with the most exons combined transcript
+
+        Optional<Pair<Transcript, Transcript>> reportableFusion =
+                fusions.stream().filter(pair -> pair.getLeft().isCanonical() && pair.getRight().isCanonical()).findFirst();
+
+        if (!reportableFusion.isPresent()) {
+            reportableFusion = fusions.stream()
+                    .filter(pair -> pair.getLeft().isCanonical() || pair.getRight().isCanonical())
+                    .sorted(Comparator.comparingInt(a -> a.getLeft().exonMax() + a.getRight().exonMax()))
+                    .reduce((a, b) -> b);
+        }
+
+        if (!reportableFusion.isPresent()) {
+            reportableFusion = fusions.stream()
+                    .sorted(Comparator.comparingInt(a -> a.getLeft().exonMax() + a.getRight().exonMax()))
+                    .reduce((a, b) -> b);
+        }
+
+        return reportableFusion;
+    }
+
+    @NotNull
     private List<GeneDisruption> processDisruptions(final List<StructuralVariantAnnotation> annotations) {
-
         final List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
-        for (final StructuralVariantAnnotation sv : annotations) {
-
-            final boolean intronicExists = sv.getStart()
+        for (final StructuralVariantAnnotation annotation : annotations) {
+            @SuppressWarnings("ConstantConditions")
+            final boolean pureIntronicDisruptionCanonical = annotation.start()
                     .stream()
-                    .filter(g -> g.getCanonical() != null)
-                    .anyMatch(g -> sv.getEnd()
+                    .filter(gene -> gene.canonical() != null)
+                    .anyMatch(gene -> annotation.end()
                             .stream()
-                            .filter(o -> o.getCanonical() != null)
-                            .anyMatch(o -> intronicDisruption(g.getCanonical(), o.getCanonical())));
-            if (intronicExists && sv.getVariant().type() != StructuralVariantType.INV) {
+                            .filter(other -> other.canonical() != null)
+                            .anyMatch(other -> intronicDisruptionOnSameTranscript(gene.canonical(), other.canonical())));
+            if (pureIntronicDisruptionCanonical && annotation.variant().type() != StructuralVariantType.INV) {
                 continue;
             }
 
-            geneAnnotations.addAll(sv.getAnnotations());
+            geneAnnotations.addAll(annotation.annotations());
         }
 
-        final ArrayListMultimap<String, GeneAnnotation> geneMap = ArrayListMultimap.create();
-        geneAnnotations.forEach(g -> geneMap.put(g.getGeneName(), g));
+        final Multimap<String, GeneAnnotation> geneMap = ArrayListMultimap.create();
+        geneAnnotations.forEach(g -> geneMap.put(g.geneName(), g));
 
         final List<GeneDisruption> disruptions = Lists.newArrayList();
         for (final String geneName : geneMap.keySet()) {
-            for (final GeneAnnotation g : geneMap.get(geneName)) {
-
-                for (final Transcript transcript : g.getTranscripts()) {
-
+            for (final GeneAnnotation gene : geneMap.get(geneName)) {
+                for (final Transcript transcript : gene.transcripts()) {
                     final GeneDisruption disruption = ImmutableGeneDisruption.builder()
-                            .reportable(inHmfPanel(g) && transcript.isCanonical())
+                            .reportable(inHmfPanel(gene) && transcript.isCanonical())
                             .linkedAnnotation(transcript)
                             .build();
 
@@ -231,15 +217,56 @@ public class StructuralVariantAnalyzer {
         return disruptions;
     }
 
+    private boolean inHmfPanel(@NotNull GeneAnnotation gene) {
+        return hmfGenePanelRegions.stream().anyMatch(region -> gene.synonyms().contains(region.geneID()));
+    }
+
+    private boolean transcriptsMatchKnownFusion(@NotNull CosmicFusionData fusion, @NotNull Transcript five, @NotNull Transcript three) {
+        String fiveTranscript = fusion.fiveTranscript();
+        String threeTranscript = fusion.threeTranscript();
+
+        final boolean fiveValid = fiveTranscript == null
+                ? five.parent().synonyms().stream().anyMatch(s -> s.equals(fusion.fiveGene()))
+                : fiveTranscript.equals(five.transcriptId());
+        final boolean threeValid = threeTranscript == null
+                ? three.parent().synonyms().stream().anyMatch(s -> s.equals(fusion.threeGene()))
+                : threeTranscript.equals(three.transcriptId());
+        return fiveValid && threeValid;
+    }
+
+    @Nullable
+    private CosmicFusionData transcriptsMatchKnownFusion(@NotNull Transcript five, @NotNull Transcript three) {
+        return cosmicFusionModel.fusions().stream().filter(f -> transcriptsMatchKnownFusion(f, five, three)).findFirst().orElse(null);
+    }
+
+    private boolean oneEndPromiscuous(@NotNull Transcript five, @NotNull Transcript three) {
+        @SuppressWarnings("ConstantConditions")
+        final boolean promiscuousFive = cosmicFusionModel.promiscuousFivePrime()
+                .stream()
+                .anyMatch(p -> p.transcript() != null ? p.transcript().equals(five.transcriptId()) : p.geneName().equals(five.geneName()));
+        @SuppressWarnings("ConstantConditions")
+        final boolean promiscuousThree = cosmicFusionModel.promiscuousThreePrime()
+                .stream()
+                .anyMatch(p -> p.transcript() != null
+                        ? p.transcript().equals(three.transcriptId())
+                        : p.geneName().equals(three.geneName()));
+        return promiscuousFive || promiscuousThree;
+    }
+
+    private static boolean intronicDisruptionOnSameTranscript(@NotNull Transcript t1, @NotNull Transcript t2) {
+        final boolean sameTranscript = t1.transcriptId().equals(t2.transcriptId());
+        final boolean bothIntronic = t1.isIntronic() && t2.isIntronic();
+        final boolean sameExonUpstream = t1.exonUpstream() == t2.exonUpstream();
+        return sameTranscript && bothIntronic && sameExonUpstream;
+    }
+
+    private static boolean isUpstream(@NotNull GeneAnnotation gene) {
+        int orientation = gene.variant().orientation(gene.isStart());
+        return gene.strand() * orientation > 0;
+    }
+
     @NotNull
-    public StructuralVariantAnalysis run(@NotNull final List<StructuralVariant> variants) {
-
-        final List<StructuralVariantAnnotation> annotations = annotator.annotateVariants(variants);
-
-        final List<StructuralVariantAnnotation> copy = Lists.newArrayList(annotations);
-        final List<GeneFusion> fusions = processFusions(copy);
-        final List<GeneDisruption> disruptions = processDisruptions(copy);
-
-        return ImmutableStructuralVariantAnalysis.of(annotations, fusions, disruptions);
+    private static List<Transcript> intronic(@NotNull List<Transcript> transcripts) {
+        return transcripts.stream().filter(Transcript::isIntronic).collect(Collectors.toList());
     }
 }

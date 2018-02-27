@@ -18,7 +18,7 @@ public class RepeatContextTest {
 
     @Test
     public void testNonSymmetric() {
-        final String sequence = "AAAAAAAAABA" + "BBBB";
+        final String sequence = "AAAAAAAAACA" + "BBBB";
         assertRepeats("A", 9, RepeatContextFactory.repeats(0, sequence));
         assertRepeats("A", 9, RepeatContextFactory.repeats(8, sequence));
         assertEquals(Optional.empty(), RepeatContextFactory.repeats(9, sequence));

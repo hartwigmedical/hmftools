@@ -28,6 +28,9 @@ public abstract class BiopsyTreatmentResponseData {
     @Nullable
     public abstract String measurementDone();
 
+    @Nullable
+    public abstract String boneOnlyDisease();
+
     @NotNull
     public abstract FormStatusState formStatus();
 
@@ -35,9 +38,15 @@ public abstract class BiopsyTreatmentResponseData {
 
     @NotNull
     public static BiopsyTreatmentResponseData of(@Nullable final LocalDate assessmentDate, @Nullable final LocalDate responseDate,
-            @Nullable final String response, @Nullable final String measurementDone, @NotNull final FormStatusState formStatus,
-            final boolean formLocked) {
-        return ImmutableBiopsyTreatmentResponseData.of(null, assessmentDate, responseDate, response, measurementDone, formStatus,
+            @Nullable final String response, @Nullable final String measurementDone, @Nullable final String boneOnlyDisease,
+            @NotNull final FormStatusState formStatus, final boolean formLocked) {
+        return ImmutableBiopsyTreatmentResponseData.of(null,
+                assessmentDate,
+                responseDate,
+                response,
+                measurementDone,
+                boneOnlyDisease,
+                formStatus,
                 formLocked);
     }
 

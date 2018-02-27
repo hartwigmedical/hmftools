@@ -8,6 +8,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.slicing.Slicer;
+import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
@@ -19,8 +20,9 @@ import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
+import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
-final class StrelkaPostProcess {
+final class StrelkaPostProcess implements VariantContextFilter {
     private static final Logger LOGGER = LogManager.getLogger(StrelkaPostProcess.class);
 
     private static final String SNP_QUAL_FIELD = "QSS_NT";
@@ -30,17 +32,24 @@ final class StrelkaPostProcess {
     private static final String TIR_FIELD = "TIR";
     private static final String TAR_FIELD = "TAR";
     private static final String SEPARATOR = ",";
-    private static final String TUMOR_GENOTYPE = "TUMOR";
+    static final String TUMOR_GENOTYPE = "TUMOR";
 
     private static final double THRESHOLD = 1.3;
     private static final int LC_QUALITY_SCORE_THRESHOLD = 20;
     private static final double LC_ALLELE_FREQUENCY_THRESHOLD = 0.1;
 
-    private StrelkaPostProcess() {
+    @NotNull
+    private final Slicer highConfidenceSlicer;
+    @NotNull
+    private final HotspotFilter hotspotFilter;
+
+    StrelkaPostProcess(@NotNull final Slicer highConfidenceSlicer) {
+        this.highConfidenceSlicer = highConfidenceSlicer;
+        this.hotspotFilter = new HotspotFilter();
     }
 
-    @VisibleForTesting
-    static boolean checkVariant(@NotNull final VariantContext variant, @NotNull final Slicer highConfidenceSlicer) {
+    @Override
+    public boolean test(@NotNull final VariantContext variant) {
         if (variant.getAlleles().size() > 2) {
             LOGGER.warn("More than 1 alt for record {}: {}", variant.getContig(), variant.getStart());
             return true;
@@ -48,14 +57,30 @@ final class StrelkaPostProcess {
             LOGGER.warn("Alt is . for record {}: {}", variant.getContig(), variant.getStart());
             return false;
         }
+
+        if (hotspotFilter.test(variant)) {
+            return true;
+        }
+
         try {
-            return qualityScore(variant) > LC_QUALITY_SCORE_THRESHOLD && allelicFrequency(variant) > LC_ALLELE_FREQUENCY_THRESHOLD || (
-                    highConfidenceSlicer.includes(variantGenomePosition(variant))
-                            && allelicFrequency(variant) * qualityScore(variant) > THRESHOLD);
+            int qualityScore = qualityScore(variant);
+            double allelicFrequency = allelicFrequency(variant);
+            return testLowConfidenceQuality(qualityScore, allelicFrequency) || testHighConfidenceQuality(variant,
+                    qualityScore,
+                    allelicFrequency);
+
         } catch (final HartwigException e) {
             LOGGER.error("encountered error while processing variant {}: {}:\t{}", variant.getContig(), variant.getStart(), e.getMessage());
             return false;
         }
+    }
+
+    private static boolean testLowConfidenceQuality(int qualityScore, double allelicFrequency) {
+        return qualityScore > LC_QUALITY_SCORE_THRESHOLD && allelicFrequency > LC_ALLELE_FREQUENCY_THRESHOLD;
+    }
+
+    private boolean testHighConfidenceQuality(@NotNull final VariantContext variant, int qualityScore, double allelicFrequency) {
+        return highConfidenceSlicer.includes(variantGenomePosition(variant)) && allelicFrequency * qualityScore > THRESHOLD;
     }
 
     @VisibleForTesting

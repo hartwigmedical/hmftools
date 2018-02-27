@@ -32,7 +32,7 @@ public class GeneCopyNumberBuilderTest {
     public void testOneCopyNumberOneExon() {
         addCopyNumber(1, 10000, 2);
         addExon(1001, 2000);
-        assertCopyNumber(1, 2, 2, 2);
+        assertCopyNumber(1, 1, 2, 2);
     }
 
     @Test
@@ -40,7 +40,7 @@ public class GeneCopyNumberBuilderTest {
         addCopyNumber(1, 10000, 2);
         addExon(1001, 2000);
         addExon(3001, 4000);
-        assertCopyNumber(1, 2, 2, 2);
+        assertCopyNumber(1, 1, 2, 2);
     }
 
     @Test
@@ -49,7 +49,7 @@ public class GeneCopyNumberBuilderTest {
         addExon(1001, 2000);
         addCopyNumber(1501, 10000, 3);
         addExon(3001, 4000);
-        assertCopyNumber(2, 2, 2.75, 3);
+        assertCopyNumber(2, 1, 2, 3);
     }
 
     @Test
@@ -59,37 +59,46 @@ public class GeneCopyNumberBuilderTest {
         addCopyNumber(2501, 3000, 3);
         addCopyNumber(3001, 10000, 2);
         addExon(3001, 4000);
-        assertCopyNumber(1, 2, 2, 2);
+        assertCopyNumber(1, 1, 2, 2);
+    }
+
+    @Test
+    public void testGermlineAmplificationInExon() {
+        addCopyNumber(1, 2500, 2);
+        addExon(1001, 3000);
+        addCopyNumber(2501, 3000, 3);
+        addCopyNumber(3001, 10000, 2);
+        addExon(3001, 4000);
+        assertCopyNumber(3, 2, 2, 3);
     }
 
     @Test
     public void testSingleNegativeRegion() {
         addCopyNumber(1, 2500, -0.8);
         addExon(1001, 2000);
-        assertCopyNumber(1, -0.8, -0.8, -0.8);
+        assertCopyNumber(1, 1, -0.8, -0.8);
     }
 
     @Test
     public void testSingleZeroRegion() {
         addCopyNumber(1, 2500, 0);
         addExon(1001, 2000);
-        assertCopyNumber(1, 0, 0, 0);
+        assertCopyNumber(1, 1, 0, 0);
     }
 
-    private void assertCopyNumber(int count, double expectedMin, double expectedMean, double expectedMax) {
+    private void assertCopyNumber(int somaticCount, final int minCount, double expectedMin, double expectedMax) {
         final GeneCopyNumber geneCopyNumber = victim.build();
-        assertEquals(count, geneCopyNumber.somaticRegions());
+        assertEquals(somaticCount, geneCopyNumber.somaticRegions());
         assertEquals(expectedMin, geneCopyNumber.minCopyNumber(), EPSILON);
-        assertEquals(expectedMean, geneCopyNumber.meanCopyNumber(), EPSILON);
         assertEquals(expectedMax, geneCopyNumber.maxCopyNumber(), EPSILON);
     }
 
     private void addExon(long start, long end) {
-        victim.addExon(exon(start, end));
+        victim.secondary(exon(start, end));
     }
 
     private void addCopyNumber(long start, long end, double copyNumber) {
-        victim.addCopyNumber(createCopyNumber(start, end, copyNumber));
+        victim.primary(createCopyNumber(start, end, copyNumber));
     }
 
     @NotNull
@@ -116,6 +125,8 @@ public class GeneCopyNumberBuilderTest {
                 .geneID("ID")
                 .geneStart(start)
                 .geneEnd(end)
+                .codingStart(0)
+                .codingEnd(0)
                 .build();
     }
 }

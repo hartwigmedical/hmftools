@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.variant;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
+
 import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -68,9 +70,6 @@ public abstract class SomaticVariantImpl implements SomaticVariant {
     @NotNull
     public abstract List<VariantAnnotation> annotations();
 
-    @NotNull
-    public abstract List<String> callers();
-
     @Override
     @Value.Default
     public int totalReadCount() {
@@ -87,6 +86,46 @@ public abstract class SomaticVariantImpl implements SomaticVariant {
     @Value.Default
     public double mappability() {
         return 0;
+    }
+
+    @Override
+    @Value.Default
+    public boolean hotspot() {
+        return false;
+    }
+
+    @Override
+    @NotNull
+    @Value.Default
+    public String gene() {
+        return Strings.EMPTY;
+    }
+
+    @Override
+    @Value.Default
+    public int genesEffected() {
+        return 0;
+    }
+
+    @Override
+    @NotNull
+    @Value.Default
+    public String worstEffect() {
+        return Strings.EMPTY;
+    }
+
+    @Override
+    @NotNull
+    @Value.Default
+    public String worstCodingEffect() {
+        return Strings.EMPTY;
+    }
+
+    @Override
+    @NotNull
+    @Value.Default
+    public String worstEffectTranscript() {
+        return Strings.EMPTY;
     }
 
     @Override

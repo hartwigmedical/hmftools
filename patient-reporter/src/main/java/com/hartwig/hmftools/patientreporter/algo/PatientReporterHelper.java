@@ -7,9 +7,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
@@ -30,12 +30,11 @@ final class PatientReporterHelper {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterHelper.class);
 
-    private static final String SOMATIC_SNV_EXTENSION = "_post_processed.vcf";
+    private static final String SOMATIC_SNV_EXTENSION = "_post_processed_v2.1.vcf.gz";
     private static final String PURPLE_DIRECTORY = "purple";
     private static final String SV_EXTENSION = "_somaticSV_bpi.vcf";
-
-    private static final String TUMOR_TYPE_ECRF_FIELD = "BASELINE.CARCINOMA.CARCINOMA.PTUMLOC";
-    private static final String TUMOR_TYPE_OTHER_ECRF_FIELD = "BASELINE.CARCINOMA.CARCINOMA.PTUMLOCS";
+    private static final String CIRCOS_PLOT_DIRECTORY = "plot";
+    private static final String CIRCOS_PLOT_EXTENSION = ".circos.png";
 
     private PatientReporterHelper() {
     }
@@ -69,52 +68,37 @@ final class PatientReporterHelper {
     }
 
     @NotNull
+    static String findCircosPlotPath(@NotNull final String runDirectory, @NotNull final String sample) throws IOException {
+        return runDirectory + File.separator + PURPLE_DIRECTORY + File.separator + CIRCOS_PLOT_DIRECTORY + File.separator + sample
+                + CIRCOS_PLOT_EXTENSION;
+    }
+
+    @NotNull
     static List<SomaticVariant> loadSomaticSNVFile(@NotNull final String sample, @NotNull final String path)
             throws IOException, HartwigException {
         return new SomaticVariantFactory().fromVCFFile(sample, path, SOMATIC_SNV_EXTENSION);
     }
 
     @NotNull
-    static String extractTumorType(@NotNull final CpctEcrfModel cpctEcrfModel, @NotNull final String sample) {
+    static String extractTumorType(@NotNull final List<PatientCancerTypes> patientsCancerTypes, @NotNull final String sample) {
         final String patientId = toPatientId(sample);
         if (patientId == null) {
             LOGGER.warn("Could not resolve patient id from " + sample);
             return Strings.EMPTY;
         }
+        final List<PatientCancerTypes> matchingIdCancerTypes = patientsCancerTypes.stream()
+                .filter(patientCancerTypes -> patientCancerTypes.cpctId().equals(patientId))
+                .collect(Collectors.toList());
 
-        final EcrfPatient patient = cpctEcrfModel.findPatientById(patientId);
-        if (patient == null) {
+        // KODU: We should never have more than one tumor type for a single patient.
+        assert matchingIdCancerTypes.size() < 2;
+
+        if (matchingIdCancerTypes.size() == 1) {
+            return matchingIdCancerTypes.get(0).cancerType();
+        } else {
             LOGGER.warn("Could not find patient " + patientId + " in CPCT ECRF database!");
             return Strings.EMPTY;
         }
-
-        final List<String> tumorTypesForPatient = readEcrfField(patient, TUMOR_TYPE_ECRF_FIELD);
-        if (tumorTypesForPatient == null || tumorTypesForPatient.size() == 0) {
-            return Strings.EMPTY;
-        }
-        // KODU: We should never have more than one tumor type for a single patient.
-        assert tumorTypesForPatient.size() == 1;
-
-        if (tumorTypesForPatient.get(0).toLowerCase().startsWith("other")) {
-            final List<String> otherTumorTypeForPatient = readEcrfField(patient, TUMOR_TYPE_OTHER_ECRF_FIELD);
-            if (otherTumorTypeForPatient == null || otherTumorTypeForPatient.size() == 0) {
-                return Strings.EMPTY;
-            }
-            assert otherTumorTypeForPatient.size() == 1;
-            return otherTumorTypeForPatient.get(0);
-        } else {
-            return tumorTypesForPatient.get(0);
-        }
-    }
-
-    private static List<String> readEcrfField(@NotNull final EcrfPatient patient, @NotNull final String field) {
-        final List<String> fieldValues = patient.fieldValuesByName(field);
-        if (fieldValues == null) {
-            LOGGER.warn("Could not find field " + field + " in patient " + patient.patientId());
-        } else if (fieldValues.size() == 0) {
-            LOGGER.warn("No value found for " + field + " in patient " + patient.patientId());
-        }
-        return fieldValues;
     }
 
     @Nullable

@@ -13,8 +13,8 @@ import com.hartwig.hmftools.common.pcf.PCFFile;
 import com.hartwig.hmftools.common.pcf.PCFPosition;
 import com.hartwig.hmftools.common.pcf.PCFSource;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.window.Window;
 import com.hartwig.hmftools.purple.config.CommonConfig;
-import com.hartwig.hmftools.window.Window;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

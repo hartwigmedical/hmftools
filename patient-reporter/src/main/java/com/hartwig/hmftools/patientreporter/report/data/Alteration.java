@@ -17,9 +17,9 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.apiclients.civic.data.CivicEvidenceItem;
-import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
+import com.hartwig.hmftools.apiclients.civic.data.CivicVariantWithEvidence;
+import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.patientreporter.civic.AdditionalCivicMatches;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -50,19 +50,22 @@ public abstract class Alteration {
     }
 
     @NotNull
-    public static Alteration from(@NotNull final VariantReport variantReport, @NotNull final List<CivicVariant> civicVariants,
-            @NotNull final Set<String> tumorSubtypesDoids) {
+    public static Alteration from(@NotNull final VariantReport variantReport, @NotNull final List<CivicVariantWithEvidence> civicVariants,
+            @NotNull final Set<String> relevantDoids) {
         final List<AlterationEvidence> exactMatchEvidence = Lists.newArrayList();
         final List<AlterationMatch> matchingVariants = Lists.newArrayList();
         civicVariants.forEach(civicVariant -> {
             if (civicVariant.containsHgvsExpression(variantReport.hgvsProtein()) || civicVariant.coordinates()
                     .equals(variantReport.variant())) {
-                exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), tumorSubtypesDoids));
+                exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), relevantDoids));
                 matchingVariants.add(AlterationMatch.of("exact", civicVariant));
+            } else if (civicVariant.coordinates().isExtendedVariant(variantReport.variant())) {
+                exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), relevantDoids));
+                matchingVariants.add(AlterationMatch.of("extended", civicVariant));
             } else if (AdditionalCivicMatches.lossOfFunctionVariants(variantReport).contains(civicVariant.id())) {
-                exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), tumorSubtypesDoids));
+                exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), relevantDoids));
                 matchingVariants.add(AlterationMatch.of("manual", civicVariant));
-            } else if (civicVariant.coordinates().containsVariant(variantReport.variant())) {
+            } else if (civicVariant.coordinates().anyCoordinatesContainVariant(variantReport.variant())) {
                 matchingVariants.add(AlterationMatch.of("approx.", civicVariant));
             }
         });
@@ -70,23 +73,49 @@ public abstract class Alteration {
     }
 
     @NotNull
-    public static Alteration from(@NotNull final CopyNumberReport copyNumberReport, @NotNull final List<CivicVariant> civicVariants,
-            @NotNull final Set<String> tumorSubtypesDoids) {
+    public static Alteration from(@NotNull final GeneCopyNumber copyNumberReport,
+            @NotNull final List<CivicVariantWithEvidence> civicVariants, @NotNull final Set<String> relevantDoids) {
         final List<AlterationMatch> matchingVariants = Lists.newArrayList();
         final List<AlterationEvidence> exactMatchEvidence = Lists.newArrayList();
         civicVariants.forEach(civicVariant -> {
             if (AdditionalCivicMatches.copyNumberVariants(copyNumberReport).contains(civicVariant.id())) {
-                exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), tumorSubtypesDoids));
+                exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), relevantDoids));
                 matchingVariants.add(AlterationMatch.of("manual", civicVariant));
             }
         });
-        return ImmutableAlteration.of(copyNumberReport.gene(), copyNumberReport.description(), exactMatchEvidence, matchingVariants);
+        return ImmutableAlteration.of(copyNumberReport.gene(), copyNumberReport.alteration().name(), exactMatchEvidence, matchingVariants);
+    }
+
+    @NotNull
+    public static Alteration from(@NotNull final GeneFusionData fusion, @NotNull final List<CivicVariantWithEvidence> civicVariants,
+            @NotNull final Set<String> relevantDoids) {
+        final List<AlterationMatch> matchingVariants = Lists.newArrayList();
+        final List<AlterationEvidence> exactMatchEvidence = Lists.newArrayList();
+        civicVariants.forEach(civicVariant -> {
+            if (civicVariant.coordinates().isFusion() && civicVariantContainsBothGenes(civicVariant, fusion)) {
+                exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), relevantDoids));
+                matchingVariants.add(AlterationMatch.of("exact", civicVariant));
+            }
+        });
+        return ImmutableAlteration.of(fusion.geneStart() + "-" + fusion.geneEnd(), "FUSION", exactMatchEvidence, matchingVariants);
+    }
+
+    @NotNull
+    public static Alteration fromWildType(@NotNull final String gene, @NotNull final List<CivicVariantWithEvidence> civicVariants,
+            @NotNull final Set<String> relevantDoids) {
+        final List<AlterationEvidence> exactMatchEvidence = Lists.newArrayList();
+        final List<AlterationMatch> matchingVariants = Lists.newArrayList();
+        civicVariants.forEach(civicVariant -> {
+            exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), relevantDoids));
+            matchingVariants.add(AlterationMatch.of("wild type", civicVariant));
+        });
+        return ImmutableAlteration.of(gene, "wild type", exactMatchEvidence, matchingVariants);
     }
 
     @NotNull
     private static List<AlterationEvidence> alterationEvidence(@NotNull final List<CivicEvidenceItem> evidenceItems,
-            @NotNull final String civicUrl, @NotNull final Set<String> tumorSubtypesDoids) {
-        final Map<String, String> associationsPerSignificance = drugAssociationsPerSignificance(evidenceItems, tumorSubtypesDoids);
+            @NotNull final String civicUrl, @NotNull final Set<String> relevantDoids) {
+        final Map<String, String> associationsPerSignificance = drugAssociationsPerSignificance(evidenceItems, relevantDoids);
         return associationsPerSignificance.keySet().stream().map(significance -> {
             final String associations = associationsPerSignificance.get(significance);
             return ImmutableAlterationEvidence.of(significance, associations, "CIViC", civicUrl);
@@ -95,18 +124,18 @@ public abstract class Alteration {
 
     @NotNull
     private static List<CivicEvidenceItem> onLabelEvidence(@NotNull final List<CivicEvidenceItem> evidenceItems,
-            @NotNull Set<String> tumorSubtypesDoids) {
+            @NotNull Set<String> relevantDoids) {
         return evidenceItems.stream()
-                .filter(item -> item.level() < 'D' && isUsable(item) && tumorSubtypesDoids.contains(item.disease().doidString()))
+                .filter(item -> item.level() < 'D' && isUsable(item) && relevantDoids.contains(item.disease().doidString()))
                 .sorted(Comparator.comparing(CivicEvidenceItem::level))
                 .collect(toList());
     }
 
     @NotNull
     private static List<CivicEvidenceItem> offLabelEvidence(@NotNull final List<CivicEvidenceItem> evidenceItems,
-            @NotNull Set<String> tumorSubtypesDoids) {
+            @NotNull Set<String> relevantDoids) {
         return evidenceItems.stream()
-                .filter(item -> item.level() < 'C' && isUsable(item) && !tumorSubtypesDoids.contains(item.disease().doidString()))
+                .filter(item -> item.level() < 'C' && isUsable(item) && !relevantDoids.contains(item.disease().doidString()))
                 .sorted(Comparator.comparing(CivicEvidenceItem::level))
                 .collect(toList());
     }
@@ -129,8 +158,10 @@ public abstract class Alteration {
     private static Map<String, Map<String, String>> groupOnLabelEvidenceLevels(@NotNull final List<CivicEvidenceItem> evidenceItems) {
         return evidenceItems.stream()
                 .flatMap(evidenceItem -> evidenceItem.drugNames().stream().map(drug -> ImmutablePair.of(drug, evidenceItem)))
-                .collect(groupingBy(pair -> pair.getRight().significance(), groupingBy(Pair::getLeft,
-                        mapping(pair -> pair.getRight().level(), collectingAndThen(toList(), Alteration::flattenOnLabelEvidenceLevels)))));
+                .collect(groupingBy(pair -> pair.getRight().significance(),
+                        groupingBy(Pair::getLeft,
+                                mapping(pair -> pair.getRight().level(),
+                                        collectingAndThen(toList(), Alteration::flattenOnLabelEvidenceLevels)))));
     }
 
     //MIVO: highest evidence level by significance (sensitivity/resistance) and by drug.
@@ -144,20 +175,23 @@ public abstract class Alteration {
                         .stream()
                         .filter(drug -> !onLabelDrugs.contains(drug))
                         .map(drug -> ImmutablePair.of(drug, evidenceItem)))
-                .collect(groupingBy(pair -> pair.getRight().significance(), groupingBy(Pair::getLeft,
-                        mapping(pair -> pair.getRight().level(), collectingAndThen(toList(), Alteration::flattenOffLabelEvidenceLevels)))));
+                .collect(groupingBy(pair -> pair.getRight().significance(),
+                        groupingBy(Pair::getLeft,
+                                mapping(pair -> pair.getRight().level(),
+                                        collectingAndThen(toList(), Alteration::flattenOffLabelEvidenceLevels)))));
     }
 
     @NotNull
     private static Map<String, String> drugAssociationsPerSignificance(@NotNull final List<CivicEvidenceItem> evidenceItems,
-            @NotNull Set<String> tumorSubtypesDoids) {
+            @NotNull Set<String> relevantDoids) {
         final Map<String, String> results = Maps.newHashMap();
-        final List<CivicEvidenceItem> onLabelEvidence = onLabelEvidence(evidenceItems, tumorSubtypesDoids);
-        final List<CivicEvidenceItem> offLabelEvidence = offLabelEvidence(evidenceItems, tumorSubtypesDoids);
+        final List<CivicEvidenceItem> onLabelEvidence = onLabelEvidence(evidenceItems, relevantDoids);
+        final List<CivicEvidenceItem> offLabelEvidence = offLabelEvidence(evidenceItems, relevantDoids);
         final Map<String, Map<String, String>> onLabelEvidenceLevels = groupOnLabelEvidenceLevels(onLabelEvidence);
         final Map<String, Map<String, String>> offLabelEvidenceLevels = groupOffLabelEvidenceLevels(onLabelEvidence, offLabelEvidence);
         onLabelEvidenceLevels.forEach((significance, drugLevelsMap) -> results.put(significance, flattenDrugLevelsMap(drugLevelsMap)));
-        offLabelEvidenceLevels.forEach((significance, drugLevelsMap) -> results.merge(significance, flattenDrugLevelsMap(drugLevelsMap),
+        offLabelEvidenceLevels.forEach((significance, drugLevelsMap) -> results.merge(significance,
+                flattenDrugLevelsMap(drugLevelsMap),
                 (existingAssociation, newAssociation) -> existingAssociation + "\n" + newAssociation));
         return results;
     }
@@ -175,6 +209,19 @@ public abstract class Alteration {
 
     @NotNull
     private static String flattenDrugLevelsMap(@NotNull final Map<String, String> drugToLevels) {
-        return drugToLevels.entrySet().stream().map(entry -> entry.getKey() + " " + entry.getValue()).collect(joining("\n"));
+        return drugToLevels.entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByValue())
+                .map(entry -> entry.getKey() + " " + entry.getValue())
+                .collect(joining("\n"));
+    }
+
+    private static boolean civicVariantContainsBothGenes(@NotNull final CivicVariantWithEvidence variant,
+            @NotNull final GeneFusionData fusion) {
+        final String variantName = variant.name();
+        final String fusionStart = fusion.geneStart().toLowerCase();
+        final String fusionEnd = fusion.geneEnd().toLowerCase();
+        return variantName != null && (variantName.toLowerCase().contains(fusionStart + "-" + fusionEnd) || variantName.toLowerCase()
+                .contains(fusionEnd + "-" + fusionStart));
     }
 }

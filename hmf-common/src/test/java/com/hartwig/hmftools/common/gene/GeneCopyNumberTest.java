@@ -17,20 +17,6 @@ public class GeneCopyNumberTest {
 
     @NotNull
     private static GeneCopyNumber createRandom(@NotNull Random random) {
-        return ImmutableGeneCopyNumber.builder()
-                .chromosome(String.valueOf(random.nextInt(22)))
-                .start(random.nextLong())
-                .end(random.nextLong())
-                .gene("gene" + random.nextInt())
-                .minCopyNumber(-2.3)
-                .maxCopyNumber(random.nextDouble())
-                .meanCopyNumber(random.nextDouble())
-                .somaticRegions(random.nextInt())
-                .germlineHomRegions(random.nextInt())
-                .germlineHet2HomRegions(random.nextInt())
-                .transcriptID("transcriptId" + random.nextInt())
-                .transcriptVersion(random.nextInt())
-                .chromosomeBand("chromosomeband" + random.nextInt())
-                .build();
+        return GeneCopyNumberFileTest.createRandom(random).minCopyNumber(-2.3).build();
     }
 }

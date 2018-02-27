@@ -12,7 +12,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
-import com.hartwig.hmftools.common.purple.copynumber.sv.ImmutableStructuralVariantLegPloidy;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
@@ -123,18 +122,6 @@ public class StructuralVariantImpliedTest {
     @NotNull
     private static StructuralVariantLegPloidy create(int orientation, @NotNull final Optional<Double> leftCopyNumber,
             @NotNull final Optional<Double> rightCopyNumber) {
-        return ImmutableStructuralVariantLegPloidy.builder()
-                .chromosome(CHROMOSOME)
-                .position(1)
-                .orientation((byte) orientation)
-                .vaf(0.5)
-                .alleleFrequency(0.5)
-                .homology("")
-                .weight(1)
-                .averageImpliedPloidy(PLOIDY)
-                .unweightedImpliedPloidy(PLOIDY)
-                .leftCopyNumber(leftCopyNumber)
-                .rightCopyNumber(rightCopyNumber)
-                .build();
+        return PurpleDatamodelTest.svLegPloidy(orientation, leftCopyNumber, rightCopyNumber, PLOIDY).chromosome(CHROMOSOME).build();
     }
 }

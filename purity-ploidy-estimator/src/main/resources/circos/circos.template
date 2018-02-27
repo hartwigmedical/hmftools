@@ -12,17 +12,6 @@ chromosomes_units           = 1000000
 chromosomes_display_default = yes
 chromosomes                 = -EXCLUDE
 
-<links>
-    <link>
-        file          = SAMPLE.link.circos
-        color         = black_a5
-        radius        = 0.4r
-        bezier_radius = 0.1r
-        thickness     = 2
-        ribbon        = yes
-    </link>
-</links>
-
 <highlights>
 
 	<highlight>
@@ -68,12 +57,37 @@ chromosomes                 = -EXCLUDE
 
 
 	# -----------------------------------------------------------
+	# INDELs
+	<plot>
+		type = heatmap
+		file = SAMPLE.indel.circos
+		r0   = 0.775r
+		r1   = 0.725r
+		layers = 1
+
+		<axes>
+			<axis>
+				color     = lpurple
+				thickness = 1
+				spacing   = 1r
+			</axis>
+		</axes>
+
+		<backgrounds>
+			<background>
+				color = vlpurple_a5
+			</background>
+		</backgrounds>
+
+	</plot>
+
+	# -----------------------------------------------------------
 	# CopyNumber - 4+ interesting data points
 	<plot>
 		type = scatter
 		file = SAMPLE.cnv.circos
-		r0   = 0.75r
-		r1   = 0.75r
+		r0   = 0.70r
+		r1   = 0.70r
 		min  = 0
 		max  = 5
 		glyph = circle
@@ -98,8 +112,8 @@ chromosomes                 = -EXCLUDE
 	<plot>
 		type = histogram
 		file = SAMPLE.cnv.circos
-		r0   = 0.60r
-		r1   = 0.75r
+		r0   = 0.55r
+		r1   = 0.70r
 		min  = 0
 		max  = 4
 		glyph = circle
@@ -136,8 +150,8 @@ chromosomes                 = -EXCLUDE
 	<plot>
 		type = histogram
 		file = SAMPLE.cnv.circos
-		r0   = 0.55r
-		r1   = 0.60r
+		r0   = 0.50r
+		r1   = 0.55r
 		min  = -2
 		max  = 0
 		color = red
@@ -173,8 +187,8 @@ chromosomes                 = -EXCLUDE
 	<plot>
 		type = scatter
 		file = SAMPLE.map.circos
-		r0   = 0.525r
-		r1   = 0.525r
+		r0   = 0.475r
+		r1   = 0.475r
 		glyph = circle
 		glyph_size = 8
 		color = blue
@@ -197,8 +211,8 @@ chromosomes                 = -EXCLUDE
 	<plot>
 		type = histogram
 		file = SAMPLE.map.circos
-		r0   = 0.45r
-		r1   = 0.525r
+		r0   = 0.40r
+		r1   = 0.475r
 		min  = 0
 		max  = 2
 		glyph = circle
@@ -235,8 +249,8 @@ chromosomes                 = -EXCLUDE
 	<plot>
 		type = histogram
 		file = SAMPLE.map.circos
-		r0   = 0.425r
-		r1   = 0.45r
+		r0   = 0.375r
+		r1   = 0.400r
 		min  = -1
 		max  = 0
 		glyph = circle
@@ -265,8 +279,17 @@ chromosomes                 = -EXCLUDE
 			</rule>
 		</rules>
 	</plot>
-
-
 </plots>
+
+<links>
+    <link>
+        file          = SAMPLE.link.circos
+        color         = black_a5
+        radius        = 0.35r
+        bezier_radius = 0.1r
+        thickness     = 2
+        ribbon        = yes
+    </link>
+</links>
 
 <<include etc/housekeeping.conf>>

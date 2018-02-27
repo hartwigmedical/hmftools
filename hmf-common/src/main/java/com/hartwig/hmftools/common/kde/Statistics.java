@@ -4,7 +4,25 @@
 //
 
 package com.hartwig.hmftools.common.kde;
-
+/**
+ * Class implementing some distributions, tests, etc. The code is mostly adapted from the CERN
+ * Jet Java libraries:
+ *
+ * Copyright 2001 University of Waikato
+ * Copyright 1999 CERN - European Organization for Nuclear Research.
+ * Permission to use, copy, modify, distribute and sell this software and its documentation for
+ * any purpose is hereby granted without fee, provided that the above copyright notice appear
+ * in all copies and that both that copyright notice and this permission notice appear in
+ * supporting documentation.
+ * CERN and the University of Waikato make no representations about the suitability of this
+ * software for any purpose. It is provided "as is" without expressed or implied warranty.
+ *
+ * @author peter.gedeck@pharma.Novartis.com
+ * @author wolfgang.hoschek@cern.ch
+ * @author Eibe Frank (eibe@cs.waikato.ac.nz)
+ * @author Richard Kirkby (rkirkby@cs.waikato.ac.nz)
+ * @version $Revision: 5619 $
+ */
 class Statistics  {
     protected static final double[] P1 = new double[]{4.0554489230596245D, 31.525109459989388D, 57.16281922464213D, 44.08050738932008D, 14.684956192885803D, 2.1866330685079025D, -0.1402560791713545D, -0.03504246268278482D, -8.574567851546854E-4D};
 

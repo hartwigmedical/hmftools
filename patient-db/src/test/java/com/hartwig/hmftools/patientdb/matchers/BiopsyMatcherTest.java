@@ -34,13 +34,13 @@ public class BiopsyMatcherTest {
 
     private final static SampleData LIMS_ARRIVED_NOV_SAMPLED_MAR = ImmutableSampleData.of("mar-sample-arrived-nov", NOV2015, MAR2015, 0D);
 
-    private final static BiopsyData ECRF_BIOPSY_JAN = ImmutableBiopsyData.of(JAN2015, "", "", FormStatusState.UNKNOWN, false);
-    private final static BiopsyData ECRF_BIOPSY_FEB = ImmutableBiopsyData.of(FEB2015, "", "", FormStatusState.UNKNOWN, false);
-    private final static BiopsyData ECRF_BIOPSY_MAR = ImmutableBiopsyData.of(MAR2015, "", "", FormStatusState.UNKNOWN, false);
-    private final static BiopsyData ECRF_BIOPSY_JUL = ImmutableBiopsyData.of(JUL2015, "", "", FormStatusState.UNKNOWN, false);
-    private final static BiopsyData ECRF_BIOPSY_SEP = ImmutableBiopsyData.of(SEP2015, "", "", FormStatusState.UNKNOWN, false);
+    private final static BiopsyData ECRF_BIOPSY_JAN = ImmutableBiopsyData.of(JAN2015, "", "", "", "", FormStatusState.UNKNOWN, false);
+    private final static BiopsyData ECRF_BIOPSY_FEB = ImmutableBiopsyData.of(FEB2015, "", "", "", "", FormStatusState.UNKNOWN, false);
+    private final static BiopsyData ECRF_BIOPSY_MAR = ImmutableBiopsyData.of(MAR2015, "", "", "", "", FormStatusState.UNKNOWN, false);
+    private final static BiopsyData ECRF_BIOPSY_JUL = ImmutableBiopsyData.of(JUL2015, "", "", "", "", FormStatusState.UNKNOWN, false);
+    private final static BiopsyData ECRF_BIOPSY_SEP = ImmutableBiopsyData.of(SEP2015, "", "", "", "", FormStatusState.UNKNOWN, false);
 
-    private final static BiopsyData BIOPSY_NULL = ImmutableBiopsyData.of(null, "", "", FormStatusState.UNKNOWN, false);
+    private final static BiopsyData BIOPSY_NULL = ImmutableBiopsyData.of(null, "", "", "", "", FormStatusState.UNKNOWN, false);
 
     // MIVO:    ---biopsy(jul)/sample(jul)---
     @Test

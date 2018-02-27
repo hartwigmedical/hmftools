@@ -31,6 +31,9 @@ abstract class EligibilityReport {
     public abstract String genes();
 
     @NotNull
+    public abstract String transcriptId();
+
+    @NotNull
     public abstract String chrom();
 
     public abstract long pos();

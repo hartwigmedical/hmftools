@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.patientreporter.report.data;
 
-import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.alleleFrequency;
 import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.exonDescription;
-import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.positionString;
+import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.ploidyToCopiesString;
 
-import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
 import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
 import com.hartwig.hmftools.svannotation.annotations.Transcript;
@@ -18,37 +16,33 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class GeneDisruptionData {
 
-    public abstract String geneName();
+    public abstract String chromosome();
 
-    public abstract String location();
+    public abstract String chromosomeBand();
+
+    public abstract String gene();
 
     public abstract String geneContext();
 
-    public abstract String transcript();
-
-    public abstract String partner();
-
     public abstract String type();
 
-    public abstract String orientation();
-
-    public abstract String vaf();
+    public abstract String copies();
 
     @NotNull
     public static GeneDisruptionData from(@NotNull final GeneDisruption disruption) {
         final Transcript transcript = disruption.linkedAnnotation();
-        final GeneAnnotation g = transcript.getGeneAnnotation();
-        final int variantOrientation = g.getVariant().orientation(g.isStart());
+        final GeneAnnotation gene = transcript.parent();
+        // TODO (KODU): Add upstream/downstream annotation
+        //        final boolean upstream = gene.variant().orientation(gene.isStart()) > 0;
+        final String geneContext = exonDescription(transcript); //+ (upstream ? " Upstream" : " Downstream");
 
         return ImmutableGeneDisruptionData.builder()
-                .geneName(disruption.linkedAnnotation().getGeneName())
-                .location(positionString(g))
-                .geneContext(exonDescription(transcript, true)) // TODO: upstream ?
-                .transcript(transcript.getTranscriptId())
-                .partner(positionString(g.getVariant(), !g.isStart()))
-                .type(g.getVariant().type().toString())
-                .orientation(variantOrientation > 0 ? "5'" : "3'")
-                .vaf(PatientReportFormat.formatNullablePercent(alleleFrequency(g)))
+                .chromosome(gene.variant().chromosome(gene.isStart()))
+                .gene(gene.geneName())
+                .geneContext(geneContext)
+                .type(gene.variant().type().name())
+                .copies(ploidyToCopiesString(gene.variant().ploidy()))
+                .chromosomeBand(gene.karyotypeBand())
                 .build();
     }
 }

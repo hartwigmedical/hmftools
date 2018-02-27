@@ -71,9 +71,20 @@ class EcrfDAO {
         context.batch(patient.fields()
                 .stream()
                 .map(field -> inserter.get()
-                        .values(field.patientId(), field.studyEventOID(), field.studyRepeatKey(), field.formOID(), field.formRepeatKey(),
-                                field.itemGroupOID(), field.itemGroupRepeatKey(), field.itemOID(), field.itemValue(), field.status(),
-                                field.locked(), sequenced ? "TRUE" : "FALSE", field.name(), field.isRelevant() ? "TRUE" : "FALSE"))
+                        .values(field.patientId(),
+                                field.studyEventOID(),
+                                field.studyRepeatKey(),
+                                field.formOID(),
+                                field.formRepeatKey(),
+                                field.itemGroupOID(),
+                                field.itemGroupRepeatKey(),
+                                field.itemOID(),
+                                field.itemValue(),
+                                field.status(),
+                                field.locked(),
+                                sequenced ? "TRUE" : "FALSE",
+                                field.name(),
+                                field.isRelevant() ? "TRUE" : "FALSE"))
                 .collect(Collectors.toList())).execute();
     }
 
@@ -88,13 +99,38 @@ class EcrfDAO {
     }
 
     private InsertValuesStep14 cpctInserter() {
-        return context.insertInto(ECRF, ECRF.PATIENTID, ECRF.STUDYEVENT, ECRF.STUDYEVENTKEY, ECRF.FORM, ECRF.FORMKEY, ECRF.ITEMGROUP,
-                ECRF.ITEMGROUPKEY, ECRF.ITEM, ECRF.ITEMVALUE, ECRF.STATUS, ECRF.LOCKED, ECRF.SEQUENCED, ECRF.FIELDNAME, ECRF.RELEVANT);
+        return context.insertInto(ECRF,
+                ECRF.PATIENTID,
+                ECRF.STUDYEVENT,
+                ECRF.STUDYEVENTKEY,
+                ECRF.FORM,
+                ECRF.FORMKEY,
+                ECRF.ITEMGROUP,
+                ECRF.ITEMGROUPKEY,
+                ECRF.ITEM,
+                ECRF.ITEMVALUE,
+                ECRF.STATUS,
+                ECRF.LOCKED,
+                ECRF.SEQUENCED,
+                ECRF.FIELDNAME,
+                ECRF.RELEVANT);
     }
 
     private InsertValuesStep14 drupInserter() {
-        return context.insertInto(DRUPECRF, DRUPECRF.PATIENTID, DRUPECRF.STUDYEVENT, DRUPECRF.STUDYEVENTKEY, DRUPECRF.FORM,
-                DRUPECRF.FORMKEY, DRUPECRF.ITEMGROUP, DRUPECRF.ITEMGROUPKEY, DRUPECRF.ITEM, DRUPECRF.ITEMVALUE, DRUPECRF.STATUS,
-                DRUPECRF.LOCKED, DRUPECRF.SEQUENCED, DRUPECRF.FIELDNAME, DRUPECRF.RELEVANT);
+        return context.insertInto(DRUPECRF,
+                DRUPECRF.PATIENTID,
+                DRUPECRF.STUDYEVENT,
+                DRUPECRF.STUDYEVENTKEY,
+                DRUPECRF.FORM,
+                DRUPECRF.FORMKEY,
+                DRUPECRF.ITEMGROUP,
+                DRUPECRF.ITEMGROUPKEY,
+                DRUPECRF.ITEM,
+                DRUPECRF.ITEMVALUE,
+                DRUPECRF.STATUS,
+                DRUPECRF.LOCKED,
+                DRUPECRF.SEQUENCED,
+                DRUPECRF.FIELDNAME,
+                DRUPECRF.RELEVANT);
     }
 }

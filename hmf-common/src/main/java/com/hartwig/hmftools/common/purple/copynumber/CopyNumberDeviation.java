@@ -19,6 +19,8 @@ final class CopyNumberDeviation {
     @VisibleForTesting
     static final int MAX_BAF_COUNT = 50;
 
+    private static final double MAX_DEVIATION_ADJUSTMENT = 0.20;
+
     @NotNull
     private final PurityAdjuster purityAdjuster;
 
@@ -31,7 +33,7 @@ final class CopyNumberDeviation {
         double refNormalisedCopyNumberDeviation = Math.abs(first.refNormalisedCopyNumber() - second.refNormalisedCopyNumber());
         double copyNumberDeviation = Math.min(tumorCopyNumberDeviation, refNormalisedCopyNumberDeviation);
         double rawMaxDeviation = maxCopyNumberDeviation(first, second);
-        double adjustedMaxDeviation = purityAdjuster.purityAdjustedMaxCopyNumberDeviation(rawMaxDeviation);
+        double adjustedMaxDeviation = purityAdjustedMaxCopyNumberDeviation(rawMaxDeviation);
 
         return Doubles.lessOrEqual(copyNumberDeviation, adjustedMaxDeviation);
     }
@@ -42,6 +44,10 @@ final class CopyNumberDeviation {
                 : !second.support().equals(SegmentSupport.NONE);
 
         return maxCopyNumberDeviation(Math.min(first.bafCount(), second.bafCount()), structuralBreakTransition);
+    }
+
+    public double purityAdjustedMaxCopyNumberDeviation(double maxCopyNumberDeviation) {
+        return maxCopyNumberDeviation * Math.max(1, MAX_DEVIATION_ADJUSTMENT / purityAdjuster.purity());
     }
 
     private static double maxCopyNumberDeviation(int bafCount, boolean structuralBreakTransition) {

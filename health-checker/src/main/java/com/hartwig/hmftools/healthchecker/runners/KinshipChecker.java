@@ -41,14 +41,15 @@ public class KinshipChecker extends ErrorHandlingChecker implements HealthChecke
         final Path kinshipPath = PathExtensionFinder.build().findPath(runContext.runDirectory(), KINSHIP_EXTENSION);
         final List<String> kinshipLines = FileReader.build().readLines(kinshipPath);
         if (kinshipLines.size() != EXPECTED_NUM_LINES) {
-            throw new MalformedFileException(
-                    String.format(MALFORMED_FILE_MSG, KinshipCheck.KINSHIP_TEST.toString(), runContext.runDirectory(),
-                            kinshipLines.size(), EXPECTED_NUM_LINES));
+            throw new MalformedFileException(String.format(MALFORMED_FILE_MSG,
+                    KinshipCheck.KINSHIP_TEST.toString(),
+                    runContext.runDirectory(),
+                    kinshipLines.size(),
+                    EXPECTED_NUM_LINES));
         }
         final Optional<HealthCheck> optCheck = kinshipLines.stream().skip(1).map(line -> {
             final String[] values = line.split(COLUMN_SEPARATOR);
-            return new HealthCheck(runContext.tumorSample(), KinshipCheck.KINSHIP_TEST.toString(),
-                    values[KINSHIP_COLUMN]);
+            return new HealthCheck(runContext.tumorSample(), KinshipCheck.KINSHIP_TEST.toString(), values[KINSHIP_COLUMN]);
         }).findFirst();
 
         assert optCheck.isPresent();
@@ -60,7 +61,8 @@ public class KinshipChecker extends ErrorHandlingChecker implements HealthChecke
     @Override
     public BaseResult errorRun(@NotNull final RunContext runContext) {
         if (runContext.isSomaticRun()) {
-            return toSingleValueResult(new HealthCheck(runContext.tumorSample(), KinshipCheck.KINSHIP_TEST.toString(),
+            return toSingleValueResult(new HealthCheck(runContext.tumorSample(),
+                    KinshipCheck.KINSHIP_TEST.toString(),
                     HealthCheckConstants.ERROR_VALUE));
         } else {
             return new NoResult(CheckType.KINSHIP);
@@ -68,7 +70,7 @@ public class KinshipChecker extends ErrorHandlingChecker implements HealthChecke
     }
 
     @NotNull
-    private BaseResult toSingleValueResult(@NotNull final HealthCheck check) {
+    private static BaseResult toSingleValueResult(@NotNull final HealthCheck check) {
         check.log(LOGGER);
         return new SingleValueResult(CheckType.KINSHIP, check);
     }

@@ -74,14 +74,43 @@ class PurityDAO {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(PURITY).where(PURITY.SAMPLEID.eq(sample)).execute();
 
-        context.insertInto(PURITY, PURITY.VERSION, PURITY.SAMPLEID, PURITY.PURITY_, PURITY.GENDER, PURITY.STATUS, PURITY.QCSTATUS,
-                PURITY.NORMFACTOR, PURITY.SCORE, PURITY.PLOIDY, PURITY.DIPLOIDPROPORTION, PURITY.MINDIPLOIDPROPORTION,
-                PURITY.MAXDIPLOIDPROPORTION, PURITY.MINPURITY, PURITY.MAXPURITY, PURITY.MINPLOIDY, PURITY.MAXPLOIDY,
-                PURITY.POLYCLONALPROPORTION, PURITY.MODIFIED)
-                .values(purity.version(), sample, bestFit.purity(), purity.gender().toString(), purity.status().toString(),
-                        checks.status().toString(), bestFit.normFactor(), bestFit.score(), bestFit.ploidy(), bestFit.diploidProportion(),
-                        score.minDiploidProportion(), score.maxDiploidProportion(), score.minPurity(), score.maxPurity(), score.minPloidy(),
-                        score.maxPloidy(), purity.polyClonalProportion(), timestamp)
+        context.insertInto(PURITY,
+                PURITY.VERSION,
+                PURITY.SAMPLEID,
+                PURITY.PURITY_,
+                PURITY.GENDER,
+                PURITY.STATUS,
+                PURITY.QCSTATUS,
+                PURITY.NORMFACTOR,
+                PURITY.SCORE,
+                PURITY.PLOIDY,
+                PURITY.DIPLOIDPROPORTION,
+                PURITY.MINDIPLOIDPROPORTION,
+                PURITY.MAXDIPLOIDPROPORTION,
+                PURITY.MINPURITY,
+                PURITY.MAXPURITY,
+                PURITY.MINPLOIDY,
+                PURITY.MAXPLOIDY,
+                PURITY.POLYCLONALPROPORTION,
+                PURITY.MODIFIED)
+                .values(purity.version(),
+                        sample,
+                        bestFit.purity(),
+                        purity.gender().toString(),
+                        purity.status().toString(),
+                        checks.status().toString(),
+                        bestFit.normFactor(),
+                        bestFit.score(),
+                        bestFit.ploidy(),
+                        bestFit.diploidProportion(),
+                        score.minDiploidProportion(),
+                        score.maxDiploidProportion(),
+                        score.minPurity(),
+                        score.maxPurity(),
+                        score.minPloidy(),
+                        score.maxPloidy(),
+                        purity.polyClonalProportion(),
+                        timestamp)
                 .execute();
     }
 
@@ -89,9 +118,14 @@ class PurityDAO {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(PURITYRANGE).where(PURITYRANGE.SAMPLEID.eq(sample)).execute();
 
-        InsertValuesStep7 inserter =
-                context.insertInto(PURITYRANGE, PURITYRANGE.SAMPLEID, PURITYRANGE.PURITY, PURITYRANGE.NORMFACTOR, PURITYRANGE.SCORE,
-                        PURITYRANGE.PLOIDY, PURITYRANGE.DIPLOIDPROPORTION, PURITYRANGE.MODIFIED);
+        InsertValuesStep7 inserter = context.insertInto(PURITYRANGE,
+                PURITYRANGE.SAMPLEID,
+                PURITYRANGE.PURITY,
+                PURITYRANGE.NORMFACTOR,
+                PURITYRANGE.SCORE,
+                PURITYRANGE.PLOIDY,
+                PURITYRANGE.DIPLOIDPROPORTION,
+                PURITYRANGE.MODIFIED);
 
         purities.forEach(x -> addPurity(timestamp, inserter, sample, x));
         inserter.execute();

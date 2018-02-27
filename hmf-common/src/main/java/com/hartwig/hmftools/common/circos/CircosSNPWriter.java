@@ -6,9 +6,11 @@ import java.nio.file.Files;
 import java.util.Collection;
 import java.util.StringJoiner;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
 

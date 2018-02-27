@@ -11,9 +11,12 @@ public abstract class GeneFusion {
 
     public abstract boolean reportable();
 
+    @NotNull
     public abstract Transcript upstreamLinkedAnnotation();
 
+    @NotNull
     public abstract Transcript downstreamLinkedAnnotation();
 
+    @NotNull
     public abstract String cosmicURL();
 }

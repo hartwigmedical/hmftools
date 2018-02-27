@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <Program name="TestStudy">
     <Panel>
-        <AllGene/>
+        <Gene name="BRCA2" ensembl="ENST00000544455"/>
         <SnpEffect>stop_gained</SnpEffect>
     </Panel>
 </Program>

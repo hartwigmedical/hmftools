@@ -1,14 +1,12 @@
 package com.hartwig.hmftools.common.purple.region;
 
-import static com.hartwig.hmftools.common.purple.BAFUtils.NORMAL_BAF;
-import static com.hartwig.hmftools.common.purple.BAFUtils.modelBAF;
-import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.bafDeviation;
+import static com.hartwig.hmftools.common.purple.BAFUtils.bafDeviation;
 import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.cnvDeviation;
-import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.modelBAFToMinimizeDeviation;
 import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.modelRatio;
 
 import static org.junit.Assert.assertEquals;
 
+import com.hartwig.hmftools.common.purple.BAFUtils;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
@@ -18,6 +16,9 @@ import org.junit.Test;
 public class FittedRegionFactoryTest {
 
     private static final double EPSILON = 1e-10;
+
+    public static final double NORMAL_BAF = 0.535;
+    private static final BAFUtils BAF_UTILS = new BAFUtils(NORMAL_BAF);
 
     @Test
     public void tumorCopyNumberDoesntChangeForObservedRegionStatus() {
@@ -29,13 +30,14 @@ public class FittedRegionFactoryTest {
     }
 
     private void testTumorCopyNumber(double expectedCopyNumber, @NotNull ObservedRegion region) {
-        final FittedRegionFactory factory = new FittedRegionFactory(Gender.FEMALE, 10, 0.2, false, 1);
+        final FittedRegionFactory factory = new FittedRegionFactory(Gender.FEMALE, 10, 0.2, 90, 1);
         final FittedRegion fittedRegion = factory.fitRegion(0.5, 1, region);
         assertEquals(expectedCopyNumber, fittedRegion.tumorCopyNumber(), EPSILON);
     }
 
     @NotNull
-    private static ObservedRegion observedRatio(double observedNormalRatio, double observedTumorRatio, @NotNull final GermlineStatus status) {
+    private static ObservedRegion observedRatio(double observedNormalRatio, double observedTumorRatio,
+            @NotNull final GermlineStatus status) {
         return PurpleDatamodelTest.createObservedRegion("1", 1, 2)
                 .observedNormalRatio(observedNormalRatio)
                 .observedTumorRatio(observedTumorRatio)
@@ -45,12 +47,13 @@ public class FittedRegionFactoryTest {
 
     @Test
     public void expectedFit() {
-        final FittedRegionFactory victim = new FittedRegionFactory(Gender.MALE, 12, 0.2, false, 1);
+        final FittedRegionFactory victim = new FittedRegionFactory(Gender.MALE, 12, 0.2, 90, 1);
         final FittedRegion result = victim.fitRegion(0.8, 0.7, create(180d / 280d + 0.01, 0.98 - 0.01));
         assertEquals(3, result.modelPloidy());
         assertEquals(0.01, result.bafDeviation(), EPSILON);
         assertEquals(0.002, result.cnvDeviation(), EPSILON);
-        assertEquals(0.015668571428571587, result.deviation(), EPSILON);
+        assertEquals(0.007834285714285794, result.deviation(), EPSILON);
+        assertEquals(2.0, result.ploidyPenalty(), EPSILON);
     }
 
     @NotNull
@@ -134,11 +137,11 @@ public class FittedRegionFactoryTest {
     }
 
     private static void assertModelBAFToMinimizeDeviation(double expectedBAF, double purity, int ploidy, double actualBAF) {
-        assertEquals(expectedBAF, modelBAFToMinimizeDeviation(purity, ploidy, actualBAF)[0], EPSILON);
+        assertEquals(expectedBAF, BAF_UTILS.modelBAFToMinimizeDeviation(purity, ploidy, actualBAF)[0], EPSILON);
     }
 
     private static void assertModelBAF(double expectedBAF, double purity, int ploidy, int betaAllele) {
-        assertEquals(expectedBAF, modelBAF(purity, ploidy, betaAllele), EPSILON);
+        assertEquals(expectedBAF, BAF_UTILS.modelBAF(purity, ploidy, betaAllele), EPSILON);
     }
 
     private static void assertCNVDeviation(double expectedDeviation, double cnvRatioWeighFactor, double modelCNVRatio, double tumorRatio) {

@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CircosFileWriter<T extends GenomeRegion> {
+public class CircosFileWriter {
 
     public static <T extends GenomeRegion> void writeRegions(@NotNull final String filePath,
             @NotNull Collection<T> values, @NotNull ToDoubleFunction<T> valueExtractor) throws IOException {

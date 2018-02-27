@@ -19,7 +19,7 @@ import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
-import com.hartwig.hmftools.window.Window;
+import com.hartwig.hmftools.common.window.Window;
 
 import org.jetbrains.annotations.NotNull;
 

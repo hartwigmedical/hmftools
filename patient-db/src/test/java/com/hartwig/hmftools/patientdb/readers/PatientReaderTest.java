@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientdb.readers;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -35,7 +36,8 @@ public class PatientReaderTest {
         final CpctEcrfModel model = CpctEcrfModel.loadFromXML(TEST_ECRF, new ImmutableFormStatusModel(Maps.newHashMap()));
         assertEquals(1, model.patientCount());
         final EcrfPatient cpctPatient = model.patients().iterator().next();
-        final CpctPatientReader cpctPatientReader = new CpctPatientReader(model, new TumorLocationCurator(TUMOR_LOCATION_MAPPING_CSV));
+        final CpctPatientReader cpctPatientReader =
+                new CpctPatientReader(model, new TumorLocationCurator(new FileInputStream(TUMOR_LOCATION_MAPPING_CSV)));
         final PatientData patientData = cpctPatientReader.read(cpctPatient);
         assertEquals("CPCT02252500", patientData.cpctId());
         assertEquals("Breast cancer", patientData.primaryTumorLocation().searchTerm());
@@ -66,7 +68,7 @@ public class PatientReaderTest {
         assertEquals(1, model.patientCount());
         final EcrfPatient cpctPatient = model.patients().iterator().next();
         final List<BiopsyTreatmentData> treatments =
-                new BiopsyTreatmentReader(new TreatmentCurator(TREATMENT_MAPPING_CSV)).read(cpctPatient);
+                new BiopsyTreatmentReader(new TreatmentCurator(new FileInputStream(TREATMENT_MAPPING_CSV))).read(cpctPatient);
         assertEquals(1, treatments.size());
         assertEquals(1, treatments.get(0).drugs().size());
         final LocalDate startDate = LocalDate.parse("2012-02-18", DATE_FORMATTER);

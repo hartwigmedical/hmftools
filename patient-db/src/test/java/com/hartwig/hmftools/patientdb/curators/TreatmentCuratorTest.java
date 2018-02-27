@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientdb.curators;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -23,7 +24,7 @@ public class TreatmentCuratorTest {
 
     static {
         try {
-            MATCHER = new TreatmentCurator(TREATMENT_MAPPING_CSV);
+            MATCHER = new TreatmentCurator(new FileInputStream(TREATMENT_MAPPING_CSV));
         } catch (IOException e) {
             LOGGER.error(e);
             throw new RuntimeException(e);

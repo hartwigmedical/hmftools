@@ -12,7 +12,9 @@ public interface PurityAdjustedSomaticVariant extends SomaticVariant {
 
     double ploidy();
 
-    boolean lossOfHeterozygosity();
+    double minorAllelePloidy();
+
+    boolean biallelic();
 
     @NotNull
     GermlineStatus germlineStatus();

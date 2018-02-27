@@ -24,11 +24,21 @@ class ValidationFindingDAO {
 
     void write(@NotNull final List<ValidationFinding> findings) {
         context.batch(findings.stream()
-                .map(finding -> context.insertInto(CLINICALFINDINGS, CLINICALFINDINGS.LEVEL, CLINICALFINDINGS.PATIENTID,
-                        CLINICALFINDINGS.ECRFITEM, CLINICALFINDINGS.FORMSTATUS, CLINICALFINDINGS.FORMLOCKED, CLINICALFINDINGS.MESSAGE,
+                .map(finding -> context.insertInto(CLINICALFINDINGS,
+                        CLINICALFINDINGS.LEVEL,
+                        CLINICALFINDINGS.PATIENTID,
+                        CLINICALFINDINGS.ECRFITEM,
+                        CLINICALFINDINGS.FORMSTATUS,
+                        CLINICALFINDINGS.FORMLOCKED,
+                        CLINICALFINDINGS.MESSAGE,
                         CLINICALFINDINGS.DETAILS)
-                        .values(finding.level(), finding.patientId(), finding.ecrfItem(), finding.formStatus().stateString(),
-                                Boolean.toString(finding.formLocked()), finding.message(), finding.details()))
+                        .values(finding.level(),
+                                finding.patientId(),
+                                finding.ecrfItem(),
+                                finding.formStatus().stateString(),
+                                Boolean.toString(finding.formLocked()),
+                                finding.message(),
+                                finding.details()))
                 .collect(Collectors.toList())).execute();
     }
 }

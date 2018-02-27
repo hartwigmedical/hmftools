@@ -33,7 +33,7 @@ public class BachelorSchema {
 
     @Nullable
     public Program processXML(final Path path) {
-        LOGGER.info("loading file: {}", path);
+        LOGGER.info("loading input file: {}", path);
         try {
             final JAXBContext context = JAXBContext.newInstance(Program.class);
             final Unmarshaller unmarshaller = context.createUnmarshaller();

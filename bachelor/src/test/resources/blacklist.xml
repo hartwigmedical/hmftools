@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<Program name="TestStudy" xmlns="http://www.hartwigmedicalfoundation.nl/bachelor.xsd">
+    <Panel>
+        <Gene name="BRCA2" ensembl="ENST00000544455"/> <!-- deprecated: refseq="NM_000059" -->
+        <SnpEffect>stop_gained</SnpEffect>
+    </Panel>
+    <Blacklist>
+        <Exclusion>
+            <Gene name="BRCA2"/>
+            <HGVS.c>9256+4867C>T</HGVS.c>
+        </Exclusion>
+        <Exclusion>
+            <Gene name="BRCA2"/>
+            <HGVS.p>Ser430Gly</HGVS.p>
+        </Exclusion>
+        <Exclusion>
+            <Gene name="BRCA2"/>
+            <MinCodon>1306</MinCodon>
+        </Exclusion>
+    </Blacklist>
+</Program>

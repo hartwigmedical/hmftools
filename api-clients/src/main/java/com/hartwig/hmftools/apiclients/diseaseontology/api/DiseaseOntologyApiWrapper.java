@@ -20,6 +20,7 @@ public class DiseaseOntologyApiWrapper {
     private static final String ENDPOINT = "http://www.disease-ontology.org/api/";
     private final DiseaseOntologyApi api;
     private final OkHttpClient httpClient;
+    private final String CANCER_DOID = "DOID:162";
 
     public DiseaseOntologyApiWrapper() {
         final Dispatcher requestDispatcher = new Dispatcher();
@@ -53,7 +54,9 @@ public class DiseaseOntologyApiWrapper {
     @NotNull
     public Observable<String> getAllParentDoids(final String doid) {
         return getMetadata(doid).flatMap(metadata -> Observable.fromIterable(metadata.parentDoids())
-                .mergeWith(Observable.fromIterable(metadata.parentDoids()).flatMap(this::getAllParentDoids)));
+                .mergeWith(Observable.fromIterable(metadata.parentDoids())
+                        .filter(parentDoid -> !parentDoid.equals(CANCER_DOID))
+                        .flatMap(this::getAllParentDoids)));
     }
 
     @NotNull

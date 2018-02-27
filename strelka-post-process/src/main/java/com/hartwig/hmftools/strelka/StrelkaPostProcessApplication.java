@@ -28,6 +28,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFConstants;
@@ -94,8 +95,10 @@ public class StrelkaPostProcessApplication {
         writer.writeHeader(outputHeader);
         final MNVValidator validator = ImmutableMNVValidator.of(tumorBam);
         Pair<PotentialMNVRegion, Optional<PotentialMNVRegion>> outputPair = ImmutablePair.of(PotentialMNVRegion.empty(), Optional.empty());
+
+        final VariantContextFilter filter = new StrelkaPostProcess(highConfidenceSlicer);
         for (final VariantContext variantContext : vcfReader) {
-            if (StrelkaPostProcess.checkVariant(variantContext, highConfidenceSlicer)) {
+            if (filter.test(variantContext)) {
                 final VariantContext simplifiedVariant = StrelkaPostProcess.simplifyVariant(variantContext, sampleName);
                 final PotentialMNVRegion potentialMNV = outputPair.getLeft();
                 outputPair = MNVDetector.fitsMNVRegion(potentialMNV, simplifiedVariant);
@@ -109,7 +112,7 @@ public class StrelkaPostProcessApplication {
     }
 
     @NotNull
-    private static VCFHeader generateOutputHeader(@NotNull final VCFHeader header, @NotNull final String sampleName) {
+    static VCFHeader generateOutputHeader(@NotNull final VCFHeader header, @NotNull final String sampleName) {
         final VCFHeader outputVCFHeader = new VCFHeader(header.getMetaDataInInputOrder(), Sets.newHashSet(sampleName));
         outputVCFHeader.addMetaDataLine(
                 new VCFFormatHeaderLine(VCFConstants.GENOTYPE_ALLELE_DEPTHS, VCFHeaderLineCount.R, VCFHeaderLineType.Integer,
