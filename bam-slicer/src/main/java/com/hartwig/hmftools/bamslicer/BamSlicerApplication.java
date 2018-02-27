@@ -70,7 +70,7 @@ public class BamSlicerApplication {
     private static final String MAX_CHUNKS_IN_MEMORY = "max_chunks";
     private static final String MAX_CONCURRENT_REQUESTS = "max_concurrent_requests";
 
-    public static void main(final String... args) throws ParseException, IOException, EmptyFileException {
+    public static void main(final String... args) throws ParseException, IOException {
         final CommandLine cmd = createCommandLine(args);
         assert cmd != null;
         //MIVO: disable default samtools buffering
@@ -102,6 +102,7 @@ public class BamSlicerApplication {
         reader.close();
     }
 
+    @NotNull
     private static QueryInterval[] getIntervalsFromVCF(@NotNull final String vcfPath, @NotNull final SAMFileHeader header,
             final int proximity) {
         final File vcfFile = new File(vcfPath);
@@ -114,7 +115,6 @@ public class BamSlicerApplication {
                     variant.getStart() + proximity));
 
             if (variant.getStructuralVariantType() == StructuralVariantType.BND) {
-
                 final String call = variant.getAlternateAllele(0).getDisplayString();
                 final String[] leftSplit = call.split("]");
                 final String[] rightSplit = call.split("\\[");
@@ -163,7 +163,7 @@ public class BamSlicerApplication {
     }
 
     private static void sliceFromURLs(@NotNull final URL indexUrl, @NotNull final URL bamUrl, @NotNull final CommandLine cmd)
-            throws IOException, EmptyFileException {
+            throws IOException {
         final OkHttpClient httpClient = SlicerHttpClient.create(Integer.parseInt(cmd.getOptionValue(MAX_CONCURRENT_REQUESTS)));
         final String outputPath = cmd.getOptionValue(OUTPUT);
         final String bedPath = cmd.getOptionValue(BED);
@@ -224,7 +224,7 @@ public class BamSlicerApplication {
 
     @NotNull
     private static QueryInterval[] getIntervalsFromBED(@NotNull final String bedPath, @NotNull final SAMFileHeader header)
-            throws IOException, EmptyFileException {
+            throws IOException {
         final Slicer bedSlicer = SlicerFactory.fromBedFile(bedPath);
         final List<QueryInterval> queryIntervals = Lists.newArrayList();
         for (final GenomeRegion region : bedSlicer.regions()) {
