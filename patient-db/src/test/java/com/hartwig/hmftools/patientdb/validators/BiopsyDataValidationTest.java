@@ -21,10 +21,14 @@ import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentDrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentDrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutablePatientData;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class BiopsyDataValidationTest {
@@ -36,8 +40,10 @@ public class BiopsyDataValidationTest {
     private final static BiopsyData BIOPSY_NULL = ImmutableBiopsyData.of(null, null, null, null, null, FormStatusState.UNKNOWN, false);
     private final static BiopsyData BIOPSY_FEB1 = ImmutableBiopsyData.of(FEB2015, null, null, "1", "", FormStatusState.UNKNOWN, false);
     private final static BiopsyData BIOPSY_FEB2 = ImmutableBiopsyData.of(FEB2015, null, null, "2", "", FormStatusState.UNKNOWN, false);
-    private final static BiopsyTreatmentData TREATMENT_JAN_FEB =
-            ImmutableBiopsyTreatmentData.of("Yes", JAN2015, FEB2015, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
+    private final static BiopsyTreatmentData TREATMENT_JAN_FEB = ImmutableBiopsyTreatmentData.of("Yes",
+            Lists.newArrayList(drugWithStartAndEndDate(JAN2015, FEB2015)),
+            FormStatusState.UNKNOWN,
+            false);
 
     @Test
     public void reportsMissingFields() {
@@ -96,5 +102,10 @@ public class BiopsyDataValidationTest {
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
         assertTrue(findingsFields.contains(fields(FORM_TREATMENT, FORM_BIOPS)));
+    }
+
+    @NotNull
+    private static BiopsyTreatmentDrugData drugWithStartAndEndDate(@Nullable LocalDate startDate, @Nullable LocalDate endDate) {
+        return ImmutableBiopsyTreatmentDrugData.of("anything", startDate, endDate, Lists.newArrayList());
     }
 }

@@ -10,8 +10,10 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentDrugData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentDrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentResponseData;
 
 import org.jetbrains.annotations.NotNull;
@@ -148,7 +150,8 @@ public class TreatmentResponseMatcherTest {
 
     @NotNull
     private static BiopsyTreatmentData treatmentWithStartEnd(@Nullable LocalDate start, @Nullable LocalDate end) {
-        return ImmutableBiopsyTreatmentData.of("Yes", start, end, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
+        BiopsyTreatmentDrugData drug = ImmutableBiopsyTreatmentDrugData.of("drug", start, end, Lists.newArrayList());
+        return ImmutableBiopsyTreatmentData.of("Yes", Lists.newArrayList(drug), FormStatusState.UNKNOWN, false);
     }
 
     @NotNull

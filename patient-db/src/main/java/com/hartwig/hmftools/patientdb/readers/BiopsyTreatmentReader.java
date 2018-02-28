@@ -44,22 +44,19 @@ public class BiopsyTreatmentReader {
     List<BiopsyTreatmentData> read(@NotNull final EcrfPatient patient) throws IOException {
         final List<BiopsyTreatmentData> treatmentDatas = Lists.newArrayList();
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_AFTERBIOPT)) {
-            for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_TREATMENT, false)) {
-                final String treatmentGiven = readTreatmentGiven(form);
-                final List<BiopsyTreatmentDrugData> drugs = readDrugs(form);
-                final LocalDate treatmentStart = determineTreatmentStartDate(drugs);
-                final LocalDate treatmentEnd = determineTreatmentEndDate(drugs);
-                treatmentDatas.add(
-                        ImmutableBiopsyTreatmentData.of(treatmentGiven, treatmentStart, treatmentEnd, drugs, form.status(), form.locked()));
+            for (final EcrfForm treatmentForm : studyEvent.nonEmptyFormsPerOID(FORM_TREATMENT, false)) {
+                final String treatmentGiven = readTreatmentGiven(treatmentForm);
+                final List<BiopsyTreatmentDrugData> drugs = readDrugs(treatmentForm);
+                treatmentDatas.add(ImmutableBiopsyTreatmentData.of(treatmentGiven, drugs, treatmentForm.status(), treatmentForm.locked()));
             }
         }
         return treatmentDatas;
     }
 
     @NotNull
-    private List<BiopsyTreatmentDrugData> readDrugs(@NotNull final EcrfForm form) throws IOException {
+    private List<BiopsyTreatmentDrugData> readDrugs(@NotNull final EcrfForm treatmentForm) throws IOException {
         final List<BiopsyTreatmentDrugData> drugs = Lists.newArrayList();
-        for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_SYSPOSTBIO, false)) {
+        for (final EcrfItemGroup itemGroup : treatmentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_SYSPOSTBIO, false)) {
             final LocalDate drugStart = itemGroup.readItemDate(FIELD_DRUG_START, 0, DATE_FORMATTER, false);
             final LocalDate drugEnd = itemGroup.readItemDate(FIELD_DRUG_END, 0, DATE_FORMATTER, false);
             String drugName = itemGroup.readItemString(FIELD_DRUG, 0, false);
@@ -73,36 +70,8 @@ public class BiopsyTreatmentReader {
     }
 
     @Nullable
-    private static LocalDate determineTreatmentStartDate(@NotNull final List<BiopsyTreatmentDrugData> drugs) {
-        LocalDate startDate = null;
-        for (final BiopsyTreatmentDrugData drug : drugs) {
-            final LocalDate drugStartDate = drug.startDate();
-            if (startDate == null || (drugStartDate != null && drugStartDate.isBefore(startDate))) {
-                startDate = drugStartDate;
-            }
-        }
-        return startDate;
-    }
-
-    @Nullable
-    private static LocalDate determineTreatmentEndDate(@NotNull final List<BiopsyTreatmentDrugData> drugs) {
-        if (drugs.isEmpty()) {
-            return null;
-        } else {
-            LocalDate endDate = drugs.get(0).endDate();
-            for (final BiopsyTreatmentDrugData drug : drugs) {
-                final LocalDate drugEndDate = drug.endDate();
-                if (drugEndDate == null || (endDate != null && drugEndDate.isAfter(endDate))) {
-                    endDate = drugEndDate;
-                }
-            }
-            return endDate;
-        }
-    }
-
-    @Nullable
-    private static String readTreatmentGiven(@NotNull final EcrfForm form) {
-        final List<EcrfItemGroup> itemGroups = form.nonEmptyItemGroupsPerOID(ITEMGROUP_TREATMENT_AFTER, false);
+    private static String readTreatmentGiven(@NotNull final EcrfForm treatmentForm) {
+        final List<EcrfItemGroup> itemGroups = treatmentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_TREATMENT_AFTER, false);
         if (itemGroups.size() > 0) {
             return itemGroups.get(0).readItemString(FIELD_TREATMENT_GIVEN, 0, false);
         }

@@ -38,7 +38,7 @@ public class BiopsyTreatmentDataTest {
 
     @NotNull
     private static BiopsyTreatmentData withDrugs(@NotNull final List<BiopsyTreatmentDrugData> drugs) {
-        return ImmutableBiopsyTreatmentData.of(1, null, null, null, drugs, null, FormStatusState.UNKNOWN, false);
+        return ImmutableBiopsyTreatmentData.of(1, null, drugs, null, FormStatusState.UNKNOWN, false);
     }
 
     @NotNull
