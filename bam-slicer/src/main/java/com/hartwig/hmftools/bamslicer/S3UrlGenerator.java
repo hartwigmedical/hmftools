@@ -15,39 +15,43 @@ import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-class SbpS3UrlGenerator {
-    private static final Logger LOGGER = LogManager.getLogger(SbpS3UrlGenerator.class);
+@Value.Immutable
+@Value.Style(allParameters = true,
+             passAnnotations = { NotNull.class, Nullable.class })
+abstract class S3UrlGenerator {
+    private static final Logger LOGGER = LogManager.getLogger(S3UrlGenerator.class);
 
-    private static final String ENDPOINT = System.getenv("SBP_ENDPOINT_URL");
-    private static final String PROFILE = "download";
-    private static final AmazonS3 s3Client;
+    abstract String endpoint_url();
 
-    static {
-        try {
-            s3Client = AmazonS3ClientBuilder.standard()
-                    .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(ENDPOINT, null))
-                    .withCredentials(new ProfileCredentialsProvider(PROFILE))
-                    .build();
-        } catch (final Exception e) {
-            throw new RuntimeException(
-                    "Could not create s3 client. SBP endpoint/credentials are missing. Are you running this with the sbp user?");
-        }
+    abstract String profile();
+
+    @Value.Lazy
+    AmazonS3 s3Client() {
+        return AmazonS3ClientBuilder.standard()
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endpoint_url(), null))
+                .withCredentials(new ProfileCredentialsProvider(profile()))
+                .build();
     }
 
     @NotNull
-    static URL generateUrl(@NotNull final String bucketName, @NotNull final String objectKey) throws IOException {
+    URL generateUrl(@NotNull final String bucketName, @NotNull final String objectKey, final int expirationHours) throws IOException {
         try {
-            LOGGER.info("Generating pre-signed URL for bucket: {}\tobject: {}", bucketName, objectKey);
+            LOGGER.info("Generating pre-signed URL for bucket: {}\tobject: {}\texpirationTime: {} hours",
+                    bucketName,
+                    objectKey,
+                    expirationHours);
             final long millisNow = System.currentTimeMillis();
-            final long expirationMillis = millisNow + 1000 * 60 * 120;   //add 2 hours;
+            final long expirationMillis = millisNow + 1000 * 60 * 60 * expirationHours;
             final Date expiration = new java.util.Date(expirationMillis);
             final GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, objectKey);
             generatePresignedUrlRequest.setMethod(HttpMethod.GET);
             generatePresignedUrlRequest.setExpiration(expiration);
 
-            return s3Client.generatePresignedUrl(generatePresignedUrlRequest);
+            return s3Client().generatePresignedUrl(generatePresignedUrlRequest);
         } catch (AmazonServiceException exception) {
             LOGGER.error("Error Message: {}", exception.getMessage());
             LOGGER.error("HTTP  Code: {}", exception.getStatusCode());

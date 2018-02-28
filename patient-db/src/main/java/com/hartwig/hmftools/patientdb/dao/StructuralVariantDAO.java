@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import static com.hartwig.hmftools.patientdb.Config.BATCH_INSERT_SIZE;
+import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTBREAKEND;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTDISRUPTION;
@@ -13,19 +13,19 @@ import java.util.List;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
-
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantImpl;
-import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantLegImpl;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+
 import org.jetbrains.annotations.NotNull;
-import org.jooq.*;
+import org.jooq.DSLContext;
+import org.jooq.InsertValuesStep21;
+import org.jooq.Record;
+import org.jooq.Record1;
+import org.jooq.Result;
 import org.jooq.types.UInteger;
 
 class StructuralVariantDAO {
@@ -150,7 +150,7 @@ class StructuralVariantDAO {
         // NERA: delete structural variants
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
 
-        for (List<EnrichedStructuralVariant> batch : Iterables.partition(variants, BATCH_INSERT_SIZE)) {
+        for (List<EnrichedStructuralVariant> batch : Iterables.partition(variants, DB_BATCH_INSERT_SIZE)) {
             InsertValuesStep21 inserter = context.insertInto(STRUCTURALVARIANT,
                     STRUCTURALVARIANT.SAMPLEID,
                     STRUCTURALVARIANT.STARTCHROMOSOME,

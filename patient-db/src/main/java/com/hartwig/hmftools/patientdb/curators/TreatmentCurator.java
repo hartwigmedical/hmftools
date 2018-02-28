@@ -4,8 +4,8 @@ import static org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter.
 import static org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter.GENERATE_WORD_PARTS;
 import static org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter.SPLIT_ON_NUMERICS;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.util.Comparator;
@@ -72,8 +72,8 @@ public class TreatmentCurator {
     private final SpellChecker spellChecker;
     private final IndexSearcher indexSearcher;
 
-    public TreatmentCurator(@NotNull final String mappingCsv) throws IOException {
-        final Directory index = createIndex(mappingCsv);
+    public TreatmentCurator(@NotNull final InputStream mappingInputStream) throws IOException {
+        final Directory index = createIndex(mappingInputStream);
         final IndexReader reader = DirectoryReader.open(index);
         spellChecker = createIndexSpellchecker(index);
         indexSearcher = new IndexSearcher(reader);
@@ -86,7 +86,8 @@ public class TreatmentCurator {
             LOGGER.warn("Failed to match search term: {}. attempting to match multiple treatments", searchTerm);
             final List<CuratedTreatment> matchedTreatments = matchMultiple(searchTerm);
             if (!matchedTreatments.isEmpty()) {
-                LOGGER.info("Matched multiple treatments {} to {}", searchTerm,
+                LOGGER.info("Matched multiple treatments {} to {}",
+                        searchTerm,
                         matchedTreatments.stream().map(CuratedTreatment::name).collect(Collectors.toList()));
             }
             return matchedTreatments;
@@ -102,7 +103,8 @@ public class TreatmentCurator {
         final ScoreDoc[] hits = indexSearcher.search(query, NUM_HITS).scoreDocs;
         if (hits.length == 1) {
             final Document searchResult = indexSearcher.doc(hits[0].doc);
-            return Optional.of(ImmutableCuratedTreatment.of(searchResult.get(CANONICAL_DRUG_NAME_FIELD), searchResult.get(DRUG_TYPE_FIELD),
+            return Optional.of(ImmutableCuratedTreatment.of(searchResult.get(CANONICAL_DRUG_NAME_FIELD),
+                    searchResult.get(DRUG_TYPE_FIELD),
                     searchTerm));
         }
         return Optional.empty();
@@ -149,9 +151,9 @@ public class TreatmentCurator {
     }
 
     @NotNull
-    private static Directory createIndex(@NotNull final String mappingCsv) throws IOException {
+    private static Directory createIndex(@NotNull final InputStream mappingInputStream) throws IOException {
         final Directory treatmentIndex = new RAMDirectory();
-        final CSVParser parser = CSVParser.parse(new File(mappingCsv), Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
+        final CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
         final IndexWriter indexWriter = createIndexWriter(treatmentIndex);
         for (final CSVRecord record : parser) {
             indexRecord(indexWriter, record);

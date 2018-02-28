@@ -28,12 +28,6 @@ public abstract class BiopsyTreatmentData {
     @Nullable
     public abstract String treatmentGiven();
 
-    @Nullable
-    public abstract LocalDate startDate();
-
-    @Nullable
-    public abstract LocalDate endDate();
-
     @NotNull
     public abstract List<BiopsyTreatmentDrugData> drugs();
 
@@ -57,10 +51,9 @@ public abstract class BiopsyTreatmentData {
     }
 
     @NotNull
-    public static BiopsyTreatmentData of(@Nullable final String treatmentGiven, @Nullable final LocalDate startDate,
-            @Nullable final LocalDate endDate, @NotNull final List<BiopsyTreatmentDrugData> drugs,
+    public static BiopsyTreatmentData of(@Nullable final String treatmentGiven, @NotNull final List<BiopsyTreatmentDrugData> drugs,
             @NotNull final FormStatusState formStatus, final boolean formLocked) {
-        return ImmutableBiopsyTreatmentData.of(createId(), treatmentGiven, startDate, endDate, drugs, null, formStatus, formLocked);
+        return ImmutableBiopsyTreatmentData.of(createId(), treatmentGiven, drugs, null, formStatus, formLocked);
     }
 
     @Nullable
@@ -84,6 +77,35 @@ public abstract class BiopsyTreatmentData {
             return COMBI_THERAPY;
         }
     }
+
+    @Nullable
+    public LocalDate startDate() {
+        LocalDate startDate = null;
+        for (final BiopsyTreatmentDrugData drug : drugs()) {
+            final LocalDate drugStartDate = drug.startDate();
+            if (startDate == null || (drugStartDate != null && drugStartDate.isBefore(startDate))) {
+                startDate = drugStartDate;
+            }
+        }
+        return startDate;
+    }
+
+    @Nullable
+    public LocalDate endDate() {
+        if (drugs().isEmpty()) {
+            return null;
+        } else {
+            LocalDate endDate = drugs().get(0).endDate();
+            for (final BiopsyTreatmentDrugData drug : drugs()) {
+                final LocalDate drugEndDate = drug.endDate();
+                if (drugEndDate == null || (endDate != null && drugEndDate.isAfter(endDate))) {
+                    endDate = drugEndDate;
+                }
+            }
+            return endDate;
+        }
+    }
+
 
     @Override
     public String toString() {

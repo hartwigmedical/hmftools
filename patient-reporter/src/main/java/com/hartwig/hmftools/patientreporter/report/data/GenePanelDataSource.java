@@ -14,7 +14,6 @@ import org.jetbrains.annotations.NotNull;
 import net.sf.dynamicreports.report.base.expression.AbstractSimpleExpression;
 import net.sf.dynamicreports.report.builder.FieldBuilder;
 import net.sf.dynamicreports.report.datasource.DRDataSource;
-import net.sf.dynamicreports.report.definition.ReportParameters;
 import net.sf.jasperreports.engine.JRDataSource;
 
 public final class GenePanelDataSource {
@@ -41,11 +40,6 @@ public final class GenePanelDataSource {
 
     @NotNull
     public static AbstractSimpleExpression<String> transcriptUrl() {
-        return new AbstractSimpleExpression<String>() {
-            @Override
-            public String evaluate(@NotNull final ReportParameters data) {
-                return "http://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;t=" + data.getValue(TRANSCRIPT_FIELD.getName());
-            }
-        };
+        return new TranscriptExpression(TRANSCRIPT_FIELD);
     }
 }

@@ -6,8 +6,7 @@ import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_SITE;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_SITE_OTHER;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FORM_BIOPS;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FORM_TREATMENT;
-import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_REGISTRATION_DATE1;
-import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_REGISTRATION_DATE2;
+import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_INFORMED_CONSENT_DATE;
 import static com.hartwig.hmftools.patientdb.validators.PatientValidator.fields;
 
 import static org.junit.Assert.assertEquals;
@@ -22,10 +21,14 @@ import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentDrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentDrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutablePatientData;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class BiopsyDataValidationTest {
@@ -37,8 +40,10 @@ public class BiopsyDataValidationTest {
     private final static BiopsyData BIOPSY_NULL = ImmutableBiopsyData.of(null, null, null, null, null, FormStatusState.UNKNOWN, false);
     private final static BiopsyData BIOPSY_FEB1 = ImmutableBiopsyData.of(FEB2015, null, null, "1", "", FormStatusState.UNKNOWN, false);
     private final static BiopsyData BIOPSY_FEB2 = ImmutableBiopsyData.of(FEB2015, null, null, "2", "", FormStatusState.UNKNOWN, false);
-    private final static BiopsyTreatmentData TREATMENT_JAN_FEB =
-            ImmutableBiopsyTreatmentData.of("Yes", JAN2015, FEB2015, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
+    private final static BiopsyTreatmentData TREATMENT_JAN_FEB = ImmutableBiopsyTreatmentData.of("Yes",
+            Lists.newArrayList(drugWithStartAndEndDate(JAN2015, FEB2015)),
+            FormStatusState.UNKNOWN,
+            false);
 
     @Test
     public void reportsMissingFields() {
@@ -61,7 +66,7 @@ public class BiopsyDataValidationTest {
     }
 
     @Test
-    public void reportsAllFindings() {
+    public void reportsAllFieldsEmpty() {
         final List<ValidationFinding> findings =
                 PatientValidator.validateBiopsies(CPCT_ID, Lists.newArrayList(BIOPSY_NULL, BIOPSY_FEB1, BIOPSY_FEB2), Lists.newArrayList());
         assertEquals(3, findings.size());
@@ -73,17 +78,18 @@ public class BiopsyDataValidationTest {
     }
 
     @Test
-    public void reportsBiopsyBeforeRegistration() {
-        final List<ValidationFinding> findings = PatientValidator.validateRegistrationDate(CPCT_ID,
-                ImmutablePatientData.builder().cpctId(CPCT_ID).registrationDate(MAR2016).build(), Lists.newArrayList(BIOPSY_FEB1));
+    public void reportsBiopsyBeforeInformedConsent() {
+        final List<ValidationFinding> findings = PatientValidator.validateInformedConsentDate(CPCT_ID,
+                ImmutablePatientData.builder().cpctId(CPCT_ID).informedConsentDate(MAR2016).build(),
+                Lists.newArrayList(BIOPSY_FEB1));
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(fields(FIELD_REGISTRATION_DATE1, FIELD_REGISTRATION_DATE2, FIELD_BIOPSY_DATE)));
+        assertTrue(findingsFields.contains(fields(FIELD_INFORMED_CONSENT_DATE, FIELD_BIOPSY_DATE)));
 
-        // KODU: DEV-251: Don't raise warning for a biopsy taken one day before registration.
-        final List<ValidationFinding> no_findings = PatientValidator.validateRegistrationDate(CPCT_ID,
-                ImmutablePatientData.builder().cpctId(CPCT_ID).registrationDate(FEB2015.plusDays(1)).build(),
+        // KODU: DEV-251: Don't raise warning for a biopsy taken one day before informed consent.
+        final List<ValidationFinding> no_findings = PatientValidator.validateInformedConsentDate(CPCT_ID,
+                ImmutablePatientData.builder().cpctId(CPCT_ID).informedConsentDate(FEB2015.plusDays(1)).build(),
                 Lists.newArrayList(BIOPSY_FEB1));
         assertEquals(0, no_findings.size());
     }
@@ -96,5 +102,10 @@ public class BiopsyDataValidationTest {
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
         assertTrue(findingsFields.contains(fields(FORM_TREATMENT, FORM_BIOPS)));
+    }
+
+    @NotNull
+    private static BiopsyTreatmentDrugData drugWithStartAndEndDate(@Nullable LocalDate startDate, @Nullable LocalDate endDate) {
+        return ImmutableBiopsyTreatmentDrugData.of("anything", startDate, endDate, Lists.newArrayList());
     }
 }

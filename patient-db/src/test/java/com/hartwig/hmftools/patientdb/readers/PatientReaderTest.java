@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientdb.readers;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -35,17 +36,19 @@ public class PatientReaderTest {
         final CpctEcrfModel model = CpctEcrfModel.loadFromXML(TEST_ECRF, new ImmutableFormStatusModel(Maps.newHashMap()));
         assertEquals(1, model.patientCount());
         final EcrfPatient cpctPatient = model.patients().iterator().next();
-        final CpctPatientReader cpctPatientReader = new CpctPatientReader(model, new TumorLocationCurator(TUMOR_LOCATION_MAPPING_CSV));
+        final CpctPatientReader cpctPatientReader =
+                new CpctPatientReader(model, new TumorLocationCurator(new FileInputStream(TUMOR_LOCATION_MAPPING_CSV)));
         final PatientData patientData = cpctPatientReader.read(cpctPatient);
         assertEquals("CPCT02252500", patientData.cpctId());
-        assertEquals("Breast cancer", patientData.primaryTumorLocation().searchTerm());
-        assertEquals("Breast", patientData.primaryTumorLocation().category());
-        assertEquals("Breast Cancer: subtype unknown", patientData.primaryTumorLocation().subcategory());
+        assertEquals("Breast cancer", patientData.cancerType().searchTerm());
+        assertEquals("Breast", patientData.cancerType().category());
+        assertEquals("Breast Cancer: subtype unknown", patientData.cancerType().subcategory());
         assertEquals("female", patientData.gender());
         assertEquals("Bernhoven uden", patientData.hospital());
         assertEquals(new Integer(1963), patientData.birthYear());
         assertEquals(LocalDate.parse("2012-06-22", DATE_FORMATTER), patientData.deathDate());
         assertEquals(LocalDate.parse("2012-02-17", DATE_FORMATTER), patientData.registrationDate());
+        assertEquals(LocalDate.parse("2012-02-17", DATE_FORMATTER), patientData.informedConsentDate());
     }
 
     @Test
@@ -66,7 +69,7 @@ public class PatientReaderTest {
         assertEquals(1, model.patientCount());
         final EcrfPatient cpctPatient = model.patients().iterator().next();
         final List<BiopsyTreatmentData> treatments =
-                new BiopsyTreatmentReader(new TreatmentCurator(TREATMENT_MAPPING_CSV)).read(cpctPatient);
+                new BiopsyTreatmentReader(new TreatmentCurator(new FileInputStream(TREATMENT_MAPPING_CSV))).read(cpctPatient);
         assertEquals(1, treatments.size());
         assertEquals(1, treatments.get(0).drugs().size());
         final LocalDate startDate = LocalDate.parse("2012-02-18", DATE_FORMATTER);

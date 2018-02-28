@@ -72,7 +72,7 @@ public class PDFWriter {
 
     @VisibleForTesting
     @NotNull
-    static JasperReportBuilder generateNotSequenceableReport(@NotNull final NotSequencedPatientReport report) throws IOException {
+    static JasperReportBuilder generateNotSequenceableReport(@NotNull final NotSequencedPatientReport report) {
         // MIVO: hack to get page footers working; the footer band and noData bands are exclusive, see additional comment below for details
         final DRDataSource singleItemDataSource = new DRDataSource("item");
         singleItemDataSource.add(new Object());
@@ -88,7 +88,7 @@ public class PDFWriter {
     @VisibleForTesting
     @NotNull
     static JasperReportBuilder generatePatientReport(@NotNull final SequencedPatientReport report,
-            @NotNull final HmfReporterData reporterData) throws IOException {
+            @NotNull final HmfReporterData reporterData) {
         final ComponentBuilder<?, ?> totalReport = cmp.multiPageList()
                 .add(ImmutableFindingsPage.of(report, reporterData).reportComponent())
                 .newPage()

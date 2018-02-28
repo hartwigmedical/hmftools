@@ -34,11 +34,16 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
     @NotNull
     String gene();
 
-    @NotNull
-    String effect();
+    int genesEffected();
 
     @NotNull
-    String codingEffect();
+    String worstEffect();
+
+    @NotNull
+    String worstEffectTranscript();
+
+    @NotNull
+    String worstCodingEffect();
 
     boolean hotspot();
 

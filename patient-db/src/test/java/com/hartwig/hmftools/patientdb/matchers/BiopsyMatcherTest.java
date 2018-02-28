@@ -180,7 +180,8 @@ public class BiopsyMatcherTest {
 
     private static void runMatcherAndVerify(@NotNull List<SampleData> sequencedBiopsies, @NotNull List<BiopsyData> clinicalBiopsies,
             @Nullable String... expectedSampleIds) {
-        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies).values();
+        final List<BiopsyData> matchedBiopsies =
+                BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies).values();
         matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         if (expectedSampleIds == null) {

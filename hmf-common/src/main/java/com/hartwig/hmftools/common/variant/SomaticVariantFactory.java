@@ -112,18 +112,31 @@ public class SomaticVariantFactory {
     }
 
     private void attachAnnotations(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
-        final List<VariantAnnotation> annotations = VariantAnnotationFactory.fromContext(context);
-        builder.annotations(VariantAnnotationFactory.fromContext(context));
-        if (!annotations.isEmpty()) {
-            final VariantAnnotation variantAnnotation = annotations.get(0);
+
+        final List<VariantAnnotation> allAnnotations = VariantAnnotationFactory.fromContext(context);
+        builder.annotations(allAnnotations);
+
+        final List<VariantAnnotation> transcriptAnnotations =
+                allAnnotations.stream().filter(x -> x.featureType().equals("transcript")).collect(Collectors.toList());
+
+        if (!transcriptAnnotations.isEmpty()) {
+            final VariantAnnotation variantAnnotation = transcriptAnnotations.get(0);
             builder.gene(variantAnnotation.gene());
-            builder.effect(variantAnnotation.consequenceString());
-            builder.codingEffect(CodingEffect.effect(variantAnnotation.consequences()).toString());
+            builder.worstEffect(variantAnnotation.consequenceString());
+            builder.worstCodingEffect(CodingEffect.effect(variantAnnotation.consequences()).toString());
+            builder.worstEffectTranscript(variantAnnotation.featureID());
         } else {
             builder.gene("");
-            builder.effect("");
-            builder.codingEffect(CodingEffect.NONE.toString());
+            builder.worstEffect("");
+            builder.worstCodingEffect(CodingEffect.NONE.toString());
+            builder.worstEffectTranscript("");
         }
+
+        builder.genesEffected((int) transcriptAnnotations.stream()
+                .map(VariantAnnotation::gene)
+                .filter(x -> !x.isEmpty())
+                .distinct()
+                .count());
     }
 
     private static void attachFilter(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {

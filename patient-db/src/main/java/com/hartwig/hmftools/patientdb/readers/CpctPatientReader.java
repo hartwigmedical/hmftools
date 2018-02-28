@@ -27,19 +27,21 @@ public class CpctPatientReader {
     private static final String STUDY_ENDSTUDY = "SE.ENDSTUDY";
 
     private static final String FORM_DEMOGRAPHY = "FRM.DEMOGRAPHY";
+    private static final String FORM_INFORMED_CONSENT = "FRM.INFORMEDCONSENT";
     private static final String FORM_CARCINOMA = "FRM.CARCINOMA";
     private static final String FORM_ELIGIBILITY = "FRM.ELIGIBILITY";
     private static final String FORM_SELCRIT = "FRM.SELCRIT";
     private static final String FORM_DEATH = "FRM.DEATH";
 
     private static final String ITEMGROUP_DEMOGRAPHY = "GRP.DEMOGRAPHY.DEMOGRAPHY";
+    private static final String ITEMGROUP_INFORMED_CONSENT = "GRP.INFORMEDCONSENT.INFORMEDCONSENT";
     private static final String ITEMGROUP_CARCINOMA = "GRP.CARCINOMA.CARCINOMA";
     private static final String ITEMGROUP_ELIGIBILITY = "GRP.ELIGIBILITY.ELIGIBILITY";
     private static final String ITEMGROUP_SELCRIT = "GRP.SELCRIT.SELCRIT";
     private static final String ITEMGROUP_DEATH = "GRP.DEATH.DEATH";
 
     public static final String FIELD_SEX = "FLD.DEMOGRAPHY.SEX";
-
+    public static final String FIELD_INFORMED_CONSENT_DATE = "FLD.INFORMEDCONSENT.ICDTC";
     public static final String FIELD_REGISTRATION_DATE1 = "FLD.ELIGIBILITY.REGDTC";
     public static final String FIELD_REGISTRATION_DATE2 = "FLD.SELCRIT.NREGDTC";
     public static final String FIELD_BIRTH_YEAR1 = "FLD.SELCRIT.NBIRTHYEAR";
@@ -68,6 +70,14 @@ public class CpctPatientReader {
     }
 
     @NotNull
+    private static Map<Integer, String> extractHospitalMap(@NotNull final CpctEcrfModel model) {
+        final Map<Integer, String> hospitals = Maps.newHashMap();
+        hospitals.putAll(model.datamodel().codeLists().get(model.datamodel().items().get(FIELD_HOSPITAL1).codeListOID()).values());
+        hospitals.putAll(model.datamodel().codeLists().get(model.datamodel().items().get(FIELD_HOSPITAL2).codeListOID()).values());
+        return ImmutableMap.copyOf(hospitals);
+    }
+
+    @NotNull
     PatientData read(@NotNull final EcrfPatient patient) {
         final ImmutablePatientData.Builder patientBuilder =
                 ImmutablePatientData.builder().cpctId(patient.patientId()).hospital(getHospital(patient, hospitals));
@@ -76,19 +86,42 @@ public class CpctPatientReader {
             setDemographyData(patientBuilder, studyEvent);
             setPrimaryTumorData(patientBuilder, studyEvent);
             setRegistrationAndBirthData(patientBuilder, studyEvent);
+            setInformedConsent(patientBuilder, studyEvent);
         }
         setDeathData(patientBuilder, patient);
         return patientBuilder.build();
     }
 
-    private static void setDeathData(@NotNull final ImmutablePatientData.Builder builder, @NotNull final EcrfPatient patient) {
-        for (final EcrfStudyEvent endStudyEvent : patient.studyEventsPerOID(STUDY_ENDSTUDY)) {
-            for (final EcrfForm deathForm : endStudyEvent.nonEmptyFormsPerOID(FORM_DEATH, false)) {
-                for (final EcrfItemGroup deathItemGroup : deathForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DEATH, false)) {
-                    builder.deathDate(deathItemGroup.readItemDate(FIELD_DEATH_DATE, 0, DATE_FORMATTER, false));
-                    builder.deathStatus(deathForm.status());
-                    builder.deathLocked(deathForm.locked());
+    @Nullable
+    private static String getHospital(@NotNull final EcrfPatient patient, @NotNull final Map<Integer, String> hospitals) {
+        final Integer hospitalCode = Integer.parseInt(patient.patientId().substring(6, 8));
+        final String hospital = hospitals.get(hospitalCode);
+        if (hospital == null) {
+            LOGGER.warn(FIELD_HOSPITAL1 + ", " + FIELD_HOSPITAL2 + " contained no Hospital with code " + hospitalCode);
+        }
+        return hospital;
+    }
+
+    private void setDemographyData(@NotNull final ImmutablePatientData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
+        for (final EcrfForm demographyForm : studyEvent.nonEmptyFormsPerOID(FORM_DEMOGRAPHY, false)) {
+            for (final EcrfItemGroup demographyItemGroup : demographyForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DEMOGRAPHY, false)) {
+                builder.gender(demographyItemGroup.readItemString(FIELD_SEX, 0, false));
+                builder.demographyStatus(demographyForm.status());
+                builder.demographyLocked(demographyForm.locked());
+            }
+        }
+    }
+
+    private void setPrimaryTumorData(@NotNull final ImmutablePatientData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
+        for (final EcrfForm carcinomaForm : studyEvent.nonEmptyFormsPerOID(FORM_CARCINOMA, false)) {
+            for (final EcrfItemGroup carcinomaItemGroup : carcinomaForm.nonEmptyItemGroupsPerOID(ITEMGROUP_CARCINOMA, false)) {
+                String primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION, 0, false);
+                if (primaryTumorLocation != null && primaryTumorLocation.trim().toLowerCase().startsWith("other")) {
+                    primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER, 0, false);
                 }
+                builder.cancerType(tumorLocationCurator.search(primaryTumorLocation));
+                builder.primaryTumorStatus(carcinomaForm.status());
+                builder.primaryTumorLocked(carcinomaForm.locked());
             }
         }
     }
@@ -125,48 +158,6 @@ public class CpctPatientReader {
         builder.birthYear(birthYear);
     }
 
-    private void setPrimaryTumorData(@NotNull final ImmutablePatientData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
-        for (final EcrfForm carcinomaForm : studyEvent.nonEmptyFormsPerOID(FORM_CARCINOMA, false)) {
-            for (final EcrfItemGroup carcinomaItemGroup : carcinomaForm.nonEmptyItemGroupsPerOID(ITEMGROUP_CARCINOMA, false)) {
-                String primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION, 0, false);
-                if (primaryTumorLocation != null && primaryTumorLocation.trim().toLowerCase().startsWith("other")) {
-                    primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER, 0, false);
-                }
-                builder.primaryTumorLocation(tumorLocationCurator.search(primaryTumorLocation));
-                builder.primaryTumorStatus(carcinomaForm.status());
-                builder.primaryTumorLocked(carcinomaForm.locked());
-            }
-        }
-    }
-
-    private void setDemographyData(@NotNull final ImmutablePatientData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
-        for (final EcrfForm demographyForm : studyEvent.nonEmptyFormsPerOID(FORM_DEMOGRAPHY, false)) {
-            for (final EcrfItemGroup demographyItemGroup : demographyForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DEMOGRAPHY, false)) {
-                builder.gender(demographyItemGroup.readItemString(FIELD_SEX, 0, false));
-                builder.demographyStatus(demographyForm.status());
-                builder.demographyLocked(demographyForm.locked());
-            }
-        }
-    }
-
-    @NotNull
-    private static Map<Integer, String> extractHospitalMap(@NotNull final CpctEcrfModel datamodel) {
-        final Map<Integer, String> hospitals = Maps.newHashMap();
-        hospitals.putAll(datamodel.datamodel().codeLists().get(datamodel.datamodel().items().get(FIELD_HOSPITAL1).codeListOID()).values());
-        hospitals.putAll(datamodel.datamodel().codeLists().get(datamodel.datamodel().items().get(FIELD_HOSPITAL2).codeListOID()).values());
-        return ImmutableMap.copyOf(hospitals);
-    }
-
-    @Nullable
-    private static String getHospital(@NotNull final EcrfPatient patient, @NotNull final Map<Integer, String> hospitals) {
-        final Integer hospitalCode = Integer.parseInt(patient.patientId().substring(6, 8));
-        final String hospital = hospitals.get(hospitalCode);
-        if (hospital == null) {
-            LOGGER.warn(FIELD_HOSPITAL1 + ", " + FIELD_HOSPITAL2 + " contained no Hospital with code " + hospitalCode);
-        }
-        return hospital;
-    }
-
     @Nullable
     private static Integer determineBirthYear(@Nullable final String birthYear1, @Nullable final String birthYear2,
             @Nullable final LocalDate birthYear3) {
@@ -180,5 +171,28 @@ public class CpctPatientReader {
             return birthYear3.getYear();
         }
         return null;
+    }
+
+    private void setInformedConsent(@NotNull final ImmutablePatientData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
+        for (final EcrfForm informedConsentForm : studyEvent.nonEmptyFormsPerOID(FORM_INFORMED_CONSENT, false)) {
+            for (final EcrfItemGroup informedConsentItemGroup : informedConsentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_INFORMED_CONSENT,
+                    false)) {
+                builder.informedConsentDate(informedConsentItemGroup.readItemDate(FIELD_INFORMED_CONSENT_DATE, 0, DATE_FORMATTER, false));
+                builder.informedConsentStatus(informedConsentForm.status());
+                builder.informedConsentLocked(informedConsentForm.locked());
+            }
+        }
+    }
+
+    private static void setDeathData(@NotNull final ImmutablePatientData.Builder builder, @NotNull final EcrfPatient patient) {
+        for (final EcrfStudyEvent endStudyEvent : patient.studyEventsPerOID(STUDY_ENDSTUDY)) {
+            for (final EcrfForm deathForm : endStudyEvent.nonEmptyFormsPerOID(FORM_DEATH, false)) {
+                for (final EcrfItemGroup deathItemGroup : deathForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DEATH, false)) {
+                    builder.deathDate(deathItemGroup.readItemDate(FIELD_DEATH_DATE, 0, DATE_FORMATTER, false));
+                    builder.deathStatus(deathForm.status());
+                    builder.deathLocked(deathForm.locked());
+                }
+            }
+        }
     }
 }

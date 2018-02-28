@@ -102,16 +102,29 @@ public abstract class SomaticVariantImpl implements SomaticVariant {
     }
 
     @Override
+    @Value.Default
+    public int genesEffected() {
+        return 0;
+    }
+
+    @Override
     @NotNull
     @Value.Default
-    public String effect() {
+    public String worstEffect() {
         return Strings.EMPTY;
     }
 
     @Override
     @NotNull
     @Value.Default
-    public String codingEffect() {
+    public String worstCodingEffect() {
+        return Strings.EMPTY;
+    }
+
+    @Override
+    @NotNull
+    @Value.Default
+    public String worstEffectTranscript() {
         return Strings.EMPTY;
     }
 

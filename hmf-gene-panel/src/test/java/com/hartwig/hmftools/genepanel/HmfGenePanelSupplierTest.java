@@ -16,14 +16,14 @@ import org.junit.Test;
 public class HmfGenePanelSupplierTest {
 
     @Test
-    public void canLoadGeneRegionsFromFile() throws IOException, EmptyFileException {
+    public void canLoadGeneRegionsFromFile() throws IOException {
         final Set<String> panel = HmfGenePanelSupplier.hmfPanelGeneSet();
         final List<HmfGenomeRegion> geneRegions = HmfGenePanelSupplier.hmfPanelGeneList();
         assertEquals(panel.size(), geneRegions.size());
     }
 
     @Test
-    public void loadedRegionsAreSortedCorrectly() throws IOException, EmptyFileException {
+    public void loadedRegionsAreSortedCorrectly() {
         final SortedSetMultimap<String, HmfGenomeRegion> geneRegions = HmfGenePanelSupplier.allGeneMap();
         for (final String chromosome : geneRegions.keySet()) {
             long start = 0;

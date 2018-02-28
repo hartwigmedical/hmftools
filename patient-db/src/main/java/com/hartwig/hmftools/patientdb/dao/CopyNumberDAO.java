@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import static com.hartwig.hmftools.patientdb.Config.BATCH_INSERT_SIZE;
+import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.COPYNUMBERGERMLINE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Copynumber.COPYNUMBER;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Copynumberregion.COPYNUMBERREGION;
@@ -65,7 +65,7 @@ class CopyNumberDAO {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(COPYNUMBER).where(COPYNUMBER.SAMPLEID.eq(sample)).execute();
 
-        for (List<PurpleCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, BATCH_INSERT_SIZE)) {
+        for (List<PurpleCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, DB_BATCH_INSERT_SIZE)) {
             InsertValuesStep12 inserter = context.insertInto(COPYNUMBER,
                     COPYNUMBER.SAMPLEID,
                     COPYNUMBER.CHROMOSOME,
@@ -88,7 +88,7 @@ class CopyNumberDAO {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(COPYNUMBERGERMLINE).where(COPYNUMBERGERMLINE.SAMPLEID.eq(sample)).execute();
 
-        for (List<PurpleCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, BATCH_INSERT_SIZE)) {
+        for (List<PurpleCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, DB_BATCH_INSERT_SIZE)) {
             InsertValuesStep12 inserter = context.insertInto(COPYNUMBERGERMLINE,
                     COPYNUMBERGERMLINE.SAMPLEID,
                     COPYNUMBERGERMLINE.CHROMOSOME,
@@ -128,7 +128,7 @@ class CopyNumberDAO {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(COPYNUMBERREGION).where(COPYNUMBERREGION.SAMPLEID.eq(sample)).execute();
 
-        for (List<FittedRegion> splitRegions : Iterables.partition(regions, BATCH_INSERT_SIZE)) {
+        for (List<FittedRegion> splitRegions : Iterables.partition(regions, DB_BATCH_INSERT_SIZE)) {
             InsertValuesStepN inserter = context.insertInto(COPYNUMBERREGION,
                     COPYNUMBERREGION.SAMPLEID,
                     COPYNUMBERREGION.CHROMOSOME,

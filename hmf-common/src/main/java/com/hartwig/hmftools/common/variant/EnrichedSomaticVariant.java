@@ -19,4 +19,10 @@ public abstract class EnrichedSomaticVariant implements PurityAdjustedSomaticVar
     public abstract int repeatCount();
 
     public abstract Clonality clonality();
+
+    @NotNull
+    public abstract String canonicalEffect();
+
+    @NotNull
+    public abstract String canonicalCodingEffect();
 }

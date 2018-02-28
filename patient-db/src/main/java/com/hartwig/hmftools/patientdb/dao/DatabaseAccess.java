@@ -8,7 +8,6 @@ import java.util.Set;
 
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
-import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
 import com.hartwig.hmftools.common.gene.CanonicalTranscript;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -18,7 +17,6 @@ import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 
@@ -190,10 +188,5 @@ public class DatabaseAccess {
 
     public void writeValidationFindings(@NotNull final List<ValidationFinding> findings) {
         validationFindingsDAO.write(findings);
-    }
-
-    @NotNull
-    public List<PatientCancerTypes> readCancerTypes() {
-        return clinicalDAO.readCancerTypes();
     }
 }

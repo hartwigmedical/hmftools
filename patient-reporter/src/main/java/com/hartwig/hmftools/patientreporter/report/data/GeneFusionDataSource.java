@@ -4,6 +4,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.report.base.expression.AbstractSimpleExpression;
@@ -14,33 +15,36 @@ import net.sf.jasperreports.engine.JRDataSource;
 
 public final class GeneFusionDataSource {
 
-    public static final FieldBuilder<?> GENES_FIELD = field("genes", String.class);
-    public static final FieldBuilder<?> GENE_CONTEXT = field("gene context", String.class);
-    public static final FieldBuilder<?> GENE_TRANSCRIPT_FIELD = field("gene_transcript", String.class);
-    public static final FieldBuilder<?> PARTNER_CONTEXT_FIELD = field("partner_context", String.class);
-    public static final FieldBuilder<?> PARTNER_TRANSCRIPT_FIELD = field("partner_transcript", String.class);
+    public static final FieldBuilder<?> FUSION_FIELD = field("field", String.class);
+    public static final FieldBuilder<?> START_TRANSCRIPT_FIELD = field("five_transcript", String.class);
+    public static final FieldBuilder<?> END_TRANSCRIPT_FIELD = field("three_transcript", String.class);
+    public static final FieldBuilder<?> START_CONTEXT_FIELD = field("five_gene context", String.class);
+    public static final FieldBuilder<?> END_CONTEXT_FIELD = field("three_gene_context", String.class);
     public static final FieldBuilder<?> COPIES_FIELD = field("copies", String.class);
-    private static final FieldBuilder<?> COSMIC_URL = field("cosmic url", String.class);
+    public static final FieldBuilder<?> COSMIC_URL_TEXT = field("cosmic_url_text", String.class);
+    private static final FieldBuilder<?> COSMIC_URL = field("cosmic_url", String.class);
 
     private GeneFusionDataSource() {
     }
 
     @NotNull
     public static JRDataSource fromGeneFusions(@NotNull List<GeneFusionData> fusions) {
-        final DRDataSource dataSource = new DRDataSource(GENES_FIELD.getName(),
-                GENE_CONTEXT.getName(),
-                GENE_TRANSCRIPT_FIELD.getName(),
-                PARTNER_CONTEXT_FIELD.getName(),
-                PARTNER_TRANSCRIPT_FIELD.getName(),
+        final DRDataSource dataSource = new DRDataSource(FUSION_FIELD.getName(),
+                START_TRANSCRIPT_FIELD.getName(),
+                END_TRANSCRIPT_FIELD.getName(),
+                START_CONTEXT_FIELD.getName(),
+                END_CONTEXT_FIELD.getName(),
                 COPIES_FIELD.getName(),
+                COSMIC_URL_TEXT.getName(),
                 COSMIC_URL.getName());
 
-        fusions.forEach(fusion -> dataSource.add(fusion.geneStart() + " - " + fusion.geneEnd(),
-                fusion.geneContextStart(),
+        fusions.forEach(fusion -> dataSource.add(name(fusion),
                 fusion.geneStartTranscript(),
-                fusion.geneContextEnd(),
                 fusion.geneEndTranscript(),
+                fusion.geneContextStart(),
+                fusion.geneContextEnd(),
                 fusion.copies(),
+                fusion.cosmicURL().isEmpty() ? Strings.EMPTY : name(fusion),
                 fusion.cosmicURL()));
 
         return dataSource;
@@ -48,8 +52,13 @@ public final class GeneFusionDataSource {
 
     @NotNull
     public static FieldBuilder<?>[] geneFusionFields() {
-        return new FieldBuilder<?>[] { GENES_FIELD, GENE_TRANSCRIPT_FIELD, PARTNER_TRANSCRIPT_FIELD, GENE_CONTEXT,/* PARTNER_GENE_FIELD,*/
-                PARTNER_CONTEXT_FIELD, COPIES_FIELD, /*URL_TEXT,*/ COSMIC_URL };
+        return new FieldBuilder<?>[] { FUSION_FIELD, START_TRANSCRIPT_FIELD, END_TRANSCRIPT_FIELD, START_CONTEXT_FIELD, END_CONTEXT_FIELD,
+                COPIES_FIELD, COSMIC_URL_TEXT, COSMIC_URL };
+    }
+
+    @NotNull
+    private static String name(@NotNull GeneFusionData fusion) {
+        return fusion.geneStart() + " - " + fusion.geneEnd();
     }
 
     @NotNull
@@ -64,11 +73,6 @@ public final class GeneFusionDataSource {
 
     @NotNull
     public static AbstractSimpleExpression<String> transcriptUrl(@NotNull final FieldBuilder<?> transcriptField) {
-        return new AbstractSimpleExpression<String>() {
-            @Override
-            public String evaluate(@NotNull final ReportParameters data) {
-                return "http://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;t=" + data.getValue(transcriptField.getName());
-            }
-        };
+        return new TranscriptExpression(transcriptField);
     }
 }
