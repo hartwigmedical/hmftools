@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseRead
 import static com.hartwig.hmftools.patientdb.validators.PatientValidator.fields;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.time.LocalDate;
@@ -64,7 +65,7 @@ public class TreatmentResponseValidationTest {
 
     @Test
     public void reportsMeasurementDoneNull() {
-        final List<ValidationFinding> findings = PatientValidator.validateTreatmentResponse(CPCT_ID, RESPONSE_NULL);
+        final List<ValidationFinding> findings = validateNonFirstResponse(CPCT_ID, RESPONSE_NULL);
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
@@ -73,7 +74,7 @@ public class TreatmentResponseValidationTest {
 
     @Test
     public void reportsOnlyResponseFilledIn() {
-        final List<ValidationFinding> findings = PatientValidator.validateTreatmentResponse(CPCT_ID, RESPONSE_ONLY);
+        final List<ValidationFinding> findings = validateNonFirstResponse(CPCT_ID, RESPONSE_ONLY);
         assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
@@ -83,7 +84,7 @@ public class TreatmentResponseValidationTest {
 
     @Test
     public void reportsMeasurementDoneMissingData() {
-        final List<ValidationFinding> findings = PatientValidator.validateTreatmentResponse(CPCT_ID, RESPONSE_MISSING_DATA);
+        final List<ValidationFinding> findings = validateNonFirstResponse(CPCT_ID, RESPONSE_MISSING_DATA);
         assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
@@ -92,8 +93,18 @@ public class TreatmentResponseValidationTest {
     }
 
     @Test
+    public void acceptMissingDataForFirstResponse() {
+        final List<ValidationFinding> findings = PatientValidator.validateTreatmentResponse(CPCT_ID, RESPONSE_MISSING_DATA, true);
+        assertEquals(1, findings.size());
+        findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
+        final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
+        assertFalse(findingsFields.contains(FIELD_RESPONSE));
+        assertTrue(findingsFields.contains(fields(FIELD_ASSESSMENT_DATE, FIELD_RESPONSE_DATE)));
+    }
+
+    @Test
     public void reportsMeasurementDoneNoWithData() {
-        final List<ValidationFinding> findings = PatientValidator.validateTreatmentResponse(CPCT_ID, RESPONSE_MEASUREMENT_NO_WITH_DATA);
+        final List<ValidationFinding> findings = validateNonFirstResponse(CPCT_ID, RESPONSE_MEASUREMENT_NO_WITH_DATA);
         assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
@@ -102,8 +113,7 @@ public class TreatmentResponseValidationTest {
 
     @Test
     public void ignoresMeasurementDoneNoWithValidData() {
-        final List<ValidationFinding> findings =
-                PatientValidator.validateTreatmentResponse(CPCT_ID, RESPONSE_MEASUREMENT_NO_WITH_VALID_DATA);
+        final List<ValidationFinding> findings = validateNonFirstResponse(CPCT_ID, RESPONSE_MEASUREMENT_NO_WITH_VALID_DATA);
         assertTrue(findings.isEmpty());
     }
 
@@ -148,5 +158,11 @@ public class TreatmentResponseValidationTest {
     @NotNull
     private static BiopsyTreatmentDrugData drugWithStartAndEndDate(@Nullable LocalDate startDate, @Nullable LocalDate endDate) {
         return ImmutableBiopsyTreatmentDrugData.of("anything", startDate, endDate, Lists.newArrayList());
+    }
+
+    @NotNull
+    private static List<ValidationFinding> validateNonFirstResponse(@NotNull String patientId,
+            @NotNull BiopsyTreatmentResponseData response) {
+        return PatientValidator.validateTreatmentResponse(patientId, response, false);
     }
 }

@@ -365,9 +365,12 @@ public final class PatientValidator {
     static List<ValidationFinding> validateTreatmentResponses(@NotNull final String patientId,
             @NotNull final List<BiopsyTreatmentData> treatments, @NotNull final List<BiopsyTreatmentResponseData> responses) {
         final List<ValidationFinding> findings = Lists.newArrayList();
-        responses.forEach(response -> findings.addAll(validateTreatmentResponse(patientId, response)));
+        for (int i = 0; i < responses.size(); i++) {
+            findings.addAll(validateTreatmentResponse(patientId, responses.get(i), i == 0));
+        }
+
         treatments.sort(comparing(BiopsyTreatmentData::startDate, nullsLast(naturalOrder())));
-        responses.sort(comparing(BiopsyTreatmentResponseData::assessmentDate, nullsLast(naturalOrder())));
+        responses.sort(comparing(BiopsyTreatmentResponseData::date, nullsLast(naturalOrder())));
         if (treatments.isEmpty() && !responses.isEmpty()) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientId,
@@ -377,15 +380,16 @@ public final class PatientValidator {
                     false));
         }
         if (!treatments.isEmpty() && !responses.isEmpty()) {
-            final LocalDate firstAssessmentDate = responses.get(0).assessmentDate();
+            final LocalDate firstResponseDate = responses.get(0).date();
             final LocalDate firstTreatmentStart = treatments.get(0).startDate();
-            if (firstAssessmentDate != null && firstTreatmentStart != null && firstAssessmentDate.isAfter(firstTreatmentStart)) {
+            if (firstResponseDate != null && firstTreatmentStart != null && firstResponseDate.isAfter(firstTreatmentStart)) {
                 findings.add(ValidationFinding.of(ECRF_LEVEL,
                         patientId,
                         fields(FORM_TREATMENT, FORM_TUMOR_MEASUREMENT),
                         "first (baseline) measurement date is after first treatment start",
                         FormStatusState.best(treatments.get(0).formStatus(), responses.get(0).formStatus()),
-                        treatments.get(0).formLocked() || responses.get(0).formLocked()));
+                        treatments.get(0).formLocked() || responses.get(0).formLocked(),
+                        "first treatment response: " + firstResponseDate + "; first treatment start: " + firstTreatmentStart));
 
             }
         }
@@ -428,7 +432,7 @@ public final class PatientValidator {
     @NotNull
     @VisibleForTesting
     static List<ValidationFinding> validateTreatmentResponse(@NotNull final String patientId,
-            @NotNull final BiopsyTreatmentResponseData treatmentResponse) {
+            @NotNull final BiopsyTreatmentResponseData treatmentResponse, boolean isFirstResponse) {
         final List<ValidationFinding> findings = Lists.newArrayList();
         final String measurementDone = treatmentResponse.measurementDone();
         final String response = treatmentResponse.response();
@@ -451,11 +455,10 @@ public final class PatientValidator {
                         treatmentResponse.formStatus(),
                         treatmentResponse.formLocked()));
             }
-            if (response == null) {
+            if (response == null && !isFirstResponse) {
                 findings.add(ValidationFinding.of(ECRF_LEVEL,
                         patientId,
-                        FIELD_RESPONSE,
-                        "measurement done is yes, but response is empty",
+                        FIELD_RESPONSE, "measurement done is yes, but response is empty (non-first response)",
                         treatmentResponse.formStatus(),
                         treatmentResponse.formLocked()));
             }
