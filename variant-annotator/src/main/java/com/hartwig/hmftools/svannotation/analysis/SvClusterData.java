@@ -4,11 +4,13 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import java.util.List;
 
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
+
 
 public class SvClusterData
 {
@@ -18,6 +20,14 @@ public class SvClusterData
     private final StructuralVariantData mSVData;
     private String mStartArm;
     private String mEndArm;
+    private int mPonCount;
+    private int mPonRegionCount; // allowing for a small buffer either side of a PON
+    private boolean mStartFragileSite;
+    private boolean mEndFragileSite;
+    private boolean mStartLineElement;
+    private boolean mEndLineElement;
+
+    private List<StructuralVariantLeg> mUniqueBreakends;
 
     // clustering info
     private List<SvClusterData> mSubSVs; // other SVs wholy contained within this SV
@@ -31,6 +41,12 @@ public class SvClusterData
         mSVData = svData;
         mStartArm = "";
         mEndArm = "";
+        mPonCount = 0;
+        mPonRegionCount = 0;
+        mStartFragileSite = false;
+        mEndFragileSite = false;
+        mStartLineElement = false;
+        mEndLineElement = false;
 
         mSubSVs = Lists.newArrayList();
         mIsSubSV = false;
@@ -71,6 +87,7 @@ public class SvClusterData
     public final byte orientation(boolean isStart){ return isStart ? mSVData.startOrientation() : mSVData.endOrientation(); }
     public final StructuralVariantType type() { return mSVData.type(); }
 
+    public final String arm(boolean isStart) { return isStart ? mStartArm : mEndArm; }
     public final String getStartArm() { return mStartArm; }
     public final String getEndArm() { return mEndArm; }
     public void setChromosomalArms(final String start, final String end)
@@ -79,11 +96,25 @@ public class SvClusterData
         mEndArm = end;
     }
 
+    public void setPonCount(int count) { mPonCount = count; }
+    public int getPonCount() { return mPonCount; }
+
+    public void setPonRegionCount(int count) { mPonRegionCount = count; }
+    public int getPonRegionCount() { return mPonRegionCount; }
+
+    public void setFragileSites(boolean isStart, boolean isEnd) { mStartFragileSite = isStart; mEndFragileSite = isEnd; }
+    public boolean isStartFragileSite() { return mStartFragileSite; }
+    public boolean isEndFragileSite() { return mEndFragileSite; }
+
+    public void setLineElements(boolean isStart, boolean isEnd) { mStartLineElement = isStart; mEndLineElement = isEnd; }
+    public boolean isStartLineElement() { return mStartLineElement; }
+    public boolean isEndLineElement() { return mEndLineElement; }
 
     public final String posId()
     {
-        return String.format("id(%s) position(%s:%d -> %s:%d)",
-                id(), chromosome(true), position(true), chromosome(false), position(false));
+        return String.format("id(%s) position(%s:%d:%d -> %s:%d:%d)",
+                id(), chromosome(true), orientation(true), position(true),
+                chromosome(false), orientation(false), position(false));
     }
 
     public boolean equals(final SvClusterData other) { return id().equals(other.id()); }
@@ -91,11 +122,25 @@ public class SvClusterData
     public final String chromosome(boolean isStart) { return isStart ? mSVData.startChromosome() : mSVData.endChromosome(); }
     public final long position(boolean isStart) { return isStart ? mSVData.startPosition() : mSVData.endPosition(); }
 
+    public final String typeStr()
+    {
+        if(type() != StructuralVariantType.BND && mStartArm != mEndArm)
+        {
+            return "CRS";
+        }
+        else
+        {
+            return type().toString();
+        }
+    }
+
     public final boolean isLocal()
     {
         // means that both ends are within the same chromosomal arm
         return chromosome(true).equals(chromosome(false));
     }
+
+    public final boolean isCrossArm() { return mStartArm != mEndArm; }
 
     public final long getSpan()
     {

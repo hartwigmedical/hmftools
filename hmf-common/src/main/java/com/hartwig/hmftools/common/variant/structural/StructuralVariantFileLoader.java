@@ -13,8 +13,8 @@ import htsjdk.variant.vcf.VCFCodec;
 public final class StructuralVariantFileLoader {
 
     @NotNull
-    public static List<StructuralVariant> fromFile(@NotNull final String vcfFileLocation) throws IOException {
-        final StructuralVariantFactory factory = new StructuralVariantFactory();
+    public static List<StructuralVariant> fromFile(@NotNull final String vcfFileLocation, final boolean filterOnPasses) throws IOException {
+        final StructuralVariantFactory factory = new StructuralVariantFactory(filterOnPasses);
 
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcfFileLocation,
                 new VCFCodec(), false)) {

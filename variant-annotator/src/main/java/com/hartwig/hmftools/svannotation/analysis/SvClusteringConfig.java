@@ -7,6 +7,9 @@ public class SvClusteringConfig {
 
     private int mClusterBaseDistance;
     private String mOutputCsvPath;
+    private String mSvPONFile;
+    private String mFragileSiteFile;
+    private String mLineElementFile;
     private boolean mUseCombinedOutputFile;
 
     public static final int DEFAULT_BASE_DISTANCE = 100000;
@@ -14,8 +17,13 @@ public class SvClusteringConfig {
     public SvClusteringConfig()
     {
         mClusterBaseDistance = DEFAULT_BASE_DISTANCE;
+        mFragileSiteFile = "";
+        mLineElementFile = "";
+
+
         mOutputCsvPath = "";
         mUseCombinedOutputFile = false;
+        mSvPONFile = "";
     }
 
     public void setBaseDistance(int distance)
@@ -28,9 +36,19 @@ public class SvClusteringConfig {
 
     public void setOutputCsvPath(final String path) { mOutputCsvPath = path; }
     public final String getOutputCsvPath() { return mOutputCsvPath; }
+
+    public void setSvPONFile(final String filename) { mSvPONFile = filename; }
+    public String getSvPONFile() { return mSvPONFile; }
+
+    public String getFragileSiteFile() { return mFragileSiteFile;}
+    public void setFragileSiteFile(final String filename) { mFragileSiteFile = filename;}
+
+    public void setLineElementFile(final String filename) { mLineElementFile = filename; }
+    public String getLineElementFile() { return mLineElementFile; }
+
     public int getClusterBaseDistance() { return mClusterBaseDistance; }
 
     public boolean getUseCombinedOutputFile() { return mUseCombinedOutputFile; }
-    public void setUseCombinedOutputFile(boolean toggle) { mUseCombinedOutputFile = true; }
+    public void setUseCombinedOutputFile(boolean toggle) { mUseCombinedOutputFile = toggle; }
 
 }

@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.svannotation.analysis;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.centromeres.Centromeres;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svannotation.analysis.SvClusterData;
 
+import java.util.List;
 import java.util.Map;
 
 import static java.lang.Math.abs;
@@ -20,6 +23,19 @@ public class SvUtilities {
     public static String CHROMOSOME_ARM_P = "P"; // short arm, and lower position
     public static String CHROMOSOME_ARM_Q = "Q";
     public static String CHROMOSOME_ARM_CENTROMERE = "C";
+
+    // list of common annotations
+    public static String REPLICATION_EVENT = "REP";
+    public static String DOUBLE_STRANDED_BREAK = "DSB";
+    public static String TEMPLATED_INSERTION = "TI";
+    public static String DOUBLE_MINUTE = "DM";
+    public static String BREAKAGE_FUSION_BRIDGE = "BFB";
+    public static String FRAGILE_SITE = "FRAG";
+    public static String UNPHASED_EVENTS = "UNPHAS";
+
+    public static String SV_GROUP_ENCLOSED = "ENCL";
+    public static String SV_GROUP_OVERLAP = "OVLP";
+    public static String SV_GROUP_NEIGHBOURS = "NHRB";
 
     public SvUtilities(int baseDistance)
     {
@@ -72,6 +88,11 @@ public class SvUtilities {
         return true;
     }
 
+    public boolean areTypePair(final SvClusterData v1, final SvClusterData v2, StructuralVariantType type1, StructuralVariantType type2)
+    {
+        return (v1.type() == type1 && v2.type() == type2) || (v1.type() == type2 && v2.type() == type1);
+    }
+
     public boolean isWithinRange(long pos1, long pos2)
     {
         return abs(pos1 - pos2) <= mClusterBaseDistance;
@@ -79,7 +100,7 @@ public class SvUtilities {
 
     public boolean isWithin(final SvClusterData outer, final SvClusterData inner)
     {
-        // tests if the inner variant is wholy contained within the outer variant
+        // tests if the inner variant is wholly contained within the outer variant
         if(!outer.isLocal() || !inner.isLocal())
             return false;
 
@@ -131,4 +152,143 @@ public class SvUtilities {
 
         return false;
     }
+
+    public boolean isOverlapping(final SvClusterData v1, final SvClusterData v2)
+    {
+        // tests if either variant has an end within the other variant
+        if(isWithin(v2, v1.chromosome(true), v1.position(true))
+        || isWithin(v2, v1.chromosome(false), v1.position(false)))
+        {
+            return true;
+        }
+
+        if(isWithin(v1, v2.chromosome(true), v2.position(true))
+        || isWithin(v1, v2.chromosome(false), v2.position(false)))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    public int getNeighbouringProximity(final SvClusterData v1, final SvClusterData v2)
+    {
+        int minLength = -1;
+
+        if(v1.chromosome(true).equals(v2.chromosome(true)))
+        {
+            int length = Math.abs((int)v1.position(true) - (int)v2.position(true));
+            minLength = (minLength >= 0) ? Math.min(minLength, length) : length;
+        }
+
+        if(v1.chromosome(true).equals(v2.chromosome(false)))
+        {
+            int length = Math.abs((int)v1.position(true) - (int)v2.position(false));
+            minLength = (minLength >= 0) ? Math.min(minLength, length) : length;
+        }
+
+        if(v1.chromosome(false).equals( v2.chromosome(true)))
+        {
+            int length = Math.abs((int)v1.position(false) - (int)v2.position(true));
+            minLength = (minLength >= 0) ? Math.min(minLength, length) : length;
+        }
+
+        if(v1.chromosome(false).equals(v2.chromosome(false)))
+        {
+            int length = Math.abs((int)v1.position(false) - (int)v2.position(false));
+            minLength = (minLength >= 0) ? Math.min(minLength, length) : length;
+        }
+
+        return minLength;
+    }
+
+    public int getProximity(final SvClusterData v1, final SvClusterData v2, boolean v1Start, boolean v2Start)
+    {
+        // warning: no check for chromosome or arm
+//        if(!v1.chromosome(v1Start).equals(v2.chromosome(v2Start)))
+//            return -1;
+
+        return Math.abs((int)v1.position(v1Start) - (int)v2.position(v2Start));
+    }
+
+    public boolean isFromCentromere(final SvClusterData var)
+    {
+        return (var.orientation(true) == 1) == (var.getStartArm() == CHROMOSOME_ARM_Q);
+    }
+
+    public boolean isFromTelomere(final SvClusterData var)
+    {
+        return (var.orientation(true) == 1) == (var.getStartArm() == CHROMOSOME_ARM_P);
+    }
+
+    public boolean isToCentromere(final SvClusterData var)
+    {
+        return (var.orientation(false) == -1) == (var.getStartArm() == CHROMOSOME_ARM_P);
+    }
+
+    public boolean isToTelomere(final SvClusterData var)
+    {
+        return (var.orientation(false) == -1) == (var.getStartArm() == CHROMOSOME_ARM_Q);
+    }
+
+    public boolean sameChrArm(final SvClusterData v1, final SvClusterData v2, boolean v1Start, boolean v2Start) {
+        return v1.chromosome(v1Start).equals(v2.chromosome(v2Start)) && v1.arm(v1Start) == v2.arm(v2Start);
+    }
+
+    public boolean areLinkedSection(final SvClusterData v1, final SvClusterData v2, boolean v1Start, boolean v2Start)
+    {
+        // must be same chromosomal arm to be considered facing
+        if(!sameChrArm(v1, v2, v1Start, v2Start))
+            return false;
+
+        // start apart and heading towards each other
+        long pos1 = v1.position(v1Start);
+        boolean headsLeft1 = (v1.orientation(v1Start) == 1);
+        long pos2 = v2.position(v2Start);
+        boolean headsLeft2 = (v2.orientation(v2Start) == 1);
+
+        if(pos1 < pos2 && !headsLeft1 && headsLeft2)
+            return true;
+
+        if(pos2 < pos1 && headsLeft1 && !headsLeft2)
+            return true;
+
+        return false;
+    }
+
+    public boolean areSectionBreak(final SvClusterData v1, final SvClusterData v2, boolean v1Start, boolean v2Start)
+    {
+        // only relevant if on same chromosomal arm
+        if(!sameChrArm(v1, v2, v1Start, v2Start))
+            return false;
+
+        // start apart and heading same direction
+        long pos1 = v1.position(v1Start);
+        boolean headsLeft1 = (v1.orientation(v1Start) == 1);
+        long pos2 = v2.position(v2Start);
+        boolean headsLeft2 = (v2.orientation(v2Start) == 1);
+
+        if(pos1 < pos2 && headsLeft1 && !headsLeft2)
+            return true;
+
+        if(pos2 < pos1 && !headsLeft1 && headsLeft2)
+            return true;
+
+        return false;
+    }
+
+    public int calcConsistency(final List<SvClusterData> svList)
+    {
+        int consistencyCount = 0;
+
+        for(final SvClusterData var : svList)
+        {
+            consistencyCount += (var.getStartArm() == CHROMOSOME_ARM_P ? 1 : -1) * var.orientation(true);
+            consistencyCount += (var.getEndArm() == CHROMOSOME_ARM_P ? 1 : -1) * var.orientation(false);
+        }
+
+        return consistencyCount;
+    }
+
+
 }

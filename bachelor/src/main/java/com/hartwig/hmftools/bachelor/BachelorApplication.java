@@ -115,7 +115,7 @@ public class BachelorApplication {
     private static Collection<EligibilityReport> processSV(final String patient, final File vcf, final BachelorEligibility eligibility) {
         LOGGER.info("processing sv: {}", vcf.getPath());
 
-        final StructuralVariantFactory factory = new StructuralVariantFactory();
+        final StructuralVariantFactory factory = new StructuralVariantFactory(true);
         try {
             try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcf.getPath(),
                     new VCFCodec(),

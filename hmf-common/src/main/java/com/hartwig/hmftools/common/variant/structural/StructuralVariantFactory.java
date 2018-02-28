@@ -3,6 +3,8 @@ package com.hartwig.hmftools.common.variant.structural;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -33,9 +35,13 @@ public class StructuralVariantFactory {
     @NotNull
     private final VariantContextFilter filter;
 
-    public StructuralVariantFactory() {
+    public StructuralVariantFactory(boolean filterPassesOnly) {
         final CompoundFilter filter = new CompoundFilter(true);
-        filter.add(new PassingVariantFilter());
+
+        if(filterPassesOnly) {
+            filter.add(new PassingVariantFilter());
+        }
+
         filter.add(new ChromosomeFilter());
         this.filter = filter;
     }
@@ -69,6 +75,7 @@ public class StructuralVariantFactory {
         final int start = context.hasAttribute(BPI_START) ? context.getAttributeAsInt(BPI_START, -1) : context.getStart();
         final int end = context.hasAttribute(BPI_END) ? context.getAttributeAsInt(BPI_END, -1) : context.getEnd();
         final List<Double> af = context.hasAttribute(BPI_AF) ? context.getAttributeAsDoubleList(BPI_AF, 0.0) : Collections.emptyList();
+        final String filtersStr = context.getFilters().toString();
 
         byte startOrientation = 0, endOrientation = 0;
         switch (type) {
@@ -115,6 +122,7 @@ public class StructuralVariantFactory {
                 .end(endLeg)
                 .insertSequence(context.getAttributeAsString(INS_SEQ, ""))
                 .type(type)
+                .filters(filtersStr)
                 .build();
     }
 
@@ -126,6 +134,7 @@ public class StructuralVariantFactory {
         final int start = first.hasAttribute(BPI_START) ? first.getAttributeAsInt(BPI_START, -1) : first.getStart();
         final int end = second.hasAttribute(BPI_START) ? second.getAttributeAsInt(BPI_START, -1) : second.getStart();
         final List<Double> af = first.hasAttribute(BPI_AF) ? first.getAttributeAsDoubleList(BPI_AF, 0.0) : Collections.emptyList();
+        final String filtersStr = first.getFilters().toString() + second.getFilters().toString();
 
         byte startOrientation = 0, endOrientation = 0;
         final String alt = first.getAlternateAllele(0).getDisplayString();
@@ -170,6 +179,7 @@ public class StructuralVariantFactory {
                 .mateId(second.getID())
                 .insertSequence(first.getAttributeAsString(INS_SEQ, ""))
                 .type(StructuralVariantType.BND)
+                .filters(filtersStr)
                 .build();
     }
 

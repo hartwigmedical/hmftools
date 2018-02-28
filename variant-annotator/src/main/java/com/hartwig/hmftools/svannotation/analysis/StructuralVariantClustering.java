@@ -2,13 +2,15 @@ package com.hartwig.hmftools.svannotation.analysis;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
-import com.hartwig.hmftools.svannotation.analysis.SvCluster;
-import com.hartwig.hmftools.svannotation.analysis.SvClusteringConfig;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.svannotation.FragileSiteAnnotator;
+import com.hartwig.hmftools.svannotation.LineElementAnnotator;
+import com.hartwig.hmftools.svannotation.SvPONAnnotator;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,6 +22,7 @@ public class StructuralVariantClustering {
 
     private final SvClusteringConfig mConfig;
     private final SvUtilities mClusteringUtils;
+    private final ClusterAnalyser mAnalyser;
 
     // data per run (ie sample)
     private String mSampleId;
@@ -30,6 +33,9 @@ public class StructuralVariantClustering {
     private List<SvCluster> mClusters;
 
     BufferedWriter mFileWriter;
+    SvPONAnnotator mSvPONAnnotator;
+    FragileSiteAnnotator mFragileSiteAnnotator;
+    LineElementAnnotator mLineElementAnnotator;
 
     private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnalyzer.class);
 
@@ -38,6 +44,17 @@ public class StructuralVariantClustering {
         mConfig = config;
         mClusteringUtils = new SvUtilities(mConfig.getClusterBaseDistance());
         mFileWriter = null;
+        mAnalyser = new ClusterAnalyser(config, mClusteringUtils);
+
+        mSvPONAnnotator = new SvPONAnnotator();
+        mSvPONAnnotator.loadPonFile(mConfig.getSvPONFile());
+
+        mFragileSiteAnnotator = new FragileSiteAnnotator();
+        mFragileSiteAnnotator.loadFragileSitesFile(mConfig.getFragileSiteFile());
+
+        mLineElementAnnotator = new LineElementAnnotator();
+        mLineElementAnnotator.loadLineElementsFile(mConfig.getLineElementFile());
+
         clearState();
     }
 
@@ -87,16 +104,6 @@ public class StructuralVariantClustering {
 //        }
     }
 
-    private void setChromosomalArms()
-    {
-        for (SvClusterData var : mUnassignedVariants)
-        {
-            String startArm = mClusteringUtils.getChromosomalArm(var.chromosome(true), var.position(true));
-            String endArm = mClusteringUtils.getChromosomalArm(var.chromosome(false), var.position(false));
-            var.setChromosomalArms(startArm, endArm);
-        }
-    }
-
     public void runClustering()
     {
         if(mUnassignedVariants.isEmpty())
@@ -106,7 +113,18 @@ public class StructuralVariantClustering {
 
         setChromosomalArms();
 
-        runClusteringByBaseDistance();
+        addExternalAnnotations();
+
+        // for now exclude Inserts
+        removeInserts();
+
+        clusterByBaseDistance();
+
+        for(SvCluster cluster : mClusters)
+        {
+            mAnalyser.analyserCluster(cluster);
+            cluster.setUniqueBreakends();
+        }
 
         //runClusteringByLocals();
 
@@ -114,240 +132,48 @@ public class StructuralVariantClustering {
             writeBaseDistanceOutput();
     }
 
-    public void runClusteringByLocals() {
-        // first find outer-most clusters at CRMS level and identify others which will span CRMS
-
-        // LOGGER.debug("sample({}) isolating inter-chromosomal variants", mSampleId);
-
-        // first remove cross-chromosomal from initial consideration
-        // List<SvClusterData> crossChromosomal = findCrossChromosomalSVs();
-
-        LOGGER.debug("sample({}) clustering contained variants", mSampleId);
-
-        createOutermostChromosomalClusters();
-
-        LOGGER.debug("sample({}) assigning sub-clusters", mSampleId);
-
-        // now need to assign and create sub-clusters within these outer-most clusters
-        for(SvCluster cluster : mClusters) {
-            assignSubClusters(cluster);
+    private void setChromosomalArms()
+    {
+        for (SvClusterData var : mAllVariants)
+        {
+            String startArm = mClusteringUtils.getChromosomalArm(var.chromosome(true), var.position(true));
+            String endArm = mClusteringUtils.getChromosomalArm(var.chromosome(false), var.position(false));
+            var.setChromosomalArms(startArm, endArm);
         }
-
-        LOGGER.debug("sample({}) matching {} overlapping variants", mSampleId, mUnassignedVariants.size());
-
-        // final create links for the cross-chromosomal SVs and other overlapping SVs
-        assignCrossClusterSVs();
     }
 
-    private List<SvClusterData> findCrossChromosomalSVs()
+    private void addExternalAnnotations()
     {
-        // first remove cross-chromosomal from initial consideration
-        List<SvClusterData> crossChromosomal = Lists.newArrayList();
-
-        int currentIndex = 0;
-        while (currentIndex < mUnassignedVariants.size()) {
-            SvClusterData currentVar = mUnassignedVariants.get(currentIndex);
-
-            // first skip over cross-CRMS for now
-            if (!currentVar.isLocal()) {
-                crossChromosomal.add(currentVar);
-
-                LOGGER.debug("cross-CRMS SV: {}", currentVar.posId());
-
-                mUnassignedVariants.remove(currentIndex); // index will point at next
-                continue;
-            } else {
-                ++currentIndex;
-            }
+        for (SvClusterData var : mAllVariants)
+        {
+            mSvPONAnnotator.setPonOccurenceCount(var);
+            var.setFragileSites(mFragileSiteAnnotator.isFragileSite(var, true), mFragileSiteAnnotator.isFragileSite(var, false));
+            var.setLineElements(mLineElementAnnotator.isLineElement(var, true), mLineElementAnnotator.isLineElement(var, false));
         }
-
-        return crossChromosomal;
-
     }
 
-    private void createOutermostChromosomalClusters()
+
+    private void removeInserts()
     {
         int currentIndex = 0;
-
-        List<SvClusterData> subSVsToRemove = Lists.newArrayList();
 
         while(currentIndex < mUnassignedVariants.size()) {
             SvClusterData currentVar = mUnassignedVariants.get(currentIndex);
 
-            if(!currentVar.isLocal())
-            {
-                LOGGER.debug("skipping inter-chromosomal SV: {}", currentVar.posId());
-                ++currentIndex;
+            // for now exclude Inserts
+            if (currentVar.type() == StructuralVariantType.INS) {
+                mUnassignedVariants.remove(currentIndex);
                 continue;
             }
 
-            boolean spansOtherSVs = false;
-            List<SvClusterData> subSVs = Lists.newArrayList();
-
-            for (SvClusterData otherVar : mUnassignedVariants) 
-            {
-                if(otherVar.id().equals(currentVar.id()))
-                {
-                    continue;
-                }
-
-                if(mClusteringUtils.isLocalOverlap(currentVar, otherVar))
-                {
-                    LOGGER.debug("local overlap SVs: v1({}) and v2({})", currentVar.posId(), otherVar.posId());
-                    spansOtherSVs = true;
-                }
-
-                if (mClusteringUtils.isWithin(currentVar, otherVar))
-                {
-                    if(currentVar.addSubSV(otherVar)) {
-                        LOGGER.debug("wholy contained: outer({}) and inner({})", currentVar.posId(), otherVar.posId());
-                    }
-
-                }
-                else if (mClusteringUtils.isWithin(otherVar, currentVar))
-                {
-                    if(otherVar.addSubSV(currentVar)) {
-                        LOGGER.debug("wholy contained: outer({}) and inner({})", otherVar.posId(), currentVar.posId());
-                    }
-                }
-            }
-
-            if(!currentVar.isSubSV() && (currentVar.hasSubSVs() || !spansOtherSVs))
-            {
-                LOGGER.debug("adding outer-most CRMS SV: {}", currentVar.posId());
-
-                // make a new cluster
-                SvCluster newCluster = new SvCluster(getNextClusterId(), mClusteringUtils);
-
-                newCluster.setSpanningSV(currentVar);
-                mClusters.add(newCluster);
-
-                mUnassignedVariants.remove(currentIndex); // index will point at next
-            }
-            else
-            {
-                if(currentVar.isSubSV())
-                    subSVsToRemove.add(currentVar);
-
-                ++currentIndex;
-            }
-        }
-
-        for(SvClusterData variant : subSVsToRemove)
-        {
-            // remove from unassigned
-            mUnassignedVariants.remove(variant);
+            ++currentIndex;
         }
     }
 
-    private void assignSubClusters(SvCluster cluster)
-    {
-        LOGGER.debug("cluster({}) sub-clustering {} variants", cluster.getClusterId(), cluster.getSVs().size());
-
-        // create sub-clusters for any SVs which have sub SVs
-        for(SvClusterData currentVar : cluster.getSVs())
-        {
-            if(currentVar == cluster.getSpanningSV())
-                continue;
-
-            if(!currentVar.hasSubSVs())
-            {
-                if(currentVar.areClustersSet())
-                {
-                    // keep with the smallest cluster
-                    long clusterSpan = currentVar.getStartCluster().getSpan();
-                    long newSpan = cluster.getSpan();
-
-                    if(newSpan == -1 || newSpan > clusterSpan)
-                    {
-                        continue;
-                    }
-
-                }
-
-                LOGGER.debug("variant({}) assigned to cluster({}) span({} -> {})",
-                        currentVar.posId(), cluster.getClusterId(), cluster.getSpanningSV().position(true), cluster.getSpanningSV().position(false));
-
-                currentVar.setStartCluster(cluster);
-                currentVar.setEndCluster(cluster);
-                continue;
-            }
-            else {
-                // also check that this variant is a sub-variant of another variant at this level
-                boolean skipClustering = false;
-                for(SvClusterData other : cluster.getSVs())
-                {
-                    if(currentVar.equals(other) || other == cluster.getSpanningSV())
-                        continue;
-
-                    if(other.getSubSVs().contains(currentVar))
-                    {
-                        LOGGER.debug("skipping sub-cluster for variant({}) since part of other({})", currentVar.id(), other.id());
-                        skipClustering = true;
-                        break;
-                    }
-                }
-
-                if(skipClustering)
-                    continue;
-            }
-
-            // create a cluster, set its parent cluster and then call iteratively
-            SvCluster newCluster = new SvCluster(getNextClusterId(), mClusteringUtils);
-
-            LOGGER.debug("cluster({}) creating new subCluster({})", cluster.getClusterId(), newCluster.getClusterId());
-
-            // add the spanning SV and its sub-SVs
-            newCluster.setSpanningSV(currentVar);
-            cluster.addSubCluster(newCluster);
-
-            // and call recursively to create lower-level clusters
-            assignSubClusters(newCluster);
-        }
-    }
-
-    private void assignCrossClusterSVs()
-    {
-        // for all remaining SVs, including those which cross chromosomes,
-        // assign them to the most precise cluster (ie that with the smallest positional range)
-        for(SvClusterData currentVar : mUnassignedVariants) {
-
-            for(int i = 0; i < 2; ++i) {
-
-                boolean isStart = (i == 0);
-                String isStartStr = isStart ? "start" : "end";
-
-                // first start position, the end
-                boolean found = false;
-                for (SvCluster cluster : mClusters) {
-                    SvCluster matchedCluster = cluster.findClosestCluster(currentVar.chromosome(isStart), currentVar.position(isStart));
-                    if (matchedCluster != null) {
-                        LOGGER.debug("variant: id({}) {}({}:{}) matched with cluster({}) on spanningVariant({})",
-                                currentVar.id(), isStartStr, currentVar.chromosome(isStart), currentVar.position(isStart),
-                                matchedCluster.getClusterId(), matchedCluster.getSpanningSV().posId());
-
-                        if(isStart)
-                            currentVar.setStartCluster(matchedCluster);
-                        else
-                            currentVar.setEndCluster(matchedCluster);
-
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found) {
-                    LOGGER.debug("variant: id({}) {}({}:{}) unmatched",
-                            currentVar.id(), isStartStr, currentVar.chromosome(isStart), currentVar.position(isStart));
-                }
-            }
-        }
-    }
-
-    public void runClusteringByBaseDistance()
+    public void clusterByBaseDistance()
     {
         // purely for logging and verification
-        logAllLinkedSVs();
+        // logAllLinkedSVs();
 
         int currentIndex = 0;
 
@@ -459,30 +285,50 @@ public class StructuralVariantClustering {
                 mFileWriter = writer;
 
                 if(!fileExists) {
-                    writer.write("SampleId,ClusterId,ClusterCount,Id,Type,Ploidy,");
+                    writer.write("SampleId,ClusterId,ClusterCount,Id,Type,Ploidy,PONCount,PONRegionCount,");
                     writer.write("ChrStart,PosStart,OrientStart,ArmStart,AdjAFStart,AdjCNStart,AdjCNChgStart,");
-                    writer.write("ChrEnd,PosEnd,OrientEnd,ArmEnd,AdjAFEnd,AdjCNEnd,AdjCNChgEnd\n");
+                    writer.write("ChrEnd,PosEnd,OrientEnd,ArmEnd,AdjAFEnd,AdjCNEnd,AdjCNChgEnd,");
+                    writer.write("FSStart,FSEnd,FSCount,LEStart,LEEnd,LECount,DupBEStart,DupBEEnd,DupBECount,DupBESiteCount,");
+                    writer.write("Desc,Consistency,ArmCount,IsTI,TICount,TILens,IsDSB,DSBCount,DSBLens,Annotations");
+                    writer.write("\n");
                 }
             }
 
             for(final SvCluster cluster : mClusters)
             {
-                for(SvFootprint footprint : cluster.getFootprints()) {
-                    for (final SvClusterData var : footprint.getSVs()) {
-                        writer.write(
-                                String.format("%s,%d,%d,%s,%s,%.2f,",
-                                        mSampleId, cluster.getClusterId(), cluster.getFootprints().size(), var.id(), var.type(), var.getSvData().ploidy()));
+                int lineElementCount = cluster.getLineElementCount();
+                int fragileSiteCount = cluster.getFragileSiteCount();
+                int duplicateBECount = cluster.getDuplicateBECount();
+                int duplicateBESiteCount = cluster.getDuplicateBESiteCount();
 
-                        writer.write(
-                                String.format("%s,%d,%d,%s,%.2f,%.2f,%.2f,%s,%d,%d,%s,%.2f,%.2f,%.2f",
-                                        var.chromosome(true), var.position(true), var.orientation(true), var.getStartArm(),
-                                        var.getSvData().adjustedStartAF(), var.getSvData().adjustedStartCopyNumber(), var.getSvData().adjustedStartCopyNumberChange(),
-                                        var.chromosome(false), var.position(false), var.orientation(false), var.getEndArm(),
-                                        var.getSvData().adjustedEndAF(), var.getSvData().adjustedEndCopyNumber(), var.getSvData().adjustedEndCopyNumberChange()
-                                        ));
+                for (final SvClusterData var : cluster.getSVs()) {
+                    writer.write(
+                            String.format("%s,%d,%d,%s,%s,%.2f,%d,%d,",
+                                    mSampleId, cluster.getClusterId(), cluster.getSVs().size(), var.id(), var.type(),
+                                    var.getSvData().ploidy(), var.getPonCount(), var.getPonRegionCount()));
 
-                        writer.newLine();
-                    }
+                    writer.write(
+                            String.format("%s,%d,%d,%s,%.2f,%.2f,%.2f,%s,%d,%d,%s,%.2f,%.2f,%.2f,",
+                                    var.chromosome(true), var.position(true), var.orientation(true), var.getStartArm(),
+                                    var.getSvData().adjustedStartAF(), var.getSvData().adjustedStartCopyNumber(), var.getSvData().adjustedStartCopyNumberChange(),
+                                    var.chromosome(false), var.position(false), var.orientation(false), var.getEndArm(),
+                                    var.getSvData().adjustedEndAF(), var.getSvData().adjustedEndCopyNumber(), var.getSvData().adjustedEndCopyNumberChange()
+                                    ));
+
+                    writer.write(
+                            String.format("%s,%s,%d,%s,%s,%d,%s,%s,%d,%d,",
+                                    var.isStartFragileSite(), var.isStartFragileSite(), fragileSiteCount, var.isStartLineElement(), var.isEndLineElement(), lineElementCount,
+                                    cluster.isSvDuplicateBE(var, true), cluster.isSvDuplicateBE(var, false), duplicateBECount, duplicateBESiteCount
+                                    ));
+
+                    writer.write(
+                            String.format("%s,%d,%d,%s,%d,%s,%s,%d,%s,%s",
+                                    cluster.getDesc(), cluster.getConsistencyCount(), cluster.getChromosomalArmCount(),
+                                    cluster.isReplicationEvent(), cluster.getTICount(), cluster.getTempInsertLengths(),
+                                    cluster.isDSBEvent(), cluster.getDSBCount(), cluster.getDSBLengths(), cluster.getAnnotations()
+                                    ));
+
+                    writer.newLine();
                 }
             }
             // writer.close();

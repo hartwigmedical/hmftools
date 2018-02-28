@@ -37,4 +37,7 @@ public interface StructuralVariant {
 
     @NotNull
     StructuralVariantType type();
+
+    @Nullable
+    String filters();
 }
