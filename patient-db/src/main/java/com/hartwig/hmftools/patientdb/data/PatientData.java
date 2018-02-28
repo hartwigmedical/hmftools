@@ -19,6 +19,9 @@ public abstract class PatientData {
     public abstract LocalDate registrationDate();
 
     @Nullable
+    public abstract LocalDate informedConsentDate();
+
+    @Nullable
     public abstract String gender();
 
     @Nullable
@@ -29,8 +32,8 @@ public abstract class PatientData {
 
     @NotNull
     @Value.Default
-    public CuratedTumorLocation primaryTumorLocation() {
-        return ImmutableCuratedTumorLocation.of(null, null, null);
+    public CuratedCancerType cancerType() {
+        return ImmutableCuratedCancerType.of(null, null, null);
     }
 
     @Nullable
@@ -55,6 +58,17 @@ public abstract class PatientData {
 
     @Value.Default
     public boolean primaryTumorLocked() {
+        return false;
+    }
+
+    @NotNull
+    @Value.Default
+    public FormStatusState informedConsentStatus() {
+        return FormStatusState.UNKNOWN;
+    }
+
+    @Value.Default
+    public boolean informedConsentLocked() {
         return false;
     }
 

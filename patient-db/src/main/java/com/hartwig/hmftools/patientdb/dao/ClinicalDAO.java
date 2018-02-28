@@ -55,9 +55,7 @@ class ClinicalDAO {
         if (patientRecord != null) {
             return patientRecord.getValue(PATIENT.ID);
         } else {
-            final int patientId = context.insertInto(PATIENT,
-                    PATIENT.CPCTID,
-                    PATIENT.REGISTRATIONDATE,
+            final int patientId = context.insertInto(PATIENT, PATIENT.CPCTID, PATIENT.REGISTRATIONDATE, PATIENT.INFORMEDCONSENTDATE,
                     PATIENT.GENDER,
                     PATIENT.HOSPITAL,
                     PATIENT.BIRTHYEAR,
@@ -66,11 +64,12 @@ class ClinicalDAO {
                     PATIENT.DEATHDATE)
                     .values(patient.cpctId(),
                             Utils.toSQLDate(patient.registrationDate()),
+                            Utils.toSQLDate(patient.informedConsentDate()),
                             patient.gender(),
                             patient.hospital(),
                             patient.birthYear(),
-                            patient.primaryTumorLocation().category(),
-                            patient.primaryTumorLocation().subcategory(),
+                            patient.cancerType().category(),
+                            patient.cancerType().subcategory(),
                             Utils.toSQLDate(patient.deathDate()))
                     .returning(PATIENT.ID)
                     .fetchOne()
@@ -85,6 +84,11 @@ class ClinicalDAO {
                     "primaryTumor",
                     patient.primaryTumorStatus().stateString(),
                     Boolean.toString(patient.primaryTumorLocked()));
+            writeFormStatus(patientId,
+                    PATIENT.getName(),
+                    "informedConsent",
+                    patient.informedConsentStatus().stateString(),
+                    Boolean.toString(patient.informedConsentLocked()));
             writeFormStatus(patientId,
                     PATIENT.getName(),
                     "eligibility",
@@ -202,6 +206,7 @@ class ClinicalDAO {
                 .returning(TREATMENTRESPONSE.ID)
                 .fetchOne()
                 .getValue(TREATMENTRESPONSE.ID);
+
         writeFormStatus(id,
                 TREATMENTRESPONSE.getName(),
                 "treatmentResponse",

@@ -40,9 +40,9 @@ public class PatientReaderTest {
                 new CpctPatientReader(model, new TumorLocationCurator(new FileInputStream(TUMOR_LOCATION_MAPPING_CSV)));
         final PatientData patientData = cpctPatientReader.read(cpctPatient);
         assertEquals("CPCT02252500", patientData.cpctId());
-        assertEquals("Breast cancer", patientData.primaryTumorLocation().searchTerm());
-        assertEquals("Breast", patientData.primaryTumorLocation().category());
-        assertEquals("Breast Cancer: subtype unknown", patientData.primaryTumorLocation().subcategory());
+        assertEquals("Breast cancer", patientData.cancerType().searchTerm());
+        assertEquals("Breast", patientData.cancerType().category());
+        assertEquals("Breast Cancer: subtype unknown", patientData.cancerType().subcategory());
         assertEquals("female", patientData.gender());
         assertEquals("Bernhoven uden", patientData.hospital());
         assertEquals(new Integer(1963), patientData.birthYear());

@@ -179,8 +179,8 @@ public final class LoadClinicalData {
         LOGGER.info("Writing cancer types to CSV... ");
         final List<PatientCancerTypes> cancerTypes = patients.stream()
                 .map(patient -> ImmutablePatientCancerTypes.of(patient.patientData().cpctId(),
-                        Strings.nullToEmpty(patient.patientData().primaryTumorLocation().category()),
-                        Strings.nullToEmpty(patient.patientData().primaryTumorLocation().subcategory())))
+                        Strings.nullToEmpty(patient.patientData().cancerType().category()),
+                        Strings.nullToEmpty(patient.patientData().cancerType().subcategory())))
                 .collect(Collectors.toList());
         PatientCancerTypes.writeRecords(outputFile, cancerTypes);
         linkName.ifPresent(link -> updateCancerTypesCSVLink(csvOutputDir + File.separator + link, outputFile));

@@ -25,6 +25,7 @@ import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_BIR
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_BIRTH_YEAR2;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_BIRTH_YEAR3;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_DEATH_DATE;
+import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_INFORMED_CONSENT_DATE;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_PRIMARY_TUMOR_LOCATION;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_PRIMARY_TUMOR_LOCATION_OTHER;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_REGISTRATION_DATE1;
@@ -82,7 +83,7 @@ public final class PatientValidator {
     static List<ValidationFinding> validatePatientData(@NotNull final PatientData patientData) {
         final String cpctId = patientData.cpctId();
         final List<ValidationFinding> findings = Lists.newArrayList();
-        if (patientData.primaryTumorLocation().searchTerm() == null) {
+        if (patientData.cancerType().searchTerm() == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     cpctId,
                     fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER),
@@ -105,6 +106,14 @@ public final class PatientValidator {
                     "registration date empty or in wrong format",
                     FormStatusState.best(patientData.selectionCriteriaStatus(), patientData.eligibilityStatus()),
                     patientData.selectionCriteriaLocked() || patientData.eligibilityLocked()));
+        }
+        if (patientData.informedConsentDate() == null) {
+            findings.add(ValidationFinding.of(ECRF_LEVEL,
+                    cpctId,
+                    FIELD_INFORMED_CONSENT_DATE,
+                    "informed consent date empty or in wrong format",
+                    patientData.informedConsentStatus(),
+                    patientData.informedConsentLocked()));
         }
         if (patientData.birthYear() == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
@@ -338,8 +347,8 @@ public final class PatientValidator {
     @VisibleForTesting
     static List<ValidationFinding> validateTumorLocationCuration(@NotNull final PatientData patientData) {
         final List<ValidationFinding> findings = Lists.newArrayList();
-        final String searchTerm = patientData.primaryTumorLocation().searchTerm();
-        if (searchTerm != null && patientData.primaryTumorLocation().category() == null) {
+        final String searchTerm = patientData.cancerType().searchTerm();
+        if (searchTerm != null && patientData.cancerType().category() == null) {
             findings.add(ValidationFinding.of("tumorLocationCuration",
                     patientData.cpctId(),
                     fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER),
@@ -413,7 +422,7 @@ public final class PatientValidator {
 
     private static boolean hasResponse(@NotNull final BiopsyTreatmentData treatment,
             @NotNull final List<BiopsyTreatmentResponseData> responses) {
-        return responses.stream().filter(response -> TreatmentResponseMatcher.responseMatchesTreatment(response, treatment)).count() > 0;
+        return responses.stream().anyMatch(response -> TreatmentResponseMatcher.responseMatchesTreatment(response, treatment));
     }
 
     @NotNull

@@ -5,6 +5,7 @@ CREATE TABLE patient
 (   id int NOT NULL AUTO_INCREMENT,
     cpctId varchar(50),
     registrationDate DATE,
+    informedConsentDate DATE,
     gender varchar(10),
     hospital varchar(255),
     birthYear int,
