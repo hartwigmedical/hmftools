@@ -466,16 +466,14 @@ public final class PatientValidator {
                             patientId,
                             FIELD_MEASUREMENT_DONE,
                             "measurement done is no, but assessment date or response date is filled in",
-                            treatmentResponse.formStatus(),
-                            treatmentResponse.formLocked()));
+                            treatmentResponse.formStatus(), treatmentResponse.formLocked(), "effective response date: " + date));
                 }
                 if (response != null) {
                     findings.add(ValidationFinding.of(ECRF_LEVEL,
                             patientId,
                             FIELD_MEASUREMENT_DONE,
                             "measurement done is no, but response filled in",
-                            treatmentResponse.formStatus(),
-                            treatmentResponse.formLocked()));
+                            treatmentResponse.formStatus(), treatmentResponse.formLocked(), "response: " + response));
                 }
             }
         } else {
@@ -483,16 +481,14 @@ public final class PatientValidator {
                     patientId,
                     FIELD_MEASUREMENT_DONE,
                     "measurement done is not yes/no",
-                    treatmentResponse.formStatus(),
-                    treatmentResponse.formLocked()));
+                    treatmentResponse.formStatus(), treatmentResponse.formLocked(), "measurement done: " + measurementDone));
         }
         if (response != null && date == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientId,
                     fields(FIELD_ASSESSMENT_DATE, FIELD_RESPONSE_DATE),
                     "response filled in, but no assessment date and response date found",
-                    treatmentResponse.formStatus(),
-                    treatmentResponse.formLocked()));
+                    treatmentResponse.formStatus(), treatmentResponse.formLocked(), "response: " + response));
         }
         return findings;
     }
