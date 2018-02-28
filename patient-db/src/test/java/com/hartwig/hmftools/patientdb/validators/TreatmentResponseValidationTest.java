@@ -59,6 +59,8 @@ public class TreatmentResponseValidationTest {
             ImmutableBiopsyTreatmentResponseData.of(null, null, null, "Yes", "No", FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentResponseData RESPONSE_MEASUREMENT_NO_WITH_DATA =
             ImmutableBiopsyTreatmentResponseData.of(JAN2015, JAN2015, "NE", "No", "No", FormStatusState.UNKNOWN, false);
+    private final static BiopsyTreatmentResponseData RESPONSE_MEASUREMENT_NO_WITH_VALID_DATA =
+            ImmutableBiopsyTreatmentResponseData.of(JAN2015, JAN2015, "ND", "No", "No", FormStatusState.UNKNOWN, false);
 
     @Test
     public void reportsMeasurementDoneNull() {
@@ -96,6 +98,13 @@ public class TreatmentResponseValidationTest {
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
         assertTrue(findingsFields.contains(FIELD_MEASUREMENT_DONE));
+    }
+
+    @Test
+    public void ignoresMeasurementDoneNoWithValidData() {
+        final List<ValidationFinding> findings =
+                PatientValidator.validateTreatmentResponse(CPCT_ID, RESPONSE_MEASUREMENT_NO_WITH_VALID_DATA);
+        assertTrue(findings.isEmpty());
     }
 
     @Test

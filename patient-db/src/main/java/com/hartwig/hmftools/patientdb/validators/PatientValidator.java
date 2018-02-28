@@ -431,7 +431,9 @@ public final class PatientValidator {
             @NotNull final BiopsyTreatmentResponseData treatmentResponse) {
         final List<ValidationFinding> findings = Lists.newArrayList();
         final String measurementDone = treatmentResponse.measurementDone();
+        final String response = treatmentResponse.response();
         final LocalDate date = treatmentResponse.date();
+
         if (measurementDone == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientId,
@@ -449,7 +451,7 @@ public final class PatientValidator {
                         treatmentResponse.formStatus(),
                         treatmentResponse.formLocked()));
             }
-            if (treatmentResponse.response() == null) {
+            if (response == null) {
                 findings.add(ValidationFinding.of(ECRF_LEVEL,
                         patientId,
                         FIELD_RESPONSE,
@@ -457,22 +459,24 @@ public final class PatientValidator {
                         treatmentResponse.formStatus(),
                         treatmentResponse.formLocked()));
             }
-        } else if (measurementDone.trim().toLowerCase().equals("no")) {
-            if (date != null) {
-                findings.add(ValidationFinding.of(ECRF_LEVEL,
-                        patientId,
-                        FIELD_MEASUREMENT_DONE,
-                        "measurement done is no, but assessment date or response date is filled in",
-                        treatmentResponse.formStatus(),
-                        treatmentResponse.formLocked()));
-            }
-            if (treatmentResponse.response() != null) {
-                findings.add(ValidationFinding.of(ECRF_LEVEL,
-                        patientId,
-                        FIELD_MEASUREMENT_DONE,
-                        "measurement done is no, but response filled in",
-                        treatmentResponse.formStatus(),
-                        treatmentResponse.formLocked()));
+        } else if (measurementDone.trim().equalsIgnoreCase("no")) {
+            if (response == null || !response.trim().equalsIgnoreCase("nd")) {
+                if (date != null) {
+                    findings.add(ValidationFinding.of(ECRF_LEVEL,
+                            patientId,
+                            FIELD_MEASUREMENT_DONE,
+                            "measurement done is no, but assessment date or response date is filled in",
+                            treatmentResponse.formStatus(),
+                            treatmentResponse.formLocked()));
+                }
+                if (response != null) {
+                    findings.add(ValidationFinding.of(ECRF_LEVEL,
+                            patientId,
+                            FIELD_MEASUREMENT_DONE,
+                            "measurement done is no, but response filled in",
+                            treatmentResponse.formStatus(),
+                            treatmentResponse.formLocked()));
+                }
             }
         } else {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
@@ -482,7 +486,7 @@ public final class PatientValidator {
                     treatmentResponse.formStatus(),
                     treatmentResponse.formLocked()));
         }
-        if (treatmentResponse.response() != null && date == null) {
+        if (response != null && date == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientId,
                     fields(FIELD_ASSESSMENT_DATE, FIELD_RESPONSE_DATE),
