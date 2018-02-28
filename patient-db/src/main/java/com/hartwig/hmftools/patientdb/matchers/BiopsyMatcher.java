@@ -31,7 +31,8 @@ public final class BiopsyMatcher {
             findings.add(biopsyMatchFinding(patientId,
                     "less ecrf biopsies than biopsies sequenced.",
                     "ecrf biopsies: " + clinicalBiopsies.size() + "; sequenced: " + sequencedBiopsies.size()));
-        } List<BiopsyData> remainingBiopsies = clinicalBiopsies;
+        }
+        List<BiopsyData> remainingBiopsies = clinicalBiopsies;
         for (final SampleData sequencedBiopsy : sequencedBiopsies) {
             final Map<Boolean, List<BiopsyData>> partitions = remainingBiopsies.stream()
                     .collect(Collectors.partitioningBy(clinicalBiopsy -> isPossibleMatch(sequencedBiopsy, clinicalBiopsy)));
@@ -39,6 +40,11 @@ public final class BiopsyMatcher {
             if (possibleMatches.size() == 1 && possibleMatches.get(0).date() != null) {
                 final BiopsyData clinicalBiopsy = possibleMatches.get(0);
                 matchedBiopsies.add(ImmutableBiopsyData.builder().from(clinicalBiopsy).sampleId(sequencedBiopsy.sampleId()).build());
+                if (hasMismatchOnSamplingDate(sequencedBiopsy, clinicalBiopsy)) {
+                    findings.add(biopsyMatchFinding(patientId,
+                            "sampling date does not equal biopsy date in matched biopsy",
+                            "sampling date: " + sequencedBiopsy.samplingDate() + "; ecrf biopsy date: " + clinicalBiopsy.date()));
+                }
                 remainingBiopsies = partitions.get(false);
             } else if (possibleMatches.size() == 0 || (possibleMatches.size() == 1 && possibleMatches.get(0).date() == null)) {
                 findings.add(biopsyMatchFinding(patientId,
@@ -84,6 +90,18 @@ public final class BiopsyMatcher {
                     Duration.between(biopsyDate.atStartOfDay(), sequencedBiopsy.arrivalDate().atStartOfDay()).toDays();
             return daysFromBiopsyTakenToArrival >= 0 && daysFromBiopsyTakenToArrival < Config.MAX_DAYS_ARRIVAL_DATE_AFTER_BIOPSY_DATE;
         }
+    }
+
+    private static boolean hasMismatchOnSamplingDate(@NotNull SampleData sequencedBiopsy, @NotNull BiopsyData clinicalBiopsy) {
+        LocalDate samplingDate = sequencedBiopsy.samplingDate();
+        LocalDate biopsyDate = clinicalBiopsy.date();
+
+        if (samplingDate != null) {
+            assert biopsyDate != null;
+            return !biopsyDate.equals(samplingDate);
+        }
+
+        return false;
     }
 
     @NotNull

@@ -66,7 +66,7 @@ public class BiopsyDataValidationTest {
     }
 
     @Test
-    public void reportsAllFindings() {
+    public void reportsAllFieldsEmpty() {
         final List<ValidationFinding> findings =
                 PatientValidator.validateBiopsies(CPCT_ID, Lists.newArrayList(BIOPSY_NULL, BIOPSY_FEB1, BIOPSY_FEB2), Lists.newArrayList());
         assertEquals(3, findings.size());
