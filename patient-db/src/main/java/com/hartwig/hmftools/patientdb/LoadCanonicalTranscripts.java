@@ -27,7 +27,7 @@ public class LoadCanonicalTranscripts {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    public static void main(@NotNull final String[] args) throws ParseException, IOException, HartwigException, SQLException {
+    public static void main(@NotNull final String[] args) throws ParseException, SQLException {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final DatabaseAccess dbAccess = databaseAccess(cmd);

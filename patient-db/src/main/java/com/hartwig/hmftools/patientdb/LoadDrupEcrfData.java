@@ -35,15 +35,13 @@ public final class LoadDrupEcrfData {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    public static void main(@NotNull final String[] args)
-            throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException, SQLException,
-            HartwigException {
+    public static void main(@NotNull final String[] args) throws ParseException, IOException, XMLStreamException, SQLException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final String userName = cmd.getOptionValue(DB_USER);
         final String password = cmd.getOptionValue(DB_PASS);
-        final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
-        final String jdbcUrl = "jdbc:" + databaseUrl;
+        final String databaseUrl = cmd.getOptionValue(DB_URL);
+
         final String ecrfFile = cmd.getOptionValue(ECRF_FILE);
         final String runsFolderPath = cmd.getOptionValue(RUNS_DIR);
 
@@ -53,6 +51,7 @@ public final class LoadDrupEcrfData {
         } else {
             final File runDirectory = new File(runsFolderPath);
             if (runDirectory.isDirectory()) {
+                final String jdbcUrl = "jdbc:" + databaseUrl;
                 final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
                 dbWriter.clearDrupEcrf();
                 LOGGER.info("Importing DRUP ecrf data from: {}", ecrfFile);

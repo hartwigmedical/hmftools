@@ -70,20 +70,20 @@ public final class LoadClinicalData {
             LoadClinicalData.class.getResourceAsStream("/tumor_location_mapping.csv");
 
     public static void main(@NotNull final String[] args)
-            throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException, SQLException,
-            HartwigException {
+            throws ParseException, IOException, XMLStreamException, SQLException, HartwigException {
         LOGGER.info("Running patient-db v{}", VERSION);
         final Options basicOptions = createBasicOptions();
         final Options clinicalOptions = createLimsOptions();
         final Options ecrfOptions = createEcrfOptions();
         final Options options = mergeOptions(basicOptions, clinicalOptions, ecrfOptions);
+
         final CommandLine cmd = createCommandLine(args, options);
         final String runsFolderPath = cmd.getOptionValue(RUNS_DIR);
         final String userName = cmd.getOptionValue(DB_USER);
         final String password = cmd.getOptionValue(DB_PASS);
-        final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
-        final String jdbcUrl = "jdbc:" + databaseUrl;
-        final boolean raw_ecrf = cmd.hasOption(DO_LOAD_RAW_ECRF);
+        final String databaseUrl = cmd.getOptionValue(DB_URL);
+
+        final boolean loadRawEcrf = cmd.hasOption(DO_LOAD_RAW_ECRF);
 
         if (Utils.anyNull(runsFolderPath, userName, password, databaseUrl)) {
             final HelpFormatter formatter = new HelpFormatter();
@@ -93,8 +93,10 @@ public final class LoadClinicalData {
             if (runDirectory.isDirectory()) {
                 LOGGER.info("Running clinical data import.");
                 final List<RunContext> runContexts = RunsFolderReader.getRunContexts(runDirectory);
+                final String jdbcUrl = "jdbc:" + databaseUrl;
+
                 final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
-                if (raw_ecrf) {
+                if (loadRawEcrf) {
                     writeRawEcrf(ecrfOptions, cmd, runContexts, dbWriter);
                 }
 
