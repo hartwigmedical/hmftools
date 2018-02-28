@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import static com.hartwig.hmftools.patientdb.Config.BATCH_INSERT_SIZE;
+import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 
 import java.sql.Timestamp;
@@ -28,7 +28,7 @@ class SomaticVariantDAO {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample)).execute();
 
-        for (List<EnrichedSomaticVariant> splitRegions : Iterables.partition(variants, BATCH_INSERT_SIZE)) {
+        for (List<EnrichedSomaticVariant> splitRegions : Iterables.partition(variants, DB_BATCH_INSERT_SIZE)) {
             InsertValuesStepN inserter = context.insertInto(SOMATICVARIANT,
                     SOMATICVARIANT.SAMPLEID,
                     SOMATICVARIANT.CHROMOSOME,

@@ -6,8 +6,7 @@ import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_SITE;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_SITE_OTHER;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FORM_BIOPS;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FORM_TREATMENT;
-import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_REGISTRATION_DATE1;
-import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_REGISTRATION_DATE2;
+import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_INFORMED_CONSENT_DATE;
 import static com.hartwig.hmftools.patientdb.validators.PatientValidator.fields;
 
 import static org.junit.Assert.assertEquals;
@@ -73,17 +72,18 @@ public class BiopsyDataValidationTest {
     }
 
     @Test
-    public void reportsBiopsyBeforeRegistration() {
-        final List<ValidationFinding> findings = PatientValidator.validateRegistrationDate(CPCT_ID,
-                ImmutablePatientData.builder().cpctId(CPCT_ID).registrationDate(MAR2016).build(), Lists.newArrayList(BIOPSY_FEB1));
+    public void reportsBiopsyBeforeInformedConsent() {
+        final List<ValidationFinding> findings = PatientValidator.validateInformedConsentDate(CPCT_ID,
+                ImmutablePatientData.builder().cpctId(CPCT_ID).informedConsentDate(MAR2016).build(),
+                Lists.newArrayList(BIOPSY_FEB1));
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(fields(FIELD_REGISTRATION_DATE1, FIELD_REGISTRATION_DATE2, FIELD_BIOPSY_DATE)));
+        assertTrue(findingsFields.contains(fields(FIELD_INFORMED_CONSENT_DATE, FIELD_BIOPSY_DATE)));
 
-        // KODU: DEV-251: Don't raise warning for a biopsy taken one day before registration.
-        final List<ValidationFinding> no_findings = PatientValidator.validateRegistrationDate(CPCT_ID,
-                ImmutablePatientData.builder().cpctId(CPCT_ID).registrationDate(FEB2015.plusDays(1)).build(),
+        // KODU: DEV-251: Don't raise warning for a biopsy taken one day before informed consent.
+        final List<ValidationFinding> no_findings = PatientValidator.validateInformedConsentDate(CPCT_ID,
+                ImmutablePatientData.builder().cpctId(CPCT_ID).informedConsentDate(FEB2015.plusDays(1)).build(),
                 Lists.newArrayList(BIOPSY_FEB1));
         assertEquals(0, no_findings.size());
     }

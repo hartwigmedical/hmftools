@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import static com.hartwig.hmftools.patientdb.Config.BATCH_INSERT_SIZE;
+import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GENECOPYNUMBER;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Copynumber.COPYNUMBER;
 
@@ -28,7 +28,7 @@ class GeneCopyNumberDAO {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(GENECOPYNUMBER).where(GENECOPYNUMBER.SAMPLEID.eq(sample)).execute();
 
-        for (List<GeneCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, BATCH_INSERT_SIZE)) {
+        for (List<GeneCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, DB_BATCH_INSERT_SIZE)) {
             InsertValuesStepN inserter = context.insertInto(GENECOPYNUMBER,
                     GENECOPYNUMBER.SAMPLEID,
                     GENECOPYNUMBER.CHROMOSOME,

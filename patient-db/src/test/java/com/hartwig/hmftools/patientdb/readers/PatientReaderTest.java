@@ -48,6 +48,7 @@ public class PatientReaderTest {
         assertEquals(new Integer(1963), patientData.birthYear());
         assertEquals(LocalDate.parse("2012-06-22", DATE_FORMATTER), patientData.deathDate());
         assertEquals(LocalDate.parse("2012-02-17", DATE_FORMATTER), patientData.registrationDate());
+        assertEquals(LocalDate.parse("2012-02-17", DATE_FORMATTER), patientData.informedConsentDate());
     }
 
     @Test

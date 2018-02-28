@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import static com.hartwig.hmftools.patientdb.Config.BATCH_INSERT_SIZE;
+import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CANONICALTRANSCRIPT;
 
 import java.sql.Timestamp;
@@ -27,7 +27,7 @@ class CanonicalTranscriptDAO {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(CANONICALTRANSCRIPT).execute();
 
-        for (List<CanonicalTranscript> split : Iterables.partition(transcripts, BATCH_INSERT_SIZE)) {
+        for (List<CanonicalTranscript> split : Iterables.partition(transcripts, DB_BATCH_INSERT_SIZE)) {
             InsertValuesStep18 inserter = context.insertInto(CANONICALTRANSCRIPT,
                     CANONICALTRANSCRIPT.GENE,
                     CANONICALTRANSCRIPT.GENEID,
