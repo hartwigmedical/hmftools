@@ -69,11 +69,14 @@ public class LineElementAnnotator {
 
         for(final GenomeRegion genomeRegion : mLineElements)
         {
-            if(genomeRegion.chromosome().equals(svData.chromosome(useStart))
-            && Math.abs(genomeRegion.start() - svData.position(useStart)) <= PERMITTED_DISTANCE
-            && Math.abs(genomeRegion.end() - svData.position(useStart)) <= PERMITTED_DISTANCE)
+            if(!genomeRegion.chromosome().equals(svData.chromosome(useStart)))
+                continue;
+
+            // test if the SV falls within the LE +/- a buffer
+            if(svData.position(useStart) >= genomeRegion.start() - PERMITTED_DISTANCE
+            && svData.position(useStart) <= genomeRegion.end() + PERMITTED_DISTANCE)
             {
-                LOGGER.debug("var({}) found in line element",
+                LOGGER.debug("var({}) found in line element({}.>{})",
                         svData.posId(), genomeRegion.chromosome(), genomeRegion.start(), genomeRegion.end());
                 return true;
             }

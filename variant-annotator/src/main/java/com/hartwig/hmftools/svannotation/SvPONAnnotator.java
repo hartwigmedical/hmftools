@@ -111,6 +111,7 @@ public class SvPONAnnotator {
             {
                 LOGGER.debug("var({}) found in PON with count({})", svData.posId(), svPon.count());
                 svData.setPonCount(svPon.count());
+                svData.setPonRegionCount(svPon.count()); // set to match
                 return;
             }
             else if(svData.getPonRegionCount() == 0 && isMatch(svData, svPon, REGION_DISTANCE))

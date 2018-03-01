@@ -317,7 +317,7 @@ public class StructuralVariantClustering {
 
                     writer.write(
                             String.format("%s,%s,%d,%s,%s,%d,%s,%s,%d,%d,",
-                                    var.isStartFragileSite(), var.isStartFragileSite(), fragileSiteCount, var.isStartLineElement(), var.isEndLineElement(), lineElementCount,
+                                    var.isStartFragileSite(), var.isEndFragileSite(), fragileSiteCount, var.isStartLineElement(), var.isEndLineElement(), lineElementCount,
                                     cluster.isSvDuplicateBE(var, true), cluster.isSvDuplicateBE(var, false), duplicateBECount, duplicateBESiteCount
                                     ));
 

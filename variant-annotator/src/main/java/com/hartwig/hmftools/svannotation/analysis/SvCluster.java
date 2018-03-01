@@ -230,16 +230,20 @@ public class SvCluster
         {
             boolean useStart = (i == 0);
 
+            boolean found = false;
             for(SvBreakend breakend : mUniqueBreakends) {
                 if (variantMatchesBreakend(var, breakend, useStart))
                 {
                     breakend.addToCount(1);
-                    return;
+                    found = true;
+                    break;
                 }
             }
 
-            // add a new entry
-            mUniqueBreakends.add(new SvBreakend(var.chromosome(useStart), var.position(useStart), var.orientation(useStart)));
+            if(!found) {
+                // add a new entry
+                mUniqueBreakends.add(new SvBreakend(var.chromosome(useStart), var.position(useStart), var.orientation(useStart)));
+            }
         }
     }
 
