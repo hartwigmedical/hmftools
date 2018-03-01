@@ -13,6 +13,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfGenomeRegion;
+import com.hartwig.hmftools.common.region.hmfslicer.Strand;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -112,6 +113,7 @@ public class ConsequenceDeterminerTest {
                 .geneEnd(GENE_END)
                 .codingStart(0)
                 .codingEnd(0)
+                .strand(Strand.FORWARD)
                 .build();
     }
 }

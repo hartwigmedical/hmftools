@@ -14,6 +14,7 @@ import com.google.common.collect.TreeMultimap;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfGenomeRegion;
+import com.hartwig.hmftools.common.region.hmfslicer.Strand;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
@@ -98,6 +99,7 @@ public class VariantAnalyzerTest {
                 .geneEnd(GENE_END)
                 .codingStart(0)
                 .codingEnd(0)
+                .strand(Strand.FORWARD)
                 .build());
         return hmfRegions;
     }

@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.region.hmfslicer.HmfExonRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfExonRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfGenomeRegion;
+import com.hartwig.hmftools.common.region.hmfslicer.Strand;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
@@ -127,6 +128,7 @@ public class GeneCopyNumberBuilderTest {
                 .geneEnd(end)
                 .codingStart(0)
                 .codingEnd(0)
+                .strand(Strand.FORWARD)
                 .build();
     }
 }
