@@ -18,7 +18,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class BiopsyTreatmentData {
+public abstract class BiopsyTreatmentData implements Comparable<BiopsyTreatmentData> {
 
     @VisibleForTesting
     static final String COMBI_THERAPY = "Combi therapy";
@@ -106,9 +106,23 @@ public abstract class BiopsyTreatmentData {
         }
     }
 
-
     @Override
     public String toString() {
         return treatmentName() + "(" + startDate() + " - " + endDate() + ")";
+    }
+
+    @Override
+    public int compareTo(@NotNull final BiopsyTreatmentData other) {
+        LocalDate startDate1 = startDate();
+        LocalDate startDate2 = other.startDate();
+        if (startDate1 == null && startDate2 == null) {
+            return 0;
+        } else if (startDate1 == null) {
+            return 1;
+        } else if (startDate2 == null) {
+            return -1;
+        } else {
+            return startDate1.compareTo(startDate2);
+        }
     }
 }
