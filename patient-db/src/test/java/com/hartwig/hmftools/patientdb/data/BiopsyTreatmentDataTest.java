@@ -18,7 +18,7 @@ public class BiopsyTreatmentDataTest {
 
     @Test
     public void canGenerateCorrectTreatmentName() {
-        List<BiopsyTreatmentDrugData> drugs =
+        List<DrugData> drugs =
                 Lists.newArrayList(drugWithName("drugB"), drugWithName("DrugC"), drugWithName("drugA"), drugWithName(null));
 
         BiopsyTreatmentData data = withDrugs(drugs);
@@ -28,13 +28,13 @@ public class BiopsyTreatmentDataTest {
 
     @Test
     public void canGenerateCorrectTreatmentType() {
-        List<BiopsyTreatmentDrugData> noTypes = Lists.newArrayList(drugWithType(null));
+        List<DrugData> noTypes = Lists.newArrayList(drugWithType(null));
         assertNull(withDrugs(noTypes).type());
 
-        List<BiopsyTreatmentDrugData> simpleType = Lists.newArrayList(drugWithType("simple"), drugWithType("simple"));
+        List<DrugData> simpleType = Lists.newArrayList(drugWithType("simple"), drugWithType("simple"));
         assertEquals("simple", withDrugs(simpleType).type());
 
-        List<BiopsyTreatmentDrugData> combiType = Lists.newArrayList(drugWithType("complex1"), drugWithType("complex2"));
+        List<DrugData> combiType = Lists.newArrayList(drugWithType("complex1"), drugWithType("complex2"));
         assertEquals(BiopsyTreatmentData.COMBI_THERAPY, withDrugs(combiType).type());
     }
 
@@ -56,31 +56,31 @@ public class BiopsyTreatmentDataTest {
     }
 
     @NotNull
-    private static BiopsyTreatmentData withDrug(@NotNull BiopsyTreatmentDrugData drug) {
+    private static BiopsyTreatmentData withDrug(@NotNull DrugData drug) {
         return ImmutableBiopsyTreatmentData.of(1, null, Lists.newArrayList(drug), null, FormStatusState.UNKNOWN, false);
     }
 
     @NotNull
-    private static BiopsyTreatmentData withDrugs(@NotNull List<BiopsyTreatmentDrugData> drugs) {
+    private static BiopsyTreatmentData withDrugs(@NotNull List<DrugData> drugs) {
         return ImmutableBiopsyTreatmentData.of(1, null, drugs, null, FormStatusState.UNKNOWN, false);
     }
 
     @NotNull
-    private static BiopsyTreatmentDrugData drugWithName(@Nullable String name) {
+    private static DrugData drugWithName(@Nullable String name) {
         final List<CuratedTreatment> curatedDrugs =
                 name == null ? Lists.newArrayList() : Lists.newArrayList(ImmutableCuratedTreatment.of(name, "", ""));
-        return ImmutableBiopsyTreatmentDrugData.of(name, null, null, curatedDrugs);
+        return ImmutableDrugData.of(name, null, null, curatedDrugs);
     }
 
     @NotNull
-    private static BiopsyTreatmentDrugData drugWithType(@Nullable String type) {
+    private static DrugData drugWithType(@Nullable String type) {
         final List<CuratedTreatment> curatedDrugs =
                 type == null ? Lists.newArrayList() : Lists.newArrayList(ImmutableCuratedTreatment.of("", type, ""));
-        return ImmutableBiopsyTreatmentDrugData.of(null, null, null, curatedDrugs);
+        return ImmutableDrugData.of(null, null, null, curatedDrugs);
     }
 
     @NotNull
-    private static BiopsyTreatmentDrugData drugWithStartDate(@Nullable LocalDate startDate) {
-        return ImmutableBiopsyTreatmentDrugData.of(null, startDate, null, Lists.newArrayList());
+    private static DrugData drugWithStartDate(@Nullable LocalDate startDate) {
+        return ImmutableDrugData.of(null, startDate, null, Lists.newArrayList());
     }
 }

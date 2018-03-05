@@ -11,8 +11,8 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATME
 import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
-import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentDrugData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
+import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PatientData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
@@ -172,7 +172,7 @@ class ClinicalDAO {
                         Boolean.toString(treatment.formLocked())));
     }
 
-    private void writeDrugData(final int patientId, final int treatmentId, @NotNull final BiopsyTreatmentDrugData drug,
+    private void writeDrugData(final int patientId, final int treatmentId, @NotNull final DrugData drug,
             @NotNull final String formStatus, @NotNull final String formLocked) {
         drug.filteredCuratedTreatments().forEach(curatedTreatment -> {
             final int id = context.insertInto(DRUG, DRUG.TREATMENTID, DRUG.PATIENTID, DRUG.STARTDATE, DRUG.ENDDATE, DRUG.NAME, DRUG.TYPE)

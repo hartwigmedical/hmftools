@@ -11,10 +11,10 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
-import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentDrugData;
+import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
-import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentDrugData;
+import com.hartwig.hmftools.patientdb.data.ImmutableDrugData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -133,7 +133,7 @@ public class TreatmentMatcherTest {
     }
 
     @NotNull
-    private static BiopsyTreatmentDrugData drugWithStartAndEndDate(@Nullable LocalDate startDate, @Nullable LocalDate endDate) {
-        return ImmutableBiopsyTreatmentDrugData.of("anything", startDate, endDate, Lists.newArrayList());
+    private static DrugData drugWithStartAndEndDate(@Nullable LocalDate startDate, @Nullable LocalDate endDate) {
+        return ImmutableDrugData.of("anything", startDate, endDate, Lists.newArrayList());
     }
 }

@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class BiopsyTreatmentDrugData {
+public abstract class DrugData {
     @Nullable
     public abstract String name();
 

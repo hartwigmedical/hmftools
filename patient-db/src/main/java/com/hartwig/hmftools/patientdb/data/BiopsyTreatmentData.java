@@ -29,7 +29,7 @@ public abstract class BiopsyTreatmentData implements Comparable<BiopsyTreatmentD
     public abstract String treatmentGiven();
 
     @NotNull
-    public abstract List<BiopsyTreatmentDrugData> drugs();
+    public abstract List<DrugData> drugs();
 
     @Nullable
     public abstract Integer biopsyId();
@@ -51,7 +51,7 @@ public abstract class BiopsyTreatmentData implements Comparable<BiopsyTreatmentD
     }
 
     @NotNull
-    public static BiopsyTreatmentData of(@Nullable final String treatmentGiven, @NotNull final List<BiopsyTreatmentDrugData> drugs,
+    public static BiopsyTreatmentData of(@Nullable final String treatmentGiven, @NotNull final List<DrugData> drugs,
             @NotNull final FormStatusState formStatus, final boolean formLocked) {
         return ImmutableBiopsyTreatmentData.of(createId(), treatmentGiven, drugs, null, formStatus, formLocked);
     }
@@ -81,7 +81,7 @@ public abstract class BiopsyTreatmentData implements Comparable<BiopsyTreatmentD
     @Nullable
     public LocalDate startDate() {
         LocalDate startDate = null;
-        for (final BiopsyTreatmentDrugData drug : drugs()) {
+        for (final DrugData drug : drugs()) {
             final LocalDate drugStartDate = drug.startDate();
             if (startDate == null || (drugStartDate != null && drugStartDate.isBefore(startDate))) {
                 startDate = drugStartDate;
@@ -96,7 +96,7 @@ public abstract class BiopsyTreatmentData implements Comparable<BiopsyTreatmentD
             return null;
         } else {
             LocalDate endDate = drugs().get(0).endDate();
-            for (final BiopsyTreatmentDrugData drug : drugs()) {
+            for (final DrugData drug : drugs()) {
                 final LocalDate drugEndDate = drug.endDate();
                 if (drugEndDate == null || (endDate != null && drugEndDate.isAfter(endDate))) {
                     endDate = drugEndDate;

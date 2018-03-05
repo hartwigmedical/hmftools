@@ -44,9 +44,9 @@ import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.Config;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
-import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentDrugData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
+import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PatientData;
 
@@ -268,7 +268,7 @@ public final class PatientValidator {
 
     @NotNull
     @VisibleForTesting
-    static List<ValidationFinding> validateDrugData(@NotNull final String patientId, @NotNull final BiopsyTreatmentDrugData drugData,
+    static List<ValidationFinding> validateDrugData(@NotNull final String patientId, @NotNull final DrugData drugData,
             @NotNull final FormStatusState formStatus, final boolean formLocked) {
         final LocalDate drugStart = drugData.startDate();
         final List<ValidationFinding> findings = Lists.newArrayList();

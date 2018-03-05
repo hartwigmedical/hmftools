@@ -12,10 +12,10 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
-import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentDrugData;
 import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
+import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
-import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentDrugData;
+import com.hartwig.hmftools.patientdb.data.ImmutableDrugData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -46,7 +46,7 @@ public class BiopsyTreatmentReader {
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_AFTERBIOPT)) {
             for (final EcrfForm treatmentForm : studyEvent.nonEmptyFormsPerOID(FORM_TREATMENT, false)) {
                 final String treatmentGiven = readTreatmentGiven(treatmentForm);
-                final List<BiopsyTreatmentDrugData> drugs = readDrugs(treatmentForm);
+                final List<DrugData> drugs = readDrugs(treatmentForm);
                 treatments.add(ImmutableBiopsyTreatmentData.of(treatmentGiven, drugs, treatmentForm.status(), treatmentForm.locked()));
             }
         }
@@ -54,8 +54,8 @@ public class BiopsyTreatmentReader {
     }
 
     @NotNull
-    private List<BiopsyTreatmentDrugData> readDrugs(@NotNull final EcrfForm treatmentForm) throws IOException {
-        final List<BiopsyTreatmentDrugData> drugs = Lists.newArrayList();
+    private List<DrugData> readDrugs(@NotNull final EcrfForm treatmentForm) throws IOException {
+        final List<DrugData> drugs = Lists.newArrayList();
         for (final EcrfItemGroup itemGroup : treatmentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_SYSPOSTBIO, false)) {
             final LocalDate drugStart = itemGroup.readItemDate(FIELD_DRUG_START, 0, DATE_FORMATTER, false);
             final LocalDate drugEnd = itemGroup.readItemDate(FIELD_DRUG_END, 0, DATE_FORMATTER, false);
@@ -64,7 +64,7 @@ public class BiopsyTreatmentReader {
                 drugName = itemGroup.readItemString(FIELD_DRUG_OTHER, 0, false);
             }
             final List<CuratedTreatment> curatedDrugs = drugName == null ? Lists.newArrayList() : treatmentCurator.search(drugName);
-            drugs.add(ImmutableBiopsyTreatmentDrugData.of(drugName, drugStart, drugEnd, curatedDrugs));
+            drugs.add(ImmutableDrugData.of(drugName, drugStart, drugEnd, curatedDrugs));
         }
         return drugs;
     }
