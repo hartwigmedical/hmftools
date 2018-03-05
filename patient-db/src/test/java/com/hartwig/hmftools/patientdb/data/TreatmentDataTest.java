@@ -14,14 +14,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
-public class BiopsyTreatmentDataTest {
+public class TreatmentDataTest {
 
     @Test
     public void canGenerateCorrectTreatmentName() {
         List<DrugData> drugs =
                 Lists.newArrayList(drugWithName("drugB"), drugWithName("DrugC"), drugWithName("drugA"), drugWithName(null));
 
-        BiopsyTreatmentData data = withDrugs(drugs);
+        TreatmentData data = withDrugs(drugs);
 
         assertEquals("DrugA/DrugB/DrugC", data.treatmentName());
     }
@@ -35,17 +35,17 @@ public class BiopsyTreatmentDataTest {
         assertEquals("simple", withDrugs(simpleType).type());
 
         List<DrugData> combiType = Lists.newArrayList(drugWithType("complex1"), drugWithType("complex2"));
-        assertEquals(BiopsyTreatmentData.COMBI_THERAPY, withDrugs(combiType).type());
+        assertEquals(TreatmentData.COMBI_THERAPY, withDrugs(combiType).type());
     }
 
     @Test
     public void sortsCorrectly() {
-        BiopsyTreatmentData treatment2015 = withDrug(drugWithStartDate(LocalDate.parse("2015-01-01")));
-        BiopsyTreatmentData treatment2014 = withDrug(drugWithStartDate(LocalDate.parse("2014-01-01")));
-        BiopsyTreatmentData treatmentNull = withDrug(drugWithStartDate(null));
-        BiopsyTreatmentData treatment2016 = withDrug(drugWithStartDate(LocalDate.parse("2016-01-01")));
+        TreatmentData treatment2015 = withDrug(drugWithStartDate(LocalDate.parse("2015-01-01")));
+        TreatmentData treatment2014 = withDrug(drugWithStartDate(LocalDate.parse("2014-01-01")));
+        TreatmentData treatmentNull = withDrug(drugWithStartDate(null));
+        TreatmentData treatment2016 = withDrug(drugWithStartDate(LocalDate.parse("2016-01-01")));
 
-        List<BiopsyTreatmentData> treatments = Lists.newArrayList(treatment2015, treatment2014, treatmentNull, treatment2016);
+        List<TreatmentData> treatments = Lists.newArrayList(treatment2015, treatment2014, treatmentNull, treatment2016);
 
         Collections.sort(treatments);
 
@@ -56,12 +56,12 @@ public class BiopsyTreatmentDataTest {
     }
 
     @NotNull
-    private static BiopsyTreatmentData withDrug(@NotNull DrugData drug) {
+    private static TreatmentData withDrug(@NotNull DrugData drug) {
         return ImmutableBiopsyTreatmentData.of(1, null, Lists.newArrayList(drug), null, FormStatusState.UNKNOWN, false);
     }
 
     @NotNull
-    private static BiopsyTreatmentData withDrugs(@NotNull List<DrugData> drugs) {
+    private static TreatmentData withDrugs(@NotNull List<DrugData> drugs) {
         return ImmutableBiopsyTreatmentData.of(1, null, drugs, null, FormStatusState.UNKNOWN, false);
     }
 

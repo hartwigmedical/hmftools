@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientdb.data;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 
@@ -12,9 +11,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class BiopsyTreatmentData implements TreatmentData {
-
-    public abstract int id();
+public abstract class PreTreatmentData implements TreatmentData {
 
     @Nullable
     public abstract String treatmentGiven();
@@ -22,25 +19,10 @@ public abstract class BiopsyTreatmentData implements TreatmentData {
     @NotNull
     public abstract List<DrugData> drugs();
 
-    @Nullable
-    public abstract Integer biopsyId();
-
     @NotNull
     public abstract FormStatusState formStatus();
 
     public abstract boolean formLocked();
-
-    private static final AtomicInteger ID_COUNTER = new AtomicInteger();
-
-    private static int createId() {
-        return ID_COUNTER.getAndIncrement();
-    }
-
-    @NotNull
-    public static BiopsyTreatmentData of(@Nullable final String treatmentGiven, @NotNull final List<DrugData> drugs,
-            @NotNull final FormStatusState formStatus, final boolean formLocked) {
-        return ImmutableBiopsyTreatmentData.of(createId(), treatmentGiven, drugs, null, formStatus, formLocked);
-    }
 
     @Override
     public String toString() {
