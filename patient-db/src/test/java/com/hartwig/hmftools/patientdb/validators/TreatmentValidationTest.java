@@ -20,12 +20,15 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
 import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTreatment;
 import com.hartwig.hmftools.patientdb.data.ImmutableDrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutablePatientData;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class TreatmentValidationTest {
@@ -34,26 +37,17 @@ public class TreatmentValidationTest {
     private final static LocalDate FEB2015 = LocalDate.parse("2015-02-01");
     private final static LocalDate MAR2015 = LocalDate.parse("2015-03-01");
 
-    private final static DrugData DRUG_NULL = ImmutableDrugData.of(null, null, null, Lists.newArrayList());
-    private final static DrugData DRUG_WRONG = ImmutableDrugData.of(null, FEB2015, JAN2015, Lists.newArrayList());
-    private final static DrugData DRUG_JAN_JAN = ImmutableDrugData.of("Drug1",
-            JAN2015,
-            JAN2015,
-            Lists.newArrayList(ImmutableCuratedTreatment.of("Drug1", "Type1", "Drug1")));
-    private final static DrugData DRUG_JAN_ONGOING = ImmutableDrugData.of("Drug1",
-            JAN2015,
-            null,
-            Lists.newArrayList(ImmutableCuratedTreatment.of("Drug1", "Type1", "Drug1")));
-    private final static DrugData DRUG_JAN_FEB = ImmutableDrugData.of("Drug1", JAN2015, FEB2015,
-            Lists.newArrayList(ImmutableCuratedTreatment.of("Drug1", "Type1", "Drug1")));
-    private final static DrugData DRUG_FEB_ONGOING = ImmutableDrugData.of("Drug1",
-            FEB2015,
-            null,
-            Lists.newArrayList(ImmutableCuratedTreatment.of("Drug1", "Type1", "Drug1")));
-    private final static DrugData DRUG_JAN_MAR = ImmutableDrugData.of("Drug1", JAN2015, MAR2015,
-            Lists.newArrayList(ImmutableCuratedTreatment.of("Drug1", "Type1", "Drug1")));
+    private final static DrugData DRUG_NULL = create(null, null, null);
+    private final static DrugData DRUG_WRONG = create(null, FEB2015, JAN2015);
+    private final static DrugData DRUG_JAN_JAN = create("Drug1", JAN2015, JAN2015);
+    private final static DrugData DRUG_JAN_ONGOING = create("Drug1", JAN2015, null);
+    private final static DrugData DRUG_JAN_FEB = create("Drug1", JAN2015, FEB2015);
+    private final static DrugData DRUG_FEB_ONGOING = create("Drug1", FEB2015, null);
+    private final static DrugData DRUG_JAN_MAR = create("Drug1", JAN2015, MAR2015);
 
-    private final static DrugData DRUG_WITH_PARTIAL_CURATED_ENTRY = ImmutableDrugData.of("Drug1 Drug2 Drug3", JAN2015, JAN2015,
+    private final static DrugData DRUG_WITH_PARTIAL_CURATED_ENTRY = ImmutableDrugData.of("Drug1 Drug2 Drug3",
+            JAN2015,
+            JAN2015,
             Lists.newArrayList(ImmutableCuratedTreatment.of("Drug1", "Type1", "Drug1")));
     private final static DrugData DRUG_MISSING_CURATED_ENTRY = ImmutableDrugData.of("Drug1", JAN2015, JAN2015, Lists.newArrayList());
 
@@ -218,5 +212,12 @@ public class TreatmentValidationTest {
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
         assertTrue(findingsFields.contains(fields(FIELD_DEATH_DATE, FORM_TREATMENT)));
+    }
+
+    @NotNull
+    private static DrugData create(@Nullable String name, @Nullable LocalDate startDate, @Nullable LocalDate endDate) {
+        List<CuratedTreatment> curation =
+                name != null ? Lists.newArrayList(ImmutableCuratedTreatment.of(name, "Type1", name)) : Lists.newArrayList();
+        return ImmutableDrugData.of(name, startDate, endDate, curation);
     }
 }
