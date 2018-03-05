@@ -41,4 +41,4 @@ where
     ,'TM9SF1','TMBIM4','TMEM236','TMEM239','TUBB3','UGT2A1','UQCR11','ZFP41','ZNF223','ZNF286A','ZNF668','ZNF709','ZNF747','ZNF763','ZNF788','ZNF8')
     and (t.biotype = 'protein_coding' or entrez_xref.dbprimary_acc is not null)
 group by chromosome, gene_start, gene_end, gene_id, gene_name, transcript_id, transcript_version, transcript_start, transcript_end, exon_id, exon_start, exon_end, coding_start, coding_end, strand
-order by if(cast(chromosome as SIGNED) = 0, ascii(chromosome), cast(chromosome as SIGNED)), gene_start, exon_start;
+order by if(cast(chromosome as SIGNED) = 0, ascii(chromosome), cast(chromosome as SIGNED)), gene_start, gene_id, exon_start;
