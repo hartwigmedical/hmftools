@@ -31,8 +31,7 @@ public final class TreatmentResponseMatcher {
         List<BiopsyTreatmentData> sortedTreatments = sortAndFilter(treatments);
         if (hasOverlappingTreatments(sortedTreatments)) {
             if (!responses.isEmpty()) {
-                findings.add(createFinding(patientId,
-                        "treatments are overlapping. Cannot match any response,",
+                findings.add(createFinding(patientId, "treatments are overlapping. Cannot match any response.",
                         "treatments: " + sortedTreatments));
             }
             return new MatchResult<>(responses, findings);
