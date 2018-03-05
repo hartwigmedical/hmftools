@@ -136,7 +136,7 @@ public final class PatientValidator {
         }
         if (biopsies.size() > 0 && treatments.size() > 0) {
             biopsies.sort(comparing(BiopsyData::date, nullsLast(naturalOrder())));
-            treatments.sort(comparing(BiopsyTreatmentData::startDate, nullsLast(naturalOrder())));
+            Collections.sort(treatments);
             final LocalDate firstBiopsyDate = biopsies.get(0).date();
             final LocalDate firstTreatmentStart = treatments.get(0).startDate();
             if (firstBiopsyDate != null && firstTreatmentStart != null && firstTreatmentStart.isBefore(firstBiopsyDate)) {
