@@ -161,7 +161,7 @@ public class TreatmentValidationTest {
     @Test
     public void reportsWrongTreatmentTimelineOngoing() {
         final List<ValidationFinding> findings =
-                PatientValidator.validateTreatments(CPCT_ID, Lists.newArrayList(TREATMENT_JAN_JAN, TREATMENT_JAN_ONGOING));
+                PatientValidator.validateTreatments(CPCT_ID, Lists.newArrayList(TREATMENT_JAN_FEB, TREATMENT_JAN_ONGOING));
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());

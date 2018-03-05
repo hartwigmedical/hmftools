@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientdb.validators;
 
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.naturalOrder;
-import static java.util.Comparator.nullsFirst;
 import static java.util.Comparator.nullsLast;
 
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_BIOPSY_DATE;
@@ -34,6 +33,7 @@ import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_SEX
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,7 +49,6 @@ import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PatientData;
-import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -189,8 +188,8 @@ public final class PatientValidator {
             @NotNull final List<BiopsyTreatmentData> treatments) {
         final List<ValidationFinding> findings = Lists.newArrayList();
         treatments.forEach(treatment -> validateTreatmentData(patientId, treatment));
-        treatments.sort(comparing(BiopsyTreatmentData::startDate, nullsLast(naturalOrder())).thenComparing(BiopsyTreatmentData::endDate,
-                nullsFirst(naturalOrder())));
+        Collections.sort(treatments);
+
         if (treatments.size() > 1) {
             for (int index = 1; index < treatments.size(); index++) {
                 final BiopsyTreatmentData currentTreatment = treatments.get(index);
@@ -369,8 +368,8 @@ public final class PatientValidator {
             findings.addAll(validateTreatmentResponse(patientId, responses.get(i), i == 0));
         }
 
-        treatments.sort(comparing(BiopsyTreatmentData::startDate, nullsLast(naturalOrder())));
-        responses.sort(comparing(BiopsyTreatmentResponseData::date, nullsLast(naturalOrder())));
+        Collections.sort(treatments);
+        Collections.sort(responses);
         if (treatments.isEmpty() && !responses.isEmpty()) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientId,
@@ -394,8 +393,9 @@ public final class PatientValidator {
             }
         }
         final List<BiopsyTreatmentData> treatmentsMissingResponse = treatments.stream()
-                .filter(treatment -> shouldHaveResponse(treatment) && !hasResponse(treatment, responses))
+                .filter(treatment -> shouldHaveResponse(treatment) && !hasResponse(treatment.id(), responses))
                 .collect(Collectors.toList());
+
         if (treatmentsMissingResponse.size() > 0) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientId,
@@ -424,9 +424,8 @@ public final class PatientValidator {
                 < Config.IMMEDIATE_TREATMENT_END_THRESHOLD;
     }
 
-    private static boolean hasResponse(@NotNull final BiopsyTreatmentData treatment,
-            @NotNull final List<BiopsyTreatmentResponseData> responses) {
-        return responses.stream().anyMatch(response -> TreatmentResponseMatcher.responseMatchesTreatment(response, treatment));
+    private static boolean hasResponse(@NotNull Integer treatmentId, @NotNull List<BiopsyTreatmentResponseData> responses) {
+        return responses.stream().anyMatch(response -> treatmentId.equals(response.treatmentId()));
     }
 
     @NotNull
