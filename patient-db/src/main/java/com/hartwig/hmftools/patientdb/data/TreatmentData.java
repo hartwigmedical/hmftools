@@ -19,8 +19,6 @@ public interface TreatmentData extends Comparable<TreatmentData> {
     @VisibleForTesting
     String COMBI_THERAPY = "Combi therapy";
 
-    int id();
-
     @Nullable
     String treatmentGiven();
 
