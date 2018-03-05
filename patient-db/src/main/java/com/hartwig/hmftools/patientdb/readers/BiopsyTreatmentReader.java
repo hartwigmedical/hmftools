@@ -42,15 +42,15 @@ public class BiopsyTreatmentReader {
 
     @NotNull
     List<BiopsyTreatmentData> read(@NotNull final EcrfPatient patient) throws IOException {
-        final List<BiopsyTreatmentData> treatmentDatas = Lists.newArrayList();
+        final List<BiopsyTreatmentData> treatments = Lists.newArrayList();
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_AFTERBIOPT)) {
             for (final EcrfForm treatmentForm : studyEvent.nonEmptyFormsPerOID(FORM_TREATMENT, false)) {
                 final String treatmentGiven = readTreatmentGiven(treatmentForm);
                 final List<BiopsyTreatmentDrugData> drugs = readDrugs(treatmentForm);
-                treatmentDatas.add(ImmutableBiopsyTreatmentData.of(treatmentGiven, drugs, treatmentForm.status(), treatmentForm.locked()));
+                treatments.add(ImmutableBiopsyTreatmentData.of(treatmentGiven, drugs, treatmentForm.status(), treatmentForm.locked()));
             }
         }
-        return treatmentDatas;
+        return treatments;
     }
 
     @NotNull
