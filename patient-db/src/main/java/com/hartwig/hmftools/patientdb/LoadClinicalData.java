@@ -162,13 +162,13 @@ public final class LoadClinicalData {
     @NotNull
     private static Map<String, Patient> readEcrfPatients(@NotNull final PatientReader reader, @NotNull final Iterable<EcrfPatient> patients,
             @NotNull final List<RunContext> runContexts) throws IOException {
-        final Map<String, Patient> readPatients = Maps.newHashMap();
+        final Map<String, Patient> patientMap = Maps.newHashMap();
         for (final EcrfPatient ecrfPatient : patients) {
             final List<String> tumorSamplesForPatient = getTumorSamplesForPatient(ecrfPatient.patientId(), runContexts);
             final Patient patient = reader.read(ecrfPatient, tumorSamplesForPatient);
-            readPatients.put(patient.patientData().cpctId(), patient);
+            patientMap.put(patient.patientData().cpctId(), patient);
         }
-        return readPatients;
+        return patientMap;
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
