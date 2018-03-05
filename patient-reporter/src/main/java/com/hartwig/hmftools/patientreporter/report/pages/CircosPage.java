@@ -56,7 +56,7 @@ public abstract class CircosPage {
                                 + "frequencies and an inner ring of short insertion/deletion (INDEL) locations. "
                                 + "SNP allele frequencies have been corrected for tumor purity and scale from 0 to 100%. Each dot represents a single somatic variant. "
                                 + "SNPs are colored according to the type of base change (e.g. C>T/G>A in red) and are in concordance "
-                                + "with the coloring used in Alexandrov at al. 2013 Nature paper that describes the use of mutational signatures. "
+                                + "with the coloring used in Alexandrov et al. 2013 Nature paper that describes the use of mutational signatures. "
                                 + "INDELs are colored yellow and red for insertions and deletions respectively.",
                         "The third circle shows all observed tumor purity adjusted copy number changes,"
                                 + "including both focal and chromosomal somatic events. "
