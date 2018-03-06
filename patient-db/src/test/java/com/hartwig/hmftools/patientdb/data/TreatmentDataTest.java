@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientdb.data;
 
+import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyTreatmentBuilder;
+import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.drugBuilder;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -8,7 +11,6 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,8 +20,7 @@ public class TreatmentDataTest {
 
     @Test
     public void canGenerateCorrectTreatmentName() {
-        List<DrugData> drugs =
-                Lists.newArrayList(drugWithName("drugB"), drugWithName("DrugC"), drugWithName("drugA"), drugWithName(null));
+        List<DrugData> drugs = Lists.newArrayList(drugWithName("DrugB"), drugWithName("DrugC"), drugWithName("drugA"), drugWithName(null));
 
         TreatmentData data = withDrugs(drugs);
 
@@ -57,30 +58,30 @@ public class TreatmentDataTest {
 
     @NotNull
     private static TreatmentData withDrug(@NotNull DrugData drug) {
-        return ImmutableBiopsyTreatmentData.of(1, null, Lists.newArrayList(drug), null, FormStatusState.UNKNOWN, false);
+        return biopsyTreatmentBuilder().addDrugs(drug).build();
     }
 
     @NotNull
     private static TreatmentData withDrugs(@NotNull List<DrugData> drugs) {
-        return ImmutableBiopsyTreatmentData.of(1, null, drugs, null, FormStatusState.UNKNOWN, false);
+        return biopsyTreatmentBuilder().addAllDrugs(drugs).build();
     }
 
     @NotNull
     private static DrugData drugWithName(@Nullable String name) {
-        final List<CuratedTreatment> curatedDrugs =
-                name == null ? Lists.newArrayList() : Lists.newArrayList(ImmutableCuratedTreatment.of(name, "", ""));
-        return ImmutableDrugData.of(name, null, null, null, curatedDrugs);
+        return name != null
+                ? drugBuilder().addCuratedTreatments(ImmutableCuratedTreatment.of(name, "", "")).build()
+                : drugBuilder().build();
     }
 
     @NotNull
     private static DrugData drugWithType(@Nullable String type) {
-        final List<CuratedTreatment> curatedDrugs =
-                type == null ? Lists.newArrayList() : Lists.newArrayList(ImmutableCuratedTreatment.of("", type, ""));
-        return ImmutableDrugData.of(null, null, null, null, curatedDrugs);
+        return type != null
+                ? drugBuilder().addCuratedTreatments(ImmutableCuratedTreatment.of("", type, "")).build()
+                : drugBuilder().build();
     }
 
     @NotNull
     private static DrugData drugWithStartDate(@Nullable LocalDate startDate) {
-        return ImmutableDrugData.of(null, startDate, null, null, Lists.newArrayList());
+        return drugBuilder().startDate(startDate).build();
     }
 }

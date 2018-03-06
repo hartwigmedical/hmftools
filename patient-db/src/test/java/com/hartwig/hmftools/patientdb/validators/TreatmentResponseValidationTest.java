@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientdb.validators;
 
+import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyTreatmentBuilder;
+import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyTreatmentResponseBuilder;
+import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.drugBuilder;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FORM_TREATMENT;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_ASSESSMENT_DATE;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_MEASUREMENT_DONE;
@@ -18,13 +21,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.DrugData;
-import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentResponseData;
-import com.hartwig.hmftools.patientdb.data.ImmutableDrugData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -36,32 +36,25 @@ public class TreatmentResponseValidationTest {
     private final static LocalDate FEB2015 = LocalDate.parse("2015-02-01");
     private final static LocalDate MAR2015 = LocalDate.parse("2015-03-01");
 
-    private final static BiopsyTreatmentData TREATMENT_JAN_MAR = ImmutableBiopsyTreatmentData.of("Yes",
-            Lists.newArrayList(drugWithStartAndEndDate(JAN2015, MAR2015)),
-            FormStatusState.UNKNOWN,
-            false);
-    private final static BiopsyTreatmentData TREATMENT_JAN_ONGOING = ImmutableBiopsyTreatmentData.of("Yes",
-            Lists.newArrayList(drugWithStartAndEndDate(JAN2015, null)),
-            FormStatusState.UNKNOWN,
-            false);
-    private final static BiopsyTreatmentData TREATMENT_JAN_JAN = ImmutableBiopsyTreatmentData.of("Yes",
-            Lists.newArrayList(drugWithStartAndEndDate(JAN2015, JAN2015)),
-            FormStatusState.UNKNOWN,
-            false);
+    private final static BiopsyTreatmentData TREATMENT_JAN_MAR =
+            biopsyTreatmentBuilder().addDrugs(drugWithStartAndEndDate(JAN2015, MAR2015)).build();
+    private final static BiopsyTreatmentData TREATMENT_JAN_ONGOING =
+            biopsyTreatmentBuilder().addDrugs(drugWithStartAndEndDate(JAN2015, null)).build();
+    private final static BiopsyTreatmentData TREATMENT_JAN_JAN =
+            biopsyTreatmentBuilder().addDrugs(drugWithStartAndEndDate(JAN2015, JAN2015)).build();
+
     private final static BiopsyTreatmentResponseData RESPONSE_JAN2015 =
-            ImmutableBiopsyTreatmentResponseData.of(JAN2015, JAN2015, "NE", "Yes", "No", FormStatusState.UNKNOWN, false);
+            biopsyTreatmentResponseBuilder().measurementDone("Yes").response("PR").responseDate(JAN2015).build();
     private final static BiopsyTreatmentResponseData RESPONSE_FEB2015 =
-            ImmutableBiopsyTreatmentResponseData.of(FEB2015, FEB2015, "NE", "Yes", "No", FormStatusState.UNKNOWN, false);
-    private final static BiopsyTreatmentResponseData RESPONSE_NULL =
-            ImmutableBiopsyTreatmentResponseData.of(null, null, null, null, null, FormStatusState.UNKNOWN, false);
-    private final static BiopsyTreatmentResponseData RESPONSE_ONLY =
-            ImmutableBiopsyTreatmentResponseData.of(null, null, "NE", null, null, FormStatusState.UNKNOWN, false);
+            biopsyTreatmentResponseBuilder().measurementDone("Yes").response("PR").responseDate(FEB2015).build();
+    private final static BiopsyTreatmentResponseData RESPONSE_NULL = biopsyTreatmentResponseBuilder().build();
+    private final static BiopsyTreatmentResponseData RESPONSE_ONLY = biopsyTreatmentResponseBuilder().response("PR").build();
     private final static BiopsyTreatmentResponseData RESPONSE_MISSING_DATA =
-            ImmutableBiopsyTreatmentResponseData.of(null, null, null, "Yes", "No", FormStatusState.UNKNOWN, false);
+            biopsyTreatmentResponseBuilder().measurementDone("Yes").build();
     private final static BiopsyTreatmentResponseData RESPONSE_MEASUREMENT_NO_WITH_DATA =
-            ImmutableBiopsyTreatmentResponseData.of(JAN2015, JAN2015, "NE", "No", "No", FormStatusState.UNKNOWN, false);
+            biopsyTreatmentResponseBuilder().measurementDone("No").response("PR").responseDate(JAN2015).build();
     private final static BiopsyTreatmentResponseData RESPONSE_MEASUREMENT_NO_WITH_VALID_DATA =
-            ImmutableBiopsyTreatmentResponseData.of(JAN2015, JAN2015, "ND", "No", "No", FormStatusState.UNKNOWN, false);
+            biopsyTreatmentResponseBuilder().measurementDone("No").response("ND").responseDate(JAN2015).build();
 
     @Test
     public void reportsMeasurementDoneNull() {
@@ -159,7 +152,7 @@ public class TreatmentResponseValidationTest {
 
     @NotNull
     private static DrugData drugWithStartAndEndDate(@Nullable LocalDate startDate, @Nullable LocalDate endDate) {
-        return ImmutableDrugData.of("anything", startDate, endDate, null, Lists.newArrayList());
+        return drugBuilder().startDate(startDate).endDate(endDate).build();
     }
 
     @NotNull

@@ -63,6 +63,7 @@ CREATE TABLE treatment
     biopsyId int,
     patientId int NOT NULL,
     treatmentGiven varchar(3),
+    radiotherapyGiven varchar(3),
     startDate DATE,
     endDate DATE,
     name varchar(255),
@@ -97,6 +98,18 @@ CREATE TABLE treatmentResponse
     response varchar(25),
     PRIMARY KEY (id),
     FOREIGN KEY (treatmentId) REFERENCES treatment(id),
+    FOREIGN KEY (patientId) REFERENCES patient(id)
+);
+
+DROP TABLE IF EXISTS tumorMarker;
+CREATE TABLE tumorMarker
+(   id int NOT NULL AUTO_INCREMENT,
+    patientId int NOT NULL,
+    date DATE,
+    marker varchar(50),
+    measurement varchar(50),
+    unit varchar(50),
+    PRIMARY KEY (id),
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
 

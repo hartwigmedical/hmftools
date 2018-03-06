@@ -22,6 +22,9 @@ public interface TreatmentData extends Comparable<TreatmentData> {
     @Nullable
     String treatmentGiven();
 
+    @Nullable
+    String radiotherapyGiven();
+
     @NotNull
     List<DrugData> drugs();
 
