@@ -17,6 +17,7 @@ import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PatientData;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
+import com.hartwig.hmftools.patientdb.data.TumorMarkerData;
 import com.hartwig.hmftools.patientdb.matchers.BiopsyMatcher;
 import com.hartwig.hmftools.patientdb.matchers.MatchResult;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentMatcher;
@@ -56,6 +57,7 @@ public class PatientReader {
         final List<BiopsyData> clinicalBiopsies = BiopsyReader.read(ecrfPatient);
         final List<BiopsyTreatmentData> treatments = biopsyTreatmentReader.read(ecrfPatient);
         final List<BiopsyTreatmentResponseData> treatmentResponses = BiopsyTreatmentResponseReader.read(ecrfPatient);
+        final List<TumorMarkerData> tumorMarkers = TumorMarkerReader.read(ecrfPatient);
 
         final MatchResult<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples(ecrfPatient.patientId(), sequencedBiopsies, clinicalBiopsies);
@@ -73,8 +75,7 @@ public class PatientReader {
                 preTreatmentData,
                 sequencedBiopsies,
                 matchedBiopsies.values(),
-                matchedTreatments.values(),
-                matchedResponses.values(),
+                matchedTreatments.values(), matchedResponses.values(), tumorMarkers,
                 findings);
     }
 }
