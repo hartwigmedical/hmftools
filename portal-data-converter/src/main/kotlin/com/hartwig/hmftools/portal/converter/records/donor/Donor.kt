@@ -9,12 +9,11 @@ data class Donor(private val fields: Map<DonorHeader, String>) : Record {
         val header: KClass<DonorHeader> = DonorHeader::class
         private val COUNTRY = "Netherlands"
         operator fun invoke(id: String, gender: String, ageAtEnrollment: String): Donor {
-            return Donor(mapOf(
-                    DonorHeader.donor_id to id,
-                    DonorHeader.donor_sex to gender,
-                    DonorHeader.donor_age_at_enrollment to ageAtEnrollment,
-                    DonorHeader.donor_region_of_residence to COUNTRY
-            ))
+            return Donor(mapOf(DonorHeader.donor_id to id,
+                               DonorHeader.donor_sex to gender,
+                               DonorHeader.donor_age_at_enrollment to ageAtEnrollment,
+                               DonorHeader.donor_age_at_diagnosis to ageAtEnrollment,
+                               DonorHeader.donor_region_of_residence to COUNTRY))
         }
     }
 
