@@ -122,7 +122,8 @@ public class TreatmentResponseValidationTest {
         BiopsyTreatmentResponseData matchedResponseFeb2015 =
                 ImmutableBiopsyTreatmentResponseData.builder().from(RESPONSE_FEB2015).treatmentId(TREATMENT_JAN_MAR.id()).build();
         final List<ValidationFinding> findings = PatientValidator.validateTreatmentResponses(CPCT_ID,
-                Lists.newArrayList(TREATMENT_JAN_MAR), Lists.newArrayList(matchedResponseFeb2015));
+                Lists.newArrayList(TREATMENT_JAN_MAR),
+                Lists.newArrayList(matchedResponseFeb2015));
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
@@ -158,7 +159,7 @@ public class TreatmentResponseValidationTest {
 
     @NotNull
     private static DrugData drugWithStartAndEndDate(@Nullable LocalDate startDate, @Nullable LocalDate endDate) {
-        return ImmutableDrugData.of("anything", startDate, endDate, Lists.newArrayList());
+        return ImmutableDrugData.of("anything", startDate, endDate, null, Lists.newArrayList());
     }
 
     @NotNull

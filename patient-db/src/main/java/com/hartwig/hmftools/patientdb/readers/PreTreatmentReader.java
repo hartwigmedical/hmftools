@@ -37,6 +37,7 @@ public class PreTreatmentReader {
     private static final String FIELD_DRUG_START = "FLD.PRETHERAPY.SYSTEMICSTDTC";
     private static final String FIELD_DRUG_END = "FLD.PRETHERAPY.SYSTEMICENDTC";
     private static final String FIELD_DRUG = "FLD.PRETHERAPY.SYSTEMICREG";
+    private static final String FIELD_BEST_RESPONSE = "FLD.PRETHERAPY.SYSTEMICRESP";
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -78,10 +79,11 @@ public class PreTreatmentReader {
         for (final EcrfItemGroup itemGroup : treatmentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DRUGS, false)) {
             final LocalDate drugStart = itemGroup.readItemDate(FIELD_DRUG_START, 0, DATE_FORMATTER, false);
             final LocalDate drugEnd = itemGroup.readItemDate(FIELD_DRUG_END, 0, DATE_FORMATTER, false);
-            String drugName = itemGroup.readItemString(FIELD_DRUG, 0, false);
+            final String drugName = itemGroup.readItemString(FIELD_DRUG, 0, false);
+            final String bestResponse = itemGroup.readItemString(FIELD_BEST_RESPONSE, 0, false);
 
             final List<CuratedTreatment> curatedDrugs = drugName == null ? Lists.newArrayList() : treatmentCurator.search(drugName);
-            drugs.add(ImmutableDrugData.of(drugName, drugStart, drugEnd, curatedDrugs));
+            drugs.add(ImmutableDrugData.of(drugName, drugStart, drugEnd, bestResponse, curatedDrugs));
         }
         return drugs;
     }

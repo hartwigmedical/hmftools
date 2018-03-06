@@ -69,18 +69,18 @@ public class TreatmentDataTest {
     private static DrugData drugWithName(@Nullable String name) {
         final List<CuratedTreatment> curatedDrugs =
                 name == null ? Lists.newArrayList() : Lists.newArrayList(ImmutableCuratedTreatment.of(name, "", ""));
-        return ImmutableDrugData.of(name, null, null, curatedDrugs);
+        return ImmutableDrugData.of(name, null, null, null, curatedDrugs);
     }
 
     @NotNull
     private static DrugData drugWithType(@Nullable String type) {
         final List<CuratedTreatment> curatedDrugs =
                 type == null ? Lists.newArrayList() : Lists.newArrayList(ImmutableCuratedTreatment.of("", type, ""));
-        return ImmutableDrugData.of(null, null, null, curatedDrugs);
+        return ImmutableDrugData.of(null, null, null, null, curatedDrugs);
     }
 
     @NotNull
     private static DrugData drugWithStartDate(@Nullable LocalDate startDate) {
-        return ImmutableDrugData.of(null, startDate, null, Lists.newArrayList());
+        return ImmutableDrugData.of(null, startDate, null, null, Lists.newArrayList());
     }
 }

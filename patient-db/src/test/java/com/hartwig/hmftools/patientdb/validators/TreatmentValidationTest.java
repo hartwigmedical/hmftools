@@ -47,9 +47,9 @@ public class TreatmentValidationTest {
 
     private final static DrugData DRUG_WITH_PARTIAL_CURATED_ENTRY = ImmutableDrugData.of("Drug1 Drug2 Drug3",
             JAN2015,
-            JAN2015,
+            JAN2015, null,
             Lists.newArrayList(ImmutableCuratedTreatment.of("Drug1", "Type1", "Drug1")));
-    private final static DrugData DRUG_MISSING_CURATED_ENTRY = ImmutableDrugData.of("Drug1", JAN2015, JAN2015, Lists.newArrayList());
+    private final static DrugData DRUG_MISSING_CURATED_ENTRY = ImmutableDrugData.of("Drug1", JAN2015, JAN2015, null, Lists.newArrayList());
 
     private final static BiopsyTreatmentData TREATMENT_GIVEN_NULL =
             ImmutableBiopsyTreatmentData.of(null, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
@@ -218,6 +218,6 @@ public class TreatmentValidationTest {
     private static DrugData create(@Nullable String name, @Nullable LocalDate startDate, @Nullable LocalDate endDate) {
         List<CuratedTreatment> curation =
                 name != null ? Lists.newArrayList(ImmutableCuratedTreatment.of(name, "Type1", name)) : Lists.newArrayList();
-        return ImmutableDrugData.of(name, startDate, endDate, curation);
+        return ImmutableDrugData.of(name, startDate, endDate, null, curation);
     }
 }
