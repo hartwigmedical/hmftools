@@ -62,6 +62,7 @@ public class CanonicalTranscriptFactory {
                 .exonStart(exonStart)
                 .exonEnd(exonEnd)
                 .exonBases(exonBases)
+                .strand(region.strand())
                 .codingStart(codingStart)
                 .codingEnd(codingEnd)
                 .codingBases(Math.max(0, codingBases - 3))

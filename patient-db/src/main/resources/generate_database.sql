@@ -478,6 +478,7 @@ CREATE TABLE canonicalTranscript
     exonStart int not null,
     exonEnd int not null,
     exonBases int not null,
+    strand varchar(255) not null,
     codingStart int not null,
     codingEnd int not null,
     codingBases int not null,

@@ -5,3 +5,6 @@ ALTER TABLE somaticVariant
     ADD COLUMN worstEffectTranscript varchar(255) NOT NULL AFTER dbsnpId,
     ADD COLUMN canonicalEffect varchar(255) NOT NULL AFTER worstCodingEffect,
     ADD COLUMN canonicalCodingEffect varchar(255) NOT NULL AFTER canonicalEffect;
+
+ALTER TABLE canonicalTranscript
+    ADD COLUMN strand varchar(255) not null AFTER exonBases;

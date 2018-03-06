@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.gene;
 
+import com.hartwig.hmftools.common.region.hmfslicer.Strand;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,6 +26,8 @@ public interface CanonicalTranscript extends TranscriptRegion {
     long exonEnd();
 
     long exonBases();
+
+    Strand strand();
 
     long codingStart();
 
