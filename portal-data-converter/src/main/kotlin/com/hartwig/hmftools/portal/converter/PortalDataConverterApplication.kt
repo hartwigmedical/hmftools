@@ -25,16 +25,16 @@ fun main(args: Array<String>) {
     val options = createOptions()
     val cmd = options.createCommandLine("portal-data-converter", args)
     val patientDataFile = File(cmd.getOptionValue(CLINICAL_DATA_CSV))
-    val runs = Files.lines(Paths.get(cmd.getOptionValue(RUNS_FILE))).map { it.trim() }.filter { it.isNotEmpty() }
-            .collect(Collectors.toList()).map { ProductionRunContextFactory.fromRunDirectory(it) }
+    val runs = Files.lines(Paths.get(cmd.getOptionValue(RUNS_FILE))).map { it.trim() }.filter { it.isNotEmpty() }.collect(Collectors.toList()).map {
+        ProductionRunContextFactory.fromRunDirectory(it)
+    }
     convertSamples(runs, cmd.getOptionValue(OUTPUT_DIR), patientDataFile)
 }
 
 private fun createOptions(): Options {
     val options = Options()
     options.addOption(Option.builder(RUNS_FILE).required().hasArg().desc("path to file containing runs to convert").build())
-    options.addOption(Option.builder(CLINICAL_DATA_CSV).required().hasArg()
-            .desc("path to csv file containing clinical data").build())
+    options.addOption(Option.builder(CLINICAL_DATA_CSV).required().hasArg().desc("path to csv file containing clinical data").build())
     options.addOption(Option.builder(OUTPUT_DIR).required().hasArg().desc("output directory").build())
     return options
 }
@@ -46,11 +46,10 @@ private fun convertSamples(runContexts: List<RunContext>, outputDirectory: Strin
     val dataPerPatient = samplesData.associateBy { it.cpctId ?: "" }
     runContexts.forEach { it ->
         val (patientId, clinicalData, somaticVcfPath) = getPatientDataAndVcf(it, dataPerSample, dataPerPatient) ?: return@forEach
-        val projectFolder = Files.createDirectories(Paths.get("$outputDirectory/HMF-${clinicalData.cancerType}"))
+        val projectFolder = Files.createDirectories(Paths.get(outputDirectory + File.separator + "HMF-${clinicalData.cancerType}"))
         val folderPath = projectFolder.toAbsolutePath().toString()
         clinicalRecords.put(folderPath, SampleRecords(patientId, it.tumorSample(), clinicalData))
-        TsvWriter.writeSomaticMutationMetadata(folderPath, it.tumorSample(),
-                listOf(SimpleSomaticMutationMetadata(it.tumorSample())))
+        TsvWriter.writeSomaticMutationMetadata(folderPath, it.tumorSample(), listOf(SimpleSomaticMutationMetadata(it.tumorSample())))
         TsvWriter.writeSimpleSomaticMutation(folderPath, it.tumorSample(), SimpleSomaticMutation(somaticVcfPath))
     }
     clinicalRecords.keySet().forEach { TsvWriter.writeSampleRecords(it, clinicalRecords[it]) }
@@ -63,11 +62,11 @@ private fun getPatientDataAndVcf(runContext: RunContext, dataPerSample: Map<Stri
     val sampleClinicalData = dataPerSample[runContext.tumorSample()]
     val somaticVcfPath = runContext.somaticVcfPath()
     return when {
-        patientId == null -> {
+        patientId == null          -> {
             logger.warn("Could not extract valid patient id from sample: ${runContext.tumorSample()}")
             null
         }
-        somaticVcfPath == null -> {
+        somaticVcfPath == null     -> {
             logger.warn("Could not locate somatic vcf file for set: ${runContext.setName()}")
             null
         }
@@ -80,6 +79,6 @@ private fun getPatientDataAndVcf(runContext: RunContext, dataPerSample: Map<Stri
                 Triple(patientId, patientClinicalData, somaticVcfPath)
             }
         }
-        else -> Triple(patientId, sampleClinicalData, somaticVcfPath)
+        else                       -> Triple(patientId, sampleClinicalData, somaticVcfPath)
     }
 }
