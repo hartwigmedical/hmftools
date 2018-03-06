@@ -24,3 +24,14 @@ CREATE TABLE preTreatmentDrug
     PRIMARY KEY (id),
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
+
+CREATE TABLE tumorMarker
+(   id int NOT NULL AUTO_INCREMENT,
+    patientId int NOT NULL,
+    date DATE,
+    marker varchar(50),
+    measurement varchar(50),
+    unit varchar(50),
+    PRIMARY KEY (id),
+    FOREIGN KEY (patientId) REFERENCES patient(id)
+);

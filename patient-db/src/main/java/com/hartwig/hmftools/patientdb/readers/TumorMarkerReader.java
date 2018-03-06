@@ -20,9 +20,9 @@ final class TumorMarkerReader {
     private static final String ITEMGROUP_RESPONSE = "GRP.RESPONSE.RESPONSE";
 
     private static final String FIELD_DATE = "FLD.RESPONSE.LBDTC_TUMORMARKERS";
-    private static final String FIELD_MARKER = "FLD.RESPONSE.LBDTC_TUMORMARKERS";
-    private static final String FIELD_MEASUREMENT = "FLD.RESPONSE.LBDTC_TUMORMARKERS";
-    private static final String FIELD_UNIT = "FLD.RESPONSE.LBDTC_TUMORMARKERS";
+    private static final String FIELD_MARKER = "FLD.RESPONSE.LBTERM_TUMORMARKERS";
+    private static final String FIELD_MEASUREMENT = "FLD.RESPONSE.LBORRES_TUMORMARKERS";
+    private static final String FIELD_UNIT = "FLD.RESPONSE.LBORRESU_TUMORMARKERS";
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -39,7 +39,13 @@ final class TumorMarkerReader {
                     String marker = responseGroup.readItemString(FIELD_MARKER, 0, false);
                     String measurement = responseGroup.readItemString(FIELD_MEASUREMENT, 0, false);
                     String unit = responseGroup.readItemString(FIELD_UNIT, 0, false);
-                    tumorMarkers.add(ImmutableTumorMarkerData.of(patient.patientId(), date, marker, measurement, unit));
+                    tumorMarkers.add(ImmutableTumorMarkerData.of(patient.patientId(),
+                            date,
+                            marker,
+                            measurement,
+                            unit,
+                            form.status(),
+                            form.locked()));
                 }
             }
         }

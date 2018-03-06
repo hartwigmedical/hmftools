@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PRETREA
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SAMPLE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATMENT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATMENTRESPONSE;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TUMORMARKER;
 
 import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
@@ -18,6 +19,7 @@ import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PatientData;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
+import com.hartwig.hmftools.patientdb.data.TumorMarkerData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -41,6 +43,7 @@ class ClinicalDAO {
         context.truncate(TREATMENT).execute();
         context.truncate(DRUG).execute();
         context.truncate(TREATMENTRESPONSE).execute();
+        context.truncate(TUMORMARKER).execute();
         context.truncate(FORMSMETADATA).execute();
         context.execute("SET FOREIGN_KEY_CHECKS = 1;");
     }
@@ -51,6 +54,7 @@ class ClinicalDAO {
         patient.clinicalBiopsies().forEach(biopsy -> writeBiopsyData(patientId, biopsy));
         patient.treatments().forEach(treatment -> writeTreatmentData(patientId, treatment));
         patient.treatmentResponses().forEach(response -> writeTreatmentResponseData(patientId, response));
+        patient.tumorMarkers().forEach(tumorMarker -> writeTumorMarkerData(patientId, tumorMarker));
     }
 
     private int writePatientData(@NotNull final PatientData patient, @NotNull PreTreatmentData preTreatmentData) {
@@ -251,6 +255,25 @@ class ClinicalDAO {
                 "treatmentResponse",
                 treatmentResponse.formStatus().stateString(),
                 Boolean.toString(treatmentResponse.formLocked()));
+    }
+
+    private void writeTumorMarkerData(final int patientId, @NotNull final TumorMarkerData tumorMarker) {
+        final int id = context.insertInto(TUMORMARKER,
+                TUMORMARKER.PATIENTID,
+                TUMORMARKER.DATE,
+                TUMORMARKER.MARKER,
+                TUMORMARKER.MEASUREMENT,
+                TUMORMARKER.UNIT)
+                .values(patientId, Utils.toSQLDate(tumorMarker.date()), tumorMarker.marker(), tumorMarker.measurement(), tumorMarker.unit())
+                .returning(TUMORMARKER.ID)
+                .fetchOne()
+                .getValue(TUMORMARKER.ID);
+
+        writeFormStatus(id,
+                TUMORMARKER.getName(),
+                "tumorMarker",
+                tumorMarker.formStatus().stateString(),
+                Boolean.toString(tumorMarker.formLocked()));
     }
 
     private void writeFormStatus(final int id, @NotNull final String tableName, @NotNull final String formName,

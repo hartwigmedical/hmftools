@@ -2,6 +2,8 @@ package com.hartwig.hmftools.patientdb.data;
 
 import java.time.LocalDate;
 
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,4 +27,9 @@ public abstract class TumorMarkerData {
 
     @Nullable
     public abstract String unit();
+
+    @NotNull
+    public abstract FormStatusState formStatus();
+
+    public abstract boolean formLocked();
 }
