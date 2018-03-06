@@ -15,15 +15,20 @@ data class SampleClinicalData(val cpctId: String?, val sampleId: String?, val ge
             val ageAtEnrollment = determineAgeAtEnrollment(record.getOrNull(BIRTH_YEAR_FIELD), record.getOrNull(REGISTRATION_DATE_FIELD))
             val cancerType = determineCancerType(record.getOrNull(CANCER_TYPE_FIELD))
             val (specimenType, specimenTypeOther) = determineSpecimenType(record.getOrNull(BIOPSY_SITE_FIELD))
-            return SampleClinicalData(record.getOrNull(CPCT_ID_FIELD), record.getOrNull(SAMPLE_ID_FIELD), gender, ageAtEnrollment,
-                    cancerType, specimenType, specimenTypeOther)
+            return SampleClinicalData(record.getOrNull(CPCT_ID_FIELD),
+                                      record.getOrNull(SAMPLE_ID_FIELD),
+                                      gender,
+                                      ageAtEnrollment,
+                                      cancerType,
+                                      specimenType,
+                                      specimenTypeOther)
         }
 
         private fun determineGender(ecrfGender: String?): String {
             return when (ecrfGender?.trim()) {
-                "male" -> "1"
+                "male"   -> "1"
                 "female" -> "2"
-                else -> DEFAULT_VALUE
+                else     -> DEFAULT_VALUE
             }
         }
 
@@ -34,9 +39,7 @@ data class SampleClinicalData(val cpctId: String?, val sampleId: String?, val ge
         private fun determineSpecimenType(ecrfBiopsySite: String?): Pair<String, String> {
             return when (ecrfBiopsySite?.trim()?.toLowerCase()) {
                 null -> Pair(DEFAULT_VALUE, DEFAULT_VALUE)
-                "primary" -> Pair("Primary tumour - solid tissue", DEFAULT_VALUE)
-                "lymph node" -> Pair("Metastatic tumour - lymph node", DEFAULT_VALUE)
-                else -> Pair("Metastatic tumour - other", ecrfBiopsySite)
+                else -> Pair("Biopsy site: " + ecrfBiopsySite, DEFAULT_VALUE)
             }
         }
 
