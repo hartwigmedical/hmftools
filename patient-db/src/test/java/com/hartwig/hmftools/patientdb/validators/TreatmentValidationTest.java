@@ -46,8 +46,7 @@ public class TreatmentValidationTest {
     private final static DrugData DRUG_JAN_MAR = create("Drug1", JAN2015, MAR2015);
 
     private final static DrugData DRUG_WITH_PARTIAL_CURATED_ENTRY = ImmutableDrugData.of("Drug1 Drug2 Drug3",
-            JAN2015,
-            JAN2015, null,
+            JAN2015, JAN2015, null,
             Lists.newArrayList(ImmutableCuratedTreatment.of("Drug1", "Type1", "Drug1")));
     private final static DrugData DRUG_MISSING_CURATED_ENTRY = ImmutableDrugData.of("Drug1", JAN2015, JAN2015, null, Lists.newArrayList());
 
@@ -171,7 +170,8 @@ public class TreatmentValidationTest {
 
     @Test
     public void reportsMissingCuratedTreatment() {
-        final List<ValidationFinding> findings = PatientValidator.validateTreatmentCuration(CPCT_ID,
+        String curationName = "testTreatmentCuration";
+        final List<ValidationFinding> findings = PatientValidator.validateTreatmentCuration(CPCT_ID, curationName, "",
                 Lists.newArrayList(ImmutableBiopsyTreatmentData.of("Yes",
                         Lists.newArrayList(DRUG_MISSING_CURATED_ENTRY),
                         FormStatusState.UNKNOWN,
@@ -179,12 +179,13 @@ public class TreatmentValidationTest {
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::level).collect(Collectors.toList());
-        assertTrue(findingsFields.get(0).equals("treatmentCuration"));
+        assertTrue(findingsFields.get(0).equals(curationName));
     }
 
     @Test
     public void reportsPartiallyCuratedTreatment() {
-        final List<ValidationFinding> findings = PatientValidator.validateTreatmentCuration(CPCT_ID,
+        String curationName = "testTreatmentCuration";
+        final List<ValidationFinding> findings = PatientValidator.validateTreatmentCuration(CPCT_ID, curationName, "",
                 Lists.newArrayList(ImmutableBiopsyTreatmentData.of("Yes",
                         Lists.newArrayList(DRUG_WITH_PARTIAL_CURATED_ENTRY),
                         FormStatusState.UNKNOWN,
@@ -192,7 +193,7 @@ public class TreatmentValidationTest {
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::level).collect(Collectors.toList());
-        assertTrue(findingsFields.get(0).equals("treatmentCuration"));
+        assertTrue(findingsFields.get(0).equals(curationName));
     }
 
     @Test
