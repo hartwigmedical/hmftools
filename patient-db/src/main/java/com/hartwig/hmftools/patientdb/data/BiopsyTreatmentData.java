@@ -19,6 +19,9 @@ public abstract class BiopsyTreatmentData implements TreatmentData {
     @Nullable
     public abstract String treatmentGiven();
 
+    @Nullable
+    public abstract String radiotherapyGiven();
+
     @NotNull
     public abstract List<DrugData> drugs();
 
@@ -37,9 +40,9 @@ public abstract class BiopsyTreatmentData implements TreatmentData {
     }
 
     @NotNull
-    public static BiopsyTreatmentData of(@Nullable final String treatmentGiven, @NotNull final List<DrugData> drugs,
-            @NotNull final FormStatusState formStatus, final boolean formLocked) {
-        return ImmutableBiopsyTreatmentData.of(createId(), treatmentGiven, drugs, null, formStatus, formLocked);
+    public static BiopsyTreatmentData of(@Nullable final String treatmentGiven, @Nullable final String radiotherapyGiven,
+            @NotNull final List<DrugData> drugs, @NotNull final FormStatusState formStatus, final boolean formLocked) {
+        return ImmutableBiopsyTreatmentData.of(createId(), treatmentGiven, radiotherapyGiven, drugs, null, formStatus, formLocked);
     }
 
     @Override
