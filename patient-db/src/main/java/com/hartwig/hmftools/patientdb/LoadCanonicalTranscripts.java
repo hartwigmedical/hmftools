@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.patientdb;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.CanonicalTranscript;
 import com.hartwig.hmftools.common.gene.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
@@ -27,7 +25,7 @@ public class LoadCanonicalTranscripts {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    public static void main(@NotNull final String[] args) throws ParseException, IOException, HartwigException, SQLException {
+    public static void main(@NotNull final String[] args) throws ParseException, SQLException {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final DatabaseAccess dbAccess = databaseAccess(cmd);

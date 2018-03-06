@@ -2,7 +2,9 @@ package com.hartwig.hmftools.svannotation;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -25,8 +27,10 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -46,6 +50,12 @@ public class LoadStructuralVariants {
     private static final String SKIP_ANNOTATIONS = "skip_annotations";
     private static final String LOAD_FROM_DB = "load_from_db";
     private static final String CLUSTER_BASE_DISTANCE = "cluster_bases";
+    private static final String DATA_OUTPUT_PATH = "data_output_path";
+    private static final String LOG_DEBUG = "log_debug";
+    private static final String WRITE_FILTERED_SVS = "log_filters";
+    private static final String SV_PON_FILE = "sv_pon_file";
+    private static final String FRAGILE_SITE_FILE = "fragile_site_file";
+    private static final String LINE_ELEMENT_FILE = "line_element_file";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -54,17 +64,50 @@ public class LoadStructuralVariants {
     public static void main(@NotNull final String[] args) throws ParseException, IOException, HartwigException, SQLException {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
-        final DatabaseAccess dbAccess = databaseAccess(cmd);
 
         boolean loadFromDB = cmd.hasOption(LOAD_FROM_DB);
         final String tumorSample = cmd.getOptionValue(SAMPLE);
         boolean runClustering = cmd.hasOption(CLUSTER_SVS);
+        boolean createFilteredPON = cmd.hasOption(WRITE_FILTERED_SVS);
+
+        final DatabaseAccess dbAccess = !createFilteredPON ? databaseAccess(cmd) : null;
+
+        if(cmd.hasOption(LOG_DEBUG))
+        {
+            Configurator.setRootLevel(Level.DEBUG);
+        }
+
+        StructuralVariantClustering svClusterer = null;
+
+        if(runClustering) {
+            LOGGER.info("will run clustering logic");
+
+            SvClusteringConfig clusteringConfig = new SvClusteringConfig();
+            clusteringConfig.setOutputCsvPath(cmd.getOptionValue(DATA_OUTPUT_PATH));
+            clusteringConfig.setBaseDistance(Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE, "0")));
+            clusteringConfig.setUseCombinedOutputFile(tumorSample.equals("*"));
+            clusteringConfig.setSvPONFile(cmd.getOptionValue(SV_PON_FILE));
+            clusteringConfig.setFragileSiteFile(cmd.getOptionValue(FRAGILE_SITE_FILE));
+            clusteringConfig.setLineElementFile(cmd.getOptionValue(LINE_ELEMENT_FILE));
+            svClusterer = new StructuralVariantClustering(clusteringConfig);
+        }
+
+        if(createFilteredPON)
+        {
+            LOGGER.info("reading VCF file including filtered SVs");
+
+            FilteredSVWriter filteredSvWriter = new FilteredSVWriter(cmd.getOptionValue(VCF_FILE), cmd.getOptionValue(DATA_OUTPUT_PATH));
+            filteredSvWriter.processVcfFiles();
+
+            LOGGER.info("reads complete");
+            return;
+        }
 
         if(!loadFromDB) {
 
             boolean skipAnnotations = cmd.hasOption(SKIP_ANNOTATIONS);
             LOGGER.info("reading VCF File");
-            final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE));
+            final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE), true);
 
             LOGGER.info("enriching structural variants based on purple data");
             final List<EnrichedStructuralVariant> enrichedVariantWithoutPrimaryId = enrichStructuralVariants(variants, dbAccess, tumorSample);
@@ -87,13 +130,6 @@ public class LoadStructuralVariants {
 
             if(runClustering)
             {
-                LOGGER.info("running clustering logic");
-
-                SvClusteringConfig clusteringConfig = new SvClusteringConfig();
-                clusteringConfig.setOutputCsvFile(tumorSample);
-                clusteringConfig.setBaseDistance(Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE, "0")));
-                StructuralVariantClustering svClusterer = new StructuralVariantClustering(clusteringConfig);
-
                 svClusterer.loadFromEnrichedSVs(tumorSample, enrichedVariants);
                 svClusterer.runClustering();
             }
@@ -104,24 +140,42 @@ public class LoadStructuralVariants {
         }
         else
         {
-            LOGGER.info("running clustering logic");
+            // only run the SV clustering routines, taking source data from the SV table(s)
 
-            SvClusteringConfig clusteringConfig = new SvClusteringConfig();
-            clusteringConfig.setOutputCsvFile(tumorSample);
-            clusteringConfig.setBaseDistance(Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE, "0")));
-            StructuralVariantClustering svClusterer = new StructuralVariantClustering(clusteringConfig);
+            List<String> samplesList = Lists.newArrayList();
 
-            List<SvClusterData> svClusterData = queryStructuralVariantData(dbAccess, tumorSample);
-            svClusterer.loadFromDatabase(tumorSample, svClusterData);
-            svClusterer.runClustering();
+            if(tumorSample.isEmpty() || tumorSample.equals("*"))
+            {
+                samplesList = getStructuralVariantSamplesList(dbAccess);
+            }
+            else if(tumorSample.contains(","))
+            {
+                String[] tumorList = tumorSample.split(",");
+                samplesList = Arrays.stream(tumorList).collect(Collectors.toList());
+            }
+            else
+            {
+                samplesList.add(tumorSample);
+            }
+
+            int count = 0;
+            for(final String sample : samplesList) {
+
+                ++count;
+                LOGGER.info("clustering for sample({}), total({})", sample, count);
+
+                List<SvClusterData> svClusterData = queryStructuralVariantData(dbAccess, sample);
+                svClusterer.loadFromDatabase(sample, svClusterData);
+                svClusterer.runClustering();
+            }
         }
 
         LOGGER.info("run complete");
     }
 
     @NotNull
-    private static List<StructuralVariant> readFromVcf(@NotNull String vcfFileLocation) throws IOException {
-        final StructuralVariantFactory factory = new StructuralVariantFactory();
+    private static List<StructuralVariant> readFromVcf(@NotNull String vcfFileLocation, final boolean filterOnPasses) throws IOException {
+        final StructuralVariantFactory factory = new StructuralVariantFactory(filterOnPasses);
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcfFileLocation,
                 new VCFCodec(),
                 false)) {
@@ -156,10 +210,17 @@ public class LoadStructuralVariants {
 
         for(final StructuralVariantData svRecord : svRecords)
         {
-            svClusterDataItems.add(SvClusterData.from(svRecord));
+            svClusterDataItems.add(new SvClusterData(svRecord));
         }
 
         return svClusterDataItems;
+    }
+
+    private static List<String> getStructuralVariantSamplesList(DatabaseAccess dbAccess)
+    {
+        List<String> svSamplesList = dbAccess.getStructuralVariantSampleList("");
+
+        return svSamplesList;
     }
 
     @NotNull
@@ -174,8 +235,15 @@ public class LoadStructuralVariants {
         options.addOption(ENSEMBL_DB, true, "Annotate structural variants using this Ensembl DB URI");
         options.addOption(LOAD_FROM_DB, false, "Use existing SV data, skip loading from VCF");
         options.addOption(CLUSTER_SVS, false, "Whether to run clustering logic");
+        options.addOption(DATA_OUTPUT_PATH, true, "CSV output directory");
         options.addOption(SKIP_ANNOTATIONS, false, "Skip annotations, including Ensemble DB data sync, for testing only)");
         options.addOption(CLUSTER_BASE_DISTANCE, true, "Clustering base distance, defaults to 1000");
+        options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
+        options.addOption(WRITE_FILTERED_SVS, false, "Includes filtered SVs and writes all to file for PON creation");
+        options.addOption(SV_PON_FILE, true, "PON file for SVs");
+        options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file for SVs");
+        options.addOption(FRAGILE_SITE_FILE, true, "Fragile Site file for SVs");
+
         return options;
     }
 

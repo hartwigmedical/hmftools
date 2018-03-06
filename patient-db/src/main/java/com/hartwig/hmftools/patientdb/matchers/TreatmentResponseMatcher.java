@@ -3,9 +3,9 @@ package com.hartwig.hmftools.patientdb.matchers;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FORM_TUMOR_MEASUREMENT;
 
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
@@ -15,43 +15,102 @@ import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentResponseData;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class TreatmentResponseMatcher {
     private TreatmentResponseMatcher() {
     }
 
     @NotNull
-    public static MatchResult<BiopsyTreatmentResponseData> matchTreatmentResponsesToTreatments(@NotNull final String patientId,
-            @NotNull final List<BiopsyTreatmentData> treatments, @NotNull final List<BiopsyTreatmentResponseData> responses) {
+    public static MatchResult<BiopsyTreatmentResponseData> matchTreatmentResponsesToTreatments(@NotNull String patientId,
+            @NotNull List<BiopsyTreatmentData> treatments, @NotNull List<BiopsyTreatmentResponseData> responses) {
         final List<BiopsyTreatmentResponseData> matchedResponses = Lists.newArrayList();
         final List<ValidationFinding> findings = Lists.newArrayList();
-        for (final BiopsyTreatmentResponseData response : responses) {
-            final Map<Boolean, List<BiopsyTreatmentData>> partitions =
-                    treatments.stream().collect(Collectors.partitioningBy(treatment -> responseMatchesTreatment(response, treatment)));
-            final List<BiopsyTreatmentData> matchedTreatments = partitions.get(true);
-            if (matchedTreatments.size() == 0) {
-                matchedResponses.add(response);
-            } else if (matchedTreatments.size() > 1) {
-                findings.add(
-                        ValidationFinding.of("match", patientId, FORM_TUMOR_MEASUREMENT, "treatment response matches multiple treatments",
-                                FormStatusState.UNKNOWN, false, "response: " + response + ". treatments: " + matchedTreatments.stream()
-                                        .map(BiopsyTreatmentData::toString)
-                                        .collect(Collectors.toList())));
-                matchedResponses.add(response);
+        Collections.sort(responses);
+
+        List<BiopsyTreatmentData> sortedTreatments = sortAndFilter(treatments);
+        if (hasOverlappingTreatments(sortedTreatments)) {
+            if (!responses.isEmpty()) {
+                findings.add(createFinding(patientId, "treatments are overlapping. Cannot match any response.",
+                        "treatments: " + sortedTreatments));
+            }
+            return new MatchResult<>(responses, findings);
+        }
+
+        Iterator<BiopsyTreatmentData> treatmentIterator = sortedTreatments.iterator();
+        BiopsyTreatmentData currentTreatment = treatmentIterator.hasNext() ? treatmentIterator.next() : null;
+        LocalDate firstTreatmentStart = currentTreatment != null ? currentTreatment.startDate() : null;
+        BiopsyTreatmentData nextTreatment = treatmentIterator.hasNext() ? treatmentIterator.next() : null;
+        boolean hasNewBaselineResponseFound = false;
+        for (BiopsyTreatmentResponseData response : responses) {
+            LocalDate responseDate = response.date();
+            if (responseMatchable(responseDate, firstTreatmentStart)) {
+                LocalDate nextTreatmentStart = nextTreatment != null ? nextTreatment.startDate() : null;
+                while (nextTreatmentStart != null && responseDate.isAfter(nextTreatmentStart)) {
+                    currentTreatment = nextTreatment;
+                    nextTreatment = treatmentIterator.hasNext() ? treatmentIterator.next() : null;
+                    nextTreatmentStart = nextTreatment != null ? nextTreatment.startDate() : null;
+                    hasNewBaselineResponseFound = false;
+                }
+
+                if (hasNewBaselineResponseFound) {
+                    matchedResponses.add(response);
+                    findings.add(createFinding(patientId,
+                            "response after new baseline and before next treatment",
+                            "response: " + response));
+                } else {
+                    String actualResponse = response.response();
+                    if (actualResponse != null && actualResponse.equalsIgnoreCase("ne")) {
+                        matchedResponses.add(response);
+                        hasNewBaselineResponseFound = true;
+                    } else {
+                        matchedResponses.add(ImmutableBiopsyTreatmentResponseData.builder()
+                                .from(response)
+                                .treatmentId(currentTreatment.id())
+                                .build());
+                    }
+                }
             } else {
-                matchedResponses.add(
-                        ImmutableBiopsyTreatmentResponseData.builder().from(response).treatmentId(matchedTreatments.get(0).id()).build());
+                matchedResponses.add(response);
             }
         }
+
         return new MatchResult<>(matchedResponses, findings);
     }
 
-    public static boolean responseMatchesTreatment(@NotNull final BiopsyTreatmentResponseData response,
-            @NotNull final BiopsyTreatmentData treatment) {
-        final LocalDate treatmentStart = treatment.startDate();
-        final LocalDate treatmentEnd = treatment.endDate();
-        final LocalDate responseDate = response.date();
-        return !(treatmentStart == null || responseDate == null) && (responseDate.isAfter(treatmentStart) && (treatmentEnd == null
-                || responseDate.isBefore(treatmentEnd) || responseDate.isEqual(treatmentEnd)));
+    private static boolean hasOverlappingTreatments(@NotNull List<BiopsyTreatmentData> sortedTreatments) {
+        Iterator<BiopsyTreatmentData> iterator = sortedTreatments.iterator();
+
+        BiopsyTreatmentData current = iterator.hasNext() ? iterator.next() : null;
+        while (iterator.hasNext()) {
+            assert current != null;
+            BiopsyTreatmentData next = iterator.next();
+            LocalDate currentEndDate = current.endDate();
+            LocalDate nextStartDate = next.startDate();
+            assert nextStartDate != null;
+            if (currentEndDate == null || currentEndDate.isAfter(nextStartDate)) {
+                return true;
+            }
+            current = next;
+        }
+
+        return false;
+    }
+
+    @NotNull
+    private static List<BiopsyTreatmentData> sortAndFilter(@NotNull List<BiopsyTreatmentData> treatments) {
+        List<BiopsyTreatmentData> sortedTreatments = Lists.newArrayList(treatments);
+        Collections.sort(sortedTreatments);
+        sortedTreatments.removeIf(treatment -> treatment.startDate() == null);
+        return sortedTreatments;
+    }
+
+    private static boolean responseMatchable(@Nullable LocalDate responseDate, @Nullable LocalDate firstTreatmentStart) {
+        return responseDate != null && firstTreatmentStart != null && responseDate.isAfter(firstTreatmentStart);
+    }
+
+    @NotNull
+    private static ValidationFinding createFinding(@NotNull String patientId, @NotNull String message, @NotNull String details) {
+        return ValidationFinding.of("match", patientId, FORM_TUMOR_MEASUREMENT, message, FormStatusState.UNKNOWN, false, details);
     }
 }

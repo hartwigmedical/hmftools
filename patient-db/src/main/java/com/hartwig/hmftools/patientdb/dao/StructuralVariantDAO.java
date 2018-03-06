@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import static com.hartwig.hmftools.patientdb.Config.BATCH_INSERT_SIZE;
+import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTBREAKEND;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTDISRUPTION;
@@ -13,19 +13,19 @@ import java.util.List;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
-
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantImpl;
-import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantLegImpl;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+
 import org.jetbrains.annotations.NotNull;
-import org.jooq.*;
+import org.jooq.DSLContext;
+import org.jooq.InsertValuesStep21;
+import org.jooq.Record;
+import org.jooq.Record1;
+import org.jooq.Result;
 import org.jooq.types.UInteger;
 
 class StructuralVariantDAO {
@@ -36,7 +36,7 @@ class StructuralVariantDAO {
         this.context = context;
     }
 
-    public final List<StructuralVariantData> readData(@NotNull final String sample) {
+    public final List<StructuralVariantData> read(@NotNull final String sample) {
         List<StructuralVariantData> structuralVariants = Lists.newArrayList();
 
         final Result<Record> result = context.select().from(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).fetch();
@@ -50,6 +50,15 @@ class StructuralVariantDAO {
                     .endPosition(record.getValue(STRUCTURALVARIANT.ENDPOSITION))
                     .startOrientation(record.getValue(STRUCTURALVARIANT.STARTORIENTATION))
                     .endOrientation(record.getValue(STRUCTURALVARIANT.ENDORIENTATION))
+                    .startAF(record.getValue(STRUCTURALVARIANT.STARTAF))
+                    .adjustedStartAF(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTAF))
+                    .adjustedStartCopyNumber(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBER))
+                    .adjustedStartCopyNumberChange(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBERCHANGE))
+                    .endAF(record.getValue(STRUCTURALVARIANT.ENDAF))
+                    .adjustedEndAF(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDAF))
+                    .adjustedEndCopyNumber(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER))
+                    .adjustedEndCopyNumberChange(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE))
+                    .ploidy(record.getValue(STRUCTURALVARIANT.PLOIDY))
                     .type(StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
                     .build());
         }
@@ -57,8 +66,29 @@ class StructuralVariantDAO {
         return structuralVariants;
     }
 
+    public final List<String> getSamplesList(@NotNull final String sampleSearch) {
+
+        final Result<Record1<String>> result = sampleSearch.equals("") ? context.select(STRUCTURALVARIANT.SAMPLEID)
+                .from(STRUCTURALVARIANT)
+                .groupBy(STRUCTURALVARIANT.SAMPLEID)
+                .fetch()
+                : context.select(STRUCTURALVARIANT.SAMPLEID)
+                        .from(STRUCTURALVARIANT)
+                        .where(STRUCTURALVARIANT.SAMPLEID.like(sampleSearch))
+                        .groupBy(STRUCTURALVARIANT.SAMPLEID)
+                        .fetch();
+
+        List<String> samplesList = Lists.newArrayList();
+
+        for (Record record : result) {
+            samplesList.add(record.getValue(STRUCTURALVARIANT.SAMPLEID));
+        }
+
+        return samplesList;
+    }
+
     @NotNull
-    List<EnrichedStructuralVariant> read(@NotNull final String sample) {
+    List<EnrichedStructuralVariant> readEnrichedData(@NotNull final String sample) {
         final List<EnrichedStructuralVariant> regions = Lists.newArrayList();
 
         final Result<Record> result = context.select().from(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).fetch();
@@ -120,7 +150,7 @@ class StructuralVariantDAO {
         // NERA: delete structural variants
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
 
-        for (List<EnrichedStructuralVariant> batch : Iterables.partition(variants, BATCH_INSERT_SIZE)) {
+        for (List<EnrichedStructuralVariant> batch : Iterables.partition(variants, DB_BATCH_INSERT_SIZE)) {
             InsertValuesStep21 inserter = context.insertInto(STRUCTURALVARIANT,
                     STRUCTURALVARIANT.SAMPLEID,
                     STRUCTURALVARIANT.STARTCHROMOSOME,

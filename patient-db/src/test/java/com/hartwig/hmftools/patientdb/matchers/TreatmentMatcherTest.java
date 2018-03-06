@@ -11,9 +11,13 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.data.ImmutableDrugData;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class TreatmentMatcherTest {
@@ -24,14 +28,20 @@ public class TreatmentMatcherTest {
     private final static LocalDate JUL2015 = LocalDate.parse("2015-07-01");
     private final static LocalDate SEP2015 = LocalDate.parse("2015-09-01");
 
-    private final static BiopsyTreatmentData TREATMENT_FEB_JUL2015 =
-            ImmutableBiopsyTreatmentData.of("Yes", FEB2015, JUL2015, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
-    private final static BiopsyTreatmentData TREATMENT_MAY_SEP2015 =
-            ImmutableBiopsyTreatmentData.of("Yes", MAY2015, SEP2015, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
+    private final static BiopsyTreatmentData TREATMENT_FEB_JUL2015 = ImmutableBiopsyTreatmentData.of("Yes",
+            Lists.newArrayList(drugWithStartAndEndDate(FEB2015, JUL2015)),
+            FormStatusState.UNKNOWN,
+            false);
+    private final static BiopsyTreatmentData TREATMENT_MAY_SEP2015 = ImmutableBiopsyTreatmentData.of("Yes",
+            Lists.newArrayList(drugWithStartAndEndDate(MAY2015, SEP2015)),
+            FormStatusState.UNKNOWN,
+            false);
     private final static BiopsyTreatmentData NO_TREATMENT_GIVEN =
-            ImmutableBiopsyTreatmentData.of("No", null, null, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
-    private final static BiopsyTreatmentData TREATMENT_MAR_NULL =
-            ImmutableBiopsyTreatmentData.of("Yes", MAR2015, null, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
+            ImmutableBiopsyTreatmentData.of("No", Lists.newArrayList(), FormStatusState.UNKNOWN, false);
+    private final static BiopsyTreatmentData TREATMENT_MAR_NULL = ImmutableBiopsyTreatmentData.of("Yes",
+            Lists.newArrayList(drugWithStartAndEndDate(MAR2015, null)),
+            FormStatusState.UNKNOWN,
+            false);
 
     private final static BiopsyData BIOPSY_JAN = ImmutableBiopsyData.of(JAN2015, "", "", "", "", FormStatusState.UNKNOWN, false);
     private final static BiopsyData BIOPSY_FEB = ImmutableBiopsyData.of(FEB2015, "", "", "", "", FormStatusState.UNKNOWN, false);
@@ -120,5 +130,10 @@ public class TreatmentMatcherTest {
                 TreatmentMatcher.matchTreatmentsToBiopsies("patient", biopsies, treatments).values();
         assertTrue(treatments.size() == matchedTreatments.size());
         assertEquals(null, matchedTreatments.get(0).biopsyId());
+    }
+
+    @NotNull
+    private static DrugData drugWithStartAndEndDate(@Nullable LocalDate startDate, @Nullable LocalDate endDate) {
+        return ImmutableDrugData.of("anything", startDate, endDate, Lists.newArrayList());
     }
 }

@@ -6,14 +6,24 @@ import static java.lang.Math.abs;
 public class SvClusteringConfig {
 
     private int mClusterBaseDistance;
-    private String mOutputCsvFile;
+    private String mOutputCsvPath;
+    private String mSvPONFile;
+    private String mFragileSiteFile;
+    private String mLineElementFile;
+    private boolean mUseCombinedOutputFile;
 
-    public static final int DEFAULT_BASE_DISTANCE = 1000;
+    public static final int DEFAULT_BASE_DISTANCE = 100000;
 
     public SvClusteringConfig()
     {
         mClusterBaseDistance = DEFAULT_BASE_DISTANCE;
-        mOutputCsvFile = "";
+        mFragileSiteFile = "";
+        mLineElementFile = "";
+
+
+        mOutputCsvPath = "";
+        mUseCombinedOutputFile = false;
+        mSvPONFile = "";
     }
 
     public void setBaseDistance(int distance)
@@ -24,9 +34,21 @@ public class SvClusteringConfig {
             mClusterBaseDistance = distance;
     }
 
-    public void setOutputCsvFile(final String outputFile) { mOutputCsvFile = outputFile; }
+    public void setOutputCsvPath(final String path) { mOutputCsvPath = path; }
+    public final String getOutputCsvPath() { return mOutputCsvPath; }
 
-    public final String getOutputCsvFile() { return mOutputCsvFile; }
+    public void setSvPONFile(final String filename) { mSvPONFile = filename; }
+    public String getSvPONFile() { return mSvPONFile; }
+
+    public String getFragileSiteFile() { return mFragileSiteFile;}
+    public void setFragileSiteFile(final String filename) { mFragileSiteFile = filename;}
+
+    public void setLineElementFile(final String filename) { mLineElementFile = filename; }
+    public String getLineElementFile() { return mLineElementFile; }
+
     public int getClusterBaseDistance() { return mClusterBaseDistance; }
+
+    public boolean getUseCombinedOutputFile() { return mUseCombinedOutputFile; }
+    public void setUseCombinedOutputFile(boolean toggle) { mUseCombinedOutputFile = toggle; }
 
 }

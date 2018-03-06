@@ -3,7 +3,7 @@
     <Appenders>
         <Console name="Console" target="SYSTEM_ERR">
             <PatternLayout pattern="%d{HH:mm:ss} - %msg%n"/>
-        </Console>s
+        </Console>
     </Appenders>
     <Loggers>
         <Root level="INFO">

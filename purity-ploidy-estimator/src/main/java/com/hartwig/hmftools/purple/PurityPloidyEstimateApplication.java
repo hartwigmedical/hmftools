@@ -280,7 +280,7 @@ public class PurityPloidyEstimateApplication {
         if (config.file().isPresent()) {
             final String filePath = config.file().get().toString();
             LOGGER.info("Loading structural variants from {}", filePath);
-            return StructuralVariantFileLoader.fromFile(filePath);
+            return StructuralVariantFileLoader.fromFile(filePath, true);
         } else {
             LOGGER.info("Structural variants support disabled.");
             return Collections.emptyList();
