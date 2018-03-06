@@ -63,6 +63,7 @@ CREATE TABLE treatment
     biopsyId int,
     patientId int NOT NULL,
     treatmentGiven varchar(3),
+    radiotherapyGiven varchar(3),
     startDate DATE,
     endDate DATE,
     name varchar(255),

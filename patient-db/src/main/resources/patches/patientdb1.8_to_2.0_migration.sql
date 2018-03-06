@@ -10,6 +10,9 @@ ALTER TABLE patient
 ALTER TABLE patient
     ADD COLUMN preTreatments varchar(255) AFTER hasRadiotherapyPreTreatment;
 
+ALTER TABLE treatment
+    ADD COLUMN radiotherapyGiven varchar(3) AFTER treatmentGiven;
+
 CREATE TABLE preTreatmentDrug
 (   id int NOT NULL AUTO_INCREMENT,
     patientId int NOT NULL,
