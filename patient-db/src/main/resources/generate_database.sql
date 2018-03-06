@@ -12,7 +12,23 @@ CREATE TABLE patient
     cancerType varchar(255),
     cancerSubtype varchar(255),
     deathDate DATE,
+    hasSystemicPreTreatment varchar(3),
+    hasRadiotherapyPreTreatment varchar(3),
+    preTreatments varchar(255),
     PRIMARY KEY (id)
+);
+
+DROP TABLE IF EXISTS preTreatmentDrug;
+CREATE TABLE preTreatmentDrug
+(   id int NOT NULL AUTO_INCREMENT,
+    patientId int NOT NULL,
+    startDate DATE,
+    endDate DATE,
+    name varchar(255),
+    type varchar(255),
+    bestResponse varchar(50),
+    PRIMARY KEY (id),
+    FOREIGN KEY (patientId) REFERENCES patient(id)
 );
 
 DROP TABLE IF EXISTS sample;
@@ -463,6 +479,7 @@ CREATE TABLE canonicalTranscript
     exonStart int not null,
     exonEnd int not null,
     exonBases int not null,
+    strand varchar(255) not null,
     codingStart int not null,
     codingEnd int not null,
     codingBases int not null,

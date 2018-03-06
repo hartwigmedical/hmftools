@@ -15,6 +15,7 @@ import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PatientData;
+import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.matchers.BiopsyMatcher;
 import com.hartwig.hmftools.patientdb.matchers.MatchResult;
@@ -33,12 +34,15 @@ public class PatientReader {
     @NotNull
     private final LimsSampleReader limsSampleReader;
     @NotNull
+    private final PreTreatmentReader preTreatmentReader;
+    @NotNull
     private final BiopsyTreatmentReader biopsyTreatmentReader;
 
     public PatientReader(@NotNull final CpctEcrfModel model, @NotNull final TreatmentCurator treatmentCurator,
             @NotNull final TumorLocationCurator tumorLocationCurator, @NotNull final Lims lims) {
         cpctPatientReader = new CpctPatientReader(model, tumorLocationCurator);
         limsSampleReader = new LimsSampleReader(lims);
+        preTreatmentReader = new PreTreatmentReader(treatmentCurator);
         biopsyTreatmentReader = new BiopsyTreatmentReader(treatmentCurator);
     }
 
@@ -48,6 +52,7 @@ public class PatientReader {
 
         final List<SampleData> sequencedBiopsies = limsSampleReader.read(tumorSamplesForPatient);
         final PatientData patientData = cpctPatientReader.read(ecrfPatient);
+        final PreTreatmentData preTreatmentData = preTreatmentReader.read(ecrfPatient);
         final List<BiopsyData> clinicalBiopsies = BiopsyReader.read(ecrfPatient);
         final List<BiopsyTreatmentData> treatments = biopsyTreatmentReader.read(ecrfPatient);
         final List<BiopsyTreatmentResponseData> treatmentResponses = BiopsyTreatmentResponseReader.read(ecrfPatient);
@@ -63,7 +68,13 @@ public class PatientReader {
         findings.addAll(matchedBiopsies.findings());
         findings.addAll(matchedTreatments.findings());
         findings.addAll(matchedResponses.findings());
-        return new Patient(patientData, sequencedBiopsies, matchedBiopsies.values(), matchedTreatments.values(), matchedResponses.values(),
+
+        return new Patient(patientData,
+                preTreatmentData,
+                sequencedBiopsies,
+                matchedBiopsies.values(),
+                matchedTreatments.values(),
+                matchedResponses.values(),
                 findings);
     }
 }

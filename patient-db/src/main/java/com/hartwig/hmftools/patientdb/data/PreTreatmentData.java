@@ -16,6 +16,9 @@ public abstract class PreTreatmentData implements TreatmentData {
     @Nullable
     public abstract String treatmentGiven();
 
+    @Nullable
+    public abstract String radiotherapyGiven();
+
     @NotNull
     public abstract List<DrugData> drugs();
 

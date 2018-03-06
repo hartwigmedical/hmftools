@@ -106,6 +106,6 @@ public class BiopsyDataValidationTest {
 
     @NotNull
     private static DrugData drugWithStartAndEndDate(@Nullable LocalDate startDate, @Nullable LocalDate endDate) {
-        return ImmutableDrugData.of("anything", startDate, endDate, Lists.newArrayList());
+        return ImmutableDrugData.of("anything", startDate, endDate, null, Lists.newArrayList());
     }
 }

@@ -45,7 +45,7 @@ public class CanonicalTranscriptFactoryTest {
 
     private HmfGenomeRegion select(@NotNull final String file) {
         final InputStream inputStream = CanonicalTranscriptFactoryTest.class.getResourceAsStream("/gene/" + file);
-        return HmfGenomeFileLoader.fromInputStream(inputStream).values().iterator().next();
+        return HmfGenomeFileLoader.fromInputStream(inputStream).iterator().next();
     }
 
 }

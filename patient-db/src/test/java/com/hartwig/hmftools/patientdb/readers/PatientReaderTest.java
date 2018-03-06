@@ -21,7 +21,9 @@ import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
+import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.PatientData;
+import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 
 import org.junit.Test;
 
@@ -49,6 +51,19 @@ public class PatientReaderTest {
         assertEquals(LocalDate.parse("2012-06-22", DATE_FORMATTER), patientData.deathDate());
         assertEquals(LocalDate.parse("2012-02-17", DATE_FORMATTER), patientData.registrationDate());
         assertEquals(LocalDate.parse("2012-02-17", DATE_FORMATTER), patientData.informedConsentDate());
+    }
+
+    @Test
+    public void canReadCpctPatientPreTherapy() throws IOException, XMLStreamException {
+        final CpctEcrfModel model = CpctEcrfModel.loadFromXML(TEST_ECRF, new ImmutableFormStatusModel(Maps.newHashMap()));
+        assertEquals(1, model.patientCount());
+        final EcrfPatient cpctPatient = model.patients().iterator().next();
+        final PreTreatmentData preTreatmentData =
+                new PreTreatmentReader(new TreatmentCurator(new FileInputStream(TREATMENT_MAPPING_CSV))).read(cpctPatient);
+        assertEquals("Yes", preTreatmentData.treatmentGiven());
+        assertEquals("Yes", preTreatmentData.radiotherapyGiven());
+        final List<DrugData> drugs = preTreatmentData.drugs();
+        assertEquals(6, drugs.size());
     }
 
     @Test

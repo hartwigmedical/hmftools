@@ -64,7 +64,7 @@ public class BiopsyTreatmentReader {
                 drugName = itemGroup.readItemString(FIELD_DRUG_OTHER, 0, false);
             }
             final List<CuratedTreatment> curatedDrugs = drugName == null ? Lists.newArrayList() : treatmentCurator.search(drugName);
-            drugs.add(ImmutableDrugData.of(drugName, drugStart, drugEnd, curatedDrugs));
+            drugs.add(ImmutableDrugData.of(drugName, drugStart, drugEnd, null, curatedDrugs));
         }
         return drugs;
     }

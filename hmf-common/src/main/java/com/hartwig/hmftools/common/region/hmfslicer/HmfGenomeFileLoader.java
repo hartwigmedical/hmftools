@@ -45,12 +45,12 @@ public final class HmfGenomeFileLoader {
     }
 
     @NotNull
-    public static SortedSetMultimap<String, HmfGenomeRegion> fromInputStream(@NotNull final InputStream genomeInputStream) {
+    public static List<HmfGenomeRegion> fromInputStream(@NotNull final InputStream genomeInputStream) {
         return fromLines(new BufferedReader(new InputStreamReader(genomeInputStream)).lines().collect(Collectors.toList()));
     }
 
     @NotNull
-    private static SortedSetMultimap<String, HmfGenomeRegion> fromLines(@NotNull final List<String> lines) {
+    private static List<HmfGenomeRegion> fromLines(@NotNull final List<String> lines) {
         final Map<String, ModifiableHmfGenomeRegion> geneMap = Maps.newLinkedHashMap();
         for (final String line : lines) {
             final String[] values = line.split(FIELD_SEPARATOR);
@@ -70,7 +70,8 @@ public final class HmfGenomeFileLoader {
             } else {
                 final ModifiableHmfGenomeRegion geneRegion = geneMap.computeIfAbsent(gene,
                         geneName -> createRegion(chromosome, transcriptStart, transcriptEnd, geneName, values));
-                assert(geneRegion.transcriptID().equals(values[TRANSCRIPT_ID_COLUMN])) : geneRegion.transcriptID();
+                assert(geneRegion.transcriptID().equals(values[TRANSCRIPT_ID_COLUMN])) :
+                        geneRegion.transcriptID();
 
                 final HmfExonRegion exonRegion = ImmutableHmfExonRegion.builder()
                         .chromosome(chromosome)
@@ -83,12 +84,7 @@ public final class HmfGenomeFileLoader {
             }
         }
 
-        final SortedSetMultimap<String, HmfGenomeRegion> regionMap = TreeMultimap.create();
-        for (ModifiableHmfGenomeRegion geneRegion : geneMap.values()) {
-            regionMap.put(geneRegion.chromosome(), geneRegion);
-        }
-
-        return regionMap;
+        return Lists.newArrayList(geneMap.values());
     }
 
     @NotNull

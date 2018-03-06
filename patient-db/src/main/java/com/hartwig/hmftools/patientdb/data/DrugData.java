@@ -21,6 +21,9 @@ public abstract class DrugData {
     @Nullable
     public abstract LocalDate endDate();
 
+    @Nullable
+    public abstract String bestResponse();
+
     @NotNull
     public abstract List<CuratedTreatment> curatedTreatments();
 
