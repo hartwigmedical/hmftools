@@ -137,13 +137,11 @@ class ClinicalDAO {
                     PRETREATMENTDRUG.PATIENTID,
                     PRETREATMENTDRUG.STARTDATE,
                     PRETREATMENTDRUG.ENDDATE,
-                    PRETREATMENTDRUG.NAME,
-                    PRETREATMENTDRUG.TYPE)
+                    PRETREATMENTDRUG.NAME, PRETREATMENTDRUG.TYPE, PRETREATMENTDRUG.BESTRESPONSE)
                     .values(patientId,
                             Utils.toSQLDate(drug.startDate()),
                             Utils.toSQLDate(drug.endDate()),
-                            curatedTreatment.name(),
-                            curatedTreatment.type())
+                            curatedTreatment.name(), curatedTreatment.type(), drug.bestResponse())
                     .returning(PRETREATMENTDRUG.ID)
                     .fetchOne()
                     .getValue(PRETREATMENTDRUG.ID);
