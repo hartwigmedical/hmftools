@@ -9,14 +9,17 @@ import com.hartwig.hmftools.portal.converter.records.ssm.SimpleSomaticMutation
 import com.hartwig.hmftools.portal.converter.records.ssm.SimpleSomaticMutationMetadata
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
+import org.apache.logging.log4j.LogManager
 import java.io.FileWriter
 import java.io.IOException
 import kotlin.reflect.KClass
 
 object TsvWriter {
+    private val logger = LogManager.getLogger(TsvWriter::class)
 
     @Throws(IOException::class)
     fun writeSampleRecords(folder: String, records: Collection<SampleRecords>) {
+        logger.info("Writing clinical records for {}", folder)
         printRecords(Donor.header, "$folder/donor.", records.map { it.donor }.toSet())
         printRecords(Sample.header, "$folder/sample.", records.map { it.sample })
         printRecords(Specimen.header, "$folder/specimen.", records.map { it.specimen })
@@ -24,11 +27,13 @@ object TsvWriter {
 
     @Throws(IOException::class)
     fun writeSimpleSomaticMutation(folder: String, sampleName: String, simpleSomaticMutations: List<SimpleSomaticMutation>) {
+        logger.info("Writing somatic mutations for {}", sampleName)
         printRecords(SimpleSomaticMutation.header, "$folder/ssm_p.$sampleName", simpleSomaticMutations)
     }
 
     @Throws(IOException::class)
     fun writeSomaticMutationMetadata(folder: String, sampleName: String, metadatas: Collection<SimpleSomaticMutationMetadata>) {
+        logger.info("Writing somatic mutations metadata for {}", sampleName)
         printRecords(SimpleSomaticMutationMetadata.header, "$folder/ssm_m.$sampleName", metadatas)
     }
 
