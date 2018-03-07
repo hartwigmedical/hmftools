@@ -20,7 +20,7 @@
         </dependency>
         <dependency>
             <groupId>com.hartwig</groupId>
-            <artifactId>hmf-common-extensions-cli</artifactId>
+            <artifactId>hmf-extensions-cli</artifactId>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>

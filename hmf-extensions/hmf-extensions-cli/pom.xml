@@ -4,13 +4,13 @@
 
     <parent>
         <groupId>com.hartwig</groupId>
-        <artifactId>hmf-common-extensions</artifactId>
+        <artifactId>hmf-extensions</artifactId>
         <version>1</version>
     </parent>
 
-    <artifactId>hmf-common-extensions-cli</artifactId>
+    <artifactId>hmf-extensions-cli</artifactId>
     <packaging>jar</packaging>
-    <name>HMF Tools - Common - CLI Extensions</name>
+    <name>HMF Tools - CLI Extensions</name>
 
     <dependencies>
         <dependency>

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.strelka.mnv;
 
-import static com.hartwig.hmftools.common.extensions.samtools.VariantContextUtils.splitMultiAlleleVariant;
+import static com.hartwig.hmftools.extensions.samtools.VariantContextUtils.splitMultiAlleleVariant;
 import static com.hartwig.hmftools.strelka.mnv.scores.SamRecordScoring.scoresPerVariant;
 
 import java.util.Collection;

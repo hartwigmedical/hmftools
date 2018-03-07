@@ -4,7 +4,7 @@ import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory
 import com.hartwig.hmftools.common.context.RunContext
-import com.hartwig.hmftools.common.extensions.cli.createCommandLine
+import com.hartwig.hmftools.extensions.cli.createCommandLine
 import com.hartwig.hmftools.portal.converter.extensions.readSamplesData
 import com.hartwig.hmftools.portal.converter.extensions.somaticVcfPath
 import com.hartwig.hmftools.portal.converter.ids.extractPatientId

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.extensions.cli
+package com.hartwig.hmftools.extensions.cli
 
 import org.apache.commons.cli.*
 import kotlin.system.exitProcess
@@ -14,6 +14,6 @@ fun Options.createCommandLine(cmd: String, args: Array<String>): CommandLine {
     return try {
         parser.parse(this, args)
     } catch (parseException: ParseException) {
-        this.printHelpAndExit(cmd, "\n${parseException.message}")
+        this.printHelpAndExit(cmd, "\n${parseException.message}\n")
     }
 }

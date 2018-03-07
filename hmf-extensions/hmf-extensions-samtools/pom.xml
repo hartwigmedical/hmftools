@@ -4,13 +4,13 @@
 
     <parent>
         <groupId>com.hartwig</groupId>
-        <artifactId>hmf-common-extensions</artifactId>
+        <artifactId>hmf-extensions</artifactId>
         <version>1</version>
     </parent>
 
-    <artifactId>hmf-common-extensions-samtools</artifactId>
+    <artifactId>hmf-extensions-samtools</artifactId>
     <packaging>jar</packaging>
-    <name>HMF Tools - Common - Samtools Extensions</name>
+    <name>HMF Tools - Samtools Extensions</name>
 
     <dependencies>
         <dependency>

@@ -20,11 +20,11 @@
         </dependency>
         <dependency>
             <groupId>com.hartwig</groupId>
-            <artifactId>hmf-common-extensions-cli</artifactId>
+            <artifactId>hmf-extensions-cli</artifactId>
         </dependency>
         <dependency>
             <groupId>com.hartwig</groupId>
-            <artifactId>hmf-common-extensions-samtools</artifactId>
+            <artifactId>hmf-extensions-samtools</artifactId>
         </dependency>
         <dependency>
             <groupId>com.hartwig</groupId>

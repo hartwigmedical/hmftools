@@ -1,6 +1,6 @@
 @file:JvmName("VariantContextUtils")
 
-package com.hartwig.hmftools.common.extensions.samtools
+package com.hartwig.hmftools.extensions.samtools
 
 import htsjdk.variant.variantcontext.GenotypeBuilder
 import htsjdk.variant.variantcontext.VariantContext
