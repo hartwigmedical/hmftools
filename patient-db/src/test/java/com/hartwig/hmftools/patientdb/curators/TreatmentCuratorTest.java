@@ -14,7 +14,6 @@ import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.lucene.queryparser.classic.ParseException;
 import org.junit.Test;
 
 public class TreatmentCuratorTest {
@@ -32,56 +31,56 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchesExactSingleWord() throws IOException, ParseException {
+    public void matchesExactSingleWord() throws IOException {
         final Optional<CuratedTreatment> matchedTreatment = MATCHER.matchSingle("Zocor");
         assertTrue(matchedTreatment.isPresent());
         assertEquals("Zocor", matchedTreatment.get().name());
     }
 
     @Test
-    public void matchesIgnoringCaseSingleWord() throws IOException, ParseException {
+    public void matchesIgnoringCaseSingleWord() throws IOException {
         final Optional<CuratedTreatment> matchedTreatment = MATCHER.matchSingle("zocor");
         assertTrue(matchedTreatment.isPresent());
         assertEquals("Zocor", matchedTreatment.get().name());
     }
 
     @Test
-    public void matchesSingleWordWithTypo() throws IOException, ParseException {
+    public void matchesSingleWordWithTypo() throws IOException {
         final Optional<CuratedTreatment> matchedTreatment = MATCHER.matchSingle("lisinoprill");
         assertTrue(matchedTreatment.isPresent());
         assertEquals("Lisinopril", matchedTreatment.get().name());
     }
 
     @Test
-    public void matchesExactMultiWord() throws IOException, ParseException {
+    public void matchesExactMultiWord() throws IOException {
         final Optional<CuratedTreatment> matchedTreatment = MATCHER.matchSingle("amlodipine besylate");
         assertTrue(matchedTreatment.isPresent());
         assertEquals("Norvasc", matchedTreatment.get().name());
     }
 
     @Test
-    public void matchesIgnoringCaseMultiWord() throws IOException, ParseException {
+    public void matchesIgnoringCaseMultiWord() throws IOException {
         final Optional<CuratedTreatment> matchedTreatment = MATCHER.matchSingle("Amlodipine Besylate");
         assertTrue(matchedTreatment.isPresent());
         assertEquals("Norvasc", matchedTreatment.get().name());
     }
 
     @Test
-    public void matchesMultiWordWithTypo() throws IOException, ParseException {
+    public void matchesMultiWordWithTypo() throws IOException {
         final Optional<CuratedTreatment> matchedTreatment = MATCHER.matchSingle("Amlodipin besylat");
         assertTrue(matchedTreatment.isPresent());
         assertEquals("Norvasc", matchedTreatment.get().name());
     }
 
     @Test
-    public void matchesTermWithSpecialChars() throws IOException, ParseException {
+    public void matchesTermWithSpecialChars() throws IOException {
         final Optional<CuratedTreatment> matchedTreatment = MATCHER.matchSingle("z-pak");
         assertTrue(matchedTreatment.isPresent());
         assertEquals("Azithromycin", matchedTreatment.get().name());
     }
 
     @Test
-    public void matchMultipleTreatments() throws IOException, ParseException {
+    public void matchMultipleTreatments() throws IOException {
         final List<CuratedTreatment> matchedTreatments = MATCHER.matchMultiple("Prinivil,Zithromax/amlodipine besylate");
         assertEquals(3, matchedTreatments.size());
         final List<String> matches = matchedTreatments.stream().map(CuratedTreatment::name).collect(Collectors.toList());
@@ -91,7 +90,7 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchMultipleTreatmentsWithTypos() throws IOException, ParseException {
+    public void matchMultipleTreatmentsWithTypos() throws IOException {
         final List<CuratedTreatment> matchedTreatments = MATCHER.matchMultiple("Prinivyl,Zithromaxx/amlodipin Besylate");
         assertEquals(3, matchedTreatments.size());
         final List<String> matches = matchedTreatments.stream().map(CuratedTreatment::name).collect(Collectors.toList());
@@ -101,7 +100,7 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchMultipleSimilarTreatments() throws IOException, ParseException {
+    public void matchMultipleSimilarTreatments() throws IOException {
         final List<CuratedTreatment> matchedTreatments = MATCHER.matchMultiple("amlodipine besylate, amlodipine acetate");
         assertEquals(2, matchedTreatments.size());
         final List<String> matches = matchedTreatments.stream().map(CuratedTreatment::name).collect(Collectors.toList());
@@ -110,7 +109,7 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void doesNotMatchAmbiguousTerm() throws IOException, ParseException {
+    public void doesNotMatchAmbiguousTerm() throws IOException {
         final List<CuratedTreatment> acidmatchedTreatments = MATCHER.search("acid");
         assertEquals(0, acidmatchedTreatments.size());
         final List<CuratedTreatment> amlodipineMatchedTreatments = MATCHER.search("amlodipine");
@@ -118,19 +117,19 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void doesNotMatchAmbiguousMultiTerm() throws IOException, ParseException {
+    public void doesNotMatchAmbiguousMultiTerm() throws IOException {
         final List<CuratedTreatment> matchedTreatments = MATCHER.search("pain therapy");
         assertEquals(0, matchedTreatments.size());
     }
 
     @Test
-    public void doesNotMatchNonExistentComposedTerm() throws IOException, ParseException {
+    public void doesNotMatchNonExistentComposedTerm() throws IOException {
         final List<CuratedTreatment> matchedTreatments = MATCHER.search("amlodipine phosphate");
         assertEquals(0, matchedTreatments.size());
     }
 
     @Test
-    public void matchesTermWithAlias() throws IOException, ParseException {
+    public void matchesTermWithAlias() throws IOException {
         final List<CuratedTreatment> matchedTreatments = MATCHER.search("Zocor (simvastatin)");
         assertEquals(2, matchedTreatments.size());
         assertEquals("Zocor", matchedTreatments.get(0).name());
@@ -138,14 +137,14 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchesTermWithNumbers() throws IOException, ParseException {
+    public void matchesTermWithNumbers() throws IOException {
         final List<CuratedTreatment> matchedTreatments = MATCHER.search("TNT 101");
         assertEquals(1, matchedTreatments.size());
         assertEquals("TNT-101", matchedTreatments.get(0).name());
     }
 
     @Test
-    public void doesNotMatchSingleOccurrenceOfAmbiguousTerm() throws IOException, ParseException {
+    public void doesNotMatchSingleOccurrenceOfAmbiguousTerm() throws IOException {
         final List<CuratedTreatment> matchedTreatments = MATCHER.search("acetate");
         assertEquals(0, matchedTreatments.size());
     }
