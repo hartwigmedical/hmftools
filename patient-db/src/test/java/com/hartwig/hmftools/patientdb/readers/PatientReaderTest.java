@@ -135,7 +135,6 @@ public class PatientReaderTest {
         final List<TumorMarkerData> tumorMarkers = TumorMarkerReader.read(cpctPatient);
 
         assertEquals(0, tumorMarkers.size());
-
     }
 
     @NotNull
