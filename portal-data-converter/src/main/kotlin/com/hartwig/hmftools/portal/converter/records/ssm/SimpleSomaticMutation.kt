@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.portal.converter.records.ssm
 
 import com.google.common.collect.Lists
-import com.hartwig.hmftools.common.extensions.samtools.split
+import com.hartwig.hmftools.extensions.samtools.split
 import com.hartwig.hmftools.portal.converter.extensions.mutationType
 import com.hartwig.hmftools.portal.converter.extensions.reformatAlleles
 import com.hartwig.hmftools.portal.converter.extensions.toRecord
