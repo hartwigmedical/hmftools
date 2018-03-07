@@ -172,21 +172,21 @@ public class DatabaseAccess {
     }
 
     public void writeDrupEcrf(@NotNull final CpctEcrfModel model, @NotNull final Set<String> sequencedPatients) {
-        LOGGER.info("writing DRUP datamodel...");
+        LOGGER.info("Writing DRUP datamodel...");
         ecrfDAO.writeDrupDatamodel(model.fields());
-        LOGGER.info("done writing DRUP datamodel.");
-        LOGGER.info("writing DRUP patients...");
+        LOGGER.info("Done writing DRUP datamodel.");
+        LOGGER.info("Writing DRUP patients...");
         model.patients().forEach(patient -> ecrfDAO.writeDrupPatient(patient, sequencedPatients.contains(patient.patientId())));
-        LOGGER.info("done writing DRUP patients.");
+        LOGGER.info("Done writing DRUP patients.");
     }
 
     public void writeCpctEcrf(@NotNull final CpctEcrfModel model, @NotNull final Set<String> sequencedPatients) {
         LOGGER.info("writing CPCT datamodel...");
         ecrfDAO.writeCpctDatamodel(model.fields());
-        LOGGER.info("done writing CPCT datamodel.");
-        LOGGER.info("writing CPCT patients...");
+        LOGGER.info("Done writing CPCT datamodel.");
+        LOGGER.info("Writing CPCT patients...");
         model.patients().forEach(patient -> ecrfDAO.writeCpctPatient(patient, sequencedPatients.contains(patient.patientId())));
-        LOGGER.info("done writing CPCT patients.");
+        LOGGER.info("Done writing CPCT patients.");
     }
 
     public void writeValidationFindings(@NotNull final List<ValidationFinding> findings) {
