@@ -45,6 +45,7 @@ public class TumorLocationCurator {
             }
         }
 
+        // KODU: File encoding is expected to be UTF-8 (see also DEV-275)
         LOGGER.warn("Could not curate tumor location (using " + System.getProperty("file.encoding") + "): " + searchTerm);
         return ImmutableCuratedCancerType.of(null, null, searchTerm);
     }
