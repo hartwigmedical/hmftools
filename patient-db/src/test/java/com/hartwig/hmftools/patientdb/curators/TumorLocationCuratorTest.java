@@ -18,7 +18,7 @@ public class TumorLocationCuratorTest {
 
     @Test
     public void canCurateDesmoidTumor() {
-        // SEE DEV-275
+        // KODU: See DEV-275
         TumorLocationCurator curator = createTumorLocationCurator();
         String desmoidTumor = "desmoïd tumor";
         CuratedCancerType cancerType = curator.search(desmoidTumor);
