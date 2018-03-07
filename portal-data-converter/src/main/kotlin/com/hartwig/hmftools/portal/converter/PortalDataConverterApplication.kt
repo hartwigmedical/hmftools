@@ -46,6 +46,10 @@ private fun convertSamples(runContexts: List<RunContext>, outputDirectory: Strin
     val dataPerPatient = samplesData.associateBy { it.cpctId ?: "" }
     runContexts.forEach { it ->
         val (patientId, clinicalData, somaticVcfPath) = getPatientDataAndVcf(it, dataPerSample, dataPerPatient) ?: return@forEach
+        if (clinicalData.cancerType == "Missing" || clinicalData.cancerType == "Other" || clinicalData.cancerType.toLowerCase().contains("unknown")) {
+            logger.info("Skipping patient with {} cancer type: {}", clinicalData.cancerType, clinicalData.cpctId)
+            return@forEach
+        }
         val projectFolder = Files.createDirectories(Paths.get(outputDirectory + File.separator + "HMF-${clinicalData.cancerType}"))
         val folderPath = projectFolder.toAbsolutePath().toString()
         clinicalRecords.put(folderPath, SampleRecords(patientId, it.tumorSample(), clinicalData))
