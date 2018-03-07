@@ -17,6 +17,15 @@ public class TumorLocationCuratorTest {
     private static final String TUMOR_LOCATION_MAPPING_CSV = Resources.getResource("tumor_location_mapping.csv").getPath();
 
     @Test
+    public void canDetermineUnusedTerms() {
+        TumorLocationCurator curator = createTumorLocationCurator();
+        assertEquals(7, curator.unusedSearchTerms().size());
+
+        curator.search("Breast cancer");
+        assertEquals(6, curator.unusedSearchTerms().size());
+    }
+
+    @Test
     public void canCurateDesmoidTumor() {
         // KODU: See DEV-275
         TumorLocationCurator curator = createTumorLocationCurator();

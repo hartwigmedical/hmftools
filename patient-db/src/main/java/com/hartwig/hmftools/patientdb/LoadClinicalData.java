@@ -29,6 +29,7 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.readers.PatientReader;
 import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
+import com.hartwig.hmftools.patientdb.validators.CurationValidator;
 import com.hartwig.hmftools.patientdb.validators.PatientValidator;
 
 import org.apache.commons.cli.CommandLine;
@@ -120,13 +121,14 @@ public final class LoadClinicalData {
         } else {
             LOGGER.info("Loading ecrf model...");
             dbAccess.clearClinicalTables();
-            final FormStatusModel formStatusModel = FormStatusReader.buildModelFromCsv(formStatusCsv);
-            final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
-            final Lims lims = LimsFactory.fromLimsJsonWithPreLIMSArrivalDates(limsJson, preLIMSArrivalDatesCsv);
-            final PatientReader patientReader = new PatientReader(model,
-                    new TreatmentCurator(TREATMENT_MAPPING_RESOURCE),
-                    new TumorLocationCurator(TUMOR_LOCATION_MAPPING_RESOURCE),
-                    lims);
+
+            FormStatusModel formStatusModel = FormStatusReader.buildModelFromCsv(formStatusCsv);
+            CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
+            Lims lims = LimsFactory.fromLimsJsonWithPreLIMSArrivalDates(limsJson, preLIMSArrivalDatesCsv);
+            TreatmentCurator treatmentCurator = new TreatmentCurator(TREATMENT_MAPPING_RESOURCE);
+            TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(TUMOR_LOCATION_MAPPING_RESOURCE);
+            final PatientReader patientReader = new PatientReader(model, treatmentCurator, tumorLocationCurator, lims);
+
             final Set<String> sequencedCpctPatientIds = Utils.sequencedPatientIds(runContexts)
                     .stream()
                     .filter(patientId -> patientId.startsWith("CPCT"))
@@ -144,10 +146,13 @@ public final class LoadClinicalData {
                 } else {
                     dbAccess.writeClinicalData(patient);
                     final List<ValidationFinding> findings = PatientValidator.validatePatient(patient);
+
                     dbAccess.writeValidationFindings(findings);
                     dbAccess.writeValidationFindings(patient.matchFindings());
                 }
             }
+            dbAccess.writeValidationFindings(CurationValidator.validateTumorLocationCurator(tumorLocationCurator));
+            
             LOGGER.info("Done!");
         }
     }

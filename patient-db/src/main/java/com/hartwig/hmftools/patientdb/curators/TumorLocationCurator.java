@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.CuratedCancerType;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedCancerType;
@@ -24,6 +26,8 @@ public class TumorLocationCurator {
 
     @NotNull
     private final Map<String, CuratedCancerType> tumorLocationMap = Maps.newHashMap();
+    @NotNull
+    private final Set<String> queriedSearchTerms = Sets.newHashSet();
 
     public TumorLocationCurator(@NotNull final InputStream mappingInputStream) throws IOException {
         final CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
@@ -39,7 +43,10 @@ public class TumorLocationCurator {
     @NotNull
     public CuratedCancerType search(@Nullable final String searchTerm) {
         if (searchTerm != null) {
-            final CuratedCancerType result = tumorLocationMap.get(searchTerm.toLowerCase());
+            String effectiveSearchTerm = searchTerm.toLowerCase();
+            queriedSearchTerms.add(effectiveSearchTerm);
+            final CuratedCancerType result = tumorLocationMap.get(effectiveSearchTerm);
+
             if (result != null) {
                 return result;
             }
@@ -48,5 +55,12 @@ public class TumorLocationCurator {
         // KODU: File encoding is expected to be UTF-8 (see also DEV-275)
         LOGGER.warn("Could not curate tumor location (using " + System.getProperty("file.encoding") + "): " + searchTerm);
         return ImmutableCuratedCancerType.of(null, null, searchTerm);
+    }
+
+    @NotNull
+    public Set<String> unusedSearchTerms() {
+        Set<String> searchTerms = tumorLocationMap.keySet();
+        searchTerms.removeAll(queriedSearchTerms);
+        return searchTerms;
     }
 }
