@@ -17,9 +17,7 @@ fun VariantContext.split(): List<VariantContext> {
         } else {
             index + 1
         }
-        val genotype = GenotypeBuilder(this.sampleNamesOrderedByName[0], alleles).DP(dp)
-                .AD(intArrayOf(ad[0], ad[altADIndex]))
-                .make()
+        val genotype = GenotypeBuilder(this.sampleNamesOrderedByName[0], alleles).DP(dp).AD(intArrayOf(ad[0], ad[altADIndex])).make()
         VariantContextBuilder(this).alleles(alleles).genotypes(genotype).make()
     }
 }
