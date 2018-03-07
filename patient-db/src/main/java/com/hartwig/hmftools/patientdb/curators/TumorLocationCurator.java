@@ -13,11 +13,16 @@ import com.hartwig.hmftools.patientdb.data.ImmutableCuratedCancerType;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class TumorLocationCurator {
 
+    private static final Logger LOGGER = LogManager.getLogger(TumorLocationCurator.class);
+
+    @NotNull
     private final Map<String, CuratedCancerType> tumorLocationMap = Maps.newHashMap();
 
     public TumorLocationCurator(@NotNull final InputStream mappingInputStream) throws IOException {
@@ -39,6 +44,8 @@ public class TumorLocationCurator {
                 return result;
             }
         }
+
+        LOGGER.warn("Could not curate tumor location (using " + System.getProperty("file.encoding") + "): " + searchTerm);
         return ImmutableCuratedCancerType.of(null, null, searchTerm);
     }
 }
