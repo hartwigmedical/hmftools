@@ -117,14 +117,17 @@ public class DatabaseAccess {
         copyNumberDAO.writeCopyNumber(sample, copyNumbers);
     }
 
+    @NotNull
     public List<StructuralVariantData> readStructuralVariantData(@NotNull final String sample) {
         return structuralVariantDAO.read(sample);
     }
 
+    @NotNull
     public List<EnrichedStructuralVariant> readStructuralVariants(@NotNull final String sample) {
         return structuralVariantDAO.readEnrichedData(sample);
     }
 
+    @NotNull
     public List<String> getStructuralVariantSampleList(@NotNull final String sampleSearch) {
         return structuralVariantDAO.getSamplesList(sampleSearch);
     }

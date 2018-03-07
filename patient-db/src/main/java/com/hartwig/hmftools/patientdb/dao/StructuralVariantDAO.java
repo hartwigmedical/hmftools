@@ -36,6 +36,7 @@ class StructuralVariantDAO {
         this.context = context;
     }
 
+    @NotNull
     public final List<StructuralVariantData> read(@NotNull final String sample) {
         List<StructuralVariantData> structuralVariants = Lists.newArrayList();
 
@@ -66,8 +67,8 @@ class StructuralVariantDAO {
         return structuralVariants;
     }
 
+    @NotNull
     public final List<String> getSamplesList(@NotNull final String sampleSearch) {
-
         final Result<Record1<String>> result = sampleSearch.equals("") ? context.select(STRUCTURALVARIANT.SAMPLEID)
                 .from(STRUCTURALVARIANT)
                 .groupBy(STRUCTURALVARIANT.SAMPLEID)

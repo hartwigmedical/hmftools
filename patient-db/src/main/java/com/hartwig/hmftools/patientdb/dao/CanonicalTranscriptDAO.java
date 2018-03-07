@@ -51,7 +51,6 @@ class CanonicalTranscriptDAO {
             split.forEach(x -> addRecord(timestamp, inserter, x));
             inserter.execute();
         }
-
     }
 
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep19 inserter,
