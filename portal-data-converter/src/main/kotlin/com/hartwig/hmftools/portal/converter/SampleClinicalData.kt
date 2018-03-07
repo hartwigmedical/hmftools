@@ -38,8 +38,8 @@ data class SampleClinicalData(val cpctId: String?, val sampleId: String?, val ge
 
         private fun determineSpecimenType(ecrfBiopsySite: String?): Pair<String, String> {
             return when (ecrfBiopsySite?.trim()?.toLowerCase()) {
-                null -> Pair(DEFAULT_VALUE, DEFAULT_VALUE)
-                else -> Pair("Biopsy site: " + ecrfBiopsySite, DEFAULT_VALUE)
+                "", null -> Pair("Biopsy site: -", DEFAULT_VALUE)
+                else     -> Pair("Biopsy site: " + ecrfBiopsySite, DEFAULT_VALUE)
             }
         }
 
