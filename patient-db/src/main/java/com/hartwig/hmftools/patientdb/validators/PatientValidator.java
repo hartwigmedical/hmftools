@@ -467,7 +467,7 @@ public final class PatientValidator {
                         treatmentResponse.formLocked()));
             }
         } else if (measurementDone.trim().equalsIgnoreCase("no")) {
-            if (response == null || !response.trim().equalsIgnoreCase("nd")) {
+            if (!treatmentResponse.isNotDoneResponse()) {
                 if (date != null) {
                     findings.add(ValidationFinding.of(ECRF_LEVEL,
                             patientId,
@@ -496,7 +496,7 @@ public final class PatientValidator {
                     treatmentResponse.formLocked(),
                     "measurement done: " + measurementDone));
         }
-        if (response != null && date == null) {
+        if (response != null && date == null && !treatmentResponse.isNotDoneResponse()) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientId,
                     fields(FIELD_ASSESSMENT_DATE, FIELD_RESPONSE_DATE),
