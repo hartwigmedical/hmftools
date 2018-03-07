@@ -21,8 +21,7 @@ public final class CurationValidator {
         for (String unusedTerm : tumorLocationCurator.unusedSearchTerms()) {
             findings.add(ValidationFinding.of("tumorLocationCuration",
                     "",
-                    "",
-                    "Tumor location search term not used",
+                    "", "tumor location search term not used",
                     FormStatusState.UNKNOWN,
                     false,
                     unusedTerm));

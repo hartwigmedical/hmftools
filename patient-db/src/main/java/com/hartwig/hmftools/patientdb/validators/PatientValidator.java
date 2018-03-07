@@ -323,8 +323,7 @@ public final class PatientValidator {
                 if (drug.curatedTreatments().isEmpty()) {
                     findings.add(ValidationFinding.of(curationName,
                             patientId,
-                            ecrfName,
-                            "Failed to curate ecrf drug. Curated list contained no matching entry, or match was ambiguous.",
+                            ecrfName, "failed to curate ecrf drug. Curated list contained no matching entry, or match was ambiguous.",
                             treatment.formStatus(),
                             treatment.formLocked(),
                             drugName));
@@ -338,7 +337,9 @@ public final class PatientValidator {
                     if (lengthOfMatchedCharacters > 0 && (double) lengthOfMatchedCharacters / lengthOfSearchCharacters < .9) {
                         findings.add(ValidationFinding.of(curationName,
                                 patientId, ecrfName,
-                                "Matched drugs are based on less than 90% of search term.", treatment.formStatus(), treatment.formLocked(),
+                                "matched drugs are based on less than 90% of search term.",
+                                treatment.formStatus(),
+                                treatment.formLocked(),
                                 drugName + " matched to " + Strings.join(curatedTreatments, ',') + " based on " + Strings.join(matchedTerms,
                                         ',')));
                     }
@@ -356,8 +357,7 @@ public final class PatientValidator {
         if (searchTerm != null && patientData.cancerType().category() == null) {
             findings.add(ValidationFinding.of("tumorLocationCuration",
                     patientData.cpctId(),
-                    fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER),
-                    "Failed to curate primary tumor location.",
+                    fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER), "failed to curate primary tumor location.",
                     patientData.primaryTumorStatus(),
                     patientData.primaryTumorLocked(),
                     searchTerm));
