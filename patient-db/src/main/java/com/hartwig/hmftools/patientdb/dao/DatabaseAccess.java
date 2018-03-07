@@ -81,9 +81,9 @@ public class DatabaseAccess {
     }
 
     @Nullable
-    private Settings settings(final String catalog) {
+    private static Settings settings(final String catalog) {
         return !catalog.equals(DEV_CATALOG)
-                ? new Settings().withRenderMapping(new RenderMapping().withSchemata(new MappedSchema().withInput("hmfpatients")
+                ? new Settings().withRenderMapping(new RenderMapping().withSchemata(new MappedSchema().withInput(DEV_CATALOG)
                 .withOutput(catalog)))
                 : null;
     }
