@@ -3,13 +3,7 @@ package com.hartwig.hmftools.patientdb;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -18,7 +12,6 @@ import java.util.stream.Collectors;
 
 import javax.xml.stream.XMLStreamException;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.context.RunContext;
@@ -27,8 +20,6 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusReader;
-import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientCancerTypes;
-import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
@@ -65,6 +56,7 @@ public final class LoadClinicalData {
     private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
     private static final String CSV_OUT_DIR = "csv_out_dir";
     private static final String CANCER_TYPES_LINK = "cancer_types_symlink";
+    private static final String PORTAL_DATA_LINK = "portal_data_symlink";
     private static final InputStream TREATMENT_MAPPING_RESOURCE = LoadClinicalData.class.getResourceAsStream("/treatment_mapping.csv");
     private static final InputStream TUMOR_LOCATION_MAPPING_RESOURCE =
             LoadClinicalData.class.getResourceAsStream("/tumor_location_mapping.csv");
@@ -120,6 +112,7 @@ public final class LoadClinicalData {
         final String formStatusCsv = cmd.getOptionValue(FORM_STATUS_CSV);
         final String csvOutputDir = cmd.getOptionValue(CSV_OUT_DIR);
         final Optional<String> cancerTypesLink = Optional.ofNullable(cmd.getOptionValue(CANCER_TYPES_LINK));
+        final Optional<String> portalDataLink = Optional.ofNullable(cmd.getOptionValue(PORTAL_DATA_LINK));
 
         if (Utils.anyNull(ecrfFilePath, limsJson, preLIMSArrivalDatesCsv, formStatusCsv, csvOutputDir)) {
             final HelpFormatter formatter = new HelpFormatter();
@@ -141,7 +134,7 @@ public final class LoadClinicalData {
 
             final Map<String, Patient> readPatients = readEcrfPatients(patientReader, model.patients(), runContexts);
             LOGGER.info("Read {} patients from ecrf", readPatients.size());
-            writeCancerTypesToCSV(csvOutputDir, cancerTypesLink, readPatients.values());
+            DumpClinicalData.writeClinicalDumps(csvOutputDir, readPatients.values(), cancerTypesLink, portalDataLink);
 
             LOGGER.info("Writing CPCT clinical data for {} sequenced patients.", sequencedCpctPatientIds.size());
             for (final String patientId : sequencedCpctPatientIds) {
@@ -169,32 +162,6 @@ public final class LoadClinicalData {
             patientMap.put(patient.patientData().cpctId(), patient);
         }
         return patientMap;
-    }
-
-    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    private static void writeCancerTypesToCSV(@NotNull final String csvOutputDir, @NotNull final Optional<String> linkName,
-            @NotNull final Collection<Patient> patients) throws IOException {
-        final String fileName = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE) + "_cancerTypes.csv";
-        final String outputFile = csvOutputDir + File.separator + fileName;
-        LOGGER.info("Writing cancer types to CSV... ");
-        final List<PatientCancerTypes> cancerTypes = patients.stream()
-                .map(patient -> ImmutablePatientCancerTypes.of(patient.patientData().cpctId(),
-                        Strings.nullToEmpty(patient.patientData().cancerType().category()),
-                        Strings.nullToEmpty(patient.patientData().cancerType().subcategory())))
-                .collect(Collectors.toList());
-        PatientCancerTypes.writeRecords(outputFile, cancerTypes);
-        linkName.ifPresent(link -> updateCancerTypesCSVLink(csvOutputDir + File.separator + link, outputFile));
-        LOGGER.info("Written {} records to {}", cancerTypes.size(), outputFile);
-    }
-
-    private static void updateCancerTypesCSVLink(@NotNull final String linkName, @NotNull final String fileName) {
-        final Path linkPath = Paths.get(linkName);
-        try {
-            Files.deleteIfExists(linkPath);
-            Files.createSymbolicLink(linkPath, Paths.get(fileName));
-        } catch (IOException e) {
-            LOGGER.warn("Failed to update symlink {}. Cause: {}", linkName, e.getMessage());
-        }
     }
 
     private static void writeRawEcrf(@NotNull final Options ecrfOptions, @NotNull final CommandLine cmd,
@@ -263,6 +230,7 @@ public final class LoadClinicalData {
         options.addOption(FORM_STATUS_CSV, true, "Path towards the form status csv file.");
         options.addOption(CSV_OUT_DIR, true, "Path towards the output directory for csv data dumps.");
         options.addOption(CANCER_TYPES_LINK, true, "Name of cancer type csv symlink.");
+        options.addOption(PORTAL_DATA_LINK, true, "Name of portal data csv symlink.");
         return options;
     }
 

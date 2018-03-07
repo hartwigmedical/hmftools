@@ -26,6 +26,7 @@ public class BiopsyTreatmentReader {
     private static final String ITEMGROUP_TREATMENT_AFTER = "GRP.TRTAFTER.TRTAFTER";
     private static final String ITEMGROUP_SYSPOSTBIO = "GRP.TRTAFTER.SYSPOSTBIO";
     public static final String FIELD_TREATMENT_GIVEN = "FLD.TRTAFTER.SYSTEMICST";
+    private static final String FIELD_RADIOTHERAPY_GIVEN = "FLD.TRTAFTER.RADIOTHERST";
     public static final String FIELD_DRUG_START = "FLD.TRTAFTER.SYSSTDT";
     public static final String FIELD_DRUG_END = "FLD.TRTAFTER.SYSENDT";
     public static final String FIELD_DRUG = "FLD.TRTAFTER.PLANNEDTRT";
@@ -46,8 +47,13 @@ public class BiopsyTreatmentReader {
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_AFTERBIOPT)) {
             for (final EcrfForm treatmentForm : studyEvent.nonEmptyFormsPerOID(FORM_TREATMENT, false)) {
                 final String treatmentGiven = readTreatmentGiven(treatmentForm);
+                final String radiotherapyGiven = readRadiotherapyGiven(treatmentForm);
                 final List<DrugData> drugs = readDrugs(treatmentForm);
-                treatments.add(ImmutableBiopsyTreatmentData.of(treatmentGiven, drugs, treatmentForm.status(), treatmentForm.locked()));
+                treatments.add(ImmutableBiopsyTreatmentData.of(treatmentGiven,
+                        radiotherapyGiven,
+                        drugs,
+                        treatmentForm.status(),
+                        treatmentForm.locked()));
             }
         }
         return treatments;
@@ -64,7 +70,7 @@ public class BiopsyTreatmentReader {
                 drugName = itemGroup.readItemString(FIELD_DRUG_OTHER, 0, false);
             }
             final List<CuratedTreatment> curatedDrugs = drugName == null ? Lists.newArrayList() : treatmentCurator.search(drugName);
-            drugs.add(ImmutableDrugData.of(drugName, drugStart, drugEnd, curatedDrugs));
+            drugs.add(ImmutableDrugData.of(drugName, drugStart, drugEnd, null, curatedDrugs));
         }
         return drugs;
     }
@@ -74,6 +80,15 @@ public class BiopsyTreatmentReader {
         final List<EcrfItemGroup> itemGroups = treatmentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_TREATMENT_AFTER, false);
         if (itemGroups.size() > 0) {
             return itemGroups.get(0).readItemString(FIELD_TREATMENT_GIVEN, 0, false);
+        }
+        return null;
+    }
+
+    @Nullable
+    private static String readRadiotherapyGiven(@NotNull final EcrfForm treatmentForm) {
+        final List<EcrfItemGroup> itemGroups = treatmentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_TREATMENT_AFTER, false);
+        if (itemGroups.size() > 0) {
+            return itemGroups.get(0).readItemString(FIELD_RADIOTHERAPY_GIVEN, 0, false);
         }
         return null;
     }

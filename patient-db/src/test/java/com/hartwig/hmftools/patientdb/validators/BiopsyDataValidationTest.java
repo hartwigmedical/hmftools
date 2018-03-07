@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientdb.validators;
 
+import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyBuilder;
+import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyTreatmentBuilder;
+import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.drugBuilder;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_BIOPSY_DATE;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_LOCATION;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_SITE;
@@ -18,17 +21,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
-import com.hartwig.hmftools.patientdb.data.DrugData;
-import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
-import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
-import com.hartwig.hmftools.patientdb.data.ImmutableDrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutablePatientData;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class BiopsyDataValidationTest {
@@ -37,13 +33,12 @@ public class BiopsyDataValidationTest {
     private final static LocalDate FEB2015 = LocalDate.parse("2015-02-01");
     private final static LocalDate MAR2016 = LocalDate.parse("2016-03-01");
 
-    private final static BiopsyData BIOPSY_NULL = ImmutableBiopsyData.of(null, null, null, null, null, FormStatusState.UNKNOWN, false);
-    private final static BiopsyData BIOPSY_FEB1 = ImmutableBiopsyData.of(FEB2015, null, null, "1", "", FormStatusState.UNKNOWN, false);
-    private final static BiopsyData BIOPSY_FEB2 = ImmutableBiopsyData.of(FEB2015, null, null, "2", "", FormStatusState.UNKNOWN, false);
-    private final static BiopsyTreatmentData TREATMENT_JAN_FEB = ImmutableBiopsyTreatmentData.of("Yes",
-            Lists.newArrayList(drugWithStartAndEndDate(JAN2015, FEB2015)),
-            FormStatusState.UNKNOWN,
-            false);
+    private final static BiopsyData BIOPSY_NULL = biopsyBuilder().date(null).build();
+    private final static BiopsyData BIOPSY_FEB1 = biopsyBuilder().date(FEB2015).site("1").location("").build();
+    ;
+    private final static BiopsyData BIOPSY_FEB2 = biopsyBuilder().date(FEB2015).site("2").location("").build();
+    private final static BiopsyTreatmentData TREATMENT_JAN_FEB =
+            biopsyTreatmentBuilder().addDrugs(drugBuilder().startDate(JAN2015).endDate(FEB2015).build()).build();
 
     @Test
     public void reportsMissingFields() {
@@ -102,10 +97,5 @@ public class BiopsyDataValidationTest {
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
         assertTrue(findingsFields.contains(fields(FORM_TREATMENT, FORM_BIOPS)));
-    }
-
-    @NotNull
-    private static DrugData drugWithStartAndEndDate(@Nullable LocalDate startDate, @Nullable LocalDate endDate) {
-        return ImmutableDrugData.of("anything", startDate, endDate, Lists.newArrayList());
     }
 }

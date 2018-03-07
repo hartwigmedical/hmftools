@@ -16,11 +16,11 @@ import org.jetbrains.annotations.NotNull;
 
 public final class BiopsyTreatmentResponseReader {
 
-    private static final String STUDY_TREATMENT = "SE.TREATMENT";
+    static final String STUDY_TREATMENT = "SE.TREATMENT";
     public static final String FORM_TUMOR_MEASUREMENT = "FRM.TUMORMEASUREMENT";
     private static final String ITEMGROUP_MEASUREMENT = "GRP.TUMORMEASUREMENT.MEASUREMENT";
     public static final String FIELD_ASSESSMENT_DATE = "FLD.TUMORMEASUREMENT.ASSDTC";
-    private static final String ITEMGROUP_TUMOR_MEASUREMENT = "GRP.TUMORMEASUREMENT.TUMORMEASUREMENT";
+    static final String ITEMGROUP_TUMOR_MEASUREMENT = "GRP.TUMORMEASUREMENT.TUMORMEASUREMENT";
     public static final String FIELD_RESPONSE_DATE = "FLD.TUMORMEASUREMENT.RESPONSEDTC";
     private static final String FIELD_BONE_ONLY_DISEASE = "FLD.TUMORMEASUREMENT.BONEYN";
     public static final String FIELD_MEASUREMENT_DONE = "FLD.TUMORMEASUREMENT.TMYN";
@@ -70,15 +70,22 @@ public final class BiopsyTreatmentResponseReader {
                         response = responseValue;
                     }
                 }
-                treatmentResponses.add(ImmutableBiopsyTreatmentResponseData.of(assessmentDate,
+                BiopsyTreatmentResponseData responseData = ImmutableBiopsyTreatmentResponseData.of(assessmentDate,
                         responseDate,
                         response,
                         measurementDone,
                         boneOnlyDisease,
-                        form.status(),
-                        form.locked()));
+                        form.status(), form.locked());
+                if (!isEmpty(responseData)) {
+                    treatmentResponses.add(responseData);
+                }
             }
         }
         return treatmentResponses;
+    }
+
+    private static boolean isEmpty(@NotNull BiopsyTreatmentResponseData response) {
+        return (response.measurementDone() == null && response.boneOnlyDisease() == null && response.date() == null
+                && response.response() == null);
     }
 }

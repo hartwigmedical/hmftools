@@ -58,9 +58,14 @@ public abstract class BiopsyTreatmentResponseData implements Comparable<BiopsyTr
         return assessmentDate();
     }
 
+    public boolean isNotDoneResponse() {
+        String response = response();
+        return response != null && response.equalsIgnoreCase("nd");
+    }
+
     @Override
     public String toString() {
-        return response() + "(" + date() + ")";
+        return response() + " (" + date() + ")";
     }
 
     @Override

@@ -170,8 +170,8 @@ public class TreatmentResponseMatcherTest {
 
     @NotNull
     private static BiopsyTreatmentData treatmentWithStartEnd(@Nullable LocalDate start, @Nullable LocalDate end) {
-        DrugData drug = ImmutableDrugData.of("drug", start, end, Lists.newArrayList());
-        return ImmutableBiopsyTreatmentData.of("Yes", Lists.newArrayList(drug), FormStatusState.UNKNOWN, false);
+        DrugData drug = ImmutableDrugData.of("drug", start, end, null, Lists.newArrayList());
+        return ImmutableBiopsyTreatmentData.of("Yes", "Yes", Lists.newArrayList(drug), FormStatusState.UNKNOWN, false);
     }
 
     @NotNull

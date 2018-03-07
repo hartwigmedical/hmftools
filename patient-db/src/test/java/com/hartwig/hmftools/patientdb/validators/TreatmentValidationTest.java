@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientdb.validators;
 
+import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyTreatmentBuilder;
+import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.drugBuilder;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_DRUG;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_DRUG_END;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_DRUG_OTHER;
@@ -45,33 +47,22 @@ public class TreatmentValidationTest {
     private final static DrugData DRUG_FEB_ONGOING = create("Drug1", FEB2015, null);
     private final static DrugData DRUG_JAN_MAR = create("Drug1", JAN2015, MAR2015);
 
-    private final static DrugData DRUG_WITH_PARTIAL_CURATED_ENTRY = ImmutableDrugData.of("Drug1 Drug2 Drug3",
-            JAN2015,
-            JAN2015,
+    private final static DrugData DRUG_WITH_PARTIAL_CURATED_ENTRY = ImmutableDrugData.of("Drug1 Drug2 Drug3", JAN2015, JAN2015, null,
             Lists.newArrayList(ImmutableCuratedTreatment.of("Drug1", "Type1", "Drug1")));
-    private final static DrugData DRUG_MISSING_CURATED_ENTRY = ImmutableDrugData.of("Drug1", JAN2015, JAN2015, Lists.newArrayList());
+    private final static DrugData DRUG_MISSING_CURATED_ENTRY = ImmutableDrugData.of("Drug1", JAN2015, JAN2015, null, Lists.newArrayList());
 
-    private final static BiopsyTreatmentData TREATMENT_GIVEN_NULL =
-            ImmutableBiopsyTreatmentData.of(null, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
-    private final static BiopsyTreatmentData TREATMENT_GIVEN_EMPTY =
-            ImmutableBiopsyTreatmentData.of("Yes", Lists.newArrayList(), FormStatusState.UNKNOWN, false);
+    private final static BiopsyTreatmentData TREATMENT_GIVEN_NULL = biopsyTreatmentBuilder().treatmentGiven(null).build();
+    private final static BiopsyTreatmentData TREATMENT_GIVEN_EMPTY = biopsyTreatmentBuilder().build();
     private final static BiopsyTreatmentData TREATMENT_NOT_GIVEN_DATA =
-            ImmutableBiopsyTreatmentData.of("No", Lists.newArrayList(DRUG_JAN_FEB), FormStatusState.UNKNOWN, false);
-    private final static BiopsyTreatmentData TREATMENT_GIVEN_GIBBERISH =
-            ImmutableBiopsyTreatmentData.of("mmm", Lists.newArrayList(), FormStatusState.UNKNOWN, false);
-    private final static BiopsyTreatmentData TREATMENT_WRONG_DRUG_DATA =
-            ImmutableBiopsyTreatmentData.of("Yes", Lists.newArrayList(DRUG_NULL, DRUG_WRONG), FormStatusState.UNKNOWN, false);
+            biopsyTreatmentBuilder().treatmentGiven("No").addDrugs(DRUG_JAN_FEB).build();
+    private final static BiopsyTreatmentData TREATMENT_GIVEN_GIBBERISH = biopsyTreatmentBuilder().treatmentGiven("mmm").build();
+    private final static BiopsyTreatmentData TREATMENT_WRONG_DRUG_DATA = biopsyTreatmentBuilder().addDrugs(DRUG_NULL, DRUG_WRONG).build();
 
-    private final static BiopsyTreatmentData TREATMENT_JAN_JAN =
-            ImmutableBiopsyTreatmentData.of("Yes", Lists.newArrayList(DRUG_JAN_JAN), FormStatusState.UNKNOWN, false);
-    private final static BiopsyTreatmentData TREATMENT_JAN_FEB =
-            ImmutableBiopsyTreatmentData.of("Yes", Lists.newArrayList(DRUG_JAN_FEB), FormStatusState.UNKNOWN, false);
-    private final static BiopsyTreatmentData TREATMENT_JAN_MAR =
-            ImmutableBiopsyTreatmentData.of("Yes", Lists.newArrayList(DRUG_JAN_MAR), FormStatusState.UNKNOWN, false);
-    private final static BiopsyTreatmentData TREATMENT_JAN_ONGOING =
-            ImmutableBiopsyTreatmentData.of("Yes", Lists.newArrayList(DRUG_JAN_ONGOING), FormStatusState.UNKNOWN, false);
-    private final static BiopsyTreatmentData TREATMENT_FEB_ONGOING =
-            ImmutableBiopsyTreatmentData.of("Yes", Lists.newArrayList(DRUG_FEB_ONGOING), FormStatusState.UNKNOWN, false);
+    private final static BiopsyTreatmentData TREATMENT_JAN_JAN = biopsyTreatmentBuilder().addDrugs(DRUG_JAN_JAN).build();
+    private final static BiopsyTreatmentData TREATMENT_JAN_FEB = biopsyTreatmentBuilder().addDrugs(DRUG_JAN_FEB).build();
+    private final static BiopsyTreatmentData TREATMENT_JAN_MAR = biopsyTreatmentBuilder().addDrugs(DRUG_JAN_MAR).build();
+    private final static BiopsyTreatmentData TREATMENT_JAN_ONGOING = biopsyTreatmentBuilder().addDrugs(DRUG_JAN_ONGOING).build();
+    private final static BiopsyTreatmentData TREATMENT_FEB_ONGOING = biopsyTreatmentBuilder().addDrugs(DRUG_FEB_ONGOING).build();
 
     @Test
     public void reportsMissingDrugData() {
@@ -171,28 +162,34 @@ public class TreatmentValidationTest {
 
     @Test
     public void reportsMissingCuratedTreatment() {
+        String curationName = "testTreatmentCuration";
         final List<ValidationFinding> findings = PatientValidator.validateTreatmentCuration(CPCT_ID,
-                Lists.newArrayList(ImmutableBiopsyTreatmentData.of("Yes",
+                curationName,
+                "",
+                Lists.newArrayList(ImmutableBiopsyTreatmentData.of("Yes", "Yes",
                         Lists.newArrayList(DRUG_MISSING_CURATED_ENTRY),
                         FormStatusState.UNKNOWN,
                         false)));
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::level).collect(Collectors.toList());
-        assertTrue(findingsFields.get(0).equals("treatmentCuration"));
+        assertTrue(findingsFields.get(0).equals(curationName));
     }
 
     @Test
     public void reportsPartiallyCuratedTreatment() {
+        String curationName = "testTreatmentCuration";
         final List<ValidationFinding> findings = PatientValidator.validateTreatmentCuration(CPCT_ID,
-                Lists.newArrayList(ImmutableBiopsyTreatmentData.of("Yes",
+                curationName,
+                "",
+                Lists.newArrayList(ImmutableBiopsyTreatmentData.of("Yes", "Yes",
                         Lists.newArrayList(DRUG_WITH_PARTIAL_CURATED_ENTRY),
                         FormStatusState.UNKNOWN,
                         false)));
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::level).collect(Collectors.toList());
-        assertTrue(findingsFields.get(0).equals("treatmentCuration"));
+        assertTrue(findingsFields.get(0).equals(curationName));
     }
 
     @Test
@@ -218,6 +215,6 @@ public class TreatmentValidationTest {
     private static DrugData create(@Nullable String name, @Nullable LocalDate startDate, @Nullable LocalDate endDate) {
         List<CuratedTreatment> curation =
                 name != null ? Lists.newArrayList(ImmutableCuratedTreatment.of(name, "Type1", name)) : Lists.newArrayList();
-        return ImmutableDrugData.of(name, startDate, endDate, curation);
+        return drugBuilder().name(name).startDate(startDate).endDate(endDate).addAllCuratedTreatments(curation).build();
     }
 }

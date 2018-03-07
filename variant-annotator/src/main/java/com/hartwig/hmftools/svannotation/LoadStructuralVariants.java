@@ -16,10 +16,18 @@ import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.variant.structural.*;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
 import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.svannotation.analysis.*;
+import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
+import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
+import com.hartwig.hmftools.svannotation.analysis.StructuralVariantClustering;
+import com.hartwig.hmftools.svannotation.analysis.SvClusterData;
+import com.hartwig.hmftools.svannotation.analysis.SvClusteringConfig;
 import com.hartwig.hmftools.svannotation.dao.StructuralVariantAnnotationDAO;
 
 import org.apache.commons.cli.CommandLine;
@@ -72,14 +80,13 @@ public class LoadStructuralVariants {
 
         final DatabaseAccess dbAccess = !createFilteredPON ? databaseAccess(cmd) : null;
 
-        if(cmd.hasOption(LOG_DEBUG))
-        {
+        if (cmd.hasOption(LOG_DEBUG)) {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
         StructuralVariantClustering svClusterer = null;
 
-        if(runClustering) {
+        if (runClustering) {
             LOGGER.info("will run clustering logic");
 
             SvClusteringConfig clusteringConfig = new SvClusteringConfig();
@@ -92,8 +99,7 @@ public class LoadStructuralVariants {
             svClusterer = new StructuralVariantClustering(clusteringConfig);
         }
 
-        if(createFilteredPON)
-        {
+        if (createFilteredPON) {
             LOGGER.info("reading VCF file including filtered SVs");
 
             FilteredSVWriter filteredSvWriter = new FilteredSVWriter(cmd.getOptionValue(VCF_FILE), cmd.getOptionValue(DATA_OUTPUT_PATH));
@@ -103,14 +109,14 @@ public class LoadStructuralVariants {
             return;
         }
 
-        if(!loadFromDB) {
-
+        if (!loadFromDB) {
             boolean skipAnnotations = cmd.hasOption(SKIP_ANNOTATIONS);
             LOGGER.info("reading VCF File");
             final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE), true);
 
             LOGGER.info("enriching structural variants based on purple data");
-            final List<EnrichedStructuralVariant> enrichedVariantWithoutPrimaryId = enrichStructuralVariants(variants, dbAccess, tumorSample);
+            final List<EnrichedStructuralVariant> enrichedVariantWithoutPrimaryId =
+                    enrichStructuralVariants(variants, dbAccess, tumorSample);
 
             LOGGER.info("persisting variants to database");
             dbAccess.writeStructuralVariants(tumorSample, enrichedVariantWithoutPrimaryId);
@@ -124,12 +130,12 @@ public class LoadStructuralVariants {
             LOGGER.info("loading Cosmic Fusion data");
             final CosmicFusionModel cosmicGeneFusions = CosmicFusions.readFromCSV(cmd.getOptionValue(FUSION_CSV));
 
-            final StructuralVariantAnalyzer analyzer = new StructuralVariantAnalyzer(annotator, HmfGenePanelSupplier.hmfPanelGeneList(), cosmicGeneFusions);
+            final StructuralVariantAnalyzer analyzer =
+                    new StructuralVariantAnalyzer(annotator, HmfGenePanelSupplier.hmfPanelGeneList(), cosmicGeneFusions);
             LOGGER.info("analyzing structural variants for impact via disruptions and fusions");
             final StructuralVariantAnalysis analysis = analyzer.run(enrichedVariants, skipAnnotations);
 
-            if(runClustering)
-            {
+            if (runClustering) {
                 svClusterer.loadFromEnrichedSVs(tumorSample, enrichedVariants);
                 svClusterer.runClustering();
             }
@@ -137,34 +143,29 @@ public class LoadStructuralVariants {
             LOGGER.info("persisting annotations to database");
             final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(dbAccess.getContext());
             annotationDAO.write(analysis);
-        }
-        else
-        {
-            // only run the SV clustering routines, taking source data from the SV table(s)
+        } else {
+            // CHSH: only run the SV clustering routines, taking source data from the SV table(s)
+            // KODU: Below assert feels somewhat risky!?
+            assert runClustering;
 
             List<String> samplesList = Lists.newArrayList();
 
-            if(tumorSample.isEmpty() || tumorSample.equals("*"))
-            {
+            if (tumorSample.isEmpty() || tumorSample.equals("*")) {
                 samplesList = getStructuralVariantSamplesList(dbAccess);
-            }
-            else if(tumorSample.contains(","))
-            {
+            } else if (tumorSample.contains(",")) {
                 String[] tumorList = tumorSample.split(",");
                 samplesList = Arrays.stream(tumorList).collect(Collectors.toList());
-            }
-            else
-            {
+            } else {
                 samplesList.add(tumorSample);
             }
 
             int count = 0;
-            for(final String sample : samplesList) {
-
+            for (final String sample : samplesList) {
                 ++count;
                 LOGGER.info("clustering for sample({}), total({})", sample, count);
 
                 List<SvClusterData> svClusterData = queryStructuralVariantData(dbAccess, sample);
+
                 svClusterer.loadFromDatabase(sample, svClusterData);
                 svClusterer.runClustering();
             }
@@ -202,25 +203,22 @@ public class LoadStructuralVariants {
         return EnrichedStructuralVariantFactory.enrich(variants, purityAdjuster, copyNumbers);
     }
 
-    private static List<SvClusterData> queryStructuralVariantData(DatabaseAccess dbAccess, final String sampleId)
-    {
+    @NotNull
+    private static List<SvClusterData> queryStructuralVariantData(@NotNull DatabaseAccess dbAccess, @NotNull String sampleId) {
         List<SvClusterData> svClusterDataItems = Lists.newArrayList();
 
         List<StructuralVariantData> svRecords = dbAccess.readStructuralVariantData(sampleId);
 
-        for(final StructuralVariantData svRecord : svRecords)
-        {
+        for (final StructuralVariantData svRecord : svRecords) {
             svClusterDataItems.add(new SvClusterData(svRecord));
         }
 
         return svClusterDataItems;
     }
 
-    private static List<String> getStructuralVariantSamplesList(DatabaseAccess dbAccess)
-    {
-        List<String> svSamplesList = dbAccess.getStructuralVariantSampleList("");
-
-        return svSamplesList;
+    @NotNull
+    private static List<String> getStructuralVariantSamplesList(@NotNull DatabaseAccess dbAccess) {
+        return dbAccess.getStructuralVariantSampleList("");
     }
 
     @NotNull
@@ -257,7 +255,7 @@ public class LoadStructuralVariants {
     private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException {
         final String userName = cmd.getOptionValue(DB_USER);
         final String password = cmd.getOptionValue(DB_PASS);
-        final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
+        final String databaseUrl = cmd.getOptionValue(DB_URL);
         final String jdbcUrl = "jdbc:" + databaseUrl;
         return new DatabaseAccess(userName, password, jdbcUrl);
     }
