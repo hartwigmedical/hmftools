@@ -63,7 +63,7 @@
         <apache.lucene.version>7.1.0</apache.lucene.version>
         <apache.commons.csv.version>1.5</apache.commons.csv.version>
         <bouncycastle.jdk15.version>1.53</bouncycastle.jdk15.version>
-        <kotlin.version>1.2.10</kotlin.version>
+        <kotlin.version>1.2.30</kotlin.version>
 
         <hmf-common.version>1</hmf-common.version>
         <hmf-gene-panel.version>1</hmf-gene-panel.version>
