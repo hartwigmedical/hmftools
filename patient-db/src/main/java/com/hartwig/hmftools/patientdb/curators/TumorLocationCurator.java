@@ -27,7 +27,7 @@ public class TumorLocationCurator {
     @NotNull
     private final Map<String, CuratedCancerType> tumorLocationMap = Maps.newHashMap();
     @NotNull
-    private final Set<String> queriedSearchTerms = Sets.newHashSet();
+    private final Set<String> unusedSearchTerms;
 
     public TumorLocationCurator(@NotNull final InputStream mappingInputStream) throws IOException {
         final CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
@@ -38,13 +38,15 @@ public class TumorLocationCurator {
             tumorLocationMap.put(location.toLowerCase(),
                     ImmutableCuratedCancerType.of(Utils.capitalize(category), Utils.capitalize(subcategory), location));
         }
+        // KODU: Need to create a copy of the key set so that we can remove elements from it without affecting the curation.
+        unusedSearchTerms = Sets.newHashSet(tumorLocationMap.keySet());
     }
 
     @NotNull
     public CuratedCancerType search(@Nullable final String searchTerm) {
         if (searchTerm != null) {
             String effectiveSearchTerm = searchTerm.toLowerCase();
-            queriedSearchTerms.add(effectiveSearchTerm);
+            unusedSearchTerms.remove(effectiveSearchTerm);
             final CuratedCancerType result = tumorLocationMap.get(effectiveSearchTerm);
 
             if (result != null) {
@@ -59,8 +61,6 @@ public class TumorLocationCurator {
 
     @NotNull
     public Set<String> unusedSearchTerms() {
-        Set<String> searchTerms = tumorLocationMap.keySet();
-        searchTerms.removeAll(queriedSearchTerms);
-        return searchTerms;
+        return unusedSearchTerms;
     }
 }
