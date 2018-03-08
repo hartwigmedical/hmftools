@@ -20,6 +20,10 @@
         </dependency>
         <dependency>
             <groupId>com.hartwig</groupId>
+            <artifactId>hmf-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.hartwig</groupId>
             <artifactId>hmf-extensions-cli</artifactId>
         </dependency>
         <dependency>
@@ -64,7 +68,6 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>create-hmf-id</id>
                         <phase>package</phase>
                         <goals>
                             <goal>single</goal>
@@ -73,32 +76,12 @@
                             <archive>
                                 <manifest>
                                     <addClasspath>true</addClasspath>
-                                    <mainClass>com.hartwig.hmftools.idgenerator.CreateHmfIdApplicationKt</mainClass>
+                                    <mainClass>com.hartwig.hmftools.idgenerator.HmfIdApplicationKt</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
-                            <finalName>create-hmf-id</finalName>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>update-hmf-id</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <archive>
-                                <manifest>
-                                    <addClasspath>true</addClasspath>
-                                    <mainClass>com.hartwig.hmftools.idgenerator.UpdateHmfIdApplicationKt</mainClass>
-                                </manifest>
-                            </archive>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
-                            <finalName>update-hmf-id</finalName>
                         </configuration>
                     </execution>
                 </executions>
