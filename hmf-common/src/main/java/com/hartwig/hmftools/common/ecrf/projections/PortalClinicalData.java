@@ -33,7 +33,9 @@ public abstract class PortalClinicalData {
         birthYear,
         registrationDate,
         cancerType,
-        biopsySite
+        biopsySite,
+        hmfId,
+        sampleHmfId
     }
 
     @NotNull
@@ -58,8 +60,22 @@ public abstract class PortalClinicalData {
     public abstract String biopsySite();
 
     @NotNull
+    public abstract String hmfId();
+
+    @NotNull
+    public abstract String sampleHmfId();
+
+    @NotNull
     private List<String> csvRecord() {
-        return Lists.newArrayList(cpctId(), sampleId(), gender(), birthYear(), registrationDate(), cancerType(), biopsySite());
+        return Lists.newArrayList(cpctId(),
+                sampleId(),
+                gender(),
+                birthYear(),
+                registrationDate(),
+                cancerType(),
+                biopsySite(),
+                hmfId(),
+                sampleHmfId());
     }
 
     @NotNull
@@ -71,6 +87,8 @@ public abstract class PortalClinicalData {
                 birthYear == null ? "" : birthYear.toString(),
                 registrationDate == null ? "" : registrationDate.format(FORMATTER),
                 Strings.nullToEmpty(cancerType),
+                "",
+                "",
                 "");
     }
 
@@ -84,7 +102,9 @@ public abstract class PortalClinicalData {
                 birthYear == null ? "" : birthYear.toString(),
                 registrationDate == null ? "" : registrationDate.format(FORMATTER),
                 Strings.nullToEmpty(cancerType),
-                Strings.nullToEmpty(biopsySite));
+                Strings.nullToEmpty(biopsySite),
+                "",
+                "");
     }
 
     public static void writeRecords(@NotNull final String outputPath, @NotNull final List<PortalClinicalData> patientCancerTypes)
@@ -106,7 +126,9 @@ public abstract class PortalClinicalData {
                         record.get(Header.birthYear),
                         record.get(Header.registrationDate),
                         record.get(Header.cancerType),
-                        record.get(Header.biopsySite)))
+                        record.get(Header.biopsySite),
+                        record.get(Header.hmfId),
+                        record.get(Header.sampleHmfId)))
                 .collect(Collectors.toList());
     }
 }
