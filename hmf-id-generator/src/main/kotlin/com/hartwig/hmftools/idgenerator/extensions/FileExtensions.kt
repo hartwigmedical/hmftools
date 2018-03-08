@@ -13,7 +13,7 @@ fun File.readOldIds(): Set<HmfId> {
     return parser.map { HmfId(it.get(HASH), it.get(HMF_ID).toInt()) }.toSet()
 }
 
-fun File.writeHmfIds(ids: Set<HmfId>) {
+fun File.writeHmfIds(ids: Collection<HmfId>) {
     this.bufferedWriter().use { out ->
         out.write("$HMF_ID,$HASH")
         out.newLine()
