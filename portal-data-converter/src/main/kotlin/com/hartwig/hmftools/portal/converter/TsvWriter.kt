@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.portal.converter
 
 import com.hartwig.hmftools.portal.converter.records.Record
-import com.hartwig.hmftools.portal.converter.records.SampleRecords
 import com.hartwig.hmftools.portal.converter.records.donor.Donor
 import com.hartwig.hmftools.portal.converter.records.sample.Sample
 import com.hartwig.hmftools.portal.converter.records.specimen.Specimen
@@ -18,8 +17,8 @@ object TsvWriter {
     private val logger = LogManager.getLogger(TsvWriter::class)
 
     @Throws(IOException::class)
-    fun writeSampleRecords(folder: String, records: Collection<SampleRecords>) {
-        logger.info("Writing clinical records for {}", folder)
+    fun writeClinicalData(folder: String, records: Collection<SampleClinicalData>) {
+        logger.info("Writing clinical records for $folder")
         printRecords(Donor.header, "$folder/donor.", records.map { it.donor }.toSet())
         printRecords(Sample.header, "$folder/sample.", records.map { it.sample })
         printRecords(Specimen.header, "$folder/specimen.", records.map { it.specimen })
@@ -27,13 +26,13 @@ object TsvWriter {
 
     @Throws(IOException::class)
     fun writeSimpleSomaticMutation(folder: String, sampleName: String, simpleSomaticMutations: List<SimpleSomaticMutation>) {
-        logger.info("Writing somatic mutations for {}", sampleName)
+        logger.info("Writing somatic mutations for $sampleName")
         printRecords(SimpleSomaticMutation.header, "$folder/ssm_p.$sampleName", simpleSomaticMutations)
     }
 
     @Throws(IOException::class)
     fun writeSomaticMutationMetadata(folder: String, sampleName: String, metadatas: Collection<SimpleSomaticMutationMetadata>) {
-        logger.info("Writing somatic mutations metadata for {}", sampleName)
+        logger.info("Writing somatic mutations metadata for $sampleName")
         printRecords(SimpleSomaticMutationMetadata.header, "$folder/ssm_m.$sampleName", metadatas)
     }
 
@@ -47,8 +46,7 @@ object TsvWriter {
         })
     }
 
-    @Throws(IOException::class)
-    private fun <T : Enum<T>> createPrinter(headerEnum: KClass<T>, fileName: String): CSVPrinter {
+    @Throws(IOException::class) private fun <T : Enum<T>> createPrinter(headerEnum: KClass<T>, fileName: String): CSVPrinter {
         val format = CSVFormat.TDF.withNullString(DEFAULT_VALUE).withHeader(headerEnum.java)
         return CSVPrinter(FileWriter(fileName), format)
     }
