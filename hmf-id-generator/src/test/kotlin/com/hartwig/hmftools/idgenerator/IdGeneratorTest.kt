@@ -27,7 +27,7 @@ class IdGeneratorTest : StringSpec() {
         "repeated samples get one id" {
             forAll { a: String, b: String ->
                 val samples = listOf(a, b, b, a)
-                val ids = generator.generateIds(samples)
+                val ids = generator.generateIds(samples).values
                 if (a != b) {
                     (ids.size == 2) and (hmfId(a, generator, ids) == 1) and (hmfId(b, generator, ids) == 2)
                 } else {
@@ -49,9 +49,11 @@ class IdGeneratorTest : StringSpec() {
         "ids are stable" {
             forAll { a: String, b: String, c: String ->
                 val samples = listOf(a, b, c)
-                val oldIds = generator.generateIds(samples)
+                val oldIds = generator.generateIds(samples).values
                 val newIds = generator2.updateIds(PASSWORD1, samples, oldIds)
-                samples.all { (hmfId(it, generator, oldIds) != null) and (hmfId(it, generator, oldIds) == hmfId(it, generator2, newIds)) }
+                samples.all {
+                    (hmfId(it, generator, oldIds) != null) and (hmfId(it, generator, oldIds) == hmfId(it, generator2, newIds.values))
+                }
             }
         }
 
@@ -59,24 +61,24 @@ class IdGeneratorTest : StringSpec() {
             forAll { a: String, b: String, c: String ->
                 val samples = listOf(a, b)
                 val newSamples = samples + c
-                val oldIds = generator.generateIds(samples)
+                val oldIds = generator.generateIds(samples).values
                 val newIds = generator2.updateIds(PASSWORD1, newSamples, oldIds)
                 val previousMaxId = oldIds.maxBy { it.id }!!.id
                 if (samples.contains(c)) {
                     if (c == a) {
-                        hmfId(c, generator2, newIds)!! == 1
+                        hmfId(c, generator2, newIds.values)!! == 1
                     } else {
-                        hmfId(c, generator2, newIds)!! == 2
+                        hmfId(c, generator2, newIds.values)!! == 2
                     }
                 } else {
-                    hmfId(c, generator2, newIds) == (previousMaxId + 1)
+                    hmfId(c, generator2, newIds.values) == (previousMaxId + 1)
                 }
             }
         }
     }
 
-    private fun hmfId(sample: String, generator: IdGenerator, ids: Set<HmfId>): Int? {
-        val sampleHash = generator.generateIds(listOf(sample)).first().hash
+    private fun hmfId(sample: String, generator: IdGenerator, ids: Collection<HmfId>): Int? {
+        val sampleHash = generator.generateIds(listOf(sample)).values.first().hash
         return ids.associateBy { it.hash }[sampleHash]?.id
     }
 }
