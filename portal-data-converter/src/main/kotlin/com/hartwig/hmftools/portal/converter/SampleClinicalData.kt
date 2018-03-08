@@ -1,55 +1,57 @@
 package com.hartwig.hmftools.portal.converter
 
-import com.hartwig.hmftools.portal.converter.extensions.getOrNull
-import org.apache.commons.csv.CSVRecord
+import com.hartwig.hmftools.common.ecrf.projections.PortalClinicalData
+import com.hartwig.hmftools.portal.converter.records.donor.Donor
+import com.hartwig.hmftools.portal.converter.records.sample.Sample
+import com.hartwig.hmftools.portal.converter.records.specimen.Specimen
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
-data class SampleClinicalData(val cpctId: String?, val sampleId: String?, val gender: String, val ageAtEnrollment: String,
-                              val cancerType: String, val specimenType: String, val specimenTypeOther: String) {
+data class SampleClinicalData(val cpctId: String, val sampleId: String, private val gender: String, private val ageAtEnrollment: String,
+                              val cancerType: String, private val specimenType: String, private val specimenTypeOther: String,
+                              val hmfId: String, val sampleHmfId: String) {
     companion object Factory {
-        private val DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-
-        operator fun invoke(record: CSVRecord): SampleClinicalData {
-            val gender = determineGender(record.getOrNull(GENDER_FIELD))
-            val ageAtEnrollment = determineAgeAtEnrollment(record.getOrNull(BIRTH_YEAR_FIELD), record.getOrNull(REGISTRATION_DATE_FIELD))
-            val cancerType = determineCancerType(record.getOrNull(CANCER_TYPE_FIELD))
-            val (specimenType, specimenTypeOther) = determineSpecimenType(record.getOrNull(BIOPSY_SITE_FIELD))
-            return SampleClinicalData(record.getOrNull(CPCT_ID_FIELD),
-                                      record.getOrNull(SAMPLE_ID_FIELD),
+        operator fun invoke(patientData: PortalClinicalData): SampleClinicalData {
+            val gender = determineGender(patientData.gender())
+            val ageAtEnrollment = determineAgeAtEnrollment(patientData.birthYear(), patientData.registrationDate())
+            val cancerType = determineCancerType(patientData.cancerType())
+            val (specimenType, specimenTypeOther) = determineSpecimenType(patientData.biopsySite())
+            return SampleClinicalData(patientData.cpctId(),
+                                      patientData.sampleId(),
                                       gender,
                                       ageAtEnrollment,
                                       cancerType,
                                       specimenType,
-                                      specimenTypeOther)
+                                      specimenTypeOther,
+                                      patientData.hmfId(),
+                                      patientData.sampleHmfId())
         }
 
-        private fun determineGender(ecrfGender: String?): String {
-            return when (ecrfGender?.trim()) {
+        private fun determineGender(ecrfGender: String): String {
+            return when (ecrfGender.trim()) {
                 "male"   -> "1"
                 "female" -> "2"
                 else     -> DEFAULT_VALUE
             }
         }
 
-        private fun determineCancerType(ecrfCancerType: String?): String {
-            return if (ecrfCancerType == null || ecrfCancerType.isBlank()) "Missing" else ecrfCancerType
+        private fun determineCancerType(ecrfCancerType: String): String {
+            return if (ecrfCancerType.isBlank()) "Missing" else ecrfCancerType
         }
 
-        private fun determineSpecimenType(ecrfBiopsySite: String?): Pair<String, String> {
-            return when (ecrfBiopsySite?.trim()?.toLowerCase()) {
-                "", null -> Pair("Biopsy site: -", DEFAULT_VALUE)
-                else     -> Pair("Biopsy site: " + ecrfBiopsySite, DEFAULT_VALUE)
+        private fun determineSpecimenType(ecrfBiopsySite: String): Pair<String, String> {
+            return when {
+                ecrfBiopsySite.isBlank() -> Pair("Biopsy site: -", DEFAULT_VALUE)
+                else                     -> Pair("Biopsy site: " + ecrfBiopsySite, DEFAULT_VALUE)
             }
         }
 
-        private fun determineAgeAtEnrollment(birthYearString: String?, registrationDateString: String?): String {
-            return if (birthYearString == null || registrationDateString == null) {
+        private fun determineAgeAtEnrollment(birthYearString: String, registrationDateString: String): String {
+            return if (birthYearString.isBlank() || registrationDateString.isBlank()) {
                 DEFAULT_VALUE
             } else {
                 try {
                     val birthYear = birthYearString.toInt()
-                    val registrationDate = LocalDate.parse(registrationDateString, DATE_FORMATTER)
+                    val registrationDate = LocalDate.parse(registrationDateString, PortalClinicalData.FORMATTER)
                     (registrationDate.year - birthYear).toString()
                 } catch (e: Exception) {
                     DEFAULT_VALUE
@@ -57,4 +59,8 @@ data class SampleClinicalData(val cpctId: String?, val sampleId: String?, val ge
             }
         }
     }
+
+    val donor = Donor(hmfId, gender, ageAtEnrollment)
+    val sample = Sample(sampleHmfId)
+    val specimen = Specimen(sampleHmfId, specimenType, specimenTypeOther, hmfId)
 }
