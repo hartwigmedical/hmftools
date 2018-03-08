@@ -51,6 +51,11 @@ public abstract class BiopsyData {
         return ImmutableBiopsyData.of(createId(), date, biopsyTaken, biopsyEvaluable, site, location, null, formStatus, formLocked);
     }
 
+    public boolean isPotentiallyEvaluable() {
+        String evaluable = biopsyEvaluable();
+        return evaluable == null || !evaluable.equalsIgnoreCase("no");
+    }
+
     @Override
     public String toString() {
         return site() + " - " + location() + " (" + date() + ")";
