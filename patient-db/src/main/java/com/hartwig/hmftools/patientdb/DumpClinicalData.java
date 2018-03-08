@@ -9,17 +9,14 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.google.common.base.Strings;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientCancerTypes;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePortalClinicalData;
 import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
 import com.hartwig.hmftools.common.ecrf.projections.PortalClinicalData;
-import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 
 import org.apache.logging.log4j.LogManager;
@@ -54,29 +51,28 @@ class DumpClinicalData {
             @NotNull final Collection<Patient> patients) throws IOException {
         final String outputFile = fileLocation(csvOutputDir, "_portal.csv");
         LOGGER.info("Writing portal clinical data to CSV... ");
-        final List<PortalClinicalData> portalData = patients.stream().flatMap(patient -> {
-            if (patient.clinicalBiopsies().stream().map(BiopsyData::sampleId).filter(Objects::nonNull).count() == 0) {
-                return Stream.of(ImmutablePortalClinicalData.of(patient.patientData().cpctId(),
-                        patient.patientData().gender(),
-                        patient.patientData().birthYear(),
-                        patient.patientData().registrationDate(),
-                        patient.patientData().cancerType().category()));
-            } else {
-                return patient.clinicalBiopsies()
+        final List<PortalClinicalData> portalData = patients.stream()
+                .flatMap(patient -> patient.sequencedBiopsies()
                         .stream()
-                        .filter(biopsyData -> biopsyData.sampleId() != null)
-                        .map(clinicalBiopsy -> ImmutablePortalClinicalData.of(patient.patientData().cpctId(),
-                                clinicalBiopsy.sampleId(),
+                        .map(sampleData -> ImmutablePortalClinicalData.of(patient.patientData().cpctId(),
+                                sampleData.sampleId(),
                                 patient.patientData().gender(),
                                 patient.patientData().birthYear(),
                                 patient.patientData().registrationDate(),
                                 patient.patientData().cancerType().category(),
-                                clinicalBiopsy.site()));
-            }
-        }).collect(Collectors.toList());
+                                getBiopsySite(patient, sampleData.sampleId()))))
+                .collect(Collectors.toList());
         PortalClinicalData.writeRecords(outputFile, portalData);
         linkName.ifPresent(link -> updateSymlink(csvOutputDir + File.separator + link, outputFile));
-        LOGGER.info("Written {} records to {}", portalData.size(), outputFile);
+        LOGGER.info("Written {} sample records to {}", portalData.size(), outputFile);
+    }
+
+    @NotNull
+    private static String getBiopsySite(@NotNull final Patient patient, @NotNull final String sampleId) {
+        return patient.clinicalBiopsies().stream().filter(biopsyData -> {
+            final String clinicalSampleId = biopsyData.sampleId();
+            return clinicalSampleId != null && clinicalSampleId.equals(sampleId);
+        }).map(biopsyData -> Strings.nullToEmpty(biopsyData.site())).findFirst().orElse("");
     }
 
     @NotNull

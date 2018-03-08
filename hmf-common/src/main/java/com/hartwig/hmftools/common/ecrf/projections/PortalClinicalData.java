@@ -24,7 +24,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class PortalClinicalData {
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private enum Header {
         cpctId,
@@ -95,14 +95,14 @@ public abstract class PortalClinicalData {
     @NotNull
     public static PortalClinicalData of(@NotNull final String cpctId, @Nullable final String sampleId, @Nullable final String gender,
             @Nullable final Integer birthYear, @Nullable final LocalDate registrationDate, @Nullable final String cancerType,
-            @Nullable final String biopsySite) {
+            @NotNull final String biopsySite) {
         return ImmutablePortalClinicalData.of(cpctId,
                 Strings.nullToEmpty(sampleId),
                 Strings.nullToEmpty(gender),
                 birthYear == null ? "" : birthYear.toString(),
                 registrationDate == null ? "" : registrationDate.format(FORMATTER),
                 Strings.nullToEmpty(cancerType),
-                Strings.nullToEmpty(biopsySite),
+                biopsySite,
                 "",
                 "");
     }
