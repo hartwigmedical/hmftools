@@ -39,12 +39,8 @@ class IdGenerator(private val password: String) {
     private fun includesAllOldPatients(oldIds: Map<OldHash, HmfId>, hashTriples: List<HashTriple>) {
         val oldPasswordHashes = hashTriples.map { it.oldHash }.toSet()
         if (!oldIds.keys.all { oldPasswordHashes.contains(it) }) {
-            logger.error("A hash value present in the {} file could not be reproduced using the provided {} and {} parameters. Either some patients were removed from the {} file or {} was wrong.",
-                         HMF_IDS_FILE,
-                         OLD_PASSWORD,
-                         PORTAL_CLINICAL_DATA,
-                         PORTAL_CLINICAL_DATA,
-                         OLD_PASSWORD)
+            logger.error("A hash value present in the $HMF_IDS_FILE file could not be reproduced using the provided $OLD_PASSWORD and $PORTAL_CLINICAL_DATA.")
+            logger.error("Either some patients were removed from the $PORTAL_CLINICAL_DATA file or $OLD_PASSWORD was wrong.")
             throw IllegalArgumentException()
         }
     }

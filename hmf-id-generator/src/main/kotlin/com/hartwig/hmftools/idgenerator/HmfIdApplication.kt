@@ -68,6 +68,7 @@ private fun runHmfIdCreate(cmd: CommandLine) {
     val idMapping = generator.generateIds(clinicalData.map { it.cpctId() })
     writeAnonymizedPatients(File(cmd.getOptionValue(PORTAL_CLINICAL_DATA)), clinicalData, idMapping)
     File(cmd.getOptionValue(OUTPUT_FILE)).writeHmfIds(idMapping.values)
+    logger.info("Generated hmf ids for ${idMapping.size} patients")
 }
 
 private fun runHmfIdUpdate(cmd: CommandLine) {
@@ -77,6 +78,7 @@ private fun runHmfIdUpdate(cmd: CommandLine) {
     val newIdMapping = generator.updateIds(cmd.getOptionValue(OLD_PASSWORD), clinicalData.map { it.cpctId() }, oldIds)
     writeAnonymizedPatients(File(cmd.getOptionValue(PORTAL_CLINICAL_DATA)), clinicalData, newIdMapping)
     File(cmd.getOptionValue(OUTPUT_FILE)).writeHmfIds(newIdMapping.values)
+    logger.info("Generated hmf ids for ${newIdMapping.size} patients")
 }
 
 private fun writeAnonymizedPatients(patientsFile: File, clinicalData: List<PortalClinicalData>, hmfIdMapping: Map<CpctId, HmfId>) {
@@ -99,7 +101,7 @@ private fun updateAnonymizedSymlink(patientsFile: File, outputPath: String) {
             Files.deleteIfExists(linkPath)
             Files.createSymbolicLink(linkPath, Paths.get(outputPath))
         } catch (e: IOException) {
-            logger.warn("Failed to update symlink {}. Cause: {}", linkPath, e.message)
+            logger.warn("Failed to update symlink $linkPath. Cause: ${e.message}")
         }
     }
 }
