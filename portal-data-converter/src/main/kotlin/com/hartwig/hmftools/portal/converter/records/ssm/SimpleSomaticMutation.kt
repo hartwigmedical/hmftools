@@ -63,12 +63,7 @@ data class SimpleSomaticMutation(private val fields: Map<SimpleSomaticMutationHe
 
         private fun filterVariants(variant: VariantContext): Boolean {
             if (variant.mutationType() == "0") {
-                logger.warn("[{}] could not determine mutation type for variant {}:{}\t{} -> {}",
-                            variant.sampleNamesOrderedByName[0],
-                            variant.contig,
-                            variant.start,
-                            variant.reference.baseString,
-                            variant.alternateAlleles.first().baseString)
+                logger.warn("[${variant.sampleNamesOrderedByName[0]}] could not determine mutation type for variant ${variant.contig}:${variant.start}\t${variant.reference.baseString} -> ${variant.alternateAlleles.first().baseString}")
             }
             return variant.mutationType() != "0"
         }
