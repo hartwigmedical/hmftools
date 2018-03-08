@@ -46,18 +46,31 @@ public final class TreatmentMatcher {
                     .collect(Collectors.partitioningBy(clinicalBiopsy -> isPossibleMatch(clinicalBiopsy.date(), treatment.startDate())));
             final List<BiopsyData> possibleMatches = partitions.get(true);
             if (possibleMatches.size() == 0) {
-                findings.add(
-                        ValidationFinding.of("match", patientId, FORM_TREATMENT, "no biopsy match for treatment", FormStatusState.UNKNOWN,
-                                false, treatment.toString()));
+                findings.add(ValidationFinding.of("match",
+                        patientId,
+                        FORM_TREATMENT,
+                        "no biopsy match for treatment",
+                        FormStatusState.UNKNOWN,
+                        false,
+                        treatment.toString()));
                 matchedTreatments.add(treatment);
             } else if (possibleMatches.size() > 1) {
-                findings.add(ValidationFinding.of("match", patientId, FORM_TREATMENT, "multiple biopsy matches for treatment",
-                        FormStatusState.UNKNOWN, false,
+                findings.add(ValidationFinding.of("match",
+                        patientId,
+                        FORM_TREATMENT,
+                        "multiple biopsy matches for treatment",
+                        FormStatusState.UNKNOWN,
+                        false,
                         treatment + ". biopsies:  " + possibleMatches.stream().map(BiopsyData::toString).collect(Collectors.toList())));
                 matchedTreatments.add(treatment);
             } else if (possibleMatches.get(0).date() == null) {
-                findings.add(ValidationFinding.of("match", patientId, FORM_TREATMENT, "treatment matched biopsy with null date.",
-                        FormStatusState.UNKNOWN, false, treatment.toString()));
+                findings.add(ValidationFinding.of("match",
+                        patientId,
+                        FORM_TREATMENT,
+                        "treatment matched biopsy with null date.",
+                        FormStatusState.UNKNOWN,
+                        false,
+                        treatment.toString()));
                 matchedTreatments.add(treatment);
             } else {
                 final BiopsyData clinicalBiopsy = possibleMatches.get(0);
@@ -72,9 +85,9 @@ public final class TreatmentMatcher {
         return biopsyDate == null || isWithinThreshold(biopsyDate, treatmentStartDate);
     }
 
-    private static boolean isWithinThreshold(@Nullable final LocalDate biopsyDate, @Nullable final LocalDate treatmentStartDate) {
-        return biopsyDate != null && treatmentStartDate != null && (treatmentStartDate.isAfter(biopsyDate) || treatmentStartDate.isEqual(
-                biopsyDate)) && Duration.between(biopsyDate.atStartOfDay(), treatmentStartDate.atStartOfDay()).toDays()
+    private static boolean isWithinThreshold(@NotNull final LocalDate biopsyDate, @Nullable final LocalDate treatmentStartDate) {
+        return treatmentStartDate != null && (treatmentStartDate.isAfter(biopsyDate) || treatmentStartDate.isEqual(biopsyDate))
+                && Duration.between(biopsyDate.atStartOfDay(), treatmentStartDate.atStartOfDay()).toDays()
                 < Config.MAX_DAYS_BETWEEN_TREATMENT_AND_BIOPSY;
     }
 }
