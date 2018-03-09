@@ -161,7 +161,7 @@ public class StructuralVariantFactory {
         // grab the inserted sequence by removing 1 base from the reference anchoring bases
         final String insertedSequence = match.group(1).length() > 0 ?
                 match.group(1).substring(1) :
-                match.group(3).substring(0, match.group(3).length() - 1);
+                match.group(4).substring(0, match.group(4).length() - 1);
         final String mantaInsertedSequence = first.getAttributeAsString(INS_SEQ, "");
         final List<Integer> ihompos = first.getAttributeAsIntList(INEXACT_HOMOLOGY_LENGTH, 0);
         final int ihomlen = ihompos.size() == 2 ? Math.abs(ihompos.get(0)) + Math.abs(ihompos.get(1)) : 0;
