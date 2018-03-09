@@ -425,7 +425,7 @@ CREATE TABLE structuralVariant
     adjustedEndCopyNumber DOUBLE PRECISION,
     adjustedStartCopyNumberChange DOUBLE PRECISION,
     adjustedEndCopyNumberChange DOUBLE PRECISION,
-    insertSequence varchar(255) not null,
+    insertSequence varchar(2048) not null,
     type varchar(255) NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId)
