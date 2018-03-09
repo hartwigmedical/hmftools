@@ -127,7 +127,7 @@ public class FilteredSVWriter {
             {
                 String filtersStr = var.filters();
 
-                if(filtersStr.equals("PASS") || filtersStr.equals("[]") || filtersStr.isEmpty())
+                if(filtersStr.equals("PASS") || filtersStr.equals("[]") || filtersStr.equals(".") || filtersStr.isEmpty())
                 {
                     LOGGER.debug("var({}) was a PASS", var.id());
                     filtersStr = "PASS";
