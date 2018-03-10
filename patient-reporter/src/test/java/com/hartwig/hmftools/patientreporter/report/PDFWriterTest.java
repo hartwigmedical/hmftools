@@ -227,18 +227,6 @@ public class PDFWriterTest {
                         .cosmicURL("")
                         .build(),
                 ImmutableGeneFusionData.builder()
-                        .geneStart("BRAF")
-                        .geneStartTranscript("ENST00000288602.10")
-                        .geneStartEntrezIds(Lists.newArrayList(673))
-                        .geneContextStart("Exon 1")
-                        .geneEnd("ZKSCAN1")
-                        .geneEndTranscript("ENST00000324306.10")
-                        .geneEndEntrezIds(Lists.newArrayList(7586))
-                        .geneContextEnd("Exon 13")
-                        .copies("1.0")
-                        .cosmicURL("")
-                        .build(),
-                ImmutableGeneFusionData.builder()
                         .geneStart("CLCN6")
                         .geneStartTranscript("ENST00000346436.10")
                         .geneStartEntrezIds(Lists.newArrayList(1185))
@@ -259,8 +247,7 @@ public class PDFWriterTest {
                 .gene("ERBB4")
                 .geneContext("Intron 4")
                 .type("INV")
-                .copies("1.0")
-                .chromosomeBand("q13")
+                .copies("1.0").chromosomeBand("q34")
                 .build();
 
         final GeneDisruptionData disruption2 = ImmutableGeneDisruptionData.builder()
@@ -268,8 +255,7 @@ public class PDFWriterTest {
                 .gene("ERBB4")
                 .geneContext("Intron 20")
                 .type("INV")
-                .copies("1.0")
-                .chromosomeBand("q14")
+                .copies("1.0").chromosomeBand("q34")
                 .build();
 
         final GeneDisruptionData disruption3 = ImmutableGeneDisruptionData.builder()
@@ -277,8 +263,7 @@ public class PDFWriterTest {
                 .gene("PIK3CB")
                 .geneContext("Intron 1")
                 .type("INS")
-                .copies("3.0")
-                .chromosomeBand("q15")
+                .copies("3.0").chromosomeBand("q22.3")
                 .build();
 
         final GeneDisruptionData disruption4 = ImmutableGeneDisruptionData.builder()
@@ -286,8 +271,7 @@ public class PDFWriterTest {
                 .gene("NRG1")
                 .geneContext("Intron 1")
                 .type("DUP")
-                .copies("0.3")
-                .chromosomeBand("q16")
+                .copies("0.3").chromosomeBand("p12")
                 .build();
 
         final GeneDisruptionData disruption5 = ImmutableGeneDisruptionData.builder()
@@ -295,8 +279,7 @@ public class PDFWriterTest {
                 .gene("NRG1")
                 .geneContext("Intron 1")
                 .type("DEL")
-                .copies("0.2")
-                .chromosomeBand("q17.3")
+                .copies("0.2").chromosomeBand("p12")
                 .build();
 
         final GeneDisruptionData disruption6 = ImmutableGeneDisruptionData.builder()
@@ -304,8 +287,7 @@ public class PDFWriterTest {
                 .gene("CDK12")
                 .geneContext("Intron 12")
                 .type("BND")
-                .copies("1.0")
-                .chromosomeBand("q32")
+                .copies("1.0").chromosomeBand("q12")
                 .build();
 
         return Lists.newArrayList(disruption1, disruption2, disruption3, disruption4, disruption5, disruption6);
