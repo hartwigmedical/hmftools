@@ -22,23 +22,23 @@ public final class MainPageTopSection {
 
     @NotNull
     public static ComponentBuilder<?, ?> build(@NotNull final String title, @NotNull final SampleReport report) {
-        return build(title, report.sampleId(), report.tumorType(), "Pathology Tumor Percentage", report.tumorPercentageString());
+        return build(title, report.sampleId(), report.cancerType(), "Pathology Tumor Percentage", report.tumorPercentageString());
     }
 
     @NotNull
     public static ComponentBuilder<?, ?> buildWithImpliedPurity(@NotNull final String title, @NotNull final SampleReport report,
             @NotNull String purityString) {
-        return build(title, report.sampleId(), report.tumorType(), "Implied Tumor Purity", purityString);
+        return build(title, report.sampleId(), report.cancerType(), "Implied Tumor Purity", purityString);
     }
 
     @NotNull
-    public static ComponentBuilder<?, ?> build(@NotNull String title, @NotNull String sample, @NotNull String tumorType,
+    public static ComponentBuilder<?, ?> build(@NotNull String title, @NotNull String sample, @NotNull String cancerType,
             @NotNull String tumorPercentageTitle, @NotNull String tumorPercentage) {
         final ComponentBuilder<?, ?> mainDiagnosisInfo =
                 cmp.horizontalList(cmp.verticalList(cmp.text("Report Date").setStyle(tableHeaderStyle()),
                         cmp.currentDate().setPattern(DATE_TIME_FORMAT).setStyle(dataTableStyle())),
                         cmp.verticalList(cmp.text("Cancer Type").setStyle(tableHeaderStyle()),
-                                cmp.text(tumorType).setStyle(dataTableStyle())),
+                                cmp.text(cancerType).setStyle(dataTableStyle())),
                         cmp.verticalList(cmp.text(tumorPercentageTitle).setStyle(tableHeaderStyle()),
                                 cmp.text(tumorPercentage).setStyle(dataTableStyle())));
         return cmp.horizontalList(cmp.image(REPORT_LOGO_PATH),
