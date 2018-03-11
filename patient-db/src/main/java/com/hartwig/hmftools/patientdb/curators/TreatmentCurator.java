@@ -88,9 +88,7 @@ public class TreatmentCurator {
 
         unusedSearchTerms = Sets.newHashSet();
         for (DrugEntry drugEntry : drugEntries) {
-            for (String name : drugEntry.names()) {
-                unusedSearchTerms.add(name.toLowerCase());
-            }
+            drugEntry.names().stream().map(String::toLowerCase).forEach(unusedSearchTerms::add);
             unusedSearchTerms.add(drugEntry.canonicalName().toLowerCase());
         }
     }
