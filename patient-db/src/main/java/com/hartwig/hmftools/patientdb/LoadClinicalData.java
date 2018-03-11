@@ -151,8 +151,9 @@ public final class LoadClinicalData {
                     dbAccess.writeValidationFindings(patient.matchFindings());
                 }
             }
+            dbAccess.writeValidationFindings(CurationValidator.validateTreatmentCurator(treatmentCurator));
             dbAccess.writeValidationFindings(CurationValidator.validateTumorLocationCurator(tumorLocationCurator));
-            
+
             LOGGER.info("Done!");
         }
     }
