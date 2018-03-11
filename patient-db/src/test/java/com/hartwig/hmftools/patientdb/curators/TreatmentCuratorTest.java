@@ -42,15 +42,20 @@ public class TreatmentCuratorTest {
         TreatmentCurator curator = new TreatmentCurator(new FileInputStream(TREATMENT_MAPPING_CSV));
         assertEquals(22, curator.unusedSearchTerms().size());
 
-        curator.search("Zocor");
+        // KODU: Match with a canonical and make sure we can re-match after updating unused terms.
+        assertEquals(1, curator.search("Zocor").size());
         assertEquals(21, curator.unusedSearchTerms().size());
+        assertEquals(1, curator.search("Zocor").size());
 
+        // KODU: Match with "other" name
         curator.search("amlodipine besylate");
         assertEquals(20, curator.unusedSearchTerms().size());
 
+        // KODU: do an imperfect match but still remove the search term.
         curator.search("Avastine");
         assertEquals(19, curator.unusedSearchTerms().size());
 
+        // KODU: Bogus example!!
         curator.search("This does not match at all!");
         assertEquals(19, curator.unusedSearchTerms().size());
     }
