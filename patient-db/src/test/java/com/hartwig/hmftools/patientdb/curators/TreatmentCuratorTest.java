@@ -38,6 +38,24 @@ public class TreatmentCuratorTest {
     }
 
     @Test
+    public void removesSearchTermsFromUnused() throws IOException {
+        TreatmentCurator curator = new TreatmentCurator(new FileInputStream(TREATMENT_MAPPING_CSV));
+        assertEquals(22, curator.unusedSearchTerms().size());
+
+        curator.search("Zocor");
+        assertEquals(21, curator.unusedSearchTerms().size());
+
+        curator.search("amlodipine besylate");
+        assertEquals(20, curator.unusedSearchTerms().size());
+
+        curator.search("Avastine");
+        assertEquals(19, curator.unusedSearchTerms().size());
+
+        curator.search("This does not match at all!");
+        assertEquals(19, curator.unusedSearchTerms().size());
+    }
+
+    @Test
     public void matchesIgnoringCaseSingleWord() throws IOException {
         final Optional<CuratedTreatment> matchedTreatment = MATCHER.matchSingle("zocor");
         assertTrue(matchedTreatment.isPresent());
