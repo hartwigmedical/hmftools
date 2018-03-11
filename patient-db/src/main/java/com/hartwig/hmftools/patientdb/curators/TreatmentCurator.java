@@ -59,7 +59,7 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
 import org.jetbrains.annotations.NotNull;
 
-public class TreatmentCurator {
+public class TreatmentCurator implements Curator {
     private static final Logger LOGGER = LogManager.getLogger(TreatmentCurator.class);
     private static final String DRUG_TERMS_FIELD = "drugTerms";
     private static final String DRUG_NAME_FIELD = "drugName";
@@ -94,6 +94,7 @@ public class TreatmentCurator {
     }
 
     @NotNull
+    @Override
     public Set<String> unusedSearchTerms() {
         return unusedSearchTerms;
     }

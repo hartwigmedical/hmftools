@@ -20,7 +20,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TumorLocationCurator {
+public class TumorLocationCurator implements Curator {
 
     private static final Logger LOGGER = LogManager.getLogger(TumorLocationCurator.class);
 
@@ -60,6 +60,7 @@ public class TumorLocationCurator {
     }
 
     @NotNull
+    @Override
     public Set<String> unusedSearchTerms() {
         return unusedSearchTerms;
     }
