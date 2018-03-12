@@ -31,7 +31,7 @@ public final class TreatmentResponseMatcher {
         List<BiopsyTreatmentData> sortedTreatments = sortAndFilter(treatments);
         if (hasOverlappingTreatments(sortedTreatments)) {
             if (!responses.isEmpty()) {
-                findings.add(createFinding(patientId, "treatments are overlapping. Cannot match any response.",
+                findings.add(responseMatchFinding(patientId, "treatments are overlapping. Cannot match any response.",
                         "treatments: " + sortedTreatments));
             }
             return new MatchResult<>(responses, findings);
@@ -55,7 +55,7 @@ public final class TreatmentResponseMatcher {
 
                 if (hasNewBaselineResponseFound) {
                     matchedResponses.add(response);
-                    findings.add(createFinding(patientId,
+                    findings.add(responseMatchFinding(patientId,
                             "response after new baseline and before next treatment",
                             "response: " + response));
                 } else {
@@ -110,7 +110,7 @@ public final class TreatmentResponseMatcher {
     }
 
     @NotNull
-    private static ValidationFinding createFinding(@NotNull String patientId, @NotNull String message, @NotNull String details) {
+    private static ValidationFinding responseMatchFinding(@NotNull String patientId, @NotNull String message, @NotNull String details) {
         return ValidationFinding.of("match", patientId, FORM_TUMOR_MEASUREMENT, message, FormStatusState.UNKNOWN, false, details);
     }
 }
