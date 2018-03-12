@@ -101,15 +101,14 @@ public abstract class PatientReporter {
         final int mutationalLoad = variantAnalysis.mutationalLoad();
         final int consequentialVariantCount = variantAnalysis.consequentialVariants().size();
         final int structuralVariantCount = structuralVariantAnalysis.annotations().size();
-        final String tumorType = PatientReporterHelper.extractTumorType(baseReporterData().patientsCancerTypes(), tumorSample);
+        final String cancerType = PatientReporterHelper.extractCancerType(baseReporterData().patientsCancerTypes(), tumorSample);
 
         final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
         final List<Alteration> alterations = civicAnalyzer().run(variantAnalysis.findings(),
                 purpleAnalysis.reportableGeneCopyNumbers(),
                 reportableDisruptions,
                 reportableFusions,
-                reporterData().panelGeneModel(),
-                doidMapping.doidsForTumorType(tumorType));
+                reporterData().panelGeneModel(), doidMapping.doidsForTumorType(cancerType));
 
         LOGGER.info(" Printing analysis results:");
         LOGGER.info("  Number of variants: " + Integer.toString(totalVariantCount));
@@ -128,8 +127,7 @@ public abstract class PatientReporter {
         final Double tumorPercentage = lims.tumorPercentageForSample(tumorSample);
         final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrichSomaticVariants(variantAnalysis.findings());
         final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(tumorSample);
-        final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample,
-                tumorType,
+        final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample, cancerType,
                 tumorPercentage,
                 lims.arrivalDateForSample(tumorSample),
                 lims.arrivalDateForSample(run.refSample()),
@@ -150,8 +148,7 @@ public abstract class PatientReporter {
     }
 
     @NotNull
-    private GenomeAnalysis analyseGenomeData(@NotNull final String sample, @NotNull final String runDirectory)
-            throws IOException, HartwigException {
+    private GenomeAnalysis analyseGenomeData(@NotNull final String sample, @NotNull final String runDirectory) throws IOException {
         LOGGER.info(" Loading somatic snv and indels...");
         final List<SomaticVariant> variants = PatientReporterHelper.loadSomaticSNVFile(sample, runDirectory);
         LOGGER.info("  " + variants.size() + " somatic snv and indels loaded for sample " + sample);

@@ -10,7 +10,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -68,19 +67,18 @@ final class PatientReporterHelper {
     }
 
     @NotNull
-    static String findCircosPlotPath(@NotNull final String runDirectory, @NotNull final String sample) throws IOException {
+    static String findCircosPlotPath(@NotNull final String runDirectory, @NotNull final String sample) {
         return runDirectory + File.separator + PURPLE_DIRECTORY + File.separator + CIRCOS_PLOT_DIRECTORY + File.separator + sample
                 + CIRCOS_PLOT_EXTENSION;
     }
 
     @NotNull
-    static List<SomaticVariant> loadSomaticSNVFile(@NotNull final String sample, @NotNull final String path)
-            throws IOException, HartwigException {
+    static List<SomaticVariant> loadSomaticSNVFile(@NotNull final String sample, @NotNull final String path) throws IOException {
         return new SomaticVariantFactory().fromVCFFile(sample, path, SOMATIC_SNV_EXTENSION);
     }
 
     @NotNull
-    static String extractTumorType(@NotNull final List<PatientCancerTypes> patientsCancerTypes, @NotNull final String sample) {
+    static String extractCancerType(@NotNull final List<PatientCancerTypes> patientsCancerTypes, @NotNull final String sample) {
         final String patientId = toPatientId(sample);
         if (patientId == null) {
             LOGGER.warn("Could not resolve patient id from " + sample);
@@ -90,7 +88,7 @@ final class PatientReporterHelper {
                 .filter(patientCancerTypes -> patientCancerTypes.cpctId().equals(patientId))
                 .collect(Collectors.toList());
 
-        // KODU: We should never have more than one tumor type for a single patient.
+        // KODU: We should never have more than one cancer type for a single patient.
         assert matchingIdCancerTypes.size() < 2;
 
         if (matchingIdCancerTypes.size() == 1) {

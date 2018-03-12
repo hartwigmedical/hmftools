@@ -17,13 +17,13 @@ public abstract class SampleReport {
     public abstract String sampleId();
 
     @NotNull
-    public abstract String tumorType();
+    public abstract String cancerType();
 
     @Nullable
-    public abstract Double tumorPercentage();
+    public abstract Double pathologyTumorPercentage();
 
     public String tumorPercentageString() {
-        return PatientReportFormat.formatNullablePercent(tumorPercentage());
+        return PatientReportFormat.formatNullablePercent(pathologyTumorPercentage());
     }
 
     @Nullable
