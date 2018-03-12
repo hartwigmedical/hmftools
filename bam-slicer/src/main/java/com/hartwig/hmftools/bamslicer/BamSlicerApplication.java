@@ -9,6 +9,7 @@ import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.List;
+import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
@@ -45,11 +46,13 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.BlockCompressedFilePointerUtil;
 import htsjdk.samtools.util.BlockCompressedStreamConstants;
 import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.HttpUtils;
 import htsjdk.variant.variantcontext.StructuralVariantType;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import okhttp3.OkHttpClient;
 
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class BamSlicerApplication {
     private static final Logger LOGGER = LogManager.getLogger(BamSlicerApplication.class);
     private static final String SBP_ENDPOINT_URL = System.getenv("SBP_ENDPOINT_URL");
@@ -66,6 +69,7 @@ public class BamSlicerApplication {
     private static final String PROXIMITY = "proximity";
     private static final String VCF = "vcf";
     private static final String BED = "bed";
+    private static final String UNMAPPED = "unmapped";
     private static final String MAX_CHUNKS_IN_MEMORY = "max_chunks";
     private static final String MAX_CHUNKS_IN_MEMORY_DEFAULT = "2000";
     private static final String MAX_CONCURRENT_REQUESTS = "max_concurrent_requests";
@@ -93,13 +97,15 @@ public class BamSlicerApplication {
 
     private static void sliceFromVCF(@NotNull final CommandLine cmd) throws IOException {
         final String inputPath = cmd.getOptionValue(INPUT);
-        final String outputPath = cmd.getOptionValue(OUTPUT);
         final String vcfPath = cmd.getOptionValue(VCF);
         final int proximity = Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500"));
         final SamReader reader = SamReaderFactory.makeDefault().open(new File(inputPath));
         final QueryInterval[] intervals = getIntervalsFromVCF(vcfPath, reader.getFileHeader(), proximity);
-        final CloseableIterator<SAMRecord> iterator = getIterator(reader, intervals);
-        writeToSlice(outputPath, reader.getFileHeader(), iterator);
+        final CloseableIterator<SAMRecord> iterator = reader.queryOverlapping(intervals);
+        final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true)
+                .makeBAMWriter(reader.getFileHeader(), true, new File(cmd.getOptionValue(OUTPUT)));
+        writeToSlice(writer, iterator);
+        writer.close();
         reader.close();
     }
 
@@ -165,36 +171,70 @@ public class BamSlicerApplication {
 
     private static void sliceFromURLs(@NotNull final URL indexUrl, @NotNull final URL bamUrl, @NotNull final CommandLine cmd)
             throws IOException {
+        final File indexFile = downloadIndex(indexUrl);
+        indexFile.deleteOnExit();
+        final SamReader reader = SamReaderFactory.makeDefault().open(SamInputResource.of(bamUrl).index(indexFile));
+        final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true)
+                .makeBAMWriter(reader.getFileHeader(), true, new File(cmd.getOptionValue(OUTPUT)));
+        final BAMIndex bamIndex = new DiskBasedBAMFileIndex(indexFile, reader.getFileHeader().getSequenceDictionary(), false);
+        final Optional<Pair<QueryInterval[], BAMFileSpan>> queryIntervalsAndSpan = queryIntervalsAndSpan(reader, bamIndex, cmd);
+        final Optional<Chunk> unmappedChunk = getUnmappedChunk(bamIndex, HttpUtils.getHeaderField(bamUrl, "Content-Length"), cmd);
+        final SamReader cachingReader = createCachingReader(indexUrl, bamUrl, cmd, queryIntervalsAndSpan, unmappedChunk);
+        queryIntervalsAndSpan.ifPresent(pair -> {
+            LOGGER.info("Slicing bam on bed regions...");
+            final CloseableIterator<SAMRecord> bedIterator = getIterator(cachingReader, pair.getKey(), pair.getValue().toCoordinateArray());
+            writeToSlice(writer, bedIterator);
+            LOGGER.info("Done writing bed slices.");
+        });
+        unmappedChunk.ifPresent(chunk -> {
+            LOGGER.info("Slicing unmapped reads...");
+            final CloseableIterator<SAMRecord> unmappedIterator = reader.queryUnmapped();
+            writeToSlice(writer, unmappedIterator);
+            LOGGER.info("Done writing unmapped reads.");
+        });
+        reader.close();
+        writer.close();
+        cachingReader.close();
+    }
+
+    @NotNull
+    private static Optional<Pair<QueryInterval[], BAMFileSpan>> queryIntervalsAndSpan(@NotNull final SamReader reader,
+            @NotNull final BAMIndex bamIndex, @NotNull final CommandLine cmd) throws IOException {
+        if (cmd.hasOption(BED)) {
+            final String bedPath = cmd.getOptionValue(BED);
+            LOGGER.info("Reading query intervals from BED file: {}", bedPath);
+            final QueryInterval[] intervals = getIntervalsFromBED(bedPath, reader.getFileHeader());
+            final BAMFileSpan span = BAMFileReader.getFileSpan(intervals, bamIndex);
+            return Optional.of(Pair.of(intervals, span));
+        }
+        return Optional.empty();
+    }
+
+    private static SamReader createCachingReader(@NotNull final URL indexUrl, @NotNull final URL bamUrl, @NotNull final CommandLine cmd,
+            @NotNull final Optional<Pair<QueryInterval[], BAMFileSpan>> queryIntervalsAndSpan, @NotNull final Optional<Chunk> unmappedChunk)
+            throws IOException {
         final OkHttpClient httpClient =
                 SlicerHttpClient.create(Integer.parseInt(cmd.getOptionValue(MAX_CONCURRENT_REQUESTS, MAX_CONCURRENT_REQUESTS_DEFAULT)));
-        final String outputPath = cmd.getOptionValue(OUTPUT);
-        final String bedPath = cmd.getOptionValue(BED);
         final int maxBufferSize = readMaxBufferSize(cmd);
         final File indexFile = downloadIndex(indexUrl);
-        final SamReader reader = SamReaderFactory.makeDefault().open(SamInputResource.of(bamUrl).index(indexFile));
-        LOGGER.info("Generating query intervals from BED file: {}", bedPath);
-        final QueryInterval[] intervals = getIntervalsFromBED(bedPath, reader.getFileHeader());
-        final BAMFileSpan span = bamSpanForIntervals(indexFile, reader.getFileHeader(), intervals);
-        final List<Chunk> expandedChunks = expandChunks(span.getChunks());
-        LOGGER.info("Generated {} query intervals which map to {} bam chunks", intervals.length, expandedChunks.size());
-        final SamInputResource bamResource =
-                SamInputResource.of(new CachingSeekableHTTPStream(httpClient, bamUrl, expandedChunks, maxBufferSize)).index(indexFile);
-        final SamReader cachingReader = SamReaderFactory.makeDefault().open(bamResource);
-
-        LOGGER.info("Slicing bam...");
-        final CloseableIterator<SAMRecord> iterator = getIterator(cachingReader, intervals, span.toCoordinateArray());
-        writeToSlice(outputPath, cachingReader.getFileHeader(), iterator);
-        cachingReader.close();
-        reader.close();
         indexFile.deleteOnExit();
+        final List<Chunk> chunks = Lists.newArrayList();
+        queryIntervalsAndSpan.ifPresent(pair -> {
+            chunks.addAll(expandChunks(pair.getValue().getChunks()));
+            LOGGER.info("Generated {} query intervals which map to {} bam chunks", pair.getKey().length, chunks.size());
+        });
+        unmappedChunk.ifPresent(chunks::add);
+        final SamInputResource bamResource =
+                SamInputResource.of(new CachingSeekableHTTPStream(httpClient, bamUrl, chunks, maxBufferSize)).index(indexFile);
+        return SamReaderFactory.makeDefault().open(bamResource);
     }
 
     @NotNull
     private static List<Chunk> expandChunks(@NotNull final List<Chunk> chunks) {
         final List<Chunk> result = Lists.newArrayList();
         //MIVO: add chunk for header
-        final long headerEndVirtualPointer = ((long) BlockCompressedStreamConstants.MAX_COMPRESSED_BLOCK_SIZE) << 16;
-        result.add(new Chunk(0, headerEndVirtualPointer));
+        final long maxBlockVirtualPointer = ((long) BlockCompressedStreamConstants.MAX_COMPRESSED_BLOCK_SIZE) << 16;
+        result.add(new Chunk(0, maxBlockVirtualPointer));
         for (final Chunk chunk : chunks) {
             final long chunkEndBlockAddress = BlockCompressedFilePointerUtil.getBlockAddress(chunk.getChunkEnd());
             final long extendedEndBlockAddress = chunkEndBlockAddress + BlockCompressedStreamConstants.MAX_COMPRESSED_BLOCK_SIZE;
@@ -203,13 +243,6 @@ public class BamSlicerApplication {
             result.add(new Chunk(chunk.getChunkStart(), chunkEndVirtualPointer));
         }
         return Chunk.optimizeChunkList(result, 0);
-    }
-
-    @NotNull
-    private static BAMFileSpan bamSpanForIntervals(@NotNull final File index, @NotNull final SAMFileHeader header,
-            @NotNull final QueryInterval[] intervals) {
-        final BAMIndex bamIndex = new DiskBasedBAMFileIndex(index, header.getSequenceDictionary(), false);
-        return BAMFileReader.getFileSpan(intervals, bamIndex);
     }
 
     @NotNull
@@ -225,6 +258,28 @@ public class BamSlicerApplication {
     }
 
     @NotNull
+    private static Optional<Chunk> getUnmappedChunk(@NotNull final BAMIndex bamIndex, @Nullable final String contentLengthString,
+            @NotNull final CommandLine cmd) {
+        if (cmd.hasOption(UNMAPPED)) {
+            final long startOfLastLinearBin = bamIndex.getStartOfLastLinearBin();
+            if (startOfLastLinearBin == -1) {
+                LOGGER.warn("Start of last linear bin was -1. No mapped reads found in BAM.");
+                return Optional.empty();
+            }
+            if (contentLengthString != null) {
+                try {
+                    final long contentLength = Long.parseLong(contentLengthString);
+                    return Optional.of(new Chunk(startOfLastLinearBin, contentLength << 16));
+                } catch (NumberFormatException ignored) {
+                    LOGGER.error("Invalid content length ({}) for bam URL", contentLengthString);
+                    return Optional.empty();
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    @NotNull
     private static QueryInterval[] getIntervalsFromBED(@NotNull final String bedPath, @NotNull final SAMFileHeader header)
             throws IOException {
         final Slicer bedSlicer = SlicerFactory.fromBedFile(bedPath);
@@ -233,11 +288,6 @@ public class BamSlicerApplication {
             queryIntervals.add(new QueryInterval(header.getSequenceIndex(region.chromosome()), (int) region.start(), (int) region.end()));
         }
         return QueryInterval.optimizeIntervals(queryIntervals.toArray(new QueryInterval[queryIntervals.size()]));
-    }
-
-    @NotNull
-    private static CloseableIterator<SAMRecord> getIterator(@NotNull final SamReader reader, @NotNull final QueryInterval[] intervals) {
-        return reader.queryOverlapping(intervals);
     }
 
     @NotNull
@@ -253,10 +303,7 @@ public class BamSlicerApplication {
         return reader.queryOverlapping(intervals);
     }
 
-    private static void writeToSlice(@NotNull final String path, @NotNull final SAMFileHeader header,
-            @NotNull final CloseableIterator<SAMRecord> iterator) {
-        final File outputBAM = new File(path);
-        final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true).makeBAMWriter(header, true, outputBAM);
+    private static void writeToSlice(final SAMFileWriter writer, @NotNull final CloseableIterator<SAMRecord> iterator) {
         String contig = "";
         while (iterator.hasNext()) {
             final SAMRecord record = iterator.next();
@@ -267,7 +314,6 @@ public class BamSlicerApplication {
             writer.addAlignment(record);
         }
         iterator.close();
-        writer.close();
     }
 
     private static int readMaxBufferSize(@NotNull final CommandLine cmd) {
@@ -316,7 +362,8 @@ public class BamSlicerApplication {
     @NotNull
     private static Options addHttpSlicerOptions(@NotNull final Options options) {
         options.addOption(Option.builder(OUTPUT).required().hasArg().desc("The output BAM (required)").build());
-        options.addOption(Option.builder(BED).required().hasArg().desc("BED to slice BAM with (required)").build());
+        options.addOption(Option.builder(BED).hasArg().desc("BED to slice BAM with").build());
+        options.addOption(Option.builder(UNMAPPED).desc("Slice unmapped reads").build());
         options.addOption(Option.builder(MAX_CHUNKS_IN_MEMORY)
                 .hasArg()
                 .desc("Max number of chunks to keep in memory (default: " + MAX_CHUNKS_IN_MEMORY_DEFAULT + ")")
