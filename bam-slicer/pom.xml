@@ -11,7 +11,7 @@
 
     <artifactId>bam-slicer</artifactId>
     <packaging>jar</packaging>
-    <version>1.2</version>
+    <version>1.3</version>
     <name>HMF Tools - BAM Slicer</name>
 
     <dependencies>
