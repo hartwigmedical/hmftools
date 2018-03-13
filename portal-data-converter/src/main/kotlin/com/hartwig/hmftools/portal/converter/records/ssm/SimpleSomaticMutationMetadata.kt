@@ -13,19 +13,17 @@ data class SimpleSomaticMutationMetadata(private val fields: Map<SimpleSomaticMu
         private val ALIGNMENT_ALGORITHM = "BWA-MEM"
         private val CALLING_ALGORITHM = "Strelka"
         private val RAW_DATA_ACCESSION = "HMF0"
-        private val RAW_DATA_REPOSITORY = "1"              // EGA; TODO: replace
+        private val RAW_DATA_REPOSITORY = "1"              // EGA; is replaced in UI with hmf
         operator fun invoke(sampleId: String): SimpleSomaticMutationMetadata {
-            return SimpleSomaticMutationMetadata(mapOf(
-                    SimpleSomaticMutationMetadataHeader.analysis_id to sampleId,
-                    SimpleSomaticMutationMetadataHeader.analyzed_sample_id to sampleId,
-                    SimpleSomaticMutationMetadataHeader.assembly_version to ASSEMBLY_VERSION,
-                    SimpleSomaticMutationMetadataHeader.platform to PLATFORM,
-                    SimpleSomaticMutationMetadataHeader.sequencing_strategy to SEQUENCING_STRATEGY,
-                    SimpleSomaticMutationMetadataHeader.alignment_algorithm to ALIGNMENT_ALGORITHM,
-                    SimpleSomaticMutationMetadataHeader.variation_calling_algorithm to CALLING_ALGORITHM,
-                    SimpleSomaticMutationMetadataHeader.raw_data_accession to RAW_DATA_ACCESSION,
-                    SimpleSomaticMutationMetadataHeader.raw_data_repository to RAW_DATA_REPOSITORY
-            ))
+            return SimpleSomaticMutationMetadata(mapOf(SimpleSomaticMutationMetadataHeader.analysis_id to sampleId,
+                                                       SimpleSomaticMutationMetadataHeader.analyzed_sample_id to sampleId,
+                                                       SimpleSomaticMutationMetadataHeader.assembly_version to ASSEMBLY_VERSION,
+                                                       SimpleSomaticMutationMetadataHeader.platform to PLATFORM,
+                                                       SimpleSomaticMutationMetadataHeader.sequencing_strategy to SEQUENCING_STRATEGY,
+                                                       SimpleSomaticMutationMetadataHeader.alignment_algorithm to ALIGNMENT_ALGORITHM,
+                                                       SimpleSomaticMutationMetadataHeader.variation_calling_algorithm to CALLING_ALGORITHM,
+                                                       SimpleSomaticMutationMetadataHeader.raw_data_accession to RAW_DATA_ACCESSION,
+                                                       SimpleSomaticMutationMetadataHeader.raw_data_repository to RAW_DATA_REPOSITORY))
         }
     }
 
