@@ -75,6 +75,8 @@ public class BamSlicerApplication {
     private static final String MAX_CONCURRENT_REQUESTS = "max_concurrent_requests";
     private static final String MAX_CONCURRENT_REQUESTS_DEFAULT = "50";
 
+    private static final Chunk HEADER_CHUNK = new Chunk(0, (long) BlockCompressedStreamConstants.MAX_COMPRESSED_BLOCK_SIZE << 16);
+
     public static void main(final String... args) throws ParseException, IOException {
         final CommandLine cmd = createCommandLine(args);
         assert cmd != null;
@@ -179,7 +181,8 @@ public class BamSlicerApplication {
         final BAMIndex bamIndex = new DiskBasedBAMFileIndex(indexFile, reader.getFileHeader().getSequenceDictionary(), false);
         final Optional<Pair<QueryInterval[], BAMFileSpan>> queryIntervalsAndSpan = queryIntervalsAndSpan(reader, bamIndex, cmd);
         final Optional<Chunk> unmappedChunk = getUnmappedChunk(bamIndex, HttpUtils.getHeaderField(bamUrl, "Content-Length"), cmd);
-        final SamReader cachingReader = createCachingReader(indexUrl, bamUrl, cmd, queryIntervalsAndSpan, unmappedChunk);
+        final List<Chunk> sliceChunks = sliceChunks(queryIntervalsAndSpan, unmappedChunk);
+        final SamReader cachingReader = createCachingReader(indexFile, bamUrl, cmd, sliceChunks);
         queryIntervalsAndSpan.ifPresent(pair -> {
             LOGGER.info("Slicing bam on bed regions...");
             final CloseableIterator<SAMRecord> bedIterator = getIterator(cachingReader, pair.getKey(), pair.getValue().toCoordinateArray());
@@ -188,7 +191,7 @@ public class BamSlicerApplication {
         });
         unmappedChunk.ifPresent(chunk -> {
             LOGGER.info("Slicing unmapped reads...");
-            final CloseableIterator<SAMRecord> unmappedIterator = reader.queryUnmapped();
+            final CloseableIterator<SAMRecord> unmappedIterator = cachingReader.queryUnmapped();
             writeToSlice(writer, unmappedIterator);
             LOGGER.info("Done writing unmapped reads.");
         });
@@ -210,31 +213,32 @@ public class BamSlicerApplication {
         return Optional.empty();
     }
 
-    private static SamReader createCachingReader(@NotNull final URL indexUrl, @NotNull final URL bamUrl, @NotNull final CommandLine cmd,
-            @NotNull final Optional<Pair<QueryInterval[], BAMFileSpan>> queryIntervalsAndSpan, @NotNull final Optional<Chunk> unmappedChunk)
-            throws IOException {
+    private static SamReader createCachingReader(@NotNull final File indexFile, @NotNull final URL bamUrl, @NotNull final CommandLine cmd,
+            @NotNull final List<Chunk> sliceChunks) throws IOException {
         final OkHttpClient httpClient =
                 SlicerHttpClient.create(Integer.parseInt(cmd.getOptionValue(MAX_CONCURRENT_REQUESTS, MAX_CONCURRENT_REQUESTS_DEFAULT)));
         final int maxBufferSize = readMaxBufferSize(cmd);
-        final File indexFile = downloadIndex(indexUrl);
-        indexFile.deleteOnExit();
+        final SamInputResource bamResource =
+                SamInputResource.of(new CachingSeekableHTTPStream(httpClient, bamUrl, sliceChunks, maxBufferSize)).index(indexFile);
+        return SamReaderFactory.makeDefault().open(bamResource);
+    }
+
+    @NotNull
+    private static List<Chunk> sliceChunks(@NotNull final Optional<Pair<QueryInterval[], BAMFileSpan>> queryIntervalsAndSpan,
+            @NotNull final Optional<Chunk> unmappedChunk) {
         final List<Chunk> chunks = Lists.newArrayList();
+        chunks.add(HEADER_CHUNK);
         queryIntervalsAndSpan.ifPresent(pair -> {
             chunks.addAll(expandChunks(pair.getValue().getChunks()));
             LOGGER.info("Generated {} query intervals which map to {} bam chunks", pair.getKey().length, chunks.size());
         });
         unmappedChunk.ifPresent(chunks::add);
-        final SamInputResource bamResource =
-                SamInputResource.of(new CachingSeekableHTTPStream(httpClient, bamUrl, chunks, maxBufferSize)).index(indexFile);
-        return SamReaderFactory.makeDefault().open(bamResource);
+        return Chunk.optimizeChunkList(chunks, 0);
     }
 
     @NotNull
     private static List<Chunk> expandChunks(@NotNull final List<Chunk> chunks) {
         final List<Chunk> result = Lists.newArrayList();
-        //MIVO: add chunk for header
-        final long maxBlockVirtualPointer = ((long) BlockCompressedStreamConstants.MAX_COMPRESSED_BLOCK_SIZE) << 16;
-        result.add(new Chunk(0, maxBlockVirtualPointer));
         for (final Chunk chunk : chunks) {
             final long chunkEndBlockAddress = BlockCompressedFilePointerUtil.getBlockAddress(chunk.getChunkEnd());
             final long extendedEndBlockAddress = chunkEndBlockAddress + BlockCompressedStreamConstants.MAX_COMPRESSED_BLOCK_SIZE;
@@ -242,7 +246,7 @@ public class BamSlicerApplication {
             final long chunkEndVirtualPointer = newChunkEnd << 16;
             result.add(new Chunk(chunk.getChunkStart(), chunkEndVirtualPointer));
         }
-        return Chunk.optimizeChunkList(result, 0);
+        return result;
     }
 
     @NotNull
