@@ -10,7 +10,6 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.common.exception.HartwigException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
@@ -116,7 +115,7 @@ public class ConfigSupplier {
     private final FittingConfig fittingConfig;
     private final SmoothingConfig smoothingConfig;
 
-    public ConfigSupplier(@NotNull CommandLine cmd, @NotNull Options opt) throws ParseException, HartwigException, IOException {
+    public ConfigSupplier(@NotNull CommandLine cmd, @NotNull Options opt) throws ParseException, IOException {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
         if (runDirectory == null) {
             printHelp(opt);

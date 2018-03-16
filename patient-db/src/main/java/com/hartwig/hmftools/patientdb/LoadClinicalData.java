@@ -20,7 +20,6 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusReader;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
@@ -62,8 +61,7 @@ public final class LoadClinicalData {
     private static final InputStream TUMOR_LOCATION_MAPPING_RESOURCE =
             LoadClinicalData.class.getResourceAsStream("/tumor_location_mapping.csv");
 
-    public static void main(@NotNull final String[] args)
-            throws ParseException, IOException, XMLStreamException, SQLException, HartwigException {
+    public static void main(@NotNull final String[] args) throws ParseException, IOException, XMLStreamException, SQLException {
         LOGGER.info("Running patient-db v{}", VERSION);
         final Options basicOptions = createBasicOptions();
         final Options clinicalOptions = createLimsOptions();
@@ -105,8 +103,7 @@ public final class LoadClinicalData {
     }
 
     private static void writeClinicalData(@NotNull final Options clinicalOptions, @NotNull final CommandLine cmd,
-            @NotNull final List<RunContext> runContexts, @NotNull final DatabaseAccess dbAccess)
-            throws IOException, XMLStreamException, HartwigException {
+            @NotNull final List<RunContext> runContexts, @NotNull final DatabaseAccess dbAccess) throws IOException, XMLStreamException {
         final String ecrfFilePath = cmd.getOptionValue(ECRF_FILE);
         final String limsJson = cmd.getOptionValue(LIMS_JSON);
         final String preLIMSArrivalDatesCsv = cmd.getOptionValue(PRE_LIMS_ARRIVAL_DATES_CSV);
@@ -171,8 +168,7 @@ public final class LoadClinicalData {
     }
 
     private static void writeRawEcrf(@NotNull final Options ecrfOptions, @NotNull final CommandLine cmd,
-            @NotNull final List<RunContext> runContexts, @NotNull final DatabaseAccess dbWriter)
-            throws IOException, HartwigException, XMLStreamException {
+            @NotNull final List<RunContext> runContexts, @NotNull final DatabaseAccess dbWriter) throws IOException, XMLStreamException {
         final String ecrfFilePath = cmd.getOptionValue(ECRF_FILE);
         final String formStatusPath = cmd.getOptionValue(FORM_STATUS_CSV);
         if (Utils.anyNull(ecrfFilePath, formStatusPath)) {

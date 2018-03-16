@@ -13,7 +13,6 @@ import java.util.Optional;
 
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.exception.HartwigException;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;

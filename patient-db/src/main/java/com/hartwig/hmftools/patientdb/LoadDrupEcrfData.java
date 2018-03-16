@@ -12,7 +12,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
 

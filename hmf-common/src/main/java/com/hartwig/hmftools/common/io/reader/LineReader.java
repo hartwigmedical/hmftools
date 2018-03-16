@@ -9,7 +9,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.exception.MalformedFileException;
 
 import org.jetbrains.annotations.NotNull;
@@ -18,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 public interface LineReader {
 
     @NotNull
-    List<String> readLines(@NotNull Path filePath, @NotNull Predicate<String> filter) throws IOException, HartwigException;
+    List<String> readLines(@NotNull Path filePath, @NotNull Predicate<String> filter) throws IOException;
 
     @NotNull
     static LineReader build() {

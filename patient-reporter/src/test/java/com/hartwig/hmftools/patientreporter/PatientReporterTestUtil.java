@@ -15,8 +15,6 @@ import com.hartwig.hmftools.common.cosmic.genes.CosmicGeneModel;
 import com.hartwig.hmftools.common.cosmic.genes.CosmicGenes;
 import com.hartwig.hmftools.common.ecrf.doid.TumorLocationDoidMapping;
 import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.lims.Lims;
@@ -48,7 +46,7 @@ public final class PatientReporterTestUtil {
     }
 
     @NotNull
-    public static HmfReporterData testHmfReporterData() throws IOException, HartwigException {
+    public static HmfReporterData testHmfReporterData() throws IOException {
         final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
         final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
         final String fusionPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_gene_fusions.csv";
@@ -63,6 +61,7 @@ public final class PatientReporterTestUtil {
     @NotNull
     public static MicrosatelliteAnalyzer testMicrosatelliteAnalyzer() {
         return new MicrosatelliteAnalyzer() {
+            @SuppressWarnings("NullableProblems")
             @Override
             @Nullable
             public IndexedFastaSequenceFile reference() {
@@ -77,7 +76,7 @@ public final class PatientReporterTestUtil {
     }
 
     @NotNull
-    public static BaseReporterData testBaseReporterData() throws IOException, EmptyFileException {
+    public static BaseReporterData testBaseReporterData() throws IOException {
         final String centerPath = Resources.getResource("center").getPath() + File.separator + "centers.csv";
         final List<PatientCancerTypes> patientsCancerTypes = Lists.newArrayList();
         final Lims lims = LimsFactory.empty();

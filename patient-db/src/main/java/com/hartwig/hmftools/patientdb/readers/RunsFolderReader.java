@@ -7,7 +7,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.FolderChecker;
 
 import org.apache.logging.log4j.LogManager;
@@ -32,7 +31,7 @@ public final class RunsFolderReader {
                 final String runDirectory = FolderChecker.build().checkFolder(folder.getPath());
                 final RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runDirectory);
                 runContexts.add(runContext);
-            } catch (IOException | HartwigException e) {
+            } catch (IOException e) {
                 LOGGER.error(e.getMessage());
             }
         }

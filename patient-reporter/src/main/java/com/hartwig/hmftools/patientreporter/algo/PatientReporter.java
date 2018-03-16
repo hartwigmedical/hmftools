@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.doid.TumorLocationDoidMapping;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.numeric.Doubles;
@@ -75,8 +74,7 @@ public abstract class PatientReporter {
     public abstract AlterationAnalyzer civicAnalyzer();
 
     @NotNull
-    public SequencedPatientReport run(@NotNull final String runDirectory, @Nullable final String comments)
-            throws IOException, HartwigException {
+    public SequencedPatientReport run(@NotNull final String runDirectory, @Nullable final String comments) throws IOException {
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
         final GenomeAnalysis genomeAnalysis = analyseGenomeData(run.tumorSample(), runDirectory);
         assert run.isSomaticRun() && run.tumorSample().equals(genomeAnalysis.sample());
@@ -107,8 +105,7 @@ public abstract class PatientReporter {
         final List<Alteration> alterations = civicAnalyzer().run(variantAnalysis.findings(),
                 purpleAnalysis.reportableGeneCopyNumbers(),
                 reportableDisruptions,
-                reportableFusions,
-                reporterData().panelGeneModel(), doidMapping.doidsForTumorType(cancerType));
+                reportableFusions, reporterData().panelGeneModel(), doidMapping.doidsForTumorType(cancerType));
 
         LOGGER.info(" Printing analysis results:");
         LOGGER.info("  Number of variants: " + Integer.toString(totalVariantCount));

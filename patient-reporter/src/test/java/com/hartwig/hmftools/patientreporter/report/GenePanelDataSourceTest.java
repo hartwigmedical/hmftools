@@ -6,7 +6,6 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.report.data.GenePanelDataSource;
 
@@ -17,7 +16,7 @@ import net.sf.jasperreports.engine.JRDataSource;
 public class GenePanelDataSourceTest {
 
     @Test
-    public void canCreateGenePanelFor3Genes() throws IOException, HartwigException {
+    public void canCreateGenePanelFor3Genes() throws IOException {
         final HmfReporterData reporterData = testHmfReporterData();
         final JRDataSource dataSource = GenePanelDataSource.fromHmfReporterData(reporterData);
         assertNotNull(dataSource);

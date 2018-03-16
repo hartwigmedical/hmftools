@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.exception.HartwigException;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -16,19 +15,18 @@ public class GCMedianReadCountFileTest {
     private static final String BASE_PATH = Resources.getResource("gc").getPath() + File.separator;
 
     @Test
-    public void canLoadWithoutExtendingRegion() throws IOException, HartwigException {
+    public void canLoadWithoutExtendingRegion() throws IOException {
         final GCMedianReadCount readCount = GCMedianReadCountFile.read(false, BASE_PATH + "EXAMPLE.purple.gc.median");
         testMinMax(readCount, -1, -1);
     }
 
     @Test
-    public void canLoadAndExtendRegion() throws IOException, HartwigException {
+    public void canLoadAndExtendRegion() throws IOException {
         final GCMedianReadCount readCount = GCMedianReadCountFile.read(true, BASE_PATH + "EXAMPLE.purple.gc.median");
         testMinMax(readCount, 1144, 880);
     }
 
-    private static void testMinMax(@NotNull final GCMedianReadCount victim, int expectedMin, int expectedMax)
-            throws IOException, HartwigException {
+    private static void testMinMax(@NotNull final GCMedianReadCount victim, int expectedMin, int expectedMax) {
         for (int i = 0; i < 20; i++) {
             assertEquals(expectedMin, victim.medianReadCount(new ImmutableGCBucket(i)));
         }

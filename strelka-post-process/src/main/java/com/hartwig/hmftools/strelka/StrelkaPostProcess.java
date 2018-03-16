@@ -5,7 +5,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
@@ -69,8 +68,8 @@ final class StrelkaPostProcess implements VariantContextFilter {
                     qualityScore,
                     allelicFrequency);
 
-        } catch (final HartwigException e) {
-            LOGGER.error("encountered error while processing variant {}: {}:\t{}", variant.getContig(), variant.getStart(), e.getMessage());
+        } catch (IllegalStateException e) {
+            LOGGER.error("Encountered error while processing variant {}: {}:\t{}", variant.getContig(), variant.getStart(), e.getMessage());
             return false;
         }
     }
@@ -84,13 +83,13 @@ final class StrelkaPostProcess implements VariantContextFilter {
     }
 
     @VisibleForTesting
-    static int qualityScore(@NotNull final VariantContext variant) throws HartwigException {
+    static int qualityScore(@NotNull final VariantContext variant) {
         if (variant.isSNP()) {
             return getIntField(variant, SNP_QUAL_FIELD);
         } else if (variant.isIndel()) {
             return getIntField(variant, INDEL_QUAL_FIELD);
         } else {
-            throw new HartwigException("record is not indel or snp: " + variant);
+            throw new IllegalStateException("record is not indel or snp: " + variant);
         }
     }
 
@@ -104,7 +103,7 @@ final class StrelkaPostProcess implements VariantContextFilter {
     }
 
     @VisibleForTesting
-    static double allelicFrequency(@NotNull final VariantContext variant) throws HartwigException {
+    static double allelicFrequency(@NotNull final VariantContext variant) {
         if (variant.isSNP()) {
             final int tierIndex = getIntField(variant, SNP_TIER_INDEX_FIELD) - 1;
             return readAf(variant, tierIndex, StrelkaPostProcess::snpAlleleKey);
@@ -112,7 +111,7 @@ final class StrelkaPostProcess implements VariantContextFilter {
             final int tierIndex = getIntField(variant, INDEL_TIER_INDEX_FIELD) - 1;
             return readAf(variant, tierIndex, StrelkaPostProcess::indelAlleleKey);
         } else {
-            throw new HartwigException("record is not indel or snp: " + variant);
+            throw new IllegalStateException("record is not indel or snp: " + variant);
         }
     }
 
@@ -132,7 +131,7 @@ final class StrelkaPostProcess implements VariantContextFilter {
     }
 
     @NotNull
-    static VariantContext simplifyVariant(@NotNull final VariantContext variant, @NotNull final String sampleName) throws HartwigException {
+    static VariantContext simplifyVariant(@NotNull final VariantContext variant, @NotNull final String sampleName) {
         //MIVO: force GT to 0/1 even for variants with multiple alts
         final List<Allele> outputVariantAlleles = variant.getAlleles().subList(0, 2);
         final Genotype genotype = new GenotypeBuilder(sampleName, outputVariantAlleles).DP(getDP(variant)).AD(getAD(variant)).make();
@@ -145,13 +144,13 @@ final class StrelkaPostProcess implements VariantContextFilter {
     }
 
     @VisibleForTesting
-    static int[] getAD(@NotNull final VariantContext variant) throws HartwigException {
+    static int[] getAD(@NotNull final VariantContext variant) {
         if (variant.isSNP()) {
             return readAD(variant, StrelkaPostProcess::snpAlleleKey);
         } else if (variant.isIndel()) {
             return readAD(variant, StrelkaPostProcess::indelAlleleKey);
         } else {
-            throw new HartwigException("record is not indel or snp: " + variant);
+            throw new IllegalStateException("record is not indel or snp: " + variant);
         }
     }
 

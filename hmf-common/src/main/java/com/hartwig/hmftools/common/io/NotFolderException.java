@@ -1,12 +1,10 @@
 package com.hartwig.hmftools.common.io;
 
-import com.hartwig.hmftools.common.exception.HartwigException;
+import java.io.IOException;
 
 import org.jetbrains.annotations.NotNull;
 
-class NotFolderException extends HartwigException {
-
-    private static final long serialVersionUID = -8396650626359037492L;
+class NotFolderException extends IOException {
 
     private static final String MESSAGE = "Path %s is not a folder";
 

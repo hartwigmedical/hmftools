@@ -17,8 +17,6 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -66,7 +64,7 @@ public class PDFWriterTest {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
 
     @Test
-    public void canGenerateSequenceReport() throws DRException, IOException, HartwigException {
+    public void canGenerateSequenceReport() throws DRException, IOException {
         final double pathologyTumorPercentage = 0.6;
         final double impliedTumorPurity = 0.58;
         final int mutationalLoad = 361;
@@ -292,7 +290,7 @@ public class PDFWriterTest {
     }
 
     @Test
-    public void canGenerateLowTumorPercentageReport() throws DRException, IOException, EmptyFileException {
+    public void canGenerateLowTumorPercentageReport() throws DRException, IOException {
         final JasperReportBuilder report = generateNotSequenceableCPCTReport(0.1, NotSequenceableReason.LOW_TUMOR_PERCENTAGE);
         assertNotNull(report);
 
@@ -306,7 +304,7 @@ public class PDFWriterTest {
     }
 
     @Test
-    public void canGenerateLowDNAYieldReport() throws DRException, IOException, EmptyFileException {
+    public void canGenerateLowDNAYieldReport() throws DRException, IOException {
         final JasperReportBuilder report = generateNotSequenceableCPCTReport(0.6, NotSequenceableReason.LOW_DNA_YIELD);
         assertNotNull(report);
 
@@ -320,7 +318,7 @@ public class PDFWriterTest {
     }
 
     @Test
-    public void canGeneratePostDNAIsolationFailReport() throws DRException, IOException, EmptyFileException {
+    public void canGeneratePostDNAIsolationFailReport() throws DRException, IOException {
         final JasperReportBuilder report = generateNotSequenceableCPCTReport(0.6, NotSequenceableReason.POST_ISOLATION_FAIL);
         assertNotNull(report);
 
@@ -335,7 +333,7 @@ public class PDFWriterTest {
 
     @NotNull
     private static JasperReportBuilder generateNotSequenceableCPCTReport(final double pathologyTumorEstimate,
-            @NotNull final NotSequenceableReason reason) throws IOException, EmptyFileException {
+            @NotNull final NotSequenceableReason reason) throws IOException {
         final NotSequencedPatientReport patientReport = ImmutableNotSequencedPatientReport.of(testSampleReport(pathologyTumorEstimate),
                 reason,
                 NotSequenceableStudy.CPCT,
@@ -346,7 +344,7 @@ public class PDFWriterTest {
     }
 
     @NotNull
-    private static SampleReport testSampleReport(final double pathologyTumorPercentage) throws IOException, EmptyFileException {
+    private static SampleReport testSampleReport(final double pathologyTumorPercentage) throws IOException {
         final String sample = "CPCT02991111T";
         return ImmutableSampleReport.of(sample,
                 "Melanoma",

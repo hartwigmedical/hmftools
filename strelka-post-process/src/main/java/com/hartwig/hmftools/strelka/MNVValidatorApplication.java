@@ -1,12 +1,8 @@
 package com.hartwig.hmftools.strelka;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Optional;
 
-import javax.xml.stream.XMLStreamException;
-
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.strelka.mnv.ImmutableMNVValidator;
 import com.hartwig.hmftools.strelka.mnv.MNVDetector;
 import com.hartwig.hmftools.strelka.mnv.MNVValidator;
@@ -36,7 +32,7 @@ public class MNVValidatorApplication {
     private static final String TUMOR_BAM = "b";
     private static final String OUTPUT_VCF = "o";
 
-    public static void main(final String... args) throws ParseException, IOException, XMLStreamException, HartwigException {
+    public static void main(final String... args) throws ParseException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 

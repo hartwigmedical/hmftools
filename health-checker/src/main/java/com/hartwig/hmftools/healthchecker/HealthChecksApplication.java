@@ -7,7 +7,6 @@ import java.util.Optional;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.FolderChecker;
 import com.hartwig.hmftools.healthchecker.report.JsonReport;
 import com.hartwig.hmftools.healthchecker.report.Report;
@@ -45,7 +44,7 @@ public final class HealthChecksApplication {
         this.reportFilePath = reportFilePath;
     }
 
-    public static void main(final String... args) throws ParseException, IOException, HartwigException {
+    public static void main(final String... args) throws ParseException, IOException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
