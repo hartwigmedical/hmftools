@@ -41,6 +41,14 @@
         <maven.jar.plugin.version>2.4</maven.jar.plugin.version>
         <maven.surefire.plugin.version>2.21.0</maven.surefire.plugin.version>
 
+        <hmf-common.version>1</hmf-common.version>
+        <hmf-gene-panel.version>1</hmf-gene-panel.version>
+        <hmf-patient-db.version>2.1</hmf-patient-db.version>
+        <hmf-apiclients.version>1.0</hmf-apiclients.version>
+        <hmf-variant-annotation.version>1.0</hmf-variant-annotation.version>
+        <hmf-strelka-post-process.version>1.2</hmf-strelka-post-process.version>
+        <hmf-extensions.version>1</hmf-extensions.version>
+
         <immutables.version>2.4.4</immutables.version>
         <htsjdk.version>2.12.0</htsjdk.version>
         <intellij.annotations.version>12.0</intellij.annotations.version>
@@ -66,19 +74,9 @@
         <bouncycastle.jdk15.version>1.53</bouncycastle.jdk15.version>
         <kotlin.version>1.2.30</kotlin.version>
 
-        <hmf-common.version>1</hmf-common.version>
-        <hmf-gene-panel.version>1</hmf-gene-panel.version>
-        <patient-db.version>2.1</patient-db.version>
-        <apiclients.version>1.0</apiclients.version>
-        <variant-annotation.version>1.0</variant-annotation.version>
-        <strelka-post-process.version>1.2</strelka-post-process.version>
-        <hmf-extensions.version>1</hmf-extensions.version>
-
         <kotlintest.version>2.0.7</kotlintest.version>
         <junit.version>4.12</junit.version>
-        <mockito.version>1.10.19</mockito.version>
-        <!-- jmockit is used by health-checker (unfortunately...) -->
-        <jmockit.version>1.8</jmockit.version>
+        <jmockit.version>1.38</jmockit.version>
 
         <ensembl.version>89</ensembl.version>
 
@@ -145,20 +143,13 @@
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>hmf-common</artifactId>
-                <version>${hmf-common.version}</version>
-                <scope>test</scope>
-                <type>test-jar</type>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
                 <artifactId>variant-annotator</artifactId>
-                <version>${variant-annotation.version}</version>
+                <version>${hmf-variant-annotation.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
                 <artifactId>patient-db</artifactId>
-                <version>${patient-db.version}</version>
+                <version>${hmf-patient-db.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
@@ -168,12 +159,22 @@
             <dependency>
                 <groupId>com.hartwig</groupId>
                 <artifactId>api-clients</artifactId>
-                <version>${apiclients.version}</version>
+                <version>${hmf-apiclients.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
                 <artifactId>strelka-post-process</artifactId>
-                <version>${strelka-post-process.version}</version>
+                <version>${hmf-strelka-post-process.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>hmf-extensions-cli</artifactId>
+                <version>${hmf-extensions.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>hmf-extensions-samtools</artifactId>
+                <version>${hmf-extensions.version}</version>
             </dependency>
 
             <dependency>
@@ -348,28 +349,19 @@
                 <artifactId>kotlin-reflect</artifactId>
                 <version>${kotlin.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>hmf-extensions-cli</artifactId>
-                <version>${hmf-extensions.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>hmf-extensions-samtools</artifactId>
-                <version>${hmf-extensions.version}</version>
-            </dependency>
 
             <!-- KODU: Test dependencies -->
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>hmf-common</artifactId>
+                <version>${hmf-common.version}</version>
+                <scope>test</scope>
+                <type>test-jar</type>
+            </dependency>
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <version>${junit.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.mockito</groupId>
-                <artifactId>mockito-all</artifactId>
-                <version>${mockito.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
