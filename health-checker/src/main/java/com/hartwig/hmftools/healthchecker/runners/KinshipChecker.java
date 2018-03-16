@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.exception.MalformedFileException;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.io.reader.FileReader;
@@ -18,7 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class KinshipChecker extends ErrorHandlingChecker implements HealthChecker {
+public class KinshipChecker implements HealthChecker {
 
     private static final Logger LOGGER = LogManager.getLogger(KinshipChecker.class);
 
@@ -34,7 +33,7 @@ public class KinshipChecker extends ErrorHandlingChecker implements HealthChecke
 
     @NotNull
     @Override
-    public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
+    public BaseResult run(@NotNull final RunContext runContext) throws IOException {
         if (!runContext.isSomaticRun()) {
             return new NoResult(CheckType.KINSHIP);
         }
@@ -55,18 +54,6 @@ public class KinshipChecker extends ErrorHandlingChecker implements HealthChecke
         assert optCheck.isPresent();
 
         return toSingleValueResult(optCheck.get());
-    }
-
-    @NotNull
-    @Override
-    public BaseResult errorRun(@NotNull final RunContext runContext) {
-        if (runContext.isSomaticRun()) {
-            return toSingleValueResult(new HealthCheck(runContext.tumorSample(),
-                    KinshipCheck.KINSHIP_TEST.toString(),
-                    HealthCheckConstants.ERROR_VALUE));
-        } else {
-            return new NoResult(CheckType.KINSHIP);
-        }
     }
 
     @NotNull

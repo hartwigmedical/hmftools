@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -19,7 +18,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class SomaticVariantsChecker extends ErrorHandlingChecker implements HealthChecker {
+public class SomaticVariantsChecker implements HealthChecker {
 
     private static final Logger LOGGER = LogManager.getLogger(SomaticVariantsChecker.class);
 
@@ -29,8 +28,7 @@ public class SomaticVariantsChecker extends ErrorHandlingChecker implements Heal
     }
 
     @NotNull
-    @Override
-    public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
+    public BaseResult run(@NotNull final RunContext runContext) throws IOException {
         if (!runContext.isSomaticRun()) {
             return new NoResult(CheckType.SOMATIC_VARIANTS);
         }
@@ -65,37 +63,6 @@ public class SomaticVariantsChecker extends ErrorHandlingChecker implements Heal
                 String.valueOf(mnpWithDBSNPAndNotCOSMIC.size())));
 
         return toMultiValueResult(checks);
-    }
-
-    @NotNull
-    @Override
-    public BaseResult errorRun(@NotNull final RunContext runContext) {
-        if (runContext.isSomaticRun()) {
-            final List<HealthCheck> checks = Lists.newArrayList();
-
-            checks.add(new HealthCheck(runContext.tumorSample(),
-                    SomaticVariantCheck.SOMATIC_SNP_COUNT.toString(),
-                    HealthCheckConstants.ERROR_VALUE));
-            checks.add(new HealthCheck(runContext.tumorSample(),
-                    SomaticVariantCheck.SOMATIC_INDEL_COUNT.toString(),
-                    HealthCheckConstants.ERROR_VALUE));
-            checks.add(new HealthCheck(runContext.tumorSample(),
-                    SomaticVariantCheck.SOMATIC_SNP_DBSNP_COUNT.toString(),
-                    HealthCheckConstants.ERROR_VALUE));
-            checks.add(new HealthCheck(runContext.tumorSample(),
-                    SomaticVariantCheck.SOMATIC_INDEL_DBSNP_COUNT.toString(),
-                    HealthCheckConstants.ERROR_VALUE));
-            checks.add(new HealthCheck(runContext.tumorSample(),
-                    SomaticVariantCheck.SOMATIC_MNP_COUNT.toString(),
-                    HealthCheckConstants.ERROR_VALUE));
-            checks.add(new HealthCheck(runContext.tumorSample(),
-                    SomaticVariantCheck.SOMATIC_MNP_DBSNP_COUNT.toString(),
-                    HealthCheckConstants.ERROR_VALUE));
-
-            return toMultiValueResult(checks);
-        } else {
-            return new NoResult(CheckType.SOMATIC_VARIANTS);
-        }
     }
 
     @NotNull

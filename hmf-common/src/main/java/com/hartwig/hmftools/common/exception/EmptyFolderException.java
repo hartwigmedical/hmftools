@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.common.exception;
 
+import java.io.IOException;
+
 import org.jetbrains.annotations.NotNull;
 
-public class EmptyFolderException extends HartwigException {
+public class EmptyFolderException extends IOException {
 
     private static final String MESSAGE = "Folder %s is empty";
 

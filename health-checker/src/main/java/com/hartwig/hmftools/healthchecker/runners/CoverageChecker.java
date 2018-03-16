@@ -8,9 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.exception.MalformedFileException;
 import com.hartwig.hmftools.common.io.path.PathPrefixSuffixFinder;
 import com.hartwig.hmftools.common.io.reader.FileReader;
@@ -22,7 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class CoverageChecker extends ErrorHandlingChecker implements HealthChecker {
+public class CoverageChecker implements HealthChecker {
 
     private static final Logger LOGGER = LogManager.getLogger(CoverageChecker.class);
 
@@ -36,8 +34,7 @@ public class CoverageChecker extends ErrorHandlingChecker implements HealthCheck
     }
 
     @NotNull
-    @Override
-    public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
+    public BaseResult run(@NotNull final RunContext runContext) throws IOException {
         final List<HealthCheck> refChecks = extractChecksForSample(runContext.runDirectory(), runContext.refSample());
         if (runContext.isSomaticRun()) {
             final List<HealthCheck> tumorChecks = extractChecksForSample(runContext.runDirectory(), runContext.tumorSample());
@@ -46,25 +43,6 @@ public class CoverageChecker extends ErrorHandlingChecker implements HealthCheck
         } else {
             return toMultiValueResult(refChecks);
         }
-    }
-
-    @NotNull
-    @Override
-    public BaseResult errorRun(@NotNull final RunContext runContext) {
-        if (runContext.isSomaticRun()) {
-            return toPatientResult(getErrorChecksForSample(runContext.refSample()), getErrorChecksForSample(runContext.tumorSample()));
-        } else {
-            return toMultiValueResult(getErrorChecksForSample(runContext.refSample()));
-        }
-    }
-
-    @NotNull
-    private static List<HealthCheck> getErrorChecksForSample(@NotNull final String sampleId) {
-        final List<HealthCheck> checks = Lists.newArrayList();
-        for (final CoverageCheck check : CoverageCheck.values()) {
-            checks.add(new HealthCheck(sampleId, check.toString(), HealthCheckConstants.ERROR_VALUE));
-        }
-        return checks;
     }
 
     @NotNull
@@ -84,7 +62,7 @@ public class CoverageChecker extends ErrorHandlingChecker implements HealthCheck
 
     @NotNull
     private static List<HealthCheck> extractChecksForSample(@NotNull final String runDirectory, @NotNull final String sampleId)
-            throws IOException, HartwigException {
+            throws IOException {
         final String basePath = getBasePathForSample(runDirectory, sampleId);
         final Path wgsMetricsPath = PathPrefixSuffixFinder.build().findPath(basePath, sampleId, WGS_METRICS_EXTENSION);
         final List<String> lines = FileReader.build().readLines(wgsMetricsPath);
@@ -123,7 +101,7 @@ public class CoverageChecker extends ErrorHandlingChecker implements HealthCheck
         final Optional<Integer> lineNumbers =
                 IntStream.range(0, lines.size()).filter(index -> lines.get(index).contains(filter)).boxed().findFirst();
         if (!lineNumbers.isPresent()) {
-            throw new MalformedFileException("Could not find line with " + filter);
+            throw new MalformedFileException(String.format("Could not find line with %s in file %s", filter, filePath));
         }
         return lineNumbers.get();
     }

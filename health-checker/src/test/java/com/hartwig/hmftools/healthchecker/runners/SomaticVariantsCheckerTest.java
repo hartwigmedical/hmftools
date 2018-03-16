@@ -8,11 +8,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.context.TestRunContextFactory;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.NoResult;
@@ -38,10 +36,10 @@ public class SomaticVariantsCheckerTest {
     private final SomaticVariantsChecker checker = new SomaticVariantsChecker();
 
     @Test
-    public void canAnalyseTypicalSomaticVariantVCF() throws IOException, HartwigException {
+    public void canAnalyseTypicalSomaticVariantVCF() throws IOException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
 
-        final BaseResult result = checker.tryRun(runContext);
+        final BaseResult result = checker.run(runContext);
         final List<HealthCheck> checks = ((MultiValueResult) result).getChecks();
 
         Assert.assertEquals(CheckType.SOMATIC_VARIANTS, result.getCheckType());
@@ -58,52 +56,17 @@ public class SomaticVariantsCheckerTest {
     }
 
     @Test
-    public void runsCorrectlyForSingleSample() throws IOException, HartwigException {
+    public void runsCorrectlyForSingleSample() throws IOException {
         final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY, REF_SAMPLE);
-        final BaseResult result = checker.tryRun(runContext);
+        final BaseResult result = checker.run(runContext);
         assertTrue(result instanceof NoResult);
     }
 
     @Test
-    public void errorYieldsCorrectOutputForSomatic() {
-        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
-        final MultiValueResult result = (MultiValueResult) checker.errorRun(runContext);
-        assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
-    }
-
-    @Test
-    public void errorYieldsCorrectOutputForSingleSample() {
-        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY, REF_SAMPLE);
-        final BaseResult result = checker.errorRun(runContext);
-        assertTrue(result instanceof NoResult);
-    }
-
-    @Test
-    public void canAnalyseMinimalVCF() throws IOException, HartwigException {
+    public void canAnalyseMinimalVCF() throws IOException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(MINIMAL_RUN_DIRECTORY, MINIMAL_REF_SAMPLE, MINIMAL_TUMOR_SAMPLE);
-        final MultiValueResult result = (MultiValueResult) checker.tryRun(runContext);
+        final MultiValueResult result = (MultiValueResult) checker.run(runContext);
         assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
-    }
-
-    @NotNull
-    private static List<String> checkNames(@NotNull final List<HealthCheck> checks) {
-        final List<String> checkNames = Lists.newArrayList();
-        for (final HealthCheck check : checks) {
-            checkNames.add(check.getCheckName());
-        }
-        return checkNames;
-    }
-
-    @Test
-    public void errorGeneratesSameCheckNames() throws IOException, HartwigException {
-        final RunContext normalRun = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
-        final List<HealthCheck> normalChecks = ((MultiValueResult) checker.tryRun(normalRun)).getChecks();
-        final List<HealthCheck> errorChecks = ((MultiValueResult) checker.errorRun(normalRun)).getChecks();
-
-        final List<String> normalCheckNames = checkNames(normalChecks);
-        final List<String> errorCheckNames = checkNames(errorChecks);
-
-        assertEquals(normalCheckNames, errorCheckNames);
     }
 
     private static void assertCheck(@NotNull final List<HealthCheck> checks, @NotNull final String checkName, final double expectedValue) {

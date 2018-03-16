@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.common.exception;
 
+import java.io.IOException;
+
 import org.jetbrains.annotations.NotNull;
 
-public class EmptyFileException extends HartwigException {
+public class EmptyFileException extends IOException {
 
     private static final String EMPTY_FILES_ERROR = "File %s was found empty in path -> %s";
 

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -11,7 +10,6 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.context.TestRunContextFactory;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.exception.MalformedFileException;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.NoResult;
@@ -34,56 +32,42 @@ public class KinshipCheckerTest {
 
     private static final double EXPECTED_KINSHIP_VALUE = 0.4748;
 
-    private final KinshipChecker checker = new KinshipChecker();
+    private final HealthChecker checker = new KinshipChecker();
 
     @Test
-    public void extractDataFromKinshipWorksForSomatic() throws IOException, HartwigException {
+    public void extractDataFromKinshipWorksForSomatic() throws IOException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(CORRECT_RUN, REF_SAMPLE, TUMOR_SAMPLE);
-        final BaseResult result = checker.tryRun(runContext);
+        final BaseResult result = checker.run(runContext);
 
         Assert.assertEquals(CheckType.KINSHIP, result.getCheckType());
         assertCheck((SingleValueResult) result, Double.toString(EXPECTED_KINSHIP_VALUE));
     }
 
     @Test
-    public void extractDataFromKinshipWorksForSingleSample() throws IOException, HartwigException {
+    public void extractDataFromKinshipWorksForSingleSample() throws IOException {
         final RunContext runContext = TestRunContextFactory.forSingleSampleTest(CORRECT_RUN, REF_SAMPLE);
-        final BaseResult result = checker.tryRun(runContext);
+        final BaseResult result = checker.run(runContext);
 
         assertEquals(CheckType.KINSHIP, result.getCheckType());
         assertTrue(result instanceof NoResult);
     }
 
-    @Test
-    public void errorYieldsCorrectOutputForSomatic() {
-        final RunContext runContext = TestRunContextFactory.forSomaticTest(CORRECT_RUN, REF_SAMPLE, TUMOR_SAMPLE);
-        final SingleValueResult result = (SingleValueResult) checker.errorRun(runContext);
-        assertNotNull(result.getCheck());
-    }
-
-    @Test
-    public void errorYieldsCorrectOutputForSingleSample() {
-        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(CORRECT_RUN, REF_SAMPLE);
-        final BaseResult result = checker.errorRun(runContext);
-        assertTrue(result instanceof NoResult);
-    }
-
     @Test(expected = MalformedFileException.class)
-    public void cannotReadMalformedKinship() throws IOException, HartwigException {
+    public void cannotReadMalformedKinship() throws IOException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(MALFORMED_RUN, REF_SAMPLE, TUMOR_SAMPLE);
-        checker.tryRun(runContext);
+        checker.run(runContext);
     }
 
     @Test(expected = EmptyFileException.class)
-    public void cannotReadFromEmptyKinship() throws IOException, HartwigException {
+    public void cannotReadFromEmptyKinship() throws IOException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(EMPTY_RUN, REF_SAMPLE, TUMOR_SAMPLE);
-        checker.tryRun(runContext);
+        checker.run(runContext);
     }
 
     @Test(expected = IOException.class)
-    public void cannotReadFromNonExistingKinship() throws IOException, HartwigException {
+    public void cannotReadFromNonExistingKinship() throws IOException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest("Does not exist", REF_SAMPLE, TUMOR_SAMPLE);
-        checker.tryRun(runContext);
+        checker.run(runContext);
     }
 
     private static void assertCheck(@NotNull final SingleValueResult result, @NotNull final String expectedValue) {

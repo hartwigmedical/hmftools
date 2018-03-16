@@ -7,7 +7,6 @@ import java.io.IOException;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.context.TestRunContextFactory;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.exception.MalformedFileException;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.SingleValueResult;
@@ -24,32 +23,25 @@ public class AmberCheckerTest {
     private final AmberChecker checker = new AmberChecker();
 
     @Test
-    public void extractDataFromAmberWorksForSomatic() throws IOException, HartwigException {
+    public void extractDataFromAmberWorksForSomatic() throws IOException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
-        final BaseResult result = checker.tryRun(runContext);
+        final BaseResult result = checker.run(runContext);
 
         Assert.assertEquals(CheckType.AMBER, result.getCheckType());
         final HealthCheck check = ((SingleValueResult) result).getCheck();
         assertCheck(check, "0.4951");
     }
 
-    @Test
-    public void errorYieldsCorrectOutputForSomatic() {
-        final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
-        final HealthCheck check = ((SingleValueResult) checker.errorRun(runContext)).getCheck();
-        assertCheck(check, "ERROR");
-    }
-
     @Test(expected = MalformedFileException.class)
-    public void testMalformed() throws IOException, HartwigException {
+    public void testMalformed() throws IOException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, REF_SAMPLE, "malformed");
-        checker.tryRun(runContext);
+        checker.run(runContext);
     }
 
     @Test(expected = IOException.class)
-    public void testMissing() throws IOException, HartwigException {
+    public void testMissing() throws IOException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, REF_SAMPLE, "missing");
-        checker.tryRun(runContext);
+        checker.run(runContext);
     }
 
     private static void assertCheck(@NotNull final HealthCheck check, final String expectedValue) {
