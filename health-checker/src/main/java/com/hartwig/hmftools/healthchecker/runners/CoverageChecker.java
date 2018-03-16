@@ -11,7 +11,7 @@ import java.util.stream.IntStream;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.exception.LineNotFoundException;
+import com.hartwig.hmftools.common.exception.MalformedFileException;
 import com.hartwig.hmftools.common.io.path.PathPrefixSuffixFinder;
 import com.hartwig.hmftools.common.io.reader.FileReader;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
@@ -104,14 +104,14 @@ public class CoverageChecker extends ErrorHandlingChecker implements HealthCheck
 
     @NotNull
     private static HealthCheck getCheck(@NotNull final String filePath, @NotNull final List<String> lines, @NotNull final String sampleId,
-            @NotNull final CoverageCheck check) throws LineNotFoundException {
+            @NotNull final CoverageCheck check) throws MalformedFileException {
         final String value = getValueFromLine(filePath, lines, check.getFieldName(), check.getColumnIndex());
         return new HealthCheck(sampleId, check.toString(), value);
     }
 
     @NotNull
     private static String getValueFromLine(@NotNull final String filePath, @NotNull final List<String> lines, @NotNull final String filter,
-            final int fieldIndex) throws LineNotFoundException {
+            final int fieldIndex) throws MalformedFileException {
         final int index = findLineIndex(filePath, lines, filter);
         final String line = lines.get(index + 1);
         final String[] lineValues = line.split(VALUE_SEPARATOR);
@@ -119,11 +119,11 @@ public class CoverageChecker extends ErrorHandlingChecker implements HealthCheck
     }
 
     private static int findLineIndex(@NotNull final String filePath, @NotNull final List<String> lines, @NotNull final String filter)
-            throws LineNotFoundException {
+            throws MalformedFileException {
         final Optional<Integer> lineNumbers =
                 IntStream.range(0, lines.size()).filter(index -> lines.get(index).contains(filter)).boxed().findFirst();
         if (!lineNumbers.isPresent()) {
-            throw new LineNotFoundException(filePath, filter);
+            throw new MalformedFileException("Could not find line with " + filter);
         }
         return lineNumbers.get();
     }

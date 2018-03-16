@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.context.TestRunContextFactory;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.exception.LineNotFoundException;
+import com.hartwig.hmftools.common.exception.MalformedFileException;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.PatientResult;
@@ -44,14 +44,14 @@ public class CoverageCheckerTest {
     private final CoverageChecker checker = new CoverageChecker();
 
     @Test
-    public void correctInputYieldsCorrectOutputForSomatic() throws IOException, HartwigException {
+    public void correctInputYieldsCorrectOutputForSomatic() {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.run(runContext);
         assertSomaticResult(result);
     }
 
     @Test
-    public void correctInputYieldsCorrectOutputForSingleSample() throws IOException, HartwigException {
+    public void correctInputYieldsCorrectOutputForSingleSample() {
         final RunContext runContext = TestRunContextFactory.forSingleSampleTest(BASE_DIRECTORY, REF_SAMPLE);
         final List<HealthCheck> checks = ((MultiValueResult) checker.run(runContext)).getChecks();
         assertEquals(EXPECTED_NUM_CHECKS, checks.size());
@@ -90,21 +90,21 @@ public class CoverageCheckerTest {
         checker.tryRun(runContext);
     }
 
-    @Test(expected = LineNotFoundException.class)
+    @Test(expected = MalformedFileException.class)
     public void incorrectRefFileYieldsLineNotFoundException() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, INCORRECT_SAMPLE,
                 TUMOR_SAMPLE);
         checker.tryRun(runContext);
     }
 
-    @Test(expected = LineNotFoundException.class)
+    @Test(expected = MalformedFileException.class)
     public void incorrectTumorFileYieldsLineNotFoundException() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, REF_SAMPLE,
                 INCORRECT_SAMPLE);
         checker.tryRun(runContext);
     }
 
-    @Test(expected = LineNotFoundException.class)
+    @Test(expected = MalformedFileException.class)
     public void incorrectFilesYieldsLineNotFoundException() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, INCORRECT_SAMPLE,
                 INCORRECT_SAMPLE);
