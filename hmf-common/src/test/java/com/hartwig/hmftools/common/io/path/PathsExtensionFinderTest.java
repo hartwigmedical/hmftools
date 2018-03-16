@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.io.path;
 import static org.junit.Assert.assertTrue;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -19,13 +18,13 @@ public class PathsExtensionFinderTest {
     private static final String NON_EXISTING_EXTENSION = ".bla";
 
     @Test
-    public void findPaths() throws IOException {
+    public void findCorrectPaths() throws FileNotFoundException {
         final List<Path> paths = PathsExtensionFinder.build().findPaths(TEST_DIRECTORY, EXISTING_EXTENSION);
         assertTrue(!paths.isEmpty());
     }
 
     @Test(expected = FileNotFoundException.class)
-    public void findPathsFilesNotFound() throws IOException {
+    public void throwErrorWhenExtensionDoesNotExist() throws FileNotFoundException {
         PathsExtensionFinder.build().findPaths(TEST_DIRECTORY, NON_EXISTING_EXTENSION);
     }
 }

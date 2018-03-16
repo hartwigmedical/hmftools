@@ -13,26 +13,30 @@ import org.jetbrains.annotations.NotNull;
 @FunctionalInterface
 public interface PathExtensionFinder {
 
-    String FILE_S_NOT_FOUND_MSG = "File %s not found in path %s";
+    String FILE_NOT_FOUND_MSG = "File %s not found in path %s";
 
     @NotNull
-    Path findPath(@NotNull String path, @NotNull String extension) throws IOException;
+    Path findPath(@NotNull String path, @NotNull String extension) throws FileNotFoundException;
 
     @NotNull
     static PathExtensionFinder build() {
         return (path, extension) -> {
             final Optional<Path> searchedFile = getPath(path, extension);
             if (!searchedFile.isPresent()) {
-                throw new FileNotFoundException(String.format(FILE_S_NOT_FOUND_MSG, extension, path));
+                throw new FileNotFoundException(String.format(FILE_NOT_FOUND_MSG, extension, path));
             }
             return searchedFile.get();
         };
     }
 
     @NotNull
-    static Optional<Path> getPath(@NotNull final String path, @NotNull final String extension) throws IOException {
-        try (Stream<Path> paths = Files.walk(new File(path).toPath())) {
-            return paths.filter(filePath -> filePath.getFileName().toString().endsWith(extension)).findFirst();
+    static Optional<Path> getPath(@NotNull final String path, @NotNull final String extension) {
+        Stream<Path> paths;
+        try {
+            paths = Files.walk(new File(path).toPath());
+        } catch (IOException e) {
+            return Optional.empty();
         }
+        return paths.filter(filePath -> filePath.getFileName().toString().endsWith(extension)).findFirst();
     }
 }
