@@ -8,8 +8,9 @@ import java.io.IOException;
 import java.net.URL;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.exception.EmptyFolderException;
-import com.hartwig.hmftools.common.exception.FolderDoesNotExistException;
+import com.hartwig.hmftools.common.io.exception.EmptyFolderException;
+import com.hartwig.hmftools.common.io.exception.FolderDoesNotExistException;
+import com.hartwig.hmftools.common.io.exception.NotFolderException;
 
 import org.junit.Test;
 

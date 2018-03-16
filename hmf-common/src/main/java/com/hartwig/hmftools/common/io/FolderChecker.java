@@ -6,8 +6,9 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import com.hartwig.hmftools.common.exception.EmptyFolderException;
-import com.hartwig.hmftools.common.exception.FolderDoesNotExistException;
+import com.hartwig.hmftools.common.io.exception.EmptyFolderException;
+import com.hartwig.hmftools.common.io.exception.FolderDoesNotExistException;
+import com.hartwig.hmftools.common.io.exception.NotFolderException;
 
 import org.jetbrains.annotations.NotNull;
 

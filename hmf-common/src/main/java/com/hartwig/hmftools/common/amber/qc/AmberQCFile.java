@@ -7,7 +7,7 @@ import java.text.DecimalFormat;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.exception.MalformedFileException;
+import com.hartwig.hmftools.common.io.exception.MalformedFileException;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -23,7 +23,7 @@ public class AmberQCFile {
         return basePath + File.separator + sample + EXTENSION;
     }
 
-    public static AmberQC read(@NotNull final String filename) throws IOException, MalformedFileException {
+    public static AmberQC read(@NotNull final String filename) throws IOException {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 

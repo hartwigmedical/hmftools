@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.hartwig.hmftools.common.exception.EmptyFileException;
+import com.hartwig.hmftools.common.io.exception.EmptyFileException;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 public interface FileReader {
 
     @NotNull
-    List<String> readLines(@NotNull Path fileToRead) throws IOException, EmptyFileException;
+    List<String> readLines(@NotNull Path fileToRead) throws IOException;
 
     @NotNull
     static FileReader build() {

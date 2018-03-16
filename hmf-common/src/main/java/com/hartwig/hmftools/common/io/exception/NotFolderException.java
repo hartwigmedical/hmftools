@@ -1,14 +1,14 @@
-package com.hartwig.hmftools.common.io;
+package com.hartwig.hmftools.common.io.exception;
 
 import java.io.IOException;
 
 import org.jetbrains.annotations.NotNull;
 
-class NotFolderException extends IOException {
+public class NotFolderException extends IOException {
 
     private static final String MESSAGE = "Path %s is not a folder";
 
-    NotFolderException(@NotNull final String folderName) {
+    public NotFolderException(@NotNull final String folderName) {
         super(String.format(MESSAGE, folderName));
     }
 }

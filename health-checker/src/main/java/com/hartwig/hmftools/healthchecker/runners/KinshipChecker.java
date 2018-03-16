@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.common.exception.MalformedFileException;
+import com.hartwig.hmftools.common.io.exception.MalformedFileException;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.io.reader.FileReader;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;

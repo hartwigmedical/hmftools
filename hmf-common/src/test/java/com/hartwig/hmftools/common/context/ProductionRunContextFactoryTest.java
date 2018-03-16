@@ -5,7 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import java.io.File;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.exception.MalformedFileException;
+import com.hartwig.hmftools.common.io.exception.MalformedFileException;
 
 import org.junit.Test;
 

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.context;
 
-import com.hartwig.hmftools.common.exception.MalformedFileException;
+import com.hartwig.hmftools.common.io.exception.MalformedFileException;
 
 import org.jetbrains.annotations.NotNull;
 

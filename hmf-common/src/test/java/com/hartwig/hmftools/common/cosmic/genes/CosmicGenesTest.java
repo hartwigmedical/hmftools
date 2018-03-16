@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
 
 import org.junit.Test;
 
@@ -16,7 +15,7 @@ public class CosmicGenesTest {
     private static final String COSMIC_EXAMPLE_FILE = Resources.getResource("cosmic").getPath() + File.separator + "CosmicExample.csv";
 
     @Test
-    public void canReadFromCSV() throws IOException, EmptyFileException {
+    public void canReadFromCSV() throws IOException {
         final CosmicGeneModel geneModel = CosmicGenes.readFromCSV(COSMIC_EXAMPLE_FILE);
         final Map<String, CosmicGeneData> dataPerSample = geneModel.data();
         assertEquals(7, dataPerSample.size());

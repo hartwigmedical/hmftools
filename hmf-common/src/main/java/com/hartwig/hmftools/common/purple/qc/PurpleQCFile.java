@@ -9,7 +9,7 @@ import java.util.Locale;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.exception.MalformedFileException;
+import com.hartwig.hmftools.common.io.exception.MalformedFileException;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +26,7 @@ public final class PurpleQCFile {
     }
 
     @NotNull
-    public static PurpleQC read(@NotNull final String filename) throws IOException, MalformedFileException {
+    public static PurpleQC read(@NotNull final String filename) throws IOException {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
