@@ -17,5 +17,4 @@ public enum Strand {
 
         throw new IllegalArgumentException("Invalid direction " + direction);
     }
-
 }

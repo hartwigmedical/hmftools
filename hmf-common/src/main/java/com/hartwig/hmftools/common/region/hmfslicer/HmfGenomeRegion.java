@@ -24,6 +24,7 @@ public abstract class HmfGenomeRegion implements TranscriptRegion {
 
     public abstract long codingEnd();
 
+    @NotNull
     public abstract Strand strand();
 
     @NotNull
