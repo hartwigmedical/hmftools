@@ -27,6 +27,7 @@ import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
+import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
@@ -42,12 +43,20 @@ public class SomaticVariantFactory {
     private final VariantContextFilter filter;
 
     @NotNull
-    public static SomaticVariantFactory instanceWithoutFilter() {
+    public static SomaticVariantFactory unfilteredInstance() {
         return new SomaticVariantFactory(new ChromosomeFilter());
     }
 
     @NotNull
-    public static SomaticVariantFactory instanceWithFilter(@NotNull VariantContextFilter... filters) {
+    public static SomaticVariantFactory passOnlyInstance() {
+        final CompoundFilter filter = new CompoundFilter(true);
+        filter.add(new ChromosomeFilter());
+        filter.add(new PassingVariantFilter());
+        return new SomaticVariantFactory(filter);
+    }
+
+    @NotNull
+    public static SomaticVariantFactory filteredInstance(@NotNull VariantContextFilter... filters) {
         final CompoundFilter filter = new CompoundFilter(true);
         filter.add(new ChromosomeFilter());
         filter.addAll(Arrays.asList(filters));

@@ -32,7 +32,7 @@ public class StrelkaChecker implements HealthChecker {
         if (!runContext.isSomaticRun()) {
             return new NoResult(CheckType.STRELKA);
         }
-        final List<SomaticVariant> variants = SomaticVariantFactory.instanceWithoutFilter()
+        final List<SomaticVariant> variants = SomaticVariantFactory.unfilteredInstance()
                 .fromVCFFile(runContext.tumorSample(), runContext.runDirectory(), STRELKA_OUTPUT_EXTENSION);
         final List<SomaticVariant> snps = VariantFilter.filter(variants, VariantPredicates.withType(VariantType.SNP));
         final List<SomaticVariant> mnps = VariantFilter.filter(variants, VariantPredicates.withType(VariantType.MNP));

@@ -25,8 +25,6 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
-
 final class PatientReporterHelper {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterHelper.class);
@@ -76,7 +74,7 @@ final class PatientReporterHelper {
 
     @NotNull
     static List<SomaticVariant> loadPassedSomaticVariants(@NotNull final String sample, @NotNull final String path) throws IOException {
-        return SomaticVariantFactory.instanceWithFilter(new PassingVariantFilter()).fromVCFFile(sample, path, SOMATIC_SNV_EXTENSION);
+        return SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, path, SOMATIC_SNV_EXTENSION);
     }
 
     @NotNull

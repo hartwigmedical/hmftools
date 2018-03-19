@@ -294,7 +294,7 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Loading somatic variants from {}", filename);
 
             SomaticVariantFactory factory =
-                    SomaticVariantFactory.instanceWithFilter(new PassingVariantFilter(), new NTFilter(), new SGTFilter());
+                    SomaticVariantFactory.filteredInstance(new PassingVariantFilter(), new NTFilter(), new SGTFilter());
 
             return factory.fromVCFFile(configSupplier.commonConfig().tumorSample(), filename);
         } else {

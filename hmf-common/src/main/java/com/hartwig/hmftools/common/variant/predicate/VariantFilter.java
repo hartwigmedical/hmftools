@@ -14,11 +14,6 @@ public final class VariantFilter {
     }
 
     @NotNull
-    public static <T extends SomaticVariant> List<T> passOnly(@NotNull final List<T> variants) {
-        return filter(variants, new PassFilterPredicate<>());
-    }
-
-    @NotNull
     public static <T extends SomaticVariant> List<T> filter(@NotNull final List<T> variants, @NotNull final Predicate<T> predicate) {
         return variants.stream().filter(predicate).collect(Collectors.toList());
     }
