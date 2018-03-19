@@ -20,12 +20,16 @@ public class LimsTest {
     public void canReadFromLimsJson() {
         final String arrivalDate = "2017-05-01";
         final String samplingDate = "2017-04-15";
+        final String dnaConcentration = "10";
         final String tumorPercentage = "40";
         final String labSopVersions = "PREP1V2-QC1V2-SEQ1V2";
 
-        final LimsJsonData data = ImmutableLimsJsonData.builder().sampleId(SAMPLE)
+        final LimsJsonData data = ImmutableLimsJsonData.builder()
+                .sampleId(SAMPLE)
                 .samplingDateString(samplingDate)
-                .arrivalDateString(arrivalDate).tumorPercentageString(tumorPercentage)
+                .arrivalDateString(arrivalDate)
+                .dnaConcentration(dnaConcentration)
+                .tumorPercentageString(tumorPercentage)
                 .labSopVersions(labSopVersions)
                 .build();
 
@@ -35,9 +39,15 @@ public class LimsTest {
 
         assertEquals(LimsTestUtil.toDate(arrivalDate), lims.arrivalDateForSample(SAMPLE));
         assertEquals(LimsTestUtil.toDate(samplingDate), lims.samplingDateForSample(SAMPLE));
-        final Double tumorPerc = lims.tumorPercentageForSample(SAMPLE);
+
+        Double dnaAmount = lims.dnaNanogramsForSample(SAMPLE);
+        assertNotNull(dnaAmount);
+        assertEquals(500, dnaAmount, 1.0E-10);
+
+        Double tumorPerc = lims.tumorPercentageForSample(SAMPLE);
         assertNotNull(tumorPerc);
         assertEquals(0.4, tumorPerc, 1.0E-10);
+
         assertEquals(labSopVersions, lims.labProceduresForSample(SAMPLE));
 
         assertNull(lims.arrivalDateForSample("DoesNotExist"));
@@ -58,16 +68,22 @@ public class LimsTest {
 
     @Test
     public void invalidDataYieldsNull() {
-        final LimsJsonData data = ImmutableLimsJsonData.builder().sampleId(SAMPLE)
+        final LimsJsonData data = ImmutableLimsJsonData.builder()
+                .sampleId(SAMPLE)
                 .samplingDateString("IsNotADate")
-                .arrivalDateString("IsNotADate").tumorPercentageString("IsNotANumber")
+                .arrivalDateString("IsNotADate")
+                .dnaConcentration("IsNotADNAConcentration")
+                .tumorPercentageString("IsNotANumber")
                 .labSopVersions("anything")
                 .build();
 
         final Lims lims = buildTestLimsWithJsonData(SAMPLE, data);
 
+        assertEquals(1, lims.sampleCount());
+
         assertNull(lims.arrivalDateForSample(SAMPLE));
         assertNull(lims.samplingDateForSample(SAMPLE));
+        assertNull(lims.dnaNanogramsForSample(SAMPLE));
         assertNull(lims.tumorPercentageForSample(SAMPLE));
         assertEquals("N/A", lims.labProceduresForSample(SAMPLE));
     }

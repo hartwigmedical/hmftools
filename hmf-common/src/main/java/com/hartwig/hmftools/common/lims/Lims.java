@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.lims;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
 
@@ -15,9 +14,6 @@ import org.jetbrains.annotations.Nullable;
 public class Lims {
 
     private static final Logger LOGGER = LogManager.getLogger(Lims.class);
-
-    @VisibleForTesting
-    static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @NotNull
     private final Map<String, LimsJsonData> dataPerSample;
@@ -36,7 +32,7 @@ public class Lims {
 
     @Nullable
     public LocalDate arrivalDateForSample(@NotNull final String sample) {
-        final LimsJsonData sampleData = dataPerSample.get(sample);
+        LimsJsonData sampleData = dataPerSample.get(sample);
         final LocalDate arrivalDate;
         if (sampleData != null) {
             arrivalDate = getNullableDate(sampleData.arrivalDateString());
@@ -55,7 +51,7 @@ public class Lims {
 
     @Nullable
     public LocalDate samplingDateForSample(@NotNull final String sample) {
-        final LimsJsonData sampleData = dataPerSample.get(sample);
+        LimsJsonData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             final LocalDate samplingDate = getNullableDate(sampleData.samplingDateString());
             if (samplingDate == null && !sampleData.samplingDateString().equalsIgnoreCase("na")) {
@@ -67,8 +63,22 @@ public class Lims {
     }
 
     @Nullable
+    public Double dnaNanogramsForSample(@NotNull String sample) {
+        LimsJsonData sampleData = dataPerSample.get(sample);
+        if (sampleData != null) {
+            try {
+                // KODU: LIMS stores the amount of nanograms per micro liter.
+                return Double.parseDouble(sampleData.dnaConcentration()) * LimsConstants.DNA_MICRO_LITERS;
+            } catch (final NumberFormatException e) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    @Nullable
     public Double tumorPercentageForSample(@NotNull final String sample) {
-        final LimsJsonData sampleData = dataPerSample.get(sample);
+        LimsJsonData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             try {
                 return Double.parseDouble(sampleData.tumorPercentageString()) / 100D;
@@ -81,7 +91,7 @@ public class Lims {
 
     @NotNull
     public String labProceduresForSample(@NotNull final String sample) {
-        final LimsJsonData sampleData = dataPerSample.get(sample);
+        LimsJsonData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             return sampleData.labProcedures();
         }
@@ -92,7 +102,7 @@ public class Lims {
     @Nullable
     private static LocalDate getNullableDate(@NotNull final String dateString) {
         try {
-            return LocalDate.parse(dateString, DATE_FORMATTER);
+            return LocalDate.parse(dateString, LimsConstants.DATE_FORMATTER);
         } catch (DateTimeParseException e) {
             return null;
         }

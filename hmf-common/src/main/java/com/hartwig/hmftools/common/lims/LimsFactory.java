@@ -83,7 +83,7 @@ public final class LimsFactory {
                 final String arrivalDateString = parts[1].trim();
                 LocalDate arrivalDate;
                 try {
-                    arrivalDate = LocalDate.parse(arrivalDateString, Lims.DATE_FORMATTER);
+                    arrivalDate = LocalDate.parse(arrivalDateString, LimsConstants.DATE_FORMATTER);
                 } catch (DateTimeParseException exc) {
                     LOGGER.warn("Could not parse date in pre-HMF arrival date csv: " + arrivalDateString);
                     arrivalDate = null;
