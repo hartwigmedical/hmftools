@@ -14,7 +14,7 @@ import com.hartwig.hmftools.healthchecker.runners.AmberChecker;
 import com.hartwig.hmftools.healthchecker.runners.CoverageChecker;
 import com.hartwig.hmftools.healthchecker.runners.HealthChecker;
 import com.hartwig.hmftools.healthchecker.runners.PurpleChecker;
-import com.hartwig.hmftools.healthchecker.runners.SomaticVariantsChecker;
+import com.hartwig.hmftools.healthchecker.runners.StrelkaChecker;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -78,8 +78,7 @@ public final class HealthChecksApplication {
 
     private void run() throws IOException {
         final Report report = new JsonReport();
-        final Collection<HealthChecker> checkers = Lists.newArrayList(new CoverageChecker(),
-                new SomaticVariantsChecker(),
+        final Collection<HealthChecker> checkers = Lists.newArrayList(new CoverageChecker(), new StrelkaChecker(),
                 new PurpleChecker(),
                 new AmberChecker());
 

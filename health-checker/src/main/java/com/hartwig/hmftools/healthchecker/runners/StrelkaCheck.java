@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
-public enum SomaticVariantCheck {
+public enum StrelkaCheck {
     SOMATIC_SNP_COUNT,
     SOMATIC_INDEL_COUNT,
     SOMATIC_MNP_COUNT,

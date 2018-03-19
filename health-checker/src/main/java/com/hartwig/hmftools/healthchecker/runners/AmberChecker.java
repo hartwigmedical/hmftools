@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.amber.qc.AmberQC;
 import com.hartwig.hmftools.common.amber.qc.AmberQCFile;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
+import com.hartwig.hmftools.healthchecker.result.NoResult;
 import com.hartwig.hmftools.healthchecker.result.SingleValueResult;
 
 import org.apache.logging.log4j.LogManager;
@@ -19,6 +20,10 @@ public class AmberChecker implements HealthChecker {
 
     @NotNull
     public BaseResult run(@NotNull final RunContext runContext) throws IOException {
+        if (!runContext.isSomaticRun()) {
+            return new NoResult(CheckType.AMBER);
+        }
+
         final String amberDirectory = runContext.runDirectory() + File.separator + "amber";
         final AmberQC qcCheck = AmberQCFile.read(AmberQCFile.generateFilename(amberDirectory, runContext.tumorSample()));
 

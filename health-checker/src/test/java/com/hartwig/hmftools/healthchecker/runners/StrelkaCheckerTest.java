@@ -19,12 +19,12 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class SomaticVariantsCheckerTest {
+public class StrelkaCheckerTest {
 
     private static final double EPSILON = 1.0e-4;
     private static final int EXPECTED_NUM_CHECKS = 6;
 
-    private static final String BASE_DIRECTORY = Resources.getResource("somatics").getPath();
+    private static final String BASE_DIRECTORY = Resources.getResource("strelka").getPath();
     private static final String RUN_DIRECTORY = BASE_DIRECTORY + File.separator + "run";
     private static final String REF_SAMPLE = "sample1";
     private static final String TUMOR_SAMPLE = "sample2";
@@ -33,7 +33,7 @@ public class SomaticVariantsCheckerTest {
     private static final String MINIMAL_REF_SAMPLE = "sample3";
     private static final String MINIMAL_TUMOR_SAMPLE = "sample4";
 
-    private final SomaticVariantsChecker checker = new SomaticVariantsChecker();
+    private final StrelkaChecker checker = new StrelkaChecker();
 
     @Test
     public void canAnalyseTypicalSomaticVariantVCF() throws IOException {
@@ -42,17 +42,17 @@ public class SomaticVariantsCheckerTest {
         final BaseResult result = checker.run(runContext);
         final List<HealthCheck> checks = ((MultiValueResult) result).getChecks();
 
-        Assert.assertEquals(CheckType.SOMATIC_VARIANTS, result.getCheckType());
+        Assert.assertEquals(CheckType.STRELKA, result.getCheckType());
         assertEquals(EXPECTED_NUM_CHECKS, checks.size());
 
-        assertCheck(checks, SomaticVariantCheck.SOMATIC_SNP_COUNT.toString(), 990);
-        assertCheck(checks, SomaticVariantCheck.SOMATIC_SNP_DBSNP_COUNT.toString(), 820);
+        assertCheck(checks, StrelkaCheck.SOMATIC_SNP_COUNT.toString(), 990);
+        assertCheck(checks, StrelkaCheck.SOMATIC_SNP_DBSNP_COUNT.toString(), 820);
 
-        assertCheck(checks, SomaticVariantCheck.SOMATIC_INDEL_COUNT.toString(), 67);
-        assertCheck(checks, SomaticVariantCheck.SOMATIC_INDEL_DBSNP_COUNT.toString(), 42);
+        assertCheck(checks, StrelkaCheck.SOMATIC_INDEL_COUNT.toString(), 67);
+        assertCheck(checks, StrelkaCheck.SOMATIC_INDEL_DBSNP_COUNT.toString(), 42);
 
-        assertCheck(checks, SomaticVariantCheck.SOMATIC_MNP_COUNT.toString(), 1);
-        assertCheck(checks, SomaticVariantCheck.SOMATIC_MNP_DBSNP_COUNT.toString(), 0);
+        assertCheck(checks, StrelkaCheck.SOMATIC_MNP_COUNT.toString(), 1);
+        assertCheck(checks, StrelkaCheck.SOMATIC_MNP_DBSNP_COUNT.toString(), 0);
     }
 
     @Test

@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
+import com.hartwig.hmftools.healthchecker.result.NoResult;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,6 +22,9 @@ public class PurpleChecker implements HealthChecker {
 
     @NotNull
     public BaseResult run(@NotNull final RunContext runContext) throws IOException {
+        if (!runContext.isSomaticRun()) {
+            return new NoResult(CheckType.PURPLE);
+        }
         final String purpleDirectory = runContext.runDirectory() + File.separator + "purple";
         final PurpleQC qcCheck = PurpleQCFile.read(PurpleQCFile.generateFilename(purpleDirectory, runContext.tumorSample()));
         final List<HealthCheck> checks = Lists.newArrayList();
