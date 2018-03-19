@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
-import static com.hartwig.hmftools.common.variant.predicate.VariantFilter.filter;
-
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -31,13 +30,16 @@ public abstract class VariantAnalyzer {
 
     @NotNull
     public VariantAnalysis run(@NotNull final List<SomaticVariant> passedVariants) {
-        final List<SomaticVariant> missenseVariants = filter(passedVariants, isMissense());
+        final List<SomaticVariant> missenseVariants = passedVariants.stream().filter(isMissense()).collect(Collectors.toList());
         final double indelsPerMb = microsatelliteAnalyzer().analyzeVariants(passedVariants);
 
         final ConsequenceOutput consequenceOutput = determiner().run(passedVariants);
 
-        return ImmutableVariantAnalysis.of(passedVariants, missenseVariants, consequenceOutput.consequentialVariants(),
-                consequenceOutput.findings(), indelsPerMb);
+        return ImmutableVariantAnalysis.of(passedVariants,
+                missenseVariants,
+                consequenceOutput.consequentialVariants(),
+                consequenceOutput.findings(),
+                indelsPerMb);
     }
 
     @NotNull
