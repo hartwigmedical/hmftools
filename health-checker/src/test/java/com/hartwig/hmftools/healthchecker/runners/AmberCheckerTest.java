@@ -12,7 +12,6 @@ import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.SingleValueResult;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class AmberCheckerTest {
@@ -27,7 +26,7 @@ public class AmberCheckerTest {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.run(runContext);
 
-        Assert.assertEquals(CheckType.AMBER, result.getCheckType());
+        assertEquals(CheckType.AMBER, result.getCheckType());
         final HealthCheck check = ((SingleValueResult) result).getCheck();
         assertCheck(check, "0.4951");
     }

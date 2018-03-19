@@ -75,21 +75,21 @@ public class CoverageCheckerTest {
     }
 
     @Test(expected = MalformedFileException.class)
-    public void incorrectRefFileYieldsLineNotFoundException() throws IOException {
+    public void incorrectRefFileYieldsMalformedFileException() throws IOException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, INCORRECT_SAMPLE,
                 TUMOR_SAMPLE);
         checker.run(runContext);
     }
 
     @Test(expected = MalformedFileException.class)
-    public void incorrectTumorFileYieldsLineNotFoundException() throws IOException {
+    public void incorrectTumorFileYieldsMalformedFileException() throws IOException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, REF_SAMPLE,
                 INCORRECT_SAMPLE);
         checker.run(runContext);
     }
 
     @Test(expected = MalformedFileException.class)
-    public void incorrectFilesYieldsLineNotFoundException() throws IOException {
+    public void incorrectFilesYieldsMalformedFileException() throws IOException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, INCORRECT_SAMPLE,
                 INCORRECT_SAMPLE);
         checker.run(runContext);
