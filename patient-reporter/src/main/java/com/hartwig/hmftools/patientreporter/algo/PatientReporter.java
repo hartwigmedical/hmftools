@@ -94,7 +94,6 @@ public abstract class PatientReporter {
                 .map(GeneDisruptionData::from)
                 .collect(Collectors.toList());
 
-        final int totalVariantCount = variantAnalysis.allVariants().size();
         final int passedVariantCount = variantAnalysis.passedVariants().size();
         final int mutationalLoad = variantAnalysis.mutationalLoad();
         final int consequentialVariantCount = variantAnalysis.consequentialVariants().size();
@@ -108,8 +107,7 @@ public abstract class PatientReporter {
                 reportableFusions, reporterData().panelGeneModel(), doidMapping.doidsForTumorType(cancerType));
 
         LOGGER.info(" Printing analysis results:");
-        LOGGER.info("  Number of variants: " + Integer.toString(totalVariantCount));
-        LOGGER.info("  Number of variants after applying pass-only filter : " + Integer.toString(passedVariantCount));
+        LOGGER.info("  Number of passed variants : " + Integer.toString(passedVariantCount));
         LOGGER.info("  Number of missense variants (mutational load) : " + Integer.toString(mutationalLoad));
         LOGGER.info("  Number of consequential variants to report : " + Integer.toString(consequentialVariantCount));
         LOGGER.info(" Determined copy number stats for " + Integer.toString(purpleAnalysis.genePanelSize()) + " genes which led to "
@@ -124,12 +122,14 @@ public abstract class PatientReporter {
         final Double tumorPercentage = lims.tumorPercentageForSample(tumorSample);
         final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrichSomaticVariants(variantAnalysis.findings());
         final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(tumorSample);
+
         final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample, cancerType,
                 tumorPercentage,
                 lims.arrivalDateForSample(tumorSample),
                 lims.arrivalDateForSample(run.refSample()),
                 lims.labProceduresForSample(tumorSample),
                 sampleRecipient);
+
         return ImmutableSequencedPatientReport.of(sampleReport,
                 purpleEnrichedVariants,
                 mutationalLoad,
@@ -147,9 +147,9 @@ public abstract class PatientReporter {
     @NotNull
     private GenomeAnalysis analyseGenomeData(@NotNull final String sample, @NotNull final String runDirectory) throws IOException {
         LOGGER.info(" Loading somatic snv and indels...");
-        final List<SomaticVariant> variants = PatientReporterHelper.loadSomaticSNVFile(sample, runDirectory);
-        LOGGER.info("  " + variants.size() + " somatic snv and indels loaded for sample " + sample);
-        LOGGER.info(" Analyzing somatic snv and indels....");
+        final List<SomaticVariant> variants = PatientReporterHelper.loadPassedSomaticVariants(sample, runDirectory);
+        LOGGER.info("  " + variants.size() + " somatic passed snps, mnps and indels loaded for sample " + sample);
+        LOGGER.info(" Analyzing somatic snp/mnp and indels....");
         final VariantAnalysis variantAnalysis = variantAnalyzer().run(variants);
 
         LOGGER.info(" Loading purity numbers...");

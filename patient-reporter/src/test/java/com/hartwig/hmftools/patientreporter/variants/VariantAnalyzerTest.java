@@ -71,7 +71,6 @@ public class VariantAnalyzerTest {
 
         final VariantAnalysis analysis = analyzer.run(variants);
 
-        assertEquals(4, analysis.allVariants().size());
         assertEquals(4, analysis.passedVariants().size());
         assertEquals(3, analysis.mutationalLoad());
         assertEquals(1, analysis.findings().size());

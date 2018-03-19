@@ -112,7 +112,6 @@ public class SomaticVariantFactory {
     }
 
     private void attachAnnotations(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
-
         final List<VariantAnnotation> allAnnotations = VariantAnnotationFactory.fromContext(context);
         builder.annotations(allAnnotations);
 
