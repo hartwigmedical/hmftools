@@ -22,7 +22,7 @@ public class SomaticVariantsChecker implements HealthChecker {
 
     private static final Logger LOGGER = LogManager.getLogger(SomaticVariantsChecker.class);
 
-    private static final String SOMATICS_EXTENSION = "_post_processed.vcf";
+    private static final String SOMATICS_EXTENSION = "_post_processed.vcf.gz";
 
     public SomaticVariantsChecker() {
     }
