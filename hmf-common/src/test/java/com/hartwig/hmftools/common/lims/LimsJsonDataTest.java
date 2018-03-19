@@ -36,8 +36,12 @@ public class LimsJsonDataTest {
 
     @NotNull
     private static LimsJsonData buildLimsEntry(@NotNull final String labSopVersions) {
-        return ImmutableLimsJsonData.builder().sampleId("").dnaConcentration("")
-                .arrivalDateString("").samplingDateString("").tumorPercentageString("50")
+        return ImmutableLimsJsonData.builder()
+                .sampleId("")
+                .dnaConcentration("")
+                .arrivalDateString("")
+                .samplingDateString("")
+                .tumorPercentageString("50")
                 .labSopVersions(labSopVersions)
                 .build();
     }

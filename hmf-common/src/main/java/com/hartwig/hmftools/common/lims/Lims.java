@@ -63,12 +63,12 @@ public class Lims {
     }
 
     @Nullable
-    public Double dnaNanogramsForSample(@NotNull String sample) {
+    public Integer dnaNanogramsForSample(@NotNull String sample) {
         LimsJsonData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             try {
                 // KODU: LIMS stores the amount of nanograms per micro liter.
-                return Double.parseDouble(sampleData.dnaConcentration()) * LimsConstants.DNA_MICRO_LITERS;
+                return (int) Math.round(Double.parseDouble(sampleData.dnaConcentration()) * LimsConstants.DNA_MICRO_LITERS);
             } catch (final NumberFormatException e) {
                 return null;
             }

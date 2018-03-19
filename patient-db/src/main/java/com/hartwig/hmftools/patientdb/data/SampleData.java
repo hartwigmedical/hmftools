@@ -21,7 +21,7 @@ public abstract class SampleData {
     public abstract LocalDate samplingDate();
 
     @Nullable
-    public abstract Double dnaNanograms();
+    public abstract Integer dnaNanograms();
 
     @Nullable
     public abstract Double tumorPercentage();

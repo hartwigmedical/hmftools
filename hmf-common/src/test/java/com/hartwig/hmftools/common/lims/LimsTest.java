@@ -40,9 +40,9 @@ public class LimsTest {
         assertEquals(LimsTestUtil.toDate(arrivalDate), lims.arrivalDateForSample(SAMPLE));
         assertEquals(LimsTestUtil.toDate(samplingDate), lims.samplingDateForSample(SAMPLE));
 
-        Double dnaAmount = lims.dnaNanogramsForSample(SAMPLE);
+        Integer dnaAmount = lims.dnaNanogramsForSample(SAMPLE);
         assertNotNull(dnaAmount);
-        assertEquals(500, dnaAmount, 1.0E-10);
+        assertEquals(500L, (int) dnaAmount);
 
         Double tumorPerc = lims.tumorPercentageForSample(SAMPLE);
         assertNotNull(tumorPerc);
