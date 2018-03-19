@@ -76,7 +76,7 @@ final class PatientReporterHelper {
 
     @NotNull
     static List<SomaticVariant> loadPassedSomaticVariants(@NotNull final String sample, @NotNull final String path) throws IOException {
-        return new SomaticVariantFactory(new PassingVariantFilter()).fromVCFFile(sample, path, SOMATIC_SNV_EXTENSION);
+        return SomaticVariantFactory.instanceWithFilter(new PassingVariantFilter()).fromVCFFile(sample, path, SOMATIC_SNV_EXTENSION);
     }
 
     @NotNull

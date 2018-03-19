@@ -39,16 +39,22 @@ public class SomaticVariantFactory {
     private static final String MAPPABILITY_TAG = "MAPPABILITY";
 
     @NotNull
-    private final CompoundFilter filter;
+    private final VariantContextFilter filter;
 
-    public SomaticVariantFactory() {
-        this(new VariantContextFilter[0]);
+    @NotNull
+    public static SomaticVariantFactory instanceWithoutFilter() {
+        return new SomaticVariantFactory(new ChromosomeFilter());
     }
 
-    public SomaticVariantFactory(VariantContextFilter... filters) {
+    @NotNull
+    public static SomaticVariantFactory instanceWithFilter(@NotNull VariantContextFilter... filters) {
         final CompoundFilter filter = new CompoundFilter(true);
         filter.add(new ChromosomeFilter());
         filter.addAll(Arrays.asList(filters));
+        return new SomaticVariantFactory(filter);
+    }
+
+    private SomaticVariantFactory(@NotNull final VariantContextFilter filter) {
         this.filter = filter;
     }
 

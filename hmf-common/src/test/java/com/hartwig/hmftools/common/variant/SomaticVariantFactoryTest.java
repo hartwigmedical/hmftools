@@ -35,7 +35,7 @@ public class SomaticVariantFactoryTest {
 
     @Before
     public void setup() {
-        victim = new SomaticVariantFactory();
+        victim = SomaticVariantFactory.instanceWithoutFilter();
         codec = new VCFCodec();
         VCFHeader header = new VCFHeader(Sets.newHashSet(), Sets.newHashSet(SAMPLE));
         codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2);
@@ -43,14 +43,15 @@ public class SomaticVariantFactoryTest {
 
     @Test
     public void canLoadSomaticVCFFromBasePathAndFilter() throws IOException {
-        final List<SomaticVariant> variants =  new SomaticVariantFactory().fromVCFFile("sample", VARIANT_PATH, SOMATIC_EXTENSION);
+        final List<SomaticVariant> variants =
+                SomaticVariantFactory.instanceWithoutFilter().fromVCFFile("sample", VARIANT_PATH, SOMATIC_EXTENSION);
         assertTestVariants(variants);
     }
 
     @Test
     public void canLoadSomaticVCFFromFile() throws IOException {
         final String file = VARIANT_PATH + File.separator + SOMATIC_EXTENSION;
-        final List<SomaticVariant> variants =  new SomaticVariantFactory().fromVCFFile("sample", file);
+        final List<SomaticVariant> variants = SomaticVariantFactory.instanceWithoutFilter().fromVCFFile("sample", file);
         assertTestVariants(variants);
     }
 
