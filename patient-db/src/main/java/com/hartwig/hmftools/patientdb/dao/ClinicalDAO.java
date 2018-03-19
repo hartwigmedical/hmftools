@@ -141,11 +141,15 @@ class ClinicalDAO {
                     PRETREATMENTDRUG.PATIENTID,
                     PRETREATMENTDRUG.STARTDATE,
                     PRETREATMENTDRUG.ENDDATE,
-                    PRETREATMENTDRUG.NAME, PRETREATMENTDRUG.TYPE, PRETREATMENTDRUG.BESTRESPONSE)
+                    PRETREATMENTDRUG.NAME,
+                    PRETREATMENTDRUG.TYPE,
+                    PRETREATMENTDRUG.BESTRESPONSE)
                     .values(patientId,
                             Utils.toSQLDate(drug.startDate()),
                             Utils.toSQLDate(drug.endDate()),
-                            curatedTreatment.name(), curatedTreatment.type(), drug.bestResponse())
+                            curatedTreatment.name(),
+                            curatedTreatment.type(),
+                            drug.bestResponse())
                     .returning(PRETREATMENTDRUG.ID)
                     .fetchOne()
                     .getValue(PRETREATMENTDRUG.ID);
@@ -154,11 +158,16 @@ class ClinicalDAO {
     }
 
     private void writeSampleData(final int patientId, @NotNull final SampleData sample) {
-        context.insertInto(SAMPLE, SAMPLE.SAMPLEID, SAMPLE.PATIENTID, SAMPLE.ARRIVALDATE, SAMPLE.SAMPLINGDATE, SAMPLE.TUMORPERCENTAGE)
+        context.insertInto(SAMPLE,
+                SAMPLE.SAMPLEID,
+                SAMPLE.PATIENTID,
+                SAMPLE.ARRIVALDATE,
+                SAMPLE.SAMPLINGDATE,
+                SAMPLE.DNANANOGRAMS,
+                SAMPLE.TUMORPERCENTAGE)
                 .values(sample.sampleId(),
                         patientId,
-                        Utils.toSQLDate(sample.arrivalDate()),
-                        Utils.toSQLDate(sample.samplingDate()),
+                        Utils.toSQLDate(sample.arrivalDate()), Utils.toSQLDate(sample.samplingDate()), sample.dnaNanograms(),
                         sample.tumorPercentage())
                 .execute();
     }
@@ -187,16 +196,12 @@ class ClinicalDAO {
 
     private void writeTreatmentData(final int patientId, @NotNull final BiopsyTreatmentData treatment) {
         context.insertInto(TREATMENT,
-                TREATMENT.ID,
-                TREATMENT.BIOPSYID,
-                TREATMENT.PATIENTID, TREATMENT.TREATMENTGIVEN, TREATMENT.RADIOTHERAPYGIVEN,
+                TREATMENT.ID, TREATMENT.BIOPSYID, TREATMENT.PATIENTID, TREATMENT.TREATMENTGIVEN, TREATMENT.RADIOTHERAPYGIVEN,
                 TREATMENT.STARTDATE,
                 TREATMENT.ENDDATE,
                 TREATMENT.NAME,
                 TREATMENT.TYPE)
-                .values(treatment.id(),
-                        treatment.biopsyId(),
-                        patientId, treatment.treatmentGiven(), treatment.radiotherapyGiven(),
+                .values(treatment.id(), treatment.biopsyId(), patientId, treatment.treatmentGiven(), treatment.radiotherapyGiven(),
                         Utils.toSQLDate(treatment.startDate()),
                         Utils.toSQLDate(treatment.endDate()),
                         treatment.treatmentName(),
