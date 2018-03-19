@@ -13,7 +13,6 @@ import com.hartwig.hmftools.healthchecker.report.Report;
 import com.hartwig.hmftools.healthchecker.runners.AmberChecker;
 import com.hartwig.hmftools.healthchecker.runners.CoverageChecker;
 import com.hartwig.hmftools.healthchecker.runners.HealthChecker;
-import com.hartwig.hmftools.healthchecker.runners.KinshipChecker;
 import com.hartwig.hmftools.healthchecker.runners.PurpleChecker;
 import com.hartwig.hmftools.healthchecker.runners.SomaticVariantsChecker;
 
@@ -81,7 +80,6 @@ public final class HealthChecksApplication {
         final Report report = new JsonReport();
         final Collection<HealthChecker> checkers = Lists.newArrayList(new CoverageChecker(),
                 new SomaticVariantsChecker(),
-                new KinshipChecker(),
                 new PurpleChecker(),
                 new AmberChecker());
 

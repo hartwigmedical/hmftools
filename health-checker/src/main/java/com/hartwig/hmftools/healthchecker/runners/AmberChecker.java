@@ -28,7 +28,7 @@ public class AmberChecker implements HealthChecker {
     }
 
     @NotNull
-    private BaseResult toSingleValueResult(@NotNull final HealthCheck check) {
+    private static BaseResult toSingleValueResult(@NotNull final HealthCheck check) {
         check.log(LOGGER);
         return new SingleValueResult(CheckType.AMBER, check);
     }
