@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 import org.junit.Test;
 
 public class BEDFileLoaderTest {
+
     private static final String BED_FILE_BASE_PATH = Resources.getResource("bed").getPath();
 
     private static final String VALID_BED = "valid.bed";
@@ -23,5 +24,4 @@ public class BEDFileLoaderTest {
         assertEquals(1, regions.get("1").first().start());
         assertEquals(1, regions.get("1").first().end());
     }
-
 }

@@ -23,6 +23,7 @@ public enum BEDFileLoader {
     ;
     private static final Logger LOGGER = LogManager.getLogger(BEDFileLoader.class);
 
+    @NotNull
     public static SortedSetMultimap<String, GenomeRegion> fromBedFile(@NotNull String bedFile) throws IOException {
         final SortedSetMultimap<String, GenomeRegion> regionMap = TreeMultimap.create();
 

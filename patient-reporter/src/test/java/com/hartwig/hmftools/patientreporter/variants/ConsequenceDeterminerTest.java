@@ -10,6 +10,9 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.SortedSetMultimap;
+import com.google.common.collect.TreeMultimap;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfGenomeRegion;
@@ -52,8 +55,11 @@ public class ConsequenceDeterminerTest {
 
     @Test
     public void worksAsExpected() {
+        final SortedSetMultimap<String, GenomeRegion> regionMap = TreeMultimap.create();
+        GenomeRegion testRegion = GenomeRegionFactory.create(CHROMOSOME, POSITION - 10, POSITION + 10);
+        regionMap.put(testRegion.chromosome(), testRegion);
 
-        final Slicer slicer = SlicerFactory.fromSingleGenomeRegion(GenomeRegionFactory.create(CHROMOSOME, POSITION - 10, POSITION + 10));
+        final Slicer slicer = SlicerFactory.fromRegions(regionMap);
         final Map<String, HmfGenomeRegion> transcriptMap = Maps.newHashMap();
         transcriptMap.put(TRANSCRIPT, hmfRegion());
 
