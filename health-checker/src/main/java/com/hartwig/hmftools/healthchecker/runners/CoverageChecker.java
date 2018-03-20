@@ -33,6 +33,9 @@ public class CoverageChecker implements HealthChecker {
                         String.valueOf(metrics.ref20xCoveragePercentage())));
 
         if (runContext.isSomaticRun()) {
+            assert metrics.tumor30xCoveragePercentage() != null;
+            assert metrics.tumor60xCoveragePercentage() != null;
+
             final List<HealthCheck> tumorChecks = Lists.newArrayList(new HealthCheck(runContext.tumorSample(),
                             CoverageCheck.COVERAGE_30X.toString(),
                             String.valueOf(metrics.tumor30xCoveragePercentage())),
