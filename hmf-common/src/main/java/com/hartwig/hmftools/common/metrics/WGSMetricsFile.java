@@ -32,8 +32,8 @@ public final class WGSMetricsFile {
     }
 
     @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) throws FileNotFoundException {
-        String path = basePath + File.separator + METRICS_BASE_DIRECTORY + File.separator + sample + METRICS_SUB_DIRECTORY_SUFFIX;
+    public static String generateFilename(@NotNull final String runDir, @NotNull final String sample) throws FileNotFoundException {
+        String path = runDir + File.separator + METRICS_BASE_DIRECTORY + File.separator + sample + METRICS_SUB_DIRECTORY_SUFFIX;
         return PathPrefixSuffixFinder.build().findPath(path, sample, METRICS_EXTENSION).toString();
     }
 

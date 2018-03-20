@@ -140,7 +140,7 @@ public class LoadStructuralVariants {
             }
 
             LOGGER.info("persisting annotations to database");
-            final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(dbAccess.getContext());
+            final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(dbAccess.context());
             annotationDAO.write(analysis);
         } else {
             // CHSH: only run the SV clustering routines, taking source data from the SV table(s)
@@ -217,7 +217,7 @@ public class LoadStructuralVariants {
 
     @NotNull
     private static List<String> getStructuralVariantSamplesList(@NotNull DatabaseAccess dbAccess) {
-        return dbAccess.getStructuralVariantSampleList("");
+        return dbAccess.structuralVariantSampleList("");
     }
 
     @NotNull

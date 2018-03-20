@@ -213,6 +213,18 @@ CREATE TABLE drupEcrfDatamodel
     relevant varchar(5)
 );
 
+DROP TABLE if EXISTS metrics;
+CREATE TABLE metrics
+(   sampleId varchar(255) NOT NULL,
+    refMeanCoverage DOUBLE PRECISION NOT NULL,
+    refCoverage10xPercentage DOUBLE PRECISION NOT NULL,
+    refCoverage20xPercentage DOUBLE PRECISION NOT NULL,
+    tumorMeanCoverage DOUBLE PRECISION NOT NULL,
+    tumorCoverage30xPercentage DOUBLE PRECISION NOT NULL,
+    tumorCoverage60xPercentage DOUBLE PRECISION NOT NULL,
+    PRIMARY KEY (sampleId)
+);
+
 DROP TABLE IF EXISTS somaticVariant;
 CREATE TABLE somaticVariant
 (   id int NOT NULL AUTO_INCREMENT,

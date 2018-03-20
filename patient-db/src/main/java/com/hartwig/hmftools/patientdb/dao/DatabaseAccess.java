@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.gene.CanonicalTranscript;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.metrics.WGSMetrics;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
@@ -55,6 +56,8 @@ public class DatabaseAccess {
     private final ValidationFindingDAO validationFindingsDAO;
     @NotNull
     private final CanonicalTranscriptDAO canonicalTranscriptDAO;
+    @NotNull
+    private final MetricsDAO metricsDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // MIVO: disable annoying jooq self-ad message
@@ -73,10 +76,11 @@ public class DatabaseAccess {
         clinicalDAO = new ClinicalDAO(context);
         validationFindingsDAO = new ValidationFindingDAO(context);
         canonicalTranscriptDAO = new CanonicalTranscriptDAO(context);
+        metricsDAO = new MetricsDAO(context);
     }
 
     @NotNull
-    public DSLContext getContext() {
+    public DSLContext context() {
         return context;
     }
 
@@ -128,7 +132,7 @@ public class DatabaseAccess {
     }
 
     @NotNull
-    public List<String> getStructuralVariantSampleList(@NotNull final String sampleSearch) {
+    public List<String> structuralVariantSampleList(@NotNull final String sampleSearch) {
         return structuralVariantDAO.getSamplesList(sampleSearch);
     }
 
@@ -152,6 +156,10 @@ public class DatabaseAccess {
     @NotNull
     public List<PurpleCopyNumber> readCopynumbers(@NotNull final String sample) {
         return copyNumberDAO.read(sample);
+    }
+
+    public void writeMetrics(@NotNull String sample, @NotNull WGSMetrics metrics) {
+        metricsDAO.writeMetrics(sample, metrics);
     }
 
     public void clearCpctEcrf() {
