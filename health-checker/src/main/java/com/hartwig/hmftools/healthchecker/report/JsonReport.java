@@ -32,7 +32,7 @@ public class JsonReport implements Report {
 
     @Override
     public void addResult(@NotNull final BaseResult result) {
-        healthChecks.putIfAbsent(result.getCheckType(), result);
+        healthChecks.putIfAbsent(result.checkType(), result);
     }
 
     @NotNull

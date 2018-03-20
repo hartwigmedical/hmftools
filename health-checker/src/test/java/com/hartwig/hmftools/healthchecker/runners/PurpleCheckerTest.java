@@ -29,8 +29,8 @@ public class PurpleCheckerTest {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.run(runContext);
 
-        Assert.assertEquals(CheckType.PURPLE, result.getCheckType());
-        final List<HealthCheck> checks = ((MultiValueResult) result).getChecks();
+        Assert.assertEquals(CheckType.PURPLE, result.checkType());
+        final List<HealthCheck> checks = ((MultiValueResult) result).checks();
 
         assertCheck(checks, PurpleCheck.AMBER_GENDER.toString(), "MALE");
         assertCheck(checks, PurpleCheck.COBALT_GENDER.toString(), "FEMALE");

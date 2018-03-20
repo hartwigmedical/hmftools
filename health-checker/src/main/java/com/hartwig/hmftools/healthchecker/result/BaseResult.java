@@ -7,5 +7,5 @@ import org.jetbrains.annotations.NotNull;
 public interface BaseResult {
 
     @NotNull
-    CheckType getCheckType();
+    CheckType checkType();
 }

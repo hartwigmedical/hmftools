@@ -26,8 +26,8 @@ public class AmberCheckerTest {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.run(runContext);
 
-        assertEquals(CheckType.AMBER, result.getCheckType());
-        final HealthCheck check = ((SingleValueResult) result).getCheck();
+        assertEquals(CheckType.AMBER, result.checkType());
+        final HealthCheck check = ((SingleValueResult) result).check();
         assertCheck(check, "0.4951");
     }
 

@@ -40,9 +40,9 @@ public class StrelkaCheckerTest {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
 
         final BaseResult result = checker.run(runContext);
-        final List<HealthCheck> checks = ((MultiValueResult) result).getChecks();
+        final List<HealthCheck> checks = ((MultiValueResult) result).checks();
 
-        Assert.assertEquals(CheckType.STRELKA, result.getCheckType());
+        Assert.assertEquals(CheckType.STRELKA, result.checkType());
         assertEquals(EXPECTED_NUM_CHECKS, checks.size());
 
         assertCheck(checks, StrelkaCheck.SOMATIC_SNP_COUNT.toString(), 990);
@@ -66,7 +66,7 @@ public class StrelkaCheckerTest {
     public void canAnalyseMinimalVCF() throws IOException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(MINIMAL_RUN_DIRECTORY, MINIMAL_REF_SAMPLE, MINIMAL_TUMOR_SAMPLE);
         final MultiValueResult result = (MultiValueResult) checker.run(runContext);
-        assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
+        assertEquals(EXPECTED_NUM_CHECKS, result.checks().size());
     }
 
     private static void assertCheck(@NotNull final List<HealthCheck> checks, @NotNull final String checkName, final double expectedValue) {

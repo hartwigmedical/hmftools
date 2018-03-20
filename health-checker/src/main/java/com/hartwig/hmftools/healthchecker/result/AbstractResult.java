@@ -15,7 +15,7 @@ abstract class AbstractResult implements BaseResult {
 
     @Override
     @NotNull
-    public CheckType getCheckType() {
+    public CheckType checkType() {
         return checkType;
     }
 }

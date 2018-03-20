@@ -22,12 +22,12 @@ public class PatientResult extends AbstractResult {
     }
 
     @NotNull
-    public List<HealthCheck> getRefSampleChecks() {
+    public List<HealthCheck> refSampleChecks() {
         return refSampleChecks;
     }
 
     @NotNull
-    public List<HealthCheck> getTumorSampleChecks() {
+    public List<HealthCheck> tumorSampleChecks() {
         return tumorSampleChecks;
     }
 }

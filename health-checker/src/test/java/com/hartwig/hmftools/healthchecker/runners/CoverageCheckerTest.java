@@ -37,12 +37,12 @@ public class CoverageCheckerTest {
 
         PatientResult result = (PatientResult) CoverageChecker.toCheckResult(metrics, REF_SAMPLE, TUMOR_SAMPLE);
 
-        List<HealthCheck> refResult = result.getRefSampleChecks();
+        List<HealthCheck> refResult = result.refSampleChecks();
         assertEquals(REF_NUMBER_OF_CHECKS, refResult.size());
         assertCheck(refResult, REF_SAMPLE, CoverageCheck.COVERAGE_10X, REF_COVERAGE_10X);
         assertCheck(refResult, REF_SAMPLE, CoverageCheck.COVERAGE_20X, REF_COVERAGE_20X);
 
-        List<HealthCheck> tumorResult = result.getTumorSampleChecks();
+        List<HealthCheck> tumorResult = result.tumorSampleChecks();
         assertEquals(TUMOR_NUMBER_OF_CHECKS, tumorResult.size());
         assertCheck(tumorResult, TUMOR_SAMPLE, CoverageCheck.COVERAGE_30X, TUMOR_COVERAGE_30X);
         assertCheck(tumorResult, TUMOR_SAMPLE, CoverageCheck.COVERAGE_60X, TUMOR_COVERAGE_60X);
@@ -58,7 +58,7 @@ public class CoverageCheckerTest {
 
         MultiValueResult result = (MultiValueResult) CoverageChecker.toCheckResult(metrics, REF_SAMPLE, null);
 
-        List<HealthCheck> refResult = result.getChecks();
+        List<HealthCheck> refResult = result.checks();
         assertEquals(REF_NUMBER_OF_CHECKS, refResult.size());
         assertCheck(refResult, REF_SAMPLE, CoverageCheck.COVERAGE_10X, REF_COVERAGE_10X);
         assertCheck(refResult, REF_SAMPLE, CoverageCheck.COVERAGE_20X, REF_COVERAGE_20X);
