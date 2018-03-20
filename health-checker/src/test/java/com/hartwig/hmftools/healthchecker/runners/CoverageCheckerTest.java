@@ -2,15 +2,11 @@ package com.hartwig.hmftools.healthchecker.runners;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.common.context.TestRunContextFactory;
-import com.hartwig.hmftools.common.io.exception.EmptyFileException;
-import com.hartwig.hmftools.common.io.exception.MalformedFileException;
+import com.hartwig.hmftools.common.metrics.ImmutableWGSMetrics;
+import com.hartwig.hmftools.common.metrics.WGSMetrics;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.PatientResult;
 
@@ -19,88 +15,58 @@ import org.junit.Test;
 
 public class CoverageCheckerTest {
 
-    private static final String BASE_DIRECTORY = Resources.getResource("coverage").getPath();
-
     private static final String REF_SAMPLE = "sample1";
     private static final int REF_NUMBER_OF_CHECKS = 2;
-    private static final double REF_COVERAGE_10X = 0.000037;
-    private static final double REF_COVERAGE_20X = 0.00002;
+    private static final double REF_COVERAGE_10X = 0.1;
+    private static final double REF_COVERAGE_20X = 0.2;
 
     private static final String TUMOR_SAMPLE = "sample2";
     private static final int TUMOR_NUMBER_OF_CHECKS = 2;
-    private static final double TUMOR_COVERAGE_30X = 0.000005;
-    private static final double TUMOR_COVERAGE_60X = 0;
-
-    private static final String EMPTY_SAMPLE = "sample3";
-    private static final String INCORRECT_SAMPLE = "sample4";
-    private static final String NON_EXISTING_SAMPLE = "sample5";
-
-    private final CoverageChecker checker = new CoverageChecker();
+    private static final double TUMOR_COVERAGE_30X = 0.3;
+    private static final double TUMOR_COVERAGE_60X = 0.4;
 
     @Test
-    public void correctInputYieldsCorrectOutputForSomatic() throws IOException {
-        final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
-        final PatientResult result = (PatientResult) checker.run(runContext);
+    public void worksForSomaticRun() {
+        WGSMetrics metrics = ImmutableWGSMetrics.builder()
+                .ref10xCoveragePercentage(REF_COVERAGE_10X)
+                .ref20xCoveragePercentage(REF_COVERAGE_20X)
+                .refMeanCoverage(0D)
+                .tumor30xCoveragePercentage(TUMOR_COVERAGE_30X)
+                .tumor60xCoveragePercentage(TUMOR_COVERAGE_60X)
+                .build();
 
-        final List<HealthCheck> refChecks = result.getRefSampleChecks();
-        assertEquals(REF_NUMBER_OF_CHECKS, refChecks.size());
-        assertCheck(refChecks, REF_SAMPLE, CoverageCheck.COVERAGE_10X, REF_COVERAGE_10X);
-        assertCheck(refChecks, REF_SAMPLE, CoverageCheck.COVERAGE_20X, REF_COVERAGE_20X);
+        PatientResult result = (PatientResult) CoverageChecker.toCheckResult(metrics, REF_SAMPLE, TUMOR_SAMPLE);
 
-        final List<HealthCheck> tumorChecks = result.getTumorSampleChecks();
-        assertEquals(TUMOR_NUMBER_OF_CHECKS, tumorChecks.size());
-        assertCheck(tumorChecks, TUMOR_SAMPLE, CoverageCheck.COVERAGE_30X, TUMOR_COVERAGE_30X);
-        assertCheck(tumorChecks, TUMOR_SAMPLE, CoverageCheck.COVERAGE_60X, TUMOR_COVERAGE_60X);
+        List<HealthCheck> refResult = result.getRefSampleChecks();
+        assertEquals(REF_NUMBER_OF_CHECKS, refResult.size());
+        assertCheck(refResult, REF_SAMPLE, CoverageCheck.COVERAGE_10X, REF_COVERAGE_10X);
+        assertCheck(refResult, REF_SAMPLE, CoverageCheck.COVERAGE_20X, REF_COVERAGE_20X);
+
+        List<HealthCheck> tumorResult = result.getTumorSampleChecks();
+        assertEquals(TUMOR_NUMBER_OF_CHECKS, tumorResult.size());
+        assertCheck(tumorResult, TUMOR_SAMPLE, CoverageCheck.COVERAGE_30X, TUMOR_COVERAGE_30X);
+        assertCheck(tumorResult, TUMOR_SAMPLE, CoverageCheck.COVERAGE_60X, TUMOR_COVERAGE_60X);
     }
 
     @Test
-    public void correctInputYieldsCorrectOutputForSingleSample() throws IOException {
-        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(BASE_DIRECTORY, REF_SAMPLE);
-        final List<HealthCheck> checks = ((MultiValueResult) checker.run(runContext)).getChecks();
+    public void worksForSingleSampleRun() {
+        WGSMetrics metrics = ImmutableWGSMetrics.builder()
+                .ref10xCoveragePercentage(REF_COVERAGE_10X)
+                .ref20xCoveragePercentage(REF_COVERAGE_20X)
+                .refMeanCoverage(0D)
+                .build();
 
-        assertEquals(REF_NUMBER_OF_CHECKS, checks.size());
-        assertCheck(checks, REF_SAMPLE, CoverageCheck.COVERAGE_10X, REF_COVERAGE_10X);
-        assertCheck(checks, REF_SAMPLE, CoverageCheck.COVERAGE_20X, REF_COVERAGE_20X);
-    }
+        MultiValueResult result = (MultiValueResult) CoverageChecker.toCheckResult(metrics, REF_SAMPLE, null);
 
-    @Test(expected = EmptyFileException.class)
-    public void emptyFileYieldsEmptyFileException() throws IOException {
-        final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, EMPTY_SAMPLE, EMPTY_SAMPLE);
-        checker.run(runContext);
-    }
-
-    @Test(expected = IOException.class)
-    public void nonExistingFileYieldsIOException() throws IOException {
-        final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, NON_EXISTING_SAMPLE,
-                NON_EXISTING_SAMPLE);
-        checker.run(runContext);
-    }
-
-    @Test(expected = MalformedFileException.class)
-    public void incorrectRefFileYieldsMalformedFileException() throws IOException {
-        final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, INCORRECT_SAMPLE,
-                TUMOR_SAMPLE);
-        checker.run(runContext);
-    }
-
-    @Test(expected = MalformedFileException.class)
-    public void incorrectTumorFileYieldsMalformedFileException() throws IOException {
-        final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, REF_SAMPLE,
-                INCORRECT_SAMPLE);
-        checker.run(runContext);
-    }
-
-    @Test(expected = MalformedFileException.class)
-    public void incorrectFilesYieldsMalformedFileException() throws IOException {
-        final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, INCORRECT_SAMPLE,
-                INCORRECT_SAMPLE);
-        checker.run(runContext);
+        List<HealthCheck> refResult = result.getChecks();
+        assertEquals(REF_NUMBER_OF_CHECKS, refResult.size());
+        assertCheck(refResult, REF_SAMPLE, CoverageCheck.COVERAGE_10X, REF_COVERAGE_10X);
+        assertCheck(refResult, REF_SAMPLE, CoverageCheck.COVERAGE_20X, REF_COVERAGE_20X);
     }
 
     private static void assertCheck(@NotNull final List<HealthCheck> checks, @NotNull final String sampleId,
             @NotNull final CoverageCheck check, final double expectedValue) {
-        final Optional<HealthCheck> value = checks.stream().filter(
-                p -> p.getCheckName().equals(check.toString())).findFirst();
+        final Optional<HealthCheck> value = checks.stream().filter(p -> p.getCheckName().equals(check.toString())).findFirst();
         assert value.isPresent();
 
         assertEquals(expectedValue, Double.parseDouble(value.get().getValue()), 1e-10);

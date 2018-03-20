@@ -3,6 +3,7 @@ package com.hartwig.hmftools.healthchecker.runners;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.metrics.WGSMetrics;
@@ -14,6 +15,7 @@ import com.hartwig.hmftools.healthchecker.result.PatientResult;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class CoverageChecker implements HealthChecker {
 
@@ -25,24 +27,28 @@ public class CoverageChecker implements HealthChecker {
     @NotNull
     public BaseResult run(@NotNull final RunContext runContext) throws IOException {
         WGSMetrics metrics = extractMetrics(runContext);
-        final List<HealthCheck> refChecks = Lists.newArrayList(new HealthCheck(runContext.refSample(),
+
+        return toCheckResult(metrics, runContext.refSample(), runContext.tumorSample());
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static BaseResult toCheckResult(@NotNull WGSMetrics metrics, @NotNull String refSample, @Nullable String tumorSample) {
+        final List<HealthCheck> refChecks = Lists.newArrayList(new HealthCheck(refSample,
                         CoverageCheck.COVERAGE_10X.toString(),
                         String.valueOf(metrics.ref10xCoveragePercentage())),
-                new HealthCheck(runContext.refSample(),
-                        CoverageCheck.COVERAGE_20X.toString(),
-                        String.valueOf(metrics.ref20xCoveragePercentage())));
+                new HealthCheck(refSample, CoverageCheck.COVERAGE_20X.toString(), String.valueOf(metrics.ref20xCoveragePercentage())));
 
-        if (runContext.isSomaticRun()) {
+        if (tumorSample != null) {
             assert metrics.tumor30xCoveragePercentage() != null;
             assert metrics.tumor60xCoveragePercentage() != null;
 
-            final List<HealthCheck> tumorChecks = Lists.newArrayList(new HealthCheck(runContext.tumorSample(),
+            final List<HealthCheck> tumorChecks = Lists.newArrayList(new HealthCheck(tumorSample,
                             CoverageCheck.COVERAGE_30X.toString(),
                             String.valueOf(metrics.tumor30xCoveragePercentage())),
-                    new HealthCheck(runContext.tumorSample(),
+                    new HealthCheck(tumorSample,
                             CoverageCheck.COVERAGE_60X.toString(),
                             String.valueOf(metrics.tumor60xCoveragePercentage())));
-
             return toPatientResult(refChecks, tumorChecks);
         } else {
             return toMultiValueResult(refChecks);
@@ -61,7 +67,7 @@ public class CoverageChecker implements HealthChecker {
     }
 
     @NotNull
-    private BaseResult toPatientResult(@NotNull final List<HealthCheck> refChecks, @NotNull final List<HealthCheck> tumorChecks) {
+    private static BaseResult toPatientResult(@NotNull final List<HealthCheck> refChecks, @NotNull final List<HealthCheck> tumorChecks) {
         HealthCheck.log(LOGGER, refChecks);
         HealthCheck.log(LOGGER, tumorChecks);
 

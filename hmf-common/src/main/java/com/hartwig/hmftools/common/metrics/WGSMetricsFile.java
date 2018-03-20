@@ -22,7 +22,7 @@ public final class WGSMetricsFile {
     private static final String METRICS_EXTENSION = "_WGSMetrics.txt";
     private static final String VALUE_SEPARATOR = "\t";
 
-    private static final int MEAN_COVERAGE_INDEX = 2;
+    private static final int MEAN_COVERAGE_INDEX = 1;
     private static final int COVERAGE_10X_INDEX = 13;
     private static final int COVERAGE_20X_INDEX = 15;
     private static final int COVERAGE_30X_INDEX = 17;
