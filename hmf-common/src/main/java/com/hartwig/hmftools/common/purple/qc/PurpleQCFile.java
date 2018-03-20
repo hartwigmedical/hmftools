@@ -20,6 +20,9 @@ public final class PurpleQCFile {
     private static final String DELIMITER = "\t";
     private static final String EXTENSION = ".purple.qc";
 
+    private PurpleQCFile() {
+    }
+
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
         return basePath + File.separator + sample + EXTENSION;
@@ -35,6 +38,7 @@ public final class PurpleQCFile {
     }
 
     @NotNull
+    @VisibleForTesting
     static PurpleQC fromLines(@NotNull final List<String> lines) throws MalformedFileException {
         try {
             return ImmutablePurpleQC.builder()

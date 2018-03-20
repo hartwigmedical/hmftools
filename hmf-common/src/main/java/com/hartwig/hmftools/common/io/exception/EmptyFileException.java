@@ -11,4 +11,8 @@ public class EmptyFileException extends IOException {
     public EmptyFileException(@NotNull final String fileName, @NotNull final String filePath) {
         super(String.format(EMPTY_FILES_ERROR, fileName, filePath));
     }
+
+    public EmptyFileException(@NotNull final String fileName) {
+        super(String.format("File %s was found empty", fileName));
+    }
 }
