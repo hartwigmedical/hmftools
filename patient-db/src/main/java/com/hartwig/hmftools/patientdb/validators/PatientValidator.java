@@ -24,6 +24,8 @@ import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_BIR
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_BIRTH_YEAR2;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_BIRTH_YEAR3;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_DEATH_DATE;
+import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_HOSPITAL1;
+import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_HOSPITAL2;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_INFORMED_CONSENT_DATE;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_PRIMARY_TUMOR_LOCATION;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_PRIMARY_TUMOR_LOCATION_OTHER;
@@ -128,6 +130,14 @@ public final class PatientValidator {
                     cpctId,
                     fields(FIELD_BIRTH_YEAR1, FIELD_BIRTH_YEAR2, FIELD_BIRTH_YEAR3),
                     "birth year could not be determined",
+                    FormStatusState.best(patientData.eligibilityStatus(), patientData.selectionCriteriaStatus()),
+                    patientData.eligibilityLocked() || patientData.selectionCriteriaLocked()));
+        }
+        if (patientData.hospital() == null) {
+            findings.add(ValidationFinding.of(ECRF_LEVEL,
+                    cpctId,
+                    fields(FIELD_HOSPITAL1, FIELD_HOSPITAL2),
+                    "no hospital",
                     FormStatusState.best(patientData.eligibilityStatus(), patientData.selectionCriteriaStatus()),
                     patientData.eligibilityLocked() || patientData.selectionCriteriaLocked()));
         }
