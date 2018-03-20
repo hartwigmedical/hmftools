@@ -57,7 +57,7 @@ public class DatabaseAccess {
     @NotNull
     private final CanonicalTranscriptDAO canonicalTranscriptDAO;
     @NotNull
-    private final MetricsDAO metricsDAO;
+    private final MetricDAO metricDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // MIVO: disable annoying jooq self-ad message
@@ -76,7 +76,7 @@ public class DatabaseAccess {
         clinicalDAO = new ClinicalDAO(context);
         validationFindingsDAO = new ValidationFindingDAO(context);
         canonicalTranscriptDAO = new CanonicalTranscriptDAO(context);
-        metricsDAO = new MetricsDAO(context);
+        metricDAO = new MetricDAO(context);
     }
 
     @NotNull
@@ -159,7 +159,7 @@ public class DatabaseAccess {
     }
 
     public void writeMetrics(@NotNull String sample, @NotNull WGSMetrics metrics) {
-        metricsDAO.writeMetrics(sample, metrics);
+        metricDAO.writeMetrics(sample, metrics);
     }
 
     public void clearCpctEcrf() {

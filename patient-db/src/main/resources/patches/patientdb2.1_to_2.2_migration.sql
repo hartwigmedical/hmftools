@@ -1,7 +1,7 @@
 ALTER TABLE sample
     ADD COLUMN dnaNanograms int AFTER samplingDate;
 
-CREATE TABLE metrics
+CREATE TABLE metric
 (   sampleId varchar(255) NOT NULL,
     refMeanCoverage DOUBLE PRECISION NOT NULL,
     refCoverage10xPercentage DOUBLE PRECISION NOT NULL,

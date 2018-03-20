@@ -213,8 +213,8 @@ CREATE TABLE drupEcrfDatamodel
     relevant varchar(5)
 );
 
-DROP TABLE if EXISTS metrics;
-CREATE TABLE metrics
+DROP TABLE if EXISTS metric;
+CREATE TABLE metric
 (   sampleId varchar(255) NOT NULL,
     refMeanCoverage DOUBLE PRECISION NOT NULL,
     refCoverage10xPercentage DOUBLE PRECISION NOT NULL,
