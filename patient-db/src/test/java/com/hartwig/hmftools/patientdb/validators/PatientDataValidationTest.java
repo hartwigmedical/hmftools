@@ -3,6 +3,8 @@ package com.hartwig.hmftools.patientdb.validators;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_BIRTH_YEAR1;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_BIRTH_YEAR2;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_BIRTH_YEAR3;
+import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_HOSPITAL1;
+import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_HOSPITAL2;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_INFORMED_CONSENT_DATE;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_PRIMARY_TUMOR_LOCATION;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_PRIMARY_TUMOR_LOCATION_OTHER;
@@ -28,7 +30,7 @@ public class PatientDataValidationTest {
     private final String CPCT_ID = "CPCT01020000";
     private final String HOSPITAL = "Test Hospital";
 
-    private final PatientData EMPTY_PATIENT_DATA = ImmutablePatientData.builder().cpctId(CPCT_ID).hospital(HOSPITAL).build();
+    private final PatientData EMPTY_PATIENT_DATA = ImmutablePatientData.builder().cpctId(CPCT_ID).build();
 
     private final PatientData PATIENT_DATA_MISSING_LOCATION_MAPPING = ImmutablePatientData.builder()
             .cpctId(CPCT_ID)
@@ -39,7 +41,7 @@ public class PatientDataValidationTest {
     @Test
     public void reportsMissingFields() {
         final List<ValidationFinding> findings = PatientValidator.validatePatientData(EMPTY_PATIENT_DATA);
-        assertEquals(5, findings.size());
+        assertEquals(6, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
 
@@ -48,6 +50,7 @@ public class PatientDataValidationTest {
         assertTrue(findingsFields.contains(FIELD_SEX));
         assertTrue(findingsFields.contains(fields(FIELD_BIRTH_YEAR1, FIELD_BIRTH_YEAR2, FIELD_BIRTH_YEAR3)));
         assertTrue(findingsFields.contains(fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER)));
+        assertTrue(findingsFields.contains(fields(FIELD_HOSPITAL1, FIELD_HOSPITAL2)));
     }
 
     @Test
