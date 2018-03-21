@@ -333,7 +333,8 @@ public final class PatientValidator {
                 if (drug.curatedTreatments().isEmpty()) {
                     findings.add(ValidationFinding.of(curationName,
                             patientId,
-                            ecrfName, "failed to curate ecrf drug. Curated list contained no matching entry, or match was ambiguous.",
+                            ecrfName,
+                            "failed to curate ecrf drug. Curated list contained no matching entry, or match was ambiguous.",
                             treatment.formStatus(),
                             treatment.formLocked(),
                             drugName));
@@ -345,8 +346,7 @@ public final class PatientValidator {
                     final long lengthOfMatchedCharacters = matchedTerms.stream().mapToLong(String::length).sum();
                     final long lengthOfSearchCharacters = drugName.chars().filter(Character::isLetterOrDigit).count();
                     if (lengthOfMatchedCharacters > 0 && (double) lengthOfMatchedCharacters / lengthOfSearchCharacters < .9) {
-                        findings.add(ValidationFinding.of(curationName,
-                                patientId, ecrfName,
+                        findings.add(ValidationFinding.of(curationName, patientId, ecrfName,
                                 "matched drugs are based on less than 90% of search term.",
                                 treatment.formStatus(),
                                 treatment.formLocked(),
@@ -367,7 +367,8 @@ public final class PatientValidator {
         if (searchTerm != null && patientData.cancerType().category() == null) {
             findings.add(ValidationFinding.of("tumorLocationCuration",
                     patientData.cpctId(),
-                    fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER), "failed to curate primary tumor location.",
+                    fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER),
+                    "failed to curate primary tumor location.",
                     patientData.primaryTumorStatus(),
                     patientData.primaryTumorLocked(),
                     searchTerm));
@@ -472,7 +473,9 @@ public final class PatientValidator {
             }
             if (response == null && !isFirstResponse) {
                 findings.add(ValidationFinding.of(ECRF_LEVEL,
-                        patientId, FIELD_RESPONSE, "measurement done is yes, but response is empty (non-first response)",
+                        patientId,
+                        FIELD_RESPONSE,
+                        "measurement done is yes, but response is empty (non-first response)",
                         treatmentResponse.formStatus(),
                         treatmentResponse.formLocked()));
             }
@@ -530,7 +533,8 @@ public final class PatientValidator {
             final LocalDate lastTreatmentEndDate = lastTreatment.endDate();
             final LocalDate firstTreatmentStart = treatments.get(0).startDate();
             if (lastTreatmentEndDate == null || lastTreatmentEndDate.isAfter(deathDate)) {
-                String details = "death date (" + deathDate + ") before end of last treatment (" + lastTreatmentEndDate + ")" + " and start treatment is (" + firstTreatmentStart + ")";
+                String details = "death date (" + deathDate + ") before end of last treatment (" + lastTreatmentEndDate + ")"
+                        + " and start treatment is (" + firstTreatmentStart + ")";
                 findings.add(ValidationFinding.of(ECRF_LEVEL,
                         patientId,
                         fields(FIELD_DEATH_DATE, FORM_TREATMENT),
