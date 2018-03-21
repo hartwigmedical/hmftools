@@ -551,8 +551,7 @@ public final class PatientValidator {
         if (informedConsentDate != null && !biopsies.isEmpty()) {
             final List<BiopsyData> biopsiesPriorToInformedConsent = biopsies.stream().filter(biopsy -> {
                 final LocalDate biopsyDate = biopsy.date();
-                return biopsyDate != null && biopsyDate.plusDays(Config.MAX_BIOPSY_DAYS_PRIOR_TO_INFORMED_CONSENT_DATE)
-                        .isBefore(informedConsentDate);
+                return biopsyDate != null && biopsyDate.isBefore(informedConsentDate);
             }).collect(Collectors.toList());
             if (biopsiesPriorToInformedConsent.size() > 0) {
                 final String detailsMessage =
@@ -569,8 +568,7 @@ public final class PatientValidator {
                 findings.add(ValidationFinding.of(ECRF_LEVEL,
                         patientId,
                         fields(FIELD_INFORMED_CONSENT_DATE, FIELD_BIOPSY_DATE),
-                        "at least 1 biopsy taken more than " + Config.MAX_BIOPSY_DAYS_PRIOR_TO_INFORMED_CONSENT_DATE
-                                + " days prior to informed consent date",
+                        "at least 1 biopsy taken before informed consent date",
                         best,
                         locked,
                         detailsMessage));
