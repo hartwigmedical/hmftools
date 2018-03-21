@@ -528,8 +528,9 @@ public final class PatientValidator {
             treatments.sort(comparing(BiopsyTreatmentData::endDate, nullsLast(naturalOrder())));
             final BiopsyTreatmentData lastTreatment = treatments.get(treatments.size() - 1);
             final LocalDate lastTreatmentEndDate = lastTreatment.endDate();
+            final LocalDate firstTreatmentStart = treatments.get(0).startDate();
             if (lastTreatmentEndDate == null || lastTreatmentEndDate.isAfter(deathDate)) {
-                String details = "death date (" + deathDate + ") before end of last treatment (" + lastTreatmentEndDate + ")";
+                String details = "death date (" + deathDate + ") before end of last treatment (" + lastTreatmentEndDate + ")" + " and start treatment is (" + firstTreatmentStart + ")";
                 findings.add(ValidationFinding.of(ECRF_LEVEL,
                         patientId,
                         fields(FIELD_DEATH_DATE, FORM_TREATMENT),
