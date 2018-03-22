@@ -31,8 +31,8 @@ public class PreTreatmentReader {
 
     private static final String FORM_TREATMENT = "FRM.PRETHERAPY";
     private static final String ITEMGROUP_TREATMENT = "GRP.PRETHERAPY.PRETHERAPY";
-    private static final String FIELD_TREATMENT_GIVEN = "FLD.PRETHERAPY.SYSTEMIC";
-    private static final String FIELD_RADIOTHERAPY_GIVEN = "FLD.PRETHERAPY.RADIOTHER";
+    public static final String FIELD_PRETREATMENT_GIVEN = "FLD.PRETHERAPY.SYSTEMIC";
+    public static final String FIELD_PRERADIOTHERAPY_GIVEN = "FLD.PRETHERAPY.RADIOTHER";
     private static final String ITEMGROUP_DRUGS = "GRP.PRETHERAPY.SYSTEMICTRT";
     private static final String FIELD_PRE_DRUG_START = "FLD.PRETHERAPY.SYSTEMICSTDTC";
     private static final String FIELD_PRE_DRUG_END = "FLD.PRETHERAPY.SYSTEMICENDTC";
@@ -92,7 +92,7 @@ public class PreTreatmentReader {
     private static String readTreatmentGiven(@NotNull final EcrfForm treatmentForm) {
         final List<EcrfItemGroup> itemGroups = treatmentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_TREATMENT, false);
         if (itemGroups.size() > 0) {
-            return itemGroups.get(0).readItemString(FIELD_TREATMENT_GIVEN, 0, false);
+            return itemGroups.get(0).readItemString(FIELD_PRETREATMENT_GIVEN, 0, false);
         }
         return null;
     }
@@ -101,7 +101,7 @@ public class PreTreatmentReader {
     private static String readRadiotherapyGiven(@NotNull final EcrfForm treatmentForm) {
         final List<EcrfItemGroup> itemGroups = treatmentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_TREATMENT, false);
         if (itemGroups.size() > 0) {
-            return itemGroups.get(0).readItemString(FIELD_RADIOTHERAPY_GIVEN, 0, false);
+            return itemGroups.get(0).readItemString(FIELD_PRERADIOTHERAPY_GIVEN, 0, false);
         }
         return null;
     }

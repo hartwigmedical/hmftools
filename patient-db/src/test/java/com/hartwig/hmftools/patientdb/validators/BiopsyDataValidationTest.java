@@ -81,13 +81,6 @@ public class BiopsyDataValidationTest {
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
         assertTrue(findingsFields.contains(fields(FIELD_INFORMED_CONSENT_DATE, FIELD_BIOPSY_DATE)));
-
-        // KODU: DEV-251: Don't raise warning for a biopsy taken one day before informed consent.
-        final List<ValidationFinding> no_findings = PatientValidator.validateInformedConsentDate(CPCT_ID,
-                ImmutablePatientData.builder().cpctId(CPCT_ID).informedConsentDate(FEB2015.plusDays(1)).build(),
-                Lists.newArrayList(BIOPSY_FEB1));
-        assertEquals(1, no_findings.size());
-        assertTrue(findingsFields.contains(fields(FIELD_INFORMED_CONSENT_DATE, FIELD_BIOPSY_DATE)));
     }
 
     @Test

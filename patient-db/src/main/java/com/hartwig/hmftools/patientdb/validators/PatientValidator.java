@@ -32,6 +32,8 @@ import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_PRI
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_REGISTRATION_DATE1;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_REGISTRATION_DATE2;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_SEX;
+import static com.hartwig.hmftools.patientdb.readers.PreTreatmentReader.FIELD_PRERADIOTHERAPY_GIVEN;
+import static com.hartwig.hmftools.patientdb.readers.PreTreatmentReader.FIELD_PRETREATMENT_GIVEN;
 import static com.hartwig.hmftools.patientdb.readers.PreTreatmentReader.FIELD_PRE_DRUG;
 
 import java.time.Duration;
@@ -52,6 +54,7 @@ import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
 import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PatientData;
+import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.TreatmentData;
 
 import org.apache.logging.log4j.util.Strings;
@@ -233,6 +236,32 @@ public final class PatientValidator {
                         treatment.formStatus(),
                         treatment.formLocked())));
             }
+        }
+        return findings;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static List<ValidationFinding> validatePreTreatmentData(@NotNull final String patientId,
+            @NotNull final PreTreatmentData preTreatmentData) {
+        final String preTreatmentGiven = preTreatmentData.treatmentGiven();
+        final String preRadioTreatment = preTreatmentData.radiotherapyGiven();
+        final List<ValidationFinding> findings = Lists.newArrayList();
+        if (preTreatmentGiven == null) {
+            findings.add(ValidationFinding.of(ECRF_LEVEL,
+                    patientId,
+                    FIELD_PRETREATMENT_GIVEN,
+                    "pre treatment given empty",
+                    preTreatmentData.formStatus(),
+                    preTreatmentData.formLocked()));
+        }
+        if (preRadioTreatment == null) {
+            findings.add(ValidationFinding.of(ECRF_LEVEL,
+                    patientId,
+                    FIELD_PRERADIOTHERAPY_GIVEN,
+                    "pre radio treatment given empty",
+                    preTreatmentData.formStatus(),
+                    preTreatmentData.formLocked()));
         }
         return findings;
     }
