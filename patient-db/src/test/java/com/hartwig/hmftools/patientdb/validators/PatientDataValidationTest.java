@@ -20,9 +20,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedCancerType;
 import com.hartwig.hmftools.patientdb.data.ImmutablePatientData;
+import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.PatientData;
+import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 
 import org.junit.Test;
 
@@ -51,6 +54,29 @@ public class PatientDataValidationTest {
         assertTrue(findingsFields.contains(fields(FIELD_BIRTH_YEAR1, FIELD_BIRTH_YEAR2, FIELD_BIRTH_YEAR3)));
         assertTrue(findingsFields.contains(fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER)));
         assertTrue(findingsFields.contains(fields(FIELD_HOSPITAL1, FIELD_HOSPITAL2)));
+    }
+
+    @Test
+    public void reportMissingPreTreatment() {
+        PreTreatmentData emptyData = ImmutablePreTreatmentData.builder().formLocked(false).formStatus(FormStatusState.UNKNOWN).build();
+
+        assertEquals(2, PatientValidator.validatePreTreatmentData(CPCT_ID, emptyData).size());
+
+        PreTreatmentData actualData = ImmutablePreTreatmentData.builder()
+                .radiotherapyGiven("Yes")
+                .treatmentGiven("No")
+                .formLocked(false)
+                .formStatus(FormStatusState.UNKNOWN)
+                .build();
+        assertEquals(0, PatientValidator.validatePreTreatmentData(CPCT_ID, actualData).size());
+
+        PreTreatmentData onlyRadioTherapyPresent =
+                ImmutablePreTreatmentData.builder().radiotherapyGiven("Yes").formLocked(false).formStatus(FormStatusState.UNKNOWN).build();
+        assertEquals(1, PatientValidator.validatePreTreatmentData(CPCT_ID, onlyRadioTherapyPresent).size());
+
+        PreTreatmentData onlyTreatmentPresent =
+                ImmutablePreTreatmentData.builder().treatmentGiven("Yes").formLocked(false).formStatus(FormStatusState.UNKNOWN).build();
+        assertEquals(1, PatientValidator.validatePreTreatmentData(CPCT_ID, onlyTreatmentPresent).size());
     }
 
     @Test

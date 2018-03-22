@@ -74,6 +74,7 @@ public final class PatientValidator {
 
         findings.addAll(validatePatientData(patient.patientData()));
         findings.addAll(validateTumorLocationCuration(patient.patientData()));
+        findings.addAll(validatePreTreatmentData(patientId, patient.preTreatmentData()));
         findings.addAll(validateBiopsies(patientId, patient.clinicalBiopsies(), patient.treatments()));
         findings.addAll(validateTreatments(patientId, patient.treatments()));
         findings.addAll(validateTreatmentResponses(patientId, patient.treatments(), patient.treatmentResponses()));
@@ -143,6 +144,32 @@ public final class PatientValidator {
                     "no hospital",
                     FormStatusState.best(patientData.eligibilityStatus(), patientData.selectionCriteriaStatus()),
                     patientData.eligibilityLocked() || patientData.selectionCriteriaLocked()));
+        }
+        return findings;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static List<ValidationFinding> validatePreTreatmentData(@NotNull final String patientId,
+            @NotNull final PreTreatmentData preTreatmentData) {
+        final String preTreatmentGiven = preTreatmentData.treatmentGiven();
+        final String preRadioTreatmentGiven = preTreatmentData.radiotherapyGiven();
+        final List<ValidationFinding> findings = Lists.newArrayList();
+        if (preTreatmentGiven == null) {
+            findings.add(ValidationFinding.of(ECRF_LEVEL,
+                    patientId,
+                    FIELD_PRETREATMENT_GIVEN,
+                    "pre systemic treatment given empty",
+                    preTreatmentData.formStatus(),
+                    preTreatmentData.formLocked()));
+        }
+        if (preRadioTreatmentGiven == null) {
+            findings.add(ValidationFinding.of(ECRF_LEVEL,
+                    patientId,
+                    FIELD_PRERADIOTHERAPY_GIVEN,
+                    "pre radio treatment given empty",
+                    preTreatmentData.formStatus(),
+                    preTreatmentData.formLocked()));
         }
         return findings;
     }
@@ -236,32 +263,6 @@ public final class PatientValidator {
                         treatment.formStatus(),
                         treatment.formLocked())));
             }
-        }
-        return findings;
-    }
-
-    @NotNull
-    @VisibleForTesting
-    static List<ValidationFinding> validatePreTreatmentData(@NotNull final String patientId,
-            @NotNull final PreTreatmentData preTreatmentData) {
-        final String preTreatmentGiven = preTreatmentData.treatmentGiven();
-        final String preRadioTreatment = preTreatmentData.radiotherapyGiven();
-        final List<ValidationFinding> findings = Lists.newArrayList();
-        if (preTreatmentGiven == null) {
-            findings.add(ValidationFinding.of(ECRF_LEVEL,
-                    patientId,
-                    FIELD_PRETREATMENT_GIVEN,
-                    "pre treatment given empty",
-                    preTreatmentData.formStatus(),
-                    preTreatmentData.formLocked()));
-        }
-        if (preRadioTreatment == null) {
-            findings.add(ValidationFinding.of(ECRF_LEVEL,
-                    patientId,
-                    FIELD_PRERADIOTHERAPY_GIVEN,
-                    "pre radio treatment given empty",
-                    preTreatmentData.formStatus(),
-                    preTreatmentData.formLocked()));
         }
         return findings;
     }
