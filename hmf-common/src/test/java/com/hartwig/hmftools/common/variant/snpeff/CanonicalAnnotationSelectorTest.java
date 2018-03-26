@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.variant.snpeff;
 
-import static com.hartwig.hmftools.common.variant.snpeff.VariantAnnotationTest.createVariantAnnotationBuilder;
+import static com.hartwig.hmftools.common.variant.snpeff.AnnotationTestFactory.createVariantAnnotationBuilder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -36,5 +36,4 @@ public class CanonicalAnnotationSelectorTest {
         selected = victim.canonical("GENE2", Lists.newArrayList(correct, incorrect));
         assertFalse(selected.isPresent());
     }
-
 }
