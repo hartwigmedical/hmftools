@@ -8,9 +8,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Optional;
 
-import javax.xml.stream.XMLStreamException;
-
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.strelka.mnv.MNVDetector;
 import com.hartwig.hmftools.strelka.mnv.PotentialMNVRegion;
 
@@ -40,7 +37,7 @@ public class MNVDetectorApplication {
     private static final String OUTPUT_VCF = "vcf_out";
     private static final String STRELKA = "strelka";
 
-    public static void main(final String... args) throws ParseException, IOException, XMLStreamException, HartwigException {
+    public static void main(final String... args) throws ParseException, IOException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
@@ -74,7 +71,7 @@ public class MNVDetectorApplication {
     }
 
     private static void processVariants(@NotNull final String filePath, @NotNull final String outputVcf, @NotNull final String outputBed,
-            boolean strelka) throws IOException, HartwigException {
+            boolean strelka) throws IOException {
         final VCFFileReader vcfReader = new VCFFileReader(new File(filePath), false);
         final VCFHeader outputHeader =
                 strelka ? generateOutputHeader(vcfReader.getFileHeader(), StrelkaPostProcess.TUMOR_GENOTYPE) : vcfReader.getFileHeader();
@@ -115,7 +112,7 @@ public class MNVDetectorApplication {
     }
 
     @NotNull
-    public static Optional<PotentialMNVRegion> filterMnvRegion(@NotNull final PotentialMNVRegion potentialMnvRegion) {
+    private static Optional<PotentialMNVRegion> filterMnvRegion(@NotNull final PotentialMNVRegion potentialMnvRegion) {
         if (potentialMnvRegion.potentialMnvs().size() == 0) {
             return Optional.empty();
         } else {

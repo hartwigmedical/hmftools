@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.io.reader.FileReader;
 
 import org.apache.logging.log4j.LogManager;
@@ -48,7 +47,7 @@ public abstract class TumorLocationDoidMapping {
     }
 
     @NotNull
-    static TumorLocationDoidMapping fromCSV(@NotNull final String pathToCsv) throws IOException, EmptyFileException {
+    static TumorLocationDoidMapping fromCSV(@NotNull final String pathToCsv) throws IOException {
         return fromLines(FileReader.build().readLines(new File(pathToCsv).toPath()));
     }
 

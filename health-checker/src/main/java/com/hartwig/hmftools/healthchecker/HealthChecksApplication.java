@@ -7,17 +7,14 @@ import java.util.Optional;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.common.exception.GenerateReportException;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.FolderChecker;
 import com.hartwig.hmftools.healthchecker.report.JsonReport;
 import com.hartwig.hmftools.healthchecker.report.Report;
 import com.hartwig.hmftools.healthchecker.runners.AmberChecker;
 import com.hartwig.hmftools.healthchecker.runners.CoverageChecker;
 import com.hartwig.hmftools.healthchecker.runners.HealthChecker;
-import com.hartwig.hmftools.healthchecker.runners.KinshipChecker;
 import com.hartwig.hmftools.healthchecker.runners.PurpleChecker;
-import com.hartwig.hmftools.healthchecker.runners.SomaticVariantsChecker;
+import com.hartwig.hmftools.healthchecker.runners.StrelkaChecker;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -25,7 +22,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -47,7 +43,7 @@ public final class HealthChecksApplication {
         this.reportFilePath = reportFilePath;
     }
 
-    public static void main(final String... args) throws ParseException {
+    public static void main(final String... args) throws ParseException, IOException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
@@ -60,14 +56,8 @@ public final class HealthChecksApplication {
             System.exit(1);
         }
 
-        RunContext runContext = null;
-        try {
-            runDirectory = FolderChecker.build().checkFolder(runDirectory);
-            runContext = ProductionRunContextFactory.fromRunDirectory(runDirectory);
-        } catch (IOException | HartwigException e) {
-            LOGGER.info(e.getMessage());
-            System.exit(1);
-        }
+        runDirectory = FolderChecker.build().checkFolder(runDirectory);
+        RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runDirectory);
 
         new HealthChecksApplication(runContext, reportFilePath).run();
     }
@@ -86,11 +76,9 @@ public final class HealthChecksApplication {
         return parser.parse(options, args);
     }
 
-    private void run() {
+    private void run() throws IOException {
         final Report report = new JsonReport();
-        final Collection<HealthChecker> checkers = Lists.newArrayList(new CoverageChecker(),
-                new SomaticVariantsChecker(),
-                new KinshipChecker(),
+        final Collection<HealthChecker> checkers = Lists.newArrayList(new CoverageChecker(), new StrelkaChecker(),
                 new PurpleChecker(),
                 new AmberChecker());
 
@@ -98,11 +86,7 @@ public final class HealthChecksApplication {
             report.addResult(checker.run(runContext));
         }
 
-        try {
-            final Optional<String> reportPath = report.generateReport(reportFilePath);
-            reportPath.ifPresent(path -> LOGGER.info(String.format("Report generated -> \n%s", path)));
-        } catch (final GenerateReportException e) {
-            LOGGER.log(Level.ERROR, e.getMessage());
-        }
+        final Optional<String> reportPath = report.generateReport(reportFilePath);
+        reportPath.ifPresent(path -> LOGGER.info(String.format("Report generated -> \n%s", path)));
     }
 }

@@ -4,10 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 
-import javax.xml.stream.XMLStreamException;
-
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.strelka.mnv.ImmutableMNVValidator;
@@ -48,7 +45,7 @@ public class StrelkaPostProcessApplication {
     private static final String SAMPLE_NAME = "t";
     private static final String TUMOR_BAM = "b";
 
-    public static void main(final String... args) throws ParseException, IOException, XMLStreamException, HartwigException {
+    public static void main(final String... args) throws ParseException, IOException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
@@ -86,7 +83,7 @@ public class StrelkaPostProcessApplication {
     }
 
     private static void processVariants(@NotNull final String filePath, @NotNull final Slicer highConfidenceSlicer,
-            @NotNull final String outputVcf, @NotNull final String sampleName, @NotNull final String tumorBam) throws HartwigException {
+            @NotNull final String outputVcf, @NotNull final String sampleName, @NotNull final String tumorBam) {
         final VCFFileReader vcfReader = new VCFFileReader(new File(filePath), false);
         final VCFHeader outputHeader = generateOutputHeader(vcfReader.getFileHeader(), sampleName);
         final VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVcf)

@@ -10,9 +10,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
+import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
@@ -30,7 +30,7 @@ final class PatientReporterHelper {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterHelper.class);
 
-    private static final String SOMATIC_SNV_EXTENSION = "_post_processed_v2.1.vcf.gz";
+    private static final String SOMATIC_VCF_EXTENSION = "_post_processed_v2.1.vcf.gz";
     private static final String PURPLE_DIRECTORY = "purple";
     private static final String SV_EXTENSION = "_somaticSV_bpi.vcf";
     private static final String CIRCOS_PLOT_DIRECTORY = "plot";
@@ -68,19 +68,19 @@ final class PatientReporterHelper {
     }
 
     @NotNull
-    static String findCircosPlotPath(@NotNull final String runDirectory, @NotNull final String sample) throws IOException {
+    static String findCircosPlotPath(@NotNull final String runDirectory, @NotNull final String sample) {
         return runDirectory + File.separator + PURPLE_DIRECTORY + File.separator + CIRCOS_PLOT_DIRECTORY + File.separator + sample
                 + CIRCOS_PLOT_EXTENSION;
     }
 
     @NotNull
-    static List<SomaticVariant> loadSomaticSNVFile(@NotNull final String sample, @NotNull final String path)
-            throws IOException, HartwigException {
-        return new SomaticVariantFactory().fromVCFFile(sample, path, SOMATIC_SNV_EXTENSION);
+    static List<SomaticVariant> loadPassedSomaticVariants(@NotNull final String sample, @NotNull final String path) throws IOException {
+        final String vcfPath = PathExtensionFinder.build().findPath(path, SOMATIC_VCF_EXTENSION).toString();
+        return SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, vcfPath);
     }
 
     @NotNull
-    static String extractTumorType(@NotNull final List<PatientCancerTypes> patientsCancerTypes, @NotNull final String sample) {
+    static String extractCancerType(@NotNull final List<PatientCancerTypes> patientsCancerTypes, @NotNull final String sample) {
         final String patientId = toPatientId(sample);
         if (patientId == null) {
             LOGGER.warn("Could not resolve patient id from " + sample);
@@ -90,7 +90,7 @@ final class PatientReporterHelper {
                 .filter(patientCancerTypes -> patientCancerTypes.cpctId().equals(patientId))
                 .collect(Collectors.toList());
 
-        // KODU: We should never have more than one tumor type for a single patient.
+        // KODU: We should never have more than one cancer type for a single patient.
         assert matchingIdCancerTypes.size() < 2;
 
         if (matchingIdCancerTypes.size() == 1) {

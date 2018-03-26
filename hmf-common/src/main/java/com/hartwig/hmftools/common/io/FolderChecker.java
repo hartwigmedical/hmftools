@@ -6,9 +6,9 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import com.hartwig.hmftools.common.exception.EmptyFolderException;
-import com.hartwig.hmftools.common.exception.FolderDoesNotExistException;
-import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.io.exception.EmptyFolderException;
+import com.hartwig.hmftools.common.io.exception.FolderDoesNotExistException;
+import com.hartwig.hmftools.common.io.exception.NotFolderException;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 public interface FolderChecker {
 
     @NotNull
-    String checkFolder(@NotNull String directory) throws IOException, HartwigException;
+    String checkFolder(@NotNull String directory) throws IOException;
 
     @NotNull
     static FolderChecker build() {
@@ -41,7 +41,7 @@ public interface FolderChecker {
         }
     }
 
-    static void checkIfDirectoryIsNotEmpty(@NotNull final File directory) throws IOException, EmptyFolderException {
+    static void checkIfDirectoryIsNotEmpty(@NotNull final File directory) throws IOException {
         final Path path = directory.toPath();
         if (isDirectoryEmpty(path)) {
             throw new EmptyFolderException(path.toString());

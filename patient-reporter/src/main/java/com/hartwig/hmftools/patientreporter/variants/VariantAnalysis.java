@@ -14,9 +14,6 @@ import org.jetbrains.annotations.Nullable;
 public abstract class VariantAnalysis {
 
     @NotNull
-    public abstract List<SomaticVariant> allVariants();
-
-    @NotNull
     public abstract List<SomaticVariant> passedVariants();
 
     @NotNull

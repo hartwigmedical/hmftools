@@ -13,32 +13,32 @@ import org.jetbrains.annotations.NotNull;
 @FunctionalInterface
 public interface PathPrefixSuffixFinder {
 
-    String FILE_S_NOT_FOUND_MSG = "File %s not found in path %s";
+    String FILE_NOT_FOUND_MSG = "File %s not found in path %s";
 
     @NotNull
-    Path findPath(@NotNull String path, @NotNull String prefix, @NotNull String suffix)
-            throws IOException;
+    Path findPath(@NotNull String path, @NotNull String prefix, @NotNull String suffix) throws FileNotFoundException;
 
     @NotNull
     static PathPrefixSuffixFinder build() {
         return (path, prefix, suffix) -> {
             final Optional<Path> fileFound = getPath(path, prefix, suffix);
             if (!fileFound.isPresent()) {
-                throw new FileNotFoundException(String.format(FILE_S_NOT_FOUND_MSG, suffix, path));
+                throw new FileNotFoundException(String.format(FILE_NOT_FOUND_MSG, suffix, path));
             }
             return fileFound.get();
         };
     }
 
     @NotNull
-    static Optional<Path> getPath(@NotNull final String path, @NotNull final String prefix,
-            @NotNull final String suffix) throws IOException {
-        try (Stream<Path> paths = Files.walk(new File(path).toPath())) {
-            return paths.filter(
-                    filePath -> filePath.getFileName().toString().startsWith(prefix)
-                            && filePath.getFileName().toString().endsWith(suffix)
-                            && filePath.toString().contains(path + File.separator + prefix))
-                    .findFirst();
+    static Optional<Path> getPath(@NotNull final String path, @NotNull final String prefix, @NotNull final String suffix) {
+        Stream<Path> paths;
+        try {
+            paths = Files.walk(new File(path).toPath());
+        } catch (IOException e) {
+            return Optional.empty();
         }
+        return paths.filter(filePath -> filePath.getFileName().toString().startsWith(prefix) && filePath.getFileName()
+                .toString()
+                .endsWith(suffix) && filePath.toString().contains(path + File.separator + prefix)).findFirst();
     }
 }

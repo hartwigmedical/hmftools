@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.gene.CanonicalTranscript;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.metrics.WGSMetrics;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
@@ -55,6 +56,8 @@ public class DatabaseAccess {
     private final ValidationFindingDAO validationFindingsDAO;
     @NotNull
     private final CanonicalTranscriptDAO canonicalTranscriptDAO;
+    @NotNull
+    private final MetricDAO metricDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // MIVO: disable annoying jooq self-ad message
@@ -73,17 +76,18 @@ public class DatabaseAccess {
         clinicalDAO = new ClinicalDAO(context);
         validationFindingsDAO = new ValidationFindingDAO(context);
         canonicalTranscriptDAO = new CanonicalTranscriptDAO(context);
+        metricDAO = new MetricDAO(context);
     }
 
     @NotNull
-    public DSLContext getContext() {
+    public DSLContext context() {
         return context;
     }
 
     @Nullable
-    private Settings settings(final String catalog) {
+    private static Settings settings(final String catalog) {
         return !catalog.equals(DEV_CATALOG)
-                ? new Settings().withRenderMapping(new RenderMapping().withSchemata(new MappedSchema().withInput("hmfpatients")
+                ? new Settings().withRenderMapping(new RenderMapping().withSchemata(new MappedSchema().withInput(DEV_CATALOG)
                 .withOutput(catalog)))
                 : null;
     }
@@ -117,15 +121,18 @@ public class DatabaseAccess {
         copyNumberDAO.writeCopyNumber(sample, copyNumbers);
     }
 
+    @NotNull
     public List<StructuralVariantData> readStructuralVariantData(@NotNull final String sample) {
         return structuralVariantDAO.read(sample);
     }
 
+    @NotNull
     public List<EnrichedStructuralVariant> readStructuralVariants(@NotNull final String sample) {
         return structuralVariantDAO.readEnrichedData(sample);
     }
 
-    public List<String> getStructuralVariantSampleList(@NotNull final String sampleSearch) {
+    @NotNull
+    public List<String> structuralVariantSampleList(@NotNull final String sampleSearch) {
         return structuralVariantDAO.getSamplesList(sampleSearch);
     }
 
@@ -151,6 +158,10 @@ public class DatabaseAccess {
         return copyNumberDAO.read(sample);
     }
 
+    public void writeMetrics(@NotNull String sample, @NotNull WGSMetrics metrics) {
+        metricDAO.writeMetrics(sample, metrics);
+    }
+
     public void clearCpctEcrf() {
         ecrfDAO.clearCpct();
     }
@@ -169,21 +180,21 @@ public class DatabaseAccess {
     }
 
     public void writeDrupEcrf(@NotNull final CpctEcrfModel model, @NotNull final Set<String> sequencedPatients) {
-        LOGGER.info("writing DRUP datamodel...");
+        LOGGER.info("Writing DRUP datamodel...");
         ecrfDAO.writeDrupDatamodel(model.fields());
-        LOGGER.info("done writing DRUP datamodel.");
-        LOGGER.info("writing DRUP patients...");
+        LOGGER.info("Done writing DRUP datamodel.");
+        LOGGER.info("Writing DRUP patients...");
         model.patients().forEach(patient -> ecrfDAO.writeDrupPatient(patient, sequencedPatients.contains(patient.patientId())));
-        LOGGER.info("done writing DRUP patients.");
+        LOGGER.info("Done writing DRUP patients.");
     }
 
     public void writeCpctEcrf(@NotNull final CpctEcrfModel model, @NotNull final Set<String> sequencedPatients) {
         LOGGER.info("writing CPCT datamodel...");
         ecrfDAO.writeCpctDatamodel(model.fields());
-        LOGGER.info("done writing CPCT datamodel.");
-        LOGGER.info("writing CPCT patients...");
+        LOGGER.info("Done writing CPCT datamodel.");
+        LOGGER.info("Writing CPCT patients...");
         model.patients().forEach(patient -> ecrfDAO.writeCpctPatient(patient, sequencedPatients.contains(patient.patientId())));
-        LOGGER.info("done writing CPCT patients.");
+        LOGGER.info("Done writing CPCT patients.");
     }
 
     public void writeValidationFindings(@NotNull final List<ValidationFinding> findings) {

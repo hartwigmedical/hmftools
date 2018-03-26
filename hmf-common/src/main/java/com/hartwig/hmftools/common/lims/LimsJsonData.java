@@ -24,6 +24,10 @@ abstract class LimsJsonData {
     public abstract String arrivalDateString();
 
     @NotNull
+    @SerializedName("dna_conc")
+    public abstract String dnaConcentration();
+
+    @NotNull
     @SerializedName("sampling_date")
     public abstract String samplingDateString();
 

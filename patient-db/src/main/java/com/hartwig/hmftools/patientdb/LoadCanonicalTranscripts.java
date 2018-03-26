@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.patientdb;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.CanonicalTranscript;
 import com.hartwig.hmftools.common.gene.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;

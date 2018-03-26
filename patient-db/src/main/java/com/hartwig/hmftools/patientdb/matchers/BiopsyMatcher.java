@@ -74,7 +74,8 @@ public final class BiopsyMatcher {
     }
 
     private static boolean isPossibleMatch(@NotNull final SampleData sequencedBiopsy, @NotNull final BiopsyData clinicalBiopsy) {
-        return clinicalBiopsy.date() == null || isWithinThreshold(sequencedBiopsy, clinicalBiopsy);
+        return clinicalBiopsy.date() == null || (isWithinThreshold(sequencedBiopsy, clinicalBiopsy)
+                && clinicalBiopsy.isPotentiallyEvaluable());
     }
 
     private static boolean isWithinThreshold(@NotNull final SampleData sequencedBiopsy, @NotNull final BiopsyData clinicalBiopsy) {

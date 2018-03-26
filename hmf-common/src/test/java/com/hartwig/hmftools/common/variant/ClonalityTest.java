@@ -23,16 +23,6 @@ public class ClonalityTest {
 
     @NotNull
     private static AllelicDepth create(final int alleleReadCount, final int totalReadCount) {
-        return new AllelicDepth() {
-            @Override
-            public int totalReadCount() {
-                return totalReadCount;
-            }
-
-            @Override
-            public int alleleReadCount() {
-                return alleleReadCount;
-            }
-        };
+        return ImmutableAllelicDepthImpl.builder().totalReadCount(totalReadCount).alleleReadCount(alleleReadCount).build();
     }
 }

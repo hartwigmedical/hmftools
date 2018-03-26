@@ -9,7 +9,6 @@ import java.util.List;
 import com.hartwig.hmftools.common.center.Center;
 import com.hartwig.hmftools.common.center.CenterModel;
 import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableNotSequenceableReporter;
@@ -45,7 +44,7 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // KODU: For testing
-    //    public static final String VERSION = "4.6";
+    //    public static final String VERSION = "4.7";
 
     private static final String CANCER_TYPES_CSV = "cancer_types_csv";
     private static final String LIMS_JSON = "lims_json";
@@ -65,8 +64,7 @@ public class PatientReporterApplication {
     private static final String SIGNATURE = "signature";
     private static final String COMMENTS = "comments";
 
-    public static void main(final String... args)
-            throws ParseException, IOException, HartwigException, DRException, SQLException {
+    public static void main(final String... args) throws ParseException, IOException, DRException, SQLException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
@@ -97,8 +95,7 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static BaseReporterData buildBaseReporterData(@NotNull final CommandLine cmd)
-            throws IOException, HartwigException {
+    private static BaseReporterData buildBaseReporterData(@NotNull final CommandLine cmd) throws IOException {
         LOGGER.info(" Loading ECRF CSV dump...");
         final List<PatientCancerTypes> patientsCancerTypes = PatientCancerTypes.readRecords(cmd.getOptionValue(CANCER_TYPES_CSV));
         LOGGER.info("  Loaded data for {} patients.", patientsCancerTypes.size());
@@ -110,7 +107,7 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd) throws IOException, HartwigException {
+    private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd) throws IOException {
         return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(COSMIC_GENE_CSV),
                 cmd.getOptionValue(COSMIC_FUSION_CSV),
                 cmd.getOptionValue(DRUP_GENES_CSV),
@@ -119,7 +116,7 @@ public class PatientReporterApplication {
 
     @NotNull
     private static PatientReporter buildReporter(@NotNull final CommandLine cmd, @NotNull final HmfReporterData reporterData)
-            throws IOException, HartwigException, SQLException {
+            throws IOException, SQLException {
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.of(reporterData.panelGeneModel(), reporterData.microsatelliteAnalyzer());
 
         final VariantAnnotator annotator;

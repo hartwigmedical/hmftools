@@ -11,6 +11,6 @@ final class LimsTestUtil {
 
     @NotNull
     static LocalDate toDate(@NotNull final String date) {
-        return LocalDate.parse(date, Lims.DATE_FORMATTER);
+        return LocalDate.parse(date, LimsConstants.DATE_FORMATTER);
     }
 }

@@ -18,7 +18,7 @@ public class MultiValueResult extends AbstractResult {
     }
 
     @NotNull
-    public List<HealthCheck> getChecks() {
+    public List<HealthCheck> checks() {
         return checks;
     }
 }

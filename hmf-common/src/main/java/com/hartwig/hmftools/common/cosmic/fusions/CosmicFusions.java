@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.io.reader.FileReader;
 
 import org.apache.logging.log4j.LogManager;
@@ -33,7 +32,7 @@ public final class CosmicFusions {
     }
 
     @NotNull
-    public static CosmicFusionModel readFromCSV(@NotNull final String pathToCSV) throws IOException, EmptyFileException {
+    public static CosmicFusionModel readFromCSV(@NotNull final String pathToCSV) throws IOException {
         final List<CosmicFusionData> items = Lists.newArrayList();
         final List<String> lines = FileReader.build().readLines(new File(pathToCSV).toPath());
         lines.remove(0); // NERA: delete header

@@ -12,7 +12,23 @@ CREATE TABLE patient
     cancerType varchar(255),
     cancerSubtype varchar(255),
     deathDate DATE,
+    hasSystemicPreTreatment varchar(3),
+    hasRadiotherapyPreTreatment varchar(3),
+    preTreatments varchar(255),
     PRIMARY KEY (id)
+);
+
+DROP TABLE IF EXISTS preTreatmentDrug;
+CREATE TABLE preTreatmentDrug
+(   id int NOT NULL AUTO_INCREMENT,
+    patientId int NOT NULL,
+    startDate DATE,
+    endDate DATE,
+    name varchar(255),
+    type varchar(255),
+    bestResponse varchar(50),
+    PRIMARY KEY (id),
+    FOREIGN KEY (patientId) REFERENCES patient(id)
 );
 
 DROP TABLE IF EXISTS sample;
@@ -21,6 +37,7 @@ CREATE TABLE sample
     patientId int NOT NULL,
     arrivalDate DATE NOT NULL,
     samplingDate DATE,
+    dnaNanograms int,
     tumorPercentage DOUBLE PRECISION,
     PRIMARY KEY (sampleId),
     FOREIGN KEY (patientId) REFERENCES patient(id)
@@ -47,6 +64,7 @@ CREATE TABLE treatment
     biopsyId int,
     patientId int NOT NULL,
     treatmentGiven varchar(3),
+    radiotherapyGiven varchar(3),
     startDate DATE,
     endDate DATE,
     name varchar(255),
@@ -81,6 +99,18 @@ CREATE TABLE treatmentResponse
     response varchar(25),
     PRIMARY KEY (id),
     FOREIGN KEY (treatmentId) REFERENCES treatment(id),
+    FOREIGN KEY (patientId) REFERENCES patient(id)
+);
+
+DROP TABLE IF EXISTS tumorMarker;
+CREATE TABLE tumorMarker
+(   id int NOT NULL AUTO_INCREMENT,
+    patientId int NOT NULL,
+    date DATE,
+    marker varchar(50),
+    measurement varchar(50),
+    unit varchar(50),
+    PRIMARY KEY (id),
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
 
@@ -181,6 +211,18 @@ CREATE TABLE drupEcrfDatamodel
     description varchar(500),
     codeList varchar(5000),
     relevant varchar(5)
+);
+
+DROP TABLE if EXISTS metric;
+CREATE TABLE metric
+(   sampleId varchar(255) NOT NULL,
+    refMeanCoverage DOUBLE PRECISION NOT NULL,
+    refCoverage10xPercentage DOUBLE PRECISION NOT NULL,
+    refCoverage20xPercentage DOUBLE PRECISION NOT NULL,
+    tumorMeanCoverage DOUBLE PRECISION NOT NULL,
+    tumorCoverage30xPercentage DOUBLE PRECISION NOT NULL,
+    tumorCoverage60xPercentage DOUBLE PRECISION NOT NULL,
+    PRIMARY KEY (sampleId)
 );
 
 DROP TABLE IF EXISTS somaticVariant;
@@ -396,7 +438,7 @@ CREATE TABLE structuralVariant
     adjustedEndCopyNumber DOUBLE PRECISION,
     adjustedStartCopyNumberChange DOUBLE PRECISION,
     adjustedEndCopyNumberChange DOUBLE PRECISION,
-    insertSequence varchar(255) not null,
+    insertSequence varchar(2048) not null,
     type varchar(255) NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId)
@@ -463,6 +505,7 @@ CREATE TABLE canonicalTranscript
     exonStart int not null,
     exonEnd int not null,
     exonBases int not null,
+    strand varchar(255) not null,
     codingStart int not null,
     codingEnd int not null,
     codingBases int not null,

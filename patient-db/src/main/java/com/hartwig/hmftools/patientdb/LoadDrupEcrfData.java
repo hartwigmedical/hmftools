@@ -12,7 +12,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
 
@@ -49,21 +48,21 @@ public final class LoadDrupEcrfData {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db - load DRUP ecrf", options);
         } else {
-            final File runDirectory = new File(runsFolderPath);
-            if (runDirectory.isDirectory()) {
+            final File runsDirectory = new File(runsFolderPath);
+            if (runsDirectory.isDirectory()) {
                 final String jdbcUrl = "jdbc:" + databaseUrl;
                 final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
                 dbWriter.clearDrupEcrf();
                 LOGGER.info("Importing DRUP ecrf data from: {}", ecrfFile);
                 final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFile, new ImmutableFormStatusModel(Maps.newHashMap()));
-                final List<RunContext> runContexts = RunsFolderReader.getRunContexts(runDirectory);
+                final List<RunContext> runContexts = RunsFolderReader.getRunContexts(runsDirectory);
                 final Set<String> sequencedPatients = Utils.sequencedPatientIds(runContexts);
                 LOGGER.info("Writing raw ecrf data for " + model.patientCount() + " patients.");
                 dbWriter.writeDrupEcrf(model, sequencedPatients);
                 LOGGER.info("Done writing raw ecrf data for " + model.patientCount() + " patients!");
             } else {
-                if (!runDirectory.exists()) {
-                    LOGGER.warn("dir " + runDirectory + " does not exist.");
+                if (!runsDirectory.exists()) {
+                    LOGGER.warn("dir " + runsDirectory + " does not exist.");
                 }
                 final HelpFormatter formatter = new HelpFormatter();
                 formatter.printHelp("patient-db - load DRUP ecrf", options);

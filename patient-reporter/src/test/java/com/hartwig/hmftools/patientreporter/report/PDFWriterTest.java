@@ -17,8 +17,6 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -28,7 +26,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantImpl;
+import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.patientreporter.BaseReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.ImmutableNotSequencedPatientReport;
@@ -66,7 +64,7 @@ public class PDFWriterTest {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
 
     @Test
-    public void canGenerateSequenceReport() throws DRException, IOException, HartwigException {
+    public void canGenerateSequenceReport() throws DRException, IOException {
         final double pathologyTumorPercentage = 0.6;
         final double impliedTumorPurity = 0.58;
         final int mutationalLoad = 361;
@@ -85,9 +83,7 @@ public class PDFWriterTest {
         final List<Alteration> alterations = RUN_CIVIC_ANALYSIS ? PatientReporterTestUtil.runCivicAnalysis(variants,
                 copyNumbers,
                 disruptions,
-                fusions,
-                reporterData.panelGeneModel(),
-                sampleReport.tumorType()) : mockedAlterations();
+                fusions, reporterData.panelGeneModel(), sampleReport.cancerType()) : mockedAlterations();
 
         final SequencedPatientReport patientReport = ImmutableSequencedPatientReport.of(sampleReport,
                 variants,
@@ -171,7 +167,7 @@ public class PDFWriterTest {
     @NotNull
     private static SomaticVariant createTestVariant(@NotNull final String chromosome, final long position, @NotNull final String ref,
             @NotNull final String alt) {
-        return new SomaticVariantImpl.Builder().chromosome(chromosome).position(position).ref(ref).alt(alt).build();
+        return SomaticVariantTestBuilderFactory.create().chromosome(chromosome).position(position).ref(ref).alt(alt).build();
     }
 
     @NotNull
@@ -227,18 +223,6 @@ public class PDFWriterTest {
                         .cosmicURL("")
                         .build(),
                 ImmutableGeneFusionData.builder()
-                        .geneStart("BRAF")
-                        .geneStartTranscript("ENST00000288602.10")
-                        .geneStartEntrezIds(Lists.newArrayList(673))
-                        .geneContextStart("Exon 1")
-                        .geneEnd("ZKSCAN1")
-                        .geneEndTranscript("ENST00000324306.10")
-                        .geneEndEntrezIds(Lists.newArrayList(7586))
-                        .geneContextEnd("Exon 13")
-                        .copies("1.0")
-                        .cosmicURL("")
-                        .build(),
-                ImmutableGeneFusionData.builder()
                         .geneStart("CLCN6")
                         .geneStartTranscript("ENST00000346436.10")
                         .geneStartEntrezIds(Lists.newArrayList(1185))
@@ -259,8 +243,7 @@ public class PDFWriterTest {
                 .gene("ERBB4")
                 .geneContext("Intron 4")
                 .type("INV")
-                .copies("1.0")
-                .chromosomeBand("q13")
+                .copies("1.0").chromosomeBand("q34")
                 .build();
 
         final GeneDisruptionData disruption2 = ImmutableGeneDisruptionData.builder()
@@ -268,8 +251,7 @@ public class PDFWriterTest {
                 .gene("ERBB4")
                 .geneContext("Intron 20")
                 .type("INV")
-                .copies("1.0")
-                .chromosomeBand("q14")
+                .copies("1.0").chromosomeBand("q34")
                 .build();
 
         final GeneDisruptionData disruption3 = ImmutableGeneDisruptionData.builder()
@@ -277,8 +259,7 @@ public class PDFWriterTest {
                 .gene("PIK3CB")
                 .geneContext("Intron 1")
                 .type("INS")
-                .copies("3.0")
-                .chromosomeBand("q15")
+                .copies("3.0").chromosomeBand("q22.3")
                 .build();
 
         final GeneDisruptionData disruption4 = ImmutableGeneDisruptionData.builder()
@@ -286,8 +267,7 @@ public class PDFWriterTest {
                 .gene("NRG1")
                 .geneContext("Intron 1")
                 .type("DUP")
-                .copies("0.3")
-                .chromosomeBand("q16")
+                .copies("0.3").chromosomeBand("p12")
                 .build();
 
         final GeneDisruptionData disruption5 = ImmutableGeneDisruptionData.builder()
@@ -295,8 +275,7 @@ public class PDFWriterTest {
                 .gene("NRG1")
                 .geneContext("Intron 1")
                 .type("DEL")
-                .copies("0.2")
-                .chromosomeBand("q17.3")
+                .copies("0.2").chromosomeBand("p12")
                 .build();
 
         final GeneDisruptionData disruption6 = ImmutableGeneDisruptionData.builder()
@@ -304,15 +283,14 @@ public class PDFWriterTest {
                 .gene("CDK12")
                 .geneContext("Intron 12")
                 .type("BND")
-                .copies("1.0")
-                .chromosomeBand("q32")
+                .copies("1.0").chromosomeBand("q12")
                 .build();
 
         return Lists.newArrayList(disruption1, disruption2, disruption3, disruption4, disruption5, disruption6);
     }
 
     @Test
-    public void canGenerateLowTumorPercentageReport() throws DRException, IOException, EmptyFileException {
+    public void canGenerateLowTumorPercentageReport() throws DRException, IOException {
         final JasperReportBuilder report = generateNotSequenceableCPCTReport(0.1, NotSequenceableReason.LOW_TUMOR_PERCENTAGE);
         assertNotNull(report);
 
@@ -326,7 +304,7 @@ public class PDFWriterTest {
     }
 
     @Test
-    public void canGenerateLowDNAYieldReport() throws DRException, IOException, EmptyFileException {
+    public void canGenerateLowDNAYieldReport() throws DRException, IOException {
         final JasperReportBuilder report = generateNotSequenceableCPCTReport(0.6, NotSequenceableReason.LOW_DNA_YIELD);
         assertNotNull(report);
 
@@ -340,7 +318,7 @@ public class PDFWriterTest {
     }
 
     @Test
-    public void canGeneratePostDNAIsolationFailReport() throws DRException, IOException, EmptyFileException {
+    public void canGeneratePostDNAIsolationFailReport() throws DRException, IOException {
         final JasperReportBuilder report = generateNotSequenceableCPCTReport(0.6, NotSequenceableReason.POST_ISOLATION_FAIL);
         assertNotNull(report);
 
@@ -355,7 +333,7 @@ public class PDFWriterTest {
 
     @NotNull
     private static JasperReportBuilder generateNotSequenceableCPCTReport(final double pathologyTumorEstimate,
-            @NotNull final NotSequenceableReason reason) throws IOException, EmptyFileException {
+            @NotNull final NotSequenceableReason reason) throws IOException {
         final NotSequencedPatientReport patientReport = ImmutableNotSequencedPatientReport.of(testSampleReport(pathologyTumorEstimate),
                 reason,
                 NotSequenceableStudy.CPCT,
@@ -366,7 +344,7 @@ public class PDFWriterTest {
     }
 
     @NotNull
-    private static SampleReport testSampleReport(final double pathologyTumorPercentage) throws IOException, EmptyFileException {
+    private static SampleReport testSampleReport(final double pathologyTumorPercentage) throws IOException {
         final String sample = "CPCT02991111T";
         return ImmutableSampleReport.of(sample,
                 "Melanoma",

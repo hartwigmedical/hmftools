@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
-import static com.hartwig.hmftools.common.variant.snpeff.VariantAnnotationTest.createVariantAnnotationBuilder;
+import static com.hartwig.hmftools.common.variant.snpeff.AnnotationTestFactory.createVariantAnnotationBuilder;
 
 import static org.junit.Assert.assertEquals;
 
@@ -10,13 +10,18 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.SortedSetMultimap;
+import com.google.common.collect.TreeMultimap;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfGenomeRegion;
+import com.hartwig.hmftools.common.region.hmfslicer.Strand;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
+import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantImpl;
+import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.snpeff.ImmutableVariantAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
@@ -51,8 +56,11 @@ public class ConsequenceDeterminerTest {
 
     @Test
     public void worksAsExpected() {
+        final SortedSetMultimap<String, GenomeRegion> regionMap = TreeMultimap.create();
+        GenomeRegion testRegion = GenomeRegionFactory.create(CHROMOSOME, POSITION - 10, POSITION + 10);
+        regionMap.put(testRegion.chromosome(), testRegion);
 
-        final Slicer slicer = SlicerFactory.fromSingleGenomeRegion(GenomeRegionFactory.create(CHROMOSOME, POSITION - 10, POSITION + 10));
+        final Slicer slicer = SlicerFactory.fromRegions(regionMap);
         final Map<String, HmfGenomeRegion> transcriptMap = Maps.newHashMap();
         transcriptMap.put(TRANSCRIPT, hmfRegion());
 
@@ -67,7 +75,7 @@ public class ConsequenceDeterminerTest {
         final VariantAnnotation rightAnnotation = annotationBuilder.consequences(Lists.newArrayList(rightConsequence)).build();
         final VariantAnnotation wrongAnnotation = annotationBuilder.consequences(Lists.newArrayList(wrongConsequence)).build();
 
-        final SomaticVariantImpl.Builder variantBuilder = new SomaticVariantImpl.Builder().
+        final ImmutableSomaticVariantImpl.Builder variantBuilder = SomaticVariantTestBuilderFactory.create().
                 chromosome(CHROMOSOME).ref(REF).alt(ALT).cosmicID(COSMIC_ID).
                 totalReadCount(TOTAL_READ_COUNT).alleleReadCount(ALLELE_READ_COUNT);
 
@@ -112,6 +120,7 @@ public class ConsequenceDeterminerTest {
                 .geneEnd(GENE_END)
                 .codingStart(0)
                 .codingEnd(0)
+                .strand(Strand.FORWARD)
                 .build();
     }
 }

@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
 
 import org.junit.Test;
 
@@ -19,7 +18,7 @@ public class FormStatusReaderTest {
     private static final String TEST_FILE = BASE_RESOURCE_DIR + File.separator + "formstatus" + File.separator + "formstatus.csv";
 
     @Test
-    public void canLoadFromCsv() throws IOException, EmptyFileException {
+    public void canLoadFromCsv() throws IOException {
         final FormStatusModel formStatusModel = FormStatusReader.buildModelFromCsv(TEST_FILE);
 
         final Map<FormStatusKey, FormStatusData> formStatuses = formStatusModel.formStatuses();

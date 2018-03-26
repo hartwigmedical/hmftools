@@ -21,7 +21,6 @@ import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gc.GCProfile;
 import com.hartwig.hmftools.common.gc.GCProfileFactory;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
@@ -105,12 +104,12 @@ public class PurityPloidyEstimateApplication {
     private static final double OBSERVED_BAF_EXPONENT_DEFAULT = 1;
 
     public static void main(final String... args)
-            throws ParseException, IOException, HartwigException, SQLException, ExecutionException, InterruptedException {
+            throws ParseException, IOException, SQLException, ExecutionException, InterruptedException {
         new PurityPloidyEstimateApplication(args);
     }
 
     private PurityPloidyEstimateApplication(final String... args)
-            throws ParseException, IOException, HartwigException, SQLException, ExecutionException, InterruptedException {
+            throws ParseException, IOException, SQLException, ExecutionException, InterruptedException {
         final VersionInfo version = new VersionInfo("purple.version");
         LOGGER.info("PURPLE version: {}", version.version());
 
@@ -294,7 +293,8 @@ public class PurityPloidyEstimateApplication {
             String filename = config.file().get().toString();
             LOGGER.info("Loading somatic variants from {}", filename);
 
-            SomaticVariantFactory factory = new SomaticVariantFactory(new PassingVariantFilter(), new NTFilter(), new SGTFilter());
+            SomaticVariantFactory factory =
+                    SomaticVariantFactory.filteredInstance(new PassingVariantFilter(), new NTFilter(), new SGTFilter());
 
             return factory.fromVCFFile(configSupplier.commonConfig().tumorSample(), filename);
         } else {

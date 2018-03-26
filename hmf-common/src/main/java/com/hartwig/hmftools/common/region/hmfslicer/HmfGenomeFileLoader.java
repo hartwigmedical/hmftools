@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
@@ -36,19 +37,20 @@ public final class HmfGenomeFileLoader {
     private static final int EXON_ID_COLUMN = 11;
     private static final int EXON_START_COLUMN = 12;
     private static final int EXON_END_COLUMN = 13;
-    private static final int CODING_START_COLUMN = 14;
-    private static final int CODING_END_COLUMN = 15;
+    private static final int STRAND_COLUMN = 14;
+    private static final int CODING_START_COLUMN = 15;
+    private static final int CODING_END_COLUMN = 16;
 
     private HmfGenomeFileLoader() {
     }
 
     @NotNull
-    public static SortedSetMultimap<String, HmfGenomeRegion> fromInputStream(@NotNull final InputStream genomeInputStream) {
+    public static List<HmfGenomeRegion> fromInputStream(@NotNull final InputStream genomeInputStream) {
         return fromLines(new BufferedReader(new InputStreamReader(genomeInputStream)).lines().collect(Collectors.toList()));
     }
 
     @NotNull
-    private static SortedSetMultimap<String, HmfGenomeRegion> fromLines(@NotNull final List<String> lines) {
+    private static List<HmfGenomeRegion> fromLines(@NotNull final List<String> lines) {
         final Map<String, ModifiableHmfGenomeRegion> geneMap = Maps.newLinkedHashMap();
         for (final String line : lines) {
             final String[] values = line.split(FIELD_SEPARATOR);
@@ -68,6 +70,8 @@ public final class HmfGenomeFileLoader {
             } else {
                 final ModifiableHmfGenomeRegion geneRegion = geneMap.computeIfAbsent(gene,
                         geneName -> createRegion(chromosome, transcriptStart, transcriptEnd, geneName, values));
+                assert(geneRegion.transcriptID().equals(values[TRANSCRIPT_ID_COLUMN])) :
+                        geneRegion.transcriptID();
 
                 final HmfExonRegion exonRegion = ImmutableHmfExonRegion.builder()
                         .chromosome(chromosome)
@@ -80,19 +84,16 @@ public final class HmfGenomeFileLoader {
             }
         }
 
-        final SortedSetMultimap<String, HmfGenomeRegion> regionMap = TreeMultimap.create();
-        for (ModifiableHmfGenomeRegion geneRegion : geneMap.values()) {
-            regionMap.put(geneRegion.chromosome(), geneRegion);
-        }
-
-        return regionMap;
+        return Lists.newArrayList(geneMap.values());
     }
 
     @NotNull
     private static ModifiableHmfGenomeRegion createRegion(final String chromosome, final long transcriptStart, final long transcriptEnd,
             @NotNull final String gene, @NotNull final String[] values) {
-        final List<Integer> entrezIds =
-                Arrays.stream(values[ENTREZ_ID_COLUMN].split(",")).map(Integer::parseInt).collect(Collectors.toList());
+        final String entrezIdString = values[ENTREZ_ID_COLUMN];
+
+        final List<Integer> entrezIds = entrezIdString.isEmpty() ? Lists.newArrayList() :
+                Arrays.stream(entrezIdString.split(",")).map(Integer::parseInt).collect(Collectors.toList());
 
         long codingStart = 0;
         long codingEnd = 0;
@@ -114,6 +115,7 @@ public final class HmfGenomeFileLoader {
                 .setGeneID(values[GENE_ID_COLUMN])
                 .setGeneStart(Long.valueOf(values[GENE_START_COLUMN]))
                 .setGeneEnd(Long.valueOf(values[GENE_END_COLUMN]))
+                .setStrand(Strand.valueOf(Integer.valueOf(values[STRAND_COLUMN])))
                 .setCodingStart(codingStart)
                 .setCodingEnd(codingEnd);
     }

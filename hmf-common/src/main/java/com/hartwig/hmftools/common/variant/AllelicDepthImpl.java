@@ -1,22 +1,11 @@
 package com.hartwig.hmftools.common.variant;
 
-class AllelicDepthImpl implements AllelicDepth {
+import org.immutables.value.Value;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-    private final int alleleReadCount;
-    private final int totalReadCount;
+@Value.Immutable
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
+abstract class AllelicDepthImpl implements AllelicDepth {
 
-    AllelicDepthImpl(final int alleleReadCount, final int totalReadCount) {
-        this.alleleReadCount = alleleReadCount;
-        this.totalReadCount = totalReadCount;
-    }
-
-    @Override
-    public int totalReadCount() {
-        return totalReadCount;
-    }
-
-    @Override
-    public int alleleReadCount() {
-        return alleleReadCount;
-    }
 }

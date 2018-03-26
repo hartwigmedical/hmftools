@@ -18,7 +18,7 @@ public final class GeneFusionDataSource {
     public static final FieldBuilder<?> FUSION_FIELD = field("field", String.class);
     public static final FieldBuilder<?> START_TRANSCRIPT_FIELD = field("five_transcript", String.class);
     public static final FieldBuilder<?> END_TRANSCRIPT_FIELD = field("three_transcript", String.class);
-    public static final FieldBuilder<?> START_CONTEXT_FIELD = field("five_gene context", String.class);
+    public static final FieldBuilder<?> START_CONTEXT_FIELD = field("five_gene_context", String.class);
     public static final FieldBuilder<?> END_CONTEXT_FIELD = field("three_gene_context", String.class);
     public static final FieldBuilder<?> COPIES_FIELD = field("copies", String.class);
     public static final FieldBuilder<?> COSMIC_URL_TEXT = field("cosmic_url_text", String.class);

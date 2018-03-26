@@ -8,7 +8,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.io.reader.FileReader;
 
 import org.apache.logging.log4j.LogManager;
@@ -46,7 +45,7 @@ public final class FormStatusReader {
     }
 
     @NotNull
-    public static FormStatusModel buildModelFromCsv(@NotNull final String pathToCsv) throws IOException, EmptyFileException {
+    public static FormStatusModel buildModelFromCsv(@NotNull final String pathToCsv) throws IOException {
         final Map<FormStatusKey, FormStatusData> formStatuses = Maps.newHashMap();
         final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         // KODU: No need to read the header line

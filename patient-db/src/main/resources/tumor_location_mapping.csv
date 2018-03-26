@@ -105,7 +105,9 @@ Neuro-endocrine tumour,neuroendocrine,NET: other
 Neuro-endorine tumor,neuroendocrine,NET: other
 neuroendocrine carcinoma,neuroendocrine,NET: other
 Neuroendocrine tumor,neuroendocrine,NET: other
+no primary tumor was found,unknown primary,
 Non-Hodgkin lymphoma,blood,lymphoma
+Non-small cell carcinoma NOS (mostly resembling lung carcinoma): working diagnosis "lung carcinoma",lung,Lung Cancer: Non-Small Cell
 Non-small cell high grade neuroendocrine carcinoma,neuroendocrine,NET: other
 Non-small cell NHL stomach stage I E,stomach,
 Oesophagal cancer (at transition from oesophagus to stomach),esophagus,cardia
@@ -133,8 +135,9 @@ sigmoidcarcinoma,colorectal,
 Skin cancer,skin,
 Small intestinal,neuroendocrine,
 Small intestinal NET,neuroendocrine,NET: small intestine
+solitair fibreuze tumor in brain,brain,solitair fibreuze
 Squamous cell carcinoma of the skin,skin,Squamous cell carcinoma
-Squamous cell carcinoma of the tongue,unknown,tongue
+Squamous cell carcinoma of the tongue,unknown primary,tongue
 Stomach (Gastric) Cancer,stomach,
 Stomach cancer ( Gastric carcer),stomach,
 Stomach cancer,stomach,

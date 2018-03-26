@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.variant;
 
-import static com.hartwig.hmftools.common.variant.predicate.VariantFilter.passOnly;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -13,7 +11,6 @@ import java.util.Optional;
 
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.exception.HartwigException;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
@@ -26,8 +23,8 @@ import htsjdk.variant.vcf.VCFHeaderVersion;
 public class SomaticVariantFactoryTest {
 
     private static final String SAMPLE = "sample";
-    private static final String VARIANT_PATH = Resources.getResource("variants").getPath();
-    private static final String SOMATIC_EXTENSION = "somatics.vcf";
+    private static final String BASE_PATH = Resources.getResource("variants").getPath();
+    private static final String SOMATIC_VARIANT_FILE = "somatics.vcf";
 
     private SomaticVariantFactory victim;
     private VCFCodec codec;
@@ -36,30 +33,26 @@ public class SomaticVariantFactoryTest {
 
     @Before
     public void setup() {
-        victim = new SomaticVariantFactory();
-        codec = new VCFCodec();
-        VCFHeader header = new VCFHeader(Sets.newHashSet(), Sets.newHashSet(SAMPLE));
-        codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2);
+        victim = SomaticVariantFactory.unfilteredInstance();
+        codec = createTestCodec();
     }
 
-    @Test
-    public void canLoadSomaticVCFFromBasePathAndFilter() throws IOException {
-        final List<SomaticVariant> variants =  new SomaticVariantFactory().fromVCFFile("sample", VARIANT_PATH, SOMATIC_EXTENSION);
-        assertTestVariants(variants);
+    @NotNull
+    private static VCFCodec createTestCodec() {
+        VCFCodec codec = new VCFCodec();
+        VCFHeader header = new VCFHeader(Sets.newHashSet(), Sets.newHashSet(SAMPLE));
+        codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2);
+        return codec;
     }
 
     @Test
     public void canLoadSomaticVCFFromFile() throws IOException {
-        final String file = VARIANT_PATH + File.separator + SOMATIC_EXTENSION;
-        final List<SomaticVariant> variants =  new SomaticVariantFactory().fromVCFFile("sample", file);
-        assertTestVariants(variants);
-    }
+        final String file = BASE_PATH + File.separator + SOMATIC_VARIANT_FILE;
+        final List<SomaticVariant> unfiltered = SomaticVariantFactory.unfilteredInstance().fromVCFFile("sample", file);
+        assertEquals(3, unfiltered.size());
 
-    private static void assertTestVariants(@NotNull List<SomaticVariant> variants) {
-        assertEquals(3, variants.size());
-
-        final List<SomaticVariant> passOnly = passOnly(variants);
-        assertEquals(2, passOnly.size());
+        final List<SomaticVariant> filtered = SomaticVariantFactory.passOnlyInstance().fromVCFFile("sample", file);
+        assertEquals(2, filtered.size());
     }
 
     @Test

@@ -10,6 +10,8 @@ public class Patient {
     @NotNull
     private final PatientData patientData;
     @NotNull
+    private final PreTreatmentData preTreatmentData;
+    @NotNull
     private final List<SampleData> sequencedBiopsies;
     @NotNull
     private final List<BiopsyData> clinicalBiopsies;
@@ -18,22 +20,32 @@ public class Patient {
     @NotNull
     private final List<BiopsyTreatmentResponseData> treatmentResponses;
     @NotNull
+    private final List<TumorMarkerData> tumorMarkers;
+    @NotNull
     private final List<ValidationFinding> matchFindings;
 
-    public Patient(@NotNull final PatientData patientData, @NotNull final List<SampleData> sequencedBiopsies,
-            @NotNull final List<BiopsyData> clinicalBiopsies, @NotNull final List<BiopsyTreatmentData> treatments,
-            @NotNull final List<BiopsyTreatmentResponseData> treatmentResponses, @NotNull final List<ValidationFinding> matchFindings) {
+    public Patient(@NotNull final PatientData patientData, @NotNull final PreTreatmentData preTreatmentData,
+            @NotNull final List<SampleData> sequencedBiopsies, @NotNull final List<BiopsyData> clinicalBiopsies,
+            @NotNull final List<BiopsyTreatmentData> treatments, @NotNull final List<BiopsyTreatmentResponseData> treatmentResponses,
+            @NotNull final List<TumorMarkerData> tumorMarkers, @NotNull final List<ValidationFinding> matchFindings) {
         this.patientData = patientData;
+        this.preTreatmentData = preTreatmentData;
         this.sequencedBiopsies = sequencedBiopsies;
         this.clinicalBiopsies = clinicalBiopsies;
         this.treatments = treatments;
         this.treatmentResponses = treatmentResponses;
+        this.tumorMarkers = tumorMarkers;
         this.matchFindings = matchFindings;
     }
 
     @NotNull
     public PatientData patientData() {
         return patientData;
+    }
+
+    @NotNull
+    public PreTreatmentData preTreatmentData() {
+        return preTreatmentData;
     }
 
     @NotNull
@@ -54,6 +66,11 @@ public class Patient {
     @NotNull
     public List<BiopsyTreatmentResponseData> treatmentResponses() {
         return treatmentResponses;
+    }
+
+    @NotNull
+    public List<TumorMarkerData> tumorMarkers() {
+        return tumorMarkers;
     }
 
     @NotNull

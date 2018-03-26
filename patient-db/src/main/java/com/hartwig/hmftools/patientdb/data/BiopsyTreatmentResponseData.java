@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class BiopsyTreatmentResponseData {
+public abstract class BiopsyTreatmentResponseData implements Comparable<BiopsyTreatmentResponseData> {
 
     @Nullable
     public abstract Integer treatmentId();
@@ -58,8 +58,28 @@ public abstract class BiopsyTreatmentResponseData {
         return assessmentDate();
     }
 
+    public boolean isNotDoneResponse() {
+        String response = response();
+        return response != null && response.equalsIgnoreCase("nd");
+    }
+
     @Override
     public String toString() {
-        return response() + "(" + date() + ")";
+        return response() + " (" + date() + ")";
+    }
+
+    @Override
+    public int compareTo(@NotNull final BiopsyTreatmentResponseData other) {
+        LocalDate date1 = date();
+        LocalDate date2 = other.date();
+        if (date1 == null && date2 == null) {
+            return 0;
+        } else if (date1 == null) {
+            return 1;
+        } else if (date2 == null) {
+            return -1;
+        } else {
+            return date1.compareTo(date2);
+        }
     }
 }

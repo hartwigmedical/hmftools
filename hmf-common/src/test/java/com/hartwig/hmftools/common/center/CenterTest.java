@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
 
 import org.junit.Test;
 
@@ -17,13 +16,13 @@ public class CenterTest {
     private static final String TEST_FILE = BASE_RESOURCE_DIR + File.separator + "centers.csv";
 
     @Test
-    public void canReadCPCTRecipients() throws IOException, EmptyFileException {
+    public void canReadCPCTRecipients() throws IOException {
         final CenterModel centerModel = Center.readFromCSV(TEST_FILE);
         assertEquals("my@email.com; my2@email.com", centerModel.getCpctRecipients("01"));
     }
 
     @Test
-    public void canReadPIs() throws IOException, EmptyFileException {
+    public void canReadPIs() throws IOException {
         final CenterModel centerModel = Center.readFromCSV(TEST_FILE);
         final CenterData center = centerModel.centerPerId("01");
         assertNotNull(center);
@@ -38,7 +37,7 @@ public class CenterTest {
     }
 
     @Test
-    public void canReadDRUPRecipients() throws IOException, EmptyFileException {
+    public void canReadDRUPRecipients() throws IOException {
         final CenterModel centerModel = Center.readFromCSV(TEST_FILE);
         assertEquals("my3@email.com", centerModel.getDrupRecipients("01"));
         //MIVO: drup recipient field with '*'
@@ -46,7 +45,7 @@ public class CenterTest {
     }
 
     @Test
-    public void canReadAddress() throws IOException, EmptyFileException {
+    public void canReadAddress() throws IOException {
         final CenterModel centerModel = Center.readFromCSV(TEST_FILE);
         final CenterData center = centerModel.centerPerId("01");
         assertNotNull(center);

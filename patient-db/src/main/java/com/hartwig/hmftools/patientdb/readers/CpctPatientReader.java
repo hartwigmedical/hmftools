@@ -53,8 +53,8 @@ public class CpctPatientReader {
 
     public static final String FIELD_DEATH_DATE = "FLD.DEATH.DDEATHDTC";
 
-    private static final String FIELD_HOSPITAL1 = "FLD.ELIGIBILITY.HOSPITAL";
-    private static final String FIELD_HOSPITAL2 = "FLD.SELCRIT.NHOSPITAL";
+    public static final String FIELD_HOSPITAL1 = "FLD.ELIGIBILITY.HOSPITAL";
+    public static final String FIELD_HOSPITAL2 = "FLD.SELCRIT.NHOSPITAL";
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -111,6 +111,7 @@ public class CpctPatientReader {
             }
         }
     }
+
 
     private void setPrimaryTumorData(@NotNull final ImmutablePatientData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
         for (final EcrfForm carcinomaForm : studyEvent.nonEmptyFormsPerOID(FORM_CARCINOMA, false)) {

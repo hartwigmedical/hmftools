@@ -11,7 +11,6 @@ import java.sql.SQLException;
 import java.util.List;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -40,7 +39,7 @@ public class HmfGenePanelBuilder {
     private static final String ENSEMBLDB_URL = "jdbc:mysql://ensembldb.ensembl.org:3337/" + DATABASE;
     private static final String DB_USER = "anonymous";
 
-    public static void main(String[] args) throws ParseException, IOException, InterruptedException, SQLException, EmptyFileException {
+    public static void main(String[] args) throws ParseException, IOException, SQLException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final String outputFilePath = cmd.getOptionValue(OUT_PATH);
@@ -77,7 +76,7 @@ public class HmfGenePanelBuilder {
     }
 
     @NotNull
-    private static Result<Record> queryEnsembldb() throws SQLException, IOException, EmptyFileException {
+    private static Result<Record> queryEnsembldb() throws SQLException, IOException {
         // MIVO: disable annoying jooq self-ad message
         System.setProperty("org.jooq.no-logo", "true");
         final Connection conn = DriverManager.getConnection(ENSEMBLDB_URL, DB_USER, "");

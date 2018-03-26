@@ -13,14 +13,15 @@ import org.jetbrains.annotations.NotNull;
 
 public class CanonicalAnnotationSelector {
 
+    @NotNull
     private final Map<String, String> transcripts;
 
-    public CanonicalAnnotationSelector(final List<CanonicalTranscript> transcripts) {
+    public CanonicalAnnotationSelector(@NotNull final List<CanonicalTranscript> transcripts) {
         this(transcripts.stream().collect(Collectors.toMap(TranscriptRegion::gene, TranscriptRegion::transcriptID)));
     }
 
     @VisibleForTesting
-    CanonicalAnnotationSelector(final Map<String, String> geneTranscriptMap) {
+    CanonicalAnnotationSelector(@NotNull final Map<String, String> geneTranscriptMap) {
         this.transcripts = geneTranscriptMap;
     }
 
@@ -33,5 +34,4 @@ public class CanonicalAnnotationSelector {
 
         return Optional.empty();
     }
-
 }

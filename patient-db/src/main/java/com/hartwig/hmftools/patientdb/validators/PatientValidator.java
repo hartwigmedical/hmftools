@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientdb.validators;
 
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.naturalOrder;
-import static java.util.Comparator.nullsFirst;
 import static java.util.Comparator.nullsLast;
 
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_BIOPSY_DATE;
@@ -25,15 +24,21 @@ import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_BIR
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_BIRTH_YEAR2;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_BIRTH_YEAR3;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_DEATH_DATE;
+import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_HOSPITAL1;
+import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_HOSPITAL2;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_INFORMED_CONSENT_DATE;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_PRIMARY_TUMOR_LOCATION;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_PRIMARY_TUMOR_LOCATION_OTHER;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_REGISTRATION_DATE1;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_REGISTRATION_DATE2;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_SEX;
+import static com.hartwig.hmftools.patientdb.readers.PreTreatmentReader.FIELD_PRERADIOTHERAPY_GIVEN;
+import static com.hartwig.hmftools.patientdb.readers.PreTreatmentReader.FIELD_PRETREATMENT_GIVEN;
+import static com.hartwig.hmftools.patientdb.readers.PreTreatmentReader.FIELD_PRE_DRUG;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,12 +49,13 @@ import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.Config;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
-import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentDrugData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
+import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PatientData;
-import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
+import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
+import com.hartwig.hmftools.patientdb.data.TreatmentData;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -68,12 +74,20 @@ public final class PatientValidator {
 
         findings.addAll(validatePatientData(patient.patientData()));
         findings.addAll(validateTumorLocationCuration(patient.patientData()));
+        findings.addAll(validatePreTreatmentData(patientId, patient.preTreatmentData()));
         findings.addAll(validateBiopsies(patientId, patient.clinicalBiopsies(), patient.treatments()));
         findings.addAll(validateTreatments(patientId, patient.treatments()));
         findings.addAll(validateTreatmentResponses(patientId, patient.treatments(), patient.treatmentResponses()));
         findings.addAll(validateDeathDate(patientId, patient.patientData(), patient.treatments()));
         findings.addAll(validateInformedConsentDate(patientId, patient.patientData(), patient.clinicalBiopsies()));
-        findings.addAll(validateTreatmentCuration(patientId, patient.treatments()));
+        findings.addAll(validateTreatmentCuration(patientId,
+                "treatmentCuration",
+                fields(FIELD_DRUG, FIELD_DRUG_OTHER),
+                patient.treatments()));
+        findings.addAll(validateTreatmentCuration(patientId,
+                "preTreatmentCuration",
+                FIELD_PRE_DRUG,
+                Lists.newArrayList(patient.preTreatmentData())));
 
         return findings;
     }
@@ -123,6 +137,40 @@ public final class PatientValidator {
                     FormStatusState.best(patientData.eligibilityStatus(), patientData.selectionCriteriaStatus()),
                     patientData.eligibilityLocked() || patientData.selectionCriteriaLocked()));
         }
+        if (patientData.hospital() == null) {
+            findings.add(ValidationFinding.of(ECRF_LEVEL,
+                    cpctId,
+                    fields(FIELD_HOSPITAL1, FIELD_HOSPITAL2),
+                    "no hospital",
+                    FormStatusState.best(patientData.eligibilityStatus(), patientData.selectionCriteriaStatus()),
+                    patientData.eligibilityLocked() || patientData.selectionCriteriaLocked()));
+        }
+        return findings;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static List<ValidationFinding> validatePreTreatmentData(@NotNull final String patientId,
+            @NotNull final PreTreatmentData preTreatmentData) {
+        final String preTreatmentGiven = preTreatmentData.treatmentGiven();
+        final String preRadioTreatmentGiven = preTreatmentData.radiotherapyGiven();
+        final List<ValidationFinding> findings = Lists.newArrayList();
+        if (preTreatmentGiven == null) {
+            findings.add(ValidationFinding.of(ECRF_LEVEL,
+                    patientId,
+                    FIELD_PRETREATMENT_GIVEN,
+                    "pre systemic treatment given empty",
+                    preTreatmentData.formStatus(),
+                    preTreatmentData.formLocked()));
+        }
+        if (preRadioTreatmentGiven == null) {
+            findings.add(ValidationFinding.of(ECRF_LEVEL,
+                    patientId,
+                    FIELD_PRERADIOTHERAPY_GIVEN,
+                    "pre radio treatment given empty",
+                    preTreatmentData.formStatus(),
+                    preTreatmentData.formLocked()));
+        }
         return findings;
     }
 
@@ -137,7 +185,7 @@ public final class PatientValidator {
         }
         if (biopsies.size() > 0 && treatments.size() > 0) {
             biopsies.sort(comparing(BiopsyData::date, nullsLast(naturalOrder())));
-            treatments.sort(comparing(BiopsyTreatmentData::startDate, nullsLast(naturalOrder())));
+            Collections.sort(treatments);
             final LocalDate firstBiopsyDate = biopsies.get(0).date();
             final LocalDate firstTreatmentStart = treatments.get(0).startDate();
             if (firstBiopsyDate != null && firstTreatmentStart != null && firstTreatmentStart.isBefore(firstBiopsyDate)) {
@@ -189,8 +237,8 @@ public final class PatientValidator {
             @NotNull final List<BiopsyTreatmentData> treatments) {
         final List<ValidationFinding> findings = Lists.newArrayList();
         treatments.forEach(treatment -> validateTreatmentData(patientId, treatment));
-        treatments.sort(comparing(BiopsyTreatmentData::startDate, nullsLast(naturalOrder())).thenComparing(BiopsyTreatmentData::endDate,
-                nullsFirst(naturalOrder())));
+        Collections.sort(treatments);
+
         if (treatments.size() > 1) {
             for (int index = 1; index < treatments.size(); index++) {
                 final BiopsyTreatmentData currentTreatment = treatments.get(index);
@@ -269,7 +317,7 @@ public final class PatientValidator {
 
     @NotNull
     @VisibleForTesting
-    static List<ValidationFinding> validateDrugData(@NotNull final String patientId, @NotNull final BiopsyTreatmentDrugData drugData,
+    static List<ValidationFinding> validateDrugData(@NotNull final String patientId, @NotNull final DrugData drugData,
             @NotNull final FormStatusState formStatus, final boolean formLocked) {
         final LocalDate drugStart = drugData.startDate();
         final List<ValidationFinding> findings = Lists.newArrayList();
@@ -306,19 +354,19 @@ public final class PatientValidator {
 
     @NotNull
     @VisibleForTesting
-    static List<ValidationFinding> validateTreatmentCuration(@NotNull final String patientId,
-            @NotNull final List<BiopsyTreatmentData> treatments) {
+    static List<ValidationFinding> validateTreatmentCuration(@NotNull final String patientId, @NotNull String curationName,
+            @NotNull String ecrfName, @NotNull final List<? extends TreatmentData> treatments) {
         final List<ValidationFinding> findings = Lists.newArrayList();
-        treatments.forEach(treatmentData -> treatmentData.drugs().forEach(drug -> {
+        treatments.forEach(treatment -> treatment.drugs().forEach(drug -> {
             final String drugName = drug.name();
             if (drugName != null) {
                 if (drug.curatedTreatments().isEmpty()) {
-                    findings.add(ValidationFinding.of("treatmentCuration",
+                    findings.add(ValidationFinding.of(curationName,
                             patientId,
-                            fields(FIELD_DRUG, FIELD_DRUG_OTHER),
-                            "Failed to curate ecrf drug. Curated list contained no matching entry, or match was ambiguous.",
-                            treatmentData.formStatus(),
-                            treatmentData.formLocked(),
+                            ecrfName,
+                            "failed to curate ecrf drug. Curated list contained no matching entry, or match was ambiguous.",
+                            treatment.formStatus(),
+                            treatment.formLocked(),
                             drugName));
                 } else {
                     final List<String> curatedTreatments =
@@ -328,12 +376,10 @@ public final class PatientValidator {
                     final long lengthOfMatchedCharacters = matchedTerms.stream().mapToLong(String::length).sum();
                     final long lengthOfSearchCharacters = drugName.chars().filter(Character::isLetterOrDigit).count();
                     if (lengthOfMatchedCharacters > 0 && (double) lengthOfMatchedCharacters / lengthOfSearchCharacters < .9) {
-                        findings.add(ValidationFinding.of("treatmentCuration",
-                                patientId,
-                                fields(FIELD_DRUG, FIELD_DRUG_OTHER),
-                                "Matched drugs are based on less than 90% of search term.",
-                                treatmentData.formStatus(),
-                                treatmentData.formLocked(),
+                        findings.add(ValidationFinding.of(curationName, patientId, ecrfName,
+                                "matched drugs are based on less than 90% of search term.",
+                                treatment.formStatus(),
+                                treatment.formLocked(),
                                 drugName + " matched to " + Strings.join(curatedTreatments, ',') + " based on " + Strings.join(matchedTerms,
                                         ',')));
                     }
@@ -352,7 +398,7 @@ public final class PatientValidator {
             findings.add(ValidationFinding.of("tumorLocationCuration",
                     patientData.cpctId(),
                     fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER),
-                    "Failed to curate primary tumor location.",
+                    "failed to curate primary tumor location.",
                     patientData.primaryTumorStatus(),
                     patientData.primaryTumorLocked(),
                     searchTerm));
@@ -369,8 +415,8 @@ public final class PatientValidator {
             findings.addAll(validateTreatmentResponse(patientId, responses.get(i), i == 0));
         }
 
-        treatments.sort(comparing(BiopsyTreatmentData::startDate, nullsLast(naturalOrder())));
-        responses.sort(comparing(BiopsyTreatmentResponseData::date, nullsLast(naturalOrder())));
+        Collections.sort(treatments);
+        Collections.sort(responses);
         if (treatments.isEmpty() && !responses.isEmpty()) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientId,
@@ -394,8 +440,9 @@ public final class PatientValidator {
             }
         }
         final List<BiopsyTreatmentData> treatmentsMissingResponse = treatments.stream()
-                .filter(treatment -> shouldHaveResponse(treatment) && !hasResponse(treatment, responses))
+                .filter(treatment -> shouldHaveResponse(treatment) && !hasResponse(treatment.id(), responses))
                 .collect(Collectors.toList());
+
         if (treatmentsMissingResponse.size() > 0) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientId,
@@ -424,9 +471,8 @@ public final class PatientValidator {
                 < Config.IMMEDIATE_TREATMENT_END_THRESHOLD;
     }
 
-    private static boolean hasResponse(@NotNull final BiopsyTreatmentData treatment,
-            @NotNull final List<BiopsyTreatmentResponseData> responses) {
-        return responses.stream().anyMatch(response -> TreatmentResponseMatcher.responseMatchesTreatment(response, treatment));
+    private static boolean hasResponse(@NotNull Integer treatmentId, @NotNull List<BiopsyTreatmentResponseData> responses) {
+        return responses.stream().anyMatch(response -> treatmentId.equals(response.treatmentId()));
     }
 
     @NotNull
@@ -458,25 +504,30 @@ public final class PatientValidator {
             if (response == null && !isFirstResponse) {
                 findings.add(ValidationFinding.of(ECRF_LEVEL,
                         patientId,
-                        FIELD_RESPONSE, "measurement done is yes, but response is empty (non-first response)",
+                        FIELD_RESPONSE,
+                        "measurement done is yes, but response is empty (non-first response)",
                         treatmentResponse.formStatus(),
                         treatmentResponse.formLocked()));
             }
         } else if (measurementDone.trim().equalsIgnoreCase("no")) {
-            if (response == null || !response.trim().equalsIgnoreCase("nd")) {
+            if (!treatmentResponse.isNotDoneResponse()) {
                 if (date != null) {
                     findings.add(ValidationFinding.of(ECRF_LEVEL,
                             patientId,
                             FIELD_MEASUREMENT_DONE,
                             "measurement done is no, but assessment date or response date is filled in",
-                            treatmentResponse.formStatus(), treatmentResponse.formLocked(), "effective response date: " + date));
+                            treatmentResponse.formStatus(),
+                            treatmentResponse.formLocked(),
+                            "effective response date: " + date));
                 }
                 if (response != null) {
                     findings.add(ValidationFinding.of(ECRF_LEVEL,
                             patientId,
                             FIELD_MEASUREMENT_DONE,
                             "measurement done is no, but response filled in",
-                            treatmentResponse.formStatus(), treatmentResponse.formLocked(), "response: " + response));
+                            treatmentResponse.formStatus(),
+                            treatmentResponse.formLocked(),
+                            "response: " + response));
                 }
             }
         } else {
@@ -484,14 +535,18 @@ public final class PatientValidator {
                     patientId,
                     FIELD_MEASUREMENT_DONE,
                     "measurement done is not yes/no",
-                    treatmentResponse.formStatus(), treatmentResponse.formLocked(), "measurement done: " + measurementDone));
+                    treatmentResponse.formStatus(),
+                    treatmentResponse.formLocked(),
+                    "measurement done: " + measurementDone));
         }
-        if (response != null && date == null) {
+        if (response != null && date == null && !treatmentResponse.isNotDoneResponse()) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientId,
                     fields(FIELD_ASSESSMENT_DATE, FIELD_RESPONSE_DATE),
                     "response filled in, but no assessment date and response date found",
-                    treatmentResponse.formStatus(), treatmentResponse.formLocked(), "response: " + response));
+                    treatmentResponse.formStatus(),
+                    treatmentResponse.formLocked(),
+                    "response: " + response));
         }
         return findings;
     }
@@ -506,8 +561,10 @@ public final class PatientValidator {
             treatments.sort(comparing(BiopsyTreatmentData::endDate, nullsLast(naturalOrder())));
             final BiopsyTreatmentData lastTreatment = treatments.get(treatments.size() - 1);
             final LocalDate lastTreatmentEndDate = lastTreatment.endDate();
+            final LocalDate firstTreatmentStart = treatments.get(0).startDate();
             if (lastTreatmentEndDate == null || lastTreatmentEndDate.isAfter(deathDate)) {
-                String details = "death date (" + deathDate + ") before end of last treatment (" + lastTreatmentEndDate + ")";
+                String details = "death date (" + deathDate + ") before end of last treatment (" + lastTreatmentEndDate + ")"
+                        + " and start treatment is (" + firstTreatmentStart + ")";
                 findings.add(ValidationFinding.of(ECRF_LEVEL,
                         patientId,
                         fields(FIELD_DEATH_DATE, FORM_TREATMENT),
@@ -528,8 +585,7 @@ public final class PatientValidator {
         if (informedConsentDate != null && !biopsies.isEmpty()) {
             final List<BiopsyData> biopsiesPriorToInformedConsent = biopsies.stream().filter(biopsy -> {
                 final LocalDate biopsyDate = biopsy.date();
-                return biopsyDate != null && biopsyDate.plusDays(Config.MAX_BIOPSY_DAYS_PRIOR_TO_INFORMED_CONSENT_DATE)
-                        .isBefore(informedConsentDate);
+                return biopsyDate != null && biopsyDate.isBefore(informedConsentDate);
             }).collect(Collectors.toList());
             if (biopsiesPriorToInformedConsent.size() > 0) {
                 final String detailsMessage =
@@ -546,8 +602,7 @@ public final class PatientValidator {
                 findings.add(ValidationFinding.of(ECRF_LEVEL,
                         patientId,
                         fields(FIELD_INFORMED_CONSENT_DATE, FIELD_BIOPSY_DATE),
-                        "at least 1 biopsy taken more than " + Config.MAX_BIOPSY_DAYS_PRIOR_TO_INFORMED_CONSENT_DATE
-                                + " days prior to informed consent date",
+                        "at least 1 biopsy taken before informed consent date",
                         best,
                         locked,
                         detailsMessage));

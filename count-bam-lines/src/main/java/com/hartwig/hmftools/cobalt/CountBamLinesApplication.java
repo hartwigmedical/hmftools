@@ -17,7 +17,6 @@ import com.hartwig.hmftools.common.cobalt.CobaltCount;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.cobalt.ReadCountFile;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gc.GCProfile;
 import com.hartwig.hmftools.common.gc.GCProfileFactory;
 import com.hartwig.hmftools.common.version.VersionInfo;
@@ -49,13 +48,11 @@ public class CountBamLinesApplication {
     private static final int WINDOW_SIZE_DEFAULT = 1000;
     private static final int MIN_MAPPING_QUALITY_DEFAULT = 10;
 
-    public static void main(final String... args)
-            throws ParseException, IOException, ExecutionException, InterruptedException, HartwigException {
+    public static void main(final String... args) throws ParseException, IOException, ExecutionException, InterruptedException {
         new CountBamLinesApplication(args);
     }
 
-    private CountBamLinesApplication(final String... args)
-            throws ParseException, IOException, ExecutionException, InterruptedException, HartwigException {
+    private CountBamLinesApplication(final String... args) throws ParseException, IOException, ExecutionException, InterruptedException {
         final VersionInfo versionInfo = new VersionInfo("cobalt.version");
         LOGGER.info("COBALT version: {}", versionInfo.version());
 

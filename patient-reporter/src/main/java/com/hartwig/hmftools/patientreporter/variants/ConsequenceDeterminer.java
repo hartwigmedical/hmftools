@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
-import static com.hartwig.hmftools.common.variant.predicate.VariantFilter.filter;
-import static com.hartwig.hmftools.common.variant.predicate.VariantPredicates.and;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,17 +43,17 @@ class ConsequenceDeterminer {
 
     @NotNull
     ConsequenceOutput run(@NotNull final List<SomaticVariant> variants) {
-        final Predicate<SomaticVariant> consequenceRule =
-                and(isIncludedIn(hmfSlicingRegion), hasActionableConsequence(relevantTranscriptMap.keySet()));
+        Predicate<SomaticVariant> consequenceRule = and(hmfSlicingRegion::test, hasActionableConsequence(relevantTranscriptMap.keySet()));
 
-        final List<SomaticVariant> consequentialVariants = filter(variants, consequenceRule);
+        List<SomaticVariant> consequentialVariants = variants.stream().filter(consequenceRule).collect(Collectors.toList());
 
         return ImmutableConsequenceOutput.of(consequentialVariants, toVariantReport(consequentialVariants));
     }
 
     @NotNull
-    private static Predicate<SomaticVariant> isIncludedIn(@NotNull final Slicer slicer) {
-        return slicer::includes;
+    public static Predicate<SomaticVariant> and(@NotNull Predicate<SomaticVariant> predicate1,
+            @NotNull Predicate<SomaticVariant> predicate2) {
+        return variant -> predicate1.test(variant) && predicate2.test(variant);
     }
 
     @NotNull
@@ -107,10 +104,11 @@ class ConsequenceDeterminer {
             @NotNull final Set<String> relevantTranscripts) {
         final List<VariantAnnotation> relevantAnnotations = findAllRelevantAnnotations(variant.annotations(), relevantTranscripts);
         for (final VariantAnnotation annotation : relevantAnnotations) {
-            for (final VariantConsequence consequence : annotation.consequences())
+            for (final VariantConsequence consequence : annotation.consequences()) {
                 if (VariantConsequence.ACTIONABLE_CONSEQUENCES.contains(consequence)) {
                     return annotation;
                 }
+            }
         }
         return null;
     }
@@ -119,8 +117,8 @@ class ConsequenceDeterminer {
     private static List<VariantAnnotation> findAllRelevantAnnotations(@NotNull final List<VariantAnnotation> annotations,
             @NotNull final Set<String> relevantTranscripts) {
         return annotations.stream()
-                .filter(annotation -> annotation.featureType().equals(FEATURE_TYPE_TRANSCRIPT) && relevantTranscripts.contains(
-                        annotation.featureID()))
+                .filter(annotation -> annotation.featureType().equals(FEATURE_TYPE_TRANSCRIPT)
+                        && relevantTranscripts.contains(annotation.featureID()))
                 .collect(Collectors.toList());
     }
 }

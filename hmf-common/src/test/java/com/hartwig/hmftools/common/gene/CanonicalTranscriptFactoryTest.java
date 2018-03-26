@@ -17,6 +17,8 @@ public class CanonicalTranscriptFactoryTest {
         final HmfGenomeRegion kras = select("KRAS.tsv");
         final CanonicalTranscript transcript = CanonicalTranscriptFactory.create(kras);
         assertTranscript(transcript, 6, 4, 1119, 189);
+        assertEquals(25368375, transcript.codingStart());
+        assertEquals(25398318, transcript.codingEnd());
     }
 
     @Test
@@ -43,7 +45,7 @@ public class CanonicalTranscriptFactoryTest {
 
     private HmfGenomeRegion select(@NotNull final String file) {
         final InputStream inputStream = CanonicalTranscriptFactoryTest.class.getResourceAsStream("/gene/" + file);
-        return HmfGenomeFileLoader.fromInputStream(inputStream).values().iterator().next();
+        return HmfGenomeFileLoader.fromInputStream(inputStream).iterator().next();
     }
 
 }

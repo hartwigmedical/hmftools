@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.SortedSetMultimap;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 
 import org.junit.Test;

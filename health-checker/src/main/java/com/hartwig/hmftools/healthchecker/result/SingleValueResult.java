@@ -16,7 +16,7 @@ public class SingleValueResult extends AbstractResult {
     }
 
     @NotNull
-    public HealthCheck getCheck() {
+    public HealthCheck check() {
         return check;
     }
 }

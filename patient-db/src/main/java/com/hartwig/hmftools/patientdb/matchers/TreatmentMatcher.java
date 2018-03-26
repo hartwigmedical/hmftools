@@ -16,13 +16,10 @@ import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class TreatmentMatcher {
-    private static final Logger LOGGER = LogManager.getLogger(TreatmentMatcher.class);
 
     private TreatmentMatcher() {
     }
@@ -32,9 +29,7 @@ public final class TreatmentMatcher {
             @NotNull final List<BiopsyData> biopsies, @NotNull final List<BiopsyTreatmentData> treatments) {
         final List<BiopsyTreatmentData> matchedTreatments = Lists.newArrayList();
         final List<ValidationFinding> findings = Lists.newArrayList();
-        if (biopsies.size() < treatments.size()) {
-            LOGGER.warn(patientId + ": has more treatments(" + treatments.size() + ") than biopsies(" + biopsies.size() + ").");
-        }
+
         List<BiopsyData> remainingBiopsies = biopsies;
         for (final BiopsyTreatmentData treatment : treatments) {
             final String treatmentGiven = treatment.treatmentGiven();
@@ -46,18 +41,15 @@ public final class TreatmentMatcher {
                     .collect(Collectors.partitioningBy(clinicalBiopsy -> isPossibleMatch(clinicalBiopsy.date(), treatment.startDate())));
             final List<BiopsyData> possibleMatches = partitions.get(true);
             if (possibleMatches.size() == 0) {
-                findings.add(
-                        ValidationFinding.of("match", patientId, FORM_TREATMENT, "no biopsy match for treatment", FormStatusState.UNKNOWN,
-                                false, treatment.toString()));
+                findings.add(treatmentMatchFinding(patientId, "no biopsy match for treatment", treatment.toString()));
                 matchedTreatments.add(treatment);
             } else if (possibleMatches.size() > 1) {
-                findings.add(ValidationFinding.of("match", patientId, FORM_TREATMENT, "multiple biopsy matches for treatment",
-                        FormStatusState.UNKNOWN, false,
+                findings.add(treatmentMatchFinding(patientId,
+                        "multiple biopsy matches for treatment",
                         treatment + ". biopsies:  " + possibleMatches.stream().map(BiopsyData::toString).collect(Collectors.toList())));
                 matchedTreatments.add(treatment);
             } else if (possibleMatches.get(0).date() == null) {
-                findings.add(ValidationFinding.of("match", patientId, FORM_TREATMENT, "treatment matched biopsy with null date.",
-                        FormStatusState.UNKNOWN, false, treatment.toString()));
+                findings.add(treatmentMatchFinding(patientId, "treatment matched biopsy with null date.", treatment.toString()));
                 matchedTreatments.add(treatment);
             } else {
                 final BiopsyData clinicalBiopsy = possibleMatches.get(0);
@@ -72,9 +64,14 @@ public final class TreatmentMatcher {
         return biopsyDate == null || isWithinThreshold(biopsyDate, treatmentStartDate);
     }
 
-    private static boolean isWithinThreshold(@Nullable final LocalDate biopsyDate, @Nullable final LocalDate treatmentStartDate) {
-        return biopsyDate != null && treatmentStartDate != null && (treatmentStartDate.isAfter(biopsyDate) || treatmentStartDate.isEqual(
-                biopsyDate)) && Duration.between(biopsyDate.atStartOfDay(), treatmentStartDate.atStartOfDay()).toDays()
+    private static boolean isWithinThreshold(@NotNull final LocalDate biopsyDate, @Nullable final LocalDate treatmentStartDate) {
+        return treatmentStartDate != null && (treatmentStartDate.isAfter(biopsyDate) || treatmentStartDate.isEqual(biopsyDate))
+                && Duration.between(biopsyDate.atStartOfDay(), treatmentStartDate.atStartOfDay()).toDays()
                 < Config.MAX_DAYS_BETWEEN_TREATMENT_AND_BIOPSY;
+    }
+
+    @NotNull
+    private static ValidationFinding treatmentMatchFinding(@NotNull String patientId, @NotNull String message, @NotNull String details) {
+        return ValidationFinding.of("match", patientId, FORM_TREATMENT, message, FormStatusState.UNKNOWN, false, details);
     }
 }

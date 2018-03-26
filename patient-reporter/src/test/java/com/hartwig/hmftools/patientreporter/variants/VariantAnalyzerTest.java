@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
-import static com.hartwig.hmftools.common.variant.snpeff.VariantAnnotationTest.createVariantAnnotationBuilder;
+import static com.hartwig.hmftools.common.variant.snpeff.AnnotationTestFactory.createVariantAnnotationBuilder;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testMicrosatelliteAnalyzer;
 
 import static org.junit.Assert.assertEquals;
@@ -14,8 +14,10 @@ import com.google.common.collect.TreeMultimap;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfGenomeRegion;
+import com.hartwig.hmftools.common.region.hmfslicer.Strand;
+import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantImpl;
+import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
@@ -70,35 +72,36 @@ public class VariantAnalyzerTest {
 
         final VariantAnalysis analysis = analyzer.run(variants);
 
-        assertEquals(4, analysis.allVariants().size());
         assertEquals(4, analysis.passedVariants().size());
         assertEquals(3, analysis.mutationalLoad());
         assertEquals(1, analysis.findings().size());
     }
 
     @NotNull
-    private static SomaticVariantImpl.Builder builder() {
-        return new SomaticVariantImpl.Builder().type(VariantType.SNP).chromosome(CHROMOSOME).filter(PASS_FILTER).ref("A").alt("T");
+    private static ImmutableSomaticVariantImpl.Builder builder() {
+        return SomaticVariantTestBuilderFactory.create().type(VariantType.SNP).chromosome(CHROMOSOME).filter(PASS_FILTER);
     }
 
     @NotNull
     private static SortedSetMultimap<String, HmfGenomeRegion> hmfRegions() {
         final SortedSetMultimap<String, HmfGenomeRegion> hmfRegions = TreeMultimap.create();
-        hmfRegions.put(CHROMOSOME, ImmutableHmfGenomeRegion.builder()
-                .chromosome(CHROMOSOME)
-                .start(350)
-                .end(450)
-                .gene(GENE)
-                .transcriptID(RIGHT_TRANSCRIPT)
-                .transcriptVersion(TRANSCRIPT_VERSION)
-                .chromosomeBand(CHROMOSOME_BAND)
-                .entrezId(ENTREZ_ID)
-                .geneID(GENE_ID)
-                .geneStart(GENE_START)
-                .geneEnd(GENE_END)
-                .codingStart(0)
-                .codingEnd(0)
-                .build());
+        hmfRegions.put(CHROMOSOME,
+                ImmutableHmfGenomeRegion.builder()
+                        .chromosome(CHROMOSOME)
+                        .start(350)
+                        .end(450)
+                        .gene(GENE)
+                        .transcriptID(RIGHT_TRANSCRIPT)
+                        .transcriptVersion(TRANSCRIPT_VERSION)
+                        .chromosomeBand(CHROMOSOME_BAND)
+                        .entrezId(ENTREZ_ID)
+                        .geneID(GENE_ID)
+                        .geneStart(GENE_START)
+                        .geneEnd(GENE_END)
+                        .codingStart(0)
+                        .codingEnd(0)
+                        .strand(Strand.FORWARD)
+                        .build());
         return hmfRegions;
     }
 }

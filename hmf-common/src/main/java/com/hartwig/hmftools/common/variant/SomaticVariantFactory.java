@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
 import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
@@ -27,6 +26,7 @@ import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
+import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
@@ -39,23 +39,31 @@ public class SomaticVariantFactory {
     private static final String MAPPABILITY_TAG = "MAPPABILITY";
 
     @NotNull
-    private final CompoundFilter filter;
+    private final VariantContextFilter filter;
 
-    public SomaticVariantFactory() {
-        this(new VariantContextFilter[0]);
-    }
-
-    public SomaticVariantFactory(VariantContextFilter... filters) {
-        final CompoundFilter filter = new CompoundFilter(true);
-        filter.add(new ChromosomeFilter());
-        filter.addAll(Arrays.asList(filters));
-        this.filter = filter;
+    @NotNull
+    public static SomaticVariantFactory unfilteredInstance() {
+        return new SomaticVariantFactory(new ChromosomeFilter());
     }
 
     @NotNull
-    public List<SomaticVariant> fromVCFFile(@NotNull final String sample, @NotNull final String basePath,
-            @NotNull final String fileExtension) throws IOException {
-        return fromVCFFile(sample, PathExtensionFinder.build().findPath(basePath, fileExtension).toString());
+    public static SomaticVariantFactory passOnlyInstance() {
+        final CompoundFilter filter = new CompoundFilter(true);
+        filter.add(new ChromosomeFilter());
+        filter.add(new PassingVariantFilter());
+        return new SomaticVariantFactory(filter);
+    }
+
+    @NotNull
+    public static SomaticVariantFactory filteredInstance(@NotNull VariantContextFilter... filters) {
+        final CompoundFilter filter = new CompoundFilter(true);
+        filter.add(new ChromosomeFilter());
+        filter.addAll(Arrays.asList(filters));
+        return new SomaticVariantFactory(filter);
+    }
+
+    private SomaticVariantFactory(@NotNull final VariantContextFilter filter) {
+        this.filter = filter;
     }
 
     @NotNull
@@ -89,7 +97,7 @@ public class SomaticVariantFactory {
             if (genotype.hasAD() && genotype.getAD().length > 1) {
                 final AllelicDepth frequencyData = determineAlleleFrequencies(genotype);
                 if (frequencyData.totalReadCount() > 0) {
-                    SomaticVariantImpl.Builder builder = new SomaticVariantImpl.Builder().chromosome(context.getContig())
+                    ImmutableSomaticVariantImpl.Builder builder = ImmutableSomaticVariantImpl.builder().chromosome(context.getContig())
                             .annotations(Collections.emptyList())
                             .position(context.getStart())
                             .ref(context.getReference().getBaseString())
@@ -111,8 +119,7 @@ public class SomaticVariantFactory {
         return Optional.empty();
     }
 
-    private void attachAnnotations(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
-
+    private void attachAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
         final List<VariantAnnotation> allAnnotations = VariantAnnotationFactory.fromContext(context);
         builder.annotations(allAnnotations);
 
@@ -139,7 +146,7 @@ public class SomaticVariantFactory {
                 .count());
     }
 
-    private static void attachFilter(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
+    private static void attachFilter(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
         if (context.isFiltered()) {
             StringJoiner joiner = new StringJoiner(";");
             context.getFilters().forEach(joiner::add);
@@ -162,11 +169,11 @@ public class SomaticVariantFactory {
         return VariantType.UNDEFINED;
     }
 
-    private static void attachType(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
+    private static void attachType(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
         builder.type(type(context));
     }
 
-    private static void attachID(@NotNull SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
+    private static void attachID(@NotNull ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
         final String ID = context.getID();
         if (!ID.isEmpty()) {
             final String[] ids = ID.split(ID_SEPARATOR);
@@ -200,6 +207,6 @@ public class SomaticVariantFactory {
             totalReadCount += afField;
         }
 
-        return new AllelicDepthImpl(alleleReadCount, totalReadCount);
+        return ImmutableAllelicDepthImpl.builder().alleleReadCount(alleleReadCount).totalReadCount(totalReadCount).build();
     }
 }

@@ -7,7 +7,6 @@ import java.util.List;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -73,7 +72,7 @@ public class LoadSomaticVariants {
         }
 
         LOGGER.info("Reading somatic VCF File");
-        final List<SomaticVariant> variants = new SomaticVariantFactory(filter).fromVCFFile(sample, vcfFileLocation);
+        final List<SomaticVariant> variants = SomaticVariantFactory.filteredInstance(filter).fromVCFFile(sample, vcfFileLocation);
 
         LOGGER.info("Reading high confidence bed file");
         final Multimap<String, GenomeRegion> highConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);

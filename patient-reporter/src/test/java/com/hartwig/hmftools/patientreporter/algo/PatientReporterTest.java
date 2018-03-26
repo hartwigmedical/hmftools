@@ -14,7 +14,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusions;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
@@ -30,15 +29,13 @@ import com.hartwig.hmftools.svannotation.annotations.Transcript;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-import net.sf.dynamicreports.report.exception.DRException;
-
 public class PatientReporterTest {
 
     private static final String RUN_DIRECTORY = Resources.getResource("example").getPath();
     private static final String FUSIONS_CSV = Resources.getResource("csv").getPath() + File.separator + "cosmic_gene_fusions.csv";
 
     @Test
-    public void canRunOnRunDirectory() throws IOException, HartwigException, DRException {
+    public void canRunOnRunDirectory() throws IOException {
         final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfPanelGeneMap());
         final BaseReporterData baseReporterData = testBaseReporterData();
         final HmfReporterData reporterData = testHmfReporterData();

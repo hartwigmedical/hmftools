@@ -6,7 +6,6 @@ import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusionModel;
 import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusions;
 import com.hartwig.hmftools.common.cosmic.genes.CosmicGeneModel;
 import com.hartwig.hmftools.common.cosmic.genes.CosmicGenes;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
@@ -21,7 +20,7 @@ final class HmfReporterDataLoader {
 
     @NotNull
     static HmfReporterData buildFromFiles(@NotNull final String cosmicGeneFile, @NotNull final String cosmicFusionFile,
-            @NotNull final String drupFilterFile, @NotNull final String fastaFileLocation) throws IOException, HartwigException {
+            @NotNull final String drupFilterFile, @NotNull final String fastaFileLocation) throws IOException {
         final GeneModel panelGeneModel = new GeneModel(HmfGenePanelSupplier.hmfPanelGeneMap());
         final CosmicGeneModel cosmicGeneModel = CosmicGenes.readFromCSV(cosmicGeneFile);
         final CosmicFusionModel cosmicFusionModel = CosmicFusions.readFromCSV(cosmicFusionFile);

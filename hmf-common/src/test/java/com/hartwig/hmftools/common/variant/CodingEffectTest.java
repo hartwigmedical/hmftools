@@ -46,7 +46,6 @@ public class CodingEffectTest {
 
     @Test
     public void testEffectPriority() {
-
         assertEffect(NONSENSE_OR_FRAMESHIFT, STOP_GAINED, SPLICE_ACCEPTOR_VARIANT, MISSENSE_VARIANT, INTRON_VARIANT);
         assertEffect(SPLICE, SPLICE_ACCEPTOR_VARIANT, MISSENSE_VARIANT, INTRON_VARIANT);
         assertEffect(MISSENSE, MISSENSE_VARIANT, INTRON_VARIANT);
@@ -56,5 +55,4 @@ public class CodingEffectTest {
     private void assertEffect(@NotNull CodingEffect expected, @NotNull final VariantConsequence... consequences) {
         assertEquals(expected, effect(Lists.newArrayList(consequences)));
     }
-
 }

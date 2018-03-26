@@ -8,9 +8,9 @@ import java.io.IOException;
 import java.net.URL;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.exception.EmptyFolderException;
-import com.hartwig.hmftools.common.exception.FolderDoesNotExistException;
-import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.io.exception.EmptyFolderException;
+import com.hartwig.hmftools.common.io.exception.FolderDoesNotExistException;
+import com.hartwig.hmftools.common.io.exception.NotFolderException;
 
 import org.junit.Test;
 
@@ -23,7 +23,7 @@ public class FolderCheckerTest {
     private static final String EMPTY_FOLDER = BASE_FOLDER + File.separator + "FolderCheckerEmpty";
 
     @Test
-    public void checkFolder() throws IOException, HartwigException {
+    public void checkFolder() throws IOException {
         final URL testPath = Resources.getResource(RUN_FOLDER);
         final String dirPath = testPath.getPath();
         final String path = FolderChecker.build().checkFolder(dirPath);
@@ -32,7 +32,7 @@ public class FolderCheckerTest {
     }
 
     @Test
-    public void checkFolderWithExtraSeparator() throws IOException, HartwigException {
+    public void checkFolderWithExtraSeparator() throws IOException {
         final URL testPath = Resources.getResource(RUN_FOLDER);
         final String dirPath = testPath.getPath() + File.separator;
         final String path = FolderChecker.build().checkFolder(dirPath);
@@ -41,19 +41,19 @@ public class FolderCheckerTest {
     }
 
     @Test(expected = FolderDoesNotExistException.class)
-    public void checkFolderNotExist() throws IOException, HartwigException {
+    public void checkFolderNotExist() throws IOException {
         FolderChecker.build().checkFolder(NON_EXISTING_FOLDER);
     }
 
     @Test(expected = EmptyFolderException.class)
-    public void checkEmptyFolder() throws IOException, HartwigException {
+    public void checkEmptyFolder() throws IOException {
         final URL testPath = Resources.getResource(EMPTY_FOLDER);
         final String dirPath = testPath.getPath();
         FolderChecker.build().checkFolder(dirPath);
     }
 
     @Test(expected = NotFolderException.class)
-    public void checkNotFolder() throws IOException, HartwigException {
+    public void checkNotFolder() throws IOException {
         final URL testPath = Resources.getResource(NOT_A_FOLDER);
         final String dirPath = testPath.getPath();
         FolderChecker.build().checkFolder(dirPath);

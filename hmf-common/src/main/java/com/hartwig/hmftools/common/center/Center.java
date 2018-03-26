@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.io.reader.FileReader;
 
 import org.apache.logging.log4j.LogManager;
@@ -34,7 +33,7 @@ public final class Center {
     }
 
     @NotNull
-    public static CenterModel readFromCSV(@NotNull final String pathToCsv) throws IOException, EmptyFileException {
+    public static CenterModel readFromCSV(@NotNull final String pathToCsv) throws IOException {
         final Map<String, CenterData> centerPerId = Maps.newHashMap();
         final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (final String line : lines) {

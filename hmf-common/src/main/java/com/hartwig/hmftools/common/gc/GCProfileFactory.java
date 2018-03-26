@@ -7,7 +7,6 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.reader.LineReader;
 
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +22,7 @@ public enum GCProfileFactory {
     private static final int MAPPABLE_PERCENTAGE_COLUMN = 4;
 
     @NotNull
-    public static Multimap<String, GCProfile> loadGCContent(@NotNull final String fileName) throws IOException, HartwigException {
+    public static Multimap<String, GCProfile> loadGCContent(@NotNull final String fileName) throws IOException {
         return loadGCContent(LineReader.build().readLines(new File(fileName).toPath(), x -> true));
     }
 

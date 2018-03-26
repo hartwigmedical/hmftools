@@ -11,6 +11,9 @@ import org.jetbrains.annotations.NotNull;
 
 public final class PurpleQCFactory {
 
+    private PurpleQCFactory() {
+    }
+
     @NotNull
     public static PurpleQC create(@NotNull FittedPurity purity, @NotNull List<PurpleCopyNumber> copyNumbers, @NotNull Gender purpleGender,
             @NotNull Gender cobaltGender) {

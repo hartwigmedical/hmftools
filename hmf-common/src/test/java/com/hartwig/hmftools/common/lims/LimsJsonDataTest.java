@@ -8,7 +8,7 @@ import org.junit.Test;
 public class LimsJsonDataTest {
 
     @Test
-    public void canConvertSOPsToLabProceduresString() throws Exception {
+    public void canConvertSOPsToLabProceduresString() {
         final String NA = "N/A";
         final String completeSopString = "PREP013V23-QC037V20-SEQ008V25";
 
@@ -36,9 +36,12 @@ public class LimsJsonDataTest {
 
     @NotNull
     private static LimsJsonData buildLimsEntry(@NotNull final String labSopVersions) {
-        return ImmutableLimsJsonData.builder().sampleId("")
+        return ImmutableLimsJsonData.builder()
+                .sampleId("")
+                .dnaConcentration("")
                 .arrivalDateString("")
-                .samplingDateString("").tumorPercentageString("50")
+                .samplingDateString("")
+                .tumorPercentageString("50")
                 .labSopVersions(labSopVersions)
                 .build();
     }

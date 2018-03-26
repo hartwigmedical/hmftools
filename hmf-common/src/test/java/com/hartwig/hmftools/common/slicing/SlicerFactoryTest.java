@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +22,7 @@ public class SlicerFactoryTest {
     private static final String INVALID_BED = "invalid.bed";
 
     @Test
-    public void handleTrivialBed() throws IOException, EmptyFileException {
+    public void handleTrivialBed() throws IOException {
         final String bedFile = BED_FILE_BASE_PATH + File.separator + VALID_BED;
         final Slicer slicer = SlicerFactory.fromBedFile(bedFile);
         assertTrue(slicer.includes(new TestGenomePosition("1", 1)));
@@ -31,14 +30,14 @@ public class SlicerFactoryTest {
     }
 
     @Test
-    public void handleUnsortedBed() throws IOException, EmptyFileException {
+    public void handleUnsortedBed() throws IOException {
         final String bedFile = BED_FILE_BASE_PATH + File.separator + UNSORTED_BED;
         final Slicer slicer = SlicerFactory.fromBedFile(bedFile);
         assertEquals(2, slicer.regions().size());
     }
 
     @Test
-    public void handleInvalidBedRegion() throws IOException, EmptyFileException {
+    public void handleInvalidBedRegion() throws IOException {
         final String bedFile = BED_FILE_BASE_PATH + File.separator + INVALID_BED;
         final Slicer slicer = SlicerFactory.fromBedFile(bedFile);
         assertEquals(2, slicer.regions().size());

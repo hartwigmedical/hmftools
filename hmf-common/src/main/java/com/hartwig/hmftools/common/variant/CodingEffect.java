@@ -13,7 +13,6 @@ public enum CodingEffect {
 
     @NotNull
     public static CodingEffect effect(@NotNull final List<VariantConsequence> consequences) {
-
         final List<CodingEffect> simplifiedEffects =
                 consequences.stream().map(CodingEffect::effect).collect(Collectors.toList());
         if (simplifiedEffects.stream().anyMatch(x -> x.equals(NONSENSE_OR_FRAMESHIFT))) {
@@ -33,7 +32,6 @@ public enum CodingEffect {
 
     @NotNull
     private static CodingEffect effect(@NotNull final VariantConsequence consequence) {
-
         switch (consequence) {
             case FRAMESHIFT_VARIANT:
             case STOP_GAINED:
@@ -52,6 +50,4 @@ public enum CodingEffect {
 
         return NONE;
     }
-
-
 }

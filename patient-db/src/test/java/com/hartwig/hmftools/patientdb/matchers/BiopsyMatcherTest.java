@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientdb.matchers;
 
+import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyBuilder;
+import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.sampleBuilder;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -8,10 +11,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
-import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
-import com.hartwig.hmftools.patientdb.data.ImmutableSampleData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
 import org.jetbrains.annotations.NotNull;
@@ -27,20 +27,21 @@ public class BiopsyMatcherTest {
     private final static LocalDate SEP2015 = LocalDate.parse("2015-09-01");
     private final static LocalDate NOV2015 = LocalDate.parse("2015-11-01");
 
-    private final static SampleData LIMS_SAMPLE_JUL = ImmutableSampleData.of("jul-sample", JUL2015, null, 0D);
-    private final static SampleData LIMS_SAMPLE_AUG = ImmutableSampleData.of("aug-sample", AUG2015, null, 0D);
-    private final static SampleData LIMS_SAMPLE_SEP = ImmutableSampleData.of("sep-sample", SEP2015, null, 0D);
-    private final static SampleData LIMS_SAMPLE_NOV = ImmutableSampleData.of("nov-sample", NOV2015, null, 0D);
+    private final static SampleData LIMS_SAMPLE_JUL = sampleBuilder(JUL2015).build();
+    private final static SampleData LIMS_SAMPLE_AUG = sampleBuilder(AUG2015).build();
+    private final static SampleData LIMS_SAMPLE_SEP = sampleBuilder(SEP2015).build();
+    private final static SampleData LIMS_SAMPLE_NOV = sampleBuilder(NOV2015).build();
 
-    private final static SampleData LIMS_ARRIVED_NOV_SAMPLED_MAR = ImmutableSampleData.of("mar-sample-arrived-nov", NOV2015, MAR2015, 0D);
+    private final static SampleData LIMS_ARRIVED_NOV_SAMPLED_MAR = sampleBuilder(NOV2015).samplingDate(MAR2015).build();
 
-    private final static BiopsyData ECRF_BIOPSY_JAN = ImmutableBiopsyData.of(JAN2015, "", "", "", "", FormStatusState.UNKNOWN, false);
-    private final static BiopsyData ECRF_BIOPSY_FEB = ImmutableBiopsyData.of(FEB2015, "", "", "", "", FormStatusState.UNKNOWN, false);
-    private final static BiopsyData ECRF_BIOPSY_MAR = ImmutableBiopsyData.of(MAR2015, "", "", "", "", FormStatusState.UNKNOWN, false);
-    private final static BiopsyData ECRF_BIOPSY_JUL = ImmutableBiopsyData.of(JUL2015, "", "", "", "", FormStatusState.UNKNOWN, false);
-    private final static BiopsyData ECRF_BIOPSY_SEP = ImmutableBiopsyData.of(SEP2015, "", "", "", "", FormStatusState.UNKNOWN, false);
+    private final static BiopsyData ECRF_BIOPSY_JAN = biopsyBuilder().date(JAN2015).build();
+    private final static BiopsyData ECRF_BIOPSY_FEB = biopsyBuilder().date(FEB2015).build();
+    private final static BiopsyData ECRF_BIOPSY_MAR = biopsyBuilder().date(MAR2015).build();
+    private final static BiopsyData ECRF_BIOPSY_MAR_NOT_EVALUABLE = biopsyBuilder().date(MAR2015).biopsyEvaluable("no").build();
+    private final static BiopsyData ECRF_BIOPSY_JUL = biopsyBuilder().date(JUL2015).build();
+    private final static BiopsyData ECRF_BIOPSY_SEP = biopsyBuilder().date(SEP2015).build();
 
-    private final static BiopsyData BIOPSY_NULL = ImmutableBiopsyData.of(null, "", "", "", "", FormStatusState.UNKNOWN, false);
+    private final static BiopsyData BIOPSY_NULL = biopsyBuilder().build();
 
     // MIVO:    ---biopsy(jul)/sample(jul)---
     @Test
@@ -175,6 +176,13 @@ public class BiopsyMatcherTest {
     public void biopsyFromJanArrivedInNovButSamplingDateInMarYieldsNoMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_ARRIVED_NOV_SAMPLED_MAR);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_JAN);
+        runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null);
+    }
+
+    @Test
+    public void noMatchWhenBiopsyIsNotEvaluable() {
+        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL);
+        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_MAR_NOT_EVALUABLE);
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null);
     }
 

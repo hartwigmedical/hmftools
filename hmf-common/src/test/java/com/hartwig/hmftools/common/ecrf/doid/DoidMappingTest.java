@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
 
 import org.junit.Test;
 
@@ -18,7 +17,7 @@ public class DoidMappingTest {
             BASE_RESOURCE_DIR + File.separator + "doid" + File.separator + "tumor_location_doid_mapping.csv";
 
     @Test
-    public void canLoadFromCsv() throws IOException, EmptyFileException {
+    public void canLoadFromCsv() throws IOException {
         final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromCSV(TEST_FILE);
         assertEquals(2, doidMapping.doidsForTumorType("Breast Cancer: ER-negative/HER2-positive").size());
         assertTrue(doidMapping.doidsForTumorType("Breast Cancer: ER-negative/HER2-positive").contains("DOID:0060076"));

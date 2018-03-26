@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.strelka.mnv;
 
-import static com.hartwig.hmftools.strelka.VariantContextUtils.splitMultiAlleleVariant;
+import static com.hartwig.hmftools.extensions.samtools.VariantContextUtils.splitMultiAlleleVariant;
 
 import java.util.Comparator;
 import java.util.List;

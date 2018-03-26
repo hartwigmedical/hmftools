@@ -9,8 +9,7 @@ import java.util.Optional;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.context.TestRunContextFactory;
-import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.exception.MalformedFileException;
+import com.hartwig.hmftools.common.io.exception.MalformedFileException;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 
@@ -26,38 +25,28 @@ public class PurpleCheckerTest {
     private final PurpleChecker checker = new PurpleChecker();
 
     @Test
-    public void extractDataFromPurpleWorksForSomatic() throws IOException, HartwigException {
+    public void extractDataFromPurpleWorksForSomatic() throws IOException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
-        final BaseResult result = checker.tryRun(runContext);
+        final BaseResult result = checker.run(runContext);
 
-        Assert.assertEquals(CheckType.PURPLE, result.getCheckType());
-        final List<HealthCheck> checks = ((MultiValueResult) result).getChecks();
+        Assert.assertEquals(CheckType.PURPLE, result.checkType());
+        final List<HealthCheck> checks = ((MultiValueResult) result).checks();
 
         assertCheck(checks, PurpleCheck.AMBER_GENDER.toString(), "MALE");
         assertCheck(checks, PurpleCheck.COBALT_GENDER.toString(), "FEMALE");
         assertCheck(checks, PurpleCheck.PURPLE_SEGMENT_SCORE.toString(), "199");
     }
 
-    @Test
-    public void errorYieldsCorrectOutputForSomatic() {
-        final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
-        final List<HealthCheck> checks = ((MultiValueResult) checker.errorRun(runContext)).getChecks();
-        assertEquals(3, checks.size());
-        assertEquals("ERROR", checks.get(0).getValue());
-        assertEquals("ERROR", checks.get(1).getValue());
-        assertEquals("ERROR", checks.get(2).getValue());
-    }
-
     @Test(expected = MalformedFileException.class)
-    public void testMalformed() throws IOException, HartwigException {
+    public void testMalformed() throws IOException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, REF_SAMPLE, "malformed");
-        checker.tryRun(runContext);
+        checker.run(runContext);
     }
 
     @Test(expected = IOException.class)
-    public void testMissing() throws IOException, HartwigException {
+    public void testMissing() throws IOException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, REF_SAMPLE, "missing");
-        checker.tryRun(runContext);
+        checker.run(runContext);
     }
 
     private static void assertCheck(@NotNull final List<HealthCheck> checks, @NotNull final String checkName, final String expectedValue) {

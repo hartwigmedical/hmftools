@@ -21,23 +21,29 @@ import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
+import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.PatientData;
+import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
+import com.hartwig.hmftools.patientdb.data.TumorMarkerData;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class PatientReaderTest {
+
     private static final String TEST_ECRF = Resources.getResource("ecrf.xml").getPath();
+
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final String TREATMENT_MAPPING_CSV = Resources.getResource("treatment_mapping.csv").getPath();
     private static final String TUMOR_LOCATION_MAPPING_CSV = Resources.getResource("tumor_location_mapping.csv").getPath();
 
     @Test
-    public void canReadCpctPatientInfo() throws IOException, XMLStreamException {
-        final CpctEcrfModel model = CpctEcrfModel.loadFromXML(TEST_ECRF, new ImmutableFormStatusModel(Maps.newHashMap()));
+    public void canReadCpctPatientInfo() {
+        final CpctEcrfModel model = loadTestEcrf();
         assertEquals(1, model.patientCount());
         final EcrfPatient cpctPatient = model.patients().iterator().next();
-        final CpctPatientReader cpctPatientReader =
-                new CpctPatientReader(model, new TumorLocationCurator(new FileInputStream(TUMOR_LOCATION_MAPPING_CSV)));
+        final CpctPatientReader cpctPatientReader = new CpctPatientReader(model, createTumorLocationCurator());
+
         final PatientData patientData = cpctPatientReader.read(cpctPatient);
         assertEquals("CPCT02252500", patientData.cpctId());
         assertEquals("Breast cancer", patientData.cancerType().searchTerm());
@@ -52,8 +58,21 @@ public class PatientReaderTest {
     }
 
     @Test
-    public void canReadCpctPatientBiopsies() throws FileNotFoundException, XMLStreamException {
-        final CpctEcrfModel model = CpctEcrfModel.loadFromXML(TEST_ECRF, new ImmutableFormStatusModel(Maps.newHashMap()));
+    public void canReadCpctPatientPreTherapy() throws IOException {
+        final CpctEcrfModel model = loadTestEcrf();
+        assertEquals(1, model.patientCount());
+        final EcrfPatient cpctPatient = model.patients().iterator().next();
+        final PreTreatmentData preTreatmentData = new PreTreatmentReader(createTreatmentCurator()).read(cpctPatient);
+
+        assertEquals("Yes", preTreatmentData.treatmentGiven());
+        assertEquals("Yes", preTreatmentData.radiotherapyGiven());
+        final List<DrugData> drugs = preTreatmentData.drugs();
+        assertEquals(6, drugs.size());
+    }
+
+    @Test
+    public void canReadCpctPatientBiopsies() {
+        final CpctEcrfModel model = loadTestEcrf();
         assertEquals(1, model.patientCount());
         final EcrfPatient cpctPatient = model.patients().iterator().next();
         final List<BiopsyData> biopsies = BiopsyReader.read(cpctPatient);
@@ -64,12 +83,12 @@ public class PatientReaderTest {
     }
 
     @Test
-    public void canReadCpctPatientTreatments() throws IOException, XMLStreamException {
-        final CpctEcrfModel model = CpctEcrfModel.loadFromXML(TEST_ECRF, new ImmutableFormStatusModel(Maps.newHashMap()));
+    public void canReadCpctPatientTreatments() throws IOException {
+        final CpctEcrfModel model = loadTestEcrf();
         assertEquals(1, model.patientCount());
         final EcrfPatient cpctPatient = model.patients().iterator().next();
-        final List<BiopsyTreatmentData> treatments =
-                new BiopsyTreatmentReader(new TreatmentCurator(new FileInputStream(TREATMENT_MAPPING_CSV))).read(cpctPatient);
+        final List<BiopsyTreatmentData> treatments = new BiopsyTreatmentReader(createTreatmentCurator()).read(cpctPatient);
+
         assertEquals(1, treatments.size());
         assertEquals(1, treatments.get(0).drugs().size());
         final LocalDate startDate = LocalDate.parse("2012-02-18", DATE_FORMATTER);
@@ -84,11 +103,12 @@ public class PatientReaderTest {
     }
 
     @Test
-    public void canReadCpctPatientTreatmentResponses() throws FileNotFoundException, XMLStreamException {
-        final CpctEcrfModel model = CpctEcrfModel.loadFromXML(TEST_ECRF, new ImmutableFormStatusModel(Maps.newHashMap()));
+    public void canReadCpctPatientTreatmentResponses() {
+        final CpctEcrfModel model = loadTestEcrf();
         assertEquals(1, model.patientCount());
         final EcrfPatient cpctPatient = model.patients().iterator().next();
         final List<BiopsyTreatmentResponseData> treatmentResponses = BiopsyTreatmentResponseReader.read(cpctPatient);
+
         assertEquals(4, treatmentResponses.size());
         assertEquals(LocalDate.parse("2012-02-09", DATE_FORMATTER), treatmentResponses.get(0).date());
         assertEquals(null, treatmentResponses.get(0).response());
@@ -105,5 +125,49 @@ public class PatientReaderTest {
         assertEquals(LocalDate.parse("2012-06-08", DATE_FORMATTER), treatmentResponses.get(3).date());
         assertEquals("PR", treatmentResponses.get(3).response());
         assertEquals("Yes", treatmentResponses.get(3).measurementDone());
+    }
+
+    @Test
+    public void canReadTumorMarkers() {
+        final CpctEcrfModel model = loadTestEcrf();
+        assertEquals(1, model.patientCount());
+        final EcrfPatient cpctPatient = model.patients().iterator().next();
+        final List<TumorMarkerData> tumorMarkers = TumorMarkerReader.read(cpctPatient);
+
+        assertEquals(0, tumorMarkers.size());
+    }
+
+    @NotNull
+    private static CpctEcrfModel loadTestEcrf() {
+        CpctEcrfModel model = null;
+        try {
+            model = CpctEcrfModel.loadFromXML(TEST_ECRF, new ImmutableFormStatusModel(Maps.newHashMap()));
+        } catch (XMLStreamException | FileNotFoundException e) {
+            // KODU: Ignore, should not happen in test.
+        }
+
+        if (model == null) {
+            throw new IllegalStateException("No cpct ecrf model could be constructed!");
+        }
+
+        return model;
+    }
+
+    @NotNull
+    private static TumorLocationCurator createTumorLocationCurator() {
+        try {
+            return new TumorLocationCurator(new FileInputStream(TUMOR_LOCATION_MAPPING_CSV));
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not create tumor location curator!");
+        }
+    }
+
+    @NotNull
+    private static TreatmentCurator createTreatmentCurator() {
+        try {
+            return new TreatmentCurator(new FileInputStream(TREATMENT_MAPPING_CSV));
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not create treatment curator!");
+        }
     }
 }

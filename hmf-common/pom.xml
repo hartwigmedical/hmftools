@@ -52,7 +52,6 @@
             <artifactId>commons-csv</artifactId>
         </dependency>
 
-        <!-- KODU: JMockit dependency should precede junit because of initialization order -->
         <dependency>
             <groupId>org.jmockit</groupId>
             <artifactId>jmockit</artifactId>

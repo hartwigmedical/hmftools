@@ -64,6 +64,7 @@ chromosomes                 = -EXCLUDE
 		r0   = 0.775r
 		r1   = 0.725r
 		layers = 1
+		min = 0.00001
 
 		<axes>
 			<axis>
