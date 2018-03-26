@@ -19,7 +19,6 @@ public class ClonalityFactory {
 
     @NotNull
     Clonality fromSample(@NotNull final PurityAdjustedSomaticVariant variant) {
-
         try {
             double purity = purityAdjuster.purity();
             double copyNumber = variant.adjustedCopyNumber();
@@ -46,5 +45,4 @@ public class ClonalityFactory {
             return Clonality.UNKNOWN;
         }
     }
-
 }

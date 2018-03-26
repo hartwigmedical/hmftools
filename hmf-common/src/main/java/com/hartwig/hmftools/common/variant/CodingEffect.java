@@ -32,7 +32,6 @@ public enum CodingEffect {
 
     @NotNull
     private static CodingEffect effect(@NotNull final VariantConsequence consequence) {
-
         switch (consequence) {
             case FRAMESHIFT_VARIANT:
             case STOP_GAINED:
@@ -51,6 +50,4 @@ public enum CodingEffect {
 
         return NONE;
     }
-
-
 }

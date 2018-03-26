@@ -43,8 +43,7 @@ class ConsequenceDeterminer {
 
     @NotNull
     ConsequenceOutput run(@NotNull final List<SomaticVariant> variants) {
-        Predicate<SomaticVariant> consequenceRule =
-                and(isIncludedIn(hmfSlicingRegion), hasActionableConsequence(relevantTranscriptMap.keySet()));
+        Predicate<SomaticVariant> consequenceRule = and(hmfSlicingRegion::test, hasActionableConsequence(relevantTranscriptMap.keySet()));
 
         List<SomaticVariant> consequentialVariants = variants.stream().filter(consequenceRule).collect(Collectors.toList());
 
@@ -55,11 +54,6 @@ class ConsequenceDeterminer {
     public static Predicate<SomaticVariant> and(@NotNull Predicate<SomaticVariant> predicate1,
             @NotNull Predicate<SomaticVariant> predicate2) {
         return variant -> predicate1.test(variant) && predicate2.test(variant);
-    }
-
-    @NotNull
-    private static Predicate<SomaticVariant> isIncludedIn(@NotNull final Slicer slicer) {
-        return slicer::includes;
     }
 
     @NotNull

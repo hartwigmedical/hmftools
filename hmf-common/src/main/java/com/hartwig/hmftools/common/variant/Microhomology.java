@@ -5,6 +5,9 @@ import org.jetbrains.annotations.NotNull;
 
 final class Microhomology {
 
+    private Microhomology() {
+    }
+
     @NotNull
     static String microhomology(int position, @NotNull final String sequence, @NotNull final String ref) {
         String result =
