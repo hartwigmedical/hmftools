@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.function.Predicate;
@@ -7,6 +8,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.context.RunContext;
+import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -32,8 +34,8 @@ public class StrelkaChecker implements HealthChecker {
         if (!runContext.isSomaticRun()) {
             return new NoResult(CheckType.STRELKA);
         }
-        final List<SomaticVariant> variants = SomaticVariantFactory.unfilteredInstance()
-                .fromVCFFile(runContext.tumorSample(), runContext.runDirectory(), STRELKA_OUTPUT_EXTENSION);
+        final String vcfPath = vcfFilePath(runContext.runDirectory(), STRELKA_OUTPUT_EXTENSION);
+        final List<SomaticVariant> variants = SomaticVariantFactory.unfilteredInstance().fromVCFFile(runContext.tumorSample(), vcfPath);
         final List<SomaticVariant> snps = extractVariantsWithType(variants, VariantType.SNP);
         final List<SomaticVariant> mnps = extractVariantsWithType(variants, VariantType.MNP);
         final List<SomaticVariant> indels = extractVariantsWithType(variants, VariantType.INDEL);
@@ -54,6 +56,11 @@ public class StrelkaChecker implements HealthChecker {
                 String.valueOf(mnpWithDBSNPAndNotCOSMIC.size())));
 
         return toMultiValueResult(checks);
+    }
+
+    @NotNull
+    private static String vcfFilePath(@NotNull String basePath, @NotNull String fileExtension) throws FileNotFoundException {
+        return PathExtensionFinder.build().findPath(basePath, fileExtension).toString();
     }
 
     @NotNull

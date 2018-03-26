@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
+import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
@@ -29,7 +30,7 @@ final class PatientReporterHelper {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterHelper.class);
 
-    private static final String SOMATIC_SNV_EXTENSION = "_post_processed_v2.1.vcf.gz";
+    private static final String SOMATIC_VCF_EXTENSION = "_post_processed_v2.1.vcf.gz";
     private static final String PURPLE_DIRECTORY = "purple";
     private static final String SV_EXTENSION = "_somaticSV_bpi.vcf";
     private static final String CIRCOS_PLOT_DIRECTORY = "plot";
@@ -74,7 +75,8 @@ final class PatientReporterHelper {
 
     @NotNull
     static List<SomaticVariant> loadPassedSomaticVariants(@NotNull final String sample, @NotNull final String path) throws IOException {
-        return SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, path, SOMATIC_SNV_EXTENSION);
+        final String vcfPath = PathExtensionFinder.build().findPath(path, SOMATIC_VCF_EXTENSION).toString();
+        return SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, vcfPath);
     }
 
     @NotNull

@@ -23,8 +23,8 @@ import htsjdk.variant.vcf.VCFHeaderVersion;
 public class SomaticVariantFactoryTest {
 
     private static final String SAMPLE = "sample";
-    private static final String VARIANT_PATH = Resources.getResource("variants").getPath();
-    private static final String SOMATIC_EXTENSION = "somatics.vcf";
+    private static final String BASE_PATH = Resources.getResource("variants").getPath();
+    private static final String SOMATIC_VARIANT_FILE = "somatics.vcf";
 
     private SomaticVariantFactory victim;
     private VCFCodec codec;
@@ -46,17 +46,13 @@ public class SomaticVariantFactoryTest {
     }
 
     @Test
-    public void canLoadSomaticVCFFromBasePathAndFilter() throws IOException {
-        final List<SomaticVariant> variants =
-                SomaticVariantFactory.passOnlyInstance().fromVCFFile("sample", VARIANT_PATH, SOMATIC_EXTENSION);
-        assertEquals(2, variants.size());
-    }
-
-    @Test
     public void canLoadSomaticVCFFromFile() throws IOException {
-        final String file = VARIANT_PATH + File.separator + SOMATIC_EXTENSION;
-        final List<SomaticVariant> variants = SomaticVariantFactory.unfilteredInstance().fromVCFFile("sample", file);
-        assertEquals(3, variants.size());
+        final String file = BASE_PATH + File.separator + SOMATIC_VARIANT_FILE;
+        final List<SomaticVariant> unfiltered = SomaticVariantFactory.unfilteredInstance().fromVCFFile("sample", file);
+        assertEquals(3, unfiltered.size());
+
+        final List<SomaticVariant> filtered = SomaticVariantFactory.passOnlyInstance().fromVCFFile("sample", file);
+        assertEquals(2, filtered.size());
     }
 
     @Test

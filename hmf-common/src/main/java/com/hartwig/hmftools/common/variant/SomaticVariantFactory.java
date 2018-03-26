@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
 import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
@@ -65,12 +64,6 @@ public class SomaticVariantFactory {
 
     private SomaticVariantFactory(@NotNull final VariantContextFilter filter) {
         this.filter = filter;
-    }
-
-    @NotNull
-    public List<SomaticVariant> fromVCFFile(@NotNull final String sample, @NotNull final String basePath,
-            @NotNull final String fileExtension) throws IOException {
-        return fromVCFFile(sample, PathExtensionFinder.build().findPath(basePath, fileExtension).toString());
     }
 
     @NotNull
