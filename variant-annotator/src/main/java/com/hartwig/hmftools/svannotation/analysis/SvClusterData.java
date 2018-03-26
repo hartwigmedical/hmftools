@@ -22,10 +22,10 @@ public class SvClusterData
     private String mEndArm;
     private int mPonCount;
     private int mPonRegionCount; // allowing for a small buffer either side of a PON
-    private boolean mStartFragileSite;
-    private boolean mEndFragileSite;
-    private boolean mStartLineElement;
-    private boolean mEndLineElement;
+    private String mStartFragileSite;
+    private String mEndFragileSite;
+    private String mStartLineElement;
+    private String mEndLineElement;
 
     private List<StructuralVariantLeg> mUniqueBreakends;
 
@@ -35,6 +35,11 @@ public class SvClusterData
     private SvCluster mStartCluster;
     private SvCluster mEndCluster;
 
+    private int mNearestSVLength;
+    private String mNearestSVLinkType;
+    private int mNearestTILength; // templated insertion if exists
+    private int mNearestDBLength; // deletion-bridge link if exists
+
     public SvClusterData(final StructuralVariantData svData)
     {
         mId = svData.id();
@@ -43,10 +48,15 @@ public class SvClusterData
         mEndArm = "";
         mPonCount = 0;
         mPonRegionCount = 0;
-        mStartFragileSite = false;
-        mEndFragileSite = false;
-        mStartLineElement = false;
-        mEndLineElement = false;
+        mStartFragileSite = "";
+        mEndFragileSite = "";
+        mStartLineElement = "";
+        mEndLineElement = "";
+
+        mNearestSVLength = -1;
+        mNearestSVLinkType = "NONE";
+        mNearestTILength = -1;
+        mNearestDBLength = -1;
 
         mSubSVs = Lists.newArrayList();
         mIsSubSV = false;
@@ -84,8 +94,19 @@ public class SvClusterData
     public final StructuralVariantData getSvData() { return mSVData; }
 
     // for convenience
+    public boolean equals(final SvClusterData other) { return id().equals(other.id()); }
+
+    public final String chromosome(boolean isStart) { return isStart ? mSVData.startChromosome() : mSVData.endChromosome(); }
+    public final long position(boolean isStart) { return isStart ? mSVData.startPosition() : mSVData.endPosition(); }
     public final byte orientation(boolean isStart){ return isStart ? mSVData.startOrientation() : mSVData.endOrientation(); }
     public final StructuralVariantType type() { return mSVData.type(); }
+
+    public final String posId()
+    {
+        return String.format("id(%s) position(%s:%d:%d -> %s:%d:%d)",
+                id(), chromosome(true), orientation(true), position(true),
+                chromosome(false), orientation(false), position(false));
+    }
 
     public final String arm(boolean isStart) { return isStart ? mStartArm : mEndArm; }
     public final String getStartArm() { return mStartArm; }
@@ -102,25 +123,25 @@ public class SvClusterData
     public void setPonRegionCount(int count) { mPonRegionCount = count; }
     public int getPonRegionCount() { return mPonRegionCount; }
 
-    public void setFragileSites(boolean isStart, boolean isEnd) { mStartFragileSite = isStart; mEndFragileSite = isEnd; }
-    public boolean isStartFragileSite() { return mStartFragileSite; }
-    public boolean isEndFragileSite() { return mEndFragileSite; }
+    public void setFragileSites(String typeStart, String typeEnd) { mStartFragileSite = typeStart; mEndFragileSite = typeEnd; }
+    public String isStartFragileSite() { return mStartFragileSite; }
+    public String isEndFragileSite() { return mEndFragileSite; }
 
-    public void setLineElements(boolean isStart, boolean isEnd) { mStartLineElement = isStart; mEndLineElement = isEnd; }
-    public boolean isStartLineElement() { return mStartLineElement; }
-    public boolean isEndLineElement() { return mEndLineElement; }
+    public void setLineElements(String typeStart, String typeEnd) { mStartLineElement = typeStart; mEndLineElement = typeEnd; }
+    public String isStartLineElement() { return mStartLineElement; }
+    public String isEndLineElement() { return mEndLineElement; }
 
-    public final String posId()
-    {
-        return String.format("id(%s) position(%s:%d:%d -> %s:%d:%d)",
-                id(), chromosome(true), orientation(true), position(true),
-                chromosome(false), orientation(false), position(false));
-    }
+    public int getNearestSVLength() { return mNearestSVLength; }
+    public void setNearestSVLength(int length) { mNearestSVLength = length; }
 
-    public boolean equals(final SvClusterData other) { return id().equals(other.id()); }
+    public final String getNearestSVLinkType() { return mNearestSVLinkType; }
+    public void setNearestSVLinkType(String type) { mNearestSVLinkType = type; }
 
-    public final String chromosome(boolean isStart) { return isStart ? mSVData.startChromosome() : mSVData.endChromosome(); }
-    public final long position(boolean isStart) { return isStart ? mSVData.startPosition() : mSVData.endPosition(); }
+    public int getNearestTILength() { return mNearestTILength; }
+    public void setNearestTILength(int length) { mNearestTILength = length; }
+
+    public int getNearestDBLength() { return mNearestDBLength; }
+    public void setNearestDBLength(int length) { mNearestDBLength = length; }
 
     public final String typeStr()
     {

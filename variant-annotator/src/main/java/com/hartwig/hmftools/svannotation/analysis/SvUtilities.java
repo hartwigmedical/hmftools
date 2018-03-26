@@ -1,10 +1,9 @@
 package com.hartwig.hmftools.svannotation.analysis;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.centromeres.Centromeres;
+import com.hartwig.hmftools.common.chromosome.ChromosomeLengths;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.hartwig.hmftools.svannotation.analysis.SvClusterData;
 
 import java.util.List;
 import java.util.Map;
@@ -19,6 +18,7 @@ public class SvUtilities {
     private int mClusterBaseDistance;
 
     private static final Map<String, GenomeRegion> CENTROMERES = Centromeres.grch37();
+    final Map<String,Integer> CHROMOSOME_LENGTHS = ChromosomeLengths.getChromosomeLengths();
 
     public static String CHROMOSOME_ARM_P = "P"; // short arm, and lower position
     public static String CHROMOSOME_ARM_Q = "Q";
@@ -33,7 +33,8 @@ public class SvUtilities {
     public static String FRAGILE_SITE = "FRAG";
     public static String UNPHASED_EVENTS = "UNPHAS";
 
-    public static String SV_GROUP_ENCLOSED = "ENCL";
+    public static String SV_GROUP_ENCLOSED = "ENCLD";
+    public static String SV_GROUP_ENCLOSING = "ENCLG";
     public static String SV_GROUP_OVERLAP = "OVLP";
     public static String SV_GROUP_NEIGHBOURS = "NHRB";
 
@@ -57,15 +58,32 @@ public class SvUtilities {
             return CHROMOSOME_ARM_CENTROMERE;
     }
 
-    public boolean areVariantsLinked(final SvClusterData v1, final SvClusterData v2)
+    public long getChromosomalArmLength(final String chromosome, final String armType)
+    {
+        final GenomeRegion region = CENTROMERES.get(chromosome);
+
+        if(region == null)
+            return 0;
+
+        if(armType.equals(CHROMOSOME_ARM_P))
+        {
+            return region.start();
+        }
+
+        long chrLength = CHROMOSOME_LENGTHS.get(chromosome);
+
+        return chrLength - region.end();
+    }
+
+    public boolean areVariantsLinkedByDistance(final SvClusterData v1, final SvClusterData v2)
     {
         if(v1.id().equals(v2.id()))
             return false;
 
-        if (areVariantsLinked(v1, true, v2, true)
-        || areVariantsLinked(v1, false, v2, true)
-        || areVariantsLinked(v1, true, v2, false)
-        || areVariantsLinked(v1, false, v2, false))
+        if (this.areVariantsLinkedByDistance(v1, true, v2, true)
+        || this.areVariantsLinkedByDistance(v1, false, v2, true)
+        || this.areVariantsLinkedByDistance(v1, true, v2, false)
+        || this.areVariantsLinkedByDistance(v1, false, v2, false))
         {
             return true;
         }
@@ -73,7 +91,7 @@ public class SvUtilities {
         return false;
     }
 
-    public boolean areVariantsLinked(final SvClusterData v1, final boolean v1UseStart, final SvClusterData v2, final boolean v2UseStart)
+    public boolean areVariantsLinkedByDistance(final SvClusterData v1, final boolean v1UseStart, final SvClusterData v2, final boolean v2UseStart)
     {
         // search all remaining SVs for proximity
         if(v1.id().equals(v2.id()))
@@ -118,7 +136,7 @@ public class SvUtilities {
 
     public boolean isWithin(final SvClusterData variant, final String chromosome, final long position)
     {
-        if(!variant.chromosome(true).equals(chromosome))
+        if(!variant.chromosome(true).equals(chromosome) || !variant.chromosome(false).equals(chromosome))
             return false;
 
         if(variant.position(true) > position || variant.position(false) < position)
@@ -171,7 +189,7 @@ public class SvUtilities {
         return false;
     }
 
-    public int getNeighbouringProximity(final SvClusterData v1, final SvClusterData v2)
+    public int getShortestProximity(final SvClusterData v1, final SvClusterData v2)
     {
         int minLength = -1;
 

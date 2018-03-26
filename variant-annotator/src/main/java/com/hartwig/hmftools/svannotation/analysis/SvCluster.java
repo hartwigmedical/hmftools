@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svannotation.analysis;
 
+import static com.hartwig.hmftools.svannotation.FragileSiteAnnotator.NO_FS;
+import static com.hartwig.hmftools.svannotation.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.svannotation.analysis.SvUtilities.DOUBLE_STRANDED_BREAK;
 import static com.hartwig.hmftools.svannotation.analysis.SvUtilities.REPLICATION_EVENT;
 
@@ -199,7 +201,7 @@ public class SvCluster
     public int getFragileSiteCount() {
         int count = 0;
         for (final SvClusterData var : mClusteredSVs) {
-            if(var.isStartFragileSite() || var.isEndFragileSite())
+            if(var.isStartFragileSite() != NO_FS || var.isEndFragileSite() != NO_FS)
                 ++count;
         }
 
@@ -209,7 +211,7 @@ public class SvCluster
     public int getLineElementCount() {
         int count = 0;
         for (final SvClusterData var : mClusteredSVs) {
-            if(var.isStartLineElement() || var.isEndLineElement())
+            if(var.isStartLineElement() != NO_LINE_ELEMENT || var.isEndLineElement() != NO_LINE_ELEMENT)
                 ++count;
         }
 
@@ -327,7 +329,7 @@ public class SvCluster
         {
             for(final SvClusterData otherVar : footprint.getSVs())
             {
-                if(mUtils.areVariantsLinked(variant, otherVar))
+                if(mUtils.areVariantsLinkedByDistance(variant, otherVar))
                 {
                     footprint.addVariant(variant);
                     LOGGER.debug("cluster({}) footprint({}) added variant({}), count({})", mClusterId, footprint.getFootprintId(), variant.id(), footprint.getSVs().size());

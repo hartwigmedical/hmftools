@@ -17,7 +17,7 @@ import org.apache.logging.log4j.Logger;
 public class SvPONAnnotator {
 
     private List<SvPON> mPonList;
-    private static final int REGION_DISTANCE = 500;
+    private static final int REGION_DISTANCE = 100;
 
     private static final Logger LOGGER = LogManager.getLogger(SvPONAnnotator.class);
 

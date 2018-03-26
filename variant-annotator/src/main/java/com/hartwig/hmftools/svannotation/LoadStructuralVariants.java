@@ -56,6 +56,9 @@ public class LoadStructuralVariants {
     private static final String SV_PON_FILE = "sv_pon_file";
     private static final String FRAGILE_SITE_FILE = "fragile_site_file";
     private static final String LINE_ELEMENT_FILE = "line_element_file";
+    private static final String REANNOTATE_FROM_VCFS = "reannotate_vcfs";
+    private static final String EXTERNAL_ANNOTATIONS = "external_annotations";
+
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -69,12 +72,35 @@ public class LoadStructuralVariants {
         final String tumorSample = cmd.getOptionValue(SAMPLE);
         boolean runClustering = cmd.hasOption(CLUSTER_SVS);
         boolean createFilteredPON = cmd.hasOption(WRITE_FILTERED_SVS);
+        boolean reannotateFromVCFs = cmd.hasOption(REANNOTATE_FROM_VCFS);
 
-        final DatabaseAccess dbAccess = !createFilteredPON ? databaseAccess(cmd) : null;
+        final DatabaseAccess dbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
 
         if(cmd.hasOption(LOG_DEBUG))
         {
             Configurator.setRootLevel(Level.DEBUG);
+        }
+
+        if(createFilteredPON)
+        {
+            LOGGER.info("reading VCF files including filtered SVs");
+
+            FilteredSVWriter filteredSvWriter = new FilteredSVWriter(cmd.getOptionValue(VCF_FILE), cmd.getOptionValue(DATA_OUTPUT_PATH));
+            filteredSvWriter.processVcfFiles();
+
+            LOGGER.info("reads complete");
+            return;
+        }
+
+        if(reannotateFromVCFs)
+        {
+            LOGGER.info("reading VCF files to re-annotate");
+
+            // for now just re-read the VCFs and write out new annotations to file
+            // may later on turn into update SQL once clustering does the same
+            SvVCFAnnotator vcfAnnotator = new SvVCFAnnotator(cmd.getOptionValue(VCF_FILE), cmd.getOptionValue(DATA_OUTPUT_PATH));
+            vcfAnnotator.processVcfFiles();
+            return;
         }
 
         StructuralVariantClustering svClusterer = null;
@@ -86,21 +112,11 @@ public class LoadStructuralVariants {
             clusteringConfig.setOutputCsvPath(cmd.getOptionValue(DATA_OUTPUT_PATH));
             clusteringConfig.setBaseDistance(Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE, "0")));
             clusteringConfig.setUseCombinedOutputFile(tumorSample.equals("*"));
-            clusteringConfig.setSvPONFile(cmd.getOptionValue(SV_PON_FILE));
-            clusteringConfig.setFragileSiteFile(cmd.getOptionValue(FRAGILE_SITE_FILE));
-            clusteringConfig.setLineElementFile(cmd.getOptionValue(LINE_ELEMENT_FILE));
+            clusteringConfig.setSvPONFile(cmd.getOptionValue(SV_PON_FILE, ""));
+            clusteringConfig.setFragileSiteFile(cmd.getOptionValue(FRAGILE_SITE_FILE, ""));
+            clusteringConfig.setLineElementFile(cmd.getOptionValue(LINE_ELEMENT_FILE, ""));
+            clusteringConfig.setExternalAnnotationsFile(cmd.getOptionValue(EXTERNAL_ANNOTATIONS, ""));
             svClusterer = new StructuralVariantClustering(clusteringConfig);
-        }
-
-        if(createFilteredPON)
-        {
-            LOGGER.info("reading VCF file including filtered SVs");
-
-            FilteredSVWriter filteredSvWriter = new FilteredSVWriter(cmd.getOptionValue(VCF_FILE), cmd.getOptionValue(DATA_OUTPUT_PATH));
-            filteredSvWriter.processVcfFiles();
-
-            LOGGER.info("reads complete");
-            return;
         }
 
         if(!loadFromDB) {
@@ -166,9 +182,18 @@ public class LoadStructuralVariants {
 
                 List<SvClusterData> svClusterData = queryStructuralVariantData(dbAccess, sample);
                 svClusterer.loadFromDatabase(sample, svClusterData);
+
+                //LOGGER.info("data loaded", sample, count);
+
                 svClusterer.runClustering();
+                //LOGGER.info("clustering complete", sample, count);
+
+//                if(count > 10)
+//                    break;
             }
         }
+
+        svClusterer.close();
 
         LOGGER.info("run complete");
     }
@@ -243,6 +268,8 @@ public class LoadStructuralVariants {
         options.addOption(SV_PON_FILE, true, "PON file for SVs");
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file for SVs");
         options.addOption(FRAGILE_SITE_FILE, true, "Fragile Site file for SVs");
+        options.addOption(REANNOTATE_FROM_VCFS, false, "Re-annotation with new VCF annotations");
+        options.addOption(EXTERNAL_ANNOTATIONS, true, "Exteranl file with per-SV annotations");
 
         return options;
     }

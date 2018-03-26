@@ -60,6 +60,7 @@ class StructuralVariantDAO {
                     .adjustedEndCopyNumberChange(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE))
                     .ploidy(record.getValue(STRUCTURALVARIANT.PLOIDY))
                     .type(StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
+                    .homology(record.getValue(STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE))
                     .build());
         }
 
@@ -142,12 +143,12 @@ class StructuralVariantDAO {
                 .where(STRUCTURALVARIANT.SAMPLEID.eq(sample))
                 .fetch();
 
-        // NERA: delete annotations
+        // first delete annotations
         context.delete(STRUCTURALVARIANTDISRUPTION).where(STRUCTURALVARIANTDISRUPTION.BREAKENDID.in(breakendsToDelete)).execute();
         context.delete(STRUCTURALVARIANTFUSION).where(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID.in(breakendsToDelete)).execute();
         context.delete(STRUCTURALVARIANTBREAKEND).where(STRUCTURALVARIANTBREAKEND.ID.in(breakendsToDelete)).execute();
 
-        // NERA: delete structural variants
+        // and then the structural variants
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
 
         for (List<EnrichedStructuralVariant> batch : Iterables.partition(variants, DB_BATCH_INSERT_SIZE)) {

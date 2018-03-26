@@ -10,6 +10,7 @@ public class SvClusteringConfig {
     private String mSvPONFile;
     private String mFragileSiteFile;
     private String mLineElementFile;
+    private String mExternalAnnotationsFile;
     private boolean mUseCombinedOutputFile;
 
     public static final int DEFAULT_BASE_DISTANCE = 100000;
@@ -19,7 +20,7 @@ public class SvClusteringConfig {
         mClusterBaseDistance = DEFAULT_BASE_DISTANCE;
         mFragileSiteFile = "";
         mLineElementFile = "";
-
+        mExternalAnnotationsFile = "";
 
         mOutputCsvPath = "";
         mUseCombinedOutputFile = false;
@@ -45,6 +46,9 @@ public class SvClusteringConfig {
 
     public void setLineElementFile(final String filename) { mLineElementFile = filename; }
     public String getLineElementFile() { return mLineElementFile; }
+
+    public void setExternalAnnotationsFile(final String filename) { mExternalAnnotationsFile = filename; }
+    public String getExternalAnnotationsFile() { return mExternalAnnotationsFile; }
 
     public int getClusterBaseDistance() { return mClusterBaseDistance; }
 
