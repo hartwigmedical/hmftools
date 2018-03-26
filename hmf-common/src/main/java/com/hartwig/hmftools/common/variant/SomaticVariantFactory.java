@@ -207,6 +207,6 @@ public class SomaticVariantFactory {
             totalReadCount += afField;
         }
 
-        return new AllelicDepthImpl(alleleReadCount, totalReadCount);
+        return ImmutableAllelicDepthImpl.builder().alleleReadCount(alleleReadCount).totalReadCount(totalReadCount).build();
     }
 }
