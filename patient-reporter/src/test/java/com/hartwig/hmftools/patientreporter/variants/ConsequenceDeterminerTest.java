@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
-import static com.hartwig.hmftools.common.variant.snpeff.VariantAnnotationTest.createVariantAnnotationBuilder;
+import static com.hartwig.hmftools.common.variant.snpeff.AnnotationTestFactory.createVariantAnnotationBuilder;
 
 import static org.junit.Assert.assertEquals;
 
@@ -19,8 +19,9 @@ import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.Strand;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
+import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantImpl;
+import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.snpeff.ImmutableVariantAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
@@ -74,7 +75,7 @@ public class ConsequenceDeterminerTest {
         final VariantAnnotation rightAnnotation = annotationBuilder.consequences(Lists.newArrayList(rightConsequence)).build();
         final VariantAnnotation wrongAnnotation = annotationBuilder.consequences(Lists.newArrayList(wrongConsequence)).build();
 
-        final SomaticVariantImpl.Builder variantBuilder = new SomaticVariantImpl.Builder().
+        final ImmutableSomaticVariantImpl.Builder variantBuilder = SomaticVariantTestBuilderFactory.create().
                 chromosome(CHROMOSOME).ref(REF).alt(ALT).cosmicID(COSMIC_ID).
                 totalReadCount(TOTAL_READ_COUNT).alleleReadCount(ALLELE_READ_COUNT);
 

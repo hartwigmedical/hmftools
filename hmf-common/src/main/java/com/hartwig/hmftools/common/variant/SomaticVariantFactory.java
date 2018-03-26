@@ -104,7 +104,7 @@ public class SomaticVariantFactory {
             if (genotype.hasAD() && genotype.getAD().length > 1) {
                 final AllelicDepth frequencyData = determineAlleleFrequencies(genotype);
                 if (frequencyData.totalReadCount() > 0) {
-                    SomaticVariantImpl.Builder builder = new SomaticVariantImpl.Builder().chromosome(context.getContig())
+                    ImmutableSomaticVariantImpl.Builder builder = ImmutableSomaticVariantImpl.builder().chromosome(context.getContig())
                             .annotations(Collections.emptyList())
                             .position(context.getStart())
                             .ref(context.getReference().getBaseString())
@@ -126,7 +126,7 @@ public class SomaticVariantFactory {
         return Optional.empty();
     }
 
-    private void attachAnnotations(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
+    private void attachAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
         final List<VariantAnnotation> allAnnotations = VariantAnnotationFactory.fromContext(context);
         builder.annotations(allAnnotations);
 
@@ -153,7 +153,7 @@ public class SomaticVariantFactory {
                 .count());
     }
 
-    private static void attachFilter(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
+    private static void attachFilter(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
         if (context.isFiltered()) {
             StringJoiner joiner = new StringJoiner(";");
             context.getFilters().forEach(joiner::add);
@@ -176,11 +176,11 @@ public class SomaticVariantFactory {
         return VariantType.UNDEFINED;
     }
 
-    private static void attachType(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
+    private static void attachType(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
         builder.type(type(context));
     }
 
-    private static void attachID(@NotNull SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
+    private static void attachID(@NotNull ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
         final String ID = context.getID();
         if (!ID.isEmpty()) {
             final String[] ids = ID.split(ID_SEPARATOR);

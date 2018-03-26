@@ -60,17 +60,17 @@ public enum VariantConsequence {
     PROTEIN_PROTEIN_CONTACT(true, "protein_protein_contact"),
     OTHER(false, Strings.EMPTY);
 
+    private final boolean actionable;
     @NotNull
     private final String parentSequenceOntologyTerm;
     @NotNull
     private final List<String> sequenceOntologySubTerms;
-    private final boolean actionable;
 
     VariantConsequence(final boolean actionable, @NotNull final String parentSequenceOntologyTerm,
             @NotNull final String... sequenceOntologySubTerms) {
+        this.actionable = actionable;
         this.parentSequenceOntologyTerm = parentSequenceOntologyTerm;
         this.sequenceOntologySubTerms = Lists.newArrayList(sequenceOntologySubTerms);
-        this.actionable = actionable;
     }
 
     public boolean isParentTypeOf(@NotNull final String annotation) {

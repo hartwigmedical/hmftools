@@ -26,7 +26,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantImpl;
+import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.patientreporter.BaseReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.ImmutableNotSequencedPatientReport;
@@ -167,7 +167,7 @@ public class PDFWriterTest {
     @NotNull
     private static SomaticVariant createTestVariant(@NotNull final String chromosome, final long position, @NotNull final String ref,
             @NotNull final String alt) {
-        return new SomaticVariantImpl.Builder().chromosome(chromosome).position(position).ref(ref).alt(alt).build();
+        return SomaticVariantTestBuilderFactory.create().chromosome(chromosome).position(position).ref(ref).alt(alt).build();
     }
 
     @NotNull

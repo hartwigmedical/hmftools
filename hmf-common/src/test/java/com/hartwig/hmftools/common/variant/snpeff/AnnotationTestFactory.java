@@ -6,13 +6,13 @@ import com.hartwig.hmftools.common.variant.VariantConsequence;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-final class AnnotationTestFactory {
+public final class AnnotationTestFactory {
 
     private AnnotationTestFactory() {
     }
 
     @NotNull
-    static ImmutableVariantAnnotation.Builder createVariantAnnotationBuilder(@NotNull VariantConsequence... consequences) {
+    public static ImmutableVariantAnnotation.Builder createVariantAnnotationBuilder(@NotNull VariantConsequence... consequences) {
         return ImmutableVariantAnnotation.builder()
                 .allele(Strings.EMPTY)
                 .severity(Strings.EMPTY)

@@ -8,7 +8,7 @@ import com.google.common.collect.TreeMultimap;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantImpl;
+import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
@@ -60,6 +60,6 @@ public class BidirectionalSlicerTest {
 
     @NotNull
     private static SomaticVariant buildVariant(@NotNull String chromosome, long position) {
-        return new SomaticVariantImpl.Builder().chromosome(chromosome).position(position).build();
+        return SomaticVariantTestBuilderFactory.create().chromosome(chromosome).position(position).build();
     }
 }
