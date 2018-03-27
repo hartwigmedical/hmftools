@@ -52,19 +52,28 @@ public class TreatmentValidationTest {
             Lists.newArrayList(ImmutableCuratedTreatment.of("Drug1", "Type1", "Drug1")));
     private final static DrugData DRUG_MISSING_CURATED_ENTRY = ImmutableDrugData.of("Drug1", JAN2015, JAN2015, null, Lists.newArrayList());
 
-    private final static BiopsyTreatmentData TREATMENT_RADIO_THERAPY = biopsyTreatmentBuilder().radiotherapyGiven(null).build();
-    private final static BiopsyTreatmentData TREATMENT_GIVEN_NULL = biopsyTreatmentBuilder().treatmentGiven(null).build();
+    private final static BiopsyTreatmentData TREATMENT_RADIO_THERAPY_NULL =
+            biopsyTreatmentBuilder().treatmentGiven("No").radiotherapyGiven(null).build();
+    private final static BiopsyTreatmentData TREATMENT_GIVEN_NULL =
+            biopsyTreatmentBuilder().treatmentGiven(null).radiotherapyGiven("No").build();
     private final static BiopsyTreatmentData TREATMENT_GIVEN_EMPTY = biopsyTreatmentBuilder().build();
     private final static BiopsyTreatmentData TREATMENT_NOT_GIVEN_DATA =
-            biopsyTreatmentBuilder().treatmentGiven("No").addDrugs(DRUG_JAN_FEB).build();
-    private final static BiopsyTreatmentData TREATMENT_GIVEN_GIBBERISH = biopsyTreatmentBuilder().treatmentGiven("mmm").build();
-    private final static BiopsyTreatmentData TREATMENT_WRONG_DRUG_DATA = biopsyTreatmentBuilder().addDrugs(DRUG_NULL, DRUG_WRONG).build();
+            biopsyTreatmentBuilder().treatmentGiven("No").addDrugs(DRUG_JAN_FEB).radiotherapyGiven("Yes").build();
+    private final static BiopsyTreatmentData TREATMENT_GIVEN_GIBBERISH =
+            biopsyTreatmentBuilder().treatmentGiven("mmm").radiotherapyGiven("Yes").build();
+    private final static BiopsyTreatmentData TREATMENT_WRONG_DRUG_DATA =
+            biopsyTreatmentBuilder().treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(DRUG_NULL, DRUG_WRONG).build();
 
-    private final static BiopsyTreatmentData TREATMENT_JAN_JAN = biopsyTreatmentBuilder().addDrugs(DRUG_JAN_JAN).build();
-    private final static BiopsyTreatmentData TREATMENT_JAN_FEB = biopsyTreatmentBuilder().addDrugs(DRUG_JAN_FEB).build();
-    private final static BiopsyTreatmentData TREATMENT_JAN_MAR = biopsyTreatmentBuilder().addDrugs(DRUG_JAN_MAR).build();
-    private final static BiopsyTreatmentData TREATMENT_JAN_ONGOING = biopsyTreatmentBuilder().addDrugs(DRUG_JAN_ONGOING).build();
-    private final static BiopsyTreatmentData TREATMENT_FEB_ONGOING = biopsyTreatmentBuilder().addDrugs(DRUG_FEB_ONGOING).build();
+    private final static BiopsyTreatmentData TREATMENT_JAN_JAN =
+            biopsyTreatmentBuilder().treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(DRUG_JAN_JAN).build();
+    private final static BiopsyTreatmentData TREATMENT_JAN_FEB =
+            biopsyTreatmentBuilder().treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(DRUG_JAN_FEB).build();
+    private final static BiopsyTreatmentData TREATMENT_JAN_MAR =
+            biopsyTreatmentBuilder().treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(DRUG_JAN_MAR).build();
+    private final static BiopsyTreatmentData TREATMENT_JAN_ONGOING =
+            biopsyTreatmentBuilder().treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(DRUG_JAN_ONGOING).build();
+    private final static BiopsyTreatmentData TREATMENT_FEB_ONGOING =
+            biopsyTreatmentBuilder().treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(DRUG_FEB_ONGOING).build();
 
     @Test
     public void reportsMissingDrugData() {
@@ -88,7 +97,8 @@ public class TreatmentValidationTest {
 
     @Test
     public void reportsMissingRadioTherapy() {
-        final List<ValidationFinding> findings = PatientValidator.validateRadioTherapy(CPCT_ID, TREATMENT_RADIO_THERAPY);
+        final List<ValidationFinding> findings =
+                PatientValidator.validateTreatments(CPCT_ID, Lists.newArrayList(TREATMENT_RADIO_THERAPY_NULL));
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
@@ -97,7 +107,7 @@ public class TreatmentValidationTest {
 
     @Test
     public void reportsMissingTreatmentGiven() {
-        final List<ValidationFinding> findings = PatientValidator.validateTreatmentData(CPCT_ID, TREATMENT_GIVEN_NULL);
+        final List<ValidationFinding> findings = PatientValidator.validateTreatments(CPCT_ID, Lists.newArrayList(TREATMENT_GIVEN_NULL));
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
@@ -106,8 +116,8 @@ public class TreatmentValidationTest {
 
     @Test
     public void reportsMissingTreatmentData() {
-        final List<ValidationFinding> findings = PatientValidator.validateTreatmentData(CPCT_ID, TREATMENT_GIVEN_EMPTY);
-        assertEquals(1, findings.size());
+        final List<ValidationFinding> findings = PatientValidator.validateTreatments(CPCT_ID, Lists.newArrayList(TREATMENT_GIVEN_EMPTY));
+        assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
         assertTrue(findingsFields.contains(FORM_TREATMENT));
@@ -115,7 +125,7 @@ public class TreatmentValidationTest {
 
     @Test
     public void reportsTreatmentGivenNoWithData() {
-        final List<ValidationFinding> findings = PatientValidator.validateTreatmentData(CPCT_ID, TREATMENT_NOT_GIVEN_DATA);
+        final List<ValidationFinding> findings = PatientValidator.validateTreatments(CPCT_ID, Lists.newArrayList(TREATMENT_NOT_GIVEN_DATA));
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
@@ -124,7 +134,8 @@ public class TreatmentValidationTest {
 
     @Test
     public void reportsTreatmentGivenGibberish() {
-        final List<ValidationFinding> findings = PatientValidator.validateTreatmentData(CPCT_ID, TREATMENT_GIVEN_GIBBERISH);
+        final List<ValidationFinding> findings =
+                PatientValidator.validateTreatments(CPCT_ID, Lists.newArrayList(TREATMENT_GIVEN_GIBBERISH));
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
@@ -133,7 +144,8 @@ public class TreatmentValidationTest {
 
     @Test
     public void reportsDrugFindingsForTreatment() {
-        final List<ValidationFinding> findings = PatientValidator.validateTreatmentData(CPCT_ID, TREATMENT_WRONG_DRUG_DATA);
+        final List<ValidationFinding> findings =
+                PatientValidator.validateTreatments(CPCT_ID, Lists.newArrayList(TREATMENT_WRONG_DRUG_DATA));
         assertEquals(4, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
@@ -176,8 +188,7 @@ public class TreatmentValidationTest {
         String curationName = "testTreatmentCuration";
         final List<ValidationFinding> findings = PatientValidator.validateTreatmentCuration(CPCT_ID,
                 curationName,
-                "",
-                Lists.newArrayList(ImmutableBiopsyTreatmentData.of("Yes", "Yes",
+                "", Lists.newArrayList(ImmutableBiopsyTreatmentData.of("Yes", "Yes",
                         Lists.newArrayList(DRUG_MISSING_CURATED_ENTRY),
                         FormStatusState.UNKNOWN,
                         false)));
@@ -192,8 +203,7 @@ public class TreatmentValidationTest {
         String curationName = "testTreatmentCuration";
         final List<ValidationFinding> findings = PatientValidator.validateTreatmentCuration(CPCT_ID,
                 curationName,
-                "",
-                Lists.newArrayList(ImmutableBiopsyTreatmentData.of("Yes", "Yes",
+                "", Lists.newArrayList(ImmutableBiopsyTreatmentData.of("Yes", "Yes",
                         Lists.newArrayList(DRUG_WITH_PARTIAL_CURATED_ENTRY),
                         FormStatusState.UNKNOWN,
                         false)));

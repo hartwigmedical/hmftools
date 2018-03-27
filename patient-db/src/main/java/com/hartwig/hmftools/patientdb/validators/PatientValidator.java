@@ -237,8 +237,7 @@ public final class PatientValidator {
     static List<ValidationFinding> validateTreatments(@NotNull final String patientId,
             @NotNull final List<BiopsyTreatmentData> treatments) {
         final List<ValidationFinding> findings = Lists.newArrayList();
-        treatments.forEach(treatment -> validateTreatmentData(patientId, treatment));
-        treatments.forEach(treatment -> validateRadioTherapy(patientId, treatment));
+        treatments.forEach(treatment -> findings.addAll(validateTreatmentData(patientId, treatment)));
         Collections.sort(treatments);
 
         if (treatments.size() > 1) {
@@ -270,24 +269,7 @@ public final class PatientValidator {
     }
 
     @NotNull
-    @VisibleForTesting
-    static List<ValidationFinding> validateRadioTherapy(@NotNull final String patientId, @NotNull final BiopsyTreatmentData treatmentData) {
-        final String postRadioTherapy = treatmentData.radiotherapyGiven();
-        final List<ValidationFinding> findings = Lists.newArrayList();
-        if (postRadioTherapy == null) {
-            findings.add(ValidationFinding.of(ECRF_LEVEL,
-                    patientId,
-                    FIELD_RADIOTHERAPY_GIVEN,
-                    "radio therapy given field empty",
-                    treatmentData.formStatus(),
-                    treatmentData.formLocked()));
-        }
-        return findings;
-    }
-
-    @NotNull
-    @VisibleForTesting
-    static List<ValidationFinding> validateTreatmentData(@NotNull final String patientId,
+    private static List<ValidationFinding> validateTreatmentData(@NotNull final String patientId,
             @NotNull final BiopsyTreatmentData treatmentData) {
         final String treatmentGiven = treatmentData.treatmentGiven();
         final List<ValidationFinding> findings = Lists.newArrayList();
@@ -327,6 +309,16 @@ public final class PatientValidator {
                     patientId,
                     FIELD_TREATMENT_GIVEN,
                     "treatment given is not yes/no",
+                    treatmentData.formStatus(),
+                    treatmentData.formLocked()));
+        }
+
+        final String postRadioTherapy = treatmentData.radiotherapyGiven();
+        if (postRadioTherapy == null) {
+            findings.add(ValidationFinding.of(ECRF_LEVEL,
+                    patientId,
+                    FIELD_RADIOTHERAPY_GIVEN,
+                    "radio therapy given field empty",
                     treatmentData.formStatus(),
                     treatmentData.formLocked()));
         }
