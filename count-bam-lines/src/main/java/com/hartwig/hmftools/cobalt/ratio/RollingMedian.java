@@ -5,8 +5,8 @@ import java.util.PriorityQueue;
 
 class RollingMedian {
 
-    private PriorityQueue<Double> minheap = new PriorityQueue<>(new MinHeapComparator());
-    private PriorityQueue<Double> maxheap = new PriorityQueue<>(new MaxHeapComparator());
+    private final PriorityQueue<Double> minheap = new PriorityQueue<>(new MinHeapComparator());
+    private final PriorityQueue<Double> maxheap = new PriorityQueue<>(new MaxHeapComparator());
 
     void add(double n) {
         if (isEmpty()) {

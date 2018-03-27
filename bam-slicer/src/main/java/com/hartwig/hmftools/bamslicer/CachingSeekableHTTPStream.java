@@ -67,7 +67,7 @@ public class CachingSeekableHTTPStream extends SeekableStream {
     }
 
     @Override
-    public boolean eof() throws IOException {
+    public boolean eof() {
         return contentLength > 0 && position >= contentLength;
     }
 
@@ -91,7 +91,7 @@ public class CachingSeekableHTTPStream extends SeekableStream {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         chunkBuffer.closeHttpClient();
     }
 

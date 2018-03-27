@@ -32,8 +32,8 @@ enum HMFVariantType {
 }
 
 class Range {
-    int Start;
-    int End;
+    final int Start;
+    final int End;
 
     Range(int start, int end) {
         Start = start;
@@ -46,7 +46,7 @@ class Range {
 }
 
 class HMFVariantContext {
-    private static int SHORT_VARIANT_LENGTH = 1000;
+    private static final int SHORT_VARIANT_LENGTH = 1000;
 
     String Id;
     Location MantaBP1;

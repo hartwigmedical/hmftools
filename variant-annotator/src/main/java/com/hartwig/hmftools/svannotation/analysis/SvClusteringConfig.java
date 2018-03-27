@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.svannotation.analysis;
 
-import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
-import static java.lang.Math.abs;
-
 public class SvClusteringConfig {
 
     private int mClusterBaseDistance;

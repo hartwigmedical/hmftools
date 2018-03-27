@@ -4,10 +4,7 @@ import static org.junit.Assert.assertNotNull;
 
 import static junit.framework.TestCase.assertNull;
 
-import java.io.IOException;
 import java.nio.file.Paths;
-
-import javax.xml.bind.JAXBException;
 
 import com.google.common.io.Resources;
 
@@ -24,23 +21,23 @@ public class BachelorTest {
     private final static String TEST_DBSNP_XML = Resources.getResource("invalid_dbsnp.xml").getPath();
 
     @Nullable
-    private static Program testFile(final String path) throws JAXBException, SAXException {
+    private static Program testFile(final String path) throws SAXException {
         final BachelorSchema schema = BachelorSchema.make();
         return schema.processXML(Paths.get(path));
     }
 
     @Test
-    public void TestValid() throws JAXBException, IOException, SAXException {
+    public void TestValid() throws SAXException {
         assertNotNull(testFile(TEST_XML));
     }
 
     @Test
-    public void TestMissingNamespace() throws JAXBException, IOException, SAXException {
+    public void TestMissingNamespace() throws SAXException {
         assertNull(testFile(TEST_INVALID_XML));
     }
 
     @Test
-    public void TestInvalidDBSNP() throws JAXBException, IOException, SAXException {
+    public void TestInvalidDBSNP() throws SAXException {
         assertNull(testFile(TEST_DBSNP_XML));
     }
 }

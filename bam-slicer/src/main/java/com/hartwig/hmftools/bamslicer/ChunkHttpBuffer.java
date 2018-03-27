@@ -51,7 +51,7 @@ class ChunkHttpBuffer {
         chunkBuffer = CacheBuilder.newBuilder().maximumSize(maxSize).build(new CacheLoader<Long, ListenableFuture<byte[]>>() {
             @Override
             @NotNull
-            public ListenableFuture<byte[]> load(@NotNull final Long offset) throws Exception {
+            public ListenableFuture<byte[]> load(@NotNull final Long offset) {
                 final Chunk chunkAtOffset = chunksPerOffset.get(offset);
                 return getBytesForChunk(chunkAtOffset);
             }

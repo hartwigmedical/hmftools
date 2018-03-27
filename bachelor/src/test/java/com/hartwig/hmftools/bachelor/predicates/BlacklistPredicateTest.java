@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.bachelor.predicates;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.function.Predicate;
-
-import javax.xml.bind.JAXBException;
 
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
@@ -40,9 +38,11 @@ public class BlacklistPredicateTest {
     private Predicate<VariantModel> blacklistPredicate;
 
     @Before
-    public void setup() throws JAXBException, SAXException {
+    public void setup() throws SAXException {
         BachelorSchema schema = BachelorSchema.make();
         final Program program = schema.processXML(Paths.get(BLACKLIST_XML));
+        assertNotNull(program);
+
         blacklistPredicate = new BlacklistPredicate(Sets.newHashSet("ENST00000380152"), program.getBlacklist());
 
         VCFHeader header = new VCFHeader(Sets.newHashSet(), Sets.newHashSet(SAMPLE));
@@ -51,25 +51,25 @@ public class BlacklistPredicateTest {
     }
 
     @Test
-    public void testNotInBlacklist() throws JAXBException, IOException, SAXException {
+    public void testNotInBlacklist() {
         VariantModel model = createModel(START + ANN + END);
         assertFalse(blacklistPredicate.test(model));
     }
 
     @Test
-    public void testHGVSc() throws JAXBException, IOException, SAXException {
+    public void testHGVSc() {
         VariantModel model = createModel(START + ANN.replace("c.9256+4867C>A", "c.9256+4867C>T") + END);
         assertTrue(blacklistPredicate.test(model));
     }
 
     @Test
-    public void testHGVSp() throws JAXBException, IOException, SAXException {
+    public void testHGVSp() {
         VariantModel model = createModel(START + ANN.replace("p.Ser430Glx", "p.Ser430Gly") + END);
         assertTrue(blacklistPredicate.test(model));
     }
 
     @Test
-    public void testMinCodon() throws JAXBException, IOException, SAXException {
+    public void testMinCodon() {
         VariantModel model = createModel(START + ANN.replace("430/680", "1310/1680") + END);
         assertTrue(blacklistPredicate.test(model));
     }
@@ -79,5 +79,4 @@ public class BlacklistPredicateTest {
         VariantContext context = codec.decode(line);
         return new VariantModel(SAMPLE, context);
     }
-
 }

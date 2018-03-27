@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.variant;
 import static com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant.Builder;
 import static com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant.builder;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,7 +45,7 @@ public class EnrichedSomaticVariantFactory {
     }
 
     @NotNull
-    public List<EnrichedSomaticVariant> enrich(@NotNull List<PurityAdjustedSomaticVariant> variants) throws IOException {
+    public List<EnrichedSomaticVariant> enrich(@NotNull List<PurityAdjustedSomaticVariant> variants) {
         final List<EnrichedSomaticVariant> result = Lists.newArrayList();
 
         for (PurityAdjustedSomaticVariant variant : variants) {

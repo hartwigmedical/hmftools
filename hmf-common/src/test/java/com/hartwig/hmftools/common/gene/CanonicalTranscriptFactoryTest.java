@@ -35,7 +35,7 @@ public class CanonicalTranscriptFactoryTest {
         assertTranscript(transcript, 12, 0, 1783, 0);
     }
 
-    private void assertTranscript(@NotNull final CanonicalTranscript victim, int exons, int codingExons, long transcriptLength,
+    private static void assertTranscript(@NotNull final CanonicalTranscript victim, int exons, int codingExons, long transcriptLength,
             int codons) {
         assertEquals(exons, victim.exons());
         assertEquals(codingExons, victim.codingExons());
@@ -43,9 +43,9 @@ public class CanonicalTranscriptFactoryTest {
         assertEquals(3 * codons, victim.codingBases());
     }
 
-    private HmfGenomeRegion select(@NotNull final String file) {
+    @NotNull
+    private static HmfGenomeRegion select(@NotNull final String file) {
         final InputStream inputStream = CanonicalTranscriptFactoryTest.class.getResourceAsStream("/gene/" + file);
         return HmfGenomeFileLoader.fromInputStream(inputStream).iterator().next();
     }
-
 }

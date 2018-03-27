@@ -3,7 +3,6 @@ package com.hartwig.hmftools.amber;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
@@ -42,11 +41,11 @@ public class AmberApplication {
     static final double DEFAULT_MIN_DEPTH_PERCENTAGE = 0.5;
     static final double DEFAULT_MAX_DEPTH_PERCENTAGE = 1.5;
 
-    public static void main(final String... args) throws ParseException, IOException, ExecutionException, InterruptedException {
+    public static void main(final String... args) throws ParseException, IOException, InterruptedException {
         new AmberApplication(args);
     }
 
-    private AmberApplication(final String... args) throws ParseException, IOException, ExecutionException, InterruptedException {
+    private AmberApplication(final String... args) throws ParseException, IOException, InterruptedException {
         final VersionInfo versionInfo = new VersionInfo("amber.version");
         LOGGER.info("AMBER version: {}", versionInfo.version());
         final Options options = createOptions();

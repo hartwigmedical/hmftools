@@ -35,7 +35,7 @@ public class BiopsyDataValidationTest {
 
     private final static BiopsyData BIOPSY_NULL = biopsyBuilder().date(null).build();
     private final static BiopsyData BIOPSY_FEB1 = biopsyBuilder().date(FEB2015).site("1").location("").build();
-    ;
+
     private final static BiopsyData BIOPSY_FEB2 = biopsyBuilder().date(FEB2015).site("2").location("").build();
     private final static BiopsyTreatmentData TREATMENT_JAN_FEB =
             biopsyTreatmentBuilder().addDrugs(drugBuilder().startDate(JAN2015).endDate(FEB2015).build()).build();
