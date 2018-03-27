@@ -170,7 +170,7 @@ public class StructuralVariantFactory {
             } if (startOrientation == 1 && endOrientation == -1) {
                 type = StructuralVariantType.DEL;
             } else if (startOrientation == -1 && endOrientation == 1) {
-                type = StructuralVariantType.DEL;
+                type = StructuralVariantType.DUP;
             } else {
                 type = StructuralVariantType.INV;
             }
