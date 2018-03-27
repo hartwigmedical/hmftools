@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_DRUG_END;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_DRUG_OTHER;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_DRUG_START;
+import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_RADIOTHERAPY_GIVEN;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_TREATMENT_GIVEN;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FORM_TREATMENT;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_DEATH_DATE;
@@ -51,6 +52,7 @@ public class TreatmentValidationTest {
             Lists.newArrayList(ImmutableCuratedTreatment.of("Drug1", "Type1", "Drug1")));
     private final static DrugData DRUG_MISSING_CURATED_ENTRY = ImmutableDrugData.of("Drug1", JAN2015, JAN2015, null, Lists.newArrayList());
 
+    private final static BiopsyTreatmentData TREATMENT_RADIO_THERAPY = biopsyTreatmentBuilder().radiotherapyGiven(null).build();
     private final static BiopsyTreatmentData TREATMENT_GIVEN_NULL = biopsyTreatmentBuilder().treatmentGiven(null).build();
     private final static BiopsyTreatmentData TREATMENT_GIVEN_EMPTY = biopsyTreatmentBuilder().build();
     private final static BiopsyTreatmentData TREATMENT_NOT_GIVEN_DATA =
@@ -82,6 +84,15 @@ public class TreatmentValidationTest {
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
         assertTrue(findingsFields.contains(fields(FIELD_DRUG_START, FIELD_DRUG_END)));
         assertTrue(findingsFields.contains(fields(FIELD_DRUG, FIELD_DRUG_OTHER)));
+    }
+
+    @Test
+    public void reportsMissingRadioTherapy() {
+        final List<ValidationFinding> findings = PatientValidator.validateRadioTherapy(CPCT_ID, TREATMENT_RADIO_THERAPY);
+        assertEquals(1, findings.size());
+        findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
+        final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
+        assertTrue(findingsFields.contains(FIELD_RADIOTHERAPY_GIVEN));
     }
 
     @Test

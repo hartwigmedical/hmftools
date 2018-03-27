@@ -26,7 +26,7 @@ public class BiopsyTreatmentReader {
     private static final String ITEMGROUP_TREATMENT_AFTER = "GRP.TRTAFTER.TRTAFTER";
     private static final String ITEMGROUP_SYSPOSTBIO = "GRP.TRTAFTER.SYSPOSTBIO";
     public static final String FIELD_TREATMENT_GIVEN = "FLD.TRTAFTER.SYSTEMICST";
-    private static final String FIELD_RADIOTHERAPY_GIVEN = "FLD.TRTAFTER.RADIOTHERST";
+    public static final String FIELD_RADIOTHERAPY_GIVEN = "FLD.TRTAFTER.RADIOTHERST";
     public static final String FIELD_DRUG_START = "FLD.TRTAFTER.SYSSTDT";
     public static final String FIELD_DRUG_END = "FLD.TRTAFTER.SYSENDT";
     public static final String FIELD_DRUG = "FLD.TRTAFTER.PLANNEDTRT";

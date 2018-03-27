@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_DRUG_END;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_DRUG_OTHER;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_DRUG_START;
+import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_RADIOTHERAPY_GIVEN;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_TREATMENT_GIVEN;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FORM_TREATMENT;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_ASSESSMENT_DATE;
@@ -237,6 +238,7 @@ public final class PatientValidator {
             @NotNull final List<BiopsyTreatmentData> treatments) {
         final List<ValidationFinding> findings = Lists.newArrayList();
         treatments.forEach(treatment -> validateTreatmentData(patientId, treatment));
+        treatments.forEach(treatment -> validateRadioTherapy(patientId, treatment));
         Collections.sort(treatments);
 
         if (treatments.size() > 1) {
@@ -263,6 +265,22 @@ public final class PatientValidator {
                         treatment.formStatus(),
                         treatment.formLocked())));
             }
+        }
+        return findings;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static List<ValidationFinding> validateRadioTherapy(@NotNull final String patientId, @NotNull final BiopsyTreatmentData treatmentData) {
+        final String postRadioTherapy = treatmentData.radiotherapyGiven();
+        final List<ValidationFinding> findings = Lists.newArrayList();
+        if (postRadioTherapy == null) {
+            findings.add(ValidationFinding.of(ECRF_LEVEL,
+                    patientId,
+                    FIELD_RADIOTHERAPY_GIVEN,
+                    "radio therapy given field empty",
+                    treatmentData.formStatus(),
+                    treatmentData.formLocked()));
         }
         return findings;
     }
