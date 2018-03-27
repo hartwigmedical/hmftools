@@ -154,7 +154,7 @@ public class FastqStatsTest {
     }
 
     @Test
-    public void computesCorrectStatsOfSingleZippedFile() throws IOException, InterruptedException {
+    public void computesCorrectStatsOfSingleZippedFile() throws InterruptedException {
         final URL path = Resources.getResource("fastq/q30-10_Flowcell_S1_L001_R1_001.fastq.gz");
         final Multimap<String, File> fastqsPerSample = getSingleFastq(path.getPath());
         final FastqTracker tracker = FastqStats.processFastqs(fastqsPerSample, 1);
@@ -163,7 +163,7 @@ public class FastqStatsTest {
     }
 
     @Test
-    public void skipsUnrecognizedFormat() throws IOException, InterruptedException {
+    public void skipsUnrecognizedFormat() throws InterruptedException {
         final URL path = Resources.getResource("fastq/q30-10.err");
         final Multimap<String, File> fastqsPerSample = getSingleFastq(path.getPath());
         final FastqTracker tracker = FastqStats.processFastqs(fastqsPerSample, 1);

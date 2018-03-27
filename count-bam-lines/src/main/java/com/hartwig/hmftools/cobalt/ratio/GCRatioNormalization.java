@@ -25,7 +25,7 @@ class GCRatioNormalization {
         final ReadCountWithGCContent readCountWithGCContent = new ReadCountWithGCContent(readCount, gcProfile);
         entries.put(gcProfile.chromosome(), readCountWithGCContent);
 
-        // TODO: TEST With/without ismappable
+        // TODO (JOBA): TEST With/without isMappable
         if (chromosome.isAutosome() && readCountWithGCContent.isMappable() && readCount > 0) {
             medianReadCountBuilder.add(gcProfile, readCount);
         }

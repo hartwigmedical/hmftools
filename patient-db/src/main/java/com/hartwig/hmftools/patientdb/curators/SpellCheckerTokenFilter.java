@@ -10,13 +10,12 @@ import org.jetbrains.annotations.NotNull;
 
 class SpellCheckerTokenFilter extends TokenFilter {
     private final SpellChecker spellChecker;
+    private final CharTermAttribute charTermAttribute = addAttribute(CharTermAttribute.class);
 
     SpellCheckerTokenFilter(@NotNull final TokenStream tokenStream, @NotNull final SpellChecker spellChecker) {
         super(tokenStream);
         this.spellChecker = spellChecker;
     }
-
-    private CharTermAttribute charTermAttribute = addAttribute(CharTermAttribute.class);
 
     @Override
     public final boolean incrementToken() throws IOException {

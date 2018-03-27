@@ -3,26 +3,22 @@ package com.hartwig.hmftools.genepanel;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeFileLoader;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
-import com.hartwig.hmftools.common.region.hmfslicer.ModifiableHmfGenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
 public enum HmfGenePanelSupplier {
     ;
-
 
     @NotNull
     public static List<HmfGenomeRegion> hmfPanelGeneList() throws IOException {
@@ -61,5 +57,4 @@ public enum HmfGenePanelSupplier {
 
         return regionMap;
     }
-
 }

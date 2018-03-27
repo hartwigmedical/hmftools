@@ -3,10 +3,7 @@ package com.hartwig.hmftools.common.variant.structural;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
-import java.util.stream.Collectors;
 import java.util.regex.Pattern;
 
 import com.google.common.base.Preconditions;
@@ -15,15 +12,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 
-import com.sun.org.apache.xerces.internal.impl.xpath.regex.RegularExpression;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;
-
-import javax.annotation.RegEx;
 
 public class StructuralVariantFactory {
 
@@ -152,7 +146,7 @@ public class StructuralVariantFactory {
         final String alt = first.getAlternateAllele(0).getDisplayString();
         final Matcher match = breakendRegex.matcher(alt);
         if (!match.matches()) {
-            throw new IllegalArgumentException(String.format("ALT {} is not in breakend notation", alt));
+            throw new IllegalArgumentException(String.format("ALT %s is not in breakend notation", alt));
         }
         // local orientation determined by the positioning of the anchoring bases
         final byte startOrientation = (byte)(match.group(1).length() > 0 ? 1 : -1);

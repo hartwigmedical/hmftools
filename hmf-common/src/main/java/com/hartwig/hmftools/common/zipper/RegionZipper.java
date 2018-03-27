@@ -9,6 +9,9 @@ import org.jetbrains.annotations.NotNull;
 
 public final class RegionZipper {
 
+    private RegionZipper() {
+    }
+
     public static <S extends GenomeRegion, T extends GenomeRegion> void zip(List<S> primary, List<T> secondary,
             RegionZipperHandler<S, T> handler) {
         String chromosome = "";
@@ -44,18 +47,11 @@ public final class RegionZipper {
         if (positionChromosome < regionChromosome) {
             return -1;
         }
+
         if (positionChromosome > regionChromosome) {
             return 1;
         }
 
-        if (position.start() < region.start()) {
-            return -1;
-        }
-
-        if (position.start() > region.start()) {
-            return 1;
-        }
-
-        return 0;
+        return Long.compare(position.start(), region.start());
     }
 }
