@@ -18,6 +18,7 @@ import com.hartwig.hmftools.patientdb.data.ImmutableDrugData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TreatmentMatcherTest {
@@ -41,6 +42,20 @@ public class TreatmentMatcherTest {
     private final static BiopsyData BIOPSY_MAR = biopsyBuilder().date(MAR2015).build();
     private final static BiopsyData BIOPSY_SEP = biopsyBuilder().date(SEP2015).build();
     private final static BiopsyData BIOPSY_NULL = biopsyBuilder().date(null).build();
+
+    // LISC:    ---biopsy(mar)----no-treatment---
+    @Test
+    @Ignore
+    public void testOneBiopsyNoTreatment() {
+        final List<BiopsyTreatmentData> treatments = Lists.newArrayList(NO_TREATMENT_GIVEN);
+        final List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_MAR);
+        final List<BiopsyTreatmentData> matchedTreatments =
+                TreatmentMatcher.matchTreatmentsToBiopsies("patient", biopsies, treatments).values();
+        assertTrue(treatments.size() == matchedTreatments.size());
+        final Integer matchedBiopsyId = matchedTreatments.get(0).biopsyId();
+        assertNotNull(matchedBiopsyId);
+        assertEquals(biopsies.get(0).id(), matchedBiopsyId.intValue());
+    }
 
     // MIVO:    ---start(feb)-biopsy(mar)----end(jul)---
     @Test
