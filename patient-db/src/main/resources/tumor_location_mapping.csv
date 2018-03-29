@@ -10,7 +10,6 @@ adrenocortical carcinoma,neuroendocrine,NET: other
 Anal cancer,colorectal,anal
 angiosarcoma,sarcoma,sarcoma: other
 Appendix carcinoma,colorectal,appendix
-ascending coloncarcinoma,colorectal,
 atypische fibroxanthoom,skin,skin: other
 Basal Cell Carcinoma,skin,skin: basal cell carcinoma
 Bladder cancer,bladder,
@@ -23,17 +22,13 @@ Breast Cancer: subtype unknown,breast,Breast Cancer: subtype unknown
 Breast Cancer: triple negative,breast,Breast Cancer: triple negative
 Carcinoma NOS ex pleimorf adenoma,head and neck,Head and Neck Cancer: Salivary Gland Cancer
 Carcinoma of unknown primary,unknown primary,
-carcinoma of unkown primary,unknown primary,carcinoma
 carcinosarcoom endometrium,uterus,
 carcinosarcoom of the uterus,uterus,
 Cervical cancer,uterus,
 Cholangiocarcinoma,liver,Cholangiocarcinoma
 choledochuscarcinoma,pancreas,
-colon adeno carcinoma,colorectal,adeno carcinoma
 Colon ascendens,colorectal,
-colon cancer,colorectal,
 Colorectal Cancer,colorectal,
-Colon coecum NET,neuroendocrine,
 desmoïd tumor,sarcoma,sarcoma: other
 Double carcinoma: endometrium and ovarium,uterus,
 duodenum,colorectal,duodenum
@@ -48,13 +43,11 @@ Fechromocytoom,neuroendocrine,NET: other
 "First CT scan 24-05-2017 suspect clear cell RCC however, biopsy result 31-05-2017 = Melanoma",kidney,
 Gallbladder cancer,gall bladder,
 Gastrointestinal Stromal Tumors (GIST),sarcoma,sarcoma: GIST
-glioblastoma,brain,glioblastoma
 Glioma: anaplastic astrocytoma-like,brain,glioma
 Glioma: Glioblastoma Multiforme,brain,glioma
 Glioma: low-grade astrocytoma,brain,astrocytoma
 Glioma: low-grade oligodendroglioma,brain,glioma
 Glioma: other,brain,glioma
-golangio or gallblatter,gall bladder,golangio or gallblatter
 "gynaecological, hooggradig, slecht gedifferentieeerd carconoom, bij PA geen duidelijke aanwijzingen voor carcinosarcoom/sarcoom primaire origine probably endometrium",ovary,
 Head and Neck cancer,head and neck,Head and Neck: other
 Head and Neck Cancer: Hypopharyngeal Cancer,head and neck,Head and Neck Cancer: Hypopharyngeal Cancer
@@ -69,7 +62,6 @@ high grade serous carcinoma of unknown origin,unknown primary,high grade serous 
 high suspicion pancreatic cancer therfore pa and cpct biopt at the same day,pancreas,
 Hodgkin lymphoma,blood,lymphoma
 hydradenocarcinoma,other,
-kidneycel carcinoma,Kidney,
 kidney,Kidney,
 Larynxcarcinoma,head and neck,Head and Neck Cancer: Laryngeal cancer
 Leiomyosarcoma,sarcoma,sarcoma: Leiomyosarcoma
@@ -81,7 +73,6 @@ Lung Cancer: Small Cell,lung,Lung Cancer: Small Cell
 Lung NET,neuroendocrine,Lung NET
 lung: adenocarcinoom,lung,lung: adenocarcinoom
 Lymphoma: other,blood,lymphoma
-May 1995: Rhabdomysarcoma left lower arm; May 2016: Triple negative mamma cancer left,breast,Breast Cancer: triple negative
 Melanoma,melanoma,
 meningeoom: anaplastic hemangiopericytoma gr 3,Brain,
 "Mesothelioma, Malignant",mesothelioma,
@@ -89,29 +80,23 @@ mixed hepatocellular-cholangio carcinoma,liver,Liver: other
 Mixed NET/not-NET located: major duodenal papilla,neuroendocrine,NET: small intestine
 most likely high tractus digestive tumor,stomach,
 multipel myeloma,blood,myeloma
-NET,neuroendocrine,NET: other
 NET colon ascendens,neuroendocrine,NET: other
 NET: lung or small intestine,neuroendocrine, Lung NET
-NET primary unknown,neuroendocrine,NET: other
 NET unknown primary,neuroendocrine,NET: other
 NET unknown primary location,neuroendocrine,NET: other
 Neuro endocrine carcinoma,neuroendocrine,NET: other
 "Neuro endocrine carcinoma (NEC), primary unknown",neuroendocrine,NET: other
-Neuroendocrine carcinoma with unknown primary tumor,neuroendocrine,NET: other
 Neuro-endocrine carcinoma with unknown primary tumor,neuroendocrine,NET: other
 neuro-endocrin carcinoma of unknown primary,neuroendocrine,NET: other
 Neuro endocrine tumor,neuroendocrine,NET: other
-Neuro-endocrine tumour,neuroendocrine,NET: other
 Neuro-endorine tumor,neuroendocrine,NET: other
 neuroendocrine carcinoma,neuroendocrine,NET: other
 Neuroendocrine tumor,neuroendocrine,NET: other
-no primary tumor was found,unknown primary,
 Non-Hodgkin lymphoma,blood,lymphoma
 Non-small cell carcinoma NOS (mostly resembling lung carcinoma): working diagnosis "lung carcinoma",lung,Lung Cancer: Non-Small Cell
 Non-small cell high grade neuroendocrine carcinoma,neuroendocrine,NET: other
 Non-small cell NHL stomach stage I E,stomach,
 Oesophagal cancer (at transition from oesophagus to stomach),esophagus,cardia
-Oesophagus/Cardiacarcinoom,esophagus,
 Oesophagus/Cardiacarcinoma,esophagus,
 Oesophago-gastric cancer (junctional),esophagus,cardia
 Osteosarcoma (Bone Cancer),sarcoma,sarcoma: osteosarcoma
@@ -122,7 +107,6 @@ Penile cancer,skin,skin: other
 Primary tumor of uknown origin,unknown primary,
 primary tumor unknown,unknown primary,
 Prostate cancer,prostate,
-rectumcarcinoma,colorectal,
 Renal Cell Cancer,kidney,
 Rhabdomyosarcoma,sarcoma,sarcoma: other
 "Sarcoma, soft tissue",sarcoma,sarcoma: other
@@ -130,10 +114,7 @@ Sarcoma: other,sarcoma,sarcoma: other
 sarcomatoid or sarcoma (postradiation),sarcoma,sarcoma: other
 sarcomoatoid carcinoom,sarcoma,sarcoma: other
 Sigmoid,colorectal,sigmoid
-sigmoid carcinoma,colorectal,
-sigmoidcarcinoma,colorectal,
 Skin cancer,skin,
-Small intestinal,neuroendocrine,
 Small intestinal NET,neuroendocrine,NET: small intestine
 solitair fibreuze tumor in brain,brain,solitair fibreuze
 Squamous cell carcinoma of the skin,skin,Squamous cell carcinoma
@@ -158,13 +139,11 @@ Unknown primary,unknown primary,
 unknown Primary tumor,unknown primary,
 unknown primary tumor,unknown primary,
 "Unknown, probably head and neck cancer",unknown primary,probably head and neck cancer
-unkown,unknown primary,
 unknown primary tumor in tractus genitalis,unknown primary,
 Urothelial cell cancer of the bladder,bladder,
 Urothelial cell cancer of the pyelum,bladder,
 Urothelial cell cancer of the urethra,bladder,
 "Urothelial cell cancer, but the origin is unknown",bladder,
 Urothelial cell cancer: other,bladder,
-Uterus extirpatie abdominal,uterus,
 Vaginal cancer,Vaginal,
 Vulva cancer,skin,skin: other
