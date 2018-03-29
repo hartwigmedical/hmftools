@@ -13,7 +13,7 @@ Appendix carcinoma,colorectal,appendix
 atypische fibroxanthoom,skin,skin: other
 Basal Cell Carcinoma,skin,skin: basal cell carcinoma
 Bladder cancer,bladder,
-Both bladder carcinoma and mesothelioma                                                                                                                                ,other          ,Both bladder carcinoma and mesothelioma
+Both bladder carcinoma and mesothelioma,other,Both bladder carcinoma and mesothelioma
 Breast cancer,breast,Breast Cancer: subtype unknown
 Breast Cancer: ER-negative/HER2-positive,breast,Breast Cancer: ER-negative/HER2-positive
 Breast Cancer: ER-positive/HER2-negative,breast,Breast Cancer: ER-positive/HER2-negative
@@ -30,10 +30,10 @@ Cholangiocarcinoma,liver,Cholangiocarcinoma
 choledochuscarcinoma,pancreas,
 Colon ascendens,colorectal,
 Colorectal Cancer,colorectal,
-Cystadenocarcinoma of the liver                                                                                                                                        ,liver          ,Cystadenocarcinoma of the liver
+Cystadenocarcinoma of the liver,liver,Cystadenocarcinoma of the liver
 desmoïd tumor,sarcoma,sarcoma: other
 Double carcinoma: endometrium and ovarium,uterus,
-duodenal carcinoma                                                                                                                                                     ,small intestine,duodenal carcinoma
+duodenal carcinoma,small intestine,duodenal carcinoma
 duodenum,colorectal,duodenum
 Endometrial cancer,uterus,
 ER-positive / HER2 unknown,breast,Breast Cancer: ER-positive/HER2 unknown
@@ -45,14 +45,14 @@ extra ovarial sereus adenocarcinoom,ovary,
 Fechromocytoom,neuroendocrine,NET: other
 "First CT scan 24-05-2017 suspect clear cell RCC however, biopsy result 31-05-2017 = Melanoma",kidney,
 Gallbladder cancer,gall bladder,
-gastrinoma in stomach                                                                                                                                                  ,stomach        ,gastrinoma in stomach
+gastrinoma in stomach,stomach,gastrinoma in stomach
 Gastrointestinal Stromal Tumors (GIST),sarcoma,sarcoma: GIST
 Glioma: anaplastic astrocytoma-like,brain,glioma
 Glioma: Glioblastoma Multiforme,brain,glioma
 Glioma: low-grade astrocytoma,brain,astrocytoma
 Glioma: low-grade oligodendroglioma,brain,glioma
 Glioma: other,brain,glioma
-golanchgio carcinoma                                                                                                                                                   ,Bile duct      ,Cholangiocarcinoma
+golanchgio carcinoma,Bile duct,Cholangiocarcinoma
 "gynaecological, hooggradig, slecht gedifferentieeerd carconoom, bij PA geen duidelijke aanwijzingen voor carcinosarcoom/sarcoom primaire origine probably endometrium",ovary,
 Head and Neck cancer,head and neck,Head and Neck: other
 Head and Neck Cancer: Hypopharyngeal Cancer,head and neck,Head and Neck Cancer: Hypopharyngeal Cancer
@@ -78,14 +78,14 @@ Lung Cancer: Small Cell,lung,Lung Cancer: Small Cell
 Lung NET,neuroendocrine,Lung NET
 lung: adenocarcinoom,lung,lung: adenocarcinoom
 Lymphoma: other,blood,lymphoma
-"malignant, probably poorly differentiated adenocarcinoma consistant with clear cell renal carcinoma"                                                                  ,kidney         ,Clear cell renal carcinoma
+"malignant, probably poorly differentiated adenocarcinoma consistant with clear cell renal carcinoma",kidney,Clear cell renal carcinoma
 Melanoma,melanoma,
 meningeoom: anaplastic hemangiopericytoma gr 3,Brain,
 "Mesothelioma, Malignant",mesothelioma,
-mix of SCLC and NSCLC                                                                                                                                                  ,lung other     ,mix of SCLC and NSCLC
+mix of SCLC and NSCLC,lung other,mix of SCLC and NSCLC
 mixed hepatocellular-cholangio carcinoma,liver,Liver: other
 Mixed NET/not-NET located: major duodenal papilla,neuroendocrine,NET: small intestine
-Morbus Kahler                                                                                                                                                          ,blood          ,Multiple myeloma
+Morbus Kahler,blood,Multiple myeloma
 most likely high tractus digestive tumor,stomach,
 multipel myeloma,blood,myeloma
 NET colon ascendens,neuroendocrine,NET: other
