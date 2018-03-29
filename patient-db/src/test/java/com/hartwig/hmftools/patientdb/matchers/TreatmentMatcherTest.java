@@ -29,12 +29,12 @@ public class TreatmentMatcherTest {
     private final static LocalDate SEP2015 = LocalDate.parse("2015-09-01");
 
     private final static BiopsyTreatmentData TREATMENT_FEB_JUL2015 =
-            biopsyTreatmentBuilder().addDrugs(drugWithStartAndEndDate(FEB2015, JUL2015)).build();
+            biopsyTreatmentBuilder().treatmentGiven("Yes").addDrugs(drugWithStartAndEndDate(FEB2015, JUL2015)).build();
     private final static BiopsyTreatmentData TREATMENT_MAY_SEP2015 =
-            biopsyTreatmentBuilder().addDrugs(drugWithStartAndEndDate(MAY2015, SEP2015)).build();
+            biopsyTreatmentBuilder().treatmentGiven("Yes").addDrugs(drugWithStartAndEndDate(MAY2015, SEP2015)).build();
     private final static BiopsyTreatmentData NO_TREATMENT_GIVEN = biopsyTreatmentBuilder().treatmentGiven("No").build();
     private final static BiopsyTreatmentData TREATMENT_MAR_NULL =
-            biopsyTreatmentBuilder().addDrugs(drugWithStartAndEndDate(MAR2015, null)).build();
+            biopsyTreatmentBuilder().treatmentGiven("Yes").addDrugs(drugWithStartAndEndDate(MAR2015, null)).build();
 
     private final static BiopsyData BIOPSY_JAN = biopsyBuilder().date(JAN2015).build();
     private final static BiopsyData BIOPSY_FEB = biopsyBuilder().date(FEB2015).build();

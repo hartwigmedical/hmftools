@@ -56,7 +56,7 @@ public class TreatmentValidationTest {
             biopsyTreatmentBuilder().treatmentGiven("No").radiotherapyGiven(null).build();
     private final static BiopsyTreatmentData TREATMENT_GIVEN_NULL =
             biopsyTreatmentBuilder().treatmentGiven(null).radiotherapyGiven("No").build();
-    private final static BiopsyTreatmentData TREATMENT_GIVEN_EMPTY = biopsyTreatmentBuilder().build();
+    private final static BiopsyTreatmentData TREATMENT_GIVEN_EMPTY = biopsyTreatmentBuilder().treatmentGiven("Yes").build();
     private final static BiopsyTreatmentData TREATMENT_NOT_GIVEN_DATA =
             biopsyTreatmentBuilder().treatmentGiven("No").addDrugs(DRUG_JAN_FEB).radiotherapyGiven("Yes").build();
     private final static BiopsyTreatmentData TREATMENT_GIVEN_GIBBERISH =

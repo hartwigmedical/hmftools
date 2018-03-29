@@ -23,7 +23,7 @@ public final class TestDatamodelFactory {
 
     @NotNull
     public static ImmutableBiopsyTreatmentData.Builder biopsyTreatmentBuilder() {
-        return ImmutableBiopsyTreatmentData.builder().id(1).treatmentGiven("Yes").formStatus(FormStatusState.UNKNOWN).formLocked(false);
+        return ImmutableBiopsyTreatmentData.builder().id(1).formStatus(FormStatusState.UNKNOWN).formLocked(false);
     }
 
     @NotNull
