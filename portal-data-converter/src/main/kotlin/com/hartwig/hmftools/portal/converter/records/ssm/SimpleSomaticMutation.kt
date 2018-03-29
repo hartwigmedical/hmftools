@@ -37,16 +37,15 @@ data class SimpleSomaticMutation(private val fields: Map<SimpleSomaticMutationHe
                                                SimpleSomaticMutationHeader.verification_status to VERIFICATION_STATUS))
         }
 
-        private operator fun invoke(variantContext: VariantContext): List<SimpleSomaticMutation> {
-            val sampleId = variantContext.sampleNamesOrderedByName[0]
+        private operator fun invoke(sampleHmfId: String, variantContext: VariantContext): List<SimpleSomaticMutation> {
             val variants = if (variantContext.alternateAlleles.size > 1) {
                 variantContext.split().map { it.reformatAlleles() }
             } else {
                 Lists.newArrayList<VariantContext>(variantContext)
             }
             return variants.filter(this::filterVariants).map { it ->
-                SimpleSomaticMutation(sampleId,
-                                      sampleId,
+                SimpleSomaticMutation(sampleHmfId,
+                                      sampleHmfId,
                                       it.mutationType(),
                                       it.contig,
                                       it.start,
@@ -56,9 +55,9 @@ data class SimpleSomaticMutation(private val fields: Map<SimpleSomaticMutationHe
             }
         }
 
-        operator fun invoke(vcfPath: String): List<SimpleSomaticMutation> {
+        operator fun invoke(sampleHmfId: String, vcfPath: String): List<SimpleSomaticMutation> {
             val vcfReader = VCFFileReader(File(vcfPath), false)
-            return vcfReader.flatMap { it -> SimpleSomaticMutation(it) }
+            return vcfReader.flatMap { it -> SimpleSomaticMutation(sampleHmfId, it) }
         }
 
         private fun filterVariants(variant: VariantContext): Boolean {
