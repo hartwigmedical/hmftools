@@ -3,7 +3,13 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
 (   id int NOT NULL AUTO_INCREMENT,
-    cpctId varchar(50),
+    patientIdentifier varchar(50),
+    PRIMARY KEY (id)
+);
+
+DROP TABLE IF EXISTS baseline;
+CREATE TABLE baseline
+(   patientId int NOT NULL,
     registrationDate DATE,
     informedConsentDate DATE,
     gender varchar(10),
@@ -15,7 +21,8 @@ CREATE TABLE patient
     hasSystemicPreTreatment varchar(3),
     hasRadiotherapyPreTreatment varchar(3),
     preTreatments varchar(255),
-    PRIMARY KEY (id)
+    PRIMARY KEY (patientId),
+    FOREIGN KEY (patientId) REFERENCES patient(id)
 );
 
 DROP TABLE IF EXISTS preTreatmentDrug;
