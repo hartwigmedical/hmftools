@@ -1,3 +1,5 @@
+SET FOREIGN_KEY_CHECKS = 0;
+
 DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
 (   id int NOT NULL AUTO_INCREMENT,
@@ -22,3 +24,5 @@ CREATE TABLE baseline
     PRIMARY KEY (patientId),
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
+
+SET FOREIGN_KEY_CHECKS = 1;
