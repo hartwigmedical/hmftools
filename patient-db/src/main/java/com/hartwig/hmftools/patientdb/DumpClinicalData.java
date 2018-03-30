@@ -38,9 +38,9 @@ class DumpClinicalData {
         final String outputFile = fileLocation(csvOutputDir, "_cancerTypes.csv");
         LOGGER.info("Writing cancer types to CSV... ");
         final List<PatientCancerTypes> cancerTypes = patients.stream()
-                .map(patient -> ImmutablePatientCancerTypes.of(patient.patientData().cpctId(),
-                        Strings.nullToEmpty(patient.patientData().cancerType().category()),
-                        Strings.nullToEmpty(patient.patientData().cancerType().subcategory())))
+                .map(patient -> ImmutablePatientCancerTypes.of(patient.patientIdentifier(),
+                        Strings.nullToEmpty(patient.baselineData().cancerType().category()),
+                        Strings.nullToEmpty(patient.baselineData().cancerType().subcategory())))
                 .collect(Collectors.toList());
         PatientCancerTypes.writeRecords(outputFile, cancerTypes);
         linkName.ifPresent(link -> updateSymlink(csvOutputDir + File.separator + link, outputFile));
@@ -54,12 +54,12 @@ class DumpClinicalData {
         final List<PortalClinicalData> portalData = patients.stream()
                 .flatMap(patient -> patient.sequencedBiopsies()
                         .stream()
-                        .map(sampleData -> ImmutablePortalClinicalData.of(patient.patientData().cpctId(),
+                        .map(sampleData -> ImmutablePortalClinicalData.of(patient.patientIdentifier(),
                                 sampleData.sampleId(),
-                                patient.patientData().gender(),
-                                patient.patientData().birthYear(),
-                                patient.patientData().registrationDate(),
-                                patient.patientData().cancerType().category(),
+                                patient.baselineData().gender(),
+                                patient.baselineData().birthYear(),
+                                patient.baselineData().registrationDate(),
+                                patient.baselineData().cancerType().category(),
                                 getBiopsySite(patient, sampleData.sampleId()))))
                 .collect(Collectors.toList());
         PortalClinicalData.writeRecords(outputFile, portalData);

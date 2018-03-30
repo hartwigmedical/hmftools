@@ -48,13 +48,13 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.Config;
+import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
 import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.Patient;
-import com.hartwig.hmftools.patientdb.data.PatientData;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.TreatmentData;
 
@@ -69,23 +69,23 @@ public final class PatientValidator {
 
     @NotNull
     public static List<ValidationFinding> validatePatient(@NotNull final Patient patient) {
-        final String patientId = patient.patientData().cpctId();
+        final String patientIdentifier = patient.patientIdentifier();
 
         final List<ValidationFinding> findings = Lists.newArrayList();
 
-        findings.addAll(validatePatientData(patient.patientData()));
-        findings.addAll(validateTumorLocationCuration(patient.patientData()));
-        findings.addAll(validatePreTreatmentData(patientId, patient.preTreatmentData()));
-        findings.addAll(validateBiopsies(patientId, patient.clinicalBiopsies(), patient.treatments()));
-        findings.addAll(validateTreatments(patientId, patient.treatments()));
-        findings.addAll(validateTreatmentResponses(patientId, patient.treatments(), patient.treatmentResponses()));
-        findings.addAll(validateDeathDate(patientId, patient.patientData(), patient.treatments()));
-        findings.addAll(validateInformedConsentDate(patientId, patient.patientData(), patient.clinicalBiopsies()));
-        findings.addAll(validateTreatmentCuration(patientId,
+        findings.addAll(validateBaselineData(patientIdentifier, patient.baselineData()));
+        findings.addAll(validateTumorLocationCuration(patientIdentifier, patient.baselineData()));
+        findings.addAll(validatePreTreatmentData(patientIdentifier, patient.preTreatmentData()));
+        findings.addAll(validateBiopsies(patientIdentifier, patient.clinicalBiopsies(), patient.treatments()));
+        findings.addAll(validateTreatments(patientIdentifier, patient.treatments()));
+        findings.addAll(validateTreatmentResponses(patientIdentifier, patient.treatments(), patient.treatmentResponses()));
+        findings.addAll(validateDeathDate(patientIdentifier, patient.baselineData(), patient.treatments()));
+        findings.addAll(validateInformedConsentDate(patientIdentifier, patient.baselineData(), patient.clinicalBiopsies()));
+        findings.addAll(validateTreatmentCuration(patientIdentifier,
                 "treatmentCuration",
                 fields(FIELD_DRUG, FIELD_DRUG_OTHER),
                 patient.treatments()));
-        findings.addAll(validateTreatmentCuration(patientId,
+        findings.addAll(validateTreatmentCuration(patientIdentifier,
                 "preTreatmentCuration",
                 FIELD_PRE_DRUG,
                 Lists.newArrayList(patient.preTreatmentData())));
@@ -95,56 +95,55 @@ public final class PatientValidator {
 
     @NotNull
     @VisibleForTesting
-    static List<ValidationFinding> validatePatientData(@NotNull final PatientData patientData) {
-        final String cpctId = patientData.cpctId();
+    static List<ValidationFinding> validateBaselineData(@NotNull String patientIdentifier, @NotNull BaselineData baselineData) {
         final List<ValidationFinding> findings = Lists.newArrayList();
-        if (patientData.cancerType().searchTerm() == null) {
+        if (baselineData.cancerType().searchTerm() == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
-                    cpctId,
+                    patientIdentifier,
                     fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER),
                     "primary tumor location empty",
-                    patientData.primaryTumorStatus(),
-                    patientData.primaryTumorLocked()));
+                    baselineData.primaryTumorStatus(),
+                    baselineData.primaryTumorLocked()));
         }
-        if (patientData.gender() == null) {
+        if (baselineData.gender() == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
-                    cpctId,
+                    patientIdentifier,
                     FIELD_SEX,
                     "gender empty",
-                    patientData.demographyStatus(),
-                    patientData.demographyLocked()));
+                    baselineData.demographyStatus(),
+                    baselineData.demographyLocked()));
         }
-        if (patientData.registrationDate() == null) {
+        if (baselineData.registrationDate() == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
-                    cpctId,
+                    patientIdentifier,
                     fields(FIELD_REGISTRATION_DATE1, FIELD_REGISTRATION_DATE2),
                     "registration date empty or in wrong format",
-                    FormStatusState.best(patientData.selectionCriteriaStatus(), patientData.eligibilityStatus()),
-                    patientData.selectionCriteriaLocked() || patientData.eligibilityLocked()));
+                    FormStatusState.best(baselineData.selectionCriteriaStatus(), baselineData.eligibilityStatus()),
+                    baselineData.selectionCriteriaLocked() || baselineData.eligibilityLocked()));
         }
-        if (patientData.informedConsentDate() == null) {
+        if (baselineData.informedConsentDate() == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
-                    cpctId,
+                    patientIdentifier,
                     FIELD_INFORMED_CONSENT_DATE,
                     "informed consent date empty or in wrong format",
-                    patientData.informedConsentStatus(),
-                    patientData.informedConsentLocked()));
+                    baselineData.informedConsentStatus(),
+                    baselineData.informedConsentLocked()));
         }
-        if (patientData.birthYear() == null) {
+        if (baselineData.birthYear() == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
-                    cpctId,
+                    patientIdentifier,
                     fields(FIELD_BIRTH_YEAR1, FIELD_BIRTH_YEAR2, FIELD_BIRTH_YEAR3),
                     "birth year could not be determined",
-                    FormStatusState.best(patientData.eligibilityStatus(), patientData.selectionCriteriaStatus()),
-                    patientData.eligibilityLocked() || patientData.selectionCriteriaLocked()));
+                    FormStatusState.best(baselineData.eligibilityStatus(), baselineData.selectionCriteriaStatus()),
+                    baselineData.eligibilityLocked() || baselineData.selectionCriteriaLocked()));
         }
-        if (patientData.hospital() == null) {
+        if (baselineData.hospital() == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
-                    cpctId,
+                    patientIdentifier,
                     fields(FIELD_HOSPITAL1, FIELD_HOSPITAL2),
                     "no hospital",
-                    FormStatusState.best(patientData.eligibilityStatus(), patientData.selectionCriteriaStatus()),
-                    patientData.eligibilityLocked() || patientData.selectionCriteriaLocked()));
+                    FormStatusState.best(baselineData.eligibilityStatus(), baselineData.selectionCriteriaStatus()),
+                    baselineData.eligibilityLocked() || baselineData.selectionCriteriaLocked()));
         }
         return findings;
     }
@@ -401,16 +400,16 @@ public final class PatientValidator {
 
     @NotNull
     @VisibleForTesting
-    static List<ValidationFinding> validateTumorLocationCuration(@NotNull final PatientData patientData) {
+    static List<ValidationFinding> validateTumorLocationCuration(@NotNull String patientIdentifier, @NotNull BaselineData baselineData) {
         final List<ValidationFinding> findings = Lists.newArrayList();
-        final String searchTerm = patientData.cancerType().searchTerm();
-        if (searchTerm != null && patientData.cancerType().category() == null) {
+        final String searchTerm = baselineData.cancerType().searchTerm();
+        if (searchTerm != null && baselineData.cancerType().category() == null) {
             findings.add(ValidationFinding.of("tumorLocationCuration",
-                    patientData.cpctId(),
+                    patientIdentifier,
                     fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER),
                     "failed to curate primary tumor location.",
-                    patientData.primaryTumorStatus(),
-                    patientData.primaryTumorLocked(),
+                    baselineData.primaryTumorStatus(),
+                    baselineData.primaryTumorLocked(),
                     searchTerm));
         }
         return findings;
@@ -563,7 +562,7 @@ public final class PatientValidator {
 
     @NotNull
     @VisibleForTesting
-    static List<ValidationFinding> validateDeathDate(@NotNull final String patientId, @NotNull final PatientData patient,
+    static List<ValidationFinding> validateDeathDate(@NotNull final String patientId, @NotNull final BaselineData patient,
             @NotNull final List<BiopsyTreatmentData> treatments) {
         final List<ValidationFinding> findings = Lists.newArrayList();
         final LocalDate deathDate = patient.deathDate();
@@ -588,7 +587,7 @@ public final class PatientValidator {
     }
 
     @NotNull
-    static List<ValidationFinding> validateInformedConsentDate(@NotNull final String patientId, @NotNull final PatientData patient,
+    static List<ValidationFinding> validateInformedConsentDate(@NotNull final String patientId, @NotNull final BaselineData patient,
             @NotNull final List<BiopsyData> biopsies) {
         final List<ValidationFinding> findings = Lists.newArrayList();
         final LocalDate informedConsentDate = patient.informedConsentDate();

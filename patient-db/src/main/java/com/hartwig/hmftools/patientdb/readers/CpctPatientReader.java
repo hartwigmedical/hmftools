@@ -12,8 +12,8 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
-import com.hartwig.hmftools.patientdb.data.ImmutablePatientData;
-import com.hartwig.hmftools.patientdb.data.PatientData;
+import com.hartwig.hmftools.patientdb.data.BaselineData;
+import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -78,9 +78,9 @@ public class CpctPatientReader {
     }
 
     @NotNull
-    PatientData read(@NotNull final EcrfPatient patient) {
-        final ImmutablePatientData.Builder patientBuilder =
-                ImmutablePatientData.builder().cpctId(patient.patientId()).hospital(getHospital(patient, hospitals));
+    BaselineData read(@NotNull final EcrfPatient patient) {
+        final ImmutableBaselineData.Builder patientBuilder =
+                ImmutableBaselineData.builder().hospital(getHospital(patient, hospitals));
 
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BASELINE)) {
             setDemographyData(patientBuilder, studyEvent);
@@ -102,7 +102,7 @@ public class CpctPatientReader {
         return hospital;
     }
 
-    private void setDemographyData(@NotNull final ImmutablePatientData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
+    private void setDemographyData(@NotNull final ImmutableBaselineData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
         for (final EcrfForm demographyForm : studyEvent.nonEmptyFormsPerOID(FORM_DEMOGRAPHY, false)) {
             for (final EcrfItemGroup demographyItemGroup : demographyForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DEMOGRAPHY, false)) {
                 builder.gender(demographyItemGroup.readItemString(FIELD_SEX, 0, false));
@@ -113,7 +113,7 @@ public class CpctPatientReader {
     }
 
 
-    private void setPrimaryTumorData(@NotNull final ImmutablePatientData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
+    private void setPrimaryTumorData(@NotNull final ImmutableBaselineData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
         for (final EcrfForm carcinomaForm : studyEvent.nonEmptyFormsPerOID(FORM_CARCINOMA, false)) {
             for (final EcrfItemGroup carcinomaItemGroup : carcinomaForm.nonEmptyItemGroupsPerOID(ITEMGROUP_CARCINOMA, false)) {
                 String primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION, 0, false);
@@ -127,7 +127,7 @@ public class CpctPatientReader {
         }
     }
 
-    private static void setRegistrationAndBirthData(@NotNull final ImmutablePatientData.Builder builder,
+    private static void setRegistrationAndBirthData(@NotNull final ImmutableBaselineData.Builder builder,
             @NotNull final EcrfStudyEvent studyEvent) {
         LocalDate registrationDate1 = null;
         LocalDate registrationDate2 = null;
@@ -174,7 +174,7 @@ public class CpctPatientReader {
         return null;
     }
 
-    private void setInformedConsent(@NotNull final ImmutablePatientData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
+    private void setInformedConsent(@NotNull final ImmutableBaselineData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
         for (final EcrfForm informedConsentForm : studyEvent.nonEmptyFormsPerOID(FORM_INFORMED_CONSENT, false)) {
             for (final EcrfItemGroup informedConsentItemGroup : informedConsentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_INFORMED_CONSENT,
                     false)) {
@@ -185,7 +185,7 @@ public class CpctPatientReader {
         }
     }
 
-    private static void setDeathData(@NotNull final ImmutablePatientData.Builder builder, @NotNull final EcrfPatient patient) {
+    private static void setDeathData(@NotNull final ImmutableBaselineData.Builder builder, @NotNull final EcrfPatient patient) {
         for (final EcrfStudyEvent endStudyEvent : patient.studyEventsPerOID(STUDY_ENDSTUDY)) {
             for (final EcrfForm deathForm : endStudyEvent.nonEmptyFormsPerOID(FORM_DEATH, false)) {
                 for (final EcrfItemGroup deathItemGroup : deathForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DEATH, false)) {

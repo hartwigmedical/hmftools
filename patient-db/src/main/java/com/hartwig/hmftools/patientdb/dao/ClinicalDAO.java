@@ -13,12 +13,12 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TUMORMA
 
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.Utils;
+import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.Patient;
-import com.hartwig.hmftools.patientdb.data.PatientData;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.data.TumorMarkerData;
@@ -51,7 +51,8 @@ class ClinicalDAO {
     }
 
     void writeClinicalData(@NotNull final Patient patient) {
-        final int patientId = writePatientData(patient.patientData(), patient.preTreatmentData());
+        final int patientId = writePatientIdentifier(patient.patientIdentifier());
+        writeBaselineData(patientId, patient.baselineData(), patient.preTreatmentData());
         patient.sequencedBiopsies().forEach(biopsy -> writeSampleData(patientId, biopsy));
         patient.clinicalBiopsies().forEach(biopsy -> writeBiopsyData(patientId, biopsy));
         patient.treatments().forEach(treatment -> writeTreatmentData(patientId, treatment));
@@ -59,13 +60,16 @@ class ClinicalDAO {
         patient.tumorMarkers().forEach(tumorMarker -> writeTumorMarkerData(patientId, tumorMarker));
     }
 
-    private int writePatientData(@NotNull final PatientData patient, @NotNull PreTreatmentData preTreatmentData) {
-        final int patientId = context.insertInto(PATIENT, PATIENT.PATIENTIDENTIFIER)
-                .values(patient.cpctId())
+    private int writePatientIdentifier(@NotNull String patientIdentifier) {
+        return context.insertInto(PATIENT, PATIENT.PATIENTIDENTIFIER)
+                .values(patientIdentifier)
                 .returning(PATIENT.ID)
                 .fetchOne()
                 .getValue(PATIENT.ID);
+    }
 
+    private void writeBaselineData(int patientId, @NotNull BaselineData patient,
+            @NotNull PreTreatmentData preTreatmentData) {
         context.insertInto(BASELINE,
                 BASELINE.PATIENTID,
                 BASELINE.REGISTRATIONDATE,
@@ -94,10 +98,7 @@ class ClinicalDAO {
                 .execute();
 
         preTreatmentData.drugs()
-                .forEach(drug -> writePreTreatmentDrugData(patientId,
-                        drug,
-                        preTreatmentData.formStatus(),
-                        preTreatmentData.formLocked()));
+                .forEach(drug -> writePreTreatmentDrugData(patientId, drug, preTreatmentData.formStatus(), preTreatmentData.formLocked()));
 
         writeBaselineFormStatus(patientId, "demography", patient.demographyStatus(), patient.demographyLocked());
         writeBaselineFormStatus(patientId, "primaryTumor", patient.primaryTumorStatus(), patient.primaryTumorLocked());
@@ -106,8 +107,6 @@ class ClinicalDAO {
         writeBaselineFormStatus(patientId, "selectionCriteria", patient.selectionCriteriaStatus(), patient.selectionCriteriaLocked());
         writeBaselineFormStatus(patientId, "death", patient.deathStatus(), patient.deathLocked());
         writeBaselineFormStatus(patientId, "pretreatment", preTreatmentData.formStatus(), preTreatmentData.formLocked());
-
-        return patientId;
     }
 
     private void writeBaselineFormStatus(int patientId, @NotNull String form, @NotNull FormStatusState formStatusState, boolean locked) {

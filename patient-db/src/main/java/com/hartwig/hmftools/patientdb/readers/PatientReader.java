@@ -10,11 +10,11 @@ import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
+import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.Patient;
-import com.hartwig.hmftools.patientdb.data.PatientData;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.data.TumorMarkerData;
@@ -52,7 +52,7 @@ public class PatientReader {
         LOGGER.info("Analyzing patient " + ecrfPatient.patientId() + " with samples: " + tumorSamplesForPatient);
 
         final List<SampleData> sequencedBiopsies = limsSampleReader.read(tumorSamplesForPatient);
-        final PatientData patientData = cpctPatientReader.read(ecrfPatient);
+        final BaselineData baselineData = cpctPatientReader.read(ecrfPatient);
         final PreTreatmentData preTreatmentData = preTreatmentReader.read(ecrfPatient);
         final List<BiopsyData> clinicalBiopsies = BiopsyReader.read(ecrfPatient);
         final List<BiopsyTreatmentData> treatments = biopsyTreatmentReader.read(ecrfPatient);
@@ -71,11 +71,13 @@ public class PatientReader {
         findings.addAll(matchedTreatments.findings());
         findings.addAll(matchedResponses.findings());
 
-        return new Patient(patientData,
+        return new Patient(ecrfPatient.patientId(), baselineData,
                 preTreatmentData,
                 sequencedBiopsies,
                 matchedBiopsies.values(),
-                matchedTreatments.values(), matchedResponses.values(), tumorMarkers,
+                matchedTreatments.values(),
+                matchedResponses.values(),
+                tumorMarkers,
                 findings);
     }
 }

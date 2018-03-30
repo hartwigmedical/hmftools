@@ -18,11 +18,11 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
+import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.DrugData;
-import com.hartwig.hmftools.patientdb.data.PatientData;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.TumorMarkerData;
 
@@ -44,17 +44,16 @@ public class PatientReaderTest {
         final EcrfPatient cpctPatient = model.patients().iterator().next();
         final CpctPatientReader cpctPatientReader = new CpctPatientReader(model, createTumorLocationCurator());
 
-        final PatientData patientData = cpctPatientReader.read(cpctPatient);
-        assertEquals("CPCT02252500", patientData.cpctId());
-        assertEquals("Breast cancer", patientData.cancerType().searchTerm());
-        assertEquals("Breast", patientData.cancerType().category());
-        assertEquals("Breast Cancer: subtype unknown", patientData.cancerType().subcategory());
-        assertEquals("female", patientData.gender());
-        assertEquals("Bernhoven uden", patientData.hospital());
-        assertEquals(new Integer(1963), patientData.birthYear());
-        assertEquals(LocalDate.parse("2012-06-22", DATE_FORMATTER), patientData.deathDate());
-        assertEquals(LocalDate.parse("2012-02-17", DATE_FORMATTER), patientData.registrationDate());
-        assertEquals(LocalDate.parse("2012-02-17", DATE_FORMATTER), patientData.informedConsentDate());
+        final BaselineData baselineData = cpctPatientReader.read(cpctPatient);
+        assertEquals("Breast cancer", baselineData.cancerType().searchTerm());
+        assertEquals("Breast", baselineData.cancerType().category());
+        assertEquals("Breast Cancer: subtype unknown", baselineData.cancerType().subcategory());
+        assertEquals("female", baselineData.gender());
+        assertEquals("Bernhoven uden", baselineData.hospital());
+        assertEquals(new Integer(1963), baselineData.birthYear());
+        assertEquals(LocalDate.parse("2012-06-22", DATE_FORMATTER), baselineData.deathDate());
+        assertEquals(LocalDate.parse("2012-02-17", DATE_FORMATTER), baselineData.registrationDate());
+        assertEquals(LocalDate.parse("2012-02-17", DATE_FORMATTER), baselineData.informedConsentDate());
     }
 
     @Test

@@ -11,10 +11,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class PatientData {
-    @NotNull
-    public abstract String cpctId();
-
+public abstract class BaselineData {
     @Nullable
     public abstract LocalDate registrationDate();
 

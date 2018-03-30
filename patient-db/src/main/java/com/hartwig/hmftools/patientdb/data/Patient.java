@@ -7,8 +7,11 @@ import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import org.jetbrains.annotations.NotNull;
 
 public class Patient {
+
     @NotNull
-    private final PatientData patientData;
+    private final String patientIdentifier;
+    @NotNull
+    private final BaselineData baselineData;
     @NotNull
     private final PreTreatmentData preTreatmentData;
     @NotNull
@@ -24,11 +27,13 @@ public class Patient {
     @NotNull
     private final List<ValidationFinding> matchFindings;
 
-    public Patient(@NotNull final PatientData patientData, @NotNull final PreTreatmentData preTreatmentData,
-            @NotNull final List<SampleData> sequencedBiopsies, @NotNull final List<BiopsyData> clinicalBiopsies,
-            @NotNull final List<BiopsyTreatmentData> treatments, @NotNull final List<BiopsyTreatmentResponseData> treatmentResponses,
-            @NotNull final List<TumorMarkerData> tumorMarkers, @NotNull final List<ValidationFinding> matchFindings) {
-        this.patientData = patientData;
+    public Patient(@NotNull final String patientIdentifier, @NotNull final BaselineData baselineData,
+            @NotNull final PreTreatmentData preTreatmentData, @NotNull final List<SampleData> sequencedBiopsies,
+            @NotNull final List<BiopsyData> clinicalBiopsies, @NotNull final List<BiopsyTreatmentData> treatments,
+            @NotNull final List<BiopsyTreatmentResponseData> treatmentResponses, @NotNull final List<TumorMarkerData> tumorMarkers,
+            @NotNull final List<ValidationFinding> matchFindings) {
+        this.patientIdentifier = patientIdentifier;
+        this.baselineData = baselineData;
         this.preTreatmentData = preTreatmentData;
         this.sequencedBiopsies = sequencedBiopsies;
         this.clinicalBiopsies = clinicalBiopsies;
@@ -39,8 +44,13 @@ public class Patient {
     }
 
     @NotNull
-    public PatientData patientData() {
-        return patientData;
+    public String patientIdentifier() {
+        return patientIdentifier;
+    }
+
+    @NotNull
+    public BaselineData baselineData() {
+        return baselineData;
     }
 
     @NotNull

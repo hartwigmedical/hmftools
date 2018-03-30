@@ -158,7 +158,7 @@ public final class LoadClinicalData {
         for (final EcrfPatient ecrfPatient : patients) {
             final List<String> tumorSamplesForPatient = getTumorSamplesForPatient(ecrfPatient.patientId(), runContexts);
             final Patient patient = reader.read(ecrfPatient, tumorSamplesForPatient);
-            patientMap.put(patient.patientData().cpctId(), patient);
+            patientMap.put(patient.patientIdentifier(), patient);
         }
         return patientMap;
     }
