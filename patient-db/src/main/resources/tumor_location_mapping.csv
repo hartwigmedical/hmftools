@@ -1,7 +1,7 @@
 primaryTumorLocation,category,subcategory
 2008: Follicular NHL Stage IA (left ear) RT 8 GY; 2013: Stage IV follicular lymphoma (ww); 25Nov2015: Anal cancer,Colon/Rectum,Anal
 Adenocarcinoma cardia,Stomach,Cardia
-"adenocarcinoma characterised by an immunoprofile which could it a primary tumor in the colorectum,  stomach or pancreas",Cancer of unknown primary origin (CUP),Cancer of unknown primary origin (CUP)
+"adenocarcinoma characterised by an immunoprofile which could it a primary tumor in the colorectum, stomach or pancreas",Cancer of unknown primary origin (CUP),Cancer of unknown primary origin (CUP)
 Adenocarcinoma small intestine,Small intestine,Small intestine: other
 "adenocarcinoma of gall bladder, pancreatic or biliary tract",Billary,Billary: other
 adenoid cystic carcinoma,Head and neck,Head and Neck: other
@@ -81,7 +81,7 @@ Lymphoma: other,Lymphoid,Lymphoma: other
 "malignant, probably poorly differentiated adenocarcinoma consistant with clear cell renal carcinoma",Kidney,Renal Cell Cancer
 Melanoma,Skin,Melanoma
 meningeoom: anaplastic hemangiopericytoma gr 3,CNS,Meningeoma
-Mesothelioma,Mesothelioma,Mesothelioma
+"Mesothelioma, Malignant",Mesothelioma,Mesothelioma
 mix of SCLC and NSCLC,Lung,Lung: other
 mixed hepatocellular-cholangio carcinoma,Liver,Liver: other
 Mixed NET/not-NET located: major duodenal papilla,Small intestine,Small intestine: other
@@ -117,7 +117,7 @@ primary tumor unknown,Cancer of unknown primary origin (CUP),Cancer of unknown p
 Prostate cancer,Prostate,Prostate
 Renal Cell Cancer,Kidney,Renal Cell Cancer
 Rhabdomyosarcoma,Bone/Soft tissue,Sarcoma: other
-Sarcoma,Bone/Soft tissue,Sarcoma: other
+"Sarcoma, soft tissue",Bone/Soft tissue,Sarcoma: other
 Sarcoma: other,Bone/Soft tissue,Sarcoma: other
 sarcomatoid or sarcoma (postradiation),Bone/Soft tissue,Sarcoma: other
 sarcomoatoid carcinoom,Bone/Soft tissue,Sarcoma: other
