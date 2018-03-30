@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.data.Patient;
+import com.hartwig.hmftools.patientdb.data.SampleData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -175,8 +176,12 @@ public class DatabaseAccess {
         clinicalDAO.clear();
     }
 
-    public void writeClinicalData(@NotNull final Patient patient) {
-        clinicalDAO.writeClinicalData(patient);
+    public void writeFullClinicalData(@NotNull Patient patient) {
+        clinicalDAO.writeFullClinicalData(patient);
+    }
+
+    public void writeSampleClinicalData(@NotNull String patientIdentifier, @NotNull List<SampleData> samples) {
+        clinicalDAO.writeSampleClinicalData(patientIdentifier, samples);
     }
 
     public void writeDrupEcrf(@NotNull final CpctEcrfModel model, @NotNull final Set<String> sequencedPatients) {

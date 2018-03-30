@@ -10,16 +10,16 @@ import com.hartwig.hmftools.patientdb.data.SampleData;
 
 import org.jetbrains.annotations.NotNull;
 
-class LimsSampleReader {
+public class LimsSampleReader {
     @NotNull
     private final Lims lims;
 
-    LimsSampleReader(@NotNull final Lims lims) {
+    public LimsSampleReader(@NotNull final Lims lims) {
         this.lims = lims;
     }
 
     @NotNull
-    List<SampleData> read(@NotNull final List<String> sampleIds) {
+    public List<SampleData> read(@NotNull final List<String> sampleIds) {
         final List<SampleData> limsBiopsies = Lists.newArrayList();
 
         sampleIds.forEach(sampleId -> {

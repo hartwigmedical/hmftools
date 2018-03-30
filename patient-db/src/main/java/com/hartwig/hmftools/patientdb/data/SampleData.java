@@ -32,4 +32,9 @@ public abstract class SampleData {
         final LocalDate samplingDate = samplingDate();
         return samplingDate != null ? samplingDate : arrivalDate();
     }
+
+    @Override
+    public String toString() {
+        return String.format("Sample {%s}", sampleId());
+    }
 }

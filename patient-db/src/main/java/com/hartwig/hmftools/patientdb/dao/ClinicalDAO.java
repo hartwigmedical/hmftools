@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATME
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATMENTRESPONSE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TUMORMARKER;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
@@ -50,14 +52,19 @@ class ClinicalDAO {
         context.execute("SET FOREIGN_KEY_CHECKS = 1;");
     }
 
-    void writeClinicalData(@NotNull final Patient patient) {
+    void writeFullClinicalData(@NotNull Patient patient) {
         final int patientId = writePatientIdentifier(patient.patientIdentifier());
         writeBaselineData(patientId, patient.baselineData(), patient.preTreatmentData());
-        patient.sequencedBiopsies().forEach(biopsy -> writeSampleData(patientId, biopsy));
+        patient.sequencedBiopsies().forEach(sample -> writeSampleData(patientId, sample));
         patient.clinicalBiopsies().forEach(biopsy -> writeBiopsyData(patientId, biopsy));
         patient.treatments().forEach(treatment -> writeTreatmentData(patientId, treatment));
         patient.treatmentResponses().forEach(response -> writeTreatmentResponseData(patientId, response));
         patient.tumorMarkers().forEach(tumorMarker -> writeTumorMarkerData(patientId, tumorMarker));
+    }
+
+    void writeSampleClinicalData(@NotNull String patientIdentifier, @NotNull List<SampleData> samples) {
+        final int patientId = writePatientIdentifier(patientIdentifier);
+        samples.forEach(sample -> writeSampleData(patientId, sample));
     }
 
     private int writePatientIdentifier(@NotNull String patientIdentifier) {
@@ -66,6 +73,23 @@ class ClinicalDAO {
                 .returning(PATIENT.ID)
                 .fetchOne()
                 .getValue(PATIENT.ID);
+    }
+
+    private void writeSampleData(final int patientId, @NotNull final SampleData sample) {
+        context.insertInto(SAMPLE,
+                SAMPLE.SAMPLEID,
+                SAMPLE.PATIENTID,
+                SAMPLE.ARRIVALDATE,
+                SAMPLE.SAMPLINGDATE,
+                SAMPLE.DNANANOGRAMS,
+                SAMPLE.TUMORPERCENTAGE)
+                .values(sample.sampleId(),
+                        patientId,
+                        Utils.toSQLDate(sample.arrivalDate()),
+                        Utils.toSQLDate(sample.samplingDate()),
+                        sample.dnaNanograms(),
+                        sample.tumorPercentage())
+                .execute();
     }
 
     private void writeBaselineData(int patientId, @NotNull BaselineData patient,
@@ -134,23 +158,6 @@ class ClinicalDAO {
 
             writeFormStatus(id, PRETREATMENTDRUG.getName(), "pretreatment", formStatus.stateString(), Boolean.toString(formLocked));
         });
-    }
-
-    private void writeSampleData(final int patientId, @NotNull final SampleData sample) {
-        context.insertInto(SAMPLE,
-                SAMPLE.SAMPLEID,
-                SAMPLE.PATIENTID,
-                SAMPLE.ARRIVALDATE,
-                SAMPLE.SAMPLINGDATE,
-                SAMPLE.DNANANOGRAMS,
-                SAMPLE.TUMORPERCENTAGE)
-                .values(sample.sampleId(),
-                        patientId,
-                        Utils.toSQLDate(sample.arrivalDate()),
-                        Utils.toSQLDate(sample.samplingDate()),
-                        sample.dnaNanograms(),
-                        sample.tumorPercentage())
-                .execute();
     }
 
     private void writeBiopsyData(final int patientId, @NotNull final BiopsyData biopsy) {

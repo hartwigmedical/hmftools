@@ -23,9 +23,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-class DumpClinicalData {
+final class DumpClinicalData {
     private static final Logger LOGGER = LogManager.getLogger(LoadClinicalData.class);
+
+    private DumpClinicalData() {
+    }
 
     static void writeClinicalDumps(@NotNull final String csvOutputDir, @NotNull final Collection<Patient> patients,
             @NotNull final Optional<String> cancerTypesLink, @NotNull final Optional<String> portalDataLink) throws IOException {

@@ -25,6 +25,8 @@ import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.data.Patient;
+import com.hartwig.hmftools.patientdb.data.SampleData;
+import com.hartwig.hmftools.patientdb.readers.LimsSampleReader;
 import com.hartwig.hmftools.patientdb.readers.PatientReader;
 import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
 import com.hartwig.hmftools.patientdb.validators.CurationValidator;
@@ -112,32 +114,35 @@ public final class LoadClinicalData {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db", clinicalOptions);
         } else {
-            LOGGER.info("Loading ecrf model...");
+            LOGGER.info("Clearing database...");
             dbAccess.clearClinicalTables();
 
-            FormStatusModel formStatusModel = FormStatusReader.buildModelFromCsv(formStatusCsv);
-            CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
+            LOGGER.info("Cleared database, loading samples from LIMS...");
             Lims lims = LimsFactory.fromLimsJsonWithPreLIMSArrivalDates(limsJson, preLIMSArrivalDatesCsv);
+            Map<String, List<SampleData>> samplesPerPatient = readSamplesPerPatient(lims, runContexts);
+
+            LOGGER.info("Loaded samples for {} patients from LIMS, loading ecrf...", samplesPerPatient.size());
+            FormStatusModel formStatusModel = FormStatusReader.buildModelFromCsv(formStatusCsv);
+            CpctEcrfModel ecrfModel = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
+
             TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource();
             TumorLocationCurator tumorLocationCurator = TumorLocationCurator.fromProductionResource();
-            final PatientReader patientReader = new PatientReader(model, treatmentCurator, tumorLocationCurator, lims);
+            PatientReader patientReader = new PatientReader(ecrfModel, treatmentCurator, tumorLocationCurator);
 
-            final Set<String> sequencedCpctPatientIds = Utils.sequencedPatientIds(runContexts)
-                    .stream()
-                    .filter(patientId -> patientId.startsWith("CPCT"))
-                    .collect(Collectors.toSet());
-
-            final Map<String, Patient> readPatients = readEcrfPatients(patientReader, model.patients(), runContexts);
-            LOGGER.info("Read {} patients from ecrf", readPatients.size());
+            final Map<String, Patient> readPatients = readEcrfPatients(patientReader, ecrfModel.patients(), samplesPerPatient);
+            LOGGER.info("Loaded {} patients from ecrf", readPatients.size());
             DumpClinicalData.writeClinicalDumps(csvOutputDir, readPatients.values(), cancerTypesLink, portalDataLink);
 
-            LOGGER.info("Writing CPCT clinical data for {} sequenced patients.", sequencedCpctPatientIds.size());
-            for (final String patientId : sequencedCpctPatientIds) {
-                final Patient patient = readPatients.get(patientId);
+            LOGGER.info("Writing clinical data for {} sequenced patients.", readPatients.size());
+            for (final String patientIdentifier : samplesPerPatient.keySet()) {
+                final Patient patient = readPatients.get(patientIdentifier);
                 if (patient == null) {
-                    LOGGER.error("Could not find patient with id: " + patientId + " in ecrf file.");
+                    if (patientIdentifier.startsWith("CPCT")) {
+                        LOGGER.error("Could not find patient with id: " + patientIdentifier + " in ecrf file.");
+                    }
+                    dbAccess.writeSampleClinicalData(patientIdentifier, samplesPerPatient.get(patientIdentifier));
                 } else {
-                    dbAccess.writeClinicalData(patient);
+                    dbAccess.writeFullClinicalData(patient);
                     final List<ValidationFinding> findings = PatientValidator.validatePatient(patient);
 
                     dbAccess.writeValidationFindings(findings);
@@ -152,13 +157,33 @@ public final class LoadClinicalData {
     }
 
     @NotNull
+    private static Map<String, List<SampleData>> readSamplesPerPatient(@NotNull Lims lims, @NotNull List<RunContext> runContexts) {
+        LimsSampleReader sampleReader = new LimsSampleReader(lims);
+
+        final Set<String> sequencedPatientIdentifiers = Utils.sequencedPatientIds(runContexts)
+                .stream()
+                .filter(identifier -> identifier.startsWith("CPCT") || identifier.startsWith("DRUP"))
+                .collect(Collectors.toSet());
+
+        Map<String, List<SampleData>> samplesPerPatient = Maps.newHashMap();
+        for (String patientIdentifier : sequencedPatientIdentifiers) {
+            List<String> sampleIds = getTumorSamplesForPatient(patientIdentifier, runContexts);
+            samplesPerPatient.put(patientIdentifier, sampleReader.read(sampleIds));
+        }
+
+        return samplesPerPatient;
+    }
+
+    @NotNull
     private static Map<String, Patient> readEcrfPatients(@NotNull final PatientReader reader, @NotNull final Iterable<EcrfPatient> patients,
-            @NotNull final List<RunContext> runContexts) throws IOException {
+            @NotNull final Map<String, List<SampleData>> samplesPerPatient) throws IOException {
         final Map<String, Patient> patientMap = Maps.newHashMap();
         for (final EcrfPatient ecrfPatient : patients) {
-            final List<String> tumorSamplesForPatient = getTumorSamplesForPatient(ecrfPatient.patientId(), runContexts);
-            final Patient patient = reader.read(ecrfPatient, tumorSamplesForPatient);
-            patientMap.put(patient.patientIdentifier(), patient);
+            List<SampleData> samples = samplesPerPatient.get(ecrfPatient.patientId());
+            if (samples != null && samples.size() > 0) {
+                final Patient patient = reader.read(ecrfPatient, samples);
+                patientMap.put(patient.patientIdentifier(), patient);
+            }
         }
         return patientMap;
     }
@@ -183,11 +208,12 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static List<String> getTumorSamplesForPatient(@NotNull final String patientId, @NotNull final List<RunContext> runContexts) {
+    private static List<String> getTumorSamplesForPatient(@NotNull final String patientIdentifier,
+            @NotNull final List<RunContext> runContexts) {
         final List<String> sampleIdsForPatient = Lists.newArrayList();
         runContexts.forEach(runContext -> {
             final String sampleId = runContext.tumorSample();
-            if (sampleId.startsWith(patientId) && !sampleIdsForPatient.contains(sampleId)) {
+            if (sampleId.startsWith(patientIdentifier) && !sampleIdsForPatient.contains(sampleId)) {
                 sampleIdsForPatient.add(sampleId);
             }
         });
