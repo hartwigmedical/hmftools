@@ -94,7 +94,12 @@ final class PatientReporterHelper {
         assert matchingIdCancerTypes.size() < 2;
 
         if (matchingIdCancerTypes.size() == 1) {
-            return matchingIdCancerTypes.get(0).cancerType();
+            String cancerType = matchingIdCancerTypes.get(0).cancerType();
+            if (cancerType.equalsIgnoreCase("other")) {
+                return matchingIdCancerTypes.get(0).cancerSubtype();
+            } else {
+                return cancerType;
+            }
         } else {
             LOGGER.warn("Could not find patient " + patientId + " in CPCT ECRF database!");
             return Strings.EMPTY;
