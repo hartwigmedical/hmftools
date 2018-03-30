@@ -81,7 +81,7 @@ Lymphoma: other,Lymphoid,Lymphoma: other
 "malignant, probably poorly differentiated adenocarcinoma consistant with clear cell renal carcinoma",Kidney,Renal Cell Cancer
 Melanoma,Skin,Melanoma
 meningeoom: anaplastic hemangiopericytoma gr 3,CNS,Meningeoma
-"Mesothelioma,Mesothelioma,Mesothelioma
+Mesothelioma,Mesothelioma,Mesothelioma
 mix of SCLC and NSCLC,Lung,Lung: other
 mixed hepatocellular-cholangio carcinoma,Liver,Liver: other
 Mixed NET/not-NET located: major duodenal papilla,Small intestine,Small intestine: other
@@ -117,7 +117,7 @@ primary tumor unknown,Cancer of unknown primary origin (CUP),Cancer of unknown p
 Prostate cancer,Prostate,Prostate
 Renal Cell Cancer,Kidney,Renal Cell Cancer
 Rhabdomyosarcoma,Bone/Soft tissue,Sarcoma: other
-"Sarcoma,Bone/Soft tissue,Sarcoma: other
+Sarcoma,Bone/Soft tissue,Sarcoma: other
 Sarcoma: other,Bone/Soft tissue,Sarcoma: other
 sarcomatoid or sarcoma (postradiation),Bone/Soft tissue,Sarcoma: other
 sarcomoatoid carcinoom,Bone/Soft tissue,Sarcoma: other

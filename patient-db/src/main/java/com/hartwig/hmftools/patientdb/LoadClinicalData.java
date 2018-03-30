@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientdb;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -57,9 +56,6 @@ public final class LoadClinicalData {
     private static final String CSV_OUT_DIR = "csv_out_dir";
     private static final String CANCER_TYPES_LINK = "cancer_types_symlink";
     private static final String PORTAL_DATA_LINK = "portal_data_symlink";
-    private static final InputStream TREATMENT_MAPPING_RESOURCE = LoadClinicalData.class.getResourceAsStream("/treatment_mapping.csv");
-    private static final InputStream TUMOR_LOCATION_MAPPING_RESOURCE =
-            LoadClinicalData.class.getResourceAsStream("/tumor_location_mapping.csv");
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, XMLStreamException, SQLException {
         LOGGER.info("Running patient-db v{}", VERSION);
@@ -122,8 +118,8 @@ public final class LoadClinicalData {
             FormStatusModel formStatusModel = FormStatusReader.buildModelFromCsv(formStatusCsv);
             CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
             Lims lims = LimsFactory.fromLimsJsonWithPreLIMSArrivalDates(limsJson, preLIMSArrivalDatesCsv);
-            TreatmentCurator treatmentCurator = new TreatmentCurator(TREATMENT_MAPPING_RESOURCE);
-            TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(TUMOR_LOCATION_MAPPING_RESOURCE);
+            TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource();
+            TumorLocationCurator tumorLocationCurator = TumorLocationCurator.fromProductionResource();
             final PatientReader patientReader = new PatientReader(model, treatmentCurator, tumorLocationCurator, lims);
 
             final Set<String> sequencedCpctPatientIds = Utils.sequencedPatientIds(runContexts)

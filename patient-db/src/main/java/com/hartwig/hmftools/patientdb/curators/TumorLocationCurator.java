@@ -8,6 +8,7 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.patientdb.LoadClinicalData;
 import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.CuratedCancerType;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedCancerType;
@@ -23,11 +24,18 @@ import org.jetbrains.annotations.Nullable;
 public class TumorLocationCurator implements Curator {
 
     private static final Logger LOGGER = LogManager.getLogger(TumorLocationCurator.class);
+    private static final InputStream TUMOR_LOCATION_MAPPING_RESOURCE =
+            LoadClinicalData.class.getResourceAsStream("/tumor_location_mapping.csv");
 
     @NotNull
     private final Map<String, CuratedCancerType> tumorLocationMap = Maps.newHashMap();
     @NotNull
     private final Set<String> unusedSearchTerms;
+
+    @NotNull
+    public static TumorLocationCurator fromProductionResource() throws IOException {
+        return new TumorLocationCurator(TUMOR_LOCATION_MAPPING_RESOURCE);
+    }
 
     public TumorLocationCurator(@NotNull final InputStream mappingInputStream) throws IOException {
         final CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());

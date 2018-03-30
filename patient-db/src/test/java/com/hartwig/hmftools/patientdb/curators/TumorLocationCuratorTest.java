@@ -14,7 +14,12 @@ import org.junit.Test;
 
 public class TumorLocationCuratorTest {
 
-    private static final String TUMOR_LOCATION_MAPPING_CSV = Resources.getResource("tumor_location_mapping.csv").getPath();
+    private static final String TUMOR_LOCATION_MAPPING_CSV = Resources.getResource("test_tumor_location_mapping.csv").getPath();
+
+    @Test
+    public void canCreateFromProductionResource() throws IOException {
+        assertNotNull(TumorLocationCurator.fromProductionResource());
+    }
 
     @Test
     public void canDetermineUnusedTerms() {

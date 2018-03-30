@@ -34,8 +34,8 @@ public class PatientReaderTest {
     private static final String TEST_ECRF = Resources.getResource("ecrf.xml").getPath();
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private static final String TREATMENT_MAPPING_CSV = Resources.getResource("treatment_mapping.csv").getPath();
-    private static final String TUMOR_LOCATION_MAPPING_CSV = Resources.getResource("tumor_location_mapping.csv").getPath();
+    private static final String TREATMENT_MAPPING_CSV = Resources.getResource("test_treatment_mapping.csv").getPath();
+    private static final String TUMOR_LOCATION_MAPPING_CSV = Resources.getResource("test_tumor_location_mapping.csv").getPath();
 
     @Test
     public void canReadCpctPatientInfo() {

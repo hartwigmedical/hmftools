@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientdb.curators;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.FileInputStream;
@@ -18,7 +19,7 @@ import org.junit.Test;
 
 public class TreatmentCuratorTest {
     private static final Logger LOGGER = LogManager.getLogger(TreatmentCurator.class);
-    private static final String TREATMENT_MAPPING_CSV = Resources.getResource("treatment_mapping.csv").getPath();
+    private static final String TREATMENT_MAPPING_CSV = Resources.getResource("test_treatment_mapping.csv").getPath();
     private static final TreatmentCurator MATCHER;
 
     static {
@@ -28,6 +29,11 @@ public class TreatmentCuratorTest {
             LOGGER.error(e);
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    public void canCreateFromProductionResource() throws IOException {
+        assertNotNull(TreatmentCurator.fromProductionResource());
     }
 
     @Test
