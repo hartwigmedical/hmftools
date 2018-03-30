@@ -49,6 +49,7 @@ public abstract class PatientCancerTypes {
         printer.close();
     }
 
+    @NotNull
     public static List<PatientCancerTypes> readRecords(@NotNull final String filePath) throws IOException {
         final CSVParser parser = CSVParser.parse(new File(filePath),
                 Charset.defaultCharset(),
