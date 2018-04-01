@@ -180,10 +180,9 @@ public final class LoadClinicalData {
         final Map<String, Patient> patientMap = Maps.newHashMap();
         for (final EcrfPatient ecrfPatient : patients) {
             List<SampleData> samples = samplesPerPatient.get(ecrfPatient.patientId());
-            if (samples != null && samples.size() > 0) {
-                final Patient patient = reader.read(ecrfPatient, samples);
-                patientMap.put(patient.patientIdentifier(), patient);
-            }
+            Patient patient = reader.read(ecrfPatient, samples != null ? samples : Lists.newArrayList());
+            patientMap.put(patient.patientIdentifier(), patient);
+
         }
         return patientMap;
     }
