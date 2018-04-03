@@ -94,10 +94,10 @@ public class BiopsySiteCurator {
 
         private Key(@NotNull final String cancerType, @NotNull final String cancerSubType, @Nullable final String biopsySite,
                 @Nullable final String biopsyLocation) {
-            this.cancerType = cancerType.toLowerCase();
-            this.cancerSubType = cancerSubType.toLowerCase();
-            this.biopsySite = biopsySite != null ? biopsySite.toLowerCase() : null;
-            this.biopsyLocation = biopsyLocation != null ? biopsyLocation.toLowerCase() : null;
+            this.cancerType = cancerType;
+            this.cancerSubType = cancerSubType;
+            this.biopsySite = biopsySite;
+            this.biopsyLocation = biopsyLocation;
         }
 
         @Override
