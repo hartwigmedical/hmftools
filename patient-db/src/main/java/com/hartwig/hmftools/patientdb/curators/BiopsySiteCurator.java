@@ -54,6 +54,8 @@ public class BiopsySiteCurator {
             curationMap.put(key,
                     ImmutableCuratedBiopsyType.of(Utils.capitalize(biopsyType), cancerType, cancerSubType, biopsySite, biopsyLocation));
         }
+
+        LOGGER.info(String.format("Read %s unique mapping rules for biopsy site curation", curationMap.size()));
     }
 
     @NotNull
