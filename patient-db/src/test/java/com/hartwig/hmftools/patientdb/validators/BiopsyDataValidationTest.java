@@ -3,13 +3,13 @@ package com.hartwig.hmftools.patientdb.validators;
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyBuilder;
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyTreatmentBuilder;
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.drugBuilder;
+import static com.hartwig.hmftools.patientdb.readers.BaselineReader.FIELD_INFORMED_CONSENT_DATE;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_BIOPSY_DATE;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_LOCATION;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_SITE;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_SITE_OTHER;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FORM_BIOPS;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FORM_TREATMENT;
-import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_INFORMED_CONSENT_DATE;
 import static com.hartwig.hmftools.patientdb.validators.PatientValidator.fields;
 
 import static org.junit.Assert.assertEquals;

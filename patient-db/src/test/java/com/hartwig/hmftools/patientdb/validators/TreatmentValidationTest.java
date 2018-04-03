@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientdb.validators;
 
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyTreatmentBuilder;
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.drugBuilder;
+import static com.hartwig.hmftools.patientdb.readers.BaselineReader.FIELD_DEATH_DATE;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_DRUG;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_DRUG_END;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_DRUG_OTHER;
@@ -9,7 +10,6 @@ import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_RADIOTHERAPY_GIVEN;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_TREATMENT_GIVEN;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FORM_TREATMENT;
-import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_DEATH_DATE;
 import static com.hartwig.hmftools.patientdb.validators.PatientValidator.fields;
 
 import static org.junit.Assert.assertEquals;

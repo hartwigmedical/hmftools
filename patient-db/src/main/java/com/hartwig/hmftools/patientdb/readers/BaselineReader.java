@@ -20,8 +20,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class CpctPatientReader {
-    private static final Logger LOGGER = LogManager.getLogger(CpctPatientReader.class);
+public class BaselineReader {
+    private static final Logger LOGGER = LogManager.getLogger(BaselineReader.class);
 
     private static final String STUDY_BASELINE = "SE.BASELINE";
     private static final String STUDY_ENDSTUDY = "SE.ENDSTUDY";
@@ -64,7 +64,7 @@ public class CpctPatientReader {
     @NotNull
     private final TumorLocationCurator tumorLocationCurator;
 
-    CpctPatientReader(@NotNull final CpctEcrfModel model, @NotNull final TumorLocationCurator tumorLocationCurator) {
+    BaselineReader(@NotNull final CpctEcrfModel model, @NotNull final TumorLocationCurator tumorLocationCurator) {
         this.hospitals = extractHospitalMap(model);
         this.tumorLocationCurator = tumorLocationCurator;
     }

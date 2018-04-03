@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
+import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
@@ -30,16 +31,19 @@ public class PatientReader {
     private static final Logger LOGGER = LogManager.getLogger(PatientReader.class);
 
     @NotNull
-    private final CpctPatientReader cpctPatientReader;
+    private final BaselineReader baselineReader;
     @NotNull
     private final PreTreatmentReader preTreatmentReader;
     @NotNull
+    private final BiopsyReader biopsyReader;
+    @NotNull
     private final BiopsyTreatmentReader biopsyTreatmentReader;
 
-    public PatientReader(@NotNull final CpctEcrfModel model, @NotNull final TreatmentCurator treatmentCurator,
-            @NotNull final TumorLocationCurator tumorLocationCurator) {
-        this.cpctPatientReader = new CpctPatientReader(model, tumorLocationCurator);
+    public PatientReader(@NotNull CpctEcrfModel model, @NotNull TumorLocationCurator tumorLocationCurator,
+            @NotNull BiopsySiteCurator biopsySiteCurator, @NotNull TreatmentCurator treatmentCurator) {
+        this.baselineReader = new BaselineReader(model, tumorLocationCurator);
         this.preTreatmentReader = new PreTreatmentReader(treatmentCurator);
+        this.biopsyReader = new BiopsyReader(biopsySiteCurator);
         this.biopsyTreatmentReader = new BiopsyTreatmentReader(treatmentCurator);
     }
 
@@ -47,9 +51,9 @@ public class PatientReader {
     public Patient read(@NotNull final EcrfPatient ecrfPatient, @NotNull final List<SampleData> sequencedSamples) throws IOException {
         LOGGER.info("Reading patient " + ecrfPatient.patientId() + " with samples: " + sequencedSamples);
 
-        final BaselineData baselineData = cpctPatientReader.read(ecrfPatient);
+        final BaselineData baselineData = baselineReader.read(ecrfPatient);
         final PreTreatmentData preTreatmentData = preTreatmentReader.read(ecrfPatient);
-        final List<BiopsyData> clinicalBiopsies = BiopsyReader.read(ecrfPatient);
+        final List<BiopsyData> clinicalBiopsies = biopsyReader.read(ecrfPatient, baselineData.cancerType());
         final List<BiopsyTreatmentData> treatments = biopsyTreatmentReader.read(ecrfPatient);
         final List<BiopsyTreatmentResponseData> treatmentResponses = BiopsyTreatmentResponseReader.read(ecrfPatient);
         final List<TumorMarkerData> tumorMarkers = TumorMarkerReader.read(ecrfPatient);

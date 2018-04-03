@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientdb.readers;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -16,10 +15,8 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
-import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
-import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
+import com.hartwig.hmftools.patientdb.curators.TestCuratorFactory;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
-import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.DrugData;
@@ -34,17 +31,15 @@ public class PatientReaderTest {
     private static final String TEST_ECRF = Resources.getResource("ecrf.xml").getPath();
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private static final String TREATMENT_MAPPING_CSV = Resources.getResource("test_treatment_mapping.csv").getPath();
-    private static final String TUMOR_LOCATION_MAPPING_CSV = Resources.getResource("test_tumor_location_mapping.csv").getPath();
 
     @Test
     public void canReadCpctPatientInfo() {
         final CpctEcrfModel model = loadTestEcrf();
         assertEquals(1, model.patientCount());
         final EcrfPatient cpctPatient = model.patients().iterator().next();
-        final CpctPatientReader cpctPatientReader = new CpctPatientReader(model, createTumorLocationCurator());
+        final BaselineReader baselineReader = new BaselineReader(model, TestCuratorFactory.tumorLocationCurator());
 
-        final BaselineData baselineData = cpctPatientReader.read(cpctPatient);
+        final BaselineData baselineData = baselineReader.read(cpctPatient);
         assertEquals("Breast cancer", baselineData.cancerType().searchTerm());
         assertEquals("Breast", baselineData.cancerType().type());
         assertEquals("Breast Cancer: subtype unknown", baselineData.cancerType().subType());
@@ -61,7 +56,7 @@ public class PatientReaderTest {
         final CpctEcrfModel model = loadTestEcrf();
         assertEquals(1, model.patientCount());
         final EcrfPatient cpctPatient = model.patients().iterator().next();
-        final PreTreatmentData preTreatmentData = new PreTreatmentReader(createTreatmentCurator()).read(cpctPatient);
+        final PreTreatmentData preTreatmentData = new PreTreatmentReader(TestCuratorFactory.treatmentCurator()).read(cpctPatient);
 
         assertEquals("Yes", preTreatmentData.treatmentGiven());
         assertEquals("Yes", preTreatmentData.radiotherapyGiven());
@@ -70,23 +65,11 @@ public class PatientReaderTest {
     }
 
     @Test
-    public void canReadCpctPatientBiopsies() {
-        final CpctEcrfModel model = loadTestEcrf();
-        assertEquals(1, model.patientCount());
-        final EcrfPatient cpctPatient = model.patients().iterator().next();
-        final List<BiopsyData> biopsies = BiopsyReader.read(cpctPatient);
-        assertEquals(1, biopsies.size());
-        assertEquals("Soft tissue", biopsies.get(0).site());
-        assertEquals("near right scapula", biopsies.get(0).location());
-        assertEquals(LocalDate.parse("2012-02-17", DATE_FORMATTER), biopsies.get(0).date());
-    }
-
-    @Test
     public void canReadCpctPatientTreatments() throws IOException {
         final CpctEcrfModel model = loadTestEcrf();
         assertEquals(1, model.patientCount());
         final EcrfPatient cpctPatient = model.patients().iterator().next();
-        final List<BiopsyTreatmentData> treatments = new BiopsyTreatmentReader(createTreatmentCurator()).read(cpctPatient);
+        final List<BiopsyTreatmentData> treatments = new BiopsyTreatmentReader(TestCuratorFactory.treatmentCurator()).read(cpctPatient);
 
         assertEquals(1, treatments.size());
         assertEquals(1, treatments.get(0).drugs().size());
@@ -150,23 +133,5 @@ public class PatientReaderTest {
         }
 
         return model;
-    }
-
-    @NotNull
-    private static TumorLocationCurator createTumorLocationCurator() {
-        try {
-            return new TumorLocationCurator(new FileInputStream(TUMOR_LOCATION_MAPPING_CSV));
-        } catch (IOException e) {
-            throw new IllegalStateException("Could not create tumor location curator!");
-        }
-    }
-
-    @NotNull
-    private static TreatmentCurator createTreatmentCurator() {
-        try {
-            return new TreatmentCurator(new FileInputStream(TREATMENT_MAPPING_CSV));
-        } catch (IOException e) {
-            throw new IllegalStateException("Could not create treatment curator!");
-        }
     }
 }

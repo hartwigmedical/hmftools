@@ -6,6 +6,7 @@ import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Objects;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.patientdb.LoadClinicalData;
 import com.hartwig.hmftools.patientdb.Utils;
@@ -30,7 +31,8 @@ public class BiopsySiteCurator {
         return new BiopsySiteCurator(BIOPSY_SITE_MAPPING_RESOURCE);
     }
 
-    public BiopsySiteCurator(@NotNull final InputStream mappingInputStream) throws IOException {
+    @VisibleForTesting
+    BiopsySiteCurator(@NotNull final InputStream mappingInputStream) throws IOException {
         final CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
         for (final CSVRecord record : parser) {
             final String cancerType = record.get("cancerType");

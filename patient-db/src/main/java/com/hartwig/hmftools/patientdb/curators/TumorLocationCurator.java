@@ -6,6 +6,7 @@ import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.patientdb.LoadClinicalData;
@@ -37,7 +38,8 @@ public class TumorLocationCurator implements CleanableCurator {
         return new TumorLocationCurator(TUMOR_LOCATION_MAPPING_RESOURCE);
     }
 
-    public TumorLocationCurator(@NotNull final InputStream mappingInputStream) throws IOException {
+    @VisibleForTesting
+    TumorLocationCurator(@NotNull final InputStream mappingInputStream) throws IOException {
         final CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
         for (final CSVRecord record : parser) {
             final String location = record.get("primaryTumorLocation");

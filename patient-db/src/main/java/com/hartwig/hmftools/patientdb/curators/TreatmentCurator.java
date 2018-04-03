@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -87,7 +88,8 @@ public class TreatmentCurator implements CleanableCurator {
         return new TreatmentCurator(TREATMENT_MAPPING_RESOURCE);
     }
 
-    public TreatmentCurator(@NotNull final InputStream mappingInputStream) throws IOException {
+    @VisibleForTesting
+    TreatmentCurator(@NotNull final InputStream mappingInputStream) throws IOException {
         final List<DrugEntry> drugEntries = readEntries(mappingInputStream);
         final Directory index = createIndex(drugEntries);
         final IndexReader reader = DirectoryReader.open(index);

@@ -53,13 +53,13 @@ public abstract class BiopsyData {
 
     @NotNull
     public static BiopsyData of(@Nullable LocalDate date, @Nullable String biopsyTaken, @Nullable String biopsyEvaluable,
-            @Nullable String site, @Nullable String location, @NotNull FormStatusState formStatus, boolean formLocked) {
-        CuratedBiopsyType notCuratedYet = ImmutableCuratedBiopsyType.of(null, null, null);
+            @NotNull CuratedBiopsyType curatedBiopsyType, @Nullable String site, @Nullable String location,
+            @NotNull FormStatusState formStatus, boolean formLocked) {
         return ImmutableBiopsyData.of(createId(),
                 date,
                 biopsyTaken,
                 biopsyEvaluable,
-                notCuratedYet,
+                curatedBiopsyType,
                 site,
                 location,
                 null,

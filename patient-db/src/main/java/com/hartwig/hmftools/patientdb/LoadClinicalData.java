@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusReader;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
+import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -127,7 +128,8 @@ public final class LoadClinicalData {
 
             TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource();
             TumorLocationCurator tumorLocationCurator = TumorLocationCurator.fromProductionResource();
-            PatientReader patientReader = new PatientReader(ecrfModel, treatmentCurator, tumorLocationCurator);
+            BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource();
+            PatientReader patientReader = new PatientReader(ecrfModel, tumorLocationCurator, biopsySiteCurator, treatmentCurator);
 
             final Map<String, Patient> readPatients = readEcrfPatients(patientReader, ecrfModel.patients(), samplesPerPatient);
             LOGGER.info("Loaded {} patients from ecrf", readPatients.size());

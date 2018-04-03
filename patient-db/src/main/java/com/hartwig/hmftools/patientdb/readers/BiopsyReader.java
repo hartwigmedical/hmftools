@@ -9,13 +9,16 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
+import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
+import com.hartwig.hmftools.patientdb.data.CuratedBiopsyType;
+import com.hartwig.hmftools.patientdb.data.CuratedCancerType;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class BiopsyReader {
+public class BiopsyReader {
 
     static final String STUDY_BIOPSY = "SE.BIOPSY";
     public static final String FORM_BIOPS = "FRM.BIOPS";
@@ -31,11 +34,15 @@ public final class BiopsyReader {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    private BiopsyReader() {
+    @NotNull
+    private final BiopsySiteCurator biopsySiteCurator;
+
+    BiopsyReader(@NotNull final BiopsySiteCurator biopsySiteCurator) {
+        this.biopsySiteCurator = biopsySiteCurator;
     }
 
     @NotNull
-    static List<BiopsyData> read(@NotNull final EcrfPatient patient) {
+    List<BiopsyData> read(@NotNull EcrfPatient patient, @NotNull CuratedCancerType curatedCancerType) {
         final List<BiopsyData> biopsies = Lists.newArrayList();
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BIOPSY)) {
             for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_BIOPS, false)) {
@@ -55,8 +62,15 @@ public final class BiopsyReader {
                     final String siteOther = biopsiesGroup.readItemString(FIELD_SITE_OTHER, 0, false);
                     final String finalSite = (site == null || site.trim().toLowerCase().startsWith("other")) ? siteOther : site;
 
-                    BiopsyData biopsy =
-                            ImmutableBiopsyData.of(date, biopsyTaken, biopsyEvaluable, finalSite, location, form.status(), form.locked());
+                    final CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(curatedCancerType.type(), finalSite);
+                    final BiopsyData biopsy = ImmutableBiopsyData.of(date,
+                            biopsyTaken,
+                            biopsyEvaluable,
+                            curatedBiopsyType,
+                            finalSite,
+                            location,
+                            form.status(),
+                            form.locked());
                     // KODU: The ecrf contains many duplicate forms that are impossible to remove. This is because in the past a new biopsy
                     // form needed to be created for every treatment response.
                     if (!isDuplicate(biopsies, biopsy) && !isEmpty(biopsy)) {
