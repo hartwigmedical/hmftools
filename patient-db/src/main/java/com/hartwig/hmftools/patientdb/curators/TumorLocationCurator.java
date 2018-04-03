@@ -21,7 +21,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TumorLocationCurator implements Curator {
+public class TumorLocationCurator implements CleanableCurator {
 
     private static final Logger LOGGER = LogManager.getLogger(TumorLocationCurator.class);
     private static final InputStream TUMOR_LOCATION_MAPPING_RESOURCE =
@@ -41,10 +41,10 @@ public class TumorLocationCurator implements Curator {
         final CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
         for (final CSVRecord record : parser) {
             final String location = record.get("primaryTumorLocation");
-            final String category = record.get("category");
-            final String subcategory = record.get("subcategory");
+            final String type = record.get("type");
+            final String subType = record.get("subType");
             tumorLocationMap.put(location.toLowerCase(),
-                    ImmutableCuratedCancerType.of(Utils.capitalize(category), Utils.capitalize(subcategory), location));
+                    ImmutableCuratedCancerType.of(Utils.capitalize(type), Utils.capitalize(subType), location));
         }
         // KODU: Need to create a copy of the key set so that we can remove elements from it without affecting the curation.
         unusedSearchTerms = Sets.newHashSet(tumorLocationMap.keySet());

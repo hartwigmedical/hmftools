@@ -5,7 +5,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
-import com.hartwig.hmftools.patientdb.curators.Curator;
+import com.hartwig.hmftools.patientdb.curators.CleanableCurator;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 
@@ -27,7 +27,8 @@ public final class CurationValidator {
     }
 
     @NotNull
-    private static List<ValidationFinding> validateCurator(@NotNull Curator curator, @NotNull String level, @NotNull String message) {
+    private static List<ValidationFinding> validateCurator(@NotNull CleanableCurator curator, @NotNull String level,
+            @NotNull String message) {
         final List<ValidationFinding> findings = Lists.newArrayList();
 
         for (String unusedTerm : curator.unusedSearchTerms()) {

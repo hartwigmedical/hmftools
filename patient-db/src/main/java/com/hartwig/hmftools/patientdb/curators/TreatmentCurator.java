@@ -60,7 +60,7 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
 import org.jetbrains.annotations.NotNull;
 
-public class TreatmentCurator implements Curator {
+public class TreatmentCurator implements CleanableCurator {
     private static final Logger LOGGER = LogManager.getLogger(TreatmentCurator.class);
     private static final InputStream TREATMENT_MAPPING_RESOURCE = LoadClinicalData.class.getResourceAsStream("/treatment_mapping.csv");
 

@@ -46,8 +46,8 @@ public class PatientReaderTest {
 
         final BaselineData baselineData = cpctPatientReader.read(cpctPatient);
         assertEquals("Breast cancer", baselineData.cancerType().searchTerm());
-        assertEquals("Breast", baselineData.cancerType().category());
-        assertEquals("Breast Cancer: subtype unknown", baselineData.cancerType().subcategory());
+        assertEquals("Breast", baselineData.cancerType().type());
+        assertEquals("Breast Cancer: subtype unknown", baselineData.cancerType().subType());
         assertEquals("female", baselineData.gender());
         assertEquals("Bernhoven uden", baselineData.hospital());
         assertEquals(new Integer(1963), baselineData.birthYear());

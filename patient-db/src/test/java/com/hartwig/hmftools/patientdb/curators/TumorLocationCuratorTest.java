@@ -37,9 +37,9 @@ public class TumorLocationCuratorTest {
         String desmoidTumor = "desmoïd tumor";
         CuratedCancerType cancerType = curator.search(desmoidTumor);
 
-        String category = cancerType.category();
-        assertNotNull(category);
-        assertEquals("sarcoma", category.toLowerCase());
+        String type = cancerType.type();
+        assertNotNull(type);
+        assertEquals("sarcoma", type.toLowerCase());
     }
 
     @NotNull

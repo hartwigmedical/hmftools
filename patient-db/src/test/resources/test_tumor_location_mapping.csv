@@ -1,4 +1,4 @@
-primaryTumorLocation,category,subcategory
+primaryTumorLocation                    ,type   ,subType
 Breast cancer,breast,Breast Cancer: subtype unknown
 Breast Cancer: ER-negative/HER2-positive,breast,Breast Cancer: ER-negative/HER2-positive
 Breast Cancer: ER-positive/HER2-negative,breast,Breast Cancer: ER-positive/HER2-negative

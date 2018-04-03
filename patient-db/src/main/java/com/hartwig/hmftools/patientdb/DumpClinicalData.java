@@ -41,8 +41,8 @@ final class DumpClinicalData {
         LOGGER.info("Writing cancer types to CSV... ");
         final List<PatientCancerTypes> cancerTypes = patients.stream()
                 .map(patient -> ImmutablePatientCancerTypes.of(patient.patientIdentifier(),
-                        Strings.nullToEmpty(patient.baselineData().cancerType().category()),
-                        Strings.nullToEmpty(patient.baselineData().cancerType().subcategory())))
+                        Strings.nullToEmpty(patient.baselineData().cancerType().type()),
+                        Strings.nullToEmpty(patient.baselineData().cancerType().subType())))
                 .collect(Collectors.toList());
         PatientCancerTypes.writeRecords(outputFile, cancerTypes);
         linkName.ifPresent(link -> updateSymlink(csvOutputDir + File.separator + link, outputFile));
@@ -61,7 +61,7 @@ final class DumpClinicalData {
                                 patient.baselineData().gender(),
                                 patient.baselineData().birthYear(),
                                 patient.baselineData().registrationDate(),
-                                patient.baselineData().cancerType().category(),
+                                patient.baselineData().cancerType().type(),
                                 getBiopsySite(patient, sampleData.sampleId()))))
                 .collect(Collectors.toList());
         PortalClinicalData.writeRecords(outputFile, portalData);

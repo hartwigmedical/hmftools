@@ -25,6 +25,12 @@ public abstract class BiopsyData {
     @Nullable
     public abstract String biopsyEvaluable();
 
+    @NotNull
+    @Value.Default
+    public CuratedBiopsyType type() {
+        return ImmutableCuratedBiopsyType.of(null, null, null);
+    }
+
     @Nullable
     public abstract String site();
 
@@ -48,7 +54,17 @@ public abstract class BiopsyData {
     @NotNull
     public static BiopsyData of(@Nullable LocalDate date, @Nullable String biopsyTaken, @Nullable String biopsyEvaluable,
             @Nullable String site, @Nullable String location, @NotNull FormStatusState formStatus, boolean formLocked) {
-        return ImmutableBiopsyData.of(createId(), date, biopsyTaken, biopsyEvaluable, site, location, null, formStatus, formLocked);
+        CuratedBiopsyType notCuratedYet = ImmutableCuratedBiopsyType.of(null, null, null);
+        return ImmutableBiopsyData.of(createId(),
+                date,
+                biopsyTaken,
+                biopsyEvaluable,
+                notCuratedYet,
+                site,
+                location,
+                null,
+                formStatus,
+                formLocked);
     }
 
     public boolean isPotentiallyEvaluable() {
