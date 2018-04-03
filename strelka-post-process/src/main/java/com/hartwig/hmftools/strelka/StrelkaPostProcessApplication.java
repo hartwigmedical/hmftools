@@ -35,6 +35,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLine;
 import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class StrelkaPostProcessApplication {
     private static final Logger LOGGER = LogManager.getLogger(StrelkaPostProcessApplication.class);
@@ -95,8 +96,9 @@ public class StrelkaPostProcessApplication {
 
         final VariantContextFilter filter = new StrelkaPostProcess(highConfidenceSlicer);
         for (final VariantContext variantContext : vcfReader) {
-            if (filter.test(variantContext)) {
-                final VariantContext simplifiedVariant = StrelkaPostProcess.simplifyVariant(variantContext, sampleName);
+            final VariantContext decodedVariantContext = variantContext.fullyDecode(outputHeader, true);
+            if (filter.test(decodedVariantContext)) {
+                final VariantContext simplifiedVariant = StrelkaPostProcess.simplifyVariant(decodedVariantContext, sampleName);
                 final PotentialMNVRegion potentialMNV = outputPair.getLeft();
                 outputPair = MNVDetector.fitsMNVRegion(potentialMNV, simplifiedVariant);
                 outputPair.getRight().ifPresent(mnvRegion -> validator.mergeVariants(mnvRegion).forEach(writer::add));
@@ -109,14 +111,24 @@ public class StrelkaPostProcessApplication {
     }
 
     @NotNull
-    static VCFHeader generateOutputHeader(@NotNull final VCFHeader header, @NotNull final String sampleName) {
+    public static VCFHeader generateOutputHeader(@NotNull final VCFHeader header, @NotNull final String sampleName) {
         final VCFHeader outputVCFHeader = new VCFHeader(header.getMetaDataInInputOrder(), Sets.newHashSet(sampleName));
-        outputVCFHeader.addMetaDataLine(
-                new VCFFormatHeaderLine(VCFConstants.GENOTYPE_ALLELE_DEPTHS, VCFHeaderLineCount.R, VCFHeaderLineType.Integer,
-                        "Allelic depths for the ref and alt alleles in the order listed"));
+        outputVCFHeader.addMetaDataLine(new VCFFormatHeaderLine(VCFConstants.GENOTYPE_ALLELE_DEPTHS,
+                VCFHeaderLineCount.R,
+                VCFHeaderLineType.Integer,
+                "Allelic depths for the ref and alt alleles in the order listed"));
         outputVCFHeader.addMetaDataLine(new VCFFormatHeaderLine(VCFConstants.GENOTYPE_KEY, 1, VCFHeaderLineType.String, "Genotype"));
-        outputVCFHeader.addMetaDataLine(
-                new VCFHeaderLine("StrelkaGATKCompatibility", "Added GT fields to strelka calls for gatk compatibility."));
+        outputVCFHeader.addMetaDataLine(new VCFHeaderLine("StrelkaGATKCompatibility",
+                "Added GT fields to strelka calls for gatk compatibility."));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine("MAPPABILITY", 1, VCFHeaderLineType.Float, "Mappability (percentage)"));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine("SOMATIC_PON_COUNT",
+                1,
+                VCFHeaderLineType.Integer,
+                "Number of times the variant appears in the somatic PON"));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine("GERMLINE_PON_COUNT",
+                1,
+                VCFHeaderLineType.Integer,
+                "Number of times the variant appears in the germline PON"));
         return outputVCFHeader;
     }
 }

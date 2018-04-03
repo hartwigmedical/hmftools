@@ -1,15 +1,19 @@
 package com.hartwig.hmftools.strelka.mnv;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +28,8 @@ class MNVMerger {
     private static final Logger LOGGER = LogManager.getLogger(MNVMerger.class);
     private static final String SET_VALUE = "mnvs";
     private static final String SET_KEY = "set";
+    private static final String SOMATIC_PON_FIELD = "SOMATIC_PON_COUNT";
+    private static final String GERMLINE_PON_FIELD = "GERMLINE_PON_COUNT";
 
     private MNVMerger() {
     }
@@ -43,10 +49,13 @@ class MNVMerger {
         final List<Allele> alleles = createMnvAlleles(variants, gapReads);
         final VariantContext firstVariant = variants.get(0);
         final VariantContext lastVariant = variants.get(variants.size() - 1);
-        final Map<String, Object> attributes = createMnvAttributes(variants);
+        final Map<String, Object> attributes = createMnvAttributes(variants, gapReads.size());
         final String sampleName = firstVariant.getSampleNamesOrderedByName().get(0);
         final Genotype genotype = new GenotypeBuilder(sampleName, alleles).DP(mergeDP(variants)).AD(mergeAD(variants)).make();
-        return new VariantContextBuilder(firstVariant.getSource(), firstVariant.getContig(), firstVariant.getStart(), lastVariant.getEnd(),
+        return new VariantContextBuilder(firstVariant.getSource(),
+                firstVariant.getContig(),
+                firstVariant.getStart(),
+                lastVariant.getEnd(),
                 alleles).genotypes(genotype).filters(firstVariant.getFilters()).attributes(attributes).make();
     }
 
@@ -97,7 +106,7 @@ class MNVMerger {
     }
 
     @NotNull
-    private static Map<String, Object> createMnvAttributes(@NotNull final List<VariantContext> variants) {
+    private static Map<String, Object> createMnvAttributes(@NotNull final List<VariantContext> variants, final int gapSize) {
         final Map<String, Object> attributes;
         if (variants.stream().anyMatch(VariantContext::isIndel)) {
             attributes = mergeAttributes(variants.stream().filter(VariantContext::isIndel).collect(Collectors.toList()));
@@ -105,26 +114,33 @@ class MNVMerger {
             attributes = mergeAttributes(variants);
         }
         attributes.put(SET_KEY, SET_VALUE);
+        if (gapSize != 0) {
+            attributes.remove(SOMATIC_PON_FIELD);
+            attributes.remove(GERMLINE_PON_FIELD);
+        }
         return attributes;
     }
 
     @NotNull
     private static Map<String, Object> mergeAttributes(@NotNull final List<VariantContext> variants) {
-        final Map<String, Object> mergedAttributes = Maps.newHashMap();
+        final Multimap<String, Comparable> mergedAttributes = ArrayListMultimap.create();
         variants.forEach(variant -> variant.getAttributes().forEach((key, value) -> {
-            if (mergedAttributes.containsKey(key)) {
-                if (value instanceof Comparable && mergedAttributes.get(key) instanceof Comparable) {
-                    final Comparable entryValue = (Comparable) value;
-                    final Comparable mergedValue = (Comparable) mergedAttributes.get(key);
-                    //noinspection unchecked
-                    if (entryValue.compareTo(mergedValue) < 1) {
-                        mergedAttributes.put(key, value);
-                    }
-                }
-            } else {
-                mergedAttributes.put(key, value);
+            if (value instanceof Comparable) {
+                mergedAttributes.put(key, (Comparable) value);
             }
         }));
-        return mergedAttributes;
+        return mergedAttributes.asMap().entrySet().stream().map(entry -> {
+            final Optional<Comparable> minValue = determineFieldMin(entry, variants.size());
+            return Pair.of(entry.getKey(), minValue);
+        }).filter(pair -> pair.getValue().isPresent()).collect(Collectors.toMap(Pair::getKey, pair -> pair.getValue().get()));
+    }
+
+    private static Optional<Comparable> determineFieldMin(@NotNull final Map.Entry<String, Collection<Comparable>> entry,
+            final int variantsSize) {
+        if ((entry.getKey().equals(SOMATIC_PON_FIELD) || entry.getKey().equals(GERMLINE_PON_FIELD))
+                && entry.getValue().size() != variantsSize) {
+            return Optional.empty();
+        }
+        return entry.getValue().stream().sorted().findFirst();
     }
 }
