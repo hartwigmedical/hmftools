@@ -28,12 +28,12 @@ import org.junit.Test;
 
 public class PatientReaderTest {
 
-    private static final String TEST_ECRF = Resources.getResource("ecrf.xml").getPath();
+    private static final String TEST_ECRF = Resources.getResource("test_ecrf.xml").getPath();
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Test
-    public void canReadCpctPatientInfo() {
+    public void canReadCpctBaselineInfo() {
         final CpctEcrfModel model = loadTestEcrf();
         assertEquals(1, model.patientCount());
         final EcrfPatient cpctPatient = model.patients().iterator().next();
