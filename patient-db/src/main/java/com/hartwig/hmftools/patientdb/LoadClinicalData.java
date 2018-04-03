@@ -90,11 +90,11 @@ public final class LoadClinicalData {
                 final String jdbcUrl = "jdbc:" + databaseUrl;
                 final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
 
-                LOGGER.info("Loading run contexts.");
+                LOGGER.info(String.format("Loading run contexts from %s.", runDirectory));
                 final List<RunContext> runContexts = RunsFolderReader.getRunContexts(runDirectory);
                 LOGGER.info(String.format("Finished loading %s run contexts.", runContexts.size()));
 
-                LOGGER.info("Loading up eCRF from xml.");
+                LOGGER.info(String.format("Loading up eCRF from %s.", ecrfFilePath));
                 final FormStatusModel formStatusModel = FormStatusReader.buildModelFromCsv(formStatusCsv);
                 final CpctEcrfModel ecrfModel = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
                 LOGGER.info(String.format("Finished loading eCRF. Read %s patients.", ecrfModel.patientCount()));
@@ -117,11 +117,11 @@ public final class LoadClinicalData {
     private static void writeClinicalData(@NotNull final DatabaseAccess dbAccess, @NotNull CpctEcrfModel ecrfModel,
             @NotNull final List<RunContext> runContexts, @NotNull final CommandLine cmd, @NotNull final Options options)
             throws IOException {
-        final String limsJson = cmd.getOptionValue(LIMS_JSON);
+        final String limsJsonPath = cmd.getOptionValue(LIMS_JSON);
         final String preLIMSArrivalDatesCsv = cmd.getOptionValue(PRE_LIMS_ARRIVAL_DATES_CSV);
         final String csvOutputDir = cmd.getOptionValue(CSV_OUT_DIR);
 
-        if (Utils.anyNull(limsJson, preLIMSArrivalDatesCsv, csvOutputDir)) {
+        if (Utils.anyNull(limsJsonPath, preLIMSArrivalDatesCsv, csvOutputDir)) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db", options);
         } else {
@@ -131,15 +131,15 @@ public final class LoadClinicalData {
             LOGGER.info("Clearing database...");
             dbAccess.clearClinicalTables();
 
-            LOGGER.info("Cleared database, loading samples from LIMS...");
-            Lims lims = LimsFactory.fromLimsJsonWithPreLIMSArrivalDates(limsJson, preLIMSArrivalDatesCsv);
+            LOGGER.info(String.format("Loading samples from LIMS on %s.", limsJsonPath));
+            Lims lims = LimsFactory.fromLimsJsonWithPreLIMSArrivalDates(limsJsonPath, preLIMSArrivalDatesCsv);
             Map<String, List<SampleData>> samplesPerPatient = readSamplesPerPatient(lims, runContexts);
             LOGGER.info(String.format("Loaded samples for %s patients from LIMS", samplesPerPatient.size()));
 
-            LOGGER.info(String.format("Interpreting and curating data for %s sequenced patients.", samplesPerPatient.size()));
-            TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource();
+            LOGGER.info(String.format("Interpreting and curating data for %s patients.", ecrfModel.patientCount()));
             TumorLocationCurator tumorLocationCurator = TumorLocationCurator.fromProductionResource();
             BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource();
+            TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource();
             PatientReader patientReader = new PatientReader(tumorLocationCurator,
                     CpctEcrfModelUtil.extractHospitalMap(ecrfModel), biopsySiteCurator, treatmentCurator);
 
@@ -147,7 +147,7 @@ public final class LoadClinicalData {
             LOGGER.info(String.format("Finished curation of %s sequenced patients from ecrf", readPatients.size()));
             DumpClinicalData.writeClinicalDumps(csvOutputDir, readPatients.values(), cancerTypesLink, portalDataLink);
 
-            LOGGER.info(String.format("Writing clinical data for %s sequenced patients.", readPatients.size()));
+            LOGGER.info(String.format("Writing clinical data for %s sequenced patients.", samplesPerPatient.size()));
             for (final String patientIdentifier : samplesPerPatient.keySet()) {
                 final Patient patient = readPatients.get(patientIdentifier);
                 if (patient == null) {

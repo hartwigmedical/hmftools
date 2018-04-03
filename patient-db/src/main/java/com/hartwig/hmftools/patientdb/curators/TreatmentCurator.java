@@ -137,14 +137,7 @@ public class TreatmentCurator implements CleanableCurator {
     public List<CuratedTreatment> search(@NotNull final String searchTerm) throws IOException {
         final Optional<CuratedTreatment> matchedTreatment = matchSingle(searchTerm);
         if (!matchedTreatment.isPresent()) {
-            LOGGER.warn("Failed to match search term: {}. attempting to match multiple treatments", searchTerm);
-            final List<CuratedTreatment> matchedTreatments = matchMultiple(searchTerm);
-            if (!matchedTreatments.isEmpty()) {
-                LOGGER.info("Matched multiple treatments {} to {}",
-                        searchTerm,
-                        matchedTreatments.stream().map(CuratedTreatment::name).collect(Collectors.toList()));
-            }
-            return matchedTreatments;
+            return matchMultiple(searchTerm);
         } else {
             return Lists.newArrayList(matchedTreatment.get());
         }
