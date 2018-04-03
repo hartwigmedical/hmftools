@@ -1,4 +1,4 @@
-cancerType,cancerSubType,biopySite,type
+cancerType,cancerSubType,biopsySite,type
 Billary,Billary: other,Liver,Liver
 Billary,Cholangiocarcinoma,abdominal wall,Abdomen/Abdominal wall
 Billary,Cholangiocarcinoma,intra costal,(Sub)cutane
@@ -580,7 +580,7 @@ Skin,Melanoma,Peritoneum,Peritoneum/Omentum
 Skin,Melanoma,Primary,(Sub)cutane
 Skin,Melanoma,Scapula,(Sub)cutane
 Skin,Melanoma,skin lesion,(Sub)cutane
-Skin,Melanoma,skin, medial left upper leg,(Sub)cutane
+Skin,Melanoma,"skin, medial left upper leg",(Sub)cutane
 Skin,Melanoma,skin,(Sub)cutane
 Skin,Melanoma,SKIN,(Sub)cutane
 Skin,Melanoma,Skin,(Sub)cutane
