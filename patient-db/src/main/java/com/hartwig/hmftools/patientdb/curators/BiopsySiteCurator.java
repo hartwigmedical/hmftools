@@ -24,7 +24,7 @@ public class BiopsySiteCurator {
     private static final InputStream BIOPSY_SITE_MAPPING_RESOURCE = LoadClinicalData.class.getResourceAsStream("/biopsy_site_mapping.csv");
 
     @NotNull
-    private final Map<CancerTypeBiopsySite, CuratedBiopsyType> biopsySiteMap = Maps.newHashMap();
+    private final Map<CurationKey, CuratedBiopsyType> biopsyCurationMap = Maps.newHashMap();
 
     @NotNull
     public static BiopsySiteCurator fromProductionResource() throws IOException {
@@ -38,42 +38,50 @@ public class BiopsySiteCurator {
             final String cancerType = record.get("cancerType");
             final String cancerSubType = record.get("cancerSubType");
             final String biopsySite = record.get("biopsySite");
-            final String type = record.get("type");
-            biopsySiteMap.put(new CancerTypeBiopsySite(cancerType.toLowerCase(), cancerSubType.toLowerCase(), biopsySite.toLowerCase()),
-                    ImmutableCuratedBiopsyType.of(Utils.capitalize(type), cancerType, cancerSubType, biopsySite));
+            final String biopsyLocation = record.get("biopsyLocation");
+            final String biopsyType = record.get("biopsyType");
+            biopsyCurationMap.put(new CurationKey(cancerType.toLowerCase(),
+                            cancerSubType.toLowerCase(),
+                            biopsySite.toLowerCase(),
+                            biopsyLocation.toLowerCase()),
+                    ImmutableCuratedBiopsyType.of(Utils.capitalize(biopsyType), cancerType, cancerSubType, biopsySite, biopsyLocation));
         }
     }
 
     @NotNull
     public CuratedBiopsyType search(@Nullable String searchCancerType, @Nullable String searchCancerSubType,
-            @Nullable String searchBiopsySite) {
-        if (searchCancerType != null && searchBiopsySite != null && searchCancerSubType != null) {
-            CancerTypeBiopsySite effectiveSearchTerm = new CancerTypeBiopsySite(searchCancerType.toLowerCase(),
+            @Nullable String searchBiopsySite, @Nullable String searchBiopsyLocation) {
+        if (searchCancerType != null && searchCancerSubType != null && searchBiopsySite != null && searchBiopsyLocation != null) {
+            CurationKey effectiveSearchTerm = new CurationKey(searchCancerType.toLowerCase(),
                     searchCancerSubType.toLowerCase(),
-                    searchBiopsySite.toLowerCase());
-            final CuratedBiopsyType result = biopsySiteMap.get(effectiveSearchTerm);
+                    searchBiopsySite.toLowerCase(),
+                    searchBiopsyLocation.toLowerCase());
+            final CuratedBiopsyType result = biopsyCurationMap.get(effectiveSearchTerm);
 
             if (result != null) {
                 return result;
             }
         }
 
-        return ImmutableCuratedBiopsyType.of(null, searchCancerType, searchCancerSubType, searchBiopsySite);
+        return ImmutableCuratedBiopsyType.of(null, searchCancerType, searchCancerSubType, searchBiopsySite, searchBiopsyLocation);
     }
 
-    private static class CancerTypeBiopsySite {
+    private static class CurationKey {
         @NotNull
         private final String cancerType;
         @NotNull
         private final String cancerSubType;
         @NotNull
         private final String biopsySite;
+        @NotNull
+        private final String biopsyLocation;
 
-        private CancerTypeBiopsySite(@NotNull final String cancerType, @NotNull final String cancerSubType,
-                @NotNull final String biopsySite) {
+        private CurationKey(@NotNull final String cancerType, @NotNull final String cancerSubType, @NotNull final String biopsySite,
+                @NotNull final String biopsyLocation) {
             this.cancerType = cancerType;
             this.cancerSubType = cancerSubType;
             this.biopsySite = biopsySite;
+            this.biopsyLocation = biopsyLocation;
         }
 
         @Override
@@ -84,15 +92,16 @@ public class BiopsySiteCurator {
             if (o == null || getClass() != o.getClass()) {
                 return false;
             }
-            final CancerTypeBiopsySite that = (CancerTypeBiopsySite) o;
+            final CurationKey that = (CurationKey) o;
             return Objects.equals(cancerType, that.cancerType) && Objects.equals(cancerSubType, that.cancerSubType) && Objects.equals(
                     biopsySite,
-                    that.biopsySite);
+                    that.biopsySite) && Objects.equals(biopsyLocation, that.biopsyLocation);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(cancerType, cancerSubType, biopsySite);
+
+            return Objects.hash(cancerType, cancerSubType, biopsySite, biopsyLocation);
         }
     }
 }

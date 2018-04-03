@@ -21,10 +21,10 @@ public class BiopsySiteCuratorTest {
     public void canCurateOnTestResource() {
         BiopsySiteCurator curator = TestCuratorFactory.biopsySiteCurator();
 
-        CuratedBiopsyType knownCuratedType = curator.search("Breast", "HER2 Positive", "Primary");
+        CuratedBiopsyType knownCuratedType = curator.search("Breast", "HER2 Positive", "Primary", "X");
         assertEquals("Breast", knownCuratedType.type());
 
-        CuratedBiopsyType cannotCurate = curator.search("This", "Is", "Unknown");
+        CuratedBiopsyType cannotCurate = curator.search("This", "Is", "Unknown", "X");
         assertNull(cannotCurate.type());
     }
 }

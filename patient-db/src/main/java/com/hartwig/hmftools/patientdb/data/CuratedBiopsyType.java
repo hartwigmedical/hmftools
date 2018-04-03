@@ -20,4 +20,7 @@ public abstract class CuratedBiopsyType {
 
     @Nullable
     public abstract String searchBiopsySite();
+
+    @Nullable
+    public abstract String searchBiopsyLocation();
 }

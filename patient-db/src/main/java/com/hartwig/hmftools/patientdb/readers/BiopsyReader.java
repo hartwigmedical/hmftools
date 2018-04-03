@@ -56,14 +56,14 @@ public class BiopsyReader {
                 for (final EcrfItemGroup biopsiesGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSIES, false)) {
                     final LocalDate date = biopsiesGroup.readItemDate(FIELD_BIOPSY_DATE, 0, DATE_FORMATTER, false);
 
-                    final String location = biopsiesGroup.readItemString(FIELD_LOCATION, 0, false);
-
                     final String site = biopsiesGroup.readItemString(FIELD_SITE, 0, false);
                     final String siteOther = biopsiesGroup.readItemString(FIELD_SITE_OTHER, 0, false);
                     final String finalSite = (site == null || site.trim().toLowerCase().startsWith("other")) ? siteOther : site;
 
+                    final String location = biopsiesGroup.readItemString(FIELD_LOCATION, 0, false);
+
                     final CuratedBiopsyType curatedBiopsyType =
-                            biopsySiteCurator.search(curatedCancerType.type(), curatedCancerType.subType(), finalSite);
+                            biopsySiteCurator.search(curatedCancerType.type(), curatedCancerType.subType(), finalSite, location);
                     final BiopsyData biopsy = ImmutableBiopsyData.of(date,
                             biopsyTaken,
                             biopsyEvaluable,
