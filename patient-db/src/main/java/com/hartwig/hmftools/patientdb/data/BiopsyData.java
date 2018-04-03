@@ -25,11 +25,8 @@ public abstract class BiopsyData {
     @Nullable
     public abstract String biopsyEvaluable();
 
-    @NotNull
-    @Value.Default
-    public CuratedBiopsyType type() {
-        return ImmutableCuratedBiopsyType.of(null, null, null);
-    }
+    @Nullable
+    public abstract CuratedBiopsyType type();
 
     @Nullable
     public abstract String site();

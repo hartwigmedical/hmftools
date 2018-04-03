@@ -19,6 +19,7 @@ import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
+import com.hartwig.hmftools.patientdb.data.CuratedBiopsyType;
 import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
@@ -158,12 +159,15 @@ class ClinicalDAO {
     }
 
     private void writeBiopsyData(final int patientId, @NotNull final BiopsyData biopsy) {
+        CuratedBiopsyType curatedType = biopsy.type();
+        String type = curatedType != null ? curatedType.type() : null;
         context.insertInto(BIOPSY,
                 BIOPSY.ID,
                 BIOPSY.SAMPLEID,
                 BIOPSY.PATIENTID,
                 BIOPSY.BIOPSYTAKEN,
                 BIOPSY.BIOPSYEVALUABLE,
+                BIOPSY.BIOPSYTYPE,
                 BIOPSY.BIOPSYSITE,
                 BIOPSY.BIOPSYLOCATION,
                 BIOPSY.BIOPSYDATE)
@@ -172,6 +176,7 @@ class ClinicalDAO {
                         patientId,
                         biopsy.biopsyTaken(),
                         biopsy.biopsyEvaluable(),
+                        type,
                         biopsy.site(),
                         biopsy.location(),
                         Utils.toSQLDate(biopsy.date()))
