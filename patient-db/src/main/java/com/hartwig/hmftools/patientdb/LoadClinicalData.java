@@ -144,7 +144,7 @@ public final class LoadClinicalData {
                     CpctEcrfModelUtil.extractHospitalMap(ecrfModel), biopsySiteCurator, treatmentCurator);
 
             final Map<String, Patient> readPatients = readEcrfPatients(patientReader, ecrfModel.patients(), samplesPerPatient);
-            LOGGER.info(String.format("Finished curation of %s sequenced patients from ecrf", readPatients.size()));
+            LOGGER.info(String.format("Finished curation of %s patients from ecrf", readPatients.size()));
             DumpClinicalData.writeClinicalDumps(csvOutputDir, readPatients.values(), cancerTypesLink, portalDataLink);
 
             LOGGER.info(String.format("Writing clinical data for %s sequenced patients.", samplesPerPatient.size()));
