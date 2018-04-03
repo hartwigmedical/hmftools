@@ -24,7 +24,13 @@ public class BiopsySiteCuratorTest {
         CuratedBiopsyType knownCuratedType = curator.search("Breast", "HER2 Positive", "Primary", "X");
         assertEquals("Breast", knownCuratedType.type());
 
+        CuratedBiopsyType fallbackCuratedType = curator.search("Breast", "HER2 Positive", "Primary", null);
+        assertEquals("Breast", fallbackCuratedType.type());
+
         CuratedBiopsyType cannotCurate = curator.search("This", "Is", "Unknown", "X");
         assertNull(cannotCurate.type());
+
+        CuratedBiopsyType cannotCurate2 = curator.search(null, null, null, null);
+        assertNull(cannotCurate2.type());
     }
 }
