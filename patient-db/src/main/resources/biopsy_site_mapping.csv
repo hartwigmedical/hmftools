@@ -1,1 +1,698 @@
 cancerType,cancerSubType,biopySite,type
+Billary,Billary: other,Liver,Liver
+Billary,Cholangiocarcinoma,abdominal wall,Abdomen/Abdominal wall
+Billary,Cholangiocarcinoma,intra costal,(Sub)cutane
+Billary,Cholangiocarcinoma,Liver,Liver
+Billary,Cholangiocarcinoma,Lymph node,Lymph node
+Billary,Cholangiocarcinoma,other,Abdomen/Abdominal wall
+Billary,Cholangiocarcinoma,Peritoneum,Peritoneum/Omentum
+Billary,Cholangiocarcinoma,Primary,Liver
+Billary,Gall bladder,Abdominal wall,Abdomen/Abdominal wall
+Billary,Gall bladder,epigastrium,(Sub)cutane
+Billary,Gall bladder,gall bladder,Gall bladder
+Billary,Gall bladder,Liver,Liver
+Billary,Gall bladder,Lymph node,Lymph node
+Bone/Soft tissue,Angiosarcoma,Liver,Liver
+Bone/Soft tissue,Angiosarcoma,Primary,Bone
+Bone/Soft tissue,Desmoid,abdomen,Abdomen/Abdominal wall
+Bone/Soft tissue,Desmoid,abdomen,Peritoneum/Omentum
+Bone/Soft tissue,Ewing sarcoma,Amputated upper leg (Leg amputation 16/06/2016),Bone
+Bone/Soft tissue,Gastrointestinal stromal tumors (GIST),abdomen,Abdomen/Abdominal wall
+Bone/Soft tissue,Gastrointestinal stromal tumors (GIST),abdomen,Peritoneum/Omentum
+Bone/Soft tissue,Gastrointestinal stromal tumors (GIST),abdominal wall,Abdomen/Abdominal wall
+Bone/Soft tissue,Gastrointestinal stromal tumors (GIST),leasion,Abdomen/Abdominal wall
+Bone/Soft tissue,Gastrointestinal stromal tumors (GIST),Liver,Liver
+Bone/Soft tissue,Gastrointestinal stromal tumors (GIST),Lung,Lung
+Bone/Soft tissue,Gastrointestinal stromal tumors (GIST),Lymph node,Lymph node
+Bone/Soft tissue,Gastrointestinal stromal tumors (GIST),mass ventrale bladder,Abdomen/Abdominal wall
+Bone/Soft tissue,Gastrointestinal stromal tumors (GIST),pancreas,Pancreas
+Bone/Soft tissue,Gastrointestinal stromal tumors (GIST),Peritoneum,Peritoneum/Omentum
+Bone/Soft tissue,Gastrointestinal stromal tumors (GIST),Primary,Stomach
+Bone/Soft tissue,Gastrointestinal stromal tumors (GIST),Rectum,Abdomen/Abdominal wall
+Bone/Soft tissue,Gastrointestinal stromal tumors (GIST),Small pelvic,Bone
+Bone/Soft tissue,Gastrointestinal stromal tumors (GIST),soft tissue,Abdomen/Abdominal wall
+Bone/Soft tissue,Gastrointestinal stromal tumors (GIST),subcutaneous,(Sub)cutane
+Bone/Soft tissue,Leiomyosarcoma,abdominal wall,Abdomen/Abdominal wall
+Bone/Soft tissue,Leiomyosarcoma,Adnex,Peritoneum/Omentum
+Bone/Soft tissue,Leiomyosarcoma,Bone,Bone
+Bone/Soft tissue,Leiomyosarcoma,Liver,Liver
+Bone/Soft tissue,Leiomyosarcoma,Lung,Lung
+Bone/Soft tissue,Leiomyosarcoma,Lymph node,Lymph node
+Bone/Soft tissue,Leiomyosarcoma,skin,(Sub)cutane
+Bone/Soft tissue,Leiomyosarcoma,small intestine,Small intestine
+Bone/Soft tissue,Leiomyosarcoma,soft tissue,Muscle
+Bone/Soft tissue,Leiomyosarcoma,soft tissue,Thorax/Thorax wall
+Bone/Soft tissue,Leiomyosarcoma,Thorax wall,Thorax/Thorax wall
+Bone/Soft tissue,Liposarcoma,Abdomen,Abdomen/Abdominal wall
+Bone/Soft tissue,Liposarcoma,omentum,Peritoneum/Omentum
+Bone/Soft tissue,Liposarcoma,shoulder,(Sub)cutane
+Bone/Soft tissue,Osteosarcoma,Bone,Bone
+Bone/Soft tissue,Osteosarcoma,Liver,Liver
+Bone/Soft tissue,Osteosarcoma,Lung,Lung
+Bone/Soft tissue,Sarcoma: other,abdomen,Abdomen/Abdominal wall
+Bone/Soft tissue,Sarcoma: other,Abdomen,Abdomen/Abdominal wall
+Bone/Soft tissue,Sarcoma: other,Bone,Bone
+Bone/Soft tissue,Sarcoma: other,Breast,Breast
+Bone/Soft tissue,Sarcoma: other,chest wall,Bone
+Bone/Soft tissue,Sarcoma: other,cutaneous,(Sub)cutane
+Bone/Soft tissue,Sarcoma: other,Fibrosarcoma,Muscle
+Bone/Soft tissue,Sarcoma: other,Laesie level costa 9,Bone
+Bone/Soft tissue,Sarcoma: other,Left scapula,Thorax/Thorax wall
+Bone/Soft tissue,Sarcoma: other,Liver,Liver
+Bone/Soft tissue,Sarcoma: other,Lung,Lung
+Bone/Soft tissue,Sarcoma: other,Lymph node,Lymph node
+Bone/Soft tissue,Sarcoma: other,Muscle,Muscle
+Bone/Soft tissue,Sarcoma: other,Occiput,Bone
+Bone/Soft tissue,Sarcoma: other,Omentum,Peritoneum/Omentum
+Bone/Soft tissue,Sarcoma: other,Palatum Molle,Head and neck
+Bone/Soft tissue,Sarcoma: other,Peritoneum,Abdomen/Abdominal wall
+Bone/Soft tissue,Sarcoma: other,Peritoneum,Peritoneum/Omentum
+Bone/Soft tissue,Sarcoma: other,Primary,Bone
+Bone/Soft tissue,Sarcoma: other,Primary,Muscle
+Bone/Soft tissue,Sarcoma: other,Primary,Peritoneum/Omentum
+Bone/Soft tissue,Sarcoma: other,Salivary gland,Head and neck
+Bone/Soft tissue,Sarcoma: other,Sarcoma,Muscle
+Bone/Soft tissue,Sarcoma: other,skin,(Sub)cutane
+Bone/Soft tissue,Sarcoma: other,soft tissue,Abdomen/Abdominal wall
+Bone/Soft tissue,Sarcoma: other,Soft tissue,Abdomen/Abdominal wall
+Bone/Soft tissue,Sarcoma: other,soft tissue,Bone
+Bone/Soft tissue,Sarcoma: other,soft tissue,Muscle
+Bone/Soft tissue,Sarcoma: other,soft tissue,Thorax/Thorax wall
+Bone/Soft tissue,Sarcoma: other,subcateneous,(Sub)cutane
+Bone/Soft tissue,Sarcoma: other,thorax wall,Thorax/Thorax wall
+Breast,Breast Cancer: ER-negative/HER2-positive,axilla,Lymph node
+Breast,Breast Cancer: ER-negative/HER2-positive,Bone,Bone
+Breast,Breast Cancer: ER-negative/HER2-positive,Brain,CNS
+Breast,Breast Cancer: ER-negative/HER2-positive,hypo-echogenic mass chest wall,Thorax/Thorax wall
+Breast,Breast Cancer: ER-negative/HER2-positive,Liver,Liver
+Breast,Breast Cancer: ER-negative/HER2-positive,Lung,Lung
+Breast,Breast Cancer: ER-negative/HER2-positive,Lymph node,Lymph node
+Breast,Breast Cancer: ER-negative/HER2-positive,Primary,Breast
+Breast,Breast Cancer: ER-negative/HER2-positive,skin,(Sub)cutane
+Breast,Breast Cancer: ER-negative/HER2-positive,subcutaneous,(Sub)cutane
+Breast,Breast Cancer: ER-positive/HER2 unknown,Lymph node,Lymph node
+Breast,Breast Cancer: ER-positive/HER2-negative,Abdominal mass,Abdomen/Abdominal wall
+Breast,Breast Cancer: ER-positive/HER2-negative,Abdominal wall cutaneous,Abdomen/Abdominal wall
+Breast,Breast Cancer: ER-positive/HER2-negative,adnex,Peritoneum/Omentum
+Breast,Breast Cancer: ER-positive/HER2-negative,Adrenal gland,Breast
+Breast,Breast Cancer: ER-positive/HER2-negative,Ascites,Abdomen/Abdominal wall
+Breast,Breast Cancer: ER-positive/HER2-negative,Bone,Bone
+Breast,Breast Cancer: ER-positive/HER2-negative,breast left,Breast
+Breast,Breast Cancer: ER-positive/HER2-negative,Breast,Breast
+Breast,Breast Cancer: ER-positive/HER2-negative,Cutane lesion,(Sub)cutane
+Breast,Breast Cancer: ER-positive/HER2-negative,Cutaneous lesions,(Sub)cutane
+Breast,Breast Cancer: ER-positive/HER2-negative,cutis,Thorax/Thorax wall
+Breast,Breast Cancer: ER-positive/HER2-negative,Endometrium,Uterus
+Breast,Breast Cancer: ER-positive/HER2-negative,Head,(Sub)cutane
+Breast,Breast Cancer: ER-positive/HER2-negative,iliac,Bone
+Breast,Breast Cancer: ER-positive/HER2-negative,left mamma,Breast
+Breast,Breast Cancer: ER-positive/HER2-negative,Lesion glandula parotis,Head and neck
+Breast,Breast Cancer: ER-positive/HER2-negative,Liver,Liver
+Breast,Breast Cancer: ER-positive/HER2-negative,Lung,Lung
+Breast,Breast Cancer: ER-positive/HER2-negative,Lymph node,Lymph node
+Breast,Breast Cancer: ER-positive/HER2-negative,Mamma,Breast
+Breast,Breast Cancer: ER-positive/HER2-negative,mamma,Breast
+Breast,Breast Cancer: ER-positive/HER2-negative,mass axillary,Lymph node
+Breast,Breast Cancer: ER-positive/HER2-negative,Mass head,(Sub)cutane
+Breast,Breast Cancer: ER-positive/HER2-negative,mediastinale mass,Thorax/Thorax wall
+Breast,Breast Cancer: ER-positive/HER2-negative,Musculus Pectoralis Major,Muscle
+Breast,Breast Cancer: ER-positive/HER2-negative,Neck gland,Head and neck
+Breast,Breast Cancer: ER-positive/HER2-negative,neck,Head and neck
+Breast,Breast Cancer: ER-positive/HER2-negative,Omental cake,Peritoneum/Omentum
+Breast,Breast Cancer: ER-positive/HER2-negative,omentum cake,Peritoneum/Omentum
+Breast,Breast Cancer: ER-positive/HER2-negative,parasternaal,Lymph node
+Breast,Breast Cancer: ER-positive/HER2-negative,parasternal,Thorax/Thorax wall
+Breast,Breast Cancer: ER-positive/HER2-negative,Pericardium,Thorax/Thorax wall
+Breast,Breast Cancer: ER-positive/HER2-negative,Peritoneum,Peritoneum/Omentum
+Breast,Breast Cancer: ER-positive/HER2-negative,Primary,Breast
+Breast,Breast Cancer: ER-positive/HER2-negative,right breast,Muscle
+Breast,Breast Cancer: ER-positive/HER2-negative,right shoulder,(Sub)cutane
+Breast,Breast Cancer: ER-positive/HER2-negative,Skin lesion,(Sub)cutane
+Breast,Breast Cancer: ER-positive/HER2-negative,skin, subcutaneous,(Sub)cutane
+Breast,Breast Cancer: ER-positive/HER2-negative,skin,(Sub)cutane
+Breast,Breast Cancer: ER-positive/HER2-negative,Skin,(Sub)cutane
+Breast,Breast Cancer: ER-positive/HER2-negative,skin,Breast
+Breast,Breast Cancer: ER-positive/HER2-negative,Skin/ cutaneous,(Sub)cutane
+Breast,Breast Cancer: ER-positive/HER2-negative,soft tissue mass near sternum,Thorax/Thorax wall
+Breast,Breast Cancer: ER-positive/HER2-negative,soft tissue,(Sub)cutane
+Breast,Breast Cancer: ER-positive/HER2-negative,soft tissue,Bone
+Breast,Breast Cancer: ER-positive/HER2-negative,soft tissue,Breast
+Breast,Breast Cancer: ER-positive/HER2-negative,soft tissue,Muscle
+Breast,Breast Cancer: ER-positive/HER2-negative,soft tissue,Peritoneum/Omentum
+Breast,Breast Cancer: ER-positive/HER2-negative,soft tissue,Thorax/Thorax wall
+Breast,Breast Cancer: ER-positive/HER2-negative,sternal tissue,Thorax/Thorax wall
+Breast,Breast Cancer: ER-positive/HER2-negative,stomach,Stomach
+Breast,Breast Cancer: ER-positive/HER2-negative,sub cutaneous,(Sub)cutane
+Breast,Breast Cancer: ER-positive/HER2-negative,subcutaneous,(Sub)cutane
+Breast,Breast Cancer: ER-positive/HER2-negative,Subcutaneous,(Sub)cutane
+Breast,Breast Cancer: ER-positive/HER2-negative,subcutaneous,Breast
+Breast,Breast Cancer: ER-positive/HER2-negative,subcutis,(Sub)cutane
+Breast,Breast Cancer: ER-positive/HER2-negative,Subcutis,(Sub)cutane
+Breast,Breast Cancer: ER-positive/HER2-negative,thoracic wall,Thorax/Thorax wall
+Breast,Breast Cancer: ER-positive/HER2-negative,Thorax wall,Thorax/Thorax wall
+Breast,Breast Cancer: ER-positive/HER2-negative,vertebral column,Bone
+Breast,Breast Cancer: other,Bone,Bone
+Breast,Breast Cancer: other,Liver,Liver
+Breast,Breast Cancer: other,Lung,Lung
+Breast,Breast Cancer: other,Lymph node,Lymph node
+Breast,Breast Cancer: other,Mamma right,Breast
+Breast,Breast Cancer: other,Primary,Breast
+Breast,Breast Cancer: other,skin,(Sub)cutane
+Breast,Breast Cancer: triple negative,axilla,Lymph node
+Breast,Breast Cancer: triple negative,axillair,Lymph node
+Breast,Breast Cancer: triple negative,Bone,Bone
+Breast,Breast Cancer: triple negative,Brain,CNS
+Breast,Breast Cancer: triple negative,Breast,(Sub)cutane
+Breast,Breast Cancer: triple negative,Liver,Liver
+Breast,Breast Cancer: triple negative,Lung,Lung
+Breast,Breast Cancer: triple negative,Lymph node,Lymph node
+Breast,Breast Cancer: triple negative,Mamma,Breast
+Breast,Breast Cancer: triple negative,Muscle back,Muscle
+Breast,Breast Cancer: triple negative,Omentum,Peritoneum/Omentum
+Breast,Breast Cancer: triple negative,Parasternal,Thorax/Thorax wall
+Breast,Breast Cancer: triple negative,Primary,Breast
+Breast,Breast Cancer: triple negative,Skin subcutaneous,(Sub)cutane
+Breast,Breast Cancer: triple negative,Skin,(Sub)cutane
+Breast,Breast Cancer: triple negative,skin,Breast
+Breast,Breast Cancer: triple negative,Skin,Breast
+Breast,Breast Cancer: triple negative,Skin/Subcutaneous,(Sub)cutane
+Breast,Breast Cancer: triple negative,soft tissue,Lymph node
+Breast,Breast Cancer: triple negative,subcutane,(Sub)cutane
+Breast,Breast Cancer: triple negative,thorax wall,Thorax/Thorax wall
+Breast,Breast Cancer: triple negative,thorax,Thorax/Thorax wall
+CNS,Astrocytoma,Primary,CNS
+CNS,CNS: other,skin,(Sub)cutane
+CNS,Glioblastoma Multiforme,brain left temporal GBM,CNS
+CNS,Glioblastoma Multiforme,brain,CNS
+CNS,Glioblastoma Multiforme,Brain,CNS
+CNS,Glioblastoma Multiforme,CNS,CNS
+CNS,Glioblastoma Multiforme,Glioblastoma,CNS
+CNS,Glioblastoma Multiforme,mass Brain,CNS
+CNS,Glioblastoma Multiforme,ovarium,Ovary
+CNS,Glioblastoma Multiforme,Primary,CNS
+CNS,Glioma,CNS,CNS
+CNS,Glioma,Liver,Liver
+CNS,Meningeoma,muscle tissue,Muscle
+CNS,Oligodendroglioma,Primary,CNS
+Colon/Rectum,Anal,abdomen,Abdomen/Abdominal wall
+Colon/Rectum,Anal,abdominal,Abdomen/Abdominal wall
+Colon/Rectum,Anal,Bone,Bone
+Colon/Rectum,Anal,cutaneous,(Sub)cutane
+Colon/Rectum,Anal,Epigastrium,(Sub)cutane
+Colon/Rectum,Anal,Liver,Liver
+Colon/Rectum,Anal,Lung,Lung
+Colon/Rectum,Anal,muscle,Muscle
+Colon/Rectum,Anal,Woundbed necrotic cavity perineal,Abdomen/Abdominal wall
+Colon/Rectum,Appendix,Lymph node,Lymph node
+Colon/Rectum,Ascending colon,Liver,Liver
+Colon/Rectum,Colon/Rectum: NET,Primary,Colon/Rectum
+Colon/Rectum,Colon/Rectum: other,abdomen,Abdomen/Abdominal wall
+Colon/Rectum,Colon/Rectum: other,Abdomen,Abdomen/Abdominal wall
+Colon/Rectum,Colon/Rectum: other,Abdomen,Peritoneum/Omentum
+Colon/Rectum,Colon/Rectum: other,Abdominal metastatic,Abdomen/Abdominal wall
+Colon/Rectum,Colon/Rectum: other,abdominal wall,Abdomen/Abdominal wall
+Colon/Rectum,Colon/Rectum: other,Abdominal wall,Abdomen/Abdominal wall
+Colon/Rectum,Colon/Rectum: other,ABDOMINAL WALL,Abdomen/Abdominal wall
+Colon/Rectum,Colon/Rectum: other,Adrenal gland,Adrenal gland
+Colon/Rectum,Colon/Rectum: other,Bone,Bone
+Colon/Rectum,Colon/Rectum: other,Breast,Breast
+Colon/Rectum,Colon/Rectum: other,colon,Colon/Rectum
+Colon/Rectum,Colon/Rectum: other,cutane,(Sub)cutane
+Colon/Rectum,Colon/Rectum: other,Cutaneous,(Sub)cutane
+Colon/Rectum,Colon/Rectum: other,dorsal from vena cava inferior/medial right kidney,Abdomen/Abdominal wall
+Colon/Rectum,Colon/Rectum: other,glandular package in aorta,Abdomen/Abdominal wall
+Colon/Rectum,Colon/Rectum: other,ilium,Colon/Rectum
+Colon/Rectum,Colon/Rectum: other,ingrinal,(Sub)cutane
+Colon/Rectum,Colon/Rectum: other,Intra abdominal mass,Abdomen/Abdominal wall
+Colon/Rectum,Colon/Rectum: other,Kidney,Adrenal gland
+Colon/Rectum,Colon/Rectum: other,Liver,Liver
+Colon/Rectum,Colon/Rectum: other,Lung,Colon/Rectum
+Colon/Rectum,Colon/Rectum: other,Lung,Lung
+Colon/Rectum,Colon/Rectum: other,Lymph node,Lymph node
+Colon/Rectum,Colon/Rectum: other,Mamma,Breast
+Colon/Rectum,Colon/Rectum: other,neck right,Lymph node
+Colon/Rectum,Colon/Rectum: other,Omental cake,Peritoneum/Omentum
+Colon/Rectum,Colon/Rectum: other,Omentum,Peritoneum/Omentum
+Colon/Rectum,Colon/Rectum: other,omentum,Peritoneum/Omentum
+Colon/Rectum,Colon/Rectum: other,peri-anal,Colon/Rectum
+Colon/Rectum,Colon/Rectum: other,peritoneale,Peritoneum/Omentum
+Colon/Rectum,Colon/Rectum: other,Peritoneum,Peritoneum/Omentum
+Colon/Rectum,Colon/Rectum: other,Primary,Colon/Rectum
+Colon/Rectum,Colon/Rectum: other,rectum,Colon/Rectum
+Colon/Rectum,Colon/Rectum: other,right side,(Sub)cutane
+Colon/Rectum,Colon/Rectum: other,scar tissue,Abdomen/Abdominal wall
+Colon/Rectum,Colon/Rectum: other,skin,(Sub)cutane
+Colon/Rectum,Colon/Rectum: other,soft tissue,Abdomen/Abdominal wall
+Colon/Rectum,Colon/Rectum: other,Soft tissue,Bone
+Colon/Rectum,Colon/Rectum: other,soft tissue,Bone
+Colon/Rectum,Colon/Rectum: other,sternum,Thorax/Thorax wall
+Colon/Rectum,Colon/Rectum: other,subcutane laesion,(Sub)cutane
+Colon/Rectum,Colon/Rectum: other,subcutane meta,Abdomen/Abdominal wall
+Colon/Rectum,Colon/Rectum: other,thoracic wall,Thorax/Thorax wall
+Colon/Rectum,Colon/Rectum: other,Thoracic wall,Thorax/Thorax wall
+Colon/Rectum,Colon/Rectum: other,upper abdomen,Peritoneum/Omentum
+Colon/Rectum,Colon/Rectum: other,vagina,Vagina
+Colon/Rectum,Sigmoid,Liver,Liver
+CUP,Cancer of unknown primary origin (CUP),abdomen,Peritoneum/Omentum
+CUP,Cancer of unknown primary origin (CUP),Axilla,Lymph node
+CUP,Cancer of unknown primary origin (CUP),Bone,Bone
+CUP,Cancer of unknown primary origin (CUP),groin,(Sub)cutane
+CUP,Cancer of unknown primary origin (CUP),Kidney,Kidney
+CUP,Cancer of unknown primary origin (CUP),Liver,Liver
+CUP,Cancer of unknown primary origin (CUP),Lung,Abdomen/Abdominal wall
+CUP,Cancer of unknown primary origin (CUP),Lymph node,Lymph node
+CUP,Cancer of unknown primary origin (CUP),Mass abdomen,Abdomen/Abdominal wall
+CUP,Cancer of unknown primary origin (CUP),Omentum,Peritoneum/Omentum
+CUP,Cancer of unknown primary origin (CUP),parafalciene lesion,CNS
+CUP,Cancer of unknown primary origin (CUP),Primary,Thorax/Thorax wall
+CUP,Cancer of unknown primary origin (CUP),Primary,Uterus
+CUP,Cancer of unknown primary origin (CUP),Thyroid,Thyroid
+CUP,Cancer of unknown primary origin (CUP),tumor near clavicula medial left,Thorax/Thorax wall
+CUP,Cancer of unknown primary origin (CUP),vaginal,Vagina
+Esophagus,Esophageal,abdomen left side,Peritoneum/Omentum
+Esophagus,Esophageal,abdomen,Abdomen/Abdominal wall
+Esophagus,Esophageal,abdominal wall,Abdomen/Abdominal wall
+Esophagus,Esophageal,Bone,Bone
+Esophagus,Esophageal,Cutane metastasis abdomen,(Sub)cutane
+Esophagus,Esophageal,esophagus - small intestine,Esophagus
+Esophagus,Esophageal,esophagus,Esophagus
+Esophagus,Esophageal,gastric mucosa,Esophagus
+Esophagus,Esophageal,Liver,Liver
+Esophagus,Esophageal,Lung,Lung
+Esophagus,Esophageal,Lung,Thorax/Thorax wall
+Esophagus,Esophageal,Lymph node,Lymph node
+Esophagus,Esophageal,Mamma,Breast
+Esophagus,Esophageal,Muscle,Muscle
+Esophagus,Esophageal,oesophagus,Esophagus
+Esophagus,Esophageal,Paravertebral,Thorax/Thorax wall
+Esophagus,Esophageal,Primary,Esophagus
+Esophagus,Esophageal,retroperitoneal mass,Abdomen/Abdominal wall
+Esophagus,Esophageal,Skin,(Sub)cutane
+Esophagus,Esophageal,soft tissue,Head and neck
+Esophagus,Esophageal,soft tissue,Muscle
+Esophagus,Esophageal: other,Liver,Liver
+Esophagus,Esophageal: other,Primary,Stomach
+Head and neck,Head and Neck: other,Liver,Liver
+Head and neck,Head and Neck: other,Lymph node,Lymph node
+Head and neck,Hypopharyngeal,Liver,Liver
+Head and neck,Hypopharyngeal,Lung,Lung
+Head and neck,Hypopharyngeal,Neck lesion,Head and neck
+Head and neck,Hypopharyngeal,Primary,Head and neck
+Head and neck,Laryngeal,Lymph node,Lymph node
+Head and neck,Laryngeal,Subcutaneous,(Sub)cutane
+Head and neck,Lip and Oral Cavity,Bone,Bone
+Head and neck,Lip and Oral Cavity,just above a. subclavia left side,Thorax/Thorax wall
+Head and neck,Lip and Oral Cavity,Lung,Lung
+Head and neck,Lip and Oral Cavity,Lymph node,Lymph node
+Head and neck,Lip and Oral Cavity,Primary,Head and neck
+Head and neck,Lip and Oral Cavity,skinlesion,(Sub)cutane
+Head and neck,Lip and Oral Cavity,tongue,Head and neck
+Head and neck,Nasal cavity and paranasal sinuses,Endonasal,Head and neck
+Head and neck,Nasal cavity and paranasal sinuses,Liver,Liver
+Head and neck,Nasal cavity and paranasal sinuses,Lymph node,Lymph node
+Head and neck,Nasal cavity and paranasal sinuses,Mouth,Head and neck
+Head and neck,Nasal cavity and paranasal sinuses,Primary,Head and neck
+Head and neck,Nasal cavity and paranasal sinuses,sinus,Head and neck
+Head and neck,Oropharyngeal,left mandibula,Head and neck
+Head and neck,Oropharyngeal,neck right side,Head and neck
+Head and neck,Oropharyngeal,soft tissue,Thorax/Thorax wall
+Head and neck,Salivary Gland,Bone,Bone
+Head and neck,Salivary Gland,Liver,Liver
+Head and neck,Salivary Gland,Lung,Lung
+Head and neck,Salivary Gland,Lymph node,Lymph node
+Head and neck,Salivary Gland,Mandible,Head and neck
+Head and neck,Salivary Gland,Muscle,Muscle
+Head and neck,Salivary Gland,Primary,Head and neck
+Head and neck,Tongue,Lymph node,Lymph node
+Head and neck,Tongue,Skin,(Sub)cutane
+Kidney,Kidney: other,Lymph node,Lymph node
+Kidney,Renal Cell Cancer,Abdomen,Abdomen/Abdominal wall
+Kidney,Renal Cell Cancer,Abdominal wall,Abdomen/Abdominal wall
+Kidney,Renal Cell Cancer,abdominal wall,Abdomen/Abdominal wall
+Kidney,Renal Cell Cancer,Adrenal gland,Adrenal gland
+Kidney,Renal Cell Cancer,Bone,Bone
+Kidney,Renal Cell Cancer,duodenum,Lymph node
+Kidney,Renal Cell Cancer,Kidney,Kidney
+Kidney,Renal Cell Cancer,Liver,Liver
+Kidney,Renal Cell Cancer,Lung,Lung
+Kidney,Renal Cell Cancer,Lymph node,Lymph node
+Kidney,Renal Cell Cancer,Muscle dorsum,Muscle
+Kidney,Renal Cell Cancer,muscle,Muscle
+Kidney,Renal Cell Cancer,Musculus psoas,Muscle
+Kidney,Renal Cell Cancer,Para-vertebral mass,Bone
+Kidney,Renal Cell Cancer,Primary,Kidney
+Kidney,Renal Cell Cancer,retro-peritoneal,Abdomen/Abdominal wall
+Kidney,Renal Cell Cancer,Skin/Subcutaneous,(Sub)cutane
+Kidney,Renal Cell Cancer,skin/subcutaneous,Thorax/Thorax wall
+Kidney,Renal Cell Cancer,soft tissue mass sacrum,Bone
+Kidney,Renal Cell Cancer,Soft tissue mass,Bone
+Kidney,Renal Cell Cancer,soft tissue,Bone
+Kidney,Renal Cell Cancer,soft tissue,Thorax/Thorax wall
+Kidney,Renal Cell Cancer,Sternum,Bone
+Kidney,Renal Cell Cancer,thorax,(Sub)cutane
+Kidney,Renal Cell Cancer,Thorax,Thorax/Thorax wall
+Kidney,Renal Cell Cancer,Uterus,Uterus
+Liver,Hepatocellular,Adrenal gland,Adrenal gland
+Liver,Hepatocellular,Liver,Liver
+Liver,Hepatocellular,Lung,Liver
+Liver,Hepatocellular,Lung,Lymph node
+Liver,Hepatocellular,paravertebrale massa,Liver
+Liver,Hepatocellular,Primary,Liver
+Liver,Liver: other,Abdomen muscle,Muscle
+Liver,Liver: other,Bone,Bone
+Liver,Liver: other,Liver,Liver
+Liver,Liver: other,Lung,Lung
+Liver,Liver: other,Peritoneum,Peritoneum/Omentum
+Liver,Liver: other,Soft tissue,Abdomen/Abdominal wall
+Lung,Bronchus,soft tissue,Muscle
+Lung,Lung Adenocarcinoom,Liver,Liver
+Lung,Lung: NET,Liver,Liver
+Lung,Lung: NET,Lung,Lung
+Lung,Lung: NET,pleural lesion,Lung
+Lung,Lung: other,Liver,Liver
+Lung,Non-Small Cell Lung Cancer,Adrenal gland,Adrenal gland
+Lung,Non-Small Cell Lung Cancer,Bone,Bone
+Lung,Non-Small Cell Lung Cancer,bronchus,Lung
+Lung,Non-Small Cell Lung Cancer,CNS,CNS
+Lung,Non-Small Cell Lung Cancer,Kidney,Kidney
+Lung,Non-Small Cell Lung Cancer,Left mamma,Breast
+Lung,Non-Small Cell Lung Cancer,Liver,Liver
+Lung,Non-Small Cell Lung Cancer,Lung,Lung
+Lung,Non-Small Cell Lung Cancer,Lung,Lymph node
+Lung,Non-Small Cell Lung Cancer,Lymph node,Lymph node
+Lung,Non-Small Cell Lung Cancer,mamma,Breast
+Lung,Non-Small Cell Lung Cancer,pelvis,Bone
+Lung,Non-Small Cell Lung Cancer,Pleura,Lung
+Lung,Non-Small Cell Lung Cancer,Primary,Lung
+Lung,Non-Small Cell Lung Cancer,shoulder blade,Bone
+Lung,Non-Small Cell Lung Cancer,Skin,(Sub)cutane
+Lung,Non-Small Cell Lung Cancer,soft tissue,(Sub)cutane
+Lung,Non-Small Cell Lung Cancer,Soft tissue,Thorax/Thorax wall
+Lung,Non-Small Cell Lung Cancer,soft tissue,Thorax/Thorax wall
+Lung,Non-Small Cell Lung Cancer,subcutaneous,(Sub)cutane
+Lung,Non-Small Cell Lung Cancer,swelling back,Lung
+Lung,Non-Small Cell Lung Cancer,thorax,Thorax/Thorax wall
+Lung,Non-Small Cell Lung Cancer,trachea,Lung
+Lung,Small Cell Lung Cancer,Adrenal gland,Adrenal gland
+Lung,Small Cell Lung Cancer,Kidney,Kidney
+Lung,Small Cell Lung Cancer,Liver,Liver
+Lung,Small Cell Lung Cancer,Lung,Lung
+Lung,Small Cell Lung Cancer,Lymph node,Lymph node
+Lung,Small Cell Lung Cancer,pleural,Lung
+Lung,Small Cell Lung Cancer,Primary,Lung
+Lung,Small Cell Lung Cancer,skin leasion,(Sub)cutane
+Lung,Small Cell Lung Cancer,subcutaneous,(Sub)cutane
+Lymphoid,Hodgkin lymphoma,Liver,Liver
+Lymphoid,Hodgkin lymphoma,Lymph node,Lymph node
+Lymphoid,Lymphoma: other,Liver,Liver
+Lymphoid,Lymphoma: other,Primary,Abdomen/Abdominal wall
+Lymphoid,Non-Hodgkin lymphoma,Lymph node,Lymph node
+Lymphoid,Non-Hodgkin lymphoma,nasal cavity,Head and neck
+Lymphoid,Non-Hodgkin lymphoma,peritoneum,Peritoneum/Omentum
+Lymphoid,Non-Hodgkin lymphoma,small pelvis,Bone
+Lymphoid,Thymic carcinoma,mediastinum,Thorax/Thorax wall
+Lymphoid,Thymic carcinoma,Thorax wall,Thorax/Thorax wall
+Mesothelioma,Mesothelioma,epicardial,Lung
+Mesothelioma,Mesothelioma,Lung,Lung
+Mesothelioma,Mesothelioma,omentum,Peritoneum/Omentum
+Mesothelioma,Mesothelioma,Peritoneum,Peritoneum/Omentum
+Mesothelioma,Mesothelioma,pleura,Lung
+Mesothelioma,Mesothelioma,Pleural fluid,Lung
+Mesothelioma,Mesothelioma,Primary,Lung
+Mesothelioma,Mesothelioma,soft tissue,Lung
+Other,Adrenal,Liver,Liver
+Other,Adrenal,Primary,Adrenal gland
+Other,Double primary,Lymph node,Lymph node
+Other,Double primary,Mesothelioma left diaphragm,Thorax/Thorax wall
+Other,Myeloid: Morbus Kahler,soft tissue,Muscle
+Other,Myeloid: Multiple Myeloma,Bone,Bone
+Other,NET: other,Liver,Liver
+Other,NET: other,Lung,Lung
+Other,NET: other,pleural,Lung
+Other,NET: other,Primary,Colon/Rectum
+Other,NET: other,subcutaneous,(Sub)cutane
+Other,NET: unknown primary,cardia,Stomach
+Other,NET: unknown primary,CNS,CNS
+Other,NET: unknown primary,Liver,Liver
+Other,NET: unknown primary,Lymph node,Lymph node
+Other,Penile,Bone,Bone
+Other,Penile,Methastase,Abdomen/Abdominal wall
+Other,Testis,Bone,Bone
+Other,Testis,Lung,Thorax/Thorax wall
+Other,Testis,Peritoneum,Peritoneum/Omentum
+Other,Thyroid,abdomen,Abdomen/Abdominal wall
+Other,Thyroid,Liver,Liver
+Other,Thyroid,Lung,Lung
+Other,Thyroid,Lymph node,Lymph node
+Other,Thyroid,neck,Head and neck
+Other,Vagina,squamous cell carcinoma,Vagina
+Ovary,Ovarian,abdomen,Abdomen/Abdominal wall
+Ovary,Ovarian,Abdomen,Abdomen/Abdominal wall
+Ovary,Ovarian,Abdomen,Peritoneum/Omentum
+Ovary,Ovarian,abdominal wall,Abdomen/Abdominal wall
+Ovary,Ovarian,abdominal wall,Peritoneum/Omentum
+Ovary,Ovarian,breast,Breast
+Ovary,Ovarian,Central in abdomen,Abdomen/Abdominal wall
+Ovary,Ovarian,cutane,(Sub)cutane
+Ovary,Ovarian,infraclaviculare,Thorax/Thorax wall
+Ovary,Ovarian,left retroperitoneal lesion,Abdomen/Abdominal wall
+Ovary,Ovarian,Liver,Liver
+Ovary,Ovarian,Lymph node,Lymph node
+Ovary,Ovarian,m. rectus abdominus,Muscle
+Ovary,Ovarian,mamma,Breast
+Ovary,Ovarian,mass anterieur,Abdomen/Abdominal wall
+Ovary,Ovarian,Nates,Abdomen/Abdominal wall
+Ovary,Ovarian,omentum majum,Peritoneum/Omentum
+Ovary,Ovarian,omentum,Peritoneum/Omentum
+Ovary,Ovarian,ovary,Ovary
+Ovary,Ovarian,Para iliacal mass,Abdomen/Abdominal wall
+Ovary,Ovarian,Peritoneum,Peritoneum/Omentum
+Ovary,Ovarian,peritonial lesion,Peritoneum/Omentum
+Ovary,Ovarian,Primary,Ovary
+Ovary,Ovarian,rectum,Abdomen/Abdominal wall
+Ovary,Ovarian,right axilla,Lymph node
+Ovary,Ovarian,right paracolisch right paracolisch,Abdomen/Abdominal wall
+Ovary,Ovarian,Skin,(Sub)cutane
+Ovary,Ovarian,Skin/ subcutaneous,(Sub)cutane
+Ovary,Ovarian,subcutane left abdominal,(Sub)cutane
+Ovary,Ovarian,Subcutus,(Sub)cutane
+Ovary,Ovarian,thorax wall,Thorax/Thorax wall
+Ovary,Ovarian,vagina,Vagina
+Ovary,Ovarian,Vagina,Vagina
+Ovary,Ovarian,Vaginal,Vagina
+Ovary,Ovarian,ventral abdomen,Abdomen/Abdominal wall
+Pancreas,Pancreatic: NET,Liver,Liver
+Pancreas,Pancreatic: NET,Peritoneum,Peritoneum/Omentum
+Pancreas,Pancreatic: NET,Primary,Pancreas
+Pancreas,Pancreatic: other,abdominal wall,Abdomen/Abdominal wall
+Pancreas,Pancreatic: other,colon,Colon/Rectum
+Pancreas,Pancreatic: other,Liver,Liver
+Pancreas,Pancreatic: other,Lung,Lung
+Pancreas,Pancreatic: other,Lymph node,Lymph node
+Pancreas,Pancreatic: other,major duodenal papilla,Small intestine
+Pancreas,Pancreatic: other,Metastasis Pancreascarcinoma,Abdomen/Abdominal wall
+Pancreas,Pancreatic: other,Musculus Erector Truncus Spinae,Muscle
+Pancreas,Pancreatic: other,Oesophagus,Esophagus
+Pancreas,Pancreatic: other,Omentum,Peritoneum/Omentum
+Pancreas,Pancreatic: other,omentum,Peritoneum/Omentum
+Pancreas,Pancreatic: other,ovarium,Peritoneum/Omentum
+Pancreas,Pancreatic: other,Peritoneum,Peritoneum/Omentum
+Pancreas,Pancreatic: other,Primary,Pancreas
+Pancreas,Pancreatic: other,subcutane right gluteal,(Sub)cutane
+Pancreas,Pancreatic: other,subcutane, right side just above the umbilicus,(Sub)cutane
+Pancreas,Pancreatic: other,subcutaneous,(Sub)cutane
+Pancreas,Pancreatic: other,supraclaviculair,Thorax/Thorax wall
+Prostate,Prostate,Adrenal gland,Adrenal gland
+Prostate,Prostate,Bone,Bone
+Prostate,Prostate,bone,Bone
+Prostate,Prostate,Groin left,(Sub)cutane
+Prostate,Prostate,In lower pelvis,Bone
+Prostate,Prostate,Intra-abdominal mass,Abdomen/Abdominal wall
+Prostate,Prostate,intraperitoneal mass,Abdomen/Abdominal wall
+Prostate,Prostate,Kidney,Kidney
+Prostate,Prostate,Liver,Bone
+Prostate,Prostate,Liver,Liver
+Prostate,Prostate,lower abdomen,Abdomen/Abdominal wall
+Prostate,Prostate,Lung,Lung
+Prostate,Prostate,Lung,Thorax/Thorax wall
+Prostate,Prostate,Lymph node,Lymph node
+Prostate,Prostate,para-aortal abdominal,Abdomen/Abdominal wall
+Prostate,Prostate,Penis,Penis
+Prostate,Prostate,Peritoneum,Peritoneum/Omentum
+Prostate,Prostate,presternal,Thorax/Thorax wall
+Prostate,Prostate,Primary,Bone
+Prostate,Prostate,Primary,Prostate
+Prostate,Prostate,prostate,Prostate
+Prostate,Prostate,psoas,Muscle
+Prostate,Prostate,Rectum,Colon/Rectum
+Prostate,Prostate,Soft tissue,Abdomen/Abdominal wall
+Prostate,Prostate,soft tissue,Bone
+Prostate,Prostate,soft tissue,Muscle
+Prostate,Prostate,Soft tissue,Thorax/Thorax wall
+Prostate,Prostate,subcutis,(Sub)cutane
+Prostate,Prostate,urinary bladder,Bladder
+Prostate,Prostate,Urinary tract,Bladder
+Skin,Basal cell carcinoma,Primary,(Sub)cutane
+Skin,Basal cell carcinoma,skin,(Sub)cutane
+Skin,Melanoma,abdomen,(Sub)cutane
+Skin,Melanoma,abdomen,ABdomen/Abdominal wall
+Skin,Melanoma,Abdomen,Abdomen/Abdominal wall
+Skin,Melanoma,Abdominal wall,Abdomen/Abdominal wall
+Skin,Melanoma,abdominal wall,Abdomen/Abdominal wall
+Skin,Melanoma,abdominal,(Sub)cutane
+Skin,Melanoma,Adrenal gland,Adrenal gland
+Skin,Melanoma,axilla,(Sub)cutane
+Skin,Melanoma,axillary,(Sub)cutane
+Skin,Melanoma,Back,(Sub)cutane
+Skin,Melanoma,Below left nipple,(Sub)cutane
+Skin,Melanoma,Bone,Bone
+Skin,Melanoma,breast/mamma,(Sub)cutane
+Skin,Melanoma,cutan,(Sub)cutane
+Skin,Melanoma,cutaneous,(Sub)cutane
+Skin,Melanoma,Cutaneous,(Sub)cutane
+Skin,Melanoma,gland in the neck,Head and neck
+Skin,Melanoma,in-transit metastasis,(Sub)cutane
+Skin,Melanoma,inguinal,(Sub)cutane
+Skin,Melanoma,intestins,(Sub)cutane
+Skin,Melanoma,lacrimal sac,Head and neck
+Skin,Melanoma,left axilla,Lymph node
+Skin,Melanoma,left mamma,(Sub)cutane
+Skin,Melanoma,Left maximus gluteus,(Sub)cutane
+Skin,Melanoma,Leg,(Sub)cutane
+Skin,Melanoma,lesion subcutaneous,(Sub)cutane
+Skin,Melanoma,Liver,Liver
+Skin,Melanoma,Lung,(Sub)cutane
+Skin,Melanoma,Lung,Lung
+Skin,Melanoma,Lymph node,Head and Neck
+Skin,Melanoma,Lymph node,Lymph node
+Skin,Melanoma,Mamma,(Sub)cutane
+Skin,Melanoma,mass inguinal,(Sub)cutane
+Skin,Melanoma,melanonoma,(Sub)cutane
+Skin,Melanoma,Mestastasis,(Sub)cutane
+Skin,Melanoma,Muscle,(Sub)cutane
+Skin,Melanoma,muscle,(Sub)cutane
+Skin,Melanoma,neck,(Sub)cutane
+Skin,Melanoma,Neck,Head and neck
+Skin,Melanoma,paravertebral,(Sub)cutane
+Skin,Melanoma,Parevertebral,Thorax/Thorax wall
+Skin,Melanoma,pelvis,Bone
+Skin,Melanoma,Peritoneum,Peritoneum/Omentum
+Skin,Melanoma,Primary,(Sub)cutane
+Skin,Melanoma,Scapula,(Sub)cutane
+Skin,Melanoma,skin lesion,(Sub)cutane
+Skin,Melanoma,skin, medial left upper leg,(Sub)cutane
+Skin,Melanoma,skin,(Sub)cutane
+Skin,Melanoma,SKIN,(Sub)cutane
+Skin,Melanoma,Skin,(Sub)cutane
+Skin,Melanoma,Skin/ Subcutaneous,(Sub)cutane
+Skin,Melanoma,Skin/subcutaneous,(Sub)cutane
+Skin,Melanoma,Skin/Subcutaneous,(Sub)cutane
+Skin,Melanoma,skin/subcutaneous,(Sub)cutane
+Skin,Melanoma,skin/subcutaneous,(sub)cutane
+Skin,Melanoma,soft tissue,(Sub)cutane
+Skin,Melanoma,Soft tissue,Thorax/Thorax wall
+Skin,Melanoma,subcatenous,(Sub)cutane
+Skin,Melanoma,Subcutane metastasis.,(Sub)cutane
+Skin,Melanoma,subcutaneous mass,(Sub)cutane
+Skin,Melanoma,subcutaneous metastasis,(Sub)cutane
+Skin,Melanoma,subcutaneous,(Sub)cutane
+Skin,Melanoma,Subcutaneous,(Sub)cutane
+Skin,Melanoma,Subcutaneus leasion,(Sub)cutane
+Skin,Melanoma,subcutis,(Sub)cutane
+Skin,Melanoma,thoracic wall,Thorax/Thorax wall
+Skin,Melanoma,Thoraric wall,Thorax/Thorax wall
+Skin,Melanoma,Thorax wall,Thorax/Thorax wall
+Skin,Melanoma,Thorax,Thorax/Thorax wall
+Skin,Melanoma,upperarm,(Sub)cutane
+Skin,Skin squamous cell carcinoma,Lymph node,Lymph node
+Skin,Skin squamous cell carcinoma,Ulcus neck,(Sub)cutane
+Skin,Skin: other,Adrenal gland,Adrenal gland
+Skin,Skin: other,Lymph node,Lymph node
+Skin,Skin: other,Skin,(Sub)cutane
+Skin,Skin: other,skin,(Sub)cutane
+Skin,Vulva,Liver,Liver
+Skin,Vulva,Lymph node,Lymph node
+Small intestine,Duodenum,Liver,Liver
+Small intestine,Small intestine: NET,Liver,Liver
+Small intestine,Small intestine: NET,Lymph node,Lymph node
+Small intestine,Small intestine: NET,Ovarium,Ovary
+Small intestine,Small intestine: NET,Primary,Small intestine
+Small intestine,Small intestine: NET,small intestines,Small intestine
+Small intestine,Small intestine: NET,soft tissue,Abdomen/Abdominal wall
+Small intestine,Small intestine: NET,subcutaneous nodus,Abdomen/Abdominal wall
+Small intestine,Small intestine: other,Liver,Liver
+Small intestine,Small intestine: other,pericardiale laesie,Abdomen/Abdominal wall
+Stomach,Cardia,Liver,Liver
+Stomach,Gastric,Liver,Liver
+Stomach,Gastric,stomach,Stomach
+Stomach,Stomach: other,abdominal,Abdomen/Abdominal wall
+Stomach,Stomach: other,belly button,Abdomen/Abdominal wall
+Stomach,Stomach: other,Clavicula,Thorax/Thorax wall
+Stomach,Stomach: other,esophagus/stomach,Stomach
+Stomach,Stomach: other,Gastric antrum,Stomach
+Stomach,Stomach: other,Liver,Liver
+Stomach,Stomach: other,Lymph node,Lymph node
+Stomach,Stomach: other,neck lymph node,Lymph node
+Stomach,Stomach: other,Primary,Esophagus
+Stomach,Stomach: other,Sacrum,Bone
+Stomach,Stomach: other,Stomach,Stomach
+Stomach,Stomach: other,stomach,Stomach
+Urinary tract,Bladder,abdominal wall,Abdomen/Abdominal wall
+Urinary tract,Bladder,armpit,Lymph node
+Urinary tract,Bladder,bladder,Bladder
+Urinary tract,Bladder,Bone,Bone
+Urinary tract,Bladder,Bottom,(Sub)cutane
+Urinary tract,Bladder,cutaneous lesion,(Sub)cutane
+Urinary tract,Bladder,Intra abdominal,Abdomen/Abdominal wall
+Urinary tract,Bladder,Liver,Liver
+Urinary tract,Bladder,Lung,Lung
+Urinary tract,Bladder,Lymph node,Lymph node
+Urinary tract,Bladder,omentum,Peritoneum/Omentum
+Urinary tract,Bladder,Peritoneum,Peritoneum/Omentum
+Urinary tract,Bladder,sigmoid,Colon/Rectum
+Urinary tract,Bladder,Soft tissue mass,Bone
+Urinary tract,Bladder,Soft tissue,Bone
+Urinary tract,Bladder,subcutis,(Sub)cutane
+Urinary tract,Bladder,Urinary tract,Bladder
+Urinary tract,Pyelum,Kidney,Kidney
+Urinary tract,Pyelum,Liver,Liver
+Urinary tract,Pyelum,Lung,Lung
+Urinary tract,Pyelum,Lymph node,Lymph node
+Urinary tract,Pyelum,peritoneal deposition,Peritoneum/Omentum
+Urinary tract,Pyelum,Peritoneum,Peritoneum/Omentum
+Urinary tract,Urethra,Liver,Liver
+Urinary tract,Urethra,Lymph node,Lymph node
+Urinary tract,Urinary tract: other,abdomen,Abdomen/Abdominal wall
+Urinary tract,Urinary tract: other,Brain,Bone
+Urinary tract,Urinary tract: other,Liver,Liver
+Urinary tract,Urinary tract: other,Lung,Lung
+Urinary tract,Urinary tract: other,Lymph node,Lymph node
+Urinary tract,Urinary tract: other,unknown,Lymph node
+Uterus,Cervical,Abdominal wall,Abdomen/Abdominal wall
+Uterus,Cervical,cervix,Uterus
+Uterus,Cervical,Kidney,Kidney
+Uterus,Cervical,Left para vertebral mass,Abdomen/Abdominal wall
+Uterus,Cervical,Liver,Liver
+Uterus,Cervical,Lymph node,Lymph node
+Uterus,Cervical,pelvis,Bone
+Uterus,Cervical,Peritoneum,Peritoneum/Omentum
+Uterus,Cervical,Primary,Uterus
+Uterus,Cervical,retroperitoneum,Abdomen/Abdominal wall
+Uterus,Cervical,sarcoma,Bone
+Uterus,Cervical,soft tissue,Bone
+Uterus,Cervical,Vulva,Uterus
+Uterus,Endometrial,Abdomen,Abdomen/Abdominal wall
+Uterus,Endometrial,abdomen,Abdomen/Abdominal wall
+Uterus,Endometrial,Abdominal,Peritoneum/Omentum
+Uterus,Endometrial,Liver,Liver
+Uterus,Endometrial,Lung,Lung
+Uterus,Endometrial,Lymph node,Lymph node
+Uterus,Endometrial,musculus rectus abdominis,Muscle
+Uterus,Endometrial,Peritoneum,Peritoneum/Omentum
+Uterus,Endometrial,Primary,Uterus
+Uterus,Endometrial,Psoas left,Abdomen/Abdominal wall
+Uterus,Endometrial,Vagina,Vagina
+Uterus,Tuba,skin,Abdomen/Abdominal wall
+Uterus,Uterus: other,caudaal below liver,Abdomen/Abdominal wall
+Uterus,Uterus: other,Lung,Lung
+Uterus,Uterus: other,Peritoneum,Peritoneum/Omentum

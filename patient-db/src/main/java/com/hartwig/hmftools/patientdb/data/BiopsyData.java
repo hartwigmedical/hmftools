@@ -29,12 +29,6 @@ public abstract class BiopsyData {
     public abstract CuratedBiopsyType type();
 
     @Nullable
-    public String curatedType() {
-        CuratedBiopsyType curatedType = type();
-        return curatedType != null ? curatedType.type() : null;
-    }
-
-    @Nullable
     public abstract String site();
 
     @Nullable
@@ -68,6 +62,12 @@ public abstract class BiopsyData {
                 null,
                 formStatus,
                 formLocked);
+    }
+
+    @Nullable
+    public String curatedType() {
+        CuratedBiopsyType curatedType = type();
+        return curatedType != null ? curatedType.type() : null;
     }
 
     public boolean isPotentiallyEvaluable() {
