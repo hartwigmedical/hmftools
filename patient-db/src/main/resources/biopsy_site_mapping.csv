@@ -128,7 +128,7 @@ Breast,Breast Cancer: ER-positive/HER2-negative,Primary,Breast
 Breast,Breast Cancer: ER-positive/HER2-negative,right breast,Muscle
 Breast,Breast Cancer: ER-positive/HER2-negative,right shoulder,(Sub)cutane
 Breast,Breast Cancer: ER-positive/HER2-negative,Skin lesion,(Sub)cutane
-Breast,Breast Cancer: ER-positive/HER2-negative,skin, subcutaneous,(Sub)cutane
+Breast,Breast Cancer: ER-positive/HER2-negative,"skin, subcutaneous",(Sub)cutane
 Breast,Breast Cancer: ER-positive/HER2-negative,skin,(Sub)cutane
 Breast,Breast Cancer: ER-positive/HER2-negative,Skin,(Sub)cutane
 Breast,Breast Cancer: ER-positive/HER2-negative,skin,Breast
@@ -499,7 +499,7 @@ Pancreas,Pancreatic: other,ovarium,Peritoneum/Omentum
 Pancreas,Pancreatic: other,Peritoneum,Peritoneum/Omentum
 Pancreas,Pancreatic: other,Primary,Pancreas
 Pancreas,Pancreatic: other,subcutane right gluteal,(Sub)cutane
-Pancreas,Pancreatic: other,subcutane, right side just above the umbilicus,(Sub)cutane
+Pancreas,Pancreatic: other,"subcutane, right side just above the umbilicus",(Sub)cutane
 Pancreas,Pancreatic: other,subcutaneous,(Sub)cutane
 Pancreas,Pancreatic: other,supraclaviculair,Thorax/Thorax wall
 Prostate,Prostate,Adrenal gland,Adrenal gland
