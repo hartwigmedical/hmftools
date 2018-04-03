@@ -7,12 +7,14 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.stream.XMLStreamException;
 
 import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
+import com.hartwig.hmftools.common.ecrf.CpctEcrfModelUtil;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
 import com.hartwig.hmftools.patientdb.curators.TestCuratorFactory;
@@ -36,9 +38,11 @@ public class PatientReaderTest {
     public void canReadCpctBaselineInfo() {
         final CpctEcrfModel model = loadTestEcrf();
         assertEquals(1, model.patientCount());
-        final EcrfPatient cpctPatient = model.patients().iterator().next();
-        final BaselineReader baselineReader = new BaselineReader(model, TestCuratorFactory.tumorLocationCurator());
 
+        final Map<Integer, String> hospitals = CpctEcrfModelUtil.extractHospitalMap(model);
+        final BaselineReader baselineReader = new BaselineReader(TestCuratorFactory.tumorLocationCurator(), hospitals);
+
+        final EcrfPatient cpctPatient = model.patients().iterator().next();
         final BaselineData baselineData = baselineReader.read(cpctPatient);
         assertEquals("Breast cancer", baselineData.cancerType().searchTerm());
         assertEquals("Breast", baselineData.cancerType().type());

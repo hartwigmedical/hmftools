@@ -2,9 +2,9 @@ package com.hartwig.hmftools.patientdb.readers;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
@@ -35,9 +35,9 @@ public class PatientReader {
     @NotNull
     private final BiopsyTreatmentReader biopsyTreatmentReader;
 
-    public PatientReader(@NotNull CpctEcrfModel model, @NotNull TumorLocationCurator tumorLocationCurator,
+    public PatientReader(@NotNull TumorLocationCurator tumorLocationCurator, @NotNull Map<Integer, String> hospitals,
             @NotNull BiopsySiteCurator biopsySiteCurator, @NotNull TreatmentCurator treatmentCurator) {
-        this.baselineReader = new BaselineReader(model, tumorLocationCurator);
+        this.baselineReader = new BaselineReader(tumorLocationCurator, hospitals);
         this.preTreatmentReader = new PreTreatmentReader(treatmentCurator);
         this.biopsyReader = new BiopsyReader(biopsySiteCurator);
         this.biopsyTreatmentReader = new BiopsyTreatmentReader(treatmentCurator);

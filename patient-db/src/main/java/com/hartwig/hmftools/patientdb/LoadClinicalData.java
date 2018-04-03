@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
+import com.hartwig.hmftools.common.ecrf.CpctEcrfModelUtil;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
@@ -102,7 +103,7 @@ public final class LoadClinicalData {
                     writeRawEcrf(dbWriter, ecrfModel, runContexts);
                 }
 
-                writeClinicalData(dbWriter, ecrfModel, limsOptions, cmd, runContexts);
+                writeClinicalData(dbWriter, ecrfModel, runContexts, cmd, options);
             } else {
                 if (!runDirectory.exists()) {
                     LOGGER.warn("dir " + runDirectory + " does not exist.");
@@ -114,34 +115,36 @@ public final class LoadClinicalData {
     }
 
     private static void writeClinicalData(@NotNull final DatabaseAccess dbAccess, @NotNull CpctEcrfModel ecrfModel,
-            @NotNull final Options clinicalOptions, @NotNull final CommandLine cmd, @NotNull final List<RunContext> runContexts)
+            @NotNull final List<RunContext> runContexts, @NotNull final CommandLine cmd, @NotNull final Options options)
             throws IOException {
         final String limsJson = cmd.getOptionValue(LIMS_JSON);
         final String preLIMSArrivalDatesCsv = cmd.getOptionValue(PRE_LIMS_ARRIVAL_DATES_CSV);
         final String csvOutputDir = cmd.getOptionValue(CSV_OUT_DIR);
-        final Optional<String> cancerTypesLink = Optional.ofNullable(cmd.getOptionValue(CANCER_TYPES_LINK));
-        final Optional<String> portalDataLink = Optional.ofNullable(cmd.getOptionValue(PORTAL_DATA_LINK));
 
         if (Utils.anyNull(limsJson, preLIMSArrivalDatesCsv, csvOutputDir)) {
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("patient-db", clinicalOptions);
+            formatter.printHelp("patient-db", options);
         } else {
+            final Optional<String> cancerTypesLink = Optional.ofNullable(cmd.getOptionValue(CANCER_TYPES_LINK));
+            final Optional<String> portalDataLink = Optional.ofNullable(cmd.getOptionValue(PORTAL_DATA_LINK));
+
             LOGGER.info("Clearing database...");
             dbAccess.clearClinicalTables();
 
             LOGGER.info("Cleared database, loading samples from LIMS...");
             Lims lims = LimsFactory.fromLimsJsonWithPreLIMSArrivalDates(limsJson, preLIMSArrivalDatesCsv);
             Map<String, List<SampleData>> samplesPerPatient = readSamplesPerPatient(lims, runContexts);
-
             LOGGER.info(String.format("Loaded samples for %s patients from LIMS", samplesPerPatient.size()));
 
+            LOGGER.info(String.format("Interpreting and curating data for %s sequenced patients.", samplesPerPatient.size()));
             TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource();
             TumorLocationCurator tumorLocationCurator = TumorLocationCurator.fromProductionResource();
             BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource();
-            PatientReader patientReader = new PatientReader(ecrfModel, tumorLocationCurator, biopsySiteCurator, treatmentCurator);
+            PatientReader patientReader = new PatientReader(tumorLocationCurator,
+                    CpctEcrfModelUtil.extractHospitalMap(ecrfModel), biopsySiteCurator, treatmentCurator);
 
             final Map<String, Patient> readPatients = readEcrfPatients(patientReader, ecrfModel.patients(), samplesPerPatient);
-            LOGGER.info(String.format("Loaded and curated %s patients from ecrf", readPatients.size()));
+            LOGGER.info(String.format("Finished curation of %s sequenced patients from ecrf", readPatients.size()));
             DumpClinicalData.writeClinicalDumps(csvOutputDir, readPatients.values(), cancerTypesLink, portalDataLink);
 
             LOGGER.info(String.format("Writing clinical data for %s sequenced patients.", readPatients.size()));
@@ -163,7 +166,7 @@ public final class LoadClinicalData {
             dbAccess.writeValidationFindings(CurationValidator.validateTreatmentCurator(treatmentCurator));
             dbAccess.writeValidationFindings(CurationValidator.validateTumorLocationCurator(tumorLocationCurator));
 
-            LOGGER.info("Done!");
+            LOGGER.info("Finished!");
         }
     }
 

@@ -24,7 +24,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 final class DumpClinicalData {
-    private static final Logger LOGGER = LogManager.getLogger(LoadClinicalData.class);
+
+    private static final Logger LOGGER = LogManager.getLogger(DumpClinicalData.class);
 
     private DumpClinicalData() {
     }

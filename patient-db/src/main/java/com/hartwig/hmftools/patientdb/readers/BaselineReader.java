@@ -4,9 +4,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
@@ -59,22 +56,13 @@ public class BaselineReader {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @NotNull
+    private final TumorLocationCurator tumorLocationCurator;
+    @NotNull
     private final Map<Integer, String> hospitals;
 
-    @NotNull
-    private final TumorLocationCurator tumorLocationCurator;
-
-    BaselineReader(@NotNull final CpctEcrfModel model, @NotNull final TumorLocationCurator tumorLocationCurator) {
-        this.hospitals = extractHospitalMap(model);
+    BaselineReader(@NotNull TumorLocationCurator tumorLocationCurator, @NotNull Map<Integer, String> hospitals) {
         this.tumorLocationCurator = tumorLocationCurator;
-    }
-
-    @NotNull
-    private static Map<Integer, String> extractHospitalMap(@NotNull final CpctEcrfModel model) {
-        final Map<Integer, String> hospitals = Maps.newHashMap();
-        hospitals.putAll(model.datamodel().codeLists().get(model.datamodel().items().get(FIELD_HOSPITAL1).codeListOID()).values());
-        hospitals.putAll(model.datamodel().codeLists().get(model.datamodel().items().get(FIELD_HOSPITAL2).codeListOID()).values());
-        return ImmutableMap.copyOf(hospitals);
+        this.hospitals = hospitals;
     }
 
     @NotNull
