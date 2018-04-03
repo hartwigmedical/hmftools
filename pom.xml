@@ -43,7 +43,7 @@
 
         <hmf-common.version>1</hmf-common.version>
         <hmf-gene-panel.version>1</hmf-gene-panel.version>
-        <hmf-patient-db.version>2.5</hmf-patient-db.version>
+        <hmf-patient-db.version>2.6</hmf-patient-db.version>
         <hmf-apiclients.version>1.0</hmf-apiclients.version>
         <hmf-variant-annotation.version>1.0</hmf-variant-annotation.version>
         <hmf-strelka-post-process.version>1.2</hmf-strelka-post-process.version>
