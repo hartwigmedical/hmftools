@@ -49,8 +49,6 @@ public class PatientReader {
 
     @NotNull
     public Patient read(@NotNull final EcrfPatient ecrfPatient, @NotNull final List<SampleData> sequencedSamples) throws IOException {
-        LOGGER.info("Reading patient " + ecrfPatient.patientId() + " with samples: " + sequencedSamples);
-
         final BaselineData baselineData = baselineReader.read(ecrfPatient);
         final PreTreatmentData preTreatmentData = preTreatmentReader.read(ecrfPatient);
         final List<BiopsyData> clinicalBiopsies = biopsyReader.read(ecrfPatient, baselineData.cancerType());
