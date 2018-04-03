@@ -23,13 +23,9 @@ import com.hartwig.hmftools.patientdb.matchers.MatchResult;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentMatcher;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class PatientReader {
-    private static final Logger LOGGER = LogManager.getLogger(PatientReader.class);
-
     @NotNull
     private final BaselineReader baselineReader;
     @NotNull
