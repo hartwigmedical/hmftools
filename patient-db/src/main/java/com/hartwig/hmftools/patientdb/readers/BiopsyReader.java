@@ -62,7 +62,8 @@ public class BiopsyReader {
                     final String siteOther = biopsiesGroup.readItemString(FIELD_SITE_OTHER, 0, false);
                     final String finalSite = (site == null || site.trim().toLowerCase().startsWith("other")) ? siteOther : site;
 
-                    final CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(curatedCancerType.type(), finalSite);
+                    final CuratedBiopsyType curatedBiopsyType =
+                            biopsySiteCurator.search(curatedCancerType.type(), curatedCancerType.subType(), finalSite);
                     final BiopsyData biopsy = ImmutableBiopsyData.of(date,
                             biopsyTaken,
                             biopsyEvaluable,
