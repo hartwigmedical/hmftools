@@ -196,7 +196,6 @@ public final class LoadClinicalData {
             List<SampleData> samples = samplesPerPatient.get(ecrfPatient.patientId());
             Patient patient = reader.read(ecrfPatient, samples != null ? samples : Lists.newArrayList());
             patientMap.put(patient.patientIdentifier(), patient);
-
         }
         return patientMap;
     }
