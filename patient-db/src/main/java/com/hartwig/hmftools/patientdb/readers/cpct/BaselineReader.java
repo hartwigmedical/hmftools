@@ -67,16 +67,16 @@ public class BaselineReader {
 
     @NotNull
     BaselineData read(@NotNull final EcrfPatient patient) {
-        final ImmutableBaselineData.Builder patientBuilder = ImmutableBaselineData.builder().hospital(getHospital(patient, hospitals));
+        final ImmutableBaselineData.Builder baselineBuilder = ImmutableBaselineData.builder().hospital(getHospital(patient, hospitals));
 
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BASELINE)) {
-            setDemographyData(patientBuilder, studyEvent);
-            setPrimaryTumorData(patientBuilder, studyEvent);
-            setRegistrationAndBirthData(patientBuilder, studyEvent);
-            setInformedConsent(patientBuilder, studyEvent);
+            setDemographyData(baselineBuilder, studyEvent);
+            setPrimaryTumorData(baselineBuilder, studyEvent);
+            setRegistrationAndBirthData(baselineBuilder, studyEvent);
+            setInformedConsent(baselineBuilder, studyEvent);
         }
-        setDeathData(patientBuilder, patient);
-        return patientBuilder.build();
+        setDeathData(baselineBuilder, patient);
+        return baselineBuilder.build();
     }
 
     @Nullable

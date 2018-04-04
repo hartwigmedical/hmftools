@@ -17,6 +17,9 @@ public abstract class BiopsyTreatmentData implements TreatmentData {
     public abstract int id();
 
     @Nullable
+    public abstract Integer biopsyId();
+
+    @Nullable
     public abstract String treatmentGiven();
 
     @Nullable
@@ -24,9 +27,6 @@ public abstract class BiopsyTreatmentData implements TreatmentData {
 
     @NotNull
     public abstract List<DrugData> drugs();
-
-    @Nullable
-    public abstract Integer biopsyId();
 
     @NotNull
     public abstract FormStatusState formStatus();
