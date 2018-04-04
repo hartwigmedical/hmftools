@@ -25,15 +25,7 @@ public enum FormStatusState {
     }
 
     @NotNull
-    public static FormStatusState best(@NotNull FormStatusState... states) {
-        assert states.length >= 1;
-
-        FormStatusState currentBest = states[0];
-        for (int i = 1; i < states.length; i++) {
-            if (states[i].rank > currentBest.rank) {
-                currentBest = states[i];
-            }
-        }
-        return currentBest;
+    public static FormStatusState best(@NotNull FormStatusState state1, @NotNull FormStatusState state2) {
+        return state1.rank > state2.rank ? state1 : state2;
     }
 }

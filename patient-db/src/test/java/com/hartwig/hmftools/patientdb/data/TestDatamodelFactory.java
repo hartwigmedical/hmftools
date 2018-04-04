@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientdb.data;
 
 import java.time.LocalDate;
 
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -20,28 +20,22 @@ public final class TestDatamodelFactory {
     public static ImmutableBaselineData.Builder baseLineBuilder() {
         return ImmutableBaselineData.builder()
                 .cancerType(ImmutableCuratedCancerType.of(null, null, null))
-                .demographyLocked(false)
-                .demographyStatus(FormStatusState.UNKNOWN)
-                .primaryTumorLocked(false)
-                .primaryTumorStatus(FormStatusState.UNKNOWN)
-                .selectionCriteriaLocked(false)
-                .selectionCriteriaStatus(FormStatusState.UNKNOWN)
-                .eligibilityLocked(false)
-                .eligibilityStatus(FormStatusState.UNKNOWN)
-                .informedConsentLocked(false)
-                .informedConsentStatus(FormStatusState.UNKNOWN)
-                .deathLocked(false)
-                .deathStatus(FormStatusState.UNKNOWN);
+                .demographyStatus(FormStatus.unknown())
+                .primaryTumorStatus(FormStatus.unknown())
+                .selectionCriteriaStatus(FormStatus.unknown())
+                .eligibilityStatus(FormStatus.unknown())
+                .informedConsentStatus(FormStatus.unknown())
+                .deathStatus(FormStatus.unknown());
     }
 
     @NotNull
     public static ImmutableBiopsyData.Builder biopsyBuilder() {
-        return ImmutableBiopsyData.builder().id(1).formStatus(FormStatusState.UNKNOWN).formLocked(false);
+        return ImmutableBiopsyData.builder().id(1).formStatus(FormStatus.unknown());
     }
 
     @NotNull
     public static ImmutableBiopsyTreatmentData.Builder biopsyTreatmentBuilder() {
-        return ImmutableBiopsyTreatmentData.builder().id(1).formStatus(FormStatusState.UNKNOWN).formLocked(false);
+        return ImmutableBiopsyTreatmentData.builder().id(1).formStatus(FormStatus.unknown());
     }
 
     @NotNull
@@ -51,6 +45,6 @@ public final class TestDatamodelFactory {
 
     @NotNull
     public static ImmutableBiopsyTreatmentResponseData.Builder biopsyTreatmentResponseBuilder() {
-        return ImmutableBiopsyTreatmentResponseData.builder().formStatus(FormStatusState.UNKNOWN).formLocked(false);
+        return ImmutableBiopsyTreatmentResponseData.builder().formStatus(FormStatus.unknown());
     }
 }

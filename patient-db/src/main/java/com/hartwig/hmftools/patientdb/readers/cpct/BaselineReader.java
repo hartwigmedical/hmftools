@@ -7,7 +7,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
@@ -94,13 +94,11 @@ public class BaselineReader {
                 hasDemographyForm = true;
                 builder.gender(demographyItemGroup.readItemString(FIELD_SEX));
                 builder.demographyStatus(demographyForm.status());
-                builder.demographyLocked(demographyForm.locked());
             }
         }
 
         if (!hasDemographyForm) {
-            builder.demographyStatus(FormStatusState.UNKNOWN);
-            builder.demographyLocked(false);
+            builder.demographyStatus(FormStatus.unknown());
         }
     }
 
@@ -115,13 +113,11 @@ public class BaselineReader {
                 }
                 builder.cancerType(tumorLocationCurator.search(primaryTumorLocation));
                 builder.primaryTumorStatus(carcinomaForm.status());
-                builder.primaryTumorLocked(carcinomaForm.locked());
             }
         }
 
         if (!hasPrimaryTumorForm) {
-            builder.primaryTumorStatus(FormStatusState.UNKNOWN);
-            builder.primaryTumorLocked(false);
+            builder.primaryTumorStatus(FormStatus.unknown());
         }
     }
 
@@ -141,13 +137,11 @@ public class BaselineReader {
                 birthYear2 = eligibilityItemGroup.readItemString(FIELD_BIRTH_YEAR2);
                 birthYear3 = eligibilityItemGroup.readItemDate(FIELD_BIRTH_YEAR3);
                 builder.eligibilityStatus(eligibilityForm.status());
-                builder.eligibilityLocked(eligibilityForm.locked());
             }
         }
 
         if (!hasEligibilityForm) {
-            builder.eligibilityStatus(FormStatusState.UNKNOWN);
-            builder.eligibilityLocked(false);
+            builder.eligibilityStatus(FormStatus.unknown());
         }
 
         boolean hasSelectionCriteriaForm = false;
@@ -158,14 +152,12 @@ public class BaselineReader {
                 if (registrationDate1 == null) {
                     registrationDate2 = selcritItemGroup.readItemDate(FIELD_REGISTRATION_DATE2);
                     builder.selectionCriteriaStatus(selcritForm.status());
-                    builder.selectionCriteriaLocked(selcritForm.locked());
                 }
             }
         }
 
         if (!hasSelectionCriteriaForm) {
-            builder.selectionCriteriaStatus(FormStatusState.UNKNOWN);
-            builder.selectionCriteriaLocked(false);
+            builder.selectionCriteriaStatus(FormStatus.unknown());
         }
 
         final LocalDate registrationDate = registrationDate2 == null ? registrationDate1 : registrationDate2;
@@ -196,13 +188,11 @@ public class BaselineReader {
                 hasInformedConsentForm = true;
                 builder.informedConsentDate(informedConsentItemGroup.readItemDate(FIELD_INFORMED_CONSENT_DATE));
                 builder.informedConsentStatus(informedConsentForm.status());
-                builder.informedConsentLocked(informedConsentForm.locked());
             }
         }
 
         if (!hasInformedConsentForm) {
-            builder.informedConsentStatus(FormStatusState.UNKNOWN);
-            builder.informedConsentLocked(false);
+            builder.informedConsentStatus(FormStatus.unknown());
         }
     }
 
@@ -214,14 +204,12 @@ public class BaselineReader {
                     hasDeathDateForm = true;
                     builder.deathDate(deathItemGroup.readItemDate(FIELD_DEATH_DATE));
                     builder.deathStatus(deathForm.status());
-                    builder.deathLocked(deathForm.locked());
                 }
             }
         }
 
         if (!hasDeathDateForm) {
-            builder.deathStatus(FormStatusState.UNKNOWN);
-            builder.deathLocked(false);
+            builder.deathStatus(FormStatus.unknown());
         }
     }
 }

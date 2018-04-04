@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
 import com.hartwig.hmftools.patientdb.data.DrugData;
@@ -80,8 +80,7 @@ public class TreatmentValidationTest {
 
     @Test
     public void reportsMissingDrugData() {
-        final List<ValidationFinding> findings =
-                PatientValidator.validateDrugData(PATIENT_IDENTIFIER, DRUG_NULL, FormStatusState.SAVED, true);
+        final List<ValidationFinding> findings = PatientValidator.validateDrugData(PATIENT_IDENTIFIER, DRUG_NULL, FormStatus.unknown());
         assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
@@ -91,8 +90,7 @@ public class TreatmentValidationTest {
 
     @Test
     public void reportsIncorrectDrugData() {
-        final List<ValidationFinding> findings =
-                PatientValidator.validateDrugData(PATIENT_IDENTIFIER, DRUG_WRONG, FormStatusState.SAVED, true);
+        final List<ValidationFinding> findings = PatientValidator.validateDrugData(PATIENT_IDENTIFIER, DRUG_WRONG, FormStatus.unknown());
         assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
@@ -199,9 +197,7 @@ public class TreatmentValidationTest {
                 "",
                 Lists.newArrayList(ImmutableBiopsyTreatmentData.of("Yes",
                         "Yes",
-                        Lists.newArrayList(DRUG_MISSING_CURATED_ENTRY),
-                        FormStatusState.UNKNOWN,
-                        false)));
+                        Lists.newArrayList(DRUG_MISSING_CURATED_ENTRY), FormStatus.unknown())));
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::level).collect(Collectors.toList());
@@ -216,9 +212,7 @@ public class TreatmentValidationTest {
                 "",
                 Lists.newArrayList(ImmutableBiopsyTreatmentData.of("Yes",
                         "Yes",
-                        Lists.newArrayList(DRUG_WITH_PARTIAL_CURATED_ENTRY),
-                        FormStatusState.UNKNOWN,
-                        false)));
+                        Lists.newArrayList(DRUG_WITH_PARTIAL_CURATED_ENTRY), FormStatus.unknown())));
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::level).collect(Collectors.toList());

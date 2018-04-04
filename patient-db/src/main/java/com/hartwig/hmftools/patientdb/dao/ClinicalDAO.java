@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TUMORMA
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
@@ -92,8 +92,7 @@ class ClinicalDAO {
                 .execute();
     }
 
-    private void writeBaselineData(int patientId, @NotNull BaselineData patient,
-            @NotNull PreTreatmentData preTreatmentData) {
+    private void writeBaselineData(int patientId, @NotNull BaselineData patient, @NotNull PreTreatmentData preTreatmentData) {
         context.insertInto(BASELINE,
                 BASELINE.PATIENTID,
                 BASELINE.REGISTRATIONDATE,
@@ -111,30 +110,32 @@ class ClinicalDAO {
                         Utils.toSQLDate(patient.registrationDate()),
                         Utils.toSQLDate(patient.informedConsentDate()),
                         patient.gender(),
-                        patient.hospital(), patient.birthYear(), patient.cancerType().type(), patient.cancerType().subType(),
+                        patient.hospital(),
+                        patient.birthYear(),
+                        patient.cancerType().type(),
+                        patient.cancerType().subType(),
                         Utils.toSQLDate(patient.deathDate()),
                         preTreatmentData.treatmentGiven(),
                         preTreatmentData.radiotherapyGiven(),
                         preTreatmentData.treatmentName())
                 .execute();
 
-        preTreatmentData.drugs()
-                .forEach(drug -> writePreTreatmentDrugData(patientId, drug, preTreatmentData.formStatus(), preTreatmentData.formLocked()));
+        preTreatmentData.drugs().forEach(drug -> writePreTreatmentDrugData(patientId, drug, preTreatmentData.formStatus()));
 
-        writeBaselineFormStatus(patientId, "demography", patient.demographyStatus(), patient.demographyLocked());
-        writeBaselineFormStatus(patientId, "primaryTumor", patient.primaryTumorStatus(), patient.primaryTumorLocked());
-        writeBaselineFormStatus(patientId, "informedConsent", patient.informedConsentStatus(), patient.informedConsentLocked());
-        writeBaselineFormStatus(patientId, "eligibility", patient.eligibilityStatus(), patient.eligibilityLocked());
-        writeBaselineFormStatus(patientId, "selectionCriteria", patient.selectionCriteriaStatus(), patient.selectionCriteriaLocked());
-        writeBaselineFormStatus(patientId, "death", patient.deathStatus(), patient.deathLocked());
-        writeBaselineFormStatus(patientId, "pretreatment", preTreatmentData.formStatus(), preTreatmentData.formLocked());
+        writeBaselineFormStatus(patientId, "demography", patient.demographyStatus());
+        writeBaselineFormStatus(patientId, "primaryTumor", patient.primaryTumorStatus());
+        writeBaselineFormStatus(patientId, "informedConsent", patient.informedConsentStatus());
+        writeBaselineFormStatus(patientId, "eligibility", patient.eligibilityStatus());
+        writeBaselineFormStatus(patientId, "selectionCriteria", patient.selectionCriteriaStatus());
+        writeBaselineFormStatus(patientId, "death", patient.deathStatus());
+        writeBaselineFormStatus(patientId, "pretreatment", preTreatmentData.formStatus());
     }
 
-    private void writeBaselineFormStatus(int patientId, @NotNull String form, @NotNull FormStatusState formStatusState, boolean locked) {
-        writeFormStatus(patientId, BASELINE.getName(), form, formStatusState.stateString(), Boolean.toString(locked));
+    private void writeBaselineFormStatus(int patientId, @NotNull String form, @NotNull FormStatus formStatus) {
+        writeFormStatus(patientId, BASELINE.getName(), form, formStatus);
     }
 
-    private void writePreTreatmentDrugData(int patientId, @NotNull DrugData drug, @NotNull FormStatusState formStatus, boolean formLocked) {
+    private void writePreTreatmentDrugData(int patientId, @NotNull DrugData drug, @NotNull FormStatus formStatus) {
         drug.filteredCuratedTreatments().forEach(curatedTreatment -> {
             final int id = context.insertInto(PRETREATMENTDRUG,
                     PRETREATMENTDRUG.PATIENTID,
@@ -153,7 +154,7 @@ class ClinicalDAO {
                     .fetchOne()
                     .getValue(PRETREATMENTDRUG.ID);
 
-            writeFormStatus(id, PRETREATMENTDRUG.getName(), "pretreatment", formStatus.stateString(), Boolean.toString(formLocked));
+            writeFormStatus(id, PRETREATMENTDRUG.getName(), "pretreatment", formStatus);
         });
     }
 
@@ -178,7 +179,7 @@ class ClinicalDAO {
                         biopsy.location(),
                         Utils.toSQLDate(biopsy.date()))
                 .execute();
-        writeFormStatus(biopsy.id(), BIOPSY.getName(), "biopsy", biopsy.formStatus().stateString(), Boolean.toString(biopsy.formLocked()));
+        writeFormStatus(biopsy.id(), BIOPSY.getName(), "biopsy", biopsy.formStatus());
     }
 
     private void writeTreatmentData(final int patientId, @NotNull final BiopsyTreatmentData treatment) {
@@ -204,19 +205,15 @@ class ClinicalDAO {
                 .execute();
         writeFormStatus(treatment.id(),
                 TREATMENT.getName(),
-                "treatment",
-                treatment.formStatus().stateString(),
-                Boolean.toString(treatment.formLocked()));
+                "treatment", treatment.formStatus());
         treatment.drugs()
                 .forEach(drug -> writeDrugData(patientId,
                         treatment.id(),
-                        drug,
-                        treatment.formStatus().stateString(),
-                        Boolean.toString(treatment.formLocked())));
+                        drug, treatment.formStatus()));
     }
 
-    private void writeDrugData(final int patientId, final int treatmentId, @NotNull final DrugData drug, @NotNull final String formStatus,
-            @NotNull final String formLocked) {
+    private void writeDrugData(final int patientId, final int treatmentId, @NotNull final DrugData drug,
+            @NotNull final FormStatus formStatus) {
         drug.filteredCuratedTreatments().forEach(curatedTreatment -> {
             final int id = context.insertInto(DRUG, DRUG.TREATMENTID, DRUG.PATIENTID, DRUG.STARTDATE, DRUG.ENDDATE, DRUG.NAME, DRUG.TYPE)
                     .values(treatmentId,
@@ -228,7 +225,7 @@ class ClinicalDAO {
                     .returning(DRUG.ID)
                     .fetchOne()
                     .getValue(DRUG.ID);
-            writeFormStatus(id, DRUG.getName(), "treatment", formStatus, formLocked);
+            writeFormStatus(id, DRUG.getName(), "treatment", formStatus);
         });
     }
 
@@ -250,11 +247,7 @@ class ClinicalDAO {
                 .fetchOne()
                 .getValue(TREATMENTRESPONSE.ID);
 
-        writeFormStatus(id,
-                TREATMENTRESPONSE.getName(),
-                "treatmentResponse",
-                treatmentResponse.formStatus().stateString(),
-                Boolean.toString(treatmentResponse.formLocked()));
+        writeFormStatus(id, TREATMENTRESPONSE.getName(), "treatmentResponse", treatmentResponse.formStatus());
     }
 
     private void writeTumorMarkerData(final int patientId, @NotNull final TumorMarkerData tumorMarker) {
@@ -269,20 +262,17 @@ class ClinicalDAO {
                 .fetchOne()
                 .getValue(TUMORMARKER.ID);
 
-        writeFormStatus(id,
-                TUMORMARKER.getName(),
-                "tumorMarker",
-                tumorMarker.formStatus().stateString(),
-                Boolean.toString(tumorMarker.formLocked()));
+        writeFormStatus(id, TUMORMARKER.getName(), "tumorMarker", tumorMarker.formStatus());
     }
 
     private void writeFormStatus(final int id, @NotNull final String tableName, @NotNull final String formName,
-            @NotNull final String formStatus, @NotNull final String formLocked) {
+            @NotNull final FormStatus formStatus) {
         context.insertInto(FORMSMETADATA,
                 FORMSMETADATA.ID,
                 FORMSMETADATA.TABLENAME,
                 FORMSMETADATA.FORM,
-                FORMSMETADATA.STATUS,
-                FORMSMETADATA.LOCKED).values(id, tableName, formName, formStatus, formLocked).execute();
+                FORMSMETADATA.STATUS, FORMSMETADATA.LOCKED)
+                .values(id, tableName, formName, formStatus.state().stateString(), Boolean.toString(formStatus.locked()))
+                .execute();
     }
 }

@@ -66,9 +66,7 @@ public class BiopsyReader {
                             biopsyEvaluable,
                             curatedBiopsyType,
                             finalSite,
-                            location,
-                            form.status(),
-                            form.locked());
+                            location, form.status());
                     // KODU: The ecrf contains many duplicate forms that are impossible to remove. This is because in the past a new biopsy
                     // form needed to be created for every treatment response.
                     if (!isDuplicate(biopsies, biopsy) && !isEmpty(biopsy)) {

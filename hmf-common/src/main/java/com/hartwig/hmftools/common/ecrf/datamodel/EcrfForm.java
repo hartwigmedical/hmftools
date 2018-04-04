@@ -6,7 +6,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -58,7 +57,7 @@ public class EcrfForm {
     }
 
     @NotNull
-    public FormStatusState status() {
-        return formStatus.state();
+    public FormStatus status() {
+        return formStatus;
     }
 }

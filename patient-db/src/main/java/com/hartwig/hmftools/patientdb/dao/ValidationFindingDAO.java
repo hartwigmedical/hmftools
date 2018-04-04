@@ -35,8 +35,8 @@ class ValidationFindingDAO {
                         .values(finding.level(),
                                 finding.patientId(),
                                 finding.ecrfItem(),
-                                finding.formStatus().stateString(),
-                                Boolean.toString(finding.formLocked()),
+                                finding.formStatus().state().stateString(),
+                                Boolean.toString(finding.formStatus().locked()),
                                 finding.message(),
                                 finding.details()))
                 .collect(Collectors.toList())).execute();

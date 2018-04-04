@@ -40,9 +40,7 @@ final class TumorMarkerReader {
                             date,
                             marker,
                             measurement,
-                            unit,
-                            form.status(),
-                            form.locked()));
+                            unit, form.status()));
                 }
             }
         }

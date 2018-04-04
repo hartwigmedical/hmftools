@@ -71,9 +71,7 @@ public final class BiopsyTreatmentResponseReader {
                         responseDate,
                         response,
                         measurementDone,
-                        boneOnlyDisease,
-                        form.status(),
-                        form.locked());
+                        boneOnlyDisease, form.status());
                 if (!isEmpty(responseData)) {
                     treatmentResponses.add(responseData);
                 }

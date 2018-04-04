@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientdb.data;
 
 import java.time.LocalDate;
 
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -34,32 +34,20 @@ public abstract class BaselineData {
     public abstract LocalDate deathDate();
 
     @NotNull
-    public abstract FormStatusState demographyStatus();
-
-    public abstract boolean demographyLocked();
+    public abstract FormStatus demographyStatus();
 
     @NotNull
-    public abstract FormStatusState primaryTumorStatus();
-
-    public abstract boolean primaryTumorLocked();
+    public abstract FormStatus primaryTumorStatus();
 
     @NotNull
-    public abstract FormStatusState informedConsentStatus();
-
-    public abstract boolean informedConsentLocked();
+    public abstract FormStatus informedConsentStatus();
 
     @NotNull
-    public abstract FormStatusState eligibilityStatus();
-
-    public abstract boolean eligibilityLocked();
+    public abstract FormStatus eligibilityStatus();
 
     @NotNull
-    public abstract FormStatusState selectionCriteriaStatus();
-
-    public abstract boolean selectionCriteriaLocked();
+    public abstract FormStatus selectionCriteriaStatus();
 
     @NotNull
-    public abstract FormStatusState deathStatus();
-
-    public abstract boolean deathLocked();
+    public abstract FormStatus deathStatus();
 }

@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.Config;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
@@ -71,7 +71,8 @@ public final class TreatmentMatcher {
     }
 
     @NotNull
-    private static ValidationFinding treatmentMatchFinding(@NotNull String patientId, @NotNull String message, @NotNull String details) {
-        return ValidationFinding.of("match", patientId, FORM_TREATMENT, message, FormStatusState.UNKNOWN, false, details);
+    private static ValidationFinding treatmentMatchFinding(@NotNull String patientIdentifier, @NotNull String message,
+            @NotNull String details) {
+        return ValidationFinding.of("match", patientIdentifier, FORM_TREATMENT, message, FormStatus.unknown(), details);
     }
 }

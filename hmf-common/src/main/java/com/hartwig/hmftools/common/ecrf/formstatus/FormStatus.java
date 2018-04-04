@@ -19,4 +19,17 @@ public abstract class FormStatus {
     public static FormStatus unknown() {
         return ImmutableFormStatus.builder().state(FormStatusState.UNKNOWN).locked(false).build();
     }
+
+    @NotNull
+    public static FormStatus merge(@NotNull FormStatus... states) {
+        assert states.length >= 1;
+
+        FormStatusState bestState = states[0].state();
+        boolean mergedLocked = states[0].locked();
+        for (int i = 1; i < states.length; i++) {
+            bestState = FormStatusState.best(bestState, states[i].state());
+            mergedLocked = mergedLocked && states[i].locked();
+        }
+        return ImmutableFormStatus.builder().state(bestState).locked(mergedLocked).build();
+    }
 }

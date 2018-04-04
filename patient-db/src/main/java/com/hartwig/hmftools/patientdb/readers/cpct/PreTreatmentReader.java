@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
 import com.hartwig.hmftools.patientdb.data.DrugData;
@@ -56,9 +56,7 @@ public class PreTreatmentReader {
                 if (preTreatmentData == null) {
                     preTreatmentData = ImmutablePreTreatmentData.of(treatmentGiven,
                             radiotherapyGiven,
-                            drugs,
-                            treatmentForm.status(),
-                            treatmentForm.locked());
+                            drugs, treatmentForm.status());
                 } else {
                     LOGGER.warn("Multiple pre-therapy forms for found patient: " + patient.patientId());
                 }
@@ -66,8 +64,7 @@ public class PreTreatmentReader {
         }
 
         return preTreatmentData != null
-                ? preTreatmentData
-                : ImmutablePreTreatmentData.of(null, null, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
+                ? preTreatmentData : ImmutablePreTreatmentData.of(null, null, Lists.newArrayList(), FormStatus.unknown());
     }
 
     @NotNull

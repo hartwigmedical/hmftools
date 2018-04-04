@@ -114,7 +114,11 @@ public final class XMLPatientReader extends EcrfReader {
                 }
                 currentItemGroup.addItem(OID, value);
                 fields.add(EcrfDataField.of(patientId, currentStudyEventOID, currentStudyEventIdx, currentFormOID, currentFormIdx,
-                        currentItemGroupOID, currentItemGroupIdx, OID, value, currentForm.status().stateString(),
+                        currentItemGroupOID,
+                        currentItemGroupIdx,
+                        OID,
+                        value,
+                        currentForm.status().state().stateString(),
                         Boolean.toString(currentForm.locked())));
             }
             reader.next();
