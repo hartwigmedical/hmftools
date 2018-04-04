@@ -1,9 +1,10 @@
-package com.hartwig.hmftools.common.ecrf;
+package com.hartwig.hmftools.patientdb.readers;
 
 import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.ecrf.EcrfModel;
 
 import org.jetbrains.annotations.NotNull;
 

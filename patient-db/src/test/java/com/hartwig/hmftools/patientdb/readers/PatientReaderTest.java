@@ -13,7 +13,6 @@ import javax.xml.stream.XMLStreamException;
 
 import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.ecrf.CpctEcrfModelUtil;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
