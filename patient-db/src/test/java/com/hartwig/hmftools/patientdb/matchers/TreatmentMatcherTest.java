@@ -105,11 +105,28 @@ public class TreatmentMatcherTest {
         assertEquals(null, matchedTreatments.get(0).biopsyId());
     }
 
-    // LISC:    ---biopsy(jan)-start(feb)---end (jul) - biopt(sep) - no-treatment
+    // LISC:    ---biopsy(jan)-start(feb)---end (jul) - biopt(sep) --- no treatment
     @Test
     @Ignore
     public void testTwoBiopsyMatchToTreatment() {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_JUL2015, NO_TREATMENT_GIVEN);
+        final List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_JAN, BIOPSY_SEP);
+        final List<BiopsyTreatmentData> matchedTreatments =
+                TreatmentMatcher.matchTreatmentsToBiopsies("patient", biopsies, treatments).values();
+        assertTrue(treatments.size() == matchedTreatments.size());
+        final Integer matchedBiopsyId1 = matchedTreatments.get(0).biopsyId();
+        final Integer matchedBiopsyId2 = matchedTreatments.get(0).biopsyId();
+        assertNotNull(matchedBiopsyId1);
+        assertNotNull(matchedBiopsyId2);
+        assertEquals(biopsies.get(0).id(), matchedBiopsyId1.intValue());
+        assertEquals(biopsies.get(0).id(), matchedBiopsyId2.intValue());
+    }
+
+    // LISC:    ---biopsy(jan)---no treatment - biopt(sep) ---- no treatment
+    @Test
+    @Ignore
+    public void testTwoBiopsyMatchToTwoNoTreatment() {
+        final List<BiopsyTreatmentData> treatments = Lists.newArrayList(NO_TREATMENT_GIVEN, NO_TREATMENT_GIVEN);
         final List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_JAN, BIOPSY_SEP);
         final List<BiopsyTreatmentData> matchedTreatments =
                 TreatmentMatcher.matchTreatmentsToBiopsies("patient", biopsies, treatments).values();
