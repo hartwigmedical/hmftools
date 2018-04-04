@@ -49,13 +49,20 @@ public class EcrfItemGroup {
 
     public boolean isEmpty() {
         return itemsPerOID.values()
-                .stream()
-                .filter(listOfValues -> listOfValues.stream().filter(value -> value != null && !value.trim().isEmpty()).count() > 0)
-                .count() == 0;
+                .stream().noneMatch(listOfValues -> listOfValues.stream().anyMatch(value -> value != null && !value.trim().isEmpty()));
     }
 
     @Nullable
-    private String readItemString(@NotNull final String itemOID, int index) {
+    public String readItemString(@NotNull final String itemOID, int index, boolean verbose) {
+        final String itemString = readItemString(itemOID, index);
+        if (itemString == null && verbose) {
+            LOGGER.warn(patientId + ": empty field: " + itemOID);
+        }
+        return itemString;
+    }
+
+    @Nullable
+    public String readItemString(@NotNull final String itemOID, int index) {
         if (index < itemsPerOID(itemOID).size()) {
             final String ecrfValue = itemsPerOID(itemOID).get(index);
             if (ecrfValue != null) {
@@ -65,22 +72,6 @@ public class EcrfItemGroup {
                     //MIVO: remove whitespace + non-breakable spaces
                     return ecrfValue.trim().replaceAll("\\u00A0", "");
                 }
-            }
-        }
-        return null;
-    }
-
-    @Nullable
-    private LocalDate readItemDate(@NotNull final String itemOID, int index, @NotNull final DateTimeFormatter dateFormatter) {
-        if (index < itemsPerOID(itemOID).size()) {
-            final String ecrfValue = itemsPerOID(itemOID).get(index);
-            if (ecrfValue == null) {
-                return null;
-            }
-            try {
-                return LocalDate.parse(ecrfValue.trim(), dateFormatter);
-            } catch (DateTimeParseException e) {
-                return null;
             }
         }
         return null;
@@ -97,11 +88,18 @@ public class EcrfItemGroup {
     }
 
     @Nullable
-    public String readItemString(@NotNull final String itemOID, int index, boolean verbose) {
-        final String itemString = readItemString(itemOID, index);
-        if (itemString == null && verbose) {
-            LOGGER.warn(patientId + ": empty field: " + itemOID);
+    public LocalDate readItemDate(@NotNull final String itemOID, int index, @NotNull final DateTimeFormatter dateFormatter) {
+        if (index < itemsPerOID(itemOID).size()) {
+            final String ecrfValue = itemsPerOID(itemOID).get(index);
+            if (ecrfValue == null) {
+                return null;
+            }
+            try {
+                return LocalDate.parse(ecrfValue.trim(), dateFormatter);
+            } catch (DateTimeParseException e) {
+                return null;
+            }
         }
-        return itemString;
+        return null;
     }
 }

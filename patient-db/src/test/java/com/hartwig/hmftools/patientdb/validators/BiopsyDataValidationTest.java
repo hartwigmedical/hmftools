@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb.validators;
 
+import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.baseLineBuilder;
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyBuilder;
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyTreatmentBuilder;
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.drugBuilder;
@@ -23,7 +24,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
-import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
 
 import org.junit.Test;
 
@@ -77,7 +77,7 @@ public class BiopsyDataValidationTest {
     @Test
     public void reportsBiopsyBeforeInformedConsent() {
         final List<ValidationFinding> findings = PatientValidator.validateInformedConsentDate(PATIENT_IDENTIFIER,
-                ImmutableBaselineData.builder().informedConsentDate(MAR2016).build(),
+                baseLineBuilder().informedConsentDate(MAR2016).build(),
                 Lists.newArrayList(BIOPSY_FEB1));
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));

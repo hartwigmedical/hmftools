@@ -28,77 +28,38 @@ public abstract class BaselineData {
     public abstract Integer birthYear();
 
     @NotNull
-    @Value.Default
-    public CuratedCancerType cancerType() {
-        return ImmutableCuratedCancerType.of(null, null, null);
-    }
+    public abstract CuratedCancerType cancerType();
 
     @Nullable
     public abstract LocalDate deathDate();
 
     @NotNull
-    @Value.Default
-    public FormStatusState demographyStatus() {
-        return FormStatusState.UNKNOWN;
-    }
+    public abstract FormStatusState demographyStatus();
 
-    @Value.Default
-    public boolean demographyLocked() {
-        return false;
-    }
+    public abstract boolean demographyLocked();
 
     @NotNull
-    @Value.Default
-    public FormStatusState primaryTumorStatus() {
-        return FormStatusState.UNKNOWN;
-    }
+    public abstract FormStatusState primaryTumorStatus();
 
-    @Value.Default
-    public boolean primaryTumorLocked() {
-        return false;
-    }
+    public abstract boolean primaryTumorLocked();
 
     @NotNull
-    @Value.Default
-    public FormStatusState informedConsentStatus() {
-        return FormStatusState.UNKNOWN;
-    }
+    public abstract FormStatusState informedConsentStatus();
 
-    @Value.Default
-    public boolean informedConsentLocked() {
-        return false;
-    }
+    public abstract boolean informedConsentLocked();
 
     @NotNull
-    @Value.Default
-    public FormStatusState eligibilityStatus() {
-        return FormStatusState.UNKNOWN;
-    }
+    public abstract FormStatusState eligibilityStatus();
 
-    @Value.Default
-    public boolean eligibilityLocked() {
-        return false;
-    }
+    public abstract boolean eligibilityLocked();
 
     @NotNull
-    @Value.Default
-    public FormStatusState selectionCriteriaStatus() {
-        return FormStatusState.UNKNOWN;
-    }
+    public abstract FormStatusState selectionCriteriaStatus();
 
-    @Value.Default
-    public boolean selectionCriteriaLocked() {
-        return false;
-    }
+    public abstract boolean selectionCriteriaLocked();
 
     @NotNull
-    @Value.Default
-    public FormStatusState deathStatus() {
-        return FormStatusState.UNKNOWN;
-    }
+    public abstract FormStatusState deathStatus();
 
-    @Value.Default
-    public boolean deathLocked() {
-        return false;
-    }
+    public abstract boolean deathLocked();
 }

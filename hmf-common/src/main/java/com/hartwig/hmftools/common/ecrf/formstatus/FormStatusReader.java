@@ -46,7 +46,7 @@ public final class FormStatusReader {
 
     @NotNull
     public static FormStatusModel buildModelFromCsv(@NotNull final String pathToCsv) throws IOException {
-        final Map<FormStatusKey, FormStatusData> formStatuses = Maps.newHashMap();
+        final Map<FormStatusKey, FormStatus> formStatuses = Maps.newHashMap();
         final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         // KODU: No need to read the header line
         lines.remove(0);
@@ -56,7 +56,7 @@ public final class FormStatusReader {
                 final FormStatusKey formKey = new ImmutableFormStatusKey(removeQuotes(parts[PATIENT_ID_COLUMN].replaceAll("-", "")),
                         removeParentheses(removeQuotes(parts[FORM_NAME_COLUMN])), removeQuotes(parts[FORM_SEQ_NUM_COLUMN]),
                         removeParentheses(removeQuotes(parts[STUDY_EVENT_NAME_COLUMN])), removeQuotes(parts[STUDY_EVENT_SEQ_NUM_COLUMN]));
-                final FormStatusData formStatus = new ImmutableFormStatusData(interpretState(removeQuotes(parts[DATA_STATUS_COLUMN])),
+                final FormStatus formStatus = new ImmutableFormStatus(interpretState(removeQuotes(parts[DATA_STATUS_COLUMN])),
                         interpretLocked(removeQuotes(parts[LOCKED_COLUMN])));
                 formStatuses.put(formKey, formStatus);
             } else if (parts.length > 0) {

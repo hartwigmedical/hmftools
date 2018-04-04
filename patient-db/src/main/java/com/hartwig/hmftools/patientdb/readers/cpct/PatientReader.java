@@ -25,7 +25,7 @@ import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CpctPatientReader {
+public class PatientReader {
     @NotNull
     private final BaselineReader baselineReader;
     @NotNull
@@ -35,7 +35,7 @@ public class CpctPatientReader {
     @NotNull
     private final BiopsyTreatmentReader biopsyTreatmentReader;
 
-    public CpctPatientReader(@NotNull TumorLocationCurator tumorLocationCurator, @NotNull Map<Integer, String> hospitals,
+    public PatientReader(@NotNull TumorLocationCurator tumorLocationCurator, @NotNull Map<Integer, String> hospitals,
             @NotNull BiopsySiteCurator biopsySiteCurator, @NotNull TreatmentCurator treatmentCurator) {
         this.baselineReader = new BaselineReader(tumorLocationCurator, hospitals);
         this.preTreatmentReader = new PreTreatmentReader(treatmentCurator);

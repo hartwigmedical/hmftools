@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 
 import org.jetbrains.annotations.NotNull;
@@ -36,12 +36,12 @@ public class BiopsyTreatmentResponseReaderTest {
         response1.addItem(BiopsyTreatmentResponseReader.FIELD_MEASUREMENT_DONE, "Yes");
         response1.addItem(BiopsyTreatmentResponseReader.FIELD_RESPONSE, "PR");
 
-        EcrfForm form1 = new EcrfForm(patient, FormStatusState.SAVED, true);
+        EcrfForm form1 = new EcrfForm(patient, FormStatus.unknown());
         form1.addItemGroup(BiopsyTreatmentResponseReader.ITEMGROUP_TUMOR_MEASUREMENT, response1);
 
         EcrfItemGroup response2 = new EcrfItemGroup(patient);
 
-        EcrfForm form2 = new EcrfForm(patient, FormStatusState.SAVED, true);
+        EcrfForm form2 = new EcrfForm(patient, FormStatus.unknown());
         form1.addItemGroup(BiopsyTreatmentResponseReader.ITEMGROUP_TUMOR_MEASUREMENT, response2);
 
         EcrfStudyEvent studyEvent = new EcrfStudyEvent(patient);

@@ -15,10 +15,9 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfResolveException;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusData;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusKey;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusKey;
 
 import org.apache.logging.log4j.LogManager;
@@ -79,7 +78,7 @@ public final class XMLPatientReader extends EcrfReader {
         String currentItemGroupOID = Strings.EMPTY;
         String currentItemGroupIdx = Strings.EMPTY;
         EcrfStudyEvent currentStudy = new EcrfStudyEvent(patientId);
-        EcrfForm currentForm = new EcrfForm(patientId, FormStatusState.UNKNOWN, false);
+        EcrfForm currentForm = new EcrfForm(patientId, FormStatus.unknown());
         EcrfItemGroup currentItemGroup = new EcrfItemGroup(patientId);
         while (reader.hasNext() && !isPatientEnd(reader)) {
             if (isStudyEventStart(reader)) {
@@ -97,11 +96,11 @@ public final class XMLPatientReader extends EcrfReader {
                 final String studyEventName = datamodel.studyEvents().get(currentStudyEventOID).name();
                 final FormStatusKey formKey =
                         new ImmutableFormStatusKey(patientId, formName, currentFormIdx, studyEventName, currentStudyEventIdx);
-                final FormStatusData formStatus = formStatusModel.formStatuses().get(formKey);
+                final FormStatus formStatus = formStatusModel.formStatuses().get(formKey);
                 if (formStatus != null) {
-                    currentForm = new EcrfForm(patientId, formStatus.state(), formStatus.locked());
+                    currentForm = new EcrfForm(patientId, formStatus);
                 } else {
-                    currentForm = new EcrfForm(patientId, FormStatusState.UNKNOWN, false);
+                    currentForm = new EcrfForm(patientId, FormStatus.unknown());
                 }
                 currentStudy.addForm(currentFormOID, currentForm);
             } else if (isItemGroupStart(reader)) {

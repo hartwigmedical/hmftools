@@ -36,6 +36,11 @@ public class EcrfStudyEvent {
     }
 
     @NotNull
+    public List<EcrfForm> nonEmptyFormsPerOID(@NotNull final String formOID) {
+        return nonEmptyFormsPerOID(formOID, false);
+    }
+
+    @NotNull
     public List<EcrfForm> nonEmptyFormsPerOID(@NotNull final String formOID, boolean verbose) {
         final List<EcrfForm> nonEmptyForms = Lists.newArrayList();
         if (formsPerOID.get(formOID) == null) {

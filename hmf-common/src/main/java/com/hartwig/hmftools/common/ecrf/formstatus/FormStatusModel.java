@@ -11,6 +11,6 @@ import org.jetbrains.annotations.Nullable;
              allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class FormStatusModel {
-    public abstract Map<FormStatusKey, FormStatusData> formStatuses();
+    public abstract Map<FormStatusKey, FormStatus> formStatuses();
 
 }

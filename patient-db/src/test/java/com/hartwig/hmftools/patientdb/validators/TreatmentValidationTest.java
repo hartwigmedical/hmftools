@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb.validators;
 
+import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.baseLineBuilder;
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyTreatmentBuilder;
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.drugBuilder;
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_DEATH_DATE;
@@ -25,7 +26,6 @@ import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
 import com.hartwig.hmftools.patientdb.data.DrugData;
-import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTreatment;
 import com.hartwig.hmftools.patientdb.data.ImmutableDrugData;
@@ -228,7 +228,7 @@ public class TreatmentValidationTest {
     @Test
     public void doesNotReportCorrectDeathTimeline() {
         final List<ValidationFinding> findings = PatientValidator.validateDeathDate(PATIENT_IDENTIFIER,
-                ImmutableBaselineData.builder().deathDate(MAR2015).build(),
+                baseLineBuilder().deathDate(MAR2015).build(),
                 Lists.newArrayList(TREATMENT_JAN_JAN, TREATMENT_JAN_FEB));
         assertEquals(0, findings.size());
     }
@@ -236,7 +236,7 @@ public class TreatmentValidationTest {
     @Test
     public void reportsDeathDateBeforeEndOfTreatment() {
         final List<ValidationFinding> findings = PatientValidator.validateDeathDate(PATIENT_IDENTIFIER,
-                ImmutableBaselineData.builder().deathDate(MAR2015).build(),
+                baseLineBuilder().deathDate(MAR2015).build(),
                 Lists.newArrayList(TREATMENT_JAN_ONGOING, TREATMENT_JAN_FEB));
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));

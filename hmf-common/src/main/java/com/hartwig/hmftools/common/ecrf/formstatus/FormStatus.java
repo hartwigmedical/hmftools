@@ -8,10 +8,15 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(of = "new",
              allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class FormStatusData {
+public abstract class FormStatus {
 
     @NotNull
     public abstract FormStatusState state();
 
     public abstract boolean locked();
+
+    @NotNull
+    public static FormStatus unknown() {
+        return ImmutableFormStatus.builder().state(FormStatusState.UNKNOWN).locked(false).build();
+    }
 }

@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 
 import org.apache.logging.log4j.LogManager;
@@ -16,19 +17,15 @@ public class EcrfForm {
 
     @NotNull
     private final String patientId;
-
-    private final boolean locked;
-
     @NotNull
-    private final FormStatusState status;
+    private final FormStatus formStatus;
 
     @NotNull
     private final Map<String, List<EcrfItemGroup>> itemGroupsPerOID;
 
-    public EcrfForm(@NotNull final String patientId, @NotNull final FormStatusState status, final boolean locked) {
+    public EcrfForm(@NotNull final String patientId, @NotNull final FormStatus formStatus) {
         this.patientId = patientId;
-        this.status = status;
-        this.locked = locked;
+        this.formStatus = formStatus;
         this.itemGroupsPerOID = Maps.newHashMap();
     }
 
@@ -45,10 +42,12 @@ public class EcrfForm {
     }
 
     public boolean isEmpty() {
-        return itemGroupsPerOID.values()
-                .stream()
-                .filter(itemGroups -> itemGroups.stream().filter(group -> !group.isEmpty()).count() > 0)
-                .count() == 0;
+        return itemGroupsPerOID.values().stream().noneMatch(itemGroups -> itemGroups.stream().anyMatch(group -> !group.isEmpty()));
+    }
+
+    @NotNull
+    public List<EcrfItemGroup> nonEmptyItemGroupsPerOID(@NotNull final String itemGroupOID) {
+        return nonEmptyItemGroupsPerOID(itemGroupOID, false);
     }
 
     @NotNull
@@ -70,11 +69,11 @@ public class EcrfForm {
     }
 
     public boolean locked() {
-        return locked;
+        return formStatus.locked();
     }
 
     @NotNull
     public FormStatusState status() {
-        return status;
+        return formStatus.state();
     }
 }

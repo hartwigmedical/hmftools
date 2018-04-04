@@ -21,7 +21,7 @@ public class FormStatusReaderTest {
     public void canLoadFromCsv() throws IOException {
         final FormStatusModel formStatusModel = FormStatusReader.buildModelFromCsv(TEST_FILE);
 
-        final Map<FormStatusKey, FormStatusData> formStatuses = formStatusModel.formStatuses();
+        final Map<FormStatusKey, FormStatus> formStatuses = formStatusModel.formStatuses();
         assertEquals(3, formStatuses.size());
         final FormStatusKey key1 = new ImmutableFormStatusKey("CPCT02000001", "Anti Coagulants", "0", "Anti Coagulants", "0");
         final FormStatusKey key2 =

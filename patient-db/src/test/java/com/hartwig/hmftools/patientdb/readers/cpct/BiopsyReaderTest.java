@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.curators.TestCuratorFactory;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedCancerType;
@@ -60,13 +60,13 @@ public class BiopsyReaderTest {
         biopsies1.addItem(BiopsyReader.FIELD_SITE_OTHER, "body");
         biopsies1.addItem(BiopsyReader.FIELD_LOCATION, "liver");
 
-        EcrfForm form1 = new EcrfForm(patient, FormStatusState.SAVED, true);
+        EcrfForm form1 = new EcrfForm(patient, FormStatus.unknown());
         form1.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSY, biopsy);
         form1.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSIES, biopsies1);
 
         // KODU: Create empty 2nd biopsy
         EcrfItemGroup biopsies2 = new EcrfItemGroup(patient);
-        EcrfForm form2 = new EcrfForm(patient, FormStatusState.SAVED, true);
+        EcrfForm form2 = new EcrfForm(patient, FormStatus.unknown());
         form2.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSY, biopsy);
         form2.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSIES, biopsies2);
 
@@ -77,7 +77,7 @@ public class BiopsyReaderTest {
         biopsies3.addItem(BiopsyReader.FIELD_SITE_OTHER, "body");
         biopsies3.addItem(BiopsyReader.FIELD_LOCATION, "liver");
 
-        EcrfForm form3 = new EcrfForm(patient, FormStatusState.SAVED, true);
+        EcrfForm form3 = new EcrfForm(patient, FormStatus.unknown());
         form3.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSY, biopsy);
         form3.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSIES, biopsies3);
 

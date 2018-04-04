@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb.validators;
 
+import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.baseLineBuilder;
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_BIRTH_YEAR1;
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_BIRTH_YEAR2;
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_BIRTH_YEAR3;
@@ -22,7 +23,6 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
-import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedCancerType;
 import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
@@ -33,12 +33,10 @@ public class BaselineDataValidationTest {
     private static final String PATIENT_IDENTIFIER = "CPCT01020000";
     private static final String HOSPITAL = "Test Hospital";
 
-    private static final BaselineData EMPTY_BASELINE = ImmutableBaselineData.builder().build();
+    private static final BaselineData EMPTY_BASELINE = baseLineBuilder().build();
 
-    private static final BaselineData BASELINE_DATA_MISSING_LOCATION_MAPPING = ImmutableBaselineData.builder()
-            .hospital(HOSPITAL)
-            .cancerType(ImmutableCuratedCancerType.of(null, null, "some_location"))
-            .build();
+    private static final BaselineData BASELINE_DATA_MISSING_LOCATION_MAPPING =
+            baseLineBuilder().hospital(HOSPITAL).cancerType(ImmutableCuratedCancerType.of(null, null, "some_location")).build();
 
     @Test
     public void reportsMissingFields() {

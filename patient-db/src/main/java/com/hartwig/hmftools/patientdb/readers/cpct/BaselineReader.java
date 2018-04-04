@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
@@ -90,26 +91,40 @@ public class BaselineReader {
     }
 
     private void setDemographyData(@NotNull final ImmutableBaselineData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
-        for (final EcrfForm demographyForm : studyEvent.nonEmptyFormsPerOID(FORM_DEMOGRAPHY, false)) {
-            for (final EcrfItemGroup demographyItemGroup : demographyForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DEMOGRAPHY, false)) {
+        boolean hasDemographyForm = false;
+        for (final EcrfForm demographyForm : studyEvent.nonEmptyFormsPerOID(FORM_DEMOGRAPHY)) {
+            for (final EcrfItemGroup demographyItemGroup : demographyForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DEMOGRAPHY)) {
+                hasDemographyForm = true;
                 builder.gender(demographyItemGroup.readItemString(FIELD_SEX, 0, false));
                 builder.demographyStatus(demographyForm.status());
                 builder.demographyLocked(demographyForm.locked());
             }
         }
+
+        if (!hasDemographyForm) {
+            builder.demographyStatus(FormStatusState.UNKNOWN);
+            builder.demographyLocked(false);
+        }
     }
 
     private void setPrimaryTumorData(@NotNull final ImmutableBaselineData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
-        for (final EcrfForm carcinomaForm : studyEvent.nonEmptyFormsPerOID(FORM_CARCINOMA, false)) {
-            for (final EcrfItemGroup carcinomaItemGroup : carcinomaForm.nonEmptyItemGroupsPerOID(ITEMGROUP_CARCINOMA, false)) {
-                String primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION, 0, false);
+        boolean hasPrimaryTumorForm = false;
+        for (final EcrfForm carcinomaForm : studyEvent.nonEmptyFormsPerOID(FORM_CARCINOMA)) {
+            for (final EcrfItemGroup carcinomaItemGroup : carcinomaForm.nonEmptyItemGroupsPerOID(ITEMGROUP_CARCINOMA)) {
+                hasPrimaryTumorForm = true;
+                String primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION, 0);
                 if (primaryTumorLocation != null && primaryTumorLocation.trim().toLowerCase().startsWith("other")) {
-                    primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER, 0, false);
+                    primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER, 0);
                 }
                 builder.cancerType(tumorLocationCurator.search(primaryTumorLocation));
                 builder.primaryTumorStatus(carcinomaForm.status());
                 builder.primaryTumorLocked(carcinomaForm.locked());
             }
+        }
+
+        if (!hasPrimaryTumorForm) {
+            builder.primaryTumorStatus(FormStatusState.UNKNOWN);
+            builder.primaryTumorLocked(false);
         }
     }
 
@@ -120,25 +135,42 @@ public class BaselineReader {
         String birthYear1 = null;
         String birthYear2 = null;
         LocalDate birthYear3 = null;
-        for (final EcrfForm eligibilityForm : studyEvent.nonEmptyFormsPerOID(FORM_ELIGIBILITY, false)) {
-            for (final EcrfItemGroup eligibilityItemGroup : eligibilityForm.nonEmptyItemGroupsPerOID(ITEMGROUP_ELIGIBILITY, false)) {
-                registrationDate1 = eligibilityItemGroup.readItemDate(FIELD_REGISTRATION_DATE1, 0, DATE_FORMATTER, false);
-                birthYear2 = eligibilityItemGroup.readItemString(FIELD_BIRTH_YEAR2, 0, false);
-                birthYear3 = eligibilityItemGroup.readItemDate(FIELD_BIRTH_YEAR3, 0, DATE_FORMATTER, false);
+
+        boolean hasEligibilityForm = false;
+        for (final EcrfForm eligibilityForm : studyEvent.nonEmptyFormsPerOID(FORM_ELIGIBILITY)) {
+            for (final EcrfItemGroup eligibilityItemGroup : eligibilityForm.nonEmptyItemGroupsPerOID(ITEMGROUP_ELIGIBILITY)) {
+                hasEligibilityForm = true;
+                registrationDate1 = eligibilityItemGroup.readItemDate(FIELD_REGISTRATION_DATE1, 0, DATE_FORMATTER);
+                birthYear2 = eligibilityItemGroup.readItemString(FIELD_BIRTH_YEAR2, 0);
+                birthYear3 = eligibilityItemGroup.readItemDate(FIELD_BIRTH_YEAR3, 0, DATE_FORMATTER);
                 builder.eligibilityStatus(eligibilityForm.status());
                 builder.eligibilityLocked(eligibilityForm.locked());
             }
         }
-        for (final EcrfForm selcritForm : studyEvent.nonEmptyFormsPerOID(FORM_SELCRIT, false)) {
-            for (final EcrfItemGroup selcritItemGroup : selcritForm.nonEmptyItemGroupsPerOID(ITEMGROUP_SELCRIT, false)) {
-                birthYear1 = selcritItemGroup.readItemString(FIELD_BIRTH_YEAR1, 0, false);
+
+        if (!hasEligibilityForm) {
+            builder.eligibilityStatus(FormStatusState.UNKNOWN);
+            builder.eligibilityLocked(false);
+        }
+
+        boolean hasSelectionCriteriaForm = false;
+        for (final EcrfForm selcritForm : studyEvent.nonEmptyFormsPerOID(FORM_SELCRIT)) {
+            for (final EcrfItemGroup selcritItemGroup : selcritForm.nonEmptyItemGroupsPerOID(ITEMGROUP_SELCRIT)) {
+                hasSelectionCriteriaForm = true;
+                birthYear1 = selcritItemGroup.readItemString(FIELD_BIRTH_YEAR1, 0);
                 if (registrationDate1 == null) {
-                    registrationDate2 = selcritItemGroup.readItemDate(FIELD_REGISTRATION_DATE2, 0, DATE_FORMATTER, false);
+                    registrationDate2 = selcritItemGroup.readItemDate(FIELD_REGISTRATION_DATE2, 0, DATE_FORMATTER);
                     builder.selectionCriteriaStatus(selcritForm.status());
                     builder.selectionCriteriaLocked(selcritForm.locked());
                 }
             }
         }
+
+        if (!hasSelectionCriteriaForm) {
+            builder.selectionCriteriaStatus(FormStatusState.UNKNOWN);
+            builder.selectionCriteriaLocked(false);
+        }
+
         final LocalDate registrationDate = registrationDate2 == null ? registrationDate1 : registrationDate2;
         final Integer birthYear = determineBirthYear(birthYear1, birthYear2, birthYear3);
         builder.registrationDate(registrationDate);
@@ -161,25 +193,38 @@ public class BaselineReader {
     }
 
     private void setInformedConsent(@NotNull final ImmutableBaselineData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
-        for (final EcrfForm informedConsentForm : studyEvent.nonEmptyFormsPerOID(FORM_INFORMED_CONSENT, false)) {
-            for (final EcrfItemGroup informedConsentItemGroup : informedConsentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_INFORMED_CONSENT,
-                    false)) {
-                builder.informedConsentDate(informedConsentItemGroup.readItemDate(FIELD_INFORMED_CONSENT_DATE, 0, DATE_FORMATTER, false));
+        boolean hasInformedConsentForm = false;
+        for (final EcrfForm informedConsentForm : studyEvent.nonEmptyFormsPerOID(FORM_INFORMED_CONSENT)) {
+            for (final EcrfItemGroup informedConsentItemGroup : informedConsentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_INFORMED_CONSENT)) {
+                hasInformedConsentForm = true;
+                builder.informedConsentDate(informedConsentItemGroup.readItemDate(FIELD_INFORMED_CONSENT_DATE, 0, DATE_FORMATTER));
                 builder.informedConsentStatus(informedConsentForm.status());
                 builder.informedConsentLocked(informedConsentForm.locked());
             }
         }
+
+        if (!hasInformedConsentForm) {
+            builder.informedConsentStatus(FormStatusState.UNKNOWN);
+            builder.informedConsentLocked(false);
+        }
     }
 
     private static void setDeathData(@NotNull final ImmutableBaselineData.Builder builder, @NotNull final EcrfPatient patient) {
+        boolean hasDeathDateForm = false;
         for (final EcrfStudyEvent endStudyEvent : patient.studyEventsPerOID(STUDY_ENDSTUDY)) {
-            for (final EcrfForm deathForm : endStudyEvent.nonEmptyFormsPerOID(FORM_DEATH, false)) {
-                for (final EcrfItemGroup deathItemGroup : deathForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DEATH, false)) {
-                    builder.deathDate(deathItemGroup.readItemDate(FIELD_DEATH_DATE, 0, DATE_FORMATTER, false));
+            for (final EcrfForm deathForm : endStudyEvent.nonEmptyFormsPerOID(FORM_DEATH)) {
+                for (final EcrfItemGroup deathItemGroup : deathForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DEATH)) {
+                    hasDeathDateForm = true;
+                    builder.deathDate(deathItemGroup.readItemDate(FIELD_DEATH_DATE, 0, DATE_FORMATTER));
                     builder.deathStatus(deathForm.status());
                     builder.deathLocked(deathForm.locked());
                 }
             }
+        }
+
+        if (!hasDeathDateForm) {
+            builder.deathStatus(FormStatusState.UNKNOWN);
+            builder.deathLocked(false);
         }
     }
 }

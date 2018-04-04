@@ -17,6 +17,24 @@ public final class TestDatamodelFactory {
     }
 
     @NotNull
+    public static ImmutableBaselineData.Builder baseLineBuilder() {
+        return ImmutableBaselineData.builder()
+                .cancerType(ImmutableCuratedCancerType.of(null, null, null))
+                .demographyLocked(false)
+                .demographyStatus(FormStatusState.UNKNOWN)
+                .primaryTumorLocked(false)
+                .primaryTumorStatus(FormStatusState.UNKNOWN)
+                .selectionCriteriaLocked(false)
+                .selectionCriteriaStatus(FormStatusState.UNKNOWN)
+                .eligibilityLocked(false)
+                .eligibilityStatus(FormStatusState.UNKNOWN)
+                .informedConsentLocked(false)
+                .informedConsentStatus(FormStatusState.UNKNOWN)
+                .deathLocked(false)
+                .deathStatus(FormStatusState.UNKNOWN);
+    }
+
+    @NotNull
     public static ImmutableBiopsyData.Builder biopsyBuilder() {
         return ImmutableBiopsyData.builder().id(1).formStatus(FormStatusState.UNKNOWN).formLocked(false);
     }

@@ -29,7 +29,7 @@ import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.readers.LimsSampleReader;
 import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
-import com.hartwig.hmftools.patientdb.readers.cpct.CpctPatientReader;
+import com.hartwig.hmftools.patientdb.readers.cpct.PatientReader;
 import com.hartwig.hmftools.patientdb.readers.cpct.Util;
 import com.hartwig.hmftools.patientdb.validators.CurationValidator;
 import com.hartwig.hmftools.patientdb.validators.PatientValidator;
@@ -146,8 +146,8 @@ public final class LoadClinicalData {
             TumorLocationCurator tumorLocationCurator = TumorLocationCurator.fromProductionResource();
             BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource();
             TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource();
-            CpctPatientReader patientReader =
-                    new CpctPatientReader(tumorLocationCurator, Util.extractHospitalMap(ecrfModel), biopsySiteCurator, treatmentCurator);
+            PatientReader patientReader =
+                    new PatientReader(tumorLocationCurator, Util.extractHospitalMap(ecrfModel), biopsySiteCurator, treatmentCurator);
 
             final Map<String, Patient> readPatients = readEcrfPatients(patientReader, ecrfModel.patients(), samplesPerPatient);
             LOGGER.info(String.format("Finished curation of %s patients from ecrf", readPatients.size()));
@@ -195,7 +195,7 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static Map<String, Patient> readEcrfPatients(@NotNull final CpctPatientReader reader,
+    private static Map<String, Patient> readEcrfPatients(@NotNull final PatientReader reader,
             @NotNull final Iterable<EcrfPatient> patients,
             @NotNull final Map<String, List<SampleData>> samplesPerPatient) throws IOException {
         final Map<String, Patient> patientMap = Maps.newHashMap();
