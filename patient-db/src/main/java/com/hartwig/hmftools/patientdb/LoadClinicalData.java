@@ -111,6 +111,9 @@ public final class LoadClinicalData {
                     cmd.getOptionValue(CSV_OUT_DIR),
                     Optional.ofNullable(cmd.getOptionValue(CANCER_TYPES_LINK)),
                     Optional.ofNullable(cmd.getOptionValue(PORTAL_DATA_LINK)));
+        } else {
+            final HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("patient-db", options);
         }
     }
 
@@ -139,13 +142,7 @@ public final class LoadClinicalData {
             }
         }
 
-        boolean validInput = allParamsPresent && validRunDirectory;
-        if (!validInput) {
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("patient-db", options);
-        }
-
-        return validInput;
+        return allParamsPresent && validRunDirectory;
     }
 
     private static void writeClinicalData(@NotNull final DatabaseAccess dbAccess, @NotNull EcrfModel cpctEcrfModel,
