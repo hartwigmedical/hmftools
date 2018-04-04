@@ -25,7 +25,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class LimsFactory {
 
-    private static final Logger LOGGER = LogManager.getLogger(Lims.class);
+    private static final Logger LOGGER = LogManager.getLogger(LimsFactory.class);
 
     private LimsFactory() {
     }
