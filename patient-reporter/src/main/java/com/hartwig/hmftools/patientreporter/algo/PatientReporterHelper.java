@@ -87,7 +87,7 @@ final class PatientReporterHelper {
             return Strings.EMPTY;
         }
         final List<PatientCancerTypes> matchingIdCancerTypes = patientsCancerTypes.stream()
-                .filter(patientCancerTypes -> patientCancerTypes.cpctId().equals(patientId))
+                .filter(patientCancerTypes -> patientCancerTypes.patientIdentifier().equals(patientId))
                 .collect(Collectors.toList());
 
         // KODU: We should never have more than one cancer type for a single patient.

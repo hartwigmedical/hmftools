@@ -20,14 +20,14 @@ import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class CpctEcrfModelTest {
+public class EcrfModelTest {
 
     private static final String BASE_RESOURCE_DIR = Resources.getResource("ecrf").getPath();
     private static final String TEST_ECRF = BASE_RESOURCE_DIR + File.separator + "example" + File.separator + "cpct_ecrf.xml";
 
     @Test
     public void loadDataFromRealXML() throws IOException, XMLStreamException {
-        final CpctEcrfModel model = CpctEcrfModel.loadFromXML(TEST_ECRF, new ImmutableFormStatusModel(Maps.newHashMap()));
+        final EcrfModel model = EcrfModel.loadFromXMLWithFormStates(TEST_ECRF, new ImmutableFormStatusModel(Maps.newHashMap()));
 
         assertTrue(hasField(model, "BASELINE.CARCINOMA.CARCINOMA.PTUMLOC"));
         assertFalse(hasField(model, "Does Not Exist"));
@@ -44,11 +44,11 @@ public class CpctEcrfModelTest {
         assertFalse(hasPatient(model, "Does Not Exist"));
     }
 
-    private static boolean hasField(@NotNull final CpctEcrfModel model, @NotNull final String fieldId) {
+    private static boolean hasField(@NotNull final EcrfModel model, @NotNull final String fieldId) {
         return Lists.newArrayList(model.findFieldsById(Lists.newArrayList(fieldId))).size() > 0;
     }
 
-    private static boolean hasPatient(@NotNull final CpctEcrfModel model, @NotNull final String patientId) {
+    private static boolean hasPatient(@NotNull final EcrfModel model, @NotNull final String patientId) {
         final List<EcrfPatient> patients = Lists.newArrayList(model.findPatientsById(Lists.newArrayList(patientId)));
         return !patients.get(0).fields().isEmpty();
     }

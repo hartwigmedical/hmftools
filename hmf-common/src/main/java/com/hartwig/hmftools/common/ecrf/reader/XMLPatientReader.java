@@ -68,7 +68,7 @@ public final class XMLPatientReader extends EcrfReader {
     @NotNull
     private static EcrfPatient readPatient(@NotNull final XMLStreamReader reader, @NotNull final XMLEcrfDatamodel datamodel,
             @NotNull final FormStatusModel formStatusModel) throws XMLStreamException {
-        final String patientId = toCPCTPatientId(reader.getAttributeValue("", PATIENT_ID_ATTRIBUTE));
+        final String patientId = reformatPatientId(reader.getAttributeValue("", PATIENT_ID_ATTRIBUTE));
         final Map<String, List<EcrfStudyEvent>> studyEventsPerOID = Maps.newHashMap();
         final List<EcrfDataField> fields = Lists.newArrayList();
 
@@ -128,7 +128,7 @@ public final class XMLPatientReader extends EcrfReader {
     }
 
     @NotNull
-    private static String toCPCTPatientId(@NotNull final String ecrfPatientId) {
+    private static String reformatPatientId(@NotNull final String ecrfPatientId) {
         return ecrfPatientId.replaceAll("-", "");
     }
 

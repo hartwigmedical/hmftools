@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
+import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.gene.CanonicalTranscript;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
@@ -184,7 +184,7 @@ public class DatabaseAccess {
         clinicalDAO.writeSampleClinicalData(patientIdentifier, samples);
     }
 
-    public void writeDrupEcrf(@NotNull final CpctEcrfModel model, @NotNull final Set<String> sequencedPatients) {
+    public void writeDrupEcrf(@NotNull final EcrfModel model, @NotNull final Set<String> sequencedPatients) {
         LOGGER.info("Writing DRUP datamodel...");
         ecrfDAO.writeDrupDatamodel(model.fields());
         LOGGER.info("Done writing DRUP datamodel.");
@@ -193,7 +193,7 @@ public class DatabaseAccess {
         LOGGER.info("Done writing DRUP patients.");
     }
 
-    public void writeCpctEcrf(@NotNull final CpctEcrfModel model, @NotNull final Set<String> sequencedPatients) {
+    public void writeCpctEcrf(@NotNull final EcrfModel model, @NotNull final Set<String> sequencedPatients) {
         LOGGER.info("writing CPCT datamodel...");
         ecrfDAO.writeCpctDatamodel(model.fields());
         LOGGER.info("Done writing CPCT datamodel.");

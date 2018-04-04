@@ -16,7 +16,7 @@ public final class CpctEcrfModelUtil {
     }
 
     @NotNull
-    public static Map<Integer, String> extractHospitalMap(@NotNull final CpctEcrfModel model) {
+    public static Map<Integer, String> extractHospitalMap(@NotNull final EcrfModel model) {
         final Map<Integer, String> hospitals = Maps.newHashMap();
         hospitals.putAll(model.datamodel().codeLists().get(model.datamodel().items().get(FIELD_HOSPITAL1).codeListOID()).values());
         hospitals.putAll(model.datamodel().codeLists().get(model.datamodel().items().get(FIELD_HOSPITAL2).codeListOID()).values());

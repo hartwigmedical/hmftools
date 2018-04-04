@@ -13,8 +13,8 @@ import javax.xml.stream.XMLStreamException;
 
 import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModelUtil;
+import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
 import com.hartwig.hmftools.patientdb.curators.TestCuratorFactory;
@@ -36,7 +36,7 @@ public class PatientReaderTest {
 
     @Test
     public void canReadCpctBaselineInfo() {
-        final CpctEcrfModel model = loadTestEcrf();
+        final EcrfModel model = loadTestEcrf();
         assertEquals(1, model.patientCount());
 
         final Map<Integer, String> hospitals = CpctEcrfModelUtil.extractHospitalMap(model);
@@ -57,7 +57,7 @@ public class PatientReaderTest {
 
     @Test
     public void canReadCpctPatientPreTherapy() throws IOException {
-        final CpctEcrfModel model = loadTestEcrf();
+        final EcrfModel model = loadTestEcrf();
         assertEquals(1, model.patientCount());
         final EcrfPatient cpctPatient = model.patients().iterator().next();
         final PreTreatmentData preTreatmentData = new PreTreatmentReader(TestCuratorFactory.treatmentCurator()).read(cpctPatient);
@@ -70,7 +70,7 @@ public class PatientReaderTest {
 
     @Test
     public void canReadCpctPatientTreatments() throws IOException {
-        final CpctEcrfModel model = loadTestEcrf();
+        final EcrfModel model = loadTestEcrf();
         assertEquals(1, model.patientCount());
         final EcrfPatient cpctPatient = model.patients().iterator().next();
         final List<BiopsyTreatmentData> treatments = new BiopsyTreatmentReader(TestCuratorFactory.treatmentCurator()).read(cpctPatient);
@@ -90,7 +90,7 @@ public class PatientReaderTest {
 
     @Test
     public void canReadCpctPatientTreatmentResponses() {
-        final CpctEcrfModel model = loadTestEcrf();
+        final EcrfModel model = loadTestEcrf();
         assertEquals(1, model.patientCount());
         final EcrfPatient cpctPatient = model.patients().iterator().next();
         final List<BiopsyTreatmentResponseData> treatmentResponses = BiopsyTreatmentResponseReader.read(cpctPatient);
@@ -115,7 +115,7 @@ public class PatientReaderTest {
 
     @Test
     public void canReadTumorMarkers() {
-        final CpctEcrfModel model = loadTestEcrf();
+        final EcrfModel model = loadTestEcrf();
         assertEquals(1, model.patientCount());
         final EcrfPatient cpctPatient = model.patients().iterator().next();
         final List<TumorMarkerData> tumorMarkers = TumorMarkerReader.read(cpctPatient);
@@ -124,10 +124,10 @@ public class PatientReaderTest {
     }
 
     @NotNull
-    private static CpctEcrfModel loadTestEcrf() {
-        CpctEcrfModel model = null;
+    private static EcrfModel loadTestEcrf() {
+        EcrfModel model = null;
         try {
-            model = CpctEcrfModel.loadFromXML(TEST_ECRF, new ImmutableFormStatusModel(Maps.newHashMap()));
+            model = EcrfModel.loadFromXMLWithFormStates(TEST_ECRF, new ImmutableFormStatusModel(Maps.newHashMap()));
         } catch (XMLStreamException | FileNotFoundException e) {
             // KODU: Ignore, should not happen in test.
         }

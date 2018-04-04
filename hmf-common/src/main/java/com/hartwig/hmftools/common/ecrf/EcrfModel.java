@@ -13,6 +13,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfDatamodelField;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
+import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
 import com.hartwig.hmftools.common.ecrf.reader.XMLEcrfDatamodel;
 import com.hartwig.hmftools.common.ecrf.reader.XMLEcrfDatamodelReader;
 import com.hartwig.hmftools.common.ecrf.reader.XMLEcrfDatamodelToEcrfFields;
@@ -23,9 +24,9 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class CpctEcrfModel {
+public class EcrfModel {
 
-    private static final Logger LOGGER = LogManager.getLogger(CpctEcrfModel.class);
+    private static final Logger LOGGER = LogManager.getLogger(EcrfModel.class);
 
     @NotNull
     private final XMLEcrfDatamodel datamodel;
@@ -35,17 +36,22 @@ public class CpctEcrfModel {
     private final Iterable<EcrfPatient> patients;
 
     @NotNull
-    public static CpctEcrfModel loadFromXML(@NotNull final String ecrfXmlPath, @NotNull final FormStatusModel formStatusModel)
+    public static EcrfModel loadFromXML(@NotNull final String ecrfXmlPath) throws XMLStreamException, FileNotFoundException {
+        return loadFromXMLWithFormStates(ecrfXmlPath, new ImmutableFormStatusModel(Maps.newHashMap()));
+    }
+
+    @NotNull
+    public static EcrfModel loadFromXMLWithFormStates(@NotNull final String ecrfXmlPath, @NotNull final FormStatusModel formStatusModel)
             throws XMLStreamException, FileNotFoundException {
         final XMLInputFactory factory = XMLInputFactory.newInstance();
         final XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(ecrfXmlPath));
         final XMLEcrfDatamodel datamodel = XMLEcrfDatamodelReader.readXMLDatamodel(reader);
         final Iterable<EcrfPatient> patients = XMLPatientReader.readPatients(reader, datamodel, formStatusModel);
 
-        return new CpctEcrfModel(datamodel, patients);
+        return new EcrfModel(datamodel, patients);
     }
 
-    private CpctEcrfModel(@NotNull final XMLEcrfDatamodel datamodel, @NotNull final Iterable<EcrfPatient> patients) {
+    private EcrfModel(@NotNull final XMLEcrfDatamodel datamodel, @NotNull final Iterable<EcrfPatient> patients) {
         this.datamodel = datamodel;
         this.patients = patients;
         this.fields = XMLEcrfDatamodelToEcrfFields.convert(datamodel);

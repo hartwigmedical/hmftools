@@ -8,10 +8,8 @@ import java.util.Set;
 
 import javax.xml.stream.XMLStreamException;
 
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
-import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
+import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
 
@@ -52,9 +50,11 @@ public final class LoadDrupEcrfData {
             if (runsDirectory.isDirectory()) {
                 final String jdbcUrl = "jdbc:" + databaseUrl;
                 final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
+
                 dbWriter.clearDrupEcrf();
                 LOGGER.info("Importing DRUP ecrf data from: {}", ecrfFile);
-                final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFile, new ImmutableFormStatusModel(Maps.newHashMap()));
+                final EcrfModel model = EcrfModel.loadFromXML(ecrfFile);
+
                 final List<RunContext> runContexts = RunsFolderReader.getRunContexts(runsDirectory);
                 final Set<String> sequencedPatients = Utils.sequencedPatientIds(runContexts);
                 LOGGER.info("Writing raw ecrf data for " + model.patientCount() + " patients.");

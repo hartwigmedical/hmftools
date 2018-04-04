@@ -14,8 +14,8 @@ import javax.xml.stream.XMLStreamException;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModelUtil;
+import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
@@ -96,7 +96,7 @@ public final class LoadClinicalData {
 
                 LOGGER.info(String.format("Loading up eCRF from %s.", ecrfFilePath));
                 final FormStatusModel formStatusModel = FormStatusReader.buildModelFromCsv(formStatusCsv);
-                final CpctEcrfModel ecrfModel = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
+                final EcrfModel ecrfModel = EcrfModel.loadFromXMLWithFormStates(ecrfFilePath, formStatusModel);
                 LOGGER.info(String.format("Finished loading eCRF. Read %s patients.", ecrfModel.patientCount()));
 
                 if (loadRawEcrf) {
@@ -114,7 +114,7 @@ public final class LoadClinicalData {
         }
     }
 
-    private static void writeClinicalData(@NotNull final DatabaseAccess dbAccess, @NotNull CpctEcrfModel ecrfModel,
+    private static void writeClinicalData(@NotNull final DatabaseAccess dbAccess, @NotNull EcrfModel ecrfModel,
             @NotNull final List<RunContext> runContexts, @NotNull final CommandLine cmd, @NotNull final Options options)
             throws IOException {
         final String limsJsonPath = cmd.getOptionValue(LIMS_JSON);
@@ -200,7 +200,7 @@ public final class LoadClinicalData {
         return patientMap;
     }
 
-    private static void writeRawEcrf(@NotNull DatabaseAccess dbWriter, @NotNull CpctEcrfModel model,
+    private static void writeRawEcrf(@NotNull DatabaseAccess dbWriter, @NotNull EcrfModel model,
             @NotNull List<RunContext> runContexts) {
         dbWriter.clearCpctEcrf();
 
