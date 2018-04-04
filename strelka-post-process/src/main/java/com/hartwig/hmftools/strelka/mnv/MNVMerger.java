@@ -16,26 +16,32 @@ import com.google.common.collect.Multimap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
+import htsjdk.variant.vcf.VCFHeader;
 
-class MNVMerger {
+@Value.Immutable
+@Value.Style(allParameters = true,
+             passAnnotations = { NotNull.class, Nullable.class })
+public abstract class MNVMerger {
     private static final Logger LOGGER = LogManager.getLogger(MNVMerger.class);
     private static final String SET_VALUE = "mnvs";
     private static final String SET_KEY = "set";
     private static final String SOMATIC_PON_FIELD = "SOMATIC_PON_COUNT";
     private static final String GERMLINE_PON_FIELD = "GERMLINE_PON_COUNT";
 
-    private MNVMerger() {
-    }
+    @NotNull
+    abstract VCFHeader vcfHeader();
 
     @NotNull
-    static VariantContext mergeVariants(@NotNull final PotentialMNV mnv, @NotNull final Map<Integer, Character> gapReads) {
+    VariantContext mergeVariants(@NotNull final PotentialMNV mnv, @NotNull final Map<Integer, Character> gapReads) {
         final Map<Integer, Character> gapsForMnv =
                 mnv.gapPositions().stream().collect(Collectors.toMap(Function.identity(), gapReads::get));
         return mergeVariants(mnv.variants(), gapsForMnv);
@@ -45,7 +51,7 @@ class MNVMerger {
     // MIVO: gaps will *ALWAYS* be added to the output variant (no checking is done here to make sure they are needed)
     @NotNull
     @VisibleForTesting
-    static VariantContext mergeVariants(@NotNull final List<VariantContext> variants, @NotNull final Map<Integer, Character> gapReads) {
+    VariantContext mergeVariants(@NotNull final List<VariantContext> variants, @NotNull final Map<Integer, Character> gapReads) {
         final List<Allele> alleles = createMnvAlleles(variants, gapReads);
         final VariantContext firstVariant = variants.get(0);
         final VariantContext lastVariant = variants.get(variants.size() - 1);
@@ -106,7 +112,7 @@ class MNVMerger {
     }
 
     @NotNull
-    private static Map<String, Object> createMnvAttributes(@NotNull final List<VariantContext> variants, final int gapSize) {
+    private Map<String, Object> createMnvAttributes(@NotNull final List<VariantContext> variants, final int gapSize) {
         final Map<String, Object> attributes;
         if (variants.stream().anyMatch(VariantContext::isIndel)) {
             attributes = mergeAttributes(variants.stream().filter(VariantContext::isIndel).collect(Collectors.toList()));
@@ -122,13 +128,12 @@ class MNVMerger {
     }
 
     @NotNull
-    private static Map<String, Object> mergeAttributes(@NotNull final List<VariantContext> variants) {
+    private Map<String, Object> mergeAttributes(@NotNull final List<VariantContext> variants) {
         final Multimap<String, Comparable> mergedAttributes = ArrayListMultimap.create();
-        variants.forEach(variant -> variant.getAttributes().forEach((key, value) -> {
-            if (value instanceof Comparable) {
-                mergedAttributes.put(key, (Comparable) value);
-            }
-        }));
+        variants.stream()
+                .flatMap(variant -> variant.fullyDecode(vcfHeader(), true).getAttributes().entrySet().stream())
+                .filter(entry -> entry.getValue() instanceof Comparable)
+                .forEach(entry -> mergedAttributes.put(entry.getKey(), (Comparable) entry.getValue()));
         return mergedAttributes.asMap().entrySet().stream().map(entry -> {
             final Optional<Comparable> minValue = determineFieldMin(entry, variants.size());
             return Pair.of(entry.getKey(), minValue);
