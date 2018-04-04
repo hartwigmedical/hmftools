@@ -17,7 +17,7 @@ public final class TestDatamodelFactory {
     }
 
     @NotNull
-    public static ImmutableBaselineData.Builder baseLineBuilder() {
+    public static ImmutableBaselineData.Builder baselineBuilder() {
         return ImmutableBaselineData.builder()
                 .cancerType(ImmutableCuratedCancerType.of(null, null, null))
                 .demographyStatus(FormStatus.unknown())

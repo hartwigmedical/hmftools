@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientdb.validators;
 
-import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.baseLineBuilder;
+import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.baselineBuilder;
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyTreatmentBuilder;
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.drugBuilder;
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_DEATH_DATE;
@@ -222,7 +222,7 @@ public class TreatmentValidationTest {
     @Test
     public void doesNotReportCorrectDeathTimeline() {
         final List<ValidationFinding> findings = PatientValidator.validateDeathDate(PATIENT_IDENTIFIER,
-                baseLineBuilder().deathDate(MAR2015).build(),
+                baselineBuilder().deathDate(MAR2015).build(),
                 Lists.newArrayList(TREATMENT_JAN_JAN, TREATMENT_JAN_FEB));
         assertEquals(0, findings.size());
     }
@@ -230,7 +230,7 @@ public class TreatmentValidationTest {
     @Test
     public void reportsDeathDateBeforeEndOfTreatment() {
         final List<ValidationFinding> findings = PatientValidator.validateDeathDate(PATIENT_IDENTIFIER,
-                baseLineBuilder().deathDate(MAR2015).build(),
+                baselineBuilder().deathDate(MAR2015).build(),
                 Lists.newArrayList(TREATMENT_JAN_ONGOING, TREATMENT_JAN_FEB));
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
