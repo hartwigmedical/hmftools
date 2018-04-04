@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientdb.readers.cpct;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
@@ -54,8 +53,6 @@ public class BaselineReader {
     public static final String FIELD_HOSPITAL1 = "FLD.ELIGIBILITY.HOSPITAL";
     public static final String FIELD_HOSPITAL2 = "FLD.SELCRIT.NHOSPITAL";
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
     @NotNull
     private final TumorLocationCurator tumorLocationCurator;
     @NotNull
@@ -95,7 +92,7 @@ public class BaselineReader {
         for (final EcrfForm demographyForm : studyEvent.nonEmptyFormsPerOID(FORM_DEMOGRAPHY)) {
             for (final EcrfItemGroup demographyItemGroup : demographyForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DEMOGRAPHY)) {
                 hasDemographyForm = true;
-                builder.gender(demographyItemGroup.readItemString(FIELD_SEX, 0, false));
+                builder.gender(demographyItemGroup.readItemString(FIELD_SEX));
                 builder.demographyStatus(demographyForm.status());
                 builder.demographyLocked(demographyForm.locked());
             }
@@ -112,9 +109,9 @@ public class BaselineReader {
         for (final EcrfForm carcinomaForm : studyEvent.nonEmptyFormsPerOID(FORM_CARCINOMA)) {
             for (final EcrfItemGroup carcinomaItemGroup : carcinomaForm.nonEmptyItemGroupsPerOID(ITEMGROUP_CARCINOMA)) {
                 hasPrimaryTumorForm = true;
-                String primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION, 0);
+                String primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION);
                 if (primaryTumorLocation != null && primaryTumorLocation.trim().toLowerCase().startsWith("other")) {
-                    primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER, 0);
+                    primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
                 }
                 builder.cancerType(tumorLocationCurator.search(primaryTumorLocation));
                 builder.primaryTumorStatus(carcinomaForm.status());
@@ -140,9 +137,9 @@ public class BaselineReader {
         for (final EcrfForm eligibilityForm : studyEvent.nonEmptyFormsPerOID(FORM_ELIGIBILITY)) {
             for (final EcrfItemGroup eligibilityItemGroup : eligibilityForm.nonEmptyItemGroupsPerOID(ITEMGROUP_ELIGIBILITY)) {
                 hasEligibilityForm = true;
-                registrationDate1 = eligibilityItemGroup.readItemDate(FIELD_REGISTRATION_DATE1, 0, DATE_FORMATTER);
-                birthYear2 = eligibilityItemGroup.readItemString(FIELD_BIRTH_YEAR2, 0);
-                birthYear3 = eligibilityItemGroup.readItemDate(FIELD_BIRTH_YEAR3, 0, DATE_FORMATTER);
+                registrationDate1 = eligibilityItemGroup.readItemDate(FIELD_REGISTRATION_DATE1);
+                birthYear2 = eligibilityItemGroup.readItemString(FIELD_BIRTH_YEAR2);
+                birthYear3 = eligibilityItemGroup.readItemDate(FIELD_BIRTH_YEAR3);
                 builder.eligibilityStatus(eligibilityForm.status());
                 builder.eligibilityLocked(eligibilityForm.locked());
             }
@@ -157,9 +154,9 @@ public class BaselineReader {
         for (final EcrfForm selcritForm : studyEvent.nonEmptyFormsPerOID(FORM_SELCRIT)) {
             for (final EcrfItemGroup selcritItemGroup : selcritForm.nonEmptyItemGroupsPerOID(ITEMGROUP_SELCRIT)) {
                 hasSelectionCriteriaForm = true;
-                birthYear1 = selcritItemGroup.readItemString(FIELD_BIRTH_YEAR1, 0);
+                birthYear1 = selcritItemGroup.readItemString(FIELD_BIRTH_YEAR1);
                 if (registrationDate1 == null) {
-                    registrationDate2 = selcritItemGroup.readItemDate(FIELD_REGISTRATION_DATE2, 0, DATE_FORMATTER);
+                    registrationDate2 = selcritItemGroup.readItemDate(FIELD_REGISTRATION_DATE2);
                     builder.selectionCriteriaStatus(selcritForm.status());
                     builder.selectionCriteriaLocked(selcritForm.locked());
                 }
@@ -197,7 +194,7 @@ public class BaselineReader {
         for (final EcrfForm informedConsentForm : studyEvent.nonEmptyFormsPerOID(FORM_INFORMED_CONSENT)) {
             for (final EcrfItemGroup informedConsentItemGroup : informedConsentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_INFORMED_CONSENT)) {
                 hasInformedConsentForm = true;
-                builder.informedConsentDate(informedConsentItemGroup.readItemDate(FIELD_INFORMED_CONSENT_DATE, 0, DATE_FORMATTER));
+                builder.informedConsentDate(informedConsentItemGroup.readItemDate(FIELD_INFORMED_CONSENT_DATE));
                 builder.informedConsentStatus(informedConsentForm.status());
                 builder.informedConsentLocked(informedConsentForm.locked());
             }
@@ -215,7 +212,7 @@ public class BaselineReader {
             for (final EcrfForm deathForm : endStudyEvent.nonEmptyFormsPerOID(FORM_DEATH)) {
                 for (final EcrfItemGroup deathItemGroup : deathForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DEATH)) {
                     hasDeathDateForm = true;
-                    builder.deathDate(deathItemGroup.readItemDate(FIELD_DEATH_DATE, 0, DATE_FORMATTER));
+                    builder.deathDate(deathItemGroup.readItemDate(FIELD_DEATH_DATE));
                     builder.deathStatus(deathForm.status());
                     builder.deathLocked(deathForm.locked());
                 }

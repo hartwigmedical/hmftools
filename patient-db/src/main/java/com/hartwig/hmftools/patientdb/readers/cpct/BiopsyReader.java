@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientdb.readers.cpct;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -32,8 +31,6 @@ public class BiopsyReader {
     public static final String FIELD_SITE_OTHER = "FLD.BIOPS.BIOTHLESSITE";
     public static final String FIELD_LOCATION = "FLD.BIOPS.BILESLOC";
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
     @NotNull
     private final BiopsySiteCurator biopsySiteCurator;
 
@@ -45,22 +42,22 @@ public class BiopsyReader {
     List<BiopsyData> read(@NotNull EcrfPatient patient, @NotNull CuratedCancerType curatedCancerType) {
         final List<BiopsyData> biopsies = Lists.newArrayList();
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BIOPSY)) {
-            for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_BIOPS, false)) {
+            for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_BIOPS)) {
                 String biopsyTaken = null;
                 String biopsyEvaluable = null;
                 // KODU: This works as there is generally a 1:N relation between BIOPSY and BIOPSIES item groups.
-                for (final EcrfItemGroup biopsyGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSY, false)) {
-                    biopsyTaken = biopsyGroup.readItemString(FIELD_BIOPSY_TAKEN, 0, false);
-                    biopsyEvaluable = biopsyGroup.readItemString(FIELD_BIOPSY_EVALUABLE, 0, false);
+                for (final EcrfItemGroup biopsyGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSY)) {
+                    biopsyTaken = biopsyGroup.readItemString(FIELD_BIOPSY_TAKEN);
+                    biopsyEvaluable = biopsyGroup.readItemString(FIELD_BIOPSY_EVALUABLE);
                 }
-                for (final EcrfItemGroup biopsiesGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSIES, false)) {
-                    final LocalDate date = biopsiesGroup.readItemDate(FIELD_BIOPSY_DATE, 0, DATE_FORMATTER, false);
+                for (final EcrfItemGroup biopsiesGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSIES)) {
+                    final LocalDate date = biopsiesGroup.readItemDate(FIELD_BIOPSY_DATE);
 
-                    final String site = biopsiesGroup.readItemString(FIELD_SITE, 0, false);
-                    final String siteOther = biopsiesGroup.readItemString(FIELD_SITE_OTHER, 0, false);
+                    final String site = biopsiesGroup.readItemString(FIELD_SITE);
+                    final String siteOther = biopsiesGroup.readItemString(FIELD_SITE_OTHER);
                     final String finalSite = (site == null || site.trim().toLowerCase().startsWith("other")) ? siteOther : site;
 
-                    final String location = biopsiesGroup.readItemString(FIELD_LOCATION, 0, false);
+                    final String location = biopsiesGroup.readItemString(FIELD_LOCATION);
 
                     final CuratedBiopsyType curatedBiopsyType =
                             biopsySiteCurator.search(curatedCancerType.type(), curatedCancerType.subType(), finalSite, location);

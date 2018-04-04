@@ -49,39 +49,39 @@ public class BiopsyReaderTest {
     private static EcrfPatient buildTestPatient() {
         final String patient = "dummy";
 
-        EcrfItemGroup biopsy = new EcrfItemGroup(patient);
+        EcrfItemGroup biopsy = new EcrfItemGroup();
         biopsy.addItem(BiopsyReader.FIELD_BIOPSY_TAKEN, "Yes");
         biopsy.addItem(BiopsyReader.FIELD_BIOPSY_EVALUABLE, "Yes");
 
         // KODU: Create initial biopsy.
-        EcrfItemGroup biopsies1 = new EcrfItemGroup(patient);
+        EcrfItemGroup biopsies1 = new EcrfItemGroup();
         biopsies1.addItem(BiopsyReader.FIELD_BIOPSY_DATE, "2017-11-10");
         biopsies1.addItem(BiopsyReader.FIELD_SITE, "other");
         biopsies1.addItem(BiopsyReader.FIELD_SITE_OTHER, "body");
         biopsies1.addItem(BiopsyReader.FIELD_LOCATION, "liver");
 
-        EcrfForm form1 = new EcrfForm(patient, FormStatus.unknown());
+        EcrfForm form1 = new EcrfForm(FormStatus.unknown());
         form1.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSY, biopsy);
         form1.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSIES, biopsies1);
 
         // KODU: Create empty 2nd biopsy
-        EcrfItemGroup biopsies2 = new EcrfItemGroup(patient);
-        EcrfForm form2 = new EcrfForm(patient, FormStatus.unknown());
+        EcrfItemGroup biopsies2 = new EcrfItemGroup();
+        EcrfForm form2 = new EcrfForm(FormStatus.unknown());
         form2.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSY, biopsy);
         form2.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSIES, biopsies2);
 
         // KODU: Create duplicate 3rd biopsy
-        EcrfItemGroup biopsies3 = new EcrfItemGroup(patient);
+        EcrfItemGroup biopsies3 = new EcrfItemGroup();
         biopsies3.addItem(BiopsyReader.FIELD_BIOPSY_DATE, "2017-11-10");
         biopsies3.addItem(BiopsyReader.FIELD_SITE, "other");
         biopsies3.addItem(BiopsyReader.FIELD_SITE_OTHER, "body");
         biopsies3.addItem(BiopsyReader.FIELD_LOCATION, "liver");
 
-        EcrfForm form3 = new EcrfForm(patient, FormStatus.unknown());
+        EcrfForm form3 = new EcrfForm(FormStatus.unknown());
         form3.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSY, biopsy);
         form3.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSIES, biopsies3);
 
-        EcrfStudyEvent studyEvent = new EcrfStudyEvent(patient);
+        EcrfStudyEvent studyEvent = new EcrfStudyEvent();
         studyEvent.addForm(BiopsyReader.FORM_BIOPS, form1);
         studyEvent.addForm(BiopsyReader.FORM_BIOPS, form2);
         studyEvent.addForm(BiopsyReader.FORM_BIOPS, form3);

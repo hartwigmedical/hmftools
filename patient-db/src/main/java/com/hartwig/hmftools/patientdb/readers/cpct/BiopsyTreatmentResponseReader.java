@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientdb.readers.cpct;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -26,8 +25,6 @@ public final class BiopsyTreatmentResponseReader {
     public static final String FIELD_MEASUREMENT_DONE = "FLD.TUMORMEASUREMENT.TMYN";
     public static final String FIELD_RESPONSE = "FLD.TUMORMEASUREMENT.BESTRESPON";
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
     private BiopsyTreatmentResponseReader() {
     }
 
@@ -35,11 +32,11 @@ public final class BiopsyTreatmentResponseReader {
     static List<BiopsyTreatmentResponseData> read(@NotNull final EcrfPatient patient) {
         final List<BiopsyTreatmentResponseData> treatmentResponses = Lists.newArrayList();
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_TREATMENT)) {
-            for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_TUMOR_MEASUREMENT, false)) {
+            for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_TUMOR_MEASUREMENT)) {
                 // KODU: There are generally multiple assessment dates per tumor measurement (one per target lesion)
                 LocalDate assessmentDate = null;
-                for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_MEASUREMENT, false)) {
-                    final LocalDate date = itemGroup.readItemDate(FIELD_ASSESSMENT_DATE, 0, DATE_FORMATTER, false);
+                for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_MEASUREMENT)) {
+                    final LocalDate date = itemGroup.readItemDate(FIELD_ASSESSMENT_DATE);
                     if (date != null) {
                         assessmentDate = date;
                         break;
@@ -49,23 +46,23 @@ public final class BiopsyTreatmentResponseReader {
                 String measurementDone = null;
                 String boneOnlyDisease = null;
                 String response = null;
-                for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_TUMOR_MEASUREMENT, false)) {
-                    final LocalDate responseDateValue = itemGroup.readItemDate(FIELD_RESPONSE_DATE, 0, DATE_FORMATTER, false);
+                for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_TUMOR_MEASUREMENT)) {
+                    final LocalDate responseDateValue = itemGroup.readItemDate(FIELD_RESPONSE_DATE);
                     if (responseDateValue != null) {
                         responseDate = responseDateValue;
                     }
 
-                    final String measurementDoneValue = itemGroup.readItemString(FIELD_MEASUREMENT_DONE, 0, false);
+                    final String measurementDoneValue = itemGroup.readItemString(FIELD_MEASUREMENT_DONE);
                     if (measurementDoneValue != null) {
                         measurementDone = measurementDoneValue;
                     }
 
-                    final String boneOnlyDiseaseValue = itemGroup.readItemString(FIELD_BONE_ONLY_DISEASE, 0, false);
+                    final String boneOnlyDiseaseValue = itemGroup.readItemString(FIELD_BONE_ONLY_DISEASE);
                     if (boneOnlyDiseaseValue != null) {
                         boneOnlyDisease = boneOnlyDiseaseValue;
                     }
 
-                    final String responseValue = itemGroup.readItemString(FIELD_RESPONSE, 0, false);
+                    final String responseValue = itemGroup.readItemString(FIELD_RESPONSE);
                     if (responseValue != null) {
                         response = responseValue;
                     }

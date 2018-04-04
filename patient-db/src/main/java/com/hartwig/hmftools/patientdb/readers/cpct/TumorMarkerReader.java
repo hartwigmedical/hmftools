@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientdb.readers.cpct;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -24,8 +23,6 @@ final class TumorMarkerReader {
     private static final String FIELD_MEASUREMENT = "FLD.RESPONSE.LBORRES_TUMORMARKERS";
     private static final String FIELD_UNIT = "FLD.RESPONSE.LBORRESU_TUMORMARKERS";
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
     private TumorMarkerReader() {
     }
 
@@ -33,12 +30,12 @@ final class TumorMarkerReader {
     static List<TumorMarkerData> read(@NotNull final EcrfPatient patient) {
         final List<TumorMarkerData> tumorMarkers = Lists.newArrayList();
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_TREATMENT)) {
-            for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_RESPONSE, false)) {
-                for (final EcrfItemGroup responseGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_RESPONSE, false)) {
-                    LocalDate date = responseGroup.readItemDate(FIELD_DATE, 0, DATE_FORMATTER, false);
-                    String marker = responseGroup.readItemString(FIELD_MARKER, 0, false);
-                    String measurement = responseGroup.readItemString(FIELD_MEASUREMENT, 0, false);
-                    String unit = responseGroup.readItemString(FIELD_UNIT, 0, false);
+            for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_RESPONSE)) {
+                for (final EcrfItemGroup responseGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_RESPONSE)) {
+                    LocalDate date = responseGroup.readItemDate(FIELD_DATE);
+                    String marker = responseGroup.readItemString(FIELD_MARKER);
+                    String measurement = responseGroup.readItemString(FIELD_MEASUREMENT);
+                    String unit = responseGroup.readItemString(FIELD_UNIT);
                     tumorMarkers.add(ImmutableTumorMarkerData.of(patient.patientId(),
                             date,
                             marker,
