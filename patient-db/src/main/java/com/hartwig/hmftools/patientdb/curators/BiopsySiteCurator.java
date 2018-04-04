@@ -118,7 +118,7 @@ public class BiopsySiteCurator {
 
         @Override
         public String toString() {
-            return "Key{" + "cancerType='" + cancerType + '\'' + ", cancerSubType='" + cancerSubType + '\'' + ", biopsySite='" + biopsySite
+            return "Key{" + "cancerType='" + cancerType + '\'' + ", cancerSubType='" + cancerSubType + '\'' + ", biopsyType='" + biopsySite
                     + '\'' + ", biopsyLocation='" + biopsyLocation + '\'' + '}';
         }
     }
