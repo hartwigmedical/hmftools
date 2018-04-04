@@ -25,14 +25,14 @@ public class MNVMergerTest {
     private static final File VCF_FILE = new File(Resources.getResource("mnvs.vcf").getPath());
     private static final VCFFileReader VCF_FILE_READER = new VCFFileReader(VCF_FILE, false);
     private static final VCFHeader VCF_OUTPUT_HEADER = generateOutputHeader(VCF_FILE_READER.getFileHeader(), "TUMOR");
-    private static final List<VariantContext> VARIANTS =
-            Streams.stream(VCF_FILE_READER).map(variant -> variant.fullyDecode(VCF_OUTPUT_HEADER, true)).collect(Collectors.toList());
+    private static final MNVMerger MNV_MERGER = ImmutableMNVMerger.of(VCF_OUTPUT_HEADER);
+    private static final List<VariantContext> VARIANTS = Streams.stream(VCF_FILE_READER).collect(Collectors.toList());
 
     // MIVO: 170756001: (C->T),  170756002: (G->T)
     @Test
     public void correctlyMerges2Variants() {
         final VariantContext mergedVariant =
-                MNVMerger.mergeVariants(Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12)), Maps.newHashMap());
+                MNV_MERGER.mergeVariants(Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12)), Maps.newHashMap());
         assertEquals("CG", mergedVariant.getReference().getBaseString());
         assertEquals(1, mergedVariant.getAlternateAlleles().size());
         assertEquals("TT", mergedVariant.getAlternateAllele(0).getBaseString());
@@ -43,7 +43,7 @@ public class MNVMergerTest {
     public void correctlyMerges2VariantsWithGap() {
         final Map<Integer, Character> gaps = Maps.newHashMap();
         gaps.put(170756002, 'G');
-        final VariantContext mergedVariant = MNVMerger.mergeVariants(Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(13)), gaps);
+        final VariantContext mergedVariant = MNV_MERGER.mergeVariants(Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(13)), gaps);
         assertEquals("CGA", mergedVariant.getReference().getBaseString());
         assertEquals(1, mergedVariant.getAlternateAlleles().size());
         assertEquals("TGT", mergedVariant.getAlternateAllele(0).getBaseString());
@@ -53,7 +53,7 @@ public class MNVMergerTest {
     @Test
     public void correctlyMerges3Variants() {
         final VariantContext mergedVariant =
-                MNVMerger.mergeVariants(Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(13)), Maps.newHashMap());
+                MNV_MERGER.mergeVariants(Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(13)), Maps.newHashMap());
         assertEquals("CGA", mergedVariant.getReference().getBaseString());
         assertEquals(1, mergedVariant.getAlternateAlleles().size());
         assertEquals("TTT", mergedVariant.getAlternateAllele(0).getBaseString());
@@ -65,7 +65,7 @@ public class MNVMergerTest {
         final Map<Integer, Character> gaps = Maps.newHashMap();
         gaps.put(170756003, 'A');
         final VariantContext mergedVariant =
-                MNVMerger.mergeVariants(Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(14)), gaps);
+                MNV_MERGER.mergeVariants(Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(14)), gaps);
         assertEquals("CGAT", mergedVariant.getReference().getBaseString());
         assertEquals(1, mergedVariant.getAlternateAlleles().size());
         assertEquals("TTAC", mergedVariant.getAlternateAllele(0).getBaseString());
@@ -75,7 +75,7 @@ public class MNVMergerTest {
     @Test
     public void correctlyMerges2VariantsWithPonCounts() {
         final VariantContext mergedVariant =
-                MNVMerger.mergeVariants(Lists.newArrayList(VARIANTS.get(18), VARIANTS.get(19)), Maps.newHashMap());
+                MNV_MERGER.mergeVariants(Lists.newArrayList(VARIANTS.get(18), VARIANTS.get(19)), Maps.newHashMap());
         assertEquals("CG", mergedVariant.getReference().getBaseString());
         assertEquals(1, mergedVariant.getAlternateAlleles().size());
         assertEquals("TT", mergedVariant.getAlternateAllele(0).getBaseString());
@@ -88,7 +88,7 @@ public class MNVMergerTest {
     @Test
     public void correctlyMerges2VariantsFirstWithoutAnyPonCount() {
         final VariantContext mergedVariant =
-                MNVMerger.mergeVariants(Lists.newArrayList(VARIANTS.get(20), VARIANTS.get(21)), Maps.newHashMap());
+                MNV_MERGER.mergeVariants(Lists.newArrayList(VARIANTS.get(20), VARIANTS.get(21)), Maps.newHashMap());
         assertEquals("CG", mergedVariant.getReference().getBaseString());
         assertEquals(1, mergedVariant.getAlternateAlleles().size());
         assertEquals("TT", mergedVariant.getAlternateAllele(0).getBaseString());
@@ -101,7 +101,7 @@ public class MNVMergerTest {
     @Test
     public void correctlyMerges2VariantsSecondWithoutGermlinePonCount() {
         final VariantContext mergedVariant =
-                MNVMerger.mergeVariants(Lists.newArrayList(VARIANTS.get(22), VARIANTS.get(23)), Maps.newHashMap());
+                MNV_MERGER.mergeVariants(Lists.newArrayList(VARIANTS.get(22), VARIANTS.get(23)), Maps.newHashMap());
         assertEquals("CG", mergedVariant.getReference().getBaseString());
         assertEquals(1, mergedVariant.getAlternateAlleles().size());
         assertEquals("TT", mergedVariant.getAlternateAllele(0).getBaseString());
@@ -116,7 +116,7 @@ public class MNVMergerTest {
         final Map<Integer, Character> gaps = Maps.newHashMap();
         gaps.put(170756003, 'A');
         final VariantContext mergedVariant =
-                MNVMerger.mergeVariants(Lists.newArrayList(VARIANTS.get(24), VARIANTS.get(25), VARIANTS.get(26)), gaps);
+                MNV_MERGER.mergeVariants(Lists.newArrayList(VARIANTS.get(24), VARIANTS.get(25), VARIANTS.get(26)), gaps);
         assertEquals("CGAT", mergedVariant.getReference().getBaseString());
         assertEquals(1, mergedVariant.getAlternateAlleles().size());
         assertEquals("TTAC", mergedVariant.getAlternateAllele(0).getBaseString());
