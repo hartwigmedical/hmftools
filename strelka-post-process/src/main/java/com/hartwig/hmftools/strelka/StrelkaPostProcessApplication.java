@@ -7,8 +7,10 @@ import java.util.Optional;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
+import com.hartwig.hmftools.strelka.mnv.ImmutableMNVMerger;
 import com.hartwig.hmftools.strelka.mnv.ImmutableMNVValidator;
 import com.hartwig.hmftools.strelka.mnv.MNVDetector;
+import com.hartwig.hmftools.strelka.mnv.MNVMerger;
 import com.hartwig.hmftools.strelka.mnv.MNVValidator;
 import com.hartwig.hmftools.strelka.mnv.PotentialMNVRegion;
 
@@ -92,19 +94,20 @@ public class StrelkaPostProcessApplication {
                 .build();
         writer.writeHeader(outputHeader);
         final MNVValidator validator = ImmutableMNVValidator.of(tumorBam);
+        final MNVMerger merger = ImmutableMNVMerger.of(outputHeader);
+
         Pair<PotentialMNVRegion, Optional<PotentialMNVRegion>> outputPair = ImmutablePair.of(PotentialMNVRegion.empty(), Optional.empty());
 
         final VariantContextFilter filter = new StrelkaPostProcess(highConfidenceSlicer);
         for (final VariantContext variantContext : vcfReader) {
-            final VariantContext decodedVariantContext = variantContext.fullyDecode(outputHeader, true);
-            if (filter.test(decodedVariantContext)) {
-                final VariantContext simplifiedVariant = StrelkaPostProcess.simplifyVariant(decodedVariantContext, sampleName);
+            if (filter.test(variantContext)) {
+                final VariantContext simplifiedVariant = StrelkaPostProcess.simplifyVariant(variantContext, sampleName);
                 final PotentialMNVRegion potentialMNV = outputPair.getLeft();
                 outputPair = MNVDetector.fitsMNVRegion(potentialMNV, simplifiedVariant);
-                outputPair.getRight().ifPresent(mnvRegion -> validator.mergeVariants(mnvRegion).forEach(writer::add));
+                outputPair.getRight().ifPresent(mnvRegion -> validator.mergeVariants(mnvRegion, merger).forEach(writer::add));
             }
         }
-        validator.mergeVariants(outputPair.getLeft()).forEach(writer::add);
+        validator.mergeVariants(outputPair.getLeft(), merger).forEach(writer::add);
         writer.close();
         vcfReader.close();
         LOGGER.info("Written output variants to " + outputVcf);
