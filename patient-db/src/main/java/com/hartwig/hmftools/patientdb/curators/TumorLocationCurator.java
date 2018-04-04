@@ -17,14 +17,11 @@ import com.hartwig.hmftools.patientdb.data.ImmutableCuratedCancerType;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class TumorLocationCurator implements CleanableCurator {
 
-    private static final Logger LOGGER = LogManager.getLogger(TumorLocationCurator.class);
     private static final InputStream TUMOR_LOCATION_MAPPING_RESOURCE =
             LoadClinicalData.class.getResourceAsStream("/tumor_location_mapping.csv");
 
