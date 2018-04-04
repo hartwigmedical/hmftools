@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.readers;
+package com.hartwig.hmftools.patientdb.readers.cpct;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -67,8 +67,7 @@ public class BaselineReader {
 
     @NotNull
     BaselineData read(@NotNull final EcrfPatient patient) {
-        final ImmutableBaselineData.Builder patientBuilder =
-                ImmutableBaselineData.builder().hospital(getHospital(patient, hospitals));
+        final ImmutableBaselineData.Builder patientBuilder = ImmutableBaselineData.builder().hospital(getHospital(patient, hospitals));
 
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BASELINE)) {
             setDemographyData(patientBuilder, studyEvent);
@@ -99,7 +98,6 @@ public class BaselineReader {
             }
         }
     }
-
 
     private void setPrimaryTumorData(@NotNull final ImmutableBaselineData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
         for (final EcrfForm carcinomaForm : studyEvent.nonEmptyFormsPerOID(FORM_CARCINOMA, false)) {

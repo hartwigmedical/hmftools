@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.readers;
+package com.hartwig.hmftools.patientdb.readers.cpct;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

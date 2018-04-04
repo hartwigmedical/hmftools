@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.readers;
+package com.hartwig.hmftools.patientdb.readers.cpct;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;

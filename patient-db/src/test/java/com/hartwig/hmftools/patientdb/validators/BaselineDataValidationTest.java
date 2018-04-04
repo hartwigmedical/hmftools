@@ -1,16 +1,16 @@
 package com.hartwig.hmftools.patientdb.validators;
 
-import static com.hartwig.hmftools.patientdb.readers.BaselineReader.FIELD_BIRTH_YEAR1;
-import static com.hartwig.hmftools.patientdb.readers.BaselineReader.FIELD_BIRTH_YEAR2;
-import static com.hartwig.hmftools.patientdb.readers.BaselineReader.FIELD_BIRTH_YEAR3;
-import static com.hartwig.hmftools.patientdb.readers.BaselineReader.FIELD_HOSPITAL1;
-import static com.hartwig.hmftools.patientdb.readers.BaselineReader.FIELD_HOSPITAL2;
-import static com.hartwig.hmftools.patientdb.readers.BaselineReader.FIELD_INFORMED_CONSENT_DATE;
-import static com.hartwig.hmftools.patientdb.readers.BaselineReader.FIELD_PRIMARY_TUMOR_LOCATION;
-import static com.hartwig.hmftools.patientdb.readers.BaselineReader.FIELD_PRIMARY_TUMOR_LOCATION_OTHER;
-import static com.hartwig.hmftools.patientdb.readers.BaselineReader.FIELD_REGISTRATION_DATE1;
-import static com.hartwig.hmftools.patientdb.readers.BaselineReader.FIELD_REGISTRATION_DATE2;
-import static com.hartwig.hmftools.patientdb.readers.BaselineReader.FIELD_SEX;
+import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_BIRTH_YEAR1;
+import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_BIRTH_YEAR2;
+import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_BIRTH_YEAR3;
+import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_HOSPITAL1;
+import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_HOSPITAL2;
+import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_INFORMED_CONSENT_DATE;
+import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_PRIMARY_TUMOR_LOCATION;
+import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_PRIMARY_TUMOR_LOCATION_OTHER;
+import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_REGISTRATION_DATE1;
+import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_REGISTRATION_DATE2;
+import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_SEX;
 import static com.hartwig.hmftools.patientdb.validators.PatientValidator.fields;
 
 import static org.junit.Assert.assertEquals;

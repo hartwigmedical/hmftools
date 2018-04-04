@@ -3,12 +3,12 @@ package com.hartwig.hmftools.patientdb.validators;
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyTreatmentBuilder;
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyTreatmentResponseBuilder;
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.drugBuilder;
-import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FORM_TREATMENT;
-import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_ASSESSMENT_DATE;
-import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_MEASUREMENT_DONE;
-import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_RESPONSE;
-import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_RESPONSE_DATE;
-import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FORM_TUMOR_MEASUREMENT;
+import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyTreatmentReader.FORM_TREATMENT;
+import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyTreatmentResponseReader.FIELD_ASSESSMENT_DATE;
+import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyTreatmentResponseReader.FIELD_MEASUREMENT_DONE;
+import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyTreatmentResponseReader.FIELD_RESPONSE;
+import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyTreatmentResponseReader.FIELD_RESPONSE_DATE;
+import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyTreatmentResponseReader.FORM_TUMOR_MEASUREMENT;
 import static com.hartwig.hmftools.patientdb.validators.PatientValidator.fields;
 
 import static org.junit.Assert.assertEquals;

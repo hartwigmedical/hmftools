@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.readers;
+package com.hartwig.hmftools.patientdb.readers.cpct;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -75,7 +75,8 @@ public final class BiopsyTreatmentResponseReader {
                         response,
                         measurementDone,
                         boneOnlyDisease,
-                        form.status(), form.locked());
+                        form.status(),
+                        form.locked());
                 if (!isEmpty(responseData)) {
                     treatmentResponses.add(responseData);
                 }

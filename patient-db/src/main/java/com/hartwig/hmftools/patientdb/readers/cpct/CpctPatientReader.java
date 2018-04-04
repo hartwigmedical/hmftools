@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.readers;
+package com.hartwig.hmftools.patientdb.readers.cpct;
 
 import java.io.IOException;
 import java.util.List;
@@ -25,7 +25,7 @@ import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PatientReader {
+public class CpctPatientReader {
     @NotNull
     private final BaselineReader baselineReader;
     @NotNull
@@ -35,7 +35,7 @@ public class PatientReader {
     @NotNull
     private final BiopsyTreatmentReader biopsyTreatmentReader;
 
-    public PatientReader(@NotNull TumorLocationCurator tumorLocationCurator, @NotNull Map<Integer, String> hospitals,
+    public CpctPatientReader(@NotNull TumorLocationCurator tumorLocationCurator, @NotNull Map<Integer, String> hospitals,
             @NotNull BiopsySiteCurator biopsySiteCurator, @NotNull TreatmentCurator treatmentCurator) {
         this.baselineReader = new BaselineReader(tumorLocationCurator, hospitals);
         this.preTreatmentReader = new PreTreatmentReader(treatmentCurator);

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientdb.matchers;
 
-import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FORM_BIOPS;
+import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyReader.FORM_BIOPS;
 
 import java.time.Duration;
 import java.time.LocalDate;

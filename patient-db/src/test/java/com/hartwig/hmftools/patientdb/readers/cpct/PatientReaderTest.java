@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.readers;
+package com.hartwig.hmftools.patientdb.readers.cpct;
 
 import static org.junit.Assert.assertEquals;
 
@@ -38,7 +38,7 @@ public class PatientReaderTest {
         final EcrfModel model = loadTestEcrf();
         assertEquals(1, model.patientCount());
 
-        final Map<Integer, String> hospitals = CpctEcrfModelUtil.extractHospitalMap(model);
+        final Map<Integer, String> hospitals = Util.extractHospitalMap(model);
         final BaselineReader baselineReader = new BaselineReader(TestCuratorFactory.tumorLocationCurator(), hospitals);
 
         final EcrfPatient cpctPatient = model.patients().iterator().next();

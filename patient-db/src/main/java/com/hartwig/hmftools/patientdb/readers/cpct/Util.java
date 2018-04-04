@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.readers;
+package com.hartwig.hmftools.patientdb.readers.cpct;
 
 import java.util.Map;
 
@@ -8,12 +8,12 @@ import com.hartwig.hmftools.common.ecrf.EcrfModel;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class CpctEcrfModelUtil {
+public final class Util {
 
     private static final String FIELD_HOSPITAL1 = "FLD.ELIGIBILITY.HOSPITAL";
     private static final String FIELD_HOSPITAL2 = "FLD.SELCRIT.NHOSPITAL";
 
-    private CpctEcrfModelUtil() {
+    private Util() {
     }
 
     @NotNull
