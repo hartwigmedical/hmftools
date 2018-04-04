@@ -45,7 +45,7 @@ public class CpctEcrfModel {
         return new CpctEcrfModel(datamodel, patients);
     }
 
-    public CpctEcrfModel(@NotNull final XMLEcrfDatamodel datamodel, @NotNull final Iterable<EcrfPatient> patients) {
+    private CpctEcrfModel(@NotNull final XMLEcrfDatamodel datamodel, @NotNull final Iterable<EcrfPatient> patients) {
         this.datamodel = datamodel;
         this.patients = patients;
         this.fields = XMLEcrfDatamodelToEcrfFields.convert(datamodel);
@@ -76,7 +76,7 @@ public class CpctEcrfModel {
     }
 
     @Nullable
-    public EcrfPatient findPatientById(@NotNull final String patientId) {
+    private EcrfPatient findPatientById(@NotNull final String patientId) {
         for (final EcrfPatient patient : patients) {
             if (patient.patientId().equals(patientId)) {
                 return patient;
