@@ -9,6 +9,7 @@ public enum CodingEffect {
     NONSENSE_OR_FRAMESHIFT,
     SPLICE,
     MISSENSE,
+    SYNONYMOUS,
     NONE;
 
     @NotNull
@@ -25,6 +26,10 @@ public enum CodingEffect {
 
         if (simplifiedEffects.stream().anyMatch(x -> x.equals(MISSENSE))) {
             return MISSENSE;
+        }
+
+        if (simplifiedEffects.stream().anyMatch(x -> x.equals(SYNONYMOUS))) {
+            return SYNONYMOUS;
         }
 
         return NONE;
@@ -46,6 +51,8 @@ public enum CodingEffect {
             case SPLICE_DONOR_VARIANT:
             case SPLICE_REGION_VARIANT:
                 return SPLICE;
+            case SYNONYMOUS_VARIANT:
+                return SYNONYMOUS;
         }
 
         return NONE;

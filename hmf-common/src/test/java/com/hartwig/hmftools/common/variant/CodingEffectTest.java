@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
+import static com.hartwig.hmftools.common.variant.CodingEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.common.variant.CodingEffect.effect;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.FRAMESHIFT_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_DELETION;
@@ -16,6 +17,7 @@ import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_DONO
 import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_REGION_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_GAINED;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.STRUCTURAL_INTERACTION_VARIANT;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.SYNONYMOUS_VARIANT;
 
 import static org.junit.Assert.assertEquals;
 
@@ -41,6 +43,8 @@ public class CodingEffectTest {
         assertEffect(SPLICE, SPLICE_DONOR_VARIANT);
         assertEffect(SPLICE, SPLICE_REGION_VARIANT);
 
+        assertEffect(SYNONYMOUS, SYNONYMOUS_VARIANT);
+
         assertEffect(NONE, INTRON_VARIANT);
     }
 
@@ -48,7 +52,8 @@ public class CodingEffectTest {
     public void testEffectPriority() {
         assertEffect(NONSENSE_OR_FRAMESHIFT, STOP_GAINED, SPLICE_ACCEPTOR_VARIANT, MISSENSE_VARIANT, INTRON_VARIANT);
         assertEffect(SPLICE, SPLICE_ACCEPTOR_VARIANT, MISSENSE_VARIANT, INTRON_VARIANT);
-        assertEffect(MISSENSE, MISSENSE_VARIANT, INTRON_VARIANT);
+        assertEffect(MISSENSE, MISSENSE_VARIANT, SYNONYMOUS_VARIANT, INTRON_VARIANT);
+        assertEffect(SYNONYMOUS, SYNONYMOUS_VARIANT, INTRON_VARIANT);
         assertEffect(NONE, INTRON_VARIANT);
     }
 
