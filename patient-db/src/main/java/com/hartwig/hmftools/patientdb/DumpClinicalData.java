@@ -23,9 +23,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-class DumpClinicalData {
-    private static final Logger LOGGER = LogManager.getLogger(LoadClinicalData.class);
+final class DumpClinicalData {
+
+    private static final Logger LOGGER = LogManager.getLogger(DumpClinicalData.class);
+
+    private DumpClinicalData() {
+    }
 
     static void writeClinicalDumps(@NotNull final String csvOutputDir, @NotNull final Collection<Patient> patients,
             @NotNull final Optional<String> cancerTypesLink, @NotNull final Optional<String> portalDataLink) throws IOException {
@@ -36,43 +39,43 @@ class DumpClinicalData {
     private static void writeCancerTypesToCSV(@NotNull final String csvOutputDir, @NotNull final Optional<String> linkName,
             @NotNull final Collection<Patient> patients) throws IOException {
         final String outputFile = fileLocation(csvOutputDir, "_cancerTypes.csv");
-        LOGGER.info("Writing cancer types to CSV... ");
+        LOGGER.info("Writing cancer types to csv in {}.", csvOutputDir);
         final List<PatientCancerTypes> cancerTypes = patients.stream()
-                .map(patient -> ImmutablePatientCancerTypes.of(patient.patientData().cpctId(),
-                        Strings.nullToEmpty(patient.patientData().cancerType().category()),
-                        Strings.nullToEmpty(patient.patientData().cancerType().subcategory())))
+                .map(patient -> ImmutablePatientCancerTypes.of(patient.patientIdentifier(),
+                        Strings.nullToEmpty(patient.baselineData().cancerType().type()),
+                        Strings.nullToEmpty(patient.baselineData().cancerType().subType())))
                 .collect(Collectors.toList());
         PatientCancerTypes.writeRecords(outputFile, cancerTypes);
         linkName.ifPresent(link -> updateSymlink(csvOutputDir + File.separator + link, outputFile));
-        LOGGER.info("Written {} records to {}", cancerTypes.size(), outputFile);
+        LOGGER.info("Written {} records to {}.", cancerTypes.size(), outputFile);
     }
 
     private static void writePortalClinicalData(@NotNull final String csvOutputDir, @NotNull final Optional<String> linkName,
             @NotNull final Collection<Patient> patients) throws IOException {
         final String outputFile = fileLocation(csvOutputDir, "_portal.csv");
-        LOGGER.info("Writing portal clinical data to CSV... ");
+        LOGGER.info("Writing portal clinical data to csv in {}.", csvOutputDir);
         final List<PortalClinicalData> portalData = patients.stream()
                 .flatMap(patient -> patient.sequencedBiopsies()
                         .stream()
-                        .map(sampleData -> ImmutablePortalClinicalData.of(patient.patientData().cpctId(),
+                        .map(sampleData -> ImmutablePortalClinicalData.of(patient.patientIdentifier(),
                                 sampleData.sampleId(),
-                                patient.patientData().gender(),
-                                patient.patientData().birthYear(),
-                                patient.patientData().registrationDate(),
-                                patient.patientData().cancerType().category(),
-                                getBiopsySite(patient, sampleData.sampleId()))))
+                                patient.baselineData().gender(),
+                                patient.baselineData().birthYear(),
+                                patient.baselineData().registrationDate(),
+                                patient.baselineData().cancerType().type(),
+                                getBiopsyType(patient, sampleData.sampleId()))))
                 .collect(Collectors.toList());
         PortalClinicalData.writeRecords(outputFile, portalData);
         linkName.ifPresent(link -> updateSymlink(csvOutputDir + File.separator + link, outputFile));
-        LOGGER.info("Written {} sample records to {}", portalData.size(), outputFile);
+        LOGGER.info("Written {} sample records to {}.", portalData.size(), outputFile);
     }
 
     @NotNull
-    private static String getBiopsySite(@NotNull final Patient patient, @NotNull final String sampleId) {
+    private static String getBiopsyType(@NotNull final Patient patient, @NotNull final String sampleId) {
         return patient.clinicalBiopsies().stream().filter(biopsyData -> {
             final String clinicalSampleId = biopsyData.sampleId();
             return clinicalSampleId != null && clinicalSampleId.equals(sampleId);
-        }).map(biopsyData -> Strings.nullToEmpty(biopsyData.site())).findFirst().orElse("");
+        }).map(biopsyData -> Strings.nullToEmpty(biopsyData.curatedType())).findFirst().orElse("");
     }
 
     @NotNull
@@ -87,7 +90,7 @@ class DumpClinicalData {
             Files.deleteIfExists(linkPath);
             Files.createSymbolicLink(linkPath, Paths.get(fileName));
         } catch (IOException e) {
-            LOGGER.warn("Failed to update symlink {}. Cause: {}", linkName, e.getMessage());
+            LOGGER.warn("Failed to update symlink {}. Cause: {}.", linkName, e.getMessage());
         }
     }
 }

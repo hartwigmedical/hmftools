@@ -64,7 +64,7 @@ public class FragileSiteAnnotator {
 //                        genomeRegion.chromosome(), genomeRegion.start(), genomeRegion.end());
             }
 
-            LOGGER.debug("loaded {} known fragile site records, {} identifed", mFragileSites.size(), mIdentifiedFragileSites.size());
+            LOGGER.debug("loaded {} known fragile site records, {} identified", mFragileSites.size(), mIdentifiedFragileSites.size());
         }
         catch(IOException exception)
         {

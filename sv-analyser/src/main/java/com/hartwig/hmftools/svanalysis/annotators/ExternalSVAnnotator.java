@@ -3,18 +3,17 @@ package com.hartwig.hmftools.svanalysis.annotators;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.svanalysis.types.SvClusterData;
+import com.google.common.collect.Maps;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class ExternalSVAnnotator {
-
 
     private List<String> mFieldNames;
     private String mFieldNamesStr;
@@ -28,14 +27,14 @@ public class ExternalSVAnnotator {
     {
         mFieldNames = Lists.newArrayList();
         mFieldNamesStr = "";
-        mIdValues = new HashMap();
+        mIdValues = Maps.newHashMap();
         mEmptyValues = "";
     }
 
-    public void loadFile(final String filename)
-    {
-        if(filename.isEmpty())
+    public void loadFile(final String filename) {
+        if (filename.isEmpty()) {
             return;
+        }
 
         try {
 
@@ -44,8 +43,7 @@ public class ExternalSVAnnotator {
             // read field names
             String line = fileReader.readLine();
 
-            if(line == null)
-            {
+            if (line == null) {
                 LOGGER.error("Empty external SV annotations CSV file({})", filename);
                 return;
             }
@@ -55,7 +53,7 @@ public class ExternalSVAnnotator {
             mFieldNames = Lists.newArrayList(fieldNames);
 
             // cache the field names, excluding the SV ID
-            for(int i = 1; i < fieldNames.length; ++i) {
+            for (int i = 1; i < fieldNames.length; ++i) {
                 mEmptyValues += ",";
                 mFieldNamesStr += "," + fieldNames[i];
             }
@@ -67,14 +65,14 @@ public class ExternalSVAnnotator {
                 // parse CSV data
                 String[] items = line.split(",");
 
-                if(items.length != mFieldNames.size())
+                if (items.length != mFieldNames.size()) {
                     continue;
+                }
 
                 int svId = Integer.parseInt(items[0]);
 
                 String values = "";
-                for(int i = 1; i < items.length; ++i)
-                {
+                for (int i = 1; i < items.length; ++i) {
                     values += "," + items[i];
                 }
 
@@ -84,22 +82,25 @@ public class ExternalSVAnnotator {
             }
 
             LOGGER.debug("loaded {} external SV annotations", mIdValues.size());
-        }
-        catch(IOException exception)
-        {
+        } catch (IOException exception) {
             LOGGER.error("Failed to read external SV annotations CSV file({})", filename);
         }
     }
 
-    public boolean hasExternalData() { return !mFieldNames.isEmpty(); }
-    public final String getFieldNames() { return mFieldNamesStr; }
+    public boolean hasExternalData() {
+        return !mFieldNames.isEmpty();
+    }
 
-    public final String getSVData(final SvClusterData var)
-    {
+    public final String getFieldNames() {
+        return mFieldNamesStr;
+    }
+
+    public final String getSVData(final SvClusterData var) {
         final String dataList = mIdValues.get(Integer.parseInt(var.id()));
 
-        if(dataList == null)
+        if (dataList == null) {
             return mEmptyValues;
+        }
 
         return dataList;
     }

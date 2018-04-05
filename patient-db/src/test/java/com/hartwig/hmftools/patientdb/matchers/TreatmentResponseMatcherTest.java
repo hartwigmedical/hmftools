@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientdb.matchers;
 
+import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyTreatmentBuilder;
+import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyTreatmentResponseBuilder;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -8,12 +11,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.DrugData;
-import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
-import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.ImmutableDrugData;
 
 import org.jetbrains.annotations.NotNull;
@@ -171,16 +171,16 @@ public class TreatmentResponseMatcherTest {
     @NotNull
     private static BiopsyTreatmentData treatmentWithStartEnd(@Nullable LocalDate start, @Nullable LocalDate end) {
         DrugData drug = ImmutableDrugData.of("drug", start, end, null, Lists.newArrayList());
-        return ImmutableBiopsyTreatmentData.of("Yes", "Yes", Lists.newArrayList(drug), FormStatusState.UNKNOWN, false);
+        return biopsyTreatmentBuilder().treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(drug).build();
     }
 
     @NotNull
     private static BiopsyTreatmentResponseData responseOnDate(@Nullable LocalDate date) {
-        return ImmutableBiopsyTreatmentResponseData.of(date, date, "response", "Yes", "No", FormStatusState.UNKNOWN, false);
+        return biopsyTreatmentResponseBuilder().responseDate(date).response("response").measurementDone("Yes").build();
     }
 
     @NotNull
     private static BiopsyTreatmentResponseData baselineResponseOnDate(@Nullable LocalDate date) {
-        return ImmutableBiopsyTreatmentResponseData.of(date, date, "NE", "Yes", "No", FormStatusState.UNKNOWN, false);
+        return biopsyTreatmentResponseBuilder().responseDate(date).response("NE").measurementDone("Yes").build();
     }
 }

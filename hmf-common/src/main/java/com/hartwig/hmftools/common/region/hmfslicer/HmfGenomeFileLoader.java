@@ -10,8 +10,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.SortedSetMultimap;
-import com.google.common.collect.TreeMultimap;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 
 import org.apache.logging.log4j.LogManager;

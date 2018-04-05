@@ -1,14 +1,13 @@
 package com.hartwig.hmftools.svanalysis.types;
 
+import java.util.List;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-
-import java.util.List;
-
 
 public class SvClusterData
 {

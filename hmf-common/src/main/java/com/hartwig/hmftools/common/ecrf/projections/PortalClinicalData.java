@@ -27,19 +27,19 @@ public abstract class PortalClinicalData {
     public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private enum Header {
-        cpctId,
+        patientIdentifier,
         sampleId,
         gender,
         birthYear,
         registrationDate,
         cancerType,
-        biopsySite,
+        biopsyType,
         hmfId,
         sampleHmfId
     }
 
     @NotNull
-    public abstract String cpctId();
+    public abstract String patientIdentifier();
 
     @NotNull
     public abstract String sampleId();
@@ -57,7 +57,7 @@ public abstract class PortalClinicalData {
     public abstract String cancerType();
 
     @NotNull
-    public abstract String biopsySite();
+    public abstract String biopsyType();
 
     @NotNull
     public abstract String hmfId();
@@ -67,21 +67,20 @@ public abstract class PortalClinicalData {
 
     @NotNull
     private List<String> csvRecord() {
-        return Lists.newArrayList(cpctId(),
+        return Lists.newArrayList(patientIdentifier(),
                 sampleId(),
                 gender(),
                 birthYear(),
                 registrationDate(),
-                cancerType(),
-                biopsySite(),
+                cancerType(), biopsyType(),
                 hmfId(),
                 sampleHmfId());
     }
 
     @NotNull
-    public static PortalClinicalData of(@NotNull final String cpctId, @Nullable final String gender, @Nullable final Integer birthYear,
-            @Nullable final LocalDate registrationDate, @Nullable final String cancerType) {
-        return ImmutablePortalClinicalData.of(cpctId,
+    public static PortalClinicalData of(@NotNull final String patientIdentifier, @Nullable final String gender,
+            @Nullable final Integer birthYear, @Nullable final LocalDate registrationDate, @Nullable final String cancerType) {
+        return ImmutablePortalClinicalData.of(patientIdentifier,
                 "",
                 Strings.nullToEmpty(gender),
                 birthYear == null ? "" : birthYear.toString(),
@@ -93,16 +92,15 @@ public abstract class PortalClinicalData {
     }
 
     @NotNull
-    public static PortalClinicalData of(@NotNull final String cpctId, @Nullable final String sampleId, @Nullable final String gender,
-            @Nullable final Integer birthYear, @Nullable final LocalDate registrationDate, @Nullable final String cancerType,
-            @NotNull final String biopsySite) {
-        return ImmutablePortalClinicalData.of(cpctId,
+    public static PortalClinicalData of(@NotNull final String patientIdentifier, @Nullable final String sampleId,
+            @Nullable final String gender, @Nullable final Integer birthYear, @Nullable final LocalDate registrationDate,
+            @Nullable final String cancerType, @NotNull final String biopsyType) {
+        return ImmutablePortalClinicalData.of(patientIdentifier,
                 Strings.nullToEmpty(sampleId),
                 Strings.nullToEmpty(gender),
                 birthYear == null ? "" : birthYear.toString(),
                 registrationDate == null ? "" : registrationDate.format(FORMATTER),
-                Strings.nullToEmpty(cancerType),
-                biopsySite,
+                Strings.nullToEmpty(cancerType), biopsyType,
                 "",
                 "");
     }
@@ -115,18 +113,17 @@ public abstract class PortalClinicalData {
         printer.close();
     }
 
+    @NotNull
     public static List<PortalClinicalData> readRecords(@NotNull final String filePath) throws IOException {
-        final CSVParser parser = CSVParser.parse(new File(filePath),
-                Charset.defaultCharset(),
-                CSVFormat.DEFAULT.withHeader(Header.class).withSkipHeaderRecord());
+        final CSVParser parser = CSVParser.parse(new File(filePath), Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader(Header.class).withSkipHeaderRecord());
         return StreamSupport.stream(parser.spliterator(), false)
-                .map(record -> ImmutablePortalClinicalData.of(record.get(Header.cpctId),
+                .map(record -> ImmutablePortalClinicalData.of(record.get(Header.patientIdentifier),
                         record.get(Header.sampleId),
                         record.get(Header.gender),
                         record.get(Header.birthYear),
                         record.get(Header.registrationDate),
                         record.get(Header.cancerType),
-                        record.get(Header.biopsySite),
+                        record.get(Header.biopsyType),
                         record.get(Header.hmfId),
                         record.get(Header.sampleHmfId)))
                 .collect(Collectors.toList());

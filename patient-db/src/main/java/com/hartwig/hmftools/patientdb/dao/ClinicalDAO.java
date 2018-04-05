@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.BASELINE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.BIOPSY;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRUG;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.FORMSMETADATA;
@@ -10,20 +11,22 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATME
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATMENTRESPONSE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TUMORMARKER;
 
+import java.util.List;
+
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.Utils;
+import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.Patient;
-import com.hartwig.hmftools.patientdb.data.PatientData;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.data.TumorMarkerData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.Record;
 
 class ClinicalDAO {
 
@@ -37,6 +40,7 @@ class ClinicalDAO {
     void clear() {
         context.execute("SET FOREIGN_KEY_CHECKS = 0;");
         context.truncate(PATIENT).execute();
+        context.truncate(BASELINE).execute();
         context.truncate(PRETREATMENTDRUG).execute();
         context.truncate(SAMPLE).execute();
         context.truncate(BIOPSY).execute();
@@ -48,94 +52,90 @@ class ClinicalDAO {
         context.execute("SET FOREIGN_KEY_CHECKS = 1;");
     }
 
-    void writeClinicalData(@NotNull final Patient patient) {
-        final int patientId = writePatientData(patient.patientData(), patient.preTreatmentData());
-        patient.sequencedBiopsies().forEach(biopsy -> writeSampleData(patientId, biopsy));
+    void writeFullClinicalData(@NotNull Patient patient) {
+        final int patientId = writePatientIdentifier(patient.patientIdentifier());
+        writeBaselineData(patientId, patient.baselineData(), patient.preTreatmentData());
+        patient.sequencedBiopsies().forEach(sample -> writeSampleData(patientId, sample));
         patient.clinicalBiopsies().forEach(biopsy -> writeBiopsyData(patientId, biopsy));
         patient.treatments().forEach(treatment -> writeTreatmentData(patientId, treatment));
         patient.treatmentResponses().forEach(response -> writeTreatmentResponseData(patientId, response));
         patient.tumorMarkers().forEach(tumorMarker -> writeTumorMarkerData(patientId, tumorMarker));
     }
 
-    private int writePatientData(@NotNull final PatientData patient, @NotNull PreTreatmentData preTreatmentData) {
-        final Record patientRecord = context.select(PATIENT.ID).from(PATIENT).where(PATIENT.CPCTID.eq(patient.cpctId())).fetchOne();
-        if (patientRecord != null) {
-            return patientRecord.getValue(PATIENT.ID);
-        } else {
-            final int patientId = context.insertInto(PATIENT,
-                    PATIENT.CPCTID,
-                    PATIENT.REGISTRATIONDATE,
-                    PATIENT.INFORMEDCONSENTDATE,
-                    PATIENT.GENDER,
-                    PATIENT.HOSPITAL,
-                    PATIENT.BIRTHYEAR,
-                    PATIENT.CANCERTYPE,
-                    PATIENT.CANCERSUBTYPE,
-                    PATIENT.DEATHDATE,
-                    PATIENT.HASSYSTEMICPRETREATMENT,
-                    PATIENT.HASRADIOTHERAPYPRETREATMENT,
-                    PATIENT.PRETREATMENTS)
-                    .values(patient.cpctId(),
-                            Utils.toSQLDate(patient.registrationDate()),
-                            Utils.toSQLDate(patient.informedConsentDate()),
-                            patient.gender(),
-                            patient.hospital(),
-                            patient.birthYear(),
-                            patient.cancerType().category(),
-                            patient.cancerType().subcategory(),
-                            Utils.toSQLDate(patient.deathDate()),
-                            preTreatmentData.treatmentGiven(),
-                            preTreatmentData.radiotherapyGiven(),
-                            preTreatmentData.treatmentName())
-                    .returning(PATIENT.ID)
-                    .fetchOne()
-                    .getValue(PATIENT.ID);
-            writeFormStatus(patientId,
-                    PATIENT.getName(),
-                    "demography",
-                    patient.demographyStatus().stateString(),
-                    Boolean.toString(patient.demographyLocked()));
-            writeFormStatus(patientId,
-                    PATIENT.getName(),
-                    "primaryTumor",
-                    patient.primaryTumorStatus().stateString(),
-                    Boolean.toString(patient.primaryTumorLocked()));
-            writeFormStatus(patientId,
-                    PATIENT.getName(),
-                    "informedConsent",
-                    patient.informedConsentStatus().stateString(),
-                    Boolean.toString(patient.informedConsentLocked()));
-            writeFormStatus(patientId,
-                    PATIENT.getName(),
-                    "eligibility",
-                    patient.eligibilityStatus().stateString(),
-                    Boolean.toString(patient.eligibilityLocked()));
-            writeFormStatus(patientId,
-                    PATIENT.getName(),
-                    "selectionCriteria",
-                    patient.selectionCriteriaStatus().stateString(),
-                    Boolean.toString(patient.selectionCriteriaLocked()));
-            writeFormStatus(patientId,
-                    PATIENT.getName(),
-                    "death",
-                    patient.deathStatus().stateString(),
-                    Boolean.toString(patient.deathLocked()));
-            writeFormStatus(patientId,
-                    PATIENT.getName(),
-                    "pretreatment",
-                    preTreatmentData.formStatus().stateString(),
-                    Boolean.toString(preTreatmentData.formLocked()));
-            preTreatmentData.drugs()
-                    .forEach(drug -> writePreTreatmentDrugData(patientId,
-                            drug,
-                            preTreatmentData.formStatus().stateString(),
-                            Boolean.toString(preTreatmentData.formLocked())));
-            return patientId;
-        }
+    void writeSampleClinicalData(@NotNull String patientIdentifier, @NotNull List<SampleData> samples) {
+        final int patientId = writePatientIdentifier(patientIdentifier);
+        samples.forEach(sample -> writeSampleData(patientId, sample));
     }
 
-    private void writePreTreatmentDrugData(final int patientId, @NotNull final DrugData drug, @NotNull final String formStatus,
-            @NotNull final String formLocked) {
+    private int writePatientIdentifier(@NotNull String patientIdentifier) {
+        return context.insertInto(PATIENT, PATIENT.PATIENTIDENTIFIER)
+                .values(patientIdentifier)
+                .returning(PATIENT.ID)
+                .fetchOne()
+                .getValue(PATIENT.ID);
+    }
+
+    private void writeSampleData(final int patientId, @NotNull final SampleData sample) {
+        context.insertInto(SAMPLE,
+                SAMPLE.SAMPLEID,
+                SAMPLE.PATIENTID,
+                SAMPLE.ARRIVALDATE,
+                SAMPLE.SAMPLINGDATE,
+                SAMPLE.DNANANOGRAMS,
+                SAMPLE.TUMORPERCENTAGE)
+                .values(sample.sampleId(),
+                        patientId,
+                        Utils.toSQLDate(sample.arrivalDate()),
+                        Utils.toSQLDate(sample.samplingDate()),
+                        sample.dnaNanograms(),
+                        sample.tumorPercentage())
+                .execute();
+    }
+
+    private void writeBaselineData(int patientId, @NotNull BaselineData patient, @NotNull PreTreatmentData preTreatmentData) {
+        context.insertInto(BASELINE,
+                BASELINE.PATIENTID,
+                BASELINE.REGISTRATIONDATE,
+                BASELINE.INFORMEDCONSENTDATE,
+                BASELINE.GENDER,
+                BASELINE.HOSPITAL,
+                BASELINE.BIRTHYEAR,
+                BASELINE.CANCERTYPE,
+                BASELINE.CANCERSUBTYPE,
+                BASELINE.DEATHDATE,
+                BASELINE.HASSYSTEMICPRETREATMENT,
+                BASELINE.HASRADIOTHERAPYPRETREATMENT,
+                BASELINE.PRETREATMENTS)
+                .values(patientId,
+                        Utils.toSQLDate(patient.registrationDate()),
+                        Utils.toSQLDate(patient.informedConsentDate()),
+                        patient.gender(),
+                        patient.hospital(),
+                        patient.birthYear(),
+                        patient.cancerType().type(),
+                        patient.cancerType().subType(),
+                        Utils.toSQLDate(patient.deathDate()),
+                        preTreatmentData.treatmentGiven(),
+                        preTreatmentData.radiotherapyGiven(),
+                        preTreatmentData.treatmentName())
+                .execute();
+
+        preTreatmentData.drugs().forEach(drug -> writePreTreatmentDrugData(patientId, drug, preTreatmentData.formStatus()));
+
+        writeBaselineFormStatus(patientId, "demography", patient.demographyStatus());
+        writeBaselineFormStatus(patientId, "primaryTumor", patient.primaryTumorStatus());
+        writeBaselineFormStatus(patientId, "informedConsent", patient.informedConsentStatus());
+        writeBaselineFormStatus(patientId, "eligibility", patient.eligibilityStatus());
+        writeBaselineFormStatus(patientId, "selectionCriteria", patient.selectionCriteriaStatus());
+        writeBaselineFormStatus(patientId, "death", patient.deathStatus());
+        writeBaselineFormStatus(patientId, "pretreatment", preTreatmentData.formStatus());
+    }
+
+    private void writeBaselineFormStatus(int patientId, @NotNull String form, @NotNull FormStatus formStatus) {
+        writeFormStatus(patientId, BASELINE.getName(), form, formStatus);
+    }
+
+    private void writePreTreatmentDrugData(int patientId, @NotNull DrugData drug, @NotNull FormStatus formStatus) {
         drug.filteredCuratedTreatments().forEach(curatedTreatment -> {
             final int id = context.insertInto(PRETREATMENTDRUG,
                     PRETREATMENTDRUG.PATIENTID,
@@ -153,23 +153,9 @@ class ClinicalDAO {
                     .returning(PRETREATMENTDRUG.ID)
                     .fetchOne()
                     .getValue(PRETREATMENTDRUG.ID);
-            writeFormStatus(id, PRETREATMENTDRUG.getName(), "pretreatment", formStatus, formLocked);
-        });
-    }
 
-    private void writeSampleData(final int patientId, @NotNull final SampleData sample) {
-        context.insertInto(SAMPLE,
-                SAMPLE.SAMPLEID,
-                SAMPLE.PATIENTID,
-                SAMPLE.ARRIVALDATE,
-                SAMPLE.SAMPLINGDATE,
-                SAMPLE.DNANANOGRAMS,
-                SAMPLE.TUMORPERCENTAGE)
-                .values(sample.sampleId(),
-                        patientId,
-                        Utils.toSQLDate(sample.arrivalDate()), Utils.toSQLDate(sample.samplingDate()), sample.dnaNanograms(),
-                        sample.tumorPercentage())
-                .execute();
+            writeFormStatus(id, PRETREATMENTDRUG.getName(), "pretreatment", formStatus);
+        });
     }
 
     private void writeBiopsyData(final int patientId, @NotNull final BiopsyData biopsy) {
@@ -179,6 +165,7 @@ class ClinicalDAO {
                 BIOPSY.PATIENTID,
                 BIOPSY.BIOPSYTAKEN,
                 BIOPSY.BIOPSYEVALUABLE,
+                BIOPSY.BIOPSYTYPE,
                 BIOPSY.BIOPSYSITE,
                 BIOPSY.BIOPSYLOCATION,
                 BIOPSY.BIOPSYDATE)
@@ -187,21 +174,30 @@ class ClinicalDAO {
                         patientId,
                         biopsy.biopsyTaken(),
                         biopsy.biopsyEvaluable(),
+                        biopsy.curatedType(),
                         biopsy.site(),
                         biopsy.location(),
                         Utils.toSQLDate(biopsy.date()))
                 .execute();
-        writeFormStatus(biopsy.id(), BIOPSY.getName(), "biopsy", biopsy.formStatus().stateString(), Boolean.toString(biopsy.formLocked()));
+        writeFormStatus(biopsy.id(), BIOPSY.getName(), "biopsy", biopsy.formStatus());
     }
 
     private void writeTreatmentData(final int patientId, @NotNull final BiopsyTreatmentData treatment) {
         context.insertInto(TREATMENT,
-                TREATMENT.ID, TREATMENT.BIOPSYID, TREATMENT.PATIENTID, TREATMENT.TREATMENTGIVEN, TREATMENT.RADIOTHERAPYGIVEN,
+                TREATMENT.ID,
+                TREATMENT.BIOPSYID,
+                TREATMENT.PATIENTID,
+                TREATMENT.TREATMENTGIVEN,
+                TREATMENT.RADIOTHERAPYGIVEN,
                 TREATMENT.STARTDATE,
                 TREATMENT.ENDDATE,
                 TREATMENT.NAME,
                 TREATMENT.TYPE)
-                .values(treatment.id(), treatment.biopsyId(), patientId, treatment.treatmentGiven(), treatment.radiotherapyGiven(),
+                .values(treatment.id(),
+                        treatment.biopsyId(),
+                        patientId,
+                        treatment.treatmentGiven(),
+                        treatment.radiotherapyGiven(),
                         Utils.toSQLDate(treatment.startDate()),
                         Utils.toSQLDate(treatment.endDate()),
                         treatment.treatmentName(),
@@ -209,19 +205,15 @@ class ClinicalDAO {
                 .execute();
         writeFormStatus(treatment.id(),
                 TREATMENT.getName(),
-                "treatment",
-                treatment.formStatus().stateString(),
-                Boolean.toString(treatment.formLocked()));
+                "treatment", treatment.formStatus());
         treatment.drugs()
                 .forEach(drug -> writeDrugData(patientId,
                         treatment.id(),
-                        drug,
-                        treatment.formStatus().stateString(),
-                        Boolean.toString(treatment.formLocked())));
+                        drug, treatment.formStatus()));
     }
 
-    private void writeDrugData(final int patientId, final int treatmentId, @NotNull final DrugData drug, @NotNull final String formStatus,
-            @NotNull final String formLocked) {
+    private void writeDrugData(final int patientId, final int treatmentId, @NotNull final DrugData drug,
+            @NotNull final FormStatus formStatus) {
         drug.filteredCuratedTreatments().forEach(curatedTreatment -> {
             final int id = context.insertInto(DRUG, DRUG.TREATMENTID, DRUG.PATIENTID, DRUG.STARTDATE, DRUG.ENDDATE, DRUG.NAME, DRUG.TYPE)
                     .values(treatmentId,
@@ -233,7 +225,7 @@ class ClinicalDAO {
                     .returning(DRUG.ID)
                     .fetchOne()
                     .getValue(DRUG.ID);
-            writeFormStatus(id, DRUG.getName(), "treatment", formStatus, formLocked);
+            writeFormStatus(id, DRUG.getName(), "treatment", formStatus);
         });
     }
 
@@ -255,11 +247,7 @@ class ClinicalDAO {
                 .fetchOne()
                 .getValue(TREATMENTRESPONSE.ID);
 
-        writeFormStatus(id,
-                TREATMENTRESPONSE.getName(),
-                "treatmentResponse",
-                treatmentResponse.formStatus().stateString(),
-                Boolean.toString(treatmentResponse.formLocked()));
+        writeFormStatus(id, TREATMENTRESPONSE.getName(), "treatmentResponse", treatmentResponse.formStatus());
     }
 
     private void writeTumorMarkerData(final int patientId, @NotNull final TumorMarkerData tumorMarker) {
@@ -274,20 +262,17 @@ class ClinicalDAO {
                 .fetchOne()
                 .getValue(TUMORMARKER.ID);
 
-        writeFormStatus(id,
-                TUMORMARKER.getName(),
-                "tumorMarker",
-                tumorMarker.formStatus().stateString(),
-                Boolean.toString(tumorMarker.formLocked()));
+        writeFormStatus(id, TUMORMARKER.getName(), "tumorMarker", tumorMarker.formStatus());
     }
 
     private void writeFormStatus(final int id, @NotNull final String tableName, @NotNull final String formName,
-            @NotNull final String formStatus, @NotNull final String formLocked) {
+            @NotNull final FormStatus formStatus) {
         context.insertInto(FORMSMETADATA,
                 FORMSMETADATA.ID,
                 FORMSMETADATA.TABLENAME,
                 FORMSMETADATA.FORM,
-                FORMSMETADATA.STATUS,
-                FORMSMETADATA.LOCKED).values(id, tableName, formName, formStatus, formLocked).execute();
+                FORMSMETADATA.STATUS, FORMSMETADATA.LOCKED)
+                .values(id, tableName, formName, formStatus.state().stateString(), Boolean.toString(formStatus.locked()))
+                .execute();
     }
 }

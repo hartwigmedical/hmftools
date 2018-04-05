@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.strelka.mnv;
 
+import static com.hartwig.hmftools.strelka.StrelkaPostProcessApplication.generateOutputHeader;
+
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
@@ -18,12 +20,15 @@ import org.junit.Test;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
 
 public class MNVValidatorTest {
     private static final Logger LOGGER = LogManager.getLogger(MNVValidatorTest.class);
 
     private static final File VCF_FILE = new File(Resources.getResource("mnvs.vcf").getPath());
     private static final VCFFileReader VCF_FILE_READER = new VCFFileReader(VCF_FILE, false);
+    private static final VCFHeader VCF_OUTPUT_HEADER = generateOutputHeader(VCF_FILE_READER.getFileHeader(), "TUMOR");
+    private static final MNVMerger MNV_MERGER = ImmutableMNVMerger.of(VCF_OUTPUT_HEADER);
     private static final List<VariantContext> VARIANTS = Streams.stream(VCF_FILE_READER).collect(Collectors.toList());
 
     // MIVO: variants at positions: 1  3(alts: A,T)  =>  possible mnvs: (1,3A) (1,3T) => actual mnv: (1,3A) => non-mnv variant: 3T
@@ -65,7 +70,7 @@ public class MNVValidatorTest {
         final SAMRecord recordWith1and2 = TestUtils.buildSamRecord(170755999, "6M", "CATTAG");
         final List<SAMRecord> records = Lists.newArrayList(recordWith1and2, recordWith1and2);
         final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
-        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
+        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator, MNV_MERGER);
         LOGGER.info(outputVariants);
         assertEquals(1, outputVariants.size());
         assertEquals("CG", outputVariants.get(0).getReference().getBaseString());
@@ -84,7 +89,7 @@ public class MNVValidatorTest {
         final SAMRecord recordWith2 = TestUtils.buildSamRecord(170755999, "6M", "CACTAG");
         final List<SAMRecord> records = Lists.newArrayList(recordWith1, recordWith2, recordWith1and2);
         final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
-        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
+        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator, MNV_MERGER);
         LOGGER.info(outputVariants);
         assertEquals(2, outputVariants.size());
         assertEquals(VARIANTS.get(11), outputVariants.get(0));
@@ -100,7 +105,7 @@ public class MNVValidatorTest {
         final SAMRecord recordWith1and2and3 = TestUtils.buildSamRecord(170756000, "6M", "ATTTGC");
         final List<SAMRecord> records = Lists.newArrayList(recordWith1and2and3, recordWith1and2and3);
         final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
-        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
+        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator, MNV_MERGER);
         assertEquals(1, outputVariants.size());
         assertEquals("CGA", outputVariants.get(0).getReference().getBaseString());
         assertEquals(1, outputVariants.get(0).getAlternateAlleles().size());
@@ -117,7 +122,7 @@ public class MNVValidatorTest {
         final SAMRecord recordWith1and2and3 = TestUtils.buildSamRecord(170756000, "6M", "ATTTGC");
         final List<SAMRecord> records = Lists.newArrayList(recordWith1and2, recordWith1and2and3);
         final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
-        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
+        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator, MNV_MERGER);
         assertEquals(2, outputVariants.size());
         assertEquals("CG", outputVariants.get(0).getReference().getBaseString());
         assertEquals(1, outputVariants.get(0).getAlternateAlleles().size());
@@ -136,7 +141,7 @@ public class MNVValidatorTest {
         final List<SAMRecord> records =
                 Lists.newArrayList(recordWith1and3, recordWith1and3, recordWith1and3, recordWith1and3, recordWith1and3, recordWith2and3);
         final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
-        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
+        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator, MNV_MERGER);
         assertEquals(2, outputVariants.size());
         assertEquals(VARIANTS.get(16), outputVariants.get(0));
         assertEquals("CCG", outputVariants.get(1).getReference().getBaseString());
@@ -155,7 +160,7 @@ public class MNVValidatorTest {
         final List<SAMRecord> records =
                 Lists.newArrayList(recordWith1and2, recordWith1and2, recordWith1and2, recordWith1and2, recordWith1and2, recordWith1and3);
         final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
-        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
+        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator, MNV_MERGER);
         assertEquals(2, outputVariants.size());
         assertEquals("CCG", outputVariants.get(0).getReference().getBaseString());
         assertEquals(1, outputVariants.get(0).getAlternateAlleles().size());
@@ -175,11 +180,14 @@ public class MNVValidatorTest {
         final SAMRecord recordWith1and2 = TestUtils.buildSamRecord(170755999, "6M", "CATTAG");
         final SAMRecord recordWith2and3 = TestUtils.buildSamRecord(170755999, "6M", "CACTTG");
         final SAMRecord recordWith1and2and3 = TestUtils.buildSamRecord(170756000, "6M", "ATTTGC");
-        final List<SAMRecord> records =
-                Lists.newArrayList(recordWith1and2, recordWith1and2and3, recordWith1and2and3, recordWith1and2and3, recordWith1and2and3,
-                        recordWith2and3);
+        final List<SAMRecord> records = Lists.newArrayList(recordWith1and2,
+                recordWith1and2and3,
+                recordWith1and2and3,
+                recordWith1and2and3,
+                recordWith1and2and3,
+                recordWith2and3);
         final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
-        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
+        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator, MNV_MERGER);
         LOGGER.info(outputVariants);
         assertEquals(2, outputVariants.size());
         assertEquals("CG", outputVariants.get(0).getReference().getBaseString());
@@ -197,7 +205,7 @@ public class MNVValidatorTest {
         final SAMRecord recordWith1and2and3and4 = TestUtils.buildSamRecord(170756001, "5M", "TTTCC");
         final List<SAMRecord> records = Lists.newArrayList(recordWith1and2and3and4, recordWith1and2and3and4);
         final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
-        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
+        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator, MNV_MERGER);
         assertEquals(1, outputVariants.size());
         assertEquals("CGAT", outputVariants.get(0).getReference().getBaseString());
         assertEquals(1, outputVariants.get(0).getAlternateAlleles().size());
@@ -213,11 +221,14 @@ public class MNVValidatorTest {
         final SAMRecord recordWith1and2and3 = TestUtils.buildSamRecord(170755999, "6M", "CATTTT");
         final SAMRecord recordWith2and3and4 = TestUtils.buildSamRecord(170756000, "6M", "ACTTCC");
         final SAMRecord recordWith1and2and3and4 = TestUtils.buildSamRecord(170756001, "5M", "TTTCC");
-        final List<SAMRecord> records =
-                Lists.newArrayList(recordWith1and2and3and4, recordWith1and2and3and4, recordWith1and2and3and4, recordWith1and2and3and4,
-                        recordWith1and2and3, recordWith2and3and4);
+        final List<SAMRecord> records = Lists.newArrayList(recordWith1and2and3and4,
+                recordWith1and2and3and4,
+                recordWith1and2and3and4,
+                recordWith1and2and3and4,
+                recordWith1and2and3,
+                recordWith2and3and4);
         final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
-        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
+        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator, MNV_MERGER);
         assertEquals(2, outputVariants.size());
         assertEquals("CGA", outputVariants.get(0).getReference().getBaseString());
         assertEquals(1, outputVariants.get(0).getAlternateAlleles().size());
@@ -236,7 +247,7 @@ public class MNVValidatorTest {
         final SAMRecord recordWith1and2and3and4 = TestUtils.buildSamRecord(170756001, "5M", "TTTCC");
         final List<SAMRecord> records = Lists.newArrayList(recordWith1and2, recordWith3and4, recordWith1and2and3and4);
         final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
-        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
+        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator, MNV_MERGER);
         assertEquals(2, outputVariants.size());
         assertEquals("CG", outputVariants.get(0).getReference().getBaseString());
         assertEquals(1, outputVariants.get(0).getAlternateAlleles().size());

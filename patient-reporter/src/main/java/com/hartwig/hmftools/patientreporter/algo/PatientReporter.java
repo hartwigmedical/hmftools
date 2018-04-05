@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.doid.TumorLocationDoidMapping;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
@@ -36,7 +35,6 @@ import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
-import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
@@ -176,10 +174,6 @@ public abstract class PatientReporter {
                 .copyNumbers(purpleCopyNumbers)
                 .panelGeneCopyNumbers(panelGeneCopyNumbers)
                 .build();
-        if (Doubles.greaterThan(purpleAnalysis.purityUncertainty(), 0.05)) {
-            LOGGER.warn("Purity uncertainty (" + PatientReportFormat.formatPercent(purpleAnalysis.purityUncertainty())
-                    + ") range exceeds 5%. Proceed with caution.");
-        }
 
         final Path structuralVariantVCF = PatientReporterHelper.findStructuralVariantVCF(runDirectory);
         LOGGER.info(" Loading structural variants...");

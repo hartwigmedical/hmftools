@@ -58,6 +58,7 @@ public enum VariantConsequence {
     STRUCTURAL_INTERACTION_VARIANT(true, "structural_interaction_variant"),
     FUSION(false, "bidirectional_gene_fusion", "gene_fusion"),
     PROTEIN_PROTEIN_CONTACT(true, "protein_protein_contact"),
+    UPSTREAM_GENE_VARIANT(false, "upstream_gene_variant"),
     OTHER(false, Strings.EMPTY);
 
     private final boolean actionable;

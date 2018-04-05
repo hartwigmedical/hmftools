@@ -1,10 +1,14 @@
 package com.hartwig.hmftools.strelka;
 
+import static com.hartwig.hmftools.strelka.StrelkaPostProcessApplication.generateOutputHeader;
+
 import java.io.File;
 import java.util.Optional;
 
+import com.hartwig.hmftools.strelka.mnv.ImmutableMNVMerger;
 import com.hartwig.hmftools.strelka.mnv.ImmutableMNVValidator;
 import com.hartwig.hmftools.strelka.mnv.MNVDetector;
+import com.hartwig.hmftools.strelka.mnv.MNVMerger;
 import com.hartwig.hmftools.strelka.mnv.MNVValidator;
 import com.hartwig.hmftools.strelka.mnv.PotentialMNVRegion;
 
@@ -24,6 +28,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
 
 public class MNVValidatorApplication {
     private static final Logger LOGGER = LogManager.getLogger(MNVValidatorApplication.class);
@@ -66,18 +71,20 @@ public class MNVValidatorApplication {
 
     private static void processVariants(@NotNull final String filePath, @NotNull final String outputVcf, @NotNull final String tumorBam) {
         final VCFFileReader vcfReader = new VCFFileReader(new File(filePath), false);
+        final VCFHeader outputHeader = generateOutputHeader(vcfReader.getFileHeader(), "TUMOR");
         final VariantContextWriter vcfWriter = new VariantContextWriterBuilder().setOutputFile(outputVcf)
                 .setReferenceDictionary(vcfReader.getFileHeader().getSequenceDictionary())
                 .build();
         vcfWriter.writeHeader(vcfReader.getFileHeader());
         final MNVValidator validator = ImmutableMNVValidator.of(tumorBam);
+        final MNVMerger merger = ImmutableMNVMerger.of(outputHeader);
         Pair<PotentialMNVRegion, Optional<PotentialMNVRegion>> outputPair = ImmutablePair.of(PotentialMNVRegion.empty(), Optional.empty());
         for (final VariantContext variant : vcfReader) {
             final PotentialMNVRegion potentialMNV = outputPair.getLeft();
             outputPair = MNVDetector.fitsMNVRegion(potentialMNV, variant);
-            outputPair.getRight().ifPresent(mnvRegion -> validator.mergeVariants(mnvRegion).forEach(vcfWriter::add));
+            outputPair.getRight().ifPresent(mnvRegion -> validator.mergeVariants(mnvRegion, merger).forEach(vcfWriter::add));
         }
-        validator.mergeVariants(outputPair.getLeft()).forEach(vcfWriter::add);
+        validator.mergeVariants(outputPair.getLeft(), merger).forEach(vcfWriter::add);
         vcfWriter.close();
         vcfReader.close();
         LOGGER.info("Written output variants to " + outputVcf);

@@ -7,12 +7,12 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_OVER
 
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 
@@ -30,14 +30,14 @@ public class SvClusteringMethods {
     private Map<String, Double> mChrArmSvRate;
     private double mMedianChrArmRate;
 
-    private static double REF_BASE_LENGTH = 10000000.0;
+    private static final double REF_BASE_LENGTH = 10000000D;
 
     public SvClusteringMethods(final SvUtilities clusteringUtils)
     {
         mUtils = clusteringUtils;
-        mChrArmSvCount = new HashMap();
-        mChrArmSvExpected = new HashMap();
-        mChrArmSvRate = new HashMap();
+        mChrArmSvCount = Maps.newHashMap();
+        mChrArmSvExpected = Maps.newHashMap();
+        mChrArmSvRate = Maps.newHashMap();
         mMedianChrArmRate = 0;
     }
 

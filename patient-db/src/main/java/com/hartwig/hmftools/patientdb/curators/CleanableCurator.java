@@ -4,7 +4,7 @@ import java.util.Set;
 
 import org.jetbrains.annotations.NotNull;
 
-public interface Curator {
+public interface CleanableCurator {
 
     @NotNull
     Set<String> unusedSearchTerms();

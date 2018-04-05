@@ -55,7 +55,9 @@ private fun convertSamples(runContexts: List<RunContext>, outputDirectory: Strin
         TsvWriter.writeSomaticMutationMetadata(folderPath,
                                                clinicalData.sampleHmfId,
                                                listOf(SimpleSomaticMutationMetadata(clinicalData.sampleHmfId)))
-        TsvWriter.writeSimpleSomaticMutation(folderPath, clinicalData.sampleHmfId, SimpleSomaticMutation(somaticVcfPath))
+        TsvWriter.writeSimpleSomaticMutation(folderPath,
+                                             clinicalData.sampleHmfId,
+                                             SimpleSomaticMutation(clinicalData.sampleHmfId, somaticVcfPath))
     }
     clinicalRecords.keySet().forEach { TsvWriter.writeClinicalData(it, clinicalRecords[it]) }
     logger.info("Done.")

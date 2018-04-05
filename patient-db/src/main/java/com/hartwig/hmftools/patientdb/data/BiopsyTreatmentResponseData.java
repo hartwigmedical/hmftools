@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientdb.data;
 
 import java.time.LocalDate;
 
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -32,22 +32,18 @@ public abstract class BiopsyTreatmentResponseData implements Comparable<BiopsyTr
     public abstract String boneOnlyDisease();
 
     @NotNull
-    public abstract FormStatusState formStatus();
-
-    public abstract boolean formLocked();
+    public abstract FormStatus formStatus();
 
     @NotNull
     public static BiopsyTreatmentResponseData of(@Nullable final LocalDate assessmentDate, @Nullable final LocalDate responseDate,
             @Nullable final String response, @Nullable final String measurementDone, @Nullable final String boneOnlyDisease,
-            @NotNull final FormStatusState formStatus, final boolean formLocked) {
+            @NotNull final FormStatus formStatus) {
         return ImmutableBiopsyTreatmentResponseData.of(null,
                 assessmentDate,
                 responseDate,
                 response,
                 measurementDone,
-                boneOnlyDisease,
-                formStatus,
-                formLocked);
+                boneOnlyDisease, formStatus);
     }
 
     @Nullable

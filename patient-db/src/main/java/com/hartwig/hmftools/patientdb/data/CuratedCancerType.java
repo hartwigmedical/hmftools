@@ -9,10 +9,10 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class CuratedCancerType {
     @Nullable
-    public abstract String category();
+    public abstract String type();
 
     @Nullable
-    public abstract String subcategory();
+    public abstract String subType();
 
     @Nullable
     public abstract String searchTerm();

@@ -90,7 +90,7 @@ public class BreakPointInspectorApplication {
         }
     }
 
-    public static void main(final String... args) throws ParseException, IOException {
+    public static void main(final String... args) throws IOException {
 
         final AnalysisBuilder analysisBuilder = new AnalysisBuilder();
         final Options options = createOptions();

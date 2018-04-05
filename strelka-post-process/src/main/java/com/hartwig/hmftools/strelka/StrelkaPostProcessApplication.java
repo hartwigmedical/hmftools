@@ -7,8 +7,10 @@ import java.util.Optional;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
+import com.hartwig.hmftools.strelka.mnv.ImmutableMNVMerger;
 import com.hartwig.hmftools.strelka.mnv.ImmutableMNVValidator;
 import com.hartwig.hmftools.strelka.mnv.MNVDetector;
+import com.hartwig.hmftools.strelka.mnv.MNVMerger;
 import com.hartwig.hmftools.strelka.mnv.MNVValidator;
 import com.hartwig.hmftools.strelka.mnv.PotentialMNVRegion;
 
@@ -35,6 +37,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLine;
 import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class StrelkaPostProcessApplication {
     private static final Logger LOGGER = LogManager.getLogger(StrelkaPostProcessApplication.class);
@@ -91,6 +94,8 @@ public class StrelkaPostProcessApplication {
                 .build();
         writer.writeHeader(outputHeader);
         final MNVValidator validator = ImmutableMNVValidator.of(tumorBam);
+        final MNVMerger merger = ImmutableMNVMerger.of(outputHeader);
+
         Pair<PotentialMNVRegion, Optional<PotentialMNVRegion>> outputPair = ImmutablePair.of(PotentialMNVRegion.empty(), Optional.empty());
 
         final VariantContextFilter filter = new StrelkaPostProcess(highConfidenceSlicer);
@@ -99,24 +104,34 @@ public class StrelkaPostProcessApplication {
                 final VariantContext simplifiedVariant = StrelkaPostProcess.simplifyVariant(variantContext, sampleName);
                 final PotentialMNVRegion potentialMNV = outputPair.getLeft();
                 outputPair = MNVDetector.fitsMNVRegion(potentialMNV, simplifiedVariant);
-                outputPair.getRight().ifPresent(mnvRegion -> validator.mergeVariants(mnvRegion).forEach(writer::add));
+                outputPair.getRight().ifPresent(mnvRegion -> validator.mergeVariants(mnvRegion, merger).forEach(writer::add));
             }
         }
-        validator.mergeVariants(outputPair.getLeft()).forEach(writer::add);
+        validator.mergeVariants(outputPair.getLeft(), merger).forEach(writer::add);
         writer.close();
         vcfReader.close();
         LOGGER.info("Written output variants to " + outputVcf);
     }
 
     @NotNull
-    static VCFHeader generateOutputHeader(@NotNull final VCFHeader header, @NotNull final String sampleName) {
+    public static VCFHeader generateOutputHeader(@NotNull final VCFHeader header, @NotNull final String sampleName) {
         final VCFHeader outputVCFHeader = new VCFHeader(header.getMetaDataInInputOrder(), Sets.newHashSet(sampleName));
-        outputVCFHeader.addMetaDataLine(
-                new VCFFormatHeaderLine(VCFConstants.GENOTYPE_ALLELE_DEPTHS, VCFHeaderLineCount.R, VCFHeaderLineType.Integer,
-                        "Allelic depths for the ref and alt alleles in the order listed"));
+        outputVCFHeader.addMetaDataLine(new VCFFormatHeaderLine(VCFConstants.GENOTYPE_ALLELE_DEPTHS,
+                VCFHeaderLineCount.R,
+                VCFHeaderLineType.Integer,
+                "Allelic depths for the ref and alt alleles in the order listed"));
         outputVCFHeader.addMetaDataLine(new VCFFormatHeaderLine(VCFConstants.GENOTYPE_KEY, 1, VCFHeaderLineType.String, "Genotype"));
-        outputVCFHeader.addMetaDataLine(
-                new VCFHeaderLine("StrelkaGATKCompatibility", "Added GT fields to strelka calls for gatk compatibility."));
+        outputVCFHeader.addMetaDataLine(new VCFHeaderLine("StrelkaGATKCompatibility",
+                "Added GT fields to strelka calls for gatk compatibility."));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine("MAPPABILITY", 1, VCFHeaderLineType.Float, "Mappability (percentage)"));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine("SOMATIC_PON_COUNT",
+                1,
+                VCFHeaderLineType.Integer,
+                "Number of times the variant appears in the somatic PON"));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine("GERMLINE_PON_COUNT",
+                1,
+                VCFHeaderLineType.Integer,
+                "Number of times the variant appears in the germline PON"));
         return outputVCFHeader;
     }
 }

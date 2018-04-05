@@ -346,8 +346,7 @@ public class PDFWriterTest {
     @NotNull
     private static SampleReport testSampleReport(final double pathologyTumorPercentage) throws IOException {
         final String sample = "CPCT02991111T";
-        return ImmutableSampleReport.of(sample,
-                "Melanoma",
+        return ImmutableSampleReport.of(sample, "Skin",
                 pathologyTumorPercentage,
                 LocalDate.parse("05-Jan-2016", FORMATTER),
                 LocalDate.parse("01-Jan-2016", FORMATTER),

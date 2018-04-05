@@ -1,13 +1,16 @@
 package com.hartwig.hmftools.common.chromosome;
 
-import java.util.HashMap;
 import java.util.Map;
+
+import com.google.common.collect.Maps;
 
 public final class ChromosomeLengths {
 
-    public static Map<String, Integer> getChromosomeLengths()
-    {
-        Map<String, Integer> lengths = new HashMap();
+    private ChromosomeLengths() {
+    }
+
+    public static Map<String, Integer> getChromosomeLengths() {
+        Map<String, Integer> lengths = Maps.newHashMap();
 
         // taken from GRCH37
         lengths.put("1", 249250621);

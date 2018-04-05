@@ -6,21 +6,14 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class EcrfStudyEvent {
-    private static final Logger LOGGER = LogManager.getLogger(EcrfForm.class);
 
     @NotNull
-    private final String patientId;
-    @NotNull
-    private final Map<String, List<EcrfForm>> formsPerOID;
+    private final Map<String, List<EcrfForm>> formsPerOID = Maps.newHashMap();
 
-    public EcrfStudyEvent(@NotNull final String patientId) {
-        this.patientId = patientId;
-        this.formsPerOID = Maps.newHashMap();
+    public EcrfStudyEvent() {
     }
 
     public void addForm(@NotNull final String formOid, @NotNull final EcrfForm form) {
@@ -36,15 +29,12 @@ public class EcrfStudyEvent {
     }
 
     @NotNull
-    public List<EcrfForm> nonEmptyFormsPerOID(@NotNull final String formOID, boolean verbose) {
+    public List<EcrfForm> nonEmptyFormsPerOID(@NotNull final String formOID) {
         final List<EcrfForm> nonEmptyForms = Lists.newArrayList();
         if (formsPerOID.get(formOID) == null) {
             return Lists.newArrayList();
         } else {
             for (final EcrfForm form : formsPerOID.get(formOID)) {
-                if (form.isEmpty() && verbose) {
-                    LOGGER.warn(patientId + ": empty form: " + formOID);
-                }
                 if (!form.isEmpty()) {
                     nonEmptyForms.add(form);
                 }

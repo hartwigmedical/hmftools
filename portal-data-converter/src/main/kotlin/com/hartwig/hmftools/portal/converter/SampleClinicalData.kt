@@ -14,8 +14,8 @@ data class SampleClinicalData(val cpctId: String, val sampleId: String, private 
             val gender = determineGender(patientData.gender())
             val ageAtEnrollment = determineAgeAtEnrollment(patientData.birthYear(), patientData.registrationDate())
             val cancerType = determineCancerType(patientData.cancerType())
-            val (specimenType, specimenTypeOther) = determineSpecimenType(patientData.biopsySite())
-            return SampleClinicalData(patientData.cpctId(),
+            val (specimenType, specimenTypeOther) = determineSpecimenType(patientData.biopsyType())
+            return SampleClinicalData(patientData.patientIdentifier(),
                                       patientData.sampleId(),
                                       gender,
                                       ageAtEnrollment,

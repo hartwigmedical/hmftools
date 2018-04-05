@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.Utils;
 
 import org.immutables.value.Value;
@@ -29,9 +29,7 @@ public interface TreatmentData extends Comparable<TreatmentData> {
     List<DrugData> drugs();
 
     @NotNull
-    FormStatusState formStatus();
-
-    boolean formLocked();
+    FormStatus formStatus();
 
     @Value.Derived
     default List<CuratedTreatment> curatedDrugs() {

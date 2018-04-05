@@ -15,9 +15,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.patientdb.LoadClinicalData;
 import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTreatment;
 
@@ -59,8 +61,10 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
 import org.jetbrains.annotations.NotNull;
 
-public class TreatmentCurator implements Curator {
+public class TreatmentCurator implements CleanableCurator {
     private static final Logger LOGGER = LogManager.getLogger(TreatmentCurator.class);
+    private static final InputStream TREATMENT_MAPPING_RESOURCE = LoadClinicalData.class.getResourceAsStream("/treatment_mapping.csv");
+
     private static final String DRUG_TERMS_FIELD = "drugTerms";
     private static final String DRUG_NAME_FIELD = "drugName";
     private static final String CANONICAL_DRUG_NAME_FIELD = "canonicalDrugName";
@@ -79,7 +83,13 @@ public class TreatmentCurator implements Curator {
     @NotNull
     private final IndexSearcher indexSearcher;
 
-    public TreatmentCurator(@NotNull final InputStream mappingInputStream) throws IOException {
+    @NotNull
+    public static TreatmentCurator fromProductionResource() throws IOException {
+        return new TreatmentCurator(TREATMENT_MAPPING_RESOURCE);
+    }
+
+    @VisibleForTesting
+    TreatmentCurator(@NotNull final InputStream mappingInputStream) throws IOException {
         final List<DrugEntry> drugEntries = readEntries(mappingInputStream);
         final Directory index = createIndex(drugEntries);
         final IndexReader reader = DirectoryReader.open(index);
@@ -127,14 +137,7 @@ public class TreatmentCurator implements Curator {
     public List<CuratedTreatment> search(@NotNull final String searchTerm) throws IOException {
         final Optional<CuratedTreatment> matchedTreatment = matchSingle(searchTerm);
         if (!matchedTreatment.isPresent()) {
-            LOGGER.warn("Failed to match search term: {}. attempting to match multiple treatments", searchTerm);
-            final List<CuratedTreatment> matchedTreatments = matchMultiple(searchTerm);
-            if (!matchedTreatments.isEmpty()) {
-                LOGGER.info("Matched multiple treatments {} to {}",
-                        searchTerm,
-                        matchedTreatments.stream().map(CuratedTreatment::name).collect(Collectors.toList()));
-            }
-            return matchedTreatments;
+            return matchMultiple(searchTerm);
         } else {
             return Lists.newArrayList(matchedTreatment.get());
         }

@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
+import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.gene.CanonicalTranscript;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.data.Patient;
+import com.hartwig.hmftools.patientdb.data.SampleData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -175,11 +176,15 @@ public class DatabaseAccess {
         clinicalDAO.clear();
     }
 
-    public void writeClinicalData(@NotNull final Patient patient) {
-        clinicalDAO.writeClinicalData(patient);
+    public void writeFullClinicalData(@NotNull Patient patient) {
+        clinicalDAO.writeFullClinicalData(patient);
     }
 
-    public void writeDrupEcrf(@NotNull final CpctEcrfModel model, @NotNull final Set<String> sequencedPatients) {
+    public void writeSampleClinicalData(@NotNull String patientIdentifier, @NotNull List<SampleData> samples) {
+        clinicalDAO.writeSampleClinicalData(patientIdentifier, samples);
+    }
+
+    public void writeDrupEcrf(@NotNull final EcrfModel model, @NotNull final Set<String> sequencedPatients) {
         LOGGER.info("Writing DRUP datamodel...");
         ecrfDAO.writeDrupDatamodel(model.fields());
         LOGGER.info("Done writing DRUP datamodel.");
@@ -188,7 +193,7 @@ public class DatabaseAccess {
         LOGGER.info("Done writing DRUP patients.");
     }
 
-    public void writeCpctEcrf(@NotNull final CpctEcrfModel model, @NotNull final Set<String> sequencedPatients) {
+    public void writeCpctEcrf(@NotNull final EcrfModel model, @NotNull final Set<String> sequencedPatients) {
         LOGGER.info("writing CPCT datamodel...");
         ecrfDAO.writeCpctDatamodel(model.fields());
         LOGGER.info("Done writing CPCT datamodel.");

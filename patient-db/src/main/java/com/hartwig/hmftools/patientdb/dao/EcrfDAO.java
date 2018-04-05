@@ -27,17 +27,17 @@ class EcrfDAO {
         this.context = context;
     }
 
-    private void clear(@NotNull final String ecrfTable, @NotNull final String ecrfDatamodelTable) {
-        context.truncate(ecrfTable).execute();
-        context.truncate(ecrfDatamodelTable).execute();
-    }
-
     void clearCpct() {
         clear(ECRF.getName(), ECRFDATAMODEL.getName());
     }
 
     void clearDrup() {
         clear(DRUPECRF.getName(), DRUPECRFDATAMODEL.getName());
+    }
+
+    private void clear(@NotNull final String ecrfTable, @NotNull final String ecrfDatamodelTable) {
+        context.truncate(ecrfTable).execute();
+        context.truncate(ecrfDatamodelTable).execute();
     }
 
     void writeCpctDatamodel(@NotNull final Iterable<EcrfDatamodelField> datamodelFields) {
@@ -48,14 +48,6 @@ class EcrfDAO {
         writeDatamodel(datamodelFields, this::drupDatamodelInserter);
     }
 
-    void writeCpctPatient(@NotNull final EcrfPatient patient, final boolean sequenced) {
-        writePatient(patient, sequenced, this::cpctInserter);
-    }
-
-    void writeDrupPatient(@NotNull final EcrfPatient patient, final boolean sequenced) {
-        writePatient(patient, sequenced, this::drupInserter);
-    }
-
     private void writeDatamodel(@NotNull final Iterable<EcrfDatamodelField> datamodelFields,
             @NotNull final Supplier<InsertValuesStep4> inserter) {
         context.batch(StreamSupport.stream(datamodelFields.spliterator(), false).map(field -> {
@@ -63,6 +55,14 @@ class EcrfDAO {
             //noinspection unchecked
             return inserter.get().values(field.name(), field.description(), codeList, field.isRelevant() ? "TRUE" : "FALSE");
         }).collect(Collectors.toList())).execute();
+    }
+
+    void writeCpctPatient(@NotNull final EcrfPatient patient, final boolean sequenced) {
+        writePatient(patient, sequenced, this::cpctInserter);
+    }
+
+    void writeDrupPatient(@NotNull final EcrfPatient patient, final boolean sequenced) {
+        writePatient(patient, sequenced, this::drupInserter);
     }
 
     private void writePatient(@NotNull final EcrfPatient patient, final boolean sequenced,
@@ -88,16 +88,18 @@ class EcrfDAO {
                 .collect(Collectors.toList())).execute();
     }
 
+    @NotNull
     private InsertValuesStep4 cpctDatamodelInserter() {
-        return context.insertInto(ECRFDATAMODEL, ECRFDATAMODEL.FIELDNAME, ECRFDATAMODEL.DESCRIPTION, ECRFDATAMODEL.CODELIST,
-                ECRFDATAMODEL.RELEVANT);
+        return context.insertInto(ECRFDATAMODEL, ECRFDATAMODEL.FIELDNAME, ECRFDATAMODEL.DESCRIPTION, ECRFDATAMODEL.CODELIST, ECRFDATAMODEL.RELEVANT);
     }
 
+    @NotNull
     private InsertValuesStep4 drupDatamodelInserter() {
         return context.insertInto(DRUPECRFDATAMODEL, DRUPECRFDATAMODEL.FIELDNAME, DRUPECRFDATAMODEL.DESCRIPTION, DRUPECRFDATAMODEL.CODELIST,
                 DRUPECRFDATAMODEL.RELEVANT);
     }
 
+    @NotNull
     private InsertValuesStep14 cpctInserter() {
         return context.insertInto(ECRF,
                 ECRF.PATIENTID,
@@ -116,6 +118,7 @@ class EcrfDAO {
                 ECRF.RELEVANT);
     }
 
+    @NotNull
     private InsertValuesStep14 drupInserter() {
         return context.insertInto(DRUPECRF,
                 DRUPECRF.PATIENTID,

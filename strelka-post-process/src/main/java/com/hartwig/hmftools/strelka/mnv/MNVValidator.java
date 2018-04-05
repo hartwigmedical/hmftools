@@ -40,14 +40,14 @@ public abstract class MNVValidator {
     }
 
     @NotNull
-    public List<VariantContext> mergeVariants(@NotNull final PotentialMNVRegion potentialMnvRegion) {
+    public List<VariantContext> mergeVariants(@NotNull final PotentialMNVRegion potentialMnvRegion, @NotNull final MNVMerger merger) {
         if (potentialMnvRegion.potentialMnvs().size() == 0) {
             return potentialMnvRegion.variants();
         } else {
             final SAMRecordIterator samIterator = queryBam(potentialMnvRegion);
             final MNVRegionValidator regionValidator = validateMNVs(samIterator, potentialMnvRegion);
             samIterator.close();
-            return outputVariants(regionValidator);
+            return outputVariants(regionValidator, merger);
         }
     }
 
@@ -65,10 +65,10 @@ public abstract class MNVValidator {
 
     @NotNull
     @VisibleForTesting
-    static List<VariantContext> outputVariants(@NotNull final MNVRegionValidator regionValidator) {
+    static List<VariantContext> outputVariants(@NotNull final MNVRegionValidator regionValidator, @NotNull final MNVMerger merger) {
         final List<VariantContext> result = Lists.newArrayList();
         for (final PotentialMNV validMnv : regionValidator.validMnvs()) {
-            final VariantContext mergedVariant = MNVMerger.mergeVariants(validMnv, regionValidator.mostFrequentReads());
+            final VariantContext mergedVariant = merger.mergeVariants(validMnv, regionValidator.mostFrequentReads());
             result.add(mergedVariant);
         }
         result.addAll(regionValidator.nonMnvVariants());

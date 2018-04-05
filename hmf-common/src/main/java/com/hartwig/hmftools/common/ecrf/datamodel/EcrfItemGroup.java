@@ -9,22 +9,17 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class EcrfItemGroup {
-    private static final Logger LOGGER = LogManager.getLogger(EcrfItemGroup.class);
+
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @NotNull
-    private final String patientId;
-    @NotNull
-    private final Map<String, List<String>> itemsPerOID;
+    private final Map<String, List<String>> itemsPerOID = Maps.newHashMap();
 
-    public EcrfItemGroup(@NotNull final String patientId) {
-        this.patientId = patientId;
-        this.itemsPerOID = Maps.newHashMap();
+    public EcrfItemGroup() {
     }
 
     public void addItem(@NotNull final String itemOid, @NotNull final String itemValue) {
@@ -49,15 +44,29 @@ public class EcrfItemGroup {
 
     public boolean isEmpty() {
         return itemsPerOID.values()
-                .stream()
-                .filter(listOfValues -> listOfValues.stream().filter(value -> value != null && !value.trim().isEmpty()).count() > 0)
-                .count() == 0;
+                .stream().noneMatch(listOfValues -> listOfValues.stream().anyMatch(value -> value != null && !value.trim().isEmpty()));
     }
 
     @Nullable
-    private String readItemString(@NotNull final String itemOID, int index) {
-        if (index < itemsPerOID(itemOID).size()) {
-            final String ecrfValue = itemsPerOID(itemOID).get(index);
+    public LocalDate readItemDate(@NotNull final String itemOID) {
+        String ecrfValue = readItemString(itemOID);
+
+        if (ecrfValue == null) {
+            return null;
+        }
+
+        try {
+            return LocalDate.parse(ecrfValue.trim(), DATE_FORMATTER);
+        } catch (DateTimeParseException e) {
+            return null;
+        }
+    }
+
+    @Nullable
+    public String readItemString(@NotNull final String itemOID) {
+        // KODU: In theory we could have multiple values for one itemOID in one item group but in practice there is always a 1:1 relation.
+        if (!itemsPerOID(itemOID).isEmpty()) {
+            final String ecrfValue = itemsPerOID(itemOID).get(0);
             if (ecrfValue != null) {
                 if (ecrfValue.replaceAll("\\s", "").length() == 0) {
                     return null;
@@ -68,40 +77,5 @@ public class EcrfItemGroup {
             }
         }
         return null;
-    }
-
-    @Nullable
-    private LocalDate readItemDate(@NotNull final String itemOID, int index, @NotNull final DateTimeFormatter dateFormatter) {
-        if (index < itemsPerOID(itemOID).size()) {
-            final String ecrfValue = itemsPerOID(itemOID).get(index);
-            if (ecrfValue == null) {
-                return null;
-            }
-            try {
-                return LocalDate.parse(ecrfValue.trim(), dateFormatter);
-            } catch (DateTimeParseException e) {
-                return null;
-            }
-        }
-        return null;
-    }
-
-    @Nullable
-    public LocalDate readItemDate(@NotNull final String itemOID, int index, @NotNull final DateTimeFormatter dateFormatter,
-            boolean verbose) {
-        final LocalDate itemDate = readItemDate(itemOID, index, dateFormatter);
-        if (itemDate == null && verbose) {
-            LOGGER.warn(patientId + ": empty field: " + itemOID);
-        }
-        return itemDate;
-    }
-
-    @Nullable
-    public String readItemString(@NotNull final String itemOID, int index, boolean verbose) {
-        final String itemString = readItemString(itemOID, index);
-        if (itemString == null && verbose) {
-            LOGGER.warn(patientId + ": empty field: " + itemOID);
-        }
-        return itemString;
     }
 }

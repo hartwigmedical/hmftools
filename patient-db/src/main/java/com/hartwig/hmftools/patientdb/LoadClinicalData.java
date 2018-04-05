@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientdb;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -15,19 +14,23 @@ import javax.xml.stream.XMLStreamException;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
+import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusReader;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
+import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.data.Patient;
-import com.hartwig.hmftools.patientdb.readers.PatientReader;
+import com.hartwig.hmftools.patientdb.data.SampleData;
+import com.hartwig.hmftools.patientdb.readers.LimsSampleReader;
 import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
+import com.hartwig.hmftools.patientdb.readers.cpct.PatientReader;
+import com.hartwig.hmftools.patientdb.readers.cpct.Util;
 import com.hartwig.hmftools.patientdb.validators.CurationValidator;
 import com.hartwig.hmftools.patientdb.validators.PatientValidator;
 
@@ -46,152 +49,191 @@ public final class LoadClinicalData {
     private static final String VERSION = LoadClinicalData.class.getPackage().getImplementationVersion();
 
     private static final String RUNS_DIR = "runs_dir";
-    private static final String ECRF_FILE = "ecrf";
+    private static final String CPCT_ECRF_FILE = "cpct_ecrf";
+    private static final String CPCT_FORM_STATUS_CSV = "cpct_form_status_csv";
+    private static final String DRUP_ECRF_FILE = "drup_ecrf";
+
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
+
     private static final String LIMS_JSON = "lims_json";
     private static final String PRE_LIMS_ARRIVAL_DATES_CSV = "pre_lims_arrival_dates_csv";
-    private static final String FORM_STATUS_CSV = "form_status_csv";
+
     private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
+
     private static final String CSV_OUT_DIR = "csv_out_dir";
     private static final String CANCER_TYPES_LINK = "cancer_types_symlink";
     private static final String PORTAL_DATA_LINK = "portal_data_symlink";
-    private static final InputStream TREATMENT_MAPPING_RESOURCE = LoadClinicalData.class.getResourceAsStream("/treatment_mapping.csv");
-    private static final InputStream TUMOR_LOCATION_MAPPING_RESOURCE =
-            LoadClinicalData.class.getResourceAsStream("/tumor_location_mapping.csv");
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, XMLStreamException, SQLException {
         LOGGER.info("Running patient-db v{}", VERSION);
-        final Options basicOptions = createBasicOptions();
-        final Options clinicalOptions = createLimsOptions();
-        final Options ecrfOptions = createEcrfOptions();
-        final Options options = mergeOptions(basicOptions, clinicalOptions, ecrfOptions);
-
+        final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
-        final String runsFolderPath = cmd.getOptionValue(RUNS_DIR);
-        final String userName = cmd.getOptionValue(DB_USER);
-        final String password = cmd.getOptionValue(DB_PASS);
-        final String databaseUrl = cmd.getOptionValue(DB_URL);
 
-        final boolean loadRawEcrf = cmd.hasOption(DO_LOAD_RAW_ECRF);
+        if (checkInputs(cmd, options)) {
+            LOGGER.info("Running clinical data import.");
 
-        if (Utils.anyNull(runsFolderPath, userName, password, databaseUrl)) {
+            final String jdbcUrl = "jdbc:" + cmd.getOptionValue(DB_URL);
+            final DatabaseAccess dbWriter = new DatabaseAccess(cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASS), jdbcUrl);
+
+            final String runsFolderPath = cmd.getOptionValue(RUNS_DIR);
+            LOGGER.info(String.format("Loading run contexts from %s.", runsFolderPath));
+            final List<RunContext> runContexts = RunsFolderReader.getRunContexts(new File(runsFolderPath));
+            LOGGER.info(String.format("Finished loading %s run contexts.", runContexts.size()));
+
+            final String cpctEcrfFilePath = cmd.getOptionValue(CPCT_ECRF_FILE);
+            final String cpctFormStatusCsv = cmd.getOptionValue(CPCT_FORM_STATUS_CSV);
+            LOGGER.info(String.format("Loading CPCT eCRF from %s.", cpctEcrfFilePath));
+            final FormStatusModel cpctFormStatusModel = FormStatusReader.buildModelFromCsv(cpctFormStatusCsv);
+            final EcrfModel cpctEcrfModel = EcrfModel.loadFromXMLWithFormStates(cpctEcrfFilePath, cpctFormStatusModel);
+            LOGGER.info(String.format("Finished loading CPCT eCRF. Read %s patients.", cpctEcrfModel.patientCount()));
+
+            final String drupEcrfFilePath = cmd.getOptionValue(DRUP_ECRF_FILE);
+            LOGGER.info(String.format("Loading DRUP eCRF from %s.", drupEcrfFilePath));
+            final EcrfModel drupEcrfModel = EcrfModel.loadFromXML(drupEcrfFilePath);
+            LOGGER.info(String.format("Finished loading DRUP eCRF. Read %s patients.", drupEcrfModel.patientCount()));
+
+            final String limsJsonPath = cmd.getOptionValue(LIMS_JSON);
+            final String preLIMSArrivalDatesCsv = cmd.getOptionValue(PRE_LIMS_ARRIVAL_DATES_CSV);
+            LOGGER.info(String.format("Loading samples from LIMS on %s.", limsJsonPath));
+            Lims lims = LimsFactory.fromLimsJsonWithPreLIMSArrivalDates(limsJsonPath, preLIMSArrivalDatesCsv);
+            Map<String, List<SampleData>> samplesPerPatient = readSamplesPerPatient(lims, runContexts);
+            LOGGER.info(String.format("Loaded samples for %s patients from LIMS", samplesPerPatient.size()));
+
+            if (cmd.hasOption(DO_LOAD_RAW_ECRF)) {
+                writeRawEcrf(dbWriter, cpctEcrfModel, drupEcrfModel, samplesPerPatient.keySet());
+            }
+
+            writeClinicalData(dbWriter,
+                    cpctEcrfModel,
+                    samplesPerPatient,
+                    cmd.getOptionValue(CSV_OUT_DIR),
+                    Optional.ofNullable(cmd.getOptionValue(CANCER_TYPES_LINK)),
+                    Optional.ofNullable(cmd.getOptionValue(PORTAL_DATA_LINK)));
+        } else {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db", options);
-        } else {
-            final File runDirectory = new File(runsFolderPath);
-            if (runDirectory.isDirectory()) {
-                LOGGER.info("Running clinical data import.");
-                final List<RunContext> runContexts = RunsFolderReader.getRunContexts(runDirectory);
-                final String jdbcUrl = "jdbc:" + databaseUrl;
-
-                final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
-                if (loadRawEcrf) {
-                    writeRawEcrf(ecrfOptions, cmd, runContexts, dbWriter);
-                }
-
-                writeClinicalData(clinicalOptions, cmd, runContexts, dbWriter);
-            } else {
-                if (!runDirectory.exists()) {
-                    LOGGER.warn("dir " + runDirectory + " does not exist.");
-                }
-                final HelpFormatter formatter = new HelpFormatter();
-                formatter.printHelp("patient-db", basicOptions);
-            }
         }
     }
 
-    private static void writeClinicalData(@NotNull final Options clinicalOptions, @NotNull final CommandLine cmd,
-            @NotNull final List<RunContext> runContexts, @NotNull final DatabaseAccess dbAccess) throws IOException, XMLStreamException {
-        final String ecrfFilePath = cmd.getOptionValue(ECRF_FILE);
-        final String limsJson = cmd.getOptionValue(LIMS_JSON);
-        final String preLIMSArrivalDatesCsv = cmd.getOptionValue(PRE_LIMS_ARRIVAL_DATES_CSV);
-        final String formStatusCsv = cmd.getOptionValue(FORM_STATUS_CSV);
-        final String csvOutputDir = cmd.getOptionValue(CSV_OUT_DIR);
-        final Optional<String> cancerTypesLink = Optional.ofNullable(cmd.getOptionValue(CANCER_TYPES_LINK));
-        final Optional<String> portalDataLink = Optional.ofNullable(cmd.getOptionValue(PORTAL_DATA_LINK));
+    private static boolean checkInputs(@NotNull CommandLine cmd, @NotNull Options options) {
+        final String runsFolderPath = cmd.getOptionValue(RUNS_DIR);
 
-        if (Utils.anyNull(ecrfFilePath, limsJson, preLIMSArrivalDatesCsv, formStatusCsv, csvOutputDir)) {
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("patient-db", clinicalOptions);
-        } else {
-            LOGGER.info("Loading ecrf model...");
-            dbAccess.clearClinicalTables();
+        boolean allParamsPresent = !Utils.anyNull(runsFolderPath,
+                cmd.getOptionValue(DB_USER),
+                cmd.getOptionValue(DB_PASS),
+                cmd.getOptionValue(DB_URL),
+                cmd.getOptionValue(CPCT_ECRF_FILE),
+                cmd.getOptionValue(CPCT_FORM_STATUS_CSV),
+                cmd.getOptionValue(DRUP_ECRF_FILE),
+                cmd.getOptionValue(LIMS_JSON),
+                cmd.getOptionValue(PRE_LIMS_ARRIVAL_DATES_CSV),
+                cmd.getOptionValue(CSV_OUT_DIR));
 
-            FormStatusModel formStatusModel = FormStatusReader.buildModelFromCsv(formStatusCsv);
-            CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
-            Lims lims = LimsFactory.fromLimsJsonWithPreLIMSArrivalDates(limsJson, preLIMSArrivalDatesCsv);
-            TreatmentCurator treatmentCurator = new TreatmentCurator(TREATMENT_MAPPING_RESOURCE);
-            TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(TUMOR_LOCATION_MAPPING_RESOURCE);
-            final PatientReader patientReader = new PatientReader(model, treatmentCurator, tumorLocationCurator, lims);
-
-            final Set<String> sequencedCpctPatientIds = Utils.sequencedPatientIds(runContexts)
-                    .stream()
-                    .filter(patientId -> patientId.startsWith("CPCT"))
-                    .collect(Collectors.toSet());
-
-            final Map<String, Patient> readPatients = readEcrfPatients(patientReader, model.patients(), runContexts);
-            LOGGER.info("Read {} patients from ecrf", readPatients.size());
-            DumpClinicalData.writeClinicalDumps(csvOutputDir, readPatients.values(), cancerTypesLink, portalDataLink);
-
-            LOGGER.info("Writing CPCT clinical data for {} sequenced patients.", sequencedCpctPatientIds.size());
-            for (final String patientId : sequencedCpctPatientIds) {
-                final Patient patient = readPatients.get(patientId);
-                if (patient == null) {
-                    LOGGER.error("Could not find patient with id: " + patientId + " in ecrf file.");
-                } else {
-                    dbAccess.writeClinicalData(patient);
-                    final List<ValidationFinding> findings = PatientValidator.validatePatient(patient);
-
-                    dbAccess.writeValidationFindings(findings);
-                    dbAccess.writeValidationFindings(patient.matchFindings());
+        boolean validRunDirectory = true;
+        if (allParamsPresent) {
+            final File runDirectory = new File(runsFolderPath);
+            if (!runDirectory.isDirectory()) {
+                validRunDirectory = false;
+                if (!runDirectory.exists()) {
+                    LOGGER.warn("dir " + runDirectory + " does not exist.");
                 }
             }
-            dbAccess.writeValidationFindings(CurationValidator.validateTreatmentCurator(treatmentCurator));
-            dbAccess.writeValidationFindings(CurationValidator.validateTumorLocationCurator(tumorLocationCurator));
-
-            LOGGER.info("Done!");
         }
+
+        return allParamsPresent && validRunDirectory;
+    }
+
+    private static void writeClinicalData(@NotNull final DatabaseAccess dbAccess, @NotNull EcrfModel cpctEcrfModel,
+            @NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull String csvOutputDir,
+            @NotNull Optional<String> cancerTypesLink, @NotNull Optional<String> portalDataLink) throws IOException {
+        LOGGER.info(String.format("Interpreting and curating data for %s CPCT patients.", cpctEcrfModel.patientCount()));
+        TumorLocationCurator tumorLocationCurator = TumorLocationCurator.fromProductionResource();
+        BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource();
+        TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource();
+        PatientReader patientReader =
+                new PatientReader(tumorLocationCurator, Util.extractHospitalMap(cpctEcrfModel), biopsySiteCurator, treatmentCurator);
+
+        final Map<String, Patient> readPatients = readEcrfPatients(patientReader, cpctEcrfModel.patients(), samplesPerPatient);
+        LOGGER.info(String.format("Finished curation of %s CPCT patients.", readPatients.size()));
+        DumpClinicalData.writeClinicalDumps(csvOutputDir, readPatients.values(), cancerTypesLink, portalDataLink);
+
+        LOGGER.info("Clearing interpreted clinical tables in database.");
+        dbAccess.clearClinicalTables();
+
+        LOGGER.info(String.format("Writing clinical data for %s sequenced patients.", samplesPerPatient.size()));
+        for (final String patientIdentifier : samplesPerPatient.keySet()) {
+            final Patient patient = readPatients.get(patientIdentifier);
+            if (patient == null) {
+                if (patientIdentifier.startsWith("CPCT")) {
+                    LOGGER.error(String.format("Could not find patient with id %s in CPCT eCRF file!", patientIdentifier));
+                }
+                dbAccess.writeSampleClinicalData(patientIdentifier, samplesPerPatient.get(patientIdentifier));
+            } else {
+                dbAccess.writeFullClinicalData(patient);
+                final List<ValidationFinding> findings = PatientValidator.validatePatient(patient);
+
+                dbAccess.writeValidationFindings(findings);
+                dbAccess.writeValidationFindings(patient.matchFindings());
+            }
+        }
+        dbAccess.writeValidationFindings(CurationValidator.validateTreatmentCurator(treatmentCurator));
+        dbAccess.writeValidationFindings(CurationValidator.validateTumorLocationCurator(tumorLocationCurator));
+
+        LOGGER.info("Finished!");
+    }
+
+    @NotNull
+    private static Map<String, List<SampleData>> readSamplesPerPatient(@NotNull Lims lims, @NotNull List<RunContext> runContexts) {
+        LimsSampleReader sampleReader = new LimsSampleReader(lims);
+
+        final Set<String> sequencedPatientIdentifiers = Utils.sequencedPatientIds(runContexts)
+                .stream()
+                .filter(identifier -> identifier.startsWith("CPCT") || identifier.startsWith("DRUP"))
+                .collect(Collectors.toSet());
+
+        Map<String, List<SampleData>> samplesPerPatient = Maps.newHashMap();
+        for (String patientIdentifier : sequencedPatientIdentifiers) {
+            List<String> sampleIds = getTumorSamplesForPatient(patientIdentifier, runContexts);
+            samplesPerPatient.put(patientIdentifier, sampleReader.read(sampleIds));
+        }
+
+        return samplesPerPatient;
     }
 
     @NotNull
     private static Map<String, Patient> readEcrfPatients(@NotNull final PatientReader reader, @NotNull final Iterable<EcrfPatient> patients,
-            @NotNull final List<RunContext> runContexts) throws IOException {
+            @NotNull final Map<String, List<SampleData>> samplesPerPatient) throws IOException {
         final Map<String, Patient> patientMap = Maps.newHashMap();
         for (final EcrfPatient ecrfPatient : patients) {
-            final List<String> tumorSamplesForPatient = getTumorSamplesForPatient(ecrfPatient.patientId(), runContexts);
-            final Patient patient = reader.read(ecrfPatient, tumorSamplesForPatient);
-            patientMap.put(patient.patientData().cpctId(), patient);
+            List<SampleData> samples = samplesPerPatient.get(ecrfPatient.patientId());
+            Patient patient = reader.read(ecrfPatient, samples != null ? samples : Lists.newArrayList());
+            patientMap.put(patient.patientIdentifier(), patient);
         }
         return patientMap;
     }
 
-    private static void writeRawEcrf(@NotNull final Options ecrfOptions, @NotNull final CommandLine cmd,
-            @NotNull final List<RunContext> runContexts, @NotNull final DatabaseAccess dbWriter) throws IOException, XMLStreamException {
-        final String ecrfFilePath = cmd.getOptionValue(ECRF_FILE);
-        final String formStatusPath = cmd.getOptionValue(FORM_STATUS_CSV);
-        if (Utils.anyNull(ecrfFilePath, formStatusPath)) {
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("patient-db -" + DO_LOAD_RAW_ECRF, ecrfOptions);
-        } else {
-            dbWriter.clearCpctEcrf();
-            LOGGER.info("Loading ecrf model...");
-            final FormStatusModel formStatusModel = FormStatusReader.buildModelFromCsv(formStatusPath);
-            final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
-            final Set<String> sequencedPatients = Utils.sequencedPatientIds(runContexts);
-            LOGGER.info("Writing raw ecrf data for " + sequencedPatients.size() + " patients.");
-            dbWriter.writeCpctEcrf(model, sequencedPatients);
-            LOGGER.info("Done writing raw ecrf data for " + sequencedPatients.size() + " patients!");
-        }
+    private static void writeRawEcrf(@NotNull DatabaseAccess dbWriter, @NotNull EcrfModel cpctEcrfModel, @NotNull EcrfModel drupEcrfModel,
+            @NotNull Set<String> sequencedPatients) {
+        LOGGER.info(String.format("Writing raw cpct ecrf data for %s patients", cpctEcrfModel.patientCount()));
+        dbWriter.clearCpctEcrf();
+        dbWriter.writeCpctEcrf(cpctEcrfModel, sequencedPatients);
+        LOGGER.info(String.format("Finished writing raw cpct ecrf data for %s patients.", cpctEcrfModel.patientCount()));
+
+        LOGGER.info(String.format("Writing raw drup ecrf data for %s patients", drupEcrfModel.patientCount()));
+        dbWriter.clearDrupEcrf();
+        dbWriter.writeDrupEcrf(drupEcrfModel, sequencedPatients);
+        LOGGER.info(String.format("Finished writing raw drup ecrf data for %s patients.", drupEcrfModel.patientCount()));
     }
 
     @NotNull
-    private static List<String> getTumorSamplesForPatient(@NotNull final String patientId, @NotNull final List<RunContext> runContexts) {
+    private static List<String> getTumorSamplesForPatient(@NotNull final String patientIdentifier,
+            @NotNull final List<RunContext> runContexts) {
         final List<String> sampleIdsForPatient = Lists.newArrayList();
         runContexts.forEach(runContext -> {
             final String sampleId = runContext.tumorSample();
-            if (sampleId.startsWith(patientId) && !sampleIdsForPatient.contains(sampleId)) {
+            if (sampleId.startsWith(patientIdentifier) && !sampleIdsForPatient.contains(sampleId)) {
                 sampleIdsForPatient.add(sampleId);
             }
         });
@@ -199,40 +241,24 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static Options mergeOptions(@NotNull final Options... optionsArray) {
-        final Options options = new Options();
-        final List<Options> optionsList = Lists.newArrayList(optionsArray);
-        optionsList.forEach(opt -> opt.getOptions().forEach(options::addOption));
-        return options;
-    }
-
-    @NotNull
-    private static Options createBasicOptions() {
+    private static Options createOptions() {
         final Options options = new Options();
         options.addOption(RUNS_DIR, true, "Path towards the folder containing patient runs.");
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
+
+        options.addOption(CPCT_ECRF_FILE, true, "Path towards the cpct ecrf file.");
+        options.addOption(CPCT_FORM_STATUS_CSV, true, "Path towards the cpct form status csv file.");
+        options.addOption(DRUP_ECRF_FILE, true, "Path towards the drup ecrf file.");
         options.addOption(DO_LOAD_RAW_ECRF, false, "Also write raw ecrf data to database?");
-        return options;
-    }
 
-    @NotNull
-    private static Options createLimsOptions() {
-        final Options options = new Options();
-        options.addOption(LIMS_JSON, true, "Path towards the LIMS json file.");
-        options.addOption(PRE_LIMS_ARRIVAL_DATES_CSV, true, "Path towards the pre-HMF arrival date csv.");
-        return options;
-    }
-
-    @NotNull
-    private static Options createEcrfOptions() {
-        final Options options = new Options();
-        options.addOption(ECRF_FILE, true, "Path towards the cpct ecrf file.");
-        options.addOption(FORM_STATUS_CSV, true, "Path towards the form status csv file.");
         options.addOption(CSV_OUT_DIR, true, "Path towards the output directory for csv data dumps.");
         options.addOption(CANCER_TYPES_LINK, true, "Name of cancer type csv symlink.");
         options.addOption(PORTAL_DATA_LINK, true, "Name of portal data csv symlink.");
+
+        options.addOption(LIMS_JSON, true, "Path towards the LIMS json file.");
+        options.addOption(PRE_LIMS_ARRIVAL_DATES_CSV, true, "Path towards the pre-HMF arrival date csv.");
         return options;
     }
 

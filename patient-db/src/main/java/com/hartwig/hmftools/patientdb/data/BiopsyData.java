@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientdb.data;
 import java.time.LocalDate;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -17,6 +17,9 @@ public abstract class BiopsyData {
     public abstract int id();
 
     @Nullable
+    public abstract String sampleId();
+
+    @Nullable
     public abstract LocalDate date();
 
     @Nullable
@@ -26,18 +29,16 @@ public abstract class BiopsyData {
     public abstract String biopsyEvaluable();
 
     @Nullable
+    public abstract CuratedBiopsyType type();
+
+    @Nullable
     public abstract String site();
 
     @Nullable
     public abstract String location();
 
-    @Nullable
-    public abstract String sampleId();
-
     @NotNull
-    public abstract FormStatusState formStatus();
-
-    public abstract boolean formLocked();
+    public abstract FormStatus formStatus();
 
     private static final AtomicInteger ID_COUNTER = new AtomicInteger(0);
 
@@ -47,8 +48,21 @@ public abstract class BiopsyData {
 
     @NotNull
     public static BiopsyData of(@Nullable LocalDate date, @Nullable String biopsyTaken, @Nullable String biopsyEvaluable,
-            @Nullable String site, @Nullable String location, @NotNull FormStatusState formStatus, boolean formLocked) {
-        return ImmutableBiopsyData.of(createId(), date, biopsyTaken, biopsyEvaluable, site, location, null, formStatus, formLocked);
+            @NotNull CuratedBiopsyType curatedBiopsyType, @Nullable String site, @Nullable String location,
+            @NotNull FormStatus formStatus) {
+        return ImmutableBiopsyData.of(createId(), null,
+                date,
+                biopsyTaken,
+                biopsyEvaluable,
+                curatedBiopsyType,
+                site,
+                location, formStatus);
+    }
+
+    @Nullable
+    public String curatedType() {
+        CuratedBiopsyType curatedType = type();
+        return curatedType != null ? curatedType.type() : null;
     }
 
     public boolean isPotentiallyEvaluable() {

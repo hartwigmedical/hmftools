@@ -65,7 +65,7 @@ private fun updateModeOptions(): Options {
 private fun runHmfIdCreate(cmd: CommandLine) {
     val generator = IdGenerator(cmd.getOptionValue(PASSWORD))
     val clinicalData = PortalClinicalData.readRecords(cmd.getOptionValue(PORTAL_CLINICAL_DATA))
-    val idMapping = generator.generateIds(clinicalData.map { it.cpctId() })
+    val idMapping = generator.generateIds(clinicalData.map { it.patientIdentifier() })
     writeAnonymizedPatients(File(cmd.getOptionValue(PORTAL_CLINICAL_DATA)), clinicalData, idMapping)
     File(cmd.getOptionValue(OUTPUT_FILE)).writeHmfIds(idMapping.values)
     logger.info("Generated hmf ids for ${idMapping.size} patients")
@@ -75,7 +75,7 @@ private fun runHmfIdUpdate(cmd: CommandLine) {
     val generator = IdGenerator(cmd.getOptionValue(PASSWORD))
     val clinicalData = PortalClinicalData.readRecords(cmd.getOptionValue(PORTAL_CLINICAL_DATA))
     val oldIds = File(cmd.getOptionValue(HMF_IDS_FILE)).readOldIds()
-    val newIdMapping = generator.updateIds(cmd.getOptionValue(OLD_PASSWORD), clinicalData.map { it.cpctId() }, oldIds)
+    val newIdMapping = generator.updateIds(cmd.getOptionValue(OLD_PASSWORD), clinicalData.map { it.patientIdentifier() }, oldIds)
     writeAnonymizedPatients(File(cmd.getOptionValue(PORTAL_CLINICAL_DATA)), clinicalData, newIdMapping)
     File(cmd.getOptionValue(OUTPUT_FILE)).writeHmfIds(newIdMapping.values)
     logger.info("Generated hmf ids for ${newIdMapping.size} patients")
@@ -107,7 +107,7 @@ private fun updateAnonymizedSymlink(patientsFile: File, outputPath: String) {
 }
 
 private fun anonymizePatient(patientData: PortalClinicalData, hmfIdMapping: Map<CpctId, HmfId>): PortalClinicalData {
-    val patientHmfId = "HMF${hmfIdMapping[patientData.cpctId()]!!.id}"
+    val patientHmfId = "HMF${hmfIdMapping[patientData.patientIdentifier()]!!.id}"
     val sampleHmfId = if (patientData.sampleId().length > 12 && patientData.sampleId()[12] == 'T') {
         patientHmfId + patientData.sampleId().substring(12)
     } else {

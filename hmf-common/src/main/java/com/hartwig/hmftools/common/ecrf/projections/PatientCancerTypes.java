@@ -22,13 +22,13 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class PatientCancerTypes {
     private enum Header {
-        cpctId,
+        patientIdentifier,
         cancerType,
         cancerSubtype
     }
 
     @NotNull
-    public abstract String cpctId();
+    public abstract String patientIdentifier();
 
     @NotNull
     public abstract String cancerType();
@@ -38,7 +38,7 @@ public abstract class PatientCancerTypes {
 
     @NotNull
     private List<String> csvRecord() {
-        return Lists.newArrayList(cpctId(), cancerType(), cancerSubtype());
+        return Lists.newArrayList(patientIdentifier(), cancerType(), cancerSubtype());
     }
 
     public static void writeRecords(@NotNull final String outputPath, @NotNull final List<PatientCancerTypes> patientCancerTypes)
@@ -49,12 +49,13 @@ public abstract class PatientCancerTypes {
         printer.close();
     }
 
+    @NotNull
     public static List<PatientCancerTypes> readRecords(@NotNull final String filePath) throws IOException {
         final CSVParser parser = CSVParser.parse(new File(filePath),
                 Charset.defaultCharset(),
                 CSVFormat.DEFAULT.withHeader(Header.class).withSkipHeaderRecord());
         return StreamSupport.stream(parser.spliterator(), false)
-                .map(record -> ImmutablePatientCancerTypes.of(record.get(Header.cpctId),
+                .map(record -> ImmutablePatientCancerTypes.of(record.get(Header.patientIdentifier),
                         record.get(Header.cancerType),
                         record.get(Header.cancerSubtype)))
                 .collect(Collectors.toList());
