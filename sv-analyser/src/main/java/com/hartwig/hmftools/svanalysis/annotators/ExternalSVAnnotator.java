@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svannotation;
+package com.hartwig.hmftools.svanalysis.annotators;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.svannotation.analysis.SvClusterData;
+import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,7 +21,7 @@ public class ExternalSVAnnotator {
     private Map<Integer, String> mIdValues;
     private String mEmptyValues;
 
-    private static final Logger LOGGER = LogManager.getLogger(FragileSiteAnnotator.class);
+    private static final Logger LOGGER = LogManager.getLogger(ExternalSVAnnotator.class);
 
 
     public ExternalSVAnnotator()

@@ -28,6 +28,7 @@
         <module>hmf-extensions</module>
         <module>hmf-id-generator</module>
         <module>portal-data-converter</module>
+        <module>sv-analyser</module>
     </modules>
 
     <properties>

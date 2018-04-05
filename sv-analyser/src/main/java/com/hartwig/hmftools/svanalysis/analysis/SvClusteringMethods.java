@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.svannotation.analysis;
+package com.hartwig.hmftools.svanalysis.analysis;
 
-import static com.hartwig.hmftools.svannotation.analysis.SvUtilities.SV_GROUP_ENCLOSED;
-import static com.hartwig.hmftools.svannotation.analysis.SvUtilities.SV_GROUP_ENCLOSING;
-import static com.hartwig.hmftools.svannotation.analysis.SvUtilities.SV_GROUP_NEIGHBOURS;
-import static com.hartwig.hmftools.svannotation.analysis.SvUtilities.SV_GROUP_OVERLAP;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_ENCLOSED;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_ENCLOSING;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_NEIGHBOURS;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_OVERLAP;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -13,10 +13,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.common.centromeres.Centromeres;
-import com.hartwig.hmftools.common.chromosome.ChromosomeLengths;
-import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -242,8 +240,8 @@ public class SvClusteringMethods {
         // form a map of unique arm to SV count
         for(final SvClusterData var : allVariants)
         {
-            String chrArmStart = var.chromosome(true) + "_" + var.arm(true);
-            String chrArmEnd = var.chromosome(false) + "_" + var.arm(false);
+            String chrArmStart = mUtils.getVariantChrArm(var,true);
+            String chrArmEnd = mUtils.getVariantChrArm(var,false);
 
             if(mChrArmSvCount.containsKey(chrArmStart))
             {
@@ -271,8 +269,8 @@ public class SvClusteringMethods {
         for(Map.Entry<String, Integer> entry : mChrArmSvCount.entrySet()) {
 
             final String chrArm = entry.getKey();
-            final String chromosome = chrArm.split("_")[0];
-            final String arm = chrArm.split("_")[1];
+            final String chromosome = mUtils.getChrFromChrArm(chrArm);
+            final String arm = mUtils.getArmFromChrArm(chrArm);
 
             long chrArmLength = mUtils.getChromosomalArmLength(chromosome, arm);
             int svCount = entry.getValue();
@@ -302,8 +300,8 @@ public class SvClusteringMethods {
         for(Map.Entry<String, Double> entry : mChrArmSvRate.entrySet()) {
 
             final String chrArm = entry.getKey();
-            final String chromosome = chrArm.split("_")[0];
-            final String arm = chrArm.split("_")[1];
+            final String chromosome = mUtils.getChrFromChrArm(chrArm);
+            final String arm = mUtils.getArmFromChrArm(chrArm);
 
             long chrArmLength = mUtils.getChromosomalArmLength(chromosome, arm);
             double expectedSvCount = (int)Math.round((chrArmLength / REF_BASE_LENGTH) * mMedianChrArmRate);
@@ -315,8 +313,8 @@ public class SvClusteringMethods {
 
     public String getChrArmData(final SvClusterData var)
     {
-        String chrArmStart = var.chromosome(true) + "_" + var.arm(true);
-        String chrArmEnd = var.chromosome(false) + "_" + var.arm(false);
+        String chrArmStart = mUtils.getVariantChrArm(var,true);
+        String chrArmEnd = mUtils.getVariantChrArm(var,false);
 
         // report Start SV count : Expected SV Count : End SV Count : Expected SV Count
         return String.format("%d,%.2f,%d,%.2f",

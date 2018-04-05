@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svannotation.analysis;
+package com.hartwig.hmftools.svanalysis.types;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
@@ -8,8 +8,6 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import java.util.List;
-
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 
 
 public class SvClusterData
@@ -32,8 +30,8 @@ public class SvClusterData
     // clustering info
     private List<SvClusterData> mSubSVs; // other SVs wholy contained within this SV
     private boolean mIsSubSV;
-    private SvCluster mStartCluster;
-    private SvCluster mEndCluster;
+//    private SvCluster mStartCluster;
+//    private SvCluster mEndCluster;
 
     private int mNearestSVLength;
     private String mNearestSVLinkType;
@@ -60,8 +58,8 @@ public class SvClusterData
 
         mSubSVs = Lists.newArrayList();
         mIsSubSV = false;
-        mStartCluster = null;
-        mEndCluster = null;
+//        mStartCluster = null;
+//        mEndCluster = null;
     }
 
     public static SvClusterData from(final EnrichedStructuralVariant enrichedSV)
@@ -190,10 +188,10 @@ public class SvClusterData
     public void setIsSubSV(final boolean isSubSV) { mIsSubSV = isSubSV; }
     public final boolean isSubSV() { return mIsSubSV; }
 
-    public void setStartCluster(SvCluster cluster) { mStartCluster = cluster; }
-    public void setEndCluster(SvCluster cluster) { mEndCluster = cluster; }
-    public final SvCluster getStartCluster() { return mStartCluster; }
-    public final SvCluster getEndCluster() { return mEndCluster; }
+//    public void setStartCluster(SvCluster cluster) { mStartCluster = cluster; }
+//    public void setEndCluster(SvCluster cluster) { mEndCluster = cluster; }
+//    public final SvCluster getStartCluster() { return mStartCluster; }
+//    public final SvCluster getEndCluster() { return mEndCluster; }
 
-    public final boolean areClustersSet() { return mStartCluster != null && mEndCluster != null; }
+    // public final boolean areClustersSet() { return mStartCluster != null && mEndCluster != null; }
 }

@@ -1,9 +1,10 @@
-package com.hartwig.hmftools.svannotation.analysis;
+package com.hartwig.hmftools.svanalysis.analysis;
 
 import com.hartwig.hmftools.common.centromeres.Centromeres;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLengths;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 
 import java.util.List;
 import java.util.Map;
@@ -308,5 +309,19 @@ public class SvUtilities {
         return consistencyCount;
     }
 
+    public final String getVariantChrArm(final SvClusterData var, boolean isStart)
+    {
+        return var.chromosome(isStart) + "_" + var.arm(isStart);
+    }
+
+    public final String getChrFromChrArm(final String chrArm)
+    {
+        return chrArm.split("_")[0];
+    }
+
+    public final String getArmFromChrArm(final String chrArm)
+    {
+        return chrArm.split("_")[1];
+    }
 
 }

@@ -6,11 +6,22 @@
 
     <xsd:simpleType name="snpEffect" final="restriction">
         <xsd:restriction base="xsd:string">
-            <xsd:enumeration value="stop_gained"/>
+            <xsd:enumeration value="coding_sequence_variant"/>
+            <xsd:enumeration value="disruptive_inframe_insertion"/>
+            <xsd:enumeration value="disruptive_inframe_deletion"/>
             <xsd:enumeration value="frameshift_variant"/>
+            <xsd:enumeration value="inframe_deletion"/>
+            <xsd:enumeration value="inframe_insertion"/>
+            <xsd:enumeration value="initiator_codon_variant"/>
+            <xsd:enumeration value="missense_variant"/>
+            <xsd:enumeration value="protein_altering_variant"/>
             <xsd:enumeration value="splice_acceptor_variant"/>
             <xsd:enumeration value="splice_donor_variant"/>
-            <xsd:enumeration value="missense_variant"/>
+            <xsd:enumeration value="start_gained"/>
+            <xsd:enumeration value="start_loss"/>
+            <xsd:enumeration value="stop_gained"/>
+            <xsd:enumeration value="stop_lost"/>
+            <xsd:enumeration value="prime_UTR_premature_start_codon_gain_variant"/>
         </xsd:restriction>
     </xsd:simpleType>
 

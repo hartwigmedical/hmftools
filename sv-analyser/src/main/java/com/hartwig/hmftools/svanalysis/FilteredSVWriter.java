@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svannotation;
+package com.hartwig.hmftools.svanalysis;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -7,11 +7,11 @@ import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
 
@@ -23,7 +23,7 @@ import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
-public class SvVCFAnnotator {
+public class FilteredSVWriter {
 
     private final String mOutputPath;
     private final String mVcfFileLocation;
@@ -31,7 +31,7 @@ public class SvVCFAnnotator {
 
     private static final Logger LOGGER = LogManager.getLogger(FilteredSVWriter.class);
 
-    public SvVCFAnnotator(final String vcfFileLocation, final String outputPath)
+    public FilteredSVWriter(final String vcfFileLocation, final String outputPath)
     {
         mOutputPath = outputPath;
         mVcfFileLocation = vcfFileLocation;
@@ -54,7 +54,7 @@ public class SvVCFAnnotator {
 
             LOGGER.debug("found {} BPI VCF files", vcfFiles.size());
 
-            // add the filtered and passed SV entries for each file
+                // add the filtered and passed SV entries for each file
             for(final File vcfFile : vcfFiles)
             {
                 if(vcfFile.isDirectory())
@@ -72,21 +72,13 @@ public class SvVCFAnnotator {
                 String[] itemsStr = vcfFile.getName().split("_");
 
                 if(itemsStr.length != 4)
-                    continue;
+                continue;
 
                 String sampleId = itemsStr[1];
                 LOGGER.debug("sampleId({})", sampleId);
 
-                List<VariantContext> variants = readFromVcf(vcfFile.getPath());
-
-                for(final VariantContext variant : variants)
-                {
-                    if(variant.hasAttribute("IMPRECISE"))
-                    {
-                        LOGGER.debug("var({}) has imprecise call", variant.getID());
-                    }
-                }
-                // generateFilteredSVFile(variants, sampleId);
+                List<StructuralVariant> variants = readFromVcf(vcfFile.getPath());
+                generateFilteredSVFile(variants, sampleId);
             }
 
             if(mFileWriter != null)
@@ -99,22 +91,17 @@ public class SvVCFAnnotator {
         }
     }
 
-    private List<VariantContext> readFromVcf(String vcfFilename)
-    {
-        List<VariantContext> variants = Lists.newArrayList();
-
+    private List<StructuralVariant> readFromVcf(String vcfFilename)  {
         final StructuralVariantFactory factory = new StructuralVariantFactory(false);
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcfFilename,
                 new VCFCodec(),
-                false))
-        {
-            while(reader.iterator().hasNext())
-                variants.add(reader.iterator().next());
+                false)) {
+            reader.iterator().forEach(factory::addVariantContext);
         }
         catch(Exception e) {
         }
 
-        return variants;
+        return factory.results();
     }
 
 
@@ -140,7 +127,7 @@ public class SvVCFAnnotator {
             {
                 String filtersStr = var.filters();
 
-                if(filtersStr.equals("PASS") || filtersStr.equals("[]") || filtersStr.isEmpty())
+                if(filtersStr.equals("PASS") || filtersStr.equals("[]") || filtersStr.equals(".") || filtersStr.isEmpty())
                 {
                     LOGGER.debug("var({}) was a PASS", var.id());
                     filtersStr = "PASS";

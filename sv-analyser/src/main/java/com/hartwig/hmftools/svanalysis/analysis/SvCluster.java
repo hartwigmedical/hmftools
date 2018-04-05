@@ -1,11 +1,14 @@
-package com.hartwig.hmftools.svannotation.analysis;
+package com.hartwig.hmftools.svanalysis.analysis;
 
-import static com.hartwig.hmftools.svannotation.FragileSiteAnnotator.NO_FS;
-import static com.hartwig.hmftools.svannotation.LineElementAnnotator.NO_LINE_ELEMENT;
-import static com.hartwig.hmftools.svannotation.analysis.SvUtilities.DOUBLE_STRANDED_BREAK;
-import static com.hartwig.hmftools.svannotation.analysis.SvUtilities.REPLICATION_EVENT;
+import static com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator.NO_FS;
+import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.DOUBLE_STRANDED_BREAK;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.REPLICATION_EVENT;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.svanalysis.types.SvBreakend;
+import com.hartwig.hmftools.svanalysis.types.SvClusterData;
+import com.hartwig.hmftools.svanalysis.types.SvFootprint;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -356,8 +359,8 @@ public class SvCluster
     {
         addVariant(spanningSV);
         mSpanningSV = spanningSV;
-        mSpanningSV.setStartCluster(this);
-        mSpanningSV.setEndCluster(this);
+//        mSpanningSV.setStartCluster(this);
+//        mSpanningSV.setEndCluster(this);
 
         LOGGER.debug("cluster({}) set spanning variant({}) with subSVsCount({})", mClusterId, spanningSV.id(), spanningSV.getSubSVs().size());
 

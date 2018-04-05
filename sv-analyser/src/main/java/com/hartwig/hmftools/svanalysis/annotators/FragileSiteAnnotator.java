@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svannotation;
+package com.hartwig.hmftools.svanalysis.annotators;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -8,7 +8,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionFactory;
-import com.hartwig.hmftools.svannotation.analysis.SvClusterData;
+import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

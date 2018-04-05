@@ -2,9 +2,7 @@ package com.hartwig.hmftools.svannotation;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -24,9 +22,9 @@ import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
-import com.hartwig.hmftools.svannotation.analysis.StructuralVariantClustering;
-import com.hartwig.hmftools.svannotation.analysis.SvClusterData;
-import com.hartwig.hmftools.svannotation.analysis.SvClusteringConfig;
+//import com.hartwig.hmftools.svanalysis.analysis.StructuralVariantClustering;
+//import com.hartwig.hmftools.svanalysis.analysis.SvClusterData;
+//import com.hartwig.hmftools.svanalysis.analysis.SvClusteringConfig;
 import com.hartwig.hmftools.svannotation.dao.StructuralVariantAnnotationDAO;
 
 import org.apache.commons.cli.CommandLine;
@@ -55,16 +53,12 @@ public class LoadStructuralVariants {
     private static final String FUSION_CSV = "fusion_csv";
     private static final String CLUSTER_SVS = "cluster_svs";
     private static final String SKIP_ANNOTATIONS = "skip_annotations";
-    private static final String LOAD_FROM_DB = "load_from_db";
     private static final String CLUSTER_BASE_DISTANCE = "cluster_bases";
     private static final String DATA_OUTPUT_PATH = "data_output_path";
     private static final String LOG_DEBUG = "log_debug";
-    private static final String WRITE_FILTERED_SVS = "log_filters";
     private static final String SV_PON_FILE = "sv_pon_file";
     private static final String FRAGILE_SITE_FILE = "fragile_site_file";
     private static final String LINE_ELEMENT_FILE = "line_element_file";
-    private static final String REANNOTATE_FROM_VCFS = "reannotate_vcfs";
-    private static final String EXTERNAL_ANNOTATIONS = "external_annotations";
 
 
     private static final String DB_USER = "db_user";
@@ -75,11 +69,8 @@ public class LoadStructuralVariants {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
-        boolean loadFromDB = cmd.hasOption(LOAD_FROM_DB);
         final String tumorSample = cmd.getOptionValue(SAMPLE);
         boolean runClustering = cmd.hasOption(CLUSTER_SVS);
-        boolean createFilteredPON = cmd.hasOption(WRITE_FILTERED_SVS);
-        boolean reannotateFromVCFs = cmd.hasOption(REANNOTATE_FROM_VCFS);
 
         final DatabaseAccess dbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
 
@@ -87,124 +78,56 @@ public class LoadStructuralVariants {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        if(createFilteredPON)
-        {
-            LOGGER.info("reading VCF files including filtered SVs");
+//        StructuralVariantClustering svClusterer = null;
+//
+//        if (runClustering) {
+//            LOGGER.info("will run clustering logic");
+//
+//            SvClusteringConfig clusteringConfig = new SvClusteringConfig();
+//            clusteringConfig.setOutputCsvPath(cmd.getOptionValue(DATA_OUTPUT_PATH));
+//            clusteringConfig.setBaseDistance(Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE, "0")));
+//            clusteringConfig.setSvPONFile(cmd.getOptionValue(SV_PON_FILE, ""));
+//            clusteringConfig.setFragileSiteFile(cmd.getOptionValue(FRAGILE_SITE_FILE, ""));
+//            clusteringConfig.setLineElementFile(cmd.getOptionValue(LINE_ELEMENT_FILE, ""));
+//            clusteringConfig.setExternalAnnotationsFile(cmd.getOptionValue(EXTERNAL_ANNOTATIONS, ""));
+//            svClusterer = new StructuralVariantClustering(clusteringConfig);
+//        }
 
-            FilteredSVWriter filteredSvWriter = new FilteredSVWriter(cmd.getOptionValue(VCF_FILE), cmd.getOptionValue(DATA_OUTPUT_PATH));
-            filteredSvWriter.processVcfFiles();
+        boolean skipAnnotations = cmd.hasOption(SKIP_ANNOTATIONS);
+        LOGGER.info("reading VCF File");
+        final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE), true);
 
-            LOGGER.info("reads complete");
-            return;
-        }
+        LOGGER.info("enriching structural variants based on purple data");
+        final List<EnrichedStructuralVariant> enrichedVariantWithoutPrimaryId =
+                enrichStructuralVariants(variants, dbAccess, tumorSample);
 
-        if(reannotateFromVCFs)
-        {
-            LOGGER.info("reading VCF files to re-annotate");
+        LOGGER.info("persisting variants to database");
+        dbAccess.writeStructuralVariants(tumorSample, enrichedVariantWithoutPrimaryId);
 
-            // for now just re-read the VCFs and write out new annotations to file
-            // may later on turn into update SQL once clustering does the same
-            SvVCFAnnotator vcfAnnotator = new SvVCFAnnotator(cmd.getOptionValue(VCF_FILE), cmd.getOptionValue(DATA_OUTPUT_PATH));
-            vcfAnnotator.processVcfFiles();
-            return;
-        }
+        // NEVA: We read after we write to populate the primaryId field
+        final List<EnrichedStructuralVariant> enrichedVariants = dbAccess.readStructuralVariants(tumorSample);
 
-        StructuralVariantClustering svClusterer = null;
+        LOGGER.info("initialising MqSql annotator");
+        final VariantAnnotator annotator = MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
 
-        if (runClustering) {
-            LOGGER.info("will run clustering logic");
+        LOGGER.info("loading Cosmic Fusion data");
+        final CosmicFusionModel cosmicGeneFusions = CosmicFusions.readFromCSV(cmd.getOptionValue(FUSION_CSV));
 
-            SvClusteringConfig clusteringConfig = new SvClusteringConfig();
-            clusteringConfig.setOutputCsvPath(cmd.getOptionValue(DATA_OUTPUT_PATH));
-            clusteringConfig.setBaseDistance(Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE, "0")));
-            clusteringConfig.setUseCombinedOutputFile(tumorSample.equals("*"));
-            clusteringConfig.setSvPONFile(cmd.getOptionValue(SV_PON_FILE, ""));
-            clusteringConfig.setFragileSiteFile(cmd.getOptionValue(FRAGILE_SITE_FILE, ""));
-            clusteringConfig.setLineElementFile(cmd.getOptionValue(LINE_ELEMENT_FILE, ""));
-            clusteringConfig.setExternalAnnotationsFile(cmd.getOptionValue(EXTERNAL_ANNOTATIONS, ""));
-            svClusterer = new StructuralVariantClustering(clusteringConfig);
-        }
+        final StructuralVariantAnalyzer analyzer =
+                new StructuralVariantAnalyzer(annotator, HmfGenePanelSupplier.hmfPanelGeneList(), cosmicGeneFusions);
+        LOGGER.info("analyzing structural variants for impact via disruptions and fusions");
+        final StructuralVariantAnalysis analysis = analyzer.run(enrichedVariants, skipAnnotations);
 
-        if (createFilteredPON) {
-            LOGGER.info("reading VCF file including filtered SVs");
+//        if (runClustering) {
+//            svClusterer.loadFromEnrichedSVs(tumorSample, enrichedVariants);
+//            svClusterer.runClustering();
+//        }
 
-            FilteredSVWriter filteredSvWriter = new FilteredSVWriter(cmd.getOptionValue(VCF_FILE), cmd.getOptionValue(DATA_OUTPUT_PATH));
-            filteredSvWriter.processVcfFiles();
+        LOGGER.info("persisting annotations to database");
+        final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(dbAccess.context());
+        annotationDAO.write(analysis);
 
-            LOGGER.info("reads complete");
-            return;
-        }
-
-        if (!loadFromDB) {
-            boolean skipAnnotations = cmd.hasOption(SKIP_ANNOTATIONS);
-            LOGGER.info("reading VCF File");
-            final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE), true);
-
-            LOGGER.info("enriching structural variants based on purple data");
-            final List<EnrichedStructuralVariant> enrichedVariantWithoutPrimaryId =
-                    enrichStructuralVariants(variants, dbAccess, tumorSample);
-
-            LOGGER.info("persisting variants to database");
-            dbAccess.writeStructuralVariants(tumorSample, enrichedVariantWithoutPrimaryId);
-
-            // NEVA: We read after we write to populate the primaryId field
-            final List<EnrichedStructuralVariant> enrichedVariants = dbAccess.readStructuralVariants(tumorSample);
-
-            LOGGER.info("initialising MqSql annotator");
-            final VariantAnnotator annotator = MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
-
-            LOGGER.info("loading Cosmic Fusion data");
-            final CosmicFusionModel cosmicGeneFusions = CosmicFusions.readFromCSV(cmd.getOptionValue(FUSION_CSV));
-
-            final StructuralVariantAnalyzer analyzer =
-                    new StructuralVariantAnalyzer(annotator, HmfGenePanelSupplier.hmfPanelGeneList(), cosmicGeneFusions);
-            LOGGER.info("analyzing structural variants for impact via disruptions and fusions");
-            final StructuralVariantAnalysis analysis = analyzer.run(enrichedVariants, skipAnnotations);
-
-            if (runClustering) {
-                svClusterer.loadFromEnrichedSVs(tumorSample, enrichedVariants);
-                svClusterer.runClustering();
-            }
-
-            LOGGER.info("persisting annotations to database");
-            final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(dbAccess.context());
-            annotationDAO.write(analysis);
-        } else {
-            // CHSH: only run the SV clustering routines, taking source data from the SV table(s)
-            // KODU: Below assert feels somewhat risky!?
-            assert runClustering;
-
-            List<String> samplesList = Lists.newArrayList();
-
-            if (tumorSample.isEmpty() || tumorSample.equals("*")) {
-                samplesList = getStructuralVariantSamplesList(dbAccess);
-            } else if (tumorSample.contains(",")) {
-                String[] tumorList = tumorSample.split(",");
-                samplesList = Arrays.stream(tumorList).collect(Collectors.toList());
-            } else {
-                samplesList.add(tumorSample);
-            }
-
-            int count = 0;
-            for (final String sample : samplesList) {
-                ++count;
-                LOGGER.info("clustering for sample({}), total({})", sample, count);
-
-                List<SvClusterData> svClusterData = queryStructuralVariantData(dbAccess, sample);
-
-                svClusterer.loadFromDatabase(sample, svClusterData);
-
-                //LOGGER.info("data loaded", sample, count);
-
-                svClusterer.runClustering();
-                //LOGGER.info("clustering complete", sample, count);
-
-//                if(count > 10)
-//                    break;
-            }
-        }
-
-        svClusterer.close();
+//        svClusterer.close();
 
         LOGGER.info("run complete");
     }
@@ -239,19 +162,6 @@ public class LoadStructuralVariants {
     }
 
     @NotNull
-    private static List<SvClusterData> queryStructuralVariantData(@NotNull DatabaseAccess dbAccess, @NotNull String sampleId) {
-        List<SvClusterData> svClusterDataItems = Lists.newArrayList();
-
-        List<StructuralVariantData> svRecords = dbAccess.readStructuralVariantData(sampleId);
-
-        for (final StructuralVariantData svRecord : svRecords) {
-            svClusterDataItems.add(new SvClusterData(svRecord));
-        }
-
-        return svClusterDataItems;
-    }
-
-    @NotNull
     private static List<String> getStructuralVariantSamplesList(@NotNull DatabaseAccess dbAccess) {
         return dbAccess.structuralVariantSampleList("");
     }
@@ -266,18 +176,14 @@ public class LoadStructuralVariants {
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(FUSION_CSV, true, "Path towards a CSV containing white-listed gene fusions.");
         options.addOption(ENSEMBL_DB, true, "Annotate structural variants using this Ensembl DB URI");
-        options.addOption(LOAD_FROM_DB, false, "Use existing SV data, skip loading from VCF");
         options.addOption(CLUSTER_SVS, false, "Whether to run clustering logic");
         options.addOption(DATA_OUTPUT_PATH, true, "CSV output directory");
         options.addOption(SKIP_ANNOTATIONS, false, "Skip annotations, including Ensemble DB data sync, for testing only)");
         options.addOption(CLUSTER_BASE_DISTANCE, true, "Clustering base distance, defaults to 1000");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
-        options.addOption(WRITE_FILTERED_SVS, false, "Includes filtered SVs and writes all to file for PON creation");
         options.addOption(SV_PON_FILE, true, "PON file for SVs");
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file for SVs");
         options.addOption(FRAGILE_SITE_FILE, true, "Fragile Site file for SVs");
-        options.addOption(REANNOTATE_FROM_VCFS, false, "Re-annotation with new VCF annotations");
-        options.addOption(EXTERNAL_ANNOTATIONS, true, "Exteranl file with per-SV annotations");
 
         return options;
     }

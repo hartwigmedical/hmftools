@@ -1,13 +1,14 @@
-package com.hartwig.hmftools.svannotation.analysis;
+package com.hartwig.hmftools.svanalysis.analysis;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.hartwig.hmftools.svannotation.ExternalSVAnnotator;
-import com.hartwig.hmftools.svannotation.FragileSiteAnnotator;
-import com.hartwig.hmftools.svannotation.LineElementAnnotator;
-import com.hartwig.hmftools.svannotation.SvPONAnnotator;
+import com.hartwig.hmftools.svanalysis.annotators.ExternalSVAnnotator;
+import com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator;
+import com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator;
+import com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator;
+import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -49,7 +50,7 @@ public class StructuralVariantClustering {
     PerformanceCounter mPC5;
     PerformanceCounter mPC6;
 
-    private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnalyzer.class);
+    private static final Logger LOGGER = LogManager.getLogger(StructuralVariantClustering.class);
 
     public StructuralVariantClustering(final SvClusteringConfig config)
     {

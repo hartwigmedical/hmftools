@@ -1,14 +1,15 @@
-package com.hartwig.hmftools.svannotation.analysis;
+package com.hartwig.hmftools.svanalysis.analysis;
 
-import static com.hartwig.hmftools.svannotation.analysis.SvUtilities.DOUBLE_MINUTE;
-import static com.hartwig.hmftools.svannotation.analysis.SvUtilities.DOUBLE_STRANDED_BREAK;
-import static com.hartwig.hmftools.svannotation.analysis.SvUtilities.REPLICATION_EVENT;
-import static com.hartwig.hmftools.svannotation.analysis.SvUtilities.SV_GROUP_ENCLOSED;
-import static com.hartwig.hmftools.svannotation.analysis.SvUtilities.SV_GROUP_NEIGHBOURS;
-import static com.hartwig.hmftools.svannotation.analysis.SvUtilities.SV_GROUP_OVERLAP;
-import static com.hartwig.hmftools.svannotation.analysis.SvUtilities.UNPHASED_EVENTS;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.DOUBLE_MINUTE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.DOUBLE_STRANDED_BREAK;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.REPLICATION_EVENT;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_ENCLOSED;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_NEIGHBOURS;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_OVERLAP;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.UNPHASED_EVENTS;
 
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

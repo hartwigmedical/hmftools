@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.svannotation.analysis;
+package com.hartwig.hmftools.svanalysis.types;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.svannotation.analysis.SvClusterData;
+import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 
 import java.util.List;
 

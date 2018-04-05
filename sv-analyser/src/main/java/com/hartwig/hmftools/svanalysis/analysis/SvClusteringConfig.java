@@ -1,7 +1,4 @@
-package com.hartwig.hmftools.svannotation.analysis;
-
-import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
-import static java.lang.Math.abs;
+package com.hartwig.hmftools.svanalysis.analysis;
 
 public class SvClusteringConfig {
 
