@@ -18,7 +18,6 @@ import com.hartwig.hmftools.patientdb.data.ImmutableDrugData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class TreatmentMatcherTest {
@@ -45,7 +44,6 @@ public class TreatmentMatcherTest {
 
     // LISC:    ---biopsy(mar)----no-treatment---
     @Test
-    @Ignore
     public void testOneBiopsyNoTreatment() {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(NO_TREATMENT_GIVEN);
         final List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_MAR);
@@ -107,26 +105,8 @@ public class TreatmentMatcherTest {
 
     // LISC:    ---biopsy(jan)-start(feb)---end (jul) - biopt(sep) --- no treatment
     @Test
-    @Ignore
     public void testTwoBiopsyMatchToTreatment() {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_JUL2015, NO_TREATMENT_GIVEN);
-        final List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_JAN, BIOPSY_SEP);
-        final List<BiopsyTreatmentData> matchedTreatments =
-                TreatmentMatcher.matchTreatmentsToBiopsies("patient", biopsies, treatments).values();
-        assertTrue(treatments.size() == matchedTreatments.size());
-        final Integer matchedBiopsyId1 = matchedTreatments.get(0).biopsyId();
-        final Integer matchedBiopsyId2 = matchedTreatments.get(0).biopsyId();
-        assertNotNull(matchedBiopsyId1);
-        assertNotNull(matchedBiopsyId2);
-        assertEquals(biopsies.get(0).id(), matchedBiopsyId1.intValue());
-        assertEquals(biopsies.get(0).id(), matchedBiopsyId2.intValue());
-    }
-
-    // LISC:    ---biopsy(jan)---no treatment - biopt(sep) ---- no treatment
-    @Test
-    @Ignore
-    public void testTwoBiopsyMatchToTwoNoTreatment() {
-        final List<BiopsyTreatmentData> treatments = Lists.newArrayList(NO_TREATMENT_GIVEN, NO_TREATMENT_GIVEN);
         final List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_JAN, BIOPSY_SEP);
         final List<BiopsyTreatmentData> matchedTreatments =
                 TreatmentMatcher.matchTreatmentsToBiopsies("patient", biopsies, treatments).values();
@@ -150,7 +130,7 @@ public class TreatmentMatcherTest {
         final Integer matchedBiopsyId1 = matchedTreatments.get(0).biopsyId();
         assertNotNull(matchedBiopsyId1);
         assertEquals(biopsies.get(0).id(), matchedBiopsyId1.intValue());
-        assertEquals(null, matchedTreatments.get(1).biopsyId());
+        assertEquals(matchedBiopsyId1, matchedTreatments.get(1).biopsyId());
     }
 
     // MIVO:    ---biopsy(jan)-biopsy(feb)-start(mar)-------end(null)
