@@ -52,7 +52,7 @@ public class FilteredSVWriter {
                     .collect(Collectors.toList());
 
 
-            LOGGER.debug("found {} BPI VCF files", vcfFiles.size());
+            LOGGER.info("found {} BPI VCF files", vcfFiles.size());
 
                 // add the filtered and passed SV entries for each file
             for(final File vcfFile : vcfFiles)
@@ -125,7 +125,7 @@ public class FilteredSVWriter {
 
             for(final StructuralVariant var : variants)
             {
-                String filtersStr = var.filters();
+                String filtersStr = var.filter();
 
                 if(filtersStr.equals("PASS") || filtersStr.equals("[]") || filtersStr.equals(".") || filtersStr.isEmpty())
                 {
@@ -135,7 +135,7 @@ public class FilteredSVWriter {
                 else
                 {
                     // make tokenisable for further searches
-                    LOGGER.debug("var({}) has filters: {}", var.id(), var.filters());
+                    LOGGER.debug("var({}) has filters: {}", var.id(), var.filter());
 
                     if(filtersStr.charAt(0) == '[')
                         filtersStr = filtersStr.substring(1);

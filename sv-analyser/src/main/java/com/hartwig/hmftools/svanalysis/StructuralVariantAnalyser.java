@@ -33,7 +33,6 @@ public class StructuralVariantAnalyser {
     private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
     private static final String CLUSTER_SVS = "cluster_svs";
-    private static final String SKIP_ANNOTATIONS = "skip_annotations";
     private static final String CLUSTER_BASE_DISTANCE = "cluster_bases";
     private static final String DATA_OUTPUT_PATH = "data_output_path";
     private static final String LOG_DEBUG = "log_debug";
@@ -53,18 +52,11 @@ public class StructuralVariantAnalyser {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
-        final String tumorSample = cmd.getOptionValue(SAMPLE);
-        boolean runClustering = cmd.hasOption(CLUSTER_SVS);
-        boolean createFilteredPON = cmd.hasOption(WRITE_FILTERED_SVS);
-        boolean reannotateFromVCFs = cmd.hasOption(REANNOTATE_FROM_VCFS);
-
-        final DatabaseAccess dbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
-
         if (cmd.hasOption(LOG_DEBUG)) {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        if(createFilteredPON)
+        if(cmd.hasOption(WRITE_FILTERED_SVS))
         {
             LOGGER.info("reading VCF files including filtered SVs");
 
@@ -75,7 +67,7 @@ public class StructuralVariantAnalyser {
             return;
         }
 
-        if(reannotateFromVCFs)
+        if(cmd.hasOption(REANNOTATE_FROM_VCFS))
         {
             LOGGER.info("reading VCF files to re-annotate");
 
@@ -86,31 +78,19 @@ public class StructuralVariantAnalyser {
             return;
         }
 
-        StructuralVariantClustering svClusterer = null;
+        final DatabaseAccess dbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
 
-        if (runClustering) {
-            LOGGER.info("will run clustering logic");
+        final String tumorSample = cmd.getOptionValue(SAMPLE);
 
-            SvClusteringConfig clusteringConfig = new SvClusteringConfig();
-            clusteringConfig.setOutputCsvPath(cmd.getOptionValue(DATA_OUTPUT_PATH));
-            clusteringConfig.setBaseDistance(Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE, "0")));
-            clusteringConfig.setUseCombinedOutputFile(tumorSample.equals("*"));
-            clusteringConfig.setSvPONFile(cmd.getOptionValue(SV_PON_FILE, ""));
-            clusteringConfig.setFragileSiteFile(cmd.getOptionValue(FRAGILE_SITE_FILE, ""));
-            clusteringConfig.setLineElementFile(cmd.getOptionValue(LINE_ELEMENT_FILE, ""));
-            clusteringConfig.setExternalAnnotationsFile(cmd.getOptionValue(EXTERNAL_ANNOTATIONS, ""));
-            svClusterer = new StructuralVariantClustering(clusteringConfig);
-        }
-
-        if (createFilteredPON) {
-            LOGGER.info("reading VCF file including filtered SVs");
-
-            FilteredSVWriter filteredSvWriter = new FilteredSVWriter(cmd.getOptionValue(VCF_FILE), cmd.getOptionValue(DATA_OUTPUT_PATH));
-            filteredSvWriter.processVcfFiles();
-
-            LOGGER.info("reads complete");
-            return;
-        }
+        SvClusteringConfig clusteringConfig = new SvClusteringConfig();
+        clusteringConfig.setOutputCsvPath(cmd.getOptionValue(DATA_OUTPUT_PATH));
+        clusteringConfig.setBaseDistance(Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE, "0")));
+        clusteringConfig.setUseCombinedOutputFile(tumorSample.equals("*"));
+        clusteringConfig.setSvPONFile(cmd.getOptionValue(SV_PON_FILE, ""));
+        clusteringConfig.setFragileSiteFile(cmd.getOptionValue(FRAGILE_SITE_FILE, ""));
+        clusteringConfig.setLineElementFile(cmd.getOptionValue(LINE_ELEMENT_FILE, ""));
+        clusteringConfig.setExternalAnnotationsFile(cmd.getOptionValue(EXTERNAL_ANNOTATIONS, ""));
+        StructuralVariantClustering svClusterer = new StructuralVariantClustering(clusteringConfig);
 
         List<String> samplesList = Lists.newArrayList();
 
@@ -174,7 +154,6 @@ public class StructuralVariantAnalyser {
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(CLUSTER_SVS, false, "Whether to run clustering logic");
         options.addOption(DATA_OUTPUT_PATH, true, "CSV output directory");
-        options.addOption(SKIP_ANNOTATIONS, false, "Skip annotations, including Ensemble DB data sync, for testing only)");
         options.addOption(CLUSTER_BASE_DISTANCE, true, "Clustering base distance, defaults to 1000");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         options.addOption(WRITE_FILTERED_SVS, false, "Includes filtered SVs and writes all to file for PON creation");

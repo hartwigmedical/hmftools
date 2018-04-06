@@ -47,6 +47,7 @@
         <hmf-patient-db.version>2.6</hmf-patient-db.version>
         <hmf-apiclients.version>1.0</hmf-apiclients.version>
         <hmf-variant-annotation.version>1.0</hmf-variant-annotation.version>
+        <hmf-sv-analyser.version>1.0</hmf-sv-analyser.version>
         <hmf-strelka-post-process.version>1.2</hmf-strelka-post-process.version>
         <hmf-extensions.version>1</hmf-extensions.version>
 
@@ -146,6 +147,11 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>variant-annotator</artifactId>
                 <version>${hmf-variant-annotation.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>sv-analyser</artifactId>
+                <version>${hmf-sv-analyser.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>

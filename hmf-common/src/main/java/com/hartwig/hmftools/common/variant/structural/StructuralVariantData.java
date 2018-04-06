@@ -28,6 +28,6 @@ public abstract class StructuralVariantData {
     public abstract Double adjustedEndCopyNumberChange();
     public abstract Double ploidy();
     public abstract String homology();
-
+    public abstract String filter();
 
 }

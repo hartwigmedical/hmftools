@@ -68,6 +68,7 @@ public class SvPONAnnotator {
             LOGGER.error("Failed to read PON CSV file({})", ponFilename);
         }
     }
+    public boolean hasEntries() { return !mPonList.isEmpty(); }
 
     private void setIndexes()
     {
@@ -122,6 +123,37 @@ public class SvPONAnnotator {
                 svData.setPonRegionCount(svPon.count());
             }
         }
+    }
+
+    public int getPonOccurenceCount(
+            final String chrStart, final String chrEnd, long posStart, long posEnd,
+            final byte orientStart, final byte orientEnd, final String type)
+    {
+        if (mPonList.isEmpty())
+            return 0;
+
+        // use CRMS to find start index
+        if(!mChrIndexMap.containsKey(chrStart))
+            return 0;
+
+        int index = mChrIndexMap.get(chrStart);
+
+        for(; index < mPonList.size(); ++index)
+        {
+            final SvPON svPon = mPonList.get(index);
+
+            if (svPon.chrStart().equals(chrStart) && svPon.chrEnd().equals(chrEnd)
+            && svPon.posStart() == posStart && svPon.posEnd() == posEnd
+            && svPon.orientStart() == orientStart && svPon.orientEnd() == orientEnd
+            && svPon.type().equals(type))
+            {
+
+                // LOGGER.debug("var({}) found in PON with count({})", svData.posId(), svPon.count());
+                return svPon.count();
+            }
+        }
+
+        return 0;
     }
 
     private boolean isMatch(final SvClusterData svData, final SvPON svPon, final int permittedDiff)

@@ -129,7 +129,7 @@ public class StructuralVariantFactory {
                 .end(endLeg)
                 .insertSequence(context.getAttributeAsString(INS_SEQ, ""))
                 .type(type)
-                .filters(filtersStr)
+                .filter(filtersStr)
                 .build();
     }
 
@@ -199,7 +199,7 @@ public class StructuralVariantFactory {
                 .mateId(second.getID())
                 .insertSequence(Strings.isNullOrEmpty(mantaInsertedSequence) ? insertedSequence : mantaInsertedSequence)
                 .type(type)
-                .filters(filtersStr)
+                .filter(filtersStr)
                 .build();
     }
 

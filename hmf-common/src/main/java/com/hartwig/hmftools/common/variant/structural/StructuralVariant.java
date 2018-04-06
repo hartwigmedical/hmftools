@@ -39,5 +39,5 @@ public interface StructuralVariant {
     StructuralVariantType type();
 
     @Nullable
-    String filters();
+    String filter();
 }

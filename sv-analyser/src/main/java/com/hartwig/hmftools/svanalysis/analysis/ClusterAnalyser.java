@@ -42,26 +42,23 @@ public class ClusterAnalyser {
                 cluster.getClusterId(), cluster.getDesc(), cluster.getSVs().size(),
                 cluster.getChromosomalArmCount(), cluster.isConsistent(), cluster.getConsistencyCount());
 
-        // for now
-        switch(cluster.getSVs().size())
-        {
-            case 1:
-                analyseSingleGroup(cluster);
-                break;
+        // cluster-size specific classification not longer used
 
-            case 2:
-                analyseDoubleGroup(cluster);
-                break;
-
-            default:
-                // not handled for now
-                break;
-        }
-
-        // what next
-
-
-
+//        // for now
+//        switch(cluster.getSVs().size())
+//        {
+//            case 1:
+//                analyseSingleGroup(cluster);
+//                break;
+//
+//            case 2:
+//                analyseDoubleGroup(cluster);
+//                break;
+//
+//            default:
+//                // not handled for now
+//                break;
+//        }
     }
 
     private void analyseSingleGroup(SvCluster cluster)
@@ -301,12 +298,6 @@ public class ClusterAnalyser {
                 cluster.addAnnotation(UNPHASED_EVENTS);
                 cluster.addAnnotation(DOUBLE_MINUTE);
             }
-//            else
-//            {
-//                // FIXME: if DUP encloses DEL, likely Replication if bridge is short - ??
-//
-//                cluster.addAnnotation(REPLICATION_EVENT);
-//            }
         }
 
 

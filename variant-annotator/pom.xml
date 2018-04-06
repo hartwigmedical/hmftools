@@ -56,6 +56,10 @@
             <groupId>com.hartwig</groupId>
             <artifactId>hmf-gene-panel</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>sv-analyser</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

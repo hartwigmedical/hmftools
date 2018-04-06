@@ -87,16 +87,6 @@ public class SvCluster
 
     public final String getDesc() { return mDesc; }
     public final void setDesc(final String desc) { mDesc = desc; }
-    public final List<String> getAnnotationList() { return mAnnotationList; }
-    public final void addAnnotation(final String annotation)
-    {
-        if(mAnnotationList.contains(annotation))
-            return;
-
-        mAnnotationList.add(annotation);
-    }
-
-    public String getAnnotations() { return mAnnotationList.stream ().collect (Collectors.joining (";")); }
 
     public void setIsConsistent(boolean toggle) { mIsConsistent = toggle; }
 
@@ -136,28 +126,6 @@ public class SvCluster
 
         mChromosomeArmCount = chrArmlist.size();
         LOGGER.debug("cluster({}) has {} unique arms", mClusterId, mChromosomeArmCount);
-    }
-
-    public final boolean isReplicationEvent()
-    {
-        return mAnnotationList.contains(REPLICATION_EVENT);
-    }
-
-    public final int getDSBCount() { return mDSBCount; }
-    public void setDSBCount(int count) { mDSBCount = count; }
-
-    public final String getDSBLengths() { return mDSBLengths; }
-    public final void setDSBLengths(final String lens) { mDSBLengths = lens; }
-
-    public final int getTICount() { return mTempInsertCount; }
-    public void setTICount(int count) { mTempInsertCount = count; }
-
-    public final String getTempInsertLengths() { return mTempInsertLengths; }
-    public final void setTempInsertLengths(final String lens) { mTempInsertLengths = lens; }
-
-    public final boolean isDSBEvent()
-    {
-        return mAnnotationList.contains(DOUBLE_STRANDED_BREAK);
     }
 
     public final String getClusterTypesAsString()
@@ -294,6 +262,38 @@ public class SvCluster
         return false;
     }
 
+    public final boolean isReplicationEvent()
+    {
+        return mAnnotationList.contains(REPLICATION_EVENT);
+    }
+
+    public final int getDSBCount() { return mDSBCount; }
+    public void setDSBCount(int count) { mDSBCount = count; }
+
+    public final String getDSBLengths() { return mDSBLengths; }
+    public final void setDSBLengths(final String lens) { mDSBLengths = lens; }
+
+    public final int getTICount() { return mTempInsertCount; }
+    public void setTICount(int count) { mTempInsertCount = count; }
+
+    public final String getTempInsertLengths() { return mTempInsertLengths; }
+    public final void setTempInsertLengths(final String lens) { mTempInsertLengths = lens; }
+
+    public final boolean isDSBEvent()
+    {
+        return mAnnotationList.contains(DOUBLE_STRANDED_BREAK);
+    }
+
+    public final List<String> getAnnotationList() { return mAnnotationList; }
+    public final void addAnnotation(final String annotation)
+    {
+        if(mAnnotationList.contains(annotation))
+            return;
+
+        mAnnotationList.add(annotation);
+    }
+
+    public String getAnnotations() { return mAnnotationList.stream ().collect (Collectors.joining (";")); }
 
     public void addSubCluster(SvCluster subCluster)
     {

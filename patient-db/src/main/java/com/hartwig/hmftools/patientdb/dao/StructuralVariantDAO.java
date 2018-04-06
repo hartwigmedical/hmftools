@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep21;
+import org.jooq.InsertValuesStep22;
 import org.jooq.Record;
 import org.jooq.Record1;
 import org.jooq.Result;
@@ -62,6 +63,7 @@ class StructuralVariantDAO {
                     .ploidy(record.getValue(STRUCTURALVARIANT.PLOIDY))
                     .type(StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
                     .homology(record.getValue(STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE))
+                    .filter(record.getValue(STRUCTURALVARIANT.FILTER))
                     .build());
         }
 
@@ -153,7 +155,7 @@ class StructuralVariantDAO {
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
 
         for (List<EnrichedStructuralVariant> batch : Iterables.partition(variants, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep21 inserter = context.insertInto(STRUCTURALVARIANT,
+            InsertValuesStep22 inserter = context.insertInto(STRUCTURALVARIANT,
                     STRUCTURALVARIANT.SAMPLEID,
                     STRUCTURALVARIANT.STARTCHROMOSOME,
                     STRUCTURALVARIANT.ENDCHROMOSOME,
@@ -174,13 +176,14 @@ class StructuralVariantDAO {
                     STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER,
                     STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE,
                     STRUCTURALVARIANT.PLOIDY,
+                    STRUCTURALVARIANT.FILTER,
                     STRUCTURALVARIANT.MODIFIED);
             batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
             inserter.execute();
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep21 inserter, @NotNull String sample,
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep22 inserter, @NotNull String sample,
             @NotNull EnrichedStructuralVariant variant) {
         //noinspection unchecked
         inserter.values(sample,
@@ -203,6 +206,7 @@ class StructuralVariantDAO {
                 variant.end().adjustedCopyNumber(),
                 variant.end().adjustedCopyNumberChange(),
                 variant.ploidy(),
+                variant.filter(),
                 timestamp);
     }
 }

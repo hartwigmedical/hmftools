@@ -312,13 +312,13 @@ public class StructuralVariantClustering {
 
                     // cluster-level info
                     writer.write("FSCount,LECount,DupBECount,DupBESiteCount,");
-                    writer.write("ClusterDesc,Consistency,ArmCount,IsTI,TICount,TILens,IsDSB,DSBCount,DSBLens,Annotations");
+                    writer.write("ClusterDesc,Consistency,ArmCount,");
 
                     // external annotations if any
                     if(mExternalAnnotator.hasExternalData())
-                        writer.write(String.format(",%s", mExternalAnnotator.getFieldNames()));
+                        writer.write(String.format("%s", mExternalAnnotator.getFieldNames()));
                     else
-                        writer.write(",NearestLen,NearestType,NearestTILen,NearestDBLen,MultipleBiopsy");
+                        writer.write("NearestLen,NearestType,NearestTILen,NearestDBLen,MultipleBiopsy");
 
                     writer.newLine();
                 }
@@ -352,20 +352,15 @@ public class StructuralVariantClustering {
                                     var.isStartFragileSite(), var.isEndFragileSite(),
                                     var.isStartLineElement(), var.isEndLineElement(),
                                     cluster.isSvDuplicateBE(var, true), cluster.isSvDuplicateBE(var, false),
-                                    mClusteringMethods.getChrArmData(var)
-                            ));
+                                    mClusteringMethods.getChrArmData(var)));
 
                     writer.write(
                             String.format("%d,%d,%d,%d,",
-                                    fragileSiteCount, lineElementCount, duplicateBECount, duplicateBESiteCount
-                                    ));
+                                    fragileSiteCount, lineElementCount, duplicateBECount, duplicateBESiteCount));
 
                     writer.write(
-                            String.format("%s,%d,%d,%s,%d,%s,%s,%d,%s,%s",
-                                    cluster.getDesc(), cluster.getConsistencyCount(), cluster.getChromosomalArmCount(),
-                                    cluster.isReplicationEvent(), cluster.getTICount(), cluster.getTempInsertLengths(),
-                                    cluster.isDSBEvent(), cluster.getDSBCount(), cluster.getDSBLengths(), cluster.getAnnotations()
-                                    ));
+                            String.format("%s,%d,%d,",
+                                    cluster.getDesc(), cluster.getConsistencyCount(), cluster.getChromosomalArmCount()));
 
                     if(mExternalAnnotator.hasExternalData()) {
                         writer.write(String.format(",%s", mExternalAnnotator.getSVData(var)));
