@@ -33,28 +33,52 @@ public final class TreatmentMatcher {
         List<BiopsyData> remainingBiopsies = biopsies;
         for (final BiopsyTreatmentData treatment : treatments) {
             final String treatmentGiven = treatment.treatmentGiven();
-            if (treatmentGiven == null || treatmentGiven.toLowerCase().equals("no")) {
+            if (treatmentGiven == null) {
                 matchedTreatments.add(treatment);
                 continue;
             }
-            final Map<Boolean, List<BiopsyData>> partitions = remainingBiopsies.stream()
-                    .collect(Collectors.partitioningBy(clinicalBiopsy -> isPossibleMatch(clinicalBiopsy.date(), treatment.startDate())));
-            final List<BiopsyData> possibleMatches = partitions.get(true);
-            if (possibleMatches.size() == 0) {
-                findings.add(treatmentMatchFinding(patientId, "no biopsy match for treatment", treatment.toString()));
-                matchedTreatments.add(treatment);
-            } else if (possibleMatches.size() > 1) {
-                findings.add(treatmentMatchFinding(patientId,
-                        "multiple biopsy matches for treatment",
-                        treatment + ". biopsies:  " + possibleMatches.stream().map(BiopsyData::toString).collect(Collectors.toList())));
-                matchedTreatments.add(treatment);
-            } else if (possibleMatches.get(0).date() == null) {
-                findings.add(treatmentMatchFinding(patientId, "treatment matched biopsy with null date.", treatment.toString()));
-                matchedTreatments.add(treatment);
-            } else {
-                final BiopsyData clinicalBiopsy = possibleMatches.get(0);
-                matchedTreatments.add(ImmutableBiopsyTreatmentData.builder().from(treatment).biopsyId(clinicalBiopsy.id()).build());
-                remainingBiopsies = partitions.get(false);
+            if (treatmentGiven.toLowerCase().equals("no")) {
+                final Map<Boolean, List<BiopsyData>> partitionsWithTreatment = remainingBiopsies.stream()
+                        .collect(Collectors.partitioningBy(clinicalBiopsy -> isPossibleMatchNoTreatment(clinicalBiopsy.date(),
+                                treatment.treatmentGiven())));
+                final List<BiopsyData> possibleMatchesNoTreatment = partitionsWithTreatment.get(true);
+                if (possibleMatchesNoTreatment.size() == 0) {
+                    findings.add(treatmentMatchFinding(patientId,
+                            "no biopsy match for treatment with treatment given is no",
+                            treatment.toString()));
+                    matchedTreatments.add(treatment);
+                } else {
+                    final BiopsyData clinicalBiopsy = possibleMatchesNoTreatment.get(0);
+                    matchedTreatments.add(ImmutableBiopsyTreatmentData.builder().from(treatment).biopsyId(clinicalBiopsy.id()).build());
+                    remainingBiopsies = partitionsWithTreatment.get(false);
+                }
+            } else if (treatmentGiven.toLowerCase().equals("yes")) {
+                final Map<Boolean, List<BiopsyData>> partitionsNoTreatment = remainingBiopsies.stream()
+                        .collect(Collectors.partitioningBy(clinicalBiopsy -> isPossibleMatch(clinicalBiopsy.date(),
+                                treatment.startDate())));
+                final List<BiopsyData> possibleMatchesWithTreatment = partitionsNoTreatment.get(true);
+                if (possibleMatchesWithTreatment.size() == 0) {
+                    findings.add(treatmentMatchFinding(patientId,
+                            "no biopsy match for treatment with treatment given is yes",
+                            treatment.toString()));
+                    matchedTreatments.add(treatment);
+                } else if (possibleMatchesWithTreatment.size() > 1) {
+                    findings.add(treatmentMatchFinding(patientId,
+                            "multiple biopsy matches for treatment with treatment given is yes",
+                            treatment + ". biopsies:  " + possibleMatchesWithTreatment.stream()
+                                    .map(BiopsyData::toString)
+                                    .collect(Collectors.toList())));
+                    matchedTreatments.add(treatment);
+                } else if (possibleMatchesWithTreatment.get(0).date() == null) {
+                    findings.add(treatmentMatchFinding(patientId,
+                            "treatment matched biopsy with null date with treatment given is yes.",
+                            treatment.toString()));
+                    matchedTreatments.add(treatment);
+                } else {
+                    final BiopsyData clinicalBiopsy = possibleMatchesWithTreatment.get(0);
+                    matchedTreatments.add(ImmutableBiopsyTreatmentData.builder().from(treatment).biopsyId(clinicalBiopsy.id()).build());
+                    remainingBiopsies = partitionsNoTreatment.get(false);
+                }
             }
         }
         return new MatchResult<>(matchedTreatments, findings);
@@ -62,6 +86,14 @@ public final class TreatmentMatcher {
 
     private static boolean isPossibleMatch(@Nullable final LocalDate biopsyDate, @Nullable final LocalDate treatmentStartDate) {
         return biopsyDate == null || isWithinThreshold(biopsyDate, treatmentStartDate);
+    }
+
+    private static boolean isPossibleMatchNoTreatment(@Nullable final LocalDate biopsyDate, @Nullable final String treatmentGiven) {
+        return biopsyDate == null || MatchingNoTreatment(biopsyDate, treatmentGiven);
+    }
+
+    private static boolean MatchingNoTreatment(@NotNull final LocalDate biopsyDate, @Nullable final String treatmentGiven) {
+        return biopsyDate != null & treatmentGiven.toLowerCase().equals("no");
     }
 
     private static boolean isWithinThreshold(@NotNull final LocalDate biopsyDate, @Nullable final LocalDate treatmentStartDate) {
