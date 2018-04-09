@@ -45,6 +45,7 @@ extra ovarial sereus adenocarcinoom,Uterus,Uterus: other
 Fechromocytoom,Other,Adrenal
 "First CT scan 24-05-2017 suspect clear cell RCC however, biopsy result 31-05-2017 = Melanoma",Skin,Melanoma
 Gallbladder cancer,Billary,Gall bladder
+gastric carcinoma                                                                                                                                                      ,Stomach         ,gastric carcinoma
 gastrinoma in stomach,Stomach,Gastric
 Gastrointestinal Stromal Tumors (GIST),Bone/Soft tissue,Gastrointestinal stromal tumors (GIST)
 Glioma: anaplastic astrocytoma-like,CNS,Glioma
@@ -112,6 +113,7 @@ Ovarian cancer,Ovary,Ovarian
 Pancreatic cancer,Pancreas,Pancreatic: other
 Pancreatic NET,Pancreas,Pancreatic: NET
 Penile cancer,Other,Penile
+pericarditis carcinomatosa,Mesothelium,pericarditis carcinomatosa
 Primary tumor of uknown origin,CUP,Cancer of unknown primary origin (CUP)
 primary tumor unknown,CUP,Cancer of unknown primary origin (CUP)
 Prostate cancer,Prostate,Prostate
@@ -123,6 +125,7 @@ sarcomatoid or sarcoma (postradiation),Bone/Soft tissue,Sarcoma: other
 sarcomoatoid carcinoom,Bone/Soft tissue,Sarcoma: other
 Sigmoid,Colon/Rectum,Sigmoid
 Skin cancer,Skin,Skin: other
+"small cell carcinoma, unknown origin (possible SCLC)",CUP,"small cell carcinoma, unknown origin (possible SCLC)"
 Small intestinal NET,Small intestine,Small intestine: NET
 solitair fibreuze tumor in brain,CNS,CNS: other
 Squamous cell carcinoma of the skin,Skin,Skin squamous cell carcinoma

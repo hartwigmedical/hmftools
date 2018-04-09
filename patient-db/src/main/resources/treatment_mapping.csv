@@ -47,6 +47,7 @@ Etoposide,Chemotherapy,
 Everolimus,Targeted therapy,
 Exemestane,Hormonal therapy,
 Fluorouracil,Chemotherapy,"Tegafur, Teysuno, Capecitabine, 5-FU, 5-Fluorouracil, Fluorouracil bolus, Xeloda"
+fluoropyrimidine                            ,Chemotherapy    ,fluorpyrimidine
 Folinezuur,remove,
 Folfirinox,Combi therapy,"Folfiri,Folfox"
 Folinic acid,remove,"folic acid, Folin acid"
@@ -64,13 +65,15 @@ Ipilimumab,Immunotherapy,
 Irinotecan,Chemotherapy,irrinotecan
 Lanreotide,Hormonal therapy,
 Lapatinib,Targeted therapy,
+Lenvatinib                                  ,Targeted therapy,
 Letrozole,Hormonal therapy,
 Leucovorin,remove,
 Leuproreline,Hormonal therapy,
 Lomustine,Chemotherapy,
-Lu-177-DOTATAAT,Hormonal therapy,
+Lu-177-DOTATAAT                             ,Radio therapy   ,
 Lu-177-PSMA,Radio therapy,"Lutetium-177-PSMA, Lu-177 PSMA radioligand therapie, PSMA-Lu"
 Lu-177-octreotaat,Radio therapy,
+"Lutetium 177"                              ,Radio therapy   ,
 Lucrin,Hormonal therapy,
 Lutetium 177-HA (PRRT),Radio therapy,
 LXH254,Targeted therapy,Study15-716; LXH254 1200 mg
@@ -84,6 +87,7 @@ MSC2490484A,Targeted therapy,DNA-PK Inhibitor MSC2490484A
 Natriumthiosulfaat,remove,
 Nilotinib,Targeted therapy,
 Nintedanib,Targeted therapy,
+Niraparib                                   ,Targeted therapy,
 Nivolumab,Immunotherapy,
 Norethisteron-Ethinylestradiol,Hormonal therapy,
 Octreotide,Hormonal therapy,Octeotride
@@ -109,6 +113,7 @@ Peptide Receptor Radionuclide Therapy (PRRT),Targeted therapy,
 Pertuzumab,Targeted therapy,
 prednison,remove,
 Probody Cx-072,Immunotherapy,
+PRRT                                        ,Radio therapy   ,
 PSMA-Ac-225,Radiotherapy,"PSMA-Ac-225 radioligand therapy, PSMA-Ac-225 treatment"
 RAD1901,Hormonal therapy,
 Radium-223,Radiotherapy,"Radium 223 chloride, Radium-233"
@@ -124,6 +129,7 @@ Somatostatine,Hormonal therapy,
 Somatuline,Hormonal therapy,
 Somulanine, remove,
 Sorafenib,Targeted therapy,
+Streptozocin                                ,Chemotherapy    ,streptozocine
 Suprefact,Hormonal therapy,
 Sunitinib,Targeted therapy,
 SYD985,Targeted therapy,
