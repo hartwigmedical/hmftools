@@ -40,8 +40,7 @@ public class RatioSupplier {
         final ListMultimap<String, ReadRatio> referenceGCRatio = gcRatioSupplier.referenceRatios();
 
         LOGGER.info("Applying ratio diploid normalization");
-        final Gender gender = Gender.fromReferenceReadRatios(referenceGCRatio);
-        final ListMultimap<String, ReadRatio> referenceGCDiploidRatio = new DiploidRatioSupplier(gender, referenceGCRatio).result();
+        final ListMultimap<String, ReadRatio> referenceGCDiploidRatio = new DiploidRatioSupplier(referenceGCRatio).result();
 
         LOGGER.info("Persisting gc read count medians to {}", outputDirectory);
         final String tumorGCMedianFilename = GCMedianReadCountFile.generateFilename(outputDirectory, tumor);

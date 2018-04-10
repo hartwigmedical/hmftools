@@ -4,9 +4,9 @@ import java.util.List;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.cobalt.ReadRatio;
-import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.cobalt.ReferenceRatioStatistics;
+import com.hartwig.hmftools.common.cobalt.ReferenceRatioStatisticsFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -17,12 +17,22 @@ class DiploidRatioSupplier {
 
     private final ListMultimap<String, ReadRatio> result = ArrayListMultimap.create();
 
-    DiploidRatioSupplier(@NotNull final Gender gender, @NotNull final ListMultimap<String, ReadRatio> normalRatios) {
+    DiploidRatioSupplier(@NotNull final ListMultimap<String, ReadRatio> normalRatios) {
+
+        final ReferenceRatioStatistics stats = ReferenceRatioStatisticsFactory.create(normalRatios);
+
         for (String chromosome : normalRatios.keySet()) {
-            double expectedRatio = HumanChromosome.fromString(chromosome).isHomologous(gender) ? 1 : 0.5;
             final List<ReadRatio> ratios = normalRatios.get(chromosome);
-            final List<ReadRatio> adjustedRatios =
-                    new DiploidRatioNormalization(expectedRatio, ROLLING_MEDIAN_MAX_DISTANCE, ROLLING_MEDIAN_MIN_COVERAGE, ratios).get();
+            final List<ReadRatio> adjustedRatios;
+            if (chromosome.equals("Y")) {
+                adjustedRatios = ratios;
+            } else {
+                double expectedRatio = chromosome.equals("X") && !stats.containsTwoXChromosomes() ? 0.5 : 1;
+                adjustedRatios = new DiploidRatioNormalization(expectedRatio,
+                        ROLLING_MEDIAN_MAX_DISTANCE,
+                        ROLLING_MEDIAN_MIN_COVERAGE,
+                        ratios).get();
+            }
             result.replaceValues(chromosome, adjustedRatios);
         }
     }
