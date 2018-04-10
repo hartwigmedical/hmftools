@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.common.chromosome;
 
-import java.util.EnumSet;
-import java.util.Set;
-
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.region.GenomeRegion;
@@ -52,10 +49,6 @@ public enum HumanChromosome implements Chromosome {
     @Override
     public boolean isAllosome() {
         return isAllosome;
-    }
-
-    public static Set<HumanChromosome> female() {
-        return EnumSet.complementOf(EnumSet.of(HumanChromosome._Y, HumanChromosome._MT));
     }
 
     public static Chromosome valueOf(@NotNull final GenomePosition position) {

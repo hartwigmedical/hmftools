@@ -22,9 +22,11 @@ public class PurpleQCTest {
     public void testGenderCheck() {
         assertEquals(PurpleQCStatus.PASS, create(Gender.MALE, Gender.MALE).status());
         assertEquals(PurpleQCStatus.PASS, create(Gender.FEMALE, Gender.FEMALE).status());
+        assertEquals(PurpleQCStatus.PASS, create(Gender.FEMALE, Gender.MALE_KLINEFELTER).status());
 
         assertEquals(PurpleQCStatus.FAIL_GENDER, create(Gender.MALE, Gender.FEMALE).status());
         assertEquals(PurpleQCStatus.FAIL_GENDER, create(Gender.FEMALE, Gender.MALE).status());
+        assertEquals(PurpleQCStatus.FAIL_GENDER, create(Gender.MALE, Gender.MALE_KLINEFELTER).status());
     }
 
     @NotNull

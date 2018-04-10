@@ -150,10 +150,10 @@ public class PurityPloidyEstimateApplication {
             // JOBA: Gender
             final Gender amberGender = Gender.fromAmber(bafs);
             final Gender cobaltGender = Gender.fromCobalt(ratios);
-            if (amberGender.equals(cobaltGender)) {
-                LOGGER.info("Sample gender is {}", amberGender.toString().toLowerCase());
+            if (cobaltGender.equals(amberGender)) {
+                LOGGER.info("Sample gender is {}", cobaltGender.toString().toLowerCase());
             } else {
-                LOGGER.warn("AMBER gender {} does not match COBALT gender {}", amberGender, cobaltGender);
+                LOGGER.warn("COBALT gender {} does not match AMBER gender {}", cobaltGender, amberGender);
             }
 
             // JOBA: Load structural and somatic variants
@@ -168,7 +168,7 @@ public class PurityPloidyEstimateApplication {
             final List<PurpleSegment> segments = PurpleSegmentFactory.segment(clusterMap, lengths);
 
             LOGGER.info("Mapping all observations to the segmented regions");
-            final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(config.windowSize(), amberGender);
+            final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(config.windowSize(), cobaltGender);
             final List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, bafs, ratios, gcProfiles);
 
             LOGGER.info("Fitting purity");
@@ -176,7 +176,7 @@ public class PurityPloidyEstimateApplication {
             final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
             final double observedBafExponent = defaultValue(cmd, OBSERVED_BAF_EXPONENT, OBSERVED_BAF_EXPONENT_DEFAULT);
             final FittedRegionFactory fittedRegionFactory =
-                    new FittedRegionFactory(amberGender, fittingConfig.maxPloidy(), cnvRatioWeight, averageTumorDepth, observedBafExponent);
+                    new FittedRegionFactory(cobaltGender, fittingConfig.maxPloidy(), cnvRatioWeight, averageTumorDepth, observedBafExponent);
 
             final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
                     fittingConfig.maxPloidy(),
@@ -200,12 +200,12 @@ public class PurityPloidyEstimateApplication {
 
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
 
-            final PurityAdjuster purityAdjuster = new PurityAdjuster(amberGender, bestFit.purity(), bestFit.normFactor());
+            final PurityAdjuster purityAdjuster = new PurityAdjuster(cobaltGender, bestFit.purity(), bestFit.normFactor());
 
             final SmoothingConfig smoothingConfig = configSupplier.smoothingConfig();
             final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(smoothingConfig.minDiploidTumorRatioCount(),
                     smoothingConfig.minDiploidTumorRatioCountAtCentromere(),
-                    amberGender,
+                    cobaltGender,
                     purityAdjuster,
                     fittedRegions,
                     structuralVariants);
@@ -218,7 +218,7 @@ public class PurityPloidyEstimateApplication {
                     .version(version.version())
                     .bestFit(bestFitFactory.bestFit())
                     .status(bestFitFactory.status())
-                    .gender(amberGender)
+                    .gender(cobaltGender)
                     .score(bestFitFactory.score())
                     .polyClonalProportion(polyclonalProportion(copyNumbers))
                     .build();
@@ -261,7 +261,7 @@ public class PurityPloidyEstimateApplication {
                     enrichedSomatics);
 
             LOGGER.info("Writing circos data to: {}", circosConfig.circosDirectory());
-            new GenerateCircosData(configSupplier, executorService).write(amberGender,
+            new GenerateCircosData(configSupplier, executorService).write(cobaltGender,
                     copyNumbers,
                     enrichedSomatics,
                     structuralVariants,

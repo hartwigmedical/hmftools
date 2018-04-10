@@ -34,7 +34,7 @@ public class FittedRegionFactory {
     public List<FittedRegion> fitRegion(final double purity, final double normFactor,
             @NotNull final Collection<ObservedRegion> observedRegions) {
 
-        final Predicate<ObservedRegion> valid = observedRegion -> gender == Gender.MALE || !observedRegion.chromosome().equals("Y");
+        final Predicate<ObservedRegion> valid = observedRegion -> !(gender == Gender.FEMALE && observedRegion.chromosome().equals("Y"));
         return observedRegions.stream().filter(valid).map(x -> fitRegion(purity, normFactor, x)).collect(Collectors.toList());
     }
 

@@ -15,13 +15,13 @@ public final class PurpleQCFactory {
     }
 
     @NotNull
-    public static PurpleQC create(@NotNull FittedPurity purity, @NotNull List<PurpleCopyNumber> copyNumbers, @NotNull Gender purpleGender,
+    public static PurpleQC create(@NotNull FittedPurity purity, @NotNull List<PurpleCopyNumber> copyNumbers, @NotNull Gender amberGender,
             @NotNull Gender cobaltGender) {
         int unsupportedSegments = (int) copyNumbers.stream().filter(x -> x.segmentStartSupport() == SegmentSupport.NONE).count();
 
         return ImmutablePurpleQC.builder()
                 .cobaltGender(cobaltGender)
-                .amberGender(purpleGender)
+                .amberGender(amberGender)
                 .ploidy(purity.ploidy())
                 .unsupportedSegments(unsupportedSegments)
                 .build();

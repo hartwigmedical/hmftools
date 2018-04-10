@@ -30,7 +30,8 @@ public abstract class PurpleQC {
     }
 
     boolean genderPass() {
-        return cobaltGender().equals(amberGender());
+        return cobaltGender().equals(amberGender()) || (amberGender().equals(Gender.FEMALE)
+                && cobaltGender().equals(Gender.MALE_KLINEFELTER));
     }
 
     public int segmentScore() {
