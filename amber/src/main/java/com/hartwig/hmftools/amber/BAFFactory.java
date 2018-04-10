@@ -45,7 +45,6 @@ class BAFFactory {
 
             if (isValidPileup(normal) && between(readCount, minDepth, maxDepth) && isHeterozygousRef(normal.referenceCount(), readCount)
                     && isHeterozygousAlt(altCount, readCount)) {
-
                 final Character alt = alt(altCount, normal);
                 tumorSelector.select(normal)
                         .filter(BAFFactory::isValidPileup)
@@ -115,11 +114,11 @@ class BAFFactory {
                 pileup.tMismatchCount());
     }
 
-    private boolean between(int totalCount, int min, int max) {
+    private static boolean between(int totalCount, int min, int max) {
         return totalCount >= min && totalCount <= max;
     }
 
-    private int medianReadCount(@NotNull final List<Pileup> pileups) {
+    private static int medianReadCount(@NotNull final List<Pileup> pileups) {
         final List<Integer> reads = pileups.stream().map(Pileup::readCount).sorted().collect(Collectors.toList());
         int count = reads.size();
         return count % 2 == 0 ? (reads.get(count / 2) + reads.get(count / 2 - 1)) / 2 : reads.get(count / 2);
