@@ -87,8 +87,8 @@ public final class TreatmentMatcher {
         return biopsyDate == null || MatchingNoTreatment(biopsyDate, treatmentGiven);
     }
 
-    private static boolean MatchingNoTreatment(@NotNull final LocalDate biopsyDate, @Nullable final String treatmentGiven) {
-        return biopsyDate != null & treatmentGiven.toLowerCase().equals("no");
+    private static boolean MatchingNoTreatment(@Nullable final LocalDate biopsyDate, @Nullable final String treatmentGiven) {
+        return biopsyDate != null || treatmentGiven.toLowerCase().equals("no");
     }
 
     private static boolean isWithinThreshold(@NotNull final LocalDate biopsyDate, @Nullable final LocalDate treatmentStartDate) {
