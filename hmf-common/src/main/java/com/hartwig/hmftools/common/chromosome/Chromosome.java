@@ -10,5 +10,5 @@ public interface Chromosome {
 
     boolean isAllosome();
 
-    boolean isHomologous(@NotNull Gender gender);
+    boolean isDiploid(@NotNull Gender gender);
 }

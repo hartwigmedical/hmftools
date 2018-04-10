@@ -170,7 +170,7 @@ class GenerateCircosData {
         String content = readResource("/circos/" + type + ".template");
         content = content.replaceAll("SAMPLE", tumorSample);
         content = content.replaceAll("REFERENCE", referenceSample);
-        content = content.replaceAll("EXCLUDE", gender.equals(Gender.MALE) ? "hsZ" : "hsY");
+        content = content.replaceAll("EXCLUDE", gender.equals(Gender.FEMALE) ? "hsY" : "hsZ");
         Files.write(confFile(type).toPath(), content.getBytes(charset));
     }
 

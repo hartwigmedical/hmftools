@@ -40,7 +40,7 @@ public class PurityAdjuster {
     }
 
     public int typicalCopyNumber(@NotNull String chromosome) {
-        return HumanChromosome.fromString(chromosome).isHomologous(gender) ? 2 : 1;
+        return HumanChromosome.fromString(chromosome).isDiploid(gender) ? 2 : 1;
     }
 
     @SuppressWarnings("unused")
@@ -51,7 +51,7 @@ public class PurityAdjuster {
 
     public double purityAdjustedCopyNumber(final String chromosomeName, final double ratio) {
         final Chromosome chromosome = HumanChromosome.fromString(chromosomeName);
-        final double typicalRatio = chromosome.isHomologous(gender) ? 1 : 0.5;
+        final double typicalRatio = chromosome.isDiploid(gender) ? 1 : 0.5;
         return purityAdjustedCopyNumber(ratio, typicalRatio);
     }
 

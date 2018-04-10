@@ -21,7 +21,7 @@ final class PopulateUnknown {
         for (CombinedRegion region : regions) {
             if (region.copyNumberMethod() == CopyNumberMethod.UNKNOWN) {
                 region.setTumorCopyNumber(CopyNumberMethod.UNKNOWN,
-                        HumanChromosome.fromString(region.chromosome()).isHomologous(gender) ? 2 : 1);
+                        HumanChromosome.fromString(region.chromosome()).isDiploid(gender) ? 2 : 1);
             }
         }
         return regions;

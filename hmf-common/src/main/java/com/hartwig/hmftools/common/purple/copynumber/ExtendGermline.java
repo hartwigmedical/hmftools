@@ -173,13 +173,13 @@ class ExtendGermline {
     }
 
     private double upperBound(@NotNull final FittedRegion region) {
-        double expectedNormalRatio = HumanChromosome.fromString(region.chromosome()).isHomologous(gender) ? 1 : 0.5;
+        double expectedNormalRatio = HumanChromosome.fromString(region.chromosome()).isDiploid(gender) ? 1 : 0.5;
         return Math.max(region.tumorCopyNumber(), region.refNormalisedCopyNumber()) / (2 * Math.min(expectedNormalRatio,
                 region.observedNormalRatio()));
     }
 
     private double lowerBound(@NotNull final FittedRegion region) {
-        double expectedNormalRatio = HumanChromosome.fromString(region.chromosome()).isHomologous(gender) ? 1 : 0.5;
+        double expectedNormalRatio = HumanChromosome.fromString(region.chromosome()).isDiploid(gender) ? 1 : 0.5;
         return Math.min(region.tumorCopyNumber(), region.refNormalisedCopyNumber()) / (2 * Math.max(expectedNormalRatio,
                 region.observedNormalRatio()));
     }

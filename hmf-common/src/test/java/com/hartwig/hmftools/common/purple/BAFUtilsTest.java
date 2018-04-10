@@ -129,7 +129,7 @@ public class BAFUtilsTest {
     private static double observedVAF(@NotNull final Gender gender, @NotNull final String chromosome, final double purity, final int ploidy,
             final int alleleCount) {
         double expectedPurityAdjustedVAF = 1d * alleleCount / ploidy;
-        int normalCount = HumanChromosome.fromString(chromosome).isHomologous(gender) ? 2 : 1;
+        int normalCount = HumanChromosome.fromString(chromosome).isDiploid(gender) ? 2 : 1;
         return expectedPurityAdjustedVAF * ploidy * purity / (normalCount * (1 - purity) + ploidy * purity);
     }
 

@@ -14,13 +14,17 @@ import org.jetbrains.annotations.NotNull;
 
 public class ReferenceRatioStatisticsFactory {
 
-    public static ReferenceRatioStatistics create(@NotNull final Multimap<String, ReadRatio> readRatios) {
+    public static ReferenceRatioStatistics fromReferenceRatio(@NotNull final Multimap<String, ReadRatio> readRatios) {
         return fromRatio(readRatios, ReadRatio::ratio);
+    }
+
+    public static ReferenceRatioStatistics fromCobalt(@NotNull final Multimap<String, CobaltRatio> readRatios) {
+        return fromRatio(readRatios, CobaltRatio::referenceGCRatio);
     }
 
     @NotNull
     @VisibleForTesting
-    private static <T> ReferenceRatioStatistics fromRatio(@NotNull final Multimap<String, T> readRatios, @NotNull Function<T, Double> transform) {
+    static <T> ReferenceRatioStatistics fromRatio(@NotNull final Multimap<String, T> readRatios, @NotNull Function<T, Double> transform) {
 
         final List<Double> xRatios = readRatios.get("X").stream().map(transform).filter(x -> !Doubles.equal(x, -1)).collect(toList());
         int xCount = xRatios.size();

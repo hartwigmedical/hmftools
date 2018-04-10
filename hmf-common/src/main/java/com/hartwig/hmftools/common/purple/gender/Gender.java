@@ -1,22 +1,18 @@
 package com.hartwig.hmftools.common.purple.gender;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
-import com.hartwig.hmftools.common.cobalt.ReadRatio;
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.cobalt.ReferenceRatioStatistics;
+import com.hartwig.hmftools.common.cobalt.ReferenceRatioStatisticsFactory;
 
 import org.jetbrains.annotations.NotNull;
 
 public enum Gender {
     MALE,
-    FEMALE;
+    FEMALE,
+    MALE_KLINEFELTER;
 
     private static final int MIN_BAF_COUNT = 1000;
 
@@ -28,30 +24,18 @@ public enum Gender {
     }
 
     @NotNull
-    public static Gender fromReferenceReadRatios(@NotNull final Multimap<String, ReadRatio> readRatios) {
-        return fromRatio(readRatios, ReadRatio::ratio);
-    }
-
-    @NotNull
     public static Gender fromCobalt(@NotNull final Multimap<String, CobaltRatio> readRatios) {
-        return fromRatio(readRatios, CobaltRatio::referenceGCRatio);
+        return fromCobalt(ReferenceRatioStatisticsFactory.fromCobalt(readRatios));
     }
 
     @NotNull
     @VisibleForTesting
-    static <T> Gender fromRatio(@NotNull final Multimap<String, T> readRatios, @NotNull Function<T, Double> transform) {
-        final List<Double> ratios =
-                readRatios.get("X").stream().map(transform).filter(x -> !Doubles.equal(x, -1)).collect(Collectors.toList());
-        if (ratios.isEmpty()) {
-            return Gender.MALE;
+    static Gender fromCobalt(@NotNull final ReferenceRatioStatistics stats) {
+        if (stats.containsTwoXChromosomes()) {
+            return stats.containsYChromosome() ? MALE_KLINEFELTER : FEMALE;
         }
 
-        return Doubles.greaterThan(median(ratios), 0.75) ? Gender.FEMALE : Gender.MALE;
+        return MALE;
     }
 
-    private static double median(@NotNull List<Double> ratios) {
-        Collections.sort(ratios);
-        int count = ratios.size();
-        return ratios.size() % 2 == 0 ? (ratios.get(count / 2) + ratios.get(count / 2 - 1)) / 2 : ratios.get(count / 2);
-    }
 }

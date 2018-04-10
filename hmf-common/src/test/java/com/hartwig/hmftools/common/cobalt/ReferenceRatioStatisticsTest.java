@@ -2,6 +2,11 @@ package com.hartwig.hmftools.common.cobalt;
 
 import static org.junit.Assert.assertEquals;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.purple.gender.Gender;
+
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ReferenceRatioStatisticsTest {

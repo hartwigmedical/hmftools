@@ -83,8 +83,8 @@ public enum HumanChromosome implements Chromosome {
         return this.ordinal() + 1;
     }
 
-    public boolean isHomologous(@NotNull Gender gender) {
-        return gender == Gender.FEMALE || !isAllosome();
+    public boolean isDiploid(@NotNull Gender gender) {
+        return isAutosome() || (gender != Gender.MALE && this.equals(_X));
     }
 
     @Override
