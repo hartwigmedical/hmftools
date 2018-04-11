@@ -1,4 +1,4 @@
-primaryTumorLocation,cancerSubType                           ,biopsySite                                          ,biopsyLocation                                                               ,biopsyType
+primaryTumorLocation,cancerSubType,biopsySite,biopsyLocation,biopsyType
 Billary,Billary: other,"Liver","right liver lobe",Liver
 Billary,Cholangiocarcinoma,"abdominal wall","Right hemiabdomen",Abdomen/Abdominal wall
 Billary,Cholangiocarcinoma,"intra costal","right subcutanous",(Sub)cutane
