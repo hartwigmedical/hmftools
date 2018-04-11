@@ -52,11 +52,6 @@ public abstract class KnownFusionsModel {
         return Streams.stream(parser).map(record -> record.get(0)).collect(Collectors.toSet());
     }
 
-    public boolean match(@NotNull final String fiveGene, @NotNull final String threeGene) {
-        return exactMatch(fiveGene, threeGene) || intergenicPromiscuousMatch(fiveGene, threeGene) || intragenicPromiscuousMatch(fiveGene,
-                threeGene);
-    }
-
     public boolean exactMatch(@NotNull final String fiveGene, @NotNull final String threeGene) {
         return fusions().get(fiveGene).contains(threeGene);
     }
