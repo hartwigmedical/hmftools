@@ -89,7 +89,7 @@ Lung Cancer: Small Cell,Lung,Small Cell
 Lung NET,Lung,NET
 lung: adenocarcinoom,Lung,Adenocarcinoom
 mix of SCLC and NSCLC,Lung,Other
-Non-small cell carcinoma NOS (mostly resembling lung carcinoma): working diagnosis "lung carcinoma",Lung,Non-Small Cell
+"Non-small cell carcinoma NOS (mostly resembling lung carcinoma): working diagnosis ""lung carcinoma""",Lung,Non-Small Cell
 Hodgkin lymphoma,Lymphoid,Hodgkin lymphoma
 Lymphoma: other,Lymphoid,Other
 Non-Hodgkin lymphoma,Lymphoid,Non-Hodgkin lymphoma
