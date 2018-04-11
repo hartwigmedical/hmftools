@@ -44,7 +44,7 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // KODU: For testing
-    //    public static final String VERSION = "4.8";
+    //    public static final String VERSION = "4.9";
 
     private static final String CANCER_TYPES_CSV = "cancer_types_csv";
     private static final String LIMS_JSON = "lims_json";
@@ -215,7 +215,7 @@ public class PatientReporterApplication {
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
-        options.addOption(CANCER_TYPES_CSV, true, "Complete path towards the cpct cancer types csv.");
+        options.addOption(CANCER_TYPES_CSV, true, "Complete path towards the cancer types csv.");
         options.addOption(LIMS_JSON, true, "Complete path towards a JSON containing the LIMS data dump.");
         options.addOption(REPORT_DIRECTORY, true, "Complete path to where the PDF reports have to be saved.");
         options.addOption(RUN_DIRECTORY, true, "Complete path towards a single run dir where patient reporter will run on.");
