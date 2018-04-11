@@ -1,8 +1,8 @@
 searchTerm,primaryTumorLocation,subType
-"adenocarcinoma of gall bladder, pancreatic or biliary tract",Billary,Other
-Cholangiocarcinoma,Billary,Cholangiocarcinoma
-Gallbladder cancer,Billary,Gall bladder
-golanchgio carcinoma,Billary,Cholangiocarcinoma
+"adenocarcinoma of gall bladder, pancreatic or biliary tract"                                                           ,Bilary              ,Other
+Cholangiocarcinoma                                                                                                      ,Bilary              ,Cholangiocarcinoma
+Gallbladder cancer                                                                                                      ,Bilary              ,Gall bladder
+golanchgio carcinoma                                                                                                    ,Bilary              ,Cholangiocarcinoma
 angiosarcoma,Bone/Soft tissue,Angiosarcoma
 desmoïd tumor,Bone/Soft tissue,Desmoid
 Ewing sarcoma,Bone/Soft tissue,Ewing sarcoma
@@ -19,11 +19,11 @@ sarcomatoid or sarcoma (postradiation),Bone/Soft tissue,Sarcoma
 sarcomoatoid carcinoom,Bone/Soft tissue,Sarcoma
 Suspicious desmoid tumors due to a gardner syndrome,Bone/Soft tissue,Desmoid
 Undifferentiated sarcoma,Bone/Soft tissue,Sarcoma
-Breast cancer,Breast,Other
+Breast cancer                                                                                                           ,Breast              ,
 Breast Cancer: ER-negative/HER2-positive,Breast,ER-negative/HER2-positive
 Breast Cancer: ER-positive/HER2-negative,Breast,ER-positive/HER2-negative
 Breast Cancer: ER-positive/HER2-positive,Breast,ER-positive/HER2-positive
-Breast Cancer: subtype unknown,Breast,Other
+Breast Cancer: subtype unknown                                                                                          ,Breast              ,Subtype unknown
 Breast Cancer: triple negative,Breast,Triple negative
 ER-positive / HER2 unknown,Breast,ER-positive/HER2 unknown
 Glioma: anaplastic astrocytoma-like,CNS,Glioma
@@ -95,7 +95,7 @@ Lymphoma: other,Lymphoid,Other
 Non-Hodgkin lymphoma,Lymphoid,Non-Hodgkin lymphoma
 Thymoma and Thymic Carcinoma,Lymphoid,Thymic carcinoma
 "Mesothelioma, Malignant",Mesothelioma,
-pericarditis carcinomatosa,Mesothelium,Pericarditis carcinomatosa
+pericarditis carcinomatosa,Mesothelioma,Pericarditis carcinomatosa
 adrenocortical carcinoma,Other,Adrenal
 Both bladder carcinoma and mesothelioma,Other,Double primary
 Double carcinoma: endometrium and ovarium,Other,Double primary
