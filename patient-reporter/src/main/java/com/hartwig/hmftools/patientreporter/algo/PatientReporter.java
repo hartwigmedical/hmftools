@@ -108,7 +108,8 @@ public abstract class PatientReporter {
                     purpleAnalysis.reportableGeneCopyNumbers(),
                     reportableDisruptions,
                     reportableFusions,
-                    reporterData().panelGeneModel(), doidMapping.doidsForTumorType(patientTumorLocation.primaryTumorLocation()));
+                    reporterData().panelGeneModel(),
+                    doidMapping.doidsForTumorType(patientTumorLocation.primaryTumorLocation()));
         } else {
             LOGGER.warn("Could not run civic analyzer as (curated) primary tumor location is not known");
             alterations = Lists.newArrayList();
