@@ -8,7 +8,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.center.Center;
 import com.hartwig.hmftools.common.center.CenterModel;
-import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
+import com.hartwig.hmftools.common.ecrf.projections.PatientCancerType;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableNotSequenceableReporter;
@@ -97,7 +97,7 @@ public class PatientReporterApplication {
     @NotNull
     private static BaseReporterData buildBaseReporterData(@NotNull final CommandLine cmd) throws IOException {
         LOGGER.info(" Loading ECRF CSV dump...");
-        final List<PatientCancerTypes> patientsCancerTypes = PatientCancerTypes.readRecords(cmd.getOptionValue(CANCER_TYPES_CSV));
+        final List<PatientCancerType> patientsCancerTypes = PatientCancerType.readRecords(cmd.getOptionValue(CANCER_TYPES_CSV));
         LOGGER.info("  Loaded data for {} patients.", patientsCancerTypes.size());
         LOGGER.info(" Loading LIMS database...");
         final Lims lims = LimsFactory.fromLimsJson(cmd.getOptionValue(LIMS_JSON));

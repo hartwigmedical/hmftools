@@ -22,13 +22,17 @@ public final class MainPageTopSection {
 
     @NotNull
     public static ComponentBuilder<?, ?> build(@NotNull final String title, @NotNull final SampleReport report) {
-        return build(title, report.sampleId(), report.primaryTumorLocation(), "Pathology Tumor Percentage", report.tumorPercentageString());
+        return build(title,
+                report.sampleId(),
+                report.primaryTumorLocationString(),
+                "Pathology Tumor Percentage",
+                report.pathologyTumorPercentageString());
     }
 
     @NotNull
     public static ComponentBuilder<?, ?> buildWithImpliedPurity(@NotNull final String title, @NotNull final SampleReport report,
             @NotNull String purityString) {
-        return build(title, report.sampleId(), report.primaryTumorLocation(), "Implied Tumor Purity", purityString);
+        return build(title, report.sampleId(), report.primaryTumorLocationString(), "Implied Tumor Purity", purityString);
     }
 
     @NotNull

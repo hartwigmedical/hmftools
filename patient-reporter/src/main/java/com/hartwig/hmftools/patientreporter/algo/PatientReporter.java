@@ -8,9 +8,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.doid.TumorLocationDoidMapping;
+import com.hartwig.hmftools.common.ecrf.projections.PatientCancerType;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -96,16 +98,22 @@ public abstract class PatientReporter {
         final int mutationalLoad = variantAnalysis.mutationalLoad();
         final int consequentialVariantCount = variantAnalysis.consequentialVariants().size();
         final int structuralVariantCount = structuralVariantAnalysis.annotations().size();
-        final String primaryTumorLocation =
-                PatientReporterHelper.extractPrimaryTumorLocation(baseReporterData().patientsCancerTypes(), tumorSample);
+        final PatientCancerType patientCancerType =
+                PatientReporterHelper.extractPatientCancerType(baseReporterData().patientsCancerTypes(), tumorSample);
 
-        final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
-        final List<Alteration> alterations = civicAnalyzer().run(variantAnalysis.findings(),
-                purpleAnalysis.reportableGeneCopyNumbers(),
-                reportableDisruptions,
-                reportableFusions,
-                reporterData().panelGeneModel(),
-                doidMapping.doidsForTumorType(primaryTumorLocation));
+        final List<Alteration> alterations;
+        if (patientCancerType != null) {
+            final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
+            alterations = civicAnalyzer().run(variantAnalysis.findings(),
+                    purpleAnalysis.reportableGeneCopyNumbers(),
+                    reportableDisruptions,
+                    reportableFusions,
+                    reporterData().panelGeneModel(),
+                    doidMapping.doidsForTumorType(patientCancerType.primaryTumorLocation()));
+        } else {
+            LOGGER.warn("Could not run civic analyzer as (curated) primary tumor location is not known");
+            alterations = Lists.newArrayList();
+        }
 
         LOGGER.info(" Printing analysis results:");
         LOGGER.info("  Number of passed variants : " + Integer.toString(passedVariantCount));
@@ -124,7 +132,7 @@ public abstract class PatientReporter {
         final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrichSomaticVariants(variantAnalysis.findings());
         final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(tumorSample);
 
-        final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample, primaryTumorLocation,
+        final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample, patientCancerType,
                 tumorPercentage,
                 lims.arrivalDateForSample(tumorSample),
                 lims.arrivalDateForSample(run.refSample()),

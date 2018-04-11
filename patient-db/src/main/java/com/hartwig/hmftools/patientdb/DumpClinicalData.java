@@ -13,9 +13,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
-import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientCancerTypes;
+import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientCancerType;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePortalClinicalData;
-import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
+import com.hartwig.hmftools.common.ecrf.projections.PatientCancerType;
 import com.hartwig.hmftools.common.ecrf.projections.PortalClinicalData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 
@@ -40,12 +40,12 @@ final class DumpClinicalData {
             @NotNull final Collection<Patient> patients) throws IOException {
         final String outputFile = fileLocation(csvOutputDir, "_cancerTypes.csv");
         LOGGER.info("Writing cancer types to csv in {}.", csvOutputDir);
-        final List<PatientCancerTypes> cancerTypes = patients.stream()
-                .map(patient -> ImmutablePatientCancerTypes.of(patient.patientIdentifier(),
+        final List<PatientCancerType> cancerTypes =
+                patients.stream().map(patient -> ImmutablePatientCancerType.of(patient.patientIdentifier(),
                         Strings.nullToEmpty(patient.baselineData().cancerType().primaryTumorLocation()),
                         Strings.nullToEmpty(patient.baselineData().cancerType().subType())))
                 .collect(Collectors.toList());
-        PatientCancerTypes.writeRecords(outputFile, cancerTypes);
+        PatientCancerType.writeRecords(outputFile, cancerTypes);
         linkName.ifPresent(link -> updateSymlink(csvOutputDir + File.separator + link, outputFile));
         LOGGER.info("Written {} records to {}.", cancerTypes.size(), outputFile);
     }

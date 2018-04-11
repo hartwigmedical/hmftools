@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
+import com.hartwig.hmftools.common.ecrf.projections.PatientCancerType;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
@@ -22,7 +22,6 @@ import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -79,14 +78,15 @@ final class PatientReporterHelper {
         return SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, vcfPath);
     }
 
-    @NotNull
-    static String extractPrimaryTumorLocation(@NotNull final List<PatientCancerTypes> patientsCancerTypes, @NotNull final String sample) {
+    @Nullable
+    static PatientCancerType extractPatientCancerType(@NotNull final List<PatientCancerType> patientsCancerTypes,
+            @NotNull final String sample) {
         final String patientId = toPatientId(sample);
         if (patientId == null) {
             LOGGER.warn("Could not resolve patient id from " + sample);
-            return Strings.EMPTY;
+            return null;
         }
-        final List<PatientCancerTypes> matchingIdCancerTypes = patientsCancerTypes.stream()
+        final List<PatientCancerType> matchingIdCancerTypes = patientsCancerTypes.stream()
                 .filter(patientCancerTypes -> patientCancerTypes.patientIdentifier().equals(patientId))
                 .collect(Collectors.toList());
 
@@ -94,15 +94,10 @@ final class PatientReporterHelper {
         assert matchingIdCancerTypes.size() < 2;
 
         if (matchingIdCancerTypes.size() == 1) {
-            String primaryTumorLocation = matchingIdCancerTypes.get(0).primaryTumorLocation();
-            if (primaryTumorLocation.equalsIgnoreCase("other")) {
-                return matchingIdCancerTypes.get(0).cancerSubtype();
-            } else {
-                return primaryTumorLocation;
-            }
+            return matchingIdCancerTypes.get(0);
         } else {
             LOGGER.warn("Could not find patient " + patientId + " in CPCT ECRF data dump!");
-            return Strings.EMPTY;
+            return null;
         }
     }
 
