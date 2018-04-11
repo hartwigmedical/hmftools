@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.fusions;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -38,25 +38,22 @@ public abstract class KnownFusionsModel {
     }
 
     @NotNull
-    public static KnownFusionsModel fromCsv(@NotNull final String fusionPairsLocation, @NotNull final String promiscuousFiveLocation,
-            @NotNull final String promiscuousThreeLocation) throws IOException {
-        final SetMultimap<String, String> fusionPairs = readFusions(fusionPairsLocation);
-        final Set<String> promiscuousFive = readPromiscuous(promiscuousFiveLocation);
-        final Set<String> promiscuousThree = readPromiscuous(promiscuousThreeLocation);
-        return ImmutableKnownFusionsModel.of(fusionPairs, promiscuousFive, promiscuousThree);
+    public static KnownFusionsModel fromInputStreams(@NotNull final InputStream fusionPairsStream,
+            @NotNull final InputStream promiscuousFiveStream, @NotNull final InputStream promiscuousThreeStream) throws IOException {
+        return ImmutableKnownFusionsModel.of(readFusions(fusionPairsStream),
+                readPromiscuous(promiscuousFiveStream),
+                readPromiscuous(promiscuousThreeStream));
     }
 
-    private static SetMultimap<String, String> readFusions(@NotNull final String fileLocation) throws IOException {
+    private static SetMultimap<String, String> readFusions(@NotNull final InputStream stream) throws IOException {
         final SetMultimap<String, String> fusionPairs = HashMultimap.create();
-        final CSVParser parser =
-                CSVParser.parse(new File(fileLocation), Charset.defaultCharset(), CSVFormat.DEFAULT.withSkipHeaderRecord());
+        final CSVParser parser = CSVParser.parse(stream, Charset.defaultCharset(), CSVFormat.DEFAULT.withSkipHeaderRecord());
         Streams.stream(parser).forEach(record -> fusionPairs.put(record.get(FIVE_GENE_COLUMN), record.get(THREE_GENE_COLUMN)));
         return fusionPairs;
     }
 
-    private static Set<String> readPromiscuous(@NotNull final String fileLocation) throws IOException {
-        final CSVParser parser =
-                CSVParser.parse(new File(fileLocation), Charset.defaultCharset(), CSVFormat.DEFAULT.withSkipHeaderRecord());
+    private static Set<String> readPromiscuous(@NotNull final InputStream stream) throws IOException {
+        final CSVParser parser = CSVParser.parse(stream, Charset.defaultCharset(), CSVFormat.DEFAULT.withSkipHeaderRecord());
         return Streams.stream(parser).map(record -> record.get(0)).collect(Collectors.toSet());
     }
 }
