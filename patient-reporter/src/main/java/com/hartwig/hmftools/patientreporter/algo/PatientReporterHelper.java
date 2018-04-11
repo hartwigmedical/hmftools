@@ -79,30 +79,30 @@ final class PatientReporterHelper {
     }
 
     @Nullable
-    static PatientTumorLocation extractPatientCancerType(@NotNull final List<PatientTumorLocation> patientsCancerTypes,
+    static PatientTumorLocation extractPatientTumorLocation(@NotNull final List<PatientTumorLocation> patientTumorLocations,
             @NotNull final String sample) {
-        final String patientId = toPatientId(sample);
-        if (patientId == null) {
-            LOGGER.warn("Could not resolve patient id from " + sample);
+        final String patientIdentifier = toPatientIdentifier(sample);
+        if (patientIdentifier == null) {
+            LOGGER.warn("Could not resolve patient identifier from " + sample);
             return null;
         }
-        final List<PatientTumorLocation> matchingIdCancerTypes = patientsCancerTypes.stream()
-                .filter(patientCancerTypes -> patientCancerTypes.patientIdentifier().equals(patientId))
+        final List<PatientTumorLocation> matchingIdTumorLocations = patientTumorLocations.stream()
+                .filter(patientTumorLocation -> patientTumorLocation.patientIdentifier().equals(patientIdentifier))
                 .collect(Collectors.toList());
 
-        // KODU: We should never have more than one curated cancer type for a single patient.
-        assert matchingIdCancerTypes.size() < 2;
+        // KODU: We should never have more than one curated tumor location for a single patient.
+        assert matchingIdTumorLocations.size() < 2;
 
-        if (matchingIdCancerTypes.size() == 1) {
-            return matchingIdCancerTypes.get(0);
+        if (matchingIdTumorLocations.size() == 1) {
+            return matchingIdTumorLocations.get(0);
         } else {
-            LOGGER.warn("Could not find patient " + patientId + " in CPCT ECRF data dump!");
+            LOGGER.warn("Could not find patient " + patientIdentifier + " in CPCT ECRF data dump!");
             return null;
         }
     }
 
     @Nullable
-    private static String toPatientId(@NotNull final String sample) {
+    private static String toPatientIdentifier(@NotNull final String sample) {
         return sample.length() >= 12 ? sample.substring(0, 12) : null;
     }
 }

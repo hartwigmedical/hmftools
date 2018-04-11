@@ -61,16 +61,23 @@ public class BiopsySiteCurator {
     }
 
     @NotNull
-    public CuratedBiopsyType search(@Nullable String searchCancerType, @Nullable String searchCancerSubType,
+    public CuratedBiopsyType search(@Nullable String searchPrimaryTumorLocation, @Nullable String searchCancerSubType,
             @Nullable String searchBiopsySite, @Nullable String searchBiopsyLocation) {
         CuratedBiopsyType result = null;
-        if (searchCancerType != null && searchCancerSubType != null) {
-            result = curationMap.get(Key.fromInputs(searchCancerType, searchCancerSubType, searchBiopsySite, searchBiopsyLocation));
+        if (searchPrimaryTumorLocation != null && searchCancerSubType != null) {
+            result = curationMap.get(Key.fromInputs(searchPrimaryTumorLocation,
+                    searchCancerSubType,
+                    searchBiopsySite,
+                    searchBiopsyLocation));
         }
 
         return result != null
                 ? result
-                : ImmutableCuratedBiopsyType.of(null, searchCancerType, searchCancerSubType, searchBiopsySite, searchBiopsyLocation);
+                : ImmutableCuratedBiopsyType.of(null,
+                        searchPrimaryTumorLocation,
+                        searchCancerSubType,
+                        searchBiopsySite,
+                        searchBiopsyLocation);
     }
 
     private static class Key {

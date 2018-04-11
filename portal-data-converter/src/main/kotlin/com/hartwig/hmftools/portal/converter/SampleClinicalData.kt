@@ -7,19 +7,19 @@ import com.hartwig.hmftools.portal.converter.records.specimen.Specimen
 import java.time.LocalDate
 
 data class SampleClinicalData(val cpctId: String, val sampleId: String, private val gender: String, private val ageAtEnrollment: String,
-                              val cancerType: String, private val specimenType: String, private val specimenTypeOther: String,
+                              val tumorLocation: String, private val specimenType: String, private val specimenTypeOther: String,
                               val hmfId: String, val sampleHmfId: String) {
     companion object Factory {
         operator fun invoke(patientData: PortalClinicalData): SampleClinicalData {
             val gender = determineGender(patientData.gender())
             val ageAtEnrollment = determineAgeAtEnrollment(patientData.birthYear(), patientData.registrationDate())
-            val cancerType = determineCancerType(patientData.primaryTumorLocation())
+            val tumorLocation = determineTumorLocation(patientData.primaryTumorLocation())
             val (specimenType, specimenTypeOther) = determineSpecimenType(patientData.biopsyType())
             return SampleClinicalData(patientData.patientIdentifier(),
                                       patientData.sampleId(),
                                       gender,
                                       ageAtEnrollment,
-                                      cancerType,
+                    tumorLocation,
                                       specimenType,
                                       specimenTypeOther,
                                       patientData.hmfId(),
@@ -34,8 +34,8 @@ data class SampleClinicalData(val cpctId: String, val sampleId: String, private 
             }
         }
 
-        private fun determineCancerType(ecrfCancerType: String): String {
-            return if (ecrfCancerType.isBlank()) "Missing" else ecrfCancerType
+        private fun determineTumorLocation(curatedTumorLocation: String): String {
+            return if (curatedTumorLocation.isBlank()) "Missing" else curatedTumorLocation
         }
 
         private fun determineSpecimenType(ecrfBiopsySite: String): Pair<String, String> {

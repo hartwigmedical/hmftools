@@ -99,7 +99,7 @@ public abstract class PatientReporter {
         final int consequentialVariantCount = variantAnalysis.consequentialVariants().size();
         final int structuralVariantCount = structuralVariantAnalysis.annotations().size();
         final PatientTumorLocation patientTumorLocation =
-                PatientReporterHelper.extractPatientCancerType(baseReporterData().patientsCancerTypes(), tumorSample);
+                PatientReporterHelper.extractPatientTumorLocation(baseReporterData().patientTumorLocations(), tumorSample);
 
         final List<Alteration> alterations;
         if (patientTumorLocation != null) {

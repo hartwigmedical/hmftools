@@ -27,7 +27,7 @@ public abstract class NotSequenceableReporter {
         final NotSequenceableStudy study = NotSequenceableStudy.fromSample(sample);
         assert study != null;
         final PatientTumorLocation patientTumorLocation =
-                PatientReporterHelper.extractPatientCancerType(baseReporterData().patientsCancerTypes(), sample);
+                PatientReporterHelper.extractPatientTumorLocation(baseReporterData().patientTumorLocations(), sample);
         final Lims lims = baseReporterData().limsModel();
         final Double tumorPercentage = lims.tumorPercentageForSample(sample);
         final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(sample);

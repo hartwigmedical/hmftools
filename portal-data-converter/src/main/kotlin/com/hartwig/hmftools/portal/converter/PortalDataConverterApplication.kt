@@ -45,11 +45,11 @@ private fun convertSamples(runContexts: List<RunContext>, outputDirectory: Strin
     val dataPerPatient = samplesData.associateBy { it.cpctId }
     runContexts.forEach { it ->
         val (clinicalData, somaticVcfPath) = getPatientDataAndVcf(it, dataPerSample, dataPerPatient) ?: return@forEach
-        if (clinicalData.cancerType == "Missing" || clinicalData.cancerType == "Other" || clinicalData.cancerType.toLowerCase().contains("unknown")) {
-            logger.info("Skipping patient with ${clinicalData.cancerType} cancer type: ${clinicalData.hmfId}")
+        if (clinicalData.tumorLocation == "Missing" || clinicalData.tumorLocation == "Other" || clinicalData.tumorLocation.toLowerCase().contains("unknown")) {
+            logger.info("Skipping patient with ${clinicalData.tumorLocation} cancer type: ${clinicalData.hmfId}")
             return@forEach
         }
-        val projectFolder = Files.createDirectories(Paths.get(outputDirectory + File.separator + "HMF-${clinicalData.cancerType}"))
+        val projectFolder = Files.createDirectories(Paths.get(outputDirectory + File.separator + "HMF-${clinicalData.tumorLocation}"))
         val folderPath = projectFolder.toAbsolutePath().toString()
         clinicalRecords.put(folderPath, clinicalData)
         TsvWriter.writeSomaticMutationMetadata(folderPath,

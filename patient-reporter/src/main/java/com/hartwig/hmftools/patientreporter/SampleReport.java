@@ -19,7 +19,7 @@ public abstract class SampleReport {
     public abstract String sampleId();
 
     @Nullable
-    public abstract PatientTumorLocation patientCancerType();
+    public abstract PatientTumorLocation patientTumorLocation();
 
     @Nullable
     public abstract Double pathologyTumorPercentage();
@@ -27,14 +27,14 @@ public abstract class SampleReport {
     @NotNull
     @Value.Derived
     public String primaryTumorLocationString() {
-        PatientTumorLocation type = patientCancerType();
+        PatientTumorLocation type = patientTumorLocation();
         return type != null ? type.primaryTumorLocation() : Strings.EMPTY;
     }
 
     @NotNull
     @Value.Derived
     public String cancerSubTypeString() {
-        PatientTumorLocation type = patientCancerType();
+        PatientTumorLocation type = patientTumorLocation();
         return type != null ? type.cancerSubtype() : Strings.EMPTY;
     }
 

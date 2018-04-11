@@ -78,10 +78,10 @@ public final class PatientReporterTestUtil {
     @NotNull
     public static BaseReporterData testBaseReporterData() throws IOException {
         final String centerPath = Resources.getResource("center").getPath() + File.separator + "centers.csv";
-        final List<PatientTumorLocation> patientsCancerTypes = Lists.newArrayList();
+        final List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
         final Lims lims = LimsFactory.empty();
         final CenterModel centerModel = Center.readFromCSV(centerPath);
-        return ImmutableBaseReporterData.of(patientsCancerTypes, lims, centerModel, SIGNATURE_PATH);
+        return ImmutableBaseReporterData.of(patientTumorLocations, lims, centerModel, SIGNATURE_PATH);
     }
 
     @NotNull

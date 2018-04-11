@@ -102,11 +102,11 @@ public abstract class PortalClinicalData {
                 "");
     }
 
-    public static void writeRecords(@NotNull final String outputPath, @NotNull final List<PortalClinicalData> patientCancerTypes)
+    public static void writeRecords(@NotNull final String outputPath, @NotNull final List<PortalClinicalData> portalClinicalDataList)
             throws IOException {
         final CSVFormat format = CSVFormat.DEFAULT.withHeader(Header.class);
         final CSVPrinter printer = new CSVPrinter(new FileWriter(outputPath), format);
-        printer.printRecords(patientCancerTypes.stream().map(PortalClinicalData::csvRecord).collect(Collectors.toList()));
+        printer.printRecords(portalClinicalDataList.stream().map(PortalClinicalData::csvRecord).collect(Collectors.toList()));
         printer.close();
     }
 

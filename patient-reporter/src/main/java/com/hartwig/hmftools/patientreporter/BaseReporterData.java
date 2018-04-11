@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class BaseReporterData {
     @NotNull
-    public abstract List<PatientTumorLocation> patientsCancerTypes();
+    public abstract List<PatientTumorLocation> patientTumorLocations();
 
     @NotNull
     public abstract Lims limsModel();
