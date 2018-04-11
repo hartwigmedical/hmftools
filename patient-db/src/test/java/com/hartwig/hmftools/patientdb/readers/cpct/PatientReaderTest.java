@@ -44,7 +44,7 @@ public class PatientReaderTest {
         final EcrfPatient cpctPatient = model.patients().iterator().next();
         final BaselineData baselineData = baselineReader.read(cpctPatient);
         assertEquals("Breast cancer", baselineData.cancerType().searchTerm());
-        assertEquals("Breast", baselineData.cancerType().type());
+        assertEquals("Breast", baselineData.cancerType().primaryTumorLocation());
         assertEquals("Breast Cancer: subtype unknown", baselineData.cancerType().subType());
         assertEquals("female", baselineData.gender());
         assertEquals("Bernhoven uden", baselineData.hospital());

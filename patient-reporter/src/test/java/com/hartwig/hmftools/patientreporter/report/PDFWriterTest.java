@@ -82,8 +82,7 @@ public class PDFWriterTest {
         final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
         final List<Alteration> alterations = RUN_CIVIC_ANALYSIS ? PatientReporterTestUtil.runCivicAnalysis(variants,
                 copyNumbers,
-                disruptions,
-                fusions, reporterData.panelGeneModel(), sampleReport.cancerType()) : mockedAlterations();
+                disruptions, fusions, reporterData.panelGeneModel(), sampleReport.primaryTumorLocation()) : mockedAlterations();
 
         final SequencedPatientReport patientReport = ImmutableSequencedPatientReport.of(sampleReport,
                 variants,

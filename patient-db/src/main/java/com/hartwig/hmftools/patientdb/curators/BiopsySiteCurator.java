@@ -39,20 +39,24 @@ public class BiopsySiteCurator {
     BiopsySiteCurator(@NotNull final InputStream mappingInputStream) throws IOException {
         final CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
         for (final CSVRecord record : parser) {
-            final String cancerType = record.get("cancerType");
+            final String primaryTumorLocation = record.get("primaryTumorLocation");
             final String cancerSubType = record.get("cancerSubType");
             final String biopsySite = record.get("biopsySite");
             final String biopsyLocation = record.get("biopsyLocation");
             final String biopsyType = record.get("biopsyType");
 
-            Key key = Key.fromInputs(cancerType, cancerSubType, biopsySite, biopsyLocation);
+            Key key = Key.fromInputs(primaryTumorLocation, cancerSubType, biopsySite, biopsyLocation);
 
             if (curationMap.get(key) != null) {
                 LOGGER.warn("Duplicate key found: " + key);
             }
 
             curationMap.put(key,
-                    ImmutableCuratedBiopsyType.of(Utils.capitalize(biopsyType), cancerType, cancerSubType, biopsySite, biopsyLocation));
+                    ImmutableCuratedBiopsyType.of(Utils.capitalize(biopsyType),
+                            primaryTumorLocation,
+                            cancerSubType,
+                            biopsySite,
+                            biopsyLocation));
         }
     }
 
@@ -71,7 +75,7 @@ public class BiopsySiteCurator {
 
     private static class Key {
         @NotNull
-        private final String cancerType;
+        private final String primaryTumorLocation;
         @NotNull
         private final String cancerSubType;
         @Nullable
@@ -79,20 +83,20 @@ public class BiopsySiteCurator {
         @Nullable
         private final String biopsyLocation;
 
-        private static Key fromInputs(@NotNull String cancerType, @NotNull String cancerSubType, @Nullable String biopsySite,
+        private static Key fromInputs(@NotNull String primaryTumorLocation, @NotNull String cancerSubType, @Nullable String biopsySite,
                 @Nullable String biopsyLocation) {
             String effectiveBiopsySite = biopsySite != null ? biopsySite.toLowerCase() : "null";
             String effectiveBiopsyLocation = biopsyLocation != null ? biopsyLocation.toLowerCase() : "null";
 
-            return new Key(cancerType.toLowerCase(),
+            return new Key(primaryTumorLocation.toLowerCase(),
                     cancerSubType.toLowerCase(),
                     effectiveBiopsySite.equalsIgnoreCase("null") ? null : effectiveBiopsySite,
                     effectiveBiopsyLocation.equalsIgnoreCase("null") ? null : effectiveBiopsyLocation);
         }
 
-        private Key(@NotNull final String cancerType, @NotNull final String cancerSubType, @Nullable final String biopsySite,
+        private Key(@NotNull final String primaryTumorLocation, @NotNull final String cancerSubType, @Nullable final String biopsySite,
                 @Nullable final String biopsyLocation) {
-            this.cancerType = cancerType;
+            this.primaryTumorLocation = primaryTumorLocation;
             this.cancerSubType = cancerSubType;
             this.biopsySite = biopsySite;
             this.biopsyLocation = biopsyLocation;
@@ -107,19 +111,19 @@ public class BiopsySiteCurator {
                 return false;
             }
             final Key key = (Key) o;
-            return Objects.equals(cancerType, key.cancerType) && Objects.equals(cancerSubType, key.cancerSubType) && Objects.equals(
-                    biopsySite, key.biopsySite) && Objects.equals(biopsyLocation, key.biopsyLocation);
+            return Objects.equals(primaryTumorLocation, key.primaryTumorLocation) && Objects.equals(cancerSubType, key.cancerSubType)
+                    && Objects.equals(biopsySite, key.biopsySite) && Objects.equals(biopsyLocation, key.biopsyLocation);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(cancerType, cancerSubType, biopsySite, biopsyLocation);
+            return Objects.hash(primaryTumorLocation, cancerSubType, biopsySite, biopsyLocation);
         }
 
         @Override
         public String toString() {
-            return "Key{" + "cancerType='" + cancerType + '\'' + ", cancerSubType='" + cancerSubType + '\'' + ", biopsyType='" + biopsySite
-                    + '\'' + ", biopsyLocation='" + biopsyLocation + '\'' + '}';
+            return "Key{" + "primaryTumorLocation='" + primaryTumorLocation + '\'' + ", cancerSubType='" + cancerSubType + '\''
+                    + ", biopsyType='" + biopsySite + '\'' + ", biopsyLocation='" + biopsyLocation + '\'' + '}';
         }
     }
 }

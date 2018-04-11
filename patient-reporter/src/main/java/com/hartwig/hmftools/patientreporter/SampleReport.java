@@ -17,7 +17,7 @@ public abstract class SampleReport {
     public abstract String sampleId();
 
     @NotNull
-    public abstract String cancerType();
+    public abstract String primaryTumorLocation();
 
     @Nullable
     public abstract Double pathologyTumorPercentage();

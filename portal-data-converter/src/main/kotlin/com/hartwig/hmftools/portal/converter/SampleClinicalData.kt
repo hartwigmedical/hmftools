@@ -13,7 +13,7 @@ data class SampleClinicalData(val cpctId: String, val sampleId: String, private 
         operator fun invoke(patientData: PortalClinicalData): SampleClinicalData {
             val gender = determineGender(patientData.gender())
             val ageAtEnrollment = determineAgeAtEnrollment(patientData.birthYear(), patientData.registrationDate())
-            val cancerType = determineCancerType(patientData.cancerType())
+            val cancerType = determineCancerType(patientData.primaryTumorLocation())
             val (specimenType, specimenTypeOther) = determineSpecimenType(patientData.biopsyType())
             return SampleClinicalData(patientData.patientIdentifier(),
                                       patientData.sampleId(),

@@ -39,11 +39,11 @@ public class TumorLocationCurator implements CleanableCurator {
     TumorLocationCurator(@NotNull final InputStream mappingInputStream) throws IOException {
         final CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
         for (final CSVRecord record : parser) {
-            final String location = record.get("primaryTumorLocation");
-            final String type = record.get("type");
+            final String searchTerm = record.get("searchTerm");
+            final String primaryTumorLocation = record.get("primaryTumorLocation");
             final String subType = record.get("subType");
-            tumorLocationMap.put(location.toLowerCase(),
-                    ImmutableCuratedCancerType.of(Utils.capitalize(type), Utils.capitalize(subType), location));
+            tumorLocationMap.put(searchTerm.toLowerCase(),
+                    ImmutableCuratedCancerType.of(Utils.capitalize(primaryTumorLocation), Utils.capitalize(subType), searchTerm));
         }
         // KODU: Need to create a copy of the key set so that we can remove elements from it without affecting the curation.
         unusedSearchTerms = Sets.newHashSet(tumorLocationMap.keySet());

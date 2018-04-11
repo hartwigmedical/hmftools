@@ -25,11 +25,12 @@ public abstract class NotSequenceableReporter {
             @Nullable final String comments) {
         final NotSequenceableStudy study = NotSequenceableStudy.fromSample(sample);
         assert study != null;
-        final String cancerType = PatientReporterHelper.extractCancerType(baseReporterData().patientsCancerTypes(), sample);
+        final String primaryTumorLocation =
+                PatientReporterHelper.extractPrimaryTumorLocation(baseReporterData().patientsCancerTypes(), sample);
         final Lims lims = baseReporterData().limsModel();
         final Double tumorPercentage = lims.tumorPercentageForSample(sample);
         final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(sample);
-        final SampleReport sampleReport = ImmutableSampleReport.of(sample, cancerType,
+        final SampleReport sampleReport = ImmutableSampleReport.of(sample, primaryTumorLocation,
                 tumorPercentage,
                 lims.arrivalDateForSample(sample),
                 null,

@@ -32,7 +32,7 @@ public class TumorLocationCuratorTest {
         String desmoidTumor = "desmoïd tumor";
         CuratedCancerType cancerType = curator.search(desmoidTumor);
 
-        String type = cancerType.type();
+        String type = cancerType.primaryTumorLocation();
         assertNotNull(type);
         assertEquals("sarcoma", type.toLowerCase());
     }

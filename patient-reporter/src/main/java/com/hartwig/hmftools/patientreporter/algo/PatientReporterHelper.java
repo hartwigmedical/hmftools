@@ -80,7 +80,7 @@ final class PatientReporterHelper {
     }
 
     @NotNull
-    static String extractCancerType(@NotNull final List<PatientCancerTypes> patientsCancerTypes, @NotNull final String sample) {
+    static String extractPrimaryTumorLocation(@NotNull final List<PatientCancerTypes> patientsCancerTypes, @NotNull final String sample) {
         final String patientId = toPatientId(sample);
         if (patientId == null) {
             LOGGER.warn("Could not resolve patient id from " + sample);
@@ -90,18 +90,18 @@ final class PatientReporterHelper {
                 .filter(patientCancerTypes -> patientCancerTypes.patientIdentifier().equals(patientId))
                 .collect(Collectors.toList());
 
-        // KODU: We should never have more than one cancer type for a single patient.
+        // KODU: We should never have more than one curated cancer type for a single patient.
         assert matchingIdCancerTypes.size() < 2;
 
         if (matchingIdCancerTypes.size() == 1) {
-            String cancerType = matchingIdCancerTypes.get(0).cancerType();
-            if (cancerType.equalsIgnoreCase("other")) {
+            String primaryTumorLocation = matchingIdCancerTypes.get(0).primaryTumorLocation();
+            if (primaryTumorLocation.equalsIgnoreCase("other")) {
                 return matchingIdCancerTypes.get(0).cancerSubtype();
             } else {
-                return cancerType;
+                return primaryTumorLocation;
             }
         } else {
-            LOGGER.warn("Could not find patient " + patientId + " in CPCT ECRF database!");
+            LOGGER.warn("Could not find patient " + patientId + " in CPCT ECRF data dump!");
             return Strings.EMPTY;
         }
     }

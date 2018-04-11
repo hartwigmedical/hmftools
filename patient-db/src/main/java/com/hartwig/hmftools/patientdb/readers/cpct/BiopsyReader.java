@@ -59,8 +59,10 @@ public class BiopsyReader {
 
                     final String location = biopsiesGroup.readItemString(FIELD_LOCATION);
 
-                    final CuratedBiopsyType curatedBiopsyType =
-                            biopsySiteCurator.search(curatedCancerType.type(), curatedCancerType.subType(), finalSite, location);
+                    final CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(curatedCancerType.primaryTumorLocation(),
+                            curatedCancerType.subType(),
+                            finalSite,
+                            location);
                     final BiopsyData biopsy = ImmutableBiopsyData.of(date,
                             biopsyTaken,
                             biopsyEvaluable,

@@ -363,7 +363,7 @@ public final class PatientValidator {
     static List<ValidationFinding> validateTumorLocationCuration(@NotNull String patientIdentifier, @NotNull BaselineData baselineData) {
         final List<ValidationFinding> findings = Lists.newArrayList();
         final String searchTerm = baselineData.cancerType().searchTerm();
-        if (searchTerm != null && baselineData.cancerType().type() == null) {
+        if (searchTerm != null && baselineData.cancerType().primaryTumorLocation() == null) {
             findings.add(ValidationFinding.of("tumorLocationCuration",
                     patientIdentifier,
                     fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER),
