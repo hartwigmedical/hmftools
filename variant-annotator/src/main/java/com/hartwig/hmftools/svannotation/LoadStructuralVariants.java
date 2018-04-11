@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svannotation;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -7,8 +8,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusionModel;
-import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusions;
+import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
@@ -20,9 +20,9 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
 import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
-import com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator;
 import com.hartwig.hmftools.svannotation.dao.StructuralVariantAnnotationDAO;
 
 import org.apache.commons.cli.CommandLine;
@@ -48,7 +48,10 @@ public class LoadStructuralVariants {
     private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
     private static final String ENSEMBL_DB = "ensembl_db";
-    private static final String FUSION_CSV = "fusion_csv";
+    private static final String FUSION_PAIRS_CSV = "fusion_pairs_csv";
+    private static final String PROMISCUOUS_FIVE_CSV = "promiscuous_five_csv";
+    private static final String PROMISCUOUS_THREE_CSV = "promiscuous_three_csv";
+
     private static final String SOURCE_SVS_FROM_DB = "source_svs_from_db";
     private static final String LOG_DEBUG = "log_debug";
     private static final String SV_PON_FILE = "sv_pon_file";
@@ -75,19 +78,16 @@ public class LoadStructuralVariants {
 
         boolean sourceSVsFromDB = cmd.hasOption(SOURCE_SVS_FROM_DB);
 
-        List<EnrichedStructuralVariant> svList = Lists.newArrayList();
+        List<EnrichedStructuralVariant> svList;
 
-        if(sourceSVsFromDB)
-        {
+        if (sourceSVsFromDB) {
             svList = dbAccess.readStructuralVariants(tumorSample);
 
-            if(svList.isEmpty())
-            {
+            if (svList.isEmpty()) {
                 LOGGER.info("no SVs loaded from DB");
                 return;
             }
-        }
-        else {
+        } else {
             LOGGER.info("reading VCF File");
             final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE), true);
 
@@ -97,18 +97,20 @@ public class LoadStructuralVariants {
 
         List<EnrichedStructuralVariant> updatedSVs = Lists.newArrayList();
 
-        if(svPONAnnotator.hasEntries()) {
-            for(EnrichedStructuralVariant variant : svList)
-            {
-                int ponCount = svPONAnnotator.getPonOccurenceCount(
-                        variant.chromosome(true), variant.chromosome(false),
-                        variant.position(true), variant.position(false),
-                        variant.orientation(true), variant.orientation(false),
+        if (svPONAnnotator.hasEntries()) {
+            for (EnrichedStructuralVariant variant : svList) {
+                int ponCount = svPONAnnotator.getPonOccurenceCount(variant.chromosome(true),
+                        variant.chromosome(false),
+                        variant.position(true),
+                        variant.position(false),
+                        variant.orientation(true),
+                        variant.orientation(false),
                         variant.type().toString());
 
                 String filter = ponCount > 1 ? "PON" : "PASS";
 
-                final ImmutableEnrichedStructuralVariant updatedSV = ImmutableEnrichedStructuralVariant.builder().from(variant).filter(filter).build();
+                final ImmutableEnrichedStructuralVariant updatedSV =
+                        ImmutableEnrichedStructuralVariant.builder().from(variant).filter(filter).build();
                 updatedSVs.add(updatedSV);
             }
         }
@@ -116,7 +118,7 @@ public class LoadStructuralVariants {
         LOGGER.info("persisting SVs to database");
         dbAccess.writeStructuralVariants(tumorSample, updatedSVs);
 
-        if(!sourceSVsFromDB) {
+        if (!sourceSVsFromDB) {
 
             // NEVA: We read after we write to populate the primaryId field
             final List<EnrichedStructuralVariant> enrichedVariants = dbAccess.readStructuralVariants(tumorSample);
@@ -125,10 +127,13 @@ public class LoadStructuralVariants {
             final VariantAnnotator annotator = MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
 
             LOGGER.info("loading Cosmic Fusion data");
-            final CosmicFusionModel cosmicGeneFusions = CosmicFusions.readFromCSV(cmd.getOptionValue(FUSION_CSV));
+            final KnownFusionsModel knownFusionsModel =
+                    KnownFusionsModel.fromInputStreams(new FileInputStream(cmd.getOptionValue(FUSION_PAIRS_CSV)),
+                            new FileInputStream(cmd.getOptionValue(PROMISCUOUS_FIVE_CSV)),
+                            new FileInputStream(cmd.getOptionValue(PROMISCUOUS_THREE_CSV)));
 
             final StructuralVariantAnalyzer analyzer =
-                    new StructuralVariantAnalyzer(annotator, HmfGenePanelSupplier.hmfPanelGeneList(), cosmicGeneFusions);
+                    new StructuralVariantAnalyzer(annotator, HmfGenePanelSupplier.hmfPanelGeneList(), knownFusionsModel);
             LOGGER.info("analyzing structural variants for impact via disruptions and fusions");
             final StructuralVariantAnalysis analysis = analyzer.run(enrichedVariants, sourceSVsFromDB);
 
@@ -177,12 +182,13 @@ public class LoadStructuralVariants {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
-        options.addOption(FUSION_CSV, true, "Path towards a CSV containing white-listed gene fusions.");
+        options.addOption(FUSION_PAIRS_CSV, true, "Path towards a CSV containing white-listed gene fusion pairs.");
+        options.addOption(PROMISCUOUS_FIVE_CSV, true, "Path towards a CSV containing white-listed promiscuous 5' genes.");
+        options.addOption(PROMISCUOUS_THREE_CSV, true, "Path towards a CSV containing white-listed promiscuous 3' genes.");
         options.addOption(ENSEMBL_DB, true, "Annotate structural variants using this Ensembl DB URI");
         options.addOption(SOURCE_SVS_FROM_DB, false, "Skip annotations, including Ensemble DB data sync, for testing only)");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         options.addOption(SV_PON_FILE, true, "PON file for SVs");
-
         return options;
     }
 
