@@ -187,17 +187,26 @@ public final class PatientValidator {
                     FIELD_BIOPSY_DATE,
                     "biopsy date empty or in wrong format", biopsyData.formStatus()));
         }
-        if (biopsyData.site() == null) {
+        if (biopsyData.location() == null && biopsyData.site() != null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientIdentifier,
-                    fields(FIELD_SITE, FIELD_SITE_OTHER),
-                    "biopsy site empty", biopsyData.formStatus()));
+                    fields(FIELD_SITE, FIELD_SITE_OTHER, FIELD_LOCATION),
+                    "biopsy location is empty and biopsy site is not empty",
+                    biopsyData.formStatus()));
         }
-        if (biopsyData.location() == null) {
+        if (biopsyData.location() != null && biopsyData.site() == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientIdentifier,
-                    fields(FIELD_LOCATION),
-                    "biopsy location empty", biopsyData.formStatus()));
+                    fields(FIELD_SITE, FIELD_SITE_OTHER, FIELD_LOCATION),
+                    "biopsy location is not empty and biopsy site is empty",
+                    biopsyData.formStatus()));
+        }
+        if (biopsyData.site() == null && biopsyData.location() == null) {
+            findings.add(ValidationFinding.of(ECRF_LEVEL,
+                    patientIdentifier,
+                    fields(FIELD_SITE, FIELD_SITE_OTHER, FIELD_LOCATION),
+                    "biopsy site and biopsy location is empty",
+                    biopsyData.formStatus()));
         }
         return findings;
     }
