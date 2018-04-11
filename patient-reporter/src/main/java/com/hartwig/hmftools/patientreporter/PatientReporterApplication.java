@@ -55,7 +55,9 @@ public class PatientReporterApplication {
     private static final String NOT_SEQUENCEABLE_SAMPLE = "not_sequenceable_sample";
 
     private static final String COSMIC_GENE_CSV = "cosmic_gene_csv";
-    private static final String COSMIC_FUSION_CSV = "cosmic_fusion_csv";
+    private static final String FUSION_PAIRS_CSV = "fusion_pairs_csv";
+    private static final String PROMISCUOUS_FIVE_CSV = "promiscuous_five_csv";
+    private static final String PROMISCUOUS_THREE_CSV = "promiscuous_three_csv";
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
     private static final String ENSEMBL_DB = "ensembl_db";
     private static final String FASTA_FILE_LOCATION = "fasta_file_location";
@@ -109,7 +111,9 @@ public class PatientReporterApplication {
     @NotNull
     private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd) throws IOException {
         return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(COSMIC_GENE_CSV),
-                cmd.getOptionValue(COSMIC_FUSION_CSV),
+                cmd.getOptionValue(FUSION_PAIRS_CSV),
+                cmd.getOptionValue(PROMISCUOUS_FIVE_CSV),
+                cmd.getOptionValue(PROMISCUOUS_THREE_CSV),
                 cmd.getOptionValue(DRUP_GENES_CSV),
                 cmd.getOptionValue(FASTA_FILE_LOCATION));
     }
@@ -128,7 +132,7 @@ public class PatientReporterApplication {
             annotator = NullAnnotator.make();
         }
         final StructuralVariantAnalyzer svAnalyzer =
-                new StructuralVariantAnalyzer(annotator, reporterData.panelGeneModel().regions(), reporterData.cosmicFusionModel());
+                new StructuralVariantAnalyzer(annotator, reporterData.panelGeneModel().regions(), reporterData.knownFusionsModel());
 
         return ImmutablePatientReporter.of(buildBaseReporterData(cmd), reporterData, variantAnalyzer, svAnalyzer, new CivicAnalyzer());
     }
@@ -137,7 +141,10 @@ public class PatientReporterApplication {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
         final String drupGenesCsv = cmd.getOptionValue(DRUP_GENES_CSV);
         final String cosmicGeneCsv = cmd.getOptionValue(COSMIC_GENE_CSV);
-        final String cosmicFusionCsv = cmd.getOptionValue(COSMIC_FUSION_CSV);
+        final String fusionPairsCsv = cmd.getOptionValue(FUSION_PAIRS_CSV);
+        final String promiscuousFiveCsv = cmd.getOptionValue(PROMISCUOUS_FIVE_CSV);
+        final String promiscuousThreeCsv = cmd.getOptionValue(PROMISCUOUS_THREE_CSV);
+
         final String fastaFileLocation = cmd.getOptionValue(FASTA_FILE_LOCATION);
 
         if (runDirectory == null || !exists(runDirectory) && !isDirectory(runDirectory)) {
@@ -146,8 +153,12 @@ public class PatientReporterApplication {
             LOGGER.warn(DRUP_GENES_CSV + " has to be an existing file: " + drupGenesCsv);
         } else if (cosmicGeneCsv == null || !exists(cosmicGeneCsv)) {
             LOGGER.warn(COSMIC_GENE_CSV + " has to be an existing file: " + cosmicGeneCsv);
-        } else if (cosmicFusionCsv == null || !exists(cosmicFusionCsv)) {
-            LOGGER.warn(COSMIC_FUSION_CSV + " has to be an existing file: " + cosmicFusionCsv);
+        } else if (fusionPairsCsv == null || !exists(fusionPairsCsv)) {
+            LOGGER.warn(FUSION_PAIRS_CSV + " has to be an existing file: " + fusionPairsCsv);
+        } else if (promiscuousFiveCsv == null || !exists(promiscuousFiveCsv)) {
+            LOGGER.warn(PROMISCUOUS_FIVE_CSV + " has to be an existing file: " + promiscuousFiveCsv);
+        } else if (promiscuousThreeCsv == null || !exists(promiscuousThreeCsv)) {
+            LOGGER.warn(PROMISCUOUS_THREE_CSV + " has to be an existing file: " + promiscuousThreeCsv);
         } else if (fastaFileLocation == null || !exists(fastaFileLocation)) {
             LOGGER.warn(FASTA_FILE_LOCATION + " has to be an existing file: " + fastaFileLocation);
         } else {
@@ -223,7 +234,9 @@ public class PatientReporterApplication {
         options.addOption(NOT_SEQUENCEABLE_REASON, true, "Either 'low_tumor_percentage' or 'low_dna_yield'");
         options.addOption(NOT_SEQUENCEABLE_SAMPLE, true, "In case of non-sequenceable reports, the name of the sample used.");
         options.addOption(COSMIC_GENE_CSV, true, "Path towards a CSV containing COSMIC gene data.");
-        options.addOption(COSMIC_FUSION_CSV, true, "Path towards a CSV containing COSMIC fusion data.");
+        options.addOption(FUSION_PAIRS_CSV, true, "Path towards a CSV containing white-listed gene fusion pairs.");
+        options.addOption(PROMISCUOUS_FIVE_CSV, true, "Path towards a CSV containing white-listed promiscuous 5' genes.");
+        options.addOption(PROMISCUOUS_THREE_CSV, true, "Path towards a CSV containing white-listed promiscuous 3' genes.");
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
         options.addOption(ENSEMBL_DB, true, "Annotate structural variants using this Ensembl DB URI");
         options.addOption(CENTER_CSV, true, "Path towards a CSV containing center data.");
