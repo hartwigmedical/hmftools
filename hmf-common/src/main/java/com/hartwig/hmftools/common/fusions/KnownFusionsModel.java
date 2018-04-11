@@ -32,11 +32,6 @@ public abstract class KnownFusionsModel {
     @NotNull
     public abstract Set<String> promiscuousThree();
 
-    public boolean match(@NotNull final String fiveGene, @NotNull final String threeGene) {
-        return promiscuousFive().contains(fiveGene) || promiscuousThree().contains(threeGene) || fusions().get(fiveGene)
-                .contains(threeGene);
-    }
-
     @NotNull
     public static KnownFusionsModel fromInputStreams(@NotNull final InputStream fusionPairsStream,
             @NotNull final InputStream promiscuousFiveStream, @NotNull final InputStream promiscuousThreeStream) throws IOException {
@@ -55,5 +50,22 @@ public abstract class KnownFusionsModel {
     private static Set<String> readPromiscuous(@NotNull final InputStream stream) throws IOException {
         final CSVParser parser = CSVParser.parse(stream, Charset.defaultCharset(), CSVFormat.DEFAULT.withSkipHeaderRecord());
         return Streams.stream(parser).map(record -> record.get(0)).collect(Collectors.toSet());
+    }
+
+    public boolean match(@NotNull final String fiveGene, @NotNull final String threeGene) {
+        return exactMatch(fiveGene, threeGene) || intergenicPromiscuousMatch(fiveGene, threeGene) || intragenicPromiscuousMatch(fiveGene,
+                threeGene);
+    }
+
+    public boolean exactMatch(@NotNull final String fiveGene, @NotNull final String threeGene) {
+        return fusions().get(fiveGene).contains(threeGene);
+    }
+
+    public boolean intergenicPromiscuousMatch(@NotNull final String fiveGene, @NotNull final String threeGene) {
+        return !fiveGene.equals(threeGene) && (promiscuousFive().contains(fiveGene) || promiscuousThree().contains(threeGene));
+    }
+
+    public boolean intragenicPromiscuousMatch(@NotNull final String fiveGene, @NotNull final String threeGene) {
+        return fiveGene.equals(threeGene) && promiscuousThree().contains(threeGene);
     }
 }
