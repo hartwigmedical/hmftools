@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.CuratedBiopsyType;
-import com.hartwig.hmftools.patientdb.data.CuratedCancerType;
+import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
 
 import org.jetbrains.annotations.NotNull;
@@ -39,7 +39,7 @@ public class BiopsyReader {
     }
 
     @NotNull
-    List<BiopsyData> read(@NotNull EcrfPatient patient, @NotNull CuratedCancerType curatedCancerType) {
+    List<BiopsyData> read(@NotNull EcrfPatient patient, @NotNull CuratedTumorLocation curatedTumorLocation) {
         final List<BiopsyData> biopsies = Lists.newArrayList();
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BIOPSY)) {
             for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_BIOPS)) {
@@ -59,8 +59,8 @@ public class BiopsyReader {
 
                     final String location = biopsiesGroup.readItemString(FIELD_LOCATION);
 
-                    final CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(curatedCancerType.primaryTumorLocation(),
-                            curatedCancerType.subType(),
+                    final CuratedBiopsyType curatedBiopsyType =
+                            biopsySiteCurator.search(curatedTumorLocation.primaryTumorLocation(), curatedTumorLocation.subType(),
                             finalSite,
                             location);
                     final BiopsyData biopsy = ImmutableBiopsyData.of(date,

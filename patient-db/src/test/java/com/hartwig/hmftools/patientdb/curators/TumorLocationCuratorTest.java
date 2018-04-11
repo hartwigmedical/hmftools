@@ -5,7 +5,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.patientdb.data.CuratedCancerType;
+import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
 
 import org.junit.Test;
 
@@ -30,10 +30,10 @@ public class TumorLocationCuratorTest {
         // KODU: See DEV-275
         TumorLocationCurator curator = TestCuratorFactory.tumorLocationCurator();
         String desmoidTumor = "desmoïd tumor";
-        CuratedCancerType cancerType = curator.search(desmoidTumor);
+        CuratedTumorLocation tumorLocation = curator.search(desmoidTumor);
 
-        String type = cancerType.primaryTumorLocation();
-        assertNotNull(type);
-        assertEquals("sarcoma", type.toLowerCase());
+        String location = tumorLocation.primaryTumorLocation();
+        assertNotNull(location);
+        assertEquals("sarcoma", location.toLowerCase());
     }
 }

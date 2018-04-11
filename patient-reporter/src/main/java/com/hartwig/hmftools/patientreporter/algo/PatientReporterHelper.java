@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.ecrf.projections.PatientCancerType;
+import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
@@ -79,14 +79,14 @@ final class PatientReporterHelper {
     }
 
     @Nullable
-    static PatientCancerType extractPatientCancerType(@NotNull final List<PatientCancerType> patientsCancerTypes,
+    static PatientTumorLocation extractPatientCancerType(@NotNull final List<PatientTumorLocation> patientsCancerTypes,
             @NotNull final String sample) {
         final String patientId = toPatientId(sample);
         if (patientId == null) {
             LOGGER.warn("Could not resolve patient id from " + sample);
             return null;
         }
-        final List<PatientCancerType> matchingIdCancerTypes = patientsCancerTypes.stream()
+        final List<PatientTumorLocation> matchingIdCancerTypes = patientsCancerTypes.stream()
                 .filter(patientCancerTypes -> patientCancerTypes.patientIdentifier().equals(patientId))
                 .collect(Collectors.toList());
 

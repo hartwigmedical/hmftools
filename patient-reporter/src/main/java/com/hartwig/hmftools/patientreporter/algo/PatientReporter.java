@@ -12,7 +12,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.doid.TumorLocationDoidMapping;
-import com.hartwig.hmftools.common.ecrf.projections.PatientCancerType;
+import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -98,18 +98,17 @@ public abstract class PatientReporter {
         final int mutationalLoad = variantAnalysis.mutationalLoad();
         final int consequentialVariantCount = variantAnalysis.consequentialVariants().size();
         final int structuralVariantCount = structuralVariantAnalysis.annotations().size();
-        final PatientCancerType patientCancerType =
+        final PatientTumorLocation patientTumorLocation =
                 PatientReporterHelper.extractPatientCancerType(baseReporterData().patientsCancerTypes(), tumorSample);
 
         final List<Alteration> alterations;
-        if (patientCancerType != null) {
+        if (patientTumorLocation != null) {
             final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
             alterations = civicAnalyzer().run(variantAnalysis.findings(),
                     purpleAnalysis.reportableGeneCopyNumbers(),
                     reportableDisruptions,
                     reportableFusions,
-                    reporterData().panelGeneModel(),
-                    doidMapping.doidsForTumorType(patientCancerType.primaryTumorLocation()));
+                    reporterData().panelGeneModel(), doidMapping.doidsForTumorType(patientTumorLocation.primaryTumorLocation()));
         } else {
             LOGGER.warn("Could not run civic analyzer as (curated) primary tumor location is not known");
             alterations = Lists.newArrayList();
@@ -132,7 +131,7 @@ public abstract class PatientReporter {
         final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrichSomaticVariants(variantAnalysis.findings());
         final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(tumorSample);
 
-        final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample, patientCancerType,
+        final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample, patientTumorLocation,
                 tumorPercentage,
                 lims.arrivalDateForSample(tumorSample),
                 lims.arrivalDateForSample(run.refSample()),

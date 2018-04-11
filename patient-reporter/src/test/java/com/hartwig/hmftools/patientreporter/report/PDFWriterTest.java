@@ -17,7 +17,7 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientCancerType;
+import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -339,7 +339,7 @@ public class PDFWriterTest {
     @NotNull
     private static SampleReport testSampleReport(final double pathologyTumorPercentage) throws IOException {
         final String sample = "CPCT02991111T";
-        return ImmutableSampleReport.of(sample, ImmutablePatientCancerType.of("CPCT02991111", "Skin", "Melanoma"),
+        return ImmutableSampleReport.of(sample, ImmutablePatientTumorLocation.of("CPCT02991111", "Skin", "Melanoma"),
                 pathologyTumorPercentage,
                 LocalDate.parse("05-Jan-2016", FORMATTER),
                 LocalDate.parse("01-Jan-2016", FORMATTER),

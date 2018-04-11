@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.time.LocalDate;
 
-import com.hartwig.hmftools.common.ecrf.projections.PatientCancerType;
+import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 
 import org.apache.logging.log4j.util.Strings;
@@ -19,7 +19,7 @@ public abstract class SampleReport {
     public abstract String sampleId();
 
     @Nullable
-    public abstract PatientCancerType patientCancerType();
+    public abstract PatientTumorLocation patientCancerType();
 
     @Nullable
     public abstract Double pathologyTumorPercentage();
@@ -27,14 +27,14 @@ public abstract class SampleReport {
     @NotNull
     @Value.Derived
     public String primaryTumorLocationString() {
-        PatientCancerType type = patientCancerType();
+        PatientTumorLocation type = patientCancerType();
         return type != null ? type.primaryTumorLocation() : Strings.EMPTY;
     }
 
     @NotNull
     @Value.Derived
     public String cancerSubTypeString() {
-        PatientCancerType type = patientCancerType();
+        PatientTumorLocation type = patientCancerType();
         return type != null ? type.cancerSubtype() : Strings.EMPTY;
     }
 

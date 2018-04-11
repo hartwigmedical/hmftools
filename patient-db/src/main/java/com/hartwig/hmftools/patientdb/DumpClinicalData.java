@@ -13,9 +13,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
-import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientCancerType;
+import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePortalClinicalData;
-import com.hartwig.hmftools.common.ecrf.projections.PatientCancerType;
+import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PortalClinicalData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 
@@ -31,23 +31,23 @@ final class DumpClinicalData {
     }
 
     static void writeClinicalDumps(@NotNull final String csvOutputDir, @NotNull final Collection<Patient> patients,
-            @NotNull final Optional<String> cancerTypesLink, @NotNull final Optional<String> portalDataLink) throws IOException {
-        writeCancerTypesToCSV(csvOutputDir, cancerTypesLink, patients);
+            @NotNull final Optional<String> tumorLocationLink, @NotNull final Optional<String> portalDataLink) throws IOException {
+        writeCuratedTumorLocationsToCSV(csvOutputDir, tumorLocationLink, patients);
         writePortalClinicalData(csvOutputDir, portalDataLink, patients);
     }
 
-    private static void writeCancerTypesToCSV(@NotNull final String csvOutputDir, @NotNull final Optional<String> linkName,
+    private static void writeCuratedTumorLocationsToCSV(@NotNull final String csvOutputDir, @NotNull final Optional<String> linkName,
             @NotNull final Collection<Patient> patients) throws IOException {
-        final String outputFile = fileLocation(csvOutputDir, "_cancerTypes.csv");
-        LOGGER.info("Writing cancer types to csv in {}.", csvOutputDir);
-        final List<PatientCancerType> cancerTypes =
-                patients.stream().map(patient -> ImmutablePatientCancerType.of(patient.patientIdentifier(),
-                        Strings.nullToEmpty(patient.baselineData().cancerType().primaryTumorLocation()),
-                        Strings.nullToEmpty(patient.baselineData().cancerType().subType())))
+        final String outputFile = fileLocation(csvOutputDir, "_curatedTumorLocations.csv");
+        LOGGER.info("Writing curated tumor locations to csv in {}.", csvOutputDir);
+        final List<PatientTumorLocation> tumorLocations = patients.stream()
+                .map(patient -> ImmutablePatientTumorLocation.of(patient.patientIdentifier(),
+                        Strings.nullToEmpty(patient.baselineData().curatedTumorLocation().primaryTumorLocation()),
+                        Strings.nullToEmpty(patient.baselineData().curatedTumorLocation().subType())))
                 .collect(Collectors.toList());
-        PatientCancerType.writeRecords(outputFile, cancerTypes);
+        PatientTumorLocation.writeRecords(outputFile, tumorLocations);
         linkName.ifPresent(link -> updateSymlink(csvOutputDir + File.separator + link, outputFile));
-        LOGGER.info("Written {} records to {}.", cancerTypes.size(), outputFile);
+        LOGGER.info("Written {} records to {}.", tumorLocations.size(), outputFile);
     }
 
     private static void writePortalClinicalData(@NotNull final String csvOutputDir, @NotNull final Optional<String> linkName,
@@ -61,7 +61,8 @@ final class DumpClinicalData {
                                 sampleData.sampleId(),
                                 patient.baselineData().gender(),
                                 patient.baselineData().birthYear(),
-                                patient.baselineData().registrationDate(), patient.baselineData().cancerType().primaryTumorLocation(),
+                                patient.baselineData().registrationDate(),
+                                patient.baselineData().curatedTumorLocation().primaryTumorLocation(),
                                 getBiopsyType(patient, sampleData.sampleId()))))
                 .collect(Collectors.toList());
         PortalClinicalData.writeRecords(outputFile, portalData);
