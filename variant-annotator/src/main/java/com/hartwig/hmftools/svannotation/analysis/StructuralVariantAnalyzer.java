@@ -50,10 +50,7 @@ public class StructuralVariantAnalyzer {
     @NotNull
     public StructuralVariantAnalysis run(@NotNull final List<EnrichedStructuralVariant> variants, boolean skipAnnotations) {
         if (skipAnnotations) {
-            final List<StructuralVariantAnnotation> annotations = Lists.newArrayList();
-            final List<GeneFusion> fusions = Lists.newArrayList();
-            final List<GeneDisruption> disruptions = Lists.newArrayList();
-            return ImmutableStructuralVariantAnalysis.of(annotations, fusions, disruptions);
+            return ImmutableStructuralVariantAnalysis.empty();
         }
 
         LOGGER.debug("annotating variants");
