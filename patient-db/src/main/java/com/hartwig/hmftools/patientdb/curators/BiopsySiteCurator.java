@@ -130,7 +130,7 @@ public class BiopsySiteCurator {
         @Override
         public String toString() {
             return "Key{" + "primaryTumorLocation='" + primaryTumorLocation + '\'' + ", cancerSubType='" + cancerSubType + '\''
-                    + ", biopsyType='" + biopsySite + '\'' + ", biopsyLocation='" + biopsyLocation + '\'' + '}';
+                    + ", biopsySite='" + biopsySite + '\'' + ", biopsyLocation='" + biopsyLocation + '\'' + '}';
         }
     }
 }
