@@ -1,162 +1,173 @@
 searchTerm,primaryTumorLocation,subType
-"adenocarcinoma of gall bladder, pancreatic or biliary tract",Biliary,Other
-Cholangiocarcinoma,Biliary,Cholangiocarcinoma
-Gallbladder cancer,Biliary,Gall bladder
-golanchgio carcinoma,Biliary,Cholangiocarcinoma
-angiosarcoma,Bone/Soft tissue,Angiosarcoma
-desmoïd tumor,Bone/Soft tissue,Desmoid
-Ewing sarcoma,Bone/Soft tissue,Ewing sarcoma
-Gastrointestinal Stromal Tumors (GIST),Bone/Soft tissue,Gastrointestinal stromal tumor (GIST)
-hemangiopericytoma,Bone/Soft tissue,Angiosarcoma
-Leiomyosarcoma,Bone/Soft tissue,Leiomyosarcoma
-Leiomyosarcoom,Bone/Soft tissue,Leiomyosarcoma
-Liposarcoma,Bone/Soft tissue,Liposarcoma
-Osteosarcoma (Bone Cancer),Bone/Soft tissue,Osteosarcoma
-Rhabdomyosarcoma,Bone/Soft tissue,Sarcoma
+"adenocarcinoma characterised by an immunoprofile which could it a primary tumor in the colorectum, stomach or pancreas",CUP,
+"adenocarcinoma of gall bladder, pancreatic or biliary tract",CUP,Gall bladder, pancreas or biliary tract
+"esophageal or stomach cancer, differentiation not possible",CUP,Esophagus or Stomach
+"First CT scan 24-05-2017 suspect clear cell RCC however, biopsy result 31-05-2017 = Melanoma",Skin,Melanoma
+"gynaecological, hooggradig, slecht gedifferentieeerd carconoom, bij PA geen duidelijke aanwijzingen voor carcinosarcoom/sarcoom primaire origine probably endometrium",Uterus,Other
+"malignant, probably poorly differentiated adenocarcinoma consistant with clear cell renal carcinoma",Kidney,Renal Cell
+"Mesothelioma, Malignant",Mesothelioma,
+"Neuro endocrine carcinoma (NEC), primary unknown",Other,NET: unknown primary
 "Sarcoma, soft tissue",Bone/Soft tissue,Sarcoma
-Sarcoma: other,Bone/Soft tissue,Sarcoma
-sarcomatoid or sarcoma (postradiation),Bone/Soft tissue,Sarcoma
-sarcomoatoid carcinoom,Bone/Soft tissue,Sarcoma
-Suspicious desmoid tumors due to a gardner syndrome,Bone/Soft tissue,Desmoid
-Undifferentiated sarcoma,Bone/Soft tissue,Sarcoma
-Breast cancer,Breast,
+"small cell carcinoma, unknown origin (possible SCLC)",CUP,Possibly SCLC
+"Unknown, probably head and neck cancer",CUP,Possibly Head and neck
+"Urothelial cell cancer, but the origin is unknown",Urinary tract,Unknown
+2008: Follicular NHL Stage IA (left ear) RT 8 GY; 2013: Stage IV follicular lymphoma (ww); 25Nov2015: Anal cancer,Colon/Rectum,Anal
+Adenocarcinoma cardia,Stomach,Cardia
+Adenocarcinoma small intestine,Small intestine,Other
+adenoid cystic carcinoma,Head and neck,Other
+Adenoid cystic carcinoma of left main bronchus,Lung,Bronchus
+adrenocortical carcinoma,Other,Adrenal
+Anal cancer,Colon/Rectum,Anal
+angiosarcoma,Bone/Soft tissue,Angiosarcoma
+Appendix carcinoma,Colon/Rectum,Appendix
+atypische fibroxanthoom,Skin,Other
+Basal Cell Carcinoma,Skin,Basal cell carcinoma
+Bladder cancer,Urinary tract,Bladder
+Both bladder carcinoma and mesothelioma,Other,Double primary
+Breast cancer,Breast,Subtype unknown
 Breast Cancer: ER-negative/HER2-positive,Breast,ER-negative/HER2-positive
 Breast Cancer: ER-positive/HER2-negative,Breast,ER-positive/HER2-negative
 Breast Cancer: ER-positive/HER2-positive,Breast,ER-positive/HER2-positive
 Breast Cancer: subtype unknown,Breast,Subtype unknown
 Breast Cancer: triple negative,Breast,Triple negative
+Carcinoma NOS ex pleimorf adenoma,Head and neck,Salivary Gland
+Carcinoma of unknown primary,CUP,
+carcinosarcoom endometrium,Uterus,Endometrial
+carcinosarcoom of the uterus,Uterus,Other
+carcinosarcoom uterus,Uterus,Other
+Cervical cancer,Uterus,Cervical
+Cholangiocarcinoma,Biliary,Cholangiocarcinoma
+choledochuscarcinoma,Pancreas,Other
+Colon ascendens,Colon/Rectum,Ascending
+Colorectal Cancer,Colon/Rectum,
+Cystadenocarcinoma of the liver,Liver,
+desmoïd tumor,Bone/Soft tissue,Desmoid
+Double carcinoma: endometrium and ovarium,Other,Double primary
+Dudodenum,Small intestine,Duodenum
+duodenal carcinoma,Small intestine,Duodenum
+duodenum,Small intestine,Duodenum
+Endometrial cancer,Uterus,Endometrial
 ER-positive / HER2 unknown,Breast,ER-positive/HER2 unknown
+Esophageal cancer,Esophagus,
+esophagus,Esophagus,
+Ewing sarcoma,Bone/Soft tissue,Ewing sarcoma
+extra ovarial sereus adenocarcinoom,Uterus,Other
+Fechromocytoom,Other,Adrenal
+Gallbladder cancer,Biliary,Gall bladder
+gastric carcinoma,Stomach,Gastric Carcinoma
+gastrinoma in stomach,Stomach,Gastric
+Gastrointestinal Stromal Tumors (GIST),Bone/Soft tissue,Gastrointestinal stromal tumor (GIST)
+Glioblastoma Multiforme,CNS,Glioblastoma Multiforme
 Glioma: anaplastic astrocytoma-like,CNS,Glioma
 Glioma: Glioblastoma Multiforme,CNS,Glioblastoma Multiforme
 Glioma: low-grade astrocytoma,CNS,Astrocytoma
 Glioma: low-grade oligodendroglioma,CNS,Oligodendroglioma
 Glioma: other,CNS,Glioma
-meningeoom: anaplastic hemangiopericytoma gr 3,CNS,Meningeoma
-solitair fibreuze tumor in brain,CNS,Other
-2008: Follicular NHL Stage IA (left ear) RT 8 GY; 2013: Stage IV follicular lymphoma (ww); 25Nov2015: Anal cancer,Colon/Rectum,Anal
-Anal cancer,Colon/Rectum,Anal
-Appendix carcinoma,Colon/Rectum,Appendix
-Colon ascendens,Colon/Rectum,Ascending
-Colorectal Cancer,Colon/Rectum,
-NET colon ascendens,Colon/Rectum,NET
-Sigmoid,Colon/Rectum,Sigmoid
-tubulovilleus adenoom,Colon/Rectum,Other
-"adenocarcinoma characterised by an immunoprofile which could it a primary tumor in the colorectum, stomach or pancreas",CUP,
-Carcinoma of unknown primary,CUP,
-high grade serous carcinoma of unknown origin,CUP,
-Primary tumor of uknown origin,CUP,
-primary tumor unknown,CUP,
-"small cell carcinoma, unknown origin (possible SCLC)",CUP,Possibly SCLC
-uknown,CUP,
-unknown,CUP,
-Unknown primary,CUP,
-unknown Primary tumor,CUP,
-unknown primary tumor,CUP,
-unknow primary tumor,CUP,
-"Unknown, probably head and neck cancer",CUP,
-unknown primary tumor in tractus genitalis,CUP,
-Esophageal cancer,Esophagus,
-esophagus,Esophagus,
-"esophageal or stomach cancer, differentiation not possible",Esophagus,Other
-Oesophagal cancer (at transition from oesophagus to stomach),Esophagus,Other
-Oesophagus/Cardiacarcinoma,Esophagus,Other
-Oesophago-gastric cancer (junctional),Esophagus,Other
-adenoid cystic carcinoma,Head and neck,Other
-Carcinoma NOS ex pleimorf adenoma,Head and neck,Salivary Gland
-Head and Neck cancer,Head and neck,Other
+golanchgio carcinoma,Biliary,Cholangiocarcinoma
+Head and Neck cancer,Head and neck,
 Head and Neck Cancer: Hypopharyngeal Cancer,Head and neck,Hypopharyngeal
 Head and Neck Cancer: Laryngeal cancer,Head and neck,Laryngeal
 Head and Neck Cancer: Lip and Oral Cavity Cancer,Head and neck,Lip and Oral Cavity
 Head and Neck Cancer: Nasal cavity and paranasal sinuses cancer,Head and neck,Nasal cavity and paranasal sinuses
 Head and Neck Cancer: Oropharyngeal Cancer,Head and neck,Oropharyngeal
 Head and Neck Cancer: Salivary Gland Cancer,Head and neck,Salivary Gland
-Larynxcarcinoma,Head and neck,Laryngeal
-Squamous cell carcinoma of the tongue,Head and neck,Tongue
-Submandular gland,Head and neck,Salivary Gland
-Tongue carcinoma lateral side,Head and neck,Tongue
-tonsilcarcinoma,Head and neck,Lip and Oral Cavity
-kidney,Kidney,Other
-"malignant, probably poorly differentiated adenocarcinoma consistant with clear cell renal carcinoma",Kidney,Renal Cell Cancer
-Renal Cell Cancer,Kidney,Renal Cell Cancer
-tumor in kidney,Kidney,Other
-Cystadenocarcinoma of the liver,Liver,
+hemangiopericytoma,Bone/Soft tissue,Angiosarcoma
 Hepatocellular Cancer,Liver,Hepatocellular
-Liver cancer,Liver,Other
-mixed hepatocellular-cholangio carcinoma,Liver,Other
-Adenoid cystic carcinoma of left main bronchus,Lung,Bronchus
+high grade serous carcinoma of unknown origin,CUP,
+high suspicion pancreatic cancer therfore pa and cpct biopt at the same day,Pancreas,
+Hodgkin lymphoma,Lymphoid,Hodgkin lymphoma
+hydradenocarcinoma,Skin,Sweat glands
+kidney,Kidney,
+large cell neuroendocrien carcinoma,Other,NET: large cell
+Larynxcarcinoma,Head and neck,Laryngeal
+Leiomyosarcoma,Bone/Soft tissue,Leiomyosarcoma
+Leiomyosarcoom,Bone/Soft tissue,Leiomyosarcoma
+Liposarcoma,Bone/Soft tissue,Liposarcoma
+Liver cancer,Liver,
 Lung Cancer: Non-Small Cell,Lung,Non-Small Cell
 Lung Cancer: Small Cell,Lung,Small Cell
 Lung NET,Lung,NET
 lung: adenocarcinoom,Lung,Adenocarcinoom
-mix of SCLC and NSCLC,Lung,Other
-"Non-small cell carcinoma NOS (mostly resembling lung carcinoma): working diagnosis ""lung carcinoma""",Lung,Non-Small Cell
-Hodgkin lymphoma,Lymphoid,Hodgkin lymphoma
 Lymphoma: other,Lymphoid,Other
-Non-Hodgkin lymphoma,Lymphoid,Non-Hodgkin lymphoma
-Thymoma and Thymic Carcinoma,Lymphoid,Thymic carcinoma
-"Mesothelioma, Malignant",Mesothelioma,
-pericarditis carcinomatosa,Mesothelioma,Pericarditis carcinomatosa
-adrenocortical carcinoma,Other,Adrenal
-Both bladder carcinoma and mesothelioma,Other,Double primary
-Double carcinoma: endometrium and ovarium,Other,Double primary
-Fechromocytoom,Other,Adrenal
+Melanoma,Skin,Melanoma
+meningeoom: anaplastic hemangiopericytoma gr 3,CNS,Meningeoma
+mix of SCLC and NSCLC,Lung,Other
+mixed hepatocellular-cholangio carcinoma,Liver,Other
+Mixed NET/not-NET located: major duodenal papilla,Small intestine,Other
 Morbus Kahler,Other,Myeloid: Morbus Kahler
+most likely high tractus digestive tumor,Small intestine,Other
 multipel myeloma,Other,Myeloid: Multiple Myeloma
-NET: lung or small intestine,Other,NET: other
+Nasal Cavity and Paranasal Sinus Cancer,Head and neck,Nasal cavity and paranasal sinuses
+NET colon ascendens,Colon/Rectum,NET
 NET unknown primary,Other,NET: unknown primary
 NET unknown primary location,Other,NET: unknown primary
+NET: lung or small intestine,Other,NET: lung or small intenstine
 Neuro endocrine carcinoma,Other,NET: unknown primary
-"Neuro endocrine carcinoma (NEC), primary unknown",Other,NET: unknown primary
-Neuro-endocrine carcinoma with unknown primary tumor,Other,NET: unknown primary
+Neuro endocrine tumor,Other,NET
 neuro-endocrin carcinoma of unknown primary,Other,NET: unknown primary
-Neuro endocrine tumor,Other,NET: other
-Neuro-endorine tumor,Other,NET: other
-neuroendocrine carcinoma,Other,NET: other
-Neuroendocrine tumor,Other,NET: other
-Non-small cell high grade neuroendocrine carcinoma,Other,NET: other
-Penile cancer,Other,Penile
-squamous cell carcinoma in the vagina,Other,Vagina
-Testicular cancer,Other,Testis
-thymic NET,Other,NET: other
-Thyroid Cancer,Other,Thyroid
-Vaginal cancer,Other,Vagina
-Ovarian cancer,Ovary,
-choledochuscarcinoma,Pancreas,Other
-high suspicion pancreatic cancer therfore pa and cpct biopt at the same day,Pancreas,
-Pancreatic cancer,Pancreas,Other
-Pancreatic NET,Pancreas,NET
-Prostate cancer,Prostate,
-atypische fibroxanthoom,Skin,Other
-Basal Cell Carcinoma,Skin,Basal cell carcinoma
-"First CT scan 24-05-2017 suspect clear cell RCC however, biopsy result 31-05-2017 = Melanoma",Skin,Melanoma
-hydradenocarcinoma,Skin,Sweat glands
-Melanoma,Skin,Melanoma
-Skin cancer,Skin,Other
-Squamous cell carcinoma of the skin,Skin,Skin squamous cell carcinoma
-Vulva cancer,Skin,Vulva
-Adenocarcinoma small intestine,Small intestine,Other
-duodenal carcinoma,Small intestine,Duodenum
-duodenum,Small intestine,Duodenum
-Mixed NET/not-NET located: major duodenal papilla,Small intestine,Other
-most likely high tractus digestive tumor,Small intestine,Other
-Small intestinal NET,Small intestine,NET
-Adenocarcinoma cardia,Stomach,Cardia
-gastric carcinoma,Stomach,Gastric Carcinoma
-gastrinoma in stomach,Stomach,Gastric
+Neuro-endocrine carcinoma with unknown primary tumor,Other,NET: unknown primary
+Neuro-endorine tumor,Other,NET
+neuroendocrine carcinoma,Other,NET
+Neuroendocrine tumor,Other,NET
+Non-Hodgkin lymphoma,Lymphoid,Non-Hodgkin lymphoma
+"Non-small cell carcinoma NOS (mostly resembling lung carcinoma): working diagnosis ""lung carcinoma""",Lung,Non-Small Cell
+Non-small cell high grade neuroendocrine carcinoma,Other,NET: non small cell
 Non-small cell NHL stomach stage I E,Stomach,Other
+Oesophagal cancer (at transition from oesophagus to stomach),Esophagus,
+Oesophago-gastric cancer (junctional),Esophagus,Other
+Oesophagus/Cardiacarcinoma,Esophagus,Other
+Osteosarcoma (Bone Cancer),Bone/Soft tissue,Osteosarcoma
+Ovarian cancer,Ovary,
+Pancreatic cancer,Pancreas,
+Pancreatic NET,Pancreas,NET
+Penile cancer,Other,Penile
+pericarditis carcinomatosa,Mesothelioma,Pericarditis carcinomatosa
+Primary tumor of uknown origin,CUP,
+primary tumor unknown,CUP,
+Prostate cancer,Prostate,
+Renal Cell Cancer,Kidney,Renal Cell
+Rhabdomyosarcoma,Bone/Soft tissue,Rhabdomyosarcoma
+rhabodomyosarcoma,Bone/Soft tissue,Rhabdomyosarcoma
+Salivary Gland Cancer,Head and neck,Salivary Gland
+salivay duct carcinoma,Head and neck,Salivary Duct
+Sarcoma: other,Bone/Soft tissue,Sarcoma
+Sarcoma: Soft Tissue,Bone/Soft tissue,Sarcoma
+sarcomatoid or sarcoma (postradiation),Bone/Soft tissue,Sarcoma
+sarcomoatoid carcinoom,Bone/Soft tissue,Sarcoma
+Sigmoid,Colon/Rectum,Sigmoid
+Skin cancer,Skin,
+Small intestinal NET,Small intestine,NET
+solitair fibreuze tumor in brain,CNS,Other
+Squamous cell carcinoma (skin cancer),Skin,Skin squamous cell carcinoma
+squamous cell carcinoma in the vagina,Other,Vagina
+Squamous cell carcinoma of the skin,Skin,Skin squamous cell carcinoma
+Squamous cell carcinoma of the tongue,Head and neck,Tongue
 Stomach (Gastric) Cancer,Stomach,Gastric
+Stomach cancer,Stomach,
 Stomach cancer ( Gastric carcer),Stomach,Gastric
-Stomach cancer,Stomach,Other
-Bladder cancer,Urinary tract,Bladder
+Submandular gland,Head and neck,Salivary Gland
+Suspicious desmoid tumors due to a gardner syndrome,Bone/Soft tissue,Desmoid
+Testicular cancer,Other,Testis
+thymic NET,Other,Thymic NET
+Thymoma and Thymic Carcinoma,Lymphoid,Thymic carcinoma
+Thyroid Cancer,Other,Thyroid
+Tongue carcinoma lateral side,Head and neck,Tongue
+tonsilcarcinoma,Head and neck,Lip and Oral Cavity
+Tuba carcinoma,Uterus,Tuba
+tubulovilleus adenoom,Colon/Rectum,Other
+tumor in kidney,Kidney,
+uknown,CUP,
+Undifferentiated sarcoma,Bone/Soft tissue,Sarcoma
+unknow primary tumor,CUP,
+unknown,CUP,
+Unknown primary,CUP,
+unknown Primary tumor,CUP,
+unknown primary tumor,CUP,
+unknown primary tumor in tractus genitalis,CUP,
+Urethral Cancer,Urinary tract,Urethra
 Urothelial cell cancer of the bladder,Urinary tract,Bladder
 Urothelial cell cancer of the pyelum,Urinary tract,Pyelum
 Urothelial cell cancer of the urethra,Urinary tract,Urethra
-"Urothelial cell cancer, but the origin is unknown",Urinary tract,Other
 Urothelial cell cancer: other,Urinary tract,Other
-carcinosarcoom endometrium,Uterus,Endometrial
-carcinosarcoom of the uterus,Uterus,Other
-Cervical cancer,Uterus,Cervical
-Endometrial cancer,Uterus,Endometrial
-extra ovarial sereus adenocarcinoom,Uterus,Other
-"gynaecological, hooggradig, slecht gedifferentieeerd carconoom, bij PA geen duidelijke aanwijzingen voor carcinosarcoom/sarcoom primaire origine probably endometrium",Uterus,Other
-Tuba carcinoma,Uterus,Tuba
+Vaginal cancer,Other,Vagina
+Vulva cancer,Skin,Vulva
