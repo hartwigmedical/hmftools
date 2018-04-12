@@ -40,7 +40,8 @@ Eligard,Hormonal therapy,eligard (androgen deprivation therapy)
 Emtansine,remove,
 Enzalutamide,Hormonal therapy,"Apalutamide,Enzatulamide, Enzulatimide"
 Epirubicine,Chemotherapy,"Epirubicin,epiribucine"
-Epacadostat,Targeted therapy,epacadostat/placebo
+Epacadostat,Targeted therapy,
+epacadostat/placebo,remove,
 Eribuline,Chemotherapy,Eribulin
 Erlotinib,Targeted therapy,
 Etoposide,Chemotherapy,
@@ -48,9 +49,8 @@ Everolimus,Targeted therapy,
 Exemestane,Hormonal therapy,"Aromasin,Exemestaan"
 Fluorouracil,Chemotherapy,"Tegafur, Teysuno, Capecitabine, 5-FU, 5-Fluorouracil, Fluorouracil bolus, Xeloda, 5-floururacil, 5-fluoracil, 5-fluoro-uracil, 5-fluouracil,capacetabine,flouroucil,Flourouracil,fluor0uracil,Fluoracil,Fluoroucil"
 fluoropyrimidine,Chemotherapy,"fluorpyrimidine,Fluoropyrimidine"
-Folinezuur,remove,
 Folfirinox,Combi therapy,"Folfiri,Folfox"
-Folinic acid,Chemotherapy,"folic acid, Folin acid, folinaccid,Foline acid,Foline zuur,folineacid,follincaccid"
+Folinic acid,Chemotherapy,"folic acid, Folin acid, folinaccid,Foline acid,Foline zuur,folineacid,follincaccid,Folinezuur"
 Fulvestrant,Hormonal therapy,Faslodex
 Gefitinib,Targeted therapy,Gefinitib
 Gemcitabine,Chemotherapy,Gemicitabine
@@ -70,9 +70,7 @@ Letrozole,Hormonal therapy,"Femara,Letrzozol,lezetrol,Lezotrol"
 Leucovorin,remove,
 Leuproreline,Androgen/estrogen deprivation therapy,"Leuproleine,leuprolin,Leuproline"
 Lomustine,Chemotherapy,
-Lu-177-DOTATAAT,Radio therapy,
 Lu-177-PSMA,Radio therapy,"Lutetium-177-PSMA, Lu-177 PSMA radioligand therapie, PSMA-Lu"
-Lu-177-octreotaat,Radio therapy,
 "Lutetium 177",Radio therapy,
 Lucrin,Hormonal therapy,
 Lutetium 177-HA (PRRT),Radio therapy,
@@ -157,9 +155,8 @@ Vinorelbine,Chemotherapy,"Navelbine,vinorlebin"
 Vismodegib,Targeted therapy,
 VX-803,Targeted therapy,
 Zoladex,Hormonal therapy,
-zolendronic acid,remove,
 om de dag 15 en 200 mg,remove,
-Lutetium-177 DOTATATE,Radiotherapy,"2 lutetium dotatate,Lu-177 octreotate,lu-177-dotatate,Lu-177-octreotate,Lutetium,Lutetium 1770octreotaat,Lutetium-177-Octreotaat,PRRT Lu-177"
+Lutetium-177 DOTATATE,Radiotherapy,"2 lutetium dotatate,Lu-177 octreotate,lu-177-dotatate,Lu-177-octreotate,Lutetium,Lutetium 1770octreotaat,Lutetium-177-Octreotaat,PRRT Lu-177, Lu-177-DOTATAAT, Lu-177-octreotaat"
 iodine-131,Radiotherapy,"5050 MBq Iodine 131,5579 MBq Iodine 131"
 AC,Chemotherapy,"AC, AC cure,AC+"
 ADT,Androgen/estrogen deprivation therapy,androgen deprivation therapy
@@ -193,7 +190,11 @@ CHR-3996 trial,Experimental therapy (unkown compound),
 CMF,Chemotherapy,
 COPP,Chemotherapy,
 cytarabine,Chemotherapy,cyturabine
-dendritic cell therapy,Experimental,"DC therapy, DCVAC/PCa,DCVAC/PCa of placebo,DCVAC/placebo,Dendritic cell,dendritic cell therapy,dendritic cell vaccination,dendritic cell vacination,dendritic cell vacine,dendritic cells or placebo (study),Dendritic celtherapy,dendtritic celactivation or placebo"
+dendritic cell therapy,Experimental,"DC therapy, DCVAC/PCa,Dendritic cell,dendritic cell therapy,dendritic cell vaccination,dendritic cell vacination,dendritic cell vacine,Dendritic celtherapy"
+DCVAC/PCa of placebo,remove,
+dendtritic celactivation or placebo,remove,
+dendritic cells or placebo (study),remove,
+DCVAC/placebo,remove,
 DHAP-VIM-DHAP,Chemotherapy,
 DMOT4039A,Experimental therapy (unkown compound),
 Durvalumab,Immunotherapy,Durvalumab
@@ -208,7 +209,7 @@ FEC-D,Chemotherapy,
 Flutamide,Androgen/estrogen deprivation therapy,
 FU/LV,Chemotherapy,
 68Ga-DOTATATE,Radiotherapy,ga-68 dotatate
-GDC/placebo,Experimental therapy (unkown compound),
+GDC/placebo,remove,
 GM CSF,remove,
 HIPEC,Chemotherapy,
 HIPEC-COLOPEC,Chemotherapy,
@@ -216,11 +217,11 @@ hormonal therapy,hormonal therapy,"HTx,hormone therapy"
 HPV vacin,Other,
 INC 280,Experimental therapy (unkown compound),
 ketoconazol,remove,
-LEE011/Placebo,Experimental therapy (unkown compound),
+LEE011/Placebo,remove,
 Lenalidomide,Chemotherapy,
 LGX818,Experimental therapy (unkown compound),
 LHRH agonist,Androgen/estrogen deprivation therapy,"LHRH,LHRH -antagonist,LHRH analoog,LHRH antagonist,LHRH unknown,LHRH-agonist,LHRH-analogue,LHRH-analoog,unspecified LHRH?"
-Lucanix/placebo,Experimental therapy (unkown compound),
+Lucanix/placebo,remove,
 medroxyprogesterone acetate,Androgen/estrogen deprivation therapy,"Medroxyprogesterion,medroxyprogesteron"
 Megestrol Acetate,Hormonal therapy,"Megace,megastrolacetaat,Megesterolacetaat"
 Melphalan,Chemotherapy,melfalan
@@ -244,10 +245,10 @@ PF-04518600,Experimental therapy (unkown compound),
 Pegylated liposomal doxorubicin,Chemotherapy,PLD
 Prednisolone,Other,"prednisolon,procarbazine"
 Sipuleucel-T,Immunotherapy,Provenge
-R-CHOP,Combi,R-CHOP
+R-CHOP,Combi,
 Rhenium 188-HEDP,Radiotherapy,Rhenium
 rilimogene,Experimental,
-S1,Chemotherapy,S1
+S1,Chemotherapy,
 Samarium-153,Radiotherapy,
 Selumetinib,Targeted therapy,
 Hyperthermia,Hyperthermia,Synergo
@@ -265,5 +266,5 @@ Unknown adjuvant chemotherapy,Chemotherapy,
 unknown chemotherapy for breast tumor,Chemotherapy,
 Vosaroxin,Chemotherapy,
 Xelox B,Combi,
-Zoledronic Acid,Bisphosphonates,zometa
+Zoledronic Acid,Bisphosphonates,"zometa,zolendronic acid"
 ABVD,Chemotherapy,
