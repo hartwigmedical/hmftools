@@ -220,7 +220,7 @@ public class StructuralVariantAnalyzer {
             for (final String threeGene : three.parent().synonyms()) {
                 if (fusionsModel.exactMatch(fiveGene, threeGene) || fusionsModel.intergenicPromiscuousMatch(fiveGene, threeGene) || (
                         fusionsModel.intragenicPromiscuousMatch(fiveGene, threeGene)
-                                && three.exonUpstream() - five.exonUpstream() > EXON_THRESHOLD)) {
+                                && three.exonDownstream() - five.exonUpstream() > EXON_THRESHOLD)) {
                     return true;
                 }
             }
