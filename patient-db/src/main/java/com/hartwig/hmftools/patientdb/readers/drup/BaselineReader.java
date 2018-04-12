@@ -32,7 +32,7 @@ class BaselineReader {
     private static final String FIELD_HOSPITAL = "FLD.REG.INST";
     private static final String FIELD_PRIMARY_TUMOR_LOCATION = "FLD.BAS.BASTTYP";
     private static final String FIELD_PRIMARY_TUMOR_LOCATION_OTHER = "FLD.BAS.BASTTOSP";
-    private static final String FIELD_GENDER = "FLD.CSF.GENDER";
+    private static final String FIELD_GENDER = "FLD.CSF.GEN";
     private static final String FIELD_BIRTH_YEAR = "FLD.CSF.YOB";
     private static final String FIELD_DEATH_DATE = "FLD.EOT.DEATHDTC";
 
