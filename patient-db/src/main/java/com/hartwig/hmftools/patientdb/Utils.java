@@ -34,16 +34,6 @@ public final class Utils {
     }
 
     @NotNull
-    private static String getPatientId(@NotNull final String runName) {
-        final String[] names = runName.split("_");
-        if (names.length < 5) {
-            LOGGER.error("run name {} had less than 5 parts after splitting on _", runName);
-            return Strings.EMPTY;
-        }
-        return names[4];
-    }
-
-    @NotNull
     public static String capitalize(@NotNull final String string) {
         if (string.isEmpty()) {
             return string;
@@ -53,10 +43,20 @@ public final class Utils {
     }
 
     @NotNull
-    static Set<String> sequencedPatientIds(@NotNull final List<RunContext> runContexts) {
+    static Set<String> sequencedPatientIdentifiers(@NotNull final List<RunContext> runContexts) {
         return runContexts.stream()
-                .map(runContext -> getPatientId(runContext.setName()))
-                .filter(patientId -> !patientId.isEmpty())
+                .map(runContext -> getPatientIdentifier(runContext.setName()))
+                .filter(patientIdentifier -> !patientIdentifier.isEmpty())
                 .collect(Collectors.toSet());
+    }
+
+    @NotNull
+    private static String getPatientIdentifier(@NotNull final String runName) {
+        final String[] names = runName.split("_");
+        if (names.length < 5) {
+            LOGGER.error("run name {} had less than 5 parts after splitting on _", runName);
+            return Strings.EMPTY;
+        }
+        return names[4];
     }
 }

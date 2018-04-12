@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -118,16 +117,17 @@ public final class LoadClinicalData {
         for (final String patientIdentifier : sequencedPatientIdentifiers) {
             Patient patient = patients.get(patientIdentifier);
             if (patient == null) {
-                if (patientIdentifier.startsWith("CPCT")) {
-                    LOGGER.error(String.format("Could not find patient with id %s in CPCT eCRF file!", patientIdentifier));
-                }
+                LOGGER.warn(String.format("Could not load patient with id %s!", patientIdentifier));
                 dbAccess.writeSampleClinicalData(patientIdentifier, samplesPerPatient.get(patientIdentifier));
             } else {
                 dbAccess.writeFullClinicalData(patient);
-                List<ValidationFinding> findings = PatientValidator.validatePatient(patient);
+                // KODU: Patient validation currently depends on CPCT datamodel internally so want to filter out DRUP.
+                if (patient.patientIdentifier().toLowerCase().startsWith("cpct")) {
+                    List<ValidationFinding> findings = PatientValidator.validatePatient(patient);
 
-                dbAccess.writeValidationFindings(findings);
-                dbAccess.writeValidationFindings(patient.matchFindings());
+                    dbAccess.writeValidationFindings(findings);
+                    dbAccess.writeValidationFindings(patient.matchFindings());
+                }
             }
         }
         dbAccess.writeValidationFindings(CurationValidator.validateTreatmentCurator(treatmentCurator));
@@ -141,8 +141,6 @@ public final class LoadClinicalData {
             @NotNull EcrfModels ecrfModels, @NotNull TumorLocationCurator tumorLocationCurator, @NotNull TreatmentCurator treatmentCurator,
             @NotNull BiopsySiteCurator biopsySiteCurator) {
         final EcrfModel cpctEcrfModel = ecrfModels.cpctModel();
-        final EcrfModel drupEcrfModel = ecrfModels.drupModel();
-
         LOGGER.info(String.format("Interpreting and curating data for %s CPCT patients.", cpctEcrfModel.patientCount()));
         PatientReader cpctPatientReader = new CpctPatientReader(tumorLocationCurator,
                 CpctUtil.extractHospitalMap(cpctEcrfModel),
@@ -152,6 +150,7 @@ public final class LoadClinicalData {
         Map<String, Patient> cpctPatients = readEcrfPatients(cpctPatientReader, cpctEcrfModel.patients(), samplesPerPatient);
         LOGGER.info(String.format("Finished curation of %s CPCT patients.", cpctPatients.size()));
 
+        final EcrfModel drupEcrfModel = ecrfModels.drupModel();
         LOGGER.info(String.format("Interpreting and curating data for %s DRUP patients.", drupEcrfModel.patientCount()));
         PatientReader drupPatientReader = new DrupPatientReader(tumorLocationCurator, biopsySiteCurator);
 
@@ -179,13 +178,12 @@ public final class LoadClinicalData {
     private static void writeRawEcrf(@NotNull DatabaseAccess dbWriter, @NotNull Set<String> sequencedPatients,
             @NotNull EcrfModels ecrfModels) {
         final EcrfModel cpctEcrfModel = ecrfModels.cpctModel();
-        final EcrfModel drupEcrfModel = ecrfModels.drupModel();
-
         LOGGER.info(String.format("Writing raw cpct ecrf data for %s patients", cpctEcrfModel.patientCount()));
         dbWriter.clearCpctEcrf();
         dbWriter.writeCpctEcrf(cpctEcrfModel, sequencedPatients);
         LOGGER.info(String.format("Finished writing raw cpct ecrf data for %s patients.", cpctEcrfModel.patientCount()));
 
+        final EcrfModel drupEcrfModel = ecrfModels.drupModel();
         LOGGER.info(String.format("Writing raw drup ecrf data for %s patients", drupEcrfModel.patientCount()));
         dbWriter.clearDrupEcrf();
         dbWriter.writeDrupEcrf(drupEcrfModel, sequencedPatients);
@@ -241,10 +239,7 @@ public final class LoadClinicalData {
     private static Map<String, List<SampleData>> readSamplesPerPatient(@NotNull Lims lims, @NotNull List<RunContext> runContexts) {
         LimsSampleReader sampleReader = new LimsSampleReader(lims);
 
-        final Set<String> sequencedPatientIdentifiers = Utils.sequencedPatientIds(runContexts)
-                .stream()
-                .filter(identifier -> identifier.startsWith("CPCT") || identifier.startsWith("DRUP"))
-                .collect(Collectors.toSet());
+        final Set<String> sequencedPatientIdentifiers = Utils.sequencedPatientIdentifiers(runContexts);
 
         Map<String, List<SampleData>> samplesPerPatient = Maps.newHashMap();
         for (String patientIdentifier : sequencedPatientIdentifiers) {
