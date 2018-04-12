@@ -27,7 +27,7 @@ import com.hartwig.hmftools.patientdb.data.TumorMarkerData;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class PatientReaderTest {
+public class CpctPatientReaderTest {
 
     private static final String TEST_ECRF = Resources.getResource("test_ecrf.xml").getPath();
 
@@ -38,7 +38,7 @@ public class PatientReaderTest {
         final EcrfModel model = loadTestEcrf();
         assertEquals(1, model.patientCount());
 
-        final Map<Integer, String> hospitals = Util.extractHospitalMap(model);
+        final Map<Integer, String> hospitals = CpctUtil.extractHospitalMap(model);
         final BaselineReader baselineReader = new BaselineReader(TestCuratorFactory.tumorLocationCurator(), hospitals);
 
         final EcrfPatient cpctPatient = model.patients().iterator().next();

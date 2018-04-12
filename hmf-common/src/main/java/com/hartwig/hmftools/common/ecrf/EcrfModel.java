@@ -36,7 +36,7 @@ public class EcrfModel {
     private final Iterable<EcrfPatient> patients;
 
     @NotNull
-    public static EcrfModel loadFromXML(@NotNull final String ecrfXmlPath) throws XMLStreamException, FileNotFoundException {
+    public static EcrfModel loadFromXMLNoFormStates(@NotNull final String ecrfXmlPath) throws XMLStreamException, FileNotFoundException {
         return loadFromXMLWithFormStates(ecrfXmlPath, new ImmutableFormStatusModel(Maps.newHashMap()));
     }
 

@@ -28,9 +28,11 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.readers.LimsSampleReader;
+import com.hartwig.hmftools.patientdb.readers.PatientReader;
 import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
-import com.hartwig.hmftools.patientdb.readers.cpct.PatientReader;
-import com.hartwig.hmftools.patientdb.readers.cpct.Util;
+import com.hartwig.hmftools.patientdb.readers.cpct.CpctPatientReader;
+import com.hartwig.hmftools.patientdb.readers.cpct.CpctUtil;
+import com.hartwig.hmftools.patientdb.readers.drup.DrupPatientReader;
 import com.hartwig.hmftools.patientdb.validators.CurationValidator;
 import com.hartwig.hmftools.patientdb.validators.PatientValidator;
 
@@ -74,13 +76,19 @@ public final class LoadClinicalData {
         if (checkInputs(cmd, options)) {
             LOGGER.info("Running clinical data import.");
 
-            final String jdbcUrl = "jdbc:" + cmd.getOptionValue(DB_URL);
-            final DatabaseAccess dbWriter = new DatabaseAccess(cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASS), jdbcUrl);
+            final DatabaseAccess dbWriter = createDatabaseAccess(cmd);
 
             final String runsFolderPath = cmd.getOptionValue(RUNS_DIR);
             LOGGER.info(String.format("Loading run contexts from %s.", runsFolderPath));
             final List<RunContext> runContexts = RunsFolderReader.getRunContexts(new File(runsFolderPath));
             LOGGER.info(String.format("Finished loading %s run contexts.", runContexts.size()));
+
+            final String limsJsonPath = cmd.getOptionValue(LIMS_JSON);
+            final String preLIMSArrivalDatesCsv = cmd.getOptionValue(PRE_LIMS_ARRIVAL_DATES_CSV);
+            LOGGER.info(String.format("Loading samples from LIMS on %s.", limsJsonPath));
+            Lims lims = LimsFactory.fromLimsJsonWithPreLIMSArrivalDates(limsJsonPath, preLIMSArrivalDatesCsv);
+            Map<String, List<SampleData>> samplesPerPatient = readSamplesPerPatient(lims, runContexts);
+            LOGGER.info(String.format("Loaded samples for %s patients from LIMS", samplesPerPatient.size()));
 
             final String cpctEcrfFilePath = cmd.getOptionValue(CPCT_ECRF_FILE);
             final String cpctFormStatusCsv = cmd.getOptionValue(CPCT_FORM_STATUS_CSV);
@@ -91,15 +99,8 @@ public final class LoadClinicalData {
 
             final String drupEcrfFilePath = cmd.getOptionValue(DRUP_ECRF_FILE);
             LOGGER.info(String.format("Loading DRUP eCRF from %s.", drupEcrfFilePath));
-            final EcrfModel drupEcrfModel = EcrfModel.loadFromXML(drupEcrfFilePath);
+            final EcrfModel drupEcrfModel = EcrfModel.loadFromXMLNoFormStates(drupEcrfFilePath);
             LOGGER.info(String.format("Finished loading DRUP eCRF. Read %s patients.", drupEcrfModel.patientCount()));
-
-            final String limsJsonPath = cmd.getOptionValue(LIMS_JSON);
-            final String preLIMSArrivalDatesCsv = cmd.getOptionValue(PRE_LIMS_ARRIVAL_DATES_CSV);
-            LOGGER.info(String.format("Loading samples from LIMS on %s.", limsJsonPath));
-            Lims lims = LimsFactory.fromLimsJsonWithPreLIMSArrivalDates(limsJsonPath, preLIMSArrivalDatesCsv);
-            Map<String, List<SampleData>> samplesPerPatient = readSamplesPerPatient(lims, runContexts);
-            LOGGER.info(String.format("Loaded samples for %s patients from LIMS", samplesPerPatient.size()));
 
             if (cmd.hasOption(DO_LOAD_RAW_ECRF)) {
                 writeRawEcrf(dbWriter, cpctEcrfModel, drupEcrfModel, samplesPerPatient.keySet());
@@ -107,8 +108,10 @@ public final class LoadClinicalData {
 
             writeClinicalData(dbWriter,
                     cpctEcrfModel,
+                    drupEcrfModel,
                     samplesPerPatient,
-                    cmd.getOptionValue(CSV_OUT_DIR), Optional.ofNullable(cmd.getOptionValue(TUMOR_LOCATION_SYMLINK)),
+                    cmd.getOptionValue(CSV_OUT_DIR),
+                    Optional.ofNullable(cmd.getOptionValue(TUMOR_LOCATION_SYMLINK)),
                     Optional.ofNullable(cmd.getOptionValue(PORTAL_DATA_LINK)));
         } else {
             final HelpFormatter formatter = new HelpFormatter();
@@ -145,25 +148,27 @@ public final class LoadClinicalData {
     }
 
     private static void writeClinicalData(@NotNull final DatabaseAccess dbAccess, @NotNull EcrfModel cpctEcrfModel,
-            @NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull String csvOutputDir,
+            @NotNull EcrfModel drupEcrfModel, @NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull String csvOutputDir,
             @NotNull Optional<String> tumorLocationSymlink, @NotNull Optional<String> portalDataLink) throws IOException {
-        LOGGER.info(String.format("Interpreting and curating data for %s CPCT patients.", cpctEcrfModel.patientCount()));
         TumorLocationCurator tumorLocationCurator = TumorLocationCurator.fromProductionResource();
         BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource();
         TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource();
-        PatientReader patientReader =
-                new PatientReader(tumorLocationCurator, Util.extractHospitalMap(cpctEcrfModel), biopsySiteCurator, treatmentCurator);
 
-        final Map<String, Patient> readPatients = readEcrfPatients(patientReader, cpctEcrfModel.patients(), samplesPerPatient);
-        LOGGER.info(String.format("Finished curation of %s CPCT patients.", readPatients.size()));
-        DumpClinicalData.writeClinicalDumps(csvOutputDir, readPatients.values(), tumorLocationSymlink, portalDataLink);
+        Map<String, Patient> patients = loadAndInterpretAllPatients(samplesPerPatient,
+                cpctEcrfModel,
+                drupEcrfModel,
+                tumorLocationCurator,
+                treatmentCurator,
+                biopsySiteCurator);
+
+        DumpClinicalData.writeClinicalDumps(csvOutputDir, patients.values(), tumorLocationSymlink, portalDataLink);
 
         LOGGER.info("Clearing interpreted clinical tables in database.");
         dbAccess.clearClinicalTables();
 
         LOGGER.info(String.format("Writing clinical data for %s sequenced patients.", samplesPerPatient.size()));
         for (final String patientIdentifier : samplesPerPatient.keySet()) {
-            final Patient patient = readPatients.get(patientIdentifier);
+            final Patient patient = patients.get(patientIdentifier);
             if (patient == null) {
                 if (patientIdentifier.startsWith("CPCT")) {
                     LOGGER.error(String.format("Could not find patient with id %s in CPCT eCRF file!", patientIdentifier));
@@ -181,6 +186,32 @@ public final class LoadClinicalData {
         dbAccess.writeValidationFindings(CurationValidator.validateTumorLocationCurator(tumorLocationCurator));
 
         LOGGER.info("Finished!");
+    }
+
+    @NotNull
+    private static Map<String, Patient> loadAndInterpretAllPatients(@NotNull Map<String, List<SampleData>> samplesPerPatient,
+            @NotNull EcrfModel cpctEcrfModel, @NotNull EcrfModel drupEcrfModel, @NotNull TumorLocationCurator tumorLocationCurator,
+            @NotNull TreatmentCurator treatmentCurator, @NotNull BiopsySiteCurator biopsySiteCurator) throws IOException {
+        LOGGER.info(String.format("Interpreting and curating data for %s CPCT patients.", cpctEcrfModel.patientCount()));
+        PatientReader cpctPatientReader = new CpctPatientReader(tumorLocationCurator,
+                CpctUtil.extractHospitalMap(cpctEcrfModel),
+                biopsySiteCurator,
+                treatmentCurator);
+
+        Map<String, Patient> cpctPatients = readEcrfPatients(cpctPatientReader, cpctEcrfModel.patients(), samplesPerPatient);
+        LOGGER.info(String.format("Finished curation of %s CPCT patients.", cpctPatients.size()));
+
+        LOGGER.info(String.format("Interpreting and curating data for %s DRUP patients.", drupEcrfModel.patientCount()));
+        PatientReader drupPatientReader = new DrupPatientReader();
+
+        Map<String, Patient> drupPatients = readEcrfPatients(drupPatientReader, drupEcrfModel.patients(), samplesPerPatient);
+        LOGGER.info(String.format("Finished curation of %s DRUP patients.", drupPatients.size()));
+
+        Map<String, Patient> mergedPatients = Maps.newHashMap();
+        mergedPatients.putAll(cpctPatients);
+        // KODU: Drup patient reader now returns null for everything.
+        // mergedPatients.putAll(drupPatients);
+        return mergedPatients;
     }
 
     @NotNull
@@ -237,6 +268,12 @@ public final class LoadClinicalData {
             }
         });
         return sampleIdsForPatient;
+    }
+
+    @NotNull
+    private static DatabaseAccess createDatabaseAccess(@NotNull CommandLine cmd) throws SQLException {
+        final String jdbcUrl = "jdbc:" + cmd.getOptionValue(DB_URL);
+        return new DatabaseAccess(cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASS), jdbcUrl);
     }
 
     @NotNull

@@ -53,7 +53,7 @@ public final class LoadDrupEcrfData {
 
                 dbWriter.clearDrupEcrf();
                 LOGGER.info("Importing DRUP ecrf data from: {}", ecrfFile);
-                final EcrfModel model = EcrfModel.loadFromXML(ecrfFile);
+                final EcrfModel model = EcrfModel.loadFromXMLNoFormStates(ecrfFile);
 
                 final List<RunContext> runContexts = RunsFolderReader.getRunContexts(runsDirectory);
                 final Set<String> sequencedPatients = Utils.sequencedPatientIds(runContexts);

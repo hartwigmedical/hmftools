@@ -22,10 +22,11 @@ import com.hartwig.hmftools.patientdb.matchers.BiopsyMatcher;
 import com.hartwig.hmftools.patientdb.matchers.MatchResult;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentMatcher;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
+import com.hartwig.hmftools.patientdb.readers.PatientReader;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PatientReader {
+public class CpctPatientReader implements PatientReader {
     @NotNull
     private final BaselineReader baselineReader;
     @NotNull
@@ -35,7 +36,7 @@ public class PatientReader {
     @NotNull
     private final BiopsyTreatmentReader biopsyTreatmentReader;
 
-    public PatientReader(@NotNull TumorLocationCurator tumorLocationCurator, @NotNull Map<Integer, String> hospitals,
+    public CpctPatientReader(@NotNull TumorLocationCurator tumorLocationCurator, @NotNull Map<Integer, String> hospitals,
             @NotNull BiopsySiteCurator biopsySiteCurator, @NotNull TreatmentCurator treatmentCurator) {
         this.baselineReader = new BaselineReader(tumorLocationCurator, hospitals);
         this.preTreatmentReader = new PreTreatmentReader(treatmentCurator);
@@ -44,6 +45,7 @@ public class PatientReader {
     }
 
     @NotNull
+    @Override
     public Patient read(@NotNull final EcrfPatient ecrfPatient, @NotNull final List<SampleData> sequencedSamples) throws IOException {
         final BaselineData baselineData = baselineReader.read(ecrfPatient);
         final PreTreatmentData preTreatmentData = preTreatmentReader.read(ecrfPatient);

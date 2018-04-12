@@ -8,12 +8,12 @@ import com.hartwig.hmftools.common.ecrf.EcrfModel;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class Util {
+public final class CpctUtil {
 
     private static final String FIELD_HOSPITAL1 = "FLD.ELIGIBILITY.HOSPITAL";
     private static final String FIELD_HOSPITAL2 = "FLD.SELCRIT.NHOSPITAL";
 
-    private Util() {
+    private CpctUtil() {
     }
 
     @NotNull
