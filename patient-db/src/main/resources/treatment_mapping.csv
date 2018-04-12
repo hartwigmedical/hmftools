@@ -34,12 +34,12 @@ Dactinomycin,Chemotherapy,Dactinomycine
 Degarelix,Androgen/estrogen deprivation therapy,Firmagon
 Denosumab,remove,
 Dexamethason,Hormonal therapy,
-Docetaxel,Chemotherapy,dcoetaxel
-Doxorubicine,Chemotherapy,"Doxorubicine (Adriamycine), Doxurubicine, Adriamycine, hydrodoxorubicin, Adriamyne, Adryamicine,doxoburicine,Doxorubine,Myocet"
+Docetaxel,Chemotherapy,"dcoetaxel,Docetaxel."
+Doxorubicine,Chemotherapy,"Doxorubicine (Adriamycine), Doxurubicine, Adriamycine, hydrodoxorubicin, Adriamyne, Adryamicine,doxoburicine,Doxorubine,Myocet,Doxorubicin"
 Eligard,Hormonal therapy,eligard (androgen deprivation therapy)
 Emtansine,remove,
 Enzalutamide,Hormonal therapy,"Apalutamide,Enzatulamide, Enzulatimide"
-Epirubicine,Chemotherapy,Epirubicin
+Epirubicine,Chemotherapy,"Epirubicin,epiribucine"
 Epacadostat,Targeted therapy,epacadostat/placebo
 Eribuline,Chemotherapy,Eribulin
 Erlotinib,Targeted therapy,
@@ -52,7 +52,7 @@ Folinezuur,remove,
 Folfirinox,Combi therapy,"Folfiri,Folfox"
 Folinic acid,Chemotherapy,"folic acid, Folin acid, folinaccid,Foline acid,Foline zuur,folineacid,follincaccid"
 Fulvestrant,Hormonal therapy,Faslodex
-Gefitinib,Targeted therapy,
+Gefitinib,Targeted therapy,Gefinitib
 Gemcitabine,Chemotherapy,Gemicitabine
 Gimeracil,remove,
 Gosereline,Androgen/estrogen deprivation therapy,"goserlrine,Zodalex"
@@ -196,7 +196,7 @@ cytarabine,Chemotherapy,cyturabine
 dendritic cell therapy,Experimental,"DC therapy, DCVAC/PCa,DCVAC/PCa of placebo,DCVAC/placebo,Dendritic cell,dendritic cell therapy,dendritic cell vaccination,dendritic cell vacination,dendritic cell vacine,dendritic cells or placebo (study),Dendritic celtherapy,dendtritic celactivation or placebo"
 DHAP-VIM-DHAP,Chemotherapy,
 DMOT4039A,Experimental therapy (unkown compound),
-docetaxel,Chemotherapy,"dectaxel,Docatal,Doxatel,Taxotere"
+docetaxel,Chemotherapy,"dectaxel,Docatal,Doxatel,Taxotere,Docetaxel"
 Durvalumab,Immunotherapy,Durvalumab
 dustasteride,remove,
 Dutasteride,remove,
@@ -213,7 +213,7 @@ GDC/placebo,Experimental therapy (unkown compound),
 GM CSF,remove,
 HIPEC,Chemotherapy,
 HIPEC-COLOPEC,Chemotherapy,
-hormonal therapy,hormonal therapy,HTx
+hormonal therapy,hormonal therapy,"HTx,hormone therapy"
 HPV vacin,Other,
 INC 280,Experimental therapy (unkown compound),
 ketoconazol,remove,
