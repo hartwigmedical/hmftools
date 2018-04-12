@@ -15,7 +15,7 @@ CREATE TABLE baseline
     gender varchar(10),
     hospital varchar(255),
     birthYear int,
-    cancerType varchar(255),
+    primaryTumorLocation varchar(255),
     cancerSubtype varchar(255),
     deathDate DATE,
     hasSystemicPreTreatment varchar(3),

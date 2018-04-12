@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.center.CenterModel;
 import com.hartwig.hmftools.common.cosmic.genes.CosmicGeneModel;
 import com.hartwig.hmftools.common.cosmic.genes.CosmicGenes;
 import com.hartwig.hmftools.common.ecrf.doid.TumorLocationDoidMapping;
-import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
+import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneModel;
@@ -86,10 +86,10 @@ public final class PatientReporterTestUtil {
     @NotNull
     public static BaseReporterData testBaseReporterData() throws IOException {
         final String centerPath = Resources.getResource("center").getPath() + File.separator + "centers.csv";
-        final List<PatientCancerTypes> patientsCancerTypes = Lists.newArrayList();
+        final List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
         final Lims lims = LimsFactory.empty();
         final CenterModel centerModel = Center.readFromCSV(centerPath);
-        return ImmutableBaseReporterData.of(patientsCancerTypes, lims, centerModel, SIGNATURE_PATH);
+        return ImmutableBaseReporterData.of(patientTumorLocations, lims, centerModel, SIGNATURE_PATH);
     }
 
     @NotNull

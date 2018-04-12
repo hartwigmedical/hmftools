@@ -26,8 +26,6 @@ import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTreatment;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.LowerCaseFilter;
 import org.apache.lucene.analysis.TokenFilter;
@@ -62,7 +60,6 @@ import org.apache.lucene.store.RAMDirectory;
 import org.jetbrains.annotations.NotNull;
 
 public class TreatmentCurator implements CleanableCurator {
-    private static final Logger LOGGER = LogManager.getLogger(TreatmentCurator.class);
     private static final InputStream TREATMENT_MAPPING_RESOURCE = LoadClinicalData.class.getResourceAsStream("/treatment_mapping.csv");
 
     private static final String DRUG_TERMS_FIELD = "drugTerms";

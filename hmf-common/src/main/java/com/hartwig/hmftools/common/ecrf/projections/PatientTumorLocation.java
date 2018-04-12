@@ -20,10 +20,10 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class PatientCancerTypes {
+public abstract class PatientTumorLocation {
     private enum Header {
         patientIdentifier,
-        cancerType,
+        primaryTumorLocation,
         cancerSubtype
     }
 
@@ -31,32 +31,32 @@ public abstract class PatientCancerTypes {
     public abstract String patientIdentifier();
 
     @NotNull
-    public abstract String cancerType();
+    public abstract String primaryTumorLocation();
 
     @NotNull
     public abstract String cancerSubtype();
 
     @NotNull
     private List<String> csvRecord() {
-        return Lists.newArrayList(patientIdentifier(), cancerType(), cancerSubtype());
+        return Lists.newArrayList(patientIdentifier(), primaryTumorLocation(), cancerSubtype());
     }
 
-    public static void writeRecords(@NotNull final String outputPath, @NotNull final List<PatientCancerTypes> patientCancerTypes)
+    public static void writeRecords(@NotNull final String outputPath, @NotNull final List<PatientTumorLocation> patientTumorLocations)
             throws IOException {
         final CSVFormat format = CSVFormat.DEFAULT.withNullString("").withHeader(Header.class);
         final CSVPrinter printer = new CSVPrinter(new FileWriter(outputPath), format);
-        printer.printRecords(patientCancerTypes.stream().map(PatientCancerTypes::csvRecord).collect(Collectors.toList()));
+        printer.printRecords(patientTumorLocations.stream().map(PatientTumorLocation::csvRecord).collect(Collectors.toList()));
         printer.close();
     }
 
     @NotNull
-    public static List<PatientCancerTypes> readRecords(@NotNull final String filePath) throws IOException {
+    public static List<PatientTumorLocation> readRecords(@NotNull final String filePath) throws IOException {
         final CSVParser parser = CSVParser.parse(new File(filePath),
                 Charset.defaultCharset(),
                 CSVFormat.DEFAULT.withHeader(Header.class).withSkipHeaderRecord());
         return StreamSupport.stream(parser.spliterator(), false)
-                .map(record -> ImmutablePatientCancerTypes.of(record.get(Header.patientIdentifier),
-                        record.get(Header.cancerType),
+                .map(record -> ImmutablePatientTumorLocation.of(record.get(Header.patientIdentifier),
+                        record.get(Header.primaryTumorLocation),
                         record.get(Header.cancerSubtype)))
                 .collect(Collectors.toList());
     }

@@ -7,9 +7,9 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CuratedCancerType {
+public abstract class CuratedTumorLocation {
     @Nullable
-    public abstract String type();
+    public abstract String primaryTumorLocation();
 
     @Nullable
     public abstract String subType();

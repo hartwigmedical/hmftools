@@ -92,7 +92,7 @@ public final class PatientValidator {
     @VisibleForTesting
     static List<ValidationFinding> validateBaselineData(@NotNull String patientIdentifier, @NotNull BaselineData baselineData) {
         final List<ValidationFinding> findings = Lists.newArrayList();
-        if (baselineData.cancerType().searchTerm() == null) {
+        if (baselineData.curatedTumorLocation().searchTerm() == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientIdentifier,
                     fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER),
@@ -187,17 +187,12 @@ public final class PatientValidator {
                     FIELD_BIOPSY_DATE,
                     "biopsy date empty or in wrong format", biopsyData.formStatus()));
         }
-        if (biopsyData.site() == null) {
+        if (biopsyData.site() == null && biopsyData.location() == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientIdentifier,
-                    fields(FIELD_SITE, FIELD_SITE_OTHER),
-                    "biopsy site empty", biopsyData.formStatus()));
-        }
-        if (biopsyData.location() == null) {
-            findings.add(ValidationFinding.of(ECRF_LEVEL,
-                    patientIdentifier,
-                    fields(FIELD_LOCATION),
-                    "biopsy location empty", biopsyData.formStatus()));
+                    fields(FIELD_SITE, FIELD_SITE_OTHER, FIELD_LOCATION),
+                    "biopsy site and biopsy location are empty",
+                    biopsyData.formStatus()));
         }
         return findings;
     }
@@ -362,8 +357,8 @@ public final class PatientValidator {
     @VisibleForTesting
     static List<ValidationFinding> validateTumorLocationCuration(@NotNull String patientIdentifier, @NotNull BaselineData baselineData) {
         final List<ValidationFinding> findings = Lists.newArrayList();
-        final String searchTerm = baselineData.cancerType().searchTerm();
-        if (searchTerm != null && baselineData.cancerType().type() == null) {
+        final String searchTerm = baselineData.curatedTumorLocation().searchTerm();
+        if (searchTerm != null && baselineData.curatedTumorLocation().primaryTumorLocation() == null) {
             findings.add(ValidationFinding.of("tumorLocationCuration",
                     patientIdentifier,
                     fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER),

@@ -32,7 +32,7 @@ public abstract class PortalClinicalData {
         gender,
         birthYear,
         registrationDate,
-        cancerType,
+        primaryTumorLocation,
         biopsyType,
         hmfId,
         sampleHmfId
@@ -54,7 +54,7 @@ public abstract class PortalClinicalData {
     public abstract String registrationDate();
 
     @NotNull
-    public abstract String cancerType();
+    public abstract String primaryTumorLocation();
 
     @NotNull
     public abstract String biopsyType();
@@ -71,21 +71,19 @@ public abstract class PortalClinicalData {
                 sampleId(),
                 gender(),
                 birthYear(),
-                registrationDate(),
-                cancerType(), biopsyType(),
+                registrationDate(), primaryTumorLocation(), biopsyType(),
                 hmfId(),
                 sampleHmfId());
     }
 
     @NotNull
     public static PortalClinicalData of(@NotNull final String patientIdentifier, @Nullable final String gender,
-            @Nullable final Integer birthYear, @Nullable final LocalDate registrationDate, @Nullable final String cancerType) {
+            @Nullable final Integer birthYear, @Nullable final LocalDate registrationDate, @Nullable final String primaryTumorLocation) {
         return ImmutablePortalClinicalData.of(patientIdentifier,
                 "",
                 Strings.nullToEmpty(gender),
                 birthYear == null ? "" : birthYear.toString(),
-                registrationDate == null ? "" : registrationDate.format(FORMATTER),
-                Strings.nullToEmpty(cancerType),
+                registrationDate == null ? "" : registrationDate.format(FORMATTER), Strings.nullToEmpty(primaryTumorLocation),
                 "",
                 "",
                 "");
@@ -94,35 +92,35 @@ public abstract class PortalClinicalData {
     @NotNull
     public static PortalClinicalData of(@NotNull final String patientIdentifier, @Nullable final String sampleId,
             @Nullable final String gender, @Nullable final Integer birthYear, @Nullable final LocalDate registrationDate,
-            @Nullable final String cancerType, @NotNull final String biopsyType) {
+            @Nullable final String primaryTumorLocation, @NotNull final String biopsyType) {
         return ImmutablePortalClinicalData.of(patientIdentifier,
                 Strings.nullToEmpty(sampleId),
                 Strings.nullToEmpty(gender),
                 birthYear == null ? "" : birthYear.toString(),
-                registrationDate == null ? "" : registrationDate.format(FORMATTER),
-                Strings.nullToEmpty(cancerType), biopsyType,
+                registrationDate == null ? "" : registrationDate.format(FORMATTER), Strings.nullToEmpty(primaryTumorLocation), biopsyType,
                 "",
                 "");
     }
 
-    public static void writeRecords(@NotNull final String outputPath, @NotNull final List<PortalClinicalData> patientCancerTypes)
+    public static void writeRecords(@NotNull final String outputPath, @NotNull final List<PortalClinicalData> portalClinicalDataList)
             throws IOException {
         final CSVFormat format = CSVFormat.DEFAULT.withHeader(Header.class);
         final CSVPrinter printer = new CSVPrinter(new FileWriter(outputPath), format);
-        printer.printRecords(patientCancerTypes.stream().map(PortalClinicalData::csvRecord).collect(Collectors.toList()));
+        printer.printRecords(portalClinicalDataList.stream().map(PortalClinicalData::csvRecord).collect(Collectors.toList()));
         printer.close();
     }
 
     @NotNull
     public static List<PortalClinicalData> readRecords(@NotNull final String filePath) throws IOException {
-        final CSVParser parser = CSVParser.parse(new File(filePath), Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader(Header.class).withSkipHeaderRecord());
+        final CSVParser parser = CSVParser.parse(new File(filePath),
+                Charset.defaultCharset(),
+                CSVFormat.DEFAULT.withHeader(Header.class).withSkipHeaderRecord());
         return StreamSupport.stream(parser.spliterator(), false)
                 .map(record -> ImmutablePortalClinicalData.of(record.get(Header.patientIdentifier),
                         record.get(Header.sampleId),
                         record.get(Header.gender),
                         record.get(Header.birthYear),
-                        record.get(Header.registrationDate),
-                        record.get(Header.cancerType),
+                        record.get(Header.registrationDate), record.get(Header.primaryTumorLocation),
                         record.get(Header.biopsyType),
                         record.get(Header.hmfId),
                         record.get(Header.sampleHmfId)))

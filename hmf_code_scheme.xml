@@ -1,51 +1,103 @@
-<code_scheme name="hmf_code_scheme">
-  <option name="GENERATE_FINAL_LOCALS" value="true" />
-  <option name="GENERATE_FINAL_PARAMETERS" value="true" />
-  <option name="CLASS_COUNT_TO_USE_IMPORT_ON_DEMAND" value="9999" />
-  <option name="NAMES_COUNT_TO_USE_IMPORT_ON_DEMAND" value="9999" />
-  <option name="PACKAGES_TO_USE_IMPORT_ON_DEMAND">
-    <value />
-  </option>
-  <option name="IMPORT_LAYOUT_TABLE">
-    <value>
-      <package name="java" withSubpackages="true" static="true" />
-      <emptyLine />
-      <package name="javax" withSubpackages="true" static="true" />
-      <emptyLine />
-      <package name="mcc" withSubpackages="true" static="true" />
-      <emptyLine />
-      <package name="com" withSubpackages="true" static="true" />
-      <emptyLine />
-      <package name="nl" withSubpackages="true" static="true" />
-      <emptyLine />
-      <package name="org" withSubpackages="true" static="true" />
-      <emptyLine />
-      <package name="" withSubpackages="true" static="true" />
-      <emptyLine />
-      <package name="java" withSubpackages="true" static="false" />
-      <emptyLine />
-      <package name="javax" withSubpackages="true" static="false" />
-      <emptyLine />
-      <package name="mcc" withSubpackages="true" static="false" />
-      <emptyLine />
-      <package name="com" withSubpackages="true" static="false" />
-      <emptyLine />
-      <package name="nl" withSubpackages="true" static="false" />
-      <emptyLine />
-      <package name="org" withSubpackages="true" static="false" />
-      <emptyLine />
-      <package name="" withSubpackages="true" static="false" />
-    </value>
-  </option>
+<code_scheme name="hmf_code_scheme" version="173">
   <option name="RIGHT_MARGIN" value="140" />
   <option name="FORMATTER_TAGS_ENABLED" value="true" />
+  <CsvCodeStyleSettings>
+    <option name="TABULARIZE" value="false" />
+    <option name="WHITE_SPACES_OUTSIDE_QUOTES" value="false" />
+  </CsvCodeStyleSettings>
+  <DBN-PSQL>
+    <case-options enabled="false">
+      <option name="KEYWORD_CASE" value="lower" />
+      <option name="FUNCTION_CASE" value="lower" />
+      <option name="PARAMETER_CASE" value="lower" />
+      <option name="DATATYPE_CASE" value="lower" />
+      <option name="OBJECT_CASE" value="preserve" />
+    </case-options>
+    <formatting-settings enabled="false" />
+  </DBN-PSQL>
+  <DBN-SQL>
+    <case-options enabled="false">
+      <option name="KEYWORD_CASE" value="lower" />
+      <option name="FUNCTION_CASE" value="lower" />
+      <option name="PARAMETER_CASE" value="lower" />
+      <option name="DATATYPE_CASE" value="lower" />
+      <option name="OBJECT_CASE" value="preserve" />
+    </case-options>
+    <formatting-settings enabled="false">
+      <option name="STATEMENT_SPACING" value="one_line" />
+      <option name="CLAUSE_CHOP_DOWN" value="chop_down_if_statement_long" />
+      <option name="ITERATION_ELEMENTS_WRAPPING" value="chop_down_if_not_single" />
+    </formatting-settings>
+  </DBN-SQL>
   <JavaCodeStyleSettings>
+    <option name="GENERATE_FINAL_LOCALS" value="true" />
+    <option name="GENERATE_FINAL_PARAMETERS" value="true" />
     <option name="ANNOTATION_PARAMETER_WRAP" value="2" />
     <option name="ALIGN_MULTILINE_ANNOTATION_PARAMETERS" value="true" />
+    <option name="CLASS_COUNT_TO_USE_IMPORT_ON_DEMAND" value="9999" />
+    <option name="NAMES_COUNT_TO_USE_IMPORT_ON_DEMAND" value="9999" />
+    <option name="PACKAGES_TO_USE_IMPORT_ON_DEMAND">
+      <value />
+    </option>
+    <option name="IMPORT_LAYOUT_TABLE">
+      <value>
+        <package name="java" withSubpackages="true" static="true" />
+        <emptyLine />
+        <package name="javax" withSubpackages="true" static="true" />
+        <emptyLine />
+        <package name="mcc" withSubpackages="true" static="true" />
+        <emptyLine />
+        <package name="com" withSubpackages="true" static="true" />
+        <emptyLine />
+        <package name="nl" withSubpackages="true" static="true" />
+        <emptyLine />
+        <package name="org" withSubpackages="true" static="true" />
+        <emptyLine />
+        <package name="" withSubpackages="true" static="true" />
+        <emptyLine />
+        <package name="java" withSubpackages="true" static="false" />
+        <emptyLine />
+        <package name="javax" withSubpackages="true" static="false" />
+        <emptyLine />
+        <package name="mcc" withSubpackages="true" static="false" />
+        <emptyLine />
+        <package name="com" withSubpackages="true" static="false" />
+        <emptyLine />
+        <package name="nl" withSubpackages="true" static="false" />
+        <emptyLine />
+        <package name="org" withSubpackages="true" static="false" />
+        <emptyLine />
+        <package name="" withSubpackages="true" static="false" />
+      </value>
+    </option>
   </JavaCodeStyleSettings>
   <MarkdownNavigatorCodeStyleSettings>
     <option name="RIGHT_MARGIN" value="72" />
   </MarkdownNavigatorCodeStyleSettings>
+  <DBN-PSQL>
+    <case-options enabled="false">
+      <option name="KEYWORD_CASE" value="lower" />
+      <option name="FUNCTION_CASE" value="lower" />
+      <option name="PARAMETER_CASE" value="lower" />
+      <option name="DATATYPE_CASE" value="lower" />
+      <option name="OBJECT_CASE" value="preserve" />
+    </case-options>
+    <formatting-settings enabled="false" />
+  </DBN-PSQL>
+  <DBN-SQL>
+    <case-options enabled="false">
+      <option name="KEYWORD_CASE" value="lower" />
+      <option name="FUNCTION_CASE" value="lower" />
+      <option name="PARAMETER_CASE" value="lower" />
+      <option name="DATATYPE_CASE" value="lower" />
+      <option name="OBJECT_CASE" value="preserve" />
+    </case-options>
+    <formatting-settings enabled="false">
+      <option name="STATEMENT_SPACING" value="one_line" />
+      <option name="CLAUSE_CHOP_DOWN" value="chop_down_if_statement_long" />
+      <option name="ITERATION_ELEMENTS_WRAPPING" value="chop_down_if_not_single" />
+    </formatting-settings>
+  </DBN-SQL>
   <XML>
     <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
   </XML>

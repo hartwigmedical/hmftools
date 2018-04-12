@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
-import com.hartwig.hmftools.patientdb.data.ImmutableCuratedCancerType;
+import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
 import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 
@@ -35,8 +35,9 @@ public class BaselineDataValidationTest {
 
     private static final BaselineData EMPTY_BASELINE = baselineBuilder().build();
 
-    private static final BaselineData BASELINE_DATA_MISSING_LOCATION_MAPPING =
-            baselineBuilder().hospital(HOSPITAL).cancerType(ImmutableCuratedCancerType.of(null, null, "some_location")).build();
+    private static final BaselineData BASELINE_DATA_MISSING_LOCATION_MAPPING = baselineBuilder().hospital(HOSPITAL)
+            .curatedTumorLocation(ImmutableCuratedTumorLocation.of(null, null, "some_location"))
+            .build();
 
     @Test
     public void reportsMissingFields() {

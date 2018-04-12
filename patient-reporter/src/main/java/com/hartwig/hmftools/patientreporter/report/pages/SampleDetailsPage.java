@@ -69,7 +69,7 @@ public abstract class SampleDetailsPage {
                 "The samples have been sequenced at Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam",
                 "The samples have been analyzed by Next Generation Sequencing",
                 "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate()),
-                "The pathology tumor percentage for this sample is " + sampleReport().tumorPercentageString(),
+                "The pathology tumor percentage for this sample is " + sampleReport().pathologyTumorPercentageString(),
                 "This experiment is performed on the blood sample which arrived on " + formattedDate(sampleReport().bloodArrivalDate()),
                 "This experiment is performed according to lab procedures: " + sampleReport().labProcedures(),
                 "This report is generated and verified by: " + user(),

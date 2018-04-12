@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.algo;
 
 import java.util.Optional;
 
+import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.patientreporter.BaseReporterData;
 import com.hartwig.hmftools.patientreporter.ImmutableNotSequencedPatientReport;
@@ -25,11 +26,12 @@ public abstract class NotSequenceableReporter {
             @Nullable final String comments) {
         final NotSequenceableStudy study = NotSequenceableStudy.fromSample(sample);
         assert study != null;
-        final String cancerType = PatientReporterHelper.extractCancerType(baseReporterData().patientsCancerTypes(), sample);
+        final PatientTumorLocation patientTumorLocation =
+                PatientReporterHelper.extractPatientTumorLocation(baseReporterData().patientTumorLocations(), sample);
         final Lims lims = baseReporterData().limsModel();
         final Double tumorPercentage = lims.tumorPercentageForSample(sample);
         final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(sample);
-        final SampleReport sampleReport = ImmutableSampleReport.of(sample, cancerType,
+        final SampleReport sampleReport = ImmutableSampleReport.of(sample, patientTumorLocation,
                 tumorPercentage,
                 lims.arrivalDateForSample(sample),
                 null,

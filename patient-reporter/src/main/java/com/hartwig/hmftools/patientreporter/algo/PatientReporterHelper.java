@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
+import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
@@ -22,7 +22,6 @@ import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,7 +29,7 @@ final class PatientReporterHelper {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterHelper.class);
 
-    private static final String SOMATIC_VCF_EXTENSION = "_post_processed_v2.1.vcf.gz";
+    private static final String SOMATIC_VCF_EXTENSION = "_post_processed_v2.2.vcf.gz";
     private static final String PURPLE_DIRECTORY = "purple";
     private static final String SV_EXTENSION = "_somaticSV_bpi.vcf";
     private static final String CIRCOS_PLOT_DIRECTORY = "plot";
@@ -79,35 +78,31 @@ final class PatientReporterHelper {
         return SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, vcfPath);
     }
 
-    @NotNull
-    static String extractCancerType(@NotNull final List<PatientCancerTypes> patientsCancerTypes, @NotNull final String sample) {
-        final String patientId = toPatientId(sample);
-        if (patientId == null) {
-            LOGGER.warn("Could not resolve patient id from " + sample);
-            return Strings.EMPTY;
+    @Nullable
+    static PatientTumorLocation extractPatientTumorLocation(@NotNull final List<PatientTumorLocation> patientTumorLocations,
+            @NotNull final String sample) {
+        final String patientIdentifier = toPatientIdentifier(sample);
+        if (patientIdentifier == null) {
+            LOGGER.warn("Could not resolve patient identifier from " + sample);
+            return null;
         }
-        final List<PatientCancerTypes> matchingIdCancerTypes = patientsCancerTypes.stream()
-                .filter(patientCancerTypes -> patientCancerTypes.patientIdentifier().equals(patientId))
+        final List<PatientTumorLocation> matchingIdTumorLocations = patientTumorLocations.stream()
+                .filter(patientTumorLocation -> patientTumorLocation.patientIdentifier().equals(patientIdentifier))
                 .collect(Collectors.toList());
 
-        // KODU: We should never have more than one cancer type for a single patient.
-        assert matchingIdCancerTypes.size() < 2;
+        // KODU: We should never have more than one curated tumor location for a single patient.
+        assert matchingIdTumorLocations.size() < 2;
 
-        if (matchingIdCancerTypes.size() == 1) {
-            String cancerType = matchingIdCancerTypes.get(0).cancerType();
-            if (cancerType.equalsIgnoreCase("other")) {
-                return matchingIdCancerTypes.get(0).cancerSubtype();
-            } else {
-                return cancerType;
-            }
+        if (matchingIdTumorLocations.size() == 1) {
+            return matchingIdTumorLocations.get(0);
         } else {
-            LOGGER.warn("Could not find patient " + patientId + " in CPCT ECRF database!");
-            return Strings.EMPTY;
+            LOGGER.warn("Could not find patient " + patientIdentifier + " in CPCT ECRF data dump!");
+            return null;
         }
     }
 
     @Nullable
-    private static String toPatientId(@NotNull final String sample) {
+    private static String toPatientIdentifier(@NotNull final String sample) {
         return sample.length() >= 12 ? sample.substring(0, 12) : null;
     }
 }

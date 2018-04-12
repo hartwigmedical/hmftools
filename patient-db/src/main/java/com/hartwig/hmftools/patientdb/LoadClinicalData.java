@@ -63,7 +63,7 @@ public final class LoadClinicalData {
     private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
 
     private static final String CSV_OUT_DIR = "csv_out_dir";
-    private static final String CANCER_TYPES_LINK = "cancer_types_symlink";
+    private static final String TUMOR_LOCATION_SYMLINK = "tumor_location_symlink";
     private static final String PORTAL_DATA_LINK = "portal_data_symlink";
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, XMLStreamException, SQLException {
@@ -108,8 +108,7 @@ public final class LoadClinicalData {
             writeClinicalData(dbWriter,
                     cpctEcrfModel,
                     samplesPerPatient,
-                    cmd.getOptionValue(CSV_OUT_DIR),
-                    Optional.ofNullable(cmd.getOptionValue(CANCER_TYPES_LINK)),
+                    cmd.getOptionValue(CSV_OUT_DIR), Optional.ofNullable(cmd.getOptionValue(TUMOR_LOCATION_SYMLINK)),
                     Optional.ofNullable(cmd.getOptionValue(PORTAL_DATA_LINK)));
         } else {
             final HelpFormatter formatter = new HelpFormatter();
@@ -147,7 +146,7 @@ public final class LoadClinicalData {
 
     private static void writeClinicalData(@NotNull final DatabaseAccess dbAccess, @NotNull EcrfModel cpctEcrfModel,
             @NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull String csvOutputDir,
-            @NotNull Optional<String> cancerTypesLink, @NotNull Optional<String> portalDataLink) throws IOException {
+            @NotNull Optional<String> tumorLocationSymlink, @NotNull Optional<String> portalDataLink) throws IOException {
         LOGGER.info(String.format("Interpreting and curating data for %s CPCT patients.", cpctEcrfModel.patientCount()));
         TumorLocationCurator tumorLocationCurator = TumorLocationCurator.fromProductionResource();
         BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource();
@@ -157,7 +156,7 @@ public final class LoadClinicalData {
 
         final Map<String, Patient> readPatients = readEcrfPatients(patientReader, cpctEcrfModel.patients(), samplesPerPatient);
         LOGGER.info(String.format("Finished curation of %s CPCT patients.", readPatients.size()));
-        DumpClinicalData.writeClinicalDumps(csvOutputDir, readPatients.values(), cancerTypesLink, portalDataLink);
+        DumpClinicalData.writeClinicalDumps(csvOutputDir, readPatients.values(), tumorLocationSymlink, portalDataLink);
 
         LOGGER.info("Clearing interpreted clinical tables in database.");
         dbAccess.clearClinicalTables();
@@ -254,7 +253,7 @@ public final class LoadClinicalData {
         options.addOption(DO_LOAD_RAW_ECRF, false, "Also write raw ecrf data to database?");
 
         options.addOption(CSV_OUT_DIR, true, "Path towards the output directory for csv data dumps.");
-        options.addOption(CANCER_TYPES_LINK, true, "Name of cancer type csv symlink.");
+        options.addOption(TUMOR_LOCATION_SYMLINK, true, "Name of cancer type csv symlink.");
         options.addOption(PORTAL_DATA_LINK, true, "Name of portal data csv symlink.");
 
         options.addOption(LIMS_JSON, true, "Path towards the LIMS json file.");

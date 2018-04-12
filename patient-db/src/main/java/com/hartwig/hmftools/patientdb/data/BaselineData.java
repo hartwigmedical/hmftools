@@ -28,7 +28,7 @@ public abstract class BaselineData {
     public abstract Integer birthYear();
 
     @NotNull
-    public abstract CuratedCancerType cancerType();
+    public abstract CuratedTumorLocation curatedTumorLocation();
 
     @Nullable
     public abstract LocalDate deathDate();

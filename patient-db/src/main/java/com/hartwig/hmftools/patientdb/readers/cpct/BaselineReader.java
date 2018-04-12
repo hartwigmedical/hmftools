@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
-import com.hartwig.hmftools.patientdb.data.ImmutableCuratedCancerType;
+import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -68,8 +68,7 @@ public class BaselineReader {
     BaselineData read(@NotNull final EcrfPatient patient) {
         final ImmutableBaselineData.Builder baselineBuilder = ImmutableBaselineData.builder()
                 .demographyStatus(FormStatus.unknown())
-                .primaryTumorStatus(FormStatus.unknown())
-                .cancerType(ImmutableCuratedCancerType.of(null, null, null))
+                .primaryTumorStatus(FormStatus.unknown()).curatedTumorLocation(ImmutableCuratedTumorLocation.of(null, null, null))
                 .eligibilityStatus(FormStatus.unknown())
                 .selectionCriteriaStatus(FormStatus.unknown())
                 .informedConsentStatus(FormStatus.unknown())
@@ -118,7 +117,7 @@ public class BaselineReader {
                 if (primaryTumorLocation != null && primaryTumorLocation.trim().toLowerCase().startsWith("other")) {
                     primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
                 }
-                builder.cancerType(tumorLocationCurator.search(primaryTumorLocation));
+                builder.curatedTumorLocation(tumorLocationCurator.search(primaryTumorLocation));
                 builder.primaryTumorStatus(carcinomaForm.status());
             }
         }

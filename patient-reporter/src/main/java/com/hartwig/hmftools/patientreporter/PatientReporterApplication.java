@@ -8,7 +8,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.center.Center;
 import com.hartwig.hmftools.common.center.CenterModel;
-import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
+import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableNotSequenceableReporter;
@@ -44,9 +44,9 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // KODU: For testing
-    //    public static final String VERSION = "4.8";
+    //    public static final String VERSION = "4.9";
 
-    private static final String CANCER_TYPES_CSV = "cancer_types_csv";
+    private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
     private static final String LIMS_JSON = "lims_json";
     private static final String REPORT_DIRECTORY = "report_dir";
     private static final String RUN_DIRECTORY = "run_dir";
@@ -99,13 +99,13 @@ public class PatientReporterApplication {
     @NotNull
     private static BaseReporterData buildBaseReporterData(@NotNull final CommandLine cmd) throws IOException {
         LOGGER.info(" Loading ECRF CSV dump...");
-        final List<PatientCancerTypes> patientsCancerTypes = PatientCancerTypes.readRecords(cmd.getOptionValue(CANCER_TYPES_CSV));
-        LOGGER.info("  Loaded data for {} patients.", patientsCancerTypes.size());
+        final List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(cmd.getOptionValue(TUMOR_LOCATION_CSV));
+        LOGGER.info("  Loaded data for {} patients.", patientTumorLocations.size());
         LOGGER.info(" Loading LIMS database...");
         final Lims lims = LimsFactory.fromLimsJson(cmd.getOptionValue(LIMS_JSON));
         LOGGER.info("  Loaded data for {} samples.", lims.sampleCount());
         final CenterModel centerModel = Center.readFromCSV(cmd.getOptionValue(CENTER_CSV));
-        return ImmutableBaseReporterData.of(patientsCancerTypes, lims, centerModel, cmd.getOptionValue(SIGNATURE));
+        return ImmutableBaseReporterData.of(patientTumorLocations, lims, centerModel, cmd.getOptionValue(SIGNATURE));
     }
 
     @NotNull
@@ -196,13 +196,13 @@ public class PatientReporterApplication {
     }
 
     private static boolean validInputForBaseReporterData(@NotNull final CommandLine cmd) {
-        final String patientsCancerTypesCsv = cmd.getOptionValue(CANCER_TYPES_CSV);
+        final String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
         final String limsJson = cmd.getOptionValue(LIMS_JSON);
         final String centerCsv = cmd.getOptionValue(CENTER_CSV);
         final String signaturePath = cmd.getOptionValue(SIGNATURE);
 
-        if (patientsCancerTypesCsv == null || !exists(patientsCancerTypesCsv)) {
-            LOGGER.warn(CANCER_TYPES_CSV + " has to be an existing file: " + patientsCancerTypesCsv);
+        if (tumorLocationCsv == null || !exists(tumorLocationCsv)) {
+            LOGGER.warn(TUMOR_LOCATION_CSV + " has to be an existing file: " + tumorLocationCsv);
         } else if (limsJson == null || !exists(limsJson)) {
             LOGGER.warn(LIMS_JSON + " has to be an existing file: " + limsJson);
         } else if (centerCsv == null || !exists(centerCsv)) {
@@ -226,7 +226,7 @@ public class PatientReporterApplication {
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
-        options.addOption(CANCER_TYPES_CSV, true, "Complete path towards the cpct cancer types csv.");
+        options.addOption(TUMOR_LOCATION_CSV, true, "Complete path towards the (curated) tumor location csv.");
         options.addOption(LIMS_JSON, true, "Complete path towards a JSON containing the LIMS data dump.");
         options.addOption(REPORT_DIRECTORY, true, "Complete path to where the PDF reports have to be saved.");
         options.addOption(RUN_DIRECTORY, true, "Complete path towards a single run dir where patient reporter will run on.");

@@ -11,8 +11,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.patientdb.LoadClinicalData;
 import com.hartwig.hmftools.patientdb.Utils;
-import com.hartwig.hmftools.patientdb.data.CuratedCancerType;
-import com.hartwig.hmftools.patientdb.data.ImmutableCuratedCancerType;
+import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
+import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -26,7 +26,7 @@ public class TumorLocationCurator implements CleanableCurator {
             LoadClinicalData.class.getResourceAsStream("/tumor_location_mapping.csv");
 
     @NotNull
-    private final Map<String, CuratedCancerType> tumorLocationMap = Maps.newHashMap();
+    private final Map<String, CuratedTumorLocation> tumorLocationMap = Maps.newHashMap();
     @NotNull
     private final Set<String> unusedSearchTerms;
 
@@ -39,29 +39,29 @@ public class TumorLocationCurator implements CleanableCurator {
     TumorLocationCurator(@NotNull final InputStream mappingInputStream) throws IOException {
         final CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
         for (final CSVRecord record : parser) {
-            final String location = record.get("primaryTumorLocation");
-            final String type = record.get("type");
+            final String searchTerm = record.get("searchTerm");
+            final String primaryTumorLocation = record.get("primaryTumorLocation");
             final String subType = record.get("subType");
-            tumorLocationMap.put(location.toLowerCase(),
-                    ImmutableCuratedCancerType.of(Utils.capitalize(type), Utils.capitalize(subType), location));
+            tumorLocationMap.put(searchTerm.toLowerCase(),
+                    ImmutableCuratedTumorLocation.of(Utils.capitalize(primaryTumorLocation), Utils.capitalize(subType), searchTerm));
         }
         // KODU: Need to create a copy of the key set so that we can remove elements from it without affecting the curation.
         unusedSearchTerms = Sets.newHashSet(tumorLocationMap.keySet());
     }
 
     @NotNull
-    public CuratedCancerType search(@Nullable final String searchTerm) {
+    public CuratedTumorLocation search(@Nullable final String searchTerm) {
         if (searchTerm != null) {
             String effectiveSearchTerm = searchTerm.toLowerCase();
             unusedSearchTerms.remove(effectiveSearchTerm);
-            final CuratedCancerType result = tumorLocationMap.get(effectiveSearchTerm);
+            final CuratedTumorLocation result = tumorLocationMap.get(effectiveSearchTerm);
 
             if (result != null) {
                 return result;
             }
         }
 
-        return ImmutableCuratedCancerType.of(null, null, searchTerm);
+        return ImmutableCuratedTumorLocation.of(null, null, searchTerm);
     }
 
     @NotNull
