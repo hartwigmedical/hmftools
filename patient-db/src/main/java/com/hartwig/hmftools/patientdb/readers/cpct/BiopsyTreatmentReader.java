@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientdb.readers.cpct;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -39,7 +38,7 @@ public class BiopsyTreatmentReader {
     }
 
     @NotNull
-    List<BiopsyTreatmentData> read(@NotNull final EcrfPatient patient) throws IOException {
+    List<BiopsyTreatmentData> read(@NotNull final EcrfPatient patient) {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList();
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_AFTERBIOPT)) {
             for (final EcrfForm treatmentForm : studyEvent.nonEmptyFormsPerOID(FORM_TREATMENT)) {
@@ -55,7 +54,7 @@ public class BiopsyTreatmentReader {
     }
 
     @NotNull
-    private List<DrugData> readDrugs(@NotNull final EcrfForm treatmentForm) throws IOException {
+    private List<DrugData> readDrugs(@NotNull final EcrfForm treatmentForm) {
         final List<DrugData> drugs = Lists.newArrayList();
         for (final EcrfItemGroup itemGroup : treatmentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_SYSPOSTBIO)) {
             final LocalDate drugStart = itemGroup.readItemDate(FIELD_DRUG_START);

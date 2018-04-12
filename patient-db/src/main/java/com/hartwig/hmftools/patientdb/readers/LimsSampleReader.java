@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientdb.readers;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.Lims;
@@ -19,7 +20,7 @@ public class LimsSampleReader {
     }
 
     @NotNull
-    public List<SampleData> read(@NotNull final List<String> sampleIds) {
+    public List<SampleData> read(@NotNull final Set<String> sampleIds) {
         final List<SampleData> limsBiopsies = Lists.newArrayList();
 
         sampleIds.forEach(sampleId -> {

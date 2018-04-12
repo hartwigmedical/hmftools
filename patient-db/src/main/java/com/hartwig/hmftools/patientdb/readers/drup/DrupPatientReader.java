@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientdb.readers.drup;
 
-import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
@@ -17,7 +16,7 @@ public class DrupPatientReader implements PatientReader {
 
     @NotNull
     @Override
-    public Patient read(@NotNull final EcrfPatient ecrfPatient, @NotNull final List<SampleData> sequencedSamples) throws IOException {
+    public Patient read(@NotNull final EcrfPatient ecrfPatient, @NotNull final List<SampleData> sequencedSamples) {
         return null;
     }
 }

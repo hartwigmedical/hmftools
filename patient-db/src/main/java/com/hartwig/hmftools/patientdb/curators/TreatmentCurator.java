@@ -26,6 +26,8 @@ import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTreatment;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.LowerCaseFilter;
 import org.apache.lucene.analysis.TokenFilter;
@@ -60,6 +62,7 @@ import org.apache.lucene.store.RAMDirectory;
 import org.jetbrains.annotations.NotNull;
 
 public class TreatmentCurator implements CleanableCurator {
+    private static final Logger LOGGER = LogManager.getLogger(TreatmentCurator.class);
     private static final InputStream TREATMENT_MAPPING_RESOURCE = LoadClinicalData.class.getResourceAsStream("/treatment_mapping.csv");
 
     private static final String DRUG_TERMS_FIELD = "drugTerms";
@@ -131,7 +134,7 @@ public class TreatmentCurator implements CleanableCurator {
     }
 
     @NotNull
-    public List<CuratedTreatment> search(@NotNull final String searchTerm) throws IOException {
+    public List<CuratedTreatment> search(@NotNull final String searchTerm) {
         final Optional<CuratedTreatment> matchedTreatment = matchSingle(searchTerm);
         if (!matchedTreatment.isPresent()) {
             return matchMultiple(searchTerm);
@@ -141,26 +144,32 @@ public class TreatmentCurator implements CleanableCurator {
     }
 
     @NotNull
-    Optional<CuratedTreatment> matchSingle(@NotNull final String searchTerm) throws IOException {
+    Optional<CuratedTreatment> matchSingle(@NotNull final String searchTerm) {
         final Analyzer analyzer = spellcheckAnalyzer(spellChecker);
         final Query query = new QueryParser(DRUG_NAME_FIELD, analyzer).createPhraseQuery(DRUG_NAME_FIELD, searchTerm);
-        final ScoreDoc[] hits = indexSearcher.search(query, NUM_HITS).scoreDocs;
+        try {
+            final ScoreDoc[] hits = indexSearcher.search(query, NUM_HITS).scoreDocs;
 
-        for (WeightedTerm term : QueryTermExtractor.getTerms(query)) {
-            unusedSearchTerms.remove(term.getTerm().toLowerCase());
-        }
+            for (WeightedTerm term : QueryTermExtractor.getTerms(query)) {
+                unusedSearchTerms.remove(term.getTerm().toLowerCase());
+            }
 
-        if (hits.length == 1) {
-            final Document searchResult = indexSearcher.doc(hits[0].doc);
-            return Optional.of(ImmutableCuratedTreatment.of(searchResult.get(CANONICAL_DRUG_NAME_FIELD),
-                    searchResult.get(DRUG_TYPE_FIELD),
-                    searchTerm));
+            if (hits.length == 1) {
+                final Document searchResult = indexSearcher.doc(hits[0].doc);
+                return Optional.of(ImmutableCuratedTreatment.of(searchResult.get(CANONICAL_DRUG_NAME_FIELD),
+                        searchResult.get(DRUG_TYPE_FIELD),
+                        searchTerm));
+            }
+
+            return Optional.empty();
+        } catch (IOException exception) {
+            LOGGER.warn("Caught IOException in treatment curation: " + exception.getMessage());
+            return Optional.empty();
         }
-        return Optional.empty();
     }
 
     @NotNull
-    List<CuratedTreatment> matchMultiple(@NotNull final String searchTerm) throws IOException {
+    List<CuratedTreatment> matchMultiple(@NotNull final String searchTerm) {
         final Map<SearchToken, CuratedTreatment> matchedTokens = Maps.newHashMap();
         final List<SearchToken> searchTokens = generateSearchTokens(searchTerm);
         for (final SearchToken searchToken : searchTokens) {
@@ -176,20 +185,26 @@ public class TreatmentCurator implements CleanableCurator {
     }
 
     @NotNull
-    private static List<SearchToken> generateSearchTokens(@NotNull final String searchTerm) throws IOException {
+    private static List<SearchToken> generateSearchTokens(@NotNull final String searchTerm) {
         final Set<SearchToken> searchTokens = Sets.newHashSet();
         final TokenStream tokenStream = getSpellCheckedShingleStream(searchTerm);
-        tokenStream.reset();
-        while (tokenStream.incrementToken()) {
-            final String searchToken = tokenStream.getAttribute(CharTermAttribute.class).toString();
-            final OffsetAttribute offsetAttribute = tokenStream.getAttribute(OffsetAttribute.class);
-            searchTokens.add(ImmutableSearchToken.of(searchToken, offsetAttribute.startOffset(), offsetAttribute.endOffset()));
+        try {
+            tokenStream.reset();
+
+            while (tokenStream.incrementToken()) {
+                final String searchToken = tokenStream.getAttribute(CharTermAttribute.class).toString();
+                final OffsetAttribute offsetAttribute = tokenStream.getAttribute(OffsetAttribute.class);
+                searchTokens.add(ImmutableSearchToken.of(searchToken, offsetAttribute.startOffset(), offsetAttribute.endOffset()));
+            }
+            tokenStream.end();
+            tokenStream.close();
+            return searchTokens.stream()
+                    .sorted(Comparator.comparing(SearchToken::length).reversed().thenComparing(SearchToken::startOffset))
+                    .collect(Collectors.toList());
+        } catch (IOException exception) {
+            LOGGER.warn("Caught IOException in treatment curation: " + exception.getMessage());
+            return Lists.newArrayList();
         }
-        tokenStream.end();
-        tokenStream.close();
-        return searchTokens.stream()
-                .sorted(Comparator.comparing(SearchToken::length).reversed().thenComparing(SearchToken::startOffset))
-                .collect(Collectors.toList());
     }
 
     @NotNull
