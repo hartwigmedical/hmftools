@@ -34,7 +34,7 @@ Dactinomycin,Chemotherapy,Dactinomycine
 Degarelix,Androgen/estrogen deprivation therapy,Firmagon
 Denosumab,remove,
 Dexamethason,Hormonal therapy,
-Docetaxel,Chemotherapy,"dcoetaxel,Docetaxel."
+Docetaxel,Chemotherapy,"dcoetaxel,Docetaxel.,dectaxel,Docatal,Doxatel,Taxotere,Docetaxel"
 Doxorubicine,Chemotherapy,"Doxorubicine (Adriamycine), Doxurubicine, Adriamycine, hydrodoxorubicin, Adriamyne, Adryamicine,doxoburicine,Doxorubine,Myocet,Doxorubicin"
 Eligard,Hormonal therapy,eligard (androgen deprivation therapy)
 Emtansine,remove,
@@ -196,7 +196,6 @@ cytarabine,Chemotherapy,cyturabine
 dendritic cell therapy,Experimental,"DC therapy, DCVAC/PCa,DCVAC/PCa of placebo,DCVAC/placebo,Dendritic cell,dendritic cell therapy,dendritic cell vaccination,dendritic cell vacination,dendritic cell vacine,dendritic cells or placebo (study),Dendritic celtherapy,dendtritic celactivation or placebo"
 DHAP-VIM-DHAP,Chemotherapy,
 DMOT4039A,Experimental therapy (unkown compound),
-docetaxel,Chemotherapy,"dectaxel,Docatal,Doxatel,Taxotere,Docetaxel"
 Durvalumab,Immunotherapy,Durvalumab
 dustasteride,remove,
 Dutasteride,remove,

@@ -103,8 +103,7 @@ class ClinicalDAO {
                 BASELINE.CANCERSUBTYPE,
                 BASELINE.DEATHDATE,
                 BASELINE.HASSYSTEMICPRETREATMENT,
-                BASELINE.HASRADIOTHERAPYPRETREATMENT,
-                BASELINE.PRETREATMENTS)
+                BASELINE.HASRADIOTHERAPYPRETREATMENT, BASELINE.PRETREATMENTS, BASELINE.PRETREATMENTSTYPE)
                 .values(patientId,
                         Utils.toSQLDate(patient.registrationDate()),
                         Utils.toSQLDate(patient.informedConsentDate()),
@@ -115,8 +114,7 @@ class ClinicalDAO {
                         patient.curatedTumorLocation().subType(),
                         Utils.toSQLDate(patient.deathDate()),
                         preTreatmentData.treatmentGiven(),
-                        preTreatmentData.radiotherapyGiven(),
-                        preTreatmentData.treatmentName())
+                        preTreatmentData.radiotherapyGiven(), preTreatmentData.treatmentName(), preTreatmentData.type())
                 .execute();
 
         preTreatmentData.drugs().forEach(drug -> writePreTreatmentDrugData(patientId, drug, preTreatmentData.formStatus()));
