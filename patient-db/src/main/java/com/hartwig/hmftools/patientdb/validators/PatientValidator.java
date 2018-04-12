@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_B
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_BIRTH_YEAR2;
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_BIRTH_YEAR3;
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_DEATH_DATE;
+import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_GENDER;
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_HOSPITAL1;
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_HOSPITAL2;
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_INFORMED_CONSENT_DATE;
@@ -15,7 +16,6 @@ import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_P
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_PRIMARY_TUMOR_LOCATION_OTHER;
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_REGISTRATION_DATE1;
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_REGISTRATION_DATE2;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_SEX;
 import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyReader.FIELD_BIOPSY_DATE;
 import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyReader.FIELD_LOCATION;
 import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyReader.FIELD_SITE;
@@ -99,7 +99,11 @@ public final class PatientValidator {
                     "primary tumor location empty", baselineData.primaryTumorStatus()));
         }
         if (baselineData.gender() == null) {
-            findings.add(ValidationFinding.of(ECRF_LEVEL, patientIdentifier, FIELD_SEX, "gender empty", baselineData.demographyStatus()));
+            findings.add(ValidationFinding.of(ECRF_LEVEL,
+                    patientIdentifier,
+                    FIELD_GENDER,
+                    "gender empty",
+                    baselineData.demographyStatus()));
         }
         if (baselineData.registrationDate() == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,

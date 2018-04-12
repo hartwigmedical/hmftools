@@ -38,7 +38,7 @@ public class BaselineReader {
     private static final String ITEMGROUP_SELCRIT = "GRP.SELCRIT.SELCRIT";
     private static final String ITEMGROUP_DEATH = "GRP.DEATH.DEATH";
 
-    public static final String FIELD_SEX = "FLD.DEMOGRAPHY.SEX";
+    public static final String FIELD_GENDER = "FLD.DEMOGRAPHY.SEX";
     public static final String FIELD_INFORMED_CONSENT_DATE = "FLD.INFORMEDCONSENT.ICDTC";
     public static final String FIELD_REGISTRATION_DATE1 = "FLD.ELIGIBILITY.REGDTC";
     public static final String FIELD_REGISTRATION_DATE2 = "FLD.SELCRIT.NREGDTC";
@@ -104,7 +104,7 @@ public class BaselineReader {
     private void setDemographyData(@NotNull final ImmutableBaselineData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
         for (final EcrfForm demographyForm : studyEvent.nonEmptyFormsPerOID(FORM_DEMOGRAPHY)) {
             for (final EcrfItemGroup demographyItemGroup : demographyForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DEMOGRAPHY)) {
-                builder.gender(demographyItemGroup.readItemString(FIELD_SEX));
+                builder.gender(demographyItemGroup.readItemString(FIELD_GENDER));
                 builder.demographyStatus(demographyForm.status());
             }
         }

@@ -33,6 +33,7 @@ import com.hartwig.hmftools.patientdb.readers.PatientReader;
 import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
 import com.hartwig.hmftools.patientdb.readers.cpct.CpctPatientReader;
 import com.hartwig.hmftools.patientdb.readers.cpct.CpctUtil;
+import com.hartwig.hmftools.patientdb.readers.drup.DrupPatientReader;
 import com.hartwig.hmftools.patientdb.validators.CurationValidator;
 import com.hartwig.hmftools.patientdb.validators.PatientValidator;
 
@@ -151,15 +152,15 @@ public final class LoadClinicalData {
         Map<String, Patient> cpctPatients = readEcrfPatients(cpctPatientReader, cpctEcrfModel.patients(), samplesPerPatient);
         LOGGER.info(String.format("Finished curation of %s CPCT patients.", cpctPatients.size()));
 
-        //        LOGGER.info(String.format("Interpreting and curating data for %s DRUP patients.", drupEcrfModel.patientCount()));
-        //        PatientReader drupPatientReader = new DrupPatientReader();
-        //
-        //        Map<String, Patient> drupPatients = readEcrfPatients(drupPatientReader, drupEcrfModel.patients(), samplesPerPatient);
-        //        LOGGER.info(String.format("Finished curation of %s DRUP patients.", drupPatients.size()));
+        LOGGER.info(String.format("Interpreting and curating data for %s DRUP patients.", drupEcrfModel.patientCount()));
+        PatientReader drupPatientReader = new DrupPatientReader(tumorLocationCurator, biopsySiteCurator);
+
+        Map<String, Patient> drupPatients = readEcrfPatients(drupPatientReader, drupEcrfModel.patients(), samplesPerPatient);
+        LOGGER.info(String.format("Finished curation of %s DRUP patients.", drupPatients.size()));
 
         Map<String, Patient> mergedPatients = Maps.newHashMap();
         mergedPatients.putAll(cpctPatients);
-        //        mergedPatients.putAll(drupPatients);
+        mergedPatients.putAll(drupPatients);
         return mergedPatients;
     }
 

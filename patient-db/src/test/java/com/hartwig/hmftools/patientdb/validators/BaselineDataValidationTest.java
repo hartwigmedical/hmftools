@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.baselineB
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_BIRTH_YEAR1;
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_BIRTH_YEAR2;
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_BIRTH_YEAR3;
+import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_GENDER;
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_HOSPITAL1;
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_HOSPITAL2;
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_INFORMED_CONSENT_DATE;
@@ -11,7 +12,6 @@ import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_P
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_PRIMARY_TUMOR_LOCATION_OTHER;
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_REGISTRATION_DATE1;
 import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_REGISTRATION_DATE2;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_SEX;
 import static com.hartwig.hmftools.patientdb.validators.PatientValidator.fields;
 
 import static org.junit.Assert.assertEquals;
@@ -48,7 +48,7 @@ public class BaselineDataValidationTest {
 
         assertTrue(findingsFields.contains(fields(FIELD_REGISTRATION_DATE1, FIELD_REGISTRATION_DATE2)));
         assertTrue(findingsFields.contains(FIELD_INFORMED_CONSENT_DATE));
-        assertTrue(findingsFields.contains(FIELD_SEX));
+        assertTrue(findingsFields.contains(FIELD_GENDER));
         assertTrue(findingsFields.contains(fields(FIELD_BIRTH_YEAR1, FIELD_BIRTH_YEAR2, FIELD_BIRTH_YEAR3)));
         assertTrue(findingsFields.contains(fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER)));
         assertTrue(findingsFields.contains(fields(FIELD_HOSPITAL1, FIELD_HOSPITAL2)));

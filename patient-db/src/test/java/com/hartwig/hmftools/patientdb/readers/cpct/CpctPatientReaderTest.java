@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientdb.readers.cpct;
 import static org.junit.Assert.assertEquals;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -11,11 +10,9 @@ import java.util.Map;
 
 import javax.xml.stream.XMLStreamException;
 
-import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
-import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
 import com.hartwig.hmftools.patientdb.curators.TestCuratorFactory;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
@@ -55,7 +52,7 @@ public class CpctPatientReaderTest {
     }
 
     @Test
-    public void canReadCpctPatientPreTherapy() throws IOException {
+    public void canReadCpctPatientPreTherapy() {
         final EcrfModel model = loadTestEcrf();
         assertEquals(1, model.patientCount());
         final EcrfPatient cpctPatient = model.patients().iterator().next();
@@ -68,7 +65,7 @@ public class CpctPatientReaderTest {
     }
 
     @Test
-    public void canReadCpctPatientTreatments() throws IOException {
+    public void canReadCpctPatientTreatments() {
         final EcrfModel model = loadTestEcrf();
         assertEquals(1, model.patientCount());
         final EcrfPatient cpctPatient = model.patients().iterator().next();
@@ -126,7 +123,7 @@ public class CpctPatientReaderTest {
     private static EcrfModel loadTestEcrf() {
         EcrfModel model = null;
         try {
-            model = EcrfModel.loadFromXMLWithFormStates(TEST_ECRF, new ImmutableFormStatusModel(Maps.newHashMap()));
+            model = EcrfModel.loadFromXMLNoFormStates(TEST_ECRF);
         } catch (XMLStreamException | FileNotFoundException e) {
             // KODU: Ignore, should not happen in test.
         }
