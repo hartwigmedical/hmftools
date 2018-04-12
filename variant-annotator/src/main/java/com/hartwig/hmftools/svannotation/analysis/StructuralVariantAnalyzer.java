@@ -216,16 +216,12 @@ public class StructuralVariantAnalyzer {
 
     private static boolean transcriptsMatchKnownFusion(@NotNull final KnownFusionsModel fusionsModel, @NotNull final Transcript five,
             @NotNull final Transcript three) {
-        for (final String fiveGene : five.parent().synonyms()) {
-            for (final String threeGene : three.parent().synonyms()) {
-                if (fusionsModel.exactMatch(fiveGene, threeGene) || fusionsModel.intergenicPromiscuousMatch(fiveGene, threeGene) || (
-                        fusionsModel.intragenicPromiscuousMatch(fiveGene, threeGene)
-                                && three.exonDownstream() - five.exonUpstream() > EXON_THRESHOLD)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        //@formatter:off
+        return fusionsModel.exactMatch(five.parent().synonyms(), three.parent().synonyms()) ||
+                fusionsModel.intergenicPromiscuousMatch(five.parent().synonyms(), three.parent().synonyms()) ||
+                (fusionsModel.intragenicPromiscuousMatch(five.parent().synonyms(), three.parent().synonyms())
+                        && three.exonDownstream() - five.exonUpstream() > EXON_THRESHOLD);
+        //@formatter:on
     }
 
     private static boolean intronicDisruptionOnSameTranscript(@NotNull Transcript t1, @NotNull Transcript t2) {
