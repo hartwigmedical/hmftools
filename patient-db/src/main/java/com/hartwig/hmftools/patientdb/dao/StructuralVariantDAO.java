@@ -22,7 +22,6 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep21;
 import org.jooq.InsertValuesStep22;
 import org.jooq.Record;
 import org.jooq.Record1;

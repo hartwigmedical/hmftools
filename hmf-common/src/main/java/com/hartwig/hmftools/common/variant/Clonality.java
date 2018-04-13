@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.variant;
 
-import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 
@@ -14,16 +13,6 @@ public enum Clonality {
     UNKNOWN;
 
     private static final int TRIALS = 100_000;
-
-    @NotNull
-    public static Clonality fromPloidy(final double clonalCutoff, final double ploidy) {
-        if (Doubles.isZero(clonalCutoff)) {
-            return Clonality.UNKNOWN;
-        } else if (Doubles.greaterOrEqual(ploidy, clonalCutoff)) {
-            return Clonality.CLONAL;
-        }
-        return Clonality.SUBCLONAL;
-    }
 
     @NotNull
     @Deprecated

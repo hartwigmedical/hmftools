@@ -7,7 +7,6 @@ import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -25,54 +24,52 @@ import htsjdk.variant.vcf.VCFCodec;
 
 public class FilteredSVWriter {
 
+    private static final Logger LOGGER = LogManager.getLogger(FilteredSVWriter.class);
+
     private final String mOutputPath;
     private final String mVcfFileLocation;
     private BufferedWriter mFileWriter;
 
-    private static final Logger LOGGER = LogManager.getLogger(FilteredSVWriter.class);
-
-    public FilteredSVWriter(final String vcfFileLocation, final String outputPath)
-    {
+    FilteredSVWriter(final String vcfFileLocation, final String outputPath) {
         mOutputPath = outputPath;
         mVcfFileLocation = vcfFileLocation;
         mFileWriter = null;
     }
 
-    public void processVcfFiles()
-    {
+    public void processVcfFiles() {
         final List<File> vcfFiles;
 
         final Path root = Paths.get(mVcfFileLocation);
 
         try (final Stream<Path> stream = Files.walk(root, 5, FileVisitOption.FOLLOW_LINKS)) {
 
-            vcfFiles = stream.map(p -> p.toFile())
-                    .filter(p -> !p.isDirectory())
-                    .filter(p_-> p_.getName().endsWith("somaticSV_bpi.vcf"))
+            vcfFiles = stream.map(p -> p.toFile()).filter(p -> !p.isDirectory()).filter(p_ -> p_.getName().endsWith("somaticSV_bpi.vcf"))
                     .collect(Collectors.toList());
-
 
             LOGGER.info("found {} BPI VCF files", vcfFiles.size());
 
-                // add the filtered and passed SV entries for each file
-            for(final File vcfFile : vcfFiles)
-            {
-                if(vcfFile.isDirectory())
+            // add the filtered and passed SV entries for each file
+            for (final File vcfFile : vcfFiles) {
+                if (vcfFile.isDirectory()) {
                     continue;
+                }
 
-                if(!vcfFile.getPath().contains("structuralVariants/bpi/"))
+                if (!vcfFile.getPath().contains("structuralVariants/bpi/")) {
                     continue;
+                }
 
-                if(!vcfFile.getName().endsWith("somaticSV_bpi.vcf"))
+                if (!vcfFile.getName().endsWith("somaticSV_bpi.vcf")) {
                     continue;
+                }
 
                 LOGGER.debug("BPI VCF path({}) file({})", vcfFile.getPath(), vcfFile.getName());
 
                 // extract sampleId from the directory or file name
                 String[] itemsStr = vcfFile.getName().split("_");
 
-                if(itemsStr.length != 4)
-                continue;
+                if (itemsStr.length != 4) {
+                    continue;
+                }
 
                 String sampleId = itemsStr[1];
                 LOGGER.debug("sampleId({})", sampleId);
@@ -81,38 +78,34 @@ public class FilteredSVWriter {
                 generateFilteredSVFile(variants, sampleId);
             }
 
-            if(mFileWriter != null)
+            if (mFileWriter != null) {
                 mFileWriter.close();
+            }
 
-        }
-        catch(Exception e)
-        {
+        } catch (Exception e) {
 
         }
     }
 
-    private List<StructuralVariant> readFromVcf(String vcfFilename)  {
+    private List<StructuralVariant> readFromVcf(String vcfFilename) {
         final StructuralVariantFactory factory = new StructuralVariantFactory(false);
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcfFilename,
                 new VCFCodec(),
                 false)) {
             reader.iterator().forEach(factory::addVariantContext);
-        }
-        catch(Exception e) {
+        } catch (Exception e) {
         }
 
         return factory.results();
     }
 
-
-    private void generateFilteredSVFile(final List<StructuralVariant> variants, final String sampleId)
-    {
+    private void generateFilteredSVFile(final List<StructuralVariant> variants, final String sampleId) {
         try {
-            if(mFileWriter == null)
-            {
+            if (mFileWriter == null) {
                 String outputFileName = mOutputPath;
-                if(!outputFileName.endsWith("/"))
+                if (!outputFileName.endsWith("/")) {
                     outputFileName += "/";
+                }
 
                 outputFileName += "svs_incl_filtered.csv";
 
@@ -123,41 +116,44 @@ public class FilteredSVWriter {
                 mFileWriter.write("SampleId,SvId,Type,ChrStart,PosStart,OrientStart,ChrEnd,PosEnd,OrientEnd,Filters\n");
             }
 
-            for(final StructuralVariant var : variants)
-            {
+            for (final StructuralVariant var : variants) {
                 String filtersStr = var.filter();
 
-                if(filtersStr.equals("PASS") || filtersStr.equals("[]") || filtersStr.equals(".") || filtersStr.isEmpty())
-                {
+                if (filtersStr.equals("PASS") || filtersStr.equals("[]") || filtersStr.equals(".") || filtersStr.isEmpty()) {
                     LOGGER.debug("var({}) was a PASS", var.id());
                     filtersStr = "PASS";
-                }
-                else
-                {
+                } else {
                     // make tokenisable for further searches
                     LOGGER.debug("var({}) has filters: {}", var.id(), var.filter());
 
-                    if(filtersStr.charAt(0) == '[')
+                    if (filtersStr.charAt(0) == '[') {
                         filtersStr = filtersStr.substring(1);
-                    if(filtersStr.charAt(filtersStr.length() - 1) == ']')
+                    }
+                    if (filtersStr.charAt(filtersStr.length() - 1) == ']') {
                         filtersStr = filtersStr.substring(0, filtersStr.length() - 1);
-                    if(!filtersStr.isEmpty())
+                    }
+                    if (!filtersStr.isEmpty()) {
                         filtersStr = filtersStr.replace(",", ";");
+                    }
                 }
 
-                mFileWriter.write(
-                        String.format("%s,%s,%s,%s,%d,%d,%s,%d,%d,%s",
-                                sampleId, var.id(), var.type(),
-                                var.chromosome(true), var.position(true), var.orientation(true),
-                                var.chromosome(false), var.position(false), var.orientation(false), filtersStr));
+                mFileWriter.write(String.format("%s,%s,%s,%s,%d,%d,%s,%d,%d,%s",
+                        sampleId,
+                        var.id(),
+                        var.type(),
+                        var.chromosome(true),
+                        var.position(true),
+                        var.orientation(true),
+                        var.chromosome(false),
+                        var.position(false),
+                        var.orientation(false),
+                        filtersStr));
 
                 mFileWriter.newLine();
             }
 
-        }
-        catch (final IOException e) {
+        } catch (final IOException e) {
             LOGGER.error("error writing to outputFile");
         }
-
     }
 }

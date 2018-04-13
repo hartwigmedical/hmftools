@@ -19,10 +19,6 @@ class GCAccumulator implements Consumer<GCProfile> {
         return count == 0 ? 0 : totalContent / count;
     }
 
-    public int count() {
-        return count;
-    }
-
     @Override
     public void accept(final GCProfile gcProfile) {
         if (gcProfile.isMappable() && gcProfile.start() >= region.start() && gcProfile.end() <= region.end()) {

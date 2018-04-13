@@ -4,7 +4,7 @@
 
 Amber determines heterozygous locations of the reference sample then calculates the allelic frequency of corresponding locations in the tumour.
 
-## Prerequsites
+## Prerequisites
 
 AMBER relies on mpileups of the reference and tumor samples sliced at likely heterozygous locations. Sambamba (or samtools) can be used to generate the mpileups.
 
