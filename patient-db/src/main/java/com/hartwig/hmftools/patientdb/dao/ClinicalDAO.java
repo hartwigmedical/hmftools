@@ -114,7 +114,9 @@ class ClinicalDAO {
                         patient.curatedTumorLocation().subType(),
                         Utils.toSQLDate(patient.deathDate()),
                         preTreatmentData.treatmentGiven(),
-                        preTreatmentData.radiotherapyGiven(), preTreatmentData.treatmentName(), preTreatmentData.type())
+                        preTreatmentData.radiotherapyGiven(),
+                        preTreatmentData.treatmentName(),
+                        preTreatmentData.concatenatedType())
                 .execute();
 
         preTreatmentData.drugs().forEach(drug -> writePreTreatmentDrugData(patientId, drug, preTreatmentData.formStatus()));
@@ -197,8 +199,7 @@ class ClinicalDAO {
                         treatment.radiotherapyGiven(),
                         Utils.toSQLDate(treatment.startDate()),
                         Utils.toSQLDate(treatment.endDate()),
-                        treatment.treatmentName(),
-                        treatment.type())
+                        treatment.treatmentName(), treatment.consolidatedType())
                 .execute();
         writeFormStatus(treatment.id(),
                 TREATMENT.getName(),
