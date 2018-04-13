@@ -25,10 +25,14 @@ import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.data.TumorMarkerData;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 
 class ClinicalDAO {
+
+    private static final Logger LOGGER = LogManager.getLogger(ClinicalDAO.class);
 
     @NotNull
     private final DSLContext context;
@@ -93,6 +97,12 @@ class ClinicalDAO {
     }
 
     private void writeBaselineData(int patientId, @NotNull BaselineData patient, @NotNull PreTreatmentData preTreatmentData) {
+        String preTreatmentTypes = preTreatmentData.concatenatedType();
+        // KODU: Somewhat ugly...
+        if (preTreatmentTypes != null && preTreatmentTypes.length() > 255) {
+            LOGGER.warn(String.format("Truncating pre-treatment type: %s", preTreatmentTypes));
+            preTreatmentTypes = preTreatmentTypes.substring(0, 255);
+        }
         context.insertInto(BASELINE,
                 BASELINE.PATIENTID,
                 BASELINE.REGISTRATIONDATE,
@@ -115,8 +125,7 @@ class ClinicalDAO {
                         Utils.toSQLDate(patient.deathDate()),
                         preTreatmentData.treatmentGiven(),
                         preTreatmentData.radiotherapyGiven(),
-                        preTreatmentData.treatmentName(),
-                        preTreatmentData.concatenatedType())
+                        preTreatmentData.treatmentName(), preTreatmentTypes)
                 .execute();
 
         preTreatmentData.drugs().forEach(drug -> writePreTreatmentDrugData(patientId, drug, preTreatmentData.formStatus()));
