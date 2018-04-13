@@ -199,6 +199,7 @@ Pemetrexed,Chemotherapy,"Pernetrexed,Alimta"
 Peptide Receptor Radionuclide Therapy (PRRT),Targeted therapy,
 Pertuzumab,Targeted therapy,
 PF-04518600,Experimental therapy (unkown compound),
+Placebo OR ribociclib,remove,
 Placebo vs olaparib,remove,
 placebo/Taselisib,remove,
 Prednisolone,Other,"prednisolon,procarbazine"
@@ -262,13 +263,4 @@ Unknown adjuvant chemotherapy,Chemotherapy,
 unknown chemotherapy for breast tumor,Chemotherapy,
 Vandetanib,Targeted therapy,
 Vanucizumab,Immunotherapy,
-Vemurafenib,Targeted therapy,
-vinblastine,Chemotherapy,"Velbe"
-Vincristine,Chemotherapy,"vineristine, oncovin"
-Vinorelbine,Chemotherapy,"Navelbine,vinorlebin"
-Vismodegib,Targeted therapy,
-Vosaroxin,Chemotherapy,
-VX-803,Targeted therapy,
-Xelox B,Combi,
-Zoladex,Hormonal therapy,
-Zoledronic Acid,Bisphosphonates,"zometa,zolendronic acid"
+VEGF-inhibitor,Targeted therapy,"VEGF"
