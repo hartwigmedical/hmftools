@@ -10,52 +10,48 @@ import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotationFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class VariantModel {
 
+    private static final Logger LOGGER = LogManager.getLogger(VariantModel.class);
+
     private final VariantContext context;
-    private final List<VariantAnnotation> annotations;
     private final Set<String> dbSNP;
     private final List<VariantAnnotation> sampleAnnotations;
 
-    private static final Logger LOGGER = LogManager.getLogger(VariantModel.class);
-
-    public VariantModel(final String sample, final VariantContext ctx) {
-
-        context = ctx;
-        dbSNP = Lists.newArrayList(ctx.getID().split(",")).stream().filter(s -> s.startsWith("rs")).collect(Collectors.toSet());
-        annotations = VariantAnnotationFactory.fromContext(ctx);
+    public VariantModel(@NotNull String sample, @NotNull VariantContext context) {
+        this.context = context;
+        dbSNP = Lists.newArrayList(context.getID().split(",")).stream().filter(s -> s.startsWith("rs")).collect(Collectors.toSet());
+        final List<VariantAnnotation> annotations = VariantAnnotationFactory.fromContext(context);
 
         final List<String> alleleList =
-                ctx.getGenotype(sample).getAlleles().stream().map(Allele::getBaseString).collect(Collectors.toList());
+                context.getGenotype(sample).getAlleles().stream().map(Allele::getBaseString).collect(Collectors.toList());
         sampleAnnotations = annotations.stream()
                 .filter(annotation -> alleleList.stream().anyMatch(allele -> allele.equals(annotation.allele())))
                 .collect(Collectors.toList());
 
         for (String allele : alleleList) {
-            LOGGER.debug("checking allele({}):", allele);
+            LOGGER.debug("checking allele ({}):", allele);
         }
-        LOGGER.debug("annotation alleleCount(reduced={} orig={}) v listCount({}):",
-                sampleAnnotations().size(),
-                annotations().size(),
+        LOGGER.debug("annotation alleleCount(reduced={} orig={}) v listCount({}):", sampleAnnotations.size(), annotations.size(),
                 alleleList.size());
     }
 
+    @NotNull
     public VariantContext context() {
         return context;
     }
 
-    public List<VariantAnnotation> annotations() {
-        return annotations;
-    }
-
+    @NotNull
     public Set<String> dbSNP() {
         return dbSNP;
     }
 
+    @NotNull
     public List<VariantAnnotation> sampleAnnotations() {
         return sampleAnnotations;
     }

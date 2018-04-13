@@ -35,18 +35,14 @@ public class PurityAdjuster {
         return purity;
     }
 
-    public double normFactor() {
-        return normFactor;
-    }
-
     public int typicalCopyNumber(@NotNull String chromosome) {
         return HumanChromosome.fromString(chromosome).isDiploid(gender) ? 2 : 1;
     }
 
     @SuppressWarnings("unused")
     public double impliedPloidy() {
-        // KODU: Dont delete per request of Mr Jon Baber!!!
-        return (1 - normFactor()) / purity() / normFactor() * 2 + 2;
+        // KODU: Don't delete per request of Mr Jon Baber!!!
+        return (1 - normFactor) / purity / normFactor * 2 + 2;
     }
 
     public double purityAdjustedCopyNumber(final String chromosomeName, final double ratio) {

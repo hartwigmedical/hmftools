@@ -21,7 +21,7 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchesExactSingleWord() throws IOException {
+    public void matchesExactSingleWord() {
         final TreatmentCurator curator = TestCuratorFactory.treatmentCurator();
         final Optional<CuratedTreatment> curatedTreatment = curator.matchSingle("Zocor");
         assertTrue(curatedTreatment.isPresent());
@@ -29,7 +29,7 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void removesSearchTermsFromUnused() throws IOException {
+    public void removesSearchTermsFromUnused() {
         final TreatmentCurator curator = TestCuratorFactory.treatmentCurator();
         assertEquals(22, curator.unusedSearchTerms().size());
 
@@ -52,7 +52,7 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchesIgnoringCaseSingleWord() throws IOException {
+    public void matchesIgnoringCaseSingleWord() {
         final TreatmentCurator curator = TestCuratorFactory.treatmentCurator();
         final Optional<CuratedTreatment> curatedTreatment = curator.matchSingle("zocor");
         assertTrue(curatedTreatment.isPresent());
@@ -60,7 +60,7 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchesSingleWordWithTypo() throws IOException {
+    public void matchesSingleWordWithTypo() {
         final TreatmentCurator curator = TestCuratorFactory.treatmentCurator();
         final Optional<CuratedTreatment> curatedTreatment = curator.matchSingle("lisinoprill");
         assertTrue(curatedTreatment.isPresent());
@@ -68,7 +68,7 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchesExactMultiWord() throws IOException {
+    public void matchesExactMultiWord() {
         final TreatmentCurator curator = TestCuratorFactory.treatmentCurator();
         final Optional<CuratedTreatment> curatedTreatment = curator.matchSingle("amlodipine besylate");
         assertTrue(curatedTreatment.isPresent());
@@ -76,7 +76,7 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchesIgnoringCaseMultiWord() throws IOException {
+    public void matchesIgnoringCaseMultiWord() {
         final TreatmentCurator curator = TestCuratorFactory.treatmentCurator();
         final Optional<CuratedTreatment> curatedTreatment = curator.matchSingle("Amlodipine Besylate");
         assertTrue(curatedTreatment.isPresent());
@@ -84,7 +84,7 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchesMultiWordWithTypo() throws IOException {
+    public void matchesMultiWordWithTypo() {
         final TreatmentCurator curator = TestCuratorFactory.treatmentCurator();
         final Optional<CuratedTreatment> curatedTreatment = curator.matchSingle("Amlodipin besylat");
         assertTrue(curatedTreatment.isPresent());
@@ -92,7 +92,7 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchesTermWithSpecialChars() throws IOException {
+    public void matchesTermWithSpecialChars() {
         final TreatmentCurator curator = TestCuratorFactory.treatmentCurator();
         final Optional<CuratedTreatment> curatedTreatment = curator.matchSingle("z-pak");
         assertTrue(curatedTreatment.isPresent());
@@ -100,7 +100,7 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchMultipleTreatments() throws IOException {
+    public void matchMultipleTreatments() {
         final TreatmentCurator curator = TestCuratorFactory.treatmentCurator();
         final List<CuratedTreatment> curatedTreatments = curator.matchMultiple("Prinivil,Zithromax/amlodipine besylate");
         assertEquals(3, curatedTreatments.size());
@@ -111,7 +111,7 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchMultipleTreatmentsWithTypos() throws IOException {
+    public void matchMultipleTreatmentsWithTypos() {
         final TreatmentCurator curator = TestCuratorFactory.treatmentCurator();
         final List<CuratedTreatment> curatedTreatments = curator.matchMultiple("Prinivyl,Zithromaxx/amlodipin Besylate");
         assertEquals(3, curatedTreatments.size());
@@ -122,7 +122,7 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchMultipleSimilarTreatments() throws IOException {
+    public void matchMultipleSimilarTreatments() {
         final TreatmentCurator curator = TestCuratorFactory.treatmentCurator();
         final List<CuratedTreatment> curatedTreatments = curator.matchMultiple("amlodipine besylate, amlodipine acetate");
         assertEquals(2, curatedTreatments.size());
@@ -132,7 +132,7 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void doesNotMatchAmbiguousTerm() throws IOException {
+    public void doesNotMatchAmbiguousTerm() {
         final TreatmentCurator curator = TestCuratorFactory.treatmentCurator();
         final List<CuratedTreatment> acidCuratedTreatments = curator.search("acid");
         assertEquals(0, acidCuratedTreatments.size());
@@ -141,21 +141,21 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void doesNotMatchAmbiguousMultiTerm() throws IOException {
+    public void doesNotMatchAmbiguousMultiTerm() {
         final TreatmentCurator curator = TestCuratorFactory.treatmentCurator();
         final List<CuratedTreatment> curatedTreatments = curator.search("pain therapy");
         assertEquals(0, curatedTreatments.size());
     }
 
     @Test
-    public void doesNotMatchNonExistentComposedTerm() throws IOException {
+    public void doesNotMatchNonExistentComposedTerm() {
         final TreatmentCurator curator = TestCuratorFactory.treatmentCurator();
         final List<CuratedTreatment> curatedTreatments = curator.search("amlodipine phosphate");
         assertEquals(0, curatedTreatments.size());
     }
 
     @Test
-    public void matchesTermWithAlias() throws IOException {
+    public void matchesTermWithAlias() {
         final TreatmentCurator curator = TestCuratorFactory.treatmentCurator();
         final List<CuratedTreatment> curatedTreatments = curator.search("Zocor (simvastatin)");
         assertEquals(2, curatedTreatments.size());
@@ -164,7 +164,7 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchesTermWithNumbers() throws IOException {
+    public void matchesTermWithNumbers() {
         final TreatmentCurator curator = TestCuratorFactory.treatmentCurator();
         final List<CuratedTreatment> curatedTreatments = curator.search("TNT 101");
         assertEquals(1, curatedTreatments.size());
@@ -172,7 +172,7 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void doesNotMatchSingleOccurrenceOfAmbiguousTerm() throws IOException {
+    public void doesNotMatchSingleOccurrenceOfAmbiguousTerm() {
         final TreatmentCurator curator = TestCuratorFactory.treatmentCurator();
         final List<CuratedTreatment> curatedTreatments = curator.search("acetate");
         assertEquals(0, curatedTreatments.size());

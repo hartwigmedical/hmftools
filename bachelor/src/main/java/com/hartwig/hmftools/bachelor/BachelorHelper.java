@@ -17,9 +17,12 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.xml.sax.SAXException;
 
-public class BachelorHelper {
+class BachelorHelper {
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorHelper.class);
+
+    private BachelorHelper() {
+    }
 
     @NotNull
     public static Map<String, Program> loadXML(final Path path) throws IOException, SAXException {
@@ -43,5 +46,4 @@ public class BachelorHelper {
 
         return result;
     }
-
 }

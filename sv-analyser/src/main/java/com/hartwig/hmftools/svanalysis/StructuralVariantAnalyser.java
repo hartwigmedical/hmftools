@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.svanalysis;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
@@ -10,9 +9,9 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.analysis.StructuralVariantClustering;
+import com.hartwig.hmftools.svanalysis.analysis.SvClusteringConfig;
 import com.hartwig.hmftools.svanalysis.annotators.SvVCFAnnotator;
 import com.hartwig.hmftools.svanalysis.types.SvClusterData;
-import com.hartwig.hmftools.svanalysis.analysis.SvClusteringConfig;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -24,7 +23,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
-
 
 public class StructuralVariantAnalyser {
 
@@ -43,12 +41,11 @@ public class StructuralVariantAnalyser {
     private static final String REANNOTATE_FROM_VCFS = "reannotate_vcfs";
     private static final String EXTERNAL_ANNOTATIONS = "external_annotations";
 
-
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
+    public static void main(@NotNull final String[] args) throws ParseException, SQLException {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
@@ -56,8 +53,7 @@ public class StructuralVariantAnalyser {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        if(cmd.hasOption(WRITE_FILTERED_SVS))
-        {
+        if (cmd.hasOption(WRITE_FILTERED_SVS)) {
             LOGGER.info("reading VCF files including filtered SVs");
 
             FilteredSVWriter filteredSvWriter = new FilteredSVWriter(cmd.getOptionValue(VCF_FILE), cmd.getOptionValue(DATA_OUTPUT_PATH));
@@ -67,8 +63,7 @@ public class StructuralVariantAnalyser {
             return;
         }
 
-        if(cmd.hasOption(REANNOTATE_FROM_VCFS))
-        {
+        if (cmd.hasOption(REANNOTATE_FROM_VCFS)) {
             LOGGER.info("reading VCF files to re-annotate");
 
             // for now just re-read the VCFs and write out new annotations to file
@@ -79,6 +74,11 @@ public class StructuralVariantAnalyser {
         }
 
         final DatabaseAccess dbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
+
+        if (dbAccess == null) {
+            LOGGER.info("Could not create dbAccess. Exiting");
+            System.exit(1);
+        }
 
         final String tumorSample = cmd.getOptionValue(SAMPLE);
 
@@ -117,8 +117,8 @@ public class StructuralVariantAnalyser {
             svClusterer.runClustering();
             //LOGGER.info("clustering complete", sample, count);
 
-//                if(count > 10)
-//                    break;
+            //                if(count > 10)
+            //                    break;
         }
 
         svClusterer.close();
