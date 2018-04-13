@@ -69,6 +69,7 @@ Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"liver","uk",Liver
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"lung","right",Lung
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"lymph node","para-iliacaal",Lymph node
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"mass ventrale bladder","ventral of bladder",Abdomen/Abdominal wall
+Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"muscle","back musculature, right side",Muscle
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"pancreas","pancreas",Pancreas
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"peritoneum","left lower abdomen",Peritoneum/Omentum
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"peritoneum","mesenterium",Peritoneum/Omentum
@@ -82,6 +83,7 @@ Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"primary","gastrointestin
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"primary","stomach",Stomach
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"rectum","proximal",Abdomen/Abdominal wall
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"small pelvic","small pelvic tumor",Bone
+Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"soft tissue","behind bladder",Abdomen/Abdominal wall
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"soft tissue","peritoneal under liver",Abdomen/Abdominal wall
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"subcutaneous","abdominal wall",(Sub)cutane
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"subcutaneous","left lateral abdomen",(Sub)cutane
@@ -802,6 +804,7 @@ Colon/Rectum,,"soft tissue","abdominal wall right",Abdomen/Abdominal wall
 Colon/Rectum,,"soft tissue","left abdomenal wall",Abdomen/Abdominal wall
 Colon/Rectum,,"soft tissue","sacrum",Bone
 Colon/Rectum,,"soft tissue","soft tissue left pelvis",Bone
+Colon/Rectum,,"soft tissue","ventral",
 Colon/Rectum,,"sternum","parasternal right side",Thorax/Thorax wall
 Colon/Rectum,,"subcutane laesion","left flank",(Sub)cutane
 Colon/Rectum,,"subcutane meta","abdominal wall",Abdomen/Abdominal wall
@@ -976,6 +979,7 @@ Head and neck,Oropharyngeal,"neck right side","superficial",Head and neck
 Head and neck,Oropharyngeal,"soft tissue","rib 11",Thorax/Thorax wall
 Head and neck,Other,"liver","segment 4b",Liver
 Head and neck,Other,"liver","segment 6",Liver
+Head and neck,Salivary Duct,"ossale vertebrae","ossale vertebrae",Bone
 Head and neck,Salivary Gland,"bone","l3",Bone
 Head and neck,Salivary Gland,"liver","4b/5",Liver
 Head and neck,Salivary Gland,"liver","left liver lobe",Liver
@@ -992,6 +996,7 @@ Head and neck,Salivary Gland,"mandible","submandibular mass",Head and neck
 Head and neck,Salivary Gland,"muscle","gluteus",Muscle
 Head and neck,Salivary Gland,"primary","mastoid area (post surgical area)",Head and neck
 Head and neck,Salivary Gland,"primary","right parotis",Head and neck
+Head and neck,Salivary Gland,"primary","sinus sphenoidalis",Head and Neck
 Head and neck,Tongue,"lymph node","neck, right side",Lymph node
 Head and neck,Tongue,"skin","neck left",(Sub)cutane
 Kidney,,"lymph node","inguinaal lilicaal",Lymph node
@@ -1284,6 +1289,7 @@ Mesothelioma,,"pleural fluid","pleura paravertebral",Lung
 Mesothelioma,,"primary","left pleura",Lung
 Mesothelioma,,"primary","left pleural ventral",Lung
 Mesothelioma,,"primary","left thorax wall",Lung
+Mesothelioma,,"primary","plaural mass right craniodorsal",Lung
 Mesothelioma,,"soft tissue","paravertebral",Lung
 Mesothelioma,,"soft tissue","thorax wall",Lung
 Mesothelioma,Pericarditis carcinomatosa,"lung","null",Lung
