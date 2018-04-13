@@ -43,7 +43,6 @@ Biliary,Gall bladder,"liver","ventral, right liver lobe",Liver
 Biliary,Gall bladder,"lymph node","neck level 4 right side",Lymph node
 Biliary,Gall bladder,"lymph node","right axilla",Lymph node
 Biliary,Gall bladder,"null","gall bladder",Gall bladder
-Biliary,Other,"liver","right liver lobe",Liver
 Bone/Soft tissue,Angiosarcoma,"liver","liver",Liver
 Bone/Soft tissue,Angiosarcoma,"primary","scalp",Bone
 Bone/Soft tissue,Desmoid,"abdomen","abdominal wall right",Abdomen/Abdominal wall
@@ -102,18 +101,18 @@ Bone/Soft tissue,Osteosarcoma,"bone","crista",Bone
 Bone/Soft tissue,Osteosarcoma,"bone","femur left",Bone
 Bone/Soft tissue,Osteosarcoma,"liver","segment 3",Liver
 Bone/Soft tissue,Osteosarcoma,"lung","lung",Lung
+Bone/Soft tissue,Rhabdomyosarcoma,"bone","pelvis",Bone
+Bone/Soft tissue,Rhabdomyosarcoma,"left scapula","left scapula",Thorax/Thorax wall
 Bone/Soft tissue,Sarcoma,"abdomen","abdomen",Abdomen/Abdominal wall
 Bone/Soft tissue,Sarcoma,"abdomen","mass para iliacal left",Abdomen/Abdominal wall
 Bone/Soft tissue,Sarcoma,"abdomen","suprapubic left paramedian",Abdomen/Abdominal wall
 Bone/Soft tissue,Sarcoma,"bone","lesion left collum femoris",Bone
 Bone/Soft tissue,Sarcoma,"bone","os pubis",Bone
-Bone/Soft tissue,Sarcoma,"bone","pelvis",Bone
 Bone/Soft tissue,Sarcoma,"breast","left breast",Breast
 Bone/Soft tissue,Sarcoma,"chest wall","rib right",Bone
 Bone/Soft tissue,Sarcoma,"cutaneous","left upper leg",(Sub)cutane
 Bone/Soft tissue,Sarcoma,"fibrosarcoma","right groin; m. rectus femoris",Muscle
 Bone/Soft tissue,Sarcoma,"laesie level costa 9","left",Bone
-Bone/Soft tissue,Sarcoma,"left scapula","left scapula",Thorax/Thorax wall
 Bone/Soft tissue,Sarcoma,"liver","left lobe",Liver
 Bone/Soft tissue,Sarcoma,"liver","metastasis",Liver
 Bone/Soft tissue,Sarcoma,"liver","right liver segment 8",Liver
@@ -152,12 +151,6 @@ Bone/Soft tissue,Sarcoma,"soft tissue","right hemithorax",Thorax/Thorax wall
 Bone/Soft tissue,Sarcoma,"soft tissue","right leg",Muscle
 Bone/Soft tissue,Sarcoma,"subcateneous","right buttocks",(Sub)cutane
 Bone/Soft tissue,Sarcoma,"thorax wall","left",Thorax/Thorax wall
-Breast,,"liver","liver",Liver
-Breast,,"liver","right lobe",Liver
-Breast,,"liver","unknown",Liver
-Breast,,"lung","apex of right lower lobe",Lung
-Breast,,"primary","left mamma",Breast
-Breast,,"skin","retro auriculair",(Sub)cutane
 Breast,ER-negative/HER2-positive,"axilla","right",Lymph node
 Breast,ER-negative/HER2-positive,"bone","lesion buttock left",Bone
 Breast,ER-negative/HER2-positive,"brain","left frontal",CNS
@@ -462,14 +455,20 @@ Breast,Subtype unknown,"liver","lateral right",Liver
 Breast,Subtype unknown,"liver","left lobe",Liver
 Breast,Subtype unknown,"liver","left",Liver
 Breast,Subtype unknown,"liver","liver n.o.s.",Liver
+Breast,Subtype unknown,"liver","liver",Liver
 Breast,Subtype unknown,"liver","right lobe s8",Liver
+Breast,Subtype unknown,"liver","right lobe",Liver
 Breast,Subtype unknown,"liver","segment 5",Liver
+Breast,Subtype unknown,"liver","unknown",Liver
+Breast,Subtype unknown,"lung","apex of right lower lobe",Lung
 Breast,Subtype unknown,"lymph node","axilla left",Lymph node
 Breast,Subtype unknown,"lymph node","axilla right",Lymph node
 Breast,Subtype unknown,"lymph node","supraclaviculair left",Lymph node
 Breast,Subtype unknown,"lymph node","supraclaviculair",Lymph node
 Breast,Subtype unknown,"mamma right","superolateral",Breast
+Breast,Subtype unknown,"primary","left mamma",Breast
 Breast,Subtype unknown,"primary","skin left breast",Breast
+Breast,Subtype unknown,"skin","retro auriculair",(Sub)cutane
 Breast,Subtype unknown,"skin","scalp",(Sub)cutane
 Breast,Subtype unknown,"skin","subcutaneous axilla (side unknown)",(Sub)cutane
 Breast,Subtype unknown,"skin","subcutis right upper arm",(Sub)cutane
@@ -827,6 +826,9 @@ CUP,,"primary","vulva",Uterus
 CUP,,"thyroid","left thyroid lobe",Thyroid
 CUP,,"tumor near clavicula medial left","tumor near clavicula medial lef",Thorax/Thorax wall
 CUP,,"vaginal","vaginal",Vagina
+CUP,Esophagus or Stomach,"primary","stomach",Stomach
+CUP,Gall bladder,"liver","right liver lobe",Liver
+CUP,Possibly Head and neck,"liver","left lobe",Liver
 Esophagus,,"abdomen left side","omental",Peritoneum/Omentum
 Esophagus,,"abdomen","subcutaneous lesion in the anterior abdominal wall left paramediaan.",Abdomen/Abdominal wall
 Esophagus,,"abdominal wall","abdominal wall",Abdomen/Abdominal wall
@@ -899,9 +901,8 @@ Esophagus,,"skin","metastasis",(Sub)cutane
 Esophagus,,"soft tissue","neck left",Head and neck
 Esophagus,,"soft tissue","right gluteal muscle",Muscle
 Esophagus,Other,"liver","segment 5",Liver
-Esophagus,Other,"liver","segment vi",Liver
 Esophagus,Other,"liver","ventral segment 4b",Liver
-Esophagus,Other,"primary","stomach",Stomach
+Head and neck,,"lymph node","para-iliacal left",Lymph node
 Head and neck,Hypopharyngeal,"liver","ventral right lobe",Liver
 Head and neck,Hypopharyngeal,"lung","right upper lobe",Lung
 Head and neck,Hypopharyngeal,"neck lesion","neck left",Head and neck
@@ -928,7 +929,6 @@ Head and neck,Oropharyngeal,"left mandibula","left mandibula",Head and neck
 Head and neck,Oropharyngeal,"neck right side","superficial",Head and neck
 Head and neck,Oropharyngeal,"soft tissue","rib 11",Thorax/Thorax wall
 Head and neck,Other,"liver","segment 4b",Liver
-Head and neck,Other,"lymph node","para-iliacal left",Lymph node
 Head and neck,Salivary Gland,"bone","l3",Bone
 Head and neck,Salivary Gland,"liver","4b/5",Liver
 Head and neck,Salivary Gland,"liver","left liver lobe",Liver
@@ -945,80 +945,95 @@ Head and neck,Salivary Gland,"primary","mastoid area (post surgical area)",Head 
 Head and neck,Salivary Gland,"primary","right parotis",Head and neck
 Head and neck,Tongue,"lymph node","neck, right side",Lymph node
 Head and neck,Tongue,"skin","neck left",(Sub)cutane
-Kidney,Other,"lymph node","inguinaal lilicaal",Lymph node
-Kidney,Renal Cell Cancer,"abdomen","left",Abdomen/Abdominal wall
-Kidney,Renal Cell Cancer,"abdominal wall","left lateral",Abdomen/Abdominal wall
-Kidney,Renal Cell Cancer,"abdominal wall","left",Abdomen/Abdominal wall
-Kidney,Renal Cell Cancer,"adrenal gland","adrenal left",Adrenal gland
-Kidney,Renal Cell Cancer,"adrenal gland","left adrenal gland",Adrenal gland
-Kidney,Renal Cell Cancer,"bone","l4",Bone
-Kidney,Renal Cell Cancer,"bone","os ileum lesion left",Bone
-Kidney,Renal Cell Cancer,"bone","os ilium",Bone
-Kidney,Renal Cell Cancer,"bone","os ischium right",Bone
-Kidney,Renal Cell Cancer,"bone","scapula",Bone
-Kidney,Renal Cell Cancer,"bone","tibia left",Bone
-Kidney,Renal Cell Cancer,"duodenum","duodenum (uncertain if lymphnodes)",Lymph node
-Kidney,Renal Cell Cancer,"kidney","cranial side left kdiney",Kidney
-Kidney,Renal Cell Cancer,"kidney","kidney 18g biopt",Kidney
-Kidney,Renal Cell Cancer,"kidney","left",Kidney
-Kidney,Renal Cell Cancer,"kidney","lesion",Kidney
-Kidney,Renal Cell Cancer,"kidney","lower pole left kidney",Kidney
-Kidney,Renal Cell Cancer,"kidney","lymph node mediastinum",Kidney
-Kidney,Renal Cell Cancer,"kidney","onderpool rechternier",Kidney
-Kidney,Renal Cell Cancer,"kidney","peri renal tissue",Kidney
-Kidney,Renal Cell Cancer,"kidney","perirenal tissue",Kidney
-Kidney,Renal Cell Cancer,"kidney","right kidney",Kidney
-Kidney,Renal Cell Cancer,"kidney","right upper pole",Kidney
-Kidney,Renal Cell Cancer,"kidney","right",Kidney
-Kidney,Renal Cell Cancer,"kidney","tumormass right kidney",Kidney
-Kidney,Renal Cell Cancer,"liver","liver",Liver
-Kidney,Renal Cell Cancer,"liver","most ventral situated largest lesion",Liver
-Kidney,Renal Cell Cancer,"liver","right liver lobe",Liver
-Kidney,Renal Cell Cancer,"liver","right lobe",Liver
-Kidney,Renal Cell Cancer,"liver","right",Liver
-Kidney,Renal Cell Cancer,"liver","segment 3",Liver
-Kidney,Renal Cell Cancer,"liver","segment 5",Liver
-Kidney,Renal Cell Cancer,"liver","segment 6",Liver
-Kidney,Renal Cell Cancer,"liver","unknown",Liver
-Kidney,Renal Cell Cancer,"lung","dorsal in left under lobe",Lung
-Kidney,Renal Cell Cancer,"lung","right",Lung
-Kidney,Renal Cell Cancer,"lymph node","abdomen",Lymph node
-Kidney,Renal Cell Cancer,"lymph node","left level v",Lymph node
-Kidney,Renal Cell Cancer,"lymph node","left side neck",Lymph node
-Kidney,Renal Cell Cancer,"lymph node","mediastinal",Lymph node
-Kidney,Renal Cell Cancer,"lymph node","neck",Lymph node
-Kidney,Renal Cell Cancer,"lymph node","para-aortaal",Lymph node
-Kidney,Renal Cell Cancer,"lymph node","para-aortal",Lymph node
-Kidney,Renal Cell Cancer,"lymph node","paravertebral left",Lymph node
-Kidney,Renal Cell Cancer,"lymph node","retrocaval",Lymph node
-Kidney,Renal Cell Cancer,"lymph node","right para-aortic",Lymph node
-Kidney,Renal Cell Cancer,"lymph node","supra clavicular",Lymph node
-Kidney,Renal Cell Cancer,"lymph node","supraclavicular lymph node",Lymph node
-Kidney,Renal Cell Cancer,"muscle dorsum","paravertebral t 12 right",Muscle
-Kidney,Renal Cell Cancer,"muscle","right upper leg",Muscle
-Kidney,Renal Cell Cancer,"musculus psoas","right",Muscle
-Kidney,Renal Cell Cancer,"null","adrenal",Adrenal gland
-Kidney,Renal Cell Cancer,"null","lesion under skin, abdominal",(Sub)cutane
-Kidney,Renal Cell Cancer,"null","muscle left leg",Muscle
-Kidney,Renal Cell Cancer,"null","skull",Bone
-Kidney,Renal Cell Cancer,"para-vertebral mass","para-vertebral right",Bone
-Kidney,Renal Cell Cancer,"primary","kidney left",Kidney
-Kidney,Renal Cell Cancer,"primary","left kidney",Kidney
-Kidney,Renal Cell Cancer,"primary","r kidney",Kidney
-Kidney,Renal Cell Cancer,"primary","right kidned",Kidney
-Kidney,Renal Cell Cancer,"primary","right kidney",Kidney
-Kidney,Renal Cell Cancer,"retro-peritoneal","left",Abdomen/Abdominal wall
-Kidney,Renal Cell Cancer,"skin/subcutaneous","thoracic wall right",Thorax/Thorax wall
-Kidney,Renal Cell Cancer,"skin/subcutaneous","unknown",(Sub)cutane
-Kidney,Renal Cell Cancer,"soft tissue mass sacrum","sacrum",Bone
-Kidney,Renal Cell Cancer,"soft tissue mass","os pubic bone right",Bone
-Kidney,Renal Cell Cancer,"soft tissue","lateral left aorta",Thorax/Thorax wall
-Kidney,Renal Cell Cancer,"soft tissue","pelvis right",Bone
-Kidney,Renal Cell Cancer,"sternum","mass retro-sternal",Bone
-Kidney,Renal Cell Cancer,"sternum","mass surrounding sternum",Bone
-Kidney,Renal Cell Cancer,"thorax","pleural lesion thoracic wall right side",Thorax/Thorax wall
-Kidney,Renal Cell Cancer,"thorax","subcutus right laterodorsaal",(Sub)cutane
-Kidney,Renal Cell Cancer,"uterus","uterus and adnexen",Uterus
+Kidney,,"lymph node","inguinaal lilicaal",Lymph node
+Kidney,Renal Cell,"abdomen","left",Abdomen/Abdominal wall
+Kidney,Renal Cell,"abdominal wall","left lateral",Abdomen/Abdominal wall
+Kidney,Renal Cell,"abdominal wall","left",Abdomen/Abdominal wall
+Kidney,Renal Cell,"adrenal gland","adrenal left",Adrenal gland
+Kidney,Renal Cell,"adrenal gland","left adrenal gland",Adrenal gland
+Kidney,Renal Cell,"bone","l4",Bone
+Kidney,Renal Cell,"bone","os ileum lesion left",Bone
+Kidney,Renal Cell,"bone","os ilium",Bone
+Kidney,Renal Cell,"bone","os ischium right",Bone
+Kidney,Renal Cell,"bone","scapula",Bone
+Kidney,Renal Cell,"bone","tibia left",Bone
+Kidney,Renal Cell,"duodenum","duodenum (uncertain if lymphnodes)",Lymph node
+Kidney,Renal Cell,"kidney","cranial side left kdiney",Kidney
+Kidney,Renal Cell,"kidney","kidney 18g biopt",Kidney
+Kidney,Renal Cell,"kidney","left",Kidney
+Kidney,Renal Cell,"kidney","lesion",Kidney
+Kidney,Renal Cell,"kidney","lower pole left kidney",Kidney
+Kidney,Renal Cell,"kidney","lymph node mediastinum",Kidney
+Kidney,Renal Cell,"kidney","onderpool rechternier",Kidney
+Kidney,Renal Cell,"kidney","peri renal tissue",Kidney
+Kidney,Renal Cell,"kidney","perirenal tissue",Kidney
+Kidney,Renal Cell,"kidney","right kidney",Kidney
+Kidney,Renal Cell,"kidney","right upper pole",Kidney
+Kidney,Renal Cell,"kidney","right",Kidney
+Kidney,Renal Cell,"kidney","tumormass right kidney",Kidney
+Kidney,Renal Cell,"liver","liver",Liver
+Kidney,Renal Cell,"liver","most ventral situated largest lesion",Liver
+Kidney,Renal Cell,"liver","right liver lobe",Liver
+Kidney,Renal Cell,"liver","right lobe",Liver
+Kidney,Renal Cell,"liver","right",Liver
+Kidney,Renal Cell,"liver","segment 3",Liver
+Kidney,Renal Cell,"liver","segment 5",Liver
+Kidney,Renal Cell,"liver","segment 6",Liver
+Kidney,Renal Cell,"liver","unknown",Liver
+Kidney,Renal Cell,"lung","dorsal in left under lobe",Lung
+Kidney,Renal Cell,"lung","right",Lung
+Kidney,Renal Cell,"lymph node","abdomen",Lymph node
+Kidney,Renal Cell,"lymph node","left level v",Lymph node
+Kidney,Renal Cell,"lymph node","left side neck",Lymph node
+Kidney,Renal Cell,"lymph node","mediastinal",Lymph node
+Kidney,Renal Cell,"lymph node","neck",Lymph node
+Kidney,Renal Cell,"lymph node","para-aortaal",Lymph node
+Kidney,Renal Cell,"lymph node","para-aortal",Lymph node
+Kidney,Renal Cell,"lymph node","paravertebral left",Lymph node
+Kidney,Renal Cell,"lymph node","retrocaval",Lymph node
+Kidney,Renal Cell,"lymph node","right para-aortic",Lymph node
+Kidney,Renal Cell,"lymph node","supra clavicular",Lymph node
+Kidney,Renal Cell,"lymph node","supraclavicular lymph node",Lymph node
+Kidney,Renal Cell,"muscle dorsum","paravertebral t 12 right",Muscle
+Kidney,Renal Cell,"muscle","right upper leg",Muscle
+Kidney,Renal Cell,"musculus psoas","right",Muscle
+Kidney,Renal Cell,"null","adrenal",Adrenal gland
+Kidney,Renal Cell,"null","lesion under skin, abdominal",(Sub)cutane
+Kidney,Renal Cell,"null","muscle left leg",Muscle
+Kidney,Renal Cell,"null","skull",Bone
+Kidney,Renal Cell,"para-vertebral mass","para-vertebral right",Bone
+Kidney,Renal Cell,"primary","kidney left",Kidney
+Kidney,Renal Cell,"primary","left kidney",Kidney
+Kidney,Renal Cell,"primary","r kidney",Kidney
+Kidney,Renal Cell,"primary","right kidned",Kidney
+Kidney,Renal Cell,"primary","right kidney",Kidney
+Kidney,Renal Cell,"retro-peritoneal","left",Abdomen/Abdominal wall
+Kidney,Renal Cell,"skin/subcutaneous","thoracic wall right",Thorax/Thorax wall
+Kidney,Renal Cell,"skin/subcutaneous","unknown",(Sub)cutane
+Kidney,Renal Cell,"soft tissue mass sacrum","sacrum",Bone
+Kidney,Renal Cell,"soft tissue mass","os pubic bone right",Bone
+Kidney,Renal Cell,"soft tissue","lateral left aorta",Thorax/Thorax wall
+Kidney,Renal Cell,"soft tissue","pelvis right",Bone
+Kidney,Renal Cell,"sternum","mass retro-sternal",Bone
+Kidney,Renal Cell,"sternum","mass surrounding sternum",Bone
+Kidney,Renal Cell,"thorax","pleural lesion thoracic wall right side",Thorax/Thorax wall
+Kidney,Renal Cell,"thorax","subcutus right laterodorsaal",(Sub)cutane
+Kidney,Renal Cell,"uterus","uterus and adnexen",Uterus
+Liver,,"abdomen muscle","musculus obliques abdominis right",Muscle
+Liver,,"bone","os ilium right",Bone
+Liver,,"liver","left liver lobe",Liver
+Liver,,"liver","left lobe",Liver
+Liver,,"liver","not specified",Liver
+Liver,,"liver","right liver lobe",Liver
+Liver,,"liver","right liver lober",Liver
+Liver,,"liver","right liverlobe",Liver
+Liver,,"liver","segment 7",Liver
+Liver,,"liver","segment iv",Liver
+Liver,,"liver","segment vi",Liver
+Liver,,"liver","uk",Liver
+Liver,,"liver","unknown",Liver
+Liver,,"lung","right lung",Lung
+Liver,,"peritoneum","omental lesion",Peritoneum/Omentum
 Liver,,"soft tissue","right flank",Abdomen/Abdominal wall
 Liver,Hepatocellular,"adrenal gland","left side",Adrenal gland
 Liver,Hepatocellular,"adrenal gland","left",Adrenal gland
@@ -1040,22 +1055,7 @@ Liver,Hepatocellular,"lung","paracardiale lymph node parasternaal",Lymph node
 Liver,Hepatocellular,"lung","wig excision left",Liver
 Liver,Hepatocellular,"paravertebrale massa","right flank",Liver
 Liver,Hepatocellular,"primary","central tumor lesion liver",Liver
-Liver,Other,"abdomen muscle","musculus obliques abdominis right",Muscle
-Liver,Other,"bone","os ilium right",Bone
-Liver,Other,"liver","left liver lobe",Liver
-Liver,Other,"liver","left lobe",Liver
 Liver,Other,"liver","liver",Liver
-Liver,Other,"liver","not specified",Liver
-Liver,Other,"liver","right liver lobe",Liver
-Liver,Other,"liver","right liver lober",Liver
-Liver,Other,"liver","right liverlobe",Liver
-Liver,Other,"liver","segment 7",Liver
-Liver,Other,"liver","segment iv",Liver
-Liver,Other,"liver","segment vi",Liver
-Liver,Other,"liver","uk",Liver
-Liver,Other,"liver","unknown",Liver
-Liver,Other,"lung","right lung",Lung
-Liver,Other,"peritoneum","omental lesion",Peritoneum/Omentum
 Lung,Adenocarcinoom,"liver","left lobe",Liver
 Lung,Bronchus,"soft tissue","pectoralis major right",Muscle
 Lung,NET,"liver","left liver lobe",Liver
@@ -1232,13 +1232,12 @@ Other,Double primary,"lymph node","axillair",Lymph node
 Other,Double primary,"mesothelioma left diaphragm","dorsolateral, between ribs",Thorax/Thorax wall
 Other,Myeloid: Morbus Kahler,"soft tissue","gastrocnemus rechts,",Muscle
 Other,Myeloid: Multiple Myeloma,"bone","unknown",Bone
-Other,NET: other,"liver","left liver lobe",Liver
-Other,NET: other,"liver","null",Liver
-Other,NET: other,"liver","right liver",Liver
-Other,NET: other,"lung","right mid lobe",Lung
-Other,NET: other,"pleural","left pleural intercostal",Lung
-Other,NET: other,"primary","colon",Colon/Rectum
-Other,NET: other,"subcutaneous","right axilla",(Sub)cutane
+Other,NET,"liver","null",Liver
+Other,NET,"liver","right liver",Liver
+Other,NET,"lung","right mid lobe",Lung
+Other,NET,"primary","colon",Colon/Rectum
+Other,NET,"subcutaneous","right axilla",(Sub)cutane
+Other,NET: lung or small intenstine,"liver","left liver lobe",Liver
 Other,NET: unknown primary,"cardia","cardia",Stomach
 Other,NET: unknown primary,"cns","occipitale",CNS
 Other,NET: unknown primary,"liver","segment 2/3",Liver
@@ -1252,6 +1251,7 @@ Other,Testis,"bone","sacrum left",Bone
 Other,Testis,"bone","sacrum",Bone
 Other,Testis,"lung","right under lobe",Thorax/Thorax wall
 Other,Testis,"peritoneum","peritonial left abdomen",Peritoneum/Omentum
+Other,Thymic NET,"pleural","left pleural intercostal",Lung
 Other,Thyroid,"abdomen","left",Abdomen/Abdominal wall
 Other,Thyroid,"liver","liver right part",Liver
 Other,Thyroid,"lung","right lower lobe",Lung
@@ -1344,7 +1344,59 @@ Ovary,,"vagina","cuff",Vagina
 Ovary,,"vagina","upper wall",Vagina
 Ovary,,"vaginal","unknown",Vagina
 Ovary,,"ventral abdomen","ventral abdomen",Abdomen/Abdominal wall
+Pancreas,,"colon","colon",Colon/Rectum
+Pancreas,,"liver","front",Liver
 Pancreas,,"liver","laesie caudaal right liver lobe",Liver
+Pancreas,,"liver","left liver lob",Liver
+Pancreas,,"liver","left liver lobe metastasis",Liver
+Pancreas,,"liver","left liver lobe",Liver
+Pancreas,,"liver","left liver segment",Liver
+Pancreas,,"liver","left lobe",Liver
+Pancreas,,"liver","left side",Liver
+Pancreas,,"liver","lesion segm 5",Liver
+Pancreas,,"liver","liverlobe left",Liver
+Pancreas,,"liver","metastasis segment 3",Liver
+Pancreas,,"liver","metastasis",Liver
+Pancreas,,"liver","not specified",Liver
+Pancreas,,"liver","null",Liver
+Pancreas,,"liver","right hemilever",Liver
+Pancreas,,"liver","right live lobe",Liver
+Pancreas,,"liver","right liver lob",Liver
+Pancreas,,"liver","right liver lobe",Liver
+Pancreas,,"liver","right liverlob",Liver
+Pancreas,,"liver","right liverlobe",Liver
+Pancreas,,"liver","right lobe liver",Liver
+Pancreas,,"liver","right lobe",Liver
+Pancreas,,"liver","right",Liver
+Pancreas,,"liver","segment 2/3",Liver
+Pancreas,,"liver","segment 2/4",Liver
+Pancreas,,"liver","segment 3",Liver
+Pancreas,,"liver","segment 4",Liver
+Pancreas,,"liver","segment 5",Liver
+Pancreas,,"liver","segment 5/8",Liver
+Pancreas,,"liver","segment 6",Liver
+Pancreas,,"liver","segment 7",Liver
+Pancreas,,"liver","segment 8",Liver
+Pancreas,,"liver","segment iv",Liver
+Pancreas,,"liver","segment unknown",Liver
+Pancreas,,"liver","unknown",Liver
+Pancreas,,"lung","left, dorsal",Lung
+Pancreas,,"lymph node","supraclaviculair left",Lymph node
+Pancreas,,"major duodenal papilla","major duodenal papilla",Small intestine
+Pancreas,,"metastasis pancreascarcinoma","abdominal wall muscus rectus",Abdomen/Abdominal wall
+Pancreas,,"musculus erector truncus spinae","musculus right",Muscle
+Pancreas,,"oesophagus","laesion",Esophagus
+Pancreas,,"omentum","abnormality lesion",Peritoneum/Omentum
+Pancreas,,"omentum","omentum lesion right",Peritoneum/Omentum
+Pancreas,,"ovarium","adnex right side",Peritoneum/Omentum
+Pancreas,,"peritoneum","left",Peritoneum/Omentum
+Pancreas,,"peritoneum","peritoneum",Peritoneum/Omentum
+Pancreas,,"primary","from left side para median approach",Pancreas
+Pancreas,,"primary","pancreas",Pancreas
+Pancreas,,"subcutane right gluteal","subcutane gluteus right",(Sub)cutane
+Pancreas,,"subcutane, right side just above the umbilicus","abdomen, near the umbilicus",(Sub)cutane
+Pancreas,,"subcutaneous","next to navel",(Sub)cutane
+Pancreas,,"supraclaviculair","supraclaviculair",Thorax/Thorax wall
 Pancreas,NET,"liver","caudaal right liver lobe",Liver
 Pancreas,NET,"liver","dorsal right lobe",Liver
 Pancreas,NET,"liver","left lobe",Liver
@@ -1361,58 +1413,6 @@ Pancreas,NET,"liver","sement 4b, 5 or 6",Liver
 Pancreas,NET,"peritoneum","lower abdomen right",Peritoneum/Omentum
 Pancreas,NET,"primary","pancreas",Pancreas
 Pancreas,Other,"abdominal wall","front",Abdomen/Abdominal wall
-Pancreas,Other,"colon","colon",Colon/Rectum
-Pancreas,Other,"liver","front",Liver
-Pancreas,Other,"liver","left liver lob",Liver
-Pancreas,Other,"liver","left liver lobe metastasis",Liver
-Pancreas,Other,"liver","left liver lobe",Liver
-Pancreas,Other,"liver","left liver segment",Liver
-Pancreas,Other,"liver","left lobe",Liver
-Pancreas,Other,"liver","left side",Liver
-Pancreas,Other,"liver","lesion segm 5",Liver
-Pancreas,Other,"liver","liverlobe left",Liver
-Pancreas,Other,"liver","metastasis segment 3",Liver
-Pancreas,Other,"liver","metastasis",Liver
-Pancreas,Other,"liver","not specified",Liver
-Pancreas,Other,"liver","null",Liver
-Pancreas,Other,"liver","right hemilever",Liver
-Pancreas,Other,"liver","right live lobe",Liver
-Pancreas,Other,"liver","right liver lob",Liver
-Pancreas,Other,"liver","right liver lobe",Liver
-Pancreas,Other,"liver","right liverlob",Liver
-Pancreas,Other,"liver","right liverlobe",Liver
-Pancreas,Other,"liver","right lobe liver",Liver
-Pancreas,Other,"liver","right lobe",Liver
-Pancreas,Other,"liver","right",Liver
-Pancreas,Other,"liver","segment 2/3",Liver
-Pancreas,Other,"liver","segment 2/4",Liver
-Pancreas,Other,"liver","segment 3",Liver
-Pancreas,Other,"liver","segment 4",Liver
-Pancreas,Other,"liver","segment 5",Liver
-Pancreas,Other,"liver","segment 5/8",Liver
-Pancreas,Other,"liver","segment 6",Liver
-Pancreas,Other,"liver","segment 7",Liver
-Pancreas,Other,"liver","segment 8",Liver
-Pancreas,Other,"liver","segment iv",Liver
-Pancreas,Other,"liver","segment unknown",Liver
-Pancreas,Other,"liver","unknown",Liver
-Pancreas,Other,"lung","left, dorsal",Lung
-Pancreas,Other,"lymph node","supraclaviculair left",Lymph node
-Pancreas,Other,"major duodenal papilla","major duodenal papilla",Small intestine
-Pancreas,Other,"metastasis pancreascarcinoma","abdominal wall muscus rectus",Abdomen/Abdominal wall
-Pancreas,Other,"musculus erector truncus spinae","musculus right",Muscle
-Pancreas,Other,"oesophagus","laesion",Esophagus
-Pancreas,Other,"omentum","abnormality lesion",Peritoneum/Omentum
-Pancreas,Other,"omentum","omentum lesion right",Peritoneum/Omentum
-Pancreas,Other,"ovarium","adnex right side",Peritoneum/Omentum
-Pancreas,Other,"peritoneum","left",Peritoneum/Omentum
-Pancreas,Other,"peritoneum","peritoneum",Peritoneum/Omentum
-Pancreas,Other,"primary","from left side para median approach",Pancreas
-Pancreas,Other,"primary","pancreas",Pancreas
-Pancreas,Other,"subcutane right gluteal","subcutane gluteus right",(Sub)cutane
-Pancreas,Other,"subcutane, right side just above the umbilicus","abdomen, near the umbilicus",(Sub)cutane
-Pancreas,Other,"subcutaneous","next to navel",(Sub)cutane
-Pancreas,Other,"supraclaviculair","supraclaviculair",Thorax/Thorax wall
 Prostate,,"adrenal gland","adrenal gland",Adrenal gland
 Prostate,,"adrenal gland","left",Adrenal gland
 Prostate,,"adrenal gland","resection",Adrenal gland
@@ -1578,6 +1578,12 @@ Prostate,,"soft tissue","upper thoracic wall, left",Thorax/Thorax wall
 Prostate,,"subcutis","left eyebrow & sternum",(Sub)cutane
 Prostate,,"urinary bladder","na",Bladder
 Prostate,,"urinary tract","bladder",Bladder
+Skin,,"lymph node","groin left",Lymph node
+Skin,,"lymph node","left axilla",Lymph node
+Skin,,"lymph node","left axillary",Lymph node
+Skin,,"null","retro peritonial left",(Sub)cutane
+Skin,,"skin","skin",(Sub)cutane
+Skin,,"skin","subcutus right leg",(Sub)cutane
 Skin,Basal cell carcinoma,"primary","scalp",(Sub)cutane
 Skin,Basal cell carcinoma,"skin","skin",(Sub)cutane
 Skin,Melanoma,"abdomen","lower abdomen left",ABdomen/Abdominal wall
@@ -1760,12 +1766,6 @@ Skin,Melanoma,"thorax wall","left",Thorax/Thorax wall
 Skin,Melanoma,"thorax","thorax wall left",Thorax/Thorax wall
 Skin,Melanoma,"upperarm","left",(Sub)cutane
 Skin,Other,"adrenal gland","left side",Adrenal gland
-Skin,Other,"lymph node","groin left",Lymph node
-Skin,Other,"lymph node","left axilla",Lymph node
-Skin,Other,"lymph node","left axillary",Lymph node
-Skin,Other,"null","retro peritonial left",(Sub)cutane
-Skin,Other,"skin","skin",(Sub)cutane
-Skin,Other,"skin","subcutus right leg",(Sub)cutane
 Skin,Skin squamous cell carcinoma,"lymph node","inguinal right",Lymph node
 Skin,Skin squamous cell carcinoma,"lymph node","right groin",Lymph node
 Skin,Skin squamous cell carcinoma,"ulcus neck","ulcus neck",(Sub)cutane
@@ -1804,34 +1804,34 @@ Small intestine,NET,"subcutaneous nodus","abdominal wall",Abdomen/Abdominal wall
 Small intestine,Other,"liver","metastasis",Liver
 Small intestine,Other,"liver","right",Liver
 Small intestine,Other,"pericardiale laesie","pericardiale laesie",Abdomen/Abdominal wall
+Stomach,,"abdominal","wall",Abdomen/Abdominal wall
+Stomach,,"belly button","metastasis",Abdomen/Abdominal wall
+Stomach,,"clavicula","subclaviculair left",Thorax/Thorax wall
+Stomach,,"esophagus/stomach","cardia",Stomach
+Stomach,,"gastric antrum","null",Stomach
+Stomach,,"liver","left liver lobe",Liver
+Stomach,,"liver","left liverlobe",Liver
+Stomach,,"liver","metastatis",Liver
+Stomach,,"liver","right lobe",Liver
+Stomach,,"liver","segment 2",Liver
+Stomach,,"liver","segment 4",Liver
+Stomach,,"liver","segment 5",Liver
+Stomach,,"liver","segment 6",Liver
+Stomach,,"liver","segment vi",Liver
+Stomach,,"lymph node","abdominal",Lymph node
+Stomach,,"lymph node","cervical level 3 left side",Lymph node
+Stomach,,"lymph node","para aortic ventral upper abdomen, cranial of pancreas",Lymph node
+Stomach,,"neck lymph node","neck",Lymph node
+Stomach,,"primary","proximal oesophagus",Esophagus
+Stomach,,"stomach","angulus",Stomach
+Stomach,,"stomach","corpus curvatura minor",Stomach
+Stomach,,"stomach","stomach",Stomach
+Stomach,,"stomach","unknown",Stomach
 Stomach,Cardia,"liver","left lobe",Liver
 Stomach,Gastric,"liver","metastasis",Liver
 Stomach,Gastric,"liver","right liver lob",Liver
 Stomach,Gastric,"stomach","stomach",Stomach
-Stomach,Other,"abdominal","wall",Abdomen/Abdominal wall
-Stomach,Other,"belly button","metastasis",Abdomen/Abdominal wall
-Stomach,Other,"clavicula","subclaviculair left",Thorax/Thorax wall
-Stomach,Other,"esophagus/stomach","cardia",Stomach
-Stomach,Other,"gastric antrum","null",Stomach
-Stomach,Other,"liver","left liver lobe",Liver
-Stomach,Other,"liver","left liverlobe",Liver
-Stomach,Other,"liver","metastatis",Liver
-Stomach,Other,"liver","right lobe",Liver
-Stomach,Other,"liver","segment 2",Liver
-Stomach,Other,"liver","segment 4",Liver
-Stomach,Other,"liver","segment 5",Liver
-Stomach,Other,"liver","segment 6",Liver
-Stomach,Other,"liver","segment vi",Liver
-Stomach,Other,"lymph node","abdominal",Lymph node
-Stomach,Other,"lymph node","cervical level 3 left side",Lymph node
-Stomach,Other,"lymph node","para aortic ventral upper abdomen, cranial of pancreas",Lymph node
-Stomach,Other,"neck lymph node","neck",Lymph node
-Stomach,Other,"primary","proximal oesophagus",Esophagus
 Stomach,Other,"sacrum","mass dorsal sacrum",Bone
-Stomach,Other,"stomach","angulus",Stomach
-Stomach,Other,"stomach","corpus curvatura minor",Stomach
-Stomach,Other,"stomach","stomach",Stomach
-Stomach,Other,"stomach","unknown",Stomach
 Urinary tract,Bladder,"abdominal wall","right kwadrant of lower abdomen",Abdomen/Abdominal wall
 Urinary tract,Bladder,"armpit","left",Lymph node
 Urinary tract,Bladder,"bladder","bladder",Bladder
@@ -1899,7 +1899,6 @@ Urinary tract,Other,"liver","segment 5",Liver
 Urinary tract,Other,"liver","segment 6",Liver
 Urinary tract,Other,"lung","lingula",Lung
 Urinary tract,Other,"lymph node","axillair right",Lymph node
-Urinary tract,Other,"lymph node","left groin",Lymph node
 Urinary tract,Other,"lymph node","liver",Lymph node
 Urinary tract,Other,"lymph node","right para-iliacal",Lymph node
 Urinary tract,Other,"unknown","most likely subcarinal node",Lymph node
@@ -1913,6 +1912,7 @@ Urinary tract,Pyelum,"lymph node","lymph node neck",Lymph node
 Urinary tract,Pyelum,"lymph node","retrocaval",Lymph node
 Urinary tract,Pyelum,"peritoneal deposition","the medianline, under the left liver lob",Peritoneum/Omentum
 Urinary tract,Pyelum,"peritoneum","mass retro peritoneal left",Peritoneum/Omentum
+Urinary tract,Unknown,"lymph node","left groin",Lymph node
 Urinary tract,Urethra,"liver","central lesion",Liver
 Urinary tract,Urethra,"liver","left",Liver
 Urinary tract,Urethra,"liver","segment 6",Liver
