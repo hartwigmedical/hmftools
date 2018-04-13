@@ -4,21 +4,11 @@ import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.baselineB
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyBuilder;
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyTreatmentBuilder;
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.drugBuilder;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_INFORMED_CONSENT_DATE;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyReader.FIELD_BIOPSY_DATE;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyReader.FIELD_LOCATION;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyReader.FIELD_SITE;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyReader.FIELD_SITE_OTHER;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyReader.FORM_BIOPS;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyTreatmentReader.FORM_TREATMENT;
-import static com.hartwig.hmftools.patientdb.validators.PatientValidator.fields;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
@@ -44,10 +34,7 @@ public class BiopsyDataValidationTest {
     public void reportsMissingFields() {
         final List<ValidationFinding> findings = PatientValidator.validateBiopsyData(PATIENT_IDENTIFIER, BIOPSY_NULL);
         assertEquals(2, findings.size());
-        findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
-        final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(FIELD_BIOPSY_DATE));
-        assertTrue(findingsFields.contains(fields(FIELD_SITE, FIELD_SITE_OTHER, FIELD_LOCATION)));
+        findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
     }
 
     @Test
@@ -55,9 +42,6 @@ public class BiopsyDataValidationTest {
         final List<ValidationFinding> findings =
                 PatientValidator.validateBiopsies(PATIENT_IDENTIFIER, Lists.newArrayList(), Lists.newArrayList());
         assertEquals(1, findings.size());
-        findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
-        final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(FORM_BIOPS));
     }
 
     @Test
@@ -66,10 +50,7 @@ public class BiopsyDataValidationTest {
                 Lists.newArrayList(BIOPSY_NULL, BIOPSY_FEB1, BIOPSY_FEB2),
                 Lists.newArrayList());
         assertEquals(2, findings.size());
-        findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
-        final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(FIELD_BIOPSY_DATE));
-        assertTrue(findingsFields.contains(fields(FIELD_SITE, FIELD_SITE_OTHER, FIELD_LOCATION)));
+        findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
     }
 
     @Test
@@ -78,9 +59,6 @@ public class BiopsyDataValidationTest {
                 baselineBuilder().informedConsentDate(MAR2016).build(),
                 Lists.newArrayList(BIOPSY_FEB1));
         assertEquals(1, findings.size());
-        findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
-        final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(fields(FIELD_INFORMED_CONSENT_DATE, FIELD_BIOPSY_DATE)));
     }
 
     @Test
@@ -89,8 +67,5 @@ public class BiopsyDataValidationTest {
                 Lists.newArrayList(BIOPSY_FEB1),
                 Lists.newArrayList(TREATMENT_JAN_FEB));
         assertEquals(1, findings.size());
-        findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
-        final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(fields(FORM_TREATMENT, FORM_BIOPS)));
     }
 }

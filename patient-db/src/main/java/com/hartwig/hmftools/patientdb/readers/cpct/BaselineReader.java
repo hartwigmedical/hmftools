@@ -18,7 +18,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class BaselineReader {
+class BaselineReader {
     private static final Logger LOGGER = LogManager.getLogger(BaselineReader.class);
 
     private static final String STUDY_BASELINE = "SE.BASELINE";
@@ -38,21 +38,21 @@ public class BaselineReader {
     private static final String ITEMGROUP_SELCRIT = "GRP.SELCRIT.SELCRIT";
     private static final String ITEMGROUP_DEATH = "GRP.DEATH.DEATH";
 
-    public static final String FIELD_GENDER = "FLD.DEMOGRAPHY.SEX";
-    public static final String FIELD_INFORMED_CONSENT_DATE = "FLD.INFORMEDCONSENT.ICDTC";
-    public static final String FIELD_REGISTRATION_DATE1 = "FLD.ELIGIBILITY.REGDTC";
-    public static final String FIELD_REGISTRATION_DATE2 = "FLD.SELCRIT.NREGDTC";
-    public static final String FIELD_BIRTH_YEAR1 = "FLD.SELCRIT.NBIRTHYEAR";
-    public static final String FIELD_BIRTH_YEAR2 = "FLD.ELIGIBILITY.BIRTHYEAR";
-    public static final String FIELD_BIRTH_YEAR3 = "FLD.ELIGIBILITY.BIRTHDTCES";
+    private static final String FIELD_GENDER = "FLD.DEMOGRAPHY.SEX";
+    private static final String FIELD_INFORMED_CONSENT_DATE = "FLD.INFORMEDCONSENT.ICDTC";
+    private static final String FIELD_REGISTRATION_DATE1 = "FLD.ELIGIBILITY.REGDTC";
+    private static final String FIELD_REGISTRATION_DATE2 = "FLD.SELCRIT.NREGDTC";
+    private static final String FIELD_BIRTH_YEAR1 = "FLD.SELCRIT.NBIRTHYEAR";
+    private static final String FIELD_BIRTH_YEAR2 = "FLD.ELIGIBILITY.BIRTHYEAR";
+    private static final String FIELD_BIRTH_YEAR3 = "FLD.ELIGIBILITY.BIRTHDTCES";
 
-    public static final String FIELD_PRIMARY_TUMOR_LOCATION = "FLD.CARCINOMA.PTUMLOC";
-    public static final String FIELD_PRIMARY_TUMOR_LOCATION_OTHER = "FLD.CARCINOMA.PTUMLOCS";
+    private static final String FIELD_PRIMARY_TUMOR_LOCATION = "FLD.CARCINOMA.PTUMLOC";
+    private static final String FIELD_PRIMARY_TUMOR_LOCATION_OTHER = "FLD.CARCINOMA.PTUMLOCS";
 
-    public static final String FIELD_DEATH_DATE = "FLD.DEATH.DDEATHDTC";
+    private static final String FIELD_DEATH_DATE = "FLD.DEATH.DDEATHDTC";
 
-    public static final String FIELD_HOSPITAL1 = "FLD.ELIGIBILITY.HOSPITAL";
-    public static final String FIELD_HOSPITAL2 = "FLD.SELCRIT.NHOSPITAL";
+    private static final String FIELD_HOSPITAL1 = "FLD.ELIGIBILITY.HOSPITAL";
+    private static final String FIELD_HOSPITAL2 = "FLD.SELCRIT.NHOSPITAL";
 
     @NotNull
     private final TumorLocationCurator tumorLocationCurator;
@@ -67,12 +67,13 @@ public class BaselineReader {
     @NotNull
     BaselineData read(@NotNull final EcrfPatient patient) {
         final ImmutableBaselineData.Builder baselineBuilder = ImmutableBaselineData.builder()
-                .demographyStatus(FormStatus.unknown())
-                .primaryTumorStatus(FormStatus.unknown()).curatedTumorLocation(ImmutableCuratedTumorLocation.of(null, null, null))
-                .eligibilityStatus(FormStatus.unknown())
-                .selectionCriteriaStatus(FormStatus.unknown())
-                .informedConsentStatus(FormStatus.unknown())
-                .deathStatus(FormStatus.unknown())
+                .demographyStatus(FormStatus.undefined())
+                .primaryTumorStatus(FormStatus.undefined())
+                .curatedTumorLocation(ImmutableCuratedTumorLocation.of(null, null, null))
+                .eligibilityStatus(FormStatus.undefined())
+                .selectionCriteriaStatus(FormStatus.undefined())
+                .informedConsentStatus(FormStatus.undefined())
+                .deathStatus(FormStatus.undefined())
                 .hospital(getHospital(patient, hospitals));
 
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BASELINE)) {

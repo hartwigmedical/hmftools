@@ -128,7 +128,6 @@ CREATE TABLE clinicalFindings
 (   id int NOT NULL AUTO_INCREMENT,
     level varchar(30),
     patientId varchar(20),
-    ecrfItem varchar(100),
     formStatus varchar(30),
     formLocked varchar(5),
     message varchar(1000),

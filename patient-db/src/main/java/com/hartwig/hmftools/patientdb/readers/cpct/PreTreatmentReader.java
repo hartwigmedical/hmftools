@@ -21,7 +21,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class PreTreatmentReader {
+class PreTreatmentReader {
 
     private static final Logger LOGGER = LogManager.getLogger(PreTreatmentReader.class);
 
@@ -29,12 +29,13 @@ public class PreTreatmentReader {
 
     private static final String FORM_TREATMENT = "FRM.PRETHERAPY";
     private static final String ITEMGROUP_TREATMENT = "GRP.PRETHERAPY.PRETHERAPY";
-    public static final String FIELD_PRETREATMENT_GIVEN = "FLD.PRETHERAPY.SYSTEMIC";
-    public static final String FIELD_PRERADIOTHERAPY_GIVEN = "FLD.PRETHERAPY.RADIOTHER";
+    private static final String FIELD_PRETREATMENT_GIVEN = "FLD.PRETHERAPY.SYSTEMIC";
+    private static final String FIELD_PRERADIOTHERAPY_GIVEN = "FLD.PRETHERAPY.RADIOTHER";
+
     private static final String ITEMGROUP_DRUGS = "GRP.PRETHERAPY.SYSTEMICTRT";
     private static final String FIELD_PRE_DRUG_START = "FLD.PRETHERAPY.SYSTEMICSTDTC";
     private static final String FIELD_PRE_DRUG_END = "FLD.PRETHERAPY.SYSTEMICENDTC";
-    public static final String FIELD_PRE_DRUG = "FLD.PRETHERAPY.SYSTEMICREG";
+    private static final String FIELD_PRE_DRUG = "FLD.PRETHERAPY.SYSTEMICREG";
     private static final String FIELD_PRE_BEST_RESPONSE = "FLD.PRETHERAPY.SYSTEMICRESP";
 
     @NotNull
@@ -63,7 +64,8 @@ public class PreTreatmentReader {
         }
 
         return preTreatmentData != null
-                ? preTreatmentData : ImmutablePreTreatmentData.of(null, null, Lists.newArrayList(), FormStatus.unknown());
+                ? preTreatmentData
+                : ImmutablePreTreatmentData.of(null, null, Lists.newArrayList(), FormStatus.undefined());
     }
 
     @NotNull

@@ -17,19 +17,19 @@ import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class BiopsyReader {
+class BiopsyReader {
 
     static final String STUDY_BIOPSY = "SE.BIOPSY";
-    public static final String FORM_BIOPS = "FRM.BIOPS";
+    static final String FORM_BIOPS = "FRM.BIOPS";
     static final String ITEMGROUP_BIOPSY = "GRP.BIOPS.BIOPS";
     static final String FIELD_BIOPSY_TAKEN = "FLD.BIOPS.CPCT";
     static final String FIELD_BIOPSY_EVALUABLE = "FLD.BIOPS.BIOPEFS";
 
     static final String ITEMGROUP_BIOPSIES = "GRP.BIOPS.BIOPSIES";
-    public static final String FIELD_BIOPSY_DATE = "FLD.BIOPS.BIOPTDT";
-    public static final String FIELD_SITE = "FLD.BIOPS.BILESSITE";
-    public static final String FIELD_SITE_OTHER = "FLD.BIOPS.BIOTHLESSITE";
-    public static final String FIELD_LOCATION = "FLD.BIOPS.BILESLOC";
+    static final String FIELD_BIOPSY_DATE = "FLD.BIOPS.BIOPTDT";
+    static final String FIELD_SITE = "FLD.BIOPS.BILESSITE";
+    static final String FIELD_SITE_OTHER = "FLD.BIOPS.BIOTHLESSITE";
+    static final String FIELD_LOCATION = "FLD.BIOPS.BILESLOC";
 
     @NotNull
     private final BiopsySiteCurator biopsySiteCurator;

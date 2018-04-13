@@ -18,17 +18,20 @@ import com.hartwig.hmftools.patientdb.data.ImmutableDrugData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class BiopsyTreatmentReader {
+class BiopsyTreatmentReader {
+
     private static final String STUDY_AFTERBIOPT = "SE.AFTERBIOPT";
-    public static final String FORM_TREATMENT = "FRM.TRTAFTER";
+    private static final String FORM_TREATMENT = "FRM.TRTAFTER";
+
     private static final String ITEMGROUP_TREATMENT_AFTER = "GRP.TRTAFTER.TRTAFTER";
+    private static final String FIELD_TREATMENT_GIVEN = "FLD.TRTAFTER.SYSTEMICST";
+    private static final String FIELD_RADIOTHERAPY_GIVEN = "FLD.TRTAFTER.RADIOTHERST";
+
     private static final String ITEMGROUP_SYSPOSTBIO = "GRP.TRTAFTER.SYSPOSTBIO";
-    public static final String FIELD_TREATMENT_GIVEN = "FLD.TRTAFTER.SYSTEMICST";
-    public static final String FIELD_RADIOTHERAPY_GIVEN = "FLD.TRTAFTER.RADIOTHERST";
-    public static final String FIELD_DRUG_START = "FLD.TRTAFTER.SYSSTDT";
-    public static final String FIELD_DRUG_END = "FLD.TRTAFTER.SYSENDT";
-    public static final String FIELD_DRUG = "FLD.TRTAFTER.PLANNEDTRT";
-    public static final String FIELD_DRUG_OTHER = "FLD.TRTAFTER.SYSREGPOST";
+    private static final String FIELD_DRUG_START = "FLD.TRTAFTER.SYSSTDT";
+    private static final String FIELD_DRUG_END = "FLD.TRTAFTER.SYSENDT";
+    private static final String FIELD_DRUG = "FLD.TRTAFTER.PLANNEDTRT";
+    private static final String FIELD_DRUG_OTHER = "FLD.TRTAFTER.SYSREGPOST";
 
     @NotNull
     private final TreatmentCurator treatmentCurator;

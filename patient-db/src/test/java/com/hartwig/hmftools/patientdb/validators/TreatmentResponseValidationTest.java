@@ -3,21 +3,12 @@ package com.hartwig.hmftools.patientdb.validators;
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyTreatmentBuilder;
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyTreatmentResponseBuilder;
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.drugBuilder;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyTreatmentReader.FORM_TREATMENT;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyTreatmentResponseReader.FIELD_ASSESSMENT_DATE;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyTreatmentResponseReader.FIELD_MEASUREMENT_DONE;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyTreatmentResponseReader.FIELD_RESPONSE;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyTreatmentResponseReader.FIELD_RESPONSE_DATE;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyTreatmentResponseReader.FORM_TUMOR_MEASUREMENT;
-import static com.hartwig.hmftools.patientdb.validators.PatientValidator.fields;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
@@ -60,48 +51,33 @@ public class TreatmentResponseValidationTest {
     public void reportsMeasurementDoneNull() {
         final List<ValidationFinding> findings = validateNonFirstResponse(CPCT_ID, RESPONSE_NULL);
         assertEquals(1, findings.size());
-        findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
-        final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(FIELD_MEASUREMENT_DONE));
     }
 
     @Test
     public void reportsOnlyResponseFilledIn() {
         final List<ValidationFinding> findings = validateNonFirstResponse(CPCT_ID, RESPONSE_ONLY);
         assertEquals(2, findings.size());
-        findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
-        final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(FIELD_MEASUREMENT_DONE));
-        assertTrue(findingsFields.contains(fields(FIELD_ASSESSMENT_DATE, FIELD_RESPONSE_DATE)));
+        findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(CPCT_ID, id));
     }
 
     @Test
     public void reportsMeasurementDoneMissingData() {
         final List<ValidationFinding> findings = validateNonFirstResponse(CPCT_ID, RESPONSE_MISSING_DATA);
         assertEquals(2, findings.size());
-        findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
-        final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(FIELD_RESPONSE));
-        assertTrue(findingsFields.contains(fields(FIELD_ASSESSMENT_DATE, FIELD_RESPONSE_DATE)));
+        findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(CPCT_ID, id));
     }
 
     @Test
     public void acceptMissingDataForFirstResponse() {
         final List<ValidationFinding> findings = PatientValidator.validateTreatmentResponse(CPCT_ID, RESPONSE_MISSING_DATA, true);
         assertEquals(1, findings.size());
-        findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
-        final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertFalse(findingsFields.contains(FIELD_RESPONSE));
-        assertTrue(findingsFields.contains(fields(FIELD_ASSESSMENT_DATE, FIELD_RESPONSE_DATE)));
+        findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(CPCT_ID, id));
     }
 
     @Test
     public void reportsMeasurementDoneNoWithData() {
         final List<ValidationFinding> findings = validateNonFirstResponse(CPCT_ID, RESPONSE_MEASUREMENT_NO_WITH_DATA);
         assertEquals(2, findings.size());
-        findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
-        final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(FIELD_MEASUREMENT_DONE));
     }
 
     @Test
@@ -118,9 +94,6 @@ public class TreatmentResponseValidationTest {
                 Lists.newArrayList(TREATMENT_JAN_MAR),
                 Lists.newArrayList(matchedResponseFeb2015));
         assertEquals(1, findings.size());
-        findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
-        final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(fields(FORM_TREATMENT, FORM_TUMOR_MEASUREMENT)));
     }
 
     @Test
@@ -128,9 +101,6 @@ public class TreatmentResponseValidationTest {
         final List<ValidationFinding> findings =
                 PatientValidator.validateTreatmentResponses(CPCT_ID, Lists.newArrayList(), Lists.newArrayList(RESPONSE_JAN2015));
         assertEquals(1, findings.size());
-        findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
-        final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(FORM_TREATMENT));
     }
 
     @Test
@@ -138,9 +108,6 @@ public class TreatmentResponseValidationTest {
         final List<ValidationFinding> findings =
                 PatientValidator.validateTreatmentResponses(CPCT_ID, Lists.newArrayList(TREATMENT_JAN_ONGOING), Lists.newArrayList());
         assertEquals(1, findings.size());
-        findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
-        final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(FORM_TUMOR_MEASUREMENT));
     }
 
     @Test

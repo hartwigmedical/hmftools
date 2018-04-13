@@ -16,8 +16,8 @@ public abstract class FormStatus {
     public abstract boolean locked();
 
     @NotNull
-    public static FormStatus unknown() {
-        return ImmutableFormStatus.builder().state(FormStatusState.UNKNOWN).locked(false).build();
+    public static FormStatus undefined() {
+        return ImmutableFormStatus.builder().state(FormStatusState.UNDEFINED).locked(false).build();
     }
 
     @NotNull

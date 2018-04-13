@@ -78,7 +78,7 @@ public final class XMLPatientReader extends EcrfReader {
         String currentItemGroupOID = Strings.EMPTY;
         String currentItemGroupIdx = Strings.EMPTY;
         EcrfStudyEvent currentStudy = new EcrfStudyEvent();
-        EcrfForm currentForm = new EcrfForm(FormStatus.unknown());
+        EcrfForm currentForm = new EcrfForm(FormStatus.undefined());
         EcrfItemGroup currentItemGroup = new EcrfItemGroup();
         while (reader.hasNext() && !isPatientEnd(reader)) {
             if (isStudyEventStart(reader)) {
@@ -97,7 +97,7 @@ public final class XMLPatientReader extends EcrfReader {
                 final FormStatusKey formKey =
                         new ImmutableFormStatusKey(patientId, formName, currentFormIdx, studyEventName, currentStudyEventIdx);
                 final FormStatus formStatus = formStatusModel.formStatuses().get(formKey);
-                currentForm = formStatus != null ? new EcrfForm(formStatus) : new EcrfForm(FormStatus.unknown());
+                currentForm = formStatus != null ? new EcrfForm(formStatus) : new EcrfForm(FormStatus.undefined());
                 currentStudy.addForm(currentFormOID, currentForm);
             } else if (isItemGroupStart(reader)) {
                 currentItemGroupOID = reader.getAttributeValue("", ITEM_GROUP_OID_ATTRIBUTE);

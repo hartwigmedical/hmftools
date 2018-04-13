@@ -13,11 +13,8 @@ public abstract class ValidationFinding {
     @NotNull
     public abstract String level();
 
-    @NotNull
-    public abstract String patientId();
-
-    @NotNull
-    public abstract String ecrfItem();
+    @Nullable
+    public abstract String patientIdentifier();
 
     @NotNull
     public abstract String message();
@@ -29,14 +26,14 @@ public abstract class ValidationFinding {
     public abstract String details();
 
     @NotNull
-    public static ValidationFinding of(@NotNull String level, @NotNull String patientId, @NotNull String ecrfItem, @NotNull String message,
+    public static ValidationFinding of(@NotNull String level, @Nullable String patientIdentifier, @NotNull String message,
             @NotNull FormStatus formStatus, @NotNull String details) {
-        return ImmutableValidationFinding.of(level, patientId, ecrfItem, message, formStatus, details);
+        return ImmutableValidationFinding.of(level, patientIdentifier, message, formStatus, details);
     }
 
     @NotNull
-    public static ValidationFinding of(@NotNull String level, @NotNull String patientId, @NotNull String ecrfItem, @NotNull String message,
+    public static ValidationFinding of(@NotNull String level, @Nullable String patientIdentifier, @NotNull String message,
             @NotNull FormStatus formStatus) {
-        return of(level, patientId, ecrfItem, message, formStatus, "");
+        return of(level, patientIdentifier, message, formStatus, "");
     }
 }

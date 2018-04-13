@@ -35,22 +35,19 @@ public class DrupPatientReader implements PatientReader {
     @Override
     public Patient read(@NotNull final EcrfPatient ecrfPatient, @NotNull final List<SampleData> sequencedBiopsies) {
         final BaselineData baselineData = baselineReader.read(ecrfPatient);
-        final PreTreatmentData noPreTreatmentData = ImmutablePreTreatmentData.builder().formStatus(FormStatus.unknown()).build();
+        final PreTreatmentData noPreTreatmentData = ImmutablePreTreatmentData.builder().formStatus(FormStatus.undefined()).build();
         final List<BiopsyData> clinicalBiopsies = biopsyReader.read(ecrfPatient, baselineData.curatedTumorLocation());
 
         final MatchResult<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples(ecrfPatient.patientId(), sequencedBiopsies, clinicalBiopsies);
 
-        // KODU: Ignore match findings since these refer to CPCT datamodel.
         return new Patient(ecrfPatient.patientId(),
                 baselineData,
                 noPreTreatmentData,
                 sequencedBiopsies,
                 matchedBiopsies.values(),
                 Lists.newArrayList(),
-                Lists.newArrayList(),
-                Lists.newArrayList(),
-                Lists.newArrayList());
+                Lists.newArrayList(), Lists.newArrayList(), matchedBiopsies.findings());
 
     }
 }

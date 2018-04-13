@@ -102,10 +102,8 @@ public final class LoadClinicalData {
         BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource();
         TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource();
 
-        Map<String, Patient> patients = loadAndInterpretAllPatients(samplesPerPatient, ecrfModels,
-                tumorLocationCurator,
-                treatmentCurator,
-                biopsySiteCurator);
+        Map<String, Patient> patients =
+                loadAndInterpretAllPatients(samplesPerPatient, ecrfModels, tumorLocationCurator, treatmentCurator, biopsySiteCurator);
 
         DumpClinicalData.writeClinicalDumps(csvOutputDir, patients.values(), tumorLocationSymlink, portalDataLink);
 
@@ -121,13 +119,11 @@ public final class LoadClinicalData {
                 dbAccess.writeSampleClinicalData(patientIdentifier, samplesPerPatient.get(patientIdentifier));
             } else {
                 dbAccess.writeFullClinicalData(patient);
-                // KODU: Patient validation currently depends on CPCT datamodel internally so want to filter out DRUP.
-                if (patient.patientIdentifier().toLowerCase().startsWith("cpct")) {
-                    List<ValidationFinding> findings = PatientValidator.validatePatient(patient);
+                List<ValidationFinding> findings = PatientValidator.validatePatient(patient);
 
-                    dbAccess.writeValidationFindings(findings);
-                    dbAccess.writeValidationFindings(patient.matchFindings());
-                }
+                dbAccess.writeValidationFindings(findings);
+                dbAccess.writeValidationFindings(patient.matchFindings());
+
             }
         }
         dbAccess.writeValidationFindings(CurationValidator.validateTreatmentCurator(treatmentCurator));

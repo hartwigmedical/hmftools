@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.patientdb.matchers;
 
-import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyTreatmentResponseReader.FORM_TUMOR_MEASUREMENT;
-
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Iterator;
@@ -112,6 +110,6 @@ public final class TreatmentResponseMatcher {
     @NotNull
     private static ValidationFinding responseMatchFinding(@NotNull String patientIdentifier, @NotNull String message,
             @NotNull String details) {
-        return ValidationFinding.of("match", patientIdentifier, FORM_TUMOR_MEASUREMENT, message, FormStatus.unknown(), details);
+        return ValidationFinding.of("match", patientIdentifier, message, FormStatus.undefined(), details);
     }
 }

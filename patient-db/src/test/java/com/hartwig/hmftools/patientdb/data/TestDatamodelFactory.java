@@ -19,22 +19,22 @@ public final class TestDatamodelFactory {
     @NotNull
     public static ImmutableBaselineData.Builder baselineBuilder() {
         return ImmutableBaselineData.builder().curatedTumorLocation(ImmutableCuratedTumorLocation.of(null, null, null))
-                .demographyStatus(FormStatus.unknown())
-                .primaryTumorStatus(FormStatus.unknown())
-                .selectionCriteriaStatus(FormStatus.unknown())
-                .eligibilityStatus(FormStatus.unknown())
-                .informedConsentStatus(FormStatus.unknown())
-                .deathStatus(FormStatus.unknown());
+                .demographyStatus(FormStatus.undefined())
+                .primaryTumorStatus(FormStatus.undefined())
+                .selectionCriteriaStatus(FormStatus.undefined())
+                .eligibilityStatus(FormStatus.undefined())
+                .informedConsentStatus(FormStatus.undefined())
+                .deathStatus(FormStatus.undefined());
     }
 
     @NotNull
     public static ImmutableBiopsyData.Builder biopsyBuilder() {
-        return ImmutableBiopsyData.builder().id(1).formStatus(FormStatus.unknown());
+        return ImmutableBiopsyData.builder().id(1).formStatus(FormStatus.undefined());
     }
 
     @NotNull
     public static ImmutableBiopsyTreatmentData.Builder biopsyTreatmentBuilder() {
-        return ImmutableBiopsyTreatmentData.builder().id(1).formStatus(FormStatus.unknown());
+        return ImmutableBiopsyTreatmentData.builder().id(1).formStatus(FormStatus.undefined());
     }
 
     @NotNull
@@ -44,6 +44,6 @@ public final class TestDatamodelFactory {
 
     @NotNull
     public static ImmutableBiopsyTreatmentResponseData.Builder biopsyTreatmentResponseBuilder() {
-        return ImmutableBiopsyTreatmentResponseData.builder().formStatus(FormStatus.unknown());
+        return ImmutableBiopsyTreatmentResponseData.builder().formStatus(FormStatus.undefined());
     }
 }

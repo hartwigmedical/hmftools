@@ -1,24 +1,10 @@
 package com.hartwig.hmftools.patientdb.validators;
 
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.baselineBuilder;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_BIRTH_YEAR1;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_BIRTH_YEAR2;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_BIRTH_YEAR3;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_GENDER;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_HOSPITAL1;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_HOSPITAL2;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_INFORMED_CONSENT_DATE;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_PRIMARY_TUMOR_LOCATION;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_PRIMARY_TUMOR_LOCATION_OTHER;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_REGISTRATION_DATE1;
-import static com.hartwig.hmftools.patientdb.readers.cpct.BaselineReader.FIELD_REGISTRATION_DATE2;
-import static com.hartwig.hmftools.patientdb.validators.PatientValidator.fields;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
@@ -43,35 +29,28 @@ public class BaselineDataValidationTest {
     public void reportsMissingFields() {
         final List<ValidationFinding> findings = PatientValidator.validateBaselineData(PATIENT_IDENTIFIER, EMPTY_BASELINE);
         assertEquals(6, findings.size());
-        findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
-        final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-
-        assertTrue(findingsFields.contains(fields(FIELD_REGISTRATION_DATE1, FIELD_REGISTRATION_DATE2)));
-        assertTrue(findingsFields.contains(FIELD_INFORMED_CONSENT_DATE));
-        assertTrue(findingsFields.contains(FIELD_GENDER));
-        assertTrue(findingsFields.contains(fields(FIELD_BIRTH_YEAR1, FIELD_BIRTH_YEAR2, FIELD_BIRTH_YEAR3)));
-        assertTrue(findingsFields.contains(fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER)));
-        assertTrue(findingsFields.contains(fields(FIELD_HOSPITAL1, FIELD_HOSPITAL2)));
+        findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
     }
 
     @Test
     public void reportMissingPreTreatment() {
-        PreTreatmentData emptyData = ImmutablePreTreatmentData.builder().formStatus(FormStatus.unknown()).build();
+        PreTreatmentData emptyData = ImmutablePreTreatmentData.builder().formStatus(FormStatus.undefined()).build();
 
         assertEquals(2, PatientValidator.validatePreTreatmentData(PATIENT_IDENTIFIER, emptyData).size());
 
         PreTreatmentData actualData = ImmutablePreTreatmentData.builder()
                 .radiotherapyGiven("Yes")
-                .treatmentGiven("No").formStatus(FormStatus.unknown())
+                .treatmentGiven("No")
+                .formStatus(FormStatus.undefined())
                 .build();
         assertEquals(0, PatientValidator.validatePreTreatmentData(PATIENT_IDENTIFIER, actualData).size());
 
         PreTreatmentData onlyRadioTherapyPresent =
-                ImmutablePreTreatmentData.builder().radiotherapyGiven("Yes").formStatus(FormStatus.unknown()).build();
+                ImmutablePreTreatmentData.builder().radiotherapyGiven("Yes").formStatus(FormStatus.undefined()).build();
         assertEquals(1, PatientValidator.validatePreTreatmentData(PATIENT_IDENTIFIER, onlyRadioTherapyPresent).size());
 
         PreTreatmentData onlyTreatmentPresent =
-                ImmutablePreTreatmentData.builder().treatmentGiven("Yes").formStatus(FormStatus.unknown()).build();
+                ImmutablePreTreatmentData.builder().treatmentGiven("Yes").formStatus(FormStatus.undefined()).build();
         assertEquals(1, PatientValidator.validatePreTreatmentData(PATIENT_IDENTIFIER, onlyTreatmentPresent).size());
     }
 
@@ -81,7 +60,5 @@ public class BaselineDataValidationTest {
                 PatientValidator.validateTumorLocationCuration(PATIENT_IDENTIFIER, BASELINE_DATA_MISSING_LOCATION_MAPPING);
         assertEquals(1, findings.size());
         assertEquals("tumorLocationCuration", findings.get(0).level());
-        final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER)));
     }
 }

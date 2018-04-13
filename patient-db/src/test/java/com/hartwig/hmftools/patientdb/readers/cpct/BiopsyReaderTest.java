@@ -60,13 +60,13 @@ public class BiopsyReaderTest {
         biopsies1.addItem(BiopsyReader.FIELD_SITE_OTHER, "body");
         biopsies1.addItem(BiopsyReader.FIELD_LOCATION, "liver");
 
-        EcrfForm form1 = new EcrfForm(FormStatus.unknown());
+        EcrfForm form1 = new EcrfForm(FormStatus.undefined());
         form1.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSY, biopsy);
         form1.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSIES, biopsies1);
 
         // KODU: Create empty 2nd biopsy
         EcrfItemGroup biopsies2 = new EcrfItemGroup();
-        EcrfForm form2 = new EcrfForm(FormStatus.unknown());
+        EcrfForm form2 = new EcrfForm(FormStatus.undefined());
         form2.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSY, biopsy);
         form2.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSIES, biopsies2);
 
@@ -77,7 +77,7 @@ public class BiopsyReaderTest {
         biopsies3.addItem(BiopsyReader.FIELD_SITE_OTHER, "body");
         biopsies3.addItem(BiopsyReader.FIELD_LOCATION, "liver");
 
-        EcrfForm form3 = new EcrfForm(FormStatus.unknown());
+        EcrfForm form3 = new EcrfForm(FormStatus.undefined());
         form3.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSY, biopsy);
         form3.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSIES, biopsies3);
 

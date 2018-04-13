@@ -39,7 +39,7 @@ class BaselineReader {
     @NotNull
     private final TumorLocationCurator tumorLocationCurator;
 
-    public BaselineReader(@NotNull final TumorLocationCurator tumorLocationCurator) {
+    BaselineReader(@NotNull final TumorLocationCurator tumorLocationCurator) {
         this.tumorLocationCurator = tumorLocationCurator;
     }
 
@@ -47,12 +47,12 @@ class BaselineReader {
     BaselineData read(@NotNull final EcrfPatient patient) {
         final ImmutableBaselineData.Builder baselineBuilder = ImmutableBaselineData.builder()
                 .curatedTumorLocation(ImmutableCuratedTumorLocation.of(null, null, null))
-                .demographyStatus(FormStatus.unknown())
-                .deathStatus(FormStatus.unknown())
-                .eligibilityStatus(FormStatus.unknown())
-                .selectionCriteriaStatus(FormStatus.unknown())
-                .primaryTumorStatus(FormStatus.unknown())
-                .informedConsentStatus(FormStatus.unknown());
+                .demographyStatus(FormStatus.undefined())
+                .deathStatus(FormStatus.undefined())
+                .eligibilityStatus(FormStatus.undefined())
+                .selectionCriteriaStatus(FormStatus.undefined())
+                .primaryTumorStatus(FormStatus.undefined())
+                .informedConsentStatus(FormStatus.undefined());
 
         for (final EcrfStudyEvent baselineEvent : patient.studyEventsPerOID(STUDY_BASELINE)) {
             setInformedConsentAndTumorLocation(baselineBuilder, baselineEvent);

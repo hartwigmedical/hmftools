@@ -32,7 +32,7 @@ public final class CurationValidator {
         final List<ValidationFinding> findings = Lists.newArrayList();
 
         for (String unusedTerm : curator.unusedSearchTerms()) {
-            findings.add(ValidationFinding.of(level, "", "", message, FormStatus.unknown(), unusedTerm));
+            findings.add(ValidationFinding.of(level, null, message, FormStatus.undefined(), unusedTerm));
         }
 
         return findings;
