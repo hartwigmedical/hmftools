@@ -97,11 +97,11 @@ class ClinicalDAO {
     }
 
     private void writeBaselineData(int patientId, @NotNull BaselineData patient, @NotNull PreTreatmentData preTreatmentData) {
+        // KODU: preTreatmentTypes exceeds the usual 255 length of varchar fields in production.
         String preTreatmentTypes = preTreatmentData.concatenatedType();
-        // KODU: Somewhat ugly...
-        if (preTreatmentTypes != null && preTreatmentTypes.length() > 255) {
+        if (preTreatmentTypes != null && preTreatmentTypes.length() > BASELINE.PRETREATMENTSTYPE.getDataType().length()) {
             LOGGER.warn(String.format("Truncating pre-treatment type: %s", preTreatmentTypes));
-            preTreatmentTypes = preTreatmentTypes.substring(0, 255);
+            preTreatmentTypes = preTreatmentTypes.substring(0, BASELINE.PRETREATMENTSTYPE.getDataType().length());
         }
         context.insertInto(BASELINE,
                 BASELINE.PATIENTID,

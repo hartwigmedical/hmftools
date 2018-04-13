@@ -21,7 +21,7 @@ CREATE TABLE baseline
     hasSystemicPreTreatment varchar(3),
     hasRadiotherapyPreTreatment varchar(3),
     preTreatments varchar(255),
-    preTreatmentsType varchar(255),
+    preTreatmentsType varchar(510),
     PRIMARY KEY (patientId),
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
