@@ -16,6 +16,18 @@ public abstract class FormStatus {
     public abstract boolean locked();
 
     @NotNull
+    @Value.Derived
+    public String stateString() {
+        return state().stateString();
+    }
+
+    @Nullable
+    @Value.Derived
+    public String lockedString() {
+        return state().equals(FormStatusState.UNDEFINED) ? null : Boolean.toString(locked());
+    }
+
+    @NotNull
     public static FormStatus undefined() {
         return ImmutableFormStatus.builder().state(FormStatusState.UNDEFINED).locked(false).build();
     }

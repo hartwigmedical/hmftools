@@ -269,7 +269,7 @@ class ClinicalDAO {
                 FORMSMETADATA.TABLENAME,
                 FORMSMETADATA.FORM,
                 FORMSMETADATA.STATUS, FORMSMETADATA.LOCKED)
-                .values(id, tableName, formName, formStatus.state().stateString(), Boolean.toString(formStatus.locked()))
+                .values(id, tableName, formName, formStatus.stateString(), formStatus.lockedString())
                 .execute();
     }
 }

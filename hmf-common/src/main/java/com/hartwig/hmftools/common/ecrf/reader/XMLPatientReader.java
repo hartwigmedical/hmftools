@@ -117,8 +117,7 @@ public final class XMLPatientReader extends EcrfReader {
                         currentItemGroupOID,
                         currentItemGroupIdx,
                         OID,
-                        value,
-                        currentForm.status().state().stateString(),
+                        value, currentForm.status().stateString(),
                         Boolean.toString(currentForm.locked())));
             }
             reader.next();
