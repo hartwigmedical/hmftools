@@ -3,17 +3,16 @@ package com.hartwig.hmftools.patientreporter.algo;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.mockedCivicAnalyzer;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReporterData;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testHmfReporterData;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testKnownFusionModel;
 
 import static org.junit.Assert.assertNotNull;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusions;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
@@ -32,7 +31,6 @@ import org.junit.Test;
 public class PatientReporterTest {
 
     private static final String RUN_DIRECTORY = Resources.getResource("example").getPath();
-    private static final String FUSIONS_CSV = Resources.getResource("csv").getPath() + File.separator + "cosmic_gene_fusions.csv";
 
     @Test
     public void canRunOnRunDirectory() throws IOException {
@@ -41,7 +39,7 @@ public class PatientReporterTest {
         final HmfReporterData reporterData = testHmfReporterData();
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.of(geneModel, reporterData.microsatelliteAnalyzer());
         final StructuralVariantAnalyzer svAnalyzer =
-                new StructuralVariantAnalyzer(new TestAnnotator(), geneModel.regions(), CosmicFusions.readFromCSV(FUSIONS_CSV));
+                new StructuralVariantAnalyzer(new TestAnnotator(), geneModel.regions(), testKnownFusionModel());
         final PatientReporter algo =
                 ImmutablePatientReporter.of(baseReporterData, reporterData, variantAnalyzer, svAnalyzer, mockedCivicAnalyzer());
         assertNotNull(algo.run(RUN_DIRECTORY, null));

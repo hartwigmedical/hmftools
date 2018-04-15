@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.fusions;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -52,15 +53,24 @@ public abstract class KnownFusionsModel {
         return Streams.stream(parser).map(record -> record.get(0)).collect(Collectors.toSet());
     }
 
-    public boolean exactMatch(@NotNull final String fiveGene, @NotNull final String threeGene) {
+    private boolean exactMatch(@NotNull final String fiveGene, @NotNull final String threeGene) {
         return fusions().get(fiveGene).contains(threeGene);
     }
 
-    public boolean intergenicPromiscuousMatch(@NotNull final String fiveGene, @NotNull final String threeGene) {
-        return !fiveGene.equals(threeGene) && (promiscuousFive().contains(fiveGene) || promiscuousThree().contains(threeGene));
+    public boolean exactMatch(@NotNull final Collection<String> fiveGeneNames, @NotNull final Collection<String> threeGeneNames) {
+        return fiveGeneNames.stream().anyMatch(fiveGene -> threeGeneNames.stream().anyMatch(threeGene -> exactMatch(fiveGene, threeGene)));
     }
 
-    public boolean intragenicPromiscuousMatch(@NotNull final String fiveGene, @NotNull final String threeGene) {
-        return fiveGene.equals(threeGene) && promiscuousThree().contains(threeGene);
+    public boolean intergenicPromiscuousMatch(@NotNull final Collection<String> fiveGeneNames,
+            @NotNull final Collection<String> threeGeneNames) {
+        //@formatter:off
+        return fiveGeneNames.stream().noneMatch(threeGeneNames::contains) &&
+                (fiveGeneNames.stream().anyMatch(promiscuousFive()::contains) || threeGeneNames.stream().anyMatch(promiscuousThree()::contains));
+        //@formatter:on
+    }
+
+    public boolean intragenicPromiscuousMatch(@NotNull final Collection<String> fiveGeneNames,
+            @NotNull final Collection<String> threeGeneNames) {
+        return fiveGeneNames.stream().anyMatch(threeGeneNames::contains) && threeGeneNames.stream().anyMatch(promiscuousThree()::contains);
     }
 }
