@@ -93,8 +93,7 @@ public abstract class ExplanationPage {
         return toList("Details on reported gene fusions",
                 Lists.newArrayList("Only intronic in-frame fusions or whole exon deletions are reported.",
                         "The canonical, or otherwise longest transcript validly fused is reported.",
-                        "Fusions are restricted to those in the Fusion Gene list curated by COSMIC.",
-                        "We additionally select fusions where one partner occurs in the 5' or 3' position in COSMIC >3 times.",
-                        "See http://cancer.sanger.ac.uk/cosmic/fusion for more information."));
+                        "Fusions are restricted to those in a known fusion list based on CiViC, OncoKB, CGI and COSMIC",
+                        "We additionally select fusions where one partner is promiscuous in either 5' or 3' position."));
     }
 }

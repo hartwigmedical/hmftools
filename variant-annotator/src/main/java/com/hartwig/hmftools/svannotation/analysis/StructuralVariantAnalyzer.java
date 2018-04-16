@@ -132,12 +132,10 @@ public class StructuralVariantAnalyzer {
                 final boolean matchesKnownFusion = transcriptsMatchKnownFusion(knownFusionsModel, upstream, downstream);
                 final boolean reportable = reportableFusion.isPresent() && reportableFusion.get() == fusion && matchesKnownFusion;
 
-                //TODO: remove cosmic url / add source?
                 final GeneFusion geneFusion = ImmutableGeneFusion.builder()
                         .reportable(reportable)
                         .upstreamLinkedAnnotation(upstream)
                         .downstreamLinkedAnnotation(downstream)
-                        .cosmicURL("")
                         .build();
 
                 result.add(geneFusion);
@@ -216,12 +214,10 @@ public class StructuralVariantAnalyzer {
 
     private static boolean transcriptsMatchKnownFusion(@NotNull final KnownFusionsModel fusionsModel, @NotNull final Transcript five,
             @NotNull final Transcript three) {
-        //@formatter:off
-        return fusionsModel.exactMatch(five.parent().synonyms(), three.parent().synonyms()) ||
-                fusionsModel.intergenicPromiscuousMatch(five.parent().synonyms(), three.parent().synonyms()) ||
-                (fusionsModel.intragenicPromiscuousMatch(five.parent().synonyms(), three.parent().synonyms())
+        return fusionsModel.exactMatch(five.parent().synonyms(), three.parent().synonyms())
+                || fusionsModel.intergenicPromiscuousMatch(five.parent().synonyms(), three.parent().synonyms()) || (
+                fusionsModel.intragenicPromiscuousMatch(five.parent().synonyms(), three.parent().synonyms())
                         && three.exonDownstream() - five.exonUpstream() > EXON_THRESHOLD);
-        //@formatter:on
     }
 
     private static boolean intronicDisruptionOnSameTranscript(@NotNull Transcript t1, @NotNull Transcript t2) {
