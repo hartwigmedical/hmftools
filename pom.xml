@@ -44,7 +44,7 @@
 
         <hmf-common.version>1</hmf-common.version>
         <hmf-gene-panel.version>1</hmf-gene-panel.version>
-        <hmf-patient-db.version>3.0</hmf-patient-db.version>
+        <hmf-patient-db.version>3.1</hmf-patient-db.version>
         <hmf-apiclients.version>1.0</hmf-apiclients.version>
         <hmf-variant-annotation.version>1.2</hmf-variant-annotation.version>
         <hmf-sv-analyser.version>1.0</hmf-sv-analyser.version>
