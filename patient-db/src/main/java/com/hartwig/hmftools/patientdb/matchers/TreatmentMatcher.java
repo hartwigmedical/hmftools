@@ -34,10 +34,6 @@ public final class TreatmentMatcher {
             findings.add(treatmentMatchFinding(patientIdentifier,
                     "less ecrf treatments than biopsies sequenced.",
                     "treatments: " + treatments.size() + "; biopsies: " + sequencedBiopsies.size()));
-        } else if (treatments.size() > sequencedBiopsies.size()) {
-            findings.add(treatmentMatchFinding(patientIdentifier,
-                    "more ecrf treatments than biopsies sequenced.",
-                    "treatments: " + treatments.size() + "; biopsies: " + sequencedBiopsies.size()));
         }
 
         List<BiopsyData> remainingBiopsies = biopsies;
