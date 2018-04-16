@@ -44,7 +44,7 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // KODU: Uncomment this line when generating an example report using PDFWriterTest
-    //    public static final String VERSION = "4.10";
+    //    public static final String VERSION = "4.11";
 
     private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
     private static final String LIMS_JSON = "lims_json";
