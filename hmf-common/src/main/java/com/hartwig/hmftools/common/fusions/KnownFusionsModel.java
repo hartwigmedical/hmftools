@@ -41,6 +41,7 @@ public abstract class KnownFusionsModel {
                 readPromiscuous(promiscuousThreeStream));
     }
 
+    @NotNull
     private static SetMultimap<String, String> readFusions(@NotNull final InputStream stream) throws IOException {
         final SetMultimap<String, String> fusionPairs = HashMultimap.create();
         final CSVParser parser = CSVParser.parse(stream, Charset.defaultCharset(), CSVFormat.DEFAULT.withSkipHeaderRecord());
@@ -48,6 +49,7 @@ public abstract class KnownFusionsModel {
         return fusionPairs;
     }
 
+    @NotNull
     private static Set<String> readPromiscuous(@NotNull final InputStream stream) throws IOException {
         final CSVParser parser = CSVParser.parse(stream, Charset.defaultCharset(), CSVFormat.DEFAULT.withSkipHeaderRecord());
         return Streams.stream(parser).map(record -> record.get(0)).collect(Collectors.toSet());
@@ -63,10 +65,8 @@ public abstract class KnownFusionsModel {
 
     public boolean intergenicPromiscuousMatch(@NotNull final Collection<String> fiveGeneNames,
             @NotNull final Collection<String> threeGeneNames) {
-        //@formatter:off
-        return fiveGeneNames.stream().noneMatch(threeGeneNames::contains) &&
-                (fiveGeneNames.stream().anyMatch(promiscuousFive()::contains) || threeGeneNames.stream().anyMatch(promiscuousThree()::contains));
-        //@formatter:on
+        return fiveGeneNames.stream().noneMatch(threeGeneNames::contains) && (fiveGeneNames.stream().anyMatch(promiscuousFive()::contains)
+                || threeGeneNames.stream().anyMatch(promiscuousThree()::contains));
     }
 
     public boolean intragenicPromiscuousMatch(@NotNull final Collection<String> fiveGeneNames,
