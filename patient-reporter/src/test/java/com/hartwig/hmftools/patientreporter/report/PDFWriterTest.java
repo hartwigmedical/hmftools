@@ -82,8 +82,11 @@ public class PDFWriterTest {
 
         final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
         final List<Alteration> alterations = RUN_CIVIC_ANALYSIS ? PatientReporterTestUtil.runCivicAnalysis(variants,
-                copyNumbers, disruptions, fusions, reporterData.panelGeneModel(), sampleReport.primaryTumorLocationString())
-                : mockedAlterations();
+                copyNumbers,
+                disruptions,
+                fusions,
+                reporterData.panelGeneModel(),
+                sampleReport.primaryTumorLocationString()) : mockedAlterations();
 
         final SequencedPatientReport patientReport = ImmutableSequencedPatientReport.of(sampleReport,
                 variants,
@@ -93,7 +96,8 @@ public class PDFWriterTest {
                 disruptions,
                 fusions,
                 PatientReportFormat.formatPercent(impliedTumorPurity),
-                alterations, Resources.getResource("circos/circos_example.png").getPath(),
+                alterations,
+                Resources.getResource("circos/circos_example.png").getPath(),
                 Optional.of("this is a test report and does not relate to any real CPCT patient"),
                 baseReporterData.signaturePath());
 
@@ -212,21 +216,20 @@ public class PDFWriterTest {
         return Lists.newArrayList(ImmutableGeneFusionData.builder()
                         .geneStart("TMPRSS2")
                         .geneStartTranscript("ENST00000398585.7")
-                        .geneStartEntrezIds(Lists.newArrayList(7113)).geneContextStart("Intron 4")
+                        .geneStartEntrezIds(Lists.newArrayList(7113))
+                        .geneContextStart("Intron 4")
                         .geneEnd("PNPLA7")
                         .geneEndTranscript("ENST00000406427.5")
-                        .geneEndEntrezIds(Lists.newArrayList(375775)).geneContextEnd("Intron 2").copies("0.4")
-                        .cosmicURL("")
+                        .geneEndEntrezIds(Lists.newArrayList(375775))
+                        .geneContextEnd("Intron 2")
+                        .copies("0.4")
                         .build(),
                 ImmutableGeneFusionData.builder()
                         .geneStart("CLCN6")
-                        .geneStartTranscript("ENST00000346436.10")
-                        .geneStartEntrezIds(Lists.newArrayList(1185)).geneContextStart("Intron 1")
+                        .geneStartTranscript("ENST00000346436.10").geneStartEntrezIds(Lists.newArrayList(1185)).geneContextStart("Intron 1")
                         .geneEnd("BRAF")
-                        .geneEndTranscript("ENST00000288602.10")
-                        .geneEndEntrezIds(Lists.newArrayList(673)).geneContextEnd("Intron 8")
+                        .geneEndTranscript("ENST00000288602.10").geneEndEntrezIds(Lists.newArrayList(673)).geneContextEnd("Intron 8")
                         .copies("1.0")
-                        .cosmicURL("http://cancer.sanger.ac.uk/cosmic/fusion/overview?fid=2&gid=54500")
                         .build());
     }
 
@@ -235,43 +238,37 @@ public class PDFWriterTest {
         final GeneDisruptionData disruption1 = ImmutableGeneDisruptionData.builder()
                 .chromosome("2")
                 .gene("ERBB4")
-                .geneContext("Intron 4")
-                .type("INV").copies("1.0").chromosomeBand("q34")
+                .geneContext("Intron 4").type("INV").copies("1.0").chromosomeBand("q34")
                 .build();
 
         final GeneDisruptionData disruption2 = ImmutableGeneDisruptionData.builder()
                 .chromosome("2")
                 .gene("ERBB4")
-                .geneContext("Intron 20")
-                .type("INV").copies("1.0").chromosomeBand("q34")
+                .geneContext("Intron 20").type("INV").copies("1.0").chromosomeBand("q34")
                 .build();
 
         final GeneDisruptionData disruption3 = ImmutableGeneDisruptionData.builder()
                 .chromosome("3")
                 .gene("PIK3CB")
-                .geneContext("Intron 1")
-                .type("INS").copies("3.0").chromosomeBand("q22.3")
+                .geneContext("Intron 1").type("INS").copies("3.0").chromosomeBand("q22.3")
                 .build();
 
         final GeneDisruptionData disruption4 = ImmutableGeneDisruptionData.builder()
                 .chromosome("8")
                 .gene("NRG1")
-                .geneContext("Intron 1")
-                .type("DUP").copies("0.3").chromosomeBand("p12")
+                .geneContext("Intron 1").type("DUP").copies("0.3").chromosomeBand("p12")
                 .build();
 
         final GeneDisruptionData disruption5 = ImmutableGeneDisruptionData.builder()
                 .chromosome("8")
                 .gene("NRG1")
-                .geneContext("Intron 1")
-                .type("DEL").copies("0.2").chromosomeBand("p12")
+                .geneContext("Intron 1").type("DEL").copies("0.2").chromosomeBand("p12")
                 .build();
 
         final GeneDisruptionData disruption6 = ImmutableGeneDisruptionData.builder()
                 .chromosome("17")
                 .gene("CDK12")
-                .geneContext("Intron 12")
-                .type("BND").copies("1.0").chromosomeBand("q12")
+                .geneContext("Intron 12").type("BND").copies("1.0").chromosomeBand("q12")
                 .build();
 
         return Lists.newArrayList(disruption1, disruption2, disruption3, disruption4, disruption5, disruption6);
