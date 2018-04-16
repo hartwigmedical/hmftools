@@ -56,7 +56,7 @@ public class CpctPatientReader implements PatientReader {
         final MatchResult<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples(ecrfPatient.patientId(), sequencedBiopsies, clinicalBiopsies);
         final MatchResult<BiopsyTreatmentData> matchedTreatments =
-                TreatmentMatcher.matchTreatmentsToBiopsies(ecrfPatient.patientId(), clinicalBiopsies, treatments);
+                TreatmentMatcher.matchTreatmentsToBiopsies(ecrfPatient.patientId(), clinicalBiopsies, treatments, sequencedBiopsies);
         final MatchResult<BiopsyTreatmentResponseData> matchedResponses =
                 TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(ecrfPatient.patientId(), treatments, treatmentResponses);
 
