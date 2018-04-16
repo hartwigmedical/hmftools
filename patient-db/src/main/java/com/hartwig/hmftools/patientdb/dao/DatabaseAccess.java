@@ -194,7 +194,7 @@ public class DatabaseAccess {
     }
 
     public void writeCpctEcrf(@NotNull final EcrfModel model, @NotNull final Set<String> sequencedPatients) {
-        LOGGER.info("writing CPCT datamodel...");
+        LOGGER.info("Writing CPCT datamodel...");
         ecrfDAO.writeCpctDatamodel(model.fields());
         LOGGER.info("Done writing CPCT datamodel.");
         LOGGER.info("Writing CPCT patients...");
