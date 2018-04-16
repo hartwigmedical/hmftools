@@ -13,6 +13,7 @@ import com.hartwig.hmftools.patientdb.Config;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.data.SampleData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,9 +25,20 @@ public final class TreatmentMatcher {
 
     @NotNull
     public static MatchResult<BiopsyTreatmentData> matchTreatmentsToBiopsies(@NotNull final String patientIdentifier,
-            @NotNull final List<BiopsyData> biopsies, @NotNull final List<BiopsyTreatmentData> treatments) {
+            @NotNull final List<BiopsyData> biopsies, @NotNull final List<BiopsyTreatmentData> treatments,
+            @NotNull final List<SampleData> sequencedBiopsies) {
         final List<BiopsyTreatmentData> matchedTreatments = Lists.newArrayList();
         final List<ValidationFinding> findings = Lists.newArrayList();
+
+        if (treatments.size() < sequencedBiopsies.size()) {
+            findings.add(treatmentMatchFinding(patientIdentifier,
+                    "less ecrf treatments than biopsies sequenced.",
+                    "treatments: " + treatments.size() + "; biopsies: " + sequencedBiopsies.size()));
+        } else if (treatments.size() > sequencedBiopsies.size()) {
+            findings.add(treatmentMatchFinding(patientIdentifier,
+                    "more ecrf treatments than biopsies sequenced.",
+                    "treatments: " + treatments.size() + "; biopsies: " + sequencedBiopsies.size()));
+        }
 
         List<BiopsyData> remainingBiopsies = biopsies;
         for (final BiopsyTreatmentData treatment : treatments) {
