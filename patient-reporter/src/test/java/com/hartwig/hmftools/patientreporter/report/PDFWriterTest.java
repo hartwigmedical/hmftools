@@ -284,8 +284,7 @@ public class PDFWriterTest {
                 .chromosomeBand("p12")
                 .build();
 
-        final GeneDisruptionData disruption6 = ImmutableGeneDisruptionData.builder()
-                .chromosome("17").gene("CDK123")
+        final GeneDisruptionData disruption6 = ImmutableGeneDisruptionData.builder().chromosome("17").gene("CDK12")
                 .geneContext("Intron 12")
                 .type("BND")
                 .copies("1.0")
