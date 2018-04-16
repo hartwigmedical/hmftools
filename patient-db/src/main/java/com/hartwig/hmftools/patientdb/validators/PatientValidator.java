@@ -444,18 +444,23 @@ public final class PatientValidator {
         if (deathDate != null && !treatments.isEmpty()) {
             treatments.sort(comparing(BiopsyTreatmentData::endDate, nullsLast(naturalOrder())));
             final BiopsyTreatmentData lastTreatment = treatments.get(treatments.size() - 1);
-            final LocalDate lastTreatmentEndDate = lastTreatment.endDate();
-            final LocalDate firstTreatmentStart = treatments.get(0).startDate();
-            if (lastTreatmentEndDate == null || lastTreatmentEndDate.isAfter(deathDate)) {
-                String details = "death date (" + deathDate + ") before end of last treatment (" + lastTreatmentEndDate + ")"
-                        + " and start treatment is (" + firstTreatmentStart + ")";
+            final String treatmentGiven = lastTreatment.treatmentGiven();
+            if (treatmentGiven != null && treatmentGiven.equalsIgnoreCase("yes")) {
+                final LocalDate lastTreatmentEndDate = lastTreatment.endDate();
+                final LocalDate firstTreatmentStart = treatments.get(0).startDate();
+                if (lastTreatmentEndDate == null || lastTreatmentEndDate.isAfter(deathDate)) {
+                    String details = "death date (" + deathDate + ") before end of last treatment (" + lastTreatmentEndDate + ")"
+                            + " and start first treatment is (" + firstTreatmentStart + ")" + " and treatmentGiven: " + treatmentGiven
+                            + ")";
 
-                findings.add(ValidationFinding.of(ECRF_LEVEL,
-                        patientIdentifier,
-                        "death date before end of last treatment",
-                        FormStatus.merge(baselineData.deathStatus(), lastTreatment.formStatus()),
-                        details));
+                    findings.add(ValidationFinding.of(ECRF_LEVEL,
+                            patientIdentifier,
+                            "death date before end of last treatment",
+                            FormStatus.merge(baselineData.deathStatus(), lastTreatment.formStatus()),
+                            details));
+                }
             }
+
         }
         return findings;
     }
