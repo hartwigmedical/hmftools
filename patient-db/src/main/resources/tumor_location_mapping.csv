@@ -60,12 +60,12 @@ Gallbladder cancer,Biliary,Gall bladder
 gastric carcinoma,Stomach,Gastric Carcinoma
 gastrinoma in stomach,Stomach,Gastric
 Gastrointestinal Stromal Tumors (GIST),Bone/Soft tissue,Gastrointestinal stromal tumor (GIST)
-Glioblastoma Multiforme,Nervous system,CNS: Glioblastoma Multiforme
-Glioma: anaplastic astrocytoma-like,Nervous system,CNS: Glioma
-Glioma: Glioblastoma Multiforme,Nervous system,CNS: Glioblastoma Multiforme
-Glioma: low-grade astrocytoma,Nervous system,CNS: Astrocytoma
-Glioma: low-grade oligodendroglioma,Nervous system,CNS: Oligodendroglioma
-Glioma: other,Nervous system,CNS: Glioma
+Glioblastoma Multiforme,Nervous system,Glioblastoma Multiforme
+Glioma: anaplastic astrocytoma-like,Nervous system,Glioma
+Glioma: Glioblastoma Multiforme,Nervous system,Glioblastoma Multiforme
+Glioma: low-grade astrocytoma,Nervous system,Astrocytoma
+Glioma: low-grade oligodendroglioma,Nervous system,Oligodendroglioma
+Glioma: other,Nervous system,Glioma
 golanchgio carcinoma,Biliary,Cholangiocarcinoma
 Head and Neck cancer,Head and neck,
 Head and Neck Cancer: Hypopharyngeal Cancer,Head and neck,Hypopharyngeal
@@ -97,7 +97,7 @@ Lung NET,Lung,NET
 lung: adenocarcinoom,Lung,Adenocarcinoom
 Lymphoma: other,Lymphoid,Other
 Melanoma,Skin,Melanoma
-meningeoom: anaplastic hemangiopericytoma gr 3,Nervous system,CNS: Meningeoma
+meningeoom: anaplastic hemangiopericytoma gr 3,Nervous system,Meningeoma
 merkelcell carcinoma,Skin,Other
 mix of SCLC and NSCLC,Lung,Other
 mixed hepatocellular-cholangio carcinoma,Liver,Other
@@ -115,7 +115,7 @@ Neuro endocrine tumor,Other,NET
 neuro-endocrin carcinoma of unknown primary,Other,NET: unknown primary
 Neuro-endocrine carcinoma with unknown primary tumor,Other,NET: unknown primary
 Neuro-endorine tumor,Other,NET
-Neuroblastoma,Nervous system,PNS: Neuroblastoma
+Neuroblastoma,Nervous system,Neuroblastoma
 neuroendocrine carcinoma,Other,NET
 Neuroendocrine tumor,Other,NET
 Non-Hodgkin lymphoma,Lymphoid,Non-Hodgkin lymphoma
@@ -131,7 +131,7 @@ Pancreatic NET,Pancreas,NET
 Penile cancer,Other,Penile
 pericarditis carcinomatosa,Mesothelioma,Pericarditis carcinomatosa
 peritonitis,Other,Peritonitis carcinomatosa
-plexuspapilloom,Nervous system,CNS: plexuspapilloom
+plexuspapilloom,Nervous system,Plexuspapilloom
 primary tumor unknown,CUP,
 Prostate cancer,Prostate,
 Renal Cell Cancer,Kidney,Renal Cell
@@ -148,7 +148,7 @@ sarcomoatoid carcinoom,Bone/Soft tissue,Sarcoma
 Sigmoid,Colon/Rectum,Sigmoid
 Skin cancer,Skin,
 Small intestinal NET,Small intestine,NET
-solitair fibreuze tumor in brain,Nervous system,CNS: Other
+solitair fibreuze tumor in brain,Nervous system,
 spindel cell sarcoma,Sarcoma,Spindle cell
 Squamous cell carcinoma (skin cancer),Skin,Skin squamous cell carcinoma
 squamous cell carcinoma in the vagina,Other,Vagina
