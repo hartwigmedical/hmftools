@@ -93,14 +93,32 @@ public class TreatmentCurator implements CleanableCurator {
         final List<DrugEntry> drugEntries = readEntries(mappingInputStream);
         final Directory index = createIndex(drugEntries);
         final IndexReader reader = DirectoryReader.open(index);
+
         spellChecker = createIndexSpellchecker(index);
         indexSearcher = new IndexSearcher(reader);
+        unusedSearchTerms = extractUniqueSearchTerms(drugEntries);
+    }
 
-        unusedSearchTerms = Sets.newHashSet();
+    @NotNull
+    private static Set<String> extractUniqueSearchTerms(@NotNull Iterable<DrugEntry> drugEntries) {
+        Set<String> uniqueSearchTerms = Sets.newHashSet();
         for (DrugEntry drugEntry : drugEntries) {
-            drugEntry.names().stream().map(String::toLowerCase).forEach(unusedSearchTerms::add);
-            unusedSearchTerms.add(drugEntry.canonicalName().toLowerCase());
+            for (String name : drugEntry.names()) {
+                if (uniqueSearchTerms.contains(name.toLowerCase())) {
+                    LOGGER.warn("Drug synonyms already included in search terms: " + name);
+                } else {
+                    uniqueSearchTerms.add(name.toLowerCase());
+                }
+            }
+
+            if (uniqueSearchTerms.contains(drugEntry.canonicalName().toLowerCase())) {
+                LOGGER.warn("Drug canonical name already included in search terms: " + drugEntry.canonicalName());
+            } else {
+                uniqueSearchTerms.add(drugEntry.canonicalName().toLowerCase());
+            }
         }
+
+        return uniqueSearchTerms;
     }
 
     @NotNull
