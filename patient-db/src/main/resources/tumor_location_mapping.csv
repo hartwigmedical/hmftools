@@ -7,8 +7,10 @@ searchTerm,primaryTumorLocation,subType
 "malignant, probably poorly differentiated adenocarcinoma consistant with clear cell renal carcinoma",Kidney,Renal Cell
 "Mesothelioma, Malignant",Mesothelioma,
 "Neuro endocrine carcinoma (NEC), primary unknown",Other,NET: unknown primary
+"Non-small cell carcinoma NOS (mostly resembling lung carcinoma): working diagnosis ""lung carcinoma""",Lung,Non-Small Cell
 "Sarcoma, soft tissue",Bone/Soft tissue,Sarcoma
 "small cell carcinoma, unknown origin (possible SCLC)",CUP,Possibly SCLC
+"Solitary brain metastasis, primary tumor probably near rectum",CUP,probably rectum
 "Unknown, probably head and neck cancer",CUP,Possibly Head and neck
 "Urothelial cell cancer, but the origin is unknown",Urinary tract,Unknown
 2008: Follicular NHL Stage IA (left ear) RT 8 GY; 2013: Stage IV follicular lymphoma (ww); 25Nov2015: Anal cancer,Colon/Rectum,Anal
@@ -57,18 +59,19 @@ Gallbladder cancer,Biliary,Gall bladder
 gastric carcinoma,Stomach,Gastric Carcinoma
 gastrinoma in stomach,Stomach,Gastric
 Gastrointestinal Stromal Tumors (GIST),Bone/Soft tissue,Gastrointestinal stromal tumor (GIST)
-Glioblastoma Multiforme,CNS,Glioblastoma Multiforme
-Glioma: anaplastic astrocytoma-like,CNS,Glioma
-Glioma: Glioblastoma Multiforme,CNS,Glioblastoma Multiforme
-Glioma: low-grade astrocytoma,CNS,Astrocytoma
-Glioma: low-grade oligodendroglioma,CNS,Oligodendroglioma
-Glioma: other,CNS,Glioma
+Glioblastoma Multiforme,Nervous system,CNS: Glioblastoma Multiforme
+Glioma: anaplastic astrocytoma-like,Nervous system,CNS: Glioma
+Glioma: Glioblastoma Multiforme,Nervous system,CNS: Glioblastoma Multiforme
+Glioma: low-grade astrocytoma,Nervous system,CNS: Astrocytoma
+Glioma: low-grade oligodendroglioma,Nervous system,CNS: Oligodendroglioma
+Glioma: other,Nervous system,CNS: Glioma
 golanchgio carcinoma,Biliary,Cholangiocarcinoma
 Head and Neck cancer,Head and neck,
 Head and Neck Cancer: Hypopharyngeal Cancer,Head and neck,Hypopharyngeal
 Head and Neck Cancer: Laryngeal cancer,Head and neck,Laryngeal
 Head and Neck Cancer: Lip and Oral Cavity Cancer,Head and neck,Lip and Oral Cavity
 Head and Neck Cancer: Nasal cavity and paranasal sinuses cancer,Head and neck,Nasal cavity and paranasal sinuses
+Head and Neck Cancer: Nasopharyngeal Cancer,Head and neck,Nasopharyngeal Cancer
 Head and Neck Cancer: Oropharyngeal Cancer,Head and neck,Oropharyngeal
 Head and Neck Cancer: Salivary Gland Cancer,Head and neck,Salivary Gland
 hemangiopericytoma,Bone/Soft tissue,Angiosarcoma
@@ -77,6 +80,8 @@ high grade serous carcinoma of unknown origin,CUP,
 high suspicion pancreatic cancer therfore pa and cpct biopt at the same day,Pancreas,
 Hodgkin lymphoma,Lymphoid,Hodgkin lymphoma
 hydradenocarcinoma,Skin,Sweat glands
+Hypopharyngeal Cancer,Head and neck,Hypopharyngeal
+inflammatory myofibroblastic tumor,Sarcoma,Inflammatory myofibroblastic
 kidney,Kidney,
 large cell neuroendocrien carcinoma,Other,NET: large cell
 Larynxcarcinoma,Head and neck,Laryngeal
@@ -90,7 +95,8 @@ Lung NET,Lung,NET
 lung: adenocarcinoom,Lung,Adenocarcinoom
 Lymphoma: other,Lymphoid,Other
 Melanoma,Skin,Melanoma
-meningeoom: anaplastic hemangiopericytoma gr 3,CNS,Meningeoma
+meningeoom: anaplastic hemangiopericytoma gr 3,Nervous system,CNS: Meningeoma
+merkelcell carcinoma,Skin,Other
 mix of SCLC and NSCLC,Lung,Other
 mixed hepatocellular-cholangio carcinoma,Liver,Other
 Mixed NET/not-NET located: major duodenal papilla,Small intestine,Other
@@ -107,10 +113,10 @@ Neuro endocrine tumor,Other,NET
 neuro-endocrin carcinoma of unknown primary,Other,NET: unknown primary
 Neuro-endocrine carcinoma with unknown primary tumor,Other,NET: unknown primary
 Neuro-endorine tumor,Other,NET
+Neuroblastoma,Nervous system,PNS: Neuroblastoma
 neuroendocrine carcinoma,Other,NET
 Neuroendocrine tumor,Other,NET
 Non-Hodgkin lymphoma,Lymphoid,Non-Hodgkin lymphoma
-"Non-small cell carcinoma NOS (mostly resembling lung carcinoma): working diagnosis ""lung carcinoma""",Lung,Non-Small Cell
 Non-small cell high grade neuroendocrine carcinoma,Other,NET: non small cell
 Non-small cell NHL stomach stage I E,Stomach,Other
 Oesophagal cancer (at transition from oesophagus to stomach),Esophagus,
@@ -122,7 +128,6 @@ Pancreatic cancer,Pancreas,
 Pancreatic NET,Pancreas,NET
 Penile cancer,Other,Penile
 pericarditis carcinomatosa,Mesothelioma,Pericarditis carcinomatosa
-Primary tumor of uknown origin,CUP,
 primary tumor unknown,CUP,
 Prostate cancer,Prostate,
 Renal Cell Cancer,Kidney,Renal Cell
@@ -130,23 +135,24 @@ Rhabdomyosarcoma,Bone/Soft tissue,Rhabdomyosarcoma
 rhabodomyosarcoma,Bone/Soft tissue,Rhabdomyosarcoma
 Salivary Gland Cancer,Head and neck,Salivary Gland
 salivay duct carcinoma,Head and neck,Salivary Duct
+Sarcoma: Ewing,Sarcoma,Ewing
 Sarcoma: other,Bone/Soft tissue,Sarcoma
 Sarcoma: Soft Tissue,Bone/Soft tissue,Sarcoma
+Sarcoma: Uterine,Sarcoma,Uterine
 sarcomatoid or sarcoma (postradiation),Bone/Soft tissue,Sarcoma
 sarcomoatoid carcinoom,Bone/Soft tissue,Sarcoma
 Sigmoid,Colon/Rectum,Sigmoid
 Skin cancer,Skin,
 Small intestinal NET,Small intestine,NET
-solitair fibreuze tumor in brain,CNS,Other
+solitair fibreuze tumor in brain,Nervous system,CNS: Other
+spindel cell sarcoma,Sarcoma,Spindle cell
 Squamous cell carcinoma (skin cancer),Skin,Skin squamous cell carcinoma
 squamous cell carcinoma in the vagina,Other,Vagina
 Squamous cell carcinoma of the skin,Skin,Skin squamous cell carcinoma
 Squamous cell carcinoma of the tongue,Head and neck,Tongue
-Stomach (Gastric) Cancer,Stomach,Gastric
 Stomach cancer,Stomach,
 Stomach cancer ( Gastric carcer),Stomach,Gastric
 Submandular gland,Head and neck,Salivary Gland
-Suspicious desmoid tumors due to a gardner syndrome,Bone/Soft tissue,Desmoid
 Testicular cancer,Other,Testis
 thymic NET,Other,Thymic NET
 Thymoma and Thymic Carcinoma,Lymphoid,Thymic carcinoma
@@ -169,5 +175,4 @@ Urothelial cell cancer of the bladder,Urinary tract,Bladder
 Urothelial cell cancer of the pyelum,Urinary tract,Pyelum
 Urothelial cell cancer of the urethra,Urinary tract,Urethra
 Urothelial cell cancer: other,Urinary tract,Other
-Vaginal cancer,Other,Vagina
 Vulva cancer,Skin,Vulva
