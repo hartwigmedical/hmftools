@@ -16,8 +16,6 @@ import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.purity.FittedPurity;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
@@ -167,12 +165,10 @@ public abstract class PatientReporter {
             LOGGER.warn("PURPLE DID NOT DETECT A TUMOR. Proceed with utmost caution!");
         }
 
-        final FittedPurity purity = context.bestFit();
-        final FittedPurityScore purityScore = context.score();
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
         final List<GeneCopyNumber> panelGeneCopyNumbers = PatientReporterHelper.loadPurpleGeneCopyNumbers(runDirectory, sample)
                 .stream()
-                .filter(x -> reporterData().panelGeneModel().panel().contains(x.gene()))
+                .filter(geneCopyNumber -> reporterData().panelGeneModel().panel().contains(geneCopyNumber.gene()))
                 .collect(Collectors.toList());
 
         LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
@@ -180,8 +176,8 @@ public abstract class PatientReporter {
         final PurpleAnalysis purpleAnalysis = ImmutablePurpleAnalysis.builder()
                 .gender(context.gender())
                 .status(context.status())
-                .fittedPurity(purity)
-                .fittedScorePurity(purityScore)
+                .fittedPurity(context.bestFit())
+                .fittedScorePurity(context.score())
                 .copyNumbers(purpleCopyNumbers)
                 .panelGeneCopyNumbers(panelGeneCopyNumbers)
                 .build();
