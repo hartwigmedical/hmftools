@@ -17,13 +17,13 @@ final class BiopsyTreatmentResponseReader {
 
     static final String STUDY_TREATMENT = "SE.TREATMENT";
     static final String FORM_TUMOR_MEASUREMENT = "FRM.TUMORMEASUREMENT";
-    private static final String ITEMGROUP_MEASUREMENT = "GRP.TUMORMEASUREMENT.MEASUREMENT";
-    private static final String FIELD_ASSESSMENT_DATE = "FLD.TUMORMEASUREMENT.ASSDTC";
-    static final String ITEMGROUP_TUMOR_MEASUREMENT = "GRP.TUMORMEASUREMENT.TUMORMEASUREMENT";
-    private static final String FIELD_RESPONSE_DATE = "FLD.TUMORMEASUREMENT.RESPONSEDTC";
-    private static final String FIELD_BONE_ONLY_DISEASE = "FLD.TUMORMEASUREMENT.BONEYN";
-    static final String FIELD_MEASUREMENT_DONE = "FLD.TUMORMEASUREMENT.TMYN";
-    static final String FIELD_RESPONSE = "FLD.TUMORMEASUREMENT.BESTRESPON";
+    private static final String ITEMGROUP_MEASUREMENT = "GRP.MEASUREMENT";
+    private static final String FIELD_ASSESSMENT_DATE = "FLD.ASSDTC";
+    static final String ITEMGROUP_TUMOR_MEASUREMENT = "GRP.TUMORMEASUREMENT";
+    private static final String FIELD_RESPONSE_DATE = "FLD.RESPONSEDTC";
+    private static final String FIELD_BONE_ONLY_DISEASE = "FLD.BONEYN";
+    static final String FIELD_MEASUREMENT_DONE = "FLD.TMYN";
+    static final String FIELD_RESPONSE = "FLD.BESTRESPON";
 
     private BiopsyTreatmentResponseReader() {
     }

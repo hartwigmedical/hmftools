@@ -16,12 +16,12 @@ import org.jetbrains.annotations.NotNull;
 final class TumorMarkerReader {
     private static final String STUDY_TREATMENT = "SE.TREATMENT";
     private static final String FORM_RESPONSE = "FRM.RESPONSE";
-    private static final String ITEMGROUP_RESPONSE = "GRP.RESPONSE.RESPONSE";
+    private static final String ITEMGROUP_RESPONSE = "GRP.RESPONSE";
 
-    private static final String FIELD_DATE = "FLD.RESPONSE.LBDTC_TUMORMARKERS";
-    private static final String FIELD_MARKER = "FLD.RESPONSE.LBTERM_TUMORMARKERS";
-    private static final String FIELD_MEASUREMENT = "FLD.RESPONSE.LBORRES_TUMORMARKERS";
-    private static final String FIELD_UNIT = "FLD.RESPONSE.LBORRESU_TUMORMARKERS";
+    private static final String FIELD_DATE = "FLD.LBDTC_TUMORMARKERS";
+    private static final String FIELD_MARKER = "FLD.LBTERM_TUMORMARKERS";
+    private static final String FIELD_MEASUREMENT = "FLD.LBORRES_TUMORMARKERS";
+    private static final String FIELD_UNIT = "FLD.LBORRESU_TUMORMARKERS";
 
     private TumorMarkerReader() {
     }

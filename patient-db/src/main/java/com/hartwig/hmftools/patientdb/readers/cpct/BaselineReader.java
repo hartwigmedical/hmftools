@@ -31,28 +31,28 @@ class BaselineReader {
     private static final String FORM_SELCRIT = "FRM.SELCRIT";
     private static final String FORM_DEATH = "FRM.DEATH";
 
-    private static final String ITEMGROUP_DEMOGRAPHY = "GRP.DEMOGRAPHY.DEMOGRAPHY";
-    private static final String ITEMGROUP_INFORMED_CONSENT = "GRP.INFORMEDCONSENT.INFORMEDCONSENT";
-    private static final String ITEMGROUP_CARCINOMA = "GRP.CARCINOMA.CARCINOMA";
-    private static final String ITEMGROUP_ELIGIBILITY = "GRP.ELIGIBILITY.ELIGIBILITY";
-    private static final String ITEMGROUP_SELCRIT = "GRP.SELCRIT.SELCRIT";
-    private static final String ITEMGROUP_DEATH = "GRP.DEATH.DEATH";
+    private static final String ITEMGROUP_DEMOGRAPHY = "GRP.DEMOGRAPHY";
+    private static final String ITEMGROUP_INFORMED_CONSENT = "GRP.INFORMEDCONSENT";
+    private static final String ITEMGROUP_CARCINOMA = "GRP.CARCINOMA";
+    private static final String ITEMGROUP_ELIGIBILITY = "GRP.ELIGIBILITY";
+    private static final String ITEMGROUP_SELCRIT = "GRP.SELCRIT";
+    private static final String ITEMGROUP_DEATH = "GRP.DEATH";
 
-    private static final String FIELD_GENDER = "FLD.DEMOGRAPHY.SEX";
-    private static final String FIELD_INFORMED_CONSENT_DATE = "FLD.INFORMEDCONSENT.ICDTC";
-    private static final String FIELD_REGISTRATION_DATE1 = "FLD.ELIGIBILITY.REGDTC";
-    private static final String FIELD_REGISTRATION_DATE2 = "FLD.SELCRIT.NREGDTC";
-    private static final String FIELD_BIRTH_YEAR1 = "FLD.SELCRIT.NBIRTHYEAR";
-    private static final String FIELD_BIRTH_YEAR2 = "FLD.ELIGIBILITY.BIRTHYEAR";
-    private static final String FIELD_BIRTH_YEAR3 = "FLD.ELIGIBILITY.BIRTHDTCES";
+    private static final String FIELD_GENDER = "FLD.SEX";
+    private static final String FIELD_INFORMED_CONSENT_DATE = "FLD.ICDTC";
+    private static final String FIELD_REGISTRATION_DATE1 = "FLD.REGDTC";
+    private static final String FIELD_REGISTRATION_DATE2 = "FLD.NREGDTC";
+    private static final String FIELD_BIRTH_YEAR1 = "FLD.NBIRTHYEAR";
+    private static final String FIELD_BIRTH_YEAR2 = "FLD.BIRTHYEAR";
+    private static final String FIELD_BIRTH_YEAR3 = "FLD.BIRTHDTCES";
 
-    private static final String FIELD_PRIMARY_TUMOR_LOCATION = "FLD.CARCINOMA.PTUMLOC";
-    private static final String FIELD_PRIMARY_TUMOR_LOCATION_OTHER = "FLD.CARCINOMA.PTUMLOCS";
+    private static final String FIELD_PRIMARY_TUMOR_LOCATION = "FLD.PTUMLOC";
+    private static final String FIELD_PRIMARY_TUMOR_LOCATION_OTHER = "FLD.PTUMLOCS";
 
-    private static final String FIELD_DEATH_DATE = "FLD.DEATH.DDEATHDTC";
+    private static final String FIELD_DEATH_DATE = "FLD.DDEATHDTC";
 
-    private static final String FIELD_HOSPITAL1 = "FLD.ELIGIBILITY.HOSPITAL";
-    private static final String FIELD_HOSPITAL2 = "FLD.SELCRIT.NHOSPITAL";
+    private static final String FIELD_HOSPITAL1 = "FLD.HOSPITAL";
+    private static final String FIELD_HOSPITAL2 = "FLD.NHOSPITAL";
 
     @NotNull
     private final TumorLocationCurator tumorLocationCurator;

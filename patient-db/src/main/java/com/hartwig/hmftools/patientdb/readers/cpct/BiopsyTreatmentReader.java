@@ -23,15 +23,15 @@ class BiopsyTreatmentReader {
     private static final String STUDY_AFTERBIOPT = "SE.AFTERBIOPT";
     private static final String FORM_TREATMENT = "FRM.TRTAFTER";
 
-    private static final String ITEMGROUP_TREATMENT_AFTER = "GRP.TRTAFTER.TRTAFTER";
-    private static final String FIELD_TREATMENT_GIVEN = "FLD.TRTAFTER.SYSTEMICST";
-    private static final String FIELD_RADIOTHERAPY_GIVEN = "FLD.TRTAFTER.RADIOTHERST";
+    private static final String ITEMGROUP_TREATMENT_AFTER = "GRP.TRTAFTER";
+    private static final String FIELD_TREATMENT_GIVEN = "FLD.SYSTEMICST";
+    private static final String FIELD_RADIOTHERAPY_GIVEN = "FLD.RADIOTHERST";
 
-    private static final String ITEMGROUP_SYSPOSTBIO = "GRP.TRTAFTER.SYSPOSTBIO";
-    private static final String FIELD_DRUG_START = "FLD.TRTAFTER.SYSSTDT";
-    private static final String FIELD_DRUG_END = "FLD.TRTAFTER.SYSENDT";
-    private static final String FIELD_DRUG = "FLD.TRTAFTER.PLANNEDTRT";
-    private static final String FIELD_DRUG_OTHER = "FLD.TRTAFTER.SYSREGPOST";
+    private static final String ITEMGROUP_SYSPOSTBIO = "GRP.SYSPOSTBIO";
+    private static final String FIELD_DRUG_START = "FLD.SYSSTDT";
+    private static final String FIELD_DRUG_END = "FLD.SYSENDT";
+    private static final String FIELD_DRUG = "FLD.PLANNEDTRT";
+    private static final String FIELD_DRUG_OTHER = "FLD.SYSREGPOST";
 
     @NotNull
     private final TreatmentCurator treatmentCurator;
