@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientdb.matchers;
 
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -32,7 +31,6 @@ public final class TreatmentMatcher {
         List<BiopsyTreatmentData> notYesTreatments = getNotYesTreatments(treatments);
 
         // KODU: First match yes-treatments
-        Collections.sort(yesTreatments);
         for (final BiopsyTreatmentData treatment : yesTreatments) {
             LocalDate startDate = treatment.startDate();
             if (startDate == null) {
