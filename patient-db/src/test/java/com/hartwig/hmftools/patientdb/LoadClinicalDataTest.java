@@ -36,7 +36,7 @@ import org.junit.Test;
 
 public class LoadClinicalDataTest {
 
-    private static final String TEST_ECRF = Resources.getResource("test_ecrf.xml").getPath();
+    private static final String TEST_ECRF = Resources.getResource("test_cpct_ecrf.xml").getPath();
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
