@@ -25,11 +25,7 @@ public final class BiopsyMatcher {
             @NotNull final List<SampleData> sequencedBiopsies, @NotNull final List<BiopsyData> clinicalBiopsies) {
         final List<BiopsyData> matchedBiopsies = Lists.newArrayList();
         final List<ValidationFinding> findings = Lists.newArrayList();
-        if (clinicalBiopsies.size() < sequencedBiopsies.size()) {
-            findings.add(biopsyMatchFinding(patientId,
-                    "less ecrf biopsies than biopsies sequenced.",
-                    "ecrf biopsies: " + clinicalBiopsies.size() + "; sequenced: " + sequencedBiopsies.size()));
-        }
+
         List<BiopsyData> remainingBiopsies = clinicalBiopsies;
         for (final SampleData sequencedBiopsy : sequencedBiopsies) {
             final Map<Boolean, List<BiopsyData>> partitions = remainingBiopsies.stream()

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientdb.matchers;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -27,6 +28,16 @@ public final class TreatmentMatcher {
         final List<ValidationFinding> findings = Lists.newArrayList();
 
         List<BiopsyData> remainingBiopsies = Lists.newArrayList(biopsies);
+
+        Collections.sort(biopsies);
+        Collections.sort(treatments);
+
+        if (firstTreatmentBeforeFirstBiopsy(biopsies, treatments)) {
+            findings.add(treatmentMatchFinding(patientIdentifier,
+                    "First treatment prior to first biopsy",
+                    "biopsy date: " + biopsies.get(0).date() + ", first treatment start: " + treatments.get(0).startDate()));
+        }
+
         List<BiopsyTreatmentData> yesTreatments = getYesTreatments(treatments);
         List<BiopsyTreatmentData> notYesTreatments = getNotYesTreatments(treatments);
 
@@ -76,6 +87,20 @@ public final class TreatmentMatcher {
             }
         }
         return new MatchResult<>(matchedTreatments, findings);
+    }
+
+    private static boolean firstTreatmentBeforeFirstBiopsy(@NotNull final List<BiopsyData> sortedBiopsies,
+            @NotNull final List<BiopsyTreatmentData> sortedTreatments) {
+        if (sortedBiopsies.size() > 0 && sortedTreatments.size() > 0) {
+            LocalDate firstBiopsyDate = sortedBiopsies.get(0).date();
+            LocalDate firstTreatmentStart = sortedTreatments.get(0).startDate();
+
+            if (firstBiopsyDate != null && firstTreatmentStart != null) {
+                return firstTreatmentStart.isBefore(firstBiopsyDate);
+            }
+        }
+
+        return false;
     }
 
     private static boolean isPossibleMatch(@NotNull final BiopsyData biopsy, @NotNull final LocalDate treatmentStartDate) {

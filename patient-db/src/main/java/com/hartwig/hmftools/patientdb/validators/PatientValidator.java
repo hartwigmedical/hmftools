@@ -40,7 +40,7 @@ public final class PatientValidator {
 
         findings.addAll(validateBaselineData(patientIdentifier, patient.baselineData()));
         findings.addAll(validatePreTreatmentData(patientIdentifier, patient.preTreatmentData()));
-        findings.addAll(validateBiopsies(patientIdentifier, patient.clinicalBiopsies(), patient.treatments()));
+        findings.addAll(validateBiopsies(patientIdentifier, patient.clinicalBiopsies(), patient.sequencedBiopsies().size()));
         findings.addAll(validateTreatments(patientIdentifier, patient.treatments()));
         findings.addAll(validateTreatmentResponses(patientIdentifier, patient.treatments(), patient.treatmentResponses()));
         findings.addAll(validateDeathDate(patientIdentifier, patient.baselineData(), patient.treatments()));
@@ -63,33 +63,39 @@ public final class PatientValidator {
                     "primary tumor location empty",
                     baselineData.primaryTumorStatus()));
         }
+
         if (baselineData.gender() == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL, patientIdentifier, "gender empty", baselineData.demographyStatus()));
         }
+
         if (baselineData.registrationDate() == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientIdentifier,
                     "registration date empty or in wrong format",
                     FormStatus.merge(baselineData.selectionCriteriaStatus(), baselineData.eligibilityStatus())));
         }
+
         if (baselineData.informedConsentDate() == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientIdentifier,
                     "informed consent date empty or in wrong format",
                     baselineData.informedConsentStatus()));
         }
+
         if (baselineData.birthYear() == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientIdentifier,
                     "birth year could not be determined",
                     FormStatus.merge(baselineData.eligibilityStatus(), baselineData.selectionCriteriaStatus())));
         }
+
         if (baselineData.hospital() == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientIdentifier,
-                    "no hospital",
+                    "hospital could not be determined",
                     FormStatus.merge(baselineData.eligibilityStatus(), baselineData.selectionCriteriaStatus())));
         }
+
         return findings;
     }
 
@@ -100,42 +106,39 @@ public final class PatientValidator {
         final String preTreatmentGiven = preTreatmentData.treatmentGiven();
         final String preRadioTreatmentGiven = preTreatmentData.radiotherapyGiven();
         final List<ValidationFinding> findings = Lists.newArrayList();
+
         if (preTreatmentGiven == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientIdentifier,
                     "pre systemic treatment given empty",
                     preTreatmentData.formStatus()));
         }
+
         if (preRadioTreatmentGiven == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientIdentifier,
                     "pre radio treatment given empty",
                     preTreatmentData.formStatus()));
         }
+
         return findings;
     }
 
     @NotNull
     @VisibleForTesting
     static List<ValidationFinding> validateBiopsies(@NotNull final String patientIdentifier, @NotNull final List<BiopsyData> biopsies,
-            @NotNull final List<BiopsyTreatmentData> treatments) {
+            int expectedMatches) {
         final List<ValidationFinding> findings = Lists.newArrayList();
+
         biopsies.forEach(biopsy -> findings.addAll(validateBiopsyData(patientIdentifier, biopsy)));
-        if (biopsies.isEmpty()) {
-            findings.add(ValidationFinding.of(ECRF_LEVEL, patientIdentifier, "no biopsies found", FormStatus.undefined()));
+
+        if (biopsies.size() < expectedMatches) {
+            findings.add(ValidationFinding.of(ECRF_LEVEL,
+                    patientIdentifier,
+                    "not enough biopsy forms to match with sequenced samples",
+                    FormStatus.undefined()));
         }
-        if (biopsies.size() > 0 && treatments.size() > 0) {
-            biopsies.sort(comparing(BiopsyData::date, nullsLast(naturalOrder())));
-            Collections.sort(treatments);
-            final LocalDate firstBiopsyDate = biopsies.get(0).date();
-            final LocalDate firstTreatmentStart = treatments.get(0).startDate();
-            if (firstBiopsyDate != null && firstTreatmentStart != null && firstTreatmentStart.isBefore(firstBiopsyDate)) {
-                findings.add(ValidationFinding.of(ECRF_LEVEL,
-                        patientIdentifier,
-                        "first treatment start is before first biopsy date",
-                        FormStatus.merge(biopsies.get(0).formStatus(), treatments.get(0).formStatus())));
-            }
-        }
+
         return findings;
     }
 
@@ -143,18 +146,21 @@ public final class PatientValidator {
     @VisibleForTesting
     static List<ValidationFinding> validateBiopsyData(@NotNull final String patientIdentifier, @NotNull final BiopsyData biopsyData) {
         final List<ValidationFinding> findings = Lists.newArrayList();
+
         if (biopsyData.date() == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientIdentifier,
                     "biopsy date empty or in wrong format",
                     biopsyData.formStatus()));
         }
+
         if (biopsyData.site() == null && biopsyData.location() == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientIdentifier,
                     "biopsy site and biopsy location are empty",
                     biopsyData.formStatus()));
         }
+
         return findings;
     }
 
@@ -303,7 +309,9 @@ public final class PatientValidator {
         final List<ValidationFinding> findings = Lists.newArrayList();
         final String searchTerm = baselineData.curatedTumorLocation().searchTerm();
         if (searchTerm != null && baselineData.curatedTumorLocation().primaryTumorLocation() == null) {
-            findings.add(ValidationFinding.of("tumorLocationCuration", patientIdentifier, "failed to curate primary tumor location",
+            findings.add(ValidationFinding.of("tumorLocationCuration",
+                    patientIdentifier,
+                    "failed to curate primary tumor location",
                     baselineData.primaryTumorStatus(),
                     searchTerm));
         }

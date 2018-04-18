@@ -26,7 +26,7 @@ public final class TreatmentResponseMatcher {
         final List<ValidationFinding> findings = Lists.newArrayList();
         Collections.sort(responses);
 
-        List<BiopsyTreatmentData> sortedTreatments = sortAndFilter(treatments);
+        List<BiopsyTreatmentData> sortedTreatments = sortAndWithStartDate(treatments);
         if (hasOverlappingTreatments(sortedTreatments)) {
             if (!responses.isEmpty()) {
                 findings.add(responseMatchFinding(patientId, "treatments are overlapping. Cannot match any response.",
@@ -96,7 +96,7 @@ public final class TreatmentResponseMatcher {
     }
 
     @NotNull
-    private static List<BiopsyTreatmentData> sortAndFilter(@NotNull List<BiopsyTreatmentData> treatments) {
+    private static List<BiopsyTreatmentData> sortAndWithStartDate(@NotNull List<BiopsyTreatmentData> treatments) {
         List<BiopsyTreatmentData> sortedTreatments = Lists.newArrayList(treatments);
         Collections.sort(sortedTreatments);
         sortedTreatments.removeIf(treatment -> treatment.startDate() == null);
