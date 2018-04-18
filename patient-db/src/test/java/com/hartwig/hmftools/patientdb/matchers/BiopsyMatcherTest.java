@@ -135,11 +135,11 @@ public class BiopsyMatcherTest {
 
     // MIVO:    ---biopsy(feb)-x-x-x-x-sample(jul)-sample(aug)---
     @Test
-    public void biopsyBefore2SamplesWithinThresholdYieldsNoMatch() {
+    public void biopsyBefore2SamplesWithinThresholdYieldsMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_JUL, SEQUENCED_BIOPSY_AUG);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(CLINICAL_BIOPSY_FEB);
 
-        runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null);
+        runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, SEQUENCED_BIOPSY_JUL.sampleId());
     }
 
     // MIVO:    ---biopsy(mar)-x-x-x-sample(jul)-x-biopsy(sep)---
@@ -154,7 +154,7 @@ public class BiopsyMatcherTest {
     // MIVO:    ---biopsy(feb)-biopsy(mar)-x-x-x-x-sample(aug)-sample(sep)---
     @Test
     public void twoSamplesAfterTwoBiopsiesYieldsNoMatch() {
-        final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_AUG, SEQUENCED_BIOPSY_SEP);
+        final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_SEP, SEQUENCED_BIOPSY_NOV);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(CLINICAL_BIOPSY_FEB, CLINICAL_BIOPSY_MAR);
 
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null, null);
@@ -171,11 +171,11 @@ public class BiopsyMatcherTest {
 
     // MIVO:    ---biopsy(jan)-x-x-x-x-x-x-sample(aug)-biopsy(sep)-x-sample(nov)---
     @Test
-    public void twoSamplesBetweenTwoBiopsiesOneOutsideThresholdYieldsNoMatch() {
+    public void twoSamplesBetweenTwoBiopsiesOneOutsideThresholdYieldsMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_AUG, SEQUENCED_BIOPSY_NOV);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(CLINICAL_BIOPSY_JAN, CLINICAL_BIOPSY_SEP);
 
-        runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null, null);
+        runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null, SEQUENCED_BIOPSY_NOV.sampleId());
     }
 
     // KODU: --biopsy(mar)-x-x-x-x-sample(nov)--

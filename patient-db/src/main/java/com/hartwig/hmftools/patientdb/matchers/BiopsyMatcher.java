@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientdb.matchers;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -27,6 +28,9 @@ public final class BiopsyMatcher {
         final List<ValidationFinding> findings = Lists.newArrayList();
 
         List<BiopsyData> remainingBiopsies = clinicalBiopsies;
+        Collections.sort(remainingBiopsies);
+        Collections.sort(sequencedBiopsies);
+
         if (clinicalBiopsies.size() < sequencedBiopsies.size()) {
             findings.add(biopsyMatchFinding(patientId,
                     "Not enough clinical biopsy forms to match for every sequenced sample",
@@ -52,16 +56,15 @@ public final class BiopsyMatcher {
                         "sample: " + sampleDataToString(sequencedBiopsy) + "; ecrf biopsies: " + clinicalBiopsies.stream()
                                 .map(BiopsyData::date)
                                 .collect(Collectors.toList()) + ". match criteria: " + getMatchDateCriteria(sequencedBiopsy)));
-                // MIVO: abort finding new matches if we can't match one sequenced biopsy
-                return new MatchResult<>(clinicalBiopsies, findings);
             } else if (possibleMatches.size() > 1) {
                 findings.add(biopsyMatchFinding(patientId,
                         "More than 1 possible clinical biopsy match for sequenced sample.",
                         "sample: " + sampleDataToString(sequencedBiopsy) + "; ecrf biopsies: " + clinicalBiopsies.stream()
                                 .map(BiopsyData::date)
                                 .collect(Collectors.toList()) + ". match criteria: " + getMatchDateCriteria(sequencedBiopsy)));
-                // MIVO: abort finding new matches if we can't match one sequenced biopsy
-                return new MatchResult<>(clinicalBiopsies, findings);
+            } else {
+                findings.add(biopsyMatchFinding(patientId, "Undetermined match issue in biopsy matcher",
+                        "sample: " + sampleDataToString(sequencedBiopsy)));
             }
         }
         matchedBiopsies.addAll(remainingBiopsies);
