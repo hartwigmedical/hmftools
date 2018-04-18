@@ -136,6 +136,7 @@ public class StructuralVariantAnalyzer {
                         .reportable(reportable)
                         .upstreamLinkedAnnotation(upstream)
                         .downstreamLinkedAnnotation(downstream)
+                        .sources(knownFusionsModel.sources(upstream.parent().synonyms(), downstream.parent().synonyms()))
                         .build();
 
                 result.add(geneFusion);
