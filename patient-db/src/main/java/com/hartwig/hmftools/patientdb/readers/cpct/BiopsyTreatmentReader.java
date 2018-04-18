@@ -64,8 +64,10 @@ class BiopsyTreatmentReader {
             if (drugName == null || drugName.trim().toLowerCase().startsWith("other")) {
                 drugName = itemGroup.readItemString(FIELD_DRUG_OTHER);
             }
-            final List<CuratedTreatment> curatedDrugs = drugName == null ? Lists.newArrayList() : treatmentCurator.search(drugName);
-            drugs.add(ImmutableDrugData.of(drugName, drugStart, drugEnd, null, curatedDrugs));
+            if (drugName != null || drugStart != null || drugEnd != null) {
+                final List<CuratedTreatment> curatedDrugs = drugName == null ? Lists.newArrayList() : treatmentCurator.search(drugName);
+                drugs.add(ImmutableDrugData.of(drugName, drugStart, drugEnd, null, curatedDrugs));
+            }
         }
         return drugs;
     }
