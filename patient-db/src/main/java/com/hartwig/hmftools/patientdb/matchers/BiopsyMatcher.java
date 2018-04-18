@@ -22,7 +22,7 @@ public final class BiopsyMatcher {
     }
 
     @NotNull
-    public static MatchResult<BiopsyData> matchBiopsiesToTumorSamples(@NotNull final String patientId,
+    public static MatchResult<BiopsyData> matchBiopsiesToTumorSamples(@NotNull final String patientIdentifier,
             @NotNull final List<SampleData> sequencedBiopsies, @NotNull final List<BiopsyData> clinicalBiopsies) {
         final List<BiopsyData> matchedBiopsies = Lists.newArrayList();
         final List<ValidationFinding> findings = Lists.newArrayList();
@@ -32,7 +32,7 @@ public final class BiopsyMatcher {
         Collections.sort(sequencedBiopsies);
 
         if (clinicalBiopsies.size() < sequencedBiopsies.size()) {
-            findings.add(biopsyMatchFinding(patientId,
+            findings.add(biopsyMatchFinding(patientIdentifier,
                     "Not enough clinical biopsy forms to match for every sequenced sample",
                     "Clinical biopsies: " + clinicalBiopsies.size() + ", sequenced samples: " + sequencedBiopsies.size()));
         }
@@ -45,25 +45,25 @@ public final class BiopsyMatcher {
                 final BiopsyData clinicalBiopsy = possibleMatches.get(0);
                 matchedBiopsies.add(ImmutableBiopsyData.builder().from(clinicalBiopsy).sampleId(sequencedBiopsy.sampleId()).build());
                 if (hasMismatchOnSamplingDate(sequencedBiopsy, clinicalBiopsy)) {
-                    findings.add(biopsyMatchFinding(patientId,
+                    findings.add(biopsyMatchFinding(patientIdentifier,
                             "Sampling date does not equal biopsy date in matched biopsy",
                             "sampling date: " + sequencedBiopsy.samplingDate() + "; ecrf biopsy date: " + clinicalBiopsy.date()));
                 }
                 remainingBiopsies = partitions.get(false);
             } else if (possibleMatches.size() == 0 || (possibleMatches.size() == 1 && possibleMatches.get(0).date() == null)) {
-                findings.add(biopsyMatchFinding(patientId,
+                findings.add(biopsyMatchFinding(patientIdentifier,
                         "Could not match any clinical biopsy with sequenced sample.",
                         "sample: " + sampleDataToString(sequencedBiopsy) + "; ecrf biopsies: " + clinicalBiopsies.stream()
                                 .map(BiopsyData::date)
                                 .collect(Collectors.toList()) + ". match criteria: " + getMatchDateCriteria(sequencedBiopsy)));
             } else if (possibleMatches.size() > 1) {
-                findings.add(biopsyMatchFinding(patientId,
+                findings.add(biopsyMatchFinding(patientIdentifier,
                         "More than 1 possible clinical biopsy match for sequenced sample.",
                         "sample: " + sampleDataToString(sequencedBiopsy) + "; ecrf biopsies: " + clinicalBiopsies.stream()
                                 .map(BiopsyData::date)
                                 .collect(Collectors.toList()) + ". match criteria: " + getMatchDateCriteria(sequencedBiopsy)));
             } else {
-                findings.add(biopsyMatchFinding(patientId, "Undetermined match issue in biopsy matcher",
+                findings.add(biopsyMatchFinding(patientIdentifier, "Undetermined match issue in biopsy matcher",
                         "sample: " + sampleDataToString(sequencedBiopsy)));
             }
         }
