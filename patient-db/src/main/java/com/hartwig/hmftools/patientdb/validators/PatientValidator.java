@@ -210,10 +210,15 @@ public final class PatientValidator {
                 findings.add(ValidationFinding.of(ECRF_LEVEL,
                         patientIdentifier,
                         "Treatment given is no, but drugs are filled in",
-                        treatmentData.formStatus()));
+                        treatmentData.formStatus(),
+                        treatmentData.drugs().toString()));
             }
         } else {
-            findings.add(ValidationFinding.of(ECRF_LEVEL, patientIdentifier, "Treatment given is not yes/no", treatmentData.formStatus()));
+            findings.add(ValidationFinding.of(ECRF_LEVEL,
+                    patientIdentifier,
+                    "Treatment given is not yes/no",
+                    treatmentData.formStatus(),
+                    treatmentGiven));
         }
 
         final String postRadioTherapy = treatmentData.radiotherapyGiven();

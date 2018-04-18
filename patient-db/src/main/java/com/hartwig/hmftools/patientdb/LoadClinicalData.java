@@ -113,11 +113,12 @@ public final class LoadClinicalData {
         dbAccess.clearClinicalTables();
 
         Set<String> sequencedPatientIdentifiers = samplesPerPatient.keySet();
+        int missingPatients = 0;
         LOGGER.info(String.format("Writing clinical data for %s sequenced patients.", sequencedPatientIdentifiers.size()));
         for (final String patientIdentifier : sequencedPatientIdentifiers) {
             Patient patient = patients.get(patientIdentifier);
             if (patient == null) {
-                LOGGER.warn(String.format("Patient with id %s not found in eCRF!", patientIdentifier));
+                missingPatients++;
                 dbAccess.writeSampleClinicalData(patientIdentifier, samplesPerPatient.get(patientIdentifier));
             } else {
                 dbAccess.writeFullClinicalData(patient);
@@ -127,6 +128,9 @@ public final class LoadClinicalData {
                 dbAccess.writeValidationFindings(patient.matchFindings());
 
             }
+        }
+        if (missingPatients > 0) {
+            LOGGER.warn(String.format("Could not load %s patients!", missingPatients));
         }
         dbAccess.writeValidationFindings(CurationValidator.validateTreatmentCurator(treatmentCurator));
         dbAccess.writeValidationFindings(CurationValidator.validateTumorLocationCurator(tumorLocationCurator));
