@@ -56,9 +56,11 @@ public class CpctPatientReader implements PatientReader {
         final MatchResult<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples(ecrfPatient.patientId(), sequencedBiopsies, clinicalBiopsies);
         final MatchResult<BiopsyTreatmentData> matchedTreatments =
-                TreatmentMatcher.matchTreatmentsToBiopsies(ecrfPatient.patientId(), clinicalBiopsies, treatments);
-        final MatchResult<BiopsyTreatmentResponseData> matchedResponses =
-                TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(ecrfPatient.patientId(), treatments, treatmentResponses);
+                TreatmentMatcher.matchTreatmentsToBiopsies(ecrfPatient.patientId(), matchedBiopsies.values(), treatments);
+        final MatchResult<BiopsyTreatmentResponseData> matchedResponses = TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(
+                ecrfPatient.patientId(),
+                matchedTreatments.values(),
+                treatmentResponses);
 
         final List<ValidationFinding> findings = Lists.newArrayList();
         findings.addAll(matchedBiopsies.findings());
@@ -67,7 +69,8 @@ public class CpctPatientReader implements PatientReader {
 
         return new Patient(ecrfPatient.patientId(),
                 baselineData,
-                preTreatmentData, sequencedBiopsies,
+                preTreatmentData,
+                sequencedBiopsies,
                 matchedBiopsies.values(),
                 matchedTreatments.values(),
                 matchedResponses.values(),

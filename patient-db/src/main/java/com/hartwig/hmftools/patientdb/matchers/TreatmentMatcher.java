@@ -86,6 +86,8 @@ public final class TreatmentMatcher {
                 matchedTreatments.add(treatment);
             }
         }
+        
+
         return new MatchResult<>(matchedTreatments, findings);
     }
 
