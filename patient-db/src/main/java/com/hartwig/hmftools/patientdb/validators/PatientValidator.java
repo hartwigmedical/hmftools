@@ -40,7 +40,7 @@ public final class PatientValidator {
 
         findings.addAll(validateBaselineData(patientIdentifier, patient.baselineData()));
         findings.addAll(validatePreTreatmentData(patientIdentifier, patient.preTreatmentData()));
-        findings.addAll(validateBiopsies(patientIdentifier, patient.clinicalBiopsies(), patient.sequencedBiopsies().size()));
+        findings.addAll(validateBiopsies(patientIdentifier, patient.clinicalBiopsies()));
         findings.addAll(validateTreatments(patientIdentifier, patient.treatments()));
         findings.addAll(validateTreatmentResponses(patientIdentifier, patient.treatments(), patient.treatmentResponses()));
         findings.addAll(validateDeathDate(patientIdentifier, patient.baselineData(), patient.treatments()));
@@ -126,18 +126,10 @@ public final class PatientValidator {
 
     @NotNull
     @VisibleForTesting
-    static List<ValidationFinding> validateBiopsies(@NotNull final String patientIdentifier, @NotNull final List<BiopsyData> biopsies,
-            int expectedMatches) {
+    static List<ValidationFinding> validateBiopsies(@NotNull final String patientIdentifier, @NotNull final List<BiopsyData> biopsies) {
         final List<ValidationFinding> findings = Lists.newArrayList();
 
         biopsies.forEach(biopsy -> findings.addAll(validateBiopsyData(patientIdentifier, biopsy)));
-
-        if (biopsies.size() < expectedMatches) {
-            findings.add(ValidationFinding.of(ECRF_LEVEL,
-                    patientIdentifier,
-                    "not enough biopsy forms to match with sequenced samples",
-                    FormStatus.undefined()));
-        }
 
         return findings;
     }

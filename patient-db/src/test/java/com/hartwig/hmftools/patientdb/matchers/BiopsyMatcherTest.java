@@ -204,15 +204,28 @@ public class BiopsyMatcherTest {
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null);
     }
 
+    @Test
+    public void createFindingWhenNotEnoughClinicalBiopsies() {
+        final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_JUL);
+        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList();
+
+        MatchResult<BiopsyData> matchedBiopsies =
+                BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies);
+
+        assertEquals(2, matchedBiopsies.findings().size());
+        assertTrue(matchedBiopsies.findings().get(0).message().toLowerCase().contains("not enough clinical biopsy forms to match"));
+    }
+
     private static void runMatcherAndVerify(@NotNull List<SampleData> sequencedBiopsies, @NotNull List<BiopsyData> clinicalBiopsies,
             @Nullable String... expectedSampleIds) {
         final List<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies).values();
-        Collections.sort(matchedBiopsies);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
+
         if (expectedSampleIds == null) {
             assertEquals(null, matchedBiopsies.get(0).sampleId());
         } else {
+            Collections.sort(matchedBiopsies);
             for (int i = 0; i < expectedSampleIds.length; i++) {
                 assertTrue(matchedBiopsies.size() >= i);
                 assertEquals(expectedSampleIds[i], matchedBiopsies.get(i).sampleId());

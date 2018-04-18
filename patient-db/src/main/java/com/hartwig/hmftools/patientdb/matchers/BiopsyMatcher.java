@@ -27,6 +27,12 @@ public final class BiopsyMatcher {
         final List<ValidationFinding> findings = Lists.newArrayList();
 
         List<BiopsyData> remainingBiopsies = clinicalBiopsies;
+        if (clinicalBiopsies.size() < sequencedBiopsies.size()) {
+            findings.add(biopsyMatchFinding(patientId,
+                    "Not enough clinical biopsy forms to match for every sequenced sample",
+                    "Clinical biopsies: " + clinicalBiopsies.size() + ", sequenced samples: " + sequencedBiopsies.size()));
+        }
+
         for (final SampleData sequencedBiopsy : sequencedBiopsies) {
             final Map<Boolean, List<BiopsyData>> partitions = remainingBiopsies.stream()
                     .collect(Collectors.partitioningBy(clinicalBiopsy -> isPossibleMatch(sequencedBiopsy, clinicalBiopsy)));

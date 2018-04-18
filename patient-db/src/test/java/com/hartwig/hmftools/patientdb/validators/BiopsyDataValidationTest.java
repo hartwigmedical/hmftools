@@ -32,15 +32,9 @@ public class BiopsyDataValidationTest {
     }
 
     @Test
-    public void reportsBiopsiesEmpty() {
-        final List<ValidationFinding> findings = PatientValidator.validateBiopsies(PATIENT_IDENTIFIER, Lists.newArrayList(), 1);
-        assertEquals(1, findings.size());
-    }
-
-    @Test
     public void reportsAllFieldsEmpty() {
         final List<ValidationFinding> findings =
-                PatientValidator.validateBiopsies(PATIENT_IDENTIFIER, Lists.newArrayList(BIOPSY_NULL, BIOPSY_FEB1, BIOPSY_FEB2), 1);
+                PatientValidator.validateBiopsies(PATIENT_IDENTIFIER, Lists.newArrayList(BIOPSY_NULL, BIOPSY_FEB1, BIOPSY_FEB2));
         assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
     }
