@@ -42,13 +42,13 @@ public final class BiopsyMatcher {
                 matchedBiopsies.add(ImmutableBiopsyData.builder().from(clinicalBiopsy).sampleId(sequencedBiopsy.sampleId()).build());
                 if (hasMismatchOnSamplingDate(sequencedBiopsy, clinicalBiopsy)) {
                     findings.add(biopsyMatchFinding(patientId,
-                            "sampling date does not equal biopsy date in matched biopsy",
+                            "Sampling date does not equal biopsy date in matched biopsy",
                             "sampling date: " + sequencedBiopsy.samplingDate() + "; ecrf biopsy date: " + clinicalBiopsy.date()));
                 }
                 remainingBiopsies = partitions.get(false);
             } else if (possibleMatches.size() == 0 || (possibleMatches.size() == 1 && possibleMatches.get(0).date() == null)) {
                 findings.add(biopsyMatchFinding(patientId,
-                        "could not match any clinical biopsy with sequenced sample.",
+                        "Could not match any clinical biopsy with sequenced sample.",
                         "sample: " + sampleDataToString(sequencedBiopsy) + "; ecrf biopsies: " + clinicalBiopsies.stream()
                                 .map(BiopsyData::date)
                                 .collect(Collectors.toList()) + ". match criteria: " + getMatchDateCriteria(sequencedBiopsy)));
@@ -56,7 +56,7 @@ public final class BiopsyMatcher {
                 return new MatchResult<>(clinicalBiopsies, findings);
             } else if (possibleMatches.size() > 1) {
                 findings.add(biopsyMatchFinding(patientId,
-                        "more than 1 possible clinical biopsy match for sequenced sample.",
+                        "More than 1 possible clinical biopsy match for sequenced sample.",
                         "sample: " + sampleDataToString(sequencedBiopsy) + "; ecrf biopsies: " + clinicalBiopsies.stream()
                                 .map(BiopsyData::date)
                                 .collect(Collectors.toList()) + ". match criteria: " + getMatchDateCriteria(sequencedBiopsy)));
@@ -108,9 +108,9 @@ public final class BiopsyMatcher {
     @NotNull
     private static String getMatchDateCriteria(@NotNull final SampleData sampleData) {
         if (sampleData.samplingDate() != null) {
-            return "sampling date " + sampleData.samplingDate() + " threshold: " + Config.MAX_DAYS_BETWEEN_SAMPLING_AND_BIOPSY_DATE;
+            return "Sampling date " + sampleData.samplingDate() + " threshold: " + Config.MAX_DAYS_BETWEEN_SAMPLING_AND_BIOPSY_DATE;
         }
-        return "arrival date " + sampleData.arrivalDate() + " threshold: " + Config.MAX_DAYS_ARRIVAL_DATE_AFTER_BIOPSY_DATE;
+        return "Arrival date " + sampleData.arrivalDate() + " threshold: " + Config.MAX_DAYS_ARRIVAL_DATE_AFTER_BIOPSY_DATE;
     }
 
     @NotNull
