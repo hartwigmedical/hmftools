@@ -30,7 +30,7 @@ public final class TreatmentResponseMatcher {
         if (hasOverlappingTreatments(sortedTreatments)) {
             if (!responses.isEmpty()) {
                 findings.add(responseMatchFinding(patientIdentifier,
-                        "treatments are overlapping. Cannot match any response.",
+                        "Treatments are overlapping. Cannot match any response.",
                         "treatments: " + sortedTreatments));
             }
             return new MatchResult<>(responses, findings);
@@ -55,7 +55,7 @@ public final class TreatmentResponseMatcher {
                 if (hasNewBaselineResponseFound) {
                     matchedResponses.add(response);
                     findings.add(responseMatchFinding(patientIdentifier,
-                            "response after new baseline and before next treatment",
+                            "Response after new baseline and before next treatment",
                             "response: " + response));
                 } else {
                     String actualResponse = response.response();
