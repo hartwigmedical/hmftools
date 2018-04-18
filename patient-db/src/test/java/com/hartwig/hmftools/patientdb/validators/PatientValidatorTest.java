@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.patientdb.validators;
 
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.baselineBuilder;
+import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyBuilder;
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyTreatmentBuilder;
+import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyTreatmentResponseBuilder;
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.drugBuilder;
 
 import static org.junit.Assert.assertEquals;
@@ -14,22 +16,41 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
+import com.hartwig.hmftools.patientdb.data.BaselineData;
+import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
 import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTreatment;
+import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
 import com.hartwig.hmftools.patientdb.data.ImmutableDrugData;
+import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
+import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
-public class TreatmentValidationTest {
+public class PatientValidatorTest {
+
     private static final String PATIENT_IDENTIFIER = "CPCT01020000";
+
     private static final LocalDate JAN2015 = LocalDate.parse("2015-01-01");
     private static final LocalDate FEB2015 = LocalDate.parse("2015-02-01");
     private static final LocalDate MAR2015 = LocalDate.parse("2015-03-01");
+
+    private static final String HOSPITAL = "Test Hospital";
+    private static final BaselineData EMPTY_BASELINE = baselineBuilder().build();
+    private static final BaselineData BASELINE_DATA_MISSING_LOCATION_MAPPING = baselineBuilder().hospital(HOSPITAL)
+            .curatedTumorLocation(ImmutableCuratedTumorLocation.of(null, null, "some_location"))
+            .build();
+
+    private static final BiopsyData BIOPSY_NULL = biopsyBuilder().date(null).build();
+    private static final BiopsyData BIOPSY_FEB1 = biopsyBuilder().date(FEB2015).site("1").location("").build();
+    private static final BiopsyData BIOPSY_FEB2 = biopsyBuilder().date(FEB2015).site("2").location("").build();
 
     private static final DrugData DRUG_NULL = create(null, null, null);
     private static final DrugData DRUG_WRONG = create(null, FEB2015, JAN2015);
@@ -68,6 +89,79 @@ public class TreatmentValidationTest {
             biopsyTreatmentBuilder().treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(DRUG_JAN_ONGOING).build();
     private static final BiopsyTreatmentData TREATMENT_FEB_ONGOING =
             biopsyTreatmentBuilder().treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(DRUG_FEB_ONGOING).build();
+
+    private static final BiopsyTreatmentResponseData RESPONSE_JAN2015 =
+            biopsyTreatmentResponseBuilder().measurementDone("Yes").response("PR").responseDate(JAN2015).build();
+    private static final BiopsyTreatmentResponseData RESPONSE_FEB2015 =
+            biopsyTreatmentResponseBuilder().measurementDone("Yes").response("PR").responseDate(FEB2015).build();
+    private static final BiopsyTreatmentResponseData RESPONSE_NULL = biopsyTreatmentResponseBuilder().build();
+    private static final BiopsyTreatmentResponseData RESPONSE_ONLY = biopsyTreatmentResponseBuilder().response("PR").build();
+    private static final BiopsyTreatmentResponseData RESPONSE_MISSING_DATA =
+            biopsyTreatmentResponseBuilder().measurementDone("Yes").build();
+    private static final BiopsyTreatmentResponseData RESPONSE_MEASUREMENT_NO_WITH_DATA =
+            biopsyTreatmentResponseBuilder().measurementDone("No").response("PR").responseDate(JAN2015).build();
+    private static final BiopsyTreatmentResponseData RESPONSE_MEASUREMENT_NO_WITH_VALID_DATA =
+            biopsyTreatmentResponseBuilder().measurementDone("No").response("ND").responseDate(JAN2015).build();
+
+    @Test
+    public void reportsMissingBaselineFields() {
+        final List<ValidationFinding> findings = PatientValidator.validateBaselineData(PATIENT_IDENTIFIER, EMPTY_BASELINE);
+        assertEquals(6, findings.size());
+        findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
+    }
+
+    @Test
+    public void reportMissingPreTreatment() {
+        PreTreatmentData emptyData = ImmutablePreTreatmentData.builder().formStatus(FormStatus.undefined()).build();
+
+        assertEquals(2, PatientValidator.validatePreTreatmentData(PATIENT_IDENTIFIER, emptyData).size());
+
+        PreTreatmentData actualData = ImmutablePreTreatmentData.builder()
+                .radiotherapyGiven("Yes")
+                .treatmentGiven("No")
+                .formStatus(FormStatus.undefined())
+                .build();
+        assertEquals(0, PatientValidator.validatePreTreatmentData(PATIENT_IDENTIFIER, actualData).size());
+
+        PreTreatmentData onlyRadioTherapyPresent =
+                ImmutablePreTreatmentData.builder().radiotherapyGiven("Yes").formStatus(FormStatus.undefined()).build();
+        assertEquals(1, PatientValidator.validatePreTreatmentData(PATIENT_IDENTIFIER, onlyRadioTherapyPresent).size());
+
+        PreTreatmentData onlyTreatmentPresent =
+                ImmutablePreTreatmentData.builder().treatmentGiven("Yes").formStatus(FormStatus.undefined()).build();
+        assertEquals(1, PatientValidator.validatePreTreatmentData(PATIENT_IDENTIFIER, onlyTreatmentPresent).size());
+    }
+
+    @Test
+    public void reportsFailureToCuratePrimaryTumorLocation() {
+        final List<ValidationFinding> findings =
+                PatientValidator.validateTumorLocationCuration(PATIENT_IDENTIFIER, BASELINE_DATA_MISSING_LOCATION_MAPPING);
+        assertEquals(1, findings.size());
+        assertEquals("tumorLocationCuration", findings.get(0).level());
+    }
+
+    @Test
+    public void reportsMissingBiopsyFields() {
+        final List<ValidationFinding> findings = PatientValidator.validateBiopsyData(PATIENT_IDENTIFIER, BIOPSY_NULL);
+        assertEquals(2, findings.size());
+        findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
+    }
+
+    @Test
+    public void reportsAllBiopsyFieldsEmpty() {
+        final List<ValidationFinding> findings =
+                PatientValidator.validateBiopsies(PATIENT_IDENTIFIER, Lists.newArrayList(BIOPSY_NULL, BIOPSY_FEB1, BIOPSY_FEB2));
+        assertEquals(2, findings.size());
+        findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
+    }
+
+    @Test
+    public void reportsBiopsyBeforeInformedConsent() {
+        final List<ValidationFinding> findings = PatientValidator.validateInformedConsentDate(PATIENT_IDENTIFIER,
+                baselineBuilder().informedConsentDate(MAR2015).build(),
+                Lists.newArrayList(BIOPSY_FEB1));
+        assertEquals(1, findings.size());
+    }
 
     @Test
     public void reportsMissingDrugData() {
@@ -193,10 +287,89 @@ public class TreatmentValidationTest {
         assertEquals(1, findings.size());
     }
 
+    @Test
+    public void reportsMeasurementDoneNull() {
+        final List<ValidationFinding> findings = validateNonFirstResponse(PATIENT_IDENTIFIER, RESPONSE_NULL);
+        assertEquals(1, findings.size());
+    }
+
+    @Test
+    public void reportsOnlyResponseFilledIn() {
+        final List<ValidationFinding> findings = validateNonFirstResponse(PATIENT_IDENTIFIER, RESPONSE_ONLY);
+        assertEquals(2, findings.size());
+        findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
+    }
+
+    @Test
+    public void reportsMeasurementDoneMissingData() {
+        final List<ValidationFinding> findings = validateNonFirstResponse(PATIENT_IDENTIFIER, RESPONSE_MISSING_DATA);
+        assertEquals(2, findings.size());
+        findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
+    }
+
+    @Test
+    public void acceptMissingDataForFirstResponse() {
+        final List<ValidationFinding> findings =
+                PatientValidator.validateTreatmentResponse(PATIENT_IDENTIFIER, RESPONSE_MISSING_DATA, true);
+        assertEquals(1, findings.size());
+        findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
+    }
+
+    @Test
+    public void reportsMeasurementDoneNoWithData() {
+        final List<ValidationFinding> findings = validateNonFirstResponse(PATIENT_IDENTIFIER, RESPONSE_MEASUREMENT_NO_WITH_DATA);
+        assertEquals(2, findings.size());
+    }
+
+    @Test
+    public void ignoresMeasurementDoneNoWithValidData() {
+        final List<ValidationFinding> findings = validateNonFirstResponse(PATIENT_IDENTIFIER, RESPONSE_MEASUREMENT_NO_WITH_VALID_DATA);
+        assertTrue(findings.isEmpty());
+    }
+
+    @Test
+    public void reportsFirstMeasurementAfterTreatmentStart() {
+        BiopsyTreatmentResponseData matchedResponseFeb2015 =
+                ImmutableBiopsyTreatmentResponseData.builder().from(RESPONSE_FEB2015).treatmentId(TREATMENT_JAN_MAR.id()).build();
+        final List<ValidationFinding> findings = PatientValidator.validateTreatmentResponses(PATIENT_IDENTIFIER,
+                Lists.newArrayList(TREATMENT_JAN_MAR),
+                Lists.newArrayList(matchedResponseFeb2015));
+        assertEquals(1, findings.size());
+    }
+
+    @Test
+    public void reportsMissingTreatmentForResponseData() {
+        final List<ValidationFinding> findings =
+                PatientValidator.validateTreatmentResponses(PATIENT_IDENTIFIER, Lists.newArrayList(), Lists.newArrayList(RESPONSE_JAN2015));
+        assertEquals(1, findings.size());
+    }
+
+    @Test
+    public void reportsMissingResponseForTreatmentMoreThan16Weeks() {
+        final List<ValidationFinding> findings = PatientValidator.validateTreatmentResponses(PATIENT_IDENTIFIER,
+                Lists.newArrayList(TREATMENT_JAN_ONGOING),
+                Lists.newArrayList());
+        assertEquals(1, findings.size());
+    }
+
+    @Test
+    public void doesNotReportMissingResponseForTreatmentEndedImmediately() {
+        final List<ValidationFinding> findings = PatientValidator.validateTreatmentResponses(PATIENT_IDENTIFIER,
+                Lists.newArrayList(TREATMENT_JAN_JAN),
+                Lists.newArrayList());
+        assertEquals(0, findings.size());
+    }
+
     @NotNull
     private static DrugData create(@Nullable String name, @Nullable LocalDate startDate, @Nullable LocalDate endDate) {
         List<CuratedTreatment> curation =
                 name != null ? Lists.newArrayList(ImmutableCuratedTreatment.of(name, "Type1", name)) : Lists.newArrayList();
         return drugBuilder().name(name).startDate(startDate).endDate(endDate).addAllCuratedTreatments(curation).build();
+    }
+
+    @NotNull
+    private static List<ValidationFinding> validateNonFirstResponse(@NotNull String patientId,
+            @NotNull BiopsyTreatmentResponseData response) {
+        return PatientValidator.validateTreatmentResponse(patientId, response, false);
     }
 }
