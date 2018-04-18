@@ -59,8 +59,8 @@ class BiopsyReader {
 
                     final String location = biopsiesGroup.readItemString(FIELD_LOCATION);
 
-                    final CuratedBiopsyType curatedBiopsyType =
-                            biopsySiteCurator.search(curatedTumorLocation.primaryTumorLocation(), curatedTumorLocation.subType(),
+                    final CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(curatedTumorLocation.primaryTumorLocation(),
+                            curatedTumorLocation.subType(),
                             finalSite,
                             location);
                     final BiopsyData biopsy = ImmutableBiopsyData.of(date,
@@ -68,7 +68,9 @@ class BiopsyReader {
                             biopsyEvaluable,
                             curatedBiopsyType,
                             finalSite,
-                            location, form.status());
+                            location,
+                            form.status());
+
                     // KODU: The ecrf contains many duplicate forms that are impossible to remove. This is because in the past a new biopsy
                     // form needed to be created for every treatment response.
                     if (!isDuplicate(biopsies, biopsy) && !isEmpty(biopsy)) {

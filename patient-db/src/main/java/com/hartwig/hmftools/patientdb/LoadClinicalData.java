@@ -85,7 +85,9 @@ public final class LoadClinicalData {
                 writeRawEcrf(dbWriter, samplesPerPatient.keySet(), ecrfModels);
             }
 
-            writeClinicalData(dbWriter, samplesPerPatient, ecrfModels,
+            writeClinicalData(dbWriter,
+                    samplesPerPatient,
+                    ecrfModels,
                     cmd.getOptionValue(CSV_OUT_DIR),
                     Optional.ofNullable(cmd.getOptionValue(TUMOR_LOCATION_SYMLINK)),
                     Optional.ofNullable(cmd.getOptionValue(PORTAL_DATA_LINK)));

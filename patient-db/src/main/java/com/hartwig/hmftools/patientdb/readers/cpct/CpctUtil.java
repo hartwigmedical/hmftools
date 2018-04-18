@@ -28,14 +28,14 @@ public final class CpctUtil {
 
         final Map<String, CodeList> codeLists = model.datamodel().codeLists();
 
-        final Item hospitalItem1 =  model.datamodel().items().get(FIELD_HOSPITAL1);
+        final Item hospitalItem1 = model.datamodel().items().get(FIELD_HOSPITAL1);
         if (hospitalItem1 != null) {
             hospitals.putAll(codeLists.get(hospitalItem1.codeListOID()).values());
         } else {
             LOGGER.warn("Could not find hospital item in datamodel: " + FIELD_HOSPITAL1);
         }
 
-        final Item hospitalItem2 =  model.datamodel().items().get(FIELD_HOSPITAL2);
+        final Item hospitalItem2 = model.datamodel().items().get(FIELD_HOSPITAL2);
         if (hospitalItem2 != null) {
             hospitals.putAll(codeLists.get(hospitalItem2.codeListOID()).values());
         } else {

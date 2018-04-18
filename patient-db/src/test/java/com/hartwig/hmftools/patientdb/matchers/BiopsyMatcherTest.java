@@ -209,8 +209,7 @@ public class BiopsyMatcherTest {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList();
 
-        MatchResult<BiopsyData> matchedBiopsies =
-                BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies);
+        MatchResult<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies);
 
         assertEquals(2, matchedBiopsies.findings().size());
         assertTrue(matchedBiopsies.findings().get(0).message().toLowerCase().contains("not enough clinical biopsy forms to match"));

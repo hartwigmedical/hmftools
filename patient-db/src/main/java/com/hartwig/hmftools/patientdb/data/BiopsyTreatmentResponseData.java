@@ -43,7 +43,8 @@ public abstract class BiopsyTreatmentResponseData implements Comparable<BiopsyTr
                 responseDate,
                 response,
                 measurementDone,
-                boneOnlyDisease, formStatus);
+                boneOnlyDisease,
+                formStatus);
     }
 
     @Nullable

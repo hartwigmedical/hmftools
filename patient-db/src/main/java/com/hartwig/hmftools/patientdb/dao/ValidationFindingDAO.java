@@ -30,9 +30,11 @@ class ValidationFindingDAO {
                         CLINICALFINDINGS.FORMSTATUS,
                         CLINICALFINDINGS.FORMLOCKED,
                         CLINICALFINDINGS.MESSAGE,
-                        CLINICALFINDINGS.DETAILS).values(finding.level(), finding.patientIdentifier(),
-                        finding.formStatus().stateString(),
-                        finding.formStatus().lockedString(),
+                        CLINICALFINDINGS.DETAILS)
+                        .values(finding.level(),
+                                finding.patientIdentifier(),
+                                finding.formStatus().stateString(),
+                                finding.formStatus().lockedString(),
                                 finding.message(),
                                 finding.details()))
                 .collect(Collectors.toList())).execute();

@@ -109,11 +109,14 @@ class ClinicalDAO {
                 BASELINE.INFORMEDCONSENTDATE,
                 BASELINE.GENDER,
                 BASELINE.HOSPITAL,
-                BASELINE.BIRTHYEAR, BASELINE.PRIMARYTUMORLOCATION,
+                BASELINE.BIRTHYEAR,
+                BASELINE.PRIMARYTUMORLOCATION,
                 BASELINE.CANCERSUBTYPE,
                 BASELINE.DEATHDATE,
                 BASELINE.HASSYSTEMICPRETREATMENT,
-                BASELINE.HASRADIOTHERAPYPRETREATMENT, BASELINE.PRETREATMENTS, BASELINE.PRETREATMENTSTYPE)
+                BASELINE.HASRADIOTHERAPYPRETREATMENT,
+                BASELINE.PRETREATMENTS,
+                BASELINE.PRETREATMENTSTYPE)
                 .values(patientId,
                         Utils.toSQLDate(patient.registrationDate()),
                         Utils.toSQLDate(patient.informedConsentDate()),
@@ -125,7 +128,8 @@ class ClinicalDAO {
                         Utils.toSQLDate(patient.deathDate()),
                         preTreatmentData.treatmentGiven(),
                         preTreatmentData.radiotherapyGiven(),
-                        preTreatmentData.treatmentName(), preTreatmentTypes)
+                        preTreatmentData.treatmentName(),
+                        preTreatmentTypes)
                 .execute();
 
         preTreatmentData.drugs().forEach(drug -> writePreTreatmentDrugData(patientId, drug, preTreatmentData.formStatus()));
@@ -208,15 +212,11 @@ class ClinicalDAO {
                         treatment.radiotherapyGiven(),
                         Utils.toSQLDate(treatment.startDate()),
                         Utils.toSQLDate(treatment.endDate()),
-                        treatment.treatmentName(), treatment.consolidatedType())
+                        treatment.treatmentName(),
+                        treatment.consolidatedType())
                 .execute();
-        writeFormStatus(treatment.id(),
-                TREATMENT.getName(),
-                "treatment", treatment.formStatus());
-        treatment.drugs()
-                .forEach(drug -> writeDrugData(patientId,
-                        treatment.id(),
-                        drug, treatment.formStatus()));
+        writeFormStatus(treatment.id(), TREATMENT.getName(), "treatment", treatment.formStatus());
+        treatment.drugs().forEach(drug -> writeDrugData(patientId, treatment.id(), drug, treatment.formStatus()));
     }
 
     private void writeDrugData(final int patientId, final int treatmentId, @NotNull final DrugData drug,
@@ -278,8 +278,7 @@ class ClinicalDAO {
                 FORMSMETADATA.ID,
                 FORMSMETADATA.TABLENAME,
                 FORMSMETADATA.FORM,
-                FORMSMETADATA.STATUS, FORMSMETADATA.LOCKED)
-                .values(id, tableName, formName, formStatus.stateString(), formStatus.lockedString())
-                .execute();
+                FORMSMETADATA.STATUS,
+                FORMSMETADATA.LOCKED).values(id, tableName, formName, formStatus.stateString(), formStatus.lockedString()).execute();
     }
 }

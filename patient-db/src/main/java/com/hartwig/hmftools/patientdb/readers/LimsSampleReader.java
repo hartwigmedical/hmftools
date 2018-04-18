@@ -26,7 +26,9 @@ public class LimsSampleReader {
         sampleIds.forEach(sampleId -> {
             final LocalDate arrivalDate = lims.arrivalDateForSample(sampleId);
             if (arrivalDate != null) {
-                limsBiopsies.add(ImmutableSampleData.of(sampleId, arrivalDate, lims.samplingDateForSample(sampleId),
+                limsBiopsies.add(ImmutableSampleData.of(sampleId,
+                        arrivalDate,
+                        lims.samplingDateForSample(sampleId),
                         lims.dnaNanogramsForSample(sampleId),
                         lims.tumorPercentageForSample(sampleId)));
             }

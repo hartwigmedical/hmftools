@@ -54,9 +54,7 @@ class PreTreatmentReader {
                 String radiotherapyGiven = readRadiotherapyGiven(treatmentForm);
                 final List<DrugData> drugs = readDrugs(treatmentForm);
                 if (preTreatmentData == null) {
-                    preTreatmentData = ImmutablePreTreatmentData.of(treatmentGiven,
-                            radiotherapyGiven,
-                            drugs, treatmentForm.status());
+                    preTreatmentData = ImmutablePreTreatmentData.of(treatmentGiven, radiotherapyGiven, drugs, treatmentForm.status());
                 } else {
                     LOGGER.warn("Multiple pre-therapy forms for found patient: " + patient.patientId());
                 }

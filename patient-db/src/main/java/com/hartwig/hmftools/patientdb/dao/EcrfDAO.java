@@ -90,12 +90,19 @@ class EcrfDAO {
 
     @NotNull
     private InsertValuesStep4 cpctDatamodelInserter() {
-        return context.insertInto(ECRFDATAMODEL, ECRFDATAMODEL.FIELDNAME, ECRFDATAMODEL.DESCRIPTION, ECRFDATAMODEL.CODELIST, ECRFDATAMODEL.RELEVANT);
+        return context.insertInto(ECRFDATAMODEL,
+                ECRFDATAMODEL.FIELDNAME,
+                ECRFDATAMODEL.DESCRIPTION,
+                ECRFDATAMODEL.CODELIST,
+                ECRFDATAMODEL.RELEVANT);
     }
 
     @NotNull
     private InsertValuesStep4 drupDatamodelInserter() {
-        return context.insertInto(DRUPECRFDATAMODEL, DRUPECRFDATAMODEL.FIELDNAME, DRUPECRFDATAMODEL.DESCRIPTION, DRUPECRFDATAMODEL.CODELIST,
+        return context.insertInto(DRUPECRFDATAMODEL,
+                DRUPECRFDATAMODEL.FIELDNAME,
+                DRUPECRFDATAMODEL.DESCRIPTION,
+                DRUPECRFDATAMODEL.CODELIST,
                 DRUPECRFDATAMODEL.RELEVANT);
     }
 

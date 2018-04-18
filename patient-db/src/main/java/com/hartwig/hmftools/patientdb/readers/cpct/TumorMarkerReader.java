@@ -36,11 +36,7 @@ final class TumorMarkerReader {
                     String marker = responseGroup.readItemString(FIELD_MARKER);
                     String measurement = responseGroup.readItemString(FIELD_MEASUREMENT);
                     String unit = responseGroup.readItemString(FIELD_UNIT);
-                    tumorMarkers.add(ImmutableTumorMarkerData.of(patient.patientId(),
-                            date,
-                            marker,
-                            measurement,
-                            unit, form.status()));
+                    tumorMarkers.add(ImmutableTumorMarkerData.of(patient.patientId(), date, marker, measurement, unit, form.status()));
                 }
             }
         }

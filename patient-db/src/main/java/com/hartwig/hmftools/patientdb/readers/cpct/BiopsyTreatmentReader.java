@@ -48,9 +48,7 @@ class BiopsyTreatmentReader {
                 final String treatmentGiven = readTreatmentGiven(treatmentForm);
                 final String radiotherapyGiven = readRadiotherapyGiven(treatmentForm);
                 final List<DrugData> drugs = readDrugs(treatmentForm);
-                treatments.add(ImmutableBiopsyTreatmentData.of(treatmentGiven,
-                        radiotherapyGiven,
-                        drugs, treatmentForm.status()));
+                treatments.add(ImmutableBiopsyTreatmentData.of(treatmentGiven, radiotherapyGiven, drugs, treatmentForm.status()));
             }
         }
         return treatments;
