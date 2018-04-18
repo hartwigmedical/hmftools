@@ -7,7 +7,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.time.LocalDate;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -48,6 +48,7 @@ public class BiopsyMatcherTest {
     public void biopsyAndSampleSameDateYieldsMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_JUL);
+
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, LIMS_SAMPLE_JUL.sampleId());
     }
 
@@ -56,6 +57,7 @@ public class BiopsyMatcherTest {
     public void biopsyBeforeSampleWithinThresholdYieldsMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_MAR);
+
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, LIMS_SAMPLE_JUL.sampleId());
     }
 
@@ -64,6 +66,7 @@ public class BiopsyMatcherTest {
     public void biopsyBeforeSampleOutsideThresholdYieldsNoMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_JAN);
+
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null);
     }
 
@@ -72,6 +75,7 @@ public class BiopsyMatcherTest {
     public void biopsyTakenAfterSampleArrivedYieldsNoMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_AUG);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_SEP);
+
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null);
     }
 
@@ -80,6 +84,7 @@ public class BiopsyMatcherTest {
     public void twoBiopsiesBeforeSampleWithinThresholdYieldsNoMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_FEB, ECRF_BIOPSY_MAR);
+
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null, null);
     }
 
@@ -88,6 +93,7 @@ public class BiopsyMatcherTest {
     public void twoBiopsiesSecondNullBeforeSampleWithinThresholdYieldsNoMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_FEB, BIOPSY_NULL);
+
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null, null);
     }
 
@@ -96,6 +102,7 @@ public class BiopsyMatcherTest {
     public void twoBiopsiesFirstNullBeforeSampleWithinThresholdYieldsNoMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_NULL, ECRF_BIOPSY_FEB);
+
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null, null);
     }
 
@@ -104,6 +111,7 @@ public class BiopsyMatcherTest {
     public void twoBiopsiesBeforeSampleOneWithinThresholdYieldsMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_JAN, ECRF_BIOPSY_MAR);
+
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null, LIMS_SAMPLE_JUL.sampleId());
     }
 
@@ -112,6 +120,7 @@ public class BiopsyMatcherTest {
     public void twoBiopsiesBeforeSample1WithinThresholdOutOfOrderYieldsMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_MAR, ECRF_BIOPSY_JAN);
+
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null, LIMS_SAMPLE_JUL.sampleId());
     }
 
@@ -120,6 +129,7 @@ public class BiopsyMatcherTest {
     public void twoBiopsiesBeforeSampleOutsideThresholdYieldsNoMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_SEP);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_JAN, ECRF_BIOPSY_FEB);
+
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null, null);
     }
 
@@ -128,6 +138,7 @@ public class BiopsyMatcherTest {
     public void biopsyBefore2SamplesWithinThresholdYieldsNoMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL, LIMS_SAMPLE_AUG);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_FEB);
+
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null);
     }
 
@@ -136,6 +147,7 @@ public class BiopsyMatcherTest {
     public void oneSampleBetween2BiopsiesWithinThresholdYieldsMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_MAR, ECRF_BIOPSY_SEP);
+
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, LIMS_SAMPLE_JUL.sampleId(), null);
     }
 
@@ -144,6 +156,7 @@ public class BiopsyMatcherTest {
     public void twoSamplesAfterTwoBiopsiesYieldsNoMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_AUG, LIMS_SAMPLE_SEP);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_FEB, ECRF_BIOPSY_MAR);
+
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null, null);
     }
 
@@ -152,6 +165,7 @@ public class BiopsyMatcherTest {
     public void twoSamplesBetweenTwoBiopsiesWithinThresholdYieldsMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_AUG, LIMS_SAMPLE_NOV);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_MAR, ECRF_BIOPSY_SEP);
+
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, LIMS_SAMPLE_AUG.sampleId(), LIMS_SAMPLE_NOV.sampleId());
     }
 
@@ -160,6 +174,7 @@ public class BiopsyMatcherTest {
     public void twoSamplesBetweenTwoBiopsiesOneOutsideThresholdYieldsNoMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_AUG, LIMS_SAMPLE_NOV);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_JAN, ECRF_BIOPSY_SEP);
+
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null, null);
     }
 
@@ -168,6 +183,7 @@ public class BiopsyMatcherTest {
     public void biopsyArrivedInNovButSamplingDateKnownYieldsMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_ARRIVED_NOV_SAMPLED_MAR);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_MAR);
+
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, LIMS_ARRIVED_NOV_SAMPLED_MAR.sampleId());
     }
 
@@ -176,6 +192,7 @@ public class BiopsyMatcherTest {
     public void biopsyFromJanArrivedInNovButSamplingDateInMarYieldsNoMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_ARRIVED_NOV_SAMPLED_MAR);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_JAN);
+
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null);
     }
 
@@ -183,6 +200,7 @@ public class BiopsyMatcherTest {
     public void noMatchWhenBiopsyIsNotEvaluable() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_MAR_NOT_EVALUABLE);
+
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null);
     }
 
@@ -190,7 +208,7 @@ public class BiopsyMatcherTest {
             @Nullable String... expectedSampleIds) {
         final List<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies).values();
-        matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
+        Collections.sort(matchedBiopsies);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         if (expectedSampleIds == null) {
             assertEquals(null, matchedBiopsies.get(0).sampleId());
@@ -201,17 +219,4 @@ public class BiopsyMatcherTest {
             }
         }
     }
-
-    @NotNull
-    private static final Comparator<BiopsyData> CLINICAL_DATA_COMPARATOR = (o1, o2) -> {
-        final LocalDate o1Date = o1.date();
-        final LocalDate o2Date = o2.date();
-        if (o1Date == null) {
-            return -1;
-        } else if (o2Date == null) {
-            return 1;
-        } else {
-            return o1Date.compareTo(o2Date);
-        }
-    };
 }
