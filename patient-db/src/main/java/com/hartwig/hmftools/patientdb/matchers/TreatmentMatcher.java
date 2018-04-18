@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientdb.matchers;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -86,9 +87,30 @@ public final class TreatmentMatcher {
                 matchedTreatments.add(treatment);
             }
         }
-        
+
+        findings.addAll(validateMatchingForMatchedBiopsies(patientIdentifier, matchedTreatments, biopsies));
 
         return new MatchResult<>(matchedTreatments, findings);
+    }
+
+    @NotNull
+    private static Collection<ValidationFinding> validateMatchingForMatchedBiopsies(@NotNull String patientIdentifier,
+            @NotNull final List<BiopsyTreatmentData> matchedTreatments, @NotNull final List<BiopsyData> biopsies) {
+        List<ValidationFinding> findings = Lists.newArrayList();
+        List<Integer> matchedBiopsyIds = Lists.newArrayList();
+
+        for (BiopsyTreatmentData treatment : matchedTreatments) {
+            if (treatment.biopsyId() != null) {
+                matchedBiopsyIds.add(treatment.biopsyId());
+            }
+        }
+
+        for (BiopsyData biopsy : biopsies) {
+            if (biopsy.sampleId() != null && !matchedBiopsyIds.contains(biopsy.id())) {
+                findings.add(treatmentMatchFinding(patientIdentifier, "Could not match treatment to matched biopsy", biopsy.toString()));
+            }
+        }
+        return findings;
     }
 
     private static boolean firstTreatmentBeforeFirstBiopsy(@NotNull final List<BiopsyData> sortedBiopsies,

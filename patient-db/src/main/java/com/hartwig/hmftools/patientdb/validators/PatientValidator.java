@@ -195,21 +195,21 @@ public final class PatientValidator {
         final List<ValidationFinding> findings = Lists.newArrayList();
         if (treatmentGiven == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL, patientIdentifier, "treatment given field empty", treatmentData.formStatus()));
-        } else if (treatmentGiven.trim().toLowerCase().equals("yes")) {
+        } else if (treatmentGiven.equalsIgnoreCase("yes")) {
             if (treatmentData.drugs().isEmpty()) {
                 findings.add(ValidationFinding.of(ECRF_LEVEL,
                         patientIdentifier,
-                        "treatment given is yes, but no treatment data filled in",
+                        "treatment given is yes, but no drugs are filled in",
                         treatmentData.formStatus()));
             } else {
                 treatmentData.drugs()
                         .forEach(drug -> findings.addAll(validateDrugData(patientIdentifier, drug, treatmentData.formStatus())));
             }
-        } else if (treatmentGiven.trim().toLowerCase().equals("no")) {
+        } else if (treatmentGiven.equalsIgnoreCase("no")) {
             if (!treatmentData.drugs().isEmpty()) {
                 findings.add(ValidationFinding.of(ECRF_LEVEL,
                         patientIdentifier,
-                        "treatment given is no, but treatment data is filled in",
+                        "treatment given is no, but drugs are filled in",
                         treatmentData.formStatus()));
             }
         } else {
@@ -238,7 +238,7 @@ public final class PatientValidator {
             final LocalDate drugEnd = drugData.endDate();
             if (drugEnd != null) {
                 if (drugStart.isAfter(drugEnd)) {
-                    findings.add(ValidationFinding.of(ECRF_LEVEL, patientIdentifier, "drug startDate is after drug endDate", formStatus));
+                    findings.add(ValidationFinding.of(ECRF_LEVEL, patientIdentifier, "drug start date is after drug end date", formStatus));
                 }
             }
         }
@@ -388,7 +388,7 @@ public final class PatientValidator {
                     "measurement done field empty",
                     treatmentResponse.formStatus()));
 
-        } else if (measurementDone.trim().toLowerCase().equals("yes")) {
+        } else if (measurementDone.equalsIgnoreCase("yes")) {
             if (date == null) {
                 findings.add(ValidationFinding.of(ECRF_LEVEL,
                         patientIdentifier,
@@ -401,7 +401,7 @@ public final class PatientValidator {
                         "measurement done is yes, but response is empty (non-first response)",
                         treatmentResponse.formStatus()));
             }
-        } else if (measurementDone.trim().equalsIgnoreCase("no")) {
+        } else if (measurementDone.equalsIgnoreCase("no")) {
             if (!treatmentResponse.isNotDoneResponse()) {
                 if (date != null) {
                     findings.add(ValidationFinding.of(ECRF_LEVEL,
@@ -425,6 +425,7 @@ public final class PatientValidator {
                     treatmentResponse.formStatus(),
                     "measurement done: " + measurementDone));
         }
+
         if (response != null && date == null && !treatmentResponse.isNotDoneResponse()) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientIdentifier,
@@ -447,11 +448,8 @@ public final class PatientValidator {
             final String treatmentGiven = lastTreatment.treatmentGiven();
             if (treatmentGiven != null && treatmentGiven.equalsIgnoreCase("yes")) {
                 final LocalDate lastTreatmentEndDate = lastTreatment.endDate();
-                final LocalDate firstTreatmentStart = treatments.get(0).startDate();
                 if (lastTreatmentEndDate == null || lastTreatmentEndDate.isAfter(deathDate)) {
-                    String details = "death date (" + deathDate + ") before end of last treatment (" + lastTreatmentEndDate + ")"
-                            + " and start first treatment is (" + firstTreatmentStart + ")" + " and treatmentGiven: " + treatmentGiven
-                            + ")";
+                    String details = "death date (" + deathDate + ") before end of last treatment (" + lastTreatmentEndDate + ")";
 
                     findings.add(ValidationFinding.of(ECRF_LEVEL,
                             patientIdentifier,
@@ -466,6 +464,7 @@ public final class PatientValidator {
     }
 
     @NotNull
+    @VisibleForTesting
     static List<ValidationFinding> validateInformedConsentDate(@NotNull final String patientIdentifier,
             @NotNull final BaselineData baselineData, @NotNull final List<BiopsyData> biopsies) {
         final List<ValidationFinding> findings = Lists.newArrayList();

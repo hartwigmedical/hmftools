@@ -20,7 +20,7 @@ public final class TreatmentResponseMatcher {
     }
 
     @NotNull
-    public static MatchResult<BiopsyTreatmentResponseData> matchTreatmentResponsesToTreatments(@NotNull String patientId,
+    public static MatchResult<BiopsyTreatmentResponseData> matchTreatmentResponsesToTreatments(@NotNull String patientIdentifier,
             @NotNull List<BiopsyTreatmentData> treatments, @NotNull List<BiopsyTreatmentResponseData> responses) {
         final List<BiopsyTreatmentResponseData> matchedResponses = Lists.newArrayList();
         final List<ValidationFinding> findings = Lists.newArrayList();
@@ -29,7 +29,8 @@ public final class TreatmentResponseMatcher {
         List<BiopsyTreatmentData> sortedTreatments = sortAndWithStartDate(treatments);
         if (hasOverlappingTreatments(sortedTreatments)) {
             if (!responses.isEmpty()) {
-                findings.add(responseMatchFinding(patientId, "treatments are overlapping. Cannot match any response.",
+                findings.add(responseMatchFinding(patientIdentifier,
+                        "treatments are overlapping. Cannot match any response.",
                         "treatments: " + sortedTreatments));
             }
             return new MatchResult<>(responses, findings);
@@ -53,7 +54,7 @@ public final class TreatmentResponseMatcher {
 
                 if (hasNewBaselineResponseFound) {
                     matchedResponses.add(response);
-                    findings.add(responseMatchFinding(patientId,
+                    findings.add(responseMatchFinding(patientIdentifier,
                             "response after new baseline and before next treatment",
                             "response: " + response));
                 } else {
