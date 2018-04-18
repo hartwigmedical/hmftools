@@ -55,7 +55,7 @@ public final class TreatmentMatcher {
             }
         }
 
-        // KODU: Then randomly distribute not-yes treatments over remaining biopsies.
+        // KODU: Then distribute not-yes treatments over remaining biopsies.
         for (final BiopsyTreatmentData treatment : notYesTreatments) {
             final String treatmentGiven = treatment.treatmentGiven();
 
@@ -81,8 +81,7 @@ public final class TreatmentMatcher {
     private static boolean isPossibleMatch(@NotNull final BiopsyData biopsy, @NotNull final LocalDate treatmentStartDate) {
         LocalDate biopsyDate = biopsy.date();
 
-        return biopsyDate != null && biopsy.isPotentiallyEvaluable() && (treatmentStartDate.isAfter(biopsyDate)
-                || treatmentStartDate.isEqual(biopsyDate))
+        return biopsyDate != null && (treatmentStartDate.isAfter(biopsyDate) || treatmentStartDate.isEqual(biopsyDate))
                 && Duration.between(biopsyDate.atStartOfDay(), treatmentStartDate.atStartOfDay()).toDays()
                 < Config.MAX_DAYS_BETWEEN_TREATMENT_AND_BIOPSY;
     }
