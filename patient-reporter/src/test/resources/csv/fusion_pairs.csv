@@ -1,4 +1,4 @@
-"H_gene","T_gene"
-EWSR1,ATF1
-EWSR1,ZNF444
-TMPRSS2,PNPLA7
+"H_gene","T_gene","cgi","civic","cosmic","oncoKb"
+"ACBD6","RRP15",NA,NA,TRUE,NA
+"ACPP","PIK3CB",NA,NA,NA,TRUE
+"ACSL3","ETV1",NA,NA,TRUE,NA
