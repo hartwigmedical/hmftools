@@ -141,6 +141,7 @@ public class TreatmentMatcherTest {
         assertEquals(biopsies.get(1).id(), matchedBiopsyId1.intValue());
     }
 
+    // KODU:    --- biopsy (null) - start(mar) ----
     @Test
     public void doesntMatchBiopsyWithNullDate() {
         final List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_NULL);
@@ -148,6 +149,19 @@ public class TreatmentMatcherTest {
         final List<BiopsyTreatmentData> matchedTreatments = assertedMatch(biopsies, treatments);
 
         assertNull(matchedTreatments.get(0).biopsyId());
+    }
+
+    // KODU:    --- start(mar) -- biopsy(sep)
+    @Test
+    public void reportFindingForTreatmentBeforeBiopsy() {
+        final List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_SEP);
+        final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_MAR_NULL);
+        MatchResult<BiopsyTreatmentData> result = TreatmentMatcher.matchTreatmentsToBiopsies("patient", biopsies, treatments);
+
+        assertEquals(2, result.findings().size());
+        assertTrue(result.findings().get(0).message().contains("treatment prior to first biopsy"));
+        assertTrue(result.findings().get(1).message().contains("find a biopsy match"));
+        assertNull(result.values().get(0).biopsyId());
     }
 
     @NotNull
