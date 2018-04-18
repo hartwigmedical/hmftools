@@ -115,7 +115,7 @@ public final class LoadClinicalData {
         for (final String patientIdentifier : sequencedPatientIdentifiers) {
             Patient patient = patients.get(patientIdentifier);
             if (patient == null) {
-                LOGGER.warn(String.format("Could not load patient with id %s!", patientIdentifier));
+                LOGGER.warn(String.format("Patient with id %s not found in eCRF!", patientIdentifier));
                 dbAccess.writeSampleClinicalData(patientIdentifier, samplesPerPatient.get(patientIdentifier));
             } else {
                 dbAccess.writeFullClinicalData(patient);
