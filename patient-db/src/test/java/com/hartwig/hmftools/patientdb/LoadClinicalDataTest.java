@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientdb;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -15,6 +16,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
@@ -28,6 +30,7 @@ import com.hartwig.hmftools.patientdb.data.TumorMarkerData;
 import com.hartwig.hmftools.patientdb.readers.PatientReader;
 import com.hartwig.hmftools.patientdb.readers.cpct.CpctPatientReader;
 import com.hartwig.hmftools.patientdb.readers.cpct.CpctUtil;
+import com.hartwig.hmftools.patientdb.validators.PatientValidator;
 
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
@@ -53,10 +56,41 @@ public class LoadClinicalDataTest {
                 biopsySiteCurator,
                 treatmentCurator);
 
+        List<ValidationFinding> allFindings = Lists.newArrayList();
         for (EcrfPatient ecrfPatient : cpctEcrfModel.patients()) {
             Patient patient = cpctPatientReader.read(ecrfPatient, Lists.newArrayList());
             assertPatient(patient);
+            allFindings.addAll(PatientValidator.validatePatient(patient));
         }
+
+        assertTrue(allFindings.size() > 0);
+
+//        int numFails = 0;
+//        int numPartial = 0;
+//        for (ValidationFinding finding : allFindings) {
+//            if (finding.message().contains("Failed to curate ecrf drug")) {
+//                numFails++;
+//                if (finding.details().toLowerCase().contains("radium")) {
+//                    System.out.println(finding);
+//                }
+//            }
+//            if (finding.message().contains("Matched drugs are based")) {
+//                numPartial++;
+//                if (finding.details().toLowerCase().contains("radium")) {
+//                    System.out.println(finding);
+//                }
+//            }
+//        }
+//
+//        System.out.println("");
+//
+//        List<ValidationFinding> curationFindings = CurationValidator.validateTreatmentCurator(treatmentCurator);
+//        for (ValidationFinding finding : curationFindings) {
+//            System.out.println("Finding : " + finding.message() + ": " + finding.details());
+//        }
+//
+//        System.out.println("Number of curation findings: " + numFails);
+//        System.out.println("Number of curation partial matches: " + numPartial);
     }
 
     private static void assertPatient(@Nullable Patient patient) {

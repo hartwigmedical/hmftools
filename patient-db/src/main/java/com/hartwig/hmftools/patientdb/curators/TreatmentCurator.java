@@ -128,7 +128,7 @@ public class TreatmentCurator implements CleanableCurator {
     }
 
     @NotNull
-    private List<DrugEntry> readEntries(@NotNull final InputStream mappingInputStream) throws IOException {
+    private static List<DrugEntry> readEntries(@NotNull final InputStream mappingInputStream) throws IOException {
         final List<DrugEntry> drugEntries = Lists.newArrayList();
         final CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
         for (final CSVRecord record : parser) {
@@ -153,6 +153,9 @@ public class TreatmentCurator implements CleanableCurator {
 
     @NotNull
     public List<CuratedTreatment> search(@NotNull final String searchTerm) {
+        if (searchTerm.equalsIgnoreCase("Radium-223 dichloride/placebo")) {
+            int x = 1;
+        }
         final Optional<CuratedTreatment> matchedTreatment = matchSingle(searchTerm);
         if (!matchedTreatment.isPresent()) {
             return matchMultiple(searchTerm);
