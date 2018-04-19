@@ -44,6 +44,9 @@ public abstract class GeneFusionData {
     public abstract String copies();
 
     @NotNull
+    public abstract String source();
+
+    @NotNull
     public static GeneFusionData from(@NotNull final GeneFusion fusion) {
         final Transcript upstream = fusion.upstreamLinkedAnnotation();
         final Transcript downstream = fusion.downstreamLinkedAnnotation();
@@ -58,6 +61,7 @@ public abstract class GeneFusionData {
                 .geneContextEnd(exonDescription(downstream))
                 .geneEndTranscript(downstream.transcriptId())
                 .copies(ploidyToCopiesString(fusionPloidy(fusion)))
+                .source(fusion.primarySource())
                 .build();
     }
 
