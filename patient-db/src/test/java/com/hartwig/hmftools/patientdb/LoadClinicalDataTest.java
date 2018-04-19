@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.patientdb;
 
-import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.sampleBuilder;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -16,6 +14,7 @@ import javax.xml.stream.XMLStreamException;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
+import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
@@ -25,7 +24,6 @@ import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
-import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.data.TumorMarkerData;
 import com.hartwig.hmftools.patientdb.readers.PatientReader;
 import com.hartwig.hmftools.patientdb.readers.cpct.CpctPatientReader;
@@ -55,14 +53,16 @@ public class LoadClinicalDataTest {
                 biopsySiteCurator,
                 treatmentCurator);
 
-        List<SampleData> samples = Lists.newArrayList(sampleBuilder(LocalDate.parse("2016-04-04", DATE_FORMATTER)).build());
-        assertPatient(cpctPatientReader.read(cpctEcrfModel.patients().iterator().next(), samples));
+        for (EcrfPatient ecrfPatient : cpctEcrfModel.patients()) {
+            Patient patient = cpctPatientReader.read(ecrfPatient, Lists.newArrayList());
+            assertPatient(patient);
+        }
     }
 
     private static void assertPatient(@Nullable Patient patient) {
         assertNotNull(patient);
         assertEquals("CPCT02021111", patient.patientIdentifier());
-        assertEquals(1, patient.sequencedBiopsies().size());
+        assertEquals(0, patient.sequencedBiopsies().size());
 
         BaselineData baselineData = patient.baselineData();
         assertNotNull(baselineData);
