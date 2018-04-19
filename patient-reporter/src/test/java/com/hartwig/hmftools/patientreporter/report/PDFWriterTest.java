@@ -58,7 +58,7 @@ public class PDFWriterTest {
 
     private static final boolean RUN_CIVIC_ANALYSIS = false;
     private static final boolean SHOW_AND_PRINT = false;
-    private static final boolean WRITE_TO_PDF = false;
+    private static final boolean WRITE_TO_PDF = true;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
 
@@ -223,6 +223,7 @@ public class PDFWriterTest {
                         .geneEndEntrezIds(Lists.newArrayList(375775))
                         .geneContextEnd("Intron 2")
                         .copies("0.4")
+                        .source("CIViC")
                         .build(),
                 ImmutableGeneFusionData.builder()
                         .geneStart("CLCN6")
@@ -234,6 +235,7 @@ public class PDFWriterTest {
                         .geneEndEntrezIds(Lists.newArrayList(673))
                         .geneContextEnd("Intron 8")
                         .copies("1.0")
+                        .source("OncoKB")
                         .build());
     }
 
