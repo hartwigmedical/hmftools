@@ -29,10 +29,10 @@ public abstract class KnownFusionsModel {
     private static final String FIVE_GENE_COLUMN = "H_gene";
     private static final String THREE_GENE_COLUMN = "T_gene";
     private static final String PROMISCUOUS_GENE_COLUMN = "gene";
-    private static final String CGI_COLUMN = "cgi";
-    private static final String CIVIC_COLUMN = "civic";
-    private static final String COSMIC_COLUMN = "cosmic";
-    private static final String ONCOKB_COLUMN = "oncoKb";
+    public static final String CGI = "CGI";
+    public static final String CIVIC = "CIViC";
+    public static final String COSMIC = "COSMIC";
+    public static final String ONCOKB = "OncoKB";
     private static final CSVFormat CSV_FORMAT = CSVFormat.DEFAULT.withNullString("NA").withFirstRecordAsHeader();
 
     //MIVO: fusion pair -> set of sources
@@ -95,24 +95,27 @@ public abstract class KnownFusionsModel {
     }
 
     @NotNull
-    public Set<String> sources(@NotNull final Collection<String> fiveGeneNames, @NotNull final Collection<String> threeGeneNames) {
-        return fiveGeneNames.stream()
+    public String primarySource(@NotNull final Collection<String> fiveGeneNames, @NotNull final Collection<String> threeGeneNames) {
+        final Set<String> sources = fiveGeneNames.stream()
                 .flatMap(fiveGene -> threeGeneNames.stream().map(threeGene -> Pair.create(fiveGene, threeGene)))
-                .flatMap(fusionPair -> {
-                    final Set<String> pairsSources = fusions().getOrDefault(fusionPair, Collections.emptySet());
-                    final Set<String> fiveSources = promiscuousFive().getOrDefault(fusionPair.getFirst(), Collections.emptySet());
-                    final Set<String> threeSources = promiscuousThree().getOrDefault(fusionPair.getSecond(), Collections.emptySet());
-                    return Streams.concat(pairsSources.stream(), fiveSources.stream(), threeSources.stream());
-                })
+                .flatMap(fusionPair -> fusions().getOrDefault(fusionPair, Collections.emptySet()).stream())
                 .collect(Collectors.toSet());
+        return primarySource(sources);
     }
 
     @NotNull
     private static Set<String> readSources(@NotNull final CSVRecord record) {
-        return Stream.of(readSource(record, CGI_COLUMN),
-                readSource(record, CIVIC_COLUMN),
-                readSource(record, COSMIC_COLUMN),
-                readSource(record, ONCOKB_COLUMN)).filter(Optional::isPresent).map(Optional::get).collect(Collectors.toSet());
+        return Stream.of(readSource(record, CGI), readSource(record, CIVIC), readSource(record, COSMIC), readSource(record, ONCOKB))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toSet());
+    }
+
+    @NotNull
+    private static String primarySource(@NotNull final Set<String> sources) {
+        return sources.contains(ONCOKB)
+                ? ONCOKB
+                : sources.contains(COSMIC) ? COSMIC : sources.contains(CGI) ? CGI : sources.contains(CIVIC) ? CIVIC : "";
     }
 
     @NotNull
