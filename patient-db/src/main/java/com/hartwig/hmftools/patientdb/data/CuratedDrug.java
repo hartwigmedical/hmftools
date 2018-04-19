@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CuratedTreatment implements Comparable<CuratedTreatment> {
+public abstract class CuratedDrug implements Comparable<CuratedDrug> {
     @NotNull
     public abstract String name();
 
@@ -18,7 +18,7 @@ public abstract class CuratedTreatment implements Comparable<CuratedTreatment> {
     public abstract String searchTerm();
 
     @Override
-    public int compareTo(@NotNull final CuratedTreatment other) {
+    public int compareTo(@NotNull final CuratedDrug other) {
         return name().compareTo(other.name());
     }
 }

@@ -19,7 +19,7 @@ import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
-import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
+import com.hartwig.hmftools.patientdb.data.CuratedDrug;
 import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
@@ -273,7 +273,7 @@ public final class PatientValidator {
         treatments.forEach(treatment -> treatment.drugs().forEach(drug -> {
             final String drugName = drug.name();
             if (drugName != null) {
-                if (drug.curatedTreatments().isEmpty()) {
+                if (drug.curatedDrugs().isEmpty()) {
                     findings.add(ValidationFinding.of(curationName,
                             patientIdentifier,
                             "Failed to curate ecrf drug. Curated list contained no matching entry, or match was ambiguous",
@@ -281,9 +281,9 @@ public final class PatientValidator {
                             drugName));
                 } else {
                     final List<String> curatedTreatments =
-                            drug.curatedTreatments().stream().map(CuratedTreatment::name).collect(Collectors.toList());
+                            drug.curatedDrugs().stream().map(CuratedDrug::name).collect(Collectors.toList());
                     final List<String> matchedTerms =
-                            drug.curatedTreatments().stream().map(CuratedTreatment::searchTerm).collect(Collectors.toList());
+                            drug.curatedDrugs().stream().map(CuratedDrug::searchTerm).collect(Collectors.toList());
                     final long lengthOfMatchedCharacters = matchedTerms.stream().mapToLong(String::length).sum();
                     final long lengthOfSearchCharacters = drugName.chars().filter(Character::isLetterOrDigit).count();
                     if (lengthOfMatchedCharacters > 0 && (double) lengthOfMatchedCharacters / lengthOfSearchCharacters < 0.9) {

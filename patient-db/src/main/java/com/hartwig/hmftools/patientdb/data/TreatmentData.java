@@ -33,31 +33,31 @@ public interface TreatmentData extends Comparable<TreatmentData> {
 
     @NotNull
     @Value.Derived
-    default List<CuratedTreatment> curatedDrugs() {
-        return drugs().stream().flatMap(drug -> drug.filteredCuratedTreatments().stream()).collect(Collectors.toList());
+    default List<CuratedDrug> curatedDrugs() {
+        return drugs().stream().flatMap(drug -> drug.filteredCuratedDrugs().stream()).collect(Collectors.toList());
     }
 
     @Nullable
     default String treatmentName() {
-        List<CuratedTreatment> drugs = curatedDrugs();
+        List<CuratedDrug> drugs = curatedDrugs();
         Collections.sort(drugs);
 
-        final String concatenatedTreatmentName = drugs.stream().map(CuratedTreatment::name).collect(Collectors.joining("/"));
+        final String concatenatedTreatmentName = drugs.stream().map(CuratedDrug::name).collect(Collectors.joining("/"));
         return Strings.emptyToNull(concatenatedTreatmentName);
     }
 
     @Nullable
     default String concatenatedType() {
-        List<CuratedTreatment> drugs = curatedDrugs();
+        List<CuratedDrug> drugs = curatedDrugs();
         Collections.sort(drugs);
 
-        final String concatenatedTreatmentType = drugs.stream().map(CuratedTreatment::type).collect(Collectors.joining("/"));
+        final String concatenatedTreatmentType = drugs.stream().map(CuratedDrug::type).collect(Collectors.joining("/"));
         return Strings.emptyToNull(concatenatedTreatmentType);
     }
 
     @Nullable
     default String consolidatedType() {
-        final Set<String> types = curatedDrugs().stream().map(CuratedTreatment::type).collect(Collectors.toSet());
+        final Set<String> types = curatedDrugs().stream().map(CuratedDrug::type).collect(Collectors.toSet());
         if (types.isEmpty()) {
             return null;
         } else if (types.size() == 1) {

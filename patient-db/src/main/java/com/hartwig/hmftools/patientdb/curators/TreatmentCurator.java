@@ -20,8 +20,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.patientdb.LoadClinicalData;
-import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
-import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTreatment;
+import com.hartwig.hmftools.patientdb.data.CuratedDrug;
+import com.hartwig.hmftools.patientdb.data.ImmutableCuratedDrug;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -69,9 +69,11 @@ public class TreatmentCurator implements CleanableCurator {
     private static final String DRUG_NAME_FIELD = "drugName";
     private static final String CANONICAL_DRUG_NAME_FIELD = "canonicalDrugName";
     private static final String DRUG_TYPE_FIELD = "drugType";
-    private static final String CANONICAL_DRUG_NAME_CSV_FIELD = "drug";
+
+    private static final String DRUG_NAME_CSV_FIELD = "drug";
     private static final String DRUG_TYPE_CSV_FIELD = "type";
-    private static final String OTHER_DRUG_NAMES_CSV_FIELD = "other_names";
+    private static final String DRUG_SYNONYMS_CSV_FIELD = "synonyms";
+
     private static final int NUM_HITS = 20;
     private static final int MAX_SHINGLES = 10;
     private static final float SPELLCHECK_ACCURACY = .85f;
@@ -103,11 +105,11 @@ public class TreatmentCurator implements CleanableCurator {
     private static Set<String> extractUniqueSearchTerms(@NotNull Iterable<DrugEntry> drugEntries) {
         Set<String> uniqueSearchTerms = Sets.newHashSet();
         for (DrugEntry drugEntry : drugEntries) {
-            for (String name : drugEntry.names()) {
-                if (uniqueSearchTerms.contains(name.toLowerCase())) {
-                    LOGGER.warn("Drug synonyms already included in search terms: " + name);
+            for (String synonym : drugEntry.synonyms()) {
+                if (uniqueSearchTerms.contains(synonym.toLowerCase())) {
+                    LOGGER.warn("Drug synonym already included in search terms: " + synonym);
                 } else {
-                    uniqueSearchTerms.add(name.toLowerCase());
+                    uniqueSearchTerms.add(synonym.toLowerCase());
                 }
             }
 
@@ -132,40 +134,37 @@ public class TreatmentCurator implements CleanableCurator {
         final List<DrugEntry> drugEntries = Lists.newArrayList();
         final CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
         for (final CSVRecord record : parser) {
-            final String canonicalName = record.get(CANONICAL_DRUG_NAME_CSV_FIELD).trim();
+            final String canonicalName = record.get(DRUG_NAME_CSV_FIELD).trim();
             final String drugType = record.get(DRUG_TYPE_CSV_FIELD).trim();
-            final String otherNamesString = record.get(OTHER_DRUG_NAMES_CSV_FIELD).trim();
+            final String synonymsField = record.get(DRUG_SYNONYMS_CSV_FIELD).trim();
 
-            final List<String> drugNames = Lists.newArrayList();
-            if (!otherNamesString.isEmpty()) {
-                final CSVParser otherNamesParser = CSVParser.parse(otherNamesString, CSVFormat.DEFAULT);
-                for (final CSVRecord otherNames : otherNamesParser) {
-                    for (final String name : otherNames) {
-                        drugNames.add(name.trim());
+            final List<String> synonyms = Lists.newArrayList();
+            if (!synonymsField.isEmpty()) {
+                final CSVParser synonymsParser = CSVParser.parse(synonymsField, CSVFormat.DEFAULT);
+                for (final CSVRecord synonymsRecord : synonymsParser) {
+                    for (final String synonym : synonymsRecord) {
+                        synonyms.add(synonym.trim());
                     }
                 }
             }
-            drugEntries.add(ImmutableDrugEntry.of(drugNames, drugType, canonicalName));
+            drugEntries.add(ImmutableDrugEntry.of(canonicalName, synonyms, drugType));
         }
 
         return drugEntries;
     }
 
     @NotNull
-    public List<CuratedTreatment> search(@NotNull final String searchTerm) {
-        if (searchTerm.equalsIgnoreCase("Radium-223 dichloride/placebo")) {
-            int x = 1;
-        }
-        final Optional<CuratedTreatment> matchedTreatment = matchSingle(searchTerm);
-        if (!matchedTreatment.isPresent()) {
+    public List<CuratedDrug> search(@NotNull final String searchTerm) {
+        final Optional<CuratedDrug> matchedDrug = matchSingle(searchTerm);
+        if (!matchedDrug.isPresent()) {
             return matchMultiple(searchTerm);
         } else {
-            return Lists.newArrayList(matchedTreatment.get());
+            return Lists.newArrayList(matchedDrug.get());
         }
     }
 
     @NotNull
-    Optional<CuratedTreatment> matchSingle(@NotNull final String searchTerm) {
+    Optional<CuratedDrug> matchSingle(@NotNull final String searchTerm) {
         final Analyzer analyzer = spellcheckAnalyzer(spellChecker);
         final Query query = new QueryParser(DRUG_NAME_FIELD, analyzer).createPhraseQuery(DRUG_NAME_FIELD, searchTerm);
         try {
@@ -177,7 +176,7 @@ public class TreatmentCurator implements CleanableCurator {
 
             if (hits.length == 1) {
                 final Document searchResult = indexSearcher.doc(hits[0].doc);
-                return Optional.of(ImmutableCuratedTreatment.of(searchResult.get(CANONICAL_DRUG_NAME_FIELD),
+                return Optional.of(ImmutableCuratedDrug.of(searchResult.get(CANONICAL_DRUG_NAME_FIELD),
                         searchResult.get(DRUG_TYPE_FIELD),
                         searchTerm));
             }
@@ -190,15 +189,15 @@ public class TreatmentCurator implements CleanableCurator {
     }
 
     @NotNull
-    List<CuratedTreatment> matchMultiple(@NotNull final String searchTerm) {
-        final Map<SearchToken, CuratedTreatment> matchedTokens = Maps.newHashMap();
+    List<CuratedDrug> matchMultiple(@NotNull final String searchTerm) {
+        final Map<SearchToken, CuratedDrug> matchedTokens = Maps.newHashMap();
         final List<SearchToken> searchTokens = generateSearchTokens(searchTerm);
         for (final SearchToken searchToken : searchTokens) {
             if (matchedTokens.keySet()
                     .stream()
                     .noneMatch(token -> (token.startOffset() <= searchToken.startOffset() && searchToken.startOffset() <= token.endOffset())
                             || (token.startOffset() <= searchToken.endOffset() && searchToken.endOffset() <= token.endOffset()))) {
-                final Optional<CuratedTreatment> matchedTreatment = matchSingle(searchToken.term());
+                final Optional<CuratedDrug> matchedTreatment = matchSingle(searchToken.term());
                 matchedTreatment.ifPresent(curatedTreatment -> matchedTokens.put(searchToken, curatedTreatment));
             }
         }
@@ -237,13 +236,13 @@ public class TreatmentCurator implements CleanableCurator {
 
     @NotNull
     private static Directory createIndex(@NotNull final List<DrugEntry> drugEntries) throws IOException {
-        final Directory treatmentIndex = new RAMDirectory();
-        final IndexWriter indexWriter = createIndexWriter(treatmentIndex);
+        final Directory drugIndex = new RAMDirectory();
+        final IndexWriter indexWriter = createIndexWriter(drugIndex);
         for (final DrugEntry drugEntry : drugEntries) {
             indexDrugEntry(indexWriter, drugEntry);
         }
         indexWriter.close();
-        return treatmentIndex;
+        return drugIndex;
     }
 
     @NotNull
@@ -255,9 +254,9 @@ public class TreatmentCurator implements CleanableCurator {
 
     private static void indexDrugEntry(@NotNull final IndexWriter writer, @NotNull final DrugEntry drugEntry) throws IOException {
         final Document document = new Document();
-        drugEntry.names().forEach(name -> {
-            document.add(new TextField(DRUG_NAME_FIELD, name, Field.Store.NO));
-            document.add(new TextField(DRUG_TERMS_FIELD, name, Field.Store.YES));
+        drugEntry.synonyms().forEach(synonym -> {
+            document.add(new TextField(DRUG_NAME_FIELD, synonym, Field.Store.NO));
+            document.add(new TextField(DRUG_TERMS_FIELD, synonym, Field.Store.YES));
         });
         document.add(new TextField(DRUG_NAME_FIELD, drugEntry.canonicalName(), Field.Store.NO));
         document.add(new TextField(DRUG_TERMS_FIELD, drugEntry.canonicalName(), Field.Store.YES));

@@ -148,7 +148,7 @@ class ClinicalDAO {
     }
 
     private void writePreTreatmentDrugData(int patientId, @NotNull DrugData drug, @NotNull FormStatus formStatus) {
-        drug.filteredCuratedTreatments().forEach(curatedTreatment -> {
+        drug.filteredCuratedDrugs().forEach(curatedTreatment -> {
             final int id = context.insertInto(PRETREATMENTDRUG,
                     PRETREATMENTDRUG.PATIENTID,
                     PRETREATMENTDRUG.STARTDATE,
@@ -221,7 +221,7 @@ class ClinicalDAO {
 
     private void writeDrugData(final int patientId, final int treatmentId, @NotNull final DrugData drug,
             @NotNull final FormStatus formStatus) {
-        drug.filteredCuratedTreatments().forEach(curatedTreatment -> {
+        drug.filteredCuratedDrugs().forEach(curatedTreatment -> {
             final int id = context.insertInto(DRUG, DRUG.TREATMENTID, DRUG.PATIENTID, DRUG.STARTDATE, DRUG.ENDDATE, DRUG.NAME, DRUG.TYPE)
                     .values(treatmentId,
                             patientId,

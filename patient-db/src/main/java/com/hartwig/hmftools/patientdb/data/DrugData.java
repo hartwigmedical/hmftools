@@ -25,14 +25,11 @@ public abstract class DrugData {
     public abstract String bestResponse();
 
     @NotNull
-    public abstract List<CuratedTreatment> curatedTreatments();
+    public abstract List<CuratedDrug> curatedDrugs();
 
     @NotNull
     @Value.Derived
-    public List<CuratedTreatment> filteredCuratedTreatments() {
-        return curatedTreatments().stream()
-                .filter(curatedTreatment -> !curatedTreatment.type().toLowerCase().equals("remove"))
-                .distinct()
-                .collect(Collectors.toList());
+    public List<CuratedDrug> filteredCuratedDrugs() {
+        return curatedDrugs().stream().filter(drug -> !drug.type().toLowerCase().equals("remove")).distinct().collect(Collectors.toList());
     }
 }

@@ -20,11 +20,11 @@ import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
-import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
+import com.hartwig.hmftools.patientdb.data.CuratedDrug;
 import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentResponseData;
-import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTreatment;
+import com.hartwig.hmftools.patientdb.data.ImmutableCuratedDrug;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
 import com.hartwig.hmftools.patientdb.data.ImmutableDrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
@@ -64,7 +64,7 @@ public class PatientValidatorTest {
             JAN2015,
             JAN2015,
             null,
-            Lists.newArrayList(ImmutableCuratedTreatment.of("Drug1", "Type1", "Drug1")));
+            Lists.newArrayList(ImmutableCuratedDrug.of("Drug1", "Type1", "Drug1")));
     private static final DrugData DRUG_MISSING_CURATED_ENTRY = ImmutableDrugData.of("Drug1", JAN2015, JAN2015, null, Lists.newArrayList());
 
     private static final BiopsyTreatmentData TREATMENT_RADIO_THERAPY_NULL =
@@ -362,9 +362,9 @@ public class PatientValidatorTest {
 
     @NotNull
     private static DrugData create(@Nullable String name, @Nullable LocalDate startDate, @Nullable LocalDate endDate) {
-        List<CuratedTreatment> curation =
-                name != null ? Lists.newArrayList(ImmutableCuratedTreatment.of(name, "Type1", name)) : Lists.newArrayList();
-        return drugBuilder().name(name).startDate(startDate).endDate(endDate).addAllCuratedTreatments(curation).build();
+        List<CuratedDrug> curation =
+                name != null ? Lists.newArrayList(ImmutableCuratedDrug.of(name, "Type1", name)) : Lists.newArrayList();
+        return drugBuilder().name(name).startDate(startDate).endDate(endDate).addAllCuratedDrugs(curation).build();
     }
 
     @NotNull

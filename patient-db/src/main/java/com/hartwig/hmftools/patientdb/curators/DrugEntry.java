@@ -12,11 +12,11 @@ import org.jetbrains.annotations.Nullable;
 abstract class DrugEntry {
 
     @NotNull
-    public abstract List<String> names();
+    public abstract String canonicalName();
+
+    @NotNull
+    public abstract List<String> synonyms();
 
     @NotNull
     public abstract String type();
-
-    @NotNull
-    public abstract String canonicalName();
 }
