@@ -26,7 +26,6 @@ import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedDrug;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
-import com.hartwig.hmftools.patientdb.data.ImmutableDrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 
@@ -38,9 +37,9 @@ public class PatientValidatorTest {
 
     private static final String PATIENT_IDENTIFIER = "CPCT01020000";
 
-    private static final LocalDate JAN2015 = LocalDate.parse("2015-01-01");
-    private static final LocalDate FEB2015 = LocalDate.parse("2015-02-01");
-    private static final LocalDate MAR2015 = LocalDate.parse("2015-03-01");
+    private static final LocalDate JAN = LocalDate.parse("2015-01-01");
+    private static final LocalDate FEB = LocalDate.parse("2015-02-01");
+    private static final LocalDate MAR = LocalDate.parse("2015-03-01");
 
     private static final String HOSPITAL = "Test Hospital";
     private static final BaselineData EMPTY_BASELINE = baselineBuilder().build();
@@ -48,60 +47,59 @@ public class PatientValidatorTest {
             .curatedTumorLocation(ImmutableCuratedTumorLocation.of(null, null, "some_location"))
             .build();
 
-    private static final BiopsyData BIOPSY_NULL = biopsyBuilder().date(null).build();
-    private static final BiopsyData BIOPSY_FEB1 = biopsyBuilder().date(FEB2015).site("1").location("").build();
-    private static final BiopsyData BIOPSY_FEB2 = biopsyBuilder().date(FEB2015).site("2").location("").build();
+    private static final BiopsyData BIOPSY_NULL = biopsyBuilder().sampleId("sample-1").date(null).build();
+    private static final BiopsyData BIOPSY_FEB_WITH_SITE = biopsyBuilder().sampleId("sample-1").date(FEB).site("site").location("").build();
+    private static final BiopsyData BIOPSY_FEB_WITH_LOCATION =
+            biopsyBuilder().sampleId("sample-1").date(FEB).site("").location("loc").build();
 
     private static final DrugData DRUG_NULL = create(null, null, null);
-    private static final DrugData DRUG_WRONG = create(null, FEB2015, JAN2015);
-    private static final DrugData DRUG_JAN_JAN = create("Drug1", JAN2015, JAN2015);
-    private static final DrugData DRUG_JAN_ONGOING = create("Drug1", JAN2015, null);
-    private static final DrugData DRUG_JAN_FEB = create("Drug1", JAN2015, FEB2015);
-    private static final DrugData DRUG_FEB_ONGOING = create("Drug1", FEB2015, null);
-    private static final DrugData DRUG_JAN_MAR = create("Drug1", JAN2015, MAR2015);
+    private static final DrugData DRUG_WRONG = create(null, FEB, JAN);
+    private static final DrugData DRUG_JAN_JAN = create("Drug1", JAN, JAN);
+    private static final DrugData DRUG_JAN_ONGOING = create("Drug1", JAN, null);
+    private static final DrugData DRUG_JAN_FEB = create("Drug1", JAN, FEB);
+    private static final DrugData DRUG_FEB_ONGOING = create("Drug1", FEB, null);
+    private static final DrugData DRUG_JAN_MAR = create("Drug1", JAN, MAR);
 
-    private static final DrugData DRUG_WITH_PARTIAL_CURATED_ENTRY = ImmutableDrugData.of("Drug1 Drug2 Drug3",
-            JAN2015,
-            JAN2015,
-            null,
-            Lists.newArrayList(ImmutableCuratedDrug.of("Drug1", "Type1", "Drug1")));
-    private static final DrugData DRUG_MISSING_CURATED_ENTRY = ImmutableDrugData.of("Drug1", JAN2015, JAN2015, null, Lists.newArrayList());
+    private static final CuratedDrug CURATED_DRUG = ImmutableCuratedDrug.of("Drug1", "Type1", "Drug1");
+    private static final DrugData DRUG_WITH_PARTIAL_CURATED_ENTRY =
+            drugBuilder().name("Drug1 Drug2 Drug3").startDate(JAN).endDate(JAN).addCuratedDrugs(CURATED_DRUG).build();
+    private static final DrugData DRUG_MISSING_CURATED_ENTRY = drugBuilder().name("Drug1").startDate(JAN).endDate(JAN).build();
 
     private static final BiopsyTreatmentData TREATMENT_RADIO_THERAPY_NULL =
-            biopsyTreatmentBuilder().treatmentGiven("No").radiotherapyGiven(null).build();
+            biopsyTreatmentBuilder().biopsyId(1).treatmentGiven("No").radiotherapyGiven(null).build();
     private static final BiopsyTreatmentData TREATMENT_GIVEN_NULL =
-            biopsyTreatmentBuilder().treatmentGiven(null).radiotherapyGiven("No").build();
-    private static final BiopsyTreatmentData TREATMENT_GIVEN_EMPTY = biopsyTreatmentBuilder().treatmentGiven("Yes").build();
+            biopsyTreatmentBuilder().biopsyId(1).treatmentGiven(null).radiotherapyGiven("No").build();
+    private static final BiopsyTreatmentData TREATMENT_GIVEN_NO_DATA = biopsyTreatmentBuilder().biopsyId(1).treatmentGiven("Yes").build();
     private static final BiopsyTreatmentData TREATMENT_NOT_GIVEN_DATA =
-            biopsyTreatmentBuilder().treatmentGiven("No").addDrugs(DRUG_JAN_FEB).radiotherapyGiven("Yes").build();
+            biopsyTreatmentBuilder().biopsyId(1).treatmentGiven("No").addDrugs(DRUG_JAN_FEB).radiotherapyGiven("Yes").build();
     private static final BiopsyTreatmentData TREATMENT_GIVEN_GIBBERISH =
-            biopsyTreatmentBuilder().treatmentGiven("mmm").radiotherapyGiven("Yes").build();
+            biopsyTreatmentBuilder().biopsyId(1).treatmentGiven("mmm").radiotherapyGiven("Yes").build();
     private static final BiopsyTreatmentData TREATMENT_WRONG_DRUG_DATA =
-            biopsyTreatmentBuilder().treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(DRUG_NULL, DRUG_WRONG).build();
+            biopsyTreatmentBuilder().biopsyId(1).treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(DRUG_NULL, DRUG_WRONG).build();
 
     private static final BiopsyTreatmentData TREATMENT_JAN_JAN =
-            biopsyTreatmentBuilder().treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(DRUG_JAN_JAN).build();
+            biopsyTreatmentBuilder().biopsyId(1).treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(DRUG_JAN_JAN).build();
     private static final BiopsyTreatmentData TREATMENT_JAN_FEB =
-            biopsyTreatmentBuilder().treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(DRUG_JAN_FEB).build();
+            biopsyTreatmentBuilder().biopsyId(1).treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(DRUG_JAN_FEB).build();
     private static final BiopsyTreatmentData TREATMENT_JAN_MAR =
-            biopsyTreatmentBuilder().treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(DRUG_JAN_MAR).build();
+            biopsyTreatmentBuilder().biopsyId(1).treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(DRUG_JAN_MAR).build();
     private static final BiopsyTreatmentData TREATMENT_JAN_ONGOING =
-            biopsyTreatmentBuilder().treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(DRUG_JAN_ONGOING).build();
+            biopsyTreatmentBuilder().biopsyId(1).treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(DRUG_JAN_ONGOING).build();
     private static final BiopsyTreatmentData TREATMENT_FEB_ONGOING =
-            biopsyTreatmentBuilder().treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(DRUG_FEB_ONGOING).build();
+            biopsyTreatmentBuilder().biopsyId(1).treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(DRUG_FEB_ONGOING).build();
 
     private static final BiopsyTreatmentResponseData RESPONSE_JAN2015 =
-            biopsyTreatmentResponseBuilder().measurementDone("Yes").response("PR").responseDate(JAN2015).build();
+            biopsyTreatmentResponseBuilder().measurementDone("Yes").response("PR").responseDate(JAN).build();
     private static final BiopsyTreatmentResponseData RESPONSE_FEB2015 =
-            biopsyTreatmentResponseBuilder().measurementDone("Yes").response("PR").responseDate(FEB2015).build();
+            biopsyTreatmentResponseBuilder().measurementDone("Yes").response("PR").responseDate(FEB).build();
     private static final BiopsyTreatmentResponseData RESPONSE_NULL = biopsyTreatmentResponseBuilder().build();
     private static final BiopsyTreatmentResponseData RESPONSE_ONLY = biopsyTreatmentResponseBuilder().response("PR").build();
     private static final BiopsyTreatmentResponseData RESPONSE_MISSING_DATA =
             biopsyTreatmentResponseBuilder().measurementDone("Yes").build();
     private static final BiopsyTreatmentResponseData RESPONSE_MEASUREMENT_NO_WITH_DATA =
-            biopsyTreatmentResponseBuilder().measurementDone("No").response("PR").responseDate(JAN2015).build();
+            biopsyTreatmentResponseBuilder().measurementDone("No").response("PR").responseDate(JAN).build();
     private static final BiopsyTreatmentResponseData RESPONSE_MEASUREMENT_NO_WITH_VALID_DATA =
-            biopsyTreatmentResponseBuilder().measurementDone("No").response("ND").responseDate(JAN2015).build();
+            biopsyTreatmentResponseBuilder().measurementDone("No").response("ND").responseDate(JAN).build();
 
     @Test
     public void reportsMissingBaselineFields() {
@@ -111,7 +109,7 @@ public class PatientValidatorTest {
     }
 
     @Test
-    public void reportMissingPreTreatment() {
+    public void canValidatePreTreatmentData() {
         PreTreatmentData emptyData = ImmutablePreTreatmentData.builder().formStatus(FormStatus.undefined()).build();
 
         assertEquals(2, PatientValidator.validatePreTreatmentData(PATIENT_IDENTIFIER, emptyData).size());
@@ -141,16 +139,9 @@ public class PatientValidatorTest {
     }
 
     @Test
-    public void reportsMissingBiopsyFields() {
-        final List<ValidationFinding> findings = PatientValidator.validateBiopsyData(PATIENT_IDENTIFIER, BIOPSY_NULL);
-        assertEquals(2, findings.size());
-        findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
-    }
-
-    @Test
-    public void reportsAllBiopsyFieldsEmpty() {
-        final List<ValidationFinding> findings =
-                PatientValidator.validateBiopsies(PATIENT_IDENTIFIER, Lists.newArrayList(BIOPSY_NULL, BIOPSY_FEB1, BIOPSY_FEB2));
+    public void reportsOnMatchedBiopsiesWithMissingFields() {
+        final List<ValidationFinding> findings = PatientValidator.validateBiopsies(PATIENT_IDENTIFIER,
+                Lists.newArrayList(BIOPSY_NULL, BIOPSY_FEB_WITH_SITE, BIOPSY_FEB_WITH_LOCATION));
         assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
     }
@@ -158,29 +149,8 @@ public class PatientValidatorTest {
     @Test
     public void reportsBiopsyBeforeInformedConsent() {
         final List<ValidationFinding> findings = PatientValidator.validateInformedConsentDate(PATIENT_IDENTIFIER,
-                baselineBuilder().informedConsentDate(MAR2015).build(),
-                Lists.newArrayList(BIOPSY_FEB1));
-        assertEquals(1, findings.size());
-    }
-
-    @Test
-    public void reportsMissingDrugData() {
-        final List<ValidationFinding> findings = PatientValidator.validateDrugData(PATIENT_IDENTIFIER, DRUG_NULL, FormStatus.undefined());
-        assertEquals(2, findings.size());
-        findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
-    }
-
-    @Test
-    public void reportsIncorrectDrugData() {
-        final List<ValidationFinding> findings = PatientValidator.validateDrugData(PATIENT_IDENTIFIER, DRUG_WRONG, FormStatus.undefined());
-        assertEquals(2, findings.size());
-        findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
-    }
-
-    @Test
-    public void reportsMissingRadioTherapy() {
-        final List<ValidationFinding> findings =
-                PatientValidator.validateTreatments(PATIENT_IDENTIFIER, Lists.newArrayList(TREATMENT_RADIO_THERAPY_NULL));
+                baselineBuilder().informedConsentDate(MAR).build(),
+                Lists.newArrayList(BIOPSY_FEB_WITH_SITE));
         assertEquals(1, findings.size());
     }
 
@@ -192,9 +162,9 @@ public class PatientValidatorTest {
     }
 
     @Test
-    public void reportsMissingTreatmentData() {
+    public void reportsEmptyTreatmentGiven() {
         final List<ValidationFinding> findings =
-                PatientValidator.validateTreatments(PATIENT_IDENTIFIER, Lists.newArrayList(TREATMENT_GIVEN_EMPTY));
+                PatientValidator.validateTreatments(PATIENT_IDENTIFIER, Lists.newArrayList(TREATMENT_GIVEN_NO_DATA));
         assertEquals(2, findings.size());
     }
 
@@ -213,10 +183,31 @@ public class PatientValidatorTest {
     }
 
     @Test
+    public void reportsMissingRadioTherapy() {
+        final List<ValidationFinding> findings =
+                PatientValidator.validateTreatments(PATIENT_IDENTIFIER, Lists.newArrayList(TREATMENT_RADIO_THERAPY_NULL));
+        assertEquals(1, findings.size());
+    }
+
+    @Test
     public void reportsDrugFindingsForTreatment() {
         final List<ValidationFinding> findings =
                 PatientValidator.validateTreatments(PATIENT_IDENTIFIER, Lists.newArrayList(TREATMENT_WRONG_DRUG_DATA));
         assertEquals(4, findings.size());
+        findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
+    }
+
+    @Test
+    public void reportsMissingDrugData() {
+        final List<ValidationFinding> findings = PatientValidator.validateDrugData(PATIENT_IDENTIFIER, DRUG_NULL, FormStatus.undefined());
+        assertEquals(2, findings.size());
+        findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
+    }
+
+    @Test
+    public void reportsIncorrectDrugData() {
+        final List<ValidationFinding> findings = PatientValidator.validateDrugData(PATIENT_IDENTIFIER, DRUG_WRONG, FormStatus.undefined());
+        assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
     }
 
@@ -272,17 +263,17 @@ public class PatientValidatorTest {
     }
 
     @Test
-    public void doesNotReportCorrectDeathTimeline() {
+    public void doesNotReportDeathTimelineWhenNoTreatmentGiven() {
         final List<ValidationFinding> findings = PatientValidator.validateDeathDate(PATIENT_IDENTIFIER,
-                baselineBuilder().deathDate(MAR2015).build(),
-                Lists.newArrayList(TREATMENT_JAN_JAN, TREATMENT_JAN_FEB));
+                baselineBuilder().deathDate(MAR).build(),
+                Lists.newArrayList(TREATMENT_JAN_FEB, TREATMENT_GIVEN_NULL));
         assertEquals(0, findings.size());
     }
 
     @Test
     public void reportsDeathDateBeforeEndOfTreatment() {
         final List<ValidationFinding> findings = PatientValidator.validateDeathDate(PATIENT_IDENTIFIER,
-                baselineBuilder().deathDate(MAR2015).build(),
+                baselineBuilder().deathDate(MAR).build(),
                 Lists.newArrayList(TREATMENT_JAN_ONGOING, TREATMENT_JAN_FEB));
         assertEquals(1, findings.size());
     }
@@ -362,8 +353,7 @@ public class PatientValidatorTest {
 
     @NotNull
     private static DrugData create(@Nullable String name, @Nullable LocalDate startDate, @Nullable LocalDate endDate) {
-        List<CuratedDrug> curation =
-                name != null ? Lists.newArrayList(ImmutableCuratedDrug.of(name, "Type1", name)) : Lists.newArrayList();
+        List<CuratedDrug> curation = name != null ? Lists.newArrayList(ImmutableCuratedDrug.of(name, "Type1", name)) : Lists.newArrayList();
         return drugBuilder().name(name).startDate(startDate).endDate(endDate).addAllCuratedDrugs(curation).build();
     }
 
