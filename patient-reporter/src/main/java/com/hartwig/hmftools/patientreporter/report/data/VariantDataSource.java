@@ -84,7 +84,7 @@ public class VariantDataSource {
         return new AbstractSimpleExpression<String>() {
             @Override
             public String evaluate(@NotNull final ReportParameters data) {
-                return "http://grch37-cancer.sanger.ac.uk/cosmic/mutation/overview?id=" + data.getValue(COSMIC_NR_FIELD.getName());
+                return "http://cancer.sanger.ac.uk/cosmic/mutation/overview?genome=37&id=" + data.getValue(COSMIC_NR_FIELD.getName());
             }
         };
     }
