@@ -3,8 +3,8 @@ package com.hartwig.hmftools.knowledgebaseimporter.oncoKb
 import org.apache.commons.csv.CSVRecord
 
 data class OncoAnnotatedVariantRecord(private val csvRecord: CSVRecord) {
-    val transcript: String = csvRecord[0]
-    val gene: String = csvRecord[3]
-    val impact: String = csvRecord[4]
-    val oncogenicity: String = csvRecord[5]
+    val transcript: String = csvRecord["Isoform"]
+    val gene: String = csvRecord["Gene"]
+    val impact: String = csvRecord["Alteration"]
+    val oncogenicity: String = csvRecord["Oncogenicity"]
 }

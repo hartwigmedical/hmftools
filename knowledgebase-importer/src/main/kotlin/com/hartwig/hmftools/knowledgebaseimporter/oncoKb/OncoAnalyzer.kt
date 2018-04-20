@@ -10,7 +10,7 @@ import java.io.File
 import java.nio.charset.Charset
 
 fun analyzeOncoKb(transvarLocation: String, fileLocation: String, reference: IndexedFastaSequenceFile): List<KnownVariantOutput> {
-    val parser = CSVParser.parse(File(fileLocation), Charset.defaultCharset(), CSVFormat.TDF.withNullString(""))
+    val parser = CSVParser.parse(File(fileLocation), Charset.defaultCharset(), CSVFormat.TDF.withFirstRecordAsHeader().withNullString(""))
     val analyzer = TransvarProteinAnalyzer(transvarLocation)
     val records = parser.asSequence().map { OncoAnnotatedVariantRecord(it) }.toList()
     val transvarOutput = analyzer.analyze(records.map { Pair(it.transcript, it.impact) })
