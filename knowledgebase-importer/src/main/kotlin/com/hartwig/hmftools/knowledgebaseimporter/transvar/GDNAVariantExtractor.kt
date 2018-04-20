@@ -24,7 +24,7 @@ private val chrDelimiter = ":"
 private val gDnaDelimiter = "g."
 
 fun extractVariants(transvarOutput: TransvarOutput, reference: IndexedFastaSequenceFile): List<SomaticVariant> {
-    val chromosome = extractChromosome(transvarOutput)
+    val chromosome = extractChromosome(transvarOutput.coordinates)
     return if (chromosome.isEmpty()) {
         logger.warn("could not extract chromosome from line: $transvarOutput. Skipping")
         emptyList()
@@ -87,8 +87,8 @@ fun extractSnv(chromosome: String, variantGDna: String): SomaticVariant {
     return somaticVariant(chromosome, start, ref, alt)
 }
 
-fun extractChromosome(transvarOutput: TransvarOutput): String {
-    return transvarOutput.coordinates.substringAfter(chrIdentifier, "").substringBefore(chrDelimiter)
+fun extractChromosome(coordinates: String): String {
+    return coordinates.substringAfter(chrIdentifier, "").substringBefore(chrDelimiter)
 }
 
 private fun extractPositions(variant: String): Pair<Long, Long?> {
