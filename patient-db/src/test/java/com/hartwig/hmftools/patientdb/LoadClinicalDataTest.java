@@ -64,33 +64,6 @@ public class LoadClinicalDataTest {
         }
 
         assertTrue(allFindings.size() > 0);
-
-//        int numFails = 0;
-//        int numPartial = 0;
-//        for (ValidationFinding finding : allFindings) {
-//            if (finding.message().contains("Failed to curate ecrf drug")) {
-//                numFails++;
-//                if (finding.details().toLowerCase().contains("radium")) {
-//                    System.out.println(finding);
-//                }
-//            }
-//            if (finding.message().contains("Matched drugs are based")) {
-//                numPartial++;
-//                if (finding.details().toLowerCase().contains("radium")) {
-//                    System.out.println(finding);
-//                }
-//            }
-//        }
-//
-//        System.out.println("");
-//
-//        List<ValidationFinding> curationFindings = CurationValidator.validateTreatmentCurator(treatmentCurator);
-//        for (ValidationFinding finding : curationFindings) {
-//            System.out.println("Finding : " + finding.message() + ": " + finding.details());
-//        }
-//
-//        System.out.println("Number of curation findings: " + numFails);
-//        System.out.println("Number of curation partial matches: " + numPartial);
     }
 
     private static void assertPatient(@Nullable Patient patient) {

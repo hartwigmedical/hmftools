@@ -79,7 +79,7 @@ public class TreatmentCurator implements CleanableCurator {
     private static final float SPELLCHECK_ACCURACY = .85f;
 
     @NotNull
-    private final Set<String> unusedSearchTerms;
+    private final Map<String, String> unusedTokenizedTermToEntryMap;
     @NotNull
     private final SpellChecker spellChecker;
     @NotNull
@@ -98,35 +98,49 @@ public class TreatmentCurator implements CleanableCurator {
 
         spellChecker = createIndexSpellchecker(index);
         indexSearcher = new IndexSearcher(reader);
-        unusedSearchTerms = extractUniqueSearchTerms(drugEntries);
+        unusedTokenizedTermToEntryMap = extractUnusedTokenizedTermToEntryMap(drugEntries);
     }
 
     @NotNull
-    private static Set<String> extractUniqueSearchTerms(@NotNull Iterable<DrugEntry> drugEntries) {
-        Set<String> uniqueSearchTerms = Sets.newHashSet();
+    private static Map<String, String> extractUnusedTokenizedTermToEntryMap(@NotNull Iterable<DrugEntry> drugEntries) throws IOException {
+        Map<String, String> uniqueTokenizedTermToEntryMap = Maps.newHashMap();
+
         for (DrugEntry drugEntry : drugEntries) {
             for (String synonym : drugEntry.synonyms()) {
-                if (uniqueSearchTerms.contains(synonym.toLowerCase())) {
+                if (uniqueTokenizedTermToEntryMap.containsValue(synonym)) {
                     LOGGER.warn("Drug synonym already included in search terms: " + synonym);
                 } else {
-                    uniqueSearchTerms.add(synonym.toLowerCase());
+                    uniqueTokenizedTermToEntryMap.put(toTokenizedString(synonym), synonym);
                 }
             }
-
-            if (uniqueSearchTerms.contains(drugEntry.canonicalName().toLowerCase())) {
-                LOGGER.warn("Drug canonical name already included in search terms: " + drugEntry.canonicalName());
-            } else {
-                uniqueSearchTerms.add(drugEntry.canonicalName().toLowerCase());
+            if (drugEntry.synonyms().isEmpty()) {
+                if (uniqueTokenizedTermToEntryMap.containsValue(drugEntry.canonicalName())) {
+                    LOGGER.warn("Drug canonical name already included in search terms: " + drugEntry.canonicalName());
+                } else {
+                    uniqueTokenizedTermToEntryMap.put(toTokenizedString(drugEntry.canonicalName()), drugEntry.canonicalName());
+                }
             }
         }
 
-        return uniqueSearchTerms;
+        return uniqueTokenizedTermToEntryMap;
+    }
+
+    @NotNull
+    private static String toTokenizedString(@NotNull String searchTerm) throws IOException {
+        List<String> result = Lists.newArrayList();
+        TokenStream stream = indexAnalyzer().tokenStream(DRUG_NAME_FIELD, new StringReader(searchTerm));
+        stream.reset();
+        while (stream.incrementToken()) {
+            result.add(stream.getAttribute(CharTermAttribute.class).toString());
+        }
+        assert result.size() == 1;
+        return result.get(0);
     }
 
     @NotNull
     @Override
     public Set<String> unusedSearchTerms() {
-        return unusedSearchTerms;
+        return Sets.newHashSet(unusedTokenizedTermToEntryMap.values());
     }
 
     @NotNull
@@ -171,7 +185,7 @@ public class TreatmentCurator implements CleanableCurator {
             final ScoreDoc[] hits = indexSearcher.search(query, NUM_HITS).scoreDocs;
 
             for (WeightedTerm term : QueryTermExtractor.getTerms(query)) {
-                unusedSearchTerms.remove(term.getTerm().toLowerCase());
+                unusedTokenizedTermToEntryMap.remove(term.getTerm());
             }
 
             if (hits.length == 1) {

@@ -1,16 +1,15 @@
 drug,type,synonyms
 68Ga-DOTATATE,Radiotherapy,"ga-68 dotatate"
-Abiraterone,Hormonal therapy,"abiterone,Arbirateron"
+Abiraterone,Hormonal therapy,"Arbirateron"
 ABT414,Hormonal therapy,
 ABVD,Chemotherapy,
-AC,Chemotherapy,"AC cure,AC+"
+AC,Chemotherapy,"AC+"
 Actinium-225 PSMA radioligandtherapie,Radio therapy,"Actinium-225 PSMA,PSMA-therapy Ac-225"
 Ad[1/PPT-E1A],Oncolytic virus,
 Adriamycin,Chemotherapy,"adriacimicyne"
 ADT,Androgen/estrogen deprivation therapy,"androgen deprivation therapy"
 Afatinib,Targeted therapy,
 Alectinib,Targeted therapy,
-Amdolipine,remove,
 AMG 211,Experimental therapy (unkown compound),
 AMG232,Experimental therapy (unkown compound),
 Anastrozole,Hormonal therapy,"anastozol,Anastrazol,Arimidex"
@@ -22,13 +21,10 @@ Atezolizumab,Immunotherapy,"atezolumab"
 Avelumab,Immunotherapy,
 Avodart,remove,
 Axitinib,Targeted therapy,
-Azacitidine,Chemotherapy,
 BCG,Other,"Bacillus Calmette-Guérin,BCG bladder instillation,BCG intravesical,Chemotherapie blaasspoeling"
 BEAM,Chemotherapy,
-Betamethason/calcipotriol,Targeted therapy,
 Bevacizumab,Targeted therapy,"Avastin,Bevacuzimab"
 BEZ235,Experimental therapy (unkown compound),
-BI 853520,Experimental therapy (unkown compound),
 Bicalutamide,Hormonal therapy,"Biculatamide"
 Binimetinib,Targeted therapy,"MEK162"
 Bisosonaal,remove,
@@ -38,7 +34,6 @@ BMS 986148,Targeted therapy,
 BMS986156,Experimental therapy (unkown compound),
 Bortezomib,Targeted therapy,
 Brachytherapy,Radiotherapy,
-Budesodine,remove,
 Busulphan,Chemotherapy,"Busulfan"
 Cabazitaxel,Chemotherapy,"jevtana"
 Cabozantinib,Targeted therapy,
@@ -47,7 +42,6 @@ Capox,Chemotherapy,
 Carboplatin,Chemotherapy,"Carboplatine, Carbpolatine,Paraplatin"
 Carbotaxol,Chemotherapy,
 Casodex,Androgen/estrogen deprivation therapy,
-CEA antibody,Experimental therapy,
 Ceritinib,Targeted therapy,
 Cetuximab,Targeted therapy,"Zr-cetuximab"
 Chloorambucil,Chemotherapy,
@@ -63,7 +57,7 @@ Cyclophosphamide,Chemotherapy,"cyclofosfamide,ifosfamide,ciclfosfamine,cyclofami
 Cyproteron,Hormonal therapy,
 Cytarabine,Chemotherapy,"cyturabine,depocyt"
 Dabrafenib,Targeted therapy,"Dabrafetinib"
-Dacarbazine,Chemotherapy,"Dacarzabine"
+Dacarbazine,Chemotherapy,
 Dactinomycin,Chemotherapy,"Dactinomycine"
 Darbepoetine,remove,
 DCVAC/PCa of placebo,remove,
@@ -76,17 +70,16 @@ Denosumab,remove,
 Dexamethason,Hormonal therapy,
 DHAP-VIM-DHAP,Chemotherapy,
 DMOT4039A,Experimental therapy (unkown compound),
-Docetaxel,Chemotherapy,"dcoetaxel,Docetaxel.,dectaxel,Docatal,Doxatel,Taxotere"
+Docetaxel,Chemotherapy,"dcoetaxel,Docetaxel.,Docatal,Doxatel,Taxotere"
 Doxorubicine,Chemotherapy,"Doxorubicine (Adriamycine), Doxurubicine, Adriamycine, hydrodoxorubicin, Adriamyne, Adryamicine,doxoburicine,Doxorubine,Myocet,Doxorubicin"
 Durvalumab,Immunotherapy,
 Dustasteride,remove,
 Dutasteride,remove,
 Dutasteride (Avodart),remove,
-Eligard,Hormonal therapy,"eligard (androgen deprivation therapy)"
+Eligard,Hormonal therapy,
 Emtansine,remove,
 Encorafenib,Targeted therapy,"Encorafinb"
 Enzalutamide,Hormonal therapy,"Apalutamide,Enzatulamide,Enzulatimide"
-Epacadostat,Targeted therapy,
 Epacadostat/placebo,remove,
 Epi-adriamycine,Chemotherapy,"Epiadriamycine"
 Epirubicine,Chemotherapy,"Epirubicin,epiribucine"
@@ -99,7 +92,7 @@ Exemestane,Hormonal therapy,"Aromasin,Exemestaan,estemane"
 FEC,Chemotherapy,"FEC75"
 FEC-D,Chemotherapy,
 Fluoropyrimidine,Chemotherapy,"fluorpyrimidine"
-Fluorouracil,Chemotherapy,"Tegafur,Teysuno,Capecitabine,5-FU,5-Fluorouracil,Fluorouracil bolus,Xeloda,5-floururacil,5-fluoracil,5-fluoro-uracil,5-fluouracil,capacetabine,flouroucil,Flourouracil,fluor0uracil,Fluaoracil,Fluoroucil,Capecitabein,Fluoracil"
+Fluorouracil,Chemotherapy,"Tegafur,Teysuno,Capecitabine,5-FU,5-Fluorouracil,Fluorouracil bolus,Xeloda,5-floururacil,5-fluoracil,5-fluouracil,capacetabine,flouroucil,Flourouracil,fluor0uracil,Fluoroucil,Capecitabein,Fluoracil"
 Flutamide,Androgen/estrogen deprivation therapy,
 Folfirinox,Combi therapy,"Folfiri,Folfox"
 Folinic acid,Chemotherapy,"folic acid, Folin acid, folinaccid,Foline acid,Foline zuur,folineacid,follincaccid,Folinezuur"
@@ -137,20 +130,17 @@ Lenalidomide,Chemotherapy,
 Lenvatinib,Targeted therapy,
 Letrozole,Hormonal therapy,"Femara,Letrzozol,lezetrol,Lezotrol"
 Leucovorin,remove,
-Leuproreline,Androgen/estrogen deprivation therapy,"Leuproleine,leuprolin,Leuproline"
+Leuproreline,Androgen/estrogen deprivation therapy,"leuprolin,Leuproline"
 Leveremoblisatie,remove,
-LGX818,Experimental therapy (unkown compound),
 LHRH agonist,Androgen/estrogen deprivation therapy,"LHRH,LHRH -antagonist,LHRH analoog,LHRH antagonist,LHRH unknown,LHRH-agonist,LHRH-analogue,LHRH-analoog,unspecified LHRH?"
 Liposomal doxorubicin,Chemotherapy,"caelyx"
 Lomustine,Chemotherapy,
 Lu-177-PSMA,Radio therapy,"Lutetium-177-PSMA, Lu-177 PSMA radioligand therapie, PSMA-Lu"
-Lucanix/placebo,remove,
 Lucrin,Hormonal therapy,
 Lutetium 177,Radio therapy,
 Lutetium 177-HA (PRRT),Radio therapy,
-Lutetium-177 DOTATATE,Radiotherapy,"2 lutetium dotatate,Lu-177 octreotate,lu-177-dotatate,Lu-177-octreotate,Lutetium,Lutetium 1770octreotaat,Lutetium-177-Octreotaat,PRRT Lu-177, Lu-177-DOTATAAT, Lu-177-octreotaat,Lu-177-HA-DOTATATE"
+Lutetium-177 DOTATATE,Radiotherapy,"2 lutetium dotatate,Lu-177 octreotate,lu-177-dotatate,Lu-177-octreotate,Lutetium,Lutetium 1770octreotaat,Lutetium-177-Octreotaat,Lu-177-octreotaat,Lu-177-HA-DOTATATE"
 LXH254,Targeted therapy,"Study15-716; LXH254 1200 mg"
-Macrogol/zouten,remove,
 Masitinib,Targeted therapy,
 Medroxyprogesterone acetate,Androgen/estrogen deprivation therapy,"Medroxyprogesterion,medroxyprogesteron"
 Megestrol,Hormonal therapy,
@@ -160,30 +150,24 @@ Mercaptoethaansulfon-acid,remove,
 Mesna,remove,
 Metformine,remove,
 Methadone,remove,
-Methotrexate,Chemotherapy,"Methotextrate,Methotrexaat,Methotrxate,MTX"
+Methotrexate,Chemotherapy,"Methotrexaat,MTX"
 Mitomycin-C,Chemotherapy,"mitomycin,Mitomycin C bladder instillation,Mitomycine,Mitomycine C,Mitomycine-C,mytomicine,Mytomycin-C"
 Mitoxine,Chemotherapy,"mustargen"
 MOPP,Chemotherapy,
 MPS-1 inhibitor,Targeted therapy,
 MSC2490484A,Targeted therapy,"DNA-PK Inhibitor MSC2490484A"
 Myeloid Dendritical cells,Experimental,
-Nandroparine,remove,
-Natriumthiosulfaat,remove,
 Neulasta,remove,
 Nilotinib,Targeted therapy,
-Nilutamide,Androgen/estrogen deprivation therapy,"Anadron,Anandron,niultamide"
+Nilutamide,Androgen/estrogen deprivation therapy,"Anadron,Anandron"
 Nintedanib,Targeted therapy,
-Niraparib,Targeted therapy,
 Nivolumab,Immunotherapy,
-Norethisteron-Ethinylestradiol,Hormonal therapy,
 Not noted,remove,
-NY-ESO tumorantigen,Immunotherapy,
 Octreotide,Hormonal therapy,"Octeotride"
 OEPA,Chemotherapy,
 Olaparib,Targeted therapy,
 Olaratumab,Targeted therapy,
 Olaratumab/placebo,remove,
-Om de dag 15 en 200 mg,remove,
 Orteronel,Hormonal therapy,"Orteronel (cross over)"
 Orteronel / placebo (pt had placebo),remove,
 Osimertinib,Targeted therapy,"AZD9291"
@@ -195,11 +179,8 @@ P53 activation,remove,
 Paclitaxel,Chemotherapy,"Nab-paclitaxel,paclicatel, nab"
 Palbociclib,Targeted therapy,
 Panitumumab,Targeted therapy,"pantinumab"
-Pantoprazol,remove,
-Paracetamol,remove,
 Pazopanib,Targeted therapy,
 PDR001 or placebo,remove,
-Pegfilgrastim,remove,
 PEGPH20,Targeted therapy,
 Pegylated liposomal doxorubicin,Chemotherapy,"PLD"
 Pembrolizumab,Immunotherapy,"Pembroluzimab"
@@ -220,10 +201,11 @@ R-CHOP,Combi,
 RAD1901,Hormonal therapy,
 Radioactive iodine,Radio therapy,
 Radium-223,Radiotherapy,"Radium 223 chloride,Radium-233,Radium"
+Radium-223 dichloride/placebo,remove,
 Ramucirumab,Targeted therapy,"Ramicurimab"
 Regorafenib,Targeted therapy,
 Rescuvolin,remove,
-RFA,Experimental therapy,"Radiofrequency ablation"
+RFA,Experimental therapy,
 Rhenium 188-HEDP,Radiotherapy,"Rhenium"
 Ribociclib,Targeted therapy,
 Ribociclib or placebo,remove,
@@ -234,7 +216,6 @@ Rociletinib,Targeted therapy,"rocelitinib"
 S1,Chemotherapy,
 Samarium-153,Radiotherapy,
 Sandostatine,Hormonal therapy,
-Selumetinib,Targeted therapy,
 Sipuleucel-T,Immunotherapy,"Provenge"
 Somatostatine,Hormonal therapy,
 Somatuline,Hormonal therapy,
@@ -262,12 +243,11 @@ Tostran,remove,
 Trabectedin,Chemotherapy,"Trabectedine"
 Trametinib,Targeted therapy,
 Transarterial chemo-embolization,Chemotherapy,"TACE"
-Trastuzumab,Targeted therapy,"T-DM1 (Trastuzumab emtansine),Trastuzumab-emtansine,Zr-89 trastuzumab,Kadcyla,herceptin"
+Trastuzumab,Targeted therapy,"T-DM1 (Trastuzumab emtansine),Trastuzumab-emtansine,Zr-89 trastuzumab,herceptin"
 Tremelimumab,Immunotherapy,
 Trifluridine,Chemotherapy,"Lonsurf,TAS-102,TAS102,Trifluridine-Tipiracil,TAS-201"
-Triptorelin,Androgen/estrogen deprivation therapy,"Pamorelin,Pamoreline,Triptoreline"
+Triptorelin,Androgen/estrogen deprivation therapy,"Pamorelin,Pamoreline"
 TTFields,Experimental therapy,
-Type unknown,remove,
 UNK,remove,
 Unknow,remove,
 Unknown,remove,
@@ -276,16 +256,12 @@ Unknown adjuvant chemotherapy,Chemotherapy,
 Unknown chemotherapy for breast tumor,Chemotherapy,
 VAC,Chemotherapy,
 Vandetanib,Targeted therapy,
-Vanucizumab,Immunotherapy,
 VEGF-inhibitor,Targeted therapy,"VEGF"
 Vemurafenib,Targeted therapy,
-Vinblastine,Chemotherapy,"Velbe"
+Vinblastine,Chemotherapy,
 Vincristine,Chemotherapy,"vineristine,oncovin"
-Vinorelbine,Chemotherapy,"Navelbine,vinorlebin"
+Vinorelbine,Chemotherapy,"vinorlebin"
 Vismodegib,Targeted therapy,
-Vosaroxin,Chemotherapy,
-VX-803,Targeted therapy,
-Xelox B,Combi,
 Zoladex,Hormonal therapy,
 Zoledronaat,remove,
 Zoledronic Acid,Bisphosphonates,"zometa,zolendronic acid"
