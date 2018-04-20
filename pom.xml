@@ -29,6 +29,7 @@
         <module>hmf-id-generator</module>
         <module>portal-data-converter</module>
         <module>sv-analyser</module>
+        <module>knowledgebase-importer</module>
     </modules>
 
     <properties>
