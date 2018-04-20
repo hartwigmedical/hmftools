@@ -29,6 +29,7 @@
         <module>hmf-id-generator</module>
         <module>portal-data-converter</module>
         <module>sv-analyser</module>
+        <module>hgvs-variant-translator</module>
     </modules>
 
     <properties>
@@ -348,7 +349,7 @@
             </dependency>
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-stdlib</artifactId>
+                <artifactId>kotlin-stdlib-jre8</artifactId>
                 <version>${kotlin.version}</version>
             </dependency>
             <dependency>
