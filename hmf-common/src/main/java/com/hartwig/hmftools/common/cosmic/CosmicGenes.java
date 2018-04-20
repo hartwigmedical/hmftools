@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.cosmic.genes;
+package com.hartwig.hmftools.common.cosmic;
 
 import java.io.File;
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.cosmic.genes;
+package com.hartwig.hmftools.common.cosmic;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

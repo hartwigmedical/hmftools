@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter;
 
-import com.hartwig.hmftools.common.cosmic.genes.CosmicGeneModel;
+import com.hartwig.hmftools.common.cosmic.CosmicGeneModel;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
