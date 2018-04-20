@@ -29,7 +29,6 @@ Biliary,Cholangiocarcinoma,"peritoneum","ventral medial",Peritoneum/Omentum
 Biliary,Cholangiocarcinoma,"primary","intrahepatic cholangiocarcinoma",Liver
 Biliary,Gall bladder,"abdominal wall","abdominal wall laesion",Abdomen/Abdominal wall
 Biliary,Gall bladder,"abdominal wall","abdominal wall",Abdomen/Abdominal wall
-Biliary,Gall bladder,"epigastrium","subcutaneous",(Sub)cutane
 Biliary,Gall bladder,"gall bladder","gall bladder",Gall bladder
 Biliary,Gall bladder,"liver","gallbladder bed",Liver
 Biliary,Gall bladder,"liver","left liver lobe",Liver
@@ -50,11 +49,9 @@ Biliary,Gall bladder,"lymph node","right axilla",Lymph node
 Biliary,Gall bladder,"null","gall bladder",Gall bladder
 Bone/Soft tissue,Angiosarcoma,"liver","liver",Liver
 Bone/Soft tissue,Angiosarcoma,"primary","scalp",Bone
-Bone/Soft tissue,Desmoid,"abdomen","abdominal wall right",Abdomen/Abdominal wall
 Bone/Soft tissue,Desmoid,"abdomen","mesenterium",Peritoneum/Omentum
 Bone/Soft tissue,Ewing sarcoma,"amputated upper leg (leg amputation 16/06/2016)","amputated",Bone
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"abdomen","left mesenterial",Abdomen/Abdominal wall
-Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"abdomen","omentum, ventral of the bladder",Peritoneum/Omentum
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"abdomen","right paramedian",Abdomen/Abdominal wall
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"abdominal wall","left upper abdomen",Abdomen/Abdominal wall
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"leasion","right abdomen",Abdomen/Abdominal wall
@@ -62,12 +59,9 @@ Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"liver","left lobe",Liver
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"liver","null",Liver
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"liver","right lobe",Liver
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"liver","right",Liver
-Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"liver","segment 4",Liver
-Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"liver","segment 5",Liver
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"liver","segment 6",Liver
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"liver","uk",Liver
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"lung","right",Lung
-Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"lymph node","para-iliacaal",Lymph node
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"mass ventrale bladder","ventral of bladder",Abdomen/Abdominal wall
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"muscle","back musculature, right side",Muscle
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"pancreas","pancreas",Pancreas
@@ -75,10 +69,8 @@ Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"peritoneum","left lower 
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"peritoneum","mesenterium",Peritoneum/Omentum
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"peritoneum","na",Peritoneum/Omentum
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"peritoneum","para-umbilicaal right side",Peritoneum/Omentum
-Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"peritoneum","right lateral of umbilicus",Peritoneum/Omentum
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"peritoneum","right lower abdomen",Peritoneum/Omentum
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"peritoneum","tumor right abdomen",Peritoneum/Omentum
-Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"peritoneum","upper stomach left",Peritoneum/Omentum
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"primary","gastrointestinal",Stomach
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"primary","stomach",Stomach
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"rectum","proximal",Abdomen/Abdominal wall
@@ -86,7 +78,6 @@ Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"small pelvic","small pel
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"soft tissue","behind bladder",Abdomen/Abdominal wall
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"soft tissue","peritoneal under liver",Abdomen/Abdominal wall
 Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"subcutaneous","abdominal wall",(Sub)cutane
-Bone/Soft tissue,Gastrointestinal stromal tumor (GIST),"subcutaneous","left lateral abdomen",(Sub)cutane
 Bone/Soft tissue,Leiomyosarcoma,"abdominal wall","left side abdominal wall",Abdomen/Abdominal wall
 Bone/Soft tissue,Leiomyosarcoma,"adnex","right",Peritoneum/Omentum
 Bone/Soft tissue,Leiomyosarcoma,"bone","costa 9",Bone
@@ -94,15 +85,12 @@ Bone/Soft tissue,Leiomyosarcoma,"liver","left lobe",Liver
 Bone/Soft tissue,Leiomyosarcoma,"liver","null",Liver
 Bone/Soft tissue,Leiomyosarcoma,"liver","segment 2/3",Liver
 Bone/Soft tissue,Leiomyosarcoma,"liver","segment 3",Liver
-Bone/Soft tissue,Leiomyosarcoma,"liver","segment 4",Liver
-Bone/Soft tissue,Leiomyosarcoma,"liver","segment 8",Liver
+Bone/Soft tissue,Leiomyosarcoma,"liver","segment viii",Liver
 Bone/Soft tissue,Leiomyosarcoma,"lung","apex left lower lobe",Lung
 Bone/Soft tissue,Leiomyosarcoma,"lung","right hemithorax mass",Lung
 Bone/Soft tissue,Leiomyosarcoma,"lung","right lung dorsal",Lung
 Bone/Soft tissue,Leiomyosarcoma,"lymph node","left retroperitoneal",Lymph node
 Bone/Soft tissue,Leiomyosarcoma,"skin","right flank",(Sub)cutane
-Bone/Soft tissue,Leiomyosarcoma,"small intestine","para vena pulmonalis",Small intestine
-Bone/Soft tissue,Leiomyosarcoma,"soft tissue","musculus gluteus maximus left",Muscle
 Bone/Soft tissue,Leiomyosarcoma,"soft tissue","under right rib cage",Thorax/Thorax wall
 Bone/Soft tissue,Leiomyosarcoma,"thorax wall","mass left side",Thorax/Thorax wall
 Bone/Soft tissue,Liposarcoma,"abdomen","intra-abdominal right, lateral",Abdomen/Abdominal wall
@@ -115,14 +103,11 @@ Bone/Soft tissue,Osteosarcoma,"lung","lung",Lung
 Bone/Soft tissue,Osteosarcoma,"lung","para mediastinal left lower lobe",Lung
 Bone/Soft tissue,Rhabdomyosarcoma,"bone","pelvis",Bone
 Bone/Soft tissue,Rhabdomyosarcoma,"left scapula","left scapula",Thorax/Thorax wall
-Bone/Soft tissue,Sarcoma,"abdomen","abdomen",Abdomen/Abdominal wall
 Bone/Soft tissue,Sarcoma,"abdomen","mass para iliacal left",Abdomen/Abdominal wall
-Bone/Soft tissue,Sarcoma,"abdomen","suprapubic left paramedian",Abdomen/Abdominal wall
 Bone/Soft tissue,Sarcoma,"abdominal wall","abdominal wall right lower abdomen",Abdomen/Abdominal wall
 Bone/Soft tissue,Sarcoma,"adrenal gland","left",Adrenal gland
 Bone/Soft tissue,Sarcoma,"bone","lesion left collum femoris",Bone
 Bone/Soft tissue,Sarcoma,"bone","os pubis",Bone
-Bone/Soft tissue,Sarcoma,"breast","left breast",Breast
 Bone/Soft tissue,Sarcoma,"chest wall","rib right",Bone
 Bone/Soft tissue,Sarcoma,"cutaneous","left upper leg",(Sub)cutane
 Bone/Soft tissue,Sarcoma,"fibrosarcoma","right groin; m. rectus femoris",Muscle
@@ -130,19 +115,14 @@ Bone/Soft tissue,Sarcoma,"laesie level costa 9","left",Bone
 Bone/Soft tissue,Sarcoma,"liver","left lob",Liver
 Bone/Soft tissue,Sarcoma,"liver","left lobe",Liver
 Bone/Soft tissue,Sarcoma,"liver","metastasis",Liver
-Bone/Soft tissue,Sarcoma,"liver","right liver segment 8",Liver
 Bone/Soft tissue,Sarcoma,"liver","segment 3",Liver
-Bone/Soft tissue,Sarcoma,"liver","segment 4 b",Liver
 Bone/Soft tissue,Sarcoma,"liver","segment 6",Liver
 Bone/Soft tissue,Sarcoma,"lung","bronchus left anterior/ left lower lobe",Lung
-Bone/Soft tissue,Sarcoma,"lung","left lower lobe",Lung
 Bone/Soft tissue,Sarcoma,"lung","right lower lobe",Lung
 Bone/Soft tissue,Sarcoma,"lung","right pleural lesion",Lung
-Bone/Soft tissue,Sarcoma,"lung","right upper lobe",Lung
 Bone/Soft tissue,Sarcoma,"lymph node","left inguinal",Lymph node
 Bone/Soft tissue,Sarcoma,"muscle","m. erector spinae l.",Muscle
 Bone/Soft tissue,Sarcoma,"occiput","metastasis",Bone
-Bone/Soft tissue,Sarcoma,"omentum","frontal abdominal wall",Peritoneum/Omentum
 Bone/Soft tissue,Sarcoma,"palatum molle","palatum molle",Head and neck
 Bone/Soft tissue,Sarcoma,"peritoneum","kidney",Peritoneum/Omentum
 Bone/Soft tissue,Sarcoma,"peritoneum","na",Peritoneum/Omentum
@@ -154,9 +134,7 @@ Bone/Soft tissue,Sarcoma,"primary","nose",Bone
 Bone/Soft tissue,Sarcoma,"primary","omental mass, left in lower abdomen",Peritoneum/Omentum
 Bone/Soft tissue,Sarcoma,"primary","pelvis",Bone
 Bone/Soft tissue,Sarcoma,"salivary gland","left parotid gland",Head and neck
-Bone/Soft tissue,Sarcoma,"sarcoma","right upper leg",Muscle
 Bone/Soft tissue,Sarcoma,"skin","dorsum right foot (medial, ventral and lateral)",(Sub)cutane
-Bone/Soft tissue,Sarcoma,"skin","left upper leg",(Sub)cutane
 Bone/Soft tissue,Sarcoma,"skin","right mamma",(Sub)cutane
 Bone/Soft tissue,Sarcoma,"soft tissue","abdomen right",Abdomen/Abdominal wall
 Bone/Soft tissue,Sarcoma,"soft tissue","abdomen, right side",Abdomen/Abdominal wall
@@ -164,11 +142,10 @@ Bone/Soft tissue,Sarcoma,"soft tissue","dorsal right upper leg",Muscle
 Bone/Soft tissue,Sarcoma,"soft tissue","prepubis",Bone
 Bone/Soft tissue,Sarcoma,"soft tissue","right hemithorax",Thorax/Thorax wall
 Bone/Soft tissue,Sarcoma,"soft tissue","right leg",Muscle
-Bone/Soft tissue,Sarcoma,"subcateneous","right buttocks",(Sub)cutane
-Bone/Soft tissue,Sarcoma,"thorax wall","left",Thorax/Thorax wall
 Breast,ER-negative/HER2-positive,"axilla","right",Lymph node
 Breast,ER-negative/HER2-positive,"bone","acetabulum right",Bone
 Breast,ER-negative/HER2-positive,"bone","lesion buttock left",Bone
+Breast,ER-negative/HER2-positive,"bone","os ileum left",Bone
 Breast,ER-negative/HER2-positive,"brain","left frontal",CNS
 Breast,ER-negative/HER2-positive,"hypo-echogenic mass chest wall","left",Thorax/Thorax wall
 Breast,ER-negative/HER2-positive,"liver","left lobe",Liver
@@ -179,6 +156,7 @@ Breast,ER-negative/HER2-positive,"liver","segment 4",Liver
 Breast,ER-negative/HER2-positive,"liver","segment 6",Liver
 Breast,ER-negative/HER2-positive,"liver","segment vi",Liver
 Breast,ER-negative/HER2-positive,"liver","ventral left liver lobe",Liver
+Breast,ER-negative/HER2-positive,"lung","middle lob",Lung
 Breast,ER-negative/HER2-positive,"lung","right lower lobe",Lung
 Breast,ER-negative/HER2-positive,"lymph node","axilla left",Lymph node
 Breast,ER-negative/HER2-positive,"lymph node","axilla right",Lymph node
@@ -209,14 +187,12 @@ Breast,ER-positive/HER2-negative,"bone","costa 8 right",Bone
 Breast,ER-positive/HER2-negative,"bone","dorsal os ileum right",Bone
 Breast,ER-positive/HER2-negative,"bone","femur right",Bone
 Breast,ER-positive/HER2-negative,"bone","ileum",Bone
+Breast,ER-positive/HER2-negative,"bone","left crista iliaca",Bone
 Breast,ER-positive/HER2-negative,"bone","left os ilium",Bone
 Breast,ER-positive/HER2-negative,"bone","metastasis os ileum right",Bone
-Breast,ER-positive/HER2-negative,"bone","null",Bone
 Breast,ER-positive/HER2-negative,"bone","os ileum left",Bone
 Breast,ER-positive/HER2-negative,"bone","os ileum right",Bone
 Breast,ER-positive/HER2-negative,"bone","os ileum sacro iliacaal right",Bone
-Breast,ER-positive/HER2-negative,"bone","os ilium left",Bone
-Breast,ER-positive/HER2-negative,"bone","os ilium",Bone
 Breast,ER-positive/HER2-negative,"bone","os pubis",Bone
 Breast,ER-positive/HER2-negative,"bone","pelvis left",Bone
 Breast,ER-positive/HER2-negative,"bone","pelvis",Bone
@@ -227,9 +203,9 @@ Breast,ER-positive/HER2-negative,"bone","sternum left",Bone
 Breast,ER-positive/HER2-negative,"bone","sternum",Bone
 Breast,ER-positive/HER2-negative,"bone","th 6",Bone
 Breast,ER-positive/HER2-negative,"bone","thwk",Bone
+Breast,ER-positive/HER2-negative,"bone","vertebra lumbal 3",Bone
 Breast,ER-positive/HER2-negative,"bone","vertebrae l5",Bone
 Breast,ER-positive/HER2-negative,"breast left","left breast",Breast
-Breast,ER-positive/HER2-negative,"breast","right breast",Breast
 Breast,ER-positive/HER2-negative,"breast","right side",Breast
 Breast,ER-positive/HER2-negative,"cutane lesion","skin lesion on back",(Sub)cutane
 Breast,ER-positive/HER2-negative,"cutaneous lesions","skin of the head: left occipital-parietal",(Sub)cutane
@@ -254,22 +230,18 @@ Breast,ER-positive/HER2-negative,"liver","left side",Liver
 Breast,ER-positive/HER2-negative,"liver","left upper lobe craniaal",Liver
 Breast,ER-positive/HER2-negative,"liver","left",Liver
 Breast,ER-positive/HER2-negative,"liver","lesion left lever",Liver
-Breast,ER-positive/HER2-negative,"liver","lesion segment 5",Liver
 Breast,ER-positive/HER2-negative,"liver","liver capsula",Liver
 Breast,ER-positive/HER2-negative,"liver","liver left lobe",Liver
 Breast,ER-positive/HER2-negative,"liver","liver metastasis",Liver
 Breast,ER-positive/HER2-negative,"liver","liver nos",Liver
 Breast,ER-positive/HER2-negative,"liver","liver right central",Liver
-Breast,ER-positive/HER2-negative,"liver","liver segment 2",Liver
 Breast,ER-positive/HER2-negative,"liver","liver segment 3",Liver
 Breast,ER-positive/HER2-negative,"liver","liver segment 4b",Liver
 Breast,ER-positive/HER2-negative,"liver","liver",Liver
 Breast,ER-positive/HER2-negative,"liver","livertop",Liver
 Breast,ER-positive/HER2-negative,"liver","metastasis segment v",Liver
 Breast,ER-positive/HER2-negative,"liver","metastasis",Liver
-Breast,ER-positive/HER2-negative,"liver","most ventral left liver lobe",Liver
 Breast,ER-positive/HER2-negative,"liver","not otherwise specified",Liver
-Breast,ER-positive/HER2-negative,"liver","not specfied",Liver
 Breast,ER-positive/HER2-negative,"liver","not specified",Liver
 Breast,ER-positive/HER2-negative,"liver","null",Liver
 Breast,ER-positive/HER2-negative,"liver","r lobe",Liver
@@ -282,13 +254,10 @@ Breast,ER-positive/HER2-negative,"liver","right lob",Liver
 Breast,ER-positive/HER2-negative,"liver","right lobe",Liver
 Breast,ER-positive/HER2-negative,"liver","right lower lobe",Liver
 Breast,ER-positive/HER2-negative,"liver","right upper liver lobe",Liver
-Breast,ER-positive/HER2-negative,"liver","right upper lobe",Liver
 Breast,ER-positive/HER2-negative,"liver","right",Liver
 Breast,ER-positive/HER2-negative,"liver","rigt lob",Liver
 Breast,ER-positive/HER2-negative,"liver","segment 2",Liver
-Breast,ER-positive/HER2-negative,"liver","segment 2/3 ventral",Liver
 Breast,ER-positive/HER2-negative,"liver","segment 2/3",Liver
-Breast,ER-positive/HER2-negative,"liver","segment 2/4",Liver
 Breast,ER-positive/HER2-negative,"liver","segment 3",Liver
 Breast,ER-positive/HER2-negative,"liver","segment 4",Liver
 Breast,ER-positive/HER2-negative,"liver","segment 4a",Liver
@@ -302,8 +271,6 @@ Breast,ER-positive/HER2-negative,"liver","segment 8-4",Liver
 Breast,ER-positive/HER2-negative,"liver","segment 8",Liver
 Breast,ER-positive/HER2-negative,"liver","segment ii",Liver
 Breast,ER-positive/HER2-negative,"liver","segment iv",Liver
-Breast,ER-positive/HER2-negative,"liver","segment l3",Liver
-Breast,ER-positive/HER2-negative,"liver","segment v-vi",Liver
 Breast,ER-positive/HER2-negative,"liver","segment vi",Liver
 Breast,ER-positive/HER2-negative,"liver","segment viii",Liver
 Breast,ER-positive/HER2-negative,"liver","subcapsulair",Liver
@@ -327,37 +294,28 @@ Breast,ER-positive/HER2-negative,"lymph node","left axilla",Lymph node
 Breast,ER-positive/HER2-negative,"lymph node","left axillary",Lymph node
 Breast,ER-positive/HER2-negative,"lymph node","left supraclaviculair",Lymph node
 Breast,ER-positive/HER2-negative,"lymph node","lowest node axilla right side",Lymph node
-Breast,ER-positive/HER2-negative,"lymph node","lymfklier linker axilla",Lymph node
 Breast,ER-positive/HER2-negative,"lymph node","lymphe node axillair left side",Lymph node
 Breast,ER-positive/HER2-negative,"lymph node","neck left",Lymph node
 Breast,ER-positive/HER2-negative,"lymph node","neck right side",Lymph node
 Breast,ER-positive/HER2-negative,"lymph node","neck right",Lymph node
-Breast,ER-positive/HER2-negative,"lymph node","neck, level v, left",Lymph node
 Breast,ER-positive/HER2-negative,"lymph node","neck",Lymph node
 Breast,ER-positive/HER2-negative,"lymph node","peritoneum",Lymph node
-Breast,ER-positive/HER2-negative,"lymph node","retrosternal",Lymph node
 Breast,ER-positive/HER2-negative,"lymph node","right axilla",Lymph node
 Breast,ER-positive/HER2-negative,"lymph node","right axillair",Lymph node
 Breast,ER-positive/HER2-negative,"lymph node","right axillary",Lymph node
 Breast,ER-positive/HER2-negative,"lymph node","right-supraclaviculair",Lymph node
 Breast,ER-positive/HER2-negative,"lymph node","right",Lymph node
 Breast,ER-positive/HER2-negative,"lymph node","subclavicular right",Lymph node
-Breast,ER-positive/HER2-negative,"lymph node","supraclavicula right",Lymph node
-Breast,ER-positive/HER2-negative,"lymph node","supraclavicula",Lymph node
 Breast,ER-positive/HER2-negative,"lymph node","supraclaviculair right",Lymph node
 Breast,ER-positive/HER2-negative,"lymph node","supraclaviculair",Lymph node
 Breast,ER-positive/HER2-negative,"lymph node","supraclavicular right side",Lymph node
-Breast,ER-positive/HER2-negative,"lymph node","supraclavicular",Lymph node
 Breast,ER-positive/HER2-negative,"lymph node","upper arm/chest. not difined left or right",Lymph node
-Breast,ER-positive/HER2-negative,"mamma","left",Breast
-Breast,ER-positive/HER2-negative,"mamma","mamma right",Breast
 Breast,ER-positive/HER2-negative,"mamma","right subcutaneous",Breast
 Breast,ER-positive/HER2-negative,"mass axillary","right",Lymph node
 Breast,ER-positive/HER2-negative,"mass head","frontal subcutis",(Sub)cutane
 Breast,ER-positive/HER2-negative,"mediastinale mass","mediastinale mass",Thorax/Thorax wall
 Breast,ER-positive/HER2-negative,"musculus pectoralis major","right lesion",Muscle
 Breast,ER-positive/HER2-negative,"neck gland","left",Head and neck
-Breast,ER-positive/HER2-negative,"neck","neck",Head and neck
 Breast,ER-positive/HER2-negative,"omental cake","omental cake",Peritoneum/Omentum
 Breast,ER-positive/HER2-negative,"omentum cake","omentum cake right",Peritoneum/Omentum
 Breast,ER-positive/HER2-negative,"parasternaal","parasternal",Lymph node
@@ -370,7 +328,6 @@ Breast,ER-positive/HER2-negative,"primary","breast left",Breast
 Breast,ER-positive/HER2-negative,"primary","breast right",Breast
 Breast,ER-positive/HER2-negative,"primary","breast",Breast
 Breast,ER-positive/HER2-negative,"primary","lateral lower quadrant",Breast
-Breast,ER-positive/HER2-negative,"primary","left breast",Breast
 Breast,ER-positive/HER2-negative,"primary","left lateral",Breast
 Breast,ER-positive/HER2-negative,"primary","left mamma",Breast
 Breast,ER-positive/HER2-negative,"primary","left mammae",Breast
@@ -380,10 +337,7 @@ Breast,ER-positive/HER2-negative,"primary","mamma",Breast
 Breast,ER-positive/HER2-negative,"primary","right breast",Breast
 Breast,ER-positive/HER2-negative,"primary","right mamma",Breast
 Breast,ER-positive/HER2-negative,"primary","upper outer quadrant left breast",Breast
-Breast,ER-positive/HER2-negative,"right breast","musculus pectoralis",Muscle
 Breast,ER-positive/HER2-negative,"right shoulder","subcutaneous",(Sub)cutane
-Breast,ER-positive/HER2-negative,"skin lesion","back right",(Sub)cutane
-Breast,ER-positive/HER2-negative,"skin, subcutaneous","lower back left",(Sub)cutane
 Breast,ER-positive/HER2-negative,"skin","cutaneous metastasis under right mamma",Breast
 Breast,ER-positive/HER2-negative,"skin","left breast",Breast
 Breast,ER-positive/HER2-negative,"skin","left mamma",Breast
@@ -392,12 +346,9 @@ Breast,ER-positive/HER2-negative,"skin","r shoulder",(Sub)cutane
 Breast,ER-positive/HER2-negative,"skin","right breast",Breast
 Breast,ER-positive/HER2-negative,"skin","shoulder left",(Sub)cutane
 Breast,ER-positive/HER2-negative,"skin","skin lesion between mammae",(Sub)cutane
-Breast,ER-positive/HER2-negative,"skin","skin neck",(Sub)cutane
-Breast,ER-positive/HER2-negative,"skin","subcutan left mammae",Breast
 Breast,ER-positive/HER2-negative,"skin","subcutaneous back",(Sub)cutane
 Breast,ER-positive/HER2-negative,"skin","trunk dorsal",(Sub)cutane
 Breast,ER-positive/HER2-negative,"skin","under left breast",(Sub)cutane
-Breast,ER-positive/HER2-negative,"skin","upper abdomen",(Sub)cutane
 Breast,ER-positive/HER2-negative,"soft tissue mass near sternum","pre-sternal",Thorax/Thorax wall
 Breast,ER-positive/HER2-negative,"soft tissue","adnex right",Peritoneum/Omentum
 Breast,ER-positive/HER2-negative,"soft tissue","left mamma",Breast
@@ -405,23 +356,16 @@ Breast,ER-positive/HER2-negative,"soft tissue","m. pectoralis",Muscle
 Breast,ER-positive/HER2-negative,"soft tissue","mediastinum",Thorax/Thorax wall
 Breast,ER-positive/HER2-negative,"soft tissue","omental cake",Peritoneum/Omentum
 Breast,ER-positive/HER2-negative,"soft tissue","subcutaneous medianline epigastro",(Sub)cutane
-Breast,ER-positive/HER2-negative,"stomach","mucosa corpus",Stomach
-Breast,ER-positive/HER2-negative,"sub cutaneous","musculus trapezius left",(Sub)cutane
-Breast,ER-positive/HER2-negative,"subcutaneous","abdomen",(Sub)cutane
-Breast,ER-positive/HER2-negative,"subcutaneous","dorsal left",(Sub)cutane
 Breast,ER-positive/HER2-negative,"subcutaneous","right mamma",Breast
 Breast,ER-positive/HER2-negative,"subcutaneous","shoulder left flank",(Sub)cutane
 Breast,ER-positive/HER2-negative,"subcutis","pre sternum",(Sub)cutane
 Breast,ER-positive/HER2-negative,"subcutis","presternal",(Sub)cutane
-Breast,ER-positive/HER2-negative,"thoracic wall","mamma left",Thorax/Thorax wall
-Breast,ER-positive/HER2-negative,"thorax wall","parasternal mass right",Thorax/Thorax wall
 Breast,ER-positive/HER2-negative,"vertebral column","l5",Bone
 Breast,ER-positive/HER2-positive,"abdominal wall","paracolic left side",Abdomen/Abdominal wall
 Breast,ER-positive/HER2-positive,"bone","ileum right site",Bone
 Breast,ER-positive/HER2-positive,"bone","os ileum right",Bone
 Breast,ER-positive/HER2-positive,"bone","rib",Bone
 Breast,ER-positive/HER2-positive,"cutis","right thoracal wall",Thorax/Thorax wall
-Breast,ER-positive/HER2-positive,"head","skin",(Sub)cutane
 Breast,ER-positive/HER2-positive,"lesion glandula parotis","neck",Head and neck
 Breast,ER-positive/HER2-positive,"liver","central in liver",Liver
 Breast,ER-positive/HER2-positive,"liver","central segm ii",Liver
@@ -442,14 +386,11 @@ Breast,ER-positive/HER2-positive,"liver","unknown",Liver
 Breast,ER-positive/HER2-positive,"lung","middle lobe of right lung",Lung
 Breast,ER-positive/HER2-positive,"lung","paravertebral and basal in the right under lob",Lung
 Breast,ER-positive/HER2-positive,"lymph node","axilla left",Lymph node
-Breast,ER-positive/HER2-positive,"lymph node","axilla right",Lymph node
 Breast,ER-positive/HER2-positive,"lymph node","axillair right",Lymph node
-Breast,ER-positive/HER2-positive,"lymph node","axillar right",Lymph node
 Breast,ER-positive/HER2-positive,"lymph node","neck right",Lymph node
 Breast,ER-positive/HER2-positive,"lymph node","neck",Lymph node
 Breast,ER-positive/HER2-positive,"lymph node","peritoneal",Lymph node
 Breast,ER-positive/HER2-positive,"lymph node","right axilla",Lymph node
-Breast,ER-positive/HER2-positive,"lymph node","supraclavicular left",Lymph node
 Breast,ER-positive/HER2-positive,"peritoneum","left paramedian",Peritoneum/Omentum
 Breast,ER-positive/HER2-positive,"peritoneum","omentum",Peritoneum/Omentum
 Breast,ER-positive/HER2-positive,"primary","axilla right",Breast
@@ -459,21 +400,14 @@ Breast,ER-positive/HER2-positive,"primary","cranial right mamma",Breast
 Breast,ER-positive/HER2-positive,"primary","left breast, recidive, is not the primary tumor",Breast
 Breast,ER-positive/HER2-positive,"primary","left central",Breast
 Breast,ER-positive/HER2-positive,"primary","mamma right",Breast
-Breast,ER-positive/HER2-positive,"primary","mamma/axilla right",Breast
-Breast,ER-positive/HER2-positive,"primary","r retro-areolair",Breast
-Breast,ER-positive/HER2-positive,"primary","retro areolair r",Breast
 Breast,ER-positive/HER2-positive,"primary","right mamma",Breast
 Breast,ER-positive/HER2-positive,"skin","right breast",Breast
-Breast,ER-positive/HER2-positive,"skin/ cutaneous","scalp",(Sub)cutane
 Breast,ER-positive/HER2-positive,"soft tissue","at os ileum",Bone
-Breast,ER-positive/HER2-positive,"sternal tissue","parasternal right",Thorax/Thorax wall
 Breast,ER-positive/HER2-positive,"subcutis","left ventral of the manubrium sterni",(Sub)cutane
-Breast,Subtype unknown,"bone","femoral head",Bone
 Breast,Subtype unknown,"bone","l2",Bone
 Breast,Subtype unknown,"bone","left os ilium",Bone
 Breast,Subtype unknown,"bone","os ileum left",Bone
 Breast,Subtype unknown,"bone","sacrum right",Bone
-Breast,Subtype unknown,"bone","vertebra lumbal 3",Bone
 Breast,Subtype unknown,"liver","lateral right",Liver
 Breast,Subtype unknown,"liver","left lobe",Liver
 Breast,Subtype unknown,"liver","left",Liver
@@ -488,12 +422,14 @@ Breast,Subtype unknown,"lung","apex of right lower lobe",Lung
 Breast,Subtype unknown,"lung","paravertebral rul",Lung
 Breast,Subtype unknown,"lymph node","axilla left",Lymph node
 Breast,Subtype unknown,"lymph node","axilla right",Lymph node
+Breast,Subtype unknown,"lymph node","left axillair conglomerate",Lymph node
 Breast,Subtype unknown,"lymph node","supraclaviculair left",Lymph node
 Breast,Subtype unknown,"lymph node","supraclaviculair",Lymph node
-Breast,Subtype unknown,"mamma right","superolateral",Breast
+Breast,Subtype unknown,"lymph node","supraclavicular right",Lymph node
 Breast,Subtype unknown,"primary","left mamma",Breast
 Breast,Subtype unknown,"primary","skin left breast",Breast
 Breast,Subtype unknown,"primary","skin",(Sub)cutane
+Breast,Subtype unknown,"sigmoid","12 cm ab anos",Lymph node
 Breast,Subtype unknown,"skin","retro auriculair",(Sub)cutane
 Breast,Subtype unknown,"skin","right upper arm",(Sub)cutane
 Breast,Subtype unknown,"skin","scalp",(Sub)cutane
@@ -506,8 +442,6 @@ Breast,Triple negative,"axillair","right",Lymph node
 Breast,Triple negative,"bone","left os ileum",Bone
 Breast,Triple negative,"bone","os ilium left",Bone
 Breast,Triple negative,"bone","sacrum",Bone
-Breast,Triple negative,"brain","frontoparietal",CNS
-Breast,Triple negative,"breast","breast lateral",(Sub)cutane
 Breast,Triple negative,"liver","left liver lob",Liver
 Breast,Triple negative,"liver","left liverlob",Liver
 Breast,Triple negative,"liver","left lobe liver",Liver
@@ -529,19 +463,16 @@ Breast,Triple negative,"lymph node","axilla/infraclavicular",Lymph node
 Breast,Triple negative,"lymph node","axillair right",Lymph node
 Breast,Triple negative,"lymph node","inguinal right",Lymph node
 Breast,Triple negative,"lymph node","left axilla",Lymph node
-Breast,Triple negative,"lymph node","left para-iliacal",Lymph node
 Breast,Triple negative,"lymph node","neck left side",Lymph node
 Breast,Triple negative,"lymph node","neck supracla left side",Lymph node
 Breast,Triple negative,"lymph node","neck",Lymph node
 Breast,Triple negative,"lymph node","nek left side",Lymph node
 Breast,Triple negative,"lymph node","periclavicular left",Lymph node
 Breast,Triple negative,"lymph node","right axilla",Lymph node
-Breast,Triple negative,"lymph node","right side",Lymph node
 Breast,Triple negative,"lymph node","supraclaviculair",Lymph node
 Breast,Triple negative,"lymph node","supraclavicular left",Lymph node
 Breast,Triple negative,"mamma","right",Breast
 Breast,Triple negative,"muscle back","musculus erector spinae and gluteus minimus",Muscle
-Breast,Triple negative,"null","breast lateral",Breast
 Breast,Triple negative,"null","mamma left",Breast
 Breast,Triple negative,"null","os ilium right",Bone
 Breast,Triple negative,"omentum","right side",Peritoneum/Omentum
@@ -554,57 +485,12 @@ Breast,Triple negative,"primary","mamma upper lateral quadrant right",Breast
 Breast,Triple negative,"primary","mamma",Breast
 Breast,Triple negative,"primary","right breast",Breast
 Breast,Triple negative,"skin subcutaneous","thoracal central",(Sub)cutane
-Breast,Triple negative,"skin","mammae",Breast
 Breast,Triple negative,"skin","subcutis left mamma",Breast
 Breast,Triple negative,"skin","thorax and scalp",(Sub)cutane
 Breast,Triple negative,"skin/subcutaneous","right chest wall",(Sub)cutane
-Breast,Triple negative,"soft tissue","left axillary",Lymph node
 Breast,Triple negative,"subcutane","uk",(Sub)cutane
 Breast,Triple negative,"thorax wall","right",Thorax/Thorax wall
 Breast,Triple negative,"thorax","parasternal mass",Thorax/Thorax wall
-CNS,Astrocytoma,"primary","supratentiorial right",CNS
-CNS,Glioblastoma Multiforme,"brain left temporal gbm","left side temporal",CNS
-CNS,Glioblastoma Multiforme,"brain","brain",CNS
-CNS,Glioblastoma Multiforme,"brain","frontal left",CNS
-CNS,Glioblastoma Multiforme,"brain","glioma supratentorieel resection",CNS
-CNS,Glioblastoma Multiforme,"brain","left frontal",CNS
-CNS,Glioblastoma Multiforme,"brain","supratentiorieel left",CNS
-CNS,Glioblastoma Multiforme,"brain","supratentorial",CNS
-CNS,Glioblastoma Multiforme,"cns","brain left temporo-medial",CNS
-CNS,Glioblastoma Multiforme,"cns","brain right parieto-occipital",CNS
-CNS,Glioblastoma Multiforme,"cns","brain right side temporal",CNS
-CNS,Glioblastoma Multiforme,"cns","brain right temporal",CNS
-CNS,Glioblastoma Multiforme,"cns","brain right temporoparietal",CNS
-CNS,Glioblastoma Multiforme,"cns","brain, right parasagital",CNS
-CNS,Glioblastoma Multiforme,"cns","brain, right temporal",CNS
-CNS,Glioblastoma Multiforme,"cns","brain",CNS
-CNS,Glioblastoma Multiforme,"cns","braintumor left frontal",CNS
-CNS,Glioblastoma Multiforme,"cns","frontal right",CNS
-CNS,Glioblastoma Multiforme,"cns","gbm right frontal",CNS
-CNS,Glioblastoma Multiforme,"cns","left side temporo-pariëto-occipitaal",CNS
-CNS,Glioblastoma Multiforme,"glioblastoma","brain",CNS
-CNS,Glioblastoma Multiforme,"mass brain","temporal left",CNS
-CNS,Glioblastoma Multiforme,"ovarium","ovarium",Ovary
-CNS,Glioblastoma Multiforme,"primary","brain frontal left",CNS
-CNS,Glioblastoma Multiforme,"primary","brain left temporal",CNS
-CNS,Glioblastoma Multiforme,"primary","brain left",CNS
-CNS,Glioblastoma Multiforme,"primary","brain supratentiorial right",CNS
-CNS,Glioblastoma Multiforme,"primary","brain",CNS
-CNS,Glioblastoma Multiforme,"primary","cerebellum right",CNS
-CNS,Glioblastoma Multiforme,"primary","frontal right",CNS
-CNS,Glioblastoma Multiforme,"primary","left parietal",CNS
-CNS,Glioblastoma Multiforme,"primary","r temporal",CNS
-CNS,Glioblastoma Multiforme,"primary","rechts pariëto-temporaal",CNS
-CNS,Glioblastoma Multiforme,"primary","supratentiorial left",CNS
-CNS,Glioblastoma Multiforme,"primary","supratentorial left",CNS
-CNS,Glioblastoma Multiforme,"primary","supratentorial right temporal",CNS
-CNS,Glioblastoma Multiforme,"primary","supratentorial right",CNS
-CNS,Glioblastoma Multiforme,"primary","supratentorieel right",CNS
-CNS,Glioma,"cns","brain",CNS
-CNS,Glioma,"liver","segment 3/4",Liver
-CNS,Meningeoma,"muscle tissue","glut. max left side",Muscle
-CNS,Oligodendroglioma,"primary","supratentorial left",CNS
-CNS,Other,"skin","upper leg left",(Sub)cutane
 Colon/Rectum,,"abdomen","abdominal wall",Abdomen/Abdominal wall
 Colon/Rectum,,"abdomen","lower right",Abdomen/Abdominal wall
 Colon/Rectum,,"abdomen","omentum",Peritoneum/Omentum
@@ -623,14 +509,12 @@ Colon/Rectum,,"bone","spine th 3",Bone
 Colon/Rectum,,"breast","left breast",Breast
 Colon/Rectum,,"colon","ascanding",Colon/Rectum
 Colon/Rectum,,"cutane","sacraal",(Sub)cutane
-Colon/Rectum,,"cutaneous","laesions",(Sub)cutane
 Colon/Rectum,,"dorsal from vena cava inferior/medial right kidney","pararenal mass",Abdomen/Abdominal wall
 Colon/Rectum,,"glandular package in aorta","glandular package in aorta",Abdomen/Abdominal wall
 Colon/Rectum,,"ilium","right side",Colon/Rectum
 Colon/Rectum,,"ingrinal","left",(Sub)cutane
 Colon/Rectum,,"intra abdominal mass","small pelvic",Abdomen/Abdominal wall
 Colon/Rectum,,"intra-abdominal","mass left paramedian",Abdomen/Abdominal wall
-Colon/Rectum,,"kidney","right adrenal gland",Adrenal gland
 Colon/Rectum,,"liver","beneath the diaphragm, right back side",Liver
 Colon/Rectum,,"liver","caudaal segment 6",Liver
 Colon/Rectum,,"liver","caudal right",Liver
@@ -665,6 +549,7 @@ Colon/Rectum,,"liver","liver tip right",Liver
 Colon/Rectum,,"liver","liver",Liver
 Colon/Rectum,,"liver","lobus caudatus",Liver
 Colon/Rectum,,"liver","location not specified",Liver
+Colon/Rectum,,"liver","location of the tumor",Liver
 Colon/Rectum,,"liver","lok",Liver
 Colon/Rectum,,"liver","metastasis left lobe liver",Liver
 Colon/Rectum,,"liver","metastasis left lobe",Liver
@@ -676,7 +561,6 @@ Colon/Rectum,,"liver","nd",Liver
 Colon/Rectum,,"liver","no specified location",Liver
 Colon/Rectum,,"liver","not decribed in radiology report",Liver
 Colon/Rectum,,"liver","not specified",Liver
-Colon/Rectum,,"liver","null",Liver
 Colon/Rectum,,"liver","omental cake/ peritoneal",Liver
 Colon/Rectum,,"liver","point of the liver right",Liver
 Colon/Rectum,,"liver","primair mass lower abdomen right",Liver
@@ -692,6 +576,7 @@ Colon/Rectum,,"liver","right side",Liver
 Colon/Rectum,,"liver","right site",Liver
 Colon/Rectum,,"liver","right upper lobe",Liver
 Colon/Rectum,,"liver","right",Liver
+Colon/Rectum,,"liver","segm iv",Liver
 Colon/Rectum,,"liver","segment 2 en 3",Liver
 Colon/Rectum,,"liver","segment 2",Liver
 Colon/Rectum,,"liver","segment 3 left lobe",Liver
@@ -709,7 +594,6 @@ Colon/Rectum,,"liver","segment 7",Liver
 Colon/Rectum,,"liver","segment 7/8",Liver
 Colon/Rectum,,"liver","segment 8",Liver
 Colon/Rectum,,"liver","segment iii",Liver
-Colon/Rectum,,"liver","segment iv b",Liver
 Colon/Rectum,,"liver","segment iv",Liver
 Colon/Rectum,,"liver","segment ivb",Liver
 Colon/Rectum,,"liver","segment v",Liver
@@ -717,13 +601,13 @@ Colon/Rectum,,"liver","segment vi",Liver
 Colon/Rectum,,"liver","segment vii",Liver
 Colon/Rectum,,"liver","subxyphoidal",Liver
 Colon/Rectum,,"liver","superficial lesion accessible via right intercostal space",Liver
+Colon/Rectum,,"liver","t17-3332",Liver
 Colon/Rectum,,"liver","unk",Liver
 Colon/Rectum,,"liver","unknown",Liver
 Colon/Rectum,,"liver","ventral , right liver lobe",Liver
 Colon/Rectum,,"liver","ventral left liver lobe",Liver
 Colon/Rectum,,"liver","ventral left",Liver
 Colon/Rectum,,"liver","ventral side of gall bladder bed",Liver
-Colon/Rectum,,"liver","viii",Liver
 Colon/Rectum,,"lung","dorsal rob",Lung
 Colon/Rectum,,"lung","later left lower lobe",Lung
 Colon/Rectum,,"lung","left bronchus/left under lobe",Lung
@@ -752,7 +636,6 @@ Colon/Rectum,,"lymph node","para iliac right",Lymph node
 Colon/Rectum,,"lymph node","parasternaal",Lymph node
 Colon/Rectum,,"lymph node","right groin",Lymph node
 Colon/Rectum,,"lymph node","right inguinal lymph node",Lymph node
-Colon/Rectum,,"lymph node","supraclavicula",Lymph node
 Colon/Rectum,,"lymph node","supraclaviculair",Lymph node
 Colon/Rectum,,"lymph node","supraclavicular lymphnode",Lymph node
 Colon/Rectum,,"lymph node","supraclavicular",Lymph node
@@ -770,10 +653,10 @@ Colon/Rectum,,"peritoneum","abdominal wall at side of laparotomy scar",Peritoneu
 Colon/Rectum,,"peritoneum","abdominal wall",Peritoneum/Omentum
 Colon/Rectum,,"peritoneum","behind rib cartilage",Peritoneum/Omentum
 Colon/Rectum,,"peritoneum","high mesenterial",Peritoneum/Omentum
+Colon/Rectum,,"peritoneum","intra abdominaal tegen diafragma",Peritoneum/Omentum
 Colon/Rectum,,"peritoneum","left flank",Peritoneum/Omentum
 Colon/Rectum,,"peritoneum","lesion metastasis",Peritoneum/Omentum
 Colon/Rectum,,"peritoneum","lower abdomen",Peritoneum/Omentum
-Colon/Rectum,,"peritoneum","null",Peritoneum/Omentum
 Colon/Rectum,,"peritoneum","omentum craniolateral umbilicus",Peritoneum/Omentum
 Colon/Rectum,,"peritoneum","omentum",Peritoneum/Omentum
 Colon/Rectum,,"peritoneum","paramedian",Peritoneum/Omentum
@@ -790,7 +673,6 @@ Colon/Rectum,,"primary","coecum",Colon/Rectum
 Colon/Rectum,,"primary","colon ascendens",Colon/Rectum
 Colon/Rectum,,"primary","colon descendens",Colon/Rectum
 Colon/Rectum,,"primary","colon",Colon/Rectum
-Colon/Rectum,,"primary","rectosigmoid",Colon/Rectum
 Colon/Rectum,,"primary","rectum",Colon/Rectum
 Colon/Rectum,,"primary","sigmoid",Colon/Rectum
 Colon/Rectum,,"rectum","na",Colon/Rectum
@@ -818,7 +700,6 @@ Colon/Rectum,Anal,"epigastrium","sub-cutaneous",(Sub)cutane
 Colon/Rectum,Anal,"liver","caudal right liver lobe",Liver
 Colon/Rectum,Anal,"liver","left liver lob",Liver
 Colon/Rectum,Anal,"liver","left lobe",Liver
-Colon/Rectum,Anal,"liver","metastase segment 6",Liver
 Colon/Rectum,Anal,"liver","r. lobe",Liver
 Colon/Rectum,Anal,"liver","right lobe",Liver
 Colon/Rectum,Anal,"lung","right upperlob",Lung
@@ -833,6 +714,7 @@ Colon/Rectum,Sigmoid,"liver","left lobe",Liver
 CUP,,"abdomen","omentum",Peritoneum/Omentum
 CUP,,"abdominal wall","right below abdominal wall",Abdomen/Abdominal wall
 CUP,,"axilla","right",Lymph node
+CUP,,"bone","costa 3en 4 rechts",Bone
 CUP,,"bone","femur",Bone
 CUP,,"bone","rib rechts hoog-thoracaal",Bone
 CUP,,"bone","right femoral head",Bone
@@ -848,6 +730,7 @@ CUP,,"liver","liver",Liver
 CUP,,"liver","r lobe",Liver
 CUP,,"liver","right hemi-liver",Liver
 CUP,,"liver","right liverlobe",Liver
+CUP,,"liver","right lob",Liver
 CUP,,"liver","right lobe",Liver
 CUP,,"liver","segm 4",Liver
 CUP,,"liver","segment 2/3",Liver
@@ -858,6 +741,7 @@ CUP,,"liver","unknown",Liver
 CUP,,"lung","anterior mediastinum",Abdomen/Abdominal wall
 CUP,,"lymph node","armpit",Lymph node
 CUP,,"lymph node","groin left",Lymph node
+CUP,,"lymph node","lumph node left axilla",Lymph node
 CUP,,"lymph node","right axilla",Lymph node
 CUP,,"lymph node","right inguinal",Lymph node
 CUP,,"lymph node","right",Lymph node
@@ -868,7 +752,7 @@ CUP,,"omentum","omentum right",Peritoneum/Omentum
 CUP,,"parafalciene lesion","segment ivb",CNS
 CUP,,"primary","mediastinum",Thorax/Thorax wall
 CUP,,"primary","vulva",Uterus
-CUP,,"thyroid","left thyroid lobe",Thyroid
+CUP,,"subcutis","back",(Sub)cutane
 CUP,,"tumor near clavicula medial left","tumor near clavicula medial lef",Thorax/Thorax wall
 CUP,,"vaginal","vaginal",Vagina
 CUP,Esophagus or Stomach,"primary","stomach",Stomach
@@ -899,7 +783,6 @@ Esophagus,,"liver","liver nos",Liver
 Esophagus,,"liver","liver",Liver
 Esophagus,,"liver","metastasis",Liver
 Esophagus,,"liver","not specified",Liver
-Esophagus,,"liver","null",Liver
 Esophagus,,"liver","right liver lob",Liver
 Esophagus,,"liver","right liver lobe",Liver
 Esophagus,,"liver","right lob (segment 7)",Liver
@@ -917,6 +800,7 @@ Esophagus,,"liver","superficial lesion",Liver
 Esophagus,,"liver","transcostal",Liver
 Esophagus,,"liver","unknown",Liver
 Esophagus,,"liver","ventral",Liver
+Esophagus,,"lung","lesion",Lung
 Esophagus,,"lung","right pleura basoventral",Lung
 Esophagus,,"lung","subpleural node",Lung
 Esophagus,,"lung","thorax wall",Thorax/Thorax wall
@@ -941,7 +825,6 @@ Esophagus,,"paravertebral","paravertebral th11",Thorax/Thorax wall
 Esophagus,,"primary","distal oesophagus",Esophagus
 Esophagus,,"primary","esophagus",Esophagus
 Esophagus,,"primary","oesophagus",Esophagus
-Esophagus,,"primary","prox stomach carcinoma",Esophagus
 Esophagus,,"retroperitoneal mass","para-aortal left",Abdomen/Abdominal wall
 Esophagus,,"skin","metastasis",(Sub)cutane
 Esophagus,,"soft tissue","neck left",Head and neck
@@ -951,6 +834,7 @@ Esophagus,Other,"liver","ventral segment 4b",Liver
 Head and neck,,"lymph node","para-iliacal left",Lymph node
 Head and neck,Hypopharyngeal,"liver","ventral right lobe",Liver
 Head and neck,Hypopharyngeal,"lung","right upper lobe",Lung
+Head and neck,Hypopharyngeal,"lymph node","skin",Lymph node
 Head and neck,Hypopharyngeal,"neck lesion","neck left",Head and neck
 Head and neck,Hypopharyngeal,"primary","hypopharynx",Head and neck
 Head and neck,Laryngeal,"lymph node","supraclavicular left",Lymph node
@@ -984,26 +868,21 @@ Head and neck,Salivary Gland,"liver","4b/5",Liver
 Head and neck,Salivary Gland,"liver","left liver lobe",Liver
 Head and neck,Salivary Gland,"liver","null",Liver
 Head and neck,Salivary Gland,"liver","segment 2/3",Liver
-Head and neck,Salivary Gland,"liver","segment 6",Liver
 Head and neck,Salivary Gland,"lung","lung",Lung
 Head and neck,Salivary Gland,"lung","paramediastinal",Lung
-Head and neck,Salivary Gland,"lymph node","axilla left",Lymph node
 Head and neck,Salivary Gland,"lymph node","left axilla",Lymph node
 Head and neck,Salivary Gland,"lymph node","left supraclavicular",Lymph node
 Head and neck,Salivary Gland,"lymph node","station 7",Lymph node
 Head and neck,Salivary Gland,"mandible","submandibular mass",Head and neck
 Head and neck,Salivary Gland,"muscle","gluteus",Muscle
-Head and neck,Salivary Gland,"primary","mastoid area (post surgical area)",Head and neck
 Head and neck,Salivary Gland,"primary","right parotis",Head and neck
 Head and neck,Salivary Gland,"primary","sinus sphenoidalis",Head and Neck
 Head and neck,Tongue,"lymph node","neck, right side",Lymph node
 Head and neck,Tongue,"skin","neck left",(Sub)cutane
 Kidney,,"lymph node","inguinaal lilicaal",Lymph node
-Kidney,Renal Cell,"abdomen","left",Abdomen/Abdominal wall
 Kidney,Renal Cell,"abdominal wall","left lateral",Abdomen/Abdominal wall
 Kidney,Renal Cell,"abdominal wall","left",Abdomen/Abdominal wall
 Kidney,Renal Cell,"adrenal gland","adrenal left",Adrenal gland
-Kidney,Renal Cell,"adrenal gland","left adrenal gland",Adrenal gland
 Kidney,Renal Cell,"bone","l4",Bone
 Kidney,Renal Cell,"bone","os ileum lesion left",Bone
 Kidney,Renal Cell,"bone","os ilium",Bone
@@ -1012,21 +891,17 @@ Kidney,Renal Cell,"bone","scapula",Bone
 Kidney,Renal Cell,"bone","tibia left",Bone
 Kidney,Renal Cell,"duodenum","duodenum (uncertain if lymphnodes)",Lymph node
 Kidney,Renal Cell,"kidney","cranial side left kdiney",Kidney
-Kidney,Renal Cell,"kidney","kidney 18g biopt",Kidney
 Kidney,Renal Cell,"kidney","left",Kidney
 Kidney,Renal Cell,"kidney","lesion",Kidney
 Kidney,Renal Cell,"kidney","lower pole left kidney",Kidney
 Kidney,Renal Cell,"kidney","lymph node mediastinum",Kidney
-Kidney,Renal Cell,"kidney","onderpool rechternier",Kidney
 Kidney,Renal Cell,"kidney","peri renal tissue",Kidney
 Kidney,Renal Cell,"kidney","perirenal tissue",Kidney
 Kidney,Renal Cell,"kidney","right kidney",Kidney
 Kidney,Renal Cell,"kidney","right upper pole",Kidney
 Kidney,Renal Cell,"kidney","right",Kidney
 Kidney,Renal Cell,"kidney","tumormass right kidney",Kidney
-Kidney,Renal Cell,"liver","liver",Liver
 Kidney,Renal Cell,"liver","most ventral situated largest lesion",Liver
-Kidney,Renal Cell,"liver","right liver lobe",Liver
 Kidney,Renal Cell,"liver","right lobe",Liver
 Kidney,Renal Cell,"liver","right",Liver
 Kidney,Renal Cell,"liver","segment 3",Liver
@@ -1039,34 +914,25 @@ Kidney,Renal Cell,"lymph node","abdomen",Lymph node
 Kidney,Renal Cell,"lymph node","left level v",Lymph node
 Kidney,Renal Cell,"lymph node","left side neck",Lymph node
 Kidney,Renal Cell,"lymph node","mediastinal",Lymph node
-Kidney,Renal Cell,"lymph node","neck",Lymph node
 Kidney,Renal Cell,"lymph node","para aorthal",Lymph node
 Kidney,Renal Cell,"lymph node","para-aortaal",Lymph node
-Kidney,Renal Cell,"lymph node","para-aortal",Lymph node
 Kidney,Renal Cell,"lymph node","paravertebral left",Lymph node
-Kidney,Renal Cell,"lymph node","retrocaval",Lymph node
-Kidney,Renal Cell,"lymph node","right para-aortic",Lymph node
 Kidney,Renal Cell,"lymph node","supra clavicular",Lymph node
 Kidney,Renal Cell,"lymph node","supraclavicular lymph node",Lymph node
 Kidney,Renal Cell,"muscle dorsum","paravertebral t 12 right",Muscle
 Kidney,Renal Cell,"muscle","right upper leg",Muscle
-Kidney,Renal Cell,"musculus psoas","right",Muscle
 Kidney,Renal Cell,"null","adrenal",Adrenal gland
 Kidney,Renal Cell,"null","lesion under skin, abdominal",(Sub)cutane
 Kidney,Renal Cell,"null","muscle left leg",Muscle
 Kidney,Renal Cell,"null","skull",Bone
 Kidney,Renal Cell,"para-vertebral mass","para-vertebral right",Bone
 Kidney,Renal Cell,"primary","kidney left",Kidney
-Kidney,Renal Cell,"primary","left kidney",Kidney
 Kidney,Renal Cell,"primary","r kidney",Kidney
 Kidney,Renal Cell,"primary","right kidned",Kidney
 Kidney,Renal Cell,"primary","right kidney",Kidney
 Kidney,Renal Cell,"retro-peritoneal","left",Abdomen/Abdominal wall
-Kidney,Renal Cell,"skin/subcutaneous","thoracic wall right",Thorax/Thorax wall
-Kidney,Renal Cell,"skin/subcutaneous","unknown",(Sub)cutane
 Kidney,Renal Cell,"soft tissue mass sacrum","sacrum",Bone
 Kidney,Renal Cell,"soft tissue mass","os pubic bone right",Bone
-Kidney,Renal Cell,"soft tissue","lateral left aorta",Thorax/Thorax wall
 Kidney,Renal Cell,"soft tissue","pelvis right",Bone
 Kidney,Renal Cell,"sternum","mass retro-sternal",Bone
 Kidney,Renal Cell,"sternum","mass surrounding sternum",Bone
@@ -1074,18 +940,12 @@ Kidney,Renal Cell,"thorax","pleural lesion thoracic wall right side",Thorax/Thor
 Kidney,Renal Cell,"thorax","subcutus right laterodorsaal",(Sub)cutane
 Kidney,Renal Cell,"uterus","uterus and adnexen",Uterus
 Liver,,"abdomen muscle","musculus obliques abdominis right",Muscle
-Liver,,"bone","os ilium right",Bone
 Liver,,"liver","left liver lobe",Liver
 Liver,,"liver","left lobe",Liver
 Liver,,"liver","not specified",Liver
 Liver,,"liver","right liver lobe",Liver
-Liver,,"liver","right liver lober",Liver
 Liver,,"liver","right liverlobe",Liver
-Liver,,"liver","segment 7",Liver
-Liver,,"liver","segment iv",Liver
-Liver,,"liver","segment vi",Liver
 Liver,,"liver","uk",Liver
-Liver,,"liver","unknown",Liver
 Liver,,"lung","right lung",Lung
 Liver,,"peritoneum","omental lesion",Peritoneum/Omentum
 Liver,,"soft tissue","right flank",Abdomen/Abdominal wall
@@ -1097,7 +957,6 @@ Liver,Hepatocellular,"liver","liver caudal",Liver
 Liver,Hepatocellular,"liver","liver lobe left",Liver
 Liver,Hepatocellular,"liver","liver",Liver
 Liver,Hepatocellular,"liver","right liver lobe",Liver
-Liver,Hepatocellular,"liver","right lobe",Liver
 Liver,Hepatocellular,"liver","right side",Liver
 Liver,Hepatocellular,"liver","segement 5",Liver
 Liver,Hepatocellular,"liver","segment 2/3",Liver
@@ -1108,18 +967,14 @@ Liver,Hepatocellular,"liver","segment 8/5",Liver
 Liver,Hepatocellular,"lung","paracardiale lymph node parasternaal",Lymph node
 Liver,Hepatocellular,"lung","wig excision left",Liver
 Liver,Hepatocellular,"paravertebrale massa","right flank",Liver
-Liver,Hepatocellular,"primary","central tumor lesion liver",Liver
 Liver,Other,"liver","liver",Liver
 Lung,Adenocarcinoom,"liver","left lobe",Liver
 Lung,Bronchus,"soft tissue","pectoralis major right",Muscle
 Lung,NET,"liver","left liver lobe",Liver
 Lung,NET,"liver","not specified",Liver
-Lung,NET,"liver","segment 4",Liver
-Lung,NET,"lung","supra lobe right",Lung
 Lung,NET,"pleural lesion","right flank",Lung
 Lung,Non-Small Cell,"adrenal gland","right",Adrenal gland
 Lung,Non-Small Cell,"bone","costa 8 right lateral",Bone
-Lung,Non-Small Cell,"bone","costae 3",Bone
 Lung,Non-Small Cell,"bone","l4",Bone
 Lung,Non-Small Cell,"bone","os ilium right",Bone
 Lung,Non-Small Cell,"bone","os sacrum",Bone
@@ -1128,8 +983,6 @@ Lung,Non-Small Cell,"bronchus","right",Lung
 Lung,Non-Small Cell,"cns","parietal right",CNS
 Lung,Non-Small Cell,"kidney","left",Kidney
 Lung,Non-Small Cell,"kidney","lower pool right kidney",Kidney
-Lung,Non-Small Cell,"left mamma","left mamma",Breast
-Lung,Non-Small Cell,"liver","between segment iv - vi",Liver
 Lung,Non-Small Cell,"liver","lateral",Liver
 Lung,Non-Small Cell,"liver","left lobe",Liver
 Lung,Non-Small Cell,"liver","left part of liver",Liver
@@ -1145,16 +998,14 @@ Lung,Non-Small Cell,"liver","segment 4b",Liver
 Lung,Non-Small Cell,"liver","segment 4b/5",Liver
 Lung,Non-Small Cell,"liver","segment 5",Liver
 Lung,Non-Small Cell,"liver","segment 5/6",Liver
-Lung,Non-Small Cell,"liver","segment 6",Liver
 Lung,Non-Small Cell,"liver","segment 7",Liver
 Lung,Non-Small Cell,"liver","segment 8",Liver
-Lung,Non-Small Cell,"liver","subcapsular lesion right lobe",Liver
-Lung,Non-Small Cell,"liver","unknown",Liver
 Lung,Non-Small Cell,"lung",",transthoracaal, right basal from dorsal",Lung
 Lung,Non-Small Cell,"lung","apex of right lower lobe",Lung
 Lung,Non-Small Cell,"lung","between left atrium and aorta",Lung
 Lung,Non-Small Cell,"lung","bronchus mucous membrane",Lung
 Lung,Non-Small Cell,"lung","caviterende leasie right lung",Lung
+Lung,Non-Small Cell,"lung","dorsal in right upper lobe",Lung
 Lung,Non-Small Cell,"lung","dorsal paravertebraal left lower lobe",Lung
 Lung,Non-Small Cell,"lung","endobrochial",Lung
 Lung,Non-Small Cell,"lung","intercostal 5-6",Lung
@@ -1165,10 +1016,9 @@ Lung,Non-Small Cell,"lung","left upper lung",Lung
 Lung,Non-Small Cell,"lung","lesion right lower lobe",Lung
 Lung,Non-Small Cell,"lung","lesion",Lung
 Lung,Non-Small Cell,"lung","linker onderkwab",Lung
+Lung,Non-Small Cell,"lung","lower lobe right",Lung
 Lung,Non-Small Cell,"lung","lung (lok paracardial)",Lung
 Lung,Non-Small Cell,"lung","middenkwab",Lung
-Lung,Non-Small Cell,"lung","null",Lung
-Lung,Non-Small Cell,"lung","pleural lesion, right dorsal",Lung
 Lung,Non-Small Cell,"lung","pleural mass left",Lung
 Lung,Non-Small Cell,"lung","pulmonary lesion left basal",Lung
 Lung,Non-Small Cell,"lung","right lower lobe apical",Lung
@@ -1185,23 +1035,20 @@ Lung,Non-Small Cell,"lung","upper lobe",Lung
 Lung,Non-Small Cell,"lymph node","axilla left subpectoral",Lymph node
 Lung,Non-Small Cell,"lymph node","axilla left",Lymph node
 Lung,Non-Small Cell,"lymph node","axilla",Lymph node
-Lung,Non-Small Cell,"lymph node","axillar right",Lymph node
 Lung,Non-Small Cell,"lymph node","chest",Lymph node
 Lung,Non-Small Cell,"lymph node","left axilla",Lymph node
+Lung,Non-Small Cell,"lymph node","left groin",Lymph node
 Lung,Non-Small Cell,"lymph node","left inguinal",Lymph node
 Lung,Non-Small Cell,"lymph node","left upperleg",Lymph node
 Lung,Non-Small Cell,"lymph node","left, subcutaneous, at the transition point between station 2 and station 5",Lymph node
 Lung,Non-Small Cell,"lymph node","low cervical left",Lymph node
 Lung,Non-Small Cell,"lymph node","lung",Lymph node
 Lung,Non-Small Cell,"lymph node","mediastinum",Lymph node
-Lung,Non-Small Cell,"lymph node","neck - right side",Lymph node
 Lung,Non-Small Cell,"lymph node","neck left",Lymph node
 Lung,Non-Small Cell,"lymph node","neck",Lymph node
 Lung,Non-Small Cell,"lymph node","retroclavicular right",Lymph node
 Lung,Non-Small Cell,"lymph node","right arm pit",Lymph node
-Lung,Non-Small Cell,"lymph node","right axilla",Lymph node
 Lung,Non-Small Cell,"lymph node","right hilair",Lymph node
-Lung,Non-Small Cell,"lymph node","right infra clavicular",Lymph node
 Lung,Non-Small Cell,"lymph node","right neck",Lymph node
 Lung,Non-Small Cell,"lymph node","right shoulder",Lymph node
 Lung,Non-Small Cell,"lymph node","right supraclavicular",Lymph node
@@ -1221,6 +1068,7 @@ Lung,Non-Small Cell,"primary","left dorso basal",Lung
 Lung,Non-Small Cell,"primary","left lung",Lung
 Lung,Non-Small Cell,"primary","lung: right upper lobe",Lung
 Lung,Non-Small Cell,"primary","lung",Lung
+Lung,Non-Small Cell,"primary","mass right upper lobe",Lung
 Lung,Non-Small Cell,"primary","paracardial",Lung
 Lung,Non-Small Cell,"shoulder blade","left dorsal",Bone
 Lung,Non-Small Cell,"skin","skin",(Sub)cutane
@@ -1255,6 +1103,7 @@ Lung,Small Cell,"lung","right upper lobe",Lung
 Lung,Small Cell,"lymph node","axilla leteral intramammair right",Lymph node
 Lung,Small Cell,"lymph node","left inguinal",Lymph node
 Lung,Small Cell,"lymph node","level iv right neck",Lymph node
+Lung,Small Cell,"lymph node","neck",Lymph node
 Lung,Small Cell,"lymph node","retrocrural right",Lymph node
 Lung,Small Cell,"lymph node","right pretracheaal",Lymph node
 Lung,Small Cell,"lymph node","supraclaviculair right",Lymph node
@@ -1269,7 +1118,6 @@ Lymphoid,Hodgkin lymphoma,"liver","segment 6",Liver
 Lymphoid,Hodgkin lymphoma,"lymph node","axillair right",Lymph node
 Lymphoid,Hodgkin lymphoma,"lymph node","inguinal lymph node left",Lymph node
 Lymphoid,Non-Hodgkin lymphoma,"lymph node","inguinal right",Lymph node
-Lymphoid,Non-Hodgkin lymphoma,"lymph node","null",Lymph node
 Lymphoid,Non-Hodgkin lymphoma,"nasal cavity","nasal cavity",Head and neck
 Lymphoid,Non-Hodgkin lymphoma,"peritoneum","pancreas",Peritoneum/Omentum
 Lymphoid,Non-Hodgkin lymphoma,"small pelvis","left site",Bone
@@ -1280,7 +1128,7 @@ Lymphoid,Thymic carcinoma,"thorax wall","costa 6 left ventral",Thorax/Thorax wal
 Mesothelioma,,"epicardial","left",Lung
 Mesothelioma,,"lung","left upper lobe",Lung
 Mesothelioma,,"lung","pleura",Lung
-Mesothelioma,,"lung","right apical",Lung
+Mesothelioma,,"lung","right",Lung
 Mesothelioma,,"omentum","omentum",Peritoneum/Omentum
 Mesothelioma,,"peritoneum","peritoneum",Peritoneum/Omentum
 Mesothelioma,,"pleura","right paracardial",Lung
@@ -1292,10 +1140,49 @@ Mesothelioma,,"primary","plaural mass right craniodorsal",Lung
 Mesothelioma,,"soft tissue","paravertebral",Lung
 Mesothelioma,,"soft tissue","thorax wall",Lung
 Mesothelioma,Pericarditis carcinomatosa,"lung","null",Lung
-NULL,NULL,"bone","costa 3en 4 rechts",Bone
-NULL,NULL,"liver","null",Liver
-NULL,NULL,"lymph node","supraclavicular right",Lymph node
-NULL,NULL,"null","brain; left parietal",CNS
+Nervous system,,"skin","upper leg left",(Sub)cutane
+Nervous system,Astrocytoma,"primary","supratentiorial right",CNS
+Nervous system,Glioblastoma Multiforme,"brain left temporal gbm","left side temporal",CNS
+Nervous system,Glioblastoma Multiforme,"brain","brain",CNS
+Nervous system,Glioblastoma Multiforme,"brain","frontal left",CNS
+Nervous system,Glioblastoma Multiforme,"brain","glioma supratentorieel resection",CNS
+Nervous system,Glioblastoma Multiforme,"brain","left frontal",CNS
+Nervous system,Glioblastoma Multiforme,"brain","supratentiorieel left",CNS
+Nervous system,Glioblastoma Multiforme,"brain","supratentorial",CNS
+Nervous system,Glioblastoma Multiforme,"cns","brain left temporo-medial",CNS
+Nervous system,Glioblastoma Multiforme,"cns","brain right parieto-occipital",CNS
+Nervous system,Glioblastoma Multiforme,"cns","brain right side temporal",CNS
+Nervous system,Glioblastoma Multiforme,"cns","brain right temporal",CNS
+Nervous system,Glioblastoma Multiforme,"cns","brain right temporoparietal",CNS
+Nervous system,Glioblastoma Multiforme,"cns","brain, right parasagital",CNS
+Nervous system,Glioblastoma Multiforme,"cns","brain, right temporal",CNS
+Nervous system,Glioblastoma Multiforme,"cns","brain",CNS
+Nervous system,Glioblastoma Multiforme,"cns","braintumor left frontal",CNS
+Nervous system,Glioblastoma Multiforme,"cns","frontal right",CNS
+Nervous system,Glioblastoma Multiforme,"cns","gbm right frontal",CNS
+Nervous system,Glioblastoma Multiforme,"cns","left side temporo-pariëto-occipitaal",CNS
+Nervous system,Glioblastoma Multiforme,"glioblastoma","brain",CNS
+Nervous system,Glioblastoma Multiforme,"mass brain","temporal left",CNS
+Nervous system,Glioblastoma Multiforme,"ovarium","ovarium",Ovary
+Nervous system,Glioblastoma Multiforme,"primary","brain frontal left",CNS
+Nervous system,Glioblastoma Multiforme,"primary","brain left temporal",CNS
+Nervous system,Glioblastoma Multiforme,"primary","brain left",CNS
+Nervous system,Glioblastoma Multiforme,"primary","brain supratentiorial right",CNS
+Nervous system,Glioblastoma Multiforme,"primary","brain",CNS
+Nervous system,Glioblastoma Multiforme,"primary","cerebellum right",CNS
+Nervous system,Glioblastoma Multiforme,"primary","frontal right",CNS
+Nervous system,Glioblastoma Multiforme,"primary","left parietal",CNS
+Nervous system,Glioblastoma Multiforme,"primary","r temporal",CNS
+Nervous system,Glioblastoma Multiforme,"primary","rechts pariëto-temporaal",CNS
+Nervous system,Glioblastoma Multiforme,"primary","supratentiorial left",CNS
+Nervous system,Glioblastoma Multiforme,"primary","supratentorial left",CNS
+Nervous system,Glioblastoma Multiforme,"primary","supratentorial right temporal",CNS
+Nervous system,Glioblastoma Multiforme,"primary","supratentorial right",CNS
+Nervous system,Glioblastoma Multiforme,"primary","supratentorieel right",CNS
+Nervous system,Glioma,"cns","brain",CNS
+Nervous system,Glioma,"liver","segment 3/4",Liver
+Nervous system,Meningeoma,"muscle tissue","glut. max left side",Muscle
+Nervous system,Oligodendroglioma,"primary","supratentorial left",CNS
 Other,Adrenal,"liver","right lobe",Liver
 Other,Adrenal,"primary","lesion",Adrenal gland
 Other,Double primary,"lymph node","axillair",Lymph node
@@ -1305,7 +1192,6 @@ Other,Myeloid: Multiple Myeloma,"bone","unknown",Bone
 Other,NET,"liver","null",Liver
 Other,NET,"liver","right liver",Liver
 Other,NET,"lung","right mid lobe",Lung
-Other,NET,"primary","colon",Colon/Rectum
 Other,NET,"subcutaneous","right axilla",(Sub)cutane
 Other,NET: large cell,"liver","left liver lobe",Liver
 Other,NET: lung or small intenstine,"liver","left liver lobe",Liver
@@ -1321,6 +1207,7 @@ Other,Testis,"bone","os ileum right",Bone
 Other,Testis,"bone","sacrum left",Bone
 Other,Testis,"bone","sacrum",Bone
 Other,Testis,"lung","right under lobe",Thorax/Thorax wall
+Other,Testis,"peritoneum","para-aortic massa",Peritoneum/Omentum
 Other,Testis,"peritoneum","peritonial left abdomen",Peritoneum/Omentum
 Other,Thymic NET,"pleural","left pleural intercostal",Lung
 Other,Thyroid,"abdomen","left",Abdomen/Abdominal wall
@@ -1355,7 +1242,6 @@ Ovary,,"liver","right, cranial",Liver
 Ovary,,"liver","segment 5",Liver
 Ovary,,"liver","segment 6",Liver
 Ovary,,"liver","segment 8",Liver
-Ovary,,"liver","unknown",Liver
 Ovary,,"liver","ventral right lobe",Liver
 Ovary,,"lymph node","axilla left",Lymph node
 Ovary,,"lymph node","axilla right",Lymph node
@@ -1378,10 +1264,10 @@ Ovary,,"mass anterieur","against abdominal wall left of the left liverpoint",Abd
 Ovary,,"nates","right",Abdomen/Abdominal wall
 Ovary,,"null","intraperitoneale deposition left",Peritoneum/Omentum
 Ovary,,"null","near to bladder",Abdomen/Abdominal wall
-Ovary,,"null","omental deposition",Peritoneum/Omentum
 Ovary,,"null","pelvic;abdominal; uterus/rectosigmoid/adnexen",Abdomen/Abdominal wall
 Ovary,,"omentum majum","omentum majum near right diaphragm",Peritoneum/Omentum
 Ovary,,"omentum","metastasis",Peritoneum/Omentum
+Ovary,,"omentum","omental deposition",Peritoneum/Omentum
 Ovary,,"omentum","omentum",Peritoneum/Omentum
 Ovary,,"omentum","paramedian peritoneal",Peritoneum/Omentum
 Ovary,,"ovary","left ovary",Ovary
@@ -1438,7 +1324,6 @@ Pancreas,,"liver","liverlobe left",Liver
 Pancreas,,"liver","lright lobe liver",Liver
 Pancreas,,"liver","metastasis segment 3",Liver
 Pancreas,,"liver","metastasis",Liver
-Pancreas,,"liver","not specified",Liver
 Pancreas,,"liver","null",Liver
 Pancreas,,"liver","right hemilever",Liver
 Pancreas,,"liver","right live lobe",Liver
@@ -1449,11 +1334,9 @@ Pancreas,,"liver","right liverlobe",Liver
 Pancreas,,"liver","right lobe liver",Liver
 Pancreas,,"liver","right lobe",Liver
 Pancreas,,"liver","right",Liver
-Pancreas,,"liver","segment 2/3",Liver
 Pancreas,,"liver","segment 2/4",Liver
 Pancreas,,"liver","segment 3",Liver
 Pancreas,,"liver","segment 4",Liver
-Pancreas,,"liver","segment 5",Liver
 Pancreas,,"liver","segment 5/8",Liver
 Pancreas,,"liver","segment 6",Liver
 Pancreas,,"liver","segment 7",Liver
@@ -1466,6 +1349,7 @@ Pancreas,,"lymph node","supraclaviculair left",Lymph node
 Pancreas,,"major duodenal papilla","major duodenal papilla",Small intestine
 Pancreas,,"metastasis pancreascarcinoma","abdominal wall muscus rectus",Abdomen/Abdominal wall
 Pancreas,,"musculus erector truncus spinae","musculus right",Muscle
+Pancreas,,"null","pancreas",Pancreas
 Pancreas,,"oesophagus","laesion",Esophagus
 Pancreas,,"omentum","abnormality lesion",Peritoneum/Omentum
 Pancreas,,"omentum","omentum lesion right",Peritoneum/Omentum
@@ -1482,7 +1366,6 @@ Pancreas,NET,"liver","caudaal right liver lobe",Liver
 Pancreas,NET,"liver","dorsal right lobe",Liver
 Pancreas,NET,"liver","left lobe",Liver
 Pancreas,NET,"liver","liver",Liver
-Pancreas,NET,"liver","metastasis, not specified",Liver
 Pancreas,NET,"liver","parenchym lobe right",Liver
 Pancreas,NET,"liver","segment 2/3",Liver
 Pancreas,NET,"liver","segment 4",Liver
@@ -1502,7 +1385,6 @@ Prostate,,"bone","bone marrow",Bone
 Prostate,,"bone","bonemarrow",Bone
 Prostate,,"bone","corpus th11",Bone
 Prostate,,"bone","crista iliaca posterior superior",Bone
-Prostate,,"bone","crista iliaca rechts",Bone
 Prostate,,"bone","crista iliaca right",Bone
 Prostate,,"bone","crista iliaca",Bone
 Prostate,,"bone","crista",Bone
@@ -1534,7 +1416,6 @@ Prostate,,"bone","rib 5",Bone
 Prostate,,"bone","right acetabulum",Bone
 Prostate,,"bone","right crista",Bone
 Prostate,,"bone","right dorsal ilium",Bone
-Prostate,,"bone","right os ileum ventral",Bone
 Prostate,,"bone","right os ileum",Bone
 Prostate,,"bone","right os ilieum",Bone
 Prostate,,"bone","right os ilium",Bone
@@ -1547,8 +1428,6 @@ Prostate,,"bone","spine l4",Bone
 Prostate,,"bone","spine: l3",Bone
 Prostate,,"bone","th11",Bone
 Prostate,,"bone","vertebra th4",Bone
-Prostate,,"groin left","skin",(Sub)cutane
-Prostate,,"in lower pelvis","left gluteus region",Bone
 Prostate,,"intra-abdominal mass","region above belly button",Abdomen/Abdominal wall
 Prostate,,"intraperitoneal mass","paramedian left",Abdomen/Abdominal wall
 Prostate,,"kidney","anteromedial right kidney",Kidney
@@ -1559,12 +1438,9 @@ Prostate,,"liver","left lobe",Liver
 Prostate,,"liver","left",Liver
 Prostate,,"liver","liver intercostal",Liver
 Prostate,,"liver","liver left lobe",Liver
-Prostate,,"liver","liver",Liver
-Prostate,,"liver","right liver lobe",Liver
 Prostate,,"liver","right lobe caudal",Liver
 Prostate,,"liver","right lobe dorsocranial",Liver
 Prostate,,"liver","right lobe",Liver
-Prostate,,"liver","right side",Liver
 Prostate,,"liver","segment 4",Liver
 Prostate,,"liver","segment 5",Liver
 Prostate,,"liver","segment 5/6",Liver
@@ -1573,7 +1449,6 @@ Prostate,,"liver","segment 6/7",Liver
 Prostate,,"liver","segment 7",Liver
 Prostate,,"liver","segment 8",Liver
 Prostate,,"liver","upper right lobe",Liver
-Prostate,,"lower abdomen","cranial of umbullicus",Abdomen/Abdominal wall
 Prostate,,"lung","dorsal lesion in the left chest wall at the height of costa 8",Thorax/Thorax wall
 Prostate,,"lung","left upper lobe",Lung
 Prostate,,"lung","right lower lobe",Lung
@@ -1587,8 +1462,6 @@ Prostate,,"lymph node","axillair right",Lymph node
 Prostate,,"lymph node","iliac gland right",Lymph node
 Prostate,,"lymph node","iliaca externa",Lymph node
 Prostate,,"lymph node","iliacale lymph node",Lymph node
-Prostate,,"lymph node","infraclaviculair",Lymph node
-Prostate,,"lymph node","inginual left",Lymph node
 Prostate,,"lymph node","inhguinal right",Lymph node
 Prostate,,"lymph node","left axillar",Lymph node
 Prostate,,"lymph node","left axillary lymph node",Lymph node
@@ -1607,15 +1480,14 @@ Prostate,,"lymph node","neck 3/4 left",Lymph node
 Prostate,,"lymph node","neck left side",Lymph node
 Prostate,,"lymph node","neck right",Lymph node
 Prostate,,"lymph node","neck",Lymph node
-Prostate,,"lymph node","null",Lymph node
 Prostate,,"lymph node","obturator right",Lymph node
 Prostate,,"lymph node","obturatorloge",Lymph node
 Prostate,,"lymph node","para aortal left (intra abdominal)",Lymph node
-Prostate,,"lymph node","para aortal left",Lymph node
 Prostate,,"lymph node","para aortal mass",Lymph node
 Prostate,,"lymph node","para aortal right",Lymph node
 Prostate,,"lymph node","para aortal",Lymph node
 Prostate,,"lymph node","para-aortal left",Lymph node
+Prostate,,"lymph node","para-aortal",Lymph node
 Prostate,,"lymph node","para-aortale klier",Lymph node
 Prostate,,"lymph node","para-aorthaal",Lymph node
 Prostate,,"lymph node","para-iliac lymph node right",Lymph node
@@ -1626,11 +1498,8 @@ Prostate,,"lymph node","para-iliacal",Lymph node
 Prostate,,"lymph node","paraclavicular left",Lymph node
 Prostate,,"lymph node","parailiacaal",Lymph node
 Prostate,,"lymph node","periclavicular",Lymph node
-Prostate,,"lymph node","peritoneum",Lymph node
-Prostate,,"lymph node","retro-auriculair left",Lymph node
 Prostate,,"lymph node","retroperitoneal left",Lymph node
 Prostate,,"lymph node","retroperitoneal lymph node",Lymph node
-Prostate,,"lymph node","retroperitoneal",Lymph node
 Prostate,,"lymph node","retropertional para-aortal left",Lymph node
 Prostate,,"lymph node","right axilla",Lymph node
 Prostate,,"lymph node","right groin",Lymph node
@@ -1660,27 +1529,23 @@ Prostate,,"primary","prostate",Prostate
 Prostate,,"prostate","prostate",Prostate
 Prostate,,"psoas","right site",Muscle
 Prostate,,"rectum","mesorectale fascie",Colon/Rectum
+Prostate,,"rib","left 8",Bone
 Prostate,,"soft tissue","left gluteal",Muscle
 Prostate,,"soft tissue","left para aortic",Abdomen/Abdominal wall
 Prostate,,"soft tissue","massa os ilium",Bone
 Prostate,,"soft tissue","upper thoracic wall, left",Thorax/Thorax wall
 Prostate,,"subcutis","left eyebrow & sternum",(Sub)cutane
-Prostate,,"urinary bladder","na",Bladder
 Prostate,,"urinary tract","bladder",Bladder
+Sarcoma,Uterine,"abdominal mass","abdomen",Abdomen/Abdominal wall
 Skin,,"lymph node","groin left",Lymph node
-Skin,,"lymph node","left axilla",Lymph node
-Skin,,"lymph node","left axillary",Lymph node
 Skin,,"null","retro peritonial left",(Sub)cutane
 Skin,,"skin","skin",(Sub)cutane
 Skin,,"skin","subcutus right leg",(Sub)cutane
 Skin,Basal cell carcinoma,"primary","scalp",(Sub)cutane
 Skin,Basal cell carcinoma,"skin","skin",(Sub)cutane
 Skin,Melanoma,"abdomen","lower abdomen left",ABdomen/Abdominal wall
-Skin,Melanoma,"abdomen","para-iliacal",Abdomen/Abdominal wall
 Skin,Melanoma,"abdomen","subcutis",(Sub)cutane
-Skin,Melanoma,"abdominal wall","abdominal wall",Abdomen/Abdominal wall
 Skin,Melanoma,"abdominal wall","ventral median left",Abdomen/Abdominal wall
-Skin,Melanoma,"abdominal","left",(Sub)cutane
 Skin,Melanoma,"adrenal gland","r. adrenal",Adrenal gland
 Skin,Melanoma,"axilla","left",(Sub)cutane
 Skin,Melanoma,"axillary","left",(Sub)cutane
@@ -1689,15 +1554,10 @@ Skin,Melanoma,"below left nipple","subcutaneous",(Sub)cutane
 Skin,Melanoma,"bone","costa 10/11",Bone
 Skin,Melanoma,"bone","glenoid left",Bone
 Skin,Melanoma,"bone","ileum left",Bone
-Skin,Melanoma,"bone","os ilium left",Bone
 Skin,Melanoma,"bone","vertebra l4",Bone
-Skin,Melanoma,"breast/mamma","cranial of the left mamma nipple",(Sub)cutane
-Skin,Melanoma,"cutan","forehead left",(Sub)cutane
 Skin,Melanoma,"cutaneous","right flank",(Sub)cutane
 Skin,Melanoma,"gland in the neck","left",Head and neck
-Skin,Melanoma,"in-transit metastasis","right lower leg",(Sub)cutane
 Skin,Melanoma,"inguinal","abnormility",(Sub)cutane
-Skin,Melanoma,"intestins","nd",(Sub)cutane
 Skin,Melanoma,"lacrimal sac","lacrimal sac, oculus sinistra",Head and neck
 Skin,Melanoma,"left axilla","left axilla",Lymph node
 Skin,Melanoma,"left mamma","subcutaneous",(Sub)cutane
@@ -1730,7 +1590,6 @@ Skin,Melanoma,"lung","metastasis",Lung
 Skin,Melanoma,"lung","pleura dorsobasal right",Lung
 Skin,Melanoma,"lymph node","abdomen",Lymph node
 Skin,Melanoma,"lymph node","axila",Lymph node
-Skin,Melanoma,"lymph node","axilla left",Lymph node
 Skin,Melanoma,"lymph node","axilla right",Lymph node
 Skin,Melanoma,"lymph node","axilla",Lymph node
 Skin,Melanoma,"lymph node","axillair left",Lymph node
@@ -1741,7 +1600,7 @@ Skin,Melanoma,"lymph node","corner of left jaw",Lymph node
 Skin,Melanoma,"lymph node","cortex",Lymph node
 Skin,Melanoma,"lymph node","groin left side",Lymph node
 Skin,Melanoma,"lymph node","iliacale left",Lymph node
-Skin,Melanoma,"lymph node","inguinal r",Lymph node
+Skin,Melanoma,"lymph node","inguinal left",Lymph node
 Skin,Melanoma,"lymph node","inguinal region right",Lymph node
 Skin,Melanoma,"lymph node","inguinal right",Lymph node
 Skin,Melanoma,"lymph node","inguinal",Lymph node
@@ -1761,8 +1620,8 @@ Skin,Melanoma,"lymph node","metastasis",Lymph node
 Skin,Melanoma,"lymph node","multiple lymph nodes right neck (level 1,2,3)",Lymph node
 Skin,Melanoma,"lymph node","neck right",Lymph node
 Skin,Melanoma,"lymph node","neck, left side",Head and Neck
-Skin,Melanoma,"lymph node","neck",Lymph node
 Skin,Melanoma,"lymph node","para-iliacal left",Lymph node
+Skin,Melanoma,"lymph node","pararenal",Lymph node
 Skin,Melanoma,"lymph node","periclaviculair left",Lymph node
 Skin,Melanoma,"lymph node","retroperitoneaal",Lymph node
 Skin,Melanoma,"lymph node","retroperitoneal, para aortal left",Lymph node
@@ -1774,7 +1633,6 @@ Skin,Melanoma,"lymph node","right groin",Lymph node
 Skin,Melanoma,"lymph node","right inguinal nodes",Lymph node
 Skin,Melanoma,"lymph node","right inguinal",Lymph node
 Skin,Melanoma,"lymph node","right side para- iliacale",Lymph node
-Skin,Melanoma,"lymph node","subcutaneous, left groin",Lymph node
 Skin,Melanoma,"lymph node","supraclaviculair left",Lymph node
 Skin,Melanoma,"lymph node","supraclavicular left",Lymph node
 Skin,Melanoma,"lymph node","supraclavicular",Lymph node
@@ -1782,7 +1640,6 @@ Skin,Melanoma,"lymph node","thorax left",Lymph node
 Skin,Melanoma,"mamma","right breast (cutaneously)",(Sub)cutane
 Skin,Melanoma,"mamma","subcutaneous, ventral from axillar veins",(Sub)cutane
 Skin,Melanoma,"mass inguinal","inguinal left",(Sub)cutane
-Skin,Melanoma,"melanonoma","cutane metastase melanoma",(Sub)cutane
 Skin,Melanoma,"mestastasis","left inguinal",(Sub)cutane
 Skin,Melanoma,"muscle","left upperleg",(Sub)cutane
 Skin,Melanoma,"muscle","m erector spinae right",(Sub)cutane
@@ -1795,7 +1652,6 @@ Skin,Melanoma,"peritoneum","left paracolic",Peritoneum/Omentum
 Skin,Melanoma,"primary","left lower leg",(Sub)cutane
 Skin,Melanoma,"primary","lesion head",(Sub)cutane
 Skin,Melanoma,"primary","lower back",(Sub)cutane
-Skin,Melanoma,"primary","m pectoralis mass",(Sub)cutane
 Skin,Melanoma,"primary","melanoma right scapula point",(Sub)cutane
 Skin,Melanoma,"primary","melanoma right scapula",(Sub)cutane
 Skin,Melanoma,"primary","neck right",(Sub)cutane
@@ -1804,7 +1660,6 @@ Skin,Melanoma,"primary","skin left lower leg",(Sub)cutane
 Skin,Melanoma,"primary","soft tissue right near scapula",(Sub)cutane
 Skin,Melanoma,"primary","subcutaneous nodulus arm",(Sub)cutane
 Skin,Melanoma,"scapula","right side",(Sub)cutane
-Skin,Melanoma,"skin lesion","scalp",(Sub)cutane
 Skin,Melanoma,"skin, medial left upper leg","medial left upper leg",(Sub)cutane
 Skin,Melanoma,"skin","cranium",(Sub)cutane
 Skin,Melanoma,"skin","head",(Sub)cutane
@@ -1812,11 +1667,8 @@ Skin,Melanoma,"skin","left shoulder",(Sub)cutane
 Skin,Melanoma,"skin","left underarm",(Sub)cutane
 Skin,Melanoma,"skin","left upper leg",(Sub)cutane
 Skin,Melanoma,"skin","noduli on the scalp",(Sub)cutane
-Skin,Melanoma,"skin","pectoralis right, nipple area left",(Sub)cutane
 Skin,Melanoma,"skin","re couer melanoom",(Sub)cutane
-Skin,Melanoma,"skin","right flank",(Sub)cutane
 Skin,Melanoma,"skin","right groin",(Sub)cutane
-Skin,Melanoma,"skin","right leg",(Sub)cutane
 Skin,Melanoma,"skin","shoulder right",(Sub)cutane
 Skin,Melanoma,"skin","subcutane left knee",(Sub)cutane
 Skin,Melanoma,"skin","subcutaneous axilla right",(Sub)cutane
@@ -1825,13 +1677,9 @@ Skin,Melanoma,"skin","subcutis right laterale femur",(Sub)cutane
 Skin,Melanoma,"skin","subcutis",(Sub)cutane
 Skin,Melanoma,"skin","temporalis",(Sub)cutane
 Skin,Melanoma,"skin","unknown",(Sub)cutane
-Skin,Melanoma,"skin/ subcutaneous","skin/ subcutaneous: lateralof the face",(Sub)cutane
-Skin,Melanoma,"skin/subcutaneous","chest left",(Sub)cutane
 Skin,Melanoma,"skin/subcutaneous","left inguinal",(Sub)cutane
-Skin,Melanoma,"skin/subcutaneous","left upper abdomen",(Sub)cutane
 Skin,Melanoma,"skin/subcutaneous","melanoma left chest",(Sub)cutane
 Skin,Melanoma,"skin/subcutaneous","right flanc",(Sub)cutane
-Skin,Melanoma,"skin/subcutaneous","thoracic wall left",(sub)cutane
 Skin,Melanoma,"skin/subcutaneous","ventral side abdomen/ omentum/peritoneum",(Sub)cutane
 Skin,Melanoma,"soft tissue","mamma right",(Sub)cutane
 Skin,Melanoma,"soft tissue","presternal",Thorax/Thorax wall
@@ -1842,20 +1690,17 @@ Skin,Melanoma,"subcatenous","chin",(Sub)cutane
 Skin,Melanoma,"subcutane metastasis.","paravertebraal right side",(Sub)cutane
 Skin,Melanoma,"subcutane","close to left shoulder joint",(Sub)cutane
 Skin,Melanoma,"subcutaneous mass","left axilla",(Sub)cutane
-Skin,Melanoma,"subcutaneous metastasis","right axilla",(Sub)cutane
 Skin,Melanoma,"subcutaneous","abdomen",(Sub)cutane
 Skin,Melanoma,"subcutaneous","lesion left upper arm lateral side",(Sub)cutane
 Skin,Melanoma,"subcutaneous","lower back",(Sub)cutane
 Skin,Melanoma,"subcutaneous","right lower arm",(Sub)cutane
 Skin,Melanoma,"subcutaneous","supra-clavicular right",(Sub)cutane
-Skin,Melanoma,"subcutaneus leasion","back",(Sub)cutane
 Skin,Melanoma,"subcutis","back dorsal",(Sub)cutane
 Skin,Melanoma,"subcutis","medial proximal left upper leg",(Sub)cutane
 Skin,Melanoma,"subcutis","right femur",(Sub)cutane
 Skin,Melanoma,"subcutis","right shoulder",(Sub)cutane
 Skin,Melanoma,"subcutis","right upperarm",(Sub)cutane
 Skin,Melanoma,"thoracic wall","left",Thorax/Thorax wall
-Skin,Melanoma,"thoraric wall","right",Thorax/Thorax wall
 Skin,Melanoma,"thorax wall","dorsal against 12th costa left",Thorax/Thorax wall
 Skin,Melanoma,"thorax wall","left",Thorax/Thorax wall
 Skin,Melanoma,"thorax","thorax wall left",Thorax/Thorax wall
@@ -1872,7 +1717,6 @@ Small intestine,Duodenum,"liver","left",Liver
 Small intestine,Duodenum,"omentum","central abdomen",Peritoneum/Omentum
 Small intestine,NET,"kidney","mass left kidney",Kidney
 Small intestine,NET,"liver","-",Liver
-Small intestine,NET,"liver","hoog in segment 3",Liver
 Small intestine,NET,"liver","left liver lab",Liver
 Small intestine,NET,"liver","liver",Liver
 Small intestine,NET,"liver","right",Liver
@@ -1930,7 +1774,6 @@ Stomach,Cardia,"liver","left lobe",Liver
 Stomach,Gastric Carcinoma,"liver","liver, no details available",Liver
 Stomach,Gastric,"liver","metastasis",Liver
 Stomach,Gastric,"liver","right liver lob",Liver
-Stomach,Gastric,"stomach","stomach",Stomach
 Stomach,Other,"sacrum","mass dorsal sacrum",Bone
 Urinary tract,Bladder,"abdominal wall","right kwadrant of lower abdomen",Abdomen/Abdominal wall
 Urinary tract,Bladder,"armpit","left",Lymph node
@@ -1940,7 +1783,6 @@ Urinary tract,Bladder,"bone","os ileum",Bone
 Urinary tract,Bladder,"bone","os ischium right",Bone
 Urinary tract,Bladder,"bone","xiphoid process",Bone
 Urinary tract,Bladder,"bottom","subcutaneous",(Sub)cutane
-Urinary tract,Bladder,"cutaneous lesion","right fronto parietal",(Sub)cutane
 Urinary tract,Bladder,"intra abdominal","mass between musculus psoas and musculus quadratus lumborum left",Abdomen/Abdominal wall
 Urinary tract,Bladder,"liver","left lobe",Liver
 Urinary tract,Bladder,"liver","left side",Liver
@@ -1950,7 +1792,6 @@ Urinary tract,Bladder,"liver","right liver lobe",Liver
 Urinary tract,Bladder,"liver","right liverlobe lateral",Liver
 Urinary tract,Bladder,"liver","right",Liver
 Urinary tract,Bladder,"liver","segment 2",Liver
-Urinary tract,Bladder,"liver","segment 2/3",Liver
 Urinary tract,Bladder,"liver","segment 4a",Liver
 Urinary tract,Bladder,"liver","segment 4a/8",Liver
 Urinary tract,Bladder,"liver","segment 5",Liver
@@ -1995,19 +1836,15 @@ Urinary tract,Bladder,"urinary tract","bladder",Bladder
 Urinary tract,Other,"abdomen","ventral right",Abdomen/Abdominal wall
 Urinary tract,Other,"brain","lesion os frontale left paramedian frontal",Bone
 Urinary tract,Other,"liver","left lobe",Liver
-Urinary tract,Other,"liver","segment 5",Liver
 Urinary tract,Other,"liver","segment 6",Liver
 Urinary tract,Other,"lung","lingula",Lung
 Urinary tract,Other,"lymph node","axillair right",Lymph node
-Urinary tract,Other,"lymph node","liver",Lymph node
 Urinary tract,Other,"lymph node","right para-iliacal",Lymph node
-Urinary tract,Other,"unknown","most likely subcarinal node",Lymph node
 Urinary tract,Pyelum,"kidney","kidney right",Kidney
 Urinary tract,Pyelum,"liver","segment 2",Liver
 Urinary tract,Pyelum,"liver","segment 7 + 8",Liver
 Urinary tract,Pyelum,"liver","segment v",Liver
 Urinary tract,Pyelum,"lung","left",Lung
-Urinary tract,Pyelum,"lung","unknown",Lung
 Urinary tract,Pyelum,"lymph node","lymph node neck",Lymph node
 Urinary tract,Pyelum,"lymph node","neck",Lymph node
 Urinary tract,Pyelum,"lymph node","retrocaval",Lymph node
@@ -2022,10 +1859,7 @@ Urinary tract,Urethra,"lymph node","supraclavicular left",Lymph node
 Urinary tract,Urethra,"lymph node","supraclavicular",Lymph node
 Urinary tract,Urethra,"lymph node","uterus",Lymph node
 Uterus,Cervical,"abdomen right","subcutaneous",Abdomen/Abdominal wall
-Uterus,Cervical,"abdominal wall","subcutis scartissue from abdominal wall of laparotomy",Abdomen/Abdominal wall
 Uterus,Cervical,"cervix","cervix",Uterus
-Uterus,Cervical,"kidney","kidney",Kidney
-Uterus,Cervical,"left para vertebral mass","on level of th12",Abdomen/Abdominal wall
 Uterus,Cervical,"liver","left side",Liver
 Uterus,Cervical,"liver","peritoneal lesion",Liver
 Uterus,Cervical,"liver","segment 3",Liver
@@ -2047,13 +1881,12 @@ Uterus,Cervical,"retroperitoneum","retroperitoneal mass",Abdomen/Abdominal wall
 Uterus,Cervical,"sarcoma","right scapula",Bone
 Uterus,Cervical,"soft tissue","soft tissue ramus inferior os pubis",Bone
 Uterus,Cervical,"vulva","vulva",Uterus
-Uterus,Endometrial,"abdomen","abdominal tissue",Abdomen/Abdominal wall
 Uterus,Endometrial,"abdomen","mass under right",Abdomen/Abdominal wall
 Uterus,Endometrial,"abdominal","omental cake",Peritoneum/Omentum
-Uterus,Endometrial,"liver","null",Liver
 Uterus,Endometrial,"liver","right lob",Liver
 Uterus,Endometrial,"liver","segment 4",Liver
 Uterus,Endometrial,"liver","segment 5",Liver
+Uterus,Endometrial,"liver","unknown",Liver
 Uterus,Endometrial,"liver","ventral in liver",Liver
 Uterus,Endometrial,"lung","left upper lobe",Lung
 Uterus,Endometrial,"lymph node","axiila right side",Lymph node
