@@ -23,7 +23,6 @@ import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.CuratedDrug;
 import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
-import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedDrug;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
 import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
@@ -316,23 +315,6 @@ public class PatientValidatorTest {
     public void ignoresMeasurementDoneNoWithValidData() {
         final List<ValidationFinding> findings = validateNonFirstResponse(PATIENT_IDENTIFIER, RESPONSE_MEASUREMENT_NO_WITH_VALID_DATA);
         assertTrue(findings.isEmpty());
-    }
-
-    @Test
-    public void reportsFirstMeasurementAfterTreatmentStart() {
-        BiopsyTreatmentResponseData matchedResponseFeb2015 =
-                ImmutableBiopsyTreatmentResponseData.builder().from(RESPONSE_FEB2015).treatmentId(TREATMENT_JAN_MAR.id()).build();
-        final List<ValidationFinding> findings = PatientValidator.validateTreatmentResponses(PATIENT_IDENTIFIER,
-                Lists.newArrayList(TREATMENT_JAN_MAR),
-                Lists.newArrayList(matchedResponseFeb2015));
-        assertEquals(1, findings.size());
-    }
-
-    @Test
-    public void reportsMissingTreatmentForResponseData() {
-        final List<ValidationFinding> findings =
-                PatientValidator.validateTreatmentResponses(PATIENT_IDENTIFIER, Lists.newArrayList(), Lists.newArrayList(RESPONSE_JAN2015));
-        assertEquals(1, findings.size());
     }
 
     @Test

@@ -315,38 +315,21 @@ public final class PatientValidator {
             findings.addAll(validateTreatmentResponse(patientIdentifier, responses.get(i), i == 0));
         }
 
-        Collections.sort(treatments);
-        Collections.sort(responses);
-        if (treatments.isEmpty() && !responses.isEmpty()) {
-            findings.add(ValidationFinding.of(ECRF_LEVEL,
-                    patientIdentifier,
-                    "Treatment response form filled in, but no treatment forms filled in",
-                    FormStatus.undefined()));
-        }
-        if (!treatments.isEmpty() && !responses.isEmpty()) {
-            final LocalDate firstResponseDate = responses.get(0).date();
-            final LocalDate firstTreatmentStart = treatments.get(0).startDate();
-            if (firstResponseDate != null && firstTreatmentStart != null && firstResponseDate.isAfter(firstTreatmentStart)) {
-                findings.add(ValidationFinding.of(ECRF_LEVEL,
-                        patientIdentifier,
-                        "First (baseline) measurement date is after first treatment start",
-                        FormStatus.merge(treatments.get(0).formStatus(), responses.get(0).formStatus()),
-                        "First treatment response: " + firstResponseDate + "; first treatment start: " + firstTreatmentStart));
-
-            }
-        }
-        final List<BiopsyTreatmentData> treatmentsMissingResponse = treatments.stream()
-                .filter(treatment -> shouldHaveResponse(treatment) && !hasResponse(treatment.id(), responses))
+        final List<BiopsyTreatmentData> matchedTreatmentsMissingResponse = treatments.stream()
+                .filter(treatment -> shouldHaveResponse(treatment) && !hasResponse(treatment.id(), responses)
+                        && treatment.biopsyId() != null)
                 .collect(Collectors.toList());
 
-        if (treatmentsMissingResponse.size() > 0) {
+        if (matchedTreatmentsMissingResponse.size() > 0) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientIdentifier,
-                    "No treatment response for at least 1 treatment",
+                    "No treatment response for at least 1 matched treatment",
                     FormStatus.undefined(),
-                    "treatments " + treatmentsMissingResponse.stream().map(BiopsyTreatmentData::toString).collect(Collectors.toList())
-                            + " should have response since they lasted more than " + Config.IMMEDIATE_TREATMENT_END_THRESHOLD
-                            + " days and started more than " + Config.START_DATE_RESPONSE_THRESHOLD + " days ago"));
+                    "treatments " + matchedTreatmentsMissingResponse.stream()
+                            .map(BiopsyTreatmentData::toString)
+                            .collect(Collectors.toList()) + " should have response since they lasted more than "
+                            + Config.IMMEDIATE_TREATMENT_END_THRESHOLD + " days and started more than "
+                            + Config.START_DATE_RESPONSE_THRESHOLD + " days ago"));
         }
         return findings;
     }
@@ -388,7 +371,7 @@ public final class PatientValidator {
             if (date == null) {
                 findings.add(ValidationFinding.of(ECRF_LEVEL,
                         patientIdentifier,
-                        "Response date and assessment date empty or in wrong format",
+                        "Response date and/or assessment date empty or in wrong format",
                         treatmentResponse.formStatus()));
             }
             if (response == null && !isFirstResponse) {
