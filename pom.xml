@@ -29,7 +29,6 @@
         <module>hmf-id-generator</module>
         <module>portal-data-converter</module>
         <module>sv-analyser</module>
-        <module>hgvs-variant-translator</module>
     </modules>
 
     <properties>
