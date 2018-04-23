@@ -32,8 +32,8 @@ fun analyzeCivic(transvarLocation: String, variantFileLocation: String, evidence
 }
 
 private fun additionalInfo(civicRecord: CivicRecord): String {
-    val evidenceLevel = civicRecord.evidenceLevel
-    return (evidenceLevel == "A" || evidenceLevel == "B" || evidenceLevel == "C").toString()
+    val highestEvidenceLevel = civicRecord.evidence.map { it.evidenceLevel }.sorted().firstOrNull() ?: "N"
+    return (highestEvidenceLevel == "A" || highestEvidenceLevel == "B" || highestEvidenceLevel == "C").toString()
 }
 
 private fun annotateCivicVariant(civicRecord: CivicRecord, reference: IndexedFastaSequenceFile): SomaticVariant? {

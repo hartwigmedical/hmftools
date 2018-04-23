@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.knowledgebaseimporter.civic
 
+import com.google.common.collect.ArrayListMultimap
+import com.google.common.collect.Multimap
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import java.io.File
@@ -15,15 +17,10 @@ fun preProcessCivic(variantFileLocation: String, evidenceFileLocation: String): 
             .toList()
 }
 
-private fun highestEvidence(
-        variantEvidencePairs: List<Pair<String, String>>): String = variantEvidencePairs.map { it.second }.sorted().first()
-
-private fun readEvidenceMap(evidenceFileLocation: String): Map<String, String> {
-    val evidenceParser = CSVParser.parse(File(evidenceFileLocation), Charset.defaultCharset(),
-                                         format)
-    return evidenceParser.iterator().asSequence()
-            .map { csvRecord -> csvRecord.get("variant_id") to csvRecord.get("evidence_level") }
-            .groupBy { it.first }
-            .mapValues { highestEvidence(it.value) }
-            .toMap()
+private fun readEvidenceMap(evidenceFileLocation: String): Multimap<String, CivicEvidence> {
+    val evidenceMap = ArrayListMultimap.create<String, CivicEvidence>()
+    val evidenceParser = CSVParser.parse(File(evidenceFileLocation), Charset.defaultCharset(), format)
+    evidenceParser.iterator().asSequence()
+            .forEach { csvRecord -> evidenceMap.put(csvRecord["variant_id"], CivicEvidence(csvRecord)) }
+    return evidenceMap
 }
