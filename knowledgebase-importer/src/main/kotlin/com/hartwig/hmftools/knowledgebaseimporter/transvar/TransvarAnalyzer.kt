@@ -1,26 +1,26 @@
 package com.hartwig.hmftools.knowledgebaseimporter.transvar
 
-import java.io.File
-import java.io.FileOutputStream
-import java.io.PrintStream
+import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.Annotation
+import java.io.*
 
-typealias Transcript = String
-typealias Impact = String
+interface TransvarAnalyzer<in T : Annotation> {
+    val analysisMode: String
+    val transvarLocation: String
 
-interface TransvarAnalyzer {
-    companion object {
-        val commonArgs = arrayOf("--noheader", "--ensembl", "--max-candidates", "1000", "-g", "1", "-m", "2", "-l")
-    }
-
-    fun createVariantFile(variants: List<Pair<Transcript, Impact>>): File {
+    private fun createVariantFile(variants: List<T>): File {
         val tempFile = File.createTempFile("transvar", "temp")
         tempFile.deleteOnExit()
         val writer = PrintStream(FileOutputStream(tempFile), true)
-        variants.forEach { writer.println("${it.first}\t${it.second}") }
+        variants.forEach { writer.println("${it.transcript}\t${it.alteration}") }
         writer.close()
         return tempFile
     }
 
-    fun analyze(variants: List<Pair<Transcript, Impact>>): List<TransvarOutput>
-
+    fun analyze(variants: List<T>): List<TransvarOutput> {
+        val variantFile = createVariantFile(variants)
+        val args = arrayOf("--noheader", "--ensembl", "--max-candidates", "1000", "-g", "1", "-m", "2", "-l")
+        val process = ProcessBuilder(transvarLocation, analysisMode, *args, variantFile.absolutePath).start()
+        val inputStream = BufferedReader(InputStreamReader(process.inputStream))
+        return inputStream.lineSequence().map { TransvarOutput(it) }.toList()
+    }
 }
