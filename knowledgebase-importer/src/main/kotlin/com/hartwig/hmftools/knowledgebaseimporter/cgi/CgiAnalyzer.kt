@@ -2,6 +2,7 @@ package com.hartwig.hmftools.knowledgebaseimporter.cgi
 
 import com.hartwig.hmftools.knowledgebaseimporter.output.KnownVariantOutput
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.TransvarProteinAnalyzer
+import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.ProteinAnnotation
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.extract
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.extractChromosome
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.extractVariants
@@ -15,7 +16,7 @@ fun analyzeCgi(transvarLocation: String, fileLocation: String, reference: Indexe
     val parser = CSVParser.parse(File(fileLocation), Charset.defaultCharset(), CSVFormat.TDF.withFirstRecordAsHeader().withNullString(""))
     val analyzer = TransvarProteinAnalyzer(transvarLocation)
     val records = parser.asSequence().map { CgiRecord(it) }.toList().filter { it.context == "somatic" }
-    val transvarOutput = analyzer.analyze(records.map { Pair(it.transcript, it.impact) })
+    val transvarOutput = analyzer.analyze(records.map { ProteinAnnotation(it.transcript, it.impact) })
     return records.zip(transvarOutput)
             .flatMap { (cgiRecord, transvarOutput) ->
                 val cgiVariantGdnas = cgiRecord.gdna.split("__").filterNot { it.isBlank() }

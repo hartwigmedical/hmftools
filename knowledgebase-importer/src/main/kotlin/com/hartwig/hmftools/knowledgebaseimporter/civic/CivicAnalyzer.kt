@@ -3,6 +3,7 @@ package com.hartwig.hmftools.knowledgebaseimporter.civic
 import com.hartwig.hmftools.common.variant.SomaticVariant
 import com.hartwig.hmftools.knowledgebaseimporter.output.KnownVariantOutput
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.TransvarCdnaAnalyzer
+import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.CDnaAnnotation
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.extractVariants
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.somaticVariant
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
@@ -11,15 +12,15 @@ fun analyzeCivic(transvarLocation: String, variantFileLocation: String, evidence
                  reference: IndexedFastaSequenceFile): List<KnownVariantOutput> {
     val records = preProcessCivic(variantFileLocation, evidenceFileLocation)
     val analyzer = TransvarCdnaAnalyzer(transvarLocation)
-    val recordsCdna = records.map { record ->
+    val cdnaRecords = records.map { record ->
         val hgvsParts = record.hgvs.split(":")
         if (hgvsParts.size > 1) {
-            Pair(hgvsParts[0], hgvsParts[1])
+            CDnaAnnotation(hgvsParts[0], hgvsParts[1])
         } else {
-            Pair("na", "na")
+            CDnaAnnotation("na", "na")
         }
     }
-    val transvarOutput = analyzer.analyze(recordsCdna)
+    val transvarOutput = analyzer.analyze(cdnaRecords)
     return records.zip(transvarOutput)
             .flatMap { (civicRecord, transvarOutput) ->
                 val civicVariant = annotateCivicVariant(civicRecord, reference)

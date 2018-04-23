@@ -5,6 +5,6 @@ import org.apache.commons.csv.CSVRecord
 data class OncoAnnotatedVariantRecord(private val csvRecord: CSVRecord) {
     val transcript: String = csvRecord["Isoform"]
     val gene: String = csvRecord["Gene"]
-    val impact: String = csvRecord["Alteration"]
+    val alteration: String = csvRecord["Alteration"]
     val oncogenicity: String = csvRecord["Oncogenicity"]
 }
