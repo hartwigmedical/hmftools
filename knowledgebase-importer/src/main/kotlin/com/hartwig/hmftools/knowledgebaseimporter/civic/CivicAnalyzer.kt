@@ -9,7 +9,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.transvar.somaticVariant
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 
 fun analyzeCivic(transvarLocation: String, variantFileLocation: String, evidenceFileLocation: String,
-                 reference: IndexedFastaSequenceFile): List<KnownVariantOutput> {
+                 reference: IndexedFastaSequenceFile): List<Pair<CivicRecord, SomaticVariant>> {
     val records = preProcessCivic(variantFileLocation, evidenceFileLocation)
     val analyzer = TransvarCdnaAnalyzer(transvarLocation)
     val cdnaRecords = records.map { record ->
@@ -25,10 +25,16 @@ fun analyzeCivic(transvarLocation: String, variantFileLocation: String, evidence
             .flatMap { (civicRecord, transvarOutput) ->
                 val civicVariant = annotateCivicVariant(civicRecord, reference)
                 val inferredVariants = extractVariants(transvarOutput, reference)
-                (listOfNotNull(civicVariant) + inferredVariants.filterNot { it == civicVariant }).map {
-                    KnownVariantOutput(civicRecord.gene, civicRecord.transcript, additionalInfo(civicRecord), it)
-                }
+                (listOfNotNull(civicVariant) + inferredVariants.filterNot { it == civicVariant }).map { Pair(civicRecord, it) }
             }
+}
+
+fun analyzeKnownCivicVariants(transvarLocation: String, variantFileLocation: String, evidenceFileLocation: String,
+                              reference: IndexedFastaSequenceFile): List<KnownVariantOutput> {
+    val civicVariants = analyzeCivic(transvarLocation, variantFileLocation, evidenceFileLocation, reference)
+    return civicVariants.map { (civicRecord, somaticVariant) ->
+        KnownVariantOutput(civicRecord.gene, civicRecord.transcript, additionalInfo(civicRecord), somaticVariant)
+    }
 }
 
 private fun additionalInfo(civicRecord: CivicRecord): String {
