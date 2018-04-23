@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.knowledgebaseimporter.civic
 
 import com.hartwig.hmftools.common.variant.SomaticVariant
+import com.hartwig.hmftools.knowledgebaseimporter.output.Actionability
+import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableVariantOutput
 import com.hartwig.hmftools.knowledgebaseimporter.output.KnownVariantOutput
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.TransvarCdnaAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.CDnaAnnotation
@@ -37,8 +39,27 @@ fun analyzeKnownCivicVariants(transvarLocation: String, variantFileLocation: Str
     }
 }
 
+fun analyzeCivicActionable(transvarLocation: String, variantFileLocation: String, evidenceFileLocation: String,
+                           reference: IndexedFastaSequenceFile): List<ActionableVariantOutput> {
+    val civicVariants = analyzeCivic(transvarLocation, variantFileLocation, evidenceFileLocation, reference)
+    return civicVariants.flatMap { (record, somaticVariant) ->
+        record.evidence.filter { it.direction == "Supports" }.flatMap { evidence ->
+            evidence.drugs.map { drug ->
+                ActionableVariantOutput(record.gene,
+                                        somaticVariant,
+                                        Actionability("civic",
+                                                      evidence.cancerType,
+                                                      drug,
+                                                      evidence.level,
+                                                      evidence.significance,
+                                                      evidence.type))
+            }
+        }
+    }
+}
+
 private fun additionalInfo(civicRecord: CivicRecord): String {
-    val highestEvidenceLevel = civicRecord.evidence.map { it.evidenceLevel }.sorted().firstOrNull() ?: "N"
+    val highestEvidenceLevel = civicRecord.evidence.map { it.level }.sorted().firstOrNull() ?: "N"
     return (highestEvidenceLevel == "A" || highestEvidenceLevel == "B" || highestEvidenceLevel == "C").toString()
 }
 
