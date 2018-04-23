@@ -44,7 +44,12 @@ private fun analyzePointMutations(transvarLocation: String, records: List<OncoAc
             .flatMap { (oncoRecord, somaticVariant) ->
                 oncoRecord.drugs.map { drug ->
                     ActionableVariantOutput(oncoRecord.gene, somaticVariant,
-                                            Actionability("oncoKb", oncoRecord.cancerType, drug, oncoRecord.level, oncoRecord.evidenceType))
+                                            Actionability("oncoKb",
+                                                          oncoRecord.cancerType,
+                                                          drug,
+                                                          oncoRecord.level,
+                                                          oncoRecord.significance,
+                                                          "predictive"))
                 }
             }
 }

@@ -13,7 +13,7 @@ data class OncoActionableVariantRecord(private val csvRecord: CSVRecord) {
     } else {
         csvRecord["Level"]
     }
-    val evidenceType = if (csvRecord["Level"].startsWith("R")) {
+    val significance = if (csvRecord["Level"].startsWith("R")) {
         "resistance"
     } else {
         "sensitivity"
