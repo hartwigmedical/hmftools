@@ -5,7 +5,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariant
 data class ActionableVariantOutput(private val gene: String, private val variant: SomaticVariant,
                                    private val actionability: Actionability) {
     companion object {
-        val header = listOf("gene", "chromosome", "position", "ref", "alt", "source", "drug", "cancerType", "level", "evidenceType")
+        val header = listOf("gene", "chromosome", "position", "ref", "alt", "source", "drug", "cancerType", "level", "type", "significance")
     }
 
     val record: List<String> = listOf(gene,
@@ -17,5 +17,6 @@ data class ActionableVariantOutput(private val gene: String, private val variant
                                       actionability.drug,
                                       actionability.cancerType,
                                       actionability.level,
-                                      actionability.evidenceType)
+                                      actionability.type,
+                                      actionability.significance)
 }
