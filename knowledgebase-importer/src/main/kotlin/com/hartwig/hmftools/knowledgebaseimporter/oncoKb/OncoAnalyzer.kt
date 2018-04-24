@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.knowledgebaseimporter.oncoKb
 
 import com.hartwig.hmftools.knowledgebaseimporter.output.Actionability
+import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableCNVOutput
 import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableVariantOutput
 import com.hartwig.hmftools.knowledgebaseimporter.output.KnownVariantOutput
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.TransvarProteinAnalyzer
@@ -12,6 +13,8 @@ import org.apache.commons.csv.CSVParser
 import org.apache.commons.csv.CSVRecord
 import java.io.File
 import java.nio.charset.Charset
+
+private const val SOURCE = "oncoKb"
 
 fun analyzeOncoKb(transvarLocation: String, fileLocation: String, reference: IndexedFastaSequenceFile): List<KnownVariantOutput> {
     val records = readOncoKbRecords(fileLocation) { OncoAnnotatedVariantRecord(it) }
@@ -40,16 +43,21 @@ private fun analyzePointMutations(transvarLocation: String, records: List<OncoAc
     val analyzer = TransvarProteinAnalyzer(transvarLocation)
     val transvarOutput = analyzer.analyze(records.map { ProteinAnnotation(it.transcript, it.alteration) })
     return records.zip(transvarOutput)
-            .flatMap { (oncoRecord, transvarOutput) -> extractVariants(transvarOutput, reference).map { Pair(oncoRecord, it) } }
-            .flatMap { (oncoRecord, somaticVariant) ->
-                oncoRecord.drugs.map { drug ->
-                    ActionableVariantOutput(oncoRecord.gene, somaticVariant,
-                                            Actionability("oncoKb",
-                                                          oncoRecord.cancerType,
-                                                          drug,
-                                                          oncoRecord.level,
-                                                          oncoRecord.significance,
-                                                          ""))
+            .flatMap { (record, transvarOutput) -> extractVariants(transvarOutput, reference).map { Pair(record, it) } }
+            .flatMap { (record, somaticVariant) ->
+                record.drugs.map { drug ->
+                    ActionableVariantOutput(record.gene, somaticVariant,
+                                            Actionability(SOURCE, record.cancerType, drug, record.level, record.significance, ""))
                 }
             }
+}
+
+fun analyzeOncoKbAmpsAndDels(fileLocation: String): List<ActionableCNVOutput> {
+    val records = readOncoKbRecords(fileLocation) { OncoActionableVariantRecord(it) }
+    return records.filter { it.alteration == "Amplification" || it.alteration == "Deletion" }.flatMap { record ->
+        record.drugs.map { drug ->
+            ActionableCNVOutput(record.gene, record.alteration,
+                                Actionability(SOURCE, record.cancerType, drug, record.level, record.significance, ""))
+        }
+    }
 }
