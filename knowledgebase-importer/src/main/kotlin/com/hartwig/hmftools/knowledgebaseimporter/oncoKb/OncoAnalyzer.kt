@@ -49,7 +49,7 @@ private fun analyzePointMutations(transvarLocation: String, records: List<OncoAc
                                                           drug,
                                                           oncoRecord.level,
                                                           oncoRecord.significance,
-                                                          "predictive"))
+                                                          ""))
                 }
             }
 }
