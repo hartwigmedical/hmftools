@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.knowledgebaseimporter.output
 
-data class ActionableCNVOutput(val gene: String, val type: String, val actionability: Actionability) {
+data class ActionableCNVOutput(private val gene: String, private val type: String, private val actionability: Actionability) {
     companion object {
         val header = listOf("gene", "type", "source", "drug", "cancerType", "level", "type", "significance")
     }
