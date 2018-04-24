@@ -23,18 +23,18 @@ fun analyzeCgi(transvarLocation: String, fileLocation: String, reference: Indexe
             }
 }
 
-fun readCgiRecords(fileLocation: String): List<CgiRecord> {
+fun readCgiRecords(fileLocation: String): List<CgiKnownVariantRecord> {
     val parser = CSVParser.parse(File(fileLocation), Charset.defaultCharset(), CSVFormat.TDF.withFirstRecordAsHeader().withNullString(""))
-    return parser.asSequence().map { CgiRecord(it) }.toList().filter { it.context == "somatic" }
+    return parser.asSequence().map { CgiKnownVariantRecord(it) }.toList().filter { it.context == "somatic" }
 }
 
-fun annotateCgiRecords(transvarLocation: String, records: List<CgiRecord>): List<TransvarOutput> {
+fun annotateCgiRecords(transvarLocation: String, knownVariantRecords: List<CgiKnownVariantRecord>): List<TransvarOutput> {
     val analyzer = TransvarProteinAnalyzer(transvarLocation)
-    return analyzer.analyze(records.map { ProteinAnnotation(it.transcript, it.impact) })
+    return analyzer.analyze(knownVariantRecords.map { ProteinAnnotation(it.transcript, it.impact) })
 }
 
-fun extractCgiVariants(cgiRecord: CgiRecord, reference: IndexedFastaSequenceFile): List<SomaticVariant> {
-    val cgiVariantGdnas = cgiRecord.gdna.split("__").filterNot { it.isBlank() }
+fun extractCgiVariants(cgiKnownVariantRecord: CgiKnownVariantRecord, reference: IndexedFastaSequenceFile): List<SomaticVariant> {
+    val cgiVariantGdnas = cgiKnownVariantRecord.gdna.split("__").filterNot { it.isBlank() }
     val chromosome = extractChromosome(cgiVariantGdnas.first())
     return extract(chromosome, cgiVariantGdnas, reference)
 }
