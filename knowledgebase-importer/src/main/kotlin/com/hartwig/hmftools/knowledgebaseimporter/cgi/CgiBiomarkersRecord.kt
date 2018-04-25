@@ -6,6 +6,8 @@ data class CgiBiomarkersRecord(private val csvRecord: CSVRecord) {
     val gene: String = csvRecord["Gene"]
     val gdna: String = csvRecord["gDNA"] ?: "na"
     val cdna: String = csvRecord["cDNA"] ?: "na"
+    val alterationType: String = csvRecord["Alteration type"]
+    val alteration: String = csvRecord["Alteration"]
     val transcript: String = csvRecord["transcript"] ?: "na"
     val protein: String = csvRecord["individual_mutation"]?.substringAfter(':', "") ?: "na"
     val drug: String = csvRecord["Drug full name"]

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.knowledgebaseimporter.cgi
 
 import com.hartwig.hmftools.common.variant.SomaticVariant
 import com.hartwig.hmftools.knowledgebaseimporter.output.Actionability
+import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableCNVOutput
 import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableVariantOutput
 import com.hartwig.hmftools.knowledgebaseimporter.output.KnownVariantOutput
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.*
@@ -13,6 +14,8 @@ import org.apache.commons.csv.CSVParser
 import org.apache.commons.csv.CSVRecord
 import java.io.File
 import java.nio.charset.Charset
+
+private const val SOURCE = "cgi"
 
 fun analyzeCgi(transvarLocation: String, fileLocation: String, reference: IndexedFastaSequenceFile): List<KnownVariantOutput> {
     val somaticRecords = readCgiRecords(fileLocation) { CgiKnownVariantRecord(it) }.filter { it.context == "somatic" }
@@ -70,7 +73,19 @@ fun actionableVariantOutput(cgiRecord: CgiBiomarkersRecord, somaticVariants: Lis
     return cgiRecord.cancerTypes.flatMap { cancerType ->
         somaticVariants.map { somaticVariant ->
             ActionableVariantOutput(cgiRecord.gene, somaticVariant,
-                                    Actionability("cgi", cancerType, cgiRecord.drug, cgiRecord.level, cgiRecord.association, ""))
+                                    Actionability(SOURCE, cancerType, cgiRecord.drug, cgiRecord.level, cgiRecord.association, ""))
+        }
+    }
+}
+
+private fun extractAmpOrDel(alteration: String): String = if (alteration.contains("amp")) "Amplification" else "Deletion"
+
+fun analyzeCgiAmpsAndDels(fileLocation: String): List<ActionableCNVOutput> {
+    val cnaRecords = readCgiRecords(fileLocation) { CgiBiomarkersRecord(it) }.filter { it.alterationType == "CNA" }
+    return cnaRecords.flatMap { record ->
+        record.cancerTypes.map { cancerType ->
+            ActionableCNVOutput(record.gene, extractAmpOrDel(record.alteration),
+                                Actionability(SOURCE, cancerType, record.drug, record.level, record.association, ""))
         }
     }
 }
