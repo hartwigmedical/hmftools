@@ -23,8 +23,7 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
 
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
     override val knownFusionPairs: List<Pair<String, String>> by lazy { knownFusions() }
-    override val promiscuousGenes: List<String>
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    override val promiscuousGenes: List<String> by lazy { promiscuousGenes() }
     override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableVariants() }
     override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableCNVs() }
     override val actionableFusions: List<ActionableFusionOutput>
@@ -45,15 +44,8 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
         }.map { flipGenePairs(it) }.distinct()
     }
 
-    private fun flipGenePairs(fusionPair: Pair<String, String>): Pair<String, String> {
-        println(fusionPair)
-        return when (fusionPair) {
-            Pair("ROS1", "CD74") -> Pair("CD74", "ROS1")
-            Pair("EP300", "MLL") -> Pair("MLL", "EP300")
-            Pair("EP300", "MOZ") -> Pair("MOZ", "EP300")
-            Pair("RET", "CCDC6") -> Pair("CCDC6", "RET")
-            else                 -> fusionPair
-        }
+    private fun promiscuousGenes(): List<String> {
+        return annotatedRecords.filter { it.alteration.contains(Regex("Fusions")) }.map { it.gene }.distinct()
     }
 
     private fun actionableVariants(): List<ActionableVariantOutput> {
@@ -84,6 +76,17 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
             record.alteration.contains(Regex("IGH-NKX2")) && record.gene == "NKX2-1" ->
                 record.copy(alteration = record.alteration.replace("IGH-NKX2", "IGH-NKX2-1"))
             else                                                                     -> record
+        }
+    }
+
+    private fun flipGenePairs(fusionPair: Pair<String, String>): Pair<String, String> {
+        println(fusionPair)
+        return when (fusionPair) {
+            Pair("ROS1", "CD74") -> Pair("CD74", "ROS1")
+            Pair("EP300", "MLL") -> Pair("MLL", "EP300")
+            Pair("EP300", "MOZ") -> Pair("MOZ", "EP300")
+            Pair("RET", "CCDC6") -> Pair("CCDC6", "RET")
+            else                 -> fusionPair
         }
     }
 
