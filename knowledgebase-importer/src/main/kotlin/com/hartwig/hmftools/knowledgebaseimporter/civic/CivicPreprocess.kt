@@ -9,12 +9,16 @@ import java.nio.charset.Charset
 
 private val format = CSVFormat.TDF.withFirstRecordAsHeader()
 
-fun preProcessCivic(variantFileLocation: String, evidenceFileLocation: String): List<CivicRecord> {
+fun preProcessCivicRecords(variantFileLocation: String, evidenceFileLocation: String): List<CivicRecord> {
     val variantEvidenceMap = readEvidenceMap(evidenceFileLocation)
     val parser = CSVParser.parse(File(variantFileLocation), Charset.defaultCharset(), format)
     return parser.iterator().asSequence().map { CivicRecord(it, variantEvidenceMap) }
-            .filter { (!it.chromosome.isBlank() && !it.start.isBlank() && !it.stop.isBlank() && (!it.ref.isBlank() || !it.alt.isBlank())) || (!it.hgvs.isBlank()) }
             .toList()
+}
+
+fun preProcessCivicVariants(variantFileLocation: String, evidenceFileLocation: String): List<CivicRecord> {
+    return preProcessCivicRecords(variantFileLocation, evidenceFileLocation)
+            .filter { (!it.chromosome.isBlank() && !it.start.isBlank() && !it.stop.isBlank() && (!it.ref.isBlank() || !it.alt.isBlank())) || (!it.hgvs.isBlank()) }
 }
 
 private fun readEvidenceMap(evidenceFileLocation: String): Multimap<String, CivicEvidence> {
