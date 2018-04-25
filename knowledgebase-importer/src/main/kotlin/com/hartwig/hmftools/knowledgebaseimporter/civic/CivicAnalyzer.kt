@@ -2,6 +2,7 @@ package com.hartwig.hmftools.knowledgebaseimporter.civic
 
 import com.hartwig.hmftools.common.variant.SomaticVariant
 import com.hartwig.hmftools.knowledgebaseimporter.output.Actionability
+import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableCNVOutput
 import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableVariantOutput
 import com.hartwig.hmftools.knowledgebaseimporter.output.KnownVariantOutput
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.TransvarCdnaAnalyzer
@@ -10,9 +11,11 @@ import com.hartwig.hmftools.knowledgebaseimporter.transvar.extractVariants
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.somaticVariant
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 
-fun analyzeCivic(transvarLocation: String, variantFileLocation: String, evidenceFileLocation: String,
-                 reference: IndexedFastaSequenceFile): List<Pair<CivicRecord, SomaticVariant>> {
-    val records = preProcessCivic(variantFileLocation, evidenceFileLocation)
+private const val SOURCE = "civic"
+
+fun readCivicVariants(transvarLocation: String, variantFileLocation: String, evidenceFileLocation: String,
+                      reference: IndexedFastaSequenceFile): List<Pair<CivicRecord, SomaticVariant>> {
+    val records = preProcessCivicVariants(variantFileLocation, evidenceFileLocation)
     val analyzer = TransvarCdnaAnalyzer(transvarLocation)
     val cdnaRecords = records.map { record ->
         val hgvsParts = record.hgvs.split(":")
@@ -33,7 +36,7 @@ fun analyzeCivic(transvarLocation: String, variantFileLocation: String, evidence
 
 fun analyzeKnownCivicVariants(transvarLocation: String, variantFileLocation: String, evidenceFileLocation: String,
                               reference: IndexedFastaSequenceFile): List<KnownVariantOutput> {
-    val civicVariants = analyzeCivic(transvarLocation, variantFileLocation, evidenceFileLocation, reference)
+    val civicVariants = readCivicVariants(transvarLocation, variantFileLocation, evidenceFileLocation, reference)
     return civicVariants.map { (civicRecord, somaticVariant) ->
         KnownVariantOutput(civicRecord.gene, civicRecord.transcript, additionalInfo(civicRecord), somaticVariant)
     }
@@ -41,13 +44,13 @@ fun analyzeKnownCivicVariants(transvarLocation: String, variantFileLocation: Str
 
 fun analyzeCivicActionable(transvarLocation: String, variantFileLocation: String, evidenceFileLocation: String,
                            reference: IndexedFastaSequenceFile): List<ActionableVariantOutput> {
-    val civicVariants = analyzeCivic(transvarLocation, variantFileLocation, evidenceFileLocation, reference)
+    val civicVariants = readCivicVariants(transvarLocation, variantFileLocation, evidenceFileLocation, reference)
     return civicVariants.flatMap { (record, somaticVariant) ->
         record.evidence.filter { it.direction == "Supports" }.flatMap { evidence ->
             evidence.drugs.map { drug ->
                 ActionableVariantOutput(record.gene,
                                         somaticVariant,
-                                        Actionability("civic",
+                                        Actionability(SOURCE,
                                                       evidence.cancerType,
                                                       drug,
                                                       evidence.level,
@@ -79,5 +82,19 @@ private fun annotateCivicVariant(civicRecord: CivicRecord, reference: IndexedFas
         }
     } else {
         null
+    }
+}
+
+private fun extractAmpOrDel(variantType: String): String = if (variantType == "AMPLIFICATION") "Amplification" else "Deletion"
+
+fun analyzeCivicAmpsAndDels(variantFileLocation: String, evidenceFileLocation: String): List<ActionableCNVOutput> {
+    val records = preProcessCivicRecords(variantFileLocation, evidenceFileLocation)
+    return records.filter { it.variant == "AMPLIFICATION" || it.variant == "DELETION" || it.variant == "LOH" }.flatMap { record ->
+        record.evidence.flatMap { evidence ->
+            evidence.drugs.map { drug ->
+                ActionableCNVOutput(record.gene, extractAmpOrDel(record.variant),
+                                    Actionability(SOURCE, evidence.cancerType, drug, evidence.level, evidence.significance, evidence.type))
+            }
+        }
     }
 }
