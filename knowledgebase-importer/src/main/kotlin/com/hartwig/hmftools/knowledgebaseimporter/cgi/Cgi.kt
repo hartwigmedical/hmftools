@@ -26,9 +26,8 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
     private val biomarkersRecords = readCSVRecords(biomarkersLocation) { CgiBiomarkersRecord(it) }
 
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
-    override val knownFusionPairs: List<Pair<String, String>> by lazy { knownFusions() }
-    override val promiscuousGenes: List<String>
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    override val knownFusionPairs: List<Pair<String, String>> by lazy { fusionRecords().filterNot { it.second == "." } }
+    override val promiscuousGenes: List<String> by lazy { fusionRecords().filter { it.second == "." }.map { it.first } }
     override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableVariants() }
     override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableCNVs() }
     override val actionableFusions: List<ActionableFusionOutput>
@@ -69,12 +68,11 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
         }
     }
 
-    private fun knownFusions(): List<Pair<String, String>> {
+    private fun fusionRecords(): List<Pair<String, String>> {
         return biomarkersRecords.filter { it.alterationType == "FUS" }
                 .mapNotNull { extractFusion(it.gene, it.alteration.trim(), FUSION_SEPARATORS) }
                 .map { flipGenePair(it, FUSIONS_TO_FLIP) }
                 .filterNot { FUSIONS_TO_FILTER.contains(it) }
-                .filterNot { it.second == "." }
                 .distinct()
     }
 
