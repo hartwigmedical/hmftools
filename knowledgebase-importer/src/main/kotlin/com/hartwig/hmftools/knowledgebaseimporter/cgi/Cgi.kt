@@ -2,6 +2,8 @@ package com.hartwig.hmftools.knowledgebaseimporter.cgi
 
 import com.hartwig.hmftools.common.variant.SomaticVariant
 import com.hartwig.hmftools.knowledgebaseimporter.Knowledgebase
+import com.hartwig.hmftools.knowledgebaseimporter.extractFusion
+import com.hartwig.hmftools.knowledgebaseimporter.flipGenePair
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
 import com.hartwig.hmftools.knowledgebaseimporter.readCSVRecords
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.*
@@ -13,6 +15,9 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
         Knowledgebase {
     companion object {
         private const val SOURCE: String = "cgi"
+        private val FUSION_SEPARATORS = listOf("__")
+        private val FUSIONS_TO_FLIP = setOf(Pair("ABL1", "BCR"), Pair("PDGFRA", "FIP1L1"), Pair("PDGFB", "COL1A1"))
+        private val FUSIONS_TO_FILTER = setOf(Pair("RET", "TPCN1"))
     }
 
     private val proteinAnalyzer = TransvarProteinAnalyzer(transvarLocation)
@@ -21,8 +26,7 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
     private val biomarkersRecords = readCSVRecords(biomarkersLocation) { CgiBiomarkersRecord(it) }
 
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
-    override val knownFusionPairs: List<Pair<String, String>>
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    override val knownFusionPairs: List<Pair<String, String>> by lazy { knownFusions() }
     override val promiscuousGenes: List<String>
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableVariants() }
@@ -63,6 +67,15 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
                 ActionableCNVOutput(record.gene, extractAmpOrDel(record.alteration), actionability(cancerType, record))
             }
         }
+    }
+
+    private fun knownFusions(): List<Pair<String, String>> {
+        return biomarkersRecords.filter { it.alterationType == "FUS" }
+                .mapNotNull { extractFusion(it.gene, it.alteration.trim(), FUSION_SEPARATORS) }
+                .map { flipGenePair(it, FUSIONS_TO_FLIP) }
+                .filterNot { FUSIONS_TO_FILTER.contains(it) }
+                .filterNot { it.second == "." }
+                .distinct()
     }
 
     private fun extractCgiVariants(gdna: String, reference: IndexedFastaSequenceFile): List<SomaticVariant> {

@@ -35,3 +35,11 @@ fun isThreeGene(gene: String, fusion: String, separator: String): Boolean {
 fun isFiveGene(gene: String, fusion: String, separator: String): Boolean {
     return fusion.contains("$gene$separator")
 }
+
+fun flipGenePair(pair: Pair<String, String>, pairsToFlip: Set<Pair<String, String>>): Pair<String, String> {
+    return if (pairsToFlip.contains(pair)) {
+        Pair(pair.second, pair.first)
+    } else {
+        pair
+    }
+}
