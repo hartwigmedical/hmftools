@@ -48,7 +48,7 @@ public class DrupPatientReader implements PatientReader {
                 matchedBiopsies.values(),
                 Lists.newArrayList(),
                 Lists.newArrayList(),
-                Lists.newArrayList(),
+                Lists.newArrayList(), Lists.newArrayList(),
                 matchedBiopsies.findings());
     }
 }

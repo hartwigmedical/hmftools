@@ -123,6 +123,19 @@ CREATE TABLE tumorMarker
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
 
+DROP TABLE IF EXISTS ranoMeasurement;
+CREATE TABLE ranoMeasurement
+(   id int NOT NULL AUTO_INCREMENT,
+    patientId int NOT NULL,
+    responseDate DATE,
+    therapyGiven varchar(50),
+    targetLesionResponse varchar(50),
+    noTargetLesionResponse varchar(50),
+    overallResponse varchar(50),
+    PRIMARY KEY (id),
+    FOREIGN KEY (patientId) REFERENCES patient(id)
+);
+
 DROP TABLE IF EXISTS clinicalFindings;
 CREATE TABLE clinicalFindings
 (   id int NOT NULL AUTO_INCREMENT,

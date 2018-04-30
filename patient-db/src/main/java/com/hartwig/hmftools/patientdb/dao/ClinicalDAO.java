@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRUG;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.FORMSMETADATA;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PATIENT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PRETREATMENTDRUG;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.RANOMEASUREMENT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SAMPLE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATMENT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATMENTRESPONSE;
@@ -24,6 +25,7 @@ import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.data.TumorMarkerData;
+import com.hartwig.hmftools.patientdb.data.ranoMeasurement;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -52,6 +54,7 @@ class ClinicalDAO {
         context.truncate(DRUG).execute();
         context.truncate(TREATMENTRESPONSE).execute();
         context.truncate(TUMORMARKER).execute();
+        context.truncate(RANOMEASUREMENT).execute();
         context.truncate(FORMSMETADATA).execute();
         context.execute("SET FOREIGN_KEY_CHECKS = 1;");
     }
@@ -64,6 +67,7 @@ class ClinicalDAO {
         patient.treatments().forEach(treatment -> writeTreatmentData(patientId, treatment));
         patient.treatmentResponses().forEach(response -> writeTreatmentResponseData(patientId, response));
         patient.tumorMarkers().forEach(tumorMarker -> writeTumorMarkerData(patientId, tumorMarker));
+        patient.ranoMeasurement().forEach(ranoMeasurement -> writeRanoMeasurementData(patientId, ranoMeasurement));
     }
 
     void writeSampleClinicalData(@NotNull String patientIdentifier, @NotNull List<SampleData> samples) {
@@ -270,6 +274,27 @@ class ClinicalDAO {
                 .getValue(TUMORMARKER.ID);
 
         writeFormStatus(id, TUMORMARKER.getName(), "tumorMarker", tumorMarker.formStatus());
+    }
+
+    private void writeRanoMeasurementData(final int patientId, @NotNull final ranoMeasurement RanoMeasurement) {
+        final int id = context.insertInto(RANOMEASUREMENT,
+                RANOMEASUREMENT.PATIENTID,
+                RANOMEASUREMENT.RESPONSEDATE,
+                RANOMEASUREMENT.THERAPYGIVEN,
+                RANOMEASUREMENT.TARGETLESIONRESPONSE,
+                RANOMEASUREMENT.NOTARGETLESIONRESPONSE,
+                RANOMEASUREMENT.OVERALLRESPONSE)
+                .values(patientId,
+                        Utils.toSQLDate(RanoMeasurement.responseDate()),
+                        RanoMeasurement.therapyGiven(),
+                        RanoMeasurement.targetLesionResponse(),
+                        RanoMeasurement.noTargetLesionResponse(),
+                        RanoMeasurement.overallResponse())
+                .returning(RANOMEASUREMENT.ID)
+                .fetchOne()
+                .getValue(RANOMEASUREMENT.ID);
+
+        writeFormStatus(id, RANOMEASUREMENT.getName(), "RanoMeasurement", RanoMeasurement.formStatus());
     }
 
     private void writeFormStatus(final int id, @NotNull final String tableName, @NotNull final String formName,

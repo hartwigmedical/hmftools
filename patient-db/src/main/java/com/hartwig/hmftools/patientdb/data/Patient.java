@@ -25,13 +25,15 @@ public class Patient {
     @NotNull
     private final List<TumorMarkerData> tumorMarkers;
     @NotNull
+    private final List<ranoMeasurement> ranoMeasurement;
+    @NotNull
     private final List<ValidationFinding> matchFindings;
 
     public Patient(@NotNull final String patientIdentifier, @NotNull final BaselineData baselineData,
             @NotNull final PreTreatmentData preTreatmentData, @NotNull final List<SampleData> sequencedBiopsies,
             @NotNull final List<BiopsyData> clinicalBiopsies, @NotNull final List<BiopsyTreatmentData> treatments,
             @NotNull final List<BiopsyTreatmentResponseData> treatmentResponses, @NotNull final List<TumorMarkerData> tumorMarkers,
-            @NotNull final List<ValidationFinding> matchFindings) {
+            @NotNull final List<ranoMeasurement> ranoMeasurement, @NotNull final List<ValidationFinding> matchFindings) {
         this.patientIdentifier = patientIdentifier;
         this.baselineData = baselineData;
         this.preTreatmentData = preTreatmentData;
@@ -40,6 +42,7 @@ public class Patient {
         this.treatments = treatments;
         this.treatmentResponses = treatmentResponses;
         this.tumorMarkers = tumorMarkers;
+        this.ranoMeasurement = ranoMeasurement;
         this.matchFindings = matchFindings;
     }
 
@@ -81,6 +84,11 @@ public class Patient {
     @NotNull
     public List<TumorMarkerData> tumorMarkers() {
         return tumorMarkers;
+    }
+
+    @NotNull
+    public List<ranoMeasurement> ranoMeasurement() {
+        return ranoMeasurement;
     }
 
     @NotNull
