@@ -27,11 +27,13 @@ abstract class LimsJsonData {
     @SerializedName("dna_conc")
     public abstract String dnaConcentration();
 
-    @NotNull
+    // KODU: Sampling date is only known for CPCT/DRUP tumor biopsies.
+    @Nullable
     @SerializedName("sampling_date")
     public abstract String samplingDateString();
 
-    @NotNull
+    // KODU: Tumor biopsies analyzed in research context do not have a proper tumor percentage filled in.
+    @Nullable
     @SerializedName("tumor_perc")
     public abstract String tumorPercentageString();
 
