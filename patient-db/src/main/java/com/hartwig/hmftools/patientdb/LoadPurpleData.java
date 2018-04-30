@@ -14,6 +14,8 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityRangeFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
+import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.region.FittedRegionFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -43,20 +45,27 @@ public class LoadPurpleData {
         final String tumorSample = cmd.getOptionValue(SAMPLE);
         final String purplePath = cmd.getOptionValue(PURPLE_DIR);
 
-        LOGGER.info("Persisting purity data");
+        LOGGER.info("Reading data from {}", purplePath);
         final PurpleQC purpleQC = PurpleQCFile.read(PurpleQCFile.generateFilename(purplePath, tumorSample));
         final PurityContext purityContext = FittedPurityFile.read(purplePath, tumorSample);
         final List<FittedPurity> bestFitPerPurity = FittedPurityRangeFile.read(purplePath, tumorSample);
-        dbAccess.writePurity(tumorSample, purityContext, purpleQC);
-        dbAccess.writeBestFitPerPurity(tumorSample, bestFitPerPurity);
-
-        LOGGER.info("Persisting copy numbers");
-        final List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(purplePath, tumorSample);
-        dbAccess.writeCopynumbers(tumorSample, copyNumbers);
-
-        LOGGER.info("Persisting gene copy numbers");
         final List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilename(purplePath, tumorSample));
-        dbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers);
+        final List<PurpleCopyNumber> copyNumbers =
+                PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilename(purplePath, tumorSample));
+        final List<PurpleCopyNumber> germlineDeletions =
+                PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateGermlineFilename(purplePath, tumorSample));
+        final List<FittedRegion> enrichedFittedRegions = FittedRegionFile.read(FittedRegionFile.generateFilename(purplePath, tumorSample));
+
+        LOGGER.info("Persisting to db");
+        persistToDatabase(dbAccess,
+                tumorSample,
+                bestFitPerPurity,
+                copyNumbers,
+                germlineDeletions,
+                enrichedFittedRegions,
+                purityContext,
+                purpleQC,
+                geneCopyNumbers);
 
         LOGGER.info("Complete");
     }
@@ -86,4 +95,17 @@ public class LoadPurpleData {
         final String jdbcUrl = "jdbc:" + databaseUrl;
         return new DatabaseAccess(userName, password, jdbcUrl);
     }
+
+    public static void persistToDatabase(final DatabaseAccess dbAccess, final String tumorSample, final List<FittedPurity> bestFitPerPurity,
+            final List<PurpleCopyNumber> copyNumbers, final List<PurpleCopyNumber> germlineDeletions,
+            final List<FittedRegion> enrichedFittedRegions, final PurityContext purityContext, final PurpleQC qcChecks,
+            final List<GeneCopyNumber> geneCopyNumbers) {
+        dbAccess.writePurity(tumorSample, purityContext, qcChecks);
+        dbAccess.writeBestFitPerPurity(tumorSample, bestFitPerPurity);
+        dbAccess.writeCopynumbers(tumorSample, copyNumbers);
+        dbAccess.writeGermlineCopynumbers(tumorSample, germlineDeletions);
+        dbAccess.writeCopynumberRegions(tumorSample, enrichedFittedRegions);
+        dbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers);
+    }
+
 }

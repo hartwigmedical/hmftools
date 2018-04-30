@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.common.purple.region;
 
+import static java.util.stream.Collectors.toList;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collection;
+import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
@@ -18,14 +21,26 @@ public enum FittedRegionFile {
     private static final String DELIMITER = "\t";
     static final String HEADER_PREFIX = "#";
 
-    public static void writeCopyNumber(@NotNull final String basePath, @NotNull final String sample,
-            @NotNull Collection<FittedRegion> copyNumbers) throws IOException {
-        final String filePath = basePath + File.separator + sample + EXTENSION;
+    @NotNull
+    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
+        return basePath + File.separator + sample + EXTENSION;
+    }
+
+    public static void write(@NotNull final String filePath, @NotNull Collection<FittedRegion> copyNumbers) throws IOException {
         final Collection<String> lines = Lists.newArrayList();
         lines.add(header());
         copyNumbers.stream().map(FittedRegionFile::toString).forEach(lines::add);
-
         Files.write(new File(filePath).toPath(), lines);
+    }
+
+    @NotNull
+    public static List<FittedRegion> read(final String filePath) throws IOException {
+        return fromLines(Files.readAllLines(new File(filePath).toPath()));
+    }
+
+    @NotNull
+    static List<FittedRegion> fromLines(@NotNull List<String> lines) {
+        return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(FittedRegionFile::fromString).collect(toList());
     }
 
     @NotNull

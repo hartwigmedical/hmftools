@@ -32,8 +32,7 @@ public enum PurpleCopyNumberFile {
     }
 
     @NotNull
-    public static List<PurpleCopyNumber> read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
-        final String filePath = basePath + File.separator + sample + EXTENSION;
+    public static List<PurpleCopyNumber> read(final String filePath) throws IOException {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 

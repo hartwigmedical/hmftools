@@ -48,7 +48,7 @@ final class PatientReporterHelper {
     static List<PurpleCopyNumber> loadPurpleCopyNumbers(@NotNull final String runDirectory, @NotNull final String sample)
             throws IOException {
         final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
-        return PurpleCopyNumberFile.read(cnvBasePath, sample);
+        return PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilename(cnvBasePath, sample));
     }
 
     @NotNull
