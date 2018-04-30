@@ -2,6 +2,7 @@ package com.hartwig.hmftools.knowledgebaseimporter.oncoKb
 
 import com.hartwig.hmftools.knowledgebaseimporter.Knowledgebase
 import com.hartwig.hmftools.knowledgebaseimporter.extractFusion
+import com.hartwig.hmftools.knowledgebaseimporter.flipGenePair
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
 import com.hartwig.hmftools.knowledgebaseimporter.readCSVRecords
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.TransvarProteinAnalyzer
@@ -15,6 +16,7 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
     companion object {
         private const val SOURCE: String = "oncoKb"
         private val FUSION_SEPARATORS = listOf("-", " - ", "?")
+        private val FUSIONS_TO_FLIP = setOf(Pair("ROS1", "CD74"), Pair("EP300", "MLL"), Pair("EP300", "MOZ"), Pair("RET", "CCDC6"))
     }
 
     private val proteinAnalyzer by lazy { TransvarProteinAnalyzer(transvarLocation) }
@@ -39,9 +41,10 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
     }
 
     private fun knownFusions(): List<Pair<String, String>> {
-        return annotatedRecords.filter { it.alteration.contains(Regex("Fusion$")) }.mapNotNull {
-            extractFusion(it.gene, it.alteration.substringBefore("Fusion").trim(), FUSION_SEPARATORS)
-        }.map { flipGenePairs(it) }.distinct()
+        return annotatedRecords.filter { it.alteration.contains(Regex("Fusion$")) }
+                .mapNotNull { extractFusion(it.gene, it.alteration.substringBefore("Fusion").trim(), FUSION_SEPARATORS) }
+                .map { flipGenePair(it, FUSIONS_TO_FLIP) }
+                .distinct()
     }
 
     private fun promiscuousGenes(): List<String> {
@@ -78,16 +81,4 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
             else                                                                     -> record
         }
     }
-
-    private fun flipGenePairs(fusionPair: Pair<String, String>): Pair<String, String> {
-        println(fusionPair)
-        return when (fusionPair) {
-            Pair("ROS1", "CD74") -> Pair("CD74", "ROS1")
-            Pair("EP300", "MLL") -> Pair("MLL", "EP300")
-            Pair("EP300", "MOZ") -> Pair("MOZ", "EP300")
-            Pair("RET", "CCDC6") -> Pair("CCDC6", "RET")
-            else                 -> fusionPair
-        }
-    }
-
 }
