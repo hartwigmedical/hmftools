@@ -58,7 +58,7 @@ public abstract class CenterModel {
         if ((ucSample.startsWith("DRUP") || ucSample.startsWith("CPCT")) && sample.length() >= 12) {
             return sample.substring(6, 8);
         }
-        throw new IllegalArgumentException("Sample parameter: " + sample + "was not in CPCT/DRUP format");
+        throw new IllegalArgumentException("Sample parameter: " + sample + " is not in CPCT/DRUP format");
     }
 
     @Nullable
