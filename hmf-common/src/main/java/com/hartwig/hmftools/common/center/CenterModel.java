@@ -23,7 +23,10 @@ public abstract class CenterModel {
     protected abstract Map<String, CenterData> centerPerId();
 
     @Nullable
-    String getCpctRecipients(@NotNull final String centerId) {
+    String getCpctRecipients(@Nullable final String centerId) {
+        if (centerId == null) {
+            return null;
+        }
         final CenterData center = centerPerId().get(centerId);
         if (center == null) {
             LOGGER.error("Center model does not contain id " + centerId);
@@ -33,7 +36,10 @@ public abstract class CenterModel {
     }
 
     @Nullable
-    String getDrupRecipients(@NotNull final String centerId) {
+    String getDrupRecipients(@Nullable final String centerId) {
+        if (centerId == null) {
+            return null;
+        }
         final CenterData center = centerPerId().get(centerId);
         if (center == null) {
             LOGGER.error("Center model does not contain id " + centerId);
@@ -47,23 +53,27 @@ public abstract class CenterModel {
     }
 
     @Nullable
-    CenterData centerPerId(@NotNull final String centerId) {
+    CenterData centerPerId(@Nullable final String centerId) {
         return centerPerId().get(centerId);
     }
 
-    // MIVO: expects sample in DRUP/CPCT format
-    @NotNull
+    @Nullable
     private static String getCenterIdFromSample(@NotNull final String sample) {
         final String ucSample = sample.toUpperCase();
         if ((ucSample.startsWith("DRUP") || ucSample.startsWith("CPCT")) && sample.length() >= 12) {
             return sample.substring(6, 8);
         }
-        throw new IllegalArgumentException("Sample parameter: " + sample + " is not in CPCT/DRUP format");
+
+        LOGGER.warn("Sample parameter: " + sample + " is not in CPCT/DRUP format");
+        return null;
     }
 
     @Nullable
     public String getAddresseeStringForSample(@NotNull final String sample) {
         final String centerId = getCenterIdFromSample(sample);
+        if (centerId == null) {
+            return null;
+        }
         final CenterData center = centerPerId(centerId);
         if (center == null) {
             LOGGER.error("Center model does not contain id " + centerId);
