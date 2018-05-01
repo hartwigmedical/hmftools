@@ -1,11 +1,8 @@
 package com.hartwig.hmftools.knowledgebaseimporter.cgi
 
 import com.hartwig.hmftools.common.variant.SomaticVariant
-import com.hartwig.hmftools.knowledgebaseimporter.Knowledgebase
-import com.hartwig.hmftools.knowledgebaseimporter.extractFusion
-import com.hartwig.hmftools.knowledgebaseimporter.flipGenePair
+import com.hartwig.hmftools.knowledgebaseimporter.*
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
-import com.hartwig.hmftools.knowledgebaseimporter.readCSVRecords
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.*
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.CDnaAnnotation
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.ProteinAnnotation
@@ -16,8 +13,10 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
     companion object {
         private const val SOURCE: String = "cgi"
         private val FUSION_SEPARATORS = listOf("__")
-        private val FUSIONS_TO_FLIP = setOf(Pair("ABL1", "BCR"), Pair("PDGFRA", "FIP1L1"), Pair("PDGFB", "COL1A1"))
-        private val FUSIONS_TO_FILTER = setOf(Pair("RET", "TPCN1"))
+        private val FUSIONS_TO_FLIP = setOf(FusionPair("ABL1", "BCR"),
+                                            FusionPair("PDGFRA", "FIP1L1"),
+                                            FusionPair("PDGFB", "COL1A1"))
+        private val FUSIONS_TO_FILTER = setOf(FusionPair("RET", "TPCN1"))
     }
 
     private val proteinAnalyzer = TransvarProteinAnalyzer(transvarLocation)
@@ -26,8 +25,8 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
     private val biomarkersRecords = readCSVRecords(biomarkersLocation) { CgiBiomarkersRecord(it) }
 
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
-    override val knownFusionPairs: List<Pair<String, String>> by lazy { fusionRecords().filterNot { it.second == "." } }
-    override val promiscuousGenes: List<String> by lazy { fusionRecords().filter { it.second == "." }.map { it.first } }
+    override val knownFusionPairs: List<FusionPair> by lazy { fusionRecords().filterIsInstance<FusionPair>() }
+    override val promiscuousGenes: List<PromiscuousGene> by lazy { fusionRecords().filterIsInstance<PromiscuousGene>() }
     override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableVariants() }
     override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableCNVs() }
     override val actionableFusions: List<ActionableFusionOutput>
@@ -68,10 +67,10 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
         }
     }
 
-    private fun fusionRecords(): List<Pair<String, String>> {
+    private fun fusionRecords(): List<Fusion> {
         return biomarkersRecords.filter { it.alterationType == "FUS" }
                 .mapNotNull { extractFusion(it.gene, it.alteration.trim(), FUSION_SEPARATORS) }
-                .map { flipGenePair(it, FUSIONS_TO_FLIP) }
+                .map { flipFusion(it, FUSIONS_TO_FLIP) }
                 .filterNot { FUSIONS_TO_FILTER.contains(it) }
                 .distinct()
     }

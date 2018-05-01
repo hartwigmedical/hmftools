@@ -1,10 +1,7 @@
 package com.hartwig.hmftools.knowledgebaseimporter.oncoKb
 
-import com.hartwig.hmftools.knowledgebaseimporter.Knowledgebase
-import com.hartwig.hmftools.knowledgebaseimporter.extractFusion
-import com.hartwig.hmftools.knowledgebaseimporter.flipGenePair
+import com.hartwig.hmftools.knowledgebaseimporter.*
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
-import com.hartwig.hmftools.knowledgebaseimporter.readCSVRecords
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.TransvarProteinAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.ProteinAnnotation
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.extractVariants
@@ -16,7 +13,10 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
     companion object {
         private const val SOURCE: String = "oncoKb"
         private val FUSION_SEPARATORS = listOf("-", " - ", "?")
-        private val FUSIONS_TO_FLIP = setOf(Pair("ROS1", "CD74"), Pair("EP300", "MLL"), Pair("EP300", "MOZ"), Pair("RET", "CCDC6"))
+        private val FUSIONS_TO_FLIP = setOf(FusionPair("ROS1", "CD74"),
+                                            FusionPair("EP300", "MLL"),
+                                            FusionPair("EP300", "MOZ"),
+                                            FusionPair("RET", "CCDC6"))
     }
 
     private val proteinAnalyzer by lazy { TransvarProteinAnalyzer(transvarLocation) }
@@ -24,8 +24,8 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
     private val actionableRecords by lazy { readCSVRecords(actionableVariantsLocation) { OncoActionableVariantRecord(it) } }
 
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
-    override val knownFusionPairs: List<Pair<String, String>> by lazy { knownFusions() }
-    override val promiscuousGenes: List<String> by lazy { promiscuousGenes() }
+    override val knownFusionPairs: List<FusionPair> by lazy { knownFusions() }
+    override val promiscuousGenes: List<PromiscuousGene> by lazy { promiscuousGenes() }
     override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableVariants() }
     override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableCNVs() }
     override val actionableFusions: List<ActionableFusionOutput>
@@ -40,15 +40,19 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
                 }
     }
 
-    private fun knownFusions(): List<Pair<String, String>> {
+    private fun knownFusions(): List<FusionPair> {
         return annotatedRecords.filter { it.alteration.contains(Regex("Fusion$")) }
-                .mapNotNull { extractFusion(it.gene, it.alteration.substringBefore("Fusion").trim(), FUSION_SEPARATORS) }
-                .map { flipGenePair(it, FUSIONS_TO_FLIP) }
+                .mapNotNull { extractFusion(it.gene, it.alteration, FUSION_SEPARATORS) }
+                .map { flipFusion(it, FUSIONS_TO_FLIP) }
+                .filterIsInstance<FusionPair>()
                 .distinct()
     }
 
-    private fun promiscuousGenes(): List<String> {
-        return annotatedRecords.filter { it.alteration.contains(Regex("Fusions")) }.map { it.gene }.distinct()
+    private fun promiscuousGenes(): List<PromiscuousGene> {
+        return annotatedRecords.filter { it.alteration.contains(Regex("Fusions")) }
+                .mapNotNull { extractFusion(it.gene, it.alteration, FUSION_SEPARATORS) }
+                .filterIsInstance<PromiscuousGene>()
+                .distinct()
     }
 
     private fun actionableVariants(): List<ActionableVariantOutput> {
