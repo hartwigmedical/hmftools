@@ -25,12 +25,11 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
     private val biomarkersRecords by lazy { readTSVRecords(biomarkersLocation) { CgiBiomarkersRecord(it) } }
 
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
-    override val knownFusionPairs: List<FusionPair> by lazy { fusionRecords().filterIsInstance<FusionPair>() }
-    override val promiscuousGenes: List<PromiscuousGene> by lazy { fusionRecords().filterIsInstance<PromiscuousGene>() }
+    override val knownFusionPairs: List<FusionPair> by lazy { actionableFusions.map { it.fusion }.filterIsInstance<FusionPair>().distinct() }
+    override val promiscuousGenes: List<PromiscuousGene> by lazy { actionableFusions.map { it.fusion }.filterIsInstance<PromiscuousGene>().distinct() }
     override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableVariants() }
     override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableCNVs() }
-    override val actionableFusions: List<ActionableFusionOutput>
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    override val actionableFusions: List<ActionableFusionOutput> by lazy { actionableFusions() }
 
     private fun knownVariants(): List<KnownVariantOutput> {
         val transvarOutput = proteinAnalyzer.analyze(somaticVariantRecords.map { ProteinAnnotation(it.transcript, it.impact) })
@@ -67,12 +66,14 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
         }
     }
 
-    private fun fusionRecords(): List<Fusion> {
-        return biomarkersRecords.filter { it.alterationType == "FUS" }
-                .map { extractFusion(it.gene, it.alteration.trim(), FUSION_SEPARATORS) }
+    private fun actionableFusions(): List<ActionableFusionOutput> {
+        val fusionRecords = biomarkersRecords.filter { it.alterationType == "FUS" }
+        val fusions = fusionRecords.map { extractFusion(it.gene, it.alteration.trim(), FUSION_SEPARATORS) }
                 .map { flipFusion(it, FUSIONS_TO_FLIP) }
-                .filterNot { FUSIONS_TO_FILTER.contains(it) }
-                .distinct()
+        return fusionRecords.zip(fusions).filterNot { FUSIONS_TO_FILTER.contains(it.second) }
+                .flatMap { (record, fusion) ->
+                    record.cancerTypes.map { cancerType -> ActionableFusionOutput(fusion, actionability(cancerType, record)) }
+                }
     }
 
     private fun extractCgiVariants(gdna: String, reference: IndexedFastaSequenceFile): List<SomaticVariant> {
