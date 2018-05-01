@@ -49,7 +49,6 @@ public enum CodingEffect {
                 return MISSENSE;
             case SPLICE_ACCEPTOR_VARIANT:
             case SPLICE_DONOR_VARIANT:
-            case SPLICE_REGION_VARIANT:
                 return SPLICE;
             case SYNONYMOUS_VARIANT:
                 return SYNONYMOUS;

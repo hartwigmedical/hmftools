@@ -41,10 +41,9 @@ public class CodingEffectTest {
 
         assertEffect(SPLICE, SPLICE_ACCEPTOR_VARIANT);
         assertEffect(SPLICE, SPLICE_DONOR_VARIANT);
-        assertEffect(SPLICE, SPLICE_REGION_VARIANT);
-
         assertEffect(SYNONYMOUS, SYNONYMOUS_VARIANT);
 
+        assertEffect(NONE, SPLICE_REGION_VARIANT);
         assertEffect(NONE, INTRON_VARIANT);
     }
 
@@ -57,7 +56,7 @@ public class CodingEffectTest {
         assertEffect(NONE, INTRON_VARIANT);
     }
 
-    private void assertEffect(@NotNull CodingEffect expected, @NotNull final VariantConsequence... consequences) {
+    private static void assertEffect(@NotNull CodingEffect expected, @NotNull final VariantConsequence... consequences) {
         assertEquals(expected, effect(Lists.newArrayList(consequences)));
     }
 }
