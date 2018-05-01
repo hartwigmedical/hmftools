@@ -60,7 +60,7 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
 
     private fun fusionRecords(): List<Fusion> {
         return records.filter { it.variantTypes.contains("fusion") }
-                .mapNotNull { extractFusion(it.gene, it.variant.trim(), FUSION_SEPARATORS) }
+                .map { extractFusion(it.gene, it.variant.trim(), FUSION_SEPARATORS) }
                 .filterNot { FUSIONS_TO_FILTER.contains(it) }
                 .distinct()
     }

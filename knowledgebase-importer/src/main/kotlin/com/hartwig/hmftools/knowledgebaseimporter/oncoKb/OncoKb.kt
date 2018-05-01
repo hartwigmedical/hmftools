@@ -24,8 +24,8 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
     private val actionableRecords by lazy { readCSVRecords(actionableVariantsLocation) { OncoActionableVariantRecord(it) } }
 
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
-    override val knownFusionPairs: List<FusionPair> by lazy { knownFusions() }
-    override val promiscuousGenes: List<PromiscuousGene> by lazy { promiscuousGenes() }
+    override val knownFusionPairs: List<FusionPair> by lazy { fusions().filterIsInstance<FusionPair>() }
+    override val promiscuousGenes: List<PromiscuousGene> by lazy { fusions().filterIsInstance<PromiscuousGene>() }
     override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableVariants() }
     override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableCNVs() }
     override val actionableFusions: List<ActionableFusionOutput>
@@ -40,18 +40,10 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
                 }
     }
 
-    private fun knownFusions(): List<FusionPair> {
-        return annotatedRecords.filter { it.alteration.contains(Regex("Fusion$")) }
-                .mapNotNull { extractFusion(it.gene, it.alteration, FUSION_SEPARATORS) }
+    private fun fusions(): List<Fusion> {
+        return annotatedRecords.filter { it.alteration.contains(Regex("Fusion")) }
+                .map { extractFusion(it.gene, it.alteration, FUSION_SEPARATORS) }
                 .map { flipFusion(it, FUSIONS_TO_FLIP) }
-                .filterIsInstance<FusionPair>()
-                .distinct()
-    }
-
-    private fun promiscuousGenes(): List<PromiscuousGene> {
-        return annotatedRecords.filter { it.alteration.contains(Regex("Fusions")) }
-                .mapNotNull { extractFusion(it.gene, it.alteration, FUSION_SEPARATORS) }
-                .filterIsInstance<PromiscuousGene>()
                 .distinct()
     }
 

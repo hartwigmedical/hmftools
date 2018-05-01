@@ -69,7 +69,7 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
 
     private fun fusionRecords(): List<Fusion> {
         return biomarkersRecords.filter { it.alterationType == "FUS" }
-                .mapNotNull { extractFusion(it.gene, it.alteration.trim(), FUSION_SEPARATORS) }
+                .map { extractFusion(it.gene, it.alteration.trim(), FUSION_SEPARATORS) }
                 .map { flipFusion(it, FUSIONS_TO_FLIP) }
                 .filterNot { FUSIONS_TO_FILTER.contains(it) }
                 .distinct()
