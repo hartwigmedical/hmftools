@@ -25,12 +25,11 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
     private val civicVariants by lazy { readCivicVariants() }
 
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
-    override val knownFusionPairs: List<FusionPair> by lazy { fusionRecords().filterIsInstance<FusionPair>() }
-    override val promiscuousGenes: List<PromiscuousGene> by lazy { fusionRecords().filterIsInstance<PromiscuousGene>() }
+    override val knownFusionPairs: List<FusionPair> by lazy { actionableFusions.map { it.fusion }.filterIsInstance<FusionPair>().distinct() }
+    override val promiscuousGenes: List<PromiscuousGene> by lazy { actionableFusions.map { it.fusion }.filterIsInstance<PromiscuousGene>().distinct() }
     override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableVariants() }
     override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableCNVs() }
-    override val actionableFusions: List<ActionableFusionOutput>
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    override val actionableFusions: List<ActionableFusionOutput> by lazy { actionableFusions() }
 
     private fun knownVariants(): List<KnownVariantOutput> {
         return civicVariants.map { (civicRecord, somaticVariant) ->
@@ -58,11 +57,17 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
         }
     }
 
-    private fun fusionRecords(): List<Fusion> {
-        return records.filter { it.variantTypes.contains("fusion") }
-                .map { extractFusion(it.gene, it.variant.trim(), FUSION_SEPARATORS) }
-                .filterNot { FUSIONS_TO_FILTER.contains(it) }
-                .distinct()
+    private fun actionableFusions(): List<ActionableFusionOutput> {
+        val fusionRecords = records.filter { it.variantTypes.contains("fusion") }
+        val fusions = fusionRecords.map { extractFusion(it.gene, it.variant.trim(), FUSION_SEPARATORS) }
+        return fusionRecords.zip(fusions).filterNot { FUSIONS_TO_FILTER.contains(it.second) }
+                .flatMap { (record, fusion) ->
+                    record.evidence.flatMap { evidence ->
+                        evidence.drugs.map { drug ->
+                            ActionableFusionOutput(fusion, actionability(drug, evidence))
+                        }
+                    }
+                }
     }
 
     private fun readCivicVariants(): List<Pair<CivicRecord, SomaticVariant>> {
