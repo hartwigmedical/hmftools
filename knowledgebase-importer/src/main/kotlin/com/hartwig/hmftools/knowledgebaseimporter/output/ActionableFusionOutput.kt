@@ -1,5 +1,5 @@
 package com.hartwig.hmftools.knowledgebaseimporter.output
 
-data class ActionableFusionOutput(val gene: String, val partner: String, val actionability: Actionability) {
+import com.hartwig.hmftools.knowledgebaseimporter.Fusion
 
-}
+data class ActionableFusionOutput(val fusion: Fusion, val actionability: Actionability)
