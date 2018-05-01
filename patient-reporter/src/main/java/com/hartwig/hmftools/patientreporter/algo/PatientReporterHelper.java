@@ -82,10 +82,7 @@ final class PatientReporterHelper {
     static PatientTumorLocation extractPatientTumorLocation(@NotNull final List<PatientTumorLocation> patientTumorLocations,
             @NotNull final String sample) {
         final String patientIdentifier = toPatientIdentifier(sample);
-        if (patientIdentifier == null) {
-            LOGGER.warn("Could not resolve patient identifier from " + sample);
-            return null;
-        }
+
         final List<PatientTumorLocation> matchingIdTumorLocations = patientTumorLocations.stream()
                 .filter(patientTumorLocation -> patientTumorLocation.patientIdentifier().equals(patientIdentifier))
                 .collect(Collectors.toList());
@@ -96,13 +93,17 @@ final class PatientReporterHelper {
         if (matchingIdTumorLocations.size() == 1) {
             return matchingIdTumorLocations.get(0);
         } else {
-            LOGGER.warn("Could not find patient " + patientIdentifier + " in CPCT ECRF data dump!");
+            LOGGER.warn("Could not find patient " + patientIdentifier + " in clinical data!");
             return null;
         }
     }
 
-    @Nullable
+    @NotNull
     private static String toPatientIdentifier(@NotNull final String sample) {
-        return sample.length() >= 12 ? sample.substring(0, 12) : null;
+        if (sample.length() >= 12 && (sample.startsWith("CPCT") || sample.startsWith("DRUP"))) {
+            return sample.substring(0, 12);
+        }
+        // KODU: If we want to generate a report for non-CPCT/non-DRUP we assume patient and sample are identical.
+        return sample;
     }
 }
