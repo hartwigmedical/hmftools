@@ -6,7 +6,17 @@ import org.apache.commons.csv.CSVRecord
 import java.io.File
 import java.nio.charset.Charset
 
+fun <T> readTSVRecords(fileLocation: String, recordParser: (CSVRecord) -> T): List<T> {
+    val format = CSVFormat.TDF.withIgnoreSurroundingSpaces().withFirstRecordAsHeader().withNullString("")
+    return readRecords(fileLocation, format, recordParser)
+}
+
 fun <T> readCSVRecords(fileLocation: String, recordParser: (CSVRecord) -> T): List<T> {
-    val parser = CSVParser.parse(File(fileLocation), Charset.defaultCharset(), CSVFormat.TDF.withFirstRecordAsHeader().withNullString(""))
+    val format = CSVFormat.DEFAULT.withIgnoreSurroundingSpaces().withFirstRecordAsHeader().withNullString("")
+    return readRecords(fileLocation, format, recordParser)
+}
+
+fun <T> readRecords(fileLocation: String, format: CSVFormat, recordParser: (CSVRecord) -> T): List<T> {
+    val parser = CSVParser.parse(File(fileLocation), Charset.defaultCharset(), format)
     return parser.asSequence().map { recordParser(it) }.toList()
 }

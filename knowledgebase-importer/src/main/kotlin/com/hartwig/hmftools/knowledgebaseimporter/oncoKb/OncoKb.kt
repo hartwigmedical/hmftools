@@ -19,9 +19,9 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
                                             FusionPair("RET", "CCDC6"))
     }
 
-    private val proteinAnalyzer by lazy { TransvarProteinAnalyzer(transvarLocation) }
-    private val annotatedRecords by lazy { readCSVRecords(annotatedVariantsLocation) { OncoAnnotatedVariantRecord(it) }.map { preProcess(it) } }
-    private val actionableRecords by lazy { readCSVRecords(actionableVariantsLocation) { OncoActionableVariantRecord(it) } }
+    private val proteinAnalyzer = TransvarProteinAnalyzer(transvarLocation)
+    private val annotatedRecords by lazy { readTSVRecords(annotatedVariantsLocation) { OncoAnnotatedVariantRecord(it) }.map { preProcess(it) } }
+    private val actionableRecords by lazy { readTSVRecords(actionableVariantsLocation) { OncoActionableVariantRecord(it) } }
 
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
     override val knownFusionPairs: List<FusionPair> by lazy { fusions().filterIsInstance<FusionPair>() }

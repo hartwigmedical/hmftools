@@ -21,7 +21,7 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
     }
 
     private val cdnaAnalyzer = TransvarCdnaAnalyzer(transvarLocation)
-    private val records = preProcessCivicRecords(variantsLocation, evidenceLocation)
+    private val records by lazy { preProcessCivicRecords(variantsLocation, evidenceLocation) }
     private val civicVariants by lazy { readCivicVariants() }
 
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
@@ -95,12 +95,12 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
 
     private fun preProcessCivicRecords(variantFileLocation: String, evidenceFileLocation: String): List<CivicRecord> {
         val variantEvidenceMap = readEvidenceMap(evidenceFileLocation)
-        return readCSVRecords(variantFileLocation) { CivicRecord(it, variantEvidenceMap) }.map { correctCivicVariants(it) }
+        return readTSVRecords(variantFileLocation) { CivicRecord(it, variantEvidenceMap) }.map { correctCivicVariants(it) }
     }
 
     private fun readEvidenceMap(evidenceLocation: String): Multimap<String, CivicEvidence> {
         val evidenceMap = ArrayListMultimap.create<String, CivicEvidence>()
-        readCSVRecords(evidenceLocation) { csvRecord -> evidenceMap.put(csvRecord["variant_id"], CivicEvidence(csvRecord)) }
+        readTSVRecords(evidenceLocation) { csvRecord -> evidenceMap.put(csvRecord["variant_id"], CivicEvidence(csvRecord)) }
         return evidenceMap
     }
 

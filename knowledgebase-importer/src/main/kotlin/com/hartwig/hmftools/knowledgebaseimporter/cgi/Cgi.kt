@@ -21,8 +21,8 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
 
     private val proteinAnalyzer = TransvarProteinAnalyzer(transvarLocation)
     private val cdnaAnalyzer = TransvarCdnaAnalyzer(transvarLocation)
-    private val somaticVariantRecords = readCSVRecords(variantsLocation) { CgiKnownVariantRecord(it) }.filter { it.context == "somatic" }
-    private val biomarkersRecords = readCSVRecords(biomarkersLocation) { CgiBiomarkersRecord(it) }
+    private val somaticVariantRecords by lazy { readTSVRecords(variantsLocation) { CgiKnownVariantRecord(it) }.filter { it.context == "somatic" } }
+    private val biomarkersRecords by lazy { readTSVRecords(biomarkersLocation) { CgiBiomarkersRecord(it) } }
 
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
     override val knownFusionPairs: List<FusionPair> by lazy { fusionRecords().filterIsInstance<FusionPair>() }
