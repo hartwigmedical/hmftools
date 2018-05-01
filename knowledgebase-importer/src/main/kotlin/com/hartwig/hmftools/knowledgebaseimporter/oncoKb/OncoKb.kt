@@ -28,8 +28,7 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
     override val promiscuousGenes: List<PromiscuousGene> by lazy { fusions().filterIsInstance<PromiscuousGene>() }
     override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableVariants() }
     override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableCNVs() }
-    override val actionableFusions: List<ActionableFusionOutput>
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    override val actionableFusions: List<ActionableFusionOutput> by lazy { actionableFusions() }
 
     private fun knownVariants(): List<KnownVariantOutput> {
         val transvarOutput = proteinAnalyzer.analyze(annotatedRecords.map { ProteinAnnotation(it.transcript, it.alteration) })
@@ -47,15 +46,24 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
                 .distinct()
     }
 
+    private fun actionableFusions(): List<ActionableFusionOutput> {
+        val fusionRecords = actionableRecords.filter { it.alteration.contains(Regex("Fusion")) }
+        val fusions = fusionRecords.map { extractFusion(it.gene, it.alteration, FUSION_SEPARATORS) }.map { flipFusion(it, FUSIONS_TO_FLIP) }
+        return fusionRecords.zip(fusions)
+                .flatMap { (record, fusion) ->
+                    record.drugs.map { drug ->
+                        ActionableFusionOutput(fusion, actionability(drug, record))
+                    }
+                }
+    }
+
     private fun actionableVariants(): List<ActionableVariantOutput> {
         val transvarOutput = proteinAnalyzer.analyze(actionableRecords.map { ProteinAnnotation(it.transcript, it.alteration) })
         return actionableRecords.zip(transvarOutput)
                 .flatMap { (record, transvarOutput) -> extractVariants(transvarOutput, reference).map { Pair(record, it) } }
                 .flatMap { (record, somaticVariant) ->
                     record.drugs.map { drug ->
-                        ActionableVariantOutput(record.gene,
-                                                somaticVariant,
-                                                Actionability(SOURCE, record.cancerType, drug, record.level, record.significance, ""))
+                        ActionableVariantOutput(record.gene, somaticVariant, actionability(drug, record))
                     }
                 }
     }
@@ -63,9 +71,7 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
     private fun actionableCNVs(): List<ActionableCNVOutput> {
         return actionableRecords.filter { it.alteration == "Amplification" || it.alteration == "Deletion" }.flatMap { record ->
             record.drugs.map { drug ->
-                ActionableCNVOutput(record.gene,
-                                    record.alteration,
-                                    Actionability(SOURCE, record.cancerType, drug, record.level, record.significance, ""))
+                ActionableCNVOutput(record.gene, record.alteration, actionability(drug, record))
             }
         }
     }
@@ -76,5 +82,9 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
                 record.copy(alteration = record.alteration.replace("IGH-NKX2", "IGH-NKX2-1"))
             else                                                                     -> record
         }
+    }
+
+    private fun actionability(drug: String, record: OncoActionableVariantRecord): Actionability {
+        return Actionability(SOURCE, record.cancerType, drug, record.level, record.significance, "")
     }
 }
