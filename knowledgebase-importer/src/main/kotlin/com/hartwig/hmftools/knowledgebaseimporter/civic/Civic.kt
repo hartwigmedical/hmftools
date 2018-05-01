@@ -3,9 +3,8 @@ package com.hartwig.hmftools.knowledgebaseimporter.civic
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import com.hartwig.hmftools.common.variant.SomaticVariant
-import com.hartwig.hmftools.knowledgebaseimporter.Knowledgebase
+import com.hartwig.hmftools.knowledgebaseimporter.*
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
-import com.hartwig.hmftools.knowledgebaseimporter.readCSVRecords
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.TransvarCdnaAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.TransvarOutput
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.CDnaAnnotation
@@ -17,6 +16,8 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
         Knowledgebase {
     companion object {
         private const val SOURCE = "civic"
+        private val FUSION_SEPARATORS = listOf("-")
+        private val FUSIONS_TO_FILTER = setOf(FusionPair("BRAF", "CUL1"))
     }
 
     private val cdnaAnalyzer = TransvarCdnaAnalyzer(transvarLocation)
@@ -24,10 +25,8 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
     private val civicVariants by lazy { readCivicVariants() }
 
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
-    override val knownFusionPairs: List<Pair<String, String>>
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-    override val promiscuousGenes: List<String>
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    override val knownFusionPairs: List<FusionPair> by lazy { fusionRecords().filterIsInstance<FusionPair>() }
+    override val promiscuousGenes: List<PromiscuousGene> by lazy { fusionRecords().filterIsInstance<PromiscuousGene>() }
     override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableVariants() }
     override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableCNVs() }
     override val actionableFusions: List<ActionableFusionOutput>
@@ -59,6 +58,12 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
         }
     }
 
+    private fun fusionRecords(): List<Fusion> {
+        return records.filter { it.variantTypes.contains("fusion") }
+                .mapNotNull { extractFusion(it.gene, it.variant.trim(), FUSION_SEPARATORS) }
+                .filterNot { FUSIONS_TO_FILTER.contains(it) }
+                .distinct()
+    }
 
     private fun readCivicVariants(): List<Pair<CivicRecord, SomaticVariant>> {
         val variantRecords = records.filter { hasVariant(it) }
@@ -90,7 +95,7 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
 
     private fun preProcessCivicRecords(variantFileLocation: String, evidenceFileLocation: String): List<CivicRecord> {
         val variantEvidenceMap = readEvidenceMap(evidenceFileLocation)
-        return readCSVRecords(variantFileLocation) { CivicRecord(it, variantEvidenceMap) }
+        return readCSVRecords(variantFileLocation) { CivicRecord(it, variantEvidenceMap) }.map { correctCivicVariants(it) }
     }
 
     private fun readEvidenceMap(evidenceLocation: String): Multimap<String, CivicEvidence> {
@@ -126,6 +131,14 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
             }
         } else {
             null
+        }
+    }
+
+    private fun correctCivicVariants(record: CivicRecord): CivicRecord {
+        return when {
+            record.variant.contains(Regex("MLL-MLLT3")) && record.gene == "KMT2A" ->
+                record.copy(variant = record.variant.replace("MLL-MLLT3", "KMT2A-MLLT3"))
+            else                                                                  -> record
         }
     }
 }
