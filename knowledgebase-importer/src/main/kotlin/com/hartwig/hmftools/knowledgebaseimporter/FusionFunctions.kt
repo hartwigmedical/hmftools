@@ -1,27 +1,20 @@
 package com.hartwig.hmftools.knowledgebaseimporter
 
-import org.apache.logging.log4j.LogManager
-
-private val logger = LogManager.getLogger("FusionFunctions")
-
 private const val GENE_PATTERN = "[A-Za-z0-9-]"
 private const val GENE_GROUP = "($GENE_PATTERN+)"
 
-fun extractFusion(gene: String, fusionString: String, separators: List<String>): Fusion? {
-    val fusion = separators.mapNotNull { extractFusion(gene, fusionString, it) }.sortedBy {
-        when (it) {
-            is FusionPair      -> 0
-            is PromiscuousGene -> 1
-        }
-    }.firstOrNull()
-    if (fusion == null) {
-        logger.warn("Could not extract fusion pair from $fusionString. Searching for gene $gene with separators $separators")
-    } else if (fusion is PromiscuousGene) {
-    }
-    return fusion
+fun extractFusion(gene: String, fusionString: String, separators: List<String>): Fusion {
+    return separators.map { extractFusion(gene, fusionString, it) }
+            .sortedBy {
+                when (it) {
+                    is FusionPair      -> 0
+                    is PromiscuousGene -> 1
+                }
+            }
+            .first()
 }
 
-fun extractFusion(gene: String, fusionString: String, separator: String): Fusion? {
+fun extractFusion(gene: String, fusionString: String, separator: String): Fusion {
     val fiveGene = fiveGene(gene, fusionString, separator)
     val threeGene = threeGene(gene, fusionString, separator)
     return if (fiveGene == null || threeGene == null) {
