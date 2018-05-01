@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.knowledgebaseimporter
 
+import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableFusionOutput
+
 private const val MIN_PARTNER_COUNT = 2
 
 //MIVO: fusions that appear more than MIN_PARTNER_COUNT on the fiveGene side of known fusion pairs
@@ -46,4 +48,22 @@ fun knownPromiscuousFive(knowledgebases: Collection<Knowledgebase>): List<Promis
 
 fun knownPromiscuousThree(knowledgebases: Collection<Knowledgebase>): List<PromiscuousGene> {
     return (inferredPromiscuousThreeGenes(knowledgebases) + externalPromiscuousThreeGenes(knowledgebases)).distinct()
+}
+
+fun actionableFusionPairs(knowledgebases: Collection<Knowledgebase>): List<ActionableFusionOutput> {
+    return knowledgebases.flatMap { it.actionableFusions }.filter { it.fusion is FusionPair }.distinct()
+}
+
+fun actionablePromiscuousFive(knowledgebases: Collection<Knowledgebase>): List<ActionableFusionOutput> {
+    val knownPromiscuousFive = knownPromiscuousFive(knowledgebases).toSet()
+    return actionablePromiscuousGenes(knowledgebases).filter { knownPromiscuousFive.contains(it.fusion) }
+}
+
+fun actionablePromiscuousThree(knowledgebases: Collection<Knowledgebase>): List<ActionableFusionOutput> {
+    val knownPromiscuousThree = knownPromiscuousThree(knowledgebases).toSet()
+    return actionablePromiscuousGenes(knowledgebases).filter { knownPromiscuousThree.contains(it.fusion) }
+}
+
+private fun actionablePromiscuousGenes(knowledgebases: Collection<Knowledgebase>): List<ActionableFusionOutput> {
+    return knowledgebases.flatMap { it.actionableFusions }.filter { it.fusion is PromiscuousGene }
 }

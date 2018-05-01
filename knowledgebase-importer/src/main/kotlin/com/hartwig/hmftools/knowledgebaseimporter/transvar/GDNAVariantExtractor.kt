@@ -12,16 +12,16 @@ private val logger = LogManager.getLogger("GDNAVariantExtractor")
 
 private val variantPositionsPattern = Pattern.compile("([0-9]+)(?:_([0-9]+))?.*")
 
-private val candidateSnvString = "candidate_snv_variants="
-private val candidateMnvString = "candidate_mnv_variants="
-private val candidatesString = "candidates="
-private val leftAlignedGDnaString = "left_align_gDNA="
+private const val candidateSnvString = "candidate_snv_variants="
+private const val candidateMnvString = "candidate_mnv_variants="
+private const val candidatesString = "candidates="
+private const val leftAlignedGDnaString = "left_align_gDNA="
 
-private val infoDelimiter = ";"
-private val variantDelimiter = ","
-private val chrIdentifier = "chr"
-private val chrDelimiter = ":"
-private val gDnaDelimiter = "g."
+private const val infoDelimiter = ";"
+private const val variantDelimiter = ","
+private const val chrIdentifier = "chr"
+private const val chrDelimiter = ":"
+private const val gDnaDelimiter = "g."
 
 fun extractVariants(transvarOutput: TransvarOutput, reference: IndexedFastaSequenceFile): List<SomaticVariant> {
     val chromosome = extractChromosome(transvarOutput.coordinates)
