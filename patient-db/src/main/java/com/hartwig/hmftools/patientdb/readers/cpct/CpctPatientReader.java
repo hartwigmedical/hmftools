@@ -53,8 +53,7 @@ public class CpctPatientReader implements PatientReader {
         final List<BiopsyTreatmentData> treatments = biopsyTreatmentReader.read(ecrfPatient);
         final List<BiopsyTreatmentResponseData> treatmentResponses = BiopsyTreatmentResponseReader.read(ecrfPatient);
         final List<TumorMarkerData> tumorMarkers = TumorMarkerReader.read(ecrfPatient);
-        final List<RanoMeasurementData> ranoMeasurement = RanoMeasurementReader.read(ecrfPatient);
-
+        final List<RanoMeasurementData> ranoMeasurements = RanoMeasurementReader.read(ecrfPatient);
 
         final MatchResult<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples(ecrfPatient.patientId(), sequencedBiopsies, clinicalBiopsies);
@@ -77,7 +76,8 @@ public class CpctPatientReader implements PatientReader {
                 matchedBiopsies.values(),
                 matchedTreatments.values(),
                 matchedResponses.values(),
-                tumorMarkers, ranoMeasurement,
+                tumorMarkers,
+                ranoMeasurements,
                 findings);
     }
 }

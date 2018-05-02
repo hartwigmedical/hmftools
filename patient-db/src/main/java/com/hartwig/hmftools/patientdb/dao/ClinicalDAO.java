@@ -67,7 +67,7 @@ class ClinicalDAO {
         patient.treatments().forEach(treatment -> writeTreatmentData(patientId, treatment));
         patient.treatmentResponses().forEach(response -> writeTreatmentResponseData(patientId, response));
         patient.tumorMarkers().forEach(tumorMarker -> writeTumorMarkerData(patientId, tumorMarker));
-        patient.ranoMeasurement().forEach(ranoMeasurement -> writeRanoMeasurementData(patientId, ranoMeasurement));
+        patient.ranoMeasurements().forEach(ranoMeasurement -> writeRanoMeasurementData(patientId, ranoMeasurement));
     }
 
     void writeSampleClinicalData(@NotNull String patientIdentifier, @NotNull List<SampleData> samples) {
