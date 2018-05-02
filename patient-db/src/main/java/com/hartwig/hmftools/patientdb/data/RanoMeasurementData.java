@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ranoMeasurement {
+public abstract class RanoMeasurementData {
     @NotNull
     public abstract String patientId();
 

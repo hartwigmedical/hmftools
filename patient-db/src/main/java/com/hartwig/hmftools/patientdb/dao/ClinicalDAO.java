@@ -23,9 +23,9 @@ import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
+import com.hartwig.hmftools.patientdb.data.RanoMeasurementData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.data.TumorMarkerData;
-import com.hartwig.hmftools.patientdb.data.ranoMeasurement;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -276,7 +276,7 @@ class ClinicalDAO {
         writeFormStatus(id, TUMORMARKER.getName(), "tumorMarker", tumorMarker.formStatus());
     }
 
-    private void writeRanoMeasurementData(final int patientId, @NotNull final ranoMeasurement RanoMeasurement) {
+    private void writeRanoMeasurementData(final int patientId, @NotNull final RanoMeasurementData RanoMeasurement) {
         final int id = context.insertInto(RANOMEASUREMENT,
                 RANOMEASUREMENT.PATIENTID,
                 RANOMEASUREMENT.RESPONSEDATE,
