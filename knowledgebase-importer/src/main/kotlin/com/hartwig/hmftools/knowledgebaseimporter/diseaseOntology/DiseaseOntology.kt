@@ -12,7 +12,7 @@ import java.util.logging.Logger
 
 class DiseaseOntology(fileLocation: String) {
     companion object {
-        private val cancerIRI = IRI.create("http://purl.obolibrary.org/obo/DOID_162")
+        private val diseaseIRI = IRI.create("http://purl.obolibrary.org/obo/DOID_4")
 
         private fun createOntology(fileLocation: String): OWLOntology {
             val logger = Logger.getLogger("org.obolibrary.oboformat.parser.OBOFormatParser")
@@ -29,19 +29,32 @@ class DiseaseOntology(fileLocation: String) {
             return reasoner
         }
 
-        private fun createCancerClassMapping(ontology: OWLOntology, reasoner: OWLReasoner): Map<String, OWLClass> {
-            val cancerClass = ontology.owlOntologyManager.owlDataFactory.getOWLClass(cancerIRI)
-            val cancerClasses = setOf(cancerClass) + reasoner.getSubClasses(cancerClass, false).flattened.filterNot { it.isOWLNothing }
-            return cancerClasses.associateBy { getLabel(it, ontology) }
+        private fun createDiseaseMapping(ontology: OWLOntology, reasoner: OWLReasoner): Map<String, OWLClass> {
+            val diseaseClass = ontology.owlOntologyManager.owlDataFactory.getOWLClass(diseaseIRI)
+            val diseases = setOf(diseaseClass) + reasoner.getSubClasses(diseaseClass, false).flattened.filterNot { it.isOWLNothing }
+            val synonyms = diseases.flatMap { disease -> getSynonyms(disease, ontology).map { Pair(it.toLowerCase(), disease) } }
+            return diseases.associateBy { getLabel(it, ontology).toLowerCase() } + synonyms.toMap()
         }
 
         private fun getLabel(owlClass: OWLClass, ontology: OWLOntology): String {
             val dataFactory = ontology.owlOntologyManager.owlDataFactory
             return owlClass.getAnnotations(ontology, dataFactory.rdfsLabel).map { it.value as OWLLiteral }.map { it.literal }.first()
         }
+
+        private fun getSynonyms(owlClass: OWLClass, ontology: OWLOntology): Set<String> {
+            return owlClass.getAnnotations(ontology)
+                    .filter { it.property.toString().contains("hasExactSynonym") }
+                    .map { it.value as OWLLiteral }
+                    .map { it.literal }
+                    .toSet()
+        }
     }
 
     private val ontology = createOntology(fileLocation)
     private val reasoner = createReasoner(ontology)
-    val cancerClassMap = createCancerClassMapping(ontology, reasoner)
+    private val diseaseNameToClass = createDiseaseMapping(ontology, reasoner)
+
+    fun isPresent(cancerType: String): Boolean {
+        return diseaseNameToClass.containsKey(cancerType.toLowerCase())
+    }
 }
