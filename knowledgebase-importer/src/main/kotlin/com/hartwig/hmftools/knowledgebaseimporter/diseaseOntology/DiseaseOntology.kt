@@ -7,12 +7,16 @@ import org.semanticweb.owlapi.model.*
 import org.semanticweb.owlapi.reasoner.InferenceType
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 import java.io.File
+import java.util.logging.Level
+import java.util.logging.Logger
 
 class DiseaseOntology(fileLocation: String) {
     companion object {
         private val cancerIRI = IRI.create("http://purl.obolibrary.org/obo/DOID_162")
 
         private fun createOntology(fileLocation: String): OWLOntology {
+            val logger = Logger.getLogger("org.obolibrary.oboformat.parser.OBOFormatParser")
+            logger.level = Level.SEVERE
             val ontologyManager = OWLManager.createOWLOntologyManager()
             val config = OWLOntologyLoaderConfiguration().setFollowRedirects(true).setMissingImportHandlingStrategy(
                     MissingImportHandlingStrategy.SILENT)
