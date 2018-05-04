@@ -4,6 +4,7 @@ import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import com.hartwig.hmftools.common.variant.SomaticVariant
 import com.hartwig.hmftools.knowledgebaseimporter.*
+import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.TransvarCdnaAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.TransvarOutput
@@ -12,7 +13,8 @@ import com.hartwig.hmftools.knowledgebaseimporter.transvar.extractVariants
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.somaticVariant
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 
-class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation: String, private val reference: IndexedFastaSequenceFile) :
+class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation: String, diseaseOntology: DiseaseOntology,
+            private val reference: IndexedFastaSequenceFile) :
         Knowledgebase {
     companion object {
         private const val SOURCE = "civic"
@@ -23,6 +25,7 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
     private val cdnaAnalyzer = TransvarCdnaAnalyzer(transvarLocation)
     private val records by lazy { preProcessCivicRecords(variantsLocation, evidenceLocation) }
     private val civicVariants by lazy { readCivicVariants() }
+    val cancerTypes by lazy { readCancerTypes(diseaseOntology) }
 
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
     override val knownFusionPairs: List<FusionPair> by lazy { actionableFusions.map { it.fusion }.filterIsInstance<FusionPair>().distinct() }
@@ -30,6 +33,7 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
     override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableVariants() }
     override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableCNVs() }
     override val actionableFusions: List<ActionableFusionOutput> by lazy { actionableFusions() }
+
 
     private fun knownVariants(): List<KnownVariantOutput> {
         return civicVariants.map { (civicRecord, somaticVariant) ->
@@ -145,5 +149,13 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
                 record.copy(variant = record.variant.replace("MLL-MLLT3", "KMT2A-MLLT3"))
             else                                                                  -> record
         }
+    }
+
+    private fun readCancerTypes(diseaseOntology: DiseaseOntology): Map<String, Set<Int>> {
+        return records.flatMap { it.evidence }.map { Pair(it.cancerType, doidsForEvidence(it, diseaseOntology)) }.toMap()
+    }
+
+    private fun doidsForEvidence(evidence: CivicEvidence, diseaseOntology: DiseaseOntology): Set<Int> {
+        return diseaseOntology.findDoids(evidence.cancerType) + diseaseOntology.findDoids(evidence.doid.toIntOrNull())
     }
 }

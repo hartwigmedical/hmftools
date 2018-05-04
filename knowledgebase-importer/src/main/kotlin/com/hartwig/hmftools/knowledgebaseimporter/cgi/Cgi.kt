@@ -2,13 +2,15 @@ package com.hartwig.hmftools.knowledgebaseimporter.cgi
 
 import com.hartwig.hmftools.common.variant.SomaticVariant
 import com.hartwig.hmftools.knowledgebaseimporter.*
+import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.*
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.CDnaAnnotation
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.ProteinAnnotation
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 
-class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation: String, private val reference: IndexedFastaSequenceFile) :
+class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation: String, diseaseOntology: DiseaseOntology,
+          private val reference: IndexedFastaSequenceFile) :
         Knowledgebase {
     companion object {
         private const val SOURCE: String = "cgi"
@@ -23,6 +25,7 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
     private val cdnaAnalyzer = TransvarCdnaAnalyzer(transvarLocation)
     private val somaticVariantRecords by lazy { readTSVRecords(variantsLocation) { CgiKnownVariantRecord(it) }.filter { it.context == "somatic" } }
     private val biomarkersRecords by lazy { readTSVRecords(biomarkersLocation) { CgiBiomarkersRecord(it) } }
+    val cancerTypes by lazy { biomarkersRecords.flatMap { it.cancerTypes }.map { Pair(it, diseaseOntology.findDoids(it)) }.toMap() }
 
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
     override val knownFusionPairs: List<FusionPair> by lazy { actionableFusions.map { it.fusion }.filterIsInstance<FusionPair>().distinct() }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.knowledgebaseimporter.oncoKb
 
 import com.hartwig.hmftools.knowledgebaseimporter.*
+import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.TransvarProteinAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.ProteinAnnotation
@@ -8,8 +9,8 @@ import com.hartwig.hmftools.knowledgebaseimporter.transvar.extractVariants
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 
 
-class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: String,
-             transvarLocation: String, private val reference: IndexedFastaSequenceFile) : Knowledgebase {
+class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: String, transvarLocation: String,
+             diseaseOntology: DiseaseOntology, private val reference: IndexedFastaSequenceFile) : Knowledgebase {
     companion object {
         private const val SOURCE: String = "oncoKb"
         private val FUSION_SEPARATORS = listOf("-", " - ", "?")
@@ -22,6 +23,7 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
     private val proteinAnalyzer = TransvarProteinAnalyzer(transvarLocation)
     private val annotatedRecords by lazy { readTSVRecords(annotatedVariantsLocation) { OncoAnnotatedVariantRecord(it) }.map { preProcess(it) } }
     private val actionableRecords by lazy { readTSVRecords(actionableVariantsLocation) { OncoActionableVariantRecord(it) } }
+    val cancerTypes by lazy { actionableRecords.map { it.cancerType }.map { Pair(it, diseaseOntology.findDoids(it)) }.toMap() }
 
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
     override val knownFusionPairs: List<FusionPair> by lazy { fusions().filterIsInstance<FusionPair>() }
