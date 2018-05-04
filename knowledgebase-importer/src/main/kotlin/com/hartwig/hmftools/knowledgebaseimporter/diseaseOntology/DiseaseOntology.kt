@@ -31,9 +31,17 @@ class DiseaseOntology(fileLocation: String) {
 
         private fun createDiseaseMapping(ontology: OWLOntology, reasoner: OWLReasoner): Map<String, OWLClass> {
             val diseaseClass = ontology.owlOntologyManager.owlDataFactory.getOWLClass(diseaseIRI)
-            val diseases = setOf(diseaseClass) + reasoner.getSubClasses(diseaseClass, false).flattened.filterNot { it.isOWLNothing }
+            val diseases = setOf(diseaseClass) + subClasses(diseaseClass, reasoner)
             val synonyms = diseases.flatMap { disease -> getSynonyms(disease, ontology).map { Pair(it, disease) } }
             return diseases.associateBy { getLabel(it, ontology) } + synonyms.toMap()
+        }
+
+        private fun subClasses(owlClass: OWLClass, reasoner: OWLReasoner): Set<OWLClass> {
+            return reasoner.getSubClasses(owlClass, false).flattened.filterNot { it.isOWLNothing || it.isOWLThing }.toSet()
+        }
+
+        private fun superClasses(owlClass: OWLClass, reasoner: OWLReasoner): Set<OWLClass> {
+            return reasoner.getSuperClasses(owlClass, false).flattened.filterNot { it.isOWLNothing || it.isOWLThing }.toSet()
         }
 
         private fun getLabel(owlClass: OWLClass, ontology: OWLOntology): String {
@@ -59,5 +67,25 @@ class DiseaseOntology(fileLocation: String) {
 
     fun isPresent(cancerType: String): Boolean {
         return diseaseNameToClass.containsKey(cancerType.toLowerCase().trim())
+    }
+
+    fun findDoids(cancerType: String): Set<Int> {
+        val cancerClass = diseaseNameToClass[cancerType.toLowerCase().trim()]
+        cancerClass ?: return emptySet()
+        return findDoids(cancerClass)
+    }
+
+    fun findDoids(cancerDoid: Int?): Set<Int> {
+        cancerDoid ?: return emptySet()
+        val cancerIRI = IRI.create("http://purl.obolibrary.org/obo/DOID_$cancerDoid")
+        return findDoids(ontology.owlOntologyManager.owlDataFactory.getOWLClass(cancerIRI))
+    }
+
+    private fun findDoids(cancerClass: OWLClass): Set<Int> {
+        val relevantClasses = setOf(cancerClass) + subClasses(cancerClass, reasoner) + superClasses(cancerClass, reasoner)
+        return relevantClasses.map { it.toString().substringAfter("DOID_").substringBefore('>') }
+                .filterNot { it.isBlank() }
+                .map { it.toInt() }
+                .toSet()
     }
 }
