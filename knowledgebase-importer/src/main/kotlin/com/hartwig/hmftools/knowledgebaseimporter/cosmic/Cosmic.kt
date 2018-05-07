@@ -1,12 +1,7 @@
 package com.hartwig.hmftools.knowledgebaseimporter.cosmic
 
-import com.hartwig.hmftools.knowledgebaseimporter.FusionPair
 import com.hartwig.hmftools.knowledgebaseimporter.Knowledgebase
-import com.hartwig.hmftools.knowledgebaseimporter.PromiscuousGene
-import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableCNVOutput
-import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableFusionOutput
-import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableVariantOutput
-import com.hartwig.hmftools.knowledgebaseimporter.output.KnownVariantOutput
+import com.hartwig.hmftools.knowledgebaseimporter.output.*
 import com.hartwig.hmftools.knowledgebaseimporter.readCSVRecords
 import org.apache.commons.csv.CSVRecord
 

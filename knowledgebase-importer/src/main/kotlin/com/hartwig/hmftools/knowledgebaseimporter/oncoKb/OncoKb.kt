@@ -37,7 +37,12 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
         return annotatedRecords.zip(transvarOutput)
                 .flatMap { (oncoRecord, transvarOutput) ->
                     extractVariants(transvarOutput, reference)
-                            .map { KnownVariantOutput(oncoRecord.gene, oncoRecord.transcript, oncoRecord.oncogenicity, it) }
+                            .map {
+                                KnownVariantOutput(oncoRecord.gene,
+                                                   oncoRecord.transcript,
+                                                   oncoRecord.oncogenicity,
+                                                   SomaticVariantOutput(it))
+                            }
                 }
     }
 
@@ -65,7 +70,7 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
                 .flatMap { (record, transvarOutput) -> extractVariants(transvarOutput, reference).map { Pair(record, it) } }
                 .flatMap { (record, somaticVariant) ->
                     record.drugs.map { drug ->
-                        ActionableVariantOutput(record.gene, somaticVariant, actionability(drug, record))
+                        ActionableVariantOutput(record.gene, SomaticVariantOutput(somaticVariant), actionability(drug, record))
                     }
                 }
     }
