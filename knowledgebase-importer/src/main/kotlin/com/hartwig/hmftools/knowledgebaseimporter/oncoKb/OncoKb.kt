@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.knowledgebaseimporter.oncoKb
 
-import com.hartwig.hmftools.knowledgebaseimporter.*
+import com.hartwig.hmftools.knowledgebaseimporter.Knowledgebase
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
+import com.hartwig.hmftools.knowledgebaseimporter.extractFusion
+import com.hartwig.hmftools.knowledgebaseimporter.flipFusion
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
+import com.hartwig.hmftools.knowledgebaseimporter.readTSVRecords
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.TransvarProteinAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.ProteinAnnotation
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.extractVariants
@@ -12,7 +15,6 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile
 class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: String, transvarLocation: String,
              diseaseOntology: DiseaseOntology, private val reference: IndexedFastaSequenceFile) : Knowledgebase {
     companion object {
-        private const val SOURCE: String = "oncoKb"
         private val FUSION_SEPARATORS = listOf("-", " - ", "?")
         private val FUSIONS_TO_FLIP = setOf(FusionPair("ROS1", "CD74"),
                                             FusionPair("EP300", "MLL"),
@@ -25,6 +27,7 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
     private val actionableRecords by lazy { readTSVRecords(actionableVariantsLocation) { OncoActionableVariantRecord(it) } }
     val cancerTypes by lazy { actionableRecords.map { it.cancerType }.map { Pair(it, diseaseOntology.findDoids(it)) }.toMap() }
 
+    override val source = "oncoKb"
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
     override val knownFusionPairs: List<FusionPair> by lazy { fusions().filterIsInstance<FusionPair>() }
     override val promiscuousGenes: List<PromiscuousGene> by lazy { fusions().filterIsInstance<PromiscuousGene>() }
@@ -92,6 +95,6 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
     }
 
     private fun actionability(drug: String, record: OncoActionableVariantRecord): Actionability {
-        return Actionability(SOURCE, record.cancerType, drug, record.level, record.significance, "")
+        return Actionability(source, record.cancerType, drug, record.level, record.significance, "")
     }
 }

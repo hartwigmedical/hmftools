@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.knowledgebaseimporter.cgi
 
 import com.hartwig.hmftools.common.variant.SomaticVariant
-import com.hartwig.hmftools.knowledgebaseimporter.*
+import com.hartwig.hmftools.knowledgebaseimporter.Knowledgebase
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
+import com.hartwig.hmftools.knowledgebaseimporter.extractFusion
+import com.hartwig.hmftools.knowledgebaseimporter.flipFusion
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
+import com.hartwig.hmftools.knowledgebaseimporter.readTSVRecords
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.*
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.CDnaAnnotation
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.ProteinAnnotation
@@ -13,7 +16,6 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
           private val reference: IndexedFastaSequenceFile) :
         Knowledgebase {
     companion object {
-        private const val SOURCE: String = "cgi"
         private val FUSION_SEPARATORS = listOf("__")
         private val FUSIONS_TO_FLIP = setOf(FusionPair("ABL1", "BCR"),
                                             FusionPair("PDGFRA", "FIP1L1"),
@@ -27,6 +29,7 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
     private val biomarkersRecords by lazy { readTSVRecords(biomarkersLocation) { CgiBiomarkersRecord(it) } }
     val cancerTypes by lazy { biomarkersRecords.flatMap { it.cancerTypes }.map { Pair(it, diseaseOntology.findDoids(it)) }.toMap() }
 
+    override val source = "cgi"
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
     override val knownFusionPairs: List<FusionPair> by lazy { actionableFusions.map { it.fusion }.filterIsInstance<FusionPair>().distinct() }
     override val promiscuousGenes: List<PromiscuousGene> by lazy { actionableFusions.map { it.fusion }.filterIsInstance<PromiscuousGene>().distinct() }
@@ -105,6 +108,6 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
     private fun extractAmpOrDel(alteration: String): String = if (alteration.contains("amp")) "Amplification" else "Deletion"
 
     private fun actionability(cancerType: String, cgiBiomarker: CgiBiomarkersRecord): Actionability {
-        return Actionability(SOURCE, cancerType, cgiBiomarker.drug, cgiBiomarker.level, cgiBiomarker.association, "")
+        return Actionability(source, cancerType, cgiBiomarker.drug, cgiBiomarker.level, cgiBiomarker.association, "")
     }
 }

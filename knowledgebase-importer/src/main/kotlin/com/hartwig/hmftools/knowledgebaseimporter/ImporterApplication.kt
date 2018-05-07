@@ -6,10 +6,14 @@ import com.hartwig.hmftools.knowledgebaseimporter.civic.Civic
 import com.hartwig.hmftools.knowledgebaseimporter.cosmic.Cosmic
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
 import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.OncoKb
+import com.hartwig.hmftools.knowledgebaseimporter.output.KnownVariantOutput
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import org.apache.commons.cli.Option
 import org.apache.commons.cli.Options
+import org.apache.commons.csv.CSVFormat
+import org.apache.commons.csv.CSVPrinter
 import java.io.File
+import java.io.FileWriter
 
 fun main(args: Array<String>) {
     val cmd = createOptions().createCommandLine("knowledgebase-importer", args)
@@ -40,4 +44,11 @@ private fun createOptions(): Options {
     options.addOption(Option.builder(COSMIC_FUSIONS_LOCATION).required().hasArg().desc("path to cosmic fusions file").build())
     options.addOption(Option.builder(OUTPUT_DIRECTORY).required().hasArg().desc("path to output directory").build())
     return options
+}
+
+private fun writeKnownVariants(knowledgebase: Knowledgebase, outputDirectory: String) {
+    val format = CSVFormat.TDF.withHeader(*KnownVariantOutput.header.toTypedArray()).withNullString("")
+    val printer = CSVPrinter(FileWriter("$outputDirectory${File.separator}${knowledgebase.source}_known_variants"), format)
+    printer.printRecords(knowledgebase.knownVariants.distinct().map { it.record })
+    printer.close()
 }

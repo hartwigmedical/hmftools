@@ -6,7 +6,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.readCSVRecords
 import org.apache.commons.csv.CSVRecord
 
 class Cosmic(fusionsLocation: String) : Knowledgebase {
-
+    override val source = "cosmic"
     override val knownVariants: List<KnownVariantOutput> = listOf()
     override val knownFusionPairs: List<FusionPair> by lazy { readCSVRecords(fusionsLocation) { readFusion(it) }.distinct() }
     override val promiscuousGenes: List<PromiscuousGene> = listOf()

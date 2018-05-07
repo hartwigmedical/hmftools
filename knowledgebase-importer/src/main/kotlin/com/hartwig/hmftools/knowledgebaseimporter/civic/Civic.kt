@@ -3,9 +3,11 @@ package com.hartwig.hmftools.knowledgebaseimporter.civic
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import com.hartwig.hmftools.common.variant.SomaticVariant
-import com.hartwig.hmftools.knowledgebaseimporter.*
+import com.hartwig.hmftools.knowledgebaseimporter.Knowledgebase
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
+import com.hartwig.hmftools.knowledgebaseimporter.extractFusion
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
+import com.hartwig.hmftools.knowledgebaseimporter.readTSVRecords
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.TransvarCdnaAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.TransvarOutput
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.CDnaAnnotation
@@ -17,7 +19,6 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
             private val reference: IndexedFastaSequenceFile) :
         Knowledgebase {
     companion object {
-        private const val SOURCE = "civic"
         private val FUSION_SEPARATORS = listOf("-")
         private val FUSIONS_TO_FILTER = setOf(FusionPair("BRAF", "CUL1"))
     }
@@ -27,6 +28,7 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
     private val civicVariants by lazy { readCivicVariants() }
     val cancerTypes by lazy { readCancerTypes(diseaseOntology) }
 
+    override val source = "civic"
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
     override val knownFusionPairs: List<FusionPair> by lazy { actionableFusions.map { it.fusion }.filterIsInstance<FusionPair>().distinct() }
     override val promiscuousGenes: List<PromiscuousGene> by lazy { actionableFusions.map { it.fusion }.filterIsInstance<PromiscuousGene>().distinct() }
@@ -119,7 +121,7 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
     }
 
     private fun actionability(drug: String, evidence: CivicEvidence): Actionability {
-        return Actionability(SOURCE, evidence.cancerType, drug, evidence.level, evidence.significance, evidence.type)
+        return Actionability(source, evidence.cancerType, drug, evidence.level, evidence.significance, evidence.type)
     }
 
     private fun extractAmpOrDel(variantType: String): String = if (variantType == "AMPLIFICATION") "Amplification" else "Deletion"
