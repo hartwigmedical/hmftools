@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.knowledgebaseimporter
 
+import com.hartwig.hmftools.knowledgebaseimporter.output.Fusion
+import com.hartwig.hmftools.knowledgebaseimporter.output.FusionPair
+import com.hartwig.hmftools.knowledgebaseimporter.output.PromiscuousGene
+
 private const val GENE_PATTERN = "[A-Za-z0-9-]"
 private const val GENE_GROUP = "($GENE_PATTERN+)"
 

@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.knowledgebaseimporter
 
 import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableFusionOutput
+import com.hartwig.hmftools.knowledgebaseimporter.output.FusionPair
+import com.hartwig.hmftools.knowledgebaseimporter.output.PromiscuousGene
 
 private const val MIN_PARTNER_COUNT = 2
 

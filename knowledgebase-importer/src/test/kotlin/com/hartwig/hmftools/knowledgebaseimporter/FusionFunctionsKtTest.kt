@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.knowledgebaseimporter
 
+import com.hartwig.hmftools.knowledgebaseimporter.output.FusionPair
+import com.hartwig.hmftools.knowledgebaseimporter.output.PromiscuousGene
 import io.kotlintest.matchers.shouldBe
 import io.kotlintest.specs.StringSpec
 
