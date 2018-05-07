@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.purple.repeat.RepeatContext;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -37,7 +38,7 @@ public abstract class MicrosatelliteAnalyzer {
             if (isPassIndel(variant)) {
                 final Pair<Integer, String> relativePositionAndRef = relativePositionAndRef(variant, reference());
                 if (getRepeatContext(variant, relativePositionAndRef.getFirst(), relativePositionAndRef.getSecond()).filter(
-                        this::repeatContextIsRelevant).isPresent()) {
+                        MicrosatelliteAnalyzer::repeatContextIsRelevant).isPresent()) {
                     indelCount++;
                 }
             }
@@ -50,10 +51,12 @@ public abstract class MicrosatelliteAnalyzer {
                 && variant.alt().length() < 50;
     }
 
-    private boolean repeatContextIsRelevant(@NotNull final RepeatContext repeatContext) {
+    @VisibleForTesting
+    static boolean repeatContextIsRelevant(@NotNull final RepeatContext repeatContext) {
         final int repeatCount = repeatContext.count();
         final int repeatSequenceLength = repeatContext.sequence().length();
-        return repeatCount > 0 && ((repeatSequenceLength >= 2 && repeatSequenceLength <= 4) || (repeatSequenceLength == 1
-                && repeatCount >= 5));
+        final boolean longRepeatRevelant = repeatSequenceLength >= 2 && repeatSequenceLength <= 4 && repeatCount >= 4;
+        final boolean shortRepeatRevelant = repeatSequenceLength == 1 && repeatCount >= 5;
+        return longRepeatRevelant | shortRepeatRevelant;
     }
 }
