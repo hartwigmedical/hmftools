@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.knowledgebaseimporter.output
 
-import com.hartwig.hmftools.knowledgebaseimporter.Fusion
+data class ActionableFusionOutput(val fusion: Fusion, val actionability: Actionability) {
+    companion object {
+        val fusionPairHeader = listOf("fiveGene", "threeGene") + Actionability.header
+        val promiscuousGeneHeader = listOf("gene") + Actionability.header
+    }
 
-data class ActionableFusionOutput(val fusion: Fusion, val actionability: Actionability)
+    val record: List<String> = fusion.record + actionability.record
+}
