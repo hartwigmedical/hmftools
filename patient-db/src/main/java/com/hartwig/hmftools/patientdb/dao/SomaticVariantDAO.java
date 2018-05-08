@@ -1,14 +1,19 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.BASELINE;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SAMPLE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 
+import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Iterables;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.patientdb.data.PotentialActionableVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -65,6 +70,27 @@ class SomaticVariantDAO {
             splitRegions.forEach(x -> addRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
+    }
+
+    @NotNull
+    Stream<PotentialActionableVariant> potentiallyActionableVariants() {
+        return context.select(SOMATICVARIANT.SAMPLEID,
+                BASELINE.PRIMARYTUMORLOCATION,
+                SOMATICVARIANT.GENE,
+                SOMATICVARIANT.CHROMOSOME,
+                SOMATICVARIANT.POSITION,
+                SOMATICVARIANT.REF,
+                SOMATICVARIANT.ALT)
+                .from(SOMATICVARIANT.join(SAMPLE)
+                        .on(SOMATICVARIANT.SAMPLEID.eq(SAMPLE.SAMPLEID))
+                        .join(BASELINE)
+                        .on(SAMPLE.PATIENTID.eq(BASELINE.PATIENTID)))
+                .where(SOMATICVARIANT.FILTER.eq("PASS"))
+                .fetchSize(Integer.MIN_VALUE)
+                .resultSetType(ResultSet.TYPE_FORWARD_ONLY)
+                .resultSetConcurrency(ResultSet.CONCUR_READ_ONLY)
+                .stream()
+                .map(PotentialActionableVariant::of);
     }
 
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStepN inserter, @NotNull String sample,

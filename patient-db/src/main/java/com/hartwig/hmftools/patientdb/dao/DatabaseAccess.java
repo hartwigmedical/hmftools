@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
@@ -20,6 +21,7 @@ import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.data.Patient;
+import com.hartwig.hmftools.patientdb.data.PotentialActionableVariant;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
 import org.apache.logging.log4j.LogManager;
@@ -112,6 +114,11 @@ public class DatabaseAccess {
 
     public void writeSomaticVariants(@NotNull final String sampleId, @NotNull List<EnrichedSomaticVariant> variants) {
         somaticVariantDAO.write(sampleId, variants);
+    }
+
+    @NotNull
+    public Stream<PotentialActionableVariant> potentiallyActionableVariants() {
+        return somaticVariantDAO.potentiallyActionableVariants();
     }
 
     public void writeStructuralVariants(@NotNull final String sampleId, @NotNull final List<EnrichedStructuralVariant> variants) {
