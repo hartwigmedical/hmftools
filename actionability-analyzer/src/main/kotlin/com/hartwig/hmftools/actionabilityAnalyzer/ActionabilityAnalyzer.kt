@@ -5,7 +5,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.readTSVRecords
 import com.hartwig.hmftools.patientdb.data.PotentialActionableVariant
 import org.apache.commons.csv.CSVRecord
 
-class ActionabilityAnalyzer(actionableVariantsLocation: String, fustionPairsLocation: String, promiscuousFiveLocation: String,
+class ActionabilityAnalyzer(actionableVariantsLocation: String, fusionPairsLocation: String, promiscuousFiveLocation: String,
                             promiscuousThreeLocation: String, cnvsLocation: String) {
     companion object {
         private fun <T> createActionabilityMap(items: List<ActionableItem<T>>): Map<T, List<ActionableTreatment>> {
@@ -35,7 +35,7 @@ class ActionabilityAnalyzer(actionableVariantsLocation: String, fustionPairsLoca
 
         private fun readActionableCNVs(fileLocation: String): List<ActionableCNVOutput> {
             return readTSVRecords(fileLocation) {
-                ActionableCNVOutput(CnvEvent(it["gene"], it["type"]), readActionability(it))
+                ActionableCNVOutput(CnvEvent(it["gene"], it["cnvType"]), readActionability(it))
             }
         }
 
@@ -51,7 +51,7 @@ class ActionabilityAnalyzer(actionableVariantsLocation: String, fustionPairsLoca
     }
 
     private val variantActionabilityMap = createActionabilityMap(readActionableVariants(actionableVariantsLocation))
-    private val fusionActionabilityMap = createActionabilityMap(readActionableFusionPairs(fustionPairsLocation))
+    private val fusionActionabilityMap = createActionabilityMap(readActionableFusionPairs(fusionPairsLocation))
     private val promiscuousFiveActionabilityMap = createActionabilityMap(readActionablePromiscuousGenes(promiscuousFiveLocation))
     private val promiscuousThreeActionabilityMap = createActionabilityMap(readActionablePromiscuousGenes(promiscuousThreeLocation))
     private val cnvActionabilityMap = createActionabilityMap(readActionableCNVs(cnvsLocation))

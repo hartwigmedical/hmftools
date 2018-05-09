@@ -31,7 +31,8 @@ private fun queryDatabase(dbAccess: DatabaseAccess, printer: CSVPrinter, actiona
     dbAccess.potentiallyActionableVariants().use {
         it.asSequence().forEachIndexed { index, variant ->
             logProgress(index)
-            actionabilityAnalyzer.actionabilityForVariant(variant).forEach { printer.printRecord(it.record) }
+            val records = actionabilityAnalyzer.actionabilityForVariant(variant).map { it.record }
+            printer.printRecords(records)
             printer.flush()
         }
     }
