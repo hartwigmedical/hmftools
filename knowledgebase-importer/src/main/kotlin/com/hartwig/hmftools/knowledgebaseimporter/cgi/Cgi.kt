@@ -31,8 +31,8 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
 
     override val source = "cgi"
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
-    override val knownFusionPairs: List<FusionPair> by lazy { actionableFusions.map { it.fusion }.filterIsInstance<FusionPair>().distinct() }
-    override val promiscuousGenes: List<PromiscuousGene> by lazy { actionableFusions.map { it.fusion }.filterIsInstance<PromiscuousGene>().distinct() }
+    override val knownFusionPairs: List<FusionPair> by lazy { actionableFusions.map { it.event }.filterIsInstance<FusionPair>().distinct() }
+    override val promiscuousGenes: List<PromiscuousGene> by lazy { actionableFusions.map { it.event }.filterIsInstance<PromiscuousGene>().distinct() }
     override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableVariants() }
     override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableCNVs() }
     override val actionableFusions: List<ActionableFusionOutput> by lazy { actionableFusions() }
@@ -44,9 +44,9 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
                     val cgiVariants = extractCgiVariants(cgiRecord.gdna, reference)
                     val inferredKnownVariants = extractVariants(transvarOutput, reference)
                             .filterNot { variant -> cgiVariants.any { it == variant } }
-                            .map { KnownVariantOutput(cgiRecord.gene, cgiRecord.transcript, "", SomaticVariantOutput(it)) }
+                            .map { KnownVariantOutput(cgiRecord.gene, cgiRecord.transcript, "", SomaticVariantEvent(it)) }
                     val cgiKnownVariants = cgiVariants.map {
-                        KnownVariantOutput(cgiRecord.gene, cgiRecord.transcript, "CGI", SomaticVariantOutput(it))
+                        KnownVariantOutput(cgiRecord.gene, cgiRecord.transcript, "CGI", SomaticVariantEvent(it))
                     }
                     cgiKnownVariants + inferredKnownVariants
                 }
@@ -69,7 +69,7 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
         val cnaRecords = biomarkersRecords.filter { it.alterationType == "CNA" }
         return cnaRecords.flatMap { record ->
             record.cancerTypes.map { cancerType ->
-                ActionableCNVOutput(record.gene, extractAmpOrDel(record.alteration), actionability(cancerType, record))
+                ActionableCNVOutput(extractCnv(record), actionability(cancerType, record))
             }
         }
     }
@@ -100,12 +100,18 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
                                         somaticVariants: List<SomaticVariant>): List<ActionableVariantOutput> {
         return cgiRecord.cancerTypes.flatMap { cancerType ->
             somaticVariants.map {
-                ActionableVariantOutput(cgiRecord.gene, SomaticVariantOutput(it), actionability(cancerType, cgiRecord))
+                ActionableVariantOutput(cgiRecord.gene, SomaticVariantEvent(it), actionability(cancerType, cgiRecord))
             }
         }
     }
 
-    private fun extractAmpOrDel(alteration: String): String = if (alteration.contains("amp")) "Amplification" else "Deletion"
+    private fun extractCnv(record: CgiBiomarkersRecord): CnvEvent {
+        return if (record.alteration.contains("amp"))
+            CnvEvent(record.gene, "Amplification")
+        else {
+            CnvEvent(record.gene, "Deletion")
+        }
+    }
 
     private fun actionability(cancerType: String, cgiBiomarker: CgiBiomarkersRecord): Actionability {
         return Actionability(source, cancerType, cgiBiomarker.drug, cgiBiomarker.level, cgiBiomarker.association, "")

@@ -44,12 +44,12 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
                                 KnownVariantOutput(oncoRecord.gene,
                                                    oncoRecord.transcript,
                                                    oncoRecord.oncogenicity,
-                                                   SomaticVariantOutput(it))
+                                                   SomaticVariantEvent(it))
                             }
                 }
     }
 
-    private fun fusions(): List<Fusion> {
+    private fun fusions(): List<FusionEvent> {
         return annotatedRecords.filter { it.alteration.contains(Regex("Fusion")) }
                 .map { extractFusion(it.gene, it.alteration, FUSION_SEPARATORS) }
                 .map { flipFusion(it, FUSIONS_TO_FLIP) }
@@ -73,7 +73,7 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
                 .flatMap { (record, transvarOutput) -> extractVariants(transvarOutput, reference).map { Pair(record, it) } }
                 .flatMap { (record, somaticVariant) ->
                     record.drugs.map { drug ->
-                        ActionableVariantOutput(record.gene, SomaticVariantOutput(somaticVariant), actionability(drug, record))
+                        ActionableVariantOutput(record.gene, SomaticVariantEvent(somaticVariant), actionability(drug, record))
                     }
                 }
     }
@@ -81,7 +81,7 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
     private fun actionableCNVs(): List<ActionableCNVOutput> {
         return actionableRecords.filter { it.alteration == "Amplification" || it.alteration == "Deletion" }.flatMap { record ->
             record.drugs.map { drug ->
-                ActionableCNVOutput(record.gene, record.alteration, actionability(drug, record))
+                ActionableCNVOutput(CnvEvent(record.gene, record.alteration), actionability(drug, record))
             }
         }
     }

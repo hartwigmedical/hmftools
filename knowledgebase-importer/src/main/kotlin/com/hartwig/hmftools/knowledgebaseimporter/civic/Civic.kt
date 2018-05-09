@@ -30,8 +30,8 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
 
     override val source = "civic"
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
-    override val knownFusionPairs: List<FusionPair> by lazy { actionableFusions.map { it.fusion }.filterIsInstance<FusionPair>().distinct() }
-    override val promiscuousGenes: List<PromiscuousGene> by lazy { actionableFusions.map { it.fusion }.filterIsInstance<PromiscuousGene>().distinct() }
+    override val knownFusionPairs: List<FusionPair> by lazy { actionableFusions.map { it.event }.filterIsInstance<FusionPair>().distinct() }
+    override val promiscuousGenes: List<PromiscuousGene> by lazy { actionableFusions.map { it.event }.filterIsInstance<PromiscuousGene>().distinct() }
     override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableVariants() }
     override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableCNVs() }
     override val actionableFusions: List<ActionableFusionOutput> by lazy { actionableFusions() }
@@ -39,7 +39,7 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
 
     private fun knownVariants(): List<KnownVariantOutput> {
         return civicVariants.map { (civicRecord, somaticVariant) ->
-            KnownVariantOutput(civicRecord.gene, civicRecord.transcript, additionalInfo(civicRecord), SomaticVariantOutput(somaticVariant))
+            KnownVariantOutput(civicRecord.gene, civicRecord.transcript, additionalInfo(civicRecord), SomaticVariantEvent(somaticVariant))
         }
     }
 
@@ -47,7 +47,7 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
         return civicVariants.flatMap { (record, somaticVariant) ->
             record.evidence.filter { it.direction == "Supports" }.flatMap { evidence ->
                 evidence.drugs.map { drug ->
-                    ActionableVariantOutput(record.gene, SomaticVariantOutput(somaticVariant), actionability(drug, evidence))
+                    ActionableVariantOutput(record.gene, SomaticVariantEvent(somaticVariant), actionability(drug, evidence))
                 }
             }
         }
@@ -57,7 +57,7 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
         return records.filter { it.variant == "AMPLIFICATION" || it.variant == "DELETION" || it.variant == "LOH" }.flatMap { record ->
             record.evidence.flatMap { evidence ->
                 evidence.drugs.map { drug ->
-                    ActionableCNVOutput(record.gene, extractAmpOrDel(record.variant), actionability(drug, evidence))
+                    ActionableCNVOutput(extractCnv(record), actionability(drug, evidence))
                 }
             }
         }
@@ -124,7 +124,13 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
         return Actionability(source, evidence.cancerType, drug, evidence.level, evidence.significance, evidence.type)
     }
 
-    private fun extractAmpOrDel(variantType: String): String = if (variantType == "AMPLIFICATION") "Amplification" else "Deletion"
+    private fun extractCnv(record: CivicRecord): CnvEvent {
+        return if (record.variant == "AMPLIFICATION") {
+            CnvEvent(record.gene, "Amplification")
+        } else {
+            CnvEvent(record.gene, "Deletion")
+        }
+    }
 
     private fun annotateVariant(civicRecord: CivicRecord, reference: IndexedFastaSequenceFile): SomaticVariant? {
         return if (!civicRecord.chromosome.isEmpty() && !civicRecord.start.isEmpty() && (!civicRecord.ref.isEmpty() || !civicRecord.alt.isEmpty())) {

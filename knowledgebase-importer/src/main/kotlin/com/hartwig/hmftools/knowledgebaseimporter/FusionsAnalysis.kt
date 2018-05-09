@@ -53,19 +53,19 @@ fun knownPromiscuousThree(knowledgebases: Collection<Knowledgebase>): List<Promi
 }
 
 fun actionableFusionPairs(knowledgebases: Collection<Knowledgebase>): List<ActionableFusionOutput> {
-    return knowledgebases.flatMap { it.actionableFusions }.filter { it.fusion is FusionPair }.distinct()
+    return knowledgebases.flatMap { it.actionableFusions }.filter { it.event is FusionPair }.distinct()
 }
 
 fun actionablePromiscuousFive(knowledgebases: Collection<Knowledgebase>): List<ActionableFusionOutput> {
     val knownPromiscuousFive = knownPromiscuousFive(knowledgebases).toSet()
-    return actionablePromiscuousGenes(knowledgebases).filter { knownPromiscuousFive.contains(it.fusion) }
+    return actionablePromiscuousGenes(knowledgebases).filter { knownPromiscuousFive.contains(it.event) }
 }
 
 fun actionablePromiscuousThree(knowledgebases: Collection<Knowledgebase>): List<ActionableFusionOutput> {
     val knownPromiscuousThree = knownPromiscuousThree(knowledgebases).toSet()
-    return actionablePromiscuousGenes(knowledgebases).filter { knownPromiscuousThree.contains(it.fusion) }
+    return actionablePromiscuousGenes(knowledgebases).filter { knownPromiscuousThree.contains(it.event) }
 }
 
 private fun actionablePromiscuousGenes(knowledgebases: Collection<Knowledgebase>): List<ActionableFusionOutput> {
-    return knowledgebases.flatMap { it.actionableFusions }.filter { it.fusion is PromiscuousGene }
+    return knowledgebases.flatMap { it.actionableFusions }.filter { it.event is PromiscuousGene }
 }

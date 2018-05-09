@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.knowledgebaseimporter
 
-import com.hartwig.hmftools.knowledgebaseimporter.output.Fusion
+import com.hartwig.hmftools.knowledgebaseimporter.output.FusionEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.FusionPair
 import com.hartwig.hmftools.knowledgebaseimporter.output.PromiscuousGene
 
 private const val GENE_PATTERN = "[A-Za-z0-9-]"
 private const val GENE_GROUP = "($GENE_PATTERN+)"
 
-fun extractFusion(gene: String, fusionString: String, separators: List<String>): Fusion {
+fun extractFusion(gene: String, fusionString: String, separators: List<String>): FusionEvent {
     return separators.map { extractFusion(gene, fusionString, it) }
             .sortedBy {
                 when (it) {
@@ -18,7 +18,7 @@ fun extractFusion(gene: String, fusionString: String, separators: List<String>):
             .first()
 }
 
-fun extractFusion(gene: String, fusionString: String, separator: String): Fusion {
+fun extractFusion(gene: String, fusionString: String, separator: String): FusionEvent {
     val fiveGene = fiveGene(gene, fusionString, separator)
     val threeGene = threeGene(gene, fusionString, separator)
     return if (fiveGene == null || threeGene == null) {
@@ -59,7 +59,7 @@ fun isThreeGene(gene: String, fusion: String, separator: String): Boolean {
 
 private fun geneStartLetters(gene: String) = gene.substring(0, 3)
 
-fun flipFusion(fusion: Fusion, pairsToFlip: Set<FusionPair>): Fusion {
+fun flipFusion(fusion: FusionEvent, pairsToFlip: Set<FusionPair>): FusionEvent {
     return if (fusion is FusionPair && pairsToFlip.contains(fusion)) {
         FusionPair(fusion.threeGene, fusion.fiveGene)
     } else {
