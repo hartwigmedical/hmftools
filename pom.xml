@@ -30,6 +30,7 @@
         <module>portal-data-converter</module>
         <module>sv-analyser</module>
         <module>knowledgebase-importer</module>
+        <module>actionability-analyzer</module>
     </modules>
 
     <properties>
@@ -51,6 +52,7 @@
         <hmf-sv-analyser.version>1.0</hmf-sv-analyser.version>
         <hmf-strelka-post-process.version>1.2</hmf-strelka-post-process.version>
         <hmf-extensions.version>1</hmf-extensions.version>
+        <hmf-knowledgebase-importer.version>1.0</hmf-knowledgebase-importer.version>
 
         <immutables.version>2.4.4</immutables.version>
         <htsjdk.version>2.12.0</htsjdk.version>
@@ -185,6 +187,11 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>hmf-extensions-samtools</artifactId>
                 <version>${hmf-extensions.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>knowledgebase-importer</artifactId>
+                <version>${hmf-knowledgebase-importer.version}</version>
             </dependency>
 
             <dependency>
