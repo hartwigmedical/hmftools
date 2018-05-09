@@ -11,9 +11,15 @@ private val logger = LogManager.getLogger("ActionabilityAnalyzerApplication")
 private val user = ""
 private val password = ""
 private val databaseUrl = "jdbc:mysql://"
+private val actionableVariants = "actionableVariants"
+private val actionableFusionPairs = "actionableFusionPairs"
+private val actionablePromiscuousFive = "actionablePromiscuousFive"
+private val actionablePromisucousThree = "actionablePromiscuousThree"
+private val actionableCNVs = "actionableCNVs"
 
 fun main(args: Array<String>) {
-    val actionabilityAnalyzer = ActionabilityAnalyzer("actionableVariantsFinal")
+    val actionabilityAnalyzer = ActionabilityAnalyzer(actionableVariants, actionableFusionPairs, actionablePromiscuousFive,
+                                                      actionablePromisucousThree, actionableCNVs)
     val dbAccess = DatabaseAccess(user, password, databaseUrl)
     val printer = createPrinter()
     logger.info("Start")
