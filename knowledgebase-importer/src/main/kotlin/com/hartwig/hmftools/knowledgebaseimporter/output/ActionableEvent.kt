@@ -1,0 +1,3 @@
+package com.hartwig.hmftools.knowledgebaseimporter.output
+
+interface ActionableEvent
