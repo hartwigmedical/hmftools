@@ -8,9 +8,17 @@ import java.io.FileWriter
 import kotlin.streams.asSequence
 
 private val logger = LogManager.getLogger("ActionabilityAnalyzerApplication")
+private val user = ""
+private val password = ""
+private val databaseUrl = "jdbc:mysql://"
 
 fun main(args: Array<String>) {
-    
+    val actionabilityAnalyzer = ActionabilityAnalyzer("actionableVariantsFinal")
+    val dbAccess = DatabaseAccess(user, password, databaseUrl)
+    val printer = createPrinter()
+    logger.info("Start")
+    queryDatabase(dbAccess, printer, actionabilityAnalyzer)
+    logger.info("Done.")
 }
 
 private fun queryDatabase(dbAccess: DatabaseAccess, printer: CSVPrinter, actionabilityAnalyzer: ActionabilityAnalyzer) {
