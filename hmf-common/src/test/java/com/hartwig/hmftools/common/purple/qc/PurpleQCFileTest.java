@@ -24,6 +24,7 @@ public class PurpleQCFileTest {
                 .ploidy(3.17)
                 .amberGender(Gender.MALE)
                 .cobaltGender(Gender.FEMALE)
+                .deletedGenes(120)
                 .build();
     }
 }

@@ -33,6 +33,7 @@ public class PurpleChecker implements HealthChecker {
         checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.PURPLE_SEGMENT_SCORE.toString(), segmentScore));
         checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.AMBER_GENDER.toString(), qcCheck.amberGender().toString()));
         checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.COBALT_GENDER.toString(), qcCheck.cobaltGender().toString()));
+        checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.PURPLE_DELETED_GENES_SCORE.toString(), String.valueOf(qcCheck.deletedGenes())));
 
         return toMultiValueResult(checks);
     }

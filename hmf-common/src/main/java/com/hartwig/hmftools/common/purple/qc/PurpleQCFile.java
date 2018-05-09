@@ -42,10 +42,11 @@ public final class PurpleQCFile {
     static PurpleQC fromLines(@NotNull final List<String> lines) throws MalformedFileException {
         try {
             return ImmutablePurpleQC.builder()
-                    .unsupportedSegments(Integer.valueOf(getValue(lines.get(4))))
-                    .ploidy(Double.valueOf(getValue(lines.get(5))))
-                    .amberGender(Gender.valueOf(getValue(lines.get(6))))
-                    .cobaltGender(Gender.valueOf(getValue(lines.get(7))))
+                    .unsupportedSegments(Integer.valueOf(getValue(lines.get(5))))
+                    .ploidy(Double.valueOf(getValue(lines.get(6))))
+                    .amberGender(Gender.valueOf(getValue(lines.get(7))))
+                    .cobaltGender(Gender.valueOf(getValue(lines.get(8))))
+                    .deletedGenes(Integer.valueOf(getValue(lines.get(9))))
                     .build();
         } catch (Exception e) {
             throw new MalformedFileException("Unable to parse purple qc file.");
@@ -65,12 +66,13 @@ public final class PurpleQCFile {
         result.add("QCStatus" + DELIMITER + check.status());
         result.add("SegmentPass" + DELIMITER + check.segmentPass());
         result.add("GenderPass" + DELIMITER + check.genderPass());
+        result.add("DeletedGenesPass" + DELIMITER + check.deletedGenesPass());
         result.add("SegmentScore" + DELIMITER + check.segmentScore());
         result.add("UnsupportedSegments" + DELIMITER + check.unsupportedSegments());
         result.add("Ploidy" + DELIMITER + FORMATTER.format(check.ploidy()));
         result.add("AmberGender" + DELIMITER + check.amberGender());
         result.add("CobaltGender" + DELIMITER + check.cobaltGender());
-
+        result.add("DeletedGenes" + DELIMITER + check.deletedGenes());
         return result;
     }
 }

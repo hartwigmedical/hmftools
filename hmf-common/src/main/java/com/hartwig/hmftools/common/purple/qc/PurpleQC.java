@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class PurpleQC {
 
     private static final int SEGMENT_THRESHOLD = 120;
+    private static final int DELETED_GENES_THRESHOLD = 280;
 
     @NotNull
     public PurpleQCStatus status() {
@@ -20,6 +21,10 @@ public abstract class PurpleQC {
 
         if (!genderPass()) {
             return PurpleQCStatus.FAIL_GENDER;
+        }
+
+        if (!deletedGenesPass()) {
+            return PurpleQCStatus.FAIL_DELETED_GENES;
         }
 
         return PurpleQCStatus.PASS;
@@ -34,11 +39,17 @@ public abstract class PurpleQC {
                 && cobaltGender().equals(Gender.MALE_KLINEFELTER));
     }
 
+    boolean deletedGenesPass() {
+        return deletedGenes() <= DELETED_GENES_THRESHOLD;
+    }
+
     public int segmentScore() {
         return (int) Math.round(unsupportedSegments() / ploidy());
     }
 
     abstract int unsupportedSegments();
+
+    public abstract int deletedGenes();
 
     public abstract double ploidy();
 
