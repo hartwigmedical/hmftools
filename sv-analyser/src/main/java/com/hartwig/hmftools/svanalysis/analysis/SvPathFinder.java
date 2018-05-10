@@ -92,7 +92,7 @@ public class SvPathFinder {
 //
 //            pathData.addVariant(currentVar);
 //
-////            LOGGER.debug("creating new path({}) with next variant({}:{})", newCluster.getClusterId(), currentIndex, currentVar.id());
+////            LOGGER.debug("creating new path({}) with next variant({}:{})", newCluster.getId(), currentIndex, currentVar.id());
 //
 //            unassignedVariants.remove(currentIndex); // index will remain the same and so point to the next item
 //

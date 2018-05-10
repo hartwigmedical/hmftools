@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_ENCL
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_ENCLOSING;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_NEIGHBOURS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_OVERLAP;
+import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -60,7 +61,7 @@ public class SvClusteringMethods {
                 }
 
                 cluster.addVariant(currentVar);
-                LOGGER.debug("cluster({}) add matched variant({}), totalCount({})", cluster.getClusterId(), currentVar.id(), cluster.getSVs().size());
+                LOGGER.debug("cluster({}) add matched variant({}), totalCount({})", cluster.getId(), currentVar.id(), cluster.getSVs().size());
 
                 matched = true;
                 break;
@@ -243,26 +244,24 @@ public class SvClusteringMethods {
             String chrArmStart = mUtils.getVariantChrArm(var,true);
             String chrArmEnd = mUtils.getVariantChrArm(var,false);
 
-            if(mChrArmSvCount.containsKey(chrArmStart))
-            {
+            // ensure an entry exists
+            if (!mChrArmSvCount.containsKey(chrArmStart)) {
+                mChrArmSvCount.put(chrArmStart, 0);
+            }
+
+            if (!chrArmStart.equals(chrArmEnd) && !mChrArmSvCount.containsKey(chrArmEnd)) {
+                mChrArmSvCount.put(chrArmEnd, 0);
+            }
+
+            // exclude LINE elements from back-ground rates
+            if(var.isStartLineElement() == NO_LINE_ELEMENT) {
                 mChrArmSvCount.replace(chrArmStart, mChrArmSvCount.get(chrArmStart) + 1);
             }
-            else
-            {
-                mChrArmSvCount.put(chrArmStart, 1);
-            }
 
-            if(mChrArmSvCount.containsKey(chrArmEnd))
-            {
+            if(var.isEndLineElement() == NO_LINE_ELEMENT) {
                 mChrArmSvCount.replace(chrArmEnd, mChrArmSvCount.get(chrArmEnd) + 1);
             }
-            else
-            {
-                mChrArmSvCount.put(chrArmEnd, 1);
-            }
         }
-
-        // now normalise these counts by expressing as an expected
 
         // now determine the background rate by taking the median value from amongst the arms
         // factoring in the arms which have no Q (14-16, 21-22) and excluding the X & Ys
@@ -277,7 +276,7 @@ public class SvClusteringMethods {
             double ratePerLength = svCount / (chrArmLength / REF_BASE_LENGTH); // the factor isn't important
 
             mChrArmSvRate.put(chrArm, ratePerLength);
-            LOGGER.debug("chrArm({}) ratePerMill({}) from count({}) length({})", chrArm, ratePerLength, svCount, chrArmLength);
+            // LOGGER.debug("chrArm({}) ratePerMill({}) from count({}) length({})", chrArm, ratePerLength, svCount, chrArmLength);
         }
 
         mChrArmSvRate = sortByValue(mChrArmSvRate, false);
@@ -286,7 +285,7 @@ public class SvClusteringMethods {
         int chrArmIndex = 0;
         for(Map.Entry<String, Double> entry : mChrArmSvRate.entrySet())
         {
-            LOGGER.debug("chrArm({}: {}) svRate({})", chrArmIndex, entry.getKey(), entry.getValue());
+            // LOGGER.debug("chrArm({}: {}) svRate({})", chrArmIndex, entry.getKey(), entry.getValue());
 
             if(chrArmIndex == 20)
                 mMedianChrArmRate = entry.getValue();
@@ -486,7 +485,7 @@ public class SvClusteringMethods {
 
     private void assignSubClusters(SvCluster cluster)
     {
-        LOGGER.debug("cluster({}) sub-clustering {} variants", cluster.getClusterId(), cluster.getSVs().size());
+        LOGGER.debug("cluster({}) sub-clustering {} variants", cluster.getId(), cluster.getSVs().size());
 
         // create sub-clusters for any SVs which have sub SVs
         for(SvClusterData currentVar : cluster.getSVs())
@@ -510,7 +509,7 @@ public class SvClusteringMethods {
                 }
 
                 LOGGER.debug("variant({}) assigned to cluster({}) span({} -> {})",
-                        currentVar.posId(), cluster.getClusterId(), cluster.getSpanningSV().position(true), cluster.getSpanningSV().position(false));
+                        currentVar.posId(), cluster.getId(), cluster.getSpanningSV().position(true), cluster.getSpanningSV().position(false));
 
                 currentVar.setStartCluster(cluster);
                 currentVar.setEndCluster(cluster);
@@ -539,7 +538,7 @@ public class SvClusteringMethods {
             // create a cluster, set its parent cluster and then call iteratively
             SvCluster newCluster = new SvCluster(getNextClusterId(), mClusteringUtils);
 
-            LOGGER.debug("cluster({}) creating new subCluster({})", cluster.getClusterId(), newCluster.getClusterId());
+            LOGGER.debug("cluster({}) creating new subCluster({})", cluster.getId(), newCluster.getId());
 
             // add the spanning SV and its sub-SVs
             newCluster.setSpanningSV(currentVar);
@@ -568,7 +567,7 @@ public class SvClusteringMethods {
                     if (matchedCluster != null) {
                         LOGGER.debug("variant: id({}) {}({}:{}) matched with cluster({}) on spanningVariant({})",
                                 currentVar.id(), isStartStr, currentVar.chromosome(isStart), currentVar.position(isStart),
-                                matchedCluster.getClusterId(), matchedCluster.getSpanningSV().posId());
+                                matchedCluster.getId(), matchedCluster.getSpanningSV().posId());
 
                         if(isStart)
                             currentVar.setStartCluster(matchedCluster);

@@ -25,6 +25,8 @@ public class StructuralVariantFactory {
     private final static String MATE_ID = "MATEID";
     private final static String PAR_ID = "PARID";
     private final static String INS_SEQ = "SVINSSEQ";
+    private final static String LEFT_INS_SEQ = "LEFT_SVINS";
+    private final static String RIGHT_INS_SEQ = "RIGHT_SVINS";
     private final static String HOM_SEQ = "HOMSEQ";
     private final static String BPI_START = "BPI_START";
     private final static String BPI_END = "BPI_END";
@@ -153,26 +155,46 @@ public class StructuralVariantFactory {
         // other orientation determined by the direction of the brackets
         final byte endOrientation = (byte)(match.group(2).equals("]") ? 1 : -1);
         // grab the inserted sequence by removing 1 base from the reference anchoring bases
-        final String insertedSequence = match.group(1).length() > 0 ?
+        String insertedSequence = match.group(1).length() > 0 ?
                 match.group(1).substring(1) :
                 match.group(4).substring(0, match.group(4).length() - 1);
+
         final String mantaInsertedSequence = first.getAttributeAsString(INS_SEQ, "");
-        final List<Integer> ihompos = first.getAttributeAsIntList(INEXACT_HOMOLOGY_LENGTH, 0);
-        final int ihomlen = ihompos.size() == 2 ? Math.abs(ihompos.get(0)) + Math.abs(ihompos.get(1)) : 0;
+
+        if(!Strings.isNullOrEmpty(mantaInsertedSequence))
+            insertedSequence =  mantaInsertedSequence;
+
+//        final List<Integer> ihompos = first.getAttributeAsIntList(INEXACT_HOMOLOGY_LENGTH, 0);
+//        final int ihomlen = ihompos.size() == 2 ? Math.abs(ihompos.get(0)) + Math.abs(ihompos.get(1)) : 0;
 
         StructuralVariantType type = StructuralVariantType.BND;
+
         if (first.getContig().equals(second.getContig())) {
             // what should we do with events are aren't simple operations.
             // eg deletions with inserted bases, duplications with additional inserted sequence..
             if (startOrientation != endOrientation && second.getStart() - first.getStart() < insertedSequence.length()) {
                 // For now, we'll label as an insertion if the inserted sequence in longer than the del/dup sequence
                 type = StructuralVariantType.INS;
-            } if (startOrientation == 1 && endOrientation == -1) {
+            }
+            if (startOrientation == 1 && endOrientation == -1) {
                 type = StructuralVariantType.DEL;
-            } else if (startOrientation == -1 && endOrientation == 1) {
+            }
+            else if (startOrientation == -1 && endOrientation == 1) {
                 type = StructuralVariantType.DUP;
-            } else {
+            }
+            else {
                 type = StructuralVariantType.INV;
+
+                final String leftInsertSeq = first.getAttributeAsString(LEFT_INS_SEQ, "");
+                final String rightInsertSeq = first.getAttributeAsString(RIGHT_INS_SEQ, "");
+                if(!leftInsertSeq.isEmpty() && !rightInsertSeq.isEmpty())
+                {
+                    insertedSequence = leftInsertSeq + "|" + rightInsertSeq;
+                }
+                else
+                {
+                    insertedSequence = leftInsertSeq + rightInsertSeq;
+                }
             }
         }
 
@@ -197,7 +219,7 @@ public class StructuralVariantFactory {
                 .start(startLeg)
                 .end(endLeg)
                 .mateId(second.getID())
-                .insertSequence(Strings.isNullOrEmpty(mantaInsertedSequence) ? insertedSequence : mantaInsertedSequence)
+                .insertSequence(insertedSequence)
                 .type(type)
                 .filter(filtersStr)
                 .build();

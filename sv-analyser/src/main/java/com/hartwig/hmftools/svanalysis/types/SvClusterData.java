@@ -24,18 +24,17 @@ public class SvClusterData
     private String mStartLineElement;
     private String mEndLineElement;
 
-    private List<StructuralVariantLeg> mUniqueBreakends;
-
-    // clustering info
-    private List<SvClusterData> mSubSVs; // other SVs wholy contained within this SV
-    private boolean mIsSubSV;
-//    private SvCluster mStartCluster;
-//    private SvCluster mEndCluster;
-
     private int mNearestSVLength;
     private String mNearestSVLinkType;
     private int mNearestTILength; // templated insertion if exists
     private int mNearestDBLength; // deletion-bridge link if exists
+
+    private boolean mDupBEStart;
+    private boolean mDupBEEnd;
+
+    private String mTransType;
+    private int mTransLength;
+    private String mTransSvLinks;
 
     public SvClusterData(final StructuralVariantData svData)
     {
@@ -55,10 +54,13 @@ public class SvClusterData
         mNearestTILength = -1;
         mNearestDBLength = -1;
 
-        mSubSVs = Lists.newArrayList();
-        mIsSubSV = false;
-//        mStartCluster = null;
-//        mEndCluster = null;
+        mDupBEStart = false;
+        mDupBEEnd = false;
+
+        mTransType = "";
+        mTransLength = 0;
+        mTransSvLinks = "";
+
     }
 
     public static SvClusterData from(final EnrichedStructuralVariant enrichedSV)
@@ -105,6 +107,19 @@ public class SvClusterData
                 chromosome(false), orientation(false), position(false));
     }
 
+    public final String posId(boolean useStart)
+    {
+        return String.format("%s: %s %s:%d:%d)",
+                id(), useStart ? "start" :"end", chromosome(useStart), orientation(useStart), position(useStart));
+    }
+
+    public final String toCsv()
+    {
+        return String.format("%s,%s,%d,%d,%s,%d,%d,%s)",
+                id(), chromosome(true), orientation(true), position(true),
+                chromosome(false), orientation(false), position(false), type());
+    }
+
     public final String arm(boolean isStart) { return isStart ? mStartArm : mEndArm; }
     public final String getStartArm() { return mStartArm; }
     public final String getEndArm() { return mEndArm; }
@@ -140,6 +155,11 @@ public class SvClusterData
     public int getNearestDBLength() { return mNearestDBLength; }
     public void setNearestDBLength(int length) { mNearestDBLength = length; }
 
+    public boolean isDupBEStart() { return mDupBEStart; }
+    public boolean isDupBEEnd() { return mDupBEEnd; }
+    public void setIsDupBEStart(boolean toggle) { mDupBEStart = toggle; }
+    public void setIsDupBEEnd(boolean toggle) { mDupBEEnd = toggle; }
+
     public final String typeStr()
     {
         if(type() != StructuralVariantType.BND && mStartArm != mEndArm)
@@ -158,39 +178,15 @@ public class SvClusterData
         return chromosome(true).equals(chromosome(false));
     }
 
-    public final boolean isCrossArm() { return mStartArm != mEndArm; }
+    public String getTransType() { return mTransType; }
+    public int getTransLength() { return mTransLength; }
+    public String getTransSvLinks() { return mTransSvLinks; }
 
-    public final long getSpan()
+    public void setTransData(String transType, int transLength, final String transSvLinks)
     {
-        if(!chromosome(true).equals(chromosome(false)))
-            return -1;
-
-        return position(false) - position(true);
+        mTransType = transType;
+        mTransLength = transLength;
+        mTransSvLinks = transSvLinks;
     }
 
-    public boolean addSubSV(SvClusterData subVariant)
-    {
-        for(final SvClusterData existing : mSubSVs)
-        {
-            if(existing.id() == subVariant.id())
-                return false;
-        }
-
-        mSubSVs.add(subVariant);
-        subVariant.setIsSubSV(true);
-        return true;
-    }
-
-    public List<SvClusterData> getSubSVs() { return mSubSVs; }
-    public boolean hasSubSVs() { return !mSubSVs.isEmpty(); }
-
-    public void setIsSubSV(final boolean isSubSV) { mIsSubSV = isSubSV; }
-    public final boolean isSubSV() { return mIsSubSV; }
-
-//    public void setStartCluster(SvCluster cluster) { mStartCluster = cluster; }
-//    public void setEndCluster(SvCluster cluster) { mEndCluster = cluster; }
-//    public final SvCluster getStartCluster() { return mStartCluster; }
-//    public final SvCluster getEndCluster() { return mEndCluster; }
-
-    // public final boolean areClustersSet() { return mStartCluster != null && mEndCluster != null; }
 }

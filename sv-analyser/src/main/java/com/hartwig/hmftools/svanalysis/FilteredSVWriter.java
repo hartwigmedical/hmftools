@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,14 +30,23 @@ public class FilteredSVWriter {
     private final String mVcfFileLocation;
     private BufferedWriter mFileWriter;
 
+    private boolean mRunPONFilter;
+    private boolean mLogInsSVs;
+
     private static final Logger LOGGER = LogManager.getLogger(FilteredSVWriter.class);
 
     public FilteredSVWriter(final String vcfFileLocation, final String outputPath)
     {
+        mRunPONFilter = false;
+        mLogInsSVs = false;
+
         mOutputPath = outputPath;
         mVcfFileLocation = vcfFileLocation;
         mFileWriter = null;
     }
+
+    public void setRunPONFilter(boolean toggle) { mRunPONFilter = toggle; }
+    public void setLogInsSVs(boolean toggle) { mLogInsSVs = toggle; }
 
     public void processVcfFiles()
     {
@@ -78,7 +88,12 @@ public class FilteredSVWriter {
                 LOGGER.debug("sampleId({})", sampleId);
 
                 List<StructuralVariant> variants = readFromVcf(vcfFile.getPath());
-                generateFilteredSVFile(variants, sampleId);
+
+                if(mRunPONFilter)
+                    generateFilteredSVFile(variants, sampleId);
+
+                if(mLogInsSVs)
+                    logInsData(variants, sampleId);
             }
 
             if(mFileWriter != null)
@@ -158,6 +173,51 @@ public class FilteredSVWriter {
         catch (final IOException e) {
             LOGGER.error("error writing to outputFile");
         }
+    }
 
+    private void logInsData(List<StructuralVariant> variants, final String sampleId)
+    {
+        try {
+
+            if(mFileWriter == null)
+            {
+                String outputFileName = mOutputPath;
+                if(!outputFileName.endsWith("/"))
+                    outputFileName += "/";
+
+                outputFileName += "sv_inserts.csv";
+
+                Path outputFile = Paths.get(outputFileName);
+
+                mFileWriter = Files.newBufferedWriter(outputFile);
+
+                mFileWriter.write("SampleId,SvId,Type,ChrStart,PosStart,OrientStart,ChrEnd,PosEnd,OrientEnd,InsertSeq\n");
+            }
+
+            for(final StructuralVariant var : variants)
+            {
+                if(var.type() != StructuralVariantType.INS)
+                    continue;
+
+                String filtersStr = var.filter();
+
+                if(!filtersStr.equals("PASS") && !filtersStr.equals(".") && !filtersStr.equals("[]"))
+                {
+                    continue;
+                }
+
+                mFileWriter.write(
+                        String.format("%s,%s,%s,%s,%d,%d,%s,%d,%d,%s",
+                                sampleId, var.id(), var.type(),
+                                var.chromosome(true), var.position(true), var.orientation(true),
+                                var.chromosome(false), var.position(false), var.orientation(false), var.insertSequence()));
+
+                mFileWriter.newLine();
+            }
+
+        }
+        catch (final IOException e) {
+            LOGGER.error("error writing to outputFile");
+        }
     }
 }

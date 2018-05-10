@@ -4,6 +4,7 @@ import com.hartwig.hmftools.common.centromeres.Centromeres;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLengths;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 
 import java.util.List;
@@ -38,6 +39,8 @@ public class SvUtilities {
     public static String SV_GROUP_ENCLOSING = "ENCLG";
     public static String SV_GROUP_OVERLAP = "OVLP";
     public static String SV_GROUP_NEIGHBOURS = "NHRB";
+
+    public static int PERMITED_DUP_BE_DISTANCE = 50;
 
     public SvUtilities(int baseDistance)
     {
@@ -294,6 +297,13 @@ public class SvUtilities {
             return true;
 
         return false;
+    }
+
+    public boolean breakendsMatch(final SvClusterData var1, final SvClusterData var2, boolean v1Start, boolean v2Start, int permittedDist)
+    {
+        return var1.chromosome(v1Start).equals(var2.chromosome(v1Start))
+                && abs(var1.position(v1Start) - var2.position(v2Start)) <= permittedDist
+                && var1.orientation(v1Start) == var2.orientation(v2Start);
     }
 
     public int calcConsistency(final List<SvClusterData> svList)

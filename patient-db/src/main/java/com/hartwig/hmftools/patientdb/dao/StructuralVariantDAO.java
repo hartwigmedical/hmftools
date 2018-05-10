@@ -63,6 +63,7 @@ class StructuralVariantDAO {
                     .ploidy(record.getValue(STRUCTURALVARIANT.PLOIDY))
                     .type(StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
                     .homology(record.getValue(STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE))
+                    .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
                     .filter(record.getValue(STRUCTURALVARIANT.FILTER))
                     .build());
         }

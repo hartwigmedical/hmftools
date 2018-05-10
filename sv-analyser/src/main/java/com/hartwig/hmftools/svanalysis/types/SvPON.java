@@ -32,8 +32,8 @@ public class SvPON {
         mCount = count;
     }
 
-    public String chrStart() { return mChrStart; }
-    public String chrEnd() { return mChrEnd; }
+    public final String chrStart() { return mChrStart; }
+    public final String chrEnd() { return mChrEnd; }
     public long posStart() { return mPosStart; }
     public long posEnd() { return mPosEnd; }
     public byte orientStart() { return mOrientStart; }

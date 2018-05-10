@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
+import static java.lang.Math.abs;
+
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator.NO_FS;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.DOUBLE_STRANDED_BREAK;
@@ -7,8 +10,10 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.REPLICATION_E
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
+import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 import com.hartwig.hmftools.svanalysis.types.SvFootprint;
+import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,18 +34,13 @@ public class SvCluster
     private boolean mIsConsistent;
     private String mDesc;
     private List<String> mAnnotationList;
-    private int mDSBCount ;
-    private int mTempInsertCount;
-    private String mDSBLengths;
-    private String mTempInsertLengths;
     private int mChromosomeArmCount;
 
     private List<SvClusterData> mClusteredSVs;
     private List<SvBreakend> mUniqueBreakends;
-    private List<SvFootprint> mFootprints;
-    private List<SvCluster> mSubClusters;
-
-    private SvClusterData mSpanningSV; // the SV whose positions define this group
+    private List<SvChain> mChains;
+    private List<SvLinkedPair> mLinkedPairs;
+    private List<SvClusterData> mSpanningSVs;
 
     private static final Logger LOGGER = LogManager.getLogger(SvCluster.class);
 
@@ -56,34 +56,36 @@ public class SvCluster
         mConsistencyCount = 0;
         mIsConsistent = false;
         mDesc = "";
-        mAnnotationList= Lists.newArrayList();
-        mDSBCount = 0;
-        mDSBLengths = "";
-        mTempInsertCount = 0;
-        mTempInsertLengths = "";
+        mAnnotationList = Lists.newArrayList();
         mChromosomeArmCount = 0;
 
-        // subclustering and linkages
-        mFootprints = Lists.newArrayList();
-        mSubClusters = Lists.newArrayList();
-
-        mSpanningSV = null;
+        // chain data
+        mLinkedPairs = Lists.newArrayList();
+        mSpanningSVs = Lists.newArrayList();
+        mChains = Lists.newArrayList();
     }
 
-    public int getClusterId() { return mClusterId; }
+    public int getId() { return mClusterId; }
 
-    private int getNextFootprintId() { return mNextFootprintId++; }
-
+    public int getCount() { return mClusteredSVs.size(); }
     public List<SvClusterData> getSVs() { return mClusteredSVs; }
-    public List<SvFootprint> getFootprints() { return mFootprints; }
-    public List<SvCluster> getSubClusters() { return mSubClusters; }
 
     public void addVariant(final SvClusterData variant)
     {
         mClusteredSVs.add(variant);
-
-        // addToFootprint(variant);
     }
+
+    public List<SvChain> getChains() { return mChains; }
+
+    public void addChain(SvChain chain)
+    {
+        mChains.add(chain);
+    }
+
+    public final List<SvLinkedPair> getLinkedPairs() { return mLinkedPairs; }
+    public final List<SvClusterData> getSpanningSVs() { return mSpanningSVs; }
+    public void setLinkedPairs(final List<SvLinkedPair> pairs) { mLinkedPairs = pairs; }
+    public void setSpanningSVs(final List<SvClusterData> svList) { mSpanningSVs = svList; }
 
     public final String getDesc() { return mDesc; }
     public final void setDesc(final String desc) { mDesc = desc; }
@@ -125,7 +127,6 @@ public class SvCluster
         }
 
         mChromosomeArmCount = chrArmlist.size();
-        LOGGER.debug("cluster({}) has {} unique arms", mClusterId, mChromosomeArmCount);
     }
 
     public final String getClusterTypesAsString()
@@ -134,11 +135,9 @@ public class SvCluster
         {
             return mClusteredSVs.get(0).typeStr();
         }
-        else if(mClusteredSVs.size() == 2)
-        {
-            return mClusteredSVs.get(0).typeStr() + "_" + mClusteredSVs.get(1).typeStr();
-        }
 
+        // the following map-based naming convention leads
+        // to a predictable ordering of types: INV, CRS, BND, DEL and DUP
         String clusterTypeStr = "";
         Map<String, Integer> typeMap = new HashMap<>();
 
@@ -195,6 +194,19 @@ public class SvCluster
         for (final SvClusterData var : mClusteredSVs) {
             addVariantToUniqueBreakends(var);
         }
+
+        // cache this against the SV
+        for (SvClusterData var : mClusteredSVs) {
+
+            for(final SvBreakend breakend : mUniqueBreakends)
+            {
+                if(variantMatchesBreakend(var, breakend, true, PERMITED_DUP_BE_DISTANCE) && breakend.getCount() > 1)
+                    var.setIsDupBEStart(true);
+
+                if(variantMatchesBreakend(var, breakend, false, PERMITED_DUP_BE_DISTANCE) && breakend.getCount() > 1)
+                    var.setIsDupBEEnd(true);
+            }
+        }
     }
 
     private void addVariantToUniqueBreakends(final SvClusterData var)
@@ -205,7 +217,7 @@ public class SvCluster
 
             boolean found = false;
             for(SvBreakend breakend : mUniqueBreakends) {
-                if (variantMatchesBreakend(var, breakend, useStart))
+                if (variantMatchesBreakend(var, breakend, useStart, PERMITED_DUP_BE_DISTANCE))
                 {
                     breakend.addToCount(1);
                     found = true;
@@ -220,10 +232,10 @@ public class SvCluster
         }
     }
 
-    private boolean variantMatchesBreakend(final SvClusterData var, final SvBreakend breakend, boolean useStart)
+    public boolean variantMatchesBreakend(final SvClusterData var, final SvBreakend breakend, boolean useStart, int permittedDist)
     {
         return breakend.chromosome().equals(var.chromosome(useStart))
-            && breakend.position() == var.position(useStart)
+            && abs(breakend.position() - var.position(useStart)) <= permittedDist
             && breakend.orientation() == var.orientation(useStart);
     }
 
@@ -251,37 +263,40 @@ public class SvCluster
         return count;
     }
 
-    public boolean isSvDuplicateBE(final SvClusterData var, boolean useStart)
+    public final SvLinkedPair findLinkedPair(final SvClusterData var, boolean useStart)
     {
-        for(final SvBreakend breakend : mUniqueBreakends)
+        for(final SvLinkedPair pair : mLinkedPairs)
         {
-            if(variantMatchesBreakend(var, breakend, useStart))
-                return breakend.getCount() > 1;
+            if(var.equals(pair.first()) && useStart == pair.firstLinkOnStart())
+                return pair;
+
+            if(var.equals(pair.second()) && useStart == pair.secondLinkOnStart())
+                return pair;
         }
 
-        return false;
+        return null;
     }
 
-    public final boolean isReplicationEvent()
+    public final SvChain findChain(final SvClusterData var)
     {
-        return mAnnotationList.contains(REPLICATION_EVENT);
+        for(final SvChain chain : mChains)
+        {
+            if(chain.getSvIndex(var) >= 0)
+                return chain;
+        }
+
+        return null;
     }
 
-    public final int getDSBCount() { return mDSBCount; }
-    public void setDSBCount(int count) { mDSBCount = count; }
-
-    public final String getDSBLengths() { return mDSBLengths; }
-    public final void setDSBLengths(final String lens) { mDSBLengths = lens; }
-
-    public final int getTICount() { return mTempInsertCount; }
-    public void setTICount(int count) { mTempInsertCount = count; }
-
-    public final String getTempInsertLengths() { return mTempInsertLengths; }
-    public final void setTempInsertLengths(final String lens) { mTempInsertLengths = lens; }
-
-    public final boolean isDSBEvent()
+    public final SvChain findChain(final SvLinkedPair pair)
     {
-        return mAnnotationList.contains(DOUBLE_STRANDED_BREAK);
+        for(final SvChain chain : mChains)
+        {
+            if(chain.hasLinkedPair(pair))
+                return chain;
+        }
+
+        return null;
     }
 
     public final List<String> getAnnotationList() { return mAnnotationList; }
@@ -294,91 +309,5 @@ public class SvCluster
     }
 
     public String getAnnotations() { return mAnnotationList.stream ().collect (Collectors.joining (";")); }
-
-    public void addSubCluster(SvCluster subCluster)
-    {
-        mSubClusters.add(subCluster);
-    }
-
-    public SvCluster findClosestCluster(String chromosome, long position)
-    {
-        if(mSpanningSV == null)
-            return null;
-
-        if(!mUtils.isWithin(mSpanningSV, chromosome, position))
-        {
-            return null;
-        }
-
-        if(mSubClusters.isEmpty())
-            return this;
-
-        for(SvCluster subCluster : mSubClusters)
-        {
-            SvCluster matchingCluster = subCluster.findClosestCluster(chromosome, position);
-            if(matchingCluster != null)
-                return matchingCluster;
-        }
-
-        // no more precise match in the sub-clusters than this cluster
-        return this;
-    }
-
-    private void addToFootprint(final SvClusterData variant)
-    {
-        // also add to relevant footprint
-        boolean footprintFound = false;
-        for(SvFootprint footprint : mFootprints)
-        {
-            for(final SvClusterData otherVar : footprint.getSVs())
-            {
-                if(mUtils.areVariantsLinkedByDistance(variant, otherVar))
-                {
-                    footprint.addVariant(variant);
-                    LOGGER.debug("cluster({}) footprint({}) added variant({}), count({})", mClusterId, footprint.getFootprintId(), variant.id(), footprint.getSVs().size());
-                    footprintFound = true;
-                    break;
-
-                }
-            }
-        }
-
-        if(!footprintFound)
-        {
-            // add a new one
-            SvFootprint newFootprint = new SvFootprint(getNextFootprintId());
-
-            LOGGER.debug("cluster({}) new footprint({}) added variant({}),", mClusterId, newFootprint.getFootprintId(), variant.id());
-            newFootprint.addVariant(variant);
-
-            mFootprints.add(newFootprint);
-        }
-    }
-
-    public void setSpanningSV(SvClusterData spanningSV)
-    {
-        addVariant(spanningSV);
-        mSpanningSV = spanningSV;
-//        mSpanningSV.setStartCluster(this);
-//        mSpanningSV.setEndCluster(this);
-
-        LOGGER.debug("cluster({}) set spanning variant({}) with subSVsCount({})", mClusterId, spanningSV.id(), spanningSV.getSubSVs().size());
-
-        // and add any of its sub-SVs
-        for(SvClusterData subVar : spanningSV.getSubSVs())
-        {
-            addVariant(subVar);
-        }
-    }
-
-    public SvClusterData getSpanningSV() { return mSpanningSV; }
-
-    public long getSpan() { return mSpanningSV != null ? mSpanningSV.getSpan() : -1; }
-
-    public boolean isIsolatedSingleSV()
-    {
-        // has no other overlapping SVs or wholy contained SVs
-        return (mClusteredSVs.size() == 1);
-    }
 
 }

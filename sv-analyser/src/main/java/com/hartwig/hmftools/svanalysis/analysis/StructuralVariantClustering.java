@@ -8,7 +8,9 @@ import com.hartwig.hmftools.svanalysis.annotators.ExternalSVAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator;
+import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvClusterData;
+import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -74,8 +76,8 @@ public class StructuralVariantClustering {
         mExternalAnnotator.loadFile(mConfig.getExternalAnnotationsFile());
 
         mPerfCounter = new PerformanceCounter("Total");
-        mPC1 = new PerformanceCounter("ChrArms");
-        mPC2 = new PerformanceCounter("ExtAnn");
+        mPC1 = new PerformanceCounter("Annotate&Filter");
+        // mPC2 = new PerformanceCounter("ExtAnn");
         mPC3 = new PerformanceCounter("BaseDist");
         mPC4 = new PerformanceCounter("Analyse");
         mPC5 = new PerformanceCounter("Nearest");
@@ -134,23 +136,19 @@ public class StructuralVariantClustering {
 
         mPerfCounter.start();
 
-
         mPC1.start();
 
-        // for now exclude Inserts
-        removeInserts(mAllVariants);
-
-        LOGGER.debug("sample({}) clustering {} variants", mSampleId, mAllVariants.size());
-
-        setChromosomalArms();
+        annotateAndFilterVariants();
 
         mPC1.stop();
-        mPC2.start();
 
-        addExternalAnnotations();
+//        mPC2.start();
+//        // LOGGER.debug("sample({}) clustering {} variants", mSampleId, mAllVariants.size());
+//        mPC2.stop();
 
-        mPC2.stop();
         mPC3.start();
+
+        LOGGER.debug("sample({}) clustering {} variants", mSampleId, mAllVariants.size());
 
         clusterByBaseDistance();
 
@@ -159,24 +157,25 @@ public class StructuralVariantClustering {
 
         for(SvCluster cluster : mClusters)
         {
-            mAnalyser.analyserCluster(cluster);
+            mAnalyser.setClusterStats(cluster);
             cluster.setUniqueBreakends();
+            mAnalyser.findLinkedPairs(mSampleId, cluster);
+            mAnalyser.findSvChains(mSampleId, cluster);
+            mAnalyser.resolveTransitiveSVs(mSampleId, cluster);
         }
 
         mPC4.stop();
         mPC5.start();
 
-        if(!mExternalAnnotator.hasExternalData()) {
-            // skip this step if sourced externally
-            mClusteringMethods.setClosestSVData(mAllVariants, mClusters);
-            mClusteringMethods.setClosestLinkedSVData(mAllVariants);
-        }
+//        if(!mExternalAnnotator.hasExternalData()) {
+//            // skip this step if sourced externally
+//            mClusteringMethods.setClosestSVData(mAllVariants, mClusters);
+//            mClusteringMethods.setClosestLinkedSVData(mAllVariants);
+//        }
         mClusteringMethods.setChromosomalArmStats(mAllVariants);
 
         mPC5.stop();
         mPC6.start();
-
-        //runClusteringByLocals();
 
         if(mConfig.getOutputCsvPath() != "")
             writeClusterDataOutput();
@@ -185,40 +184,34 @@ public class StructuralVariantClustering {
         mPerfCounter.stop();
     }
 
-    private void setChromosomalArms()
-    {
-        for (SvClusterData var : mAllVariants)
-        {
-            String startArm = mClusteringUtils.getChromosomalArm(var.chromosome(true), var.position(true));
-            String endArm = mClusteringUtils.getChromosomalArm(var.chromosome(false), var.position(false));
-            var.setChromosomalArms(startArm, endArm);
-        }
-
-        // set arm statistics
-    }
-
-    private void addExternalAnnotations()
-    {
-        for (SvClusterData var : mAllVariants)
-        {
-            mSvPONAnnotator.setPonOccurenceCount(var);
-            var.setFragileSites(mFragileSiteAnnotator.isFragileSite(var, true), mFragileSiteAnnotator.isFragileSite(var, false));
-            var.setLineElements(mLineElementAnnotator.isLineElement(var, true), mLineElementAnnotator.isLineElement(var, false));
-        }
-    }
-
-    private void removeInserts(List<SvClusterData> variants)
+    private void annotateAndFilterVariants()
     {
         int currentIndex = 0;
 
-        while(currentIndex < variants.size()) {
-            SvClusterData currentVar = variants.get(currentIndex);
+        while(currentIndex < mAllVariants.size()) {
+
+            SvClusterData var = mAllVariants.get(currentIndex);
 
             // for now exclude Inserts
-            if (currentVar.type() == StructuralVariantType.INS) {
-                variants.remove(currentIndex);
+            if (var.type() == StructuralVariantType.INS) {
+                mAllVariants.remove(currentIndex);
                 continue;
             }
+
+            mSvPONAnnotator.setPonOccurenceCount(var);
+
+            // exclude PON
+            if (var.getPonCount() >= 2) {
+                mAllVariants.remove(currentIndex);
+                continue;
+            }
+
+            var.setFragileSites(mFragileSiteAnnotator.isFragileSite(var, true), mFragileSiteAnnotator.isFragileSite(var, false));
+            var.setLineElements(mLineElementAnnotator.isLineElement(var, true), mLineElementAnnotator.isLineElement(var, false));
+
+            String startArm = mClusteringUtils.getChromosomalArm(var.chromosome(true), var.position(true));
+            String endArm = mClusteringUtils.getChromosomalArm(var.chromosome(false), var.position(false));
+            var.setChromosomalArms(startArm, endArm);
 
             ++currentIndex;
         }
@@ -240,7 +233,7 @@ public class StructuralVariantClustering {
             // make a new cluster
             SvCluster newCluster = new SvCluster(getNextClusterId(), mClusteringUtils);
 
-            LOGGER.debug("creating new cluster({}) with next variant({}:{})", newCluster.getClusterId(), currentIndex, currentVar.id());
+            LOGGER.debug("creating new cluster({}) with next variant({}:{})", newCluster.getId(), currentIndex, currentVar.id());
 
             // first remove the current SV from consideration
             newCluster.addVariant(currentVar);
@@ -314,11 +307,20 @@ public class StructuralVariantClustering {
                     writer.write("FSCount,LECount,DupBECount,DupBESiteCount,");
                     writer.write("ClusterDesc,Consistency,ArmCount,");
 
+                    // linked pair info
+                    writer.write("LnkStartSv,LnkStartType,LnkStartLen,LnkEndSv,LnkEndType,LnkEndLen,");
+
+                    // chain info
+                    writer.write("ChainId,ChainCount,ChainTICount,ChainDBCount,ChainIndex,");
+
+                    // transitive info
+                    writer.write("TransType,TransLen,TransSvLinks,");
+
                     // external annotations if any
                     if(mExternalAnnotator.hasExternalData())
                         writer.write(String.format("%s", mExternalAnnotator.getFieldNames()));
                     else
-                        writer.write("NearestLen,NearestType,NearestTILen,NearestDBLen,MultipleBiopsy");
+                        writer.write("NearestLen,NearestType,NearestTILen,NearestDBLen");
 
                     writer.newLine();
                 }
@@ -334,7 +336,7 @@ public class StructuralVariantClustering {
                 for (final SvClusterData var : cluster.getSVs()) {
                     writer.write(
                             String.format("%s,%d,%d,%s,%s,%.2f,%d,%d,",
-                                    mSampleId, cluster.getClusterId(), cluster.getSVs().size(), var.id(), var.type(),
+                                    mSampleId, cluster.getId(), cluster.getCount(), var.id(), var.type(),
                                     var.getSvData().ploidy(), var.getPonCount(), var.getPonRegionCount()));
 
                     writer.write(
@@ -343,7 +345,7 @@ public class StructuralVariantClustering {
                                     var.getSvData().adjustedStartAF(), var.getSvData().adjustedStartCopyNumber(), var.getSvData().adjustedStartCopyNumberChange(),
                                     var.chromosome(false), var.position(false), var.orientation(false), var.getEndArm(),
                                     var.getSvData().adjustedEndAF(), var.getSvData().adjustedEndCopyNumber(), var.getSvData().adjustedEndCopyNumberChange(),
-                                    var.getSvData().homology()
+                                    var.getSvData().insertSequence().isEmpty() ? var.getSvData().homology() : ""
                                     ));
 
                     writer.write(
@@ -351,7 +353,7 @@ public class StructuralVariantClustering {
                                     // var.getNearestSVLength(), var.getNearestSVLinkType(), var.getNearestTILength(), var.getNearestDBLength(),
                                     var.isStartFragileSite(), var.isEndFragileSite(),
                                     var.isStartLineElement(), var.isEndLineElement(),
-                                    cluster.isSvDuplicateBE(var, true), cluster.isSvDuplicateBE(var, false),
+                                    var.isDupBEStart(), var.isDupBEEnd(),
                                     mClusteringMethods.getChrArmData(var)));
 
                     writer.write(
@@ -362,12 +364,40 @@ public class StructuralVariantClustering {
                             String.format("%s,%d,%d,",
                                     cluster.getDesc(), cluster.getConsistencyCount(), cluster.getChromosomalArmCount()));
 
+                    // linked pair info
+                    SvLinkedPair startLP = cluster.findLinkedPair(var, true);
+                    if(startLP != null)
+                        writer.write(String.format("%s,%s,%d,",
+                                startLP.first().equals(var) ? startLP.second().id() : startLP.first().id(),
+                                startLP.linkType(), startLP.length()));
+                    else
+                        writer.write("0,,-1,");
+
+                    SvLinkedPair endLP = cluster.findLinkedPair(var, false);
+                    if(endLP != null)
+                        writer.write(String.format("%s,%s,%d,",
+                                endLP.first().equals(var) ? endLP.second().id() : endLP.first().id(),
+                                endLP.linkType(), endLP.length()));
+                    else
+                        writer.write("0,,-1,");
+
+                    // chain info
+                    SvChain chain = cluster.findChain(var);
+
+                    if(chain != null)
+                        writer.write(String.format("%d,%d,%d,%d,%d,",
+                                chain.getId(), chain.getLinkCount(), chain.getTICount(), chain.getDBCount(), chain.getSvIndex(var)));
+                    else
+                        writer.write("0,0,0,0,0,");
+
+                    writer.write(String.format("%s,%d,%s,", var.getTransType(), var.getTransLength(), var.getTransSvLinks()));
+
                     if(mExternalAnnotator.hasExternalData()) {
-                        writer.write(String.format(",%s", mExternalAnnotator.getSVData(var)));
+                        writer.write(String.format("%s", mExternalAnnotator.getSVData(var)));
                     }
                     else
                     {
-                        writer.write(String.format(",%d,%s,%d,%d,None",
+                        writer.write(String.format("%d,%s,%d,%d",
                                 var.getNearestSVLength(), var.getNearestSVLinkType(),
                                 var.getNearestTILength(), var.getNearestDBLength()));
                     }
@@ -397,7 +427,7 @@ public class StructuralVariantClustering {
         // log perf stats
         mPerfCounter.logStats();
         mPC1.logStats();
-        mPC2.logStats();
+        //mPC2.logStats();
         mPC3.logStats();
         mPC4.logStats();
         mPC5.logStats();

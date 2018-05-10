@@ -2,14 +2,23 @@ package com.hartwig.hmftools.svanalysis.analysis;
 
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.DOUBLE_STRANDED_BREAK;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.REPLICATION_EVENT;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_ENCLOSED;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_NEIGHBOURS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_OVERLAP;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.TEMPLATED_INSERTION;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.UNPHASED_EVENTS;
 
+import java.util.HashMap;
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.svanalysis.types.SvBreakend;
+import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvClusterData;
+import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,16 +28,21 @@ public class ClusterAnalyser {
     final SvClusteringConfig mConfig;
     final SvUtilities mUtils;
 
+    private static int MIN_TEMPLATED_INSERTION_LENGTH = 20;
+    private static int MAX_TEMPLATED_INSERTION_LENGTH = 500;
+
+    public static String TRANS_TYPE_TI = "TI";
+    public static String TRANS_TYPE_SPAN = "SPAN";
+
     private static final Logger LOGGER = LogManager.getLogger(ClusterAnalyser.class);
 
     public ClusterAnalyser(final SvClusteringConfig config, final SvUtilities utils)
     {
         mConfig = config;
         mUtils = utils;
-
     }
 
-    public void analyserCluster(SvCluster cluster)
+    public void setClusterStats(SvCluster cluster)
     {
         cluster.setConsistencyCount();
 
@@ -38,271 +52,722 @@ public class ClusterAnalyser {
 
         cluster.setChromosomalArmCount();
 
-        LOGGER.debug("cluster({}) desc({}) svCount({}) armCount({}) consistent({} count={})",
-                cluster.getClusterId(), cluster.getDesc(), cluster.getSVs().size(),
-                cluster.getChromosomalArmCount(), cluster.isConsistent(), cluster.getConsistencyCount());
-
-        // cluster-size specific classification not longer used
-
-//        // for now
-//        switch(cluster.getSVs().size())
-//        {
-//            case 1:
-//                analyseSingleGroup(cluster);
-//                break;
-//
-//            case 2:
-//                analyseDoubleGroup(cluster);
-//                break;
-//
-//            default:
-//                // not handled for now
-//                break;
-//        }
+        if(cluster.getCount() > 1) {
+            LOGGER.debug("cluster({}) desc({}) svCount({}) armCount({}) consistent({} count={})",
+                    cluster.getId(), cluster.getDesc(), cluster.getCount(),
+                    cluster.getChromosomalArmCount(), cluster.isConsistent(), cluster.getConsistencyCount());
+        }
     }
 
-    private void analyseSingleGroup(SvCluster cluster)
+    public void findLinkedPairs(final String sampleId, SvCluster cluster)
     {
-        SvClusterData var = cluster.getSVs().get(0);
+        if(cluster.getCount() < 3)
+            return;
 
-        if(cluster.getConsistencyCount() == 0) {
+        // exclude large clusters for now due to processing times
+        // until the algo is better refined
+        int maxClusterSize = 50;
 
-            LOGGER.debug("cluster({}:{}) is consistent, with type({})", cluster.getClusterId(), cluster.getDesc(), var.type());
+        if(cluster.getCount() >= maxClusterSize)
+            return;
 
-            switch (var.type()) {
-                case DEL:
-                    cluster.addAnnotation(REPLICATION_EVENT);
-                    cluster.addAnnotation(DOUBLE_STRANDED_BREAK);
-                    break;
+        if(cluster.getLineElementCount() > 0)
+            return;
 
-                case DUP:
-                    cluster.addAnnotation(REPLICATION_EVENT);
-                    break;
+        List<SvLinkedPair> linkedPairs = Lists.newArrayList();
 
-                case INS:
-                    cluster.addAnnotation(REPLICATION_EVENT);
-                    break;
+        List<SvClusterData> spanningSVs = Lists.newArrayList();
 
-                case INV:
-                    cluster.addAnnotation(REPLICATION_EVENT);
-                    break;
+        for (int i = 0; i < cluster.getCount(); ++i) {
 
-                case BND:
-                    cluster.addAnnotation(REPLICATION_EVENT);
-                    cluster.addAnnotation(DOUBLE_STRANDED_BREAK);
-                    break;
+            SvClusterData var1 = cluster.getSVs().get(i);
+
+            // make note of SVs which line up exactly with other SVs
+            // these will be used to eliminate transitive SVs later on
+            if(var1.isDupBEStart() && var1.isDupBEEnd()) {
+
+                spanningSVs.add(var1);
+                continue;
             }
-        }
-        else
-        {
-            LOGGER.debug("cluster({}) is inconsistent, with type({})", cluster.getClusterId(), var.type());
-        }
 
-        // anything else?
-    }
+            for (int a = 0; a < 2; ++a) {
 
-    private void analyseDoubleGroup(SvCluster cluster) {
+                boolean v1Start = (a == 0);
 
-        SvClusterData var1 = cluster.getSVs().get(0);
-        SvClusterData var2 = cluster.getSVs().get(1);
+                for (int j = i+1; j < cluster.getCount(); ++j) {
 
-        // count templated insertions
-        // can't use the same end twice to count as a DB, so need to find the shortest combo
-        // use a 2-dim matrix to record length for dim 1: SV and din:2 start-end
-        int shortestLen = -1;
-        int[][] tiLengths = new int[2][2];
-        int shortI = 0;
-        int shortJ = 0;
-        int tiCount = 0;
-        String tiLengthsStr = "";
+                    SvClusterData var2 = cluster.getSVs().get(j);
 
-        for(int i = 0; i < 2; ++i)
-        {
-            boolean v1Start = (i == 0);
-            for(int j = 0; j < 2; ++j)
-            {
-                boolean v2Start = (j == 0);
-                tiLengths[i][j] = -1; // initialised
-
-                if(mUtils.areLinkedSection(var1, var2, v1Start, v2Start))
-                {
-                    int length = mUtils.getProximity(var1, var2, v1Start, v2Start);
-
-                    LOGGER.debug("{}({}) and {}({}) templated insertion, length({}) using {} and {}",
-                            var1.type(), var1.posId(), var2.type(), var2.posId(), length,
-                            v1Start ? "start" : "end", v2Start ? "start" : "end");
-
-                    tiLengths[i][j] = length;
-                    ++tiCount;
-
-                    if(shortestLen == -1 || length < shortestLen)
-                    {
-                        shortestLen = length;
-                        shortI = i;
-                        shortJ = j;
-                    }
-                }
-            }
-        }
-
-        if(tiCount > 0) {
-            for (int i = 0; i < 2; ++i) {
-
-                for (int j = 0; j < 2; ++j) {
-
-                    if(tiLengths[i][j] == -1)
+                    if(var2.isDupBEStart() && var2.isDupBEEnd())
                         continue;
 
-                    if ((i == shortI || j == shortJ) && !(i == shortI && j == shortJ)) {
-                        // remove the longer of the lengths where a BE is used twice to measure lengths
-                        --tiCount;
-                    }
-                    else {
-                        tiLengthsStr += tiLengthsStr.isEmpty() ? String.valueOf(tiLengths[i][j]) : ";" + tiLengths[i][j];
-                    }
-                }
-            }
+                    for (int b = 0; b < 2; ++b) {
 
-            cluster.setTICount(tiCount);
-            cluster.setTempInsertLengths(tiLengthsStr);
-        }
+                        boolean v2Start = (b == 0);
 
+                        SvLinkedPair newPair = null;
+                        int linkLength = 0;
 
-        boolean validReplication = cluster.getConsistencyCount() == 0 && cluster.getSVs().size() - tiCount <= 1;
+                        if (mUtils.areLinkedSection(var1, var2, v1Start, v2Start)) {
 
-        if(validReplication)
-            cluster.addAnnotation(REPLICATION_EVENT);
+                            // check the templated insertion length
+                            linkLength = mUtils.getProximity(var1, var2, v1Start, v2Start);
 
-        // now count up possible deletion bridges
-        int dbCount = 0;
-        String dbLengthsStr = "";
+                            if (linkLength < MIN_TEMPLATED_INSERTION_LENGTH)
+                                continue;
 
-        if(mUtils.areTypePair(var1, var2, StructuralVariantType.INV, StructuralVariantType.INV)
-        || mUtils.areTypePair(var1, var2, StructuralVariantType.BND, StructuralVariantType.BND)
-        || mUtils.areTypePair(var1, var2, StructuralVariantType.DUP, StructuralVariantType.DEL)) {
+                            // form a new TI from these 2 BEs
+                            newPair = new SvLinkedPair(var1, var2, SvLinkedPair.LINK_TYPE_TI, v1Start, v2Start);
 
-            // can't use the same end twice to count as a DB, so need to find the shortest combo
-            shortestLen = -1;
-            int[][] dbLengths = new int[2][2];
-            shortI = 0;
-            shortJ = 0;
+                        } else if (mUtils.areSectionBreak(var1, var2, v1Start, v2Start)) {
 
-            for (int i = 0; i < 2; ++i) {
-                boolean v1Start = (i == 0);
-                for (int j = 0; j < 2; ++j) {
-                    boolean v2Start = (j == 0);
-                    dbLengths[i][j] = -1; // initialised
+                            // form a new DB from these 2 BEs
+                            newPair = new SvLinkedPair(var1, var2, SvLinkedPair.LINK_TYPE_DB, v1Start, v2Start);
+                        }
+                        else
+                        {
+                            continue;
+                        }
 
-                    if (mUtils.areSectionBreak(var1, var2, v1Start, v2Start)) {
-                        int length = mUtils.getProximity(var1, var2, v1Start, v2Start);
+                        // insert in order
+                        int index = 0;
+                        for (; index < linkedPairs.size(); ++index) {
+                            SvLinkedPair pair = linkedPairs.get(index);
 
-                        LOGGER.debug("{}({}) and {}({}) deletion bridge, length({}) using {} and {}",
-                                var1.type(), var1.posId(), var2.type(), var2.posId(), length,
-                                v1Start ? "start" : "end", v2Start ? "start" : "end");
+                            if (pair.length() > newPair.length())
+                                break;
+                        }
 
-                        dbLengths[i][j] = length;
-                        ++dbCount;
+                        if (index >= linkedPairs.size())
+                            linkedPairs.add(newPair);
+                        else
+                            linkedPairs.add(index, newPair);
 
-                        if (shortestLen == -1 || length < shortestLen) {
-                            shortestLen = length;
-                            shortI = i;
-                            shortJ = j;
+                        if(linkedPairs.size() > maxClusterSize * 3)
+                            linkedPairs.remove(linkedPairs.size()-1);
+
+                        if(newPair.length() < 10000) {
+
+                            // to avoid logging unlikely long TIs
+                            LOGGER.debug("sample({}) cluster({}) adding linked {} pair({} and {}) length({}) at index({})",
+                                    sampleId, cluster.getId(), newPair.linkType(), newPair.first().posId(),
+                                    newPair.second().posId(), newPair.length(), index);
                         }
                     }
                 }
             }
+        }
 
-            if(dbCount > 0) {
-                for (int i = 0; i < 2; ++i) {
+        LOGGER.debug("sample({}) cluster({}) has {} linked pairs and {} possible spanning SVs",
+                sampleId, cluster.getId(), linkedPairs.size(), spanningSVs.size());
 
-                    for (int j = 0; j < 2; ++j) {
+        // now remove mutually exclusive linked sections by using the shortest first
+        for(int i = 0; i < linkedPairs.size(); ++i)
+        {
+            final SvLinkedPair pair = linkedPairs.get(i);
 
-                        if (dbLengths[i][j] == -1)
-                            continue;
+            for(int j = i+1; j < linkedPairs.size();)
+            {
+                final SvLinkedPair pair2 = linkedPairs.get(j);
 
-                        if ((i == shortI || j == shortJ) && !(i == shortI && j == shortJ))
-                            --dbCount;
-                        else
-                            dbLengthsStr += dbLengthsStr.isEmpty() ? String.valueOf(dbLengths[i][j]) : ";" + dbLengths[i][j];
+                if((pair.first().equals(pair2.first()) && pair.firstLinkOnStart() == pair2.firstLinkOnStart())
+                || (pair.first().equals(pair2.second()) && pair.firstLinkOnStart() == pair2.secondLinkOnStart())
+                || (pair.second().equals(pair2.first()) && pair.secondLinkOnStart() == pair2.firstLinkOnStart())
+                || (pair.second().equals(pair2.second()) && pair.secondLinkOnStart() == pair2.secondLinkOnStart()))
+                {
+                    if(pair.length() < 10000) {
+                        // to avoid logging unlikely long TIs
+                        LOGGER.debug("removing duplicate linked pair({} len={}) vs shorter({} len={}) ",
+                                pair2.toString(), pair2.length(), pair.toString(), pair.length());
+                    }
+
+                    // remove the duplicate
+                    linkedPairs.remove(j);
+                }
+                else
+                {
+                    ++j;
+                }
+            }
+        }
+
+        if(linkedPairs.isEmpty() && spanningSVs.isEmpty())
+            return;
+
+        LOGGER.info("sample({}) cluster({}: {} count={}) has {} mutually exclusive linked pairs:",
+                sampleId, cluster.getId(), cluster.getDesc(), cluster.getCount(), linkedPairs.size());
+
+        for(final SvLinkedPair pair : linkedPairs)
+        {
+            LOGGER.info("linked {} pair length({}) variants({})",
+                    pair.linkType(), pair.length(), pair.toString());
+        }
+
+        cluster.setLinkedPairs(linkedPairs);
+        cluster.setSpanningSVs(spanningSVs);
+    }
+
+    public void findSvChains(final String sampleId, SvCluster cluster)
+    {
+        if(cluster.getLinkedPairs().isEmpty())
+            return;
+
+        List<SvLinkedPair> linkedPairs = Lists.newArrayList();
+        linkedPairs.addAll(cluster.getLinkedPairs());
+
+        LOGGER.debug("cluster({}) attempting to find chained SVs from {} linked pairs", cluster.getId(), linkedPairs.size());
+
+        while(linkedPairs.size() >= 2) {
+
+            // start with a single linked pair
+            // for each of its ends (where the first BE is labelled 'first', and the second labelled 'last'),
+            // search for the closest possible linking BE from another linked pair
+            // for BEs to link they must be facing (like a TI)
+
+            SvLinkedPair linkedPair = linkedPairs.get(0);
+            linkedPairs.remove(0);
+
+            int chainId = cluster.getChains().size()+1;
+            SvChain currentChain = new SvChain(chainId);
+
+            LOGGER.debug("sample({}) cluster({}) starting chain({}) with linked pair({})",
+                    sampleId, cluster.getId(), chainId, linkedPair.toString());
+
+            currentChain.addLinkedPair(linkedPair, true);
+
+            while(!linkedPairs.isEmpty())
+            {
+                // now search the remaining SVs for links at either end of the current chain
+                SvClusterData beFirst = currentChain.getFirstSV();
+                boolean chainFirstUnlinkedOnStart = currentChain.firstUnlinkedOnStart();
+                SvClusterData beLast = currentChain.getLastSV();
+                boolean chainLastUnlinkedOnStart = currentChain.lastUnlinkedOnStart();
+
+                SvLinkedPair closestStartPair = null;
+                int closestStartLen = -1;
+
+                SvLinkedPair closestLastPair = null;
+                int closestLastLen = -1;
+
+                for(SvLinkedPair pair : linkedPairs) {
+
+                    // first check for a linked pair which has the same variant (but the other BE) to the unlinked on
+                    if((beFirst.equals(pair.first()) && chainFirstUnlinkedOnStart == pair.firstLinkOnStart())
+                    || (beFirst.equals(pair.second()) && chainFirstUnlinkedOnStart == pair.secondLinkOnStart()))
+                    {
+                        closestStartPair = pair;
+                        closestStartLen = 0; // to prevent another match
+                    }
+                    else
+                    {
+                        /*
+                        if (mUtils.areLinkedSection(pair.first(), beFirst, !pair.firstLinkOnStart(), chainFirstUnlinkedOnStart)) {
+
+                            int linkLength = mUtils.getProximity(pair.first(), beFirst, !pair.firstLinkOnStart(), chainFirstUnlinkedOnStart);
+
+                            if (linkLength >= 0 && (linkLength < closestStartLen || closestStartLen == -1)) {
+                                closestStartPair = pair;
+                                closestStartLen = linkLength;
+                            }
+                        }
+
+                        if (mUtils.areLinkedSection(pair.second(), beFirst, !pair.secondLinkOnStart(), chainFirstUnlinkedOnStart)) {
+
+                            int linkLength = mUtils.getProximity(pair.first(), beFirst, !pair.secondLinkOnStart(), chainFirstUnlinkedOnStart);
+
+                            if (linkLength >= 0 && (linkLength < closestStartLen || closestStartLen == -1)) {
+                                closestStartPair = pair;
+                                closestStartLen = linkLength;
+                            }
+                        }
+                        */
+                    }
+
+                    if((beLast.equals(pair.first()) && chainLastUnlinkedOnStart == pair.firstLinkOnStart())
+                    || (beLast.equals(pair.second()) && chainLastUnlinkedOnStart == pair.secondLinkOnStart()))
+                    {
+                        closestLastPair = pair;
+                        closestLastLen = 0; // to prevent another match
+                    }
+                    else
+                    {
+                        /*
+                        if (mUtils.areLinkedSection(pair.first(), beLast, !pair.firstLinkOnStart(), chainLastUnlinkedOnStart)) {
+
+                            int linkLength = mUtils.getProximity(pair.first(), beLast, !pair.firstLinkOnStart(), chainLastUnlinkedOnStart);
+
+                            if (linkLength >= 0 && (linkLength < closestLastLen || closestLastLen == -1)) {
+                                closestLastPair = pair;
+                                closestLastLen = linkLength;
+                            }
+                        }
+
+                        if (mUtils.areLinkedSection(pair.second(), beLast, !pair.secondLinkOnStart(), chainLastUnlinkedOnStart)) {
+
+                            int linkLength = mUtils.getProximity(pair.second(), beLast, !pair.secondLinkOnStart(), chainLastUnlinkedOnStart);
+
+                            if (linkLength >= 0 && (linkLength < closestLastLen || closestLastLen == -1)) {
+                                closestLastPair = pair;
+                                closestLastLen = linkLength;
+                            }
+                        }
+                        */
                     }
                 }
 
-                cluster.setDSBCount(dbCount);
-                cluster.setDSBLengths(dbLengthsStr);
+                if(closestStartPair == null && closestLastPair == null)
+                {
+                    break;
+                }
+
+                if(closestStartPair != null)
+                {
+                    LOGGER.debug("adding linked pair({}) on chain start({}) with length({})",
+                            closestStartPair.toString(), beFirst.posId(chainFirstUnlinkedOnStart), closestStartLen);
+
+                    // add this to the chain at the start
+                    currentChain.addLinkedPair(closestStartPair, true);
+                    linkedPairs.remove(closestStartPair);
+                }
+
+                if(closestLastPair != null & closestLastPair != closestStartPair)
+                {
+                    LOGGER.debug("adding linked pair({}) on chain end({}) with length({})",
+                            closestLastPair.toString(), beLast.posId(chainLastUnlinkedOnStart), closestLastLen);
+
+                    // add this to the chain at the start
+                    currentChain.addLinkedPair(closestLastPair, false);
+                    linkedPairs.remove(closestLastPair);
+                }
             }
-       }
 
-        boolean validDSB = cluster.getSVs().size() == dbCount;
-
-        if(validDSB)
-            cluster.addAnnotation(DOUBLE_STRANDED_BREAK);
-
-        if(validReplication || validDSB)
-        {
-            LOGGER.debug("var({}) and var({}) replication({} count={} lens={}) DSB({} count={} lens={})",
-                    var1.posId(), var2.posId(), validReplication, tiCount, tiLengthsStr, validDSB, dbCount, dbLengthsStr);
-        }
-
-        // apply some specific tests
-        boolean firstEnclosesSecond = mUtils.isWithin(var1, var2);
-        boolean secondEnclosesFirst = mUtils.isWithin(var2, var1);
-        boolean areEnclosed = firstEnclosesSecond || secondEnclosesFirst;
-        boolean areOverlapping = mUtils.isOverlapping(var1, var2);
-        boolean areNeighbouring = !firstEnclosesSecond && !secondEnclosesFirst && !areOverlapping;
-
-        // set type from type pairs
-        String overlapType = "";
-
-        int neighbourDistance = 0;
-
-        if(areEnclosed)
-        {
-            overlapType = SV_GROUP_ENCLOSED;
-        }
-        else if(areOverlapping)
-        {
-            overlapType = SV_GROUP_OVERLAP;
-        }
-        else
-        {
-            overlapType = SV_GROUP_NEIGHBOURS;
-            neighbourDistance = mUtils.getShortestProximity(var1, var2);
-        }
-
-        LOGGER.debug("cluster({}) desc({}) enclosed({}) overlap({}) neighbours({} dist={})",
-                cluster.getClusterId(), cluster.getDesc(), areEnclosed ? (firstEnclosesSecond ? "2nd" : "1st") : "false",
-                areOverlapping, areNeighbouring, neighbourDistance);
-
-        if(mUtils.areTypePair(var1, var2, StructuralVariantType.DEL, StructuralVariantType.DEL))
-        {
-            // cluster.addAnnotation(UNPHASED_EVENTS);
-
-            if(cluster.isConsistent() && (areEnclosed || areOverlapping))
+            if(currentChain.getLinkCount() > 1)
             {
-                LOGGER.debug("var({}:{}) and var({}:{}) invalid overlapping DELs)",
-                        var1.posId(), var1.type(), var2.posId(), var2.posId());
+                LOGGER.info("sample({}) cluster({}) adding chain({}) with {} linked pairs:",
+                        sampleId, cluster.getId(), currentChain.getId(), currentChain.getLinkCount());
 
-                cluster.setIsConsistent(false);
-            }
-            else if(areNeighbouring)
-            {
-                // FIXME: likely replication event if bridge is short
-                // cluster.addAnnotation(REPLICATION_EVENT);
+                cluster.addChain(currentChain);
+
+                for(int i = 0; i < currentChain.getLinkCount(); ++i)
+                {
+                    final SvLinkedPair pair = currentChain.getLinkedPairs().get(i);
+                    LOGGER.info("sample({}) cluster({}) chain({}) {}: pair({}) {} len={}",
+                            sampleId, cluster.getId(), currentChain.getId(), i, pair.toString(), pair.linkType(), pair.length());
+                }
             }
         }
-        else if(mUtils.areTypePair(var1, var2, StructuralVariantType.DEL, StructuralVariantType.DUP))
+    }
+
+    public void resolveTransitiveSVs(final String sampleId, SvCluster cluster) {
+
+        if (cluster.getLinkedPairs().isEmpty() || cluster.getSpanningSVs().isEmpty())
+            return;
+
+        // attempt to matching spanning SVs to the ends of one or more linked pairs
+        // these can only span short TIs (ie not DBs or long TIs)
+
+        for(SvClusterData spanningSV : cluster.getSpanningSVs())
         {
-            if(var1.type() == StructuralVariantType.DEL && firstEnclosesSecond
-            || var2.type() == StructuralVariantType.DEL && secondEnclosesFirst)
+            boolean startMatched = false;
+            boolean endMatched = false;
+            SvClusterData startLink = null;
+            SvClusterData endLink = null;
+            SvLinkedPair startPair = null;
+            SvLinkedPair endPair = null;
+            boolean startLinkOnStart = false;
+            boolean endLinkOnStart = false;
+
+            List<SvClusterData> transitiveSVs = Lists.newArrayList();
+
+            for(SvLinkedPair pair : cluster.getLinkedPairs()) {
+
+                if (pair.length() > MAX_TEMPLATED_INSERTION_LENGTH) {
+                    // isValidSpan = false;
+                    continue;
+                }
+
+               if (!startMatched && mUtils.breakendsMatch(spanningSV, pair.first(), true, !pair.firstLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
+                    startLink = pair.first();
+                    startLinkOnStart = !pair.firstLinkOnStart();
+                    startPair = pair;
+                    startMatched = true;
+                }
+
+                if (!startMatched && mUtils.breakendsMatch(spanningSV, pair.second(), true, !pair.secondLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
+                    startLink = pair.second();
+                    startLinkOnStart = !pair.secondLinkOnStart();
+                    startPair = pair;
+                    startMatched = true;
+                }
+
+                if (!endMatched && mUtils.breakendsMatch(spanningSV, pair.first(), false, !pair.firstLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
+                    endLink = pair.first();
+                    endLinkOnStart = !pair.firstLinkOnStart();
+                    endPair = pair;
+                    endMatched = true;
+                }
+
+                if (!endMatched && mUtils.breakendsMatch(spanningSV, pair.second(), false, !pair.secondLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
+                    endLink = pair.second();
+                    endLinkOnStart = !pair.secondLinkOnStart();
+                    endPair = pair;
+                    endMatched = true;
+                }
+
+                if(startMatched && endMatched)
+                    break;
+            }
+
+            if(startMatched && endMatched)
             {
-                cluster.addAnnotation(UNPHASED_EVENTS);
-                cluster.addAnnotation(DOUBLE_MINUTE);
+                boolean samePair = (startPair == endPair);
+                int tiLength = 0;
+                boolean hasValidTransData = true;
+
+                LOGGER.debug("cluster({}) spanSV({}) linked to transitives({} and {}) from {} linked pair",
+                        cluster.getId(), spanningSV.posId(), startLink.posId(), endLink.posId(),
+                        samePair ? "same" : "diff");
+
+                if(samePair)
+                {
+                    tiLength = startPair.length();
+                    transitiveSVs.add(startLink);
+                    transitiveSVs.add(endLink);
+                }
+                else {
+
+                    // now additionally check if these SVs are part of a chain, and if so whether any intermediary transitive SVs
+                    // are also covered by this span
+                    SvChain startChain = cluster.findChain(startPair);
+                    SvChain endChain = cluster.findChain(endPair);
+
+                    if (startChain != null && endChain == startChain) {
+
+                        // now walk the chain and mark each transitive SV
+                        int startIndex = startChain.getSvIndex(startLink, startLinkOnStart);
+                        int endIndex = startChain.getSvIndex(endLink, endLinkOnStart);
+
+                        if(startIndex == -1 || endIndex == -1)
+                        {
+                            LOGGER.error("cluster({}) chain({}) index not found({} - {}) links({} & {})",
+                                    cluster.getId(), startChain.getId(), startIndex, endIndex, startLink, endLink);
+                            return;
+                        }
+
+                        int totalTILength = 0;
+
+                        if (startIndex != endIndex) {
+
+                            int startI = startIndex <= endIndex ? startIndex : endIndex;
+                            int endI = startIndex > endIndex ? startIndex : endIndex;
+
+                            for(int i = startI; i <= endI; ++i)
+                            {
+                                final SvLinkedPair pair = startChain.getLinkedPairs().get(i);
+
+                                if(transitiveSVs.contains(pair.first()) || transitiveSVs.contains(pair.second()))
+                                {
+                                    LOGGER.debug("cluster({}) chain({}) attempt to re-add trans SVs, invalid",
+                                            cluster.getId(), startChain.getId());
+
+                                    transitiveSVs.clear();
+
+                                    // manually add the link SVs
+                                    totalTILength = 0;
+                                    transitiveSVs.add(startLink);
+                                    transitiveSVs.add(endLink);
+                                    break;
+                                }
+
+                                totalTILength += pair.length();
+
+                                if(totalTILength > MAX_TEMPLATED_INSERTION_LENGTH * 3)
+                                {
+                                    LOGGER.debug("cluster({}) chain({}) exceed valid totalLen({}) at index({}), invalid",
+                                            cluster.getId(), startChain.getId(), totalTILength, i);
+
+                                    hasValidTransData = false;
+                                    break;
+                                }
+
+                                LOGGER.debug("cluster({}) chain({}) including index({}) totalLen({}) linkPair({}))",
+                                        cluster.getId(), startChain.getId(), i, totalTILength, pair.toString());
+
+                                transitiveSVs.add(pair.first());
+                                transitiveSVs.add(pair.second());
+                            }
+
+                            if(hasValidTransData)
+                            {
+                                LOGGER.info("cluster({}) spanSV({}) covers {} linked pairs",
+                                        cluster.getId(), spanningSV.id(), transitiveSVs.size()/2);
+
+                                tiLength = totalTILength;
+                            }
+                        }
+                        else
+                        {
+                            LOGGER.warn("cluster({}) chain({}) linked pairs have same index({}) but diff linked pair",
+                                    cluster.getId(), startChain.getId(), startIndex);
+                        }
+                    }
+                    else if (startChain == null || endChain == null) {
+
+                        // ignore any intermediary linked SVs from the single chain for now
+                        tiLength = startPair.length() + endPair.length();
+
+                        if(tiLength < MAX_TEMPLATED_INSERTION_LENGTH * 3) {
+
+                            transitiveSVs.add(startLink);
+                            transitiveSVs.add(endLink);
+                        }
+                        else
+                        {
+                            hasValidTransData = false;
+                        }
+                    }
+                    else
+                    {
+                        hasValidTransData = false;
+                        LOGGER.info("cluster({}) linked pairs have diff chains({} and {})",
+                                cluster.getId(), startChain.getId(), endChain.getId());
+                    }
+                }
+
+                if(hasValidTransData) {
+
+                    // mark all transitive SVs
+                    for (SvClusterData transSv : transitiveSVs) {
+                        String svLinkData = spanningSV.id();
+                        transSv.setTransData(TRANS_TYPE_TI, tiLength, svLinkData);
+                    }
+
+                    // and mark the spanning SV
+                    String svLinkData = startLink.id() + "_" + endLink.id();
+                    spanningSV.setTransData(TRANS_TYPE_SPAN, tiLength, svLinkData);
+                }
             }
         }
-
-
     }
 
 
+    public void checkDuplicateBEProximity(final SvCluster cluster)
+    {
+        if(cluster.getCount() < 2 || cluster.getCount() > 4)
+        {
+            return;
+        }
 
+        if(cluster.getLineElementCount() > 0) {
+            return;
+        }
+
+        if(cluster.getDuplicateBECount() > 0) {
+            return;
+        }
+
+        List<Integer> permittedLens = Lists.newArrayList();
+        permittedLens.add(5);
+        permittedLens.add(10);
+        permittedLens.add(25);
+        permittedLens.add(50);
+        permittedLens.add(100);
+
+        for (int i = 0; i < cluster.getCount(); ++i) {
+
+            final SvClusterData var1 = cluster.getSVs().get(i);
+            SvBreakend be1 = new SvBreakend(var1.chromosome(true), var1.position(true), var1.orientation(true));
+            SvBreakend be2 = new SvBreakend(var1.chromosome(false), var1.position(false), var1.orientation(false));
+
+            for (int j = i+1; j < cluster.getCount(); ++j) {
+
+                final SvClusterData var2 = cluster.getSVs().get(j);
+
+                int matchCount = 0;
+
+                for (Integer permittedDist : permittedLens) {
+
+                    if (matchCount < 2 && cluster.variantMatchesBreakend(var2, be1, true, permittedDist)) {
+
+                        ++matchCount;
+                        LOGGER.info("clusterId({}) size({}) variants({} and {}) SS match on {}",
+                                cluster.getId(), cluster.getCount(), var1.id(), var2.id(), permittedDist);
+                    }
+                    if (matchCount < 2 && cluster.variantMatchesBreakend(var2, be1, false, permittedDist)) {
+
+                        ++matchCount;
+                        LOGGER.info("clusterId({}) size({}) variants({} and {}) SE match on {}",
+                                cluster.getId(), cluster.getCount(), var1.id(), var2.id(), permittedDist);
+                    }
+                    if (matchCount < 2 && cluster.variantMatchesBreakend(var2, be2, true, permittedDist)) {
+
+                        ++matchCount;
+                        LOGGER.info("clusterId({}) size({}) variants({} and {}) ES match on {}",
+                                cluster.getId(), cluster.getCount(), var1.id(), var2.id(), permittedDist);
+                    }
+                    if (matchCount < 2 && cluster.variantMatchesBreakend(var2, be2, false, permittedDist)) {
+
+                        ++matchCount;
+                        LOGGER.info("clusterId({}) size({}) variants({} and {}) EE match on {}",
+                                cluster.getId(), cluster.getCount(), var1.id(), var2.id(), permittedDist);
+                    }
+
+                    if(matchCount >= 2)
+                        break;
+                }
+            }
+        }
+    }
+
+    /*
+    public void resolveTransitiveSVs(final String sampleId, SvCluster cluster)
+    {
+        if(cluster.getCount() != 3)
+            return;
+
+        if(cluster.getDuplicateBESiteCount() < 2)
+            return;
+
+        if(cluster.getLineElementCount() > 0)
+            return;
+
+        if(!cluster.isConsistent())
+            return;
+
+        LOGGER.debug("cluster({}) attempting to resolve transitive SVs", cluster.getId());
+
+        // look for potential short templated insertions which can be resolved into a single variant
+
+        SvClusterData spanningSv = null; // the single SV to resolve to
+        SvClusterData transSvOnStart = null;
+        SvClusterData transSvOnEnd = null;
+        boolean startMatchesStart = false; // which ends of the spanning SV connect to the transitive
+        boolean endMatchesStart = false;
+
+        int bndCount = 0;
+        int invCount = 0;
+        boolean isValidTrans = true;
+
+        for (int i = 0; i < cluster.getCount(); ++i) {
+
+            SvClusterData var1 = cluster.getSVs().get(i);
+
+            if (var1.type() == StructuralVariantType.BND)
+                ++bndCount;
+            else if (var1.type() == StructuralVariantType.INV)
+                ++invCount;
+
+            SvBreakend beStart = new SvBreakend(var1.chromosome(true), var1.position(true), var1.orientation(true));
+            SvBreakend beEnd = new SvBreakend(var1.chromosome(false), var1.position(false), var1.orientation(false));
+
+            isValidTrans = true;
+            transSvOnStart = null;
+            transSvOnEnd = null;
+            startMatchesStart = false;
+            endMatchesStart = false;
+
+            boolean isSpanningSV = false;
+
+            for (int j = 0; j < cluster.getCount(); ++j) {
+
+                if (i == j)
+                    continue;
+
+                SvClusterData var2 = cluster.getSVs().get(j);
+                boolean matchOnStart = false;
+
+                if (cluster.variantMatchesBreakend(var2, beStart, true, cluster.PERMITED_DUP_BE_DISTANCE)) {
+
+                    if (transSvOnStart != null) {
+                        isValidTrans = false;
+                        break;
+                    }
+
+                    startMatchesStart = true;
+                    transSvOnStart = var2;
+                }
+                else if (cluster.variantMatchesBreakend(var2, beStart, false, cluster.PERMITED_DUP_BE_DISTANCE)) {
+
+                    if (transSvOnStart != null) {
+                        isValidTrans = false;
+                        break;
+                    }
+
+                    startMatchesStart = false;
+                    transSvOnStart = var2;
+                }
+                else if (cluster.variantMatchesBreakend(var2, beEnd, true, cluster.PERMITED_DUP_BE_DISTANCE)) {
+
+                    if (transSvOnEnd != null) {
+                        isValidTrans = false;
+                        break;
+                    }
+
+                    endMatchesStart = true;
+                    transSvOnEnd = var2;
+                }
+                else if (cluster.variantMatchesBreakend(var2, beEnd, false, cluster.PERMITED_DUP_BE_DISTANCE)) {
+
+                    if (transSvOnEnd != null) {
+                        isValidTrans = false;
+                        break;
+                    }
+
+                    endMatchesStart = false;
+                    transSvOnEnd = var2;
+                }
+                else {
+                    continue;
+                }
+            }
+
+            if(!isValidTrans)
+                continue;
+
+            if(transSvOnStart == null || transSvOnEnd == null || transSvOnStart == transSvOnEnd)
+                continue;
+
+            // also check for a short templated insertion formed by the 2 transitive SVs
+            // take the opposite ends to those matching the spanning SV
+            if(!mUtils.areLinkedSection(transSvOnStart, transSvOnEnd, !startMatchesStart, !endMatchesStart))
+                continue;
+
+            spanningSv = var1;
+            LOGGER.debug("cluster({}: {}) spanning SV({} - {}) found", cluster.getId(), cluster.getDesc(), spanningSv.posId(), spanningSv.type());
+            break;
+        }
+
+        if(!isValidTrans || spanningSv == null)
+            return;
+
+        //        if(bndCount == 1 || invCount == 3 || (invCount == 1 && bndCount == 0))
+        //            return;
+
+        int tiLength = mUtils.getProximity(transSvOnStart, transSvOnEnd, !startMatchesStart, !endMatchesStart);
+
+        // check for a deletion bridge at the beginngin of the spanning SV or at the end
+        int dbLenStart = 0;
+        int dbLenEnd = 0;
+        if(mUtils.areSectionBreak(spanningSv, transSvOnStart, true, startMatchesStart))
+        {
+            dbLenStart = mUtils.getProximity(spanningSv, transSvOnStart, true, startMatchesStart);
+        }
+        if(mUtils.areSectionBreak(spanningSv, transSvOnEnd, false, startMatchesStart))
+        {
+            dbLenEnd = mUtils.getProximity(spanningSv, transSvOnEnd, false, endMatchesStart);
+        }
+
+        LOGGER.info("cluster({}) spanning SV({} {} db1={} db2={}) transitive SVs({} {} and {} {}) tiLen({})",
+                cluster.getId(), spanningSv.posId(), spanningSv.type(), dbLenStart, dbLenEnd,
+                transSvOnStart.posId(), transSvOnStart.type(), transSvOnEnd.posId(), transSvOnEnd.type(), tiLength);
+
+        LOGGER.info("TRANS_CSV: {}",
+                String.format("%s,%d,%s,%d,%d",
+                        sampleId, cluster.getId(), spanningSv.toCsv(), dbLenStart, dbLenEnd,
+                        transSvOnStart.toCsv(), transSvOnEnd.toCsv(), tiLength));
+
+        // annotate with the reclassification
+
+    }
+    */
 }
