@@ -35,13 +35,8 @@ public class VariantModel {
                 .filter(annotation -> alleleList.stream().anyMatch(allele -> allele.equals(annotation.allele())))
                 .collect(Collectors.toList());
 
-        for (String allele : alleleList) {
-            LOGGER.debug("checking allele({}):", allele);
-        }
-        LOGGER.debug("annotation alleleCount(reduced={} orig={}) v listCount({}):",
-                sampleAnnotations().size(),
-                annotations().size(),
-                alleleList.size());
+//        LOGGER.debug("annotation alleleCount(reduced={} orig={}) v listCount({}):",
+//                sampleAnnotations().size(), annotations().size(), alleleList.size());
     }
 
     public VariantContext context() {

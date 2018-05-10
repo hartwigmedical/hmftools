@@ -29,8 +29,10 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -53,6 +55,7 @@ public class BachelorApplication {
     private static final String SOMATIC = "somatic";
     private static final String COPYNUMBER = "copyNumber";
     private static final String SV = "structuralVariants";
+    private static final String LOG_DEBUG = "log_debug";
 
     @NotNull
     private static Options createOptions() {
@@ -67,6 +70,7 @@ public class BachelorApplication {
         options.addOption(Option.builder(SOMATIC).required(false).desc("process the somatic file").build());
         options.addOption(Option.builder(COPYNUMBER).required(false).desc("process the copy number file").build());
         options.addOption(Option.builder(SV).required(false).desc("process the sv file").build());
+        options.addOption(Option.builder(LOG_DEBUG).required(false).desc("Sets log level to Debug, off by default").build());
         return options;
     }
 
@@ -200,6 +204,10 @@ public class BachelorApplication {
         final Options options = createOptions();
         try {
             final CommandLine cmd = createCommandLine(options, args);
+
+            if (cmd.hasOption(LOG_DEBUG)) {
+                Configurator.setRootLevel(Level.DEBUG);
+            }
 
             // load configs
             final Map<String, Program> map;

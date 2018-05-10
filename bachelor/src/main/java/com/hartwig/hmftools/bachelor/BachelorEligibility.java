@@ -175,8 +175,10 @@ class BachelorEligibility {
             final Predicate<HmfGenomeRegion> disruptionPredicate =
                     disruption -> disruptionPredicates.stream().anyMatch(p -> p.test(disruption));
 
-            BachelorProgram bachelorProgram = new BachelorProgram(program.getName(),
+            BachelorProgram bachelorProgram = new BachelorProgram(
+                    program.getName(),
                     snvPredicate,
+                    inWhitelist,
                     copyNumberPredicate,
                     disruptionPredicate,
                     requiredEffects,
@@ -206,21 +208,6 @@ class BachelorEligibility {
         // gather up the relevant alleles
         VariantModel sampleVariant = new VariantModel(sample, variant);
 
-
-        //        for(SnpEff snpEff : sampleVariant.SampleAnnotations)
-        //        {
-        //            if(snpEff.Transcript.contains("ENST00000357654"))
-        //            {
-        //                LOGGER.debug("matched SAMPLED transcriptId: gene({}) allele({}) effects({})",
-        //                        snpEff.GeneName, snpEff.getAllele(), snpEff.AllEffects);
-        //
-        //                for(String effect : snpEff.Effects)
-        //                {
-        //                    LOGGER.debug("transcript({}) with effect({})", snpEff.Transcript, effect);
-        //                }
-        //            }
-        //        }
-
         // apply the all relevant tests to see if this program has been matched
         final List<String> matchingPrograms = programs.stream()
                 .filter(program -> program.vcfProcessor().test(sampleVariant))
@@ -249,9 +236,10 @@ class BachelorEligibility {
             LOGGER.info("match found: program({}) ", programName);
 
             for (VariantAnnotation snpEff : sampleVariant.sampleAnnotations()) {
+
                 // re-check that this variant is one that is relevant
                 if (!program.panelTranscripts().contains(snpEff.featureID())) {
-                    LOGGER.debug("uninteresting transcript({})", snpEff.featureID());
+                    // LOGGER.debug("uninteresting transcript({})", snpEff.featureID());
                     continue;
                 }
 
@@ -263,9 +251,17 @@ class BachelorEligibility {
                     }
                 }
 
-                if (!found) {
-                    LOGGER.debug("uninteresting effects({})", snpEff.effects());
-                    continue;
+                if (!found && !program.whitelist().test(sampleVariant)) {
+
+                    if(program.whitelist().test(sampleVariant))
+                    {
+                        // allow this whitelist through
+                        LOGGER.debug("unlisted effecta({}) but whitelisted variant", snpEff.effects());
+                    }
+                    else {
+                        LOGGER.debug("uninteresting effects({})", snpEff.effects());
+                        continue;
+                    }
                 }
 
                 // now we have the correct allele and transcript ID as required by the XML
@@ -295,26 +291,6 @@ class BachelorEligibility {
         }
 
         return reportList;
-
-        //        final String alts = variant.getAlternateAlleles().stream().map(Object::toString).collect(Collectors.joining("|"));
-        //        final String effects = String.join("|", sampleVariant.SampleAnnotations.stream().flatMap(a -> a.Effects.stream()).collect(Collectors.toSet()));
-        //        final String genes = String.join("|", sampleVariant.SampleAnnotations.stream().map(a -> a.GeneName).collect(Collectors.toSet()));
-
-        //        return matchingPrograms.stream()
-        //                .map(p -> ImmutableEligibilityReport.builder()
-        //                        .patient(patient)
-        //                        .source(type)
-        //                        .program(p)
-        //                        .id(variant.getID())
-        //                        .genes(genes)
-        //                        .transcriptId("TransId")
-        //                        .chrom(variant.getContig())
-        //                        .pos(variant.getStart())
-        //                        .ref(variant.getReference().toString())
-        //                        .alts(alts)
-        //                        .effects(effects)
-        //                        .build())
-        //                .collect(Collectors.toList());
     }
 
     @NotNull
@@ -324,14 +300,15 @@ class BachelorEligibility {
         final List<EligibilityReport> results = Lists.newArrayList();
 
         for (final HmfGenomeRegion region : variantLocationsToQuery) {
-            LOGGER.debug("chromosome({} start={} end={})", region.chromosome(), (int) region.geneStart(), (int) region.geneEnd());
+
+            // LOGGER.debug("chromosome({} start={} end={})", region.chromosome(), (int) region.geneStart(), (int) region.geneEnd());
 
             final CloseableIterator<VariantContext> query =
                     reader.query(region.chromosome(), (int) region.geneStart(), (int) region.geneEnd());
 
             while (query.hasNext()) {
                 final VariantContext variant = query.next();
-                LOGGER.debug("variant({}) patient({}) sample({})", variant, patient, sample);
+                // LOGGER.debug("patient({}) sample({}) processing variant({})", patient, sample, variant.getID());
                 results.addAll(processVariant(variant, patient, sample, type));
             }
             query.close();

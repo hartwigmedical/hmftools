@@ -12,6 +12,8 @@ import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
 
 import nl.hartwigmedicalfoundation.bachelor.ProgramBlacklist;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,6 +25,8 @@ public class BlacklistPredicate implements Predicate<VariantModel> {
     private final Collection<String> transcripts;
     @NotNull
     private final List<ProgramBlacklist.Exclusion> blacklist;
+
+    private static final Logger LOGGER = LogManager.getLogger(BlacklistPredicate.class);
 
     public BlacklistPredicate(@NotNull final Collection<String> transcripts, @Nullable final ProgramBlacklist blacklist) {
         this.transcripts = transcripts;
@@ -46,22 +50,36 @@ public class BlacklistPredicate implements Predicate<VariantModel> {
 
     private static boolean test(final ProgramBlacklist.Exclusion blacklist, final VariantContext context,
             final VariantAnnotation annotation) {
-        if (blacklist.getHGVSP() != null && !annotation.hgvsProtein().isEmpty() && blacklist.getHGVSP()
-                .equals(annotation.hgvsProtein().replaceFirst("^p\\.", ""))) {
+
+        if (blacklist.getHGVSP() != null && !annotation.hgvsProtein().isEmpty()
+        && blacklist.getHGVSP().equals(annotation.hgvsProtein().replaceFirst("^p\\.", ""))) {
+
+            LOGGER.debug("variant({}) found in blacklist HGVSP({})", context.getID(), blacklist.getHGVSP());
             return true;
         }
-        if (blacklist.getHGVSC() != null && !annotation.hgvsCoding().isEmpty() && blacklist.getHGVSC()
-                .equals(annotation.hgvsCoding().replaceFirst("^c\\.", ""))) {
+        if (blacklist.getHGVSC() != null && !annotation.hgvsCoding().isEmpty()
+        && blacklist.getHGVSC().equals(annotation.hgvsCoding().replaceFirst("^c\\.", ""))) {
+
+            LOGGER.debug("variant({}) found in blacklist HGVSC({})", context.getID(), blacklist.getHGVSC());
+
             return true;
         }
 
         final List<Integer> proteinPositions = proteinPosition(annotation);
         if (blacklist.getMinCodon() != null && !proteinPositions.isEmpty() // TODO: stronger check here?
-                && blacklist.getMinCodon().intValue() <= proteinPositions.get(0)) {
+        && blacklist.getMinCodon().intValue() <= proteinPositions.get(0)) {
+
+            LOGGER.debug("variant({}) found in blacklist minCodon({})", context.getID(), blacklist.getMinCodon());
             return true;
         }
 
-        return blacklist.getPosition() != null && atPosition(context, blacklist.getPosition());
+        if(blacklist.getPosition() != null && atPosition(context, blacklist.getPosition()))
+        {
+            LOGGER.debug("variant({}) found in blacklist postition({})", context.getID(), blacklist.getPosition());
+            return true;
+        }
+
+        return false;
     }
 
     private static boolean atPosition(final VariantContext v, final String position) {

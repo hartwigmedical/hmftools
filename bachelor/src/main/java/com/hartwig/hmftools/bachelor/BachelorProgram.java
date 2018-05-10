@@ -7,40 +7,43 @@ import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 
 public class BachelorProgram {
-    private final String name;
-    private final Predicate<VariantModel> vcfProcessor;
-    private final Predicate<GeneCopyNumber> copyNumberProcessor;
-    private final Predicate<HmfGenomeRegion> disruptionProcessor;
+    private final String mName;
+    private final Predicate<VariantModel> mVcfProcessor;
+    private final Predicate<VariantModel> mWhiteList;
+    private final Predicate<GeneCopyNumber> mCopyNumberProcessor;
+    private final Predicate<HmfGenomeRegion> mDisruptionProcessor;
 
     private final List<String> RequiredEffects;
     private final List<String> PanelTranscripts;
 
     // add white and blacklist criteria for this program
 
-    BachelorProgram(final String name, final Predicate<VariantModel> vcfProcessor, final Predicate<GeneCopyNumber> copyNumberProcessor,
-            final Predicate<HmfGenomeRegion> disruptionProcessor, final List<String> requiredEffects, final List<String> panelTranscripts) {
-        this.name = name;
-        this.vcfProcessor = vcfProcessor;
-        this.copyNumberProcessor = copyNumberProcessor;
-        this.disruptionProcessor = disruptionProcessor;
+    BachelorProgram(final String name, final Predicate<VariantModel> vcfProcessor, Predicate<VariantModel> whitelist,
+            final Predicate<GeneCopyNumber> copyNumberProcessor, final Predicate<HmfGenomeRegion> disruptionProcessor,
+            final List<String> requiredEffects, final List<String> panelTranscripts) {
+
+        mName = name;
+        mVcfProcessor = vcfProcessor;
+        mWhiteList = whitelist;
+        mCopyNumberProcessor = copyNumberProcessor;
+        mDisruptionProcessor = disruptionProcessor;
         this.RequiredEffects = requiredEffects;
         this.PanelTranscripts = panelTranscripts;
     }
 
     public String name() {
-        return name;
+        return mName;
     }
 
-    public Predicate<VariantModel> vcfProcessor() {
-        return vcfProcessor;
-    }
+    public Predicate<VariantModel> vcfProcessor() { return mVcfProcessor; }
+    public Predicate<VariantModel> whitelist() { return mWhiteList; }
 
     public Predicate<GeneCopyNumber> copyNumberProcessor() {
-        return copyNumberProcessor;
+        return mCopyNumberProcessor;
     }
 
     public Predicate<HmfGenomeRegion> disruptionProcessor() {
-        return disruptionProcessor;
+        return mDisruptionProcessor;
     }
 
     public List<String> requiredEffects() {

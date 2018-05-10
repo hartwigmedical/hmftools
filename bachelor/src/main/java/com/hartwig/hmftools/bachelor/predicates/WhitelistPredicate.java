@@ -10,6 +10,8 @@ import com.hartwig.hmftools.bachelor.VariantModel;
 
 import nl.hartwigmedicalfoundation.bachelor.ProgramWhitelist;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,6 +19,7 @@ public class WhitelistPredicate implements Predicate<VariantModel> {
 
     private final Multimap<String, String> transcriptProteinWhitelist = HashMultimap.create();
     private final Set<String> dbSNPWhitelist = Sets.newHashSet();
+    private static final Logger LOGGER = LogManager.getLogger(WhitelistPredicate.class);
 
     public WhitelistPredicate(@NotNull final Multimap<String, String> geneToEnsemblMap, @Nullable final ProgramWhitelist whitelist) {
         if (whitelist != null) {
@@ -35,7 +38,18 @@ public class WhitelistPredicate implements Predicate<VariantModel> {
 
     @Override
     public boolean test(final VariantModel variant) {
-        return inDbSNPWhitelist(variant) || inProteinWhitelist(variant);
+        if(inDbSNPWhitelist(variant))
+        {
+            LOGGER.debug("variant({}) found in dbSNP whitelist", variant.context().getID());
+            return true;
+        }
+        else if(inProteinWhitelist(variant))
+        {
+            LOGGER.debug("variant({}) found in protein whitelist", variant.context().getID());
+            return true;
+        }
+
+        return false;
     }
 
     private boolean inProteinWhitelist(final VariantModel variant) {
