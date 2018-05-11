@@ -6,8 +6,10 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.SortedSetMultimap;
+import com.hartwig.hmftools.common.gene.TranscriptRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 
 import org.junit.Test;
@@ -32,4 +34,12 @@ public class HmfGenePanelSupplierTest {
             }
         }
     }
+
+    @Test
+    public void testManuallyAddedGenes()  {
+        final List<String> allGenes = HmfGenePanelSupplier.allGeneList().stream().map(TranscriptRegion::gene).collect(Collectors.toList());
+        assertTrue(allGenes.contains("C11orf95"));
+        assertTrue(allGenes.contains("CDKN2Ap14ARF"));
+    }
+
 }

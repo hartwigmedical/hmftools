@@ -32,7 +32,7 @@ where
     seq_region.name in ('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', 'X', 'Y', 'MT') and
     ((gene.seq_region_start >= karyotype.seq_region_start and gene.seq_region_start <= karyotype.seq_region_end)
 		or (gene.seq_region_end >= karyotype.seq_region_start and gene.seq_region_end <= karyotype.seq_region_end))
-	and t.biotype = 'protein_coding'
+	and (t.biotype = 'protein_coding' or display_xref.display_label = 'C11orf95')
     and gene.stable_id not in
     ('ENSG00000250424','ENSG00000257028','ENSG00000184909','ENSG00000181464','ENSG00000244255','ENSG00000263203','ENSG00000268942','ENSG00000233280',
      'ENSG00000258465','ENSG00000251246','ENSG00000272414','ENSG00000258728','ENSG00000269783','ENSG00000273266','ENSG00000241489','ENSG00000269881',
