@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientdb.data;
 
-import static com.hartwig.hmftools.patientdb.dao.PotentiallyActionableFusionsDAO.FIVE_BREAKEND;
-import static com.hartwig.hmftools.patientdb.dao.PotentiallyActionableFusionsDAO.THREE_BREAKEND;
+import static com.hartwig.hmftools.patientdb.dao.PotentiallyActionableItemsDAO.FIVE_BREAKEND;
+import static com.hartwig.hmftools.patientdb.dao.PotentiallyActionableItemsDAO.THREE_BREAKEND;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.BASELINE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 

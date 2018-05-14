@@ -64,7 +64,7 @@ public class DatabaseAccess {
     @NotNull
     private final MetricDAO metricDAO;
     @NotNull
-    private final PotentiallyActionableFusionsDAO actionableFusionsDAO;
+    private final PotentiallyActionableItemsDAO potentiallyActionableItemsDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // MIVO: disable annoying jooq self-ad message
@@ -84,7 +84,7 @@ public class DatabaseAccess {
         validationFindingsDAO = new ValidationFindingDAO(context);
         canonicalTranscriptDAO = new CanonicalTranscriptDAO(context);
         metricDAO = new MetricDAO(context);
-        actionableFusionsDAO = new PotentiallyActionableFusionsDAO(context);
+        potentiallyActionableItemsDAO = new PotentiallyActionableItemsDAO(context);
     }
 
     @NotNull
@@ -123,17 +123,17 @@ public class DatabaseAccess {
 
     @NotNull
     public Stream<PotentialActionableVariant> potentiallyActionableVariants() {
-        return somaticVariantDAO.potentiallyActionableVariants();
+        return potentiallyActionableItemsDAO.potentiallyActionableVariants();
     }
 
     @NotNull
     public Stream<PotentialActionableCNV> potentiallyActionableCNVs() {
-        return geneCopyNumberDAO.potentiallyActionableCNVs();
+        return potentiallyActionableItemsDAO.potentiallyActionableCNVs();
     }
 
     @NotNull
     public Stream<PotentialActionableFusion> potentiallyActionableFusions() {
-        return actionableFusionsDAO.potentiallyActionableFusions();
+        return potentiallyActionableItemsDAO.potentiallyActionableFusions();
     }
 
     public void writeStructuralVariants(@NotNull final String sampleId, @NotNull final List<EnrichedStructuralVariant> variants) {
