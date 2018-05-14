@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PotentialActionableCNV;
+import com.hartwig.hmftools.patientdb.data.PotentialActionableFusion;
 import com.hartwig.hmftools.patientdb.data.PotentialActionableVariant;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
@@ -62,6 +63,8 @@ public class DatabaseAccess {
     private final CanonicalTranscriptDAO canonicalTranscriptDAO;
     @NotNull
     private final MetricDAO metricDAO;
+    @NotNull
+    private final PotentiallyActionableFusionsDAO actionableFusionsDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // MIVO: disable annoying jooq self-ad message
@@ -81,6 +84,7 @@ public class DatabaseAccess {
         validationFindingsDAO = new ValidationFindingDAO(context);
         canonicalTranscriptDAO = new CanonicalTranscriptDAO(context);
         metricDAO = new MetricDAO(context);
+        actionableFusionsDAO = new PotentiallyActionableFusionsDAO(context);
     }
 
     @NotNull
@@ -125,6 +129,11 @@ public class DatabaseAccess {
     @NotNull
     public Stream<PotentialActionableCNV> potentiallyActionableCNVs() {
         return geneCopyNumberDAO.potentiallyActionableCNVs();
+    }
+
+    @NotNull
+    public Stream<PotentialActionableFusion> potentiallyActionableFusions() {
+        return actionableFusionsDAO.potentiallyActionableFusions();
     }
 
     public void writeStructuralVariants(@NotNull final String sampleId, @NotNull final List<EnrichedStructuralVariant> variants) {
