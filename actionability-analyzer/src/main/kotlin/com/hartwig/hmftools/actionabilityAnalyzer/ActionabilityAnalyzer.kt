@@ -4,6 +4,7 @@ import com.hartwig.hmftools.common.copynumber.CopyNumberAlteration
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
 import com.hartwig.hmftools.knowledgebaseimporter.readTSVRecords
 import com.hartwig.hmftools.patientdb.data.PotentialActionableCNV
+import com.hartwig.hmftools.patientdb.data.PotentialActionableFusion
 import com.hartwig.hmftools.patientdb.data.PotentialActionableVariant
 import org.apache.commons.csv.CSVRecord
 
@@ -63,7 +64,10 @@ class ActionabilityAnalyzer(actionableVariantsLocation: String, fusionPairsLocat
         return getActionability(variantActionabilityMap, variantKey, variant.sampleId()).toSet()
     }
 
-    fun actionabilityForFusion(sampleId: String, fiveGene: String, threeGene: String): Set<ActionabilityOutput> {
+    fun actionabilityForFusion(fusion: PotentialActionableFusion): Set<ActionabilityOutput> {
+        val fiveGene = fusion.fiveGene()
+        val threeGene = fusion.threeGene()
+        val sampleId = fusion.sampleId()
         val fusionPairActionability = getActionability(fusionActionabilityMap, FusionPair(fiveGene, threeGene), sampleId)
         val promiscuousFiveActionability = getActionability(promiscuousFiveActionabilityMap, PromiscuousGene(fiveGene), sampleId)
         val promiscuousThreeActionability = getActionability(promiscuousThreeActionabilityMap, PromiscuousGene(threeGene), sampleId)

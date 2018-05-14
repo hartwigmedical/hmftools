@@ -47,6 +47,15 @@ private fun queryDatabase(dbAccess: DatabaseAccess, printer: CSVPrinter, actiona
         }
     }
     logger.info("Done writing actionable cnvs.")
+    logger.info("Querying actionable fusions.")
+    dbAccess.potentiallyActionableFusions().use {
+        it.asSequence().forEach { fusion ->
+            val records = actionabilityAnalyzer.actionabilityForFusion(fusion).map { it.record }
+            printer.printRecords(records)
+            printer.flush()
+        }
+    }
+    logger.info("Done writing actionable fusions.")
     printer.close()
 }
 
