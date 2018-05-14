@@ -31,7 +31,7 @@ public class ClusterAnalyser {
     private static int MIN_TEMPLATED_INSERTION_LENGTH = 20;
     private static int MAX_TEMPLATED_INSERTION_LENGTH = 500;
 
-    public static String TRANS_TYPE_TI = "TI";
+    public static String TRANS_TYPE_TRANS = "TRANS";
     public static String TRANS_TYPE_SPAN = "SPAN";
 
     private static final Logger LOGGER = LogManager.getLogger(ClusterAnalyser.class);
@@ -53,19 +53,18 @@ public class ClusterAnalyser {
         cluster.setChromosomalArmCount();
 
         if(cluster.getCount() > 1) {
-            LOGGER.debug("cluster({}) desc({}) svCount({}) armCount({}) consistent({} count={})",
-                    cluster.getId(), cluster.getDesc(), cluster.getCount(),
+            LOGGER.debug("cluster({}) svCount({}) desc({}) armCount({}) consistent({} count={})",
+                    cluster.getId(), cluster.getCount(), cluster.getDesc(),
                     cluster.getChromosomalArmCount(), cluster.isConsistent(), cluster.getConsistencyCount());
         }
     }
 
     public void findLinkedPairs(final String sampleId, SvCluster cluster)
     {
-        if(cluster.getCount() < 3)
+        if(cluster.getCount() < 2)
             return;
 
-        // exclude large clusters for now due to processing times
-        // until the algo is better refined
+        // exclude large clusters for now due to processing times until the algo is better refined
         int maxClusterSize = 50;
 
         if(cluster.getCount() >= maxClusterSize)
@@ -82,6 +81,9 @@ public class ClusterAnalyser {
 
             SvClusterData var1 = cluster.getSVs().get(i);
 
+            if(var1.type() == StructuralVariantType.INS)
+                continue;
+
             // make note of SVs which line up exactly with other SVs
             // these will be used to eliminate transitive SVs later on
             if(var1.isDupBEStart() && var1.isDupBEEnd()) {
@@ -97,6 +99,9 @@ public class ClusterAnalyser {
                 for (int j = i+1; j < cluster.getCount(); ++j) {
 
                     SvClusterData var2 = cluster.getSVs().get(j);
+
+                    if(var2.type() == StructuralVariantType.INS)
+                        continue;
 
                     if(var2.isDupBEStart() && var2.isDupBEEnd())
                         continue;
@@ -539,7 +544,7 @@ public class ClusterAnalyser {
                     // mark all transitive SVs
                     for (SvClusterData transSv : transitiveSVs) {
                         String svLinkData = spanningSV.id();
-                        transSv.setTransData(TRANS_TYPE_TI, tiLength, svLinkData);
+                        transSv.setTransData(TRANS_TYPE_TRANS, tiLength, svLinkData);
                     }
 
                     // and mark the spanning SV

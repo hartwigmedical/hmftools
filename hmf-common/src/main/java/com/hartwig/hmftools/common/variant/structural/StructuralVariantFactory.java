@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
@@ -25,12 +26,15 @@ public class StructuralVariantFactory {
     private final static String MATE_ID = "MATEID";
     private final static String PAR_ID = "PARID";
     private final static String INS_SEQ = "SVINSSEQ";
-    private final static String LEFT_INS_SEQ = "LEFT_SVINS";
-    private final static String RIGHT_INS_SEQ = "RIGHT_SVINS";
+    private final static String LEFT_INS_SEQ = "LEFT_SVINSSEQ";
+    private final static String RIGHT_INS_SEQ = "RIGHT_SVINSSEQ";
     private final static String HOM_SEQ = "HOMSEQ";
     private final static String BPI_START = "BPI_START";
     private final static String BPI_END = "BPI_END";
     private final static String BPI_AF = "BPI_AF";
+    private final static String ALT = "ALT";
+    private final static String IMPRECISE = "IMPRECISE";
+    private final static String SOMATIC_SCORE = "SOMATICSCORE";
     private final static String INEXACT_HOMOLOGY_LENGTH = "IHOMLEN";
     private final static Pattern breakendRegex = Pattern.compile("^(.*)([\\[\\]])(.+)[\\[\\]](.*)$");
 
@@ -109,6 +113,37 @@ public class StructuralVariantFactory {
                 break;
         }
 
+        final String impreciseStr = context.getAttributeAsString(IMPRECISE, "");
+        boolean isImprecise = !impreciseStr.isEmpty() && impreciseStr.equals("true");
+
+        final int somaticScore = context.getAttributeAsInt(SOMATIC_SCORE, 0);
+
+        String insertedSequence = "";
+
+        if(type == StructuralVariantType.INS)
+        {
+            final String leftInsertSeq = context.getAttributeAsString(LEFT_INS_SEQ, "");
+            final String rightInsertSeq = context.getAttributeAsString(RIGHT_INS_SEQ, "");
+            if(!leftInsertSeq.isEmpty() && !rightInsertSeq.isEmpty())
+            {
+                insertedSequence = leftInsertSeq + "|" + rightInsertSeq;
+            }
+            else
+            {
+                List<Allele> alleles = context.getAlleles();
+                if(alleles.size() > 1) {
+                    insertedSequence = alleles.get(1).toString();
+
+                    // remove the ref base from the start
+                    insertedSequence = insertedSequence.substring(1, insertedSequence.length());
+                }
+            }
+        }
+        else
+        {
+            insertedSequence = context.getAttributeAsString(INS_SEQ, "");
+        }
+
         final StructuralVariantLeg startLeg = ImmutableStructuralVariantLegImpl.builder()
                 .chromosome(context.getContig())
                 .position(start)
@@ -129,9 +164,11 @@ public class StructuralVariantFactory {
                 .id(context.getID())
                 .start(startLeg)
                 .end(endLeg)
-                .insertSequence(context.getAttributeAsString(INS_SEQ, ""))
+                .insertSequence(insertedSequence)
                 .type(type)
                 .filter(filtersStr)
+                .isImprecise(isImprecise)
+                .somaticScore(somaticScore)
                 .build();
     }
 
@@ -161,15 +198,19 @@ public class StructuralVariantFactory {
 
         final String mantaInsertedSequence = first.getAttributeAsString(INS_SEQ, "");
 
-        if(!Strings.isNullOrEmpty(mantaInsertedSequence))
-            insertedSequence =  mantaInsertedSequence;
-
 //        final List<Integer> ihompos = first.getAttributeAsIntList(INEXACT_HOMOLOGY_LENGTH, 0);
 //        final int ihomlen = ihompos.size() == 2 ? Math.abs(ihompos.get(0)) + Math.abs(ihompos.get(1)) : 0;
+
+
+        final String impreciseStr = first.getAttributeAsString(IMPRECISE, "");
+        boolean isImprecise = !impreciseStr.isEmpty() && impreciseStr.equals("true");
+
+        final int somaticScore = first.getAttributeAsInt(SOMATIC_SCORE, 0);
 
         StructuralVariantType type = StructuralVariantType.BND;
 
         if (first.getContig().equals(second.getContig())) {
+
             // what should we do with events are aren't simple operations.
             // eg deletions with inserted bases, duplications with additional inserted sequence..
             if (startOrientation != endOrientation && second.getStart() - first.getStart() < insertedSequence.length()) {
@@ -184,17 +225,6 @@ public class StructuralVariantFactory {
             }
             else {
                 type = StructuralVariantType.INV;
-
-                final String leftInsertSeq = first.getAttributeAsString(LEFT_INS_SEQ, "");
-                final String rightInsertSeq = first.getAttributeAsString(RIGHT_INS_SEQ, "");
-                if(!leftInsertSeq.isEmpty() && !rightInsertSeq.isEmpty())
-                {
-                    insertedSequence = leftInsertSeq + "|" + rightInsertSeq;
-                }
-                else
-                {
-                    insertedSequence = leftInsertSeq + rightInsertSeq;
-                }
             }
         }
 
@@ -219,9 +249,11 @@ public class StructuralVariantFactory {
                 .start(startLeg)
                 .end(endLeg)
                 .mateId(second.getID())
-                .insertSequence(insertedSequence)
+                .insertSequence(Strings.isNullOrEmpty(mantaInsertedSequence) ? insertedSequence : mantaInsertedSequence)
                 .type(type)
                 .filter(filtersStr)
+                .isImprecise(isImprecise)
+                .somaticScore(somaticScore)
                 .build();
     }
 

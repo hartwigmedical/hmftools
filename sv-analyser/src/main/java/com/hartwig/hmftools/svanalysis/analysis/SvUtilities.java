@@ -47,6 +47,8 @@ public class SvUtilities {
         mClusterBaseDistance = baseDistance;
     }
 
+    public int getBaseDistance() { return mClusterBaseDistance; }
+
     public final String getChromosomalArm(final String chromosome, final long position)
     {
         final GenomeRegion region = CENTROMERES.get(chromosome);
@@ -108,6 +110,23 @@ public class SvUtilities {
             return false;
 
         return true;
+    }
+
+    public boolean areAllWithinRange(long start1, long end1, long start2, long end2, int permittedDistance)
+    {
+        if(start1 > start2 - permittedDistance && end1 < end2 + permittedDistance)
+            return true;
+
+        if(start2 > start1 - permittedDistance && end2 < end1 + permittedDistance)
+            return true;
+
+        return false;
+    }
+
+    public boolean areAnyWithinRange(long start1, long end1, long start2, long end2, int permittedDistance)
+    {
+        return isWithinRange(start1, start2) || isWithinRange(end1, end2)
+            || isWithinRange(end1, start2) || isWithinRange(start1, end2);
     }
 
     public boolean areTypePair(final SvClusterData v1, final SvClusterData v2, StructuralVariantType type1, StructuralVariantType type2)

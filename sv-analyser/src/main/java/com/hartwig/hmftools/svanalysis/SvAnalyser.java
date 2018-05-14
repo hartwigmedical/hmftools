@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.svanalysis;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
+import static com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator.PON_FILTER_PON;
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -12,8 +12,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
-import com.hartwig.hmftools.svanalysis.analysis.StructuralVariantClustering;
-import com.hartwig.hmftools.svanalysis.annotators.SvVCFAnnotator;
+import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 import com.hartwig.hmftools.svanalysis.analysis.SvClusteringConfig;
 
@@ -29,9 +28,9 @@ import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 
-public class StructuralVariantAnalyser {
+public class SvAnalyser {
 
-    private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnalyser.class);
+    private static final Logger LOGGER = LogManager.getLogger(SvAnalyser.class);
 
     private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
@@ -41,11 +40,11 @@ public class StructuralVariantAnalyser {
     private static final String LOG_DEBUG = "log_debug";
     private static final String WRITE_FILTERED_SVS = "write_pon_filters";
     private static final String LOG_VCF_INSERTS = "log_vcf_inserts";
+    private static final String LOG_VCF_MANTA_DATA = "log_vcf_manta_data";
     private static final String SV_PON_FILE = "sv_pon_file";
     private static final String FRAGILE_SITE_FILE = "fragile_site_file";
     private static final String LINE_ELEMENT_FILE = "line_element_file";
-    private static final String REANNOTATE_FROM_VCFS = "reannotate_vcfs";
-    private static final String EXTERNAL_ANNOTATIONS = "external_annotations";
+    private static final String EXTERNAL_SV_DATA_FILE = "ext_sv_data_file";
     private static final String COPY_NUMBER_ANALYSIS = "copy_number_analysis";
     private static final String COPY_NUMBER_FILE = "cn_file";
 
@@ -77,6 +76,7 @@ public class StructuralVariantAnalyser {
 
             filteredSvWriter.setLogInsSVs(cmd.hasOption(LOG_VCF_INSERTS));
             filteredSvWriter.setRunPONFilter(cmd.hasOption(WRITE_FILTERED_SVS));
+            filteredSvWriter.setLogExtraMantaData(cmd.hasOption(LOG_VCF_MANTA_DATA));
             filteredSvWriter.processVcfFiles();
 
             LOGGER.info("reads complete");
@@ -94,17 +94,6 @@ public class StructuralVariantAnalyser {
             return;
         }
 
-        if(cmd.hasOption(REANNOTATE_FROM_VCFS))
-        {
-            LOGGER.info("reading VCF files to re-annotate");
-
-            // for now just re-read the VCFs and write out new annotations to file
-            // may later on turn into update SQL once clustering does the same
-            SvVCFAnnotator vcfAnnotator = new SvVCFAnnotator(cmd.getOptionValue(VCF_FILE), cmd.getOptionValue(DATA_OUTPUT_PATH));
-            vcfAnnotator.processVcfFiles();
-            return;
-        }
-
         SvClusteringConfig clusteringConfig = new SvClusteringConfig();
         clusteringConfig.setOutputCsvPath(cmd.getOptionValue(DATA_OUTPUT_PATH));
         clusteringConfig.setBaseDistance(Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE, "0")));
@@ -112,8 +101,8 @@ public class StructuralVariantAnalyser {
         clusteringConfig.setSvPONFile(cmd.getOptionValue(SV_PON_FILE, ""));
         clusteringConfig.setFragileSiteFile(cmd.getOptionValue(FRAGILE_SITE_FILE, ""));
         clusteringConfig.setLineElementFile(cmd.getOptionValue(LINE_ELEMENT_FILE, ""));
-        clusteringConfig.setExternalAnnotationsFile(cmd.getOptionValue(EXTERNAL_ANNOTATIONS, ""));
-        StructuralVariantClustering svClusterer = new StructuralVariantClustering(clusteringConfig);
+        clusteringConfig.setExternalAnnotationsFile(cmd.getOptionValue(EXTERNAL_SV_DATA_FILE, ""));
+        SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(clusteringConfig);
 
         List<String> samplesList = Lists.newArrayList();
 
@@ -129,22 +118,16 @@ public class StructuralVariantAnalyser {
         int count = 0;
         for (final String sample : samplesList) {
             ++count;
-            LOGGER.info("clustering for sample({}), total({})", sample, count);
-
             List<SvClusterData> svClusterData = queryStructuralVariantData(dbAccess, sample);
 
-            svClusterer.loadFromDatabase(sample, svClusterData);
+            LOGGER.info("sample({}) processing {} SVs, totalProcessed({})", sample, svClusterData.size(), count);
 
-            //LOGGER.info("data loaded", sample, count);
+            sampleAnalyser.loadFromDatabase(sample, svClusterData);
 
-            svClusterer.runClustering();
-            //LOGGER.info("clustering complete", sample, count);
-
-//                if(count > 10)
-//                    break;
+            sampleAnalyser.analyse();
         }
 
-        svClusterer.close();
+        sampleAnalyser.close();
 
         LOGGER.info("run complete");
     }
@@ -157,6 +140,10 @@ public class StructuralVariantAnalyser {
         List<StructuralVariantData> svRecords = dbAccess.readStructuralVariantData(sampleId);
 
         for (final StructuralVariantData svRecord : svRecords) {
+
+            if(svRecord.filter().equals(PON_FILTER_PON))
+                continue;
+
             svClusterDataItems.add(new SvClusterData(svRecord));
         }
 
@@ -183,10 +170,10 @@ public class StructuralVariantAnalyser {
         options.addOption(WRITE_FILTERED_SVS, false, "Includes filtered SVs and writes all to file for PON creation");
         options.addOption(SV_PON_FILE, true, "PON file for SVs");
         options.addOption(LOG_VCF_INSERTS, false, "Read INS from VCF files, write to CSV");
+        options.addOption(LOG_VCF_MANTA_DATA, false, "Read extra manta data from VCF files, write to CSV");
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file for SVs");
         options.addOption(FRAGILE_SITE_FILE, true, "Fragile Site file for SVs");
-        options.addOption(REANNOTATE_FROM_VCFS, false, "Re-annotation with new VCF annotations");
-        options.addOption(EXTERNAL_ANNOTATIONS, true, "External file with per-SV annotations");
+        options.addOption(EXTERNAL_SV_DATA_FILE, true, "External file with per-SV annotations");
         options.addOption(COPY_NUMBER_ANALYSIS, false, "Run copy number analysis");
         options.addOption(COPY_NUMBER_FILE, true, "Copy number CSV file");
 

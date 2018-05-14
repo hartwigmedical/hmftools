@@ -3,6 +3,7 @@ package com.hartwig.hmftools.svanalysis.annotators;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,20 +16,26 @@ import org.apache.logging.log4j.Logger;
 
 public class ExternalSVAnnotator {
 
-    private List<String> mFieldNames;
-    private String mFieldNamesStr;
-    private Map<Integer, String> mIdValues;
-    private String mEmptyValues;
-
     private static final Logger LOGGER = LogManager.getLogger(ExternalSVAnnotator.class);
 
+    private static int CSV_INDEX_SAMPLE_ID = 1;
+    private static int CSV_INDEX_SV_ID = 2;
+    private static int CSV_FIELD_COUNT = 9;
+    private static int CSV_ID_FIELD_COUNT = 3;
+
+    // annotations
+    private static int FIELD_INDEX_PON_COUNT = 0;
+    private static int FIELD_INDEX_PON_REGION_COUNT = 1;
+    private static int FIELD_INDEX_LE_START = 2;
+    private static int FIELD_INDEX_LE_END = 3;
+    private static int FIELD_INDEX_FS_START = 4;
+    private static int FIELD_INDEX_FS_END = 5;
+
+    private Map<String, Map<String, ExternalSvData>> mSampleSvData;
 
     public ExternalSVAnnotator()
     {
-        mFieldNames = Lists.newArrayList();
-        mFieldNamesStr = "";
-        mIdValues = Maps.newHashMap();
-        mEmptyValues = "";
+        mSampleSvData = Maps.newHashMap();
     }
 
     public void loadFile(final String filename) {
@@ -48,60 +55,71 @@ public class ExternalSVAnnotator {
                 return;
             }
 
-            String[] fieldNames = line.split(",");
-
-            mFieldNames = Lists.newArrayList(fieldNames);
-
-            // cache the field names, excluding the SV ID
-            for (int i = 1; i < fieldNames.length; ++i) {
-                mEmptyValues += ",";
-                mFieldNamesStr += "," + fieldNames[i];
-            }
-
-            mFieldNamesStr = mFieldNamesStr.substring(1);
+            int svCount = 0;
 
             while ((line = fileReader.readLine()) != null) {
 
                 // parse CSV data
                 String[] items = line.split(",");
 
-                if (items.length != mFieldNames.size()) {
+                if (items.length != CSV_FIELD_COUNT) {
                     continue;
                 }
 
-                int svId = Integer.parseInt(items[0]);
+                String sampleId = items[CSV_INDEX_SAMPLE_ID];
 
-                String values = "";
-                for (int i = 1; i < items.length; ++i) {
-                    values += "," + items[i];
+                if(!mSampleSvData.containsKey(sampleId))
+                {
+                    mSampleSvData.put(sampleId, new HashMap<String, ExternalSvData>());
                 }
 
-                values = values.substring(1);
+                Map<String, ExternalSvData> sampleDataMap = mSampleSvData.get(sampleId);
 
-                mIdValues.put(svId, values);
+                final String svId = items[CSV_INDEX_SV_ID];
+                ++svCount;
+
+                List<String> dataValues = Lists.newArrayList();
+
+                // now parse the required values
+                dataValues.add(FIELD_INDEX_PON_COUNT, items[FIELD_INDEX_PON_COUNT+CSV_ID_FIELD_COUNT]);
+                dataValues.add(FIELD_INDEX_PON_REGION_COUNT, items[FIELD_INDEX_PON_REGION_COUNT+CSV_ID_FIELD_COUNT]);
+                dataValues.add(FIELD_INDEX_LE_START, items[FIELD_INDEX_LE_START+CSV_ID_FIELD_COUNT]);
+                dataValues.add(FIELD_INDEX_LE_END, items[FIELD_INDEX_LE_END+CSV_ID_FIELD_COUNT]);
+                dataValues.add(FIELD_INDEX_FS_START, items[FIELD_INDEX_FS_START+CSV_ID_FIELD_COUNT]);
+                dataValues.add(FIELD_INDEX_FS_END, items[FIELD_INDEX_FS_END+CSV_ID_FIELD_COUNT]);
+
+                sampleDataMap.put(svId, new ExternalSvData(svId, dataValues));
             }
 
-            LOGGER.debug("loaded {} external SV annotations", mIdValues.size());
+            LOGGER.debug("loaded {} samples and {} SVs from external data file", mSampleSvData.size(), svCount);
+
         } catch (IOException exception) {
             LOGGER.error("Failed to read external SV annotations CSV file({})", filename);
         }
     }
 
-    public boolean hasExternalData() {
-        return !mFieldNames.isEmpty();
-    }
+    public boolean hasData() { return !mSampleSvData.isEmpty(); }
 
-    public final String getFieldNames() {
-        return mFieldNamesStr;
-    }
+    public void setSVData(final String sampleId, SvClusterData var) {
 
-    public final String getSVData(final SvClusterData var) {
-        final String dataList = mIdValues.get(Integer.parseInt(var.id()));
+        if(!mSampleSvData.containsKey(sampleId))
+            return;
 
-        if (dataList == null) {
-            return mEmptyValues;
+        final Map<String, ExternalSvData> sampleDataMap = mSampleSvData.get(sampleId);
+
+        final ExternalSvData svData = sampleDataMap.get(var.id());
+
+        if(svData == null) {
+
+            LOGGER.error("sv({}) external data not found", var.id());
+            return;
         }
 
-        return dataList;
+        final List<String> svValues = svData.getValues();
+
+        var.setPonCount(Integer.parseInt(svValues.get(FIELD_INDEX_PON_COUNT)));
+        var.setPonRegionCount(Integer.parseInt(svValues.get(FIELD_INDEX_PON_REGION_COUNT)));
+        var.setLineElements(svValues.get(FIELD_INDEX_LE_START), svValues.get(FIELD_INDEX_LE_END));
+        var.setFragileSites(svValues.get(FIELD_INDEX_FS_START), svValues.get(FIELD_INDEX_FS_END));
     }
 }

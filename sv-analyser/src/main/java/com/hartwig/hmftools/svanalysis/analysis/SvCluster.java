@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.DOUBLE_STRAND
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.REPLICATION_EVENT;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvClusterData;
@@ -28,29 +29,29 @@ public class SvCluster
     final SvUtilities mUtils;
 
     private int mClusterId;
-    private int mNextFootprintId;
 
     private int mConsistencyCount;
-    private boolean mIsConsistent;
+    private boolean mIsConsistent; // follows from telomere to centromere to telomore
     private String mDesc;
     private List<String> mAnnotationList;
     private int mChromosomeArmCount;
 
-    private List<SvClusterData> mClusteredSVs;
-    private List<SvBreakend> mUniqueBreakends;
-    private List<SvChain> mChains;
-    private List<SvLinkedPair> mLinkedPairs;
-    private List<SvClusterData> mSpanningSVs;
+    private List<SvClusterData> mClusteredSVs; // SVs within close promximity of each other
+    private List<SvBreakend> mUniqueBreakends; // for duplicate BE searches
+    private List<SvChain> mChains; // pairs of SVs linked into chains
+    private List<SvLinkedPair> mLinkedPairs; // forming a TI or DB
+    private List<SvClusterData> mSpanningSVs; // having 2 duplicate (matching) BEs
+    private List<SvFootprint> mFootprints; // localised SVs within the cluster
 
     private static final Logger LOGGER = LogManager.getLogger(SvCluster.class);
 
     public SvCluster(final int clusterId, final SvUtilities utils)
     {
-        mNextFootprintId = 0;
         mClusterId = clusterId;
         mUtils = utils;
         mClusteredSVs = Lists.newArrayList();
         mUniqueBreakends = Lists.newArrayList();
+        mFootprints = Lists.newArrayList();
 
         // annotation info
         mConsistencyCount = 0;
@@ -68,6 +69,10 @@ public class SvCluster
     public int getId() { return mClusterId; }
 
     public int getCount() { return mClusteredSVs.size(); }
+
+    public final String getDesc() { return mDesc; }
+    public final void setDesc(final String desc) { mDesc = desc; }
+
     public List<SvClusterData> getSVs() { return mClusteredSVs; }
 
     public void addVariant(final SvClusterData variant)
@@ -87,10 +92,7 @@ public class SvCluster
     public void setLinkedPairs(final List<SvLinkedPair> pairs) { mLinkedPairs = pairs; }
     public void setSpanningSVs(final List<SvClusterData> svList) { mSpanningSVs = svList; }
 
-    public final String getDesc() { return mDesc; }
-    public final void setDesc(final String desc) { mDesc = desc; }
-
-    public void setIsConsistent(boolean toggle) { mIsConsistent = toggle; }
+    public final List<SvFootprint> getFootprints() { return mFootprints; }
 
     public boolean isConsistent() { return mIsConsistent; }
 
@@ -168,20 +170,10 @@ public class SvCluster
         return clusterTypeStr;
     }
 
-    public int getFragileSiteCount() {
-        int count = 0;
-        for (final SvClusterData var : mClusteredSVs) {
-            if(var.isStartFragileSite() != NO_FS || var.isEndFragileSite() != NO_FS)
-                ++count;
-        }
-
-        return count;
-    }
-
     public int getLineElementCount() {
         int count = 0;
         for (final SvClusterData var : mClusteredSVs) {
-            if(var.isStartLineElement() != NO_LINE_ELEMENT || var.isEndLineElement() != NO_LINE_ELEMENT)
+            if(!var.isStartLineElement().equals(NO_LINE_ELEMENT) || !var.isEndLineElement().equals(NO_LINE_ELEMENT))
                 ++count;
         }
 
@@ -192,11 +184,17 @@ public class SvCluster
     {
         // group any matching BEs (same position and orientation)
         for (final SvClusterData var : mClusteredSVs) {
+            if(var.type() == StructuralVariantType.INS)
+                continue;
+
             addVariantToUniqueBreakends(var);
         }
 
         // cache this against the SV
         for (SvClusterData var : mClusteredSVs) {
+
+            if(var.type() == StructuralVariantType.INS)
+                continue;
 
             for(final SvBreakend breakend : mUniqueBreakends)
             {
@@ -204,7 +202,15 @@ public class SvCluster
                     var.setIsDupBEStart(true);
 
                 if(variantMatchesBreakend(var, breakend, false, PERMITED_DUP_BE_DISTANCE) && breakend.getCount() > 1)
+                {
+                    if(var.type() == StructuralVariantType.INV && var.position(false) - var.position(true) <= PERMITED_DUP_BE_DISTANCE)
+                    {
+                        // avoid setting both end of an INV as duplicate if they match
+                        continue;
+                    }
+
                     var.setIsDupBEEnd(true);
+                }
             }
         }
     }
@@ -214,6 +220,13 @@ public class SvCluster
         for(int i = 0; i < 2; ++i)
         {
             boolean useStart = (i == 0);
+
+            if(var.type() == StructuralVariantType.INV && var.position(false) - var.position(true) <= PERMITED_DUP_BE_DISTANCE)
+            {
+                // avoid setting both end of an INV as duplicate if they match
+                if(i == 1)
+                    continue;
+            }
 
             boolean found = false;
             for(SvBreakend breakend : mUniqueBreakends) {

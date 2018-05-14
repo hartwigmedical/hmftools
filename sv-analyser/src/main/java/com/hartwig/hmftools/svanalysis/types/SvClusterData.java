@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.svanalysis.types;
 
+import static com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator.NO_FS;
+import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -44,10 +47,10 @@ public class SvClusterData
         mEndArm = "";
         mPonCount = 0;
         mPonRegionCount = 0;
-        mStartFragileSite = "";
-        mEndFragileSite = "";
-        mStartLineElement = "";
-        mEndLineElement = "";
+        mStartFragileSite = NO_FS;
+        mEndFragileSite = NO_FS;
+        mStartLineElement = NO_LINE_ELEMENT;
+        mEndLineElement = NO_LINE_ELEMENT;
 
         mNearestSVLength = -1;
         mNearestSVLinkType = "NONE";
@@ -60,7 +63,6 @@ public class SvClusterData
         mTransType = "";
         mTransLength = 0;
         mTransSvLinks = "";
-
     }
 
     public static SvClusterData from(final EnrichedStructuralVariant enrichedSV)
@@ -175,7 +177,7 @@ public class SvClusterData
     public final boolean isLocal()
     {
         // means that both ends are within the same chromosomal arm
-        return chromosome(true).equals(chromosome(false));
+        return chromosome(true).equals(chromosome(false)) && mStartArm.equals(mEndArm);
     }
 
     public String getTransType() { return mTransType; }

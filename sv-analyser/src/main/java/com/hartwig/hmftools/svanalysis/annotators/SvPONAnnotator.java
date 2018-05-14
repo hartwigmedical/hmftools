@@ -16,6 +16,9 @@ import org.apache.logging.log4j.Logger;
 
 public class SvPONAnnotator {
 
+    public static String PON_FILTER_PON = "PON";
+    public static String PON_FILTER_PASS = "PASS";
+
     private List<SvPON> mPonList;
     private static final int REGION_DISTANCE = 100;
 
@@ -147,7 +150,6 @@ public class SvPONAnnotator {
             && svPon.orientStart() == orientStart && svPon.orientEnd() == orientEnd
             && svPon.type().equals(type))
             {
-
                 // LOGGER.debug("var({}) found in PON with count({})", svData.posId(), svPon.count());
                 return svPon.count();
             }

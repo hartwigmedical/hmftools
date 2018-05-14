@@ -28,10 +28,13 @@ public class FilteredSVWriter {
 
     private final String mOutputPath;
     private final String mVcfFileLocation;
-    private BufferedWriter mFileWriter;
+    private BufferedWriter mPonFileWriter;
+    private BufferedWriter mInsFileWriter;
+    private BufferedWriter mMantaFileWriter;
 
     private boolean mRunPONFilter;
     private boolean mLogInsSVs;
+    private boolean mExtraMantaData;
 
     private static final Logger LOGGER = LogManager.getLogger(FilteredSVWriter.class);
 
@@ -39,14 +42,18 @@ public class FilteredSVWriter {
     {
         mRunPONFilter = false;
         mLogInsSVs = false;
+        mExtraMantaData = false;
 
         mOutputPath = outputPath;
         mVcfFileLocation = vcfFileLocation;
-        mFileWriter = null;
+        mPonFileWriter = null;
+        mInsFileWriter = null;
+        mMantaFileWriter = null;
     }
 
     public void setRunPONFilter(boolean toggle) { mRunPONFilter = toggle; }
     public void setLogInsSVs(boolean toggle) { mLogInsSVs = toggle; }
+    public void setLogExtraMantaData(boolean toggle) { mExtraMantaData = toggle; }
 
     public void processVcfFiles()
     {
@@ -94,10 +101,19 @@ public class FilteredSVWriter {
 
                 if(mLogInsSVs)
                     logInsData(variants, sampleId);
+
+                if(mExtraMantaData)
+                    logExtraMantaData(variants, sampleId);
             }
 
-            if(mFileWriter != null)
-                mFileWriter.close();
+            if(mPonFileWriter != null)
+                mPonFileWriter.close();
+
+            if(mInsFileWriter != null)
+                mInsFileWriter.close();
+
+            if(mMantaFileWriter != null)
+                mMantaFileWriter.close();
 
         }
         catch(Exception e)
@@ -123,7 +139,7 @@ public class FilteredSVWriter {
     private void generateFilteredSVFile(final List<StructuralVariant> variants, final String sampleId)
     {
         try {
-            if(mFileWriter == null)
+            if(mPonFileWriter == null)
             {
                 String outputFileName = mOutputPath;
                 if(!outputFileName.endsWith("/"))
@@ -133,9 +149,9 @@ public class FilteredSVWriter {
 
                 Path outputFile = Paths.get(outputFileName);
 
-                mFileWriter = Files.newBufferedWriter(outputFile);
+                mPonFileWriter = Files.newBufferedWriter(outputFile);
 
-                mFileWriter.write("SampleId,SvId,Type,ChrStart,PosStart,OrientStart,ChrEnd,PosEnd,OrientEnd,Filters\n");
+                mPonFileWriter.write("SampleId,SvId,Type,ChrStart,PosStart,OrientStart,ChrEnd,PosEnd,OrientEnd,Filters\n");
             }
 
             for(final StructuralVariant var : variants)
@@ -160,13 +176,13 @@ public class FilteredSVWriter {
                         filtersStr = filtersStr.replace(",", ";");
                 }
 
-                mFileWriter.write(
+                mPonFileWriter.write(
                         String.format("%s,%s,%s,%s,%d,%d,%s,%d,%d,%s",
                                 sampleId, var.id(), var.type(),
                                 var.chromosome(true), var.position(true), var.orientation(true),
                                 var.chromosome(false), var.position(false), var.orientation(false), filtersStr));
 
-                mFileWriter.newLine();
+                mPonFileWriter.newLine();
             }
 
         }
@@ -179,7 +195,7 @@ public class FilteredSVWriter {
     {
         try {
 
-            if(mFileWriter == null)
+            if(mInsFileWriter == null)
             {
                 String outputFileName = mOutputPath;
                 if(!outputFileName.endsWith("/"))
@@ -189,9 +205,9 @@ public class FilteredSVWriter {
 
                 Path outputFile = Paths.get(outputFileName);
 
-                mFileWriter = Files.newBufferedWriter(outputFile);
+                mInsFileWriter = Files.newBufferedWriter(outputFile);
 
-                mFileWriter.write("SampleId,SvId,Type,ChrStart,PosStart,OrientStart,ChrEnd,PosEnd,OrientEnd,InsertSeq\n");
+                mInsFileWriter.write("SampleId,SvId,Type,ChrStart,PosStart,OrientStart,ChrEnd,PosEnd,OrientEnd,InsertSeq\n");
             }
 
             for(final StructuralVariant var : variants)
@@ -206,13 +222,57 @@ public class FilteredSVWriter {
                     continue;
                 }
 
-                mFileWriter.write(
+                mInsFileWriter.write(
                         String.format("%s,%s,%s,%s,%d,%d,%s,%d,%d,%s",
                                 sampleId, var.id(), var.type(),
                                 var.chromosome(true), var.position(true), var.orientation(true),
                                 var.chromosome(false), var.position(false), var.orientation(false), var.insertSequence()));
 
-                mFileWriter.newLine();
+                mInsFileWriter.newLine();
+            }
+
+        }
+        catch (final IOException e) {
+            LOGGER.error("error writing to outputFile");
+        }
+    }
+
+    private void logExtraMantaData(List<StructuralVariant> variants, final String sampleId)
+    {
+        try {
+
+            if(mMantaFileWriter == null)
+            {
+                String outputFileName = mOutputPath;
+                if(!outputFileName.endsWith("/"))
+                    outputFileName += "/";
+
+                outputFileName += "sv_extra_manta_data.csv";
+
+                Path outputFile = Paths.get(outputFileName);
+
+                mMantaFileWriter = Files.newBufferedWriter(outputFile);
+
+                mMantaFileWriter.write("SampleId,SvId,Type,ChrStart,PosStart,OrientStart,ChrEnd,PosEnd,OrientEnd,IsImprecise,SomaticScore\n");
+            }
+
+            for(final StructuralVariant var : variants)
+            {
+                String filtersStr = var.filter();
+
+                if(!filtersStr.equals("PASS") && !filtersStr.equals(".") && !filtersStr.equals("[]"))
+                {
+                    continue;
+                }
+
+                mMantaFileWriter.write(
+                        String.format("%s,%s,%s,%s,%d,%d,%s,%d,%d,%s,%d",
+                                sampleId, var.id(), var.type(),
+                                var.chromosome(true), var.position(true), var.orientation(true),
+                                var.chromosome(false), var.position(false), var.orientation(false),
+                                var.isImprecise(), var.somaticScore()));
+
+                mMantaFileWriter.newLine();
             }
 
         }

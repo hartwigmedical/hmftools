@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.svannotation;
 
+import static com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator.PON_FILTER_PASS;
+import static com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator.PON_FILTER_PON;
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -106,7 +109,7 @@ public class LoadStructuralVariants {
                         variant.orientation(true), variant.orientation(false),
                         variant.type().toString());
 
-                String filter = ponCount > 1 ? "PON" : "PASS";
+                String filter = ponCount > 1 ? PON_FILTER_PON : PON_FILTER_PASS;
 
                 final ImmutableEnrichedStructuralVariant updatedSV = ImmutableEnrichedStructuralVariant.builder().from(variant).filter(filter).build();
                 updatedSVs.add(updatedSV);
