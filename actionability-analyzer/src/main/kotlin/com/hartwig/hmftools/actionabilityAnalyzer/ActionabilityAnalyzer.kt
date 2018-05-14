@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.actionabilityAnalyzer
 
+import com.hartwig.hmftools.common.copynumber.CopyNumberAlteration
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
 import com.hartwig.hmftools.knowledgebaseimporter.readTSVRecords
+import com.hartwig.hmftools.patientdb.data.PotentialActionableCNV
 import com.hartwig.hmftools.patientdb.data.PotentialActionableVariant
 import org.apache.commons.csv.CSVRecord
 
@@ -68,8 +70,9 @@ class ActionabilityAnalyzer(actionableVariantsLocation: String, fusionPairsLocat
         return (fusionPairActionability + promiscuousFiveActionability + promiscuousThreeActionability).toSet()
     }
 
-    fun actionabilityForCNV(sampleId: String, gene: String, cnvType: String): Set<ActionabilityOutput> {
-        val cnvEvent = CnvEvent(gene, cnvType)
-        return getActionability(cnvActionabilityMap, cnvEvent, sampleId).toSet()
+    fun actionabilityForCNV(cnv: PotentialActionableCNV): Set<ActionabilityOutput> {
+        val cnvType = if (cnv.alteration() == CopyNumberAlteration.GAIN) "Amplification" else "Deletion"
+        val cnvEvent = CnvEvent(cnv.gene(), cnvType)
+        return getActionability(cnvActionabilityMap, cnvEvent, cnv.sampleId()).toSet()
     }
 }

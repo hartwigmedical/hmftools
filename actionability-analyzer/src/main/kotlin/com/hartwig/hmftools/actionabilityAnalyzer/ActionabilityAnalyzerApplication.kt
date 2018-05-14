@@ -28,6 +28,7 @@ fun main(args: Array<String>) {
 }
 
 private fun queryDatabase(dbAccess: DatabaseAccess, printer: CSVPrinter, actionabilityAnalyzer: ActionabilityAnalyzer) {
+    logger.info("Querying actionable variants.")
     dbAccess.potentiallyActionableVariants().use {
         it.asSequence().forEachIndexed { index, variant ->
             logProgress(index)
@@ -36,6 +37,16 @@ private fun queryDatabase(dbAccess: DatabaseAccess, printer: CSVPrinter, actiona
             printer.flush()
         }
     }
+    logger.info("Done writing actionable variants.")
+    logger.info("Querying actionable cnvs.")
+    dbAccess.potentiallyActionableCNVs().use {
+        it.asSequence().forEach { cnv ->
+            val records = actionabilityAnalyzer.actionabilityForCNV(cnv).map { it.record }
+            printer.printRecords(records)
+            printer.flush()
+        }
+    }
+    logger.info("Done writing actionable cnvs.")
     printer.close()
 }
 
