@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.data.Patient;
+import com.hartwig.hmftools.patientdb.data.PotentialActionableCNV;
 import com.hartwig.hmftools.patientdb.data.PotentialActionableVariant;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
@@ -119,6 +120,11 @@ public class DatabaseAccess {
     @NotNull
     public Stream<PotentialActionableVariant> potentiallyActionableVariants() {
         return somaticVariantDAO.potentiallyActionableVariants();
+    }
+
+    @NotNull
+    public Stream<PotentialActionableCNV> potentiallyActionableCNVs() {
+        return geneCopyNumberDAO.potentiallyActionableCNVs();
     }
 
     public void writeStructuralVariants(@NotNull final String sampleId, @NotNull final List<EnrichedStructuralVariant> variants) {
