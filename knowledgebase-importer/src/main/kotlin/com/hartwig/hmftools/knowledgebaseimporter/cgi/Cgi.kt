@@ -87,7 +87,7 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
     private fun extractCgiVariants(gdna: String, reference: IndexedFastaSequenceFile): List<SomaticVariant> {
         val cgiVariantGdnas = gdna.split("__").filterNot { it.isBlank() }
         val chromosome = extractChromosome(cgiVariantGdnas.first())
-        return extract(chromosome, cgiVariantGdnas, reference)
+        return extractVariants(chromosome, cgiVariantGdnas, reference)
     }
 
     private fun annotateCgiBiomarkers(): List<Pair<TransvarOutput, TransvarOutput>> {
