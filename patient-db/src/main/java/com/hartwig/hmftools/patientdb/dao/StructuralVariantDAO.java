@@ -22,8 +22,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep21;
-import org.jooq.InsertValuesStep22;
+import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
 import org.jooq.Record1;
 import org.jooq.Result;
@@ -65,6 +64,8 @@ class StructuralVariantDAO {
                     .homology(record.getValue(STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE))
                     .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
                     .filter(record.getValue(STRUCTURALVARIANT.FILTER))
+                    .mantaPrecise(record.getValue(STRUCTURALVARIANT.MANTAPRECISE).equals("true"))
+                    .somaticScore(record.getValue(STRUCTURALVARIANT.SOMATICSCORE))
                     .build());
         }
 
@@ -156,7 +157,7 @@ class StructuralVariantDAO {
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
 
         for (List<EnrichedStructuralVariant> batch : Iterables.partition(variants, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep22 inserter = context.insertInto(STRUCTURALVARIANT,
+            InsertValuesStepN inserter = context.insertInto(STRUCTURALVARIANT,
                     STRUCTURALVARIANT.SAMPLEID,
                     STRUCTURALVARIANT.STARTCHROMOSOME,
                     STRUCTURALVARIANT.ENDCHROMOSOME,
@@ -178,13 +179,15 @@ class StructuralVariantDAO {
                     STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE,
                     STRUCTURALVARIANT.PLOIDY,
                     STRUCTURALVARIANT.FILTER,
+                    STRUCTURALVARIANT.MANTAPRECISE,
+                    STRUCTURALVARIANT.SOMATICSCORE,
                     STRUCTURALVARIANT.MODIFIED);
             batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
             inserter.execute();
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep22 inserter, @NotNull String sample,
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStepN inserter, @NotNull String sample,
             @NotNull EnrichedStructuralVariant variant) {
         //noinspection unchecked
         inserter.values(sample,
@@ -208,6 +211,8 @@ class StructuralVariantDAO {
                 variant.end().adjustedCopyNumberChange(),
                 variant.ploidy(),
                 variant.filter(),
+                variant.mantaPrecise(),
+                variant.somaticScore(),
                 timestamp);
     }
 }

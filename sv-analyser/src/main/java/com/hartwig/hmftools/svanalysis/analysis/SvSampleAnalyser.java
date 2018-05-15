@@ -157,7 +157,7 @@ public class SvSampleAnalyser {
             mAnalyser.findSvChains(mSampleId, cluster);
             mAnalyser.resolveTransitiveSVs(mSampleId, cluster);
 
-            mClusteringMethods.findFootprints(mSampleId, cluster);
+            // mClusteringMethods.findFootprints(mSampleId, cluster);
         }
 
         mPC4.stop();
@@ -278,7 +278,8 @@ public class SvSampleAnalyser {
                     // SV info
                     writer.write("SampleId,ClusterId,ClusterCount,Id,Type,Ploidy,PONCount,PONRegionCount,");
                     writer.write("ChrStart,PosStart,OrientStart,ArmStart,AdjAFStart,AdjCNStart,AdjCNChgStart,");
-                    writer.write("ChrEnd,PosEnd,OrientEnd,ArmEnd,AdjAFEnd,AdjCNEnd,AdjCNChgEnd,Homology,InsertSeq,");
+                    writer.write("ChrEnd,PosEnd,OrientEnd,ArmEnd,AdjAFEnd,AdjCNEnd,AdjCNChgEnd,");
+                    writer.write("Homology,InsertSeq,MantaPrecise,SomaticScore,");
                     writer.write("FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,");
                     writer.write("ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd,");
 
@@ -292,9 +293,7 @@ public class SvSampleAnalyser {
                     writer.write("ChainId,ChainCount,ChainTICount,ChainDBCount,ChainIndex,");
 
                     // transitive info
-                    writer.write("TransType,TransLen,TransSvLinks,");
-
-                    writer.write("NearestLen,NearestType,NearestTILen,NearestDBLen");
+                    writer.write("TransType,TransLen,TransSvLinks");
 
                     writer.newLine();
                 }
@@ -312,14 +311,17 @@ public class SvSampleAnalyser {
                                     var.getSvData().ploidy(), var.getPonCount(), var.getPonRegionCount()));
 
                     writer.write(
-                            String.format("%s,%d,%d,%s,%.2f,%.2f,%.2f,%s,%d,%d,%s,%.2f,%.2f,%.2f,%s,%s,",
+                            String.format("%s,%d,%d,%s,%.2f,%.2f,%.2f,%s,%d,%d,%s,%.2f,%.2f,%.2f,",
                                     var.chromosome(true), var.position(true), var.orientation(true), var.getStartArm(),
                                     var.getSvData().adjustedStartAF(), var.getSvData().adjustedStartCopyNumber(), var.getSvData().adjustedStartCopyNumberChange(),
                                     var.chromosome(false), var.position(false), var.orientation(false), var.getEndArm(),
-                                    var.getSvData().adjustedEndAF(), var.getSvData().adjustedEndCopyNumber(), var.getSvData().adjustedEndCopyNumberChange(),
+                                    var.getSvData().adjustedEndAF(), var.getSvData().adjustedEndCopyNumber(), var.getSvData().adjustedEndCopyNumberChange()));
+
+                    writer.write(
+                            String.format("%s,%s,%s,%d,",
                                     var.getSvData().insertSequence().isEmpty() && var.type() != StructuralVariantType.INS ? var.getSvData().homology() : "",
-                                    var.type() == StructuralVariantType.INS ? var.getSvData().insertSequence() : ""
-                                    ));
+                                    var.type() == StructuralVariantType.INS ? var.getSvData().insertSequence() : "",
+                                    var.getSvData().mantaPrecise(), var.getSvData().somaticScore()));
 
                     writer.write(
                             String.format("%s,%s,%s,%s,%s,%s,%s,",
@@ -360,11 +362,7 @@ public class SvSampleAnalyser {
                     else
                         writer.write("0,0,0,0,0,");
 
-                    writer.write(String.format("%s,%d,%s,", var.getTransType(), var.getTransLength(), var.getTransSvLinks()));
-
-                    writer.write(String.format("%d,%s,%d,%d",
-                            var.getNearestSVLength(), var.getNearestSVLinkType(),
-                            var.getNearestTILength(), var.getNearestDBLength()));
+                    writer.write(String.format("%s,%d,%s", var.getTransType(), var.getTransLength(), var.getTransSvLinks()));
 
                     writer.newLine();
                 }

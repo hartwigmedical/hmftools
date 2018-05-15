@@ -114,7 +114,7 @@ public class StructuralVariantFactory {
         }
 
         final String impreciseStr = context.getAttributeAsString(IMPRECISE, "");
-        boolean isImprecise = !impreciseStr.isEmpty() && impreciseStr.equals("true");
+        boolean isPrecise = impreciseStr.isEmpty() || !impreciseStr.equals("true");
 
         final int somaticScore = context.getAttributeAsInt(SOMATIC_SCORE, 0);
 
@@ -167,7 +167,7 @@ public class StructuralVariantFactory {
                 .insertSequence(insertedSequence)
                 .type(type)
                 .filter(filtersStr)
-                .isImprecise(isImprecise)
+                .mantaPrecise(isPrecise)
                 .somaticScore(somaticScore)
                 .build();
     }
@@ -203,7 +203,7 @@ public class StructuralVariantFactory {
 
 
         final String impreciseStr = first.getAttributeAsString(IMPRECISE, "");
-        boolean isImprecise = !impreciseStr.isEmpty() && impreciseStr.equals("true");
+        boolean isPrecise = impreciseStr.isEmpty() || !impreciseStr.equals("true");
 
         final int somaticScore = first.getAttributeAsInt(SOMATIC_SCORE, 0);
 
@@ -252,7 +252,7 @@ public class StructuralVariantFactory {
                 .insertSequence(Strings.isNullOrEmpty(mantaInsertedSequence) ? insertedSequence : mantaInsertedSequence)
                 .type(type)
                 .filter(filtersStr)
-                .isImprecise(isImprecise)
+                .mantaPrecise(isPrecise)
                 .somaticScore(somaticScore)
                 .build();
     }

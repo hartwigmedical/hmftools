@@ -125,16 +125,4 @@ public class SvChain {
         return mLinkedPairs.contains(pair);
     }
 
-    public boolean hasVariantBE(final SvClusterData var, boolean useStart)
-    {
-        for(final SvLinkedPair pair : mLinkedPairs)
-        {
-            if(pair.hasVariantBE(var, useStart))
-                return true;
-        }
-
-        return false;
-    }
-
-
 }

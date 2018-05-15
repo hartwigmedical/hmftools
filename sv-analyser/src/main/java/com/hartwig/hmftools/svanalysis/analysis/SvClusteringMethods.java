@@ -406,11 +406,11 @@ public class SvClusteringMethods {
             }
 
             // exclude LINE elements from back-ground rates
-            if(var.isStartLineElement() == NO_LINE_ELEMENT) {
+            if(var.isStartLineElement().equals(NO_LINE_ELEMENT)) {
                 mChrArmSvCount.replace(chrArmStart, mChrArmSvCount.get(chrArmStart) + 1);
             }
 
-            if(var.isEndLineElement() == NO_LINE_ELEMENT) {
+            if(var.isEndLineElement().equals(NO_LINE_ELEMENT)) {
                 mChrArmSvCount.replace(chrArmEnd, mChrArmSvCount.get(chrArmEnd) + 1);
             }
         }

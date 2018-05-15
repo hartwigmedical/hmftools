@@ -2,6 +2,8 @@ package com.hartwig.hmftools.svanalysis.types;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.MIN_TEMPLATED_INSERTION_LENGTH;
+
 public class SvLinkedPair {
 
     private SvClusterData mFirst;
@@ -10,6 +12,7 @@ public class SvLinkedPair {
     private boolean mSecondLinkOnStart;
     private String mLinkType;
     private int mLinkLength;
+    private SvClusterData mSpanningSV;
 
     public static final String LINK_TYPE_TI = "TI";
     public static final String LINK_TYPE_DB = "DB";
@@ -22,9 +25,17 @@ public class SvLinkedPair {
         mFirstLinkOnStart = firstLinkOnStart;
         mSecondLinkOnStart = secondLinkOnStart;
         mLinkType = linkType;
+        mSpanningSV = null;
 
         int length = (int)(first.position(firstLinkOnStart) - second.position(secondLinkOnStart));
         mLinkLength = abs(length);
+
+        if(mLinkType == LINK_TYPE_TI && mLinkLength < MIN_TEMPLATED_INSERTION_LENGTH)
+        {
+            // re-label this as a DB
+            mLinkType = LINK_TYPE_DB;
+            mLinkLength = -mLinkLength;
+        }
     }
 
     public final SvClusterData first() { return mFirst; }
@@ -45,5 +56,10 @@ public class SvLinkedPair {
                 first().id(), first().chromosome(mFirstLinkOnStart), first().position(mFirstLinkOnStart), mFirstLinkOnStart ? "start":"end",
                 second().id(), second().chromosome(mSecondLinkOnStart), second().position(mSecondLinkOnStart), mSecondLinkOnStart ? "start":"end");
     }
+
+    public boolean hasSpanningSV() { return mSpanningSV != null; }
+    public final SvClusterData getSpanningSV() { return mSpanningSV; }
+    public void setSpanningSV(SvClusterData var) { mSpanningSV = var; }
+
 
 }

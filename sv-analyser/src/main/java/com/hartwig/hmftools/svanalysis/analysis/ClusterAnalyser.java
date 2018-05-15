@@ -28,7 +28,7 @@ public class ClusterAnalyser {
     final SvClusteringConfig mConfig;
     final SvUtilities mUtils;
 
-    private static int MIN_TEMPLATED_INSERTION_LENGTH = 20;
+    public static int MIN_TEMPLATED_INSERTION_LENGTH = 20;
     private static int MAX_TEMPLATED_INSERTION_LENGTH = 500;
 
     public static String TRANS_TYPE_TRANS = "TRANS";
@@ -65,7 +65,7 @@ public class ClusterAnalyser {
             return;
 
         // exclude large clusters for now due to processing times until the algo is better refined
-        int maxClusterSize = 50;
+        int maxClusterSize = 100;
 
         if(cluster.getCount() >= maxClusterSize)
             return;
@@ -115,16 +115,10 @@ public class ClusterAnalyser {
 
                         if (mUtils.areLinkedSection(var1, var2, v1Start, v2Start)) {
 
-                            // check the templated insertion length
-                            linkLength = mUtils.getProximity(var1, var2, v1Start, v2Start);
-
-                            if (linkLength < MIN_TEMPLATED_INSERTION_LENGTH)
-                                continue;
-
                             // form a new TI from these 2 BEs
                             newPair = new SvLinkedPair(var1, var2, SvLinkedPair.LINK_TYPE_TI, v1Start, v2Start);
-
-                        } else if (mUtils.areSectionBreak(var1, var2, v1Start, v2Start)) {
+                        }
+                        else if (mUtils.areSectionBreak(var1, var2, v1Start, v2Start)) {
 
                             // form a new DB from these 2 BEs
                             newPair = new SvLinkedPair(var1, var2, SvLinkedPair.LINK_TYPE_DB, v1Start, v2Start);
@@ -136,12 +130,28 @@ public class ClusterAnalyser {
 
                         // insert in order
                         int index = 0;
+                        boolean skipNewPair = false;
                         for (; index < linkedPairs.size(); ++index) {
                             SvLinkedPair pair = linkedPairs.get(index);
+
+                            // check for a matching BE on a pair that is much shorter, and if so skip creating this new linked pair
+                            if(newPair.length() > 10000) {
+
+                                if (pair.first().equals(newPair.first()) || pair.first().equals(newPair.second()) || pair.second().equals(newPair.first()) || pair.second().equals(newPair.second())) {
+
+                                    if (newPair.length() > 2 * pair.length()) {
+                                        skipNewPair = true;
+                                        break;
+                                    }
+                                }
+                            }
 
                             if (pair.length() > newPair.length())
                                 break;
                         }
+
+                        if(skipNewPair)
+                            continue;
 
                         if (index >= linkedPairs.size())
                             linkedPairs.add(newPair);
@@ -163,6 +173,9 @@ public class ClusterAnalyser {
             }
         }
 
+        // prior to consolidating linked pairs, check for duplicate BE in the spanning SVs
+        matchDuplicateBEToLinkedPairs(linkedPairs, spanningSVs);
+
         LOGGER.debug("sample({}) cluster({}) has {} linked pairs and {} possible spanning SVs",
                 sampleId, cluster.getId(), linkedPairs.size(), spanningSVs.size());
 
@@ -182,8 +195,14 @@ public class ClusterAnalyser {
                 {
                     if(pair.length() < 10000) {
                         // to avoid logging unlikely long TIs
-                        LOGGER.debug("removing duplicate linked pair({} len={}) vs shorter({} len={}) ",
+                        LOGGER.debug("removing duplicate linked pair({} len={}) vs shorter({} len={})",
                                 pair2.toString(), pair2.length(), pair.toString(), pair.length());
+                    }
+
+                    if(pair.first().getTransType() == TRANS_TYPE_TRANS && pair.second().getTransType() == TRANS_TYPE_TRANS)
+                    {
+                        LOGGER.debug("duplicate linked pair({} len={}) already linked to spanSV({})",
+                                pair2.toString(), pair2.length(), pair.first().getTransSvLinks());
                     }
 
                     // remove the duplicate
@@ -210,6 +229,58 @@ public class ClusterAnalyser {
 
         cluster.setLinkedPairs(linkedPairs);
         cluster.setSpanningSVs(spanningSVs);
+    }
+
+    private void matchDuplicateBEToLinkedPairs(final List<SvLinkedPair> linkedPairs, final List<SvClusterData> spanningSVs)
+    {
+        // link spanning SVs with any single linked pairs
+        for(SvClusterData spanningSV : spanningSVs)
+        {
+            SvClusterData startLink = null;
+            SvClusterData endLink = null;
+
+            for(SvLinkedPair pair : linkedPairs) {
+
+                if (pair.length() > MAX_TEMPLATED_INSERTION_LENGTH) {
+                    continue;
+                }
+
+                if(mUtils.breakendsMatch(spanningSV, pair.first(), true, !pair.firstLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
+                    startLink = pair.first();
+                }
+                else if(mUtils.breakendsMatch(spanningSV, pair.second(), true, !pair.secondLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
+                    startLink = pair.second();
+                }
+                else
+                {
+                    continue;
+                }
+
+                if(mUtils.breakendsMatch(spanningSV, pair.first(), false, !pair.firstLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
+                    endLink = pair.first();
+                }
+                else if(mUtils.breakendsMatch(spanningSV, pair.second(), false, !pair.secondLinkOnStart(), PERMITED_DUP_BE_DISTANCE))
+                {
+                    endLink = pair.second();
+                }
+                else
+                {
+                    continue;
+                }
+
+                // match found on both ends
+                LOGGER.debug("spanSV({}) linked to linked pair({} and {})",
+                        spanningSV.posId(), startLink.posId(), endLink.posId());
+
+                startLink.setTransData(TRANS_TYPE_TRANS, pair.length(), spanningSV.id());
+                endLink.setTransData(TRANS_TYPE_TRANS, pair.length(), spanningSV.id());
+
+                String svLinkData = startLink.id() + "_" + endLink.id();
+                spanningSV.setTransData(TRANS_TYPE_SPAN, pair.length(), svLinkData);
+
+                break;
+            }
+        }
     }
 
     public void findSvChains(final String sampleId, SvCluster cluster)
@@ -263,60 +334,12 @@ public class ClusterAnalyser {
                         closestStartPair = pair;
                         closestStartLen = 0; // to prevent another match
                     }
-                    else
-                    {
-                        /*
-                        if (mUtils.areLinkedSection(pair.first(), beFirst, !pair.firstLinkOnStart(), chainFirstUnlinkedOnStart)) {
-
-                            int linkLength = mUtils.getProximity(pair.first(), beFirst, !pair.firstLinkOnStart(), chainFirstUnlinkedOnStart);
-
-                            if (linkLength >= 0 && (linkLength < closestStartLen || closestStartLen == -1)) {
-                                closestStartPair = pair;
-                                closestStartLen = linkLength;
-                            }
-                        }
-
-                        if (mUtils.areLinkedSection(pair.second(), beFirst, !pair.secondLinkOnStart(), chainFirstUnlinkedOnStart)) {
-
-                            int linkLength = mUtils.getProximity(pair.first(), beFirst, !pair.secondLinkOnStart(), chainFirstUnlinkedOnStart);
-
-                            if (linkLength >= 0 && (linkLength < closestStartLen || closestStartLen == -1)) {
-                                closestStartPair = pair;
-                                closestStartLen = linkLength;
-                            }
-                        }
-                        */
-                    }
 
                     if((beLast.equals(pair.first()) && chainLastUnlinkedOnStart == pair.firstLinkOnStart())
                     || (beLast.equals(pair.second()) && chainLastUnlinkedOnStart == pair.secondLinkOnStart()))
                     {
                         closestLastPair = pair;
                         closestLastLen = 0; // to prevent another match
-                    }
-                    else
-                    {
-                        /*
-                        if (mUtils.areLinkedSection(pair.first(), beLast, !pair.firstLinkOnStart(), chainLastUnlinkedOnStart)) {
-
-                            int linkLength = mUtils.getProximity(pair.first(), beLast, !pair.firstLinkOnStart(), chainLastUnlinkedOnStart);
-
-                            if (linkLength >= 0 && (linkLength < closestLastLen || closestLastLen == -1)) {
-                                closestLastPair = pair;
-                                closestLastLen = linkLength;
-                            }
-                        }
-
-                        if (mUtils.areLinkedSection(pair.second(), beLast, !pair.secondLinkOnStart(), chainLastUnlinkedOnStart)) {
-
-                            int linkLength = mUtils.getProximity(pair.second(), beLast, !pair.secondLinkOnStart(), chainLastUnlinkedOnStart);
-
-                            if (linkLength >= 0 && (linkLength < closestLastLen || closestLastLen == -1)) {
-                                closestLastPair = pair;
-                                closestLastLen = linkLength;
-                            }
-                        }
-                        */
                     }
                 }
 
@@ -370,7 +393,6 @@ public class ClusterAnalyser {
 
         // attempt to matching spanning SVs to the ends of one or more linked pairs
         // these can only span short TIs (ie not DBs or long TIs)
-
         for(SvClusterData spanningSV : cluster.getSpanningSVs())
         {
             boolean startMatched = false;
@@ -391,33 +413,45 @@ public class ClusterAnalyser {
                     continue;
                 }
 
-               if (!startMatched && mUtils.breakendsMatch(spanningSV, pair.first(), true, !pair.firstLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
-                    startLink = pair.first();
-                    startLinkOnStart = !pair.firstLinkOnStart();
-                    startPair = pair;
+                if (!startMatched)
+                {
+                    if(mUtils.breakendsMatch(spanningSV, pair.first(), true, !pair.firstLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
+                        startLink = pair.first();
+                        startLinkOnStart = !pair.firstLinkOnStart();
+                    }
+                    else if(mUtils.breakendsMatch(spanningSV, pair.second(), true, !pair.secondLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
+                        startLink = pair.second();
+                        startLinkOnStart = !pair.secondLinkOnStart();
+                    }
+                    else
+                    {
+                        continue;
+                    }
+
                     startMatched = true;
+                    startPair = pair;
                 }
 
-                if (!startMatched && mUtils.breakendsMatch(spanningSV, pair.second(), true, !pair.secondLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
-                    startLink = pair.second();
-                    startLinkOnStart = !pair.secondLinkOnStart();
-                    startPair = pair;
-                    startMatched = true;
-                }
+                if (!endMatched)
+                {
+                    if(mUtils.breakendsMatch(spanningSV, pair.first(), false, !pair.firstLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
+                        endLink = pair.first();
+                        endLinkOnStart = !pair.firstLinkOnStart();
+                    }
+                    else if(mUtils.breakendsMatch(spanningSV, pair.second(), false, !pair.secondLinkOnStart(), PERMITED_DUP_BE_DISTANCE))
+                    {
+                        endLink = pair.second();
+                        endLinkOnStart = !pair.secondLinkOnStart();
+                    }
+                    else
+                    {
+                        continue;
+                    }
 
-                if (!endMatched && mUtils.breakendsMatch(spanningSV, pair.first(), false, !pair.firstLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
-                    endLink = pair.first();
-                    endLinkOnStart = !pair.firstLinkOnStart();
                     endPair = pair;
                     endMatched = true;
                 }
 
-                if (!endMatched && mUtils.breakendsMatch(spanningSV, pair.second(), false, !pair.secondLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
-                    endLink = pair.second();
-                    endLinkOnStart = !pair.secondLinkOnStart();
-                    endPair = pair;
-                    endMatched = true;
-                }
 
                 if(startMatched && endMatched)
                     break;
@@ -448,7 +482,7 @@ public class ClusterAnalyser {
 
                     if (startChain != null && endChain == startChain) {
 
-                        // now walk the chain and mark each transitive SV
+                        // now walk the chain and collect up all transitive SVs
                         int startIndex = startChain.getSvIndex(startLink, startLinkOnStart);
                         int endIndex = startChain.getSvIndex(endLink, endLinkOnStart);
 

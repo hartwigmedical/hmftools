@@ -270,7 +270,7 @@ public class FilteredSVWriter {
                                 sampleId, var.id(), var.type(),
                                 var.chromosome(true), var.position(true), var.orientation(true),
                                 var.chromosome(false), var.position(false), var.orientation(false),
-                                var.isImprecise(), var.somaticScore()));
+                                var.mantaPrecise(), var.somaticScore()));
 
                 mMantaFileWriter.newLine();
             }

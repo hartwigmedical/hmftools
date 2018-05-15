@@ -449,6 +449,8 @@ CREATE TABLE structuralVariant
     insertSequence varchar(2048) not null,
     type varchar(255) NOT NULL,
     filter varchar(255) NOT NULL,
+    mantaPrecise varchar(20),
+    somaticScore int,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );

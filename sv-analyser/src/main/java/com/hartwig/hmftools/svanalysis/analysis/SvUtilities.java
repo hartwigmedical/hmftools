@@ -320,7 +320,7 @@ public class SvUtilities {
 
     public boolean breakendsMatch(final SvClusterData var1, final SvClusterData var2, boolean v1Start, boolean v2Start, int permittedDist)
     {
-        return var1.chromosome(v1Start).equals(var2.chromosome(v1Start))
+        return var1.chromosome(v1Start).equals(var2.chromosome(v2Start))
                 && abs(var1.position(v1Start) - var2.position(v2Start)) <= permittedDist
                 && var1.orientation(v1Start) == var2.orientation(v2Start);
     }

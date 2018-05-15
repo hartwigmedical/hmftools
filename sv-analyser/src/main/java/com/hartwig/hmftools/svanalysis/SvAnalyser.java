@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
+import com.hartwig.hmftools.svanalysis.annotators.ExtDataLinker;
 import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 import com.hartwig.hmftools.svanalysis.analysis.SvClusteringConfig;
 
@@ -47,7 +48,7 @@ public class SvAnalyser {
     private static final String EXTERNAL_SV_DATA_FILE = "ext_sv_data_file";
     private static final String COPY_NUMBER_ANALYSIS = "copy_number_analysis";
     private static final String COPY_NUMBER_FILE = "cn_file";
-
+    private static final String EXTERNAL_DATA_LINE_FILE = "ext_data_link_file";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -94,6 +95,14 @@ public class SvAnalyser {
             return;
         }
 
+        ExtDataLinker extDataLinker = null;
+
+        if (cmd.hasOption(EXTERNAL_DATA_LINE_FILE)) {
+
+            extDataLinker = new ExtDataLinker();
+            extDataLinker.loadFile(cmd.getOptionValue(EXTERNAL_DATA_LINE_FILE));
+        }
+
         SvClusteringConfig clusteringConfig = new SvClusteringConfig();
         clusteringConfig.setOutputCsvPath(cmd.getOptionValue(DATA_OUTPUT_PATH));
         clusteringConfig.setBaseDistance(Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE, "0")));
@@ -124,7 +133,14 @@ public class SvAnalyser {
 
             sampleAnalyser.loadFromDatabase(sample, svClusterData);
 
-            sampleAnalyser.analyse();
+            if(extDataLinker != null && extDataLinker.hasData())
+            {
+                extDataLinker.setSVData(sample, svClusterData);
+            }
+            else {
+
+                sampleAnalyser.analyse();
+            }
         }
 
         sampleAnalyser.close();
@@ -176,6 +192,7 @@ public class SvAnalyser {
         options.addOption(EXTERNAL_SV_DATA_FILE, true, "External file with per-SV annotations");
         options.addOption(COPY_NUMBER_ANALYSIS, false, "Run copy number analysis");
         options.addOption(COPY_NUMBER_FILE, true, "Copy number CSV file");
+        options.addOption(EXTERNAL_DATA_LINE_FILE, true, "External SV data file, mapped by position info");
 
         return options;
     }

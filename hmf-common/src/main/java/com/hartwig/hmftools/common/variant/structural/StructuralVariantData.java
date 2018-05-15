@@ -30,5 +30,7 @@ public abstract class StructuralVariantData {
     public abstract String homology();
     public abstract String filter();
     public abstract String insertSequence();
+    public abstract boolean mantaPrecise();
+    public abstract int somaticScore();
 
 }
