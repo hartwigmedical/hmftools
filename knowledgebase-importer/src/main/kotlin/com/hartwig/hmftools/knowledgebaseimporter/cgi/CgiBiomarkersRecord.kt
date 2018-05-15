@@ -10,8 +10,26 @@ data class CgiBiomarkersRecord(private val csvRecord: CSVRecord) {
     val alteration: String = csvRecord["Alteration"]
     val transcript: String = csvRecord["transcript"] ?: "na"
     val protein: String = csvRecord["individual_mutation"]?.substringAfter(':', "") ?: "na"
-    val drug: String = csvRecord["Drug full name"]
+    val drugs: List<String> = readDrugs(csvRecord)
     val level: String = csvRecord["Evidence level"]
     val association: String = csvRecord["Association"]
     val cancerTypes = csvRecord["Primary Tumor type"].split(";").map { it.trim() }
+
+    companion object {
+        private fun readDrugs(csvRecord: CSVRecord): List<String> {
+            val drugNames = readDrugsField(csvRecord["Drug"].orEmpty())
+            return if (drugNames.isEmpty()) {
+                readDrugsField(csvRecord["Drug family"].orEmpty())
+            } else {
+                drugNames
+            }
+        }
+
+        private fun readDrugsField(drugField: String): List<String> {
+            return drugField.replace(";", " + ")
+                    .removeSurrounding("[", "]")
+                    .split(",")
+                    .filterNot { it.isBlank() }
+        }
+    }
 }

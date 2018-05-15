@@ -68,8 +68,10 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
     private fun actionableCNVs(): List<ActionableCNVOutput> {
         val cnaRecords = biomarkersRecords.filter { it.alterationType == "CNA" }
         return cnaRecords.flatMap { record ->
-            record.cancerTypes.map { cancerType ->
-                ActionableCNVOutput(extractCnv(record), actionability(cancerType, record))
+            record.cancerTypes.flatMap { cancerType ->
+                record.drugs.map {
+                    ActionableCNVOutput(extractCnv(record), actionability(cancerType, it, record))
+                }
             }
         }
     }
@@ -80,7 +82,9 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
                 .map { flipFusion(it, FUSIONS_TO_FLIP) }
         return fusionRecords.zip(fusions).filterNot { FUSIONS_TO_FILTER.contains(it.second) }
                 .flatMap { (record, fusion) ->
-                    record.cancerTypes.map { cancerType -> ActionableFusionOutput(fusion, actionability(cancerType, record)) }
+                    record.cancerTypes.flatMap { cancerType ->
+                        record.drugs.map { ActionableFusionOutput(fusion, actionability(cancerType, it, record)) }
+                    }
                 }
     }
 
@@ -99,8 +103,10 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
     private fun actionableVariantOutput(cgiRecord: CgiBiomarkersRecord,
                                         somaticVariants: List<SomaticVariant>): List<ActionableVariantOutput> {
         return cgiRecord.cancerTypes.flatMap { cancerType ->
-            somaticVariants.map {
-                ActionableVariantOutput(cgiRecord.gene, SomaticVariantEvent(it), actionability(cancerType, cgiRecord))
+            cgiRecord.drugs.flatMap { drug ->
+                somaticVariants.map {
+                    ActionableVariantOutput(cgiRecord.gene, SomaticVariantEvent(it), actionability(cancerType, drug, cgiRecord))
+                }
             }
         }
     }
@@ -113,7 +119,7 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
         }
     }
 
-    private fun actionability(cancerType: String, cgiBiomarker: CgiBiomarkersRecord): Actionability {
-        return Actionability(source, cancerType, cgiBiomarker.drug, cgiBiomarker.level, cgiBiomarker.association, "")
+    private fun actionability(cancerType: String, drug: String, cgiBiomarker: CgiBiomarkersRecord): Actionability {
+        return Actionability(source, cancerType, drug, cgiBiomarker.level, cgiBiomarker.association, "")
     }
 }
