@@ -33,7 +33,6 @@ import com.hartwig.hmftools.patientdb.readers.cpct.CpctUtil;
 import com.hartwig.hmftools.patientdb.validators.PatientValidator;
 
 import org.jetbrains.annotations.Nullable;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class LoadClinicalDataTest {
@@ -43,7 +42,6 @@ public class LoadClinicalDataTest {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Test
-    @Ignore
     public void canLoadUpRealCpctEcrf() throws IOException, XMLStreamException {
         TumorLocationCurator tumorLocationCurator = TumorLocationCurator.fromProductionResource();
         BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource();
@@ -51,7 +49,7 @@ public class LoadClinicalDataTest {
 
         EcrfModel cpctEcrfModel = EcrfModel.loadFromXMLNoFormStates(TEST_ECRF);
         assertEquals(1, cpctEcrfModel.patientCount());
-        assertEquals(1283, Lists.newArrayList(cpctEcrfModel.fields()).size());
+        assertEquals(1264, Lists.newArrayList(cpctEcrfModel.fields()).size());
 
         PatientReader cpctPatientReader = new CpctPatientReader(tumorLocationCurator,
                 CpctUtil.extractHospitalMap(cpctEcrfModel),
@@ -70,25 +68,25 @@ public class LoadClinicalDataTest {
 
     private static void assertPatient(@Nullable Patient patient) {
         assertNotNull(patient);
-        assertEquals("CPCT02021111", patient.patientIdentifier());
+        assertEquals("CPCT02000010", patient.patientIdentifier());
         assertEquals(0, patient.sequencedBiopsies().size());
 
         BaselineData baselineData = patient.baselineData();
         assertNotNull(baselineData);
-        assertEquals(new Integer(1960), baselineData.birthYear());
+        assertEquals(new Integer(1999), baselineData.birthYear());
         assertEquals("Gastrointestinal Stromal Tumors (GIST)", baselineData.curatedTumorLocation().searchTerm());
         assertEquals("female", baselineData.gender());
         assertEquals(LocalDate.parse("2016-01-01", DATE_FORMATTER), baselineData.informedConsentDate());
-        assertEquals(LocalDate.parse("2016-03-03", DATE_FORMATTER), baselineData.registrationDate());
+        assertEquals(LocalDate.parse("2017-09-27", DATE_FORMATTER), baselineData.registrationDate());
         assertNull(baselineData.deathDate());
-        assertEquals("EMC, Rotterdam", baselineData.hospital());
+        assertNull(baselineData.hospital());
 
         PreTreatmentData preTreatmentData = patient.preTreatmentData();
         assertNotNull(preTreatmentData);
         assertEquals("No", preTreatmentData.radiotherapyGiven());
         assertEquals("Yes", preTreatmentData.treatmentGiven());
         assertEquals(1, preTreatmentData.drugs().size());
-        assertEquals("Something", preTreatmentData.drugs().get(0).name());
+        assertEquals("Imatinib", preTreatmentData.drugs().get(0).name());
 
         List<TumorMarkerData> tumorMarkers = patient.tumorMarkers();
         assertEquals(0, tumorMarkers.size());
@@ -97,7 +95,7 @@ public class LoadClinicalDataTest {
         assertEquals(1, biopsies.size());
         assertNull(biopsies.get(0).biopsyEvaluable());
         assertEquals("Yes", biopsies.get(0).biopsyTaken());
-        assertEquals(LocalDate.parse("2016-04-20", DATE_FORMATTER), biopsies.get(0).date());
+        assertEquals(LocalDate.parse("2015-09-24", DATE_FORMATTER), biopsies.get(0).date());
         assertEquals("abdomen", biopsies.get(0).site());
         assertEquals("left mesenterial", biopsies.get(0).location());
 
@@ -106,7 +104,7 @@ public class LoadClinicalDataTest {
         assertEquals("Yes", treatments.get(0).treatmentGiven());
         assertEquals("No", treatments.get(0).radiotherapyGiven());
         assertEquals(1, treatments.get(0).drugs().size());
-        assertEquals(LocalDate.parse("2016-06-30", DATE_FORMATTER), treatments.get(0).drugs().get(0).startDate());
+        assertEquals(LocalDate.parse("2017-04-10", DATE_FORMATTER), treatments.get(0).drugs().get(0).startDate());
         assertNull(treatments.get(0).drugs().get(0).endDate());
         assertEquals("Imatinib", treatments.get(0).drugs().get(0).name());
 
@@ -114,8 +112,8 @@ public class LoadClinicalDataTest {
         assertEquals(4, responses.size());
         assertEquals("Yes", responses.get(0).measurementDone());
         assertNull(responses.get(0).boneOnlyDisease());
-        assertEquals(LocalDate.parse("2016-04-05", DATE_FORMATTER), responses.get(0).responseDate());
-        assertEquals(LocalDate.parse("2016-04-05", DATE_FORMATTER), responses.get(0).assessmentDate());
+        assertEquals(LocalDate.parse("2015-07-22", DATE_FORMATTER), responses.get(0).responseDate());
+        assertEquals(LocalDate.parse("2015-05-22", DATE_FORMATTER), responses.get(0).assessmentDate());
         assertEquals("NE", responses.get(0).response());
     }
 }
