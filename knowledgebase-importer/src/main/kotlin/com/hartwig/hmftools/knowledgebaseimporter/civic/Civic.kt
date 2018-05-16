@@ -45,19 +45,15 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
     private fun actionableVariants(): List<ActionableVariantOutput> {
         return civicVariants.flatMap { (record, somaticVariant) ->
             record.evidence.filter { it.direction == "Supports" }.flatMap { evidence ->
-                evidence.drugs.map { drug ->
-                    ActionableVariantOutput(record.gene, SomaticVariantEvent(somaticVariant), actionability(drug, evidence))
-                }
+                evidence.actionabilityItems.map { ActionableVariantOutput(record.gene, SomaticVariantEvent(somaticVariant), it) }
             }
         }
     }
 
     private fun actionableCNVs(): List<ActionableCNVOutput> {
         return records.filter { it.variant == "AMPLIFICATION" || it.variant == "DELETION" || it.variant == "LOH" }.flatMap { record ->
-            record.evidence.flatMap { evidence ->
-                evidence.drugs.map { drug ->
-                    ActionableCNVOutput(extractCnv(record), actionability(drug, evidence))
-                }
+            record.evidence.filter { it.direction == "Supports" }.flatMap { evidence ->
+                evidence.actionabilityItems.map { ActionableCNVOutput(extractCnv(record), it) }
             }
         }
     }
@@ -67,10 +63,8 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
         val fusions = fusionRecords.map { extractFusion(it.gene, it.variant.trim(), FUSION_SEPARATORS) }
         return fusionRecords.zip(fusions).filterNot { FUSIONS_TO_FILTER.contains(it.second) }
                 .flatMap { (record, fusion) ->
-                    record.evidence.flatMap { evidence ->
-                        evidence.drugs.map { drug ->
-                            ActionableFusionOutput(fusion, actionability(drug, evidence))
-                        }
+                    record.evidence.filter { it.direction == "Supports" }.flatMap { evidence ->
+                        evidence.actionabilityItems.map { ActionableFusionOutput(fusion, it) }
                     }
                 }
     }
@@ -117,10 +111,6 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
     private fun additionalInfo(civicRecord: CivicRecord): String {
         val highestEvidenceLevel = civicRecord.evidence.map { it.level }.sorted().firstOrNull() ?: "N"
         return (highestEvidenceLevel == "A" || highestEvidenceLevel == "B" || highestEvidenceLevel == "C").toString()
-    }
-
-    private fun actionability(drug: String, evidence: CivicEvidence): Actionability {
-        return Actionability(source, evidence.cancerType, drug, evidence.level, evidence.significance, evidence.type)
     }
 
     private fun extractCnv(record: CivicRecord): CnvEvent {

@@ -63,9 +63,7 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
         val fusions = fusionRecords.map { extractFusion(it.gene, it.alteration, FUSION_SEPARATORS) }.map { flipFusion(it, FUSIONS_TO_FLIP) }
         return fusionRecords.zip(fusions)
                 .flatMap { (record, fusion) ->
-                    record.drugs.map { drug ->
-                        ActionableFusionOutput(fusion, actionability(drug, record))
-                    }
+                    record.actionabilityItems.map { ActionableFusionOutput(fusion, it) }
                 }
     }
 
@@ -74,17 +72,13 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
         return actionableRecords.zip(transvarOutput)
                 .flatMap { (record, transvarOutput) -> extractVariants(transvarOutput, reference).map { Pair(record, it) } }
                 .flatMap { (record, somaticVariant) ->
-                    record.drugs.map { drug ->
-                        ActionableVariantOutput(record.gene, SomaticVariantEvent(somaticVariant), actionability(drug, record))
-                    }
+                    record.actionabilityItems.map { ActionableVariantOutput(record.gene, SomaticVariantEvent(somaticVariant), it) }
                 }
     }
 
     private fun actionableCNVs(): List<ActionableCNVOutput> {
         return actionableRecords.filter { it.alteration == "Amplification" || it.alteration == "Deletion" }.flatMap { record ->
-            record.drugs.map { drug ->
-                ActionableCNVOutput(CnvEvent(record.gene, record.alteration), actionability(drug, record))
-            }
+            record.actionabilityItems.map { ActionableCNVOutput(CnvEvent(record.gene, record.alteration), it) }
         }
     }
 
@@ -94,9 +88,5 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
                 record.copy(alteration = record.alteration.replace("IGH-NKX2", "IGH-NKX2-1"))
             else                                                                     -> record
         }
-    }
-
-    private fun actionability(drug: String, record: OncoActionableVariantRecord): Actionability {
-        return Actionability(source, record.cancerType, drug, record.level, record.significance, "")
     }
 }
