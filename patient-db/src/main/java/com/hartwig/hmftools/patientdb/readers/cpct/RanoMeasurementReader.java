@@ -15,14 +15,14 @@ import org.jetbrains.annotations.NotNull;
 
 final class RanoMeasurementReader {
     private static final String STUDY_TREATMENT = "SE.TREATMENT";
-    private static final String FORM_RESPONSERANO = "FRM.TMRANO";
-    private static final String ITEMGROUP_RESPONSERANO = "GRP.TMRANO.TMRANO";
+    private static final String FORM_RESPONSE_RANO = "FRM.TMRANO";
+    private static final String ITEMGROUP_RESPONSE_RANO = "GRP.TMRANO.TMRANO";
 
-    private static final String FIELD_RANOTHERAPYGIVEN = "FLD.TMRANO.RNTMRNYN";
-    private static final String FIELD_RANORESPONSEDATE = "FLD.TMRANO.RNTMDT";
-    private static final String FIELD_RANOTARGETLESIONRESPONSE = "FLD.TMRANO.RNRSPTL";
-    private static final String FIELD_RANONOTARGETLESIONRESPONSE = "FLD.TMRANO.RNRSPNTL";
-    private static final String FIELD_RANOOVERALLRESPONSE = "FLD.TMRANO.RNVRLL";
+    private static final String FIELD_THERAPY_GIVEN = "FLD.TMRANO.RNTMRNYN";
+    private static final String FIELD_RESPONSE_DATE = "FLD.TMRANO.RNTMDT";
+    private static final String FIELD_TARGET_LESION_RESPONSE = "FLD.TMRANO.RNRSPTL";
+    private static final String FIELD_NO_TARGET_LESION_RESPONSE = "FLD.TMRANO.RNRSPNTL";
+    private static final String FIELD_OVERALL_RESPONSE = "FLD.TMRANO.RNVRLL";
 
     private RanoMeasurementReader() {
     }
@@ -31,13 +31,13 @@ final class RanoMeasurementReader {
     static List<RanoMeasurementData> read(@NotNull final EcrfPatient patient) {
         final List<RanoMeasurementData> rano = Lists.newArrayList();
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_TREATMENT)) {
-            for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_RESPONSERANO)) {
-                for (final EcrfItemGroup responseGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_RESPONSERANO)) {
-                    String therapyGiven = responseGroup.readItemString(FIELD_RANOTHERAPYGIVEN);
-                    LocalDate responseDate = responseGroup.readItemDate(FIELD_RANORESPONSEDATE);
-                    String targetLesionResponse = responseGroup.readItemString(FIELD_RANOTARGETLESIONRESPONSE);
-                    String noTargetLesionResponse = responseGroup.readItemString(FIELD_RANONOTARGETLESIONRESPONSE);
-                    String overallResponse = responseGroup.readItemString(FIELD_RANOOVERALLRESPONSE);
+            for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_RESPONSE_RANO)) {
+                for (final EcrfItemGroup responseGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_RESPONSE_RANO)) {
+                    String therapyGiven = responseGroup.readItemString(FIELD_THERAPY_GIVEN);
+                    LocalDate responseDate = responseGroup.readItemDate(FIELD_RESPONSE_DATE);
+                    String targetLesionResponse = responseGroup.readItemString(FIELD_TARGET_LESION_RESPONSE);
+                    String noTargetLesionResponse = responseGroup.readItemString(FIELD_NO_TARGET_LESION_RESPONSE);
+                    String overallResponse = responseGroup.readItemString(FIELD_OVERALL_RESPONSE);
                     rano.add(ImmutableRanoMeasurementData.of(patient.patientId(),
                             therapyGiven,
                             responseDate,
