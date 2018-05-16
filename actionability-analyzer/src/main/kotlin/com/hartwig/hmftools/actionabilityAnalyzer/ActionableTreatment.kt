@@ -1,26 +1,16 @@
 package com.hartwig.hmftools.actionabilityAnalyzer
 
+import com.hartwig.hmftools.knowledgebaseimporter.output.Actionability
 import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableItem
 
-data class ActionableTreatment(val treatment: String, val significance: String, val level: String,
-                               val evidence: List<ActionabilityEvidence>) {
+data class ActionableTreatment(val event: String, val actionability: Actionability) {
     companion object {
-        val header = listOf("treatment", "significance", "level", "detailed evidence")
+        val header = listOf("event") + Actionability.header
 
         operator fun invoke(items: List<ActionableItem<*>>): List<ActionableTreatment> {
-            return items.groupBy { it.actionability.drug }.map { (drug, variants) ->
-                ActionableTreatment(drug, significance(variants), level(variants), variants.map { ActionabilityEvidence(it) })
-            }
-        }
-
-        private fun significance(items: List<ActionableItem<*>>): String {
-            return "todo"
-        }
-
-        private fun level(items: List<ActionableItem<*>>): String {
-            return "todo"
+            return items.map { ActionableTreatment(it.event.toString(), it.actionability) }
         }
     }
 
-    val record: List<String> = listOf(treatment, significance, level, evidence.toString())
+    val record: List<String> = listOf(event) + actionability.record
 }

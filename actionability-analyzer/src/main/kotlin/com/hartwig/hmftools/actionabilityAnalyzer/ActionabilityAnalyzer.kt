@@ -48,8 +48,8 @@ class ActionabilityAnalyzer(actionableVariantsLocation: String, fusionPairsLocat
         }
 
         private fun <T> getActionability(actionabilityMap: Map<T, List<ActionableTreatment>>, event: T,
-                                         sampleId: String): List<ActionabilityOutput> {
-            return actionabilityMap[event].orEmpty().map { ActionabilityOutput(sampleId, it) }
+                                         sampleId: String, cancerType: String?): List<ActionabilityOutput> {
+            return actionabilityMap[event].orEmpty().map { ActionabilityOutput(sampleId, cancerType, it) }
         }
     }
 
@@ -61,22 +61,25 @@ class ActionabilityAnalyzer(actionableVariantsLocation: String, fusionPairsLocat
 
     fun actionabilityForVariant(variant: PotentialActionableVariant): Set<ActionabilityOutput> {
         val variantKey = SomaticVariantEvent(variant.chromosome(), variant.position().toString(), variant.ref(), variant.alt())
-        return getActionability(variantActionabilityMap, variantKey, variant.sampleId()).toSet()
+        return getActionability(variantActionabilityMap, variantKey, variant.sampleId(), variant.primaryTumorLocation()).toSet()
     }
 
     fun actionabilityForFusion(fusion: PotentialActionableFusion): Set<ActionabilityOutput> {
         val fiveGene = fusion.fiveGene()
         val threeGene = fusion.threeGene()
         val sampleId = fusion.sampleId()
-        val fusionPairActionability = getActionability(fusionActionabilityMap, FusionPair(fiveGene, threeGene), sampleId)
-        val promiscuousFiveActionability = getActionability(promiscuousFiveActionabilityMap, PromiscuousGene(fiveGene), sampleId)
-        val promiscuousThreeActionability = getActionability(promiscuousThreeActionabilityMap, PromiscuousGene(threeGene), sampleId)
+        val cancerType = fusion.primaryTumorLocation()
+        val fusionPairActionability = getActionability(fusionActionabilityMap, FusionPair(fiveGene, threeGene), sampleId, cancerType)
+        val promiscuousFiveActionability = getActionability(promiscuousFiveActionabilityMap, PromiscuousGene(fiveGene), sampleId,
+                                                            cancerType)
+        val promiscuousThreeActionability = getActionability(promiscuousThreeActionabilityMap, PromiscuousGene(threeGene), sampleId,
+                                                             cancerType)
         return (fusionPairActionability + promiscuousFiveActionability + promiscuousThreeActionability).toSet()
     }
 
     fun actionabilityForCNV(cnv: PotentialActionableCNV): Set<ActionabilityOutput> {
         val cnvType = if (cnv.alteration() == CopyNumberAlteration.GAIN) "Amplification" else "Deletion"
         val cnvEvent = CnvEvent(cnv.gene(), cnvType)
-        return getActionability(cnvActionabilityMap, cnvEvent, cnv.sampleId()).toSet()
+        return getActionability(cnvActionabilityMap, cnvEvent, cnv.sampleId(), cnv.primaryTumorLocation()).toSet()
     }
 }
