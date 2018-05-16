@@ -13,7 +13,7 @@ class Cosmic(fusionsLocation: String) : Knowledgebase {
     override val actionableVariants: List<ActionableVariantOutput> = listOf()
     override val actionableCNVs: List<ActionableCNVOutput> = listOf()
     override val actionableFusions: List<ActionableFusionOutput> = listOf()
-    override val cancerTypes: Map<String, Set<Int>> = mapOf()
+    override val cancerTypes: Map<String, Set<String>> = mapOf()
 
     private fun readFusion(csvRecord: CSVRecord): FusionPair {
         val fiveGene = csvRecord["5' Partner"].split("_").first()

@@ -10,5 +10,5 @@ interface Knowledgebase {
     val actionableVariants: List<ActionableVariantOutput>
     val actionableCNVs: List<ActionableCNVOutput>
     val actionableFusions: List<ActionableFusionOutput>
-    val cancerTypes: Map<String, Set<Int>>
+    val cancerTypes: Map<String, Set<String>>
 }

@@ -158,11 +158,11 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
         }
     }
 
-    private fun readCancerTypes(diseaseOntology: DiseaseOntology): Map<String, Set<Int>> {
+    private fun readCancerTypes(diseaseOntology: DiseaseOntology): Map<String, Set<String>> {
         return records.flatMap { it.evidence }.map { Pair(it.cancerType, doidsForEvidence(it, diseaseOntology)) }.toMap()
     }
 
-    private fun doidsForEvidence(evidence: CivicEvidence, diseaseOntology: DiseaseOntology): Set<Int> {
-        return diseaseOntology.findDoids(evidence.cancerType) + diseaseOntology.findDoids(evidence.doid.toIntOrNull())
+    private fun doidsForEvidence(evidence: CivicEvidence, diseaseOntology: DiseaseOntology): Set<String> {
+        return diseaseOntology.findDoidsForCancerType(evidence.cancerType) + diseaseOntology.findDoidsForDoid(evidence.doid)
     }
 }

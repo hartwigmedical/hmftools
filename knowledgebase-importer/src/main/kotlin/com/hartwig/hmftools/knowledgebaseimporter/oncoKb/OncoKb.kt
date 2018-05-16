@@ -33,7 +33,9 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
     override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableVariants() }
     override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableCNVs() }
     override val actionableFusions: List<ActionableFusionOutput> by lazy { actionableFusions() }
-    override val cancerTypes by lazy { actionableRecords.map { it.cancerType }.map { Pair(it, diseaseOntology.findDoids(it)) }.toMap() }
+    override val cancerTypes by lazy {
+        actionableRecords.map { it.cancerType }.map { Pair(it, diseaseOntology.findDoidsForCancerType(it)) }.toMap()
+    }
 
     private fun knownVariants(): List<KnownVariantOutput> {
         val transvarOutput = proteinAnalyzer.analyze(annotatedRecords.map { ProteinAnnotation(it.transcript, it.alteration) })

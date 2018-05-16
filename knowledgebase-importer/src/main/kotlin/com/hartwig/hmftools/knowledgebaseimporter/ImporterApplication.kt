@@ -29,7 +29,7 @@ fun main(args: Array<String>) {
                       reference)
     val cosmic = Cosmic("cosmic_gene_fusions.csv")
     val knowledgebases = listOf(oncoKb, cgi, civic, cosmic)
-    val knowledgebaseCancerTypes: Map<String, Set<Int>> = knowledgebases.fold(mapOf(), { map, it -> map + it.cancerTypes })
+    val knowledgebaseCancerTypes: Map<String, Set<String>> = knowledgebases.fold(mapOf(), { map, it -> map + it.cancerTypes })
     val cancerTypesOutput = knowledgebaseCancerTypes.entries.map { CancerTypeDoidOutput(it.key, it.value.joinToString(";")) }
 
     knowledgebases.filterNot { it.knownVariants.isEmpty() }.map { writeKnownVariants(it, outputDir) }
