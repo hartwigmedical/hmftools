@@ -2,6 +2,7 @@ package com.hartwig.hmftools.knowledgebaseimporter.cgi
 
 import com.hartwig.hmftools.knowledgebaseimporter.output.Actionability
 import com.hartwig.hmftools.knowledgebaseimporter.output.HmfLevel
+import com.hartwig.hmftools.knowledgebaseimporter.output.HmfResponse
 import org.apache.commons.csv.CSVRecord
 
 data class CgiBiomarkersRecord(private val csvRecord: CSVRecord) {
@@ -17,7 +18,7 @@ data class CgiBiomarkersRecord(private val csvRecord: CSVRecord) {
     val association: String = csvRecord["Association"]
     val cancerTypes = csvRecord["Primary Tumor type"].split(";").map { it.trim() }
     val actionabilityItems: List<Actionability> = Actionability("cgi", cancerTypes, drugs, level, association, "Predictive",
-                                                                highestLevel(level))
+                                                                highestLevel(level), HmfResponse(association))
 
     companion object {
         private fun readDrugs(csvRecord: CSVRecord): List<String> {

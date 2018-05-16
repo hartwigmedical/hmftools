@@ -2,6 +2,7 @@ package com.hartwig.hmftools.knowledgebaseimporter.oncoKb
 
 import com.hartwig.hmftools.knowledgebaseimporter.output.Actionability
 import com.hartwig.hmftools.knowledgebaseimporter.output.HmfLevel
+import com.hartwig.hmftools.knowledgebaseimporter.output.HmfResponse
 import org.apache.commons.csv.CSVRecord
 
 data class OncoActionableVariantRecord(private val csvRecord: CSVRecord) {
@@ -11,9 +12,9 @@ data class OncoActionableVariantRecord(private val csvRecord: CSVRecord) {
     val cancerType: String = csvRecord["Cancer Type"]
     val drugs: List<String> = csvRecord["Drugs(s)"].split(",").map { it.trim() }
     val level: String = readLevel(csvRecord["Level"])
-    val significance = if (csvRecord["Level"].startsWith("R")) "resistance" else "sensitivity"
-    val actionabilityItems: List<Actionability> = Actionability("oncoKb", listOf(cancerType), drugs, level, significance,
-                                                                "Predictive", HmfLevel(csvRecord["Level"]))
+    val significance = if (csvRecord["Level"].startsWith("R")) HmfResponse.Resistant else HmfResponse.Responsive
+    val actionabilityItems: List<Actionability> = Actionability("oncoKb", listOf(cancerType), drugs, level, significance.name,
+                                                                "Predictive", HmfLevel(csvRecord["Level"]), significance)
 
     companion object {
         private fun readLevel(levelField: String): String {
