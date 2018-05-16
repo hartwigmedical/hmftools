@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
 
-public class DndscvFile {
+final class DndscvFile {
 
     private static final String DELIMITER = "\t";
 

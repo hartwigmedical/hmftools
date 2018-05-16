@@ -85,7 +85,7 @@ class ReadCountMedian {
         }
     }
 
-    public static class InnerReadCount implements Comparable<InnerReadCount> {
+    private static class InnerReadCount implements Comparable<InnerReadCount> {
         private final int read;
         private int count;
 
@@ -93,11 +93,11 @@ class ReadCountMedian {
             this.read = read;
         }
 
-        public int read() {
+        int read() {
             return read;
         }
 
-        public int count() {
+        int count() {
             return count;
         }
 

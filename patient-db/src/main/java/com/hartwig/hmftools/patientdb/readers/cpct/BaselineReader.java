@@ -11,14 +11,14 @@ import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
-import com.hartwig.hmftools.patientdb.data.ImmutableCuratedCancerType;
+import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class BaselineReader {
+class BaselineReader {
     private static final Logger LOGGER = LogManager.getLogger(BaselineReader.class);
 
     private static final String STUDY_BASELINE = "SE.BASELINE";
@@ -31,28 +31,28 @@ public class BaselineReader {
     private static final String FORM_SELCRIT = "FRM.SELCRIT";
     private static final String FORM_DEATH = "FRM.DEATH";
 
-    private static final String ITEMGROUP_DEMOGRAPHY = "GRP.DEMOGRAPHY.DEMOGRAPHY";
-    private static final String ITEMGROUP_INFORMED_CONSENT = "GRP.INFORMEDCONSENT.INFORMEDCONSENT";
-    private static final String ITEMGROUP_CARCINOMA = "GRP.CARCINOMA.CARCINOMA";
-    private static final String ITEMGROUP_ELIGIBILITY = "GRP.ELIGIBILITY.ELIGIBILITY";
-    private static final String ITEMGROUP_SELCRIT = "GRP.SELCRIT.SELCRIT";
-    private static final String ITEMGROUP_DEATH = "GRP.DEATH.DEATH";
+    private static final String ITEMGROUP_DEMOGRAPHY = "GRP.DEMOGRAPHY";
+    private static final String ITEMGROUP_INFORMED_CONSENT = "GRP.INFORMEDCONSENT";
+    private static final String ITEMGROUP_CARCINOMA = "GRP.CARCINOMA";
+    private static final String ITEMGROUP_ELIGIBILITY = "GRP.ELIGIBILITY";
+    private static final String ITEMGROUP_SELCRIT = "GRP.SELCRIT";
+    private static final String ITEMGROUP_DEATH = "GRP.DEATH";
 
-    public static final String FIELD_SEX = "FLD.DEMOGRAPHY.SEX";
-    public static final String FIELD_INFORMED_CONSENT_DATE = "FLD.INFORMEDCONSENT.ICDTC";
-    public static final String FIELD_REGISTRATION_DATE1 = "FLD.ELIGIBILITY.REGDTC";
-    public static final String FIELD_REGISTRATION_DATE2 = "FLD.SELCRIT.NREGDTC";
-    public static final String FIELD_BIRTH_YEAR1 = "FLD.SELCRIT.NBIRTHYEAR";
-    public static final String FIELD_BIRTH_YEAR2 = "FLD.ELIGIBILITY.BIRTHYEAR";
-    public static final String FIELD_BIRTH_YEAR3 = "FLD.ELIGIBILITY.BIRTHDTCES";
+    private static final String FIELD_GENDER = "FLD.SEX";
+    private static final String FIELD_INFORMED_CONSENT_DATE = "FLD.ICDTC";
+    private static final String FIELD_REGISTRATION_DATE1 = "FLD.REGDTC";
+    private static final String FIELD_REGISTRATION_DATE2 = "FLD.NREGDTC";
+    private static final String FIELD_BIRTH_YEAR1 = "FLD.NBIRTHYEAR";
+    private static final String FIELD_BIRTH_YEAR2 = "FLD.BIRTHYEAR";
+    private static final String FIELD_BIRTH_YEAR3 = "FLD.BIRTHDTCES";
 
-    public static final String FIELD_PRIMARY_TUMOR_LOCATION = "FLD.CARCINOMA.PTUMLOC";
-    public static final String FIELD_PRIMARY_TUMOR_LOCATION_OTHER = "FLD.CARCINOMA.PTUMLOCS";
+    private static final String FIELD_PRIMARY_TUMOR_LOCATION = "FLD.PTUMLOC";
+    private static final String FIELD_PRIMARY_TUMOR_LOCATION_OTHER = "FLD.PTUMLOCS";
 
-    public static final String FIELD_DEATH_DATE = "FLD.DEATH.DDEATHDTC";
+    private static final String FIELD_DEATH_DATE = "FLD.DDEATHDTC";
 
-    public static final String FIELD_HOSPITAL1 = "FLD.ELIGIBILITY.HOSPITAL";
-    public static final String FIELD_HOSPITAL2 = "FLD.SELCRIT.NHOSPITAL";
+    private static final String FIELD_HOSPITAL1 = "FLD.HOSPITAL";
+    private static final String FIELD_HOSPITAL2 = "FLD.NHOSPITAL";
 
     @NotNull
     private final TumorLocationCurator tumorLocationCurator;
@@ -67,13 +67,13 @@ public class BaselineReader {
     @NotNull
     BaselineData read(@NotNull final EcrfPatient patient) {
         final ImmutableBaselineData.Builder baselineBuilder = ImmutableBaselineData.builder()
-                .demographyStatus(FormStatus.unknown())
-                .primaryTumorStatus(FormStatus.unknown())
-                .cancerType(ImmutableCuratedCancerType.of(null, null, null))
-                .eligibilityStatus(FormStatus.unknown())
-                .selectionCriteriaStatus(FormStatus.unknown())
-                .informedConsentStatus(FormStatus.unknown())
-                .deathStatus(FormStatus.unknown())
+                .demographyStatus(FormStatus.undefined())
+                .primaryTumorStatus(FormStatus.undefined())
+                .curatedTumorLocation(ImmutableCuratedTumorLocation.of(null, null, null))
+                .eligibilityStatus(FormStatus.undefined())
+                .selectionCriteriaStatus(FormStatus.undefined())
+                .informedConsentStatus(FormStatus.undefined())
+                .deathStatus(FormStatus.undefined())
                 .hospital(getHospital(patient, hospitals));
 
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BASELINE)) {
@@ -93,11 +93,11 @@ public class BaselineReader {
             final Integer hospitalCode = Integer.parseInt(patient.patientId().substring(6, 8));
             final String hospital = hospitals.get(hospitalCode);
             if (hospital == null) {
-                LOGGER.warn(FIELD_HOSPITAL1 + ", " + FIELD_HOSPITAL2 + " contained no Hospital with code " + hospitalCode);
+                LOGGER.warn(FIELD_HOSPITAL1 + ", " + FIELD_HOSPITAL2 + " contained no hospital with code " + hospitalCode);
             }
             return hospital;
         } else {
-            LOGGER.warn("Could not extract hospital code from patient: " + patient.patientId());
+            LOGGER.warn("Could not extract hospital code for patient: " + patient.patientId());
             return null;
         }
     }
@@ -105,7 +105,7 @@ public class BaselineReader {
     private void setDemographyData(@NotNull final ImmutableBaselineData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
         for (final EcrfForm demographyForm : studyEvent.nonEmptyFormsPerOID(FORM_DEMOGRAPHY)) {
             for (final EcrfItemGroup demographyItemGroup : demographyForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DEMOGRAPHY)) {
-                builder.gender(demographyItemGroup.readItemString(FIELD_SEX));
+                builder.gender(demographyItemGroup.readItemString(FIELD_GENDER));
                 builder.demographyStatus(demographyForm.status());
             }
         }
@@ -118,7 +118,7 @@ public class BaselineReader {
                 if (primaryTumorLocation != null && primaryTumorLocation.trim().toLowerCase().startsWith("other")) {
                     primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
                 }
-                builder.cancerType(tumorLocationCurator.search(primaryTumorLocation));
+                builder.curatedTumorLocation(tumorLocationCurator.search(primaryTumorLocation));
                 builder.primaryTumorStatus(carcinomaForm.status());
             }
         }

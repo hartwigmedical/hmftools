@@ -51,7 +51,7 @@ class ConsequenceDeterminer {
     }
 
     @NotNull
-    public static Predicate<SomaticVariant> and(@NotNull Predicate<SomaticVariant> predicate1,
+    private static Predicate<SomaticVariant> and(@NotNull Predicate<SomaticVariant> predicate1,
             @NotNull Predicate<SomaticVariant> predicate2) {
         return variant -> predicate1.test(variant) && predicate2.test(variant);
     }

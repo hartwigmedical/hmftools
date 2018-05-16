@@ -74,7 +74,8 @@ class StructuralVariantDAO {
 
     @NotNull
     public final List<String> getSamplesList(@NotNull final String sampleSearch) {
-        final Result<Record1<String>> result = sampleSearch.equals("") ? context.select(STRUCTURALVARIANT.SAMPLEID)
+        final Result<Record1<String>> result = sampleSearch.equals("")
+                ? context.select(STRUCTURALVARIANT.SAMPLEID)
                 .from(STRUCTURALVARIANT)
                 .groupBy(STRUCTURALVARIANT.SAMPLEID)
                 .fetch()

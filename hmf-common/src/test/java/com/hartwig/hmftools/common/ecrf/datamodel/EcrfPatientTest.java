@@ -21,7 +21,7 @@ public class EcrfPatientTest {
         final EcrfDatamodelField field = new ImmutableEcrfDatamodelField("1", "2", "3", "4", "5", Maps.newHashMap());
         final EcrfItemGroup itemGroup = new EcrfItemGroup();
         itemGroup.itemsPerOID().put("4", Lists.newArrayList("value1", "value2"));
-        final EcrfForm form = new EcrfForm(FormStatus.unknown());
+        final EcrfForm form = new EcrfForm(FormStatus.undefined());
         form.itemGroupsPerOID().put("3", Lists.newArrayList(itemGroup));
         final EcrfStudyEvent study = new EcrfStudyEvent();
         study.formsPerOID().put("2", Lists.newArrayList(form));

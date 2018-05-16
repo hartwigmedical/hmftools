@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.cobalt.CobaltRatioFactory;
 import com.hartwig.hmftools.common.cobalt.ReadRatio;
 import com.hartwig.hmftools.common.gc.GCMedianReadCountFile;
 import com.hartwig.hmftools.common.gc.GCProfile;
-import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

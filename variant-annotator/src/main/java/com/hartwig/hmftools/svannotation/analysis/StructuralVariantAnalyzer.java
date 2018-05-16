@@ -9,8 +9,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusionData;
-import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusionModel;
+import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
@@ -27,33 +26,30 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class StructuralVariantAnalyzer {
+    private static final int EXON_THRESHOLD = 1;
 
     @NotNull
     private final VariantAnnotator annotator;
     @NotNull
     private final Collection<HmfGenomeRegion> hmfGenePanelRegions;
     @NotNull
-    private final CosmicFusionModel cosmicFusionModel;
+    private final KnownFusionsModel knownFusionsModel;
 
     private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnalyzer.class);
 
     public StructuralVariantAnalyzer(@NotNull final VariantAnnotator annotator,
-            @NotNull final Collection<HmfGenomeRegion> hmfGenePanelRegions, @NotNull final CosmicFusionModel cosmicFusionModel) {
+            @NotNull final Collection<HmfGenomeRegion> hmfGenePanelRegions, @NotNull final KnownFusionsModel knownFusionsModel) {
         this.annotator = annotator;
         this.hmfGenePanelRegions = hmfGenePanelRegions;
-        this.cosmicFusionModel = cosmicFusionModel;
+        this.knownFusionsModel = knownFusionsModel;
     }
 
     @NotNull
     public StructuralVariantAnalysis run(@NotNull final List<EnrichedStructuralVariant> variants, boolean skipAnnotations) {
         if (skipAnnotations) {
-            final List<StructuralVariantAnnotation> annotations = Lists.newArrayList();
-            final List<GeneFusion> fusions = Lists.newArrayList();
-            final List<GeneDisruption> disruptions = Lists.newArrayList();
-            return ImmutableStructuralVariantAnalysis.of(annotations, fusions, disruptions);
+            return ImmutableStructuralVariantAnalysis.empty();
         }
 
         LOGGER.debug("annotating variants");
@@ -133,16 +129,14 @@ public class StructuralVariantAnalyzer {
                 final Transcript upstream = fusion.getLeft();
                 final Transcript downstream = fusion.getRight();
 
-                final CosmicFusionData cosmic = transcriptsMatchKnownFusion(upstream, downstream);
-                final boolean promiscuousEnd = oneEndPromiscuous(upstream, downstream);
-                final boolean reportable =
-                        reportableFusion.isPresent() && reportableFusion.get() == fusion && (cosmic != null || promiscuousEnd);
+                final boolean matchesKnownFusion = transcriptsMatchKnownFusion(knownFusionsModel, upstream, downstream);
+                final boolean reportable = reportableFusion.isPresent() && reportableFusion.get() == fusion && matchesKnownFusion;
 
                 final GeneFusion geneFusion = ImmutableGeneFusion.builder()
                         .reportable(reportable)
                         .upstreamLinkedAnnotation(upstream)
                         .downstreamLinkedAnnotation(downstream)
-                        .cosmicURL(cosmic != null ? cosmic.cosmicURL() : "")
+                        .primarySource(knownFusionsModel.primarySource(upstream.parent().synonyms(), downstream.parent().synonyms()))
                         .build();
 
                 result.add(geneFusion);
@@ -219,36 +213,12 @@ public class StructuralVariantAnalyzer {
         return hmfGenePanelRegions.stream().anyMatch(region -> gene.synonyms().contains(region.geneID()));
     }
 
-    private boolean transcriptsMatchKnownFusion(@NotNull CosmicFusionData fusion, @NotNull Transcript five, @NotNull Transcript three) {
-        String fiveTranscript = fusion.fiveTranscript();
-        String threeTranscript = fusion.threeTranscript();
-
-        final boolean fiveValid = fiveTranscript == null
-                ? five.parent().synonyms().stream().anyMatch(s -> s.equals(fusion.fiveGene()))
-                : fiveTranscript.equals(five.transcriptId());
-        final boolean threeValid = threeTranscript == null
-                ? three.parent().synonyms().stream().anyMatch(s -> s.equals(fusion.threeGene()))
-                : threeTranscript.equals(three.transcriptId());
-        return fiveValid && threeValid;
-    }
-
-    @Nullable
-    private CosmicFusionData transcriptsMatchKnownFusion(@NotNull Transcript five, @NotNull Transcript three) {
-        return cosmicFusionModel.fusions().stream().filter(f -> transcriptsMatchKnownFusion(f, five, three)).findFirst().orElse(null);
-    }
-
-    private boolean oneEndPromiscuous(@NotNull Transcript five, @NotNull Transcript three) {
-        @SuppressWarnings("ConstantConditions")
-        final boolean promiscuousFive = cosmicFusionModel.promiscuousFivePrime()
-                .stream()
-                .anyMatch(p -> p.transcript() != null ? p.transcript().equals(five.transcriptId()) : p.geneName().equals(five.geneName()));
-        @SuppressWarnings("ConstantConditions")
-        final boolean promiscuousThree = cosmicFusionModel.promiscuousThreePrime()
-                .stream()
-                .anyMatch(p -> p.transcript() != null
-                        ? p.transcript().equals(three.transcriptId())
-                        : p.geneName().equals(three.geneName()));
-        return promiscuousFive || promiscuousThree;
+    private static boolean transcriptsMatchKnownFusion(@NotNull final KnownFusionsModel fusionsModel, @NotNull final Transcript five,
+            @NotNull final Transcript three) {
+        return fusionsModel.exactMatch(five.parent().synonyms(), three.parent().synonyms())
+                || fusionsModel.intergenicPromiscuousMatch(five.parent().synonyms(), three.parent().synonyms()) || (
+                fusionsModel.intragenicPromiscuousMatch(five.parent().synonyms(), three.parent().synonyms())
+                        && three.exonDownstream() - five.exonUpstream() > EXON_THRESHOLD);
     }
 
     private static boolean intronicDisruptionOnSameTranscript(@NotNull Transcript t1, @NotNull Transcript t2) {

@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.patientdb.matchers;
 
-import static com.hartwig.hmftools.patientdb.readers.cpct.BiopsyTreatmentResponseReader.FORM_TUMOR_MEASUREMENT;
-
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Iterator;
@@ -22,16 +20,17 @@ public final class TreatmentResponseMatcher {
     }
 
     @NotNull
-    public static MatchResult<BiopsyTreatmentResponseData> matchTreatmentResponsesToTreatments(@NotNull String patientId,
+    public static MatchResult<BiopsyTreatmentResponseData> matchTreatmentResponsesToTreatments(@NotNull String patientIdentifier,
             @NotNull List<BiopsyTreatmentData> treatments, @NotNull List<BiopsyTreatmentResponseData> responses) {
         final List<BiopsyTreatmentResponseData> matchedResponses = Lists.newArrayList();
         final List<ValidationFinding> findings = Lists.newArrayList();
         Collections.sort(responses);
 
-        List<BiopsyTreatmentData> sortedTreatments = sortAndFilter(treatments);
+        List<BiopsyTreatmentData> sortedTreatments = sortAndWithStartDate(treatments);
         if (hasOverlappingTreatments(sortedTreatments)) {
             if (!responses.isEmpty()) {
-                findings.add(responseMatchFinding(patientId, "treatments are overlapping. Cannot match any response.",
+                findings.add(responseMatchFinding(patientIdentifier,
+                        "Treatments are overlapping. Cannot match any response.",
                         "treatments: " + sortedTreatments));
             }
             return new MatchResult<>(responses, findings);
@@ -55,8 +54,8 @@ public final class TreatmentResponseMatcher {
 
                 if (hasNewBaselineResponseFound) {
                     matchedResponses.add(response);
-                    findings.add(responseMatchFinding(patientId,
-                            "response after new baseline and before next treatment",
+                    findings.add(responseMatchFinding(patientIdentifier,
+                            "Response after new baseline and before next treatment",
                             "response: " + response));
                 } else {
                     String actualResponse = response.response();
@@ -98,7 +97,7 @@ public final class TreatmentResponseMatcher {
     }
 
     @NotNull
-    private static List<BiopsyTreatmentData> sortAndFilter(@NotNull List<BiopsyTreatmentData> treatments) {
+    private static List<BiopsyTreatmentData> sortAndWithStartDate(@NotNull List<BiopsyTreatmentData> treatments) {
         List<BiopsyTreatmentData> sortedTreatments = Lists.newArrayList(treatments);
         Collections.sort(sortedTreatments);
         sortedTreatments.removeIf(treatment -> treatment.startDate() == null);
@@ -112,6 +111,6 @@ public final class TreatmentResponseMatcher {
     @NotNull
     private static ValidationFinding responseMatchFinding(@NotNull String patientIdentifier, @NotNull String message,
             @NotNull String details) {
-        return ValidationFinding.of("match", patientIdentifier, FORM_TUMOR_MEASUREMENT, message, FormStatus.unknown(), details);
+        return ValidationFinding.of("match", patientIdentifier, message, FormStatus.undefined(), details);
     }
 }

@@ -1,4 +1,4 @@
-cancerType,cancerSubType,biopsySite,biopsyLocation,biopsyType
+primaryTumorLocation,cancerSubType,biopsySite,biopsyLocation,biopsyType
 Breast,HER2 Positive,Primary,left,Breast
 Breast,HER2 Negative,Mamma,NULL,Breast
 CUP,CUP,NULL,Lymph node,Lymph node

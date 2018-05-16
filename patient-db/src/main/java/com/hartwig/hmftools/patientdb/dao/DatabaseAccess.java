@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
@@ -20,6 +21,9 @@ import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.data.Patient;
+import com.hartwig.hmftools.patientdb.data.PotentialActionableCNV;
+import com.hartwig.hmftools.patientdb.data.PotentialActionableFusion;
+import com.hartwig.hmftools.patientdb.data.PotentialActionableVariant;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
 import org.apache.logging.log4j.LogManager;
@@ -59,6 +63,8 @@ public class DatabaseAccess {
     private final CanonicalTranscriptDAO canonicalTranscriptDAO;
     @NotNull
     private final MetricDAO metricDAO;
+    @NotNull
+    private final PotentiallyActionableItemsDAO potentiallyActionableItemsDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // MIVO: disable annoying jooq self-ad message
@@ -78,6 +84,7 @@ public class DatabaseAccess {
         validationFindingsDAO = new ValidationFindingDAO(context);
         canonicalTranscriptDAO = new CanonicalTranscriptDAO(context);
         metricDAO = new MetricDAO(context);
+        potentiallyActionableItemsDAO = new PotentiallyActionableItemsDAO(context);
     }
 
     @NotNull
@@ -112,6 +119,21 @@ public class DatabaseAccess {
 
     public void writeSomaticVariants(@NotNull final String sampleId, @NotNull List<EnrichedSomaticVariant> variants) {
         somaticVariantDAO.write(sampleId, variants);
+    }
+
+    @NotNull
+    public Stream<PotentialActionableVariant> potentiallyActionableVariants() {
+        return potentiallyActionableItemsDAO.potentiallyActionableVariants();
+    }
+
+    @NotNull
+    public Stream<PotentialActionableCNV> potentiallyActionableCNVs() {
+        return potentiallyActionableItemsDAO.potentiallyActionableCNVs();
+    }
+
+    @NotNull
+    public Stream<PotentialActionableFusion> potentiallyActionableFusions() {
+        return potentiallyActionableItemsDAO.potentiallyActionableFusions();
     }
 
     public void writeStructuralVariants(@NotNull final String sampleId, @NotNull final List<EnrichedStructuralVariant> variants) {
@@ -194,7 +216,7 @@ public class DatabaseAccess {
     }
 
     public void writeCpctEcrf(@NotNull final EcrfModel model, @NotNull final Set<String> sequencedPatients) {
-        LOGGER.info("writing CPCT datamodel...");
+        LOGGER.info("Writing CPCT datamodel...");
         ecrfDAO.writeCpctDatamodel(model.fields());
         LOGGER.info("Done writing CPCT datamodel.");
         LOGGER.info("Writing CPCT patients...");

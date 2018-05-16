@@ -35,6 +35,7 @@ public class PurpleCheckerTest {
         assertCheck(checks, PurpleCheck.AMBER_GENDER.toString(), "MALE");
         assertCheck(checks, PurpleCheck.COBALT_GENDER.toString(), "FEMALE");
         assertCheck(checks, PurpleCheck.PURPLE_SEGMENT_SCORE.toString(), "199");
+        assertCheck(checks, PurpleCheck.PURPLE_DELETED_GENES_SCORE.toString(), "120");
     }
 
     @Test(expected = MalformedFileException.class)

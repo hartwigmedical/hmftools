@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientdb.data;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -8,7 +9,6 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
-import com.hartwig.hmftools.patientdb.Utils;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -31,24 +31,33 @@ public interface TreatmentData extends Comparable<TreatmentData> {
     @NotNull
     FormStatus formStatus();
 
+    @NotNull
     @Value.Derived
-    default List<CuratedTreatment> curatedDrugs() {
-        return drugs().stream().flatMap(drug -> drug.filteredCuratedTreatments().stream()).collect(Collectors.toList());
+    default List<CuratedDrug> curatedDrugs() {
+        return drugs().stream().flatMap(drug -> drug.filteredCuratedDrugs().stream()).collect(Collectors.toList());
     }
 
     @Nullable
     default String treatmentName() {
-        final String distinctSortedDrugs = curatedDrugs().stream()
-                .map(treatment -> Utils.capitalize(treatment.name()))
-                .sorted()
-                .distinct()
-                .collect(Collectors.joining("/"));
-        return Strings.emptyToNull(distinctSortedDrugs);
+        List<CuratedDrug> drugs = curatedDrugs();
+        Collections.sort(drugs);
+
+        final String concatenatedTreatmentName = drugs.stream().map(CuratedDrug::name).collect(Collectors.joining("/"));
+        return Strings.emptyToNull(concatenatedTreatmentName);
     }
 
     @Nullable
-    default String type() {
-        final Set<String> types = curatedDrugs().stream().map(CuratedTreatment::type).collect(Collectors.toSet());
+    default String concatenatedType() {
+        List<CuratedDrug> drugs = curatedDrugs();
+        Collections.sort(drugs);
+
+        final String concatenatedTreatmentType = drugs.stream().map(CuratedDrug::type).collect(Collectors.joining("/"));
+        return Strings.emptyToNull(concatenatedTreatmentType);
+    }
+
+    @Nullable
+    default String consolidatedType() {
+        final Set<String> types = curatedDrugs().stream().map(CuratedDrug::type).collect(Collectors.toSet());
         if (types.isEmpty()) {
             return null;
         } else if (types.size() == 1) {

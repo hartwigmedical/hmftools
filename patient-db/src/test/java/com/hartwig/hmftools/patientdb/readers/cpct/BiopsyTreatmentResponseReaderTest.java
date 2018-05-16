@@ -36,12 +36,12 @@ public class BiopsyTreatmentResponseReaderTest {
         response1.addItem(BiopsyTreatmentResponseReader.FIELD_MEASUREMENT_DONE, "Yes");
         response1.addItem(BiopsyTreatmentResponseReader.FIELD_RESPONSE, "PR");
 
-        EcrfForm form1 = new EcrfForm(FormStatus.unknown());
+        EcrfForm form1 = new EcrfForm(FormStatus.undefined());
         form1.addItemGroup(BiopsyTreatmentResponseReader.ITEMGROUP_TUMOR_MEASUREMENT, response1);
 
         EcrfItemGroup response2 = new EcrfItemGroup();
 
-        EcrfForm form2 = new EcrfForm(FormStatus.unknown());
+        EcrfForm form2 = new EcrfForm(FormStatus.undefined());
         form1.addItemGroup(BiopsyTreatmentResponseReader.ITEMGROUP_TUMOR_MEASUREMENT, response2);
 
         EcrfStudyEvent studyEvent = new EcrfStudyEvent();

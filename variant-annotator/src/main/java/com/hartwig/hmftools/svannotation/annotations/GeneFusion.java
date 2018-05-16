@@ -18,5 +18,5 @@ public abstract class GeneFusion {
     public abstract Transcript downstreamLinkedAnnotation();
 
     @NotNull
-    public abstract String cosmicURL();
+    public abstract String primarySource();
 }

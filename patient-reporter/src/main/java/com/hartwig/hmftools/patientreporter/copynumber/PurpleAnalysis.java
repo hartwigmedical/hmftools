@@ -57,10 +57,6 @@ public abstract class PurpleAnalysis {
         return ReportableCopyNumbers.filterCopyNumbersForReport(fittedPurity().ploidy(), panelGeneCopyNumbers());
     }
 
-    public double purityUncertainty() {
-        return fittedScorePurity().maxPurity() - fittedScorePurity().minPurity();
-    }
-
     @NotNull
     public String purityString() {
         return status() == FittedPurityStatus.NO_TUMOR

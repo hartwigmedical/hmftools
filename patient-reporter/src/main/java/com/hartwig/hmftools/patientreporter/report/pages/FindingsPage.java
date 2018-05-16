@@ -131,8 +131,8 @@ public abstract class FindingsPage {
                                 col.column("5' End", GeneFusionDataSource.START_CONTEXT_FIELD),
                                 col.column("3' Start", GeneFusionDataSource.END_CONTEXT_FIELD),
                                 col.column("Copies", GeneFusionDataSource.COPIES_FIELD),
-                                col.column("Cosmic", GeneFusionDataSource.COSMIC_URL_TEXT)
-                                        .setHyperLink(hyperLink(GeneFusionDataSource.cosmicHyperlink()))
+                                col.column("Source", GeneFusionDataSource.SOURCE_FIELD)
+                                        .setHyperLink(hyperLink(GeneFusionDataSource.sourceHyperlink()))
                                         .setStyle(linkStyle()))
                         .setDataSource(GeneFusionDataSource.fromGeneFusions(report.geneFusions())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));

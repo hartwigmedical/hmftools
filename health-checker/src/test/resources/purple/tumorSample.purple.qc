@@ -1,8 +1,10 @@
 QCStatus	FAIL_GENDER
 SegmentPass	true
 GenderPass	true
+DeletedGenesPass	true
 SegmentScore	88
 UnsupportedSegments	400
 Ploidy	2.01
 PurpleGender	MALE
 CobaltGender	FEMALE
+DeletedGenes	120

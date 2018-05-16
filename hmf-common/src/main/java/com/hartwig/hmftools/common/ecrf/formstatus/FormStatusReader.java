@@ -116,7 +116,7 @@ public final class FormStatusReader {
                 return FormStatusState.VERIFIED;
             default: {
                 LOGGER.warn("Could not interpret data status: " + state);
-                return FormStatusState.UNKNOWN;
+                return FormStatusState.UNDEFINED;
             }
         }
     }

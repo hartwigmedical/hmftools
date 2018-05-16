@@ -15,12 +15,13 @@ CREATE TABLE baseline
     gender varchar(10),
     hospital varchar(255),
     birthYear int,
-    cancerType varchar(255),
+    primaryTumorLocation varchar(255),
     cancerSubtype varchar(255),
     deathDate DATE,
     hasSystemicPreTreatment varchar(3),
     hasRadiotherapyPreTreatment varchar(3),
     preTreatments varchar(255),
+    preTreatmentsType varchar(510),
     PRIMARY KEY (patientId),
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
@@ -122,12 +123,24 @@ CREATE TABLE tumorMarker
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
 
+DROP TABLE IF EXISTS ranoMeasurement;
+CREATE TABLE ranoMeasurement
+(   id int NOT NULL AUTO_INCREMENT,
+    patientId int NOT NULL,
+    responseDate DATE,
+    therapyGiven varchar(50),
+    targetLesionResponse varchar(50),
+    noTargetLesionResponse varchar(50),
+    overallResponse varchar(50),
+    PRIMARY KEY (id),
+    FOREIGN KEY (patientId) REFERENCES patient(id)
+);
+
 DROP TABLE IF EXISTS clinicalFindings;
 CREATE TABLE clinicalFindings
 (   id int NOT NULL AUTO_INCREMENT,
     level varchar(30),
     patientId varchar(20),
-    ecrfItem varchar(100),
     formStatus varchar(30),
     formLocked varchar(5),
     message varchar(1000),

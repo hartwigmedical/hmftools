@@ -17,6 +17,7 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -83,7 +84,9 @@ public class PDFWriterTest {
         final List<Alteration> alterations = RUN_CIVIC_ANALYSIS ? PatientReporterTestUtil.runCivicAnalysis(variants,
                 copyNumbers,
                 disruptions,
-                fusions, reporterData.panelGeneModel(), sampleReport.cancerType()) : mockedAlterations();
+                fusions,
+                reporterData.panelGeneModel(),
+                sampleReport.primaryTumorLocationString()) : mockedAlterations();
 
         final SequencedPatientReport patientReport = ImmutableSequencedPatientReport.of(sampleReport,
                 variants,
@@ -94,7 +97,7 @@ public class PDFWriterTest {
                 fusions,
                 PatientReportFormat.formatPercent(impliedTumorPurity),
                 alterations,
-                Resources.getResource("circos" + File.separator + "circos_example.png").getPath(),
+                Resources.getResource("circos/circos_example.png").getPath(),
                 Optional.of("this is a test report and does not relate to any real CPCT patient"),
                 baseReporterData.signaturePath());
 
@@ -214,25 +217,25 @@ public class PDFWriterTest {
                         .geneStart("TMPRSS2")
                         .geneStartTranscript("ENST00000398585.7")
                         .geneStartEntrezIds(Lists.newArrayList(7113))
-                        .geneContextStart("Exon 1")
+                        .geneContextStart("Intron 4")
                         .geneEnd("PNPLA7")
                         .geneEndTranscript("ENST00000406427.5")
                         .geneEndEntrezIds(Lists.newArrayList(375775))
-                        .geneContextEnd("Exon 13")
-                        .copies("1.0")
-                        .cosmicURL("")
+                        .geneContextEnd("Intron 2")
+                        .copies("0.4")
+                        .source("CIViC")
                         .build(),
                 ImmutableGeneFusionData.builder()
                         .geneStart("CLCN6")
                         .geneStartTranscript("ENST00000346436.10")
                         .geneStartEntrezIds(Lists.newArrayList(1185))
-                        .geneContextStart("Exon 1")
+                        .geneContextStart("Intron 1")
                         .geneEnd("BRAF")
                         .geneEndTranscript("ENST00000288602.10")
                         .geneEndEntrezIds(Lists.newArrayList(673))
-                        .geneContextEnd("Exon 13")
+                        .geneContextEnd("Intron 8")
                         .copies("1.0")
-                        .cosmicURL("http://cancer.sanger.ac.uk/cosmic/fusion/overview?fid=2&gid=54500")
+                        .source("OncoKB")
                         .build());
     }
 
@@ -243,7 +246,8 @@ public class PDFWriterTest {
                 .gene("ERBB4")
                 .geneContext("Intron 4")
                 .type("INV")
-                .copies("1.0").chromosomeBand("q34")
+                .copies("1.0")
+                .chromosomeBand("q34")
                 .build();
 
         final GeneDisruptionData disruption2 = ImmutableGeneDisruptionData.builder()
@@ -251,7 +255,8 @@ public class PDFWriterTest {
                 .gene("ERBB4")
                 .geneContext("Intron 20")
                 .type("INV")
-                .copies("1.0").chromosomeBand("q34")
+                .copies("1.0")
+                .chromosomeBand("q34")
                 .build();
 
         final GeneDisruptionData disruption3 = ImmutableGeneDisruptionData.builder()
@@ -259,7 +264,8 @@ public class PDFWriterTest {
                 .gene("PIK3CB")
                 .geneContext("Intron 1")
                 .type("INS")
-                .copies("3.0").chromosomeBand("q22.3")
+                .copies("3.0")
+                .chromosomeBand("q22.3")
                 .build();
 
         final GeneDisruptionData disruption4 = ImmutableGeneDisruptionData.builder()
@@ -267,7 +273,8 @@ public class PDFWriterTest {
                 .gene("NRG1")
                 .geneContext("Intron 1")
                 .type("DUP")
-                .copies("0.3").chromosomeBand("p12")
+                .copies("0.3")
+                .chromosomeBand("p12")
                 .build();
 
         final GeneDisruptionData disruption5 = ImmutableGeneDisruptionData.builder()
@@ -275,7 +282,8 @@ public class PDFWriterTest {
                 .gene("NRG1")
                 .geneContext("Intron 1")
                 .type("DEL")
-                .copies("0.2").chromosomeBand("p12")
+                .copies("0.2")
+                .chromosomeBand("p12")
                 .build();
 
         final GeneDisruptionData disruption6 = ImmutableGeneDisruptionData.builder()
@@ -283,7 +291,8 @@ public class PDFWriterTest {
                 .gene("CDK12")
                 .geneContext("Intron 12")
                 .type("BND")
-                .copies("1.0").chromosomeBand("q12")
+                .copies("1.0")
+                .chromosomeBand("q12")
                 .build();
 
         return Lists.newArrayList(disruption1, disruption2, disruption3, disruption4, disruption5, disruption6);
@@ -346,7 +355,8 @@ public class PDFWriterTest {
     @NotNull
     private static SampleReport testSampleReport(final double pathologyTumorPercentage) throws IOException {
         final String sample = "CPCT02991111T";
-        return ImmutableSampleReport.of(sample, "Skin",
+        return ImmutableSampleReport.of(sample,
+                ImmutablePatientTumorLocation.of("CPCT02991111", "Skin", "Melanoma"),
                 pathologyTumorPercentage,
                 LocalDate.parse("05-Jan-2016", FORMATTER),
                 LocalDate.parse("01-Jan-2016", FORMATTER),

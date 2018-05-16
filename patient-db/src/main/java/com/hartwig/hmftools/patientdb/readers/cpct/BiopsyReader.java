@@ -11,25 +11,25 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.CuratedBiopsyType;
-import com.hartwig.hmftools.patientdb.data.CuratedCancerType;
+import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class BiopsyReader {
+class BiopsyReader {
 
     static final String STUDY_BIOPSY = "SE.BIOPSY";
-    public static final String FORM_BIOPS = "FRM.BIOPS";
-    static final String ITEMGROUP_BIOPSY = "GRP.BIOPS.BIOPS";
-    static final String FIELD_BIOPSY_TAKEN = "FLD.BIOPS.CPCT";
-    static final String FIELD_BIOPSY_EVALUABLE = "FLD.BIOPS.BIOPEFS";
+    static final String FORM_BIOPS = "FRM.BIOPS";
+    static final String ITEMGROUP_BIOPSY = "GRP.BIOPS";
+    static final String FIELD_BIOPSY_TAKEN = "FLD.CPCT";
+    static final String FIELD_BIOPSY_EVALUABLE = "FLD.BIOPEFS";
 
-    static final String ITEMGROUP_BIOPSIES = "GRP.BIOPS.BIOPSIES";
-    public static final String FIELD_BIOPSY_DATE = "FLD.BIOPS.BIOPTDT";
-    public static final String FIELD_SITE = "FLD.BIOPS.BILESSITE";
-    public static final String FIELD_SITE_OTHER = "FLD.BIOPS.BIOTHLESSITE";
-    public static final String FIELD_LOCATION = "FLD.BIOPS.BILESLOC";
+    static final String ITEMGROUP_BIOPSIES = "GRP.BIOPSIES";
+    static final String FIELD_BIOPSY_DATE = "FLD.BIOPTDT";
+    static final String FIELD_SITE = "FLD.BILESSITE";
+    static final String FIELD_SITE_OTHER = "FLD.BIOTHLESSITE";
+    static final String FIELD_LOCATION = "FLD.BILESLOC";
 
     @NotNull
     private final BiopsySiteCurator biopsySiteCurator;
@@ -39,7 +39,7 @@ public class BiopsyReader {
     }
 
     @NotNull
-    List<BiopsyData> read(@NotNull EcrfPatient patient, @NotNull CuratedCancerType curatedCancerType) {
+    List<BiopsyData> read(@NotNull EcrfPatient patient, @NotNull CuratedTumorLocation curatedTumorLocation) {
         final List<BiopsyData> biopsies = Lists.newArrayList();
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BIOPSY)) {
             for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_BIOPS)) {
@@ -59,14 +59,18 @@ public class BiopsyReader {
 
                     final String location = biopsiesGroup.readItemString(FIELD_LOCATION);
 
-                    final CuratedBiopsyType curatedBiopsyType =
-                            biopsySiteCurator.search(curatedCancerType.type(), curatedCancerType.subType(), finalSite, location);
+                    final CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(curatedTumorLocation.primaryTumorLocation(),
+                            curatedTumorLocation.subType(),
+                            finalSite,
+                            location);
                     final BiopsyData biopsy = ImmutableBiopsyData.of(date,
                             biopsyTaken,
                             biopsyEvaluable,
                             curatedBiopsyType,
                             finalSite,
-                            location, form.status());
+                            location,
+                            form.status());
+
                     // KODU: The ecrf contains many duplicate forms that are impossible to remove. This is because in the past a new biopsy
                     // form needed to be created for every treatment response.
                     if (!isDuplicate(biopsies, biopsy) && !isEmpty(biopsy)) {

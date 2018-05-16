@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter;
 import java.util.List;
 
 import com.hartwig.hmftools.common.center.CenterModel;
-import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
+import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 
 import org.immutables.value.Value;
@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class BaseReporterData {
     @NotNull
-    public abstract List<PatientCancerTypes> patientsCancerTypes();
+    public abstract List<PatientTumorLocation> patientTumorLocations();
 
     @NotNull
     public abstract Lims limsModel();

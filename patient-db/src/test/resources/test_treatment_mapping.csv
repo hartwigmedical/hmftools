@@ -1,9 +1,9 @@
-drug,type,other_names
+drug,type,synonyms
 Zocor,cholesterol-lowering,simvastatin
 Lisinopril,blood pressure,"Prinivil,Zestril"
 Norvasc,blood pressure,amlodipine besylate
 Azithromycin,antibiotic,"Z-Pak,Zithromax,Zithromax-Aspirin"
-Norvinopril,blood pressure,amlodipine acetate
+Norvinopril,blood pressure,amlodipine-acetate
 Aspirin,anything,"ASA (acetylsalicylic acid), Aspirin pain therapy"
 Mefenamic acid,pain, MA24819 Mefenamic acid
 TNT-101,pretty much anything, TNT-101 pain therapy

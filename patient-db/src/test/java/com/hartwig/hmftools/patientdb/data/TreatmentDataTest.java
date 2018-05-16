@@ -20,7 +20,7 @@ public class TreatmentDataTest {
 
     @Test
     public void canGenerateCorrectTreatmentName() {
-        List<DrugData> drugs = Lists.newArrayList(drugWithName("DrugB"), drugWithName("DrugC"), drugWithName("drugA"), drugWithName(null));
+        List<DrugData> drugs = Lists.newArrayList(drugWithName("DrugB"), drugWithName("DrugC"), drugWithName("DrugA"), drugWithName(null));
 
         TreatmentData data = withDrugs(drugs);
 
@@ -30,13 +30,16 @@ public class TreatmentDataTest {
     @Test
     public void canGenerateCorrectTreatmentType() {
         List<DrugData> noTypes = Lists.newArrayList(drugWithType(null));
-        assertNull(withDrugs(noTypes).type());
+        assertNull(withDrugs(noTypes).consolidatedType());
+        assertNull(withDrugs(noTypes).concatenatedType());
 
         List<DrugData> simpleType = Lists.newArrayList(drugWithType("simple"), drugWithType("simple"));
-        assertEquals("simple", withDrugs(simpleType).type());
+        assertEquals("simple", withDrugs(simpleType).consolidatedType());
+        assertEquals("simple/simple", withDrugs(simpleType).concatenatedType());
 
         List<DrugData> combiType = Lists.newArrayList(drugWithType("complex1"), drugWithType("complex2"));
-        assertEquals(TreatmentData.COMBI_THERAPY, withDrugs(combiType).type());
+        assertEquals(TreatmentData.COMBI_THERAPY, withDrugs(combiType).consolidatedType());
+        assertEquals("complex1/complex2", withDrugs(combiType).concatenatedType());
     }
 
     @Test
@@ -69,14 +72,14 @@ public class TreatmentDataTest {
     @NotNull
     private static DrugData drugWithName(@Nullable String name) {
         return name != null
-                ? drugBuilder().addCuratedTreatments(ImmutableCuratedTreatment.of(name, "", "")).build()
+                ? drugBuilder().addCuratedDrugs(ImmutableCuratedDrug.of(name, "", "")).build()
                 : drugBuilder().build();
     }
 
     @NotNull
     private static DrugData drugWithType(@Nullable String type) {
         return type != null
-                ? drugBuilder().addCuratedTreatments(ImmutableCuratedTreatment.of("", type, "")).build()
+                ? drugBuilder().addCuratedDrugs(ImmutableCuratedDrug.of("", type, "")).build()
                 : drugBuilder().build();
     }
 

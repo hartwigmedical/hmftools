@@ -2,7 +2,6 @@ package com.hartwig.hmftools.svanalysis;
 
 import static com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator.PON_FILTER_PON;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
@@ -12,10 +11,10 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
+import com.hartwig.hmftools.svanalysis.analysis.SvClusteringConfig;
 import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.svanalysis.annotators.ExtDataLinker;
 import com.hartwig.hmftools.svanalysis.types.SvClusterData;
-import com.hartwig.hmftools.svanalysis.analysis.SvClusteringConfig;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -54,7 +53,7 @@ public class SvAnalyser {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
+    public static void main(@NotNull final String[] args) throws ParseException, SQLException {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
 

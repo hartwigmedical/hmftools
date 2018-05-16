@@ -18,6 +18,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,14 +57,17 @@ public final class LimsFactory {
 
         jsonSamples.forEach(jsonSample -> {
             final JsonObject jsonSampleObject = jsonSample.getValue().getAsJsonObject();
-            final String sampleLabel = jsonSampleObject.get("label").getAsString();
             final String analysisType = jsonSampleObject.get("analysis_type").getAsString();
 
             // KODU: Filter on somatic to get rid of RNA samples, see also DEV-252
-            if ((sampleLabel.equals("CPCT") || sampleLabel.equals("DRUP")) && analysisType != null && analysisType.toLowerCase()
-                    .contains("somatic")) {
-                final LimsJsonData limsJsonData = gson.fromJson(jsonSample.getValue(), LimsJsonData.class);
-                limsDataPerSample.put(limsJsonData.sampleId(), limsJsonData);
+            if (analysisType != null && analysisType.toLowerCase().contains("somatic")) {
+                try {
+                    final LimsJsonData limsJsonData = gson.fromJson(jsonSample.getValue(), LimsJsonData.class);
+                    limsDataPerSample.put(limsJsonData.sampleId(), limsJsonData);
+                } catch (JsonSyntaxException e) {
+                    LOGGER.warn(
+                            "Could not convert json element to LimsJsonData: " + jsonSample.getValue() + " - message:" + e.getMessage());
+                }
             }
         });
 

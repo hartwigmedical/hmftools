@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple;
 
 import static com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFactory.polyclonalProportion;
+import static com.hartwig.hmftools.patientdb.LoadPurpleData.persistToDatabase;
 import static com.hartwig.hmftools.purple.PurpleRegionZipper.updateRegionsWithCopyNumbers;
 
 import java.io.IOException;
@@ -175,8 +176,11 @@ public class PurityPloidyEstimateApplication {
             final FittingConfig fittingConfig = configSupplier.fittingConfig();
             final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
             final double observedBafExponent = defaultValue(cmd, OBSERVED_BAF_EXPONENT, OBSERVED_BAF_EXPONENT_DEFAULT);
-            final FittedRegionFactory fittedRegionFactory =
-                    new FittedRegionFactory(cobaltGender, fittingConfig.maxPloidy(), cnvRatioWeight, averageTumorDepth, observedBafExponent);
+            final FittedRegionFactory fittedRegionFactory = new FittedRegionFactory(cobaltGender,
+                    fittingConfig.maxPloidy(),
+                    cnvRatioWeight,
+                    averageTumorDepth,
+                    observedBafExponent);
 
             final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
                     fittingConfig.maxPloidy(),
@@ -223,24 +227,27 @@ public class PurityPloidyEstimateApplication {
                     .polyClonalProportion(polyclonalProportion(copyNumbers))
                     .build();
 
-            LOGGER.info("Generating QC Stats");
-            final PurpleQC qcChecks = PurpleQCFactory.create(bestFitFactory.bestFit(), copyNumbers, amberGender, cobaltGender);
-
             final List<PurityAdjustedSomaticVariant> enrichedSomatics =
                     new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers, enrichedFittedRegions).create(somaticVariants);
 
             final List<GeneCopyNumber> geneCopyNumbers =
                     GeneCopyNumberFactory.geneCopyNumbers(genePanel, copyNumbers, germlineDeletions, enrichedSomatics);
 
+            LOGGER.info("Generating QC Stats");
+            final PurpleQC qcChecks = PurpleQCFactory.create(bestFitFactory.bestFit(), copyNumbers, amberGender, cobaltGender, geneCopyNumbers);
+
             final DBConfig dbConfig = configSupplier.dbConfig();
             if (dbConfig.enabled()) {
                 final DatabaseAccess dbAccess = databaseAccess(dbConfig);
-                dbAccess.writePurity(tumorSample, purityContext, qcChecks);
-                dbAccess.writeBestFitPerPurity(tumorSample, bestFitPerPurity);
-                dbAccess.writeCopynumbers(tumorSample, copyNumbers);
-                dbAccess.writeGermlineCopynumbers(tumorSample, germlineDeletions);
-                dbAccess.writeCopynumberRegions(tumorSample, enrichedFittedRegions);
-                dbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers);
+                persistToDatabase(dbAccess,
+                        tumorSample,
+                        bestFitPerPurity,
+                        copyNumbers,
+                        germlineDeletions,
+                        enrichedFittedRegions,
+                        purityContext,
+                        qcChecks,
+                        geneCopyNumbers);
             }
 
             LOGGER.info("Writing purple data to: {}", outputDirectory);
@@ -250,7 +257,7 @@ public class PurityPloidyEstimateApplication {
             FittedPurityRangeFile.write(outputDirectory, tumorSample, bestFitPerPurity);
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilename(outputDirectory, tumorSample), copyNumbers);
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateGermlineFilename(outputDirectory, tumorSample), germlineDeletions);
-            FittedRegionFile.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
+            FittedRegionFile.write(FittedRegionFile.generateFilename(outputDirectory, tumorSample), enrichedFittedRegions);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
 
             final CircosConfig circosConfig = configSupplier.circosConfig();

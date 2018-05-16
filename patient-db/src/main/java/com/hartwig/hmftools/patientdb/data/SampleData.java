@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class SampleData {
+public abstract class SampleData implements Comparable<SampleData> {
 
     @NotNull
     public abstract String sampleId();
@@ -36,5 +36,10 @@ public abstract class SampleData {
     @Override
     public String toString() {
         return String.format("Sample {%s}", sampleId());
+    }
+
+    @Override
+    public int compareTo(@NotNull final SampleData other) {
+        return date().compareTo(other.date());
     }
 }

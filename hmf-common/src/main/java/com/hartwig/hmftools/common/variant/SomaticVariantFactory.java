@@ -71,7 +71,6 @@ public class SomaticVariantFactory {
         final List<SomaticVariant> variants = Lists.newArrayList();
 
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
-
             final VCFHeader header = (VCFHeader) reader.getHeader();
             if (!sampleInFile(sample, header)) {
                 throw new IllegalArgumentException("Sample " + sample + " not found in vcf file " + vcfFile);
@@ -119,7 +118,7 @@ public class SomaticVariantFactory {
         return Optional.empty();
     }
 
-    private void attachAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
+    private static void attachAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
         final List<VariantAnnotation> allAnnotations = VariantAnnotationFactory.fromContext(context);
         builder.annotations(allAnnotations);
 

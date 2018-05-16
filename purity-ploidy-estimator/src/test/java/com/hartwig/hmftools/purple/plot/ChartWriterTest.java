@@ -5,9 +5,6 @@ import static org.junit.Assert.assertEquals;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-import java.text.NumberFormat;
-import java.util.Locale;
-
 public class ChartWriterTest {
 
     @Test

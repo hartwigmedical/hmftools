@@ -10,7 +10,7 @@ public enum PatientReportFormat {
 
     @NotNull
     public static String formatNullablePercent(final @Nullable Double percentage) {
-        return percentage == null ? "Na" : formatPercent(percentage);
+        return percentage != null ? formatPercent(percentage) : "N/A";
     }
 
     @NotNull

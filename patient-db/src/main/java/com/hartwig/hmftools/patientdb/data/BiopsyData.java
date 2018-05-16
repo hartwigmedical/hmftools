@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class BiopsyData {
+public abstract class BiopsyData implements Comparable<BiopsyData>  {
 
     public abstract int id();
 
@@ -73,5 +73,20 @@ public abstract class BiopsyData {
     @Override
     public String toString() {
         return site() + " - " + location() + " (" + date() + ")";
+    }
+
+    @Override
+    public int compareTo(@NotNull final BiopsyData other) {
+        LocalDate date1 = date();
+        LocalDate date2 = other.date();
+        if (date1 == null && date2 == null) {
+            return 0;
+        } else if (date1 == null) {
+            return 1;
+        } else if (date2 == null) {
+            return -1;
+        } else {
+            return date1.compareTo(date2);
+        }
     }
 }

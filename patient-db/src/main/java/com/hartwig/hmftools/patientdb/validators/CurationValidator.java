@@ -18,12 +18,12 @@ public final class CurationValidator {
 
     @NotNull
     public static List<ValidationFinding> validateTumorLocationCurator(@NotNull TumorLocationCurator tumorLocationCurator) {
-        return validateCurator(tumorLocationCurator, "tumorLocationCuration", "tumor location search term not used");
+        return validateCurator(tumorLocationCurator, "tumorLocationCuration", "Tumor location search term not used");
     }
 
     @NotNull
     public static List<ValidationFinding> validateTreatmentCurator(@NotNull TreatmentCurator treatmentCurator) {
-        return validateCurator(treatmentCurator, "treatmentCuration", "treatment search term not used");
+        return validateCurator(treatmentCurator, "treatmentCuration", "Treatment search term not used");
     }
 
     @NotNull
@@ -32,7 +32,7 @@ public final class CurationValidator {
         final List<ValidationFinding> findings = Lists.newArrayList();
 
         for (String unusedTerm : curator.unusedSearchTerms()) {
-            findings.add(ValidationFinding.of(level, "", "", message, FormStatus.unknown(), unusedTerm));
+            findings.add(ValidationFinding.of(level, null, message, FormStatus.undefined(), unusedTerm));
         }
 
         return findings;

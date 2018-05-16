@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svannotation.analysis;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,5 +40,10 @@ public abstract class StructuralVariantAnalysis {
                                 .parent()
                                 .variant()))
                 .collect(Collectors.toList());
+    }
+
+    @NotNull
+    public static StructuralVariantAnalysis empty() {
+        return ImmutableStructuralVariantAnalysis.of(Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
     }
 }

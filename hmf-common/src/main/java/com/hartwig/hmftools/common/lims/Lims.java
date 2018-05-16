@@ -4,8 +4,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -20,7 +18,6 @@ public class Lims {
     @NotNull
     private final Map<String, LocalDate> preLimsArrivalDates;
 
-    @VisibleForTesting
     Lims(@NotNull final Map<String, LimsJsonData> dataPerSample, @NotNull final Map<String, LocalDate> preLimsArrivalDates) {
         this.dataPerSample = dataPerSample;
         this.preLimsArrivalDates = preLimsArrivalDates;
@@ -53,8 +50,9 @@ public class Lims {
     public LocalDate samplingDateForSample(@NotNull final String sample) {
         LimsJsonData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
-            final LocalDate samplingDate = getNullableDate(sampleData.samplingDateString());
-            if (samplingDate == null && !sampleData.samplingDateString().equalsIgnoreCase("na")) {
+            final String samplingDateString = sampleData.samplingDateString();
+            final LocalDate samplingDate = getNullableDate(samplingDateString);
+            if (samplingDate == null && samplingDateString != null && !samplingDateString.equalsIgnoreCase("na")) {
                 LOGGER.warn("LIMS sampling date for " + sample + ": " + sampleData.samplingDateString() + " is not a valid date.");
             }
             return samplingDate;
@@ -80,8 +78,12 @@ public class Lims {
     public Double tumorPercentageForSample(@NotNull final String sample) {
         LimsJsonData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
+            String tumorPercentageString = sampleData.tumorPercentageString();
+            if (tumorPercentageString == null) {
+                return null;
+            }
             try {
-                return Double.parseDouble(sampleData.tumorPercentageString()) / 100D;
+                return Double.parseDouble(tumorPercentageString) / 100D;
             } catch (final NumberFormatException e) {
                 return null;
             }
@@ -100,7 +102,11 @@ public class Lims {
     }
 
     @Nullable
-    private static LocalDate getNullableDate(@NotNull final String dateString) {
+    private static LocalDate getNullableDate(@Nullable final String dateString) {
+        if (dateString == null) {
+            return null;
+        }
+
         try {
             return LocalDate.parse(dateString, LimsConstants.DATE_FORMATTER);
         } catch (DateTimeParseException e) {

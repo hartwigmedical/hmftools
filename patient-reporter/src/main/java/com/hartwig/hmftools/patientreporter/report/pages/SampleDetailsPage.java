@@ -15,6 +15,8 @@ import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.report.Commons;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 
@@ -24,6 +26,8 @@ import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 @Value.Style(passAnnotations = NotNull.class,
              allParameters = true)
 public abstract class SampleDetailsPage {
+
+    private static final Logger LOGGER = LogManager.getLogger(SampleDetailsPage.class);
 
     @NotNull
     abstract SampleReport sampleReport();
@@ -61,19 +65,22 @@ public abstract class SampleDetailsPage {
 
     @NotNull
     private ComponentBuilder<?, ?> sampleDetailsSection() {
-        if (sampleReport().recipient() == null) {
-            throw new IllegalStateException("No recipient address present for sample " + sampleReport().sampleId());
+        String recipient = sampleReport().recipient();
+        if (recipient == null) {
+            LOGGER.warn("No recipient address present for sample " + sampleReport().sampleId());
         }
+
+        recipient = recipient != null ? recipient : "?";
 
         final List<String> lines = Lists.newArrayList(
                 "The samples have been sequenced at Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam",
                 "The samples have been analyzed by Next Generation Sequencing",
                 "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate()),
-                "The pathology tumor percentage for this sample is " + sampleReport().tumorPercentageString(),
+                "The pathology tumor percentage for this sample is " + sampleReport().pathologyTumorPercentageString(),
                 "This experiment is performed on the blood sample which arrived on " + formattedDate(sampleReport().bloodArrivalDate()),
                 "This experiment is performed according to lab procedures: " + sampleReport().labProcedures(),
                 "This report is generated and verified by: " + user(),
-                "This report is addressed at: " + sampleReport().recipient());
+                "This report is addressed at: " + recipient);
 
         comments().ifPresent(comments -> lines.add("Comments: " + comments));
 

@@ -13,17 +13,17 @@ import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentResponseData;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class BiopsyTreatmentResponseReader {
+final class BiopsyTreatmentResponseReader {
 
     static final String STUDY_TREATMENT = "SE.TREATMENT";
-    public static final String FORM_TUMOR_MEASUREMENT = "FRM.TUMORMEASUREMENT";
-    private static final String ITEMGROUP_MEASUREMENT = "GRP.TUMORMEASUREMENT.MEASUREMENT";
-    public static final String FIELD_ASSESSMENT_DATE = "FLD.TUMORMEASUREMENT.ASSDTC";
-    static final String ITEMGROUP_TUMOR_MEASUREMENT = "GRP.TUMORMEASUREMENT.TUMORMEASUREMENT";
-    public static final String FIELD_RESPONSE_DATE = "FLD.TUMORMEASUREMENT.RESPONSEDTC";
-    private static final String FIELD_BONE_ONLY_DISEASE = "FLD.TUMORMEASUREMENT.BONEYN";
-    public static final String FIELD_MEASUREMENT_DONE = "FLD.TUMORMEASUREMENT.TMYN";
-    public static final String FIELD_RESPONSE = "FLD.TUMORMEASUREMENT.BESTRESPON";
+    static final String FORM_TUMOR_MEASUREMENT = "FRM.TUMORMEASUREMENT";
+    private static final String ITEMGROUP_MEASUREMENT = "GRP.MEASUREMENT";
+    private static final String FIELD_ASSESSMENT_DATE = "FLD.ASSDTC";
+    static final String ITEMGROUP_TUMOR_MEASUREMENT = "GRP.TUMORMEASUREMENT";
+    private static final String FIELD_RESPONSE_DATE = "FLD.RESPONSEDTC";
+    private static final String FIELD_BONE_ONLY_DISEASE = "FLD.BONEYN";
+    static final String FIELD_MEASUREMENT_DONE = "FLD.TMYN";
+    static final String FIELD_RESPONSE = "FLD.BESTRESPON";
 
     private BiopsyTreatmentResponseReader() {
     }
@@ -71,7 +71,8 @@ public final class BiopsyTreatmentResponseReader {
                         responseDate,
                         response,
                         measurementDone,
-                        boneOnlyDisease, form.status());
+                        boneOnlyDisease,
+                        form.status());
                 if (!isEmpty(responseData)) {
                     treatmentResponses.add(responseData);
                 }

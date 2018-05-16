@@ -8,7 +8,7 @@ public enum FormStatusState {
     SUBMITTED_WITH_DISCREPANCIES("submitted with discrepancies", 2),
     SUBMITTED_WITH_MISSING("submitted with missing", 3),
     VERIFIED("verified", 4),
-    UNKNOWN("unknown", -1);
+    UNDEFINED("undefined", -1);
 
     @NotNull
     private final String stateString;

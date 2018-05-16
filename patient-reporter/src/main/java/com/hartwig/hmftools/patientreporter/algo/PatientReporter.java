@@ -8,14 +8,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.doid.TumorLocationDoidMapping;
+import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.purity.FittedPurity;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
@@ -96,13 +96,22 @@ public abstract class PatientReporter {
         final int mutationalLoad = variantAnalysis.mutationalLoad();
         final int consequentialVariantCount = variantAnalysis.consequentialVariants().size();
         final int structuralVariantCount = structuralVariantAnalysis.annotations().size();
-        final String cancerType = PatientReporterHelper.extractCancerType(baseReporterData().patientsCancerTypes(), tumorSample);
+        final PatientTumorLocation patientTumorLocation =
+                PatientReporterHelper.extractPatientTumorLocation(baseReporterData().patientTumorLocations(), tumorSample);
 
-        final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
-        final List<Alteration> alterations = civicAnalyzer().run(variantAnalysis.findings(),
-                purpleAnalysis.reportableGeneCopyNumbers(),
-                reportableDisruptions,
-                reportableFusions, reporterData().panelGeneModel(), doidMapping.doidsForTumorType(cancerType));
+        final List<Alteration> alterations;
+        if (patientTumorLocation != null) {
+            final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
+            alterations = civicAnalyzer().run(variantAnalysis.findings(),
+                    purpleAnalysis.reportableGeneCopyNumbers(),
+                    reportableDisruptions,
+                    reportableFusions,
+                    reporterData().panelGeneModel(),
+                    doidMapping.doidsForTumorType(patientTumorLocation.primaryTumorLocation()));
+        } else {
+            LOGGER.warn("Could not run civic analyzer as (curated) primary tumor location is not known");
+            alterations = Lists.newArrayList();
+        }
 
         LOGGER.info(" Printing analysis results:");
         LOGGER.info("  Number of passed variants : " + Integer.toString(passedVariantCount));
@@ -121,7 +130,7 @@ public abstract class PatientReporter {
         final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrichSomaticVariants(variantAnalysis.findings());
         final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(tumorSample);
 
-        final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample, cancerType,
+        final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample, patientTumorLocation,
                 tumorPercentage,
                 lims.arrivalDateForSample(tumorSample),
                 lims.arrivalDateForSample(run.refSample()),
@@ -156,12 +165,10 @@ public abstract class PatientReporter {
             LOGGER.warn("PURPLE DID NOT DETECT A TUMOR. Proceed with utmost caution!");
         }
 
-        final FittedPurity purity = context.bestFit();
-        final FittedPurityScore purityScore = context.score();
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
         final List<GeneCopyNumber> panelGeneCopyNumbers = PatientReporterHelper.loadPurpleGeneCopyNumbers(runDirectory, sample)
                 .stream()
-                .filter(x -> reporterData().panelGeneModel().panel().contains(x.gene()))
+                .filter(geneCopyNumber -> reporterData().panelGeneModel().panel().contains(geneCopyNumber.gene()))
                 .collect(Collectors.toList());
 
         LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
@@ -169,8 +176,8 @@ public abstract class PatientReporter {
         final PurpleAnalysis purpleAnalysis = ImmutablePurpleAnalysis.builder()
                 .gender(context.gender())
                 .status(context.status())
-                .fittedPurity(purity)
-                .fittedScorePurity(purityScore)
+                .fittedPurity(context.bestFit())
+                .fittedScorePurity(context.score())
                 .copyNumbers(purpleCopyNumbers)
                 .panelGeneCopyNumbers(panelGeneCopyNumbers)
                 .build();

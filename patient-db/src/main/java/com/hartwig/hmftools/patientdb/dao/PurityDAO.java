@@ -134,7 +134,12 @@ class PurityDAO {
     private static void addPurity(@NotNull Timestamp timestamp, @NotNull InsertValuesStep7 inserter, @NotNull String sample,
             @NotNull FittedPurity purity) {
         //noinspection unchecked
-        inserter.values(sample, purity.purity(), purity.normFactor(), purity.score(), purity.ploidy(), purity.diploidProportion(),
+        inserter.values(sample,
+                purity.purity(),
+                purity.normFactor(),
+                purity.score(),
+                purity.ploidy(),
+                purity.diploidProportion(),
                 timestamp);
     }
 }
