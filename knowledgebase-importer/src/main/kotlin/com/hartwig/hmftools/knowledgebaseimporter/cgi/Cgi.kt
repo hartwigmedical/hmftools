@@ -27,7 +27,6 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
     private val cdnaAnalyzer = TransvarCdnaAnalyzer(transvarLocation)
     private val somaticVariantRecords by lazy { readTSVRecords(variantsLocation) { CgiKnownVariantRecord(it) }.filter { it.context == "somatic" } }
     private val biomarkersRecords by lazy { readTSVRecords(biomarkersLocation) { CgiBiomarkersRecord(it) } }
-    val cancerTypes by lazy { biomarkersRecords.flatMap { it.cancerTypes }.map { Pair(it, diseaseOntology.findDoids(it)) }.toMap() }
 
     override val source = "cgi"
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
@@ -36,6 +35,9 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
     override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableVariants() }
     override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableCNVs() }
     override val actionableFusions: List<ActionableFusionOutput> by lazy { actionableFusions() }
+    override val cancerTypes by lazy {
+        biomarkersRecords.flatMap { it.cancerTypes }.map { Pair(it, diseaseOntology.findDoids(it)) }.toMap()
+    }
 
     private fun knownVariants(): List<KnownVariantOutput> {
         val transvarOutput = proteinAnalyzer.analyze(somaticVariantRecords.map { ProteinAnnotation(it.transcript, it.impact) })

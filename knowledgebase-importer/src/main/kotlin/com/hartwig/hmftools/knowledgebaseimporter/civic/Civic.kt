@@ -26,7 +26,6 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
     private val cdnaAnalyzer = TransvarCdnaAnalyzer(transvarLocation)
     private val records by lazy { preProcessCivicRecords(variantsLocation, evidenceLocation) }
     private val civicVariants by lazy { readCivicVariants() }
-    val cancerTypes by lazy { readCancerTypes(diseaseOntology) }
 
     override val source = "civic"
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
@@ -35,7 +34,7 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
     override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableVariants() }
     override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableCNVs() }
     override val actionableFusions: List<ActionableFusionOutput> by lazy { actionableFusions() }
-
+    override val cancerTypes by lazy { readCancerTypes(diseaseOntology) }
 
     private fun knownVariants(): List<KnownVariantOutput> {
         return civicVariants.map { (civicRecord, somaticVariant) ->

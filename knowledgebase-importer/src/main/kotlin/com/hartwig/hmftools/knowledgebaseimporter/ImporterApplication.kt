@@ -29,6 +29,8 @@ fun main(args: Array<String>) {
                       reference)
     val cosmic = Cosmic("cosmic_gene_fusions.csv")
     val knowledgebases = listOf(oncoKb, cgi, civic, cosmic)
+    val knowledgebaseCancerTypes: Map<String, Set<Int>> = knowledgebases.fold(mapOf(), { map, it -> map + it.cancerTypes })
+    val cancerTypesOutput = knowledgebaseCancerTypes.entries.map { CancerTypeDoidOutput(it.key, it.value.joinToString(";")) }
 
     knowledgebases.filterNot { it.knownVariants.isEmpty() }.map { writeKnownVariants(it, outputDir) }
     writeKnownFusionPairs(knownFusionPairs(knowledgebases), "$outputDir${File.separator}knownFusionPairs.csv")
@@ -40,6 +42,7 @@ fun main(args: Array<String>) {
     writeActionablePromiscuousGenes(actionablePromiscuousFive(knowledgebases), "$outputDir${File.separator}actionablePromiscuousFive.csv")
     writeActionablePromiscuousGenes(actionablePromiscuousThree(knowledgebases), "$outputDir${File.separator}actionablePromiscuousThree.csv")
     writeActionableCnvs(knowledgebases.flatMap { it.actionableCNVs }, "$outputDir${File.separator}actionableCNVs.csv")
+    writeCancerTypes(cancerTypesOutput, "$outputDir${File.separator}knowledgebaseCancerTypes.csv")
 }
 
 private fun createOptions(): Options {
@@ -104,5 +107,12 @@ private fun writeActionablePromiscuousGenes(fusions: List<ActionableFusionOutput
     val format = CSVFormat.TDF.withHeader(*ActionableFusionOutput.promiscuousGeneHeader.toTypedArray()).withNullString("")
     val printer = CSVPrinter(FileWriter(location), format)
     printer.printRecords(fusions.map { it.record })
+    printer.close()
+}
+
+private fun writeCancerTypes(cancerTypes: List<CancerTypeDoidOutput>, location: String) {
+    val format = CSVFormat.TDF.withHeader(*CancerTypeDoidOutput.header.toTypedArray()).withNullString("")
+    val printer = CSVPrinter(FileWriter(location), format)
+    printer.printRecords(cancerTypes.map { it.record })
     printer.close()
 }
