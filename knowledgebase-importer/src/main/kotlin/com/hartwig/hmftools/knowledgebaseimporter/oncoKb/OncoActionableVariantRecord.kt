@@ -12,7 +12,7 @@ data class OncoActionableVariantRecord(private val csvRecord: CSVRecord) {
     val drugs: List<String> = csvRecord["Drugs(s)"].split(",").map { it.trim() }
     val level: String = readLevel(csvRecord["Level"])
     val significance = if (csvRecord["Level"].startsWith("R")) "resistance" else "sensitivity"
-    val actionabilityItems: List<Actionability> = Actionability("civic", listOf(cancerType), drugs, level, significance,
+    val actionabilityItems: List<Actionability> = Actionability("oncoKb", listOf(cancerType), drugs, level, significance,
                                                                 "Predictive", HmfLevel(csvRecord["Level"]))
 
     companion object {
