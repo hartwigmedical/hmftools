@@ -57,7 +57,7 @@ class ActionabilityAnalyzer(actionableVariantsLocation: String, fusionPairsLocat
 
         private fun readPrimaryTumorMapping(): Map<String, Set<String>> {
             return readCSVRecords(this::class.java.getResourceAsStream("/primary_tumor_locations.csv")) {
-                Pair(it["primaryTumorLocation"], it["doid"].orEmpty().split(";").toSet())
+                Pair(it["primaryTumorLocation"], it["doids"].orEmpty().split(";").toSet())
             }.toMap()
         }
     }
