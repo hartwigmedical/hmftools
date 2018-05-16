@@ -16,13 +16,13 @@ import org.jetbrains.annotations.NotNull;
 final class RanoMeasurementReader {
     private static final String STUDY_TREATMENT = "SE.TREATMENT";
     private static final String FORM_RESPONSERANO = "FRM.TMRANO";
-    private static final String ITEMGROUP_RESPONSERANO = "GRP.TMRANO";
+    private static final String ITEMGROUP_RESPONSERANO = "GRP.TMRANO.TMRANO";
 
-    private static final String FIELD_RANOTHERAPYGIVEN = "FLD.RNTMRNYN";
-    private static final String FIELD_RANORESPONSEDATE = "FLD.RNTMDT";
-    private static final String FIELD_RANOTARGETLESIONRESPONSE = "FLD.RNRSPTL";
-    private static final String FIELD_RANONOTARGETLESIONRESPONSE = "FLD.RNRSPNTL";
-    private static final String FIELD_RANOOVERALLRESPONSE = "FLD.RNRSPNTL";
+    private static final String FIELD_RANOTHERAPYGIVEN = "FLD.TMRANO.RNTMRNYN";
+    private static final String FIELD_RANORESPONSEDATE = "FLD.TMRANO.RNTMDT";
+    private static final String FIELD_RANOTARGETLESIONRESPONSE = "FLD.TMRANO.RNRSPTL";
+    private static final String FIELD_RANONOTARGETLESIONRESPONSE = "FLD.TMRANO.RNRSPNTL";
+    private static final String FIELD_RANOOVERALLRESPONSE = "FLD.TMRANO.RNVRLL";
 
     private RanoMeasurementReader() {
     }
