@@ -1,0 +1,24 @@
+primaryTumorLocation,doid
+Stomach,10534
+Colon/Rectum,9256;219
+Breast,1612
+Bone/Soft,201
+Skin,4159
+Lung,1324
+Biliary,4607
+Prostate,10283
+Small,10154
+Liver,3571
+Pancreas,1793
+Other,
+Ovary,2394
+Kidney,263
+Uterus,363
+Nervous,3093
+Esophagus,5041
+Head and neck,11934
+CUP,
+Sarcoma,1115
+Urinary tract,3996
+Lymphoid,0060058
+Mesothelioma,1790
