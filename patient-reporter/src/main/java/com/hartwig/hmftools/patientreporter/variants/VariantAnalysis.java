@@ -25,9 +25,7 @@ public abstract class VariantAnalysis {
     @NotNull
     public abstract List<VariantReport> findings();
 
-    public int mutationalLoad() {
-        return missenseVariants().size();
-    }
-
     public abstract double indelsPerMb();
+
+    public abstract int mutationalLoad();
 }
