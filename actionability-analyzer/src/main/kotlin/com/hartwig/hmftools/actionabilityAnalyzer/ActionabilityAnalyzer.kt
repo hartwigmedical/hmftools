@@ -51,7 +51,7 @@ class ActionabilityAnalyzer(actionableVariantsLocation: String, fusionPairsLocat
 
         private fun readCancerTypeMapping(fileLocation: String): Map<String, Set<String>> {
             return readTSVRecords(fileLocation) { CancerTypeDoidOutput(it["cancerType"], it["doids"].orEmpty()) }
-                    .map { Pair(it.cancerType, it.doidSet.split(";").toSet()) }
+                    .map { Pair(it.cancerType, it.doidSet.split(";").filterNot { it.isBlank() }.toSet()) }
                     .toMap()
         }
 
