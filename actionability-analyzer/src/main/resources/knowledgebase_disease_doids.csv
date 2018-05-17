@@ -1,5 +1,4 @@
 cancerType,doids,detailedName
-Non-Melanoma,,
 Acute Lymphoid Leukemia,,
 All Solid Tumors,,
 All Tumors,4,disease
@@ -57,7 +56,7 @@ Pericytoma,,
 PTEN Harmatoma Tumor Syndrome,,
 Renal,263,kidney cancer
 Salivary glands,8850,salivary gland cancer
-Skin Cancer,4159,skin cancer
+"Skin Cancer, Non-Melanoma",,
 Soft Tissue Sarcoma,,
 Solid Tumor,,
 Solid tumors,,
