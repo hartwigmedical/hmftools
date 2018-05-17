@@ -39,7 +39,7 @@ Cabazitaxel,Chemotherapy,"jevtana"
 Cabozantinib,Targeted therapy,
 Capmatinib,Targeted therapy,
 Capox,Chemotherapy,
-Carboplatin,Chemotherapy,"Carboplatine, Carbpolatine,Paraplatin, carbo platin, carbosin"
+Carboplatin,Chemotherapy,"Carboplatine, Carbpolatine,Paraplatin, carbo platin, carbosin,carbo"
 Carbotaxol,Chemotherapy,
 Casodex,Androgen/estrogen deprivation therapy,
 Ceritinib,Targeted therapy,
@@ -98,6 +98,7 @@ Folfirinox,Combi therapy,"Folfiri,Folfox"
 Folinic acid,Chemotherapy,"folic acid, Folin acid, folinaccid,Foline acid,Foline zuur,folineacid,follincaccid,Folinezuur, folinicacid"
 FU/LV,Chemotherapy,
 Fulvestrant,Hormonal therapy,"Faslodex"
+GDC-0032/Placebo,remove,
 GDC/placebo,remove,
 Gefitinib,Targeted therapy,"Gefinitib"
 Gemcitabine,Chemotherapy,"Gemicitabine"
@@ -111,6 +112,7 @@ HIPEC-COLOPEC,Chemotherapy,
 Hormonal therapy,hormonal therapy,"HTx,hormone therapy"
 HPV vacin,Other,
 hVEGF vaccine,Targeted therapy,
+hVEGF/RFASE,vaccin,
 Hyperthermia,Hyperthermia,"Synergo"
 I-131 5500 MBq,Radio therapy,
 IDH1 remmer,Targeted therapy,
@@ -152,6 +154,7 @@ Metformine,remove,
 Methadone,remove,
 Methotrexate,Chemotherapy,"Methotrexaat,MTX"
 Mitomycin-C,Chemotherapy,"mitomycin,Mitomycin C bladder instillation,Mitomycine,Mitomycine C,Mitomycine-C,mytomicine,Mytomycin-C"
+mitotane,Chemotherapy,
 Mitoxine,Chemotherapy,"mustargen"
 MOPP,Chemotherapy,
 MPS-1 inhibitor,Targeted therapy,
@@ -160,7 +163,7 @@ Myeloid Dendritical cells,Experimental,
 Neulasta,remove,
 Nilotinib,Targeted therapy,
 Nilutamide,Androgen/estrogen deprivation therapy,"Anadron,Anandron"
-Nintedanib,Targeted therapy,
+Nintedanib,Targeted therapy,Nintadinib
 Nivolumab,Immunotherapy,
 Not noted,remove,
 Octreotide,Hormonal therapy,"Octeotride"
@@ -180,6 +183,7 @@ Paclitaxel,Chemotherapy,"Nab-paclitaxel,paclicatel, nab"
 Palbociclib,Targeted therapy,
 Panitumumab,Targeted therapy,"pantinumab"
 Pazopanib,Targeted therapy,
+procarbazine/lomustine/vincristine,Chemotherapy,PCV
 PDR001 or placebo,remove,
 PEGPH20,Targeted therapy,
 Pegylated liposomal doxorubicin,Chemotherapy,"PLD"
@@ -188,6 +192,7 @@ Pemetrexed,Chemotherapy,"Pernetrexed,Alimta"
 Peptide Receptor Radionuclide Therapy (PRRT),Targeted therapy,
 Pertuzumab,Targeted therapy,
 PF-04518600,Experimental therapy (unkown compound),
+pimasertib,Targeted therapy,pimasertinib
 Placebo OR ribociclib,remove,
 Placebo vs olaparib,remove,
 Placebo/Taselisib,remove,
@@ -235,6 +240,7 @@ TDM-1,Chemotherapy,
 Temozolomide,Chemotherapy,"Temozolamide"
 Teniposide,Chemotherapy,
 Thalidomide,Chemotherapy,"thalodomide"
+Thiotepa,Chemotherapy,
 Tim-3 blocker,Targeted therapy,"tim 3 blocker"
 Tipiracil,remove,"tipiracil)"
 Tisotumab vedotin,Targeted therapy,
@@ -257,6 +263,7 @@ Unknown chemotherapy for breast tumor,Chemotherapy,
 VAC,Chemotherapy,
 Vandetanib,Targeted therapy,
 VEGF-inhibitor,Targeted therapy,"VEGF"
+Veliparib,Targeted therapy,
 Vemurafenib,Targeted therapy,
 Vinblastine,Chemotherapy,
 Vincristine,Chemotherapy,"vineristine,oncovin"

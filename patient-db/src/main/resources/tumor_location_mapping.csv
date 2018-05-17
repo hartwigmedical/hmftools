@@ -13,12 +13,14 @@ searchTerm,primaryTumorLocation,subType
 "Solitary brain metastasis, primary tumor probably near rectum",CUP,Probably rectum
 "Unknown, probably head and neck cancer",CUP,Possibly Head and neck
 "Urothelial cell cancer, but the origin is unknown",Urinary tract,Unknown
+"suspected gastric carcinoma, histological biopt: fits best with a high gastrointestinal tumor, in which gastric carcinoma is less likely.",Stomach,Gastric Carcinoma
 2008: Follicular NHL Stage IA (left ear) RT 8 GY; 2013: Stage IV follicular lymphoma (ww); 25Nov2015: Anal cancer,Colon/Rectum,Anal
 Adenocarcinoma cardia,Stomach,Cardia
 Adenocarcinoma small intestine,Small intestine,Other
 adenoid cystic carcinoma,Head and neck,Other
 Adenoid cystic carcinoma of left main bronchus,Lung,Bronchus
 adrenocortical carcinoma,Other,Adrenal
+Adrenocortical cortex,Other,Adrenal
 Anal cancer,Colon/Rectum,Anal
 angiosarcoma,Bone/Soft tissue,Angiosarcoma
 Appendix carcinoma,Colon/Rectum,Appendix
@@ -33,6 +35,7 @@ Breast Cancer: ER-positive/HER2-positive,Breast,ER-positive/HER2-positive
 Breast Cancer: subtype unknown,Breast,Subtype unknown
 Breast Cancer: triple negative,Breast,Triple negative
 Carcinoma NOS ex pleimorf adenoma,Head and neck,Salivary Gland
+Carcinoma of Ampulla of Vater or distal choledochus,biliary,Ampulla of Vater or distal choledochus
 Carcinoma of unknown primary,CUP,
 carcinosarcoom endometrium,Uterus,Endometrial
 carcinosarcoom of the uterus,Uterus,Other
@@ -63,6 +66,7 @@ gastrinoma in stomach,Stomach,Gastric
 Gastrointestinal Stromal Tumors (GIST),Bone/Soft tissue,Gastrointestinal stromal tumor (GIST)
 Glioblastoma Multiforme,Nervous system,Glioblastoma Multiforme
 Glioma: anaplastic astrocytoma-like,Nervous system,Glioma
+Glioma: anaplastic oligodendroglioma-like,Nervous system,Glioma: anaplastic oligodendroglioma-like
 Glioma: Glioblastoma Multiforme,Nervous system,Glioblastoma Multiforme
 Glioma: low-grade astrocytoma,Nervous system,Astrocytoma
 Glioma: low-grade oligodendroglioma,Nervous system,Oligodendroglioma
@@ -106,6 +110,7 @@ Mixed NET/not-NET located: major duodenal papilla,Small intestine,Other
 Morbus Kahler,Other,Myeloid: Morbus Kahler
 most likely high tractus digestive tumor,Small intestine,Other
 multipel myeloma,Other,Myeloid: Multiple Myeloma
+myoepithelial carcinoma,Sarcoma,myoepithelial carcinoma
 Nasal Cavity and Paranasal Sinus Cancer,Head and neck,Nasal cavity and paranasal sinuses
 NET colon ascendens,Colon/Rectum,NET
 NET unknown primary,Other,NET: unknown primary
@@ -129,6 +134,7 @@ Osteosarcoma (Bone Cancer),Bone/Soft tissue,Osteosarcoma
 Ovarian cancer,Ovary,
 Pancreatic cancer,Pancreas,
 Pancreatic NET,Pancreas,NET
+Paraganglioma / NET lung?,NET,paraganglioma
 Penile cancer,Other,Penile
 pericarditis carcinomatosa,Mesothelioma,Pericarditis carcinomatosa
 plexuspapilloom,Nervous system,Plexuspapilloom
@@ -138,6 +144,7 @@ Renal Cell Cancer,Kidney,Renal Cell
 Rhabdomyosarcoma,Bone/Soft tissue,Rhabdomyosarcoma
 rhabodomyosarcoma,Bone/Soft tissue,Rhabdomyosarcoma
 Salivary Gland Cancer,Head and neck,Salivary Gland
+salivary gland carcinoma,Head and neck,Salivary Gland
 salivay duct carcinoma,Head and neck,Salivary Duct
 Sarcoma: Ewing,Sarcoma,Ewing sarcoma
 Sarcoma: other,Bone/Soft tissue,Sarcoma
@@ -174,6 +181,7 @@ Unknown primary,CUP,
 unknown Primary tumor,CUP,
 unknown primary tumor,CUP,
 unknown primary tumor in tractus genitalis,CUP,
+Urachuscarcinoma,Urinary tract,Urachal carcinoma
 Urethral Cancer,Urinary tract,Urethra
 Urothelial cell cancer of the bladder,Urinary tract,Bladder
 Urothelial cell cancer of the pyelum,Urinary tract,Pyelum
