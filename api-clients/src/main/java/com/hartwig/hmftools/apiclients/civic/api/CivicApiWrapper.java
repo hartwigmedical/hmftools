@@ -1,15 +1,18 @@
 package com.hartwig.hmftools.apiclients.civic.api;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 
 import com.google.gson.Gson;
 import com.hartwig.hmftools.apiclients.civic.data.CivicApiDataGson;
 import com.hartwig.hmftools.apiclients.civic.data.CivicApiMetadata;
+import com.hartwig.hmftools.apiclients.civic.data.CivicEvidenceItem;
 import com.hartwig.hmftools.apiclients.civic.data.CivicGene;
 import com.hartwig.hmftools.apiclients.civic.data.CivicIndexResult;
 import com.hartwig.hmftools.apiclients.civic.data.CivicVariantWithEvidence;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import io.reactivex.Observable;
@@ -71,6 +74,13 @@ public class CivicApiWrapper {
                     .flatMap(page -> endpoint.apply((long) page, CIVIC_BATCH_COUNT).flatMapIterable(CivicIndexResult::records));
             return firstPageResults.mergeWith(nextPagesResults);
         });
+    }
+
+    @NotNull
+    public Map<Integer, String> getDrugInteractionMap() {
+        return getAllFromPaginatedEndpoint(api::getEvidenceItems).toMap(CivicEvidenceItem::id,
+                evidenceItem -> evidenceItem.drugInteractionType() == null ? Strings.EMPTY : evidenceItem.drugInteractionType())
+                .blockingGet();
     }
 
     public void releaseResources() {
