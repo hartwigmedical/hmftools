@@ -2,6 +2,7 @@ package com.hartwig.hmftools.knowledgebaseimporter.civic
 
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
+import com.hartwig.hmftools.apiclients.civic.api.CivicApiWrapper
 import com.hartwig.hmftools.common.variant.SomaticVariant
 import com.hartwig.hmftools.knowledgebaseimporter.Knowledgebase
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
@@ -103,8 +104,13 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
     }
 
     private fun readEvidenceMap(evidenceLocation: String): Multimap<String, CivicEvidence> {
+        val civicApi = CivicApiWrapper()
+        val drugInteractionMap = civicApi.drugInteractionMap
         val evidenceMap = ArrayListMultimap.create<String, CivicEvidence>()
-        readTSVRecords(evidenceLocation) { csvRecord -> evidenceMap.put(csvRecord["variant_id"], CivicEvidence(csvRecord)) }
+        readTSVRecords(evidenceLocation) { csvRecord ->
+            evidenceMap.put(csvRecord["variant_id"], CivicEvidence(csvRecord, drugInteractionMap))
+        }
+        civicApi.releaseResources()
         return evidenceMap
     }
 
