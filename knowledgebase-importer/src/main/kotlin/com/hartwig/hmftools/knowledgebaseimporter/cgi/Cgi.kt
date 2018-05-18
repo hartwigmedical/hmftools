@@ -46,9 +46,9 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
                     val cgiVariants = extractCgiVariants(cgiRecord.gdna, reference)
                     val inferredKnownVariants = extractVariants(transvarOutput, reference)
                             .filterNot { variant -> cgiVariants.any { it == variant } }
-                            .map { KnownVariantOutput(cgiRecord.gene, cgiRecord.transcript, "", SomaticVariantEvent(it)) }
+                            .map { KnownVariantOutput(cgiRecord.gene, cgiRecord.transcript, "", SomaticVariantEvent(cgiRecord.gene, it)) }
                     val cgiKnownVariants = cgiVariants.map {
-                        KnownVariantOutput(cgiRecord.gene, cgiRecord.transcript, "CGI", SomaticVariantEvent(it))
+                        KnownVariantOutput(cgiRecord.gene, cgiRecord.transcript, "CGI", SomaticVariantEvent(cgiRecord.gene, it))
                     }
                     cgiKnownVariants + inferredKnownVariants
                 }
@@ -100,7 +100,7 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
                                         somaticVariants: List<SomaticVariant>): List<ActionableVariantOutput> {
         return cgiRecord.actionabilityItems.flatMap { actionability ->
             somaticVariants.map {
-                ActionableVariantOutput(cgiRecord.gene, SomaticVariantEvent(it), actionability)
+                ActionableVariantOutput(cgiRecord.gene, SomaticVariantEvent(cgiRecord.gene, it), actionability)
             }
         }
     }
