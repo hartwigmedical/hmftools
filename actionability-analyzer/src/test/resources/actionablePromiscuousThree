@@ -1,0 +1,8 @@
+gene	source	drug	cancerType	level	hmfLevel	evidenceType	significance	hmfResponse
+RET	oncoKb	Vandetanib	Non-Small Cell Lung Cancer	3A	C	Predictive	Responsive	Responsive
+RET	oncoKb	Cabozantinib	Non-Small Cell Lung Cancer	2A	B	Predictive	Responsive	Responsive
+ALK	cgi	Alectinib	Non-small cell lung	FDA guidelines	A	Predictive	Responsive	Responsive
+ALK	cgi	Ceritinib	Non-small cell lung	FDA guidelines	A	Predictive	Responsive	Responsive
+ALK	civic	Pemetrexed	Non-small Cell Lung Carcinoma	B	B	Predictive	Sensitivity	Responsive
+ALK	civic	Crizotinib	Non-small Cell Lung Carcinoma	A	A	Predictive	Sensitivity	Responsive
+ALK	civic	Crizotinib	Non-small Cell Lung Carcinoma	B	B	Predictive	Sensitivity	Responsive
