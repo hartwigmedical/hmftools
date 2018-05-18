@@ -29,6 +29,7 @@ fun main(args: Array<String>) {
                       reference)
     val cosmic = Cosmic("cosmic_gene_fusions.csv")
     val knowledgebases = listOf(oncoKb, cgi, civic, cosmic)
+    val cancerTypesDoids = knowledgebaseCancerDoids(knowledgebases, diseaseOntology)
 
     knowledgebases.filterNot { it.knownVariants.isEmpty() }.map { writeKnownVariants(it, outputDir) }
     writeKnownFusionPairs(knownFusionPairs(knowledgebases), "$outputDir${File.separator}knownFusionPairs.csv")
@@ -40,6 +41,7 @@ fun main(args: Array<String>) {
     writeActionablePromiscuousGenes(actionablePromiscuousFive(knowledgebases), "$outputDir${File.separator}actionablePromiscuousFive.csv")
     writeActionablePromiscuousGenes(actionablePromiscuousThree(knowledgebases), "$outputDir${File.separator}actionablePromiscuousThree.csv")
     writeActionableCnvs(knowledgebases.flatMap { it.actionableCNVs }, "$outputDir${File.separator}actionableCNVs.csv")
+    writeCancerTypes(cancerTypesDoids, "$outputDir${File.separator}knowledgebaseCancerTypes.csv")
 }
 
 private fun createOptions(): Options {
@@ -56,6 +58,20 @@ private fun createOptions(): Options {
     options.addOption(Option.builder(COSMIC_FUSIONS_LOCATION).required().hasArg().desc("path to cosmic fusions file").build())
     options.addOption(Option.builder(OUTPUT_DIRECTORY).required().hasArg().desc("path to output directory").build())
     return options
+}
+
+private fun knowledgebaseCancerDoids(knowledgebases: List<Knowledgebase>, ontology: DiseaseOntology): List<CancerTypeDoidOutput> {
+    val extraCancerTypeDoids = readExtraCancerTypeDoids().map {
+        Pair(it.key, it.value.flatMap { doid -> ontology.findDoidsForDoid(doid) }.toSet())
+    }.toMap()
+    val allCancerTypeDoids = knowledgebases.fold(mapOf<String, Set<String>>(), { map, it -> map + it.cancerTypes })
+    return (allCancerTypeDoids + extraCancerTypeDoids).entries.map { CancerTypeDoidOutput(it.key, it.value.joinToString(";")) }
+}
+
+private fun readExtraCancerTypeDoids(): Map<String, Set<String>> {
+    return readCSVRecords(object {}.javaClass.getResourceAsStream("/knowledgebase_disease_doids.csv")) {
+        Pair(it["cancerType"], it["doids"].orEmpty().split(";").filterNot { it.isBlank() }.map { it.trim() }.toSet())
+    }.toMap()
 }
 
 private fun writeKnownVariants(knowledgebase: Knowledgebase, outputDirectory: String) {
@@ -104,5 +120,12 @@ private fun writeActionablePromiscuousGenes(fusions: List<ActionableFusionOutput
     val format = CSVFormat.TDF.withHeader(*ActionableFusionOutput.promiscuousGeneHeader.toTypedArray()).withNullString("")
     val printer = CSVPrinter(FileWriter(location), format)
     printer.printRecords(fusions.map { it.record })
+    printer.close()
+}
+
+private fun writeCancerTypes(cancerTypes: List<CancerTypeDoidOutput>, location: String) {
+    val format = CSVFormat.TDF.withHeader(*CancerTypeDoidOutput.header.toTypedArray()).withNullString("")
+    val printer = CSVPrinter(FileWriter(location), format)
+    printer.printRecords(cancerTypes.map { it.record })
     printer.close()
 }

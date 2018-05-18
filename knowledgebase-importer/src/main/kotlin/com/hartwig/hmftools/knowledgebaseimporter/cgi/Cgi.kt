@@ -27,7 +27,6 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
     private val cdnaAnalyzer = TransvarCdnaAnalyzer(transvarLocation)
     private val somaticVariantRecords by lazy { readTSVRecords(variantsLocation) { CgiKnownVariantRecord(it) }.filter { it.context == "somatic" } }
     private val biomarkersRecords by lazy { readTSVRecords(biomarkersLocation) { CgiBiomarkersRecord(it) } }
-    val cancerTypes by lazy { biomarkersRecords.flatMap { it.cancerTypes }.map { Pair(it, diseaseOntology.findDoids(it)) }.toMap() }
 
     override val source = "cgi"
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
@@ -36,6 +35,9 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
     override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableVariants() }
     override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableCNVs() }
     override val actionableFusions: List<ActionableFusionOutput> by lazy { actionableFusions() }
+    override val cancerTypes by lazy {
+        biomarkersRecords.flatMap { it.cancerTypes }.map { Pair(it, diseaseOntology.findDoidsForCancerType(it)) }.toMap()
+    }
 
     private fun knownVariants(): List<KnownVariantOutput> {
         val transvarOutput = proteinAnalyzer.analyze(somaticVariantRecords.map { ProteinAnnotation(it.transcript, it.impact) })
@@ -68,11 +70,7 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
     private fun actionableCNVs(): List<ActionableCNVOutput> {
         val cnaRecords = biomarkersRecords.filter { it.alterationType == "CNA" }
         return cnaRecords.flatMap { record ->
-            record.cancerTypes.flatMap { cancerType ->
-                record.drugs.map {
-                    ActionableCNVOutput(extractCnv(record), actionability(cancerType, it, record))
-                }
-            }
+            record.actionabilityItems.map { ActionableCNVOutput(extractCnv(record), it) }
         }
     }
 
@@ -82,9 +80,7 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
                 .map { flipFusion(it, FUSIONS_TO_FLIP) }
         return fusionRecords.zip(fusions).filterNot { FUSIONS_TO_FILTER.contains(it.second) }
                 .flatMap { (record, fusion) ->
-                    record.cancerTypes.flatMap { cancerType ->
-                        record.drugs.map { ActionableFusionOutput(fusion, actionability(cancerType, it, record)) }
-                    }
+                    record.actionabilityItems.map { ActionableFusionOutput(fusion, it) }
                 }
     }
 
@@ -102,11 +98,9 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
 
     private fun actionableVariantOutput(cgiRecord: CgiBiomarkersRecord,
                                         somaticVariants: List<SomaticVariant>): List<ActionableVariantOutput> {
-        return cgiRecord.cancerTypes.flatMap { cancerType ->
-            cgiRecord.drugs.flatMap { drug ->
-                somaticVariants.map {
-                    ActionableVariantOutput(cgiRecord.gene, SomaticVariantEvent(it), actionability(cancerType, drug, cgiRecord))
-                }
+        return cgiRecord.actionabilityItems.flatMap { actionability ->
+            somaticVariants.map {
+                ActionableVariantOutput(cgiRecord.gene, SomaticVariantEvent(it), actionability)
             }
         }
     }
@@ -117,9 +111,5 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
         else {
             CnvEvent(record.gene, "Deletion")
         }
-    }
-
-    private fun actionability(cancerType: String, drug: String, cgiBiomarker: CgiBiomarkersRecord): Actionability {
-        return Actionability(source, cancerType, drug, cgiBiomarker.level, cgiBiomarker.association, "")
     }
 }

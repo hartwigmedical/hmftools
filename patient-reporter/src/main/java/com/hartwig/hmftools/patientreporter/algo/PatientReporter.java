@@ -124,6 +124,8 @@ public abstract class PatientReporter {
         LOGGER.info("  Number of gene disruptions to report : " + Integer.toString(reportableDisruptions.size()));
         LOGGER.info("  Number of CIViC alterations to report : " + alterations.size());
         LOGGER.info("  Microsatellite analysis results: " + variantAnalysis.indelsPerMb() + " indels per MB");
+        LOGGER.info("  Mutational load results: " + variantAnalysis.mutationalLoad());
+
 
         final Lims lims = baseReporterData().limsModel();
         final Double tumorPercentage = lims.tumorPercentageForSample(tumorSample);

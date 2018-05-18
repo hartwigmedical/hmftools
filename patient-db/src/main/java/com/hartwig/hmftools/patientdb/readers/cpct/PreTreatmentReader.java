@@ -28,15 +28,15 @@ class PreTreatmentReader {
     private static final String STUDY_BASELINE = "SE.BASELINE";
 
     private static final String FORM_TREATMENT = "FRM.PRETHERAPY";
-    private static final String ITEMGROUP_TREATMENT = "GRP.PRETHERAPY";
-    private static final String FIELD_PRETREATMENT_GIVEN = "FLD.SYSTEMIC";
-    private static final String FIELD_PRERADIOTHERAPY_GIVEN = "FLD.RADIOTHER";
+    private static final String ITEMGROUP_TREATMENT = "GRP.PRETHERAPY.PRETHERAPY";
+    private static final String FIELD_PRETREATMENT_GIVEN = "FLD.PRETHERAPY.SYSTEMIC";
+    private static final String FIELD_PRERADIOTHERAPY_GIVEN = "FLD.PRETHERAPY.RADIOTHER";
 
-    private static final String ITEMGROUP_DRUGS = "GRP.SYSTEMICTRT";
-    private static final String FIELD_PRE_DRUG_START = "FLD.SYSTEMICSTDTC";
-    private static final String FIELD_PRE_DRUG_END = "FLD.SYSTEMICENDTC";
-    private static final String FIELD_PRE_DRUG = "FLD.SYSTEMICREG";
-    private static final String FIELD_PRE_BEST_RESPONSE = "FLD.SYSTEMICRESP";
+    private static final String ITEMGROUP_DRUGS = "GRP.PRETHERAPY.SYSTEMICTRT";
+    private static final String FIELD_PRE_DRUG_START = "FLD.PRETHERAPY.SYSTEMICSTDTC";
+    private static final String FIELD_PRE_DRUG_END = "FLD.PRETHERAPY.SYSTEMICENDTC";
+    private static final String FIELD_PRE_DRUG = "FLD.PRETHERAPY.SYSTEMICREG";
+    private static final String FIELD_PRE_BEST_RESPONSE = "FLD.PRETHERAPY.SYSTEMICRESP";
 
     @NotNull
     private final TreatmentCurator treatmentCurator;

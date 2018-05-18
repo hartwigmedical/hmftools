@@ -21,15 +21,15 @@ class BiopsyReader {
 
     static final String STUDY_BIOPSY = "SE.BIOPSY";
     static final String FORM_BIOPS = "FRM.BIOPS";
-    static final String ITEMGROUP_BIOPSY = "GRP.BIOPS";
-    static final String FIELD_BIOPSY_TAKEN = "FLD.CPCT";
-    static final String FIELD_BIOPSY_EVALUABLE = "FLD.BIOPEFS";
+    static final String ITEMGROUP_BIOPSY = "GRP.BIOPS.BIOPS";
+    static final String FIELD_BIOPSY_TAKEN = "FLD.BIOPS.CPCT";
+    static final String FIELD_BIOPSY_EVALUABLE = "FLD.BIOPS.BIOPEFS";
 
-    static final String ITEMGROUP_BIOPSIES = "GRP.BIOPSIES";
-    static final String FIELD_BIOPSY_DATE = "FLD.BIOPTDT";
-    static final String FIELD_SITE = "FLD.BILESSITE";
-    static final String FIELD_SITE_OTHER = "FLD.BIOTHLESSITE";
-    static final String FIELD_LOCATION = "FLD.BILESLOC";
+    static final String ITEMGROUP_BIOPSIES = "GRP.BIOPS.BIOPSIES";
+    static final String FIELD_BIOPSY_DATE = "FLD.BIOPS.BIOPTDT";
+    static final String FIELD_SITE = "FLD.BIOPS.BILESSITE";
+    static final String FIELD_SITE_OTHER = "FLD.BIOPS.BIOTHLESSITE";
+    static final String FIELD_LOCATION = "FLD.BIOPS.BILESLOC";
 
     @NotNull
     private final BiopsySiteCurator biopsySiteCurator;

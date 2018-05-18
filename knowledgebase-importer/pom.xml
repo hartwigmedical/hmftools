@@ -35,6 +35,10 @@
             <artifactId>org.semanticweb.hermit</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>api-clients</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.kotlintest</groupId>
             <artifactId>kotlintest</artifactId>
             <scope>test</scope>

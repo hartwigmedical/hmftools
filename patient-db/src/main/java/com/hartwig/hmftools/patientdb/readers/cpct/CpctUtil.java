@@ -16,8 +16,8 @@ public final class CpctUtil {
 
     private static final Logger LOGGER = LogManager.getLogger(CpctUtil.class);
 
-    private static final String FIELD_HOSPITAL1 = "FLD.HOSPITAL";
-    private static final String FIELD_HOSPITAL2 = "FLD.NHOSPITAL";
+    private static final String FIELD_HOSPITAL1 = "FLD.ELIGIBILITY.HOSPITAL";
+    private static final String FIELD_HOSPITAL2 = "FLD.SELCRIT.NHOSPITAL";
 
     private CpctUtil() {
     }

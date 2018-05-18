@@ -2,6 +2,7 @@ package com.hartwig.hmftools.knowledgebaseimporter.civic
 
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
+import com.hartwig.hmftools.apiclients.civic.api.CivicApiWrapper
 import com.hartwig.hmftools.common.variant.SomaticVariant
 import com.hartwig.hmftools.knowledgebaseimporter.Knowledgebase
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
@@ -26,7 +27,6 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
     private val cdnaAnalyzer = TransvarCdnaAnalyzer(transvarLocation)
     private val records by lazy { preProcessCivicRecords(variantsLocation, evidenceLocation) }
     private val civicVariants by lazy { readCivicVariants() }
-    val cancerTypes by lazy { readCancerTypes(diseaseOntology) }
 
     override val source = "civic"
     override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
@@ -35,7 +35,7 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
     override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableVariants() }
     override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableCNVs() }
     override val actionableFusions: List<ActionableFusionOutput> by lazy { actionableFusions() }
-
+    override val cancerTypes by lazy { readCancerTypes(diseaseOntology) }
 
     private fun knownVariants(): List<KnownVariantOutput> {
         return civicVariants.map { (civicRecord, somaticVariant) ->
@@ -46,19 +46,15 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
     private fun actionableVariants(): List<ActionableVariantOutput> {
         return civicVariants.flatMap { (record, somaticVariant) ->
             record.evidence.filter { it.direction == "Supports" }.flatMap { evidence ->
-                evidence.drugs.map { drug ->
-                    ActionableVariantOutput(record.gene, SomaticVariantEvent(somaticVariant), actionability(drug, evidence))
-                }
+                evidence.actionabilityItems.map { ActionableVariantOutput(record.gene, SomaticVariantEvent(somaticVariant), it) }
             }
         }
     }
 
     private fun actionableCNVs(): List<ActionableCNVOutput> {
         return records.filter { it.variant == "AMPLIFICATION" || it.variant == "DELETION" || it.variant == "LOH" }.flatMap { record ->
-            record.evidence.flatMap { evidence ->
-                evidence.drugs.map { drug ->
-                    ActionableCNVOutput(extractCnv(record), actionability(drug, evidence))
-                }
+            record.evidence.filter { it.direction == "Supports" }.flatMap { evidence ->
+                evidence.actionabilityItems.map { ActionableCNVOutput(extractCnv(record), it) }
             }
         }
     }
@@ -68,10 +64,8 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
         val fusions = fusionRecords.map { extractFusion(it.gene, it.variant.trim(), FUSION_SEPARATORS) }
         return fusionRecords.zip(fusions).filterNot { FUSIONS_TO_FILTER.contains(it.second) }
                 .flatMap { (record, fusion) ->
-                    record.evidence.flatMap { evidence ->
-                        evidence.drugs.map { drug ->
-                            ActionableFusionOutput(fusion, actionability(drug, evidence))
-                        }
+                    record.evidence.filter { it.direction == "Supports" }.flatMap { evidence ->
+                        evidence.actionabilityItems.map { ActionableFusionOutput(fusion, it) }
                     }
                 }
     }
@@ -110,18 +104,19 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
     }
 
     private fun readEvidenceMap(evidenceLocation: String): Multimap<String, CivicEvidence> {
+        val civicApi = CivicApiWrapper()
+        val drugInteractionMap = civicApi.drugInteractionMap
         val evidenceMap = ArrayListMultimap.create<String, CivicEvidence>()
-        readTSVRecords(evidenceLocation) { csvRecord -> evidenceMap.put(csvRecord["variant_id"], CivicEvidence(csvRecord)) }
+        readTSVRecords(evidenceLocation) { csvRecord ->
+            evidenceMap.put(csvRecord["variant_id"], CivicEvidence(csvRecord, drugInteractionMap))
+        }
+        civicApi.releaseResources()
         return evidenceMap
     }
 
     private fun additionalInfo(civicRecord: CivicRecord): String {
         val highestEvidenceLevel = civicRecord.evidence.map { it.level }.sorted().firstOrNull() ?: "N"
         return (highestEvidenceLevel == "A" || highestEvidenceLevel == "B" || highestEvidenceLevel == "C").toString()
-    }
-
-    private fun actionability(drug: String, evidence: CivicEvidence): Actionability {
-        return Actionability(source, evidence.cancerType, drug, evidence.level, evidence.significance, evidence.type)
     }
 
     private fun extractCnv(record: CivicRecord): CnvEvent {
@@ -159,11 +154,11 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
         }
     }
 
-    private fun readCancerTypes(diseaseOntology: DiseaseOntology): Map<String, Set<Int>> {
+    private fun readCancerTypes(diseaseOntology: DiseaseOntology): Map<String, Set<String>> {
         return records.flatMap { it.evidence }.map { Pair(it.cancerType, doidsForEvidence(it, diseaseOntology)) }.toMap()
     }
 
-    private fun doidsForEvidence(evidence: CivicEvidence, diseaseOntology: DiseaseOntology): Set<Int> {
-        return diseaseOntology.findDoids(evidence.cancerType) + diseaseOntology.findDoids(evidence.doid.toIntOrNull())
+    private fun doidsForEvidence(evidence: CivicEvidence, diseaseOntology: DiseaseOntology): Set<String> {
+        return diseaseOntology.findDoidsForCancerType(evidence.cancerType) + diseaseOntology.findDoidsForDoid(evidence.doid)
     }
 }

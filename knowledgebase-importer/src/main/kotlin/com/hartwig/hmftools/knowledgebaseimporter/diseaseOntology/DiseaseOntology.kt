@@ -69,23 +69,22 @@ class DiseaseOntology(fileLocation: String) {
         return diseaseNameToClass.containsKey(cancerType.toLowerCase().trim())
     }
 
-    fun findDoids(cancerType: String): Set<Int> {
+    fun findDoidsForCancerType(cancerType: String): Set<String> {
         val cancerClass = diseaseNameToClass[cancerType.toLowerCase().trim()]
         cancerClass ?: return emptySet()
         return findDoids(cancerClass)
     }
 
-    fun findDoids(cancerDoid: Int?): Set<Int> {
-        cancerDoid ?: return emptySet()
+    fun findDoidsForDoid(cancerDoid: String): Set<String> {
+        if (cancerDoid.isEmpty()) return emptySet()
         val cancerIRI = IRI.create("http://purl.obolibrary.org/obo/DOID_$cancerDoid")
         return findDoids(ontology.owlOntologyManager.owlDataFactory.getOWLClass(cancerIRI))
     }
 
-    private fun findDoids(cancerClass: OWLClass): Set<Int> {
+    private fun findDoids(cancerClass: OWLClass): Set<String> {
         val relevantClasses = setOf(cancerClass) + subClasses(cancerClass, reasoner) + superClasses(cancerClass, reasoner)
         return relevantClasses.map { it.toString().substringAfter("DOID_").substringBefore('>') }
                 .filterNot { it.isBlank() }
-                .map { it.toInt() }
                 .toSet()
     }
 }
