@@ -67,7 +67,7 @@ public abstract class NonSequenceablePage {
             }
             case LOW_TUMOR_PERCENTAGE: {
                 title = "Notification of inadequate tumor sample";
-                subTitle = "Not enough tumor cells detected by PA UMCU.";
+                subTitle = "Not enough tumor cells detected by PA UMC Utrecht.";
                 message = "For sequencing we require a minimum of 30% tumor cells.";
                 break;
             }
