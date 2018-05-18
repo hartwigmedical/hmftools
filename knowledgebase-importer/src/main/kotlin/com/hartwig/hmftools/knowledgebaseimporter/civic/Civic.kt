@@ -39,8 +39,7 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
 
     private fun knownVariants(): List<KnownVariantOutput> {
         return civicVariants.map { (civicRecord, somaticVariant) ->
-            KnownVariantOutput(civicRecord.gene, civicRecord.transcript, additionalInfo(civicRecord),
-                               SomaticVariantEvent(civicRecord.gene, somaticVariant))
+            KnownVariantOutput(civicRecord.gene, civicRecord.transcript, additionalInfo(civicRecord), SomaticVariantEvent(somaticVariant))
         }
     }
 
@@ -48,7 +47,7 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
         return civicVariants.flatMap { (record, somaticVariant) ->
             record.evidence.filter { it.direction == "Supports" }.flatMap { evidence ->
                 evidence.actionabilityItems.map {
-                    ActionableVariantOutput(record.gene, SomaticVariantEvent(record.gene, somaticVariant), it)
+                    ActionableVariantOutput(record.gene, SomaticVariantEvent(somaticVariant), it)
                 }
             }
         }
