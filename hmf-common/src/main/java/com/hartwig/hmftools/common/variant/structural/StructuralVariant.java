@@ -41,7 +41,9 @@ public interface StructuralVariant {
     @Nullable
     String filter();
 
+    @Nullable
     boolean mantaPrecise();
 
+    @Nullable
     int somaticScore();
 }

@@ -131,6 +131,9 @@ class StructuralVariantDAO {
                     .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
                     .type(StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
                     .ploidy(record.getValue(STRUCTURALVARIANT.PLOIDY))
+                    .filter(record.getValue(STRUCTURALVARIANT.FILTER))
+                    .mantaPrecise(record.getValue(STRUCTURALVARIANT.MANTAPRECISE).equals("true"))
+                    .somaticScore(record.getValue(STRUCTURALVARIANT.SOMATICSCORE))
                     .build();
 
             regions.add(variant);
