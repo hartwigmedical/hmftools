@@ -27,6 +27,7 @@ data class CivicEvidence(private val csvRecord: CSVRecord, private val drugInter
             val drugs = drugField.split(",").map { it.trim() }.filterNot { it.isEmpty() }
             return when {
                 drugInteraction.isBlank()                      -> drugs
+                drugInteraction.toLowerCase() == "substitutes" -> drugs
                 drugInteraction.toLowerCase() == "combination" -> listOf(drugs.joinToString(" + "))
                 else                                           -> listOf(drugs.joinToString(", ") + " ($drugInteraction)")
             }
