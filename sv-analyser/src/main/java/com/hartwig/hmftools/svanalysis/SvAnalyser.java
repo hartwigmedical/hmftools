@@ -14,6 +14,7 @@ import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.SvClusteringConfig;
 import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.svanalysis.annotators.ExtDataLinker;
+import com.hartwig.hmftools.svanalysis.annotators.GeneAnnotator;
 import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 
 import org.apache.commons.cli.CommandLine;
@@ -47,7 +48,8 @@ public class SvAnalyser {
     private static final String EXTERNAL_SV_DATA_FILE = "ext_sv_data_file";
     private static final String COPY_NUMBER_ANALYSIS = "copy_number_analysis";
     private static final String COPY_NUMBER_FILE = "cn_file";
-    private static final String EXTERNAL_DATA_LINE_FILE = "ext_data_link_file";
+    private static final String EXTERNAL_DATA_LINK_FILE = "ext_data_link_file";
+    private static final String DRIVER_GENES_FILE = "driver_gene_file";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -96,10 +98,10 @@ public class SvAnalyser {
 
         ExtDataLinker extDataLinker = null;
 
-        if (cmd.hasOption(EXTERNAL_DATA_LINE_FILE)) {
+        if (cmd.hasOption(EXTERNAL_DATA_LINK_FILE)) {
 
             extDataLinker = new ExtDataLinker();
-            extDataLinker.loadFile(cmd.getOptionValue(EXTERNAL_DATA_LINE_FILE));
+            extDataLinker.loadFile(cmd.getOptionValue(EXTERNAL_DATA_LINK_FILE));
         }
 
         SvClusteringConfig clusteringConfig = new SvClusteringConfig();
@@ -110,6 +112,7 @@ public class SvAnalyser {
         clusteringConfig.setFragileSiteFile(cmd.getOptionValue(FRAGILE_SITE_FILE, ""));
         clusteringConfig.setLineElementFile(cmd.getOptionValue(LINE_ELEMENT_FILE, ""));
         clusteringConfig.setExternalAnnotationsFile(cmd.getOptionValue(EXTERNAL_SV_DATA_FILE, ""));
+        clusteringConfig.setGeneDataFile(cmd.getOptionValue(DRIVER_GENES_FILE, ""));
         SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(clusteringConfig);
 
         List<String> samplesList = Lists.newArrayList();
@@ -191,7 +194,8 @@ public class SvAnalyser {
         options.addOption(EXTERNAL_SV_DATA_FILE, true, "External file with per-SV annotations");
         options.addOption(COPY_NUMBER_ANALYSIS, false, "Run copy number analysis");
         options.addOption(COPY_NUMBER_FILE, true, "Copy number CSV file");
-        options.addOption(EXTERNAL_DATA_LINE_FILE, true, "External SV data file, mapped by position info");
+        options.addOption(EXTERNAL_DATA_LINK_FILE, true, "External SV data file, mapped by position info");
+        options.addOption(DRIVER_GENES_FILE, true, "Gene data file");
 
         return options;
     }

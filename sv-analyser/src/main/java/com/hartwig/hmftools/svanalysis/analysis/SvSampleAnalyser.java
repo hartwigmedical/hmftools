@@ -6,6 +6,7 @@ import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.annotators.ExternalSVAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator;
+import com.hartwig.hmftools.svanalysis.annotators.GeneAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
@@ -42,6 +43,7 @@ public class SvSampleAnalyser {
     LineElementAnnotator mLineElementAnnotator;
     ExternalSVAnnotator mExternalAnnotator;
     SvClusteringMethods mClusteringMethods;
+    GeneAnnotator mGeneAnnotator;
 
     PerformanceCounter mPerfCounter;
     PerformanceCounter mPC1;
@@ -74,12 +76,15 @@ public class SvSampleAnalyser {
         mExternalAnnotator = new ExternalSVAnnotator();
         mExternalAnnotator.loadFile(mConfig.getExternalAnnotationsFile());
 
+        mGeneAnnotator = new GeneAnnotator();
+        mGeneAnnotator.loadGeneDriverFile(mConfig.getGeneDataFile());
+
         mPerfCounter = new PerformanceCounter("Total");
         mPC1 = new PerformanceCounter("Annotate&Filter");
-        // mPC2 = new PerformanceCounter("ExtAnn");
         mPC3 = new PerformanceCounter("BaseDist");
         mPC4 = new PerformanceCounter("Analyse");
         mPC5 = new PerformanceCounter("Nearest");
+        mPC2 = new PerformanceCounter("GeneData");
         mPC6 = new PerformanceCounter("CSV");
 
         clearState();
@@ -134,10 +139,6 @@ public class SvSampleAnalyser {
 
         mPC1.stop();
 
-//        mPC2.start();
-//        // LOGGER.debug("sample({}) clustering {} variants", mSampleId, mAllVariants.size());
-//        mPC2.stop();
-
         mPC3.start();
 
         LOGGER.debug("sample({}) clustering {} variants", mSampleId, mAllVariants.size());
@@ -169,6 +170,20 @@ public class SvSampleAnalyser {
         mClusteringMethods.setChromosomalArmStats(mAllVariants);
 
         mPC5.stop();
+
+        mPC2.start();
+
+        if(mGeneAnnotator.hasData()) {
+            for (SvClusterData var : mAllVariants) {
+
+                mGeneAnnotator.addGeneData(mSampleId, var);
+            }
+
+            mGeneAnnotator.reportGeneMatchData(mSampleId);
+        }
+
+        mPC2.stop();
+
         mPC6.start();
 
         if(mConfig.getOutputCsvPath() != "")
@@ -389,10 +404,10 @@ public class SvSampleAnalyser {
         // log perf stats
         mPerfCounter.logStats();
         mPC1.logStats();
-        //mPC2.logStats();
         mPC3.logStats();
         mPC4.logStats();
         mPC5.logStats();
+        mPC2.logStats();
         mPC6.logStats();
     }
 
