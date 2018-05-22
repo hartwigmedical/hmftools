@@ -15,10 +15,7 @@ public abstract class VariantAnalysis {
 
     @NotNull
     public abstract List<SomaticVariant> passedVariants();
-
-    @NotNull
-    public abstract List<SomaticVariant> missenseVariants();
-
+    
     @NotNull
     public abstract List<SomaticVariant> consequentialVariants();
 

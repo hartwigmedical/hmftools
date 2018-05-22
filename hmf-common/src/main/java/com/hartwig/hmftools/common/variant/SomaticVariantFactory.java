@@ -134,7 +134,7 @@ public class SomaticVariantFactory {
         } else {
             builder.gene("");
             builder.worstEffect("");
-            builder.worstCodingEffect(CodingEffect.NONE);
+            builder.worstCodingEffect(CodingEffect.UNDEFINED);
             builder.worstEffectTranscript("");
         }
 
