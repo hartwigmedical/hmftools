@@ -47,8 +47,9 @@ public abstract class MicrosatelliteAnalyzer {
     }
 
     private boolean isPassIndel(@NotNull final SomaticVariant variant) {
-        return variant.filter().equals("PASS") && variant.type() == VariantType.INDEL && variant.ref().length() < 50
-                && variant.alt().length() < 50;
+        // KODU: Patient reporting should already filter on passed only.
+        assert variant.filter().equals("PASS");
+        return variant.type() == VariantType.INDEL && variant.ref().length() < 50 && variant.alt().length() < 50;
     }
 
     @VisibleForTesting
