@@ -121,7 +121,7 @@ public class PatientReporterApplication {
     @NotNull
     private static PatientReporter buildReporter(@NotNull final CommandLine cmd, @NotNull final HmfReporterData reporterData)
             throws IOException, SQLException {
-        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.of(reporterData.panelGeneModel(), reporterData.microsatelliteAnalyzer());
+        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.of(reporterData);
 
         final VariantAnnotator annotator;
         if (cmd.hasOption(ENSEMBL_DB)) {

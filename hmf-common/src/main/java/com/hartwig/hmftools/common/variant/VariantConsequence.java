@@ -61,15 +61,15 @@ public enum VariantConsequence {
     UPSTREAM_GENE_VARIANT(false, "upstream_gene_variant"),
     OTHER(false, Strings.EMPTY);
 
-    private final boolean actionable;
+    private final boolean hasImpact;
     @NotNull
     private final String parentSequenceOntologyTerm;
     @NotNull
     private final List<String> sequenceOntologySubTerms;
 
-    VariantConsequence(final boolean actionable, @NotNull final String parentSequenceOntologyTerm,
+    VariantConsequence(final boolean hasImpact, @NotNull final String parentSequenceOntologyTerm,
             @NotNull final String... sequenceOntologySubTerms) {
-        this.actionable = actionable;
+        this.hasImpact = hasImpact;
         this.parentSequenceOntologyTerm = parentSequenceOntologyTerm;
         this.sequenceOntologySubTerms = Lists.newArrayList(sequenceOntologySubTerms);
     }
@@ -83,11 +83,11 @@ public enum VariantConsequence {
         return parentSequenceOntologyTerm.replace("_", " ");
     }
 
-    public boolean isActionable() {
-        return actionable;
+    public boolean hasImpact() {
+        return hasImpact;
     }
 
     @NotNull
-    public static final List<VariantConsequence> ACTIONABLE_CONSEQUENCES =
-            Stream.of(VariantConsequence.values()).filter(VariantConsequence::isActionable).collect(Collectors.toList());
+    public static final List<VariantConsequence> IMPACTING_CONSEQUENCES =
+            Stream.of(VariantConsequence.values()).filter(VariantConsequence::hasImpact).collect(Collectors.toList());
 }
