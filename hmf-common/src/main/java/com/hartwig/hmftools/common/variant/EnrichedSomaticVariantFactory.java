@@ -41,7 +41,7 @@ public class EnrichedSomaticVariantFactory {
         this.highConfidenceSelector = GenomeRegionSelectorFactory.create(highConfidenceRegions);
         this.reference = reference;
         this.clonalityFactory = clonalityFactory;
-        canonicalAnnotationSelector = new CanonicalAnnotationSelector(canonicalTranscripts);
+        this.canonicalAnnotationSelector = new CanonicalAnnotationSelector(canonicalTranscripts);
     }
 
     @NotNull
@@ -85,10 +85,10 @@ public class EnrichedSomaticVariantFactory {
         if (canonicalAnnotation.isPresent()) {
             final VariantAnnotation annotation = canonicalAnnotation.get();
             builder.canonicalEffect(annotation.consequenceString());
-            builder.canonicalCodingEffect(CodingEffect.effect(annotation.consequences()).toString());
+            builder.canonicalCodingEffect(CodingEffect.effect(annotation.consequences()));
         } else {
             builder.canonicalEffect(Strings.EMPTY);
-            builder.canonicalCodingEffect(Strings.EMPTY);
+            builder.canonicalCodingEffect(CodingEffect.UNDEFINED);
         }
     }
 

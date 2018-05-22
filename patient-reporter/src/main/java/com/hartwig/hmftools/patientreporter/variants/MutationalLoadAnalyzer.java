@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.variants;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -19,6 +20,8 @@ public class MutationalLoadAnalyzer {
     }
 
     private static boolean mutationalLoadCheck(@NotNull final SomaticVariant variant) {
-        return variant.worstCodingEffect().contains("MISSENSE") && variant.filter().equals("PASS");
+        // KODU: Patient reporting pre-filters already, so below assert should always hold.
+        assert variant.filter().equals("PASS");
+        return variant.worstCodingEffect() == CodingEffect.MISSENSE;
     }
 }

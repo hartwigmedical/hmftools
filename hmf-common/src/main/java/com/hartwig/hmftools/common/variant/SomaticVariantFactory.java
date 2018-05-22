@@ -129,12 +129,12 @@ public class SomaticVariantFactory {
             final VariantAnnotation variantAnnotation = transcriptAnnotations.get(0);
             builder.gene(variantAnnotation.gene());
             builder.worstEffect(variantAnnotation.consequenceString());
-            builder.worstCodingEffect(CodingEffect.effect(variantAnnotation.consequences()).toString());
+            builder.worstCodingEffect(CodingEffect.effect(variantAnnotation.consequences()));
             builder.worstEffectTranscript(variantAnnotation.featureID());
         } else {
             builder.gene("");
             builder.worstEffect("");
-            builder.worstCodingEffect(CodingEffect.NONE.toString());
+            builder.worstCodingEffect(CodingEffect.NONE);
             builder.worstEffectTranscript("");
         }
 

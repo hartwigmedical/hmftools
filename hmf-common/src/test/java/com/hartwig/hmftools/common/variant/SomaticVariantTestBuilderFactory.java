@@ -21,7 +21,7 @@ public final class SomaticVariantTestBuilderFactory {
                 .genesEffected(0)
                 .worstEffect(Strings.EMPTY)
                 .worstEffectTranscript(Strings.EMPTY)
-                .worstCodingEffect(Strings.EMPTY)
+                .worstCodingEffect(CodingEffect.NONE)
                 .totalReadCount(0)
                 .alleleReadCount(0)
                 .hotspot(false)

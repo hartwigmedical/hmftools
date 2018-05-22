@@ -34,7 +34,6 @@ import com.hartwig.hmftools.patientreporter.variants.MicrosatelliteAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -68,10 +67,12 @@ public final class PatientReporterTestUtil {
 
     @NotNull
     public static MicrosatelliteAnalyzer testMicrosatelliteAnalyzer() {
+
         return new MicrosatelliteAnalyzer() {
-            @SuppressWarnings("NullableProblems")
+
+            @SuppressWarnings("ConstantConditions")
             @Override
-            @Nullable
+            @NotNull
             public IndexedFastaSequenceFile reference() {
                 return null;
             }
