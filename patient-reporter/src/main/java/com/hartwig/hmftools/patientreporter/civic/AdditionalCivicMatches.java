@@ -31,7 +31,8 @@ public class AdditionalCivicMatches {
             AdditionalCivicMatches.class.getResourceAsStream("/civic_additional_matches.csv");
     private static final Pattern variantIdPattern = Pattern.compile("/variants/([0-9]+)/");
     private static final String COPY_GAIN = "copy-gain";
-    private static final String COPY_LOSS = "copy-loss";
+    private static final String COPY_PARTIAL_LOSS = "copy-partial-loss";
+    private static final String COPY_FULL_LOSS = "copy-full-loss";
     private static final String LOSS_OF_FUNCTION = "loss-of-function";
     private static final Multimap<String, Integer> additionalVariantsMapping;
 
@@ -42,10 +43,12 @@ public class AdditionalCivicMatches {
             for (final CSVRecord record : parser) {
                 final String gene = record.get("gene").toLowerCase();
                 final List<Integer> copyGainVariants = variantIdsFromCsvEntry(record.get(COPY_GAIN));
-                final List<Integer> copyLossVariants = variantIdsFromCsvEntry(record.get(COPY_LOSS));
+                final List<Integer> copyPartialLossVariants = variantIdsFromCsvEntry(record.get(COPY_PARTIAL_LOSS));
+                final List<Integer> copyFullLossVariants = variantIdsFromCsvEntry(record.get(COPY_FULL_LOSS));
                 final List<Integer> lossOfFunctionVariants = variantIdsFromCsvEntry(record.get(LOSS_OF_FUNCTION));
                 additionalVariantsMapping.putAll(gene + COPY_GAIN, copyGainVariants);
-                additionalVariantsMapping.putAll(gene + COPY_LOSS, copyLossVariants);
+                additionalVariantsMapping.putAll(gene + COPY_PARTIAL_LOSS, copyPartialLossVariants);
+                additionalVariantsMapping.putAll(gene + COPY_FULL_LOSS, copyFullLossVariants);
                 additionalVariantsMapping.putAll(gene + LOSS_OF_FUNCTION, lossOfFunctionVariants);
             }
         } catch (IOException e) {
@@ -70,8 +73,11 @@ public class AdditionalCivicMatches {
 
     @NotNull
     public static Collection<Integer> copyNumberVariants(@NotNull final GeneCopyNumber copyNumberReport) {
-        if (copyNumberReport.alteration() == CopyNumberAlteration.LOSS) {
-            return copyLossVariants(copyNumberReport.gene());
+        if (copyNumberReport.alteration() == CopyNumberAlteration.COPY_PARTIAL_LOSS) {
+            return copyPartialLossVariants(copyNumberReport.gene());
+        }
+        if (copyNumberReport.alteration() == CopyNumberAlteration.COPY_FULL_LOSS) {
+            return copyFullLossVariants(copyNumberReport.gene());
         } else if (copyNumberReport.alteration() == CopyNumberAlteration.GAIN) {
             return copyGainVariants(copyNumberReport.gene());
         }
@@ -93,8 +99,13 @@ public class AdditionalCivicMatches {
     }
 
     @NotNull
-    private static Collection<Integer> copyLossVariants(@NotNull final String gene) {
-        return additionalVariantsMapping.get(gene.toLowerCase() + COPY_LOSS);
+    private static Collection<Integer> copyPartialLossVariants(@NotNull final String gene) {
+        return additionalVariantsMapping.get(gene.toLowerCase() + COPY_PARTIAL_LOSS);
+    }
+
+    @NotNull
+    private static Collection<Integer> copyFullLossVariants(@NotNull final String gene) {
+        return additionalVariantsMapping.get(gene.toLowerCase() + COPY_FULL_LOSS);
     }
 
     @NotNull

@@ -4,7 +4,8 @@ import org.jetbrains.annotations.NotNull;
 
 public enum CopyNumberAlteration {
     GAIN("copy-gain"),
-    LOSS("copy-loss"),
+    COPY_FULL_LOSS("copy-full-loss"),
+    COPY_PARTIAL_LOSS("copy-partial-loss"),
     NEUTRAL("none");
 
     private static final int NORMAL_HUMAN_COPY_NUMBER = 2;
@@ -27,6 +28,7 @@ public enum CopyNumberAlteration {
             return NEUTRAL;
         }
 
-        return value > NORMAL_HUMAN_COPY_NUMBER ? GAIN : LOSS;
+        return value > NORMAL_HUMAN_COPY_NUMBER ? GAIN : COPY_PARTIAL_LOSS;
+
     }
 }
