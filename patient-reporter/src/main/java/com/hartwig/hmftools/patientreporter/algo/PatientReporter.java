@@ -93,7 +93,7 @@ public abstract class PatientReporter {
                 .collect(Collectors.toList());
 
         final int passedVariantCount = variantAnalysis.passedVariants().size();
-        final int reportedVariantCount = variantAnalysis.findings().size();
+        final int reportedVariantCount = variantAnalysis.variantReports().size();
         final int structuralVariantCount = structuralVariantAnalysis.annotations().size();
         final PatientTumorLocation patientTumorLocation =
                 PatientReporterHelper.extractPatientTumorLocation(baseReporterData().patientTumorLocations(), tumorSample);
@@ -101,7 +101,7 @@ public abstract class PatientReporter {
         final List<Alteration> alterations;
         if (patientTumorLocation != null) {
             final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
-            alterations = civicAnalyzer().run(variantAnalysis.findings(),
+            alterations = civicAnalyzer().run(variantAnalysis.variantReports(),
                     purpleAnalysis.reportableGeneCopyNumbers(),
                     reportableDisruptions,
                     reportableFusions,
@@ -126,7 +126,7 @@ public abstract class PatientReporter {
 
         final Lims lims = baseReporterData().limsModel();
         final Double pathologyTumorPercentage = lims.tumorPercentageForSample(tumorSample);
-        final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrichSomaticVariants(variantAnalysis.findings());
+        final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrichSomaticVariants(variantAnalysis.variantReports());
         final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(tumorSample);
 
         final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample,

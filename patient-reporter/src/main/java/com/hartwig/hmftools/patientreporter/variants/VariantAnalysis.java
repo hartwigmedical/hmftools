@@ -15,12 +15,9 @@ public abstract class VariantAnalysis {
 
     @NotNull
     public abstract List<SomaticVariant> passedVariants();
-    
-    @NotNull
-    public abstract List<SomaticVariant> consequentialVariants();
 
     @NotNull
-    public abstract List<VariantReport> findings();
+    public abstract List<VariantReport> variantReports();
 
     public abstract double indelsPerMb();
 

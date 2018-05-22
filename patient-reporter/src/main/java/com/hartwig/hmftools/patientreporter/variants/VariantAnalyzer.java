@@ -30,11 +30,10 @@ public abstract class VariantAnalyzer {
         final double indelsPerMb = microsatelliteAnalyzer().analyzeVariants(passedVariants);
         final int mutationalLoad = MutationalLoadAnalyzer.analyzeVariants(passedVariants);
 
-        final ConsequenceOutput consequenceOutput = determiner().run(passedVariants);
+        final List<VariantReport> variantReports = determiner().run(passedVariants);
 
         return ImmutableVariantAnalysis.of(passedVariants,
-                consequenceOutput.consequentialVariants(),
-                consequenceOutput.findings(),
+                variantReports,
                 indelsPerMb,
                 mutationalLoad);
     }

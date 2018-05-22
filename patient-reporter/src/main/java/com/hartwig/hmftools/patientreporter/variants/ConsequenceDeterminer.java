@@ -42,12 +42,12 @@ class ConsequenceDeterminer {
     }
 
     @NotNull
-    ConsequenceOutput run(@NotNull final List<SomaticVariant> variants) {
+    List<VariantReport> run(@NotNull final List<SomaticVariant> variants) {
         Predicate<SomaticVariant> consequenceRule = and(hmfSlicingRegion::test, hasActionableConsequence(relevantTranscriptMap.keySet()));
 
         List<SomaticVariant> consequentialVariants = variants.stream().filter(consequenceRule).collect(Collectors.toList());
 
-        return ImmutableConsequenceOutput.of(consequentialVariants, toVariantReport(consequentialVariants));
+        return toVariantReport(consequentialVariants);
     }
 
     @NotNull
@@ -62,9 +62,9 @@ class ConsequenceDeterminer {
     }
 
     @NotNull
-    private List<VariantReport> toVariantReport(@NotNull final List<SomaticVariant> variants) {
+    private List<VariantReport> toVariantReport(@NotNull final List<SomaticVariant> variantsToReport) {
         final List<VariantReport> reports = Lists.newArrayList();
-        for (final SomaticVariant variant : variants) {
+        for (final SomaticVariant variant : variantsToReport) {
             final ImmutableVariantReport.Builder builder = ImmutableVariantReport.builder();
             final VariantAnnotation variantAnnotation = findPrimaryRelevantAnnotation(variant, relevantTranscriptMap.keySet());
             // KODU: Variants with no relevant annotations should be filtered out by now.

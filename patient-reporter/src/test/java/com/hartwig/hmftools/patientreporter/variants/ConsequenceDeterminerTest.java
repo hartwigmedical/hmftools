@@ -86,22 +86,22 @@ public class ConsequenceDeterminerTest {
         final SomaticVariant wrongPositionVariant = variantBuilder.position(WRONG_POSITION).
                 annotations(Lists.newArrayList(rightAnnotation)).build();
 
-        final List<VariantReport> findings =
-                determiner.run(Lists.newArrayList(rightVariant, wrongConsequenceVariant, wrongPositionVariant)).findings();
-        assertEquals(1, findings.size());
+        final List<VariantReport> variants =
+                determiner.run(Lists.newArrayList(rightVariant, wrongConsequenceVariant, wrongPositionVariant));
+        assertEquals(1, variants.size());
 
-        final VariantReport report = findings.get(0);
-        assertEquals(GENE, report.gene());
-        assertEquals(CHROMOSOME + ":" + POSITION, report.variant().chromosomePosition());
-        assertEquals(REF, report.variant().ref());
-        assertEquals(ALT, report.variant().alt());
-        assertEquals(TRANSCRIPT + "." + TRANSCRIPT_VERSION, report.transcript());
-        assertEquals(HGVS_CODING, report.hgvsCoding());
-        assertEquals(HGVS_PROTEIN, report.hgvsProtein());
-        assertEquals(rightConsequence.readableSequenceOntologyTerm(), report.consequence());
-        assertEquals(COSMIC_ID, report.cosmicID());
-        assertEquals(TOTAL_READ_COUNT, report.totalReadCount());
-        assertEquals(ALLELE_READ_COUNT, report.alleleReadCount());
+        final VariantReport variant = variants.get(0);
+        assertEquals(GENE, variant.gene());
+        assertEquals(CHROMOSOME + ":" + POSITION, variant.variant().chromosomePosition());
+        assertEquals(REF, variant.variant().ref());
+        assertEquals(ALT, variant.variant().alt());
+        assertEquals(TRANSCRIPT + "." + TRANSCRIPT_VERSION, variant.transcript());
+        assertEquals(HGVS_CODING, variant.hgvsCoding());
+        assertEquals(HGVS_PROTEIN, variant.hgvsProtein());
+        assertEquals(rightConsequence.readableSequenceOntologyTerm(), variant.consequence());
+        assertEquals(COSMIC_ID, variant.cosmicID());
+        assertEquals(TOTAL_READ_COUNT, variant.totalReadCount());
+        assertEquals(ALLELE_READ_COUNT, variant.alleleReadCount());
     }
 
     @NotNull
