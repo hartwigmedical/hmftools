@@ -16,7 +16,6 @@ import org.jooq.DSLContext;
 import org.jooq.InsertValuesStepN;
 
 class SomaticVariantDAO {
-    private static final String PASS = "PASS";
 
     @NotNull
     private final DSLContext context;
@@ -73,7 +72,7 @@ class SomaticVariantDAO {
         inserter.values(sample,
                 variant.chromosome(),
                 variant.position(),
-                filter(variant.filter()),
+                variant.filter(),
                 variant.type(),
                 variant.ref(),
                 variant.alt(),
@@ -102,10 +101,5 @@ class SomaticVariantDAO {
                 variant.germlineStatus(),
                 DatabaseUtil.decimal(variant.minorAllelePloidy()),
                 timestamp);
-    }
-
-    @NotNull
-    private static String filter(@NotNull String filter) {
-        return filter.equals(".") ? PASS : filter;
     }
 }

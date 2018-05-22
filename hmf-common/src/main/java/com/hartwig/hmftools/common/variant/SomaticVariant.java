@@ -57,12 +57,5 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
         return cosmicID() != null;
     }
 
-    default boolean hasConsequence(@NotNull final VariantConsequence consequence) {
-        for (final VariantAnnotation annotation : annotations()) {
-            if (annotation.consequences().contains(consequence)) {
-                return true;
-            }
-        }
-        return false;
-    }
+    default boolean isFiltered() {return !filter().equals("PASS");}
 }

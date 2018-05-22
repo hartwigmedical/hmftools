@@ -21,7 +21,7 @@ public class MutationalLoadAnalyzer {
 
     private static boolean mutationalLoadCheck(@NotNull final SomaticVariant variant) {
         // KODU: Patient reporting should already filter on passed only.
-        assert variant.filter().equals("PASS");
+        assert !variant.isFiltered();
         return variant.worstCodingEffect() == CodingEffect.MISSENSE;
     }
 }

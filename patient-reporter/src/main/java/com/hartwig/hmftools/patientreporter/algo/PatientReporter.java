@@ -93,8 +93,7 @@ public abstract class PatientReporter {
                 .collect(Collectors.toList());
 
         final int passedVariantCount = variantAnalysis.passedVariants().size();
-        final int mutationalLoad = variantAnalysis.mutationalLoad();
-        final int consequentialVariantCount = variantAnalysis.consequentialVariants().size();
+        final int reportedVariantCount = variantAnalysis.findings().size();
         final int structuralVariantCount = structuralVariantAnalysis.annotations().size();
         final PatientTumorLocation patientTumorLocation =
                 PatientReporterHelper.extractPatientTumorLocation(baseReporterData().patientTumorLocations(), tumorSample);
@@ -115,25 +114,24 @@ public abstract class PatientReporter {
 
         LOGGER.info(" Printing analysis results:");
         LOGGER.info("  Number of passed variants : " + Integer.toString(passedVariantCount));
-        LOGGER.info("  Number of missense variants (mutational load) : " + Integer.toString(mutationalLoad));
-        LOGGER.info("  Number of consequential variants to report : " + Integer.toString(consequentialVariantCount));
+        LOGGER.info("  Number of variants to report : " + Integer.toString(reportedVariantCount));
         LOGGER.info(" Determined copy number stats for " + Integer.toString(purpleAnalysis.genePanelSize()) + " genes which led to "
                 + Integer.toString(purpleAnalysis.reportableGeneCopyNumbers().size()) + " copy numbers.");
-        LOGGER.info("  Number of unreported structural variants : " + Integer.toString(structuralVariantCount));
+        LOGGER.info("  Number of structural variants : " + Integer.toString(structuralVariantCount));
         LOGGER.info("  Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
         LOGGER.info("  Number of gene disruptions to report : " + Integer.toString(reportableDisruptions.size()));
         LOGGER.info("  Number of CIViC alterations to report : " + alterations.size());
         LOGGER.info("  Microsatellite analysis results: " + variantAnalysis.indelsPerMb() + " indels per MB");
         LOGGER.info("  Mutational load results: " + variantAnalysis.mutationalLoad());
 
-
         final Lims lims = baseReporterData().limsModel();
-        final Double tumorPercentage = lims.tumorPercentageForSample(tumorSample);
+        final Double pathologyTumorPercentage = lims.tumorPercentageForSample(tumorSample);
         final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrichSomaticVariants(variantAnalysis.findings());
         final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(tumorSample);
 
-        final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample, patientTumorLocation,
-                tumorPercentage,
+        final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample,
+                patientTumorLocation,
+                pathologyTumorPercentage,
                 lims.arrivalDateForSample(tumorSample),
                 lims.arrivalDateForSample(run.refSample()),
                 lims.labProceduresForSample(tumorSample),
@@ -141,7 +139,7 @@ public abstract class PatientReporter {
 
         return ImmutableSequencedPatientReport.of(sampleReport,
                 purpleEnrichedVariants,
-                mutationalLoad,
+                variantAnalysis.mutationalLoad(),
                 variantAnalysis.indelsPerMb(),
                 purpleAnalysis.reportableGeneCopyNumbers(),
                 reportableDisruptions,

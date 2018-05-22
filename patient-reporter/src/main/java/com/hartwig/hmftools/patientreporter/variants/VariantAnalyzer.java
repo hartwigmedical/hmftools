@@ -1,11 +1,9 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
 import java.util.List;
-import java.util.function.Predicate;
 
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.VariantConsequence;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -39,10 +37,5 @@ public abstract class VariantAnalyzer {
                 consequenceOutput.findings(),
                 indelsPerMb,
                 mutationalLoad);
-    }
-
-    @NotNull
-    private static Predicate<SomaticVariant> isMissense() {
-        return variant -> variant.hasConsequence(VariantConsequence.MISSENSE_VARIANT);
     }
 }
