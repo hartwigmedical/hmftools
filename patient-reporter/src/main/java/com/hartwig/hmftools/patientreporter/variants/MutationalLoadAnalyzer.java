@@ -10,18 +10,19 @@ import org.jetbrains.annotations.NotNull;
 public class MutationalLoadAnalyzer {
 
     static int analyzeVariants(@NotNull final List<SomaticVariant> variants) {
-        final List<Boolean> mutationalLoadList = new ArrayList<>();
+        final List<Boolean> mutationalLoad = new ArrayList<>();
         int mutationalLoadSize = 0;
         for (final SomaticVariant variant : variants) {
-            final boolean mutationLoadValue = mutationalLoad(variant);
-            mutationalLoadList.add(mutationLoadValue);
+            if (mutationalLoadCheck(variant)) {
+                mutationalLoad.add(mutationalLoadCheck(variant));
+            }
             mutationalLoadSize++;
         }
 
-        return mutationalLoadList.size();
+        return mutationalLoad.size();
     }
 
-    static boolean mutationalLoad(@NotNull final SomaticVariant variant) {
-        return variant.worstCodingEffect().contains("missense") && variant.filter().equals("PASS");
+    static boolean mutationalLoadCheck(@NotNull final SomaticVariant variant) {
+        return variant.worstCodingEffect().contains("MISSENSE") && variant.filter().equals("PASS");
     }
 }
