@@ -23,12 +23,7 @@ public enum HmfGenePanelSupplier {
     @NotNull
     public static List<HmfGenomeRegion> hmfPanelGeneList() throws IOException {
         final Set<String> panel = hmfPanelGeneSet();
-        return  allGeneList().stream().filter(x -> panel.contains(x.gene())).collect(Collectors.toList());
-    }
-
-    @NotNull
-    public static SortedSetMultimap<String, HmfGenomeRegion> hmfPanelGeneMap() throws IOException {
-        return toSortedMap(hmfPanelGeneList());
+        return allGeneList().stream().filter(x -> panel.contains(x.gene())).collect(Collectors.toList());
     }
 
     @NotNull

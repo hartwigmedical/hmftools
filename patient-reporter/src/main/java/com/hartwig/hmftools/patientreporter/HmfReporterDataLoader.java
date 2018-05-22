@@ -22,7 +22,7 @@ final class HmfReporterDataLoader {
     static HmfReporterData buildFromFiles(@NotNull final String cosmicGeneFile, @NotNull final String fusionPairsLocation,
             @NotNull final String promiscuousFiveLocation, @NotNull final String promiscuousThreeLocation,
             @NotNull final String drupFilterFile, @NotNull final String fastaFileLocation) throws IOException {
-        final GeneModel panelGeneModel = new GeneModel(HmfGenePanelSupplier.hmfPanelGeneMap());
+        final GeneModel panelGeneModel = new GeneModel(HmfGenePanelSupplier.hmfPanelGeneList());
         final CosmicGeneModel cosmicGeneModel = CosmicGenes.readFromCSV(cosmicGeneFile);
         final KnownFusionsModel knownFusionsModel = KnownFusionsModel.fromInputStreams(new FileInputStream(fusionPairsLocation),
                 new FileInputStream(promiscuousFiveLocation),
