@@ -62,6 +62,11 @@ fun extractVariants(chromosome: String, gDnaVariants: List<String>, reference: I
     }
 }
 
+fun extractVariant(gDnaVariant: String, reference: IndexedFastaSequenceFile): SomaticVariant? {
+    val chromosome = extractChromosome(gDnaVariant)
+    return extractVariant(chromosome, gDnaVariant.substringAfter(gDnaDelimiter), reference)
+}
+
 private fun extractVariant(chromosome: String, variantGDna: String, reference: IndexedFastaSequenceFile): SomaticVariant? {
     return try {
         when {
