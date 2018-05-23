@@ -178,7 +178,7 @@ public class PDFWriterTest {
         final GeneCopyNumber copyNumber1 =
                 createCopyNumberBuilder().chromosome("9").chromosomeBand("p21.3").gene("CDKN2A").minCopyNumber(0).maxCopyNumber(0).build();
         final GeneCopyNumber copyNumber2 =
-                createCopyNumberBuilder().chromosome("17").chromosomeBand("p17.13").gene("TP53").minCopyNumber(0).maxCopyNumber(2).build();
+                createCopyNumberBuilder().chromosome("17").chromosomeBand("p13.1").gene("TP53").minCopyNumber(0).maxCopyNumber(2).build();
         final GeneCopyNumber copyNumber3 =
                 createCopyNumberBuilder().chromosome("17").chromosomeBand("q12").gene("ERBB2").minCopyNumber(11).maxCopyNumber(11).build();
         return Lists.newArrayList(copyNumber1, copyNumber2, copyNumber3);
