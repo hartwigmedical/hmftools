@@ -48,17 +48,15 @@ public final class GeneCopyNumberDataSource {
 
     @NotNull
     private static String type(@NotNull GeneCopyNumber geneCopyNumber) {
-        String valueLoss = "";
         if (geneCopyNumber.alteration() == CopyNumberAlteration.GAIN) {
             return "gain";
         } else {
             assert geneCopyNumber.alteration() == CopyNumberAlteration.LOSS;
-            if (geneCopyNumber.maxCopyNumber() <= 0.5) {
-                valueLoss = "full loss";
-            } else if (geneCopyNumber.maxCopyNumber() >= 2.0) {
-                valueLoss = "partial loss";
+            if (geneCopyNumber.maxCopyNumber() < 0.5) {
+                return "full loss";
+            } else {
+                return "partial loss";
             }
-            return valueLoss;
         }
     }
 }
