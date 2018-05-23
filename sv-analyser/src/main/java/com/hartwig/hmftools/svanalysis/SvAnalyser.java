@@ -89,6 +89,8 @@ public class SvAnalyser {
         {
             CNAnalyser cnAnalyser = new CNAnalyser(cmd.getOptionValue(DATA_OUTPUT_PATH), dbAccess);
             cnAnalyser.loadFromCSV(cmd.getOptionValue(COPY_NUMBER_FILE), tumorSample);
+            cnAnalyser.setAnalyseFlips(false);
+            cnAnalyser.setAnalyseLOH(true);
             cnAnalyser.analyseData(tumorSample, "");
             cnAnalyser.close();
 
