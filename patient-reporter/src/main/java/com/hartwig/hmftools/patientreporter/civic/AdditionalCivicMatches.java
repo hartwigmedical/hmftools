@@ -78,8 +78,7 @@ public class AdditionalCivicMatches {
 
     @NotNull
     public static Collection<Integer> copyNumberVariants(@NotNull final GeneCopyNumber copyNumberReport) {
-        if (copyNumberReport.alteration() == CopyNumberAlteration.COPY_FULL_LOSS
-                || copyNumberReport.alteration() == CopyNumberAlteration.COPY_PARTIAL_LOSS) {
+        if (copyNumberReport.alteration() == CopyNumberAlteration.LOSS) {
             return copyLossVariants(copyNumberReport.gene());
         } else if (copyNumberReport.alteration() == CopyNumberAlteration.GAIN) {
             return copyGainVariants(copyNumberReport.gene());

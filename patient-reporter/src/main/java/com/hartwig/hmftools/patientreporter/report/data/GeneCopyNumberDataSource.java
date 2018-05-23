@@ -4,6 +4,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.copynumber.CopyNumberAlteration;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 
 import org.jetbrains.annotations.NotNull;
@@ -34,8 +35,7 @@ public final class GeneCopyNumberDataSource {
         for (final GeneCopyNumber copyNumber : copyNumbers) {
             copyNumberDatasource.add(copyNumber.chromosome(),
                     copyNumber.chromosomeBand(),
-                    copyNumber.gene(),
-                    copyNumber.alteration().description(),
+                    copyNumber.gene(), type(copyNumber),
                     Integer.toString(copyNumber.value()));
         }
         return copyNumberDatasource;
@@ -44,5 +44,21 @@ public final class GeneCopyNumberDataSource {
     @NotNull
     public static FieldBuilder<?>[] copyNumberFields() {
         return new FieldBuilder<?>[] { CHROMOSOME, CHROMOSOME_BAND, GENE_FIELD, GAIN_OR_LOSS_FIELD, COPY_NUMBER_FIELD };
+    }
+
+    @NotNull
+    private static String type(@NotNull GeneCopyNumber geneCopyNumber) {
+        String valueLoss = "";
+        if (geneCopyNumber.alteration() == CopyNumberAlteration.GAIN) {
+            return "gain";
+        } else {
+            assert geneCopyNumber.alteration() == CopyNumberAlteration.LOSS;
+            if (geneCopyNumber.maxCopyNumber() <= 0.5) {
+                valueLoss = "full loss";
+            } else if (geneCopyNumber.maxCopyNumber() >= 2.0) {
+                valueLoss = "partial loss";
+            }
+            return valueLoss;
+        }
     }
 }

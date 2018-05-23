@@ -75,9 +75,9 @@ public abstract class ExplanationPage {
                 Lists.newArrayList("The lowest copy number value along the exonic regions of the canonical transcript is determined as "
                                 + "a measure for the gene's copy number.",
                         "Copy numbers are corrected for the implied tumor purity and represent the number of copies in the tumor DNA.",
-                        "Any gene with no copies is reported as loss.",
-                        "Any gene with at least 8 copies is reported as a gain.",
-                        "Any gene with more copies than 2.2 times the average tumor ploidy is reported as a gain."));
+                        "Any gene with minCopyNumber and maxCopyNumber with no copies is reported as a copy full loss. ",
+                        "Any gene with minCopyNumber with no copies and maxCopyNumber is greather than 0.5 is reported as a copy partial loss.",
+                        "Any gene with more copies than 3 times the average tumor ploidy is reported as a gain."));
     }
 
     @NotNull
