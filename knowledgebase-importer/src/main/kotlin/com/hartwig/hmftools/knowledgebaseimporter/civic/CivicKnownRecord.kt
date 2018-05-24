@@ -12,7 +12,8 @@ import org.apache.commons.csv.CSVRecord
 import java.util.regex.Pattern
 
 data class CivicKnownRecord(private val metadata: RecordMetadata, override val additionalInfo: String,
-                            override val events: List<SomaticEvent>, override val actionability: List<Actionability>) :
+                            override val events: List<SomaticEvent>, override val actionability: List<Actionability>,
+                            val cancerDoids: Map<String, String>) :
         RecordMetadata by metadata, KnownRecord, ActionableRecord {
     companion object {
         private val FUSION_SEPARATORS = listOf("-")
@@ -23,7 +24,8 @@ data class CivicKnownRecord(private val metadata: RecordMetadata, override val a
             val evidence = variantEvidenceMap[csvRecord["variant_id"]]
             val additionalInfo = additionalInfo(evidence)
             val actionability = evidence.filter { it.direction == "Supports" }.flatMap { it.actionabilityItems }
-            return CivicKnownRecord(metadata, additionalInfo, readSomaticEvents(csvRecord), actionability)
+            val doids = evidence.associateBy({ it.cancerType }, { it.doid })
+            return CivicKnownRecord(metadata, additionalInfo, readSomaticEvents(csvRecord), actionability, doids)
         }
 
         private fun readSomaticEvents(record: CSVRecord): List<SomaticEvent> {
