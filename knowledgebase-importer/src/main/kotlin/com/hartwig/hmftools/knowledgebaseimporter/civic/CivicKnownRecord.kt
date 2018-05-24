@@ -29,7 +29,7 @@ data class CivicKnownRecord(private val metadata: RecordMetadata, override val a
         private fun readSomaticEvents(record: CSVRecord): List<SomaticEvent> {
             val events = mutableListOf<SomaticEvent>()
             if (hasVariant(record)) {
-                events.add(KnowledgebaseVariant(record["chromosome"], record["start"].toLong(), record["reference_bases"],
+                events.add(KnowledgebaseVariant(record["gene"], record["chromosome"], record["start"].toLong(), record["reference_bases"],
                                                 record["variant_bases"]))
             }
             if (hasHgvs(record)) {
@@ -69,9 +69,8 @@ data class CivicKnownRecord(private val metadata: RecordMetadata, override val a
         }
 
         private fun readFusion(record: CSVRecord): FusionEvent? {
-            val variantTypes = record["variant_types"]
+            val variantTypes = record["variant_types"].orEmpty()
             val fusion = when {
-                variantTypes == null            -> null
                 variantTypes.contains("fusion") -> extractCorrectFusion(record["gene"], record["variant"].trim())
                 else                            -> null
             }
@@ -80,7 +79,7 @@ data class CivicKnownRecord(private val metadata: RecordMetadata, override val a
 
         private fun extractCorrectFusion(gene: String, variant: String): FusionEvent {
             return if (variant.contains(Regex("MLL-MLLT3")) && gene == "KMT2A") {
-                extractFusion(gene, "KMT2A-MLLT3", FUSION_SEPARATORS)
+                extractFusion(gene, variant.replace("MLL-MLLT3", "KMT2A-MLLT3"), FUSION_SEPARATORS)
             } else {
                 extractFusion(gene, variant, FUSION_SEPARATORS)
             }
