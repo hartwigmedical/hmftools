@@ -38,11 +38,6 @@ public final class GeneCopyNumberDataSource {
             copyNumberDatasource.add(copyNumber.chromosome(),
                     copyNumber.chromosomeBand(), copyNumber.gene(), type(copyNumber),
                     CopiesOnReportDependentOnPurity.copiesValue(String.valueOf(fitStatus), Integer.toString(copyNumber.value())));
-            ;
-
-
-
-
         }
         return copyNumberDatasource;
     }
