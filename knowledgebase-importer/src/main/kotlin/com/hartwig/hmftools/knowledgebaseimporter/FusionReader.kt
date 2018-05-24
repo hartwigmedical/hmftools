@@ -8,12 +8,12 @@ import com.hartwig.hmftools.knowledgebaseimporter.output.PromiscuousGene
 private const val GENE_PATTERN = "[A-Za-z0-9-]"
 private const val GENE_GROUP = "($GENE_PATTERN+)"
 
-data class FusionReader(private val separators: List<String> = listOf(), private val fusionsToFilter: Set<FusionEvent> = setOf(),
-                        private val fusionsToFlip: Set<FusionPair> = setOf()) {
+data class FusionReader(private val separators: Set<String> = setOf(), private val filterSet: Set<FusionEvent> = setOf(),
+                        private val flipSet: Set<FusionPair> = setOf()) {
 
     companion object {
         @VisibleForTesting
-        fun extractFusion(gene: String, fusionString: String, separators: List<String>): FusionEvent {
+        fun extractFusion(gene: String, fusionString: String, separators: Set<String>): FusionEvent {
             return separators.map { extractFusion(gene, fusionString, it) }
                     .sortedBy {
                         when (it) {
@@ -81,8 +81,8 @@ data class FusionReader(private val separators: List<String> = listOf(), private
         }
     }
 
-    fun extractFusion(gene: String, fusionString: String): FusionEvent? {
+    fun read(gene: String, fusionString: String): FusionEvent? {
         val fusion = extractFusion(gene.trim(), fusionString.trim(), separators)
-        return if (fusionsToFilter.contains(fusion)) null else flipFusion(fusion, fusionsToFlip)
+        return if (filterSet.contains(fusion)) null else flipFusion(fusion, flipSet)
     }
 }
