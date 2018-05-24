@@ -11,11 +11,11 @@ import com.hartwig.hmftools.common.center.CenterModel;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.patientreporter.algo.ImmutableNotSequenceableReporter;
+import com.hartwig.hmftools.patientreporter.algo.ImmutableNotAnalysableReporter;
 import com.hartwig.hmftools.patientreporter.algo.ImmutablePatientReporter;
-import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
-import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReporter;
-import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
+import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
+import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReporter;
+import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.algo.PatientReporter;
 import com.hartwig.hmftools.patientreporter.civic.CivicAnalyzer;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
@@ -50,9 +50,9 @@ public class PatientReporterApplication {
     private static final String LIMS_JSON = "lims_json";
     private static final String REPORT_DIRECTORY = "report_dir";
     private static final String RUN_DIRECTORY = "run_dir";
-    private static final String NOT_SEQUENCEABLE = "not_sequenceable";
-    private static final String NOT_SEQUENCEABLE_REASON = "not_sequenceable_reason";
-    private static final String NOT_SEQUENCEABLE_SAMPLE = "not_sequenceable_sample";
+    private static final String NOT_ANALYSABLE = "not_analysable";
+    private static final String NOT_ANALYSABLE_REASON = "not_analysable_reason";
+    private static final String NOT_ANALYSED_SAMPLE = "not_analysable_sample";
 
     private static final String COSMIC_GENE_CSV = "cosmic_gene_csv";
     private static final String FUSION_PAIRS_CSV = "fusion_pairs_csv";
@@ -76,13 +76,13 @@ public class PatientReporterApplication {
         LOGGER.info("Running patient reporter v" + VERSION);
         final PDFWriter pdfWriter = new PDFWriter(cmd.getOptionValue(REPORT_DIRECTORY));
 
-        if (cmd.hasOption(NOT_SEQUENCEABLE) && validInputForNonSequenceableReport(cmd)) {
-            final String sample = cmd.getOptionValue(NOT_SEQUENCEABLE_SAMPLE);
+        if (cmd.hasOption(NOT_ANALYSABLE) && validInputForNonAnalysableReport(cmd)) {
+            final String sample = cmd.getOptionValue(NOT_ANALYSED_SAMPLE);
             LOGGER.info("Generating non-sequenceable report for {}", sample);
-            final NotSequenceableReason reason = NotSequenceableReason.fromIdentifier(cmd.getOptionValue(NOT_SEQUENCEABLE_REASON));
-            final NotSequenceableReporter reporter = ImmutableNotSequenceableReporter.of(buildBaseReporterData(cmd));
+            final NotAnalysableReason reason = NotAnalysableReason.fromIdentifier(cmd.getOptionValue(NOT_ANALYSABLE_REASON));
+            final NotAnalysableReporter reporter = ImmutableNotAnalysableReporter.of(buildBaseReporterData(cmd));
 
-            final NotSequencedPatientReport report = reporter.run(sample, reason, cmd.getOptionValue(COMMENTS));
+            final NotAnalysedPatientReport report = reporter.run(sample, reason, cmd.getOptionValue(COMMENTS));
             pdfWriter.writeNonSequenceableReport(report);
         } else if (validInputForPatientReporter(cmd)) {
             LOGGER.info("Generating sequenceable report...");
@@ -167,17 +167,17 @@ public class PatientReporterApplication {
         return false;
     }
 
-    private static boolean validInputForNonSequenceableReport(@NotNull final CommandLine cmd) {
-        final NotSequenceableReason notSequenceableReason =
-                NotSequenceableReason.fromIdentifier(cmd.getOptionValue(NOT_SEQUENCEABLE_REASON));
-        final String notSequenceableSample = cmd.getOptionValue(NOT_SEQUENCEABLE_SAMPLE);
+    private static boolean validInputForNonAnalysableReport(@NotNull final CommandLine cmd) {
+        final NotAnalysableReason notAnalysableReason =
+                NotAnalysableReason.fromIdentifier(cmd.getOptionValue(NOT_ANALYSABLE_REASON));
+        final String notAnalysedSample = cmd.getOptionValue(NOT_ANALYSED_SAMPLE);
 
-        if (notSequenceableReason == NotSequenceableReason.UNDEFINED) {
-            LOGGER.warn(NOT_SEQUENCEABLE_REASON + " has to be low_tumor_percentage, low_dna_yield or post_isolation_fail.");
-        } else if (notSequenceableSample == null) {
-            LOGGER.warn(NOT_SEQUENCEABLE_SAMPLE + " has to be provided.");
-        } else if (NotSequenceableStudy.fromSample(notSequenceableSample) == null) {
-            LOGGER.warn("Could not determine study for sample " + notSequenceableSample);
+        if (notAnalysableReason == NotAnalysableReason.UNDEFINED) {
+            LOGGER.warn(NOT_ANALYSABLE_REASON + " has to be low_tumor_percentage, low_dna_yield or post_analysis_fail.");
+        } else if (notAnalysedSample == null) {
+            LOGGER.warn(NOT_ANALYSED_SAMPLE + " has to be provided.");
+        } else if (NotAnalysableStudy.fromSample(notAnalysedSample) == null) {
+            LOGGER.warn("Could not determine study for sample " + notAnalysedSample);
         } else {
             return true;
         }
@@ -230,9 +230,9 @@ public class PatientReporterApplication {
         options.addOption(LIMS_JSON, true, "Complete path towards a JSON containing the LIMS data dump.");
         options.addOption(REPORT_DIRECTORY, true, "Complete path to where the PDF reports have to be saved.");
         options.addOption(RUN_DIRECTORY, true, "Complete path towards a single run dir where patient reporter will run on.");
-        options.addOption(NOT_SEQUENCEABLE, false, "If set, generates a non-sequenceable report.");
-        options.addOption(NOT_SEQUENCEABLE_REASON, true, "Either 'low_tumor_percentage' or 'low_dna_yield'");
-        options.addOption(NOT_SEQUENCEABLE_SAMPLE, true, "In case of non-sequenceable reports, the name of the sample used.");
+        options.addOption(NOT_ANALYSABLE, false, "If set, generates a non-sequenceable report.");
+        options.addOption(NOT_ANALYSABLE_REASON, true, "Either 'low_tumor_percentage' or 'low_dna_yield'");
+        options.addOption(NOT_ANALYSED_SAMPLE, true, "In case of non-sequenceable reports, the name of the sample used.");
         options.addOption(COSMIC_GENE_CSV, true, "Path towards a CSV containing COSMIC gene data.");
         options.addOption(FUSION_PAIRS_CSV, true, "Path towards a CSV containing white-listed gene fusion pairs.");
         options.addOption(PROMISCUOUS_FIVE_CSV, true, "Path towards a CSV containing white-listed promiscuous 5' genes.");

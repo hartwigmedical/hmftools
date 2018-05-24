@@ -12,7 +12,7 @@ import java.nio.file.Files;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
-import com.hartwig.hmftools.patientreporter.NotSequencedPatientReport;
+import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableCircosPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableExplanationPage;
@@ -50,8 +50,8 @@ public class PDFWriter {
         writeReport(fileName(report.sampleReport().sampleId(), "_evidence_items.pdf"), evidenceReportBuilder);
     }
 
-    public void writeNonSequenceableReport(@NotNull final NotSequencedPatientReport report) throws IOException, DRException {
-        final JasperReportBuilder reportBuilder = generateNotSequenceableReport(report);
+    public void writeNonSequenceableReport(@NotNull final NotAnalysedPatientReport report) throws IOException, DRException {
+        final JasperReportBuilder reportBuilder = generateNotAnalysableReport(report);
         writeReport(fileName(report.sampleReport().sampleId(), "_hmf_report.pdf"), reportBuilder);
     }
 
@@ -72,7 +72,7 @@ public class PDFWriter {
 
     @VisibleForTesting
     @NotNull
-    static JasperReportBuilder generateNotSequenceableReport(@NotNull final NotSequencedPatientReport report) {
+    static JasperReportBuilder generateNotAnalysableReport(@NotNull final NotAnalysedPatientReport report) {
         // MIVO: hack to get page footers working; the footer band and noData bands are exclusive, see additional comment below for details
         final DRDataSource singleItemDataSource = new DRDataSource("item");
         singleItemDataSource.add(new Object());
@@ -103,7 +103,7 @@ public class PDFWriter {
         // MIVO: hack to get page footers working; the footer band and noData bands are exclusive:
         //  - footerBand, detailBand, etc are shown when data source is not empty
         //  - noData band is shown when data source is empty; intended to be used when there is no data to show in the report
-        //  (e.g. would be appropriate to be used for notSequenceableReport)
+        //  (e.g. would be appropriate to be used for notAnalysableReport)
         //
         // more info: http://www.dynamicreports.org/examples/bandreport
         //

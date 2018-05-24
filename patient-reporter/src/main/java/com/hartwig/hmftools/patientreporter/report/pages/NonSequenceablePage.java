@@ -8,10 +8,10 @@ import static com.hartwig.hmftools.patientreporter.report.Commons.tableHeaderSty
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 
-import com.hartwig.hmftools.patientreporter.NotSequencedPatientReport;
+import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
-import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
-import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
+import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
+import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 
 import org.immutables.value.Value;
@@ -31,24 +31,24 @@ public abstract class NonSequenceablePage {
     abstract String user();
 
     @NotNull
-    abstract NotSequenceableReason reason();
+    abstract NotAnalysableReason reason();
 
     @NotNull
-    abstract NotSequenceableStudy study();
+    abstract NotAnalysableStudy study();
 
     @NotNull
-    public static NonSequenceablePage of(@NotNull final NotSequencedPatientReport report) {
+    public static NonSequenceablePage of(@NotNull final NotAnalysedPatientReport report) {
         return ImmutableNonSequenceablePage.of(report.sampleReport(), report.user(), report.reason(), report.study());
     }
 
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
         return cmp.verticalList(MainPageTopSection.build("HMF Sequencing Report", sampleReport()), cmp.verticalGap(SECTION_VERTICAL_GAP),
-                mainPageNotSequenceableSection());
+                mainPageNotAnalysableSection());
     }
 
     @NotNull
-    private ComponentBuilder<?, ?> mainPageNotSequenceableSection() {
+    private ComponentBuilder<?, ?> mainPageNotAnalysableSection() {
         if (sampleReport().recipient() == null) {
             throw new IllegalStateException("No recipient address present for sample " + sampleReport().sampleId());
         }
@@ -71,7 +71,7 @@ public abstract class NonSequenceablePage {
                 message = "For sequencing we require a minimum of 30% tumor cells.";
                 break;
             }
-            case POST_ISOLATION_FAIL: {
+            case POST_ANALYSIS_FAIL: {
                 title = "Notification of inadequate tumor sample";
                 subTitle = "Analysis has failed post DNA isolation";
                 message = "This sample could not be processed to completion successfully.";

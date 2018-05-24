@@ -30,15 +30,15 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.patientreporter.BaseReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
-import com.hartwig.hmftools.patientreporter.ImmutableNotSequencedPatientReport;
+import com.hartwig.hmftools.patientreporter.ImmutableNotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSequencedPatientReport;
-import com.hartwig.hmftools.patientreporter.NotSequencedPatientReport;
+import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestUtil;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
-import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
-import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
+import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
+import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
@@ -302,7 +302,7 @@ public class PDFWriterTest {
 
     @Test
     public void canGenerateLowTumorPercentageReport() throws DRException, IOException {
-        final JasperReportBuilder report = generateNotSequenceableCPCTReport(0.1, NotSequenceableReason.LOW_TUMOR_PERCENTAGE);
+        final JasperReportBuilder report = generateNotAnalysableCPCTReport(0.1, NotAnalysableReason.LOW_TUMOR_PERCENTAGE);
         assertNotNull(report);
 
         if (SHOW_AND_PRINT) {
@@ -316,7 +316,7 @@ public class PDFWriterTest {
 
     @Test
     public void canGenerateLowDNAYieldReport() throws DRException, IOException {
-        final JasperReportBuilder report = generateNotSequenceableCPCTReport(0.6, NotSequenceableReason.LOW_DNA_YIELD);
+        final JasperReportBuilder report = generateNotAnalysableCPCTReport(0.6, NotAnalysableReason.LOW_DNA_YIELD);
         assertNotNull(report);
 
         if (SHOW_AND_PRINT) {
@@ -330,7 +330,7 @@ public class PDFWriterTest {
 
     @Test
     public void canGeneratePostDNAIsolationFailReport() throws DRException, IOException {
-        final JasperReportBuilder report = generateNotSequenceableCPCTReport(0.6, NotSequenceableReason.POST_ISOLATION_FAIL);
+        final JasperReportBuilder report = generateNotAnalysableCPCTReport(0.6, NotAnalysableReason.POST_ANALYSIS_FAIL);
         assertNotNull(report);
 
         if (SHOW_AND_PRINT) {
@@ -343,15 +343,15 @@ public class PDFWriterTest {
     }
 
     @NotNull
-    private static JasperReportBuilder generateNotSequenceableCPCTReport(final double pathologyTumorEstimate,
-            @NotNull final NotSequenceableReason reason) throws IOException {
-        final NotSequencedPatientReport patientReport = ImmutableNotSequencedPatientReport.of(testSampleReport(pathologyTumorEstimate),
+    private static JasperReportBuilder generateNotAnalysableCPCTReport(final double pathologyTumorEstimate,
+            @NotNull final NotAnalysableReason reason) throws IOException {
+        final NotAnalysedPatientReport patientReport = ImmutableNotAnalysedPatientReport.of(testSampleReport(pathologyTumorEstimate),
                 reason,
-                NotSequenceableStudy.CPCT,
+                NotAnalysableStudy.CPCT,
                 Optional.empty(),
                 PatientReporterTestUtil.SIGNATURE_PATH);
 
-        return PDFWriter.generateNotSequenceableReport(patientReport);
+        return PDFWriter.generateNotAnalysableReport(patientReport);
     }
 
     @NotNull
