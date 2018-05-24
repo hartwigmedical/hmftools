@@ -4,12 +4,12 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 
 import org.jetbrains.annotations.NotNull;
 
-public abstract class CopiesOnReportDependentOnPurity {
+public final class CopiesOnReportDependentOnPurity {
 
-    public PurpleAnalysis purple;
+    static PurpleAnalysis purple;
 
     @NotNull
-    public String copiesValue(final int value) {
-        return purple.status() == FittedPurityStatus.NO_TUMOR ? "N/A" : Integer.toString(value);
+    public static String copiesValue(final String value) {
+        return purple.status() == FittedPurityStatus.NO_TUMOR ? "N/A" : value;
     }
 }
