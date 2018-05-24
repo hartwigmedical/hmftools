@@ -27,8 +27,6 @@ data class OncoActionableRecord(private val metadata: RecordMetadata, override v
             return OncoActionableRecord(metadata, somaticEventReader.read(gene, transcript, alteration), actionability)
         }
 
-        private fun readLevel(levelField: String): String {
-            return if (levelField.startsWith("R")) levelField.drop(1) else levelField
-        }
+        private fun readLevel(levelField: String): String = if (levelField.startsWith("R")) levelField.drop(1) else levelField
     }
 }

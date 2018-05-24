@@ -17,12 +17,10 @@ data class OncoKnownRecord(private val metadata: RecordMetadata, override val ad
             return OncoKnownRecord(metadata, record["Oncogenicity"], somaticEventReader.read(gene, transcript, alteration))
         }
 
-        private fun correctRecord(gene: String, alteration: String): Pair<String, String> {
-            return when {
-                alteration.contains(Regex("IGH-NKX2")) && gene == "NKX2-1" ->
-                    Pair(gene, alteration.replace("IGH-NKX2", "IGH-NKX2-1"))
-                else                                                       -> Pair(gene, alteration)
-            }
+        private fun correctRecord(gene: String, alteration: String): Pair<String, String> = when {
+            alteration.contains(Regex("IGH-NKX2")) && gene == "NKX2-1" ->
+                Pair(gene, alteration.replace("IGH-NKX2", "IGH-NKX2-1"))
+            else                                                       -> Pair(gene, alteration)
         }
     }
 }
