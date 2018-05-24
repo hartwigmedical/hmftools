@@ -24,19 +24,20 @@ import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
+import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.BaseReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
+import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableNotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
-import com.hartwig.hmftools.patientreporter.ImmutableSequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestUtil;
 import com.hartwig.hmftools.patientreporter.SampleReport;
-import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
@@ -88,13 +89,15 @@ public class PDFWriterTest {
                 reporterData.panelGeneModel(),
                 sampleReport.primaryTumorLocationString()) : mockedAlterations();
 
-        final SequencedPatientReport patientReport = ImmutableSequencedPatientReport.of(sampleReport,
+        final AnalysedPatientReport patientReport = ImmutableAnalysedPatientReport.of(sampleReport,
                 variants,
                 mutationalLoad,
                 microsatelliteIndicator,
                 copyNumbers,
                 disruptions,
                 fusions,
+                impliedTumorPurity,
+                FittedPurityStatus.NORMAL,
                 PatientReportFormat.formatPercent(impliedTumorPurity),
                 alterations,
                 Resources.getResource("circos/circos_example.png").getPath(),

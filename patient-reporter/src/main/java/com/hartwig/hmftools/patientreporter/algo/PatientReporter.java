@@ -23,12 +23,12 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
+import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.BaseReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
+import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
-import com.hartwig.hmftools.patientreporter.ImmutableSequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
-import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.civic.AlterationAnalyzer;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutablePurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
@@ -72,7 +72,7 @@ public abstract class PatientReporter {
     public abstract AlterationAnalyzer civicAnalyzer();
 
     @NotNull
-    public SequencedPatientReport run(@NotNull final String runDirectory, @Nullable final String comments) throws IOException {
+    public AnalysedPatientReport run(@NotNull final String runDirectory, @Nullable final String comments) throws IOException {
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
         final GenomeAnalysis genomeAnalysis = analyseGenomeData(run.tumorSample(), runDirectory);
         assert run.isSomaticRun() && run.tumorSample().equals(genomeAnalysis.sample());
@@ -137,13 +137,15 @@ public abstract class PatientReporter {
                 lims.labProceduresForSample(tumorSample),
                 sampleRecipient);
 
-        return ImmutableSequencedPatientReport.of(sampleReport,
+        return ImmutableAnalysedPatientReport.of(sampleReport,
                 purpleEnrichedVariants,
                 variantAnalysis.mutationalLoad(),
                 variantAnalysis.indelsPerMb(),
                 purpleAnalysis.reportableGeneCopyNumbers(),
                 reportableDisruptions,
                 reportableFusions,
+                purpleAnalysis.fittedPurity().purity(),
+                purpleAnalysis.status(),
                 purpleAnalysis.purityString(),
                 alterations,
                 PatientReporterHelper.findCircosPlotPath(runDirectory, tumorSample),

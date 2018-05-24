@@ -89,7 +89,7 @@ public class PatientReporterApplication {
             final HmfReporterData reporterData = buildReporterData(cmd);
             final PatientReporter reporter = buildReporter(cmd, reporterData);
 
-            final SequencedPatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY), cmd.getOptionValue(COMMENTS));
+            final AnalysedPatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY), cmd.getOptionValue(COMMENTS));
             pdfWriter.writeSequenceReport(report, reporterData);
         } else {
             printUsageAndExit(options);

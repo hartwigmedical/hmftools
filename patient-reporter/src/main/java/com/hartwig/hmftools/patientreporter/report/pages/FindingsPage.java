@@ -10,8 +10,8 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
+import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
-import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 import com.hartwig.hmftools.patientreporter.report.components.DataExpression;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
@@ -36,7 +36,7 @@ public abstract class FindingsPage {
     private static final int HEADER_TO_TABLE_DISTANCE = 6;
 
     @NotNull
-    abstract SequencedPatientReport report();
+    abstract AnalysedPatientReport report();
 
     @NotNull
     abstract HmfReporterData reporterData();
@@ -61,7 +61,7 @@ public abstract class FindingsPage {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> somaticVariantReport(@NotNull final SequencedPatientReport report,
+    private static ComponentBuilder<?, ?> somaticVariantReport(@NotNull final AnalysedPatientReport report,
             @NotNull final DrupFilter drupFilter) {
         final String geneMutationAddition = "Marked genes (*) are included in the DRUP study and indicate potential "
                 + "eligibility in DRUP. Please note that the marking is NOT based on the specific mutation reported for "
@@ -99,7 +99,7 @@ public abstract class FindingsPage {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> geneCopyNumberReport(@NotNull final SequencedPatientReport report) {
+    private static ComponentBuilder<?, ?> geneCopyNumberReport(@NotNull final AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> table =
                 !report.geneCopyNumbers().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(GeneCopyNumberDataSource.copyNumberFields())
@@ -117,7 +117,7 @@ public abstract class FindingsPage {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> geneFusionReport(@NotNull final SequencedPatientReport report) {
+    private static ComponentBuilder<?, ?> geneFusionReport(@NotNull final AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> table =
                 !report.geneFusions().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(GeneFusionDataSource.geneFusionFields())
@@ -143,17 +143,17 @@ public abstract class FindingsPage {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> mutationalLoadReport(@NotNull SequencedPatientReport report) {
+    private static ComponentBuilder<?, ?> mutationalLoadReport(@NotNull AnalysedPatientReport report) {
         return MutationalLoadSection.build(report.mutationalLoad());
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> microsatelliteReport(@NotNull SequencedPatientReport report) {
+    private static ComponentBuilder<?, ?> microsatelliteReport(@NotNull AnalysedPatientReport report) {
         return MicrosatelliteSection.build(report.microsatelliteIndicator());
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> geneDisruptionReport(@NotNull final SequencedPatientReport report) {
+    private static ComponentBuilder<?, ?> geneDisruptionReport(@NotNull final AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> table = report.geneDisruptions().size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(GeneDisruptionDataSource.geneDisruptionFields())
                 .columns(col.column("Chromosome", GeneDisruptionDataSource.CHROMOSOME_FIELD),
