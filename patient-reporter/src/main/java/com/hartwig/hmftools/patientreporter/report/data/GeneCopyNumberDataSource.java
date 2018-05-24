@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.copynumber.CopyNumberAlteration;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -25,7 +26,7 @@ public final class GeneCopyNumberDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromCopyNumbers(@NotNull final List<GeneCopyNumber> copyNumbers) {
+    public static JRDataSource fromCopyNumbers(@NotNull FittedPurityStatus fitStatus, @NotNull final List<GeneCopyNumber> copyNumbers) {
         final DRDataSource copyNumberDatasource = new DRDataSource(CHROMOSOME.getName(),
                 CHROMOSOME_BAND.getName(),
                 GENE_FIELD.getName(),

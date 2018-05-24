@@ -10,6 +10,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
+import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
@@ -21,6 +22,7 @@ import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.VariantDataSource;
+import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -45,7 +47,7 @@ public abstract class FindingsPage {
     public ComponentBuilder<?, ?> reportComponent() {
         return cmp.verticalList(MainPageTopSection.buildWithImpliedPurity("HMF Sequencing Report",
                 report().sampleReport(),
-                report().impliedPurityString()),
+                impliedPurityString(report())),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 somaticVariantReport(report(), reporterData().drupFilter()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -58,6 +60,13 @@ public abstract class FindingsPage {
                 mutationalLoadReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 geneDisruptionReport(report()));
+    }
+
+    @NotNull
+    private static String impliedPurityString(@NotNull AnalysedPatientReport report) {
+        return report.fitStatus() == FittedPurityStatus.NO_TUMOR
+                ? "[below detection threshold]"
+                : PatientReportFormat.formatPercent(report.impliedPurity());
     }
 
     @NotNull
@@ -108,7 +117,7 @@ public abstract class FindingsPage {
                                 col.column("Gene", GeneCopyNumberDataSource.GENE_FIELD),
                                 col.column("Type", GeneCopyNumberDataSource.GAIN_OR_LOSS_FIELD),
                                 col.column("Copies", GeneCopyNumberDataSource.COPY_NUMBER_FIELD))
-                        .setDataSource(GeneCopyNumberDataSource.fromCopyNumbers(report.geneCopyNumbers())))
+                        .setDataSource(GeneCopyNumberDataSource.fromCopyNumbers(report.fitStatus(), report.geneCopyNumbers())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Gains & Losses").setStyle(sectionHeaderStyle()),

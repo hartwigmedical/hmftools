@@ -38,18 +38,10 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @NotNull
     public abstract List<GeneFusionData> geneFusions();
 
-    abstract double impliedPurity();
+    public abstract double impliedPurity();
 
     @NotNull
-    abstract FittedPurityStatus fitStatus();
-
-    @NotNull
-    abstract String purplePurity();
-
-    @NotNull
-    public String impliedPurityString() {
-        return purplePurity();
-    }
+    public abstract FittedPurityStatus fitStatus();
 
     @NotNull
     public abstract List<Alteration> civicAlterations();

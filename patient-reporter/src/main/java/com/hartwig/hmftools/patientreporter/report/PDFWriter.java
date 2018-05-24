@@ -106,8 +106,6 @@ public class PDFWriter {
         //  (e.g. would be appropriate to be used for notAnalysableReport)
         //
         // more info: http://www.dynamicreports.org/examples/bandreport
-        //
-        // todo: fix when implementing new report layout
 
         final DRDataSource singleItemDataSource = new DRDataSource("item");
         singleItemDataSource.add(new Object());

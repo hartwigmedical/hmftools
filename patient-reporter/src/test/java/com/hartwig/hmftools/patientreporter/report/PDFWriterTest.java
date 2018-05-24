@@ -45,7 +45,6 @@ import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
 import com.hartwig.hmftools.patientreporter.report.data.ImmutableGeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.ImmutableGeneFusionData;
-import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableVariantReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
@@ -98,7 +97,6 @@ public class PDFWriterTest {
                 fusions,
                 impliedTumorPurity,
                 FittedPurityStatus.NORMAL,
-                PatientReportFormat.formatPercent(impliedTumorPurity),
                 alterations,
                 Resources.getResource("circos/circos_example.png").getPath(),
                 Optional.of("this is a test report and does not relate to any real CPCT patient"),

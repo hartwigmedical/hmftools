@@ -146,7 +146,6 @@ public abstract class PatientReporter {
                 reportableFusions,
                 purpleAnalysis.fittedPurity().purity(),
                 purpleAnalysis.status(),
-                purpleAnalysis.purityString(),
                 alterations,
                 PatientReporterHelper.findCircosPlotPath(runDirectory, tumorSample),
                 Optional.ofNullable(comments),
