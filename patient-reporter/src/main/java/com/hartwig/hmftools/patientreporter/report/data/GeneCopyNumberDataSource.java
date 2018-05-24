@@ -35,10 +35,11 @@ public final class GeneCopyNumberDataSource {
         for (final GeneCopyNumber copyNumber : copyNumbers) {
             copyNumberDatasource.add(copyNumber.chromosome(),
                     copyNumber.chromosomeBand(),
-                    copyNumber.gene(), type(copyNumber),
-                    Integer.toString(copyNumber.value()));
+                    copyNumber.gene(), type(copyNumber), Integer.toString(copyNumber.value()))
+            //CopiesOnReportDependentOnPurity.copiesValue(Integer.toString(copyNumber.value())))
+            ;
 
-            //CopiesOnReportDependentOnPurity.copiesValue(Integer.toString(copyNumber.value())));
+
 
 
         }
