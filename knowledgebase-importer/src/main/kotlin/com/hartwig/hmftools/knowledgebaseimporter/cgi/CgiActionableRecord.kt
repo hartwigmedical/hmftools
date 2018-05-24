@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.knowledgebaseimporter.cgi
 
-import com.hartwig.hmftools.knowledgebaseimporter.extractFusion
-import com.hartwig.hmftools.knowledgebaseimporter.flipFusion
+import com.hartwig.hmftools.knowledgebaseimporter.FusionReader
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.ActionableRecord
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.GDnaVariant
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordMetadata
@@ -14,11 +13,12 @@ import org.apache.commons.csv.CSVRecord
 data class CgiActionableRecord(private val metadata: RecordMetadata, override val events: List<SomaticEvent>,
                                override val actionability: List<Actionability>) : RecordMetadata by metadata, ActionableRecord {
     companion object {
-        private val FUSION_SEPARATORS = listOf("__")
+        private val FUSION_SEPARATORS = setOf("__")
         private val FUSIONS_TO_FLIP = setOf(FusionPair("ABL1", "BCR"),
                                             FusionPair("PDGFRA", "FIP1L1"),
                                             FusionPair("PDGFB", "COL1A1"))
         private val FUSIONS_TO_FILTER = setOf(FusionPair("RET", "TPCN1"))
+        private val fusionReader = FusionReader(separators = FUSION_SEPARATORS, filterSet = FUSIONS_TO_FILTER, flipSet = FUSIONS_TO_FLIP)
 
         operator fun invoke(csvRecord: CSVRecord): CgiActionableRecord? {
             val metadata = CgiMetadata(csvRecord["Gene"], csvRecord["transcript"] ?: "na")
@@ -55,20 +55,15 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
             }
         }
 
-        private fun readCNV(record: CSVRecord): CnvEvent? {
-            return when {
-                record["Alteration type"] != "CNA"   -> null
-                record["Alteration"].contains("amp") -> CnvEvent(record["Gene"], "Amplification")
-                else                                 -> CnvEvent(record["Gene"], "Deletion")
-            }
+        private fun readCNV(record: CSVRecord): CnvEvent? = when {
+            record["Alteration type"] != "CNA"   -> null
+            record["Alteration"].contains("amp") -> CnvEvent(record["Gene"], "Amplification")
+            else                                 -> CnvEvent(record["Gene"], "Deletion")
         }
 
-        private fun readFusion(record: CSVRecord): FusionEvent? {
-            val fusion = when {
-                record["Alteration type"] != "FUS" -> null
-                else                               -> extractFusion(record["Gene"], record["Alteration"].trim(), FUSION_SEPARATORS)
-            }
-            return if (FUSIONS_TO_FILTER.contains(fusion) || fusion == null) null else flipFusion(fusion, FUSIONS_TO_FLIP)
+        private fun readFusion(record: CSVRecord): FusionEvent? = when {
+            record["Alteration type"] == "FUS" -> fusionReader.read(record["Gene"], record["Alteration"])
+            else                               -> null
         }
 
         private fun readActionability(csvRecord: CSVRecord): List<Actionability> {
