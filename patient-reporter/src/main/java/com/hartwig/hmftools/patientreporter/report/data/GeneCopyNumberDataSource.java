@@ -37,6 +37,8 @@ public final class GeneCopyNumberDataSource {
                     copyNumber.chromosomeBand(),
                     copyNumber.gene(), type(copyNumber),
                     Integer.toString(copyNumber.value()));
+            // CopiesOnReportDependentOnPurity.copiesValue(copyNumber.value())); TODO go to function
+
         }
         return copyNumberDatasource;
     }
