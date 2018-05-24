@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations
 
-interface Annotation {
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.SomaticEvent
+
+interface Annotation : SomaticEvent {
     val transcript: String
     val alteration: String
 }
