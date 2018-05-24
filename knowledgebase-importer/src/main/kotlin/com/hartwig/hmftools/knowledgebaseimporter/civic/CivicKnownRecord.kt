@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.knowledgebaseimporter.civic
 
 import com.google.common.collect.Multimap
-import com.hartwig.hmftools.knowledgebaseimporter.extractFusion
+import com.hartwig.hmftools.knowledgebaseimporter.FusionReader
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.*
 import com.hartwig.hmftools.knowledgebaseimporter.output.Actionability
 import com.hartwig.hmftools.knowledgebaseimporter.output.CnvEvent
@@ -16,19 +16,21 @@ data class CivicKnownRecord(private val metadata: RecordMetadata, override val a
                             val cancerDoids: Map<String, String>) :
         RecordMetadata by metadata, KnownRecord, ActionableRecord {
     companion object {
-        private val FUSION_SEPARATORS = listOf("-")
+        private val FUSION_SEPARATORS = setOf("-")
         private val FUSIONS_TO_FILTER = setOf(FusionPair("BRAF", "CUL1"))
+        private val fusionReader = FusionReader(separators = FUSION_SEPARATORS, filterSet = FUSIONS_TO_FILTER)
 
-        operator fun invoke(csvRecord: CSVRecord, variantEvidenceMap: Multimap<String, CivicEvidence>): CivicKnownRecord {
-            val metadata = CivicMetadata(csvRecord["gene"], csvRecord["representative_transcript"] ?: "-")
-            val evidence = variantEvidenceMap[csvRecord["variant_id"]]
+        operator fun invoke(record: CSVRecord, variantEvidenceMap: Multimap<String, CivicEvidence>): CivicKnownRecord {
+            val metadata = CivicMetadata(record["gene"], record["representative_transcript"] ?: "-")
+            val evidence = variantEvidenceMap[record["variant_id"]]
             val additionalInfo = additionalInfo(evidence)
             val actionability = evidence.filter { it.direction == "Supports" }.flatMap { it.actionabilityItems }
             val doids = evidence.associateBy({ it.cancerType }, { it.doid })
-            return CivicKnownRecord(metadata, additionalInfo, readSomaticEvents(csvRecord), actionability, doids)
+            val (gene, variant) = correctRecord(record["gene"], record["variant"])
+            return CivicKnownRecord(metadata, additionalInfo, readSomaticEvents(gene, variant, record), actionability, doids)
         }
 
-        private fun readSomaticEvents(record: CSVRecord): List<SomaticEvent> {
+        private fun readSomaticEvents(gene: String, variant: String, record: CSVRecord): List<SomaticEvent> {
             val events = mutableListOf<SomaticEvent>()
             if (hasVariant(record)) {
                 events.add(KnowledgebaseVariant(record["gene"], record["chromosome"], record["start"].toLong(), record["reference_bases"],
@@ -38,7 +40,7 @@ data class CivicKnownRecord(private val metadata: RecordMetadata, override val a
                 val hgvsParts = extractHgvs(record).split(":")
                 events.add(CDnaAnnotation(hgvsParts[0], hgvsParts[1]))
             }
-            return events + listOfNotNull(readCNV(record), readFusion(record))
+            return events + listOfNotNull(readCNV(gene, variant), readFusion(gene, variant, record))
         }
 
         private fun hasVariant(record: CSVRecord): Boolean {
@@ -61,30 +63,25 @@ data class CivicKnownRecord(private val metadata: RecordMetadata, override val a
             return (highestEvidenceLevel == "A" || highestEvidenceLevel == "B" || highestEvidenceLevel == "C").toString()
         }
 
-        private fun readCNV(record: CSVRecord): CnvEvent? {
-            return when {
-                record["variant"] == "AMPLIFICATION" -> CnvEvent(record["gene"], "Amplification")
-                record["variant"] == "DELETION"      -> CnvEvent(record["gene"], "Deletion")
-                record["variant"] == "LOH"           -> CnvEvent(record["gene"], "Deletion")
-                else                                 -> null
-            }
+        private fun readCNV(gene: String, variant: String): CnvEvent? = when (variant) {
+            "AMPLIFICATION" -> CnvEvent(gene, "Amplification")
+            "DELETION"      -> CnvEvent(gene, "Deletion")
+            "LOH"           -> CnvEvent(gene, "Deletion")
+            else            -> null
         }
 
-        private fun readFusion(record: CSVRecord): FusionEvent? {
+        private fun readFusion(gene: String, variant: String, record: CSVRecord): FusionEvent? {
             val variantTypes = record["variant_types"].orEmpty()
-            val fusion = when {
-                variantTypes.contains("fusion") -> extractCorrectFusion(record["gene"], record["variant"].trim())
+            return when {
+                variantTypes.contains("fusion") -> fusionReader.read(gene, variant)
                 else                            -> null
             }
-            return if (FUSIONS_TO_FILTER.contains(fusion) || fusion == null) null else fusion
         }
 
-        private fun extractCorrectFusion(gene: String, variant: String): FusionEvent {
-            return if (variant.contains(Regex("MLL-MLLT3")) && gene == "KMT2A") {
-                extractFusion(gene, variant.replace("MLL-MLLT3", "KMT2A-MLLT3"), FUSION_SEPARATORS)
-            } else {
-                extractFusion(gene, variant, FUSION_SEPARATORS)
-            }
+        private fun correctRecord(gene: String, variant: String): Pair<String, String> = when {
+            variant.contains(Regex("MLL-MLLT3")) && gene == "KMT2A" ->
+                Pair(gene, variant.replace("MLL-MLLT3", "KMT2A-MLLT3"))
+            else                                                    -> Pair(gene, variant)
         }
     }
 }
