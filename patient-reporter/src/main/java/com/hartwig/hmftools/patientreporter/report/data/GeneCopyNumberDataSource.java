@@ -7,6 +7,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.copynumber.CopyNumberAlteration;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
+import com.hartwig.hmftools.patientreporter.copynumber.CopiesOnReportDependentOnPurity;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -36,8 +37,8 @@ public final class GeneCopyNumberDataSource {
         for (final GeneCopyNumber copyNumber : copyNumbers) {
             copyNumberDatasource.add(copyNumber.chromosome(),
                     copyNumber.chromosomeBand(),
-                    copyNumber.gene(), type(copyNumber), Integer.toString(copyNumber.value()))
-            //CopiesOnReportDependentOnPurity.copiesValue(Integer.toString(fitStatus, copyNumber.value())))
+                    // copyNumber.gene(), type(copyNumber), Integer.toString(copyNumber.value()))
+                    CopiesOnReportDependentOnPurity.copiesValue(String.valueOf(fitStatus), Integer.toString(copyNumber.value())));
             ;
 
 
