@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.knowledgebaseimporter.oncoKb
 
-import com.hartwig.hmftools.knowledgebaseimporter.extractFusion
-import com.hartwig.hmftools.knowledgebaseimporter.flipFusion
+import com.hartwig.hmftools.knowledgebaseimporter.FusionReader
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.SomaticEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.CnvEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.FusionEvent
@@ -10,14 +9,13 @@ import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.ProteinAn
 
 class OncoSomaticEventReader {
     companion object {
-        private val FUSION_SEPARATORS = listOf("-", " - ", "?")
+        private val FUSION_SEPARATORS = setOf("-", " - ", "?")
         private val FUSIONS_TO_FLIP = setOf(FusionPair("ROS1", "CD74"),
                                             FusionPair("EP300", "MLL"),
                                             FusionPair("EP300", "MOZ"),
                                             FusionPair("RET", "CCDC6"))
-        private val FUSIONS_TO_FILTER = setOf<FusionPair>()
+        private val fusionReader = FusionReader(separators = FUSION_SEPARATORS, flipSet = FUSIONS_TO_FLIP)
     }
-
 
     fun read(gene: String, transcript: String, alteration: String): List<SomaticEvent> {
         val fusionsAndCnvs = listOfNotNull(readFusions(gene, alteration), readCnv(gene, alteration))
@@ -29,11 +27,10 @@ class OncoSomaticEventReader {
     }
 
     private fun readFusions(gene: String, alteration: String): FusionEvent? {
-        val fusion = when {
-            alteration.contains(Regex("Fusion")) -> extractFusion(gene, alteration, FUSION_SEPARATORS)
+        return when {
+            alteration.contains(Regex("Fusion")) -> fusionReader.read(gene, alteration)
             else                                 -> null
         }
-        return if (FUSIONS_TO_FILTER.contains(fusion) || fusion == null) null else flipFusion(fusion, FUSIONS_TO_FLIP)
     }
 
     private fun readCnv(gene: String, alteration: String): CnvEvent? {
