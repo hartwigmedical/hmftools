@@ -20,7 +20,7 @@ class ActionabilityAnalyzer(actionableVariantsLocation: String, fusionPairsLocat
 
         private fun readActionableVariants(fileLocation: String): List<ActionableVariantOutput> {
             return readTSVRecords(fileLocation) {
-                ActionableVariantOutput(it["gene"], SomaticVariantEvent(it["chromosome"], it["position"], it["ref"], it["alt"]),
+                ActionableVariantOutput(SomaticVariantEvent(it["gene"], it["chromosome"], it["position"], it["ref"], it["alt"]),
                                         readActionability(it))
             }
         }
@@ -71,7 +71,8 @@ class ActionabilityAnalyzer(actionableVariantsLocation: String, fusionPairsLocat
     private val tumorLocationMapping = readPrimaryTumorMapping()
 
     fun actionabilityForVariant(variant: PotentialActionableVariant): Set<ActionabilityOutput> {
-        val variantKey = SomaticVariantEvent(variant.chromosome(), variant.position().toString(), variant.ref(), variant.alt())
+        val variantKey = SomaticVariantEvent(variant.gene(), variant.chromosome(), variant.position().toString(), variant.ref(),
+                                             variant.alt())
         return getActionability(variantActionabilityMap, variantKey, variant.sampleId(), variant.primaryTumorLocation())
                 .map {
                     val eventWithGene = "${variant.gene()} ${it.actionableTreatment.event}"

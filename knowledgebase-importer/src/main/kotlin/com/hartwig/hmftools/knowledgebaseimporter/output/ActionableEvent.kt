@@ -1,3 +1,5 @@
 package com.hartwig.hmftools.knowledgebaseimporter.output
 
-interface ActionableEvent
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.SomaticEvent
+
+interface ActionableEvent : SomaticEvent

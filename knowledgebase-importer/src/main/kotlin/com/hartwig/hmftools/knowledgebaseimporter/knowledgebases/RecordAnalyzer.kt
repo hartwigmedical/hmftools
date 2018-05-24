@@ -16,7 +16,7 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
         val records = knowledgebases.flatMap { it.knownKbRecords }
         val knownSomaticVariants = extractSomaticVariants(records)
         return knownSomaticVariants.map { (record, variant) ->
-            KnownVariantOutput(record.gene, record.transcript, record.additionalInfo, variant)
+            KnownVariantOutput(record.transcript, record.additionalInfo, variant)
         }
     }
 
@@ -39,7 +39,7 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
         val recordEventPairs = records.collectEvents<GDnaVariant, R>()
         return recordEventPairs.flatMap { (record, gdnaVariant) ->
             listOfNotNull(extractVariant(gdnaVariant.gDnaImpact, reference))
-                    .map { Pair(record, SomaticVariantEvent(it)) }
+                    .map { Pair(record, SomaticVariantEvent(record.gene, it)) }
         }
     }
 
@@ -56,13 +56,14 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
         return when {
             variant.ref.isNullOrBlank() -> {
                 val base = reference.getSubsequenceAt(variant.chromosome, position, position).baseString
-                SomaticVariantEvent(variant.chromosome, position.toString(), base, base + variant.alt)
+                SomaticVariantEvent(variant.gene, variant.chromosome, position.toString(), base, base + variant.alt)
             }
             variant.alt.isNullOrBlank() -> {
                 val base = reference.getSubsequenceAt(variant.chromosome, position - 1, position - 1).baseString
-                SomaticVariantEvent(variant.chromosome, (position - 1).toString(), base + variant.ref, base)
+                SomaticVariantEvent(variant.gene, variant.chromosome, (position - 1).toString(), base + variant.ref, base)
             }
-            else                        -> SomaticVariantEvent(variant.chromosome, position.toString(), variant.ref!!, variant.alt!!)
+            else                        -> SomaticVariantEvent(variant.gene, variant.chromosome, position.toString(), variant.ref!!,
+                                                               variant.alt!!)
         }
     }
 
@@ -76,7 +77,7 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
         val transvarOutput = analyzer.analyze(recordEventPairs.map { it.second })
         return recordEventPairs.map { it.first }.zip(transvarOutput).flatMap { (record, output) ->
             val somaticVariants = extractVariants(output, reference)
-            somaticVariants.map { Pair(record, SomaticVariantEvent(it)) }
+            somaticVariants.map { Pair(record, SomaticVariantEvent(record.gene, it)) }
         }
     }
 }
