@@ -16,14 +16,14 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
     override val knownVariants by lazy { RecordAnalyzer(transvarLocation, reference).knownVariants(listOf(this)).distinct() }
     override val knownFusionPairs: List<FusionPair> by lazy { actionableKbRecords.flatMap { it.events }.filterIsInstance<FusionPair>().distinct() }
     override val promiscuousGenes: List<PromiscuousGene> by lazy { actionableKbRecords.flatMap { it.events }.filterIsInstance<PromiscuousGene>().distinct() }
-    override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableKbVariants.map { it.toActionableOutput() }.filterIsInstance<ActionableVariantOutput>() }
-    override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableKbVariants.map { it.toActionableOutput() }.filterIsInstance<ActionableCNVOutput>() }
-    override val actionableFusions: List<ActionableFusionOutput> by lazy { actionableKbVariants.map { it.toActionableOutput() }.filterIsInstance<ActionableFusionOutput>() }
+    override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableKbItems.map { it.toActionableOutput() }.filterIsInstance<ActionableVariantOutput>() }
+    override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableKbItems.map { it.toActionableOutput() }.filterIsInstance<ActionableCNVOutput>() }
+    override val actionableFusions: List<ActionableFusionOutput> by lazy { actionableKbItems.map { it.toActionableOutput() }.filterIsInstance<ActionableFusionOutput>() }
     override val cancerTypes by lazy {
         actionableKbRecords.flatMap { it.actionability }.map { it.cancerType }
                 .associateBy({ it }, { diseaseOntology.findDoidsForCancerType(it) })
     }
     override val knownKbRecords by lazy { readTSVRecords(variantsLocation) { CgiKnownKbRecord(it) }.filterNotNull() }
     override val actionableKbRecords by lazy { readTSVRecords(biomarkersLocation) { CgiActionableRecord(it) }.filterNotNull() }
-    val actionableKbVariants by lazy { RecordAnalyzer(transvarLocation, reference).actionableItems(listOf(this)).distinct() }
+    private val actionableKbItems by lazy { RecordAnalyzer(transvarLocation, reference).actionableItems(listOf(this)).distinct() }
 }
