@@ -2,88 +2,29 @@ package com.hartwig.hmftools.knowledgebaseimporter.oncoKb
 
 import com.hartwig.hmftools.knowledgebaseimporter.Knowledgebase
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
-import com.hartwig.hmftools.knowledgebaseimporter.extractFusion
-import com.hartwig.hmftools.knowledgebaseimporter.flipFusion
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.ActionableRecord
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.KnowledgebaseSource
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
 import com.hartwig.hmftools.knowledgebaseimporter.readTSVRecords
-import com.hartwig.hmftools.knowledgebaseimporter.transvar.TransvarProteinAnalyzer
-import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.ProteinAnnotation
-import com.hartwig.hmftools.knowledgebaseimporter.transvar.extractVariants
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 
 
 class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: String, transvarLocation: String,
-             diseaseOntology: DiseaseOntology, private val reference: IndexedFastaSequenceFile) : Knowledgebase {
-    companion object {
-        private val FUSION_SEPARATORS = listOf("-", " - ", "?")
-        private val FUSIONS_TO_FLIP = setOf(FusionPair("ROS1", "CD74"),
-                                            FusionPair("EP300", "MLL"),
-                                            FusionPair("EP300", "MOZ"),
-                                            FusionPair("RET", "CCDC6"))
-    }
-
-    private val proteinAnalyzer = TransvarProteinAnalyzer(transvarLocation)
-    private val annotatedRecords by lazy { readTSVRecords(annotatedVariantsLocation) { OncoAnnotatedVariantRecord(it) }.map { preProcess(it) } }
-    private val actionableRecords by lazy { readTSVRecords(actionableVariantsLocation) { OncoActionableVariantRecord(it) } }
-
+             diseaseOntology: DiseaseOntology, private val reference: IndexedFastaSequenceFile) : Knowledgebase,
+        KnowledgebaseSource<OncoKnownRecord, ActionableRecord> {
     override val source = "oncoKb"
-    override val knownVariants: List<KnownVariantOutput> by lazy { knownVariants() }
-    override val knownFusionPairs: List<FusionPair> by lazy { fusions().filterIsInstance<FusionPair>() }
-    override val promiscuousGenes: List<PromiscuousGene> by lazy { fusions().filterIsInstance<PromiscuousGene>() }
-    override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableVariants() }
-    override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableCNVs() }
-    override val actionableFusions: List<ActionableFusionOutput> by lazy { actionableFusions() }
+    override val knownVariants by lazy { RecordAnalyzer(transvarLocation, reference).knownVariants(listOf(this)).distinct() }
+    override val knownFusionPairs by lazy { knownKbRecords.flatMap { it.events }.filterIsInstance<FusionPair>().distinct() }
+    override val promiscuousGenes by lazy { knownKbRecords.flatMap { it.events }.filterIsInstance<PromiscuousGene>().distinct() }
+    override val actionableVariants by lazy { actionableKbItems.map { it.toActionableOutput() }.filterIsInstance<ActionableVariantOutput>() }
+    override val actionableCNVs by lazy { actionableKbItems.map { it.toActionableOutput() }.filterIsInstance<ActionableCNVOutput>() }
+    override val actionableFusions by lazy { actionableKbItems.map { it.toActionableOutput() }.filterIsInstance<ActionableFusionOutput>() }
     override val cancerTypes by lazy {
-        actionableRecords.map { it.cancerType }.map { Pair(it, diseaseOntology.findDoidsForCancerType(it)) }.toMap()
+        actionableKbRecords.flatMap { it.actionability }.map { it.cancerType }
+                .associateBy({ it }, { diseaseOntology.findDoidsForCancerType(it) })
     }
-
-    private fun knownVariants(): List<KnownVariantOutput> {
-        val transvarOutput = proteinAnalyzer.analyze(annotatedRecords.map { ProteinAnnotation(it.transcript, it.alteration) })
-        return annotatedRecords.zip(transvarOutput)
-                .flatMap { (oncoRecord, transvarOutput) ->
-                    extractVariants(transvarOutput, reference)
-                            .map {
-                                KnownVariantOutput(oncoRecord.gene, oncoRecord.transcript, oncoRecord.oncogenicity, SomaticVariantEvent(it))
-                            }
-                }
-    }
-
-    private fun fusions(): List<FusionEvent> {
-        return annotatedRecords.filter { it.alteration.contains(Regex("Fusion")) }
-                .map { extractFusion(it.gene, it.alteration, FUSION_SEPARATORS) }
-                .map { flipFusion(it, FUSIONS_TO_FLIP) }
-                .distinct()
-    }
-
-    private fun actionableFusions(): List<ActionableFusionOutput> {
-        val fusionRecords = actionableRecords.filter { it.alteration.contains(Regex("Fusion")) }
-        val fusions = fusionRecords.map { extractFusion(it.gene, it.alteration, FUSION_SEPARATORS) }.map { flipFusion(it, FUSIONS_TO_FLIP) }
-        return fusionRecords.zip(fusions)
-                .flatMap { (record, fusion) ->
-                    record.actionabilityItems.map { ActionableFusionOutput(fusion, it) }
-                }
-    }
-
-    private fun actionableVariants(): List<ActionableVariantOutput> {
-        val transvarOutput = proteinAnalyzer.analyze(actionableRecords.map { ProteinAnnotation(it.transcript, it.alteration) })
-        return actionableRecords.zip(transvarOutput)
-                .flatMap { (record, transvarOutput) -> extractVariants(transvarOutput, reference).map { Pair(record, it) } }
-                .flatMap { (record, somaticVariant) ->
-                    record.actionabilityItems.map { ActionableVariantOutput(record.gene, SomaticVariantEvent(somaticVariant), it) }
-                }
-    }
-
-    private fun actionableCNVs(): List<ActionableCNVOutput> {
-        return actionableRecords.filter { it.alteration == "Amplification" || it.alteration == "Deletion" }.flatMap { record ->
-            record.actionabilityItems.map { ActionableCNVOutput(CnvEvent(record.gene, record.alteration), it) }
-        }
-    }
-
-    private fun preProcess(record: OncoAnnotatedVariantRecord): OncoAnnotatedVariantRecord {
-        return when {
-            record.alteration.contains(Regex("IGH-NKX2")) && record.gene == "NKX2-1" ->
-                record.copy(alteration = record.alteration.replace("IGH-NKX2", "IGH-NKX2-1"))
-            else                                                                     -> record
-        }
-    }
+    override val knownKbRecords by lazy { readTSVRecords(annotatedVariantsLocation) { OncoKnownRecord(it) } }
+    override val actionableKbRecords by lazy { readTSVRecords(actionableVariantsLocation) { OncoActionableRecord(it) } }
+    val actionableKbItems by lazy { RecordAnalyzer(transvarLocation, reference).actionableItems(listOf(this)).distinct() }
 }
