@@ -43,7 +43,7 @@ public abstract class ExplanationPage {
                                 + "Potential variants in the tumor that also exist in germline findings are not included in this report.",
                         "Variant detection in samples with lower tumor content is less sensitive. "
                                 + "In case of a low tumor purity (below 20%) likelihood of failing to detect potential variants increases.",
-                        "The implied tumor purity is the percentage of tumor DNA in the biopsy based on analysis of "
+                        "The implied tumor purity is the percentage of tumor cells in the biopsy based on analysis of "
                                 + "whole genome data."));
     }
 
