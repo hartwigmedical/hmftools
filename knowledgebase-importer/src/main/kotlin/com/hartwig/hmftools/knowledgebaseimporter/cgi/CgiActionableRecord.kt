@@ -11,8 +11,10 @@ import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.ProteinAn
 import org.apache.commons.csv.CSVRecord
 
 data class CgiActionableRecord(private val metadata: RecordMetadata, override val events: List<SomaticEvent>,
-                               override val actionability: List<Actionability>) : RecordMetadata by metadata, ActionableRecord {
+                               override val actionability: List<Actionability>, val cgiDrugs: List<CgiDrug>) : RecordMetadata by metadata,
+        ActionableRecord {
     companion object {
+
         private val FUSION_SEPARATORS = setOf("__")
         private val FUSIONS_TO_FLIP = setOf(FusionPair("ABL1", "BCR"),
                                             FusionPair("PDGFRA", "FIP1L1"),
@@ -20,10 +22,10 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
         private val FUSIONS_TO_FILTER = setOf(FusionPair("RET", "TPCN1"))
         private val fusionReader = FusionReader(separators = FUSION_SEPARATORS, filterSet = FUSIONS_TO_FILTER, flipSet = FUSIONS_TO_FLIP)
 
-        operator fun invoke(csvRecord: CSVRecord): CgiActionableRecord? {
-            val metadata = CgiMetadata(csvRecord["Gene"], csvRecord["transcript"] ?: "na")
-            val events = readSomaticEvents(csvRecord)
-            return CgiActionableRecord(metadata, events, readActionability(csvRecord))
+        operator fun invoke(record: CSVRecord): CgiActionableRecord? {
+            val metadata = CgiMetadata(record["Gene"], record["transcript"] ?: "na")
+            val events = readSomaticEvents(record)
+            return CgiActionableRecord(metadata, events, readActionability(record), readCgiDrugs(record))
         }
 
         private fun readSomaticEvents(record: CSVRecord): List<SomaticEvent> {
@@ -66,18 +68,18 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
             else                               -> null
         }
 
-        private fun readActionability(csvRecord: CSVRecord): List<Actionability> {
-            val cancerTypes = csvRecord["Primary Tumor type"].split(";").map { it.trim() }
-            val level = csvRecord["Evidence level"]
-            val association = csvRecord["Association"]
-            return Actionability("cgi", cancerTypes, readDrugs(csvRecord), level, association, "Predictive",
+        private fun readActionability(record: CSVRecord): List<Actionability> {
+            val cancerTypes = record["Primary Tumor type"].split(";").map { it.trim() }
+            val level = record["Evidence level"]
+            val association = record["Association"]
+            return Actionability("cgi", cancerTypes, readDrugs(record), level, association, "Predictive",
                                  highestLevel(level), HmfResponse(association))
         }
 
-        private fun readDrugs(csvRecord: CSVRecord): List<String> {
-            val drugNames = readDrugsField(csvRecord["Drug"].orEmpty())
+        private fun readDrugs(record: CSVRecord): List<String> {
+            val drugNames = readDrugsField(record["Drug"].orEmpty())
             return if (drugNames.isEmpty()) {
-                readDrugsField(csvRecord["Drug family"].orEmpty())
+                readDrugsField(record["Drug family"].orEmpty())
             } else {
                 drugNames
             }
