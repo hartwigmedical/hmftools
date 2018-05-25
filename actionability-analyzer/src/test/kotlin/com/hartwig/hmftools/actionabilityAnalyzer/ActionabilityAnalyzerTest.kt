@@ -35,14 +35,16 @@ class ActionabilityAnalyzerTest : StringSpec() {
 
         "finding variant does not depend on gene name" {
             val variant = brafSNV.withGene("BRAF2")
+            val brafSnvActionability = actionabilityAnalyzer.actionabilityForVariant(variant)
             val actionability = actionabilityAnalyzer.actionabilityForVariant(variant)
             val drugs = drugs(actionability)
             val sources = sources(actionability)
             val events = actionability.map { it.actionableTreatment.event }.toSet()
+            val brafEvents = brafSnvActionability.map { it.actionableTreatment.event }.toSet()
             actionability.size shouldBe 6
             actionability.filter { it.treatmentType == ON_LABEL }.size shouldBe 2
             events.size shouldBe 1
-            events.first() shouldBe "${variant.gene()} ${variant.chromosome()}:${variant.position()} ${variant.ref()}->${variant.alt()}"
+            events shouldBe brafEvents
             (drugs == setOf("Dabrafenib", "Vemurafenib")) shouldBe true
             (sources == setOf("civic", "cgi")) shouldBe true
         }

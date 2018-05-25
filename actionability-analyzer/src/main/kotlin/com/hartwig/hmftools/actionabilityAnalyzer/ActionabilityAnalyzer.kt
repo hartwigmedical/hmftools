@@ -12,10 +12,8 @@ import org.apache.commons.csv.CSVRecord
 class ActionabilityAnalyzer(actionableVariantsLocation: String, fusionPairsLocation: String, promiscuousFiveLocation: String,
                             promiscuousThreeLocation: String, cnvsLocation: String, cancerTypeLocation: String) {
     companion object {
-        private fun <T> createActionabilityMap(items: List<ActionableItem<T>>): Map<T, List<ActionableTreatment>> {
-            return items.groupBy { it.event }.mapValues { (_, actionableOutputs) ->
-                ActionableTreatment(actionableOutputs)
-            }
+        private fun <T, R> createActionabilityMap(items: List<ActionableItem<T>>, keyMapper: (T) -> R): Map<R, List<ActionableTreatment>> {
+            return items.groupBy { keyMapper(it.event) }.mapValues { (_, actionableOutputs) -> ActionableTreatment(actionableOutputs) }
         }
 
         private fun readActionableVariants(fileLocation: String): List<ActionableVariantOutput> {
@@ -62,22 +60,17 @@ class ActionabilityAnalyzer(actionableVariantsLocation: String, fusionPairsLocat
         }
     }
 
-    private val variantActionabilityMap = createActionabilityMap(readActionableVariants(actionableVariantsLocation))
-    private val fusionActionabilityMap = createActionabilityMap(readActionableFusionPairs(fusionPairsLocation))
-    private val promiscuousFiveActionabilityMap = createActionabilityMap(readActionablePromiscuousGenes(promiscuousFiveLocation))
-    private val promiscuousThreeActionabilityMap = createActionabilityMap(readActionablePromiscuousGenes(promiscuousThreeLocation))
-    private val cnvActionabilityMap = createActionabilityMap(readActionableCNVs(cnvsLocation))
+    private val variantActionabilityMap = createActionabilityMap(readActionableVariants(actionableVariantsLocation)) { VariantKey(it) }
+    private val fusionActionabilityMap = createActionabilityMap(readActionableFusionPairs(fusionPairsLocation)) { it }
+    private val promiscuousFiveActionabilityMap = createActionabilityMap(readActionablePromiscuousGenes(promiscuousFiveLocation)) { it }
+    private val promiscuousThreeActionabilityMap = createActionabilityMap(readActionablePromiscuousGenes(promiscuousThreeLocation)) { it }
+    private val cnvActionabilityMap = createActionabilityMap(readActionableCNVs(cnvsLocation)) { it }
     private val cancerTypeMapping = readCancerTypeMapping(cancerTypeLocation)
     private val tumorLocationMapping = readPrimaryTumorMapping()
 
     fun actionabilityForVariant(variant: PotentialActionableVariant): Set<ActionabilityOutput> {
-        val variantKey = SomaticVariantEvent(variant.gene(), variant.chromosome(), variant.position().toString(), variant.ref(),
-                                             variant.alt())
-        return getActionability(variantActionabilityMap, variantKey, variant.sampleId(), variant.primaryTumorLocation())
-                .map {
-                    val eventWithGene = "${variant.gene()} ${it.actionableTreatment.event}"
-                    it.copy(actionableTreatment = it.actionableTreatment.copy(event = eventWithGene))
-                }.toSet()
+        val variantKey = VariantKey(variant)
+        return getActionability(variantActionabilityMap, variantKey, variant.sampleId(), variant.primaryTumorLocation()).toSet()
     }
 
     fun actionabilityForFusion(fusion: PotentialActionableFusion): Set<ActionabilityOutput> {
