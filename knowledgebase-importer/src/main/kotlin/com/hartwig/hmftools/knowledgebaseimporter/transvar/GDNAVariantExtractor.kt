@@ -56,7 +56,7 @@ private fun parseOptimalCandidate(chromosome: String, transvarOutput: TransvarOu
     return extractVariant(chromosome, variantGDna, reference)
 }
 
-fun extractVariants(chromosome: String, gDnaVariants: List<String>, reference: IndexedFastaSequenceFile): List<SomaticVariant> {
+private fun extractVariants(chromosome: String, gDnaVariants: List<String>, reference: IndexedFastaSequenceFile): List<SomaticVariant> {
     return gDnaVariants.map { it.substringAfter(gDnaDelimiter) }.mapNotNull {
         extractVariant(chromosome, it, reference)
     }
