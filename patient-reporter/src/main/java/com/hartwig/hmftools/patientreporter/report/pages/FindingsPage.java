@@ -88,7 +88,7 @@ public abstract class FindingsPage {
                                         .setHyperLink(hyperLink(VariantDataSource.cosmicHyperlink()))
                                         .setStyle(linkStyle()),
                                 col.column("Ploidy (TAF)", VariantDataSource.PLOIDY_TAF_FIELD)))
-                        .setDataSource(VariantDataSource.fromVariants(report.variants(), drupFilter))
+                        .setDataSource(VariantDataSource.fromVariants(report.fitStatus(), report.variants(), drupFilter))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
@@ -143,7 +143,7 @@ public abstract class FindingsPage {
                                 col.column("Source", GeneFusionDataSource.SOURCE_FIELD)
                                         .setHyperLink(hyperLink(GeneFusionDataSource.sourceHyperlink()))
                                         .setStyle(linkStyle()))
-                        .setDataSource(GeneFusionDataSource.fromGeneFusions(report.geneFusions())))
+                        .setDataSource(GeneFusionDataSource.fromGeneFusions(report.fitStatus(), report.geneFusions())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Gene Fusions").setStyle(sectionHeaderStyle()),
@@ -171,7 +171,7 @@ public abstract class FindingsPage {
                         col.column("Context", GeneDisruptionDataSource.GENE_CONTEXT_FIELD),
                         col.column("Type", GeneDisruptionDataSource.TYPE_FIELD),
                         col.column("Copies", GeneDisruptionDataSource.COPIES_FIELD))
-                .setDataSource(GeneDisruptionDataSource.fromGeneDisruptions(report.geneDisruptions())))
+                .setDataSource(GeneDisruptionDataSource.fromGeneDisruptions(report.fitStatus(), report.geneDisruptions())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Gene Disruptions").setStyle(sectionHeaderStyle()),

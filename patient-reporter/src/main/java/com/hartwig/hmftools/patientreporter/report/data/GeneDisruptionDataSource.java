@@ -4,6 +4,9 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
+import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
+
 import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.report.builder.FieldBuilder;
@@ -23,7 +26,7 @@ public final class GeneDisruptionDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromGeneDisruptions(@NotNull List<GeneDisruptionData> disruptions) {
+    public static JRDataSource fromGeneDisruptions(@NotNull FittedPurityStatus fitStatus, @NotNull List<GeneDisruptionData> disruptions) {
         final DRDataSource dataSource = new DRDataSource(CHROMOSOME_FIELD.getName(),
                 CHROMOSOME_BAND_FIELD.getName(),
                 GENE_FIELD.getName(),
@@ -36,7 +39,7 @@ public final class GeneDisruptionDataSource {
                 disruption.gene(),
                 disruption.geneContext(),
                 disruption.type(),
-                disruption.copies()));
+                PatientReportFormat.correctCopyValueForFitStatus(fitStatus, disruption.copies())));
 
         return dataSource;
     }

@@ -7,7 +7,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.copynumber.CopyNumberAlteration;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
-import com.hartwig.hmftools.patientreporter.copynumber.CopiesOnReportDependentOnPurity;
+import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -37,7 +37,7 @@ public final class GeneCopyNumberDataSource {
         for (final GeneCopyNumber copyNumber : copyNumbers) {
             copyNumberDatasource.add(copyNumber.chromosome(),
                     copyNumber.chromosomeBand(), copyNumber.gene(), type(copyNumber),
-                    CopiesOnReportDependentOnPurity.copiesValue(String.valueOf(fitStatus), Integer.toString(copyNumber.value())));
+                    PatientReportFormat.correctCopyValueForFitStatus(fitStatus, Integer.toString(copyNumber.value())));
         }
         return copyNumberDatasource;
     }
@@ -52,6 +52,7 @@ public final class GeneCopyNumberDataSource {
         if (geneCopyNumber.alteration() == CopyNumberAlteration.GAIN) {
             return "gain";
         } else {
+            // KODU: At this point we only have losses and gains.
             assert geneCopyNumber.alteration() == CopyNumberAlteration.LOSS;
             if (geneCopyNumber.maxCopyNumber() < 0.5) {
                 return "full loss";

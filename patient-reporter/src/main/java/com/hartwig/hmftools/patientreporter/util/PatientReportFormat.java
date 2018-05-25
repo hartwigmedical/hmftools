@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.util;
 
+import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.svannotation.annotations.Transcript;
 
 import org.jetbrains.annotations.NotNull;
@@ -21,6 +22,11 @@ public enum PatientReportFormat {
     @NotNull
     public static String ploidyToCopiesString(@Nullable Double ploidy) {
         return ploidy != null ? String.format("%.1f", ploidy) : "-";
+    }
+
+    @NotNull
+    public static String correctCopyValueForFitStatus(@NotNull final FittedPurityStatus fitStatus, @NotNull final String copiesValue) {
+        return fitStatus == FittedPurityStatus.NO_TUMOR ? "N/A" : copiesValue;
     }
 
     @NotNull

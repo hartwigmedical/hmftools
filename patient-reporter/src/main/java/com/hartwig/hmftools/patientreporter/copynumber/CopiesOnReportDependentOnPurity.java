@@ -6,8 +6,11 @@ import org.jetbrains.annotations.NotNull;
 
 public final class CopiesOnReportDependentOnPurity {
 
+    private CopiesOnReportDependentOnPurity() {
+    }
+
     @NotNull
-    public static String copiesValue(@NotNull final String fitStatus, @NotNull final String valueOfTotalCopies) {
-        return fitStatus.equals(FittedPurityStatus.NO_TUMOR) ? "N/A" : valueOfTotalCopies;
+    public static String copiesValue(@NotNull final FittedPurityStatus fitStatus, @NotNull final String copiesValue) {
+        return fitStatus == FittedPurityStatus.NO_TUMOR ? "N/A" : copiesValue;
     }
 }
