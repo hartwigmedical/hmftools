@@ -74,6 +74,14 @@ private fun readExtraCancerTypeDoids(): Map<String, Set<String>> {
     }.toMap()
 }
 
+private fun bootstrapTreatmentTypeMapping(cgi: Cgi): List<Pair<String, String>> {
+    return cgi.actionableKbRecords.flatMap { it.cgiDrugs }.groupBy { it.drugName }
+            .mapValues { (key, value) ->
+                val drugFamilies = value.flatMap { it.drugTypes }.toSet()
+                if (drugFamilies.size > 1) drugFamilies.filterNot { it == key } else drugFamilies
+            }.flatMap { entry -> entry.value.map { Pair(entry.key, it) } }
+}
+
 private fun writeKnownVariants(knowledgebase: Knowledgebase, outputDirectory: String) {
     val format = CSVFormat.TDF.withHeader(*KnownVariantOutput.header.toTypedArray()).withNullString("")
     val printer = CSVPrinter(FileWriter("$outputDirectory${File.separator}${knowledgebase.source}KnownVariants.tsv"), format)
