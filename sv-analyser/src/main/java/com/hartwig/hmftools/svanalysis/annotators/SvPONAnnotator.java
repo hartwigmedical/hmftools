@@ -34,12 +34,12 @@ public class SvPONAnnotator {
 
     public void loadPonFile(final String ponFilename)
     {
-        if(ponFilename.isEmpty())
+        if(ponFilename == null || ponFilename.isEmpty())
             return;
 
         try {
 
-             BufferedReader fileReader = new BufferedReader(new FileReader(ponFilename));
+            BufferedReader fileReader = new BufferedReader(new FileReader(ponFilename));
 
             String line;
             while ((line = fileReader.readLine()) != null) {

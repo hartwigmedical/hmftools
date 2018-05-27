@@ -76,8 +76,13 @@ public class LoadStructuralVariants {
         }
 
         // prepare the PON data annotator
-        SvPONAnnotator svPONAnnotator = new SvPONAnnotator();
-        svPONAnnotator.loadPonFile(cmd.getOptionValue(SV_PON_FILE));
+        SvPONAnnotator svPONAnnotator = null;
+
+        if(cmd.hasOption(SV_PON_FILE))
+        {
+            svPONAnnotator= new SvPONAnnotator();
+            svPONAnnotator.loadPonFile(cmd.getOptionValue(SV_PON_FILE));
+        }
 
         boolean sourceSVsFromDB = cmd.hasOption(SOURCE_SVS_FROM_DB);
 
@@ -100,7 +105,8 @@ public class LoadStructuralVariants {
 
         List<EnrichedStructuralVariant> updatedSVs = Lists.newArrayList();
 
-        if (svPONAnnotator.hasEntries()) {
+        if (svPONAnnotator != null && svPONAnnotator.hasEntries()) {
+
             for (EnrichedStructuralVariant variant : svList) {
                 int ponCount = svPONAnnotator.getPonOccurenceCount(variant.chromosome(true),
                         variant.chromosome(false),
@@ -117,8 +123,13 @@ public class LoadStructuralVariants {
                 updatedSVs.add(updatedSV);
             }
         }
+        else
+        {
+            updatedSVs = svList;
+        }
 
-        LOGGER.info("persisting SVs to database");
+        LOGGER.info("persisting {} SVs to database", updatedSVs.size());
+
         dbAccess.writeStructuralVariants(tumorSample, updatedSVs);
 
         if (!sourceSVsFromDB) {
@@ -126,7 +137,6 @@ public class LoadStructuralVariants {
             // NEVA: We read after we write to populate the primaryId field
             final List<EnrichedStructuralVariant> enrichedVariants = dbAccess.readStructuralVariants(tumorSample);
 
-            LOGGER.info("initialising MqSql annotator");
             final VariantAnnotator annotator = MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
 
             LOGGER.info("loading Cosmic Fusion data");
