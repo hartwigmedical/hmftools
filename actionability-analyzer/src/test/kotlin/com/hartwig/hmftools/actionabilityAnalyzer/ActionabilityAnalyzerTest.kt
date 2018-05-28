@@ -81,7 +81,7 @@ class ActionabilityAnalyzerTest : StringSpec() {
     }
 
     private fun drugs(actionability: Set<ActionabilityOutput>): Set<String> {
-        return actionability.filter { it.treatmentType == ON_LABEL }.map { it.actionableTreatment.actionability.drug }.toSet()
+        return actionability.filter { it.treatmentType == ON_LABEL }.map { it.actionableTreatment.actionability.drug.name }.toSet()
     }
 
     private fun sources(actionability: Set<ActionabilityOutput>): Set<String> {
