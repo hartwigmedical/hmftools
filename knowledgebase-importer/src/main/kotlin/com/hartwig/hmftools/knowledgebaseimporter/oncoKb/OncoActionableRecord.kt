@@ -19,7 +19,7 @@ data class OncoActionableRecord(private val metadata: RecordMetadata, override v
             val transcript = record["Isoform"]
             val level: String = readLevel(record["Level"])
             val significance = if (record["Level"].startsWith("R")) HmfResponse.Resistant else HmfResponse.Responsive
-            val drugs = readDrugs(record, treatmentTypeMap)
+            val drugs = readDrugEntries(record, treatmentTypeMap)
             val cancerType: String = record["Cancer Type"]
             val actionability = Actionability("oncoKb", listOf(cancerType), drugs, level, significance.name,
                                               "Predictive", HmfLevel(record["Level"]), significance)
@@ -30,9 +30,15 @@ data class OncoActionableRecord(private val metadata: RecordMetadata, override v
 
         private fun readLevel(levelField: String): String = if (levelField.startsWith("R")) levelField.drop(1) else levelField
 
-        private fun readDrugs(record: CSVRecord, treatmentTypeMap: Map<String, String>): List<HmfDrug> {
+        private fun readDrugEntries(record: CSVRecord, treatmentTypeMap: Map<String, String>): List<HmfDrug> {
             val drugNames = record["Drugs(s)"].split(",").map { it.trim() }
-            return drugNames.map { HmfDrug(it, treatmentTypeMap[it.toLowerCase()] ?: "Unknown") }
+            return drugNames.map { annotateDrugEntry(it, treatmentTypeMap) }
+        }
+
+        private fun annotateDrugEntry(entry: String, treatmentTypeMap: Map<String, String>): HmfDrug {
+            val entryType = entry.split("+")
+                    .joinToString(" + ") { treatmentTypeMap[it.trim().toLowerCase()] ?: "Unknown" }
+            return HmfDrug(entry, entryType)
         }
     }
 }
