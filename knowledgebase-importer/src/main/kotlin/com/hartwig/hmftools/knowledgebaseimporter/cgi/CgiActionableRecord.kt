@@ -22,10 +22,10 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
         private val FUSIONS_TO_FILTER = setOf(FusionPair("RET", "TPCN1"))
         private val fusionReader = FusionReader(separators = FUSION_SEPARATORS, filterSet = FUSIONS_TO_FILTER, flipSet = FUSIONS_TO_FLIP)
 
-        operator fun invoke(record: CSVRecord): CgiActionableRecord? {
+        operator fun invoke(record: CSVRecord, treatmentTypeMap: Map<String, String>): CgiActionableRecord? {
             val metadata = CgiMetadata(record["Gene"], record["transcript"] ?: "na")
             val events = readSomaticEvents(record)
-            return CgiActionableRecord(metadata, events, readActionability(record), readCgiDrugs(record))
+            return CgiActionableRecord(metadata, events, readActionability(record, treatmentTypeMap), readCgiDrugs(record))
         }
 
         private fun readSomaticEvents(record: CSVRecord): List<SomaticEvent> {
@@ -68,15 +68,29 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
             else                               -> null
         }
 
-        private fun readActionability(record: CSVRecord): List<Actionability> {
+        private fun readActionability(record: CSVRecord, treatmentTypeMap: Map<String, String>): List<Actionability> {
             val cancerTypes = record["Primary Tumor type"].split(";").map { it.trim() }
             val level = record["Evidence level"]
             val association = record["Association"]
-            return Actionability("cgi", cancerTypes, readDrugs(record), level, association, "Predictive",
+            return Actionability("cgi", cancerTypes, readDrugs(record, treatmentTypeMap), level, association, "Predictive",
                                  highestLevel(level), HmfResponse(association))
         }
 
-        private fun readDrugs(record: CSVRecord): List<String> {
+        private fun readDrugs(record: CSVRecord, treatmentTypeMap: Map<String, String>): List<HmfDrug> {
+            val drugs = readDrugNames(record)
+            return drugs.map { name ->
+                if (name.contains("+")) {
+                    val type = name.split("+").map { it.trim() }
+                            .map { treatmentTypeMap[it.toLowerCase()] ?: "Unknown" }
+                            .joinToString(" + ")
+                    HmfDrug(name, type)
+                } else {
+                    HmfDrug(name, treatmentTypeMap[name.toLowerCase()] ?: "Unknown")
+                }
+            }
+        }
+
+        private fun readDrugNames(record: CSVRecord): List<String> {
             val drugNames = readDrugsField(record["Drug"].orEmpty())
             return if (drugNames.isEmpty()) {
                 readDrugsField(record["Drug family"].orEmpty())

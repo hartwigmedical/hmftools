@@ -9,7 +9,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.readTSVRecords
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 
 class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation: String, diseaseOntology: DiseaseOntology,
-          private val reference: IndexedFastaSequenceFile) :
+          private val reference: IndexedFastaSequenceFile, treatmentTypeMap: Map<String, String>) :
         Knowledgebase, KnowledgebaseSource<CgiKnownKbRecord, CgiActionableRecord> {
 
     override val source = "cgi"
@@ -24,6 +24,8 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
                 .associateBy({ it }, { diseaseOntology.findDoidsForCancerType(it) })
     }
     override val knownKbRecords by lazy { readTSVRecords(variantsLocation) { CgiKnownKbRecord(it) }.filterNotNull() }
-    override val actionableKbRecords by lazy { readTSVRecords(biomarkersLocation) { CgiActionableRecord(it) }.filterNotNull() }
+    override val actionableKbRecords by lazy {
+        readTSVRecords(biomarkersLocation) { CgiActionableRecord(it, treatmentTypeMap) }.filterNotNull()
+    }
     private val actionableKbItems by lazy { RecordAnalyzer(transvarLocation, reference).actionableItems(listOf(this)).distinct() }
 }
