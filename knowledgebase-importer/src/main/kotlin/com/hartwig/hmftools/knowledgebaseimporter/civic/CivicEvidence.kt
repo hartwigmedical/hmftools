@@ -26,7 +26,7 @@ data class CivicEvidence(private val csvRecord: CSVRecord, private val drugInter
         }
 
         private fun getDrugs(drugField: String, drugInteraction: String, treatmentTypeMap: Map<String, String>): List<HmfDrug> {
-            val drugs = drugField.split(",").map { it.trim() }.filterNot { it.isEmpty() }
+            val drugs = splitDrugs(drugField).filterNot { it.isEmpty() }
             val treatmentTypes = drugs.map { treatmentTypeMap[it.toLowerCase()] ?: "Unknown" }
             return when {
                 drugInteraction.isBlank()                      -> drugs.zip(treatmentTypes).map { HmfDrug(it.first, it.second) }
@@ -42,6 +42,11 @@ data class CivicEvidence(private val csvRecord: CSVRecord, private val drugInter
                     listOf(HmfDrug(name, type))
                 }
             }
+        }
+
+        fun splitDrugs(drugField: String): List<String> {
+            val matchResult = "([A-Z0-9a-z-]+(?:\\s*\\([A-Z0-9a-z-,\\s]+\\))*)".toRegex().findAll(drugField)
+            return matchResult.map { it.groupValues[1] }.toList()
         }
     }
 }
