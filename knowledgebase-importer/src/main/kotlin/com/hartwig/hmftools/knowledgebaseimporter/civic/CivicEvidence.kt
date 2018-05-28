@@ -1,15 +1,17 @@
 package com.hartwig.hmftools.knowledgebaseimporter.civic
 
 import com.hartwig.hmftools.knowledgebaseimporter.output.Actionability
+import com.hartwig.hmftools.knowledgebaseimporter.output.HmfDrug
 import com.hartwig.hmftools.knowledgebaseimporter.output.HmfLevel
 import com.hartwig.hmftools.knowledgebaseimporter.output.HmfResponse
 import org.apache.commons.csv.CSVRecord
 
-data class CivicEvidence(private val csvRecord: CSVRecord, private val drugInteractionMap: Map<Int, String>) {
+data class CivicEvidence(private val csvRecord: CSVRecord, private val drugInteractionMap: Map<Int, String>,
+                         private val treatmentTypeMap: Map<String, String>) {
     val cancerType: String = csvRecord["disease"].orEmpty()
     val drugInteractionType = getDrugInteraction(csvRecord["evidence_id"].toIntOrNull(), drugInteractionMap)
     val doid: String = csvRecord["doid"].orEmpty()
-    val drugs: List<String> = getDrugs(csvRecord["drugs"].orEmpty(), drugInteractionType)
+    val drugs: List<HmfDrug> = getDrugs(csvRecord["drugs"].orEmpty(), drugInteractionType, treatmentTypeMap)
     val type: String = csvRecord["evidence_type"].orEmpty()
     val direction: String = csvRecord["evidence_direction"].orEmpty()
     val level: String = csvRecord["evidence_level"].orEmpty()
@@ -23,13 +25,22 @@ data class CivicEvidence(private val csvRecord: CSVRecord, private val drugInter
             return drugInteractionMap[evidenceId].orEmpty()
         }
 
-        private fun getDrugs(drugField: String, drugInteraction: String): List<String> {
+        private fun getDrugs(drugField: String, drugInteraction: String, treatmentTypeMap: Map<String, String>): List<HmfDrug> {
             val drugs = drugField.split(",").map { it.trim() }.filterNot { it.isEmpty() }
+            val treatmentTypes = drugs.map { treatmentTypeMap[it.toLowerCase()] ?: "Unknown" }
             return when {
-                drugInteraction.isBlank()                      -> drugs
-                drugInteraction.toLowerCase() == "substitutes" -> drugs
-                drugInteraction.toLowerCase() == "combination" -> listOf(drugs.joinToString(" + "))
-                else                                           -> listOf(drugs.joinToString(", ") + " ($drugInteraction)")
+                drugInteraction.isBlank()                      -> drugs.zip(treatmentTypes).map { HmfDrug(it.first, it.second) }
+                drugInteraction.toLowerCase() == "substitutes" -> drugs.zip(treatmentTypes).map { HmfDrug(it.first, it.second) }
+                drugInteraction.toLowerCase() == "combination" -> {
+                    val name = drugs.joinToString(" + ")
+                    val type = treatmentTypes.joinToString(" + ")
+                    listOf(HmfDrug(name, type))
+                }
+                else                                           -> {
+                    val name = drugs.joinToString(", ") + " ($drugInteraction)"
+                    val type = treatmentTypes.joinToString(", ") + " ($drugInteraction)"
+                    listOf(HmfDrug(name, type))
+                }
             }
         }
     }
