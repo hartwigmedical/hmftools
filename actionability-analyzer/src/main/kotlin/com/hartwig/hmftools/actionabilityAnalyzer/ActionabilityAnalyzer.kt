@@ -42,9 +42,9 @@ class ActionabilityAnalyzer(actionableVariantsLocation: String, fusionPairsLocat
         }
 
         private fun readActionability(record: CSVRecord): Actionability {
-            return Actionability(record["source"], record["cancerType"], record["drug"].orEmpty(), record["level"],
-                                 record["significance"].orEmpty(), record["evidenceType"].orEmpty(), HmfLevel.valueOf(record["hmfLevel"]),
-                                 HmfResponse.valueOf(record["hmfResponse"]))
+            return Actionability(record["source"], record["cancerType"], HmfDrug(record["drug"].orEmpty(), record["drugType"].orEmpty()),
+                                 record["level"], record["significance"].orEmpty(), record["evidenceType"].orEmpty(),
+                                 HmfLevel.valueOf(record["hmfLevel"]), HmfResponse.valueOf(record["hmfResponse"]))
         }
 
         private fun readCancerTypeMapping(fileLocation: String): Map<String, Set<String>> {
