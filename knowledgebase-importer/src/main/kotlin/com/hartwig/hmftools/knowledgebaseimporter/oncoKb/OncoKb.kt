@@ -11,7 +11,8 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile
 
 
 class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: String, transvarLocation: String,
-             diseaseOntology: DiseaseOntology, private val reference: IndexedFastaSequenceFile) : Knowledgebase,
+             diseaseOntology: DiseaseOntology, private val reference: IndexedFastaSequenceFile,
+             treatmentTypeMap: Map<String, String>) : Knowledgebase,
         KnowledgebaseSource<OncoKnownRecord, ActionableRecord> {
     override val source = "oncoKb"
     override val knownVariants by lazy { RecordAnalyzer(transvarLocation, reference).knownVariants(listOf(this)).distinct() }
@@ -25,6 +26,6 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
                 .associateBy({ it }, { diseaseOntology.findDoidsForCancerType(it) })
     }
     override val knownKbRecords by lazy { readTSVRecords(annotatedVariantsLocation) { OncoKnownRecord(it) } }
-    override val actionableKbRecords by lazy { readTSVRecords(actionableVariantsLocation) { OncoActionableRecord(it) } }
+    override val actionableKbRecords by lazy { readTSVRecords(actionableVariantsLocation) { OncoActionableRecord(it, treatmentTypeMap) } }
     private val actionableKbItems by lazy { RecordAnalyzer(transvarLocation, reference).actionableItems(listOf(this)).distinct() }
 }
