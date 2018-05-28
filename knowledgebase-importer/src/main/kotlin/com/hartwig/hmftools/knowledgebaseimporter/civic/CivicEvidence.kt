@@ -20,6 +20,10 @@ data class CivicEvidence(private val csvRecord: CSVRecord, private val drugInter
                                                                 HmfLevel(level), HmfResponse(significance))
 
     companion object {
+        private const val drugCharacters = "A-Z0-9a-z-\\s"
+        private const val squareBracketPart = "\\[.*?\\]"
+        private const val roundBracketPart = "\\(.*?\\)"
+
         private fun getDrugInteraction(evidenceId: Int?, drugInteractionMap: Map<Int, String>): String {
             evidenceId ?: return ""
             return drugInteractionMap[evidenceId].orEmpty()
@@ -45,8 +49,9 @@ data class CivicEvidence(private val csvRecord: CSVRecord, private val drugInter
         }
 
         fun splitDrugs(drugField: String): List<String> {
-            val matchResult = "([A-Z0-9a-z-]+(?:\\s*\\([A-Z0-9a-z-,\\s]+\\))*)".toRegex().findAll(drugField)
-            return matchResult.map { it.groupValues[1] }.toList()
+            val drugNamePattern = "([$drugCharacters]+(?:\\s*(?:$roundBracketPart|$squareBracketPart)[$drugCharacters]*)*)"
+            val matchResult = drugNamePattern.toRegex().findAll(drugField)
+            return matchResult.map { it.groupValues[1].trim() }.toList()
         }
     }
 }
