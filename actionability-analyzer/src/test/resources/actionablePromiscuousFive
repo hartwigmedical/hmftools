@@ -1,4 +1,4 @@
-gene	source	drug	cancerType	level	hmfLevel	evidenceType	significance	hmfResponse
-FGFR2	oncoKb	BGJ-398	Bladder Cancer	3A	C	Predictive	Responsive	Responsive
-FGFR2	oncoKb	AZD4575	Bladder Cancer	3A	C	Predictive	Responsive	Responsive
+gene	source	drug	drugType	cancerType	level	hmfLevel	evidenceType	significance	hmfResponse
+FGFR2	oncoKb	BGJ-398	Unknown	Bladder Cancer	3A	C	Predictive	Responsive	Responsive
+FGFR2	oncoKb	AZD4575	Unknown	Bladder Cancer	3A	C	Predictive	Responsive	Responsive
 
