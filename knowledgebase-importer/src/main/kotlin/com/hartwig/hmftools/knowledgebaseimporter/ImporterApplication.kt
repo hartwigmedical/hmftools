@@ -20,13 +20,15 @@ fun main(args: Array<String>) {
     val outputDir = cmd.getOptionValue(OUTPUT_DIRECTORY)
     val reference = IndexedFastaSequenceFile(File(cmd.getOptionValue(REFERENCE)))
     val diseaseOntology = DiseaseOntology(cmd.getOptionValue(DOID_OWL_LOCATION))
+    val treatmentTypeMap = readTreatmentTypes("treatmentTypeMapping.tsv")
+
     val transvar = cmd.getOptionValue(TRANSVAR_LOCATION)
     val oncoKb = OncoKb(cmd.getOptionValue(ONCO_ANNOTATED_LOCATION), cmd.getOptionValue(ONCO_ACTIONABLE_LOCATION), transvar,
-                        diseaseOntology, reference)
+                        diseaseOntology, reference, treatmentTypeMap)
     val cgi = Cgi(cmd.getOptionValue(CGI_VALIDATED_LOCATION), cmd.getOptionValue(CGI_BIOMARKERS_LOCATION), transvar, diseaseOntology,
-                  reference)
+                  reference, treatmentTypeMap)
     val civic = Civic(cmd.getOptionValue(CIVIC_VARIANTS_LOCATION), cmd.getOptionValue(CIVIC_EVIDENCE_LOCATION), transvar, diseaseOntology,
-                      reference)
+                      reference, treatmentTypeMap)
     val cosmic = Cosmic("cosmic_gene_fusions.csv")
     val knowledgebases = listOf(oncoKb, cgi, civic, cosmic)
     val cancerTypesDoids = knowledgebaseCancerDoids(knowledgebases, diseaseOntology)
@@ -36,12 +38,13 @@ fun main(args: Array<String>) {
     writePromiscuousGenes(knownPromiscuousFive(knowledgebases), "$outputDir${File.separator}knownPromiscuousFive.csv")
     writePromiscuousGenes(knownPromiscuousThree(knowledgebases), "$outputDir${File.separator}knownPromiscuousFive.csv")
 
-    writeActionableVariants(knowledgebases.flatMap { it.actionableVariants }, "$outputDir${File.separator}actionableVariants.csv")
-    writeActionableFusionPairs(actionableFusionPairs(knowledgebases), "$outputDir${File.separator}actionableFusionPairs.csv")
-    writeActionablePromiscuousGenes(actionablePromiscuousFive(knowledgebases), "$outputDir${File.separator}actionablePromiscuousFive.csv")
-    writeActionablePromiscuousGenes(actionablePromiscuousThree(knowledgebases), "$outputDir${File.separator}actionablePromiscuousThree.csv")
-    writeActionableCnvs(knowledgebases.flatMap { it.actionableCNVs }, "$outputDir${File.separator}actionableCNVs.csv")
-    writeCancerTypes(cancerTypesDoids, "$outputDir${File.separator}knowledgebaseCancerTypes.csv")
+    writeActionableVariants(knowledgebases.flatMap { it.actionableVariants }, "$outputDir${File.separator}actionableVariants.tsv")
+    writeActionableFusionPairs(actionableFusionPairs(knowledgebases), "$outputDir${File.separator}actionableFusionPairs.tsv")
+    writeActionablePromiscuousGenes(actionablePromiscuousFive(knowledgebases), "$outputDir${File.separator}actionablePromiscuousFive.tsv")
+    writeActionablePromiscuousGenes(actionablePromiscuousThree(knowledgebases), "$outputDir${File.separator}actionablePromiscuousThree.tsv")
+    writeActionableCnvs(knowledgebases.flatMap { it.actionableCNVs }, "$outputDir${File.separator}actionableCNVs.tsv")
+    writeCancerDoids(cancerTypesDoids, "$outputDir${File.separator}knowledgebaseCancerTypes.tsv")
+    //    writeTreatmentTypes(bootstrapTreatmentTypeMapping(cgi), "$outputDir${File.separator}treatmentTypeMapping.tsv")
 }
 
 private fun createOptions(): Options {
@@ -74,12 +77,12 @@ private fun readExtraCancerTypeDoids(): Map<String, Set<String>> {
     }.toMap()
 }
 
-private fun bootstrapTreatmentTypeMapping(cgi: Cgi): List<Pair<String, String>> {
+private fun bootstrapTreatmentTypeMapping(cgi: Cgi): List<HmfDrug> {
     return cgi.actionableKbRecords.flatMap { it.cgiDrugs }.groupBy { it.drugName }
             .mapValues { (key, value) ->
                 val drugFamilies = value.flatMap { it.drugTypes }.toSet()
                 if (drugFamilies.size > 1) drugFamilies.filterNot { it == key } else drugFamilies
-            }.flatMap { entry -> entry.value.map { Pair(entry.key, it) } }
+            }.map { HmfDrug(it.key, it.value.joinToString(";")) }
 }
 
 private fun writeKnownVariants(knowledgebase: Knowledgebase, outputDirectory: String) {
@@ -131,9 +134,22 @@ private fun writeActionablePromiscuousGenes(fusions: List<ActionableFusionOutput
     printer.close()
 }
 
-private fun writeCancerTypes(cancerTypes: List<CancerTypeDoidOutput>, location: String) {
+private fun writeCancerDoids(cancerTypes: List<CancerTypeDoidOutput>, location: String) {
     val format = CSVFormat.TDF.withHeader(*CancerTypeDoidOutput.header.toTypedArray()).withNullString("")
     val printer = CSVPrinter(FileWriter(location), format)
     printer.printRecords(cancerTypes.map { it.record })
     printer.close()
+}
+
+private fun writeTreatmentTypes(output: List<HmfDrug>, location: String) {
+    val format = CSVFormat.TDF.withHeader(*HmfDrug.header.toTypedArray()).withNullString("")
+    val printer = CSVPrinter(FileWriter(location), format)
+    printer.printRecords(output.distinct().map { it.record })
+    printer.close()
+}
+
+private fun readTreatmentTypes(fileLocation: String): Map<String, String> {
+    return readCSVRecords(fileLocation) {
+        HmfDrug(it["name"].toLowerCase(), it["type"])
+    }.associateBy({ it.name }, { it.type })
 }
