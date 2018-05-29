@@ -233,7 +233,7 @@ class CopyNumberDAO {
         return fittedRegions;
     }
 
-    void deleteCopyNumberSample(@NotNull String sample) {
+    void deleteCopyNumberForSample(@NotNull String sample) {
         context.delete(COPYNUMBER).where(COPYNUMBER.SAMPLEID.eq(sample)).execute();
         context.delete(COPYNUMBERGERMLINE).where(COPYNUMBERGERMLINE.SAMPLEID.eq(sample)).execute();
         context.delete(COPYNUMBERREGION).where(COPYNUMBERREGION.SAMPLEID.eq(sample)).execute();

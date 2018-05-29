@@ -228,28 +228,28 @@ public class DatabaseAccess {
         validationFindingsDAO.write(findings);
     }
 
-    public void deleteAllDataOfSample(@NotNull String sample) {
+    public void deleteAllDataForSample(@NotNull String sample) {
         LOGGER.info("Starting deleting data");
 
-        metricDAO.deleteMetricSample(sample);
-        LOGGER.info("Deleting metric data of sampleID: " + sample);
+        LOGGER.info("Deleting metric data for sample: " + sample);
+        metricDAO.deleteMetricForSample(sample);
 
-        purityDAO.deletePuritySample(sample);
-        LOGGER.info("Deleting purity data of sampleID: " + sample);
+        LOGGER.info("Deleting purity data for sample: " + sample);
+        purityDAO.deletePurityForSample(sample);
 
-        copyNumberDAO.deleteCopyNumberSample(sample);
-        LOGGER.info("Deleting copy number data of sampleID: " + sample);
+        LOGGER.info("Deleting copy number data for sample: " + sample);
+        copyNumberDAO.deleteCopyNumberForSample(sample);
 
-        geneCopyNumberDAO.deleteGeneCopyNumberSample(sample);
-        LOGGER.info("Deleting gene copy number data of sampleID: " + sample);
+        LOGGER.info("Deleting gene copy number data for sample: " + sample);
+        geneCopyNumberDAO.deleteGeneCopyNumberForSample(sample);
 
-        somaticVariantDAO.deleteSomaticVariantSample(sample);
-        LOGGER.info("Deleting somatic variant data of sampleID: " + sample);
+        LOGGER.info("Deleting somatic variant data for sample: " + sample);
+        somaticVariantDAO.deleteSomaticVariantForSample(sample);
 
-        structuralVariantDAO.deleteStructuralVariantSample(sample);
-        LOGGER.info("Deleting structural variant data of sampleID: " + sample);
+        LOGGER.info("Deleting structural variant data for sample: " + sample);
+        structuralVariantDAO.deleteStructuralVariantsForSample(sample);
 
-        LOGGER.info("All data of sampleID: " + sample + " is deleted");
+        LOGGER.info("All data for sample: " + sample + " is deleted");
     }
 }
 

@@ -143,9 +143,8 @@ class PurityDAO {
                 timestamp);
     }
 
-    void deletePuritySample(@NotNull String sample) {
+    void deletePurityForSample(@NotNull String sample) {
         context.delete(PURITY).where(PURITY.SAMPLEID.eq(sample)).execute();
         context.delete(PURITYRANGE).where(PURITYRANGE.SAMPLEID.eq(sample)).execute();
-
     }
 }

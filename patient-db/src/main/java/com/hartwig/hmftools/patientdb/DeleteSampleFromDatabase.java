@@ -13,8 +13,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class DeleteSampleOfDatabase {
-    private static final Logger LOGGER = LogManager.getLogger(DeleteSampleOfDatabase.class);
+public class DeleteSampleFromDatabase {
+    private static final Logger LOGGER = LogManager.getLogger(DeleteSampleFromDatabase.class);
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -27,8 +27,8 @@ public class DeleteSampleOfDatabase {
         final DatabaseAccess dbAccess = databaseAccess(cmd);
         final String sample = cmd.getOptionValue(SAMPLE);
 
-        LOGGER.info("Removing sampleId: " + sample + " from hmf database");
-        dbAccess.deleteAllDataOfSample(sample);
+        LOGGER.info("Removing sample: " + sample + " from hmf database");
+        dbAccess.deleteAllDataForSample(sample);
         LOGGER.info("Complete");
     }
 

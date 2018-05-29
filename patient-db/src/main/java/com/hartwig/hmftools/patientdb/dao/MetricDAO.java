@@ -17,7 +17,7 @@ class MetricDAO {
     }
 
     void writeMetrics(@NotNull String sample, @NotNull WGSMetrics metrics) {
-        context.delete(METRIC).where(METRIC.SAMPLEID.eq(sample)).execute();
+        deleteMetricForSample(sample);
 
         Double tumorMeanCoverage = metrics.tumorMeanCoverage();
         Double tumor30xCoveragePercentage = metrics.tumor30xCoveragePercentage();
@@ -46,7 +46,7 @@ class MetricDAO {
                 .execute();
     }
 
-    void deleteMetricSample(@NotNull String sample) {
+    void deleteMetricForSample(@NotNull String sample) {
         context.delete(METRIC).where(METRIC.SAMPLEID.eq(sample)).execute();
     }
 }
