@@ -1,9 +1,10 @@
 primaryTumorLocation,doids
+Adrenal,
 Biliary,4607
 Bone/Soft tissue,201
 Breast,1612
 Colon/Rectum,9256;219
-CUP,
+Double primary,
 Esophagus,5041
 Head and neck,11934
 Kidney,263
@@ -11,14 +12,20 @@ Liver,3571
 Lung,1324
 Lymphoid,0060058
 Mesothelioma,1790
+Myeloid,
 Nervous system,3093
-Other,
+NET,
 Ovary,2394
 Pancreas,1793
+Penile,
 Prostate,10283
-Sarcoma,1115
 Skin,4159
 Small intestine,10154
 Stomach,10534
+Testis,
+Thymus,
+Thyroid,
+Unknown,
 Urinary tract,3996
 Uterus,363
+Vulva,
