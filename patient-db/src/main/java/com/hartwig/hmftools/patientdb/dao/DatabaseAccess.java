@@ -227,4 +227,29 @@ public class DatabaseAccess {
     public void writeValidationFindings(@NotNull final List<ValidationFinding> findings) {
         validationFindingsDAO.write(findings);
     }
+
+    public void deleteAllDataOfSample(@NotNull String sample) {
+        LOGGER.info("Starting deleting data");
+
+        metricDAO.deleteMetricSample(sample);
+        LOGGER.info("Deleting metric data of sampleID: " + sample);
+
+        purityDAO.deletePuritySample(sample);
+        LOGGER.info("Deleting purity data of sampleID: " + sample);
+
+        copyNumberDAO.deleteCopyNumberSample(sample);
+        LOGGER.info("Deleting copy number data of sampleID: " + sample);
+
+        geneCopyNumberDAO.deleteGeneCopyNumberSample(sample);
+        LOGGER.info("Deleting gene copy number data of sampleID: " + sample);
+
+        somaticVariantDAO.deleteSomaticVariantSample(sample);
+        LOGGER.info("Deleting somatic variant data of sampleID: " + sample);
+
+        structuralVariantDAO.deleteStructuralVariantSample(sample);
+        LOGGER.info("Deleting structural variant data of sampleID: " + sample);
+
+        LOGGER.info("All data of sampleID: " + sample + " is deleted");
+    }
 }
+

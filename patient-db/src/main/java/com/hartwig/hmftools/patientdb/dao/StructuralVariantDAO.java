@@ -145,17 +145,10 @@ class StructuralVariantDAO {
     void write(@NotNull final String sample, @NotNull final List<EnrichedStructuralVariant> variants) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
-        final Result<Record1<UInteger>> breakendsToDelete = context.select(STRUCTURALVARIANTBREAKEND.ID)
-                .from(STRUCTURALVARIANTBREAKEND)
-                .innerJoin(STRUCTURALVARIANT)
-                .on(STRUCTURALVARIANT.ID.eq(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID))
-                .where(STRUCTURALVARIANT.SAMPLEID.eq(sample))
-                .fetch();
-
         // first delete annotations
-        context.delete(STRUCTURALVARIANTDISRUPTION).where(STRUCTURALVARIANTDISRUPTION.BREAKENDID.in(breakendsToDelete)).execute();
-        context.delete(STRUCTURALVARIANTFUSION).where(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID.in(breakendsToDelete)).execute();
-        context.delete(STRUCTURALVARIANTBREAKEND).where(STRUCTURALVARIANTBREAKEND.ID.in(breakendsToDelete)).execute();
+        context.delete(STRUCTURALVARIANTDISRUPTION).where(STRUCTURALVARIANTDISRUPTION.BREAKENDID.in(deleteBreakends(sample))).execute();
+        context.delete(STRUCTURALVARIANTFUSION).where(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID.in(deleteBreakends(sample))).execute();
+        context.delete(STRUCTURALVARIANTBREAKEND).where(STRUCTURALVARIANTBREAKEND.ID.in(deleteBreakends(sample))).execute();
 
         // and then the structural variants
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
@@ -218,5 +211,22 @@ class StructuralVariantDAO {
                 variant.mantaPrecise(),
                 variant.somaticScore(),
                 timestamp);
+    }
+
+    void deleteStructuralVariantSample(@NotNull String sample) {
+        context.delete(STRUCTURALVARIANTDISRUPTION).where(STRUCTURALVARIANTDISRUPTION.BREAKENDID.in(deleteBreakends(sample))).execute();
+        context.delete(STRUCTURALVARIANTFUSION).where(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID.in(deleteBreakends(sample))).execute();
+        context.delete(STRUCTURALVARIANTBREAKEND).where(STRUCTURALVARIANTBREAKEND.ID.in(deleteBreakends(sample))).execute();
+        context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
+    }
+
+    private List<Record1<UInteger>> deleteBreakends(@NotNull String sample) {
+        final Result<Record1<UInteger>> breakendsToDelete = context.select(STRUCTURALVARIANTBREAKEND.ID)
+                .from(STRUCTURALVARIANTBREAKEND)
+                .innerJoin(STRUCTURALVARIANT)
+                .on(STRUCTURALVARIANT.ID.eq(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID))
+                .where(STRUCTURALVARIANT.SAMPLEID.eq(sample))
+                .fetch();
+        return breakendsToDelete;
     }
 }

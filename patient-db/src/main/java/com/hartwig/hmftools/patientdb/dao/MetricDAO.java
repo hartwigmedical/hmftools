@@ -45,4 +45,8 @@ class MetricDAO {
                         DatabaseUtil.decimal(tumor60xCoveragePercentage))
                 .execute();
     }
+
+    void deleteMetricSample(@NotNull String sample) {
+        context.delete(METRIC).where(METRIC.SAMPLEID.eq(sample)).execute();
+    }
 }

@@ -25,23 +25,11 @@ public class DeleteSampleOfDatabase {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final DatabaseAccess dbAccess = databaseAccess(cmd);
+        final String sample = cmd.getOptionValue(SAMPLE);
 
-        LOGGER.info("Removing sampleId from hmf database");
-
-        //delete sampleId from table:
-        //  -   canonicalTranscript
-        //  -   copyNumber
-        //  -   copyNumberGermline
-        //  -   copyNumberRegion
-        //  -   geneCopyNumber
-        //  -   metric
-        //  -   purity
-        //  -   purityRange
-        //  -   somaticVariant
-        //  -   structuralVariant
-        //  -   structuralVariantBreakend
-        //  -   structuralVariantDisruption
-        //  -   structuralVariantFusion
+        LOGGER.info("Removing sampleId: " + sample + " from hmf database");
+        dbAccess.deleteAllDataOfSample(sample);
+        LOGGER.info("Complete");
     }
 
     @NotNull

@@ -99,4 +99,8 @@ class GeneCopyNumberDAO {
                 gene.minMinorAllelePloidy(),
                 timestamp);
     }
+
+    void deleteGeneCopyNumberSample(@NotNull String sample) {
+        context.delete(GENECOPYNUMBER).where(GENECOPYNUMBER.SAMPLEID.eq(sample)).execute();
+    }
 }

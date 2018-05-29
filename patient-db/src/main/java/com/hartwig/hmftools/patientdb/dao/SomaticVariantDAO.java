@@ -102,4 +102,8 @@ class SomaticVariantDAO {
                 DatabaseUtil.decimal(variant.minorAllelePloidy()),
                 timestamp);
     }
+
+    void deleteSomaticVariantSample(@NotNull String sample) {
+        context.delete(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample)).execute();
+    }
 }
