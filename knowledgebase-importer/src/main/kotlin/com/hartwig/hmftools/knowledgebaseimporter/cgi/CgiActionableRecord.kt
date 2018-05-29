@@ -22,10 +22,11 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
         private val FUSIONS_TO_FILTER = setOf(FusionPair("RET", "TPCN1"))
         private val fusionReader = FusionReader(separators = FUSION_SEPARATORS, filterSet = FUSIONS_TO_FILTER, flipSet = FUSIONS_TO_FLIP)
 
-        operator fun invoke(record: CSVRecord, treatmentTypeMap: Map<String, String>): CgiActionableRecord? {
+        operator fun invoke(record: CSVRecord, treatmentTypeMap: Map<String, String>): CgiActionableRecord {
             val metadata = CgiMetadata(record["Gene"], record["transcript"] ?: "na")
             val events = readSomaticEvents(record)
-            return CgiActionableRecord(metadata, events, readActionability(record, treatmentTypeMap), readCgiDrugs(record))
+            val actionability = readActionability(record, treatmentTypeMap).filterNot { it.significance == "No Responsive" }
+            return CgiActionableRecord(metadata, events, actionability, readCgiDrugs(record))
         }
 
         private fun readSomaticEvents(record: CSVRecord): List<SomaticEvent> {

@@ -25,7 +25,7 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
     }
     override val knownKbRecords by lazy { readTSVRecords(variantsLocation) { CgiKnownKbRecord(it) }.filterNotNull() }
     override val actionableKbRecords by lazy {
-        readTSVRecords(biomarkersLocation) { CgiActionableRecord(it, treatmentTypeMap) }.filterNotNull()
+        readTSVRecords(biomarkersLocation) { CgiActionableRecord(it, treatmentTypeMap) }
     }
     private val actionableKbItems by lazy { RecordAnalyzer(transvarLocation, reference).actionableItems(listOf(this)).distinct() }
 }
