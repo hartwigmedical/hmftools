@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.actionabilityAnalyzer
 
+import com.google.common.annotations.VisibleForTesting
 import com.hartwig.hmftools.common.copynumber.CopyNumberAlteration
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
 import com.hartwig.hmftools.knowledgebaseimporter.readCSVRecords
@@ -53,7 +54,8 @@ class ActionabilityAnalyzer(actionableVariantsLocation: String, fusionPairsLocat
                     .toMap()
         }
 
-        private fun readPrimaryTumorMapping(): Map<String, Set<String>> {
+        @VisibleForTesting
+        fun primaryTumorMapping(): Map<String, Set<String>> {
             return readCSVRecords(this::class.java.getResourceAsStream("/primary_tumor_locations.csv")) {
                 Pair(it["primaryTumorLocation"], it["doids"].orEmpty().split(";").filterNot { it.isBlank() }.toSet())
             }.toMap()
@@ -66,7 +68,7 @@ class ActionabilityAnalyzer(actionableVariantsLocation: String, fusionPairsLocat
     private val promiscuousThreeActionabilityMap = createActionabilityMap(readActionablePromiscuousGenes(promiscuousThreeLocation)) { it }
     private val cnvActionabilityMap = createActionabilityMap(readActionableCNVs(cnvsLocation)) { it }
     private val cancerTypeMapping = readCancerTypeMapping(cancerTypeLocation)
-    private val tumorLocationMapping = readPrimaryTumorMapping()
+    private val tumorLocationMapping = primaryTumorMapping()
 
     fun actionabilityForVariant(variant: PotentialActionableVariant): Set<ActionabilityOutput> {
         val variantKey = VariantKey(variant)
