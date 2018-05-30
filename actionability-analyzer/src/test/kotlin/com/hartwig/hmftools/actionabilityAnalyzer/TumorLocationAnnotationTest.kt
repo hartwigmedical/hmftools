@@ -14,8 +14,8 @@ class TumorLocationAnnotationTest : StringSpec() {
     private val curator = TumorLocationCurator(FileInputStream("$patientDbResourcesPath${File.separator}$tumorLocationMappingCsv"))
 
     init {
-        "curated primary tumor locations match annotated primary tumor locations" {
-            curator.primaryTumorLocations() shouldBe ActionabilityAnalyzer.primaryTumorMapping().keys
+        "all curated primary tumor locations have entries in doid csv" {
+            curator.primaryTumorLocations().all { ActionabilityAnalyzer.primaryTumorMapping().keys.contains(it) } shouldBe true
         }
 
     }
