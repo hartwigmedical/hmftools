@@ -21,19 +21,29 @@ public class PurpleChecker implements HealthChecker {
     private static final Logger LOGGER = LogManager.getLogger(PurpleChecker.class);
 
     @NotNull
-    public BaseResult run(@NotNull final RunContext runContext) throws IOException {
+    @Override
+    public BaseResult run(@NotNull final RunContext runContext) {
         if (!runContext.isSomaticRun()) {
             return new NoResult(CheckType.PURPLE);
         }
         final String purpleDirectory = runContext.runDirectory() + File.separator + "purple";
-        final PurpleQC qcCheck = PurpleQCFile.read(PurpleQCFile.generateFilename(purpleDirectory, runContext.tumorSample()));
+        final PurpleQC qcCheck;
+        try {
+            qcCheck = PurpleQCFile.read(PurpleQCFile.generateFilename(purpleDirectory, runContext.tumorSample()));
+        } catch (IOException exc) {
+            LOGGER.warn("Could not load purple qc file.");
+            return new NoResult(CheckType.PURPLE);
+        }
+
         final List<HealthCheck> checks = Lists.newArrayList();
 
         final String segmentScore = String.valueOf(qcCheck.segmentScore());
         checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.PURPLE_SEGMENT_SCORE.toString(), segmentScore));
         checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.AMBER_GENDER.toString(), qcCheck.amberGender().toString()));
         checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.COBALT_GENDER.toString(), qcCheck.cobaltGender().toString()));
-        checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.PURPLE_DELETED_GENES_SCORE.toString(), String.valueOf(qcCheck.deletedGenes())));
+        checks.add(new HealthCheck(runContext.tumorSample(),
+                PurpleCheck.PURPLE_DELETED_GENES_SCORE.toString(),
+                String.valueOf(qcCheck.deletedGenes())));
 
         return toMultiValueResult(checks);
     }

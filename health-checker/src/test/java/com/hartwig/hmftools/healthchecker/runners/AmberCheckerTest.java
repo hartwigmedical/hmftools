@@ -1,14 +1,13 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
 import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
+import static org.junit.Assert.assertTrue;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.context.TestRunContextFactory;
-import com.hartwig.hmftools.common.io.exception.MalformedFileException;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
+import com.hartwig.hmftools.healthchecker.result.NoResult;
 import com.hartwig.hmftools.healthchecker.result.SingleValueResult;
 
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +21,7 @@ public class AmberCheckerTest {
     private final AmberChecker checker = new AmberChecker();
 
     @Test
-    public void extractDataFromAmberWorksForSomatic() throws IOException {
+    public void extractDataFromAmberWorksForSomatic() {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.run(runContext);
 
@@ -31,16 +30,16 @@ public class AmberCheckerTest {
         assertCheck(check, "0.4951");
     }
 
-    @Test(expected = MalformedFileException.class)
-    public void testMalformed() throws IOException {
+    @Test
+    public void testMalformed() {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, REF_SAMPLE, "malformed");
-        checker.run(runContext);
+        assertTrue(checker.run(runContext) instanceof NoResult);
     }
 
-    @Test(expected = IOException.class)
-    public void testMissing() throws IOException {
+    @Test
+    public void testMissing() {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, REF_SAMPLE, "missing");
-        checker.run(runContext);
+        assertTrue(checker.run(runContext) instanceof NoResult);
     }
 
     private static void assertCheck(@NotNull final HealthCheck check, final String expectedValue) {
