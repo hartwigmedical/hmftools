@@ -196,8 +196,12 @@ public class TreatmentCurator implements CleanableCurator {
             }
 
             return Optional.empty();
-        } catch (IOException exception) {
-            LOGGER.warn("Caught IOException in treatment curation: " + exception.getMessage());
+        } catch (IOException | NullPointerException exception) {
+            // NullPointerException raised when query is null (happens when search term contains only separator characters like whitespace, commas, punctuation, etc)
+            LOGGER.error("Caught {} in treatment curation for search term {}. Error message: {} ",
+                    exception.getClass().getName(),
+                    searchTerm,
+                    exception.getMessage());
             return Optional.empty();
         }
     }
