@@ -249,7 +249,12 @@ public class DatabaseAccess {
         LOGGER.info("Deleting structural variant data for sample: " + sample);
         structuralVariantDAO.deleteStructuralVariantsForSample(sample);
 
+        LOGGER.info("TODO: remove set from datastore");
+        LOGGER.info("TODO: run run_clinical_patient_db_prod");
+        LOGGER.info("Clinical data for sample: " + sample + " is removed from database");
+
         LOGGER.info("All data for sample: " + sample + " is deleted");
+
     }
 }
 
