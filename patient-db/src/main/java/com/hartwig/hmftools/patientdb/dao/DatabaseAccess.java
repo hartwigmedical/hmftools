@@ -26,6 +26,7 @@ import com.hartwig.hmftools.patientdb.data.PotentialActionableFusion;
 import com.hartwig.hmftools.patientdb.data.PotentialActionableVariant;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
+import org.apache.commons.math3.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -134,6 +135,11 @@ public class DatabaseAccess {
     @NotNull
     public Stream<PotentialActionableFusion> potentiallyActionableFusions() {
         return potentiallyActionableItemsDAO.potentiallyActionableFusions();
+    }
+
+    @NotNull
+    public Stream<Pair<String, String>> allSamplesAndTumorLocations() {
+        return potentiallyActionableItemsDAO.allSampleAndTumorLocations();
     }
 
     public void writeStructuralVariants(@NotNull final String sampleId, @NotNull final List<EnrichedStructuralVariant> variants) {

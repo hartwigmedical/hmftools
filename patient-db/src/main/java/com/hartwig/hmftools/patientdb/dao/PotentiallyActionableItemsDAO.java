@@ -18,6 +18,7 @@ import com.hartwig.hmftools.patientdb.data.PotentialActionableFusion;
 import com.hartwig.hmftools.patientdb.data.PotentialActionableVariant;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Structuralvariantbreakend;
 
+import org.apache.commons.math3.util.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 
@@ -35,16 +36,12 @@ public class PotentiallyActionableItemsDAO {
     @NotNull
     Stream<PotentialActionableVariant> potentiallyActionableVariants() {
         return context.select(SOMATICVARIANT.SAMPLEID,
-                BASELINE.PRIMARYTUMORLOCATION,
                 SOMATICVARIANT.GENE,
                 SOMATICVARIANT.CHROMOSOME,
                 SOMATICVARIANT.POSITION,
                 SOMATICVARIANT.REF,
                 SOMATICVARIANT.ALT)
-                .from(SOMATICVARIANT.join(SAMPLE)
-                        .on(SOMATICVARIANT.SAMPLEID.eq(SAMPLE.SAMPLEID))
-                        .leftJoin(BASELINE)
-                        .on(SAMPLE.PATIENTID.eq(BASELINE.PATIENTID)))
+                .from(SOMATICVARIANT)
                 .where(SOMATICVARIANT.FILTER.eq("PASS"))
                 .fetchSize(Integer.MIN_VALUE)
                 .resultSetType(ResultSet.TYPE_FORWARD_ONLY)
@@ -55,13 +52,8 @@ public class PotentiallyActionableItemsDAO {
 
     @NotNull
     Stream<PotentialActionableCNV> potentiallyActionableCNVs() {
-        return context.select(GENECOPYNUMBER.SAMPLEID, BASELINE.PRIMARYTUMORLOCATION, GENECOPYNUMBER.GENE, GENECOPYNUMBER.MINCOPYNUMBER)
-                .from(GENECOPYNUMBER.join(PURITY)
-                        .on(GENECOPYNUMBER.SAMPLEID.eq(PURITY.SAMPLEID))
-                        .join(SAMPLE)
-                        .on(GENECOPYNUMBER.SAMPLEID.eq(SAMPLE.SAMPLEID))
-                        .leftJoin(BASELINE)
-                        .on(SAMPLE.PATIENTID.eq(BASELINE.PATIENTID)))
+        return context.select(GENECOPYNUMBER.SAMPLEID, GENECOPYNUMBER.GENE, GENECOPYNUMBER.MINCOPYNUMBER)
+                .from(GENECOPYNUMBER.join(PURITY).on(GENECOPYNUMBER.SAMPLEID.eq(PURITY.SAMPLEID)))
                 .where(PURITY.QCSTATUS.eq("PASS")
                         .and(PURITY.STATUS.ne("NO_TUMOR"))
                         .and(PURITY.PURITY_.ge(0.2))
@@ -76,22 +68,28 @@ public class PotentiallyActionableItemsDAO {
 
     @NotNull
     Stream<PotentialActionableFusion> potentiallyActionableFusions() {
-        return context.select(STRUCTURALVARIANT.SAMPLEID, BASELINE.PRIMARYTUMORLOCATION, FIVE_BREAKEND.GENE, THREE_BREAKEND.GENE)
+        return context.select(STRUCTURALVARIANT.SAMPLEID, FIVE_BREAKEND.GENE, THREE_BREAKEND.GENE)
                 .from(STRUCTURALVARIANTFUSION.join(FIVE_BREAKEND)
                         .on(FIVE_BREAKEND.ID.eq(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID))
                         .join(THREE_BREAKEND)
                         .on(THREE_BREAKEND.ID.eq(STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID))
                         .join(STRUCTURALVARIANT)
-                        .on(STRUCTURALVARIANT.ID.eq(FIVE_BREAKEND.STRUCTURALVARIANTID))
-                        .join(SAMPLE)
-                        .on(STRUCTURALVARIANT.SAMPLEID.eq(SAMPLE.SAMPLEID))
-                        .leftJoin(BASELINE)
-                        .on(SAMPLE.PATIENTID.eq(BASELINE.PATIENTID)))
+                        .on(STRUCTURALVARIANT.ID.eq(FIVE_BREAKEND.STRUCTURALVARIANTID)))
                 .where(STRUCTURALVARIANTFUSION.ISREPORTED.eq((byte) 1))
                 .fetchSize(Integer.MIN_VALUE)
                 .resultSetType(ResultSet.TYPE_FORWARD_ONLY)
                 .resultSetConcurrency(ResultSet.CONCUR_READ_ONLY)
                 .stream()
                 .map(PotentialActionableFusion::of);
+    }
+
+    @NotNull
+    Stream<Pair<String, String>> allSampleAndTumorLocations() {
+        return context.select(SAMPLE.SAMPLEID, BASELINE.PRIMARYTUMORLOCATION)
+                .from(SAMPLE.leftJoin(BASELINE).on(SAMPLE.PATIENTID.eq(BASELINE.PATIENTID)))
+                .fetch()
+                .stream()
+                .map(result -> Pair.create(result.get(SAMPLE.SAMPLEID), result.get(BASELINE.PRIMARYTUMORLOCATION)))
+                .distinct();
     }
 }
