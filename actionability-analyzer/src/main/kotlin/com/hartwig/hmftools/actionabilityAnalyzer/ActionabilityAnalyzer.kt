@@ -10,8 +10,9 @@ import com.hartwig.hmftools.patientdb.data.PotentialActionableFusion
 import com.hartwig.hmftools.patientdb.data.PotentialActionableVariant
 import org.apache.commons.csv.CSVRecord
 
-class ActionabilityAnalyzer(actionableVariantsLocation: String, fusionPairsLocation: String, promiscuousFiveLocation: String,
-                            promiscuousThreeLocation: String, cnvsLocation: String, cancerTypeLocation: String) {
+class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, String>, actionableVariantsLocation: String,
+                            fusionPairsLocation: String, promiscuousFiveLocation: String, promiscuousThreeLocation: String,
+                            cnvsLocation: String, cancerTypeLocation: String) {
     companion object {
         private fun <T, R> createActionabilityMap(items: List<ActionableItem<T>>, keyMapper: (T) -> R): Map<R, List<ActionableTreatment>> {
             return items.groupBy { keyMapper(it.event) }.mapValues { (_, actionableOutputs) -> ActionableTreatment(actionableOutputs) }
@@ -72,14 +73,15 @@ class ActionabilityAnalyzer(actionableVariantsLocation: String, fusionPairsLocat
 
     fun actionabilityForVariant(variant: PotentialActionableVariant): Set<ActionabilityOutput> {
         val variantKey = VariantKey(variant)
-        return getActionability(variantActionabilityMap, variantKey, variant.sampleId(), variant.primaryTumorLocation()).toSet()
+        val cancerType = sampleTumorLocationMap[variant.sampleId()]
+        return getActionability(variantActionabilityMap, variantKey, variant.sampleId(), cancerType).toSet()
     }
 
     fun actionabilityForFusion(fusion: PotentialActionableFusion): Set<ActionabilityOutput> {
         val fiveGene = fusion.fiveGene()
         val threeGene = fusion.threeGene()
         val sampleId = fusion.sampleId()
-        val cancerType = fusion.primaryTumorLocation()
+        val cancerType = sampleTumorLocationMap[fusion.sampleId()]
         val fusionPairActionability = getActionability(fusionActionabilityMap, FusionPair(fiveGene, threeGene), sampleId, cancerType)
         val promiscuousFiveActionability = getActionability(promiscuousFiveActionabilityMap, PromiscuousGene(fiveGene), sampleId,
                                                             cancerType)
@@ -91,7 +93,7 @@ class ActionabilityAnalyzer(actionableVariantsLocation: String, fusionPairsLocat
     fun actionabilityForCNV(cnv: PotentialActionableCNV): Set<ActionabilityOutput> {
         val cnvType = if (cnv.alteration() == CopyNumberAlteration.GAIN) "Amplification" else "Deletion"
         val cnvEvent = CnvEvent(cnv.gene(), cnvType)
-        return getActionability(cnvActionabilityMap, cnvEvent, cnv.sampleId(), cnv.primaryTumorLocation()).toSet()
+        return getActionability(cnvActionabilityMap, cnvEvent, cnv.sampleId(), sampleTumorLocationMap[cnv.sampleId()]).toSet()
     }
 
     private fun <T> getActionability(actionabilityMap: Map<T, List<ActionableTreatment>>, event: T,

@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.actionabilityAnalyzer
 
+import com.hartwig.hmftools.knowledgebaseimporter.readCSVRecords
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import org.apache.logging.log4j.LogManager
 import java.io.FileWriter
 import kotlin.streams.asSequence
+import kotlin.streams.toList
 
 private val logger = LogManager.getLogger("ActionabilityAnalyzerApplication")
 private val user = ""
@@ -17,11 +19,14 @@ private val actionablePromiscuousFive = "actionablePromiscuousFive"
 private val actionablePromisucousThree = "actionablePromiscuousThree"
 private val actionableCNVs = "actionableCNVs"
 private val cancerTypes = "knowledgebaseCancerTypes"
+private val allDbSamples = false
+private val cohortCsvLocation = "cohort.csv"
 
 fun main(args: Array<String>) {
-    val actionabilityAnalyzer = ActionabilityAnalyzer(actionableVariants, actionableFusionPairs, actionablePromiscuousFive,
-                                                      actionablePromisucousThree, actionableCNVs, cancerTypes)
     val dbAccess = DatabaseAccess(user, password, databaseUrl)
+    val samplesToAnalyze = readSamples(dbAccess)
+    val actionabilityAnalyzer = ActionabilityAnalyzer(samplesToAnalyze, actionableVariants, actionableFusionPairs,
+                                                      actionablePromiscuousFive, actionablePromisucousThree, actionableCNVs, cancerTypes)
     val printer = createPrinter()
     logger.info("Start")
     queryDatabase(dbAccess, printer, actionabilityAnalyzer)
@@ -70,3 +75,7 @@ private fun createPrinter(): CSVPrinter {
     val format = CSVFormat.TDF.withHeader(*ActionabilityOutput.header.toTypedArray()).withNullString("NULL")
     return CSVPrinter(FileWriter("actionableVariantsPerSample.tsv"), format)
 }
+
+private fun readSamples(dbAccess: DatabaseAccess): Map<String, String> =
+        if (allDbSamples) dbAccess.allSamplesAndTumorLocations().toList().associate { Pair(it.key, it.value) }
+        else readCSVRecords(cohortCsvLocation) { Pair(it[0], it[1]) }.toMap()

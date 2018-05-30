@@ -7,6 +7,7 @@ import io.kotlintest.specs.StringSpec
 
 class ActionabilityAnalyzerTest : StringSpec() {
     private val ON_LABEL = "On-label"
+    private val samplesMap = mapOf("CPCT99110022T" to "Skin", "CPCT99110033T" to "Lung")
 
     private val actionableCNVs = Resources.getResource("actionableCNVs").path
     private val actionableFusionPairs = Resources.getResource("actionableFusionPairs").path
@@ -14,10 +15,13 @@ class ActionabilityAnalyzerTest : StringSpec() {
     private val actionablePromiscuousThree = Resources.getResource("actionablePromiscuousThree").path
     private val actionableVariants = Resources.getResource("actionableVariants").path
     private val cancerTypesMapping = Resources.getResource("knowledgebaseCancerTypes").path
-    private val actionabilityAnalyzer = ActionabilityAnalyzer(actionableVariants, actionableFusionPairs, actionablePromiscuousFive,
-                                                              actionablePromiscuousThree, actionableCNVs, cancerTypesMapping)
+    private val actionabilityAnalyzer = ActionabilityAnalyzer(samplesMap, actionableVariants, actionableFusionPairs,
+                                                              actionablePromiscuousFive, actionablePromiscuousThree, actionableCNVs,
+                                                              cancerTypesMapping)
 
-    private val brafSNV = ImmutablePotentialActionableVariant.of("CPCT99110022", "Skin", "BRAF", "7", 140453136, "A", "T")
+    private val brafSNV = ImmutablePotentialActionableVariant.of("CPCT99110022T", "BRAF", "7", 140453136, "A", "T")
+    private val brafOtherSNV = ImmutablePotentialActionableVariant.of("CPCT99110033T", "BRAF", "7", 140453136, "A", "T")
+
 
     init {
         "finds BRAF SNV actionability" {
@@ -50,7 +54,7 @@ class ActionabilityAnalyzerTest : StringSpec() {
         }
 
         "finds BRAF SNV actionability for different primary tumor" {
-            val variant = brafSNV.withPrimaryTumorLocation("Lung")
+            val variant = brafOtherSNV
             val actionability = actionabilityAnalyzer.actionabilityForVariant(variant)
             val drugs = drugs(actionability)
             val sources = sources(actionability)
