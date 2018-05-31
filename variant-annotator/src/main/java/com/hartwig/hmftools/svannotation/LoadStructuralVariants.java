@@ -51,6 +51,7 @@ public class LoadStructuralVariants {
     private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
     private static final String ENSEMBL_DB = "ensembl_db";
+    private static final String ENSEMBL_DB_LOCAL = "local_ensembl";
     private static final String FUSION_PAIRS_CSV = "fusion_pairs_csv";
     private static final String PROMISCUOUS_FIVE_CSV = "promiscuous_five_csv";
     private static final String PROMISCUOUS_THREE_CSV = "promiscuous_three_csv";
@@ -69,7 +70,7 @@ public class LoadStructuralVariants {
 
         final String tumorSample = cmd.getOptionValue(SAMPLE);
 
-        final DatabaseAccess dbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
+        final DatabaseAccess dbAccess = databaseAccess(cmd);
 
         if (cmd.hasOption(LOG_DEBUG)) {
             Configurator.setRootLevel(Level.DEBUG);
@@ -137,7 +138,27 @@ public class LoadStructuralVariants {
             // NEVA: We read after we write to populate the primaryId field
             final List<EnrichedStructuralVariant> enrichedVariants = dbAccess.readStructuralVariants(tumorSample);
 
-            final VariantAnnotator annotator = MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
+            DatabaseAccess ensembleDBConn = null;
+
+            if(cmd.hasOption(ENSEMBL_DB_LOCAL)) {
+
+                // the same credential work for both hmf and ensembl DBs
+                final String ensembleJdbcUrl = "jdbc:" + cmd.getOptionValue(ENSEMBL_DB);
+                final String ensembleUser = cmd.getOptionValue(DB_USER);
+                final String ensemblePassword =  cmd.getOptionValue(DB_USER);
+
+                LOGGER.debug("connecting to local ensembl DB: {}", cmd.getOptionValue(ENSEMBL_DB));
+
+                try {
+                    ensembleDBConn = new DatabaseAccess(ensembleUser, ensemblePassword, ensembleJdbcUrl);
+                } catch (Exception e) {
+                    LOGGER.warn("Ensemble DB connection failed: {}", e.toString(), e.getMessage());
+                }
+            }
+
+            final VariantAnnotator annotator = ensembleDBConn != null ?
+                    new MySQLAnnotator(ensembleDBConn.context()) :
+                    MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
 
             LOGGER.info("loading Cosmic Fusion data");
             final KnownFusionsModel knownFusionsModel =
@@ -199,6 +220,7 @@ public class LoadStructuralVariants {
         options.addOption(PROMISCUOUS_FIVE_CSV, true, "Path towards a CSV containing white-listed promiscuous 5' genes.");
         options.addOption(PROMISCUOUS_THREE_CSV, true, "Path towards a CSV containing white-listed promiscuous 3' genes.");
         options.addOption(ENSEMBL_DB, true, "Annotate structural variants using this Ensembl DB URI");
+        options.addOption(ENSEMBL_DB_LOCAL, false, "Connect to local Ensembl DB");
         options.addOption(SOURCE_SVS_FROM_DB, false, "Skip annotations, including Ensemble DB data sync, for testing only)");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         options.addOption(SV_PON_FILE, true, "PON file for SVs");

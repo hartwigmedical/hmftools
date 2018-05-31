@@ -25,6 +25,8 @@ import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
 import com.hartwig.hmftools.svannotation.annotations.StructuralVariantAnnotation;
 import com.hartwig.hmftools.svannotation.annotations.Transcript;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.ensembl.database.homo_sapiens_core.enums.GeneStatus;
 import org.ensembl.database.homo_sapiens_core.enums.ObjectXrefEnsemblObjectType;
 import org.ensembl.database.homo_sapiens_core.tables.Xref;
@@ -39,6 +41,9 @@ import org.jooq.impl.DSL;
 import org.jooq.types.UInteger;
 
 public class MySQLAnnotator implements VariantAnnotator {
+
+    private static final Logger LOGGER = LogManager.getLogger(MySQLAnnotator.class);
+
     private static final String ENTREZ_IDS = "ENTREZ_IDS";
     private static final String KARYOTYPE_BAND = "KARYOTYPE_BAND";
 
@@ -59,6 +64,12 @@ public class MySQLAnnotator implements VariantAnnotator {
         coordSystemId = findCoordSystemId();
     }
 
+    public MySQLAnnotator(@NotNull final DSLContext dbConnection)
+    {
+        context = dbConnection;
+        coordSystemId = findCoordSystemId();
+    }
+
     @NotNull
     private UInteger findCoordSystemId() {
         return context.select(COORD_SYSTEM.COORD_SYSTEM_ID)
@@ -73,7 +84,21 @@ public class MySQLAnnotator implements VariantAnnotator {
     @Override
     @NotNull
     public List<StructuralVariantAnnotation> annotateVariants(@NotNull List<EnrichedStructuralVariant> variants) {
-        return variants.stream().map(this::annotateVariant).collect(Collectors.toList());
+
+        List<StructuralVariantAnnotation> annotatedVars = Lists.newArrayList();
+
+        for(final EnrichedStructuralVariant variant : variants)
+        {
+//            LOGGER.debug("annotating var({}) {} breakends({}:{} -> {}:{})",
+//                    variant.id(), variant.type(),
+//                    variant.chromosome(true), variant.position(true),
+//                    variant.chromosome(false), variant.position(false));
+
+             annotatedVars.add(annotateVariant(variant));
+        }
+
+        return annotatedVars;
+        // return variants.stream().map(this::annotateVariant).collect(Collectors.toList());
     }
 
     @NotNull
@@ -97,8 +122,16 @@ public class MySQLAnnotator implements VariantAnnotator {
             final String geneStableId = gene.get(GENE.STABLE_ID);
             final UInteger canonicalTranscriptId = gene.get(GENE.CANONICAL_TRANSCRIPT_ID);
             final int geneStrand = gene.get(GENE.SEQ_REGION_STRAND);
-            final List<Integer> entrezIds =
-                    Arrays.stream(gene.get(ENTREZ_IDS, String.class).split(",")).map(Integer::parseInt).collect(Collectors.toList());
+
+            final String entrezIdsStr = gene.get(ENTREZ_IDS, String.class);
+
+//            if(entrezIdsStr == null) {
+//                LOGGER.debug("var({}) missing an entrezId", variant.id());
+//            }
+
+            final List<Integer> entrezIds = (entrezIdsStr == null || entrezIdsStr.isEmpty()) ? Lists.newArrayList() :
+                Arrays.stream(entrezIdsStr.split(",")).map(Integer::parseInt).collect(Collectors.toList());
+
             final String karyotypeBand = gene.get(KARYOTYPE_BAND, String.class);
 
             final List<String> synonyms = context.select(XREF.DBPRIMARY_ACC)
@@ -158,12 +191,12 @@ public class MySQLAnnotator implements VariantAnnotator {
                 .innerJoin(OBJECT_XREF)
                 .on(GENE.GENE_ID.eq(OBJECT_XREF.ENSEMBL_ID))
                 .and(OBJECT_XREF.ENSEMBL_OBJECT_TYPE.eq(ObjectXrefEnsemblObjectType.Gene))
-                .innerJoin(ENTREZ_XREF)
+                .leftJoin(ENTREZ_XREF) // was an inner join before
                 .on(OBJECT_XREF.XREF_ID.eq(ENTREZ_XREF.XREF_ID))
                 .and(ENTREZ_XREF.EXTERNAL_DB_ID.eq(UInteger.valueOf(1300)))
                 .innerJoin(XREF)
                 .on(XREF.XREF_ID.eq(GENE.DISPLAY_XREF_ID))
-                .where(GENE.STATUS.eq(GeneStatus.KNOWN))
+                .where((GENE.STATUS.eq(GeneStatus.KNOWN).or(GENE.STATUS.eq(GeneStatus.NOVEL))))
                 .and(decode().when(GENE.SEQ_REGION_STRAND.gt(zero),
                         decode().when(GENE.SEQ_REGION_START.ge(UInteger.valueOf(promoterDistance)),
                                 GENE.SEQ_REGION_START.sub(promoterDistance)).otherwise(GENE.SEQ_REGION_START))
