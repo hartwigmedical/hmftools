@@ -129,7 +129,7 @@ public class LoadStructuralVariants {
             LOGGER.info("initialising MqSql annotator");
             final VariantAnnotator annotator = MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
 
-            LOGGER.info("loading Cosmic Fusion data");
+            LOGGER.info("loading Fusion data");
             final KnownFusionsModel knownFusionsModel =
                     KnownFusionsModel.fromInputStreams(new FileInputStream(cmd.getOptionValue(FUSION_PAIRS_CSV)),
                             new FileInputStream(cmd.getOptionValue(PROMISCUOUS_FIVE_CSV)),
