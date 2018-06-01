@@ -191,6 +191,11 @@
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
+                <artifactId>hmf-extensions-csv</artifactId>
+                <version>${hmf-extensions.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
                 <artifactId>knowledgebase-importer</artifactId>
                 <version>${hmf-knowledgebase-importer.version}</version>
             </dependency>

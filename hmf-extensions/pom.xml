@@ -16,6 +16,7 @@
     <modules>
         <module>hmf-extensions-cli</module>
         <module>hmf-extensions-samtools</module>
+        <module>hmf-extensions-csv</module>
     </modules>
 
 </project>
