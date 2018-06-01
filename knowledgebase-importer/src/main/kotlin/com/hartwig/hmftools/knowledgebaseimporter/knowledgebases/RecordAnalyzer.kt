@@ -19,14 +19,14 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
         }
     }
 
-    fun actionableItems(knowledgebases: List<KnowledgebaseSource<*, *>>): List<ActionableKbItem> {
+    fun actionableItems(knowledgebases: List<KnowledgebaseSource<*, *>>): List<ActionableItem<*>> {
         val records = knowledgebases.flatMap { it.actionableKbRecords }
         val fusions = records.collectEvents<FusionEvent, ActionableRecord>()
         val cnvs = records.collectEvents<CnvEvent, ActionableRecord>()
         val somaticVariants = extractSomaticVariants(records)
         val events = fusions + cnvs + somaticVariants
         return events.flatMap { (record, event) ->
-            record.actionability.map { ActionableKbItem(event, it) }
+            record.actionability.map { ActionableItem(event, it) }
         }
     }
 

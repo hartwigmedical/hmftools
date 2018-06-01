@@ -16,10 +16,10 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
     override val knownVariants by lazy { RecordAnalyzer(transvarLocation, reference).knownVariants(listOf(this)).distinct() }
     override val knownFusionPairs: List<FusionPair> by lazy { actionableKbRecords.flatMap { it.events }.filterIsInstance<FusionPair>().distinct() }
     override val promiscuousGenes: List<PromiscuousGene> by lazy { actionableKbRecords.flatMap { it.events }.filterIsInstance<PromiscuousGene>().distinct() }
-    override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableKbItems.map { it.toActionableOutput() }.filterIsInstance<ActionableVariantOutput>() }
-    override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableKbItems.map { it.toActionableOutput() }.filterIsInstance<ActionableCNVOutput>() }
-    override val actionableFusionPairs by lazy { actionableKbItems.map { it.toActionableOutput() }.filterIsInstance<ActionableFusionPairOutput>() }
-    override val actionablePromiscuousGenes by lazy { actionableKbItems.map { it.toActionableOutput() }.filterIsInstance<ActionablePromiscuousGeneOutput>() }
+    override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableKbItems.filterIsInstance<ActionableVariantOutput>() }
+    override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableKbItems.filterIsInstance<ActionableCNVOutput>() }
+    override val actionableFusionPairs by lazy { actionableKbItems.filterIsInstance<ActionableFusionPairOutput>() }
+    override val actionablePromiscuousGenes by lazy { actionableKbItems.filterIsInstance<ActionablePromiscuousGeneOutput>() }
     override val cancerTypes by lazy {
         actionableKbRecords.flatMap { it.actionability }.map { it.cancerType }
                 .associateBy({ it }, { diseaseOntology.findDoidsForCancerType(it) })

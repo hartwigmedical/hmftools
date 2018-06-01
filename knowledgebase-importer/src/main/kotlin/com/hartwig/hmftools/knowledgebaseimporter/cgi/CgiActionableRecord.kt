@@ -77,8 +77,7 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
             return drugs.map { name ->
                 if (name.contains("+")) {
                     val type = name.split("+").map { it.trim() }
-                            .map { treatmentTypeMap[it.toLowerCase()] ?: "Unknown" }
-                            .joinToString(" + ")
+                            .joinToString(" + ") { treatmentTypeMap[it.toLowerCase()] ?: "Unknown" }
                     HmfDrug(name, type)
                 } else {
                     HmfDrug(name, treatmentTypeMap[name.toLowerCase()] ?: "Unknown")
