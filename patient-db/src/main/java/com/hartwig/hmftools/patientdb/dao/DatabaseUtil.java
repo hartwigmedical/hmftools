@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-final class DatabaseUtil {
+final public class DatabaseUtil {
 
-    static double decimal(double number) {
+    public static double decimal(double number) {
         return round(number, 4);
     }
 

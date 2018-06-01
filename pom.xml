@@ -25,6 +25,7 @@
         <module>ensembl-db</module>
         <module>bam-slicer</module>
         <module>bachelor</module>
+        <module>bachelor-pp</module>
         <module>hmf-extensions</module>
         <module>hmf-id-generator</module>
         <module>portal-data-converter</module>

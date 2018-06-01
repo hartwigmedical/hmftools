@@ -202,6 +202,7 @@ public class BachelorApplication {
 
     public static void main(final String... args) {
         final Options options = createOptions();
+
         try {
             final CommandLine cmd = createCommandLine(options, args);
 
