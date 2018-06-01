@@ -111,15 +111,15 @@ private fun writeActionableCnvs(cnvs: List<ActionableCNVOutput>, location: Strin
     printer.close()
 }
 
-private fun writeActionableFusionPairs(fusions: List<ActionableFusionOutput>, location: String) {
-    val format = CSVFormat.TDF.withHeader(*ActionableFusionOutput.fusionPairHeader.toTypedArray()).withNullString("")
+private fun writeActionableFusionPairs(fusions: List<ActionableFusionPairOutput>, location: String) {
+    val format = CSVFormat.TDF.withHeader(*ActionableFusionPairOutput.header.toTypedArray()).withNullString("")
     val printer = CSVPrinter(FileWriter(location), format)
     printer.printRecords(fusions.map { it.record })
     printer.close()
 }
 
-private fun writeActionablePromiscuousGenes(fusions: List<ActionableFusionOutput>, location: String) {
-    val format = CSVFormat.TDF.withHeader(*ActionableFusionOutput.promiscuousGeneHeader.toTypedArray()).withNullString("")
+private fun writeActionablePromiscuousGenes(fusions: List<ActionablePromiscuousGeneOutput>, location: String) {
+    val format = CSVFormat.TDF.withHeader(*ActionablePromiscuousGeneOutput.header.toTypedArray()).withNullString("")
     val printer = CSVPrinter(FileWriter(location), format)
     printer.printRecords(fusions.map { it.record })
     printer.close()
