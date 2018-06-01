@@ -18,7 +18,8 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
     override val promiscuousGenes: List<PromiscuousGene> by lazy { actionableKbRecords.flatMap { it.events }.filterIsInstance<PromiscuousGene>().distinct() }
     override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableKbItems.map { it.toActionableOutput() }.filterIsInstance<ActionableVariantOutput>() }
     override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableKbItems.map { it.toActionableOutput() }.filterIsInstance<ActionableCNVOutput>() }
-    override val actionableFusions: List<ActionableFusionOutput> by lazy { actionableKbItems.map { it.toActionableOutput() }.filterIsInstance<ActionableFusionOutput>() }
+    override val actionableFusionPairs by lazy { actionableKbItems.map { it.toActionableOutput() }.filterIsInstance<ActionableFusionPairOutput>() }
+    override val actionablePromiscuousGenes by lazy { actionableKbItems.map { it.toActionableOutput() }.filterIsInstance<ActionablePromiscuousGeneOutput>() }
     override val cancerTypes by lazy {
         actionableKbRecords.flatMap { it.actionability }.map { it.cancerType }
                 .associateBy({ it }, { diseaseOntology.findDoidsForCancerType(it) })

@@ -9,6 +9,7 @@ interface Knowledgebase {
     val promiscuousGenes: List<PromiscuousGene>
     val actionableVariants: List<ActionableVariantOutput>
     val actionableCNVs: List<ActionableCNVOutput>
-    val actionableFusions: List<ActionableFusionOutput>
+    val actionableFusionPairs: List<ActionableFusionPairOutput>
+    val actionablePromiscuousGenes: List<ActionablePromiscuousGeneOutput>
     val cancerTypes: Map<String, Set<String>>
 }
