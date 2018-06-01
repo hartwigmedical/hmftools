@@ -11,6 +11,7 @@
     <artifactId>hmf-extensions</artifactId>
     <packaging>pom</packaging>
     <name>HMF Tools - Extensions</name>
+    <version>1.0</version>
 
     <modules>
         <module>hmf-extensions-cli</module>
