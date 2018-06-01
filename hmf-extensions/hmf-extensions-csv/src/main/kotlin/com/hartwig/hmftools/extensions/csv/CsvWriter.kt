@@ -41,15 +41,11 @@ object CsvWriter {
     }
 
     inline fun <reified T : CsvData> writeCSV(records: List<T>, location: String) {
-        val printer = CSVPrinter(FileWriter(location), DEFAULT_CSV_FORMAT.withHeader(*T::class.columns().toTypedArray()))
-        printer.printRecords(records.map { T::class.values(it) })
-        printer.close()
+        write(records, location, DEFAULT_CSV_FORMAT)
     }
 
     inline fun <reified T : CsvData> writeTSV(records: List<T>, location: String) {
-        val printer = CSVPrinter(FileWriter(location), DEFAULT_TSV_FORMAT.withHeader(*T::class.columns().toTypedArray()))
-        printer.printRecords(records.map { T::class.values(it) })
-        printer.close()
+        write(records, location, DEFAULT_TSV_FORMAT)
     }
 
     // MIVO: generate CsvData header record based on primary constructor parameter list
