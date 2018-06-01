@@ -7,8 +7,8 @@ data class ActionableKbItem(val event: ActionableEvent, val actionability: Actio
         return when (event) {
             is CnvEvent            -> ActionableCNVOutput(event, actionability)
             is SomaticVariantEvent -> ActionableVariantOutput(event, actionability)
-            is FusionEvent         -> ActionableFusionOutput(event, actionability)
-            else                   -> null
+            is FusionPair          -> ActionableFusionPairOutput(event, actionability)
+            is PromiscuousGene     -> ActionablePromiscuousGeneOutput(event, actionability)
         }
     }
 }
