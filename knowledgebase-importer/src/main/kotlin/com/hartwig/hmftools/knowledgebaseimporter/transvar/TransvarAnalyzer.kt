@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.knowledgebaseimporter.transvar
 
-import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.Annotation
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.HgvsAnnotation
 import java.io.*
 
-interface TransvarAnalyzer<in T : Annotation> {
+interface TransvarAnalyzer<in T : HgvsAnnotation> {
     val analysisMode: String
     val transvarLocation: String
 
