@@ -40,7 +40,7 @@ object CsvWriter {
         printer.close()
     }
 
-    inline fun <reified T : CsvData> writeCSV(records: List<T>, location: String, format: CSVFormat) {
+    inline fun <reified T : CsvData> writeCSV(records: List<T>, location: String) {
         val printer = CSVPrinter(FileWriter(location), DEFAULT_CSV_FORMAT.withHeader(*T::class.columns().toTypedArray()))
         printer.printRecords(records.map { T::class.values(it) })
         printer.close()
