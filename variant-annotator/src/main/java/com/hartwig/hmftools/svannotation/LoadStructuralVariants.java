@@ -70,6 +70,8 @@ public class LoadStructuralVariants {
 
         final String tumorSample = cmd.getOptionValue(SAMPLE);
 
+        LOGGER.info("annotating variants for sample({})", tumorSample);
+
         final DatabaseAccess dbAccess = databaseAccess(cmd);
 
         if (cmd.hasOption(LOG_DEBUG)) {
