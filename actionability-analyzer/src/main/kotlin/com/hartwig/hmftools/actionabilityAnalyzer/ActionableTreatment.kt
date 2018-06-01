@@ -1,16 +1,14 @@
 package com.hartwig.hmftools.actionabilityAnalyzer
 
+import com.hartwig.hmftools.extensions.csv.CsvData
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.ActionableItem
 import com.hartwig.hmftools.knowledgebaseimporter.output.Actionability
-import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableItem
 
-data class ActionableTreatment(val event: String, val actionability: Actionability) {
+data class ActionableTreatment(val event: String, val actionability: Actionability) : CsvData {
     companion object {
-        val header = listOf("event") + Actionability.header
 
         operator fun invoke(items: List<ActionableItem<*>>): List<ActionableTreatment> {
-            return items.map { ActionableTreatment(it.event.toString(), it.actionability) }
+            return items.map { ActionableTreatment(it.event.eventString(), it.actionability) }
         }
     }
-
-    val record: List<String> = listOf(event) + actionability.record
 }

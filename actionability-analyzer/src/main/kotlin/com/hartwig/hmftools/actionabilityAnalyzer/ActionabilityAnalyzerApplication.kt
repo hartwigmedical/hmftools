@@ -1,14 +1,12 @@
 package com.hartwig.hmftools.actionabilityAnalyzer
 
+import com.hartwig.hmftools.extensions.csv.CsvWriter
 import com.hartwig.hmftools.knowledgebaseimporter.readCSVRecords
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess
 import com.hartwig.hmftools.patientdb.data.PotentialActionableCNV
 import com.hartwig.hmftools.patientdb.data.PotentialActionableFusion
 import com.hartwig.hmftools.patientdb.data.PotentialActionableVariant
-import org.apache.commons.csv.CSVFormat
-import org.apache.commons.csv.CSVPrinter
 import org.apache.logging.log4j.LogManager
-import java.io.FileWriter
 import java.util.stream.Stream
 import kotlin.streams.asSequence
 import kotlin.streams.toList
@@ -31,54 +29,40 @@ fun main(args: Array<String>) {
     val samplesToAnalyze = readSamples(dbAccess)
     val actionabilityAnalyzer = ActionabilityAnalyzer(samplesToAnalyze, actionableVariants, actionableFusionPairs,
                                                       actionablePromiscuousFive, actionablePromisucousThree, actionableCNVs, cancerTypes)
-    val printer = createPrinter()
     logger.info("Start")
-    queryDatabase(dbAccess, samplesToAnalyze, printer, actionabilityAnalyzer)
+    queryDatabase(dbAccess, samplesToAnalyze, actionabilityAnalyzer)
     logger.info("Done.")
 }
 
-private fun queryDatabase(dbAccess: DatabaseAccess, samplesToAnalyze: Map<String, String>, printer: CSVPrinter,
-                          actionabilityAnalyzer: ActionabilityAnalyzer) {
+private fun queryDatabase(dbAccess: DatabaseAccess, samplesToAnalyze: Map<String, String>, actionabilityAnalyzer: ActionabilityAnalyzer) {
     logger.info("Querying actionable variants.")
+    val records = mutableListOf<ActionabilityOutput>()
     potentiallyActionableVariants(dbAccess, samplesToAnalyze).use {
-        it.asSequence().forEachIndexed { index, variant ->
+        val variantRecords = it.asSequence().mapIndexed { index, variant ->
             logProgress(index)
-            val records = actionabilityAnalyzer.actionabilityForVariant(variant).map { it.record }
-            printer.printRecords(records)
-            printer.flush()
-        }
+            actionabilityAnalyzer.actionabilityForVariant(variant)
+        }.flatten().toList()
+        records.addAll(variantRecords)
     }
-    logger.info("Done writing actionable variants.")
     logger.info("Querying actionable cnvs.")
     potentiallyActionableCNVs(dbAccess, samplesToAnalyze).use {
-        it.asSequence().forEach { cnv ->
-            val records = actionabilityAnalyzer.actionabilityForCNV(cnv).map { it.record }
-            printer.printRecords(records)
-            printer.flush()
-        }
+        val cnvRecords = it.asSequence().flatMap { actionabilityAnalyzer.actionabilityForCNV(it).asSequence() }.toList()
+        records.addAll(cnvRecords)
     }
-    logger.info("Done writing actionable cnvs.")
     logger.info("Querying actionable fusions.")
     potentiallyActionableFusions(dbAccess, samplesToAnalyze).use {
-        it.asSequence().forEach { fusion ->
-            val records = actionabilityAnalyzer.actionabilityForFusion(fusion).map { it.record }
-            printer.printRecords(records)
-            printer.flush()
-        }
+        val fusionRecords = it.asSequence().flatMap { actionabilityAnalyzer.actionabilityForFusion(it).asSequence() }.toList()
+        records.addAll(fusionRecords)
     }
-    logger.info("Done writing actionable fusions.")
-    printer.close()
+    logger.info("Done. Writing results to file...")
+    CsvWriter.writeTSV(records, "actionableVariantsPerSample.tsv")
+    logger.info("Done.")
 }
 
 private fun logProgress(index: Int) {
     if (index % 1000000 == 0) {
         logger.info("Processed $index records...")
     }
-}
-
-private fun createPrinter(): CSVPrinter {
-    val format = CSVFormat.TDF.withHeader(*ActionabilityOutput.header.toTypedArray()).withNullString("NULL")
-    return CSVPrinter(FileWriter("actionableVariantsPerSample.tsv"), format)
 }
 
 private fun readSamples(dbAccess: DatabaseAccess): Map<String, String> =

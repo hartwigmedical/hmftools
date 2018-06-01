@@ -1,10 +1,6 @@
 package com.hartwig.hmftools.actionabilityAnalyzer
 
-data class ActionabilityOutput(val sampleId: String, val patientCancerType: String?, val treatmentType: String,
-                               val actionableTreatment: ActionableTreatment) {
-    companion object {
-        val header = listOf("sampleId", "patientCancerType", "treatmentType") + ActionableTreatment.header
-    }
+import com.hartwig.hmftools.extensions.csv.CsvData
 
-    val record: List<String> = listOf(sampleId, patientCancerType ?: "NULL", treatmentType) + actionableTreatment.record
-}
+data class ActionabilityOutput(val sampleId: String, val patientCancerType: String?, val treatmentType: String,
+                               val actionableTreatment: ActionableTreatment) : CsvData
