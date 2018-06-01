@@ -19,4 +19,7 @@ abstract class DrugEntry {
 
     @NotNull
     public abstract String type();
+
+    @NotNull
+    public abstract String treatmentMechanism();
 }

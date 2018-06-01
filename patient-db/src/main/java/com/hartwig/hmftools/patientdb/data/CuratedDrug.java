@@ -15,6 +15,9 @@ public abstract class CuratedDrug implements Comparable<CuratedDrug> {
     public abstract String type();
 
     @NotNull
+    public abstract String mechanism();
+
+    @NotNull
     public abstract String searchTerm();
 
     @Override
