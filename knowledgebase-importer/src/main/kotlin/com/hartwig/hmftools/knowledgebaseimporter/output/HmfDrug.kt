@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.knowledgebaseimporter.output
 
-data class HmfDrug(val name: String, val type: String) {
-    companion object {
-        val header = listOf("name", "type")
-    }
+import com.hartwig.hmftools.extensions.csv.CsvData
 
-    val record: List<String> = listOf(name, type)
-}
+data class HmfDrug(val name: String, val type: String) : CsvData

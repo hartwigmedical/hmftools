@@ -4,13 +4,11 @@ import com.hartwig.hmftools.extensions.cli.createCommandLine
 import com.hartwig.hmftools.extensions.cli.options.HmfOptions
 import com.hartwig.hmftools.extensions.cli.options.filesystem.RequiredInputFileOption
 import com.hartwig.hmftools.extensions.cli.options.filesystem.RequiredOutputOption
+import com.hartwig.hmftools.extensions.csv.CsvWriter
 import com.hartwig.hmftools.knowledgebaseimporter.cgi.CgiActionableRecord
 import com.hartwig.hmftools.knowledgebaseimporter.output.HmfDrug
-import org.apache.commons.csv.CSVFormat
-import org.apache.commons.csv.CSVPrinter
 import org.apache.logging.log4j.LogManager
 import java.io.File
-import java.io.FileWriter
 
 private val logger = LogManager.getLogger("CgiTreatmentExtractorApp")
 
@@ -21,7 +19,7 @@ fun main(args: Array<String>) {
         logger.error("Could not create parent directories for ")
     }
     val cgiActionableRecords = readTSVRecords(cmd.getOptionValue(CGI_BIOMARKERS_LOCATION)) { CgiActionableRecord(it, mapOf()) }
-    writeTreatmentTypes(bootstrapTreatmentTypeMapping(cgiActionableRecords), "$outputFile")
+    CsvWriter.writeTSV(bootstrapTreatmentTypeMapping(cgiActionableRecords), "$outputFile")
 }
 
 private fun createOptions(): HmfOptions {
@@ -37,11 +35,4 @@ private fun bootstrapTreatmentTypeMapping(records: List<CgiActionableRecord>): L
                 val drugFamilies = value.flatMap { it.drugTypes }.toSet()
                 if (drugFamilies.size > 1) drugFamilies.filterNot { it == key } else drugFamilies
             }.map { HmfDrug(it.key, it.value.joinToString(";")) }
-}
-
-private fun writeTreatmentTypes(output: List<HmfDrug>, location: String) {
-    val format = CSVFormat.TDF.withHeader(*HmfDrug.header.toTypedArray()).withNullString("")
-    val printer = CSVPrinter(FileWriter(location), format)
-    printer.printRecords(output.distinct().map { it.record })
-    printer.close()
 }
