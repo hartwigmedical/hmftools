@@ -44,7 +44,6 @@ fun main(args: Array<String>) {
     writeActionablePromiscuousGenes(actionablePromiscuousThree(knowledgebases), "$outputDir${File.separator}actionablePromiscuousThree.tsv")
     writeActionableCnvs(knowledgebases.flatMap { it.actionableCNVs }, "$outputDir${File.separator}actionableCNVs.tsv")
     writeCancerDoids(cancerTypesDoids, "$outputDir${File.separator}knowledgebaseCancerTypes.tsv")
-    //    writeTreatmentTypes(bootstrapTreatmentTypeMapping(cgi), "$outputDir${File.separator}treatmentTypeMapping.tsv")
 }
 
 private fun createOptions(): Options {
@@ -75,14 +74,6 @@ private fun readExtraCancerTypeDoids(): Map<String, Set<String>> {
     return readCSVRecords(object {}.javaClass.getResourceAsStream("/knowledgebase_disease_doids.csv")) {
         Pair(it["cancerType"], it["doids"].orEmpty().split(";").filterNot { it.isBlank() }.map { it.trim() }.toSet())
     }.toMap()
-}
-
-private fun bootstrapTreatmentTypeMapping(cgi: Cgi): List<HmfDrug> {
-    return cgi.actionableKbRecords.flatMap { it.cgiDrugs }.groupBy { it.drugName }
-            .mapValues { (key, value) ->
-                val drugFamilies = value.flatMap { it.drugTypes }.toSet()
-                if (drugFamilies.size > 1) drugFamilies.filterNot { it == key } else drugFamilies
-            }.map { HmfDrug(it.key, it.value.joinToString(";")) }
 }
 
 private fun writeKnownVariants(knowledgebase: Knowledgebase, outputDirectory: String) {
@@ -138,13 +129,6 @@ private fun writeCancerDoids(cancerTypes: List<CancerTypeDoidOutput>, location: 
     val format = CSVFormat.TDF.withHeader(*CancerTypeDoidOutput.header.toTypedArray()).withNullString("")
     val printer = CSVPrinter(FileWriter(location), format)
     printer.printRecords(cancerTypes.map { it.record })
-    printer.close()
-}
-
-private fun writeTreatmentTypes(output: List<HmfDrug>, location: String) {
-    val format = CSVFormat.TDF.withHeader(*HmfDrug.header.toTypedArray()).withNullString("")
-    val printer = CSVPrinter(FileWriter(location), format)
-    printer.printRecords(output.distinct().map { it.record })
     printer.close()
 }
 
