@@ -7,27 +7,26 @@ import com.hartwig.hmftools.knowledgebaseimporter.output.Actionability
 import com.hartwig.hmftools.knowledgebaseimporter.output.CnvEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.FusionEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.FusionPair
-import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.CDnaAnnotation
 import org.apache.commons.csv.CSVRecord
 import java.util.regex.Pattern
 
-data class CivicKnownRecord(private val metadata: RecordMetadata, override val additionalInfo: String,
-                            override val events: List<SomaticEvent>, override val actionability: List<Actionability>,
-                            val cancerDoids: Map<String, String>) :
+data class CivicRecord(private val metadata: RecordMetadata, override val additionalInfo: String,
+                       override val events: List<SomaticEvent>, override val actionability: List<Actionability>,
+                       val cancerDoids: Map<String, String>) :
         RecordMetadata by metadata, KnownRecord, ActionableRecord {
     companion object {
         private val FUSION_SEPARATORS = setOf("-")
         private val FUSIONS_TO_FILTER = setOf(FusionPair("BRAF", "CUL1"))
         private val fusionReader = FusionReader(separators = FUSION_SEPARATORS, filterSet = FUSIONS_TO_FILTER)
 
-        operator fun invoke(record: CSVRecord, variantEvidenceMap: Multimap<String, CivicEvidence>): CivicKnownRecord {
+        operator fun invoke(record: CSVRecord, variantEvidenceMap: Multimap<String, CivicEvidence>): CivicRecord {
             val metadata = CivicMetadata(record["gene"], record["representative_transcript"] ?: "-")
             val evidence = variantEvidenceMap[record["variant_id"]]
             val additionalInfo = additionalInfo(evidence)
             val actionability = evidence.filter { it.direction == "Supports" }.flatMap { it.actionabilityItems }
             val doids = evidence.associateBy({ it.cancerType }, { it.doid })
             val (gene, variant) = correctRecord(record["gene"], record["variant"])
-            return CivicKnownRecord(metadata, additionalInfo, readSomaticEvents(gene, variant, record), actionability, doids)
+            return CivicRecord(metadata, additionalInfo, readSomaticEvents(gene, variant, record), actionability, doids)
         }
 
         private fun readSomaticEvents(gene: String, variant: String, record: CSVRecord): List<SomaticEvent> {

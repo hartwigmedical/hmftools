@@ -1,13 +1,8 @@
 package com.hartwig.hmftools.knowledgebaseimporter.cgi
 
 import com.hartwig.hmftools.knowledgebaseimporter.FusionReader
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.ActionableRecord
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.GDnaVariant
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordMetadata
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.SomaticEvent
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.*
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
-import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.CDnaAnnotation
-import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.ProteinAnnotation
 import org.apache.commons.csv.CSVRecord
 
 data class CgiActionableRecord(private val metadata: RecordMetadata, override val events: List<SomaticEvent>,

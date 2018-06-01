@@ -5,7 +5,6 @@ import com.hartwig.hmftools.knowledgebaseimporter.output.FusionEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.KnownVariantOutput
 import com.hartwig.hmftools.knowledgebaseimporter.output.SomaticVariantEvent
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.*
-import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.Annotation
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 
 class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFastaSequenceFile) {
@@ -72,7 +71,7 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
     }
 
     private inline fun <reified T, R> analyzeAnnotations(records: List<R>, analyzer: TransvarAnalyzer<T>)
-            : List<Pair<R, SomaticVariantEvent>> where T : Annotation, R : KnowledgebaseRecord {
+            : List<Pair<R, SomaticVariantEvent>> where T : HgvsAnnotation, R : KnowledgebaseRecord {
         val recordEventPairs = records.collectEvents<T, R>()
         val transvarOutput = analyzer.analyze(recordEventPairs.map { it.second })
         return recordEventPairs.map { it.first }.zip(transvarOutput).flatMap { (record, output) ->

@@ -1,10 +1,6 @@
 package com.hartwig.hmftools.knowledgebaseimporter.cgi
 
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.GDnaVariant
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.KnownRecord
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordMetadata
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.SomaticEvent
-import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.ProteinAnnotation
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.*
 import org.apache.commons.csv.CSVRecord
 
 data class CgiKnownKbRecord(private val metadata: RecordMetadata, override val additionalInfo: String,

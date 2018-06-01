@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.knowledgebaseimporter.oncoKb
 
 import com.hartwig.hmftools.knowledgebaseimporter.FusionReader
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.ProteinAnnotation
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.SomaticEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.CnvEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.FusionEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.FusionPair
-import com.hartwig.hmftools.knowledgebaseimporter.transvar.annotations.ProteinAnnotation
 
 class OncoSomaticEventReader {
     companion object {

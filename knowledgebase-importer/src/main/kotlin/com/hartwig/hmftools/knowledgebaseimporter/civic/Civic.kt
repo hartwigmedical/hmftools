@@ -14,7 +14,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile
 
 class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation: String, diseaseOntology: DiseaseOntology,
             private val reference: IndexedFastaSequenceFile, treatmentTypeMap: Map<String, String>) :
-        Knowledgebase, KnowledgebaseSource<CivicKnownRecord, ActionableRecord> {
+        Knowledgebase, KnowledgebaseSource<CivicRecord, ActionableRecord> {
 
     override val source = "civic"
     override val knownVariants by lazy { RecordAnalyzer(transvarLocation, reference).knownVariants(listOf(this)).distinct() }
@@ -34,9 +34,9 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
     private val actionableKbItems by lazy { RecordAnalyzer(transvarLocation, reference).actionableItems(listOf(this)).distinct() }
 
     private fun preProcessCivicRecords(variantFileLocation: String, evidenceFileLocation: String,
-                                       treatmentTypeMap: Map<String, String>): List<CivicKnownRecord> {
+                                       treatmentTypeMap: Map<String, String>): List<CivicRecord> {
         val variantEvidenceMap = readEvidenceMap(evidenceFileLocation, treatmentTypeMap)
-        return readTSVRecords(variantFileLocation) { CivicKnownRecord(it, variantEvidenceMap) }
+        return readTSVRecords(variantFileLocation) { CivicRecord(it, variantEvidenceMap) }
     }
 
     private fun readEvidenceMap(evidenceLocation: String, treatmentTypeMap: Map<String, String>): Multimap<String, CivicEvidence> {
