@@ -25,15 +25,15 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
             }
         }
 
-        private fun readActionableFusionPairs(fileLocation: String): List<ActionableFusionOutput> {
+        private fun readActionableFusionPairs(fileLocation: String): List<ActionableFusionPairOutput> {
             return readTSVRecords(fileLocation) {
-                ActionableFusionOutput(FusionPair(it["fiveGene"], it["threeGene"]), readActionability(it))
+                ActionableFusionPairOutput(FusionPair(it["fiveGene"], it["threeGene"]), readActionability(it))
             }
         }
 
-        private fun readActionablePromiscuousGenes(fileLocation: String): List<ActionableFusionOutput> {
+        private fun readActionablePromiscuousGenes(fileLocation: String): List<ActionablePromiscuousGeneOutput> {
             return readTSVRecords(fileLocation) {
-                ActionableFusionOutput(PromiscuousGene(it["gene"]), readActionability(it))
+                ActionablePromiscuousGeneOutput(PromiscuousGene(it["gene"]), readActionability(it))
             }
         }
 
