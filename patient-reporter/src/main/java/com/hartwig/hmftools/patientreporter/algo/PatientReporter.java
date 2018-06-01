@@ -23,12 +23,12 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
+import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.BaseReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
+import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
-import com.hartwig.hmftools.patientreporter.ImmutableSequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
-import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.civic.AlterationAnalyzer;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutablePurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
@@ -72,7 +72,7 @@ public abstract class PatientReporter {
     public abstract AlterationAnalyzer civicAnalyzer();
 
     @NotNull
-    public SequencedPatientReport run(@NotNull final String runDirectory, @Nullable final String comments) throws IOException {
+    public AnalysedPatientReport run(@NotNull final String runDirectory, @Nullable final String comments) throws IOException {
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
         final GenomeAnalysis genomeAnalysis = analyseGenomeData(run.tumorSample(), runDirectory);
         assert run.isSomaticRun() && run.tumorSample().equals(genomeAnalysis.sample());
@@ -93,8 +93,7 @@ public abstract class PatientReporter {
                 .collect(Collectors.toList());
 
         final int passedVariantCount = variantAnalysis.passedVariants().size();
-        final int mutationalLoad = variantAnalysis.mutationalLoad();
-        final int consequentialVariantCount = variantAnalysis.consequentialVariants().size();
+        final int reportedVariantCount = variantAnalysis.variantReports().size();
         final int structuralVariantCount = structuralVariantAnalysis.annotations().size();
         final PatientTumorLocation patientTumorLocation =
                 PatientReporterHelper.extractPatientTumorLocation(baseReporterData().patientTumorLocations(), tumorSample);
@@ -102,7 +101,7 @@ public abstract class PatientReporter {
         final List<Alteration> alterations;
         if (patientTumorLocation != null) {
             final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
-            alterations = civicAnalyzer().run(variantAnalysis.findings(),
+            alterations = civicAnalyzer().run(variantAnalysis.variantReports(),
                     purpleAnalysis.reportableGeneCopyNumbers(),
                     reportableDisruptions,
                     reportableFusions,
@@ -115,38 +114,38 @@ public abstract class PatientReporter {
 
         LOGGER.info(" Printing analysis results:");
         LOGGER.info("  Number of passed variants : " + Integer.toString(passedVariantCount));
-        LOGGER.info("  Number of missense variants (mutational load) : " + Integer.toString(mutationalLoad));
-        LOGGER.info("  Number of consequential variants to report : " + Integer.toString(consequentialVariantCount));
+        LOGGER.info("  Number of variants to report : " + Integer.toString(reportedVariantCount));
         LOGGER.info(" Determined copy number stats for " + Integer.toString(purpleAnalysis.genePanelSize()) + " genes which led to "
                 + Integer.toString(purpleAnalysis.reportableGeneCopyNumbers().size()) + " copy numbers.");
-        LOGGER.info("  Number of unreported structural variants : " + Integer.toString(structuralVariantCount));
+        LOGGER.info("  Number of structural variants : " + Integer.toString(structuralVariantCount));
         LOGGER.info("  Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
         LOGGER.info("  Number of gene disruptions to report : " + Integer.toString(reportableDisruptions.size()));
         LOGGER.info("  Number of CIViC alterations to report : " + alterations.size());
         LOGGER.info("  Microsatellite analysis results: " + variantAnalysis.indelsPerMb() + " indels per MB");
         LOGGER.info("  Mutational load results: " + variantAnalysis.mutationalLoad());
 
-
         final Lims lims = baseReporterData().limsModel();
-        final Double tumorPercentage = lims.tumorPercentageForSample(tumorSample);
-        final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrichSomaticVariants(variantAnalysis.findings());
+        final Double pathologyTumorPercentage = lims.tumorPercentageForSample(tumorSample);
+        final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrichSomaticVariants(variantAnalysis.variantReports());
         final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(tumorSample);
 
-        final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample, patientTumorLocation,
-                tumorPercentage,
+        final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample,
+                patientTumorLocation,
+                pathologyTumorPercentage,
                 lims.arrivalDateForSample(tumorSample),
                 lims.arrivalDateForSample(run.refSample()),
                 lims.labProceduresForSample(tumorSample),
                 sampleRecipient);
 
-        return ImmutableSequencedPatientReport.of(sampleReport,
+        return ImmutableAnalysedPatientReport.of(sampleReport,
                 purpleEnrichedVariants,
-                mutationalLoad,
+                variantAnalysis.mutationalLoad(),
                 variantAnalysis.indelsPerMb(),
                 purpleAnalysis.reportableGeneCopyNumbers(),
                 reportableDisruptions,
                 reportableFusions,
-                purpleAnalysis.purityString(),
+                purpleAnalysis.fittedPurity().purity(),
+                purpleAnalysis.status(),
                 alterations,
                 PatientReporterHelper.findCircosPlotPath(runDirectory, tumorSample),
                 Optional.ofNullable(comments),

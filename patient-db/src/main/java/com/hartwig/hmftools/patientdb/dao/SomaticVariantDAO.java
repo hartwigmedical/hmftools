@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Iterables;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +16,6 @@ import org.jooq.DSLContext;
 import org.jooq.InsertValuesStepN;
 
 class SomaticVariantDAO {
-    private static final String PASS = "PASS";
 
     @NotNull
     private final DSLContext context;
@@ -26,7 +26,7 @@ class SomaticVariantDAO {
 
     void write(@NotNull final String sample, @NotNull List<EnrichedSomaticVariant> variants) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
-        context.delete(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample)).execute();
+        deleteSomaticVariantForSample(sample);
 
         for (List<EnrichedSomaticVariant> splitRegions : Iterables.partition(variants, DB_BATCH_INSERT_SIZE)) {
             InsertValuesStepN inserter = context.insertInto(SOMATICVARIANT,
@@ -68,43 +68,42 @@ class SomaticVariantDAO {
     }
 
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStepN inserter, @NotNull String sample,
-            @NotNull EnrichedSomaticVariant region) {
+            @NotNull EnrichedSomaticVariant variant) {
         inserter.values(sample,
-                region.chromosome(),
-                region.position(),
-                filter(region.filter()),
-                region.type(),
-                region.ref(),
-                region.alt(),
-                region.gene(),
-                region.genesEffected(),
-                region.cosmicID() == null ? "" : region.cosmicID(),
-                region.dbsnpID() == null ? "" : region.dbsnpID(),
-                region.worstEffect(),
-                region.worstCodingEffect(),
-                region.worstEffectTranscript(),
-                region.canonicalEffect(),
-                region.canonicalCodingEffect(),
-                region.alleleReadCount(),
-                region.totalReadCount(),
-                DatabaseUtil.decimal(region.adjustedCopyNumber()),
-                DatabaseUtil.decimal(region.adjustedVAF()),
-                region.highConfidenceRegion(),
-                region.trinucleotideContext(),
-                region.microhomology(),
-                region.repeatSequence(),
-                region.repeatCount(),
-                region.clonality(),
-                region.biallelic(),
-                region.hotspot(),
-                DatabaseUtil.decimal(region.mappability()),
-                region.germlineStatus(),
-                DatabaseUtil.decimal(region.minorAllelePloidy()),
+                variant.chromosome(),
+                variant.position(),
+                variant.filter(),
+                variant.type(),
+                variant.ref(),
+                variant.alt(),
+                variant.gene(),
+                variant.genesEffected(),
+                variant.cosmicID() == null ? "" : variant.cosmicID(),
+                variant.dbsnpID() == null ? "" : variant.dbsnpID(),
+                variant.worstEffect(),
+                variant.worstCodingEffect() == CodingEffect.UNDEFINED ? "" : variant.worstCodingEffect(),
+                variant.worstEffectTranscript(),
+                variant.canonicalEffect(),
+                variant.canonicalCodingEffect() == CodingEffect.UNDEFINED ? "" : variant.canonicalCodingEffect(),
+                variant.alleleReadCount(),
+                variant.totalReadCount(),
+                DatabaseUtil.decimal(variant.adjustedCopyNumber()),
+                DatabaseUtil.decimal(variant.adjustedVAF()),
+                variant.highConfidenceRegion(),
+                variant.trinucleotideContext(),
+                variant.microhomology(),
+                variant.repeatSequence(),
+                variant.repeatCount(),
+                variant.clonality(),
+                variant.biallelic(),
+                variant.hotspot(),
+                DatabaseUtil.decimal(variant.mappability()),
+                variant.germlineStatus(),
+                DatabaseUtil.decimal(variant.minorAllelePloidy()),
                 timestamp);
     }
 
-    @NotNull
-    private static String filter(@NotNull String filter) {
-        return filter.equals(".") ? PASS : filter;
+    void deleteSomaticVariantForSample(@NotNull String sample) {
+        context.delete(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample)).execute();
     }
 }

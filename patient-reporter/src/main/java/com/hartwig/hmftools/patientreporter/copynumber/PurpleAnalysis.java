@@ -18,7 +18,6 @@ import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableVariantReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
@@ -55,13 +54,6 @@ public abstract class PurpleAnalysis {
     @NotNull
     public List<GeneCopyNumber> reportableGeneCopyNumbers() {
         return ReportableCopyNumbers.filterCopyNumbersForReport(fittedPurity().ploidy(), panelGeneCopyNumbers());
-    }
-
-    @NotNull
-    public String purityString() {
-        return status() == FittedPurityStatus.NO_TUMOR
-                ? "[below detection threshold]"
-                : PatientReportFormat.formatPercent(fittedPurity().purity());
     }
 
     @NotNull

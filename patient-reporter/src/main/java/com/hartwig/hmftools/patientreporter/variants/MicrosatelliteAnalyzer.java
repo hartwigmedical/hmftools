@@ -47,16 +47,17 @@ public abstract class MicrosatelliteAnalyzer {
     }
 
     private boolean isPassIndel(@NotNull final SomaticVariant variant) {
-        return variant.filter().equals("PASS") && variant.type() == VariantType.INDEL && variant.ref().length() < 50
-                && variant.alt().length() < 50;
+        // KODU: Patient reporting should already filter on passed only.
+        assert !variant.isFiltered();
+        return variant.type() == VariantType.INDEL && variant.ref().length() < 50 && variant.alt().length() < 50;
     }
 
     @VisibleForTesting
     static boolean repeatContextIsRelevant(@NotNull final RepeatContext repeatContext) {
         final int repeatCount = repeatContext.count();
         final int repeatSequenceLength = repeatContext.sequence().length();
-        final boolean longRepeatRevelant = repeatSequenceLength >= 2 && repeatSequenceLength <= 4 && repeatCount >= 4;
-        final boolean shortRepeatRevelant = repeatSequenceLength == 1 && repeatCount >= 5;
-        return longRepeatRevelant | shortRepeatRevelant;
+        final boolean longRepeatRelevant = repeatSequenceLength >= 2 && repeatSequenceLength <= 4 && repeatCount >= 4;
+        final boolean shortRepeatRelevant = repeatSequenceLength == 1 && repeatCount >= 5;
+        return longRepeatRelevant | shortRepeatRelevant;
     }
 }

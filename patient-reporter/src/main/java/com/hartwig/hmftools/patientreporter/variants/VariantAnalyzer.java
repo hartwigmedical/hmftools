@@ -1,12 +1,11 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
 import java.util.List;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import java.util.Set;
 
-import com.hartwig.hmftools.common.gene.GeneModel;
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.VariantConsequence;
+import com.hartwig.hmftools.patientreporter.HmfReporterData;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -24,27 +23,24 @@ public abstract class VariantAnalyzer {
     protected abstract MicrosatelliteAnalyzer microsatelliteAnalyzer();
 
     @NotNull
-    public static VariantAnalyzer of(@NotNull final GeneModel geneModel, @NotNull final MicrosatelliteAnalyzer microsatelliteAnalyzer) {
-        return ImmutableVariantAnalyzer.of(new ConsequenceDeterminer(geneModel), microsatelliteAnalyzer);
+    public static VariantAnalyzer of(@NotNull HmfReporterData reporterData) {
+        Set<String> transcriptsToInclude = reporterData.panelGeneModel().transcriptMap().keySet();
+        return of(transcriptsToInclude, reporterData.microsatelliteAnalyzer());
+    }
+
+    @VisibleForTesting
+    @NotNull
+    public static VariantAnalyzer of(@NotNull Set<String> transcripts, @NotNull MicrosatelliteAnalyzer microsatelliteAnalyzer) {
+        return ImmutableVariantAnalyzer.of(new ConsequenceDeterminer(transcripts), microsatelliteAnalyzer);
     }
 
     @NotNull
     public VariantAnalysis run(@NotNull final List<SomaticVariant> passedVariants) {
-        final List<SomaticVariant> missenseVariants = passedVariants.stream().filter(isMissense()).collect(Collectors.toList());
         final double indelsPerMb = microsatelliteAnalyzer().analyzeVariants(passedVariants);
         final int mutationalLoad = MutationalLoadAnalyzer.analyzeVariants(passedVariants);
 
+        final List<VariantReport> variantReports = determiner().run(passedVariants);
 
-        final ConsequenceOutput consequenceOutput = determiner().run(passedVariants);
-
-        return ImmutableVariantAnalysis.of(passedVariants,
-                missenseVariants,
-                consequenceOutput.consequentialVariants(),
-                consequenceOutput.findings(), indelsPerMb, mutationalLoad);
-    }
-
-    @NotNull
-    private static Predicate<SomaticVariant> isMissense() {
-        return variant -> variant.hasConsequence(VariantConsequence.MISSENSE_VARIANT);
+        return ImmutableVariantAnalysis.of(passedVariants, variantReports, indelsPerMb, mutationalLoad);
     }
 }

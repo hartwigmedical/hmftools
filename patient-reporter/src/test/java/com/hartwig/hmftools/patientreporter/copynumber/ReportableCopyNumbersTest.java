@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.copynumber;
 
-import static com.hartwig.hmftools.patientreporter.copynumber.ReportableCopyNumbers.ABS_GAIN;
 import static com.hartwig.hmftools.patientreporter.copynumber.ReportableCopyNumbers.ABS_LOSS;
 import static com.hartwig.hmftools.patientreporter.copynumber.ReportableCopyNumbers.REL_GAIN;
 import static com.hartwig.hmftools.patientreporter.copynumber.ReportableCopyNumbers.includeInReport;
@@ -19,17 +18,6 @@ public class ReportableCopyNumbersTest {
         assertTrue(includeInReport(2, ABS_LOSS));
         assertTrue(includeInReport(2, ABS_LOSS - 0.1));
         assertFalse(includeInReport(2, ABS_LOSS + 0.1));
-    }
-
-    @Test
-    public void testAbsGain() {
-        assertTrue(includeInReport(0, ABS_GAIN));
-        assertTrue(includeInReport(1, ABS_GAIN));
-        assertTrue(includeInReport(2, ABS_GAIN));
-        assertTrue(includeInReport(ABS_GAIN, ABS_GAIN));
-
-        assertTrue(includeInReport(ABS_GAIN, ABS_GAIN + 0.1));
-        assertFalse(includeInReport(ABS_GAIN, ABS_GAIN - 0.1));
     }
 
     @Test

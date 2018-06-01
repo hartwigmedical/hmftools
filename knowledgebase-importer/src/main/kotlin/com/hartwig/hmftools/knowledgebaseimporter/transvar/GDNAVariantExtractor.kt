@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.knowledgebaseimporter.transvar
 
+import com.hartwig.hmftools.common.variant.CodingEffect
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl
 import com.hartwig.hmftools.common.variant.SomaticVariant
 import com.hartwig.hmftools.common.variant.VariantType
@@ -167,7 +168,7 @@ fun somaticVariant(chromosome: String, position: Long, ref: String, alt: String)
             .genesEffected(0)
             .worstEffect(Strings.EMPTY)
             .worstEffectTranscript(Strings.EMPTY)
-            .worstCodingEffect(Strings.EMPTY)
+            .worstCodingEffect(CodingEffect.UNDEFINED)
             .totalReadCount(0)
             .alleleReadCount(0)
             .hotspot(false)

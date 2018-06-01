@@ -24,5 +24,5 @@ public abstract class EnrichedSomaticVariant implements PurityAdjustedSomaticVar
     public abstract String canonicalEffect();
 
     @NotNull
-    public abstract String canonicalCodingEffect();
+    public abstract CodingEffect canonicalCodingEffect();
 }

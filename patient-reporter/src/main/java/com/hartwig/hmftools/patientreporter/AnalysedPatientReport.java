@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
@@ -16,7 +17,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class SequencedPatientReport implements PatientReport {
+public abstract class AnalysedPatientReport implements PatientReport {
     @NotNull
     @Override
     public abstract SampleReport sampleReport();
@@ -37,13 +38,10 @@ public abstract class SequencedPatientReport implements PatientReport {
     @NotNull
     public abstract List<GeneFusionData> geneFusions();
 
-    @NotNull
-    abstract String purplePurity();
+    public abstract double impliedPurity();
 
     @NotNull
-    public String impliedPurityString() {
-        return purplePurity();
-    }
+    public abstract FittedPurityStatus fitStatus();
 
     @NotNull
     public abstract List<Alteration> civicAlterations();

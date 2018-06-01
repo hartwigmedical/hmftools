@@ -34,7 +34,6 @@ import com.hartwig.hmftools.patientreporter.variants.MicrosatelliteAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -52,7 +51,7 @@ public final class PatientReporterTestUtil {
     public static HmfReporterData testHmfReporterData() throws IOException {
         final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
         final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
-        final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfPanelGeneMap());
+        final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfPanelGeneList());
         final CosmicGeneModel cosmicGeneModel = CosmicGenes.readFromCSV(cosmicPath);
         final DrupFilter drupFilter = new DrupFilter(drupFilterPath);
         final MicrosatelliteAnalyzer microsatelliteAnalyzer = testMicrosatelliteAnalyzer();
@@ -68,10 +67,12 @@ public final class PatientReporterTestUtil {
 
     @NotNull
     public static MicrosatelliteAnalyzer testMicrosatelliteAnalyzer() {
+
         return new MicrosatelliteAnalyzer() {
-            @SuppressWarnings("NullableProblems")
+
+            @SuppressWarnings("ConstantConditions")
             @Override
-            @Nullable
+            @NotNull
             public IndexedFastaSequenceFile reference() {
                 return null;
             }

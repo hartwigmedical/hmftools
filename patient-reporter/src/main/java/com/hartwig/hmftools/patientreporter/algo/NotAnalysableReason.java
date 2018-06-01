@@ -4,16 +4,16 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public enum NotSequenceableReason {
+public enum NotAnalysableReason {
     LOW_TUMOR_PERCENTAGE("low_tumor_percentage"),
     LOW_DNA_YIELD("low_dna_yield"),
-    POST_ISOLATION_FAIL("post_isolation_fail"),
+    POST_ANALYSIS_FAIL("post_analysis_fail"),
     UNDEFINED(Strings.EMPTY);
 
     @NotNull
     private final String identifier;
 
-    NotSequenceableReason(@NotNull final String identifier) {
+    NotAnalysableReason(@NotNull final String identifier) {
         this.identifier = identifier;
     }
 
@@ -23,12 +23,12 @@ public enum NotSequenceableReason {
     }
 
     @NotNull
-    public static NotSequenceableReason fromIdentifier(@Nullable final String identifier) {
+    public static NotAnalysableReason fromIdentifier(@Nullable final String identifier) {
         if (identifier == null) {
             return UNDEFINED;
         }
 
-        for (final NotSequenceableReason reason : NotSequenceableReason.values()) {
+        for (final NotAnalysableReason reason : NotAnalysableReason.values()) {
             if (reason.identifier().equals(identifier)) {
                 return reason;
             }

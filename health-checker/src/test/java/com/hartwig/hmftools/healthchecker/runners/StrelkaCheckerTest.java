@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,7 +35,7 @@ public class StrelkaCheckerTest {
     private final StrelkaChecker checker = new StrelkaChecker();
 
     @Test
-    public void canAnalyseTypicalSomaticVariantVCF() throws IOException {
+    public void canAnalyseTypicalSomaticVariantVCF() {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
 
         final BaseResult result = checker.run(runContext);
@@ -56,14 +55,14 @@ public class StrelkaCheckerTest {
     }
 
     @Test
-    public void runsCorrectlyForSingleSample() throws IOException {
+    public void runsCorrectlyForSingleSample() {
         final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY, REF_SAMPLE);
         final BaseResult result = checker.run(runContext);
         assertTrue(result instanceof NoResult);
     }
 
     @Test
-    public void canAnalyseMinimalVCF() throws IOException {
+    public void canAnalyseMinimalVCF() {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(MINIMAL_RUN_DIRECTORY, MINIMAL_REF_SAMPLE, MINIMAL_TUMOR_SAMPLE);
         final MultiValueResult result = (MultiValueResult) checker.run(runContext);
         assertEquals(EXPECTED_NUM_CHECKS, result.checks().size());

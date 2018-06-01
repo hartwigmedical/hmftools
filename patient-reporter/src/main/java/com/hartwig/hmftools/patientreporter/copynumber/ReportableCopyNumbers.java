@@ -12,9 +12,7 @@ import org.jetbrains.annotations.NotNull;
 final class ReportableCopyNumbers {
 
     @VisibleForTesting
-    static final double ABS_GAIN = 8;
-    @VisibleForTesting
-    static final double REL_GAIN = 2.2;
+    static final double REL_GAIN = 3;
     @VisibleForTesting
     static final double ABS_LOSS = 0.5;
 
@@ -23,16 +21,14 @@ final class ReportableCopyNumbers {
 
     @NotNull
     static List<GeneCopyNumber> filterCopyNumbersForReport(final double samplePloidy, @NotNull final List<GeneCopyNumber> geneCopyNumbers) {
-        return geneCopyNumbers.stream().filter(x -> includeInReport(samplePloidy, x.minCopyNumber())).collect(Collectors.toList());
+        return geneCopyNumbers.stream()
+                .filter(copyNumber -> includeInReport(samplePloidy, copyNumber.value()))
+                .collect(Collectors.toList());
     }
 
     @VisibleForTesting
     static boolean includeInReport(final double samplePloidy, final double copyNumber) {
         if (Doubles.lessOrEqual(copyNumber, ABS_LOSS)) {
-            return true;
-        }
-
-        if (Doubles.greaterOrEqual(copyNumber, ABS_GAIN)) {
             return true;
         }
 

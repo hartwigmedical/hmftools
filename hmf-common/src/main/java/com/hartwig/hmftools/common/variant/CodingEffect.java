@@ -10,7 +10,8 @@ public enum CodingEffect {
     SPLICE,
     MISSENSE,
     SYNONYMOUS,
-    NONE;
+    NONE,
+    UNDEFINED;
 
     @NotNull
     public static CodingEffect effect(@NotNull final List<VariantConsequence> consequences) {

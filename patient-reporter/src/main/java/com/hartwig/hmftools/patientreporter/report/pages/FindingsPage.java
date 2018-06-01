@@ -10,8 +10,9 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
+import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
+import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
-import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 import com.hartwig.hmftools.patientreporter.report.components.DataExpression;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
@@ -21,6 +22,7 @@ import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.VariantDataSource;
+import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -36,7 +38,7 @@ public abstract class FindingsPage {
     private static final int HEADER_TO_TABLE_DISTANCE = 6;
 
     @NotNull
-    abstract SequencedPatientReport report();
+    abstract AnalysedPatientReport report();
 
     @NotNull
     abstract HmfReporterData reporterData();
@@ -45,7 +47,7 @@ public abstract class FindingsPage {
     public ComponentBuilder<?, ?> reportComponent() {
         return cmp.verticalList(MainPageTopSection.buildWithImpliedPurity("HMF Sequencing Report",
                 report().sampleReport(),
-                report().impliedPurityString()),
+                impliedPurityString(report())),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 somaticVariantReport(report(), reporterData().drupFilter()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -61,7 +63,14 @@ public abstract class FindingsPage {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> somaticVariantReport(@NotNull final SequencedPatientReport report,
+    private static String impliedPurityString(@NotNull AnalysedPatientReport report) {
+        return report.fitStatus() == FittedPurityStatus.NO_TUMOR
+                ? "[below detection threshold]"
+                : PatientReportFormat.formatPercent(report.impliedPurity());
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> somaticVariantReport(@NotNull final AnalysedPatientReport report,
             @NotNull final DrupFilter drupFilter) {
         final String geneMutationAddition = "Marked genes (*) are included in the DRUP study and indicate potential "
                 + "eligibility in DRUP. Please note that the marking is NOT based on the specific mutation reported for "
@@ -79,7 +88,7 @@ public abstract class FindingsPage {
                                         .setHyperLink(hyperLink(VariantDataSource.cosmicHyperlink()))
                                         .setStyle(linkStyle()),
                                 col.column("Ploidy (TAF)", VariantDataSource.PLOIDY_TAF_FIELD)))
-                        .setDataSource(VariantDataSource.fromVariants(report.variants(), drupFilter))
+                        .setDataSource(VariantDataSource.fromVariants(report.fitStatus(), report.variants(), drupFilter))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
@@ -99,7 +108,7 @@ public abstract class FindingsPage {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> geneCopyNumberReport(@NotNull final SequencedPatientReport report) {
+    private static ComponentBuilder<?, ?> geneCopyNumberReport(@NotNull final AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> table =
                 !report.geneCopyNumbers().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(GeneCopyNumberDataSource.copyNumberFields())
@@ -108,7 +117,7 @@ public abstract class FindingsPage {
                                 col.column("Gene", GeneCopyNumberDataSource.GENE_FIELD),
                                 col.column("Type", GeneCopyNumberDataSource.GAIN_OR_LOSS_FIELD),
                                 col.column("Copies", GeneCopyNumberDataSource.COPY_NUMBER_FIELD))
-                        .setDataSource(GeneCopyNumberDataSource.fromCopyNumbers(report.geneCopyNumbers())))
+                        .setDataSource(GeneCopyNumberDataSource.fromCopyNumbers(report.fitStatus(), report.geneCopyNumbers())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Gains & Losses").setStyle(sectionHeaderStyle()),
@@ -117,7 +126,7 @@ public abstract class FindingsPage {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> geneFusionReport(@NotNull final SequencedPatientReport report) {
+    private static ComponentBuilder<?, ?> geneFusionReport(@NotNull final AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> table =
                 !report.geneFusions().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(GeneFusionDataSource.geneFusionFields())
@@ -134,7 +143,7 @@ public abstract class FindingsPage {
                                 col.column("Source", GeneFusionDataSource.SOURCE_FIELD)
                                         .setHyperLink(hyperLink(GeneFusionDataSource.sourceHyperlink()))
                                         .setStyle(linkStyle()))
-                        .setDataSource(GeneFusionDataSource.fromGeneFusions(report.geneFusions())))
+                        .setDataSource(GeneFusionDataSource.fromGeneFusions(report.fitStatus(), report.geneFusions())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Gene Fusions").setStyle(sectionHeaderStyle()),
@@ -143,17 +152,17 @@ public abstract class FindingsPage {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> mutationalLoadReport(@NotNull SequencedPatientReport report) {
+    private static ComponentBuilder<?, ?> mutationalLoadReport(@NotNull AnalysedPatientReport report) {
         return MutationalLoadSection.build(report.mutationalLoad());
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> microsatelliteReport(@NotNull SequencedPatientReport report) {
+    private static ComponentBuilder<?, ?> microsatelliteReport(@NotNull AnalysedPatientReport report) {
         return MicrosatelliteSection.build(report.microsatelliteIndicator());
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> geneDisruptionReport(@NotNull final SequencedPatientReport report) {
+    private static ComponentBuilder<?, ?> geneDisruptionReport(@NotNull final AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> table = report.geneDisruptions().size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(GeneDisruptionDataSource.geneDisruptionFields())
                 .columns(col.column("Chromosome", GeneDisruptionDataSource.CHROMOSOME_FIELD),
@@ -162,7 +171,7 @@ public abstract class FindingsPage {
                         col.column("Context", GeneDisruptionDataSource.GENE_CONTEXT_FIELD),
                         col.column("Type", GeneDisruptionDataSource.TYPE_FIELD),
                         col.column("Copies", GeneDisruptionDataSource.COPIES_FIELD))
-                .setDataSource(GeneDisruptionDataSource.fromGeneDisruptions(report.geneDisruptions())))
+                .setDataSource(GeneDisruptionDataSource.fromGeneDisruptions(report.fitStatus(), report.geneDisruptions())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Gene Disruptions").setStyle(sectionHeaderStyle()),

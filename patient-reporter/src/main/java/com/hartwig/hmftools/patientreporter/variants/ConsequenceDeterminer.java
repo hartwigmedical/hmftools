@@ -1,16 +1,12 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.gene.GeneModel;
-import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
-import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
@@ -28,54 +24,29 @@ class ConsequenceDeterminer {
     static final String FEATURE_TYPE_TRANSCRIPT = "transcript";
 
     @NotNull
-    private final Slicer hmfSlicingRegion;
-    @NotNull
-    private final Map<String, HmfGenomeRegion> relevantTranscriptMap;
+    private final Set<String> transcripts;
 
-    ConsequenceDeterminer(@NotNull final GeneModel geneModel) {
-        this(geneModel.slicer(), geneModel.transcriptMap());
-    }
-
-    ConsequenceDeterminer(@NotNull final Slicer hmfSlicingRegion, @NotNull final Map<String, HmfGenomeRegion> relevantTranscriptMap) {
-        this.hmfSlicingRegion = hmfSlicingRegion;
-        this.relevantTranscriptMap = relevantTranscriptMap;
+    ConsequenceDeterminer(@NotNull final Set<String> transcripts) {
+        this.transcripts = transcripts;
     }
 
     @NotNull
-    ConsequenceOutput run(@NotNull final List<SomaticVariant> variants) {
-        Predicate<SomaticVariant> consequenceRule = and(hmfSlicingRegion::test, hasActionableConsequence(relevantTranscriptMap.keySet()));
+    List<VariantReport> run(@NotNull final List<SomaticVariant> variants) {
+        Predicate<SomaticVariant> hasImpactingAnnotation = variant -> findImpactingAnnotation(variant, transcripts) != null;
 
-        List<SomaticVariant> consequentialVariants = variants.stream().filter(consequenceRule).collect(Collectors.toList());
+        List<SomaticVariant> variantsToReport = variants.stream().filter(hasImpactingAnnotation).collect(Collectors.toList());
 
-        return ImmutableConsequenceOutput.of(consequentialVariants, toVariantReport(consequentialVariants));
+        return toVariantReport(variantsToReport);
     }
 
     @NotNull
-    private static Predicate<SomaticVariant> and(@NotNull Predicate<SomaticVariant> predicate1,
-            @NotNull Predicate<SomaticVariant> predicate2) {
-        return variant -> predicate1.test(variant) && predicate2.test(variant);
-    }
-
-    @NotNull
-    private static Predicate<SomaticVariant> hasActionableConsequence(@NotNull final Set<String> relevantTranscripts) {
-        return variant -> findPrimaryRelevantAnnotation(variant, relevantTranscripts) != null;
-    }
-
-    @NotNull
-    private List<VariantReport> toVariantReport(@NotNull final List<SomaticVariant> variants) {
+    private List<VariantReport> toVariantReport(@NotNull final List<SomaticVariant> variantsToReport) {
         final List<VariantReport> reports = Lists.newArrayList();
-        for (final SomaticVariant variant : variants) {
+        for (final SomaticVariant variant : variantsToReport) {
             final ImmutableVariantReport.Builder builder = ImmutableVariantReport.builder();
-            final VariantAnnotation variantAnnotation = findPrimaryRelevantAnnotation(variant, relevantTranscriptMap.keySet());
-            // KODU: Variants with no relevant annotations should be filtered out by now.
+            final VariantAnnotation variantAnnotation = findImpactingAnnotation(variant, transcripts);
+            // KODU: Variants with no impacting annotations should be filtered out by now.
             assert variantAnnotation != null;
-
-            final HmfGenomeRegion hmfGenomeRegion = relevantTranscriptMap.get(variantAnnotation.featureID());
-            assert hmfGenomeRegion != null;
-
-            if (!variantAnnotation.gene().equals(hmfGenomeRegion.gene())) {
-                LOGGER.warn("Annotated gene does not match gene expected from slicing annotation for " + variant);
-            }
 
             if (!variantAnnotation.allele().equals(variant.alt())) {
                 LOGGER.warn("Annotated allele does not match alt from variant for " + variant);
@@ -83,7 +54,7 @@ class ConsequenceDeterminer {
 
             builder.variant(variant);
             builder.gene(variantAnnotation.gene());
-            builder.transcript(hmfGenomeRegion.transcript());
+            builder.transcript(variantAnnotation.featureID());
             builder.hgvsCoding(variantAnnotation.hgvsCoding());
             builder.hgvsProtein(variantAnnotation.hgvsProtein());
             builder.consequence(variantAnnotation.consequenceString());
@@ -100,12 +71,12 @@ class ConsequenceDeterminer {
     }
 
     @Nullable
-    private static VariantAnnotation findPrimaryRelevantAnnotation(@NotNull final SomaticVariant variant,
-            @NotNull final Set<String> relevantTranscripts) {
-        final List<VariantAnnotation> relevantAnnotations = findAllRelevantAnnotations(variant.annotations(), relevantTranscripts);
+    private static VariantAnnotation findImpactingAnnotation(@NotNull final SomaticVariant variant,
+            @NotNull final Set<String> transcripts) {
+        final List<VariantAnnotation> relevantAnnotations = findAllRelevantAnnotations(variant.annotations(), transcripts);
         for (final VariantAnnotation annotation : relevantAnnotations) {
             for (final VariantConsequence consequence : annotation.consequences()) {
-                if (VariantConsequence.ACTIONABLE_CONSEQUENCES.contains(consequence)) {
+                if (VariantConsequence.IMPACTING_CONSEQUENCES.contains(consequence)) {
                     return annotation;
                 }
             }
@@ -115,10 +86,10 @@ class ConsequenceDeterminer {
 
     @NotNull
     private static List<VariantAnnotation> findAllRelevantAnnotations(@NotNull final List<VariantAnnotation> annotations,
-            @NotNull final Set<String> relevantTranscripts) {
+            @NotNull final Set<String> transcripts) {
         return annotations.stream()
                 .filter(annotation -> annotation.featureType().equals(FEATURE_TYPE_TRANSCRIPT)
-                        && relevantTranscripts.contains(annotation.featureID()))
+                        && transcripts.contains(annotation.featureID()))
                 .collect(Collectors.toList());
     }
 }
