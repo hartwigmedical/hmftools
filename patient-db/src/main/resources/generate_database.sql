@@ -34,6 +34,7 @@ CREATE TABLE preTreatmentDrug
     endDate DATE,
     name varchar(255),
     type varchar(255),
+    mechanism varchar(255),
     bestResponse varchar(50),
     PRIMARY KEY (id),
     FOREIGN KEY (patientId) REFERENCES patient(id)
@@ -92,6 +93,7 @@ CREATE TABLE drug
     endDate DATE,
     name varchar(255),
     type varchar(255),
+    mechanism varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (treatmentId) REFERENCES treatment(id),
     FOREIGN KEY (patientId) REFERENCES patient(id)

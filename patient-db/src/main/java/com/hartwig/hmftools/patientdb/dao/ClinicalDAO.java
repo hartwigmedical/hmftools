@@ -158,13 +158,13 @@ class ClinicalDAO {
                     PRETREATMENTDRUG.STARTDATE,
                     PRETREATMENTDRUG.ENDDATE,
                     PRETREATMENTDRUG.NAME,
-                    PRETREATMENTDRUG.TYPE,
+                    PRETREATMENTDRUG.TYPE, PRETREATMENTDRUG.MECHANISM,
                     PRETREATMENTDRUG.BESTRESPONSE)
                     .values(patientId,
                             Utils.toSQLDate(drug.startDate()),
                             Utils.toSQLDate(drug.endDate()),
                             curatedTreatment.name(),
-                            curatedTreatment.type(),
+                            curatedTreatment.type(), curatedTreatment.mechanism(),
                             drug.bestResponse())
                     .returning(PRETREATMENTDRUG.ID)
                     .fetchOne()
@@ -226,13 +226,19 @@ class ClinicalDAO {
     private void writeDrugData(final int patientId, final int treatmentId, @NotNull final DrugData drug,
             @NotNull final FormStatus formStatus) {
         drug.filteredCuratedDrugs().forEach(curatedTreatment -> {
-            final int id = context.insertInto(DRUG, DRUG.TREATMENTID, DRUG.PATIENTID, DRUG.STARTDATE, DRUG.ENDDATE, DRUG.NAME, DRUG.TYPE)
+            final int id = context.insertInto(DRUG,
+                    DRUG.TREATMENTID,
+                    DRUG.PATIENTID,
+                    DRUG.STARTDATE,
+                    DRUG.ENDDATE,
+                    DRUG.NAME,
+                    DRUG.TYPE,
+                    DRUG.MECHANISM)
                     .values(treatmentId,
                             patientId,
                             Utils.toSQLDate(drug.startDate()),
                             Utils.toSQLDate(drug.endDate()),
-                            curatedTreatment.name(),
-                            curatedTreatment.type())
+                            curatedTreatment.name(), curatedTreatment.type(), curatedTreatment.mechanism())
                     .returning(DRUG.ID)
                     .fetchOne()
                     .getValue(DRUG.ID);

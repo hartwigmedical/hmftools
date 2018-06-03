@@ -69,9 +69,11 @@ public class TreatmentCurator implements CleanableCurator {
     private static final String DRUG_NAME_FIELD = "drugName";
     private static final String CANONICAL_DRUG_NAME_FIELD = "canonicalDrugName";
     private static final String DRUG_TYPE_FIELD = "drugType";
+    private static final String DRUG_MECHANISM_FIELD = "drugMechanism";
 
     private static final String DRUG_NAME_CSV_FIELD = "drug";
     private static final String DRUG_TYPE_CSV_FIELD = "type";
+    private static final String DRUG_MECHANISM_CSV_FILE = "mechanism";
     private static final String DRUG_SYNONYMS_CSV_FIELD = "synonyms";
 
     private static final int NUM_HITS = 20;
@@ -145,12 +147,14 @@ public class TreatmentCurator implements CleanableCurator {
 
     @NotNull
     private static List<DrugEntry> readEntries(@NotNull final InputStream mappingInputStream) throws IOException {
+
         final List<DrugEntry> drugEntries = Lists.newArrayList();
         final CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
         for (final CSVRecord record : parser) {
             final String canonicalName = record.get(DRUG_NAME_CSV_FIELD).trim();
             final String drugType = record.get(DRUG_TYPE_CSV_FIELD).trim();
             final String synonymsField = record.get(DRUG_SYNONYMS_CSV_FIELD).trim();
+            final String treatmentMechanism = record.get(DRUG_MECHANISM_CSV_FILE.trim());
 
             final List<String> synonyms = Lists.newArrayList();
             if (!synonymsField.isEmpty()) {
@@ -161,9 +165,8 @@ public class TreatmentCurator implements CleanableCurator {
                     }
                 }
             }
-            drugEntries.add(ImmutableDrugEntry.of(canonicalName, synonyms, drugType));
+            drugEntries.add(ImmutableDrugEntry.of(canonicalName, synonyms, drugType, treatmentMechanism));
         }
-
         return drugEntries;
     }
 
@@ -191,8 +194,7 @@ public class TreatmentCurator implements CleanableCurator {
             if (hits.length == 1) {
                 final Document searchResult = indexSearcher.doc(hits[0].doc);
                 return Optional.of(ImmutableCuratedDrug.of(searchResult.get(CANONICAL_DRUG_NAME_FIELD),
-                        searchResult.get(DRUG_TYPE_FIELD),
-                        searchTerm));
+                        searchResult.get(DRUG_TYPE_FIELD), searchResult.get(DRUG_MECHANISM_FIELD), searchTerm));
             }
 
             return Optional.empty();
@@ -280,6 +282,7 @@ public class TreatmentCurator implements CleanableCurator {
         document.add(new TextField(DRUG_NAME_FIELD, drugEntry.canonicalName(), Field.Store.NO));
         document.add(new TextField(DRUG_TERMS_FIELD, drugEntry.canonicalName(), Field.Store.YES));
         document.add(new StringField(DRUG_TYPE_FIELD, drugEntry.type(), Field.Store.YES));
+        document.add(new TextField(DRUG_MECHANISM_FIELD, drugEntry.treatmentMechanism(), Field.Store.YES));
         document.add(new TextField(CANONICAL_DRUG_NAME_FIELD, drugEntry.canonicalName(), Field.Store.YES));
         writer.addDocument(document);
     }

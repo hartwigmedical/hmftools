@@ -71,15 +71,13 @@ public class TreatmentDataTest {
 
     @NotNull
     private static DrugData drugWithName(@Nullable String name) {
-        return name != null
-                ? drugBuilder().addCuratedDrugs(ImmutableCuratedDrug.of(name, "", "")).build()
+        return name != null ? drugBuilder().addCuratedDrugs(ImmutableCuratedDrug.of(name, "", "", "")).build()
                 : drugBuilder().build();
     }
 
     @NotNull
     private static DrugData drugWithType(@Nullable String type) {
-        return type != null
-                ? drugBuilder().addCuratedDrugs(ImmutableCuratedDrug.of("", type, "")).build()
+        return type != null ? drugBuilder().addCuratedDrugs(ImmutableCuratedDrug.of("", type, "", "")).build()
                 : drugBuilder().build();
     }
 
