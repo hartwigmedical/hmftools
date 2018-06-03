@@ -147,14 +147,15 @@ public class LoadStructuralVariants {
                 // the same credential work for both hmf and ensembl DBs
                 final String ensembleJdbcUrl = "jdbc:" + cmd.getOptionValue(ENSEMBL_DB);
                 final String ensembleUser = cmd.getOptionValue(DB_USER);
-                final String ensemblePassword =  cmd.getOptionValue(DB_USER);
+                final String ensemblePassword =  cmd.getOptionValue(DB_PASS);
 
                 LOGGER.debug("connecting to local ensembl DB: {}", cmd.getOptionValue(ENSEMBL_DB));
 
                 try {
                     ensembleDBConn = new DatabaseAccess(ensembleUser, ensemblePassword, ensembleJdbcUrl);
                 } catch (Exception e) {
-                    LOGGER.warn("Ensemble DB connection failed: {}", e.toString(), e.getMessage());
+                    LOGGER.warn("Ensembl DB connection failed: {}", e.toString(), e.getMessage());
+                    return;
                 }
             }
 

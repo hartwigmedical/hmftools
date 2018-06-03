@@ -87,18 +87,13 @@ public class MySQLAnnotator implements VariantAnnotator {
 
         List<StructuralVariantAnnotation> annotatedVars = Lists.newArrayList();
 
-        for(final EnrichedStructuralVariant variant : variants)
-        {
-//            LOGGER.debug("annotating var({}) {} breakends({}:{} -> {}:{})",
-//                    variant.id(), variant.type(),
-//                    variant.chromosome(true), variant.position(true),
-//                    variant.chromosome(false), variant.position(false));
-
-             annotatedVars.add(annotateVariant(variant));
-        }
-
-        return annotatedVars;
-        // return variants.stream().map(this::annotateVariant).collect(Collectors.toList());
+//        for(final EnrichedStructuralVariant variant : variants)
+//        {
+//             annotatedVars.add(annotateVariant(variant));
+//        }
+//
+//        return annotatedVars;
+        return variants.stream().map(this::annotateVariant).collect(Collectors.toList());
     }
 
     @NotNull
