@@ -17,19 +17,21 @@ class OncoSomaticEventReader {
         private val fusionReader = FusionReader(separators = FUSION_SEPARATORS, flipSet = FUSIONS_TO_FLIP)
     }
 
-    fun read(gene: String, transcript: String, alteration: String): List<SomaticEvent> {
-        val fusionsAndCnvs = listOfNotNull(readFusions(gene, alteration), readCnv(gene, alteration))
-        return if (fusionsAndCnvs.isEmpty()) {
-            listOfNotNull(ProteinAnnotation(transcript, alteration))
-        } else {
-            fusionsAndCnvs
+    fun read(gene: String, transcript: String, alteration: String, effect: String = ""): List<SomaticEvent> {
+        return when {
+            isFusion(alteration) -> listOfNotNull(readFusions(gene, alteration, effect))
+            isCnv(alteration)    -> listOfNotNull(readCnv(gene, alteration))
+            else                 -> listOf(ProteinAnnotation(transcript, alteration))
         }
     }
 
-    private fun readFusions(gene: String, alteration: String): FusionEvent? {
+    private fun isFusion(alteration: String): Boolean = alteration.contains(Regex("Fusion"))
+    private fun isCnv(alteration: String): Boolean = alteration == "Amplification" || alteration == "Deletion"
+
+    private fun readFusions(gene: String, alteration: String, effect: String): FusionEvent? {
         return when {
-            alteration.contains(Regex("Fusion")) -> fusionReader.read(gene, alteration)
-            else                                 -> null
+            effect.contains("Loss-of-function") -> null
+            else                                -> fusionReader.read(gene, alteration)
         }
     }
 

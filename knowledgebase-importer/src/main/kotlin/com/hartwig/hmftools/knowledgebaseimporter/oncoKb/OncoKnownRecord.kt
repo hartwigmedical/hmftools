@@ -13,8 +13,9 @@ data class OncoKnownRecord(private val metadata: RecordMetadata, override val ad
         operator fun invoke(record: CSVRecord): OncoKnownRecord {
             val (gene, alteration) = correctRecord(record["Gene"], record["Alteration"])
             val transcript = record["Isoform"]
+            val effect = record["Mutation Effect"]
             val metadata = OncoMetadata(gene, transcript)
-            return OncoKnownRecord(metadata, record["Oncogenicity"], somaticEventReader.read(gene, transcript, alteration))
+            return OncoKnownRecord(metadata, record["Oncogenicity"], somaticEventReader.read(gene, transcript, alteration, effect))
         }
 
         private fun correctRecord(gene: String, alteration: String): Pair<String, String> = when {
