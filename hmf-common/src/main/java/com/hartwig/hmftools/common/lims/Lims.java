@@ -97,7 +97,7 @@ public class Lims {
         if (sampleData != null) {
             return sampleData.primaryTumor();
         }
-        LOGGER.warn("Could not find lab primary tumor for sample: " + sample + " in LIMS");
+        // KODU: No warning raised since initially this information was not tracked so this will be missing for early samples.
         return "N/A";
     }
 
