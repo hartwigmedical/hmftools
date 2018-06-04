@@ -49,7 +49,7 @@ public class BachelorApplication {
     private static final String CONFIG_DIRECTORY = "configDirectory";
     private static final String RUN_DIRECTORY = "runDirectory";
     private static final String BATCH_DIRECTORY = "batchDirectory";
-    private static final String OUTPUT = "output";
+    private static final String OUTPUT_DIR = "output_dir";
     private static final String VALIDATE = "validate";
     private static final String GERMLINE = "germline";
     private static final String SOMATIC = "somatic";
@@ -62,7 +62,7 @@ public class BachelorApplication {
         final Options options = new Options();
         options.addOption(Option.builder(CONFIG_DIRECTORY).required(false).hasArg().desc("folder to find program XMLs").build());
         options.addOption(Option.builder(CONFIG_XML).required(false).hasArg().desc("single config XML to run").build());
-        options.addOption(Option.builder(OUTPUT).required().hasArg().desc("output file").build());
+        options.addOption(Option.builder(OUTPUT_DIR).required().hasArg().desc("output file").build());
         options.addOption(Option.builder(RUN_DIRECTORY).required(false).hasArg().desc("the run directory to look for inputs").build());
         options.addOption(Option.builder(BATCH_DIRECTORY).required(false).hasArg().desc("runs directory to batch process").build());
         options.addOption(Option.builder(VALIDATE).required(false).desc("only validate the configs").build());
@@ -134,8 +134,11 @@ public class BachelorApplication {
         return eligibility.processStructuralVariants(patient, factory.results());
     }
 
-    private static File process(final BachelorEligibility eligibility, final RunDirectory run, final boolean germline,
-            final boolean somatic, final boolean copyNumber, final boolean structuralVariants) {
+    private static void process(
+            final BachelorEligibility eligibility, final RunDirectory run, final boolean germline,
+            final boolean somatic, final boolean copyNumber, final boolean structuralVariants,
+            final BufferedWriter allDataWriter, final BufferedWriter bedFileWriter)
+    {
 
         final String patient = run.getPatientID();
         final boolean doGermline = run.germline() != null && germline;
@@ -160,15 +163,21 @@ public class BachelorApplication {
         }
 
         try {
-            final File file = File.createTempFile(patient, ".csv");
-            file.deleteOnExit();
+            for (final EligibilityReport r : result) {
 
-            outputToFile(result, file);
+                allDataWriter.write(String.format("%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s",
+                        r.patient(), r.source().toString(), r.program(),  r.id(),
+                        r.genes(), r.transcriptId(), r.chrom(), r.pos(), r.ref(), r.alts(), r.effects()));
+                allDataWriter.newLine();
 
-            return file;
-        } catch (final IOException e) {
-            LOGGER.error("error with temporary file for {}", run.prefix());
-            return null;
+                bedFileWriter.write(String.format("%s\t%s\t%d\t%d",
+                        r.patient(), r.chrom(), r.pos() - 1, r.pos()));
+                bedFileWriter.newLine();
+            }
+        }
+        catch (final IOException e) {
+            LOGGER.error("error writing output");
+            return;
         }
     }
 
@@ -177,33 +186,11 @@ public class BachelorApplication {
                 Arrays.asList("PATIENT", "SOURCE", "PROGRAM", "ID", "GENES", "TRANSCRIPT_ID", "CHROM", "POS", "REF", "ALTS", "EFFECTS"));
     }
 
-    private static void outputToFile(final Collection<EligibilityReport> reports, final File outputFile) throws IOException {
-        try (final BufferedWriter writer = Files.newBufferedWriter(outputFile.toPath())) {
-            for (final EligibilityReport r : reports) {
-
-                writer.write(String.format("%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s",
-                        r.patient(),
-                        r.source().toString(),
-                        r.program(),
-                        r.id(),
-                        r.genes(),
-                        r.transcriptId(),
-                        r.chrom(),
-                        r.pos(),
-                        r.ref(),
-                        r.alts(),
-                        r.effects()));
-                writer.newLine();
-
-            }
-            writer.close();
-        }
-    }
-
     public static void main(final String... args) {
         final Options options = createOptions();
 
-        try {
+        try
+        {
             final CommandLine cmd = createCommandLine(options, args);
 
             if (cmd.hasOption(LOG_DEBUG)) {
@@ -232,9 +219,18 @@ public class BachelorApplication {
                 return;
             }
 
+            boolean isBatchRun = cmd.hasOption(BATCH_DIRECTORY);
+            boolean isSingleRun = cmd.hasOption(RUN_DIRECTORY);
+            if (!isBatchRun && !isSingleRun)
+            {
+                LOGGER.error("requires either a batch or single run directory");
+                System.exit(1);
+                return;
+            }
+
             final BachelorEligibility eligibility = BachelorEligibility.fromMap(map);
 
-            LOGGER.info("beginning processing");
+            LOGGER.info("beginning processing {} run", isBatchRun ? "batch" : "single");
 
             final boolean germline = cmd.hasOption(GERMLINE);
             final boolean somatic = cmd.hasOption(SOMATIC);
@@ -242,64 +238,80 @@ public class BachelorApplication {
             final boolean structuralVariants = cmd.hasOption(SV);
             final boolean doAll = !(germline || somatic || copyNumber || structuralVariants);
 
-            final List<File> filesToMerge;
-            if (cmd.hasOption(BATCH_DIRECTORY)) {
-                final Path root = Paths.get(cmd.getOptionValue(BATCH_DIRECTORY));
-                try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS).parallel()) {
-                    filesToMerge = stream.filter(p -> p.toFile().isDirectory())
-                            .filter(p -> !p.equals(root))
-                            .map(RunDirectory::new)
-                            .map(run -> process(eligibility,
-                                    run,
-                                    germline || doAll,
-                                    somatic || doAll,
-                                    copyNumber || doAll,
-                                    structuralVariants || doAll))
-                            .collect(Collectors.toList());
+            try {
+
+                String outputDir = cmd.getOptionValue(OUTPUT_DIR);
+
+                if(!outputDir.endsWith("/"))
+                    outputDir += "/";
+
+                String mainFileName = outputDir + "bachelor_output.csv";
+                String bedFileName = outputDir + "bachelor_bed.csv";
+
+                final BufferedWriter mainDataWriter = Files.newBufferedWriter(Paths.get(mainFileName));
+                mainDataWriter.write(fileHeader());
+                mainDataWriter.newLine();
+
+                final BufferedWriter bedFileWriter = Files.newBufferedWriter(Paths.get(bedFileName));
+
+                if (cmd.hasOption(BATCH_DIRECTORY))
+                {
+                    final Path root = Paths.get(cmd.getOptionValue(BATCH_DIRECTORY));
+
+                    try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS).parallel())
+                    {
+                        final List<RunDirectory> runDirectories = stream
+                                .filter(p -> p.toFile().isDirectory())
+                                .filter(p -> !p.equals(root))
+                                .map(RunDirectory::new)
+                                .collect(Collectors.toList());
+
+                        LOGGER.info("found {} batch directories", runDirectories.size());
+
+                            // add the filtered and passed SV entries for each file
+                            for (final RunDirectory runDir: runDirectories)
+                            {
+                                process(eligibility, runDir,
+                                        germline || doAll,
+                                        somatic || doAll,
+                                        copyNumber || doAll,
+                                        structuralVariants || doAll,
+                                        mainDataWriter, bedFileWriter);
+                            }
+                    }
+                    catch (Exception e)
+                    {
+                        LOGGER.error("failed walking batch directories");
+                    }
                 }
-            } else if (cmd.hasOption(RUN_DIRECTORY)) {
-                final Path path = Paths.get(cmd.getOptionValue(RUN_DIRECTORY));
-                if (!Files.exists(path)) {
-                    LOGGER.error("-runDirectory path does not exist");
-                    System.exit(1);
-                    return;
+                else if (cmd.hasOption(RUN_DIRECTORY))
+                {
+                    final Path path = Paths.get(cmd.getOptionValue(RUN_DIRECTORY));
+                    if (!Files.exists(path)) {
+                        LOGGER.error("-runDirectory path does not exist");
+                        System.exit(1);
+                        return;
+                    }
+                    process(eligibility,
+                            new RunDirectory(path),
+                            germline || doAll,
+                            somatic || doAll,
+                            copyNumber || doAll,
+                            structuralVariants || doAll,
+                            mainDataWriter, bedFileWriter);
                 }
-                filesToMerge = Collections.singletonList(process(eligibility,
-                        new RunDirectory(path),
-                        germline || doAll,
-                        somatic || doAll,
-                        copyNumber || doAll,
-                        structuralVariants || doAll));
-            } else {
-                LOGGER.error("requires either a batch or single run directory");
-                System.exit(1);
-                return;
+
+                mainDataWriter.close();
+                bedFileWriter.close();
+            }
+            catch(IOException e)
+            {
+                LOGGER.error("failed writing output");
             }
 
             LOGGER.info("processing complete");
-            LOGGER.info("merging to CSV {}", cmd.getOptionValue(OUTPUT));
 
-            // TODO: better way to join files? using FileChannels?
-
-            try (final BufferedWriter writer = Files.newBufferedWriter(Paths.get(cmd.getOptionValue(OUTPUT)))) {
-
-                // header
-                writer.write(fileHeader());
-                writer.newLine();
-
-                for (final File file : filesToMerge) {
-                    final List<String> lines = Files.readAllLines(file.toPath());
-                    for (final String line : lines) {
-                        writer.write(line);
-                        writer.newLine();
-                    }
-                }
-
-            }
-
-            LOGGER.info("output written");
-
-            LOGGER.info("bachelor done");
+            LOGGER.info("run complete");
 
         } catch (final ParseException e) {
             printHelpAndExit(options);
