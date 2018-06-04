@@ -22,6 +22,7 @@ CREATE TABLE baseline
     hasRadiotherapyPreTreatment varchar(3),
     preTreatments varchar(255),
     preTreatmentsType varchar(510),
+    preTreatmentsMechanism varchar(510),
     PRIMARY KEY (patientId),
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
@@ -80,6 +81,7 @@ CREATE TABLE treatment
     endDate DATE,
     name varchar(255),
     type varchar(255),
+    mechanism varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (biopsyId) REFERENCES biopsy(id),
     FOREIGN KEY (patientId) REFERENCES patient(id)

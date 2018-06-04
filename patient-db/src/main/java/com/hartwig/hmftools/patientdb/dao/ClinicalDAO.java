@@ -109,6 +109,13 @@ class ClinicalDAO {
             LOGGER.warn(String.format("Truncating pre-treatment type: %s", preTreatmentTypes));
             preTreatmentTypes = preTreatmentTypes.substring(0, BASELINE.PRETREATMENTSTYPE.getDataType().length());
         }
+
+        String preTreatmentMechanism = preTreatmentData.concatenatedMechanism();
+        if (preTreatmentMechanism != null && preTreatmentMechanism.length() > BASELINE.PRETREATMENTSMECHANISM.getDataType().length()) {
+            LOGGER.warn(String.format("Truncating pre-treatment type: %s", preTreatmentMechanism));
+            preTreatmentMechanism = preTreatmentMechanism.substring(0, BASELINE.PRETREATMENTSMECHANISM.getDataType().length());
+        }
+
         context.insertInto(BASELINE,
                 BASELINE.PATIENTID,
                 BASELINE.REGISTRATIONDATE,
@@ -121,8 +128,7 @@ class ClinicalDAO {
                 BASELINE.DEATHDATE,
                 BASELINE.HASSYSTEMICPRETREATMENT,
                 BASELINE.HASRADIOTHERAPYPRETREATMENT,
-                BASELINE.PRETREATMENTS,
-                BASELINE.PRETREATMENTSTYPE)
+                BASELINE.PRETREATMENTS, BASELINE.PRETREATMENTSTYPE, BASELINE.PRETREATMENTSMECHANISM)
                 .values(patientId,
                         Utils.toSQLDate(patient.registrationDate()),
                         Utils.toSQLDate(patient.informedConsentDate()),
@@ -134,8 +140,7 @@ class ClinicalDAO {
                         Utils.toSQLDate(patient.deathDate()),
                         preTreatmentData.treatmentGiven(),
                         preTreatmentData.radiotherapyGiven(),
-                        preTreatmentData.treatmentName(),
-                        preTreatmentTypes)
+                        preTreatmentData.treatmentName(), preTreatmentTypes, preTreatmentMechanism)
                 .execute();
 
         preTreatmentData.drugs().forEach(drug -> writePreTreatmentDrugData(patientId, drug, preTreatmentData.formStatus()));
@@ -209,8 +214,7 @@ class ClinicalDAO {
                 TREATMENT.RADIOTHERAPYGIVEN,
                 TREATMENT.STARTDATE,
                 TREATMENT.ENDDATE,
-                TREATMENT.NAME,
-                TREATMENT.TYPE)
+                TREATMENT.NAME, TREATMENT.TYPE, TREATMENT.MECHANISM)
                 .values(treatment.id(),
                         treatment.biopsyId(),
                         patientId,
@@ -218,8 +222,7 @@ class ClinicalDAO {
                         treatment.radiotherapyGiven(),
                         Utils.toSQLDate(treatment.startDate()),
                         Utils.toSQLDate(treatment.endDate()),
-                        treatment.treatmentName(),
-                        treatment.consolidatedType())
+                        treatment.treatmentName(), treatment.consolidatedType(), treatment.consolidatedMechanism())
                 .execute();
         writeFormStatus(treatment.id(), TREATMENT.getName(), "treatment", treatment.formStatus());
         treatment.drugs().forEach(drug -> writeDrugData(patientId, treatment.id(), drug, treatment.formStatus()));
