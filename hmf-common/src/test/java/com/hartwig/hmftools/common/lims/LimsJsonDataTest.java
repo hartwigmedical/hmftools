@@ -42,6 +42,7 @@ public class LimsJsonDataTest {
                 .arrivalDateString("")
                 .samplingDateString("")
                 .tumorPercentageString("50")
+                .primaryTumor("")
                 .labSopVersions(labSopVersions)
                 .build();
     }

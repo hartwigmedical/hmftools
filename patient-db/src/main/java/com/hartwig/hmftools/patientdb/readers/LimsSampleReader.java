@@ -30,6 +30,7 @@ public class LimsSampleReader {
                         arrivalDate,
                         lims.samplingDateForSample(sampleId),
                         lims.dnaNanogramsForSample(sampleId),
+                        lims.primaryTumorForSample(sampleId),
                         lims.tumorPercentageForSample(sampleId)));
             }
         });

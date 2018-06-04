@@ -92,6 +92,16 @@ public class Lims {
     }
 
     @NotNull
+    public String primaryTumorForSample(@NotNull final String sample) {
+        LimsJsonData sampleData = dataPerSample.get(sample);
+        if (sampleData != null) {
+            return sampleData.primaryTumor();
+        }
+        LOGGER.warn("Could not find lab primary tumor for sample: " + sample + " in LIMS");
+        return "N/A";
+    }
+
+    @NotNull
     public String labProceduresForSample(@NotNull final String sample) {
         LimsJsonData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {

@@ -90,12 +90,14 @@ class ClinicalDAO {
                 SAMPLE.ARRIVALDATE,
                 SAMPLE.SAMPLINGDATE,
                 SAMPLE.DNANANOGRAMS,
+                SAMPLE.LIMSPRIMARYTUMOR,
                 SAMPLE.TUMORPERCENTAGE)
                 .values(sample.sampleId(),
                         patientId,
                         Utils.toSQLDate(sample.arrivalDate()),
                         Utils.toSQLDate(sample.samplingDate()),
                         sample.dnaNanograms(),
+                        sample.limsPrimaryTumor(),
                         sample.tumorPercentage())
                 .execute();
     }
