@@ -12,7 +12,7 @@ enum class HmfLevel {
                                              "Clinical trials" to B,
                                              "Late trials" to B,
                                              "Late trials,Pre-clinical" to B,
-                                             "Early trials" to B,
+                                             "Early trials" to C,
                                              "Case report" to C,
                                              "Early Trials,Case Report" to C,
                                              "Pre-clinical" to D,
