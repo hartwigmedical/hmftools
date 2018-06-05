@@ -58,7 +58,7 @@ public interface TreatmentData extends Comparable<TreatmentData> {
     default String concatenatedType() {
         List<CuratedDrug> drugs = sortedDrugs();
 
-        String value = drugs.stream().map(CuratedDrug::mechanism).collect(Collectors.joining(SEPARATOR));
+        String value = drugs.stream().map(CuratedDrug::type).collect(Collectors.joining(SEPARATOR));
         return Strings.emptyToNull(value);
     }
 
