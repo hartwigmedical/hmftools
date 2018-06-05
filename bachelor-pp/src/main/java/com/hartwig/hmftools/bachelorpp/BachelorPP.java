@@ -161,9 +161,6 @@ public class BachelorPP {
             variantContext.getCommonInfo().putAttribute("AD", bachRecord.getAltCount(), true);
             variantContext.getCommonInfo().addFilter("PASS");
 
-            variantContext.getCommonInfo().putAttribute(ANNOT);
-
-            bachRecord.setVariantContext(variantContext);
 
             Optional<SomaticVariant> somVariant = SomaticVariantFactory.unfilteredInstance().createVariant(sampleId, variantContext);
 

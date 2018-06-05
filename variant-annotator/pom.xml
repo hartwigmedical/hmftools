@@ -11,8 +11,8 @@
 
     <artifactId>variant-annotator</artifactId>
     <packaging>jar</packaging>
-    <version>1.3</version>
-    <name>HMF Tools - Variant Annotator Lib</name>
+    <version>1.4</version>
+    <name>HMF Tools - Variant Annotator</name>
 
     <dependencies>
         <dependency>
