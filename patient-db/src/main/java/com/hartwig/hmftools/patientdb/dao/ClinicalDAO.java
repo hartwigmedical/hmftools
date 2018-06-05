@@ -128,7 +128,9 @@ class ClinicalDAO {
                 BASELINE.DEATHDATE,
                 BASELINE.HASSYSTEMICPRETREATMENT,
                 BASELINE.HASRADIOTHERAPYPRETREATMENT,
-                BASELINE.PRETREATMENTS, BASELINE.PRETREATMENTSTYPE, BASELINE.PRETREATMENTSMECHANISM)
+                BASELINE.PRETREATMENTS,
+                BASELINE.PRETREATMENTSTYPE,
+                BASELINE.PRETREATMENTSMECHANISM)
                 .values(patientId,
                         Utils.toSQLDate(patient.registrationDate()),
                         Utils.toSQLDate(patient.informedConsentDate()),
@@ -140,7 +142,9 @@ class ClinicalDAO {
                         Utils.toSQLDate(patient.deathDate()),
                         preTreatmentData.treatmentGiven(),
                         preTreatmentData.radiotherapyGiven(),
-                        preTreatmentData.treatmentName(), preTreatmentTypes, preTreatmentMechanism)
+                        preTreatmentData.treatmentName(),
+                        preTreatmentTypes,
+                        preTreatmentMechanism)
                 .execute();
 
         preTreatmentData.drugs().forEach(drug -> writePreTreatmentDrugData(patientId, drug, preTreatmentData.formStatus()));
@@ -165,13 +169,15 @@ class ClinicalDAO {
                     PRETREATMENTDRUG.STARTDATE,
                     PRETREATMENTDRUG.ENDDATE,
                     PRETREATMENTDRUG.NAME,
-                    PRETREATMENTDRUG.TYPE, PRETREATMENTDRUG.MECHANISM,
+                    PRETREATMENTDRUG.TYPE,
+                    PRETREATMENTDRUG.MECHANISM,
                     PRETREATMENTDRUG.BESTRESPONSE)
                     .values(patientId,
                             Utils.toSQLDate(drug.startDate()),
                             Utils.toSQLDate(drug.endDate()),
                             curatedTreatment.name(),
-                            curatedTreatment.type(), curatedTreatment.mechanism(),
+                            curatedTreatment.type(),
+                            curatedTreatment.mechanism(),
                             drug.bestResponse())
                     .returning(PRETREATMENTDRUG.ID)
                     .fetchOne()
@@ -214,7 +220,9 @@ class ClinicalDAO {
                 TREATMENT.RADIOTHERAPYGIVEN,
                 TREATMENT.STARTDATE,
                 TREATMENT.ENDDATE,
-                TREATMENT.NAME, TREATMENT.TYPE, TREATMENT.MECHANISM)
+                TREATMENT.NAME,
+                TREATMENT.TYPE,
+                TREATMENT.MECHANISM)
                 .values(treatment.id(),
                         treatment.biopsyId(),
                         patientId,
@@ -222,7 +230,9 @@ class ClinicalDAO {
                         treatment.radiotherapyGiven(),
                         Utils.toSQLDate(treatment.startDate()),
                         Utils.toSQLDate(treatment.endDate()),
-                        treatment.treatmentName(), treatment.consolidatedType(), treatment.consolidatedMechanism())
+                        treatment.treatmentName(),
+                        treatment.consolidatedType(),
+                        treatment.consolidatedMechanism())
                 .execute();
         writeFormStatus(treatment.id(), TREATMENT.getName(), "treatment", treatment.formStatus());
         treatment.drugs().forEach(drug -> writeDrugData(patientId, treatment.id(), drug, treatment.formStatus()));
@@ -243,7 +253,9 @@ class ClinicalDAO {
                             patientId,
                             Utils.toSQLDate(drug.startDate()),
                             Utils.toSQLDate(drug.endDate()),
-                            curatedTreatment.name(), curatedTreatment.type(), curatedTreatment.mechanism())
+                            curatedTreatment.name(),
+                            curatedTreatment.type(),
+                            curatedTreatment.mechanism())
                     .returning(DRUG.ID)
                     .fetchOne()
                     .getValue(DRUG.ID);
