@@ -104,13 +104,13 @@ class ClinicalDAO {
 
     private void writeBaselineData(int patientId, @NotNull BaselineData patient, @NotNull PreTreatmentData preTreatmentData) {
         // KODU: preTreatmentTypes exceeds the usual 255 length of varchar fields in production.
-        String preTreatmentTypes = preTreatmentData.concatenatedType();
+        String preTreatmentTypes = preTreatmentData.concatenatedTypeOrMechanism("type");
         if (preTreatmentTypes != null && preTreatmentTypes.length() > BASELINE.PRETREATMENTSTYPE.getDataType().length()) {
             LOGGER.warn(String.format("Truncating pre-treatment type: %s", preTreatmentTypes));
             preTreatmentTypes = preTreatmentTypes.substring(0, BASELINE.PRETREATMENTSTYPE.getDataType().length());
         }
 
-        String preTreatmentMechanism = preTreatmentData.concatenatedMechanism();
+        String preTreatmentMechanism = preTreatmentData.concatenatedTypeOrMechanism("mechanism");
         if (preTreatmentMechanism != null && preTreatmentMechanism.length() > BASELINE.PRETREATMENTSMECHANISM.getDataType().length()) {
             LOGGER.warn(String.format("Truncating pre-treatment type: %s", preTreatmentMechanism));
             preTreatmentMechanism = preTreatmentMechanism.substring(0, BASELINE.PRETREATMENTSMECHANISM.getDataType().length());
@@ -231,8 +231,8 @@ class ClinicalDAO {
                         Utils.toSQLDate(treatment.startDate()),
                         Utils.toSQLDate(treatment.endDate()),
                         treatment.treatmentName(),
-                        treatment.consolidatedType(),
-                        treatment.consolidatedMechanism())
+                        treatment.consolidatedTypeOrMechanism("type"),
+                        treatment.consolidatedTypeOrMechanism("mechanism"))
                 .execute();
         writeFormStatus(treatment.id(), TREATMENT.getName(), "treatment", treatment.formStatus());
         treatment.drugs().forEach(drug -> writeDrugData(patientId, treatment.id(), drug, treatment.formStatus()));

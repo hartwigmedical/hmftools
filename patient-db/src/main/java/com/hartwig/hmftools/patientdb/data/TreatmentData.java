@@ -35,6 +35,9 @@ public interface TreatmentData extends Comparable<TreatmentData> {
     FormStatus formStatus();
 
     @NotNull
+    String seperator = "/";
+
+    @NotNull
     @Value.Derived
     default List<CuratedDrug> curatedDrugs() {
         return drugs().stream().flatMap(drug -> drug.filteredCuratedDrugs().stream()).collect(Collectors.toList());
@@ -45,49 +48,45 @@ public interface TreatmentData extends Comparable<TreatmentData> {
         List<CuratedDrug> drugs = curatedDrugs();
         Collections.sort(drugs);
 
-        final String concatenatedTreatmentName = drugs.stream().map(CuratedDrug::name).collect(Collectors.joining("/"));
+        final String concatenatedTreatmentName = drugs.stream().map(CuratedDrug::name).collect(Collectors.joining(seperator));
         return Strings.emptyToNull(concatenatedTreatmentName);
     }
 
     @Nullable
-    default String concatenatedType() {
+    default String concatenatedTypeOrMechanism(@NotNull String ValueForTreatment) {
         List<CuratedDrug> drugs = curatedDrugs();
         Collections.sort(drugs);
 
-        final String concatenatedTreatmentType = drugs.stream().map(CuratedDrug::type).collect(Collectors.joining("/"));
-        return Strings.emptyToNull(concatenatedTreatmentType);
+        return Strings.emptyToNull(chcekValueConcatenated(ValueForTreatment, drugs));
     }
 
     @Nullable
-    default String consolidatedType() {
-        final Set<String> types = curatedDrugs().stream().map(CuratedDrug::type).collect(Collectors.toSet());
-        if (types.isEmpty()) {
+    default String chcekValueConcatenated(@NotNull String TreatmentValue, @NotNull List<CuratedDrug> drugs) {
+        return TreatmentValue.equals("type")
+                ? drugs.stream().map(CuratedDrug::type).collect(Collectors.joining(seperator))
+                : drugs.stream().map(CuratedDrug::mechanism).collect(Collectors.joining(seperator));
+    }
+
+    @Nullable
+    default Set<String> checkValueConsolidated(@NotNull String TreatmentValue) {
+        return TreatmentValue.equals("type")
+                ? curatedDrugs().stream().map(CuratedDrug::type).collect(Collectors.toSet())
+                : curatedDrugs().stream().map(CuratedDrug::mechanism).collect(Collectors.toSet());
+    }
+
+    @NotNull
+    default String checkCombiValueTreatment(@NotNull String valueCombi) {
+        return valueCombi.equals("type") ? COMBI_THERAPY : COMBI_MECHANISM;
+    }
+
+    @Nullable
+    default String consolidatedTypeOrMechanism(@NotNull String ValueForTreatment) {
+        if (checkValueConsolidated(ValueForTreatment).isEmpty()) {
             return null;
-        } else if (types.size() == 1) {
-            return types.iterator().next();
+        } else if (checkValueConsolidated(ValueForTreatment).size() == 1) {
+            return checkValueConsolidated(ValueForTreatment).iterator().next();
         } else {
-            return COMBI_THERAPY;
-        }
-    }
-
-    @Nullable
-    default String concatenatedMechanism() {
-        List<CuratedDrug> drugs = curatedDrugs();
-        Collections.sort(drugs);
-
-        final String concatenatedTreatmentMechanism = drugs.stream().map(CuratedDrug::mechanism).collect(Collectors.joining("/"));
-        return Strings.emptyToNull(concatenatedTreatmentMechanism);
-    }
-
-    @Nullable
-    default String consolidatedMechanism() {
-        final Set<String> types = curatedDrugs().stream().map(CuratedDrug::mechanism).collect(Collectors.toSet());
-        if (types.isEmpty()) {
-            return null;
-        } else if (types.size() == 1) {
-            return types.iterator().next();
-        } else {
-            return COMBI_MECHANISM;
+            return checkCombiValueTreatment(ValueForTreatment);
         }
     }
 
