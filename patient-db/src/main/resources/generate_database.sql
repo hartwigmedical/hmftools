@@ -20,8 +20,9 @@ CREATE TABLE baseline
     deathDate DATE,
     hasSystemicPreTreatment varchar(3),
     hasRadiotherapyPreTreatment varchar(3),
-    preTreatments varchar(255),
+    preTreatments varchar(800),
     preTreatmentsType varchar(510),
+    preTreatmentsMechanism varchar(510),
     PRIMARY KEY (patientId),
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
@@ -32,7 +33,7 @@ CREATE TABLE preTreatmentDrug
     patientId int NOT NULL,
     startDate DATE,
     endDate DATE,
-    name varchar(255),
+    name varchar(800),
     type varchar(255),
     mechanism varchar(255),
     bestResponse varchar(50),
@@ -47,6 +48,7 @@ CREATE TABLE sample
     arrivalDate DATE NOT NULL,
     samplingDate DATE,
     dnaNanograms int,
+    limsPrimaryTumor varchar(255),
     tumorPercentage DOUBLE PRECISION,
     PRIMARY KEY (sampleId),
     FOREIGN KEY (patientId) REFERENCES patient(id)
@@ -77,8 +79,9 @@ CREATE TABLE treatment
     radiotherapyGiven varchar(3),
     startDate DATE,
     endDate DATE,
-    name varchar(255),
+    name varchar(800),
     type varchar(255),
+    mechanism varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (biopsyId) REFERENCES biopsy(id),
     FOREIGN KEY (patientId) REFERENCES patient(id)
@@ -91,7 +94,7 @@ CREATE TABLE drug
     patientId int NOT NULL,
     startDate DATE,
     endDate DATE,
-    name varchar(255),
+    name varchar(800),
     type varchar(255),
     mechanism varchar(255),
     PRIMARY KEY (id),

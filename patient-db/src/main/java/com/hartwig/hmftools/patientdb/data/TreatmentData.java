@@ -19,6 +19,9 @@ public interface TreatmentData extends Comparable<TreatmentData> {
     @VisibleForTesting
     String COMBI_THERAPY = "Combi therapy";
 
+    @VisibleForTesting
+    String COMBI_MECHANISM = "Combi mechanism";
+
     @Nullable
     String treatmentGiven();
 
@@ -64,6 +67,27 @@ public interface TreatmentData extends Comparable<TreatmentData> {
             return types.iterator().next();
         } else {
             return COMBI_THERAPY;
+        }
+    }
+
+    @Nullable
+    default String concatenatedMechanism() {
+        List<CuratedDrug> drugs = curatedDrugs();
+        Collections.sort(drugs);
+
+        final String concatenatedTreatmentMechanism = drugs.stream().map(CuratedDrug::mechanism).collect(Collectors.joining("/"));
+        return Strings.emptyToNull(concatenatedTreatmentMechanism);
+    }
+
+    @Nullable
+    default String consolidatedMechanism() {
+        final Set<String> types = curatedDrugs().stream().map(CuratedDrug::mechanism).collect(Collectors.toSet());
+        if (types.isEmpty()) {
+            return null;
+        } else if (types.size() == 1) {
+            return types.iterator().next();
+        } else {
+            return COMBI_MECHANISM;
         }
     }
 

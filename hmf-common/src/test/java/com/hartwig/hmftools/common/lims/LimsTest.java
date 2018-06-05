@@ -22,6 +22,7 @@ public class LimsTest {
         final String samplingDate = "2017-04-15";
         final String dnaConcentration = "10";
         final String tumorPercentage = "40";
+        final String primaryTumor = "Prostate";
         final String labSopVersions = "PREP1V2-QC1V2-SEQ1V2";
 
         final LimsJsonData data = ImmutableLimsJsonData.builder()
@@ -30,6 +31,7 @@ public class LimsTest {
                 .arrivalDateString(arrivalDate)
                 .dnaConcentration(dnaConcentration)
                 .tumorPercentageString(tumorPercentage)
+                .primaryTumor(primaryTumor)
                 .labSopVersions(labSopVersions)
                 .build();
 
@@ -49,11 +51,13 @@ public class LimsTest {
         assertEquals(0.4, tumorPerc, 1.0E-10);
 
         assertEquals(labSopVersions, lims.labProceduresForSample(SAMPLE));
+        assertEquals(primaryTumor, lims.primaryTumorForSample(SAMPLE));
 
         assertNull(lims.arrivalDateForSample("DoesNotExist"));
         assertNull(lims.samplingDateForSample("DoesNotExist"));
         assertNull(lims.tumorPercentageForSample("DoesNotExist"));
         assertEquals("N/A", lims.labProceduresForSample("DoesNotExist"));
+        assertEquals("N/A", lims.primaryTumorForSample("DoesNotExist"));
     }
 
     @Test
@@ -74,6 +78,7 @@ public class LimsTest {
                 .arrivalDateString("IsNotADate")
                 .dnaConcentration("IsNotADNAConcentration")
                 .tumorPercentageString("IsNotANumber")
+                .primaryTumor("anything")
                 .labSopVersions("anything")
                 .build();
 

@@ -43,6 +43,21 @@ public class TreatmentDataTest {
     }
 
     @Test
+    public void canGenerateCorrectTreatmentMechanism() {
+        List<DrugData> noMechanism = Lists.newArrayList(drugWithMechanism(null));
+        assertNull(withDrugs(noMechanism).consolidatedMechanism());
+        assertNull(withDrugs(noMechanism).concatenatedMechanism());
+
+        List<DrugData> simpleMechanism = Lists.newArrayList(drugWithMechanism("mechanism"), drugWithMechanism("mechanism"));
+        assertEquals("mechanism", withDrugs(simpleMechanism).consolidatedMechanism());
+        assertEquals("mechanism/mechanism", withDrugs(simpleMechanism).concatenatedMechanism());
+
+        List<DrugData> combiMechanism = Lists.newArrayList(drugWithMechanism("mechanism1"), drugWithMechanism("mechanism2"));
+        assertEquals(TreatmentData.COMBI_MECHANISM, withDrugs(combiMechanism).consolidatedMechanism());
+        assertEquals("mechanism1/mechanism2", withDrugs(combiMechanism).concatenatedMechanism());
+    }
+
+    @Test
     public void sortsCorrectly() {
         TreatmentData treatment2015 = withDrug(drugWithStartDate(LocalDate.parse("2015-01-01")));
         TreatmentData treatment2014 = withDrug(drugWithStartDate(LocalDate.parse("2014-01-01")));
@@ -78,6 +93,13 @@ public class TreatmentDataTest {
     @NotNull
     private static DrugData drugWithType(@Nullable String type) {
         return type != null ? drugBuilder().addCuratedDrugs(ImmutableCuratedDrug.of("", type, "", "")).build()
+                : drugBuilder().build();
+    }
+
+    @NotNull
+    private static DrugData drugWithMechanism(@Nullable String mechanism) {
+        return mechanism != null
+                ? drugBuilder().addCuratedDrugs(ImmutableCuratedDrug.of("", "", mechanism, "")).build()
                 : drugBuilder().build();
     }
 
