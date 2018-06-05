@@ -77,7 +77,7 @@ public class AlleleDepthLoader {
                 mBachelorVariants.add(bachRecord);
             }
 
-            LOGGER.debug("loaded {} bachelor records", mBachelorVariants.size());
+            LOGGER.info("loaded {} bachelor records", mBachelorVariants.size());
         }
         catch(IOException exception)
         {
@@ -101,7 +101,7 @@ public class AlleleDepthLoader {
             mpuFiles = stream.map(p -> p.toFile()).filter(p -> !p.isDirectory()).filter(p_ -> p_.getName().endsWith(MPILEUP_FILE_EXTN))
                     .collect(Collectors.toList());
 
-            LOGGER.info("found {} mini-pileup files", mpuFiles.size());
+            LOGGER.debug("found {} mini-pileup files", mpuFiles.size());
 
             for (final File mpuFile : mpuFiles) {
 
@@ -115,7 +115,7 @@ public class AlleleDepthLoader {
                 mPileupData.addAll(pileups);
             }
 
-            LOGGER.debug("loaded {} pileup files, {} records", mpuFiles.size(), mPileupData.size());
+            LOGGER.info("loaded {} pileup files, {} records", mpuFiles.size(), mPileupData.size());
         }
         catch(IOException e)
         {
@@ -142,7 +142,26 @@ public class AlleleDepthLoader {
                     continue;
 
                 bachRecord.setRefCount(pileup.referenceCount());
-                bachRecord.setAltCount(pileup.aMismatchCount() + pileup.tMismatchCount() + pileup.gMismatchCount() + pileup.cMismatchCount());
+
+                if(pileup.insertions() > 0)
+                {
+                    bachRecord.setAltCount(pileup.insertions());
+                }
+                else if(pileup.deletions() > 0)
+                {
+                    bachRecord.setAltCount(pileup.deletions());
+                }
+                else if(bachRecord.alts().length() == bachRecord.ref().length() && bachRecord.alts().length() == 1)
+                {
+                    if(bachRecord.alts().charAt(0) == 'A')
+                        bachRecord.setAltCount(pileup.aMismatchCount());
+                    else if(bachRecord.alts().charAt(0) == 'C')
+                        bachRecord.setAltCount(pileup.cMismatchCount());
+                    else if(bachRecord.alts().charAt(0) == 'G')
+                        bachRecord.setAltCount(pileup.gMismatchCount());
+                    else if(bachRecord.alts().charAt(0) == 'T')
+                        bachRecord.setAltCount(pileup.tMismatchCount());
+                }
 
                 LOGGER.debug("sample({} chr({}) position({}) matched, counts(ref={} alt={})",
                         mSampleId, bachRecord.chromosome(), bachRecord.position(), bachRecord.getRefCount(), bachRecord.getAltCount());

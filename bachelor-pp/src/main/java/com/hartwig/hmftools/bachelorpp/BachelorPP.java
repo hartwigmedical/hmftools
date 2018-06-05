@@ -87,7 +87,16 @@ public class BachelorPP {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        final DatabaseAccess dbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
+        DatabaseAccess dbAccess = null;
+
+        try {
+            dbAccess = databaseAccess(cmd);
+        }
+        catch(SQLException e)
+        {
+            LOGGER.error("DB connection failed");
+            return;
+        }
 
         String sampleId = cmd.getOptionValue(SAMPLE);
 
@@ -151,6 +160,8 @@ public class BachelorPP {
 
             variantContext.getCommonInfo().putAttribute("AD", bachRecord.getAltCount(), true);
             variantContext.getCommonInfo().addFilter("PASS");
+
+            variantContext.getCommonInfo().putAttribute(ANNOT);
 
             bachRecord.setVariantContext(variantContext);
 
@@ -217,10 +228,10 @@ public class BachelorPP {
             // final List<SomaticVariant> variants = SomaticVariantFactory.filteredInstance(filter).fromVCFFile(sample, vcfFileLocation);
             // variants = SomaticVariantFactory.unfilteredInstance().fromVCFFile(sampleId, vcfFile);
 
-             LOGGER.info("Reading high confidence bed file");
+             LOGGER.debug("reading high confidence bed file");
              highConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
 
-             LOGGER.info("Loading indexed fasta reference file");
+             LOGGER.debug("loading indexed fasta reference file");
              indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
         }
         catch(IOException e)
@@ -229,7 +240,7 @@ public class BachelorPP {
             return;
         }
 
-        LOGGER.info("Querying purple database");
+        LOGGER.debug("querying purple database");
         final PurityContext purityContext = dbAccess.readPurityContext(sampleId);
 
         if (purityContext == null) {
@@ -246,14 +257,14 @@ public class BachelorPP {
         final Multimap<String, FittedRegion> copyNumberRegions =
                 Multimaps.index(dbAccess.readCopyNumberRegions(sampleId), FittedRegion::chromosome);
 
-        LOGGER.info("Incorporating purple purity");
+        LOGGER.debug("incorporating purple purity");
         final PurityAdjustedSomaticVariantFactory purityAdjustmentFactory =
                 new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers, copyNumberRegions);
         final List<PurityAdjustedSomaticVariant> purityAdjustedVariants = purityAdjustmentFactory.create(variants);
 
         final double clonalPloidy = ClonalityCutoffKernel.clonalCutoff(purityAdjustedVariants);
 
-        LOGGER.info("Enriching variants");
+        LOGGER.debug("enriching variants");
         final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(highConfidenceRegions,
                 indexedFastaSequenceFile,
                 new ClonalityFactory(purityAdjuster, clonalPloidy),
@@ -283,7 +294,7 @@ public class BachelorPP {
 
     public static void writeToFile(final String sampleId, final List<BachelorGermlineVariant> bachRecords, final String outputDir)
     {
-        LOGGER.info("writing germline reports to file");
+        LOGGER.debug("writing germline reports to file");
 
         String outputFileName = outputDir;
         if (!outputFileName.endsWith("/")) {

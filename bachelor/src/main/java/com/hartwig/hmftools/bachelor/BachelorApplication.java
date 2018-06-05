@@ -55,6 +55,7 @@ public class BachelorApplication {
     private static final String SOMATIC = "somatic";
     private static final String COPYNUMBER = "copyNumber";
     private static final String SV = "structuralVariants";
+    private static final String SAMPLE = "sample";
     private static final String LOG_DEBUG = "log_debug";
 
     @NotNull
@@ -70,6 +71,7 @@ public class BachelorApplication {
         options.addOption(Option.builder(SOMATIC).required(false).desc("process the somatic file").build());
         options.addOption(Option.builder(COPYNUMBER).required(false).desc("process the copy number file").build());
         options.addOption(Option.builder(SV).required(false).desc("process the sv file").build());
+        options.addOption(Option.builder(SAMPLE).required(false).hasArg().desc("sample id").build());
         options.addOption(Option.builder(LOG_DEBUG).required(false).desc("Sets log level to Debug, off by default").build());
         return options;
     }
@@ -135,11 +137,10 @@ public class BachelorApplication {
     }
 
     private static void process(
-            final BachelorEligibility eligibility, final RunDirectory run, final boolean germline,
-            final boolean somatic, final boolean copyNumber, final boolean structuralVariants,
+            final BachelorEligibility eligibility, final RunDirectory run, final String sampleId,
+            final boolean germline, final boolean somatic, final boolean copyNumber, final boolean structuralVariants,
             final BufferedWriter allDataWriter, final BufferedWriter bedFileWriter)
     {
-
         final String patient = run.getPatientID();
         final boolean doGermline = run.germline() != null && germline;
         final boolean doSomatic = run.somatic() != null && somatic;
@@ -166,12 +167,12 @@ public class BachelorApplication {
             for (final EligibilityReport r : result) {
 
                 allDataWriter.write(String.format("%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s",
-                        r.patient(), r.source().toString(), r.program(),  r.id(),
+                        sampleId, r.source().toString(), r.program(),  r.id(),
                         r.genes(), r.transcriptId(), r.chrom(), r.pos(), r.ref(), r.alts(), r.effects()));
                 allDataWriter.newLine();
 
                 bedFileWriter.write(String.format("%s\t%s\t%d\t%d",
-                        r.patient(), r.chrom(), r.pos() - 1, r.pos()));
+                        sampleId, r.chrom(), r.pos() - 1, r.pos()));
                 bedFileWriter.newLine();
             }
         }
@@ -183,7 +184,7 @@ public class BachelorApplication {
 
     private static String fileHeader() {
         return String.join(",",
-                Arrays.asList("PATIENT", "SOURCE", "PROGRAM", "ID", "GENES", "TRANSCRIPT_ID", "CHROM", "POS", "REF", "ALTS", "EFFECTS"));
+                Arrays.asList("SAMPLEID", "SOURCE", "PROGRAM", "ID", "GENE", "TRANSCRIPT_ID", "CHROM", "POS", "REF", "ALTS", "EFFECTS"));
     }
 
     public static void main(final String... args) {
@@ -221,16 +222,27 @@ public class BachelorApplication {
 
             boolean isBatchRun = cmd.hasOption(BATCH_DIRECTORY);
             boolean isSingleRun = cmd.hasOption(RUN_DIRECTORY);
+            final String sampleId = cmd.getOptionValue(SAMPLE);
+
             if (!isBatchRun && !isSingleRun)
             {
                 LOGGER.error("requires either a batch or single run directory");
                 System.exit(1);
                 return;
             }
+            else if(isSingleRun && (sampleId == null || sampleId.isEmpty()))
+            {
+                LOGGER.error("single run requires sample to be specified");
+                System.exit(1);
+                return;
+            }
 
             final BachelorEligibility eligibility = BachelorEligibility.fromMap(map);
 
-            LOGGER.info("beginning processing {} run", isBatchRun ? "batch" : "single");
+            if(isBatchRun)
+                LOGGER.info("beginning batch run");
+            else
+                LOGGER.info("beginning single sample run: {}", sampleId);
 
             final boolean germline = cmd.hasOption(GERMLINE);
             final boolean somatic = cmd.hasOption(SOMATIC);
@@ -271,7 +283,7 @@ public class BachelorApplication {
                             // add the filtered and passed SV entries for each file
                             for (final RunDirectory runDir: runDirectories)
                             {
-                                process(eligibility, runDir,
+                                process(eligibility, runDir, runDir.getPatientID(),
                                         germline || doAll,
                                         somatic || doAll,
                                         copyNumber || doAll,
@@ -292,8 +304,7 @@ public class BachelorApplication {
                         System.exit(1);
                         return;
                     }
-                    process(eligibility,
-                            new RunDirectory(path),
+                    process(eligibility, new RunDirectory(path), sampleId,
                             germline || doAll,
                             somatic || doAll,
                             copyNumber || doAll,
