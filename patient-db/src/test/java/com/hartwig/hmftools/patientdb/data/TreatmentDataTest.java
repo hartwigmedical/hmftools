@@ -30,31 +30,31 @@ public class TreatmentDataTest {
     @Test
     public void canGenerateCorrectTreatmentType() {
         List<DrugData> noTypes = Lists.newArrayList(drugWithType(null));
-        assertNull(withDrugs(noTypes).consolidatedTypeOrMechanism("type"));
-        assertNull(withDrugs(noTypes).concatenatedTypeOrMechanism("type"));
+        assertNull(withDrugs(noTypes).consolidatedType("type"));
+        assertNull(withDrugs(noTypes).concatenatedType("type"));
 
         List<DrugData> simpleType = Lists.newArrayList(drugWithType("simple"), drugWithType("simple"));
-        assertEquals("simple", withDrugs(simpleType).consolidatedTypeOrMechanism("type"));
-        assertEquals("simple/simple", withDrugs(simpleType).concatenatedTypeOrMechanism("type"));
+        assertEquals("simple", withDrugs(simpleType).consolidatedType("type"));
+        assertEquals("simple/simple", withDrugs(simpleType).concatenatedType("type"));
 
         List<DrugData> combiType = Lists.newArrayList(drugWithType("complex1"), drugWithType("complex2"));
-        assertEquals(TreatmentData.COMBI_THERAPY, withDrugs(combiType).consolidatedTypeOrMechanism("type"));
-        assertEquals("complex1/complex2", withDrugs(combiType).concatenatedTypeOrMechanism("type"));
+        assertEquals(TreatmentData.COMBI_TYPE, withDrugs(combiType).consolidatedType("type"));
+        assertEquals("complex1/complex2", withDrugs(combiType).concatenatedType("type"));
     }
 
     @Test
     public void canGenerateCorrectTreatmentMechanism() {
         List<DrugData> noMechanism = Lists.newArrayList(drugWithMechanism(null));
-        assertNull(withDrugs(noMechanism).consolidatedTypeOrMechanism("mechanism"));
-        assertNull(withDrugs(noMechanism).concatenatedTypeOrMechanism("mechanism"));
+        assertNull(withDrugs(noMechanism).consolidatedType("mechanism"));
+        assertNull(withDrugs(noMechanism).concatenatedType("mechanism"));
 
         List<DrugData> simpleMechanism = Lists.newArrayList(drugWithMechanism("mechanism"), drugWithMechanism("mechanism"));
-        assertEquals("mechanism", withDrugs(simpleMechanism).consolidatedTypeOrMechanism("mechanism"));
-        assertEquals("mechanism/mechanism", withDrugs(simpleMechanism).concatenatedTypeOrMechanism("mechanism"));
+        assertEquals("mechanism", withDrugs(simpleMechanism).consolidatedType("mechanism"));
+        assertEquals("mechanism/mechanism", withDrugs(simpleMechanism).concatenatedType("mechanism"));
 
         List<DrugData> combiMechanism = Lists.newArrayList(drugWithMechanism("mechanism1"), drugWithMechanism("mechanism2"));
-        assertEquals(TreatmentData.COMBI_MECHANISM, withDrugs(combiMechanism).consolidatedTypeOrMechanism("mechanism"));
-        assertEquals("mechanism1/mechanism2", withDrugs(combiMechanism).concatenatedTypeOrMechanism("mechanism"));
+        assertEquals(TreatmentData.COMBI_MECHANISM, withDrugs(combiMechanism).consolidatedType("mechanism"));
+        assertEquals("mechanism1/mechanism2", withDrugs(combiMechanism).concatenatedType("mechanism"));
     }
 
     @Test
