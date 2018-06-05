@@ -44,13 +44,13 @@ public class StrelkaCheckerTest {
         Assert.assertEquals(CheckType.STRELKA, result.checkType());
         assertEquals(EXPECTED_NUM_CHECKS, checks.size());
 
-        assertCheck(checks, StrelkaCheck.SOMATIC_SNP_COUNT.toString(), 990);
-        assertCheck(checks, StrelkaCheck.SOMATIC_SNP_DBSNP_COUNT.toString(), 820);
+        assertCheck(checks, StrelkaCheck.SOMATIC_SNP_COUNT.toString(), 780);
+        assertCheck(checks, StrelkaCheck.SOMATIC_SNP_DBSNP_COUNT.toString(), 756);
 
-        assertCheck(checks, StrelkaCheck.SOMATIC_INDEL_COUNT.toString(), 67);
-        assertCheck(checks, StrelkaCheck.SOMATIC_INDEL_DBSNP_COUNT.toString(), 42);
+        assertCheck(checks, StrelkaCheck.SOMATIC_INDEL_COUNT.toString(), 73);
+        assertCheck(checks, StrelkaCheck.SOMATIC_INDEL_DBSNP_COUNT.toString(), 63);
 
-        assertCheck(checks, StrelkaCheck.SOMATIC_MNP_COUNT.toString(), 1);
+        assertCheck(checks, StrelkaCheck.SOMATIC_MNP_COUNT.toString(), 7);
         assertCheck(checks, StrelkaCheck.SOMATIC_MNP_DBSNP_COUNT.toString(), 0);
     }
 
