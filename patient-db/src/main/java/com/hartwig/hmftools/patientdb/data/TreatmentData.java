@@ -45,8 +45,7 @@ public interface TreatmentData extends Comparable<TreatmentData> {
     @Nullable
     @Value.Derived
     default String treatmentName() {
-        List<CuratedDrug> drugs = curatedDrugs();
-        Collections.sort(drugs);
+        List<CuratedDrug> drugs = sortedDrugs();
 
         final String concatenatedTreatmentName = drugs.stream().map(CuratedDrug::name).collect(Collectors.joining(SEPARATOR));
         return Strings.emptyToNull(concatenatedTreatmentName);
