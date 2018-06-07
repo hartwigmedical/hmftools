@@ -252,7 +252,6 @@ drug,type,mechanism,synonyms
 "Trifluridine",Chemotherapy,Tyrosine antagonist,"Lonsurf,TAS-102,TAS102,Trifluridine-Tipiracil,TAS-201"
 "Triptorelin",Androgen/estrogen deprivation therapy,Unknown,"Pamorelin,Pamoreline"
 "tumor necrosis factor alpha",remove,,""
-"Tumor protein 53 (P53) activation",remove,,"P53 activation"
 "Tumor treating fields (TTFields)",Experimental therapy,Unknown,"TTFields"
 "UNK",remove,,""
 "Unknow",remove,,""
