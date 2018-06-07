@@ -15,7 +15,6 @@ import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.NoResult;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class StrelkaCheckerTest {
@@ -41,7 +40,7 @@ public class StrelkaCheckerTest {
         final BaseResult result = checker.run(runContext);
         final List<HealthCheck> checks = ((MultiValueResult) result).checks();
 
-        Assert.assertEquals(CheckType.STRELKA, result.checkType());
+        assertEquals(CheckType.STRELKA, result.checkType());
         assertEquals(EXPECTED_NUM_CHECKS, checks.size());
 
         assertCheck(checks, StrelkaCheck.SOMATIC_SNP_COUNT.toString(), 780);
