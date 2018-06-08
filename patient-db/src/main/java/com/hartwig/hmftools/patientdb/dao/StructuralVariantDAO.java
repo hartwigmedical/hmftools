@@ -64,7 +64,7 @@ class StructuralVariantDAO {
                     .homology(record.getValue(STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE))
                     .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
                     .filter(record.getValue(STRUCTURALVARIANT.FILTER))
-                    .mantaPrecise(record.getValue(STRUCTURALVARIANT.MANTAPRECISE).equals("true"))
+                    .imprecise(record.getValue(STRUCTURALVARIANT.IMPRECISE).equals("false"))
                     .somaticScore(record.getValue(STRUCTURALVARIANT.SOMATICSCORE))
                     .build());
         }
@@ -132,7 +132,7 @@ class StructuralVariantDAO {
                     .type(StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
                     .ploidy(record.getValue(STRUCTURALVARIANT.PLOIDY))
                     .filter(record.getValue(STRUCTURALVARIANT.FILTER))
-                    .mantaPrecise(record.getValue(STRUCTURALVARIANT.MANTAPRECISE).equals("true"))
+                    .imprecise(record.getValue(STRUCTURALVARIANT.IMPRECISE).equals("false"))
                     .somaticScore(record.getValue(STRUCTURALVARIANT.SOMATICSCORE))
                     .build();
 
@@ -170,7 +170,7 @@ class StructuralVariantDAO {
                     STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE,
                     STRUCTURALVARIANT.PLOIDY,
                     STRUCTURALVARIANT.FILTER,
-                    STRUCTURALVARIANT.MANTAPRECISE,
+                    STRUCTURALVARIANT.IMPRECISE,
                     STRUCTURALVARIANT.SOMATICSCORE,
                     STRUCTURALVARIANT.MODIFIED);
             batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
@@ -202,7 +202,7 @@ class StructuralVariantDAO {
                 variant.end().adjustedCopyNumberChange(),
                 variant.ploidy(),
                 variant.filter(),
-                variant.mantaPrecise(),
+                variant.imprecise(),
                 variant.somaticScore(),
                 timestamp);
     }

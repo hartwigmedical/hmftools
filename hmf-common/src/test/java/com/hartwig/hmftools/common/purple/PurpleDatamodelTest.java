@@ -151,7 +151,7 @@ public class PurpleDatamodelTest {
                 .type(type)
                 .start(createStartLeg(startChromosome, startPosition, type).alleleFrequency(startVaf).build())
                 .end(createEndLeg(endChromosome, endPosition, type).alleleFrequency(endVaf).build())
-                .mantaPrecise(false)
+                .imprecise(true)
                 .somaticScore(0);
     }
 
@@ -166,7 +166,7 @@ public class PurpleDatamodelTest {
                 .type(type)
                 .start(createStartLeg(startChromosome, startPosition, type).build())
                 .end(createEndLeg(endChromosome, endPosition, type).build())
-                .mantaPrecise(false)
+                .imprecise(true)
                 .somaticScore(0);
     }
 

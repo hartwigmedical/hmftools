@@ -167,7 +167,7 @@ public class StructuralVariantFactory {
                 .insertSequence(insertedSequence)
                 .type(type)
                 .filter(filtersStr)
-                .mantaPrecise(isPrecise)
+                .imprecise(!isPrecise)
                 .somaticScore(somaticScore)
                 .build();
     }
@@ -252,7 +252,7 @@ public class StructuralVariantFactory {
                 .insertSequence(Strings.isNullOrEmpty(mantaInsertedSequence) ? insertedSequence : mantaInsertedSequence)
                 .type(type)
                 .filter(filtersStr)
-                .mantaPrecise(isPrecise)
+                .imprecise(!isPrecise)
                 .somaticScore(somaticScore)
                 .build();
     }
