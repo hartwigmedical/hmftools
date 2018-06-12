@@ -42,7 +42,7 @@ public interface StructuralVariant {
     String filter();
 
     @Nullable
-    Boolean mantaPrecise();
+    Boolean imprecise();
 
     @Nullable
     Integer somaticScore();
