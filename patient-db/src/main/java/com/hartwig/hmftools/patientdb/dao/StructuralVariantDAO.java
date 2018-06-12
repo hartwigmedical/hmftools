@@ -66,9 +66,17 @@ class StructuralVariantDAO {
                     .filter(record.getValue(STRUCTURALVARIANT.FILTER))
                     .imprecise(record.getValue(STRUCTURALVARIANT.IMPRECISE).equals("false"))
                     .somaticScore(record.getValue(STRUCTURALVARIANT.SOMATICSCORE))
+                    .qualityScore(record.getValue(STRUCTURALVARIANT.QUALSCORE))
+                    .startIntervalStart(record.getValue(STRUCTURALVARIANT.STARTPOSITIONINTERVALSTART))
+                    .startIntervalEnd(record.getValue(STRUCTURALVARIANT.STARTPOSITIONINTERVALEND))
+                    .endIntervalStart(record.getValue(STRUCTURALVARIANT.ENDPOSITIONINTERVALSTART))
+                    .endIntervalEnd(record.getValue(STRUCTURALVARIANT.ENDPOSITIONINTERVALEND))
+                    .startInexactHomologyIntervalStart(record.getValue(STRUCTURALVARIANT.STARTPOSITIONIMPRECISEHOMOLOGYINTERVALSTART))
+                    .startInexactHomologyIntervalEnd(record.getValue(STRUCTURALVARIANT.STARTPOSITIONIMPRECISEHOMOLOGYINTERVALEND))
+                    .endInexactHomologyIntervalStart(record.getValue(STRUCTURALVARIANT.ENDPOSITIONIMPRECISEHOMOLOGYINTERVALSTART))
+                    .endInexactHomologyIntervalEnd(record.getValue(STRUCTURALVARIANT.ENDPOSITIONIMPRECISEHOMOLOGYINTERVALEND))
                     .build());
         }
-
         return structuralVariants;
     }
 
@@ -104,6 +112,10 @@ class StructuralVariantDAO {
             final EnrichedStructuralVariantLeg start = ImmutableEnrichedStructuralVariantLeg.builder()
                     .chromosome(record.getValue(STRUCTURALVARIANT.STARTCHROMOSOME))
                     .position(record.getValue(STRUCTURALVARIANT.STARTPOSITION))
+                    .startPosition(record.getValue(STRUCTURALVARIANT.STARTPOSITIONINTERVALSTART))
+                    .endPosition(record.getValue(STRUCTURALVARIANT.STARTPOSITIONINTERVALEND))
+                    .impreciseHomologyIntervalStart(record.getValue(STRUCTURALVARIANT.STARTPOSITIONIMPRECISEHOMOLOGYINTERVALSTART))
+                    .impreciseHomologyIntervalEnd(record.getValue(STRUCTURALVARIANT.STARTPOSITIONIMPRECISEHOMOLOGYINTERVALEND))
                     .orientation(record.getValue(STRUCTURALVARIANT.STARTORIENTATION))
                     .homology(record.getValue(STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE))
                     .alleleFrequency(record.getValue(STRUCTURALVARIANT.STARTAF))
@@ -112,16 +124,23 @@ class StructuralVariantDAO {
                     .adjustedCopyNumberChange(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBERCHANGE))
                     .build();
 
-            final EnrichedStructuralVariantLeg end = ImmutableEnrichedStructuralVariantLeg.builder()
-                    .chromosome(record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME))
-                    .position(record.getValue(STRUCTURALVARIANT.ENDPOSITION))
-                    .orientation(record.getValue(STRUCTURALVARIANT.ENDORIENTATION))
-                    .homology(record.getValue(STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE))
-                    .alleleFrequency(record.getValue(STRUCTURALVARIANT.ENDAF))
-                    .adjustedAlleleFrequency(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDAF))
-                    .adjustedCopyNumber(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER))
-                    .adjustedCopyNumberChange(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE))
-                    .build();
+            EnrichedStructuralVariantLeg end = null;
+            if (record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME) != null) {
+                ImmutableEnrichedStructuralVariantLeg.builder()
+                        .chromosome(record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME))
+                        .position(record.getValue(STRUCTURALVARIANT.ENDPOSITION))
+                        .startPosition(record.getValue(STRUCTURALVARIANT.ENDPOSITIONINTERVALSTART))
+                        .endPosition(record.getValue(STRUCTURALVARIANT.ENDPOSITIONINTERVALEND))
+                        .impreciseHomologyIntervalStart(record.getValue(STRUCTURALVARIANT.ENDPOSITIONIMPRECISEHOMOLOGYINTERVALSTART))
+                        .impreciseHomologyIntervalEnd(record.getValue(STRUCTURALVARIANT.ENDPOSITIONIMPRECISEHOMOLOGYINTERVALEND))
+                        .orientation(record.getValue(STRUCTURALVARIANT.ENDORIENTATION))
+                        .homology(record.getValue(STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE))
+                        .alleleFrequency(record.getValue(STRUCTURALVARIANT.ENDAF))
+                        .adjustedAlleleFrequency(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDAF))
+                        .adjustedCopyNumber(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER))
+                        .adjustedCopyNumberChange(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE))
+                        .build();
+            }
 
             final EnrichedStructuralVariant variant = ImmutableEnrichedStructuralVariant.builder()
                     .primaryKey(record.getValue(STRUCTURALVARIANT.ID))
@@ -132,14 +151,20 @@ class StructuralVariantDAO {
                     .type(StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
                     .ploidy(record.getValue(STRUCTURALVARIANT.PLOIDY))
                     .filter(record.getValue(STRUCTURALVARIANT.FILTER))
-                    .imprecise(record.getValue(STRUCTURALVARIANT.IMPRECISE).equals("false"))
+                    // TODO: what's the correct approach here?
+                    // jooq type conversion or just manual mapping?
+                    .imprecise(byteToBoolean(record.getValue(STRUCTURALVARIANT.IMPRECISE)))
                     .somaticScore(record.getValue(STRUCTURALVARIANT.SOMATICSCORE))
+                    .qualityScore(record.getValue(STRUCTURALVARIANT.QUALSCORE))
                     .build();
 
             regions.add(variant);
         }
-
         return regions;
+    }
+    private static Boolean byteToBoolean(Byte b) {
+        if (b == null) return null;
+        return b != 0;
     }
 
     void write(@NotNull final String sample, @NotNull final List<EnrichedStructuralVariant> variants) {
@@ -172,6 +197,15 @@ class StructuralVariantDAO {
                     STRUCTURALVARIANT.FILTER,
                     STRUCTURALVARIANT.IMPRECISE,
                     STRUCTURALVARIANT.SOMATICSCORE,
+                    STRUCTURALVARIANT.QUALSCORE,
+                    STRUCTURALVARIANT.STARTPOSITIONINTERVALSTART,
+                    STRUCTURALVARIANT.STARTPOSITIONINTERVALEND,
+                    STRUCTURALVARIANT.ENDPOSITIONINTERVALSTART,
+                    STRUCTURALVARIANT.ENDPOSITIONINTERVALEND,
+                    STRUCTURALVARIANT.STARTPOSITIONIMPRECISEHOMOLOGYINTERVALSTART,
+                    STRUCTURALVARIANT.STARTPOSITIONIMPRECISEHOMOLOGYINTERVALEND,
+                    STRUCTURALVARIANT.ENDPOSITIONIMPRECISEHOMOLOGYINTERVALSTART,
+                    STRUCTURALVARIANT.ENDPOSITIONIMPRECISEHOMOLOGYINTERVALEND,
                     STRUCTURALVARIANT.MODIFIED);
             batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
             inserter.execute();
@@ -183,27 +217,36 @@ class StructuralVariantDAO {
         //noinspection unchecked
         inserter.values(sample,
                 variant.start().chromosome(),
-                variant.end().chromosome(),
+                variant.end() == null ? null : variant.end().chromosome(),
                 variant.start().position(),
-                variant.end().position(),
+                variant.end() == null ? null : variant.end().position(),
                 variant.start().orientation(),
-                variant.end().orientation(),
+                variant.end() == null ? null : variant.end().orientation(),
                 variant.start().homology(),
-                variant.end().homology(),
+                variant.end() == null ? null : variant.end().homology(),
                 variant.insertSequence(),
                 variant.type(),
                 variant.start().alleleFrequency(),
                 variant.start().adjustedAlleleFrequency(),
                 variant.start().adjustedCopyNumber(),
                 variant.start().adjustedCopyNumberChange(),
-                variant.end().alleleFrequency(),
-                variant.end().adjustedAlleleFrequency(),
-                variant.end().adjustedCopyNumber(),
-                variant.end().adjustedCopyNumberChange(),
+                variant.end() == null ? null : variant.end().alleleFrequency(),
+                variant.end() == null ? null : variant.end().adjustedAlleleFrequency(),
+                variant.end() == null ? null : variant.end().adjustedCopyNumber(),
+                variant.end() == null ? null : variant.end().adjustedCopyNumberChange(),
                 variant.ploidy(),
                 variant.filter(),
                 variant.imprecise(),
                 variant.somaticScore(),
+                variant.qualityScore(),
+                variant.start().startPosition(),
+                variant.start().endPosition(),
+                variant.end() == null ? null : variant.end().startPosition(),
+                variant.end() == null ? null : variant.end().endPosition(),
+                variant.start().impreciseHomologyIntervalStart(),
+                variant.start().impreciseHomologyIntervalEnd(),
+                variant.end() == null ? null : variant.end().impreciseHomologyIntervalStart(),
+                variant.end() == null ? null : variant.end().impreciseHomologyIntervalEnd(),
                 timestamp);
     }
 
