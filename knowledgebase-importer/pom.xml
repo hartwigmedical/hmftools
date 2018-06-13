@@ -27,6 +27,18 @@
             <artifactId>hmf-extensions-cli</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>hmf-extensions-csv</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>ensembl-db</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+        </dependency>
+        <dependency>
             <groupId>net.sourceforge.owlapi</groupId>
             <artifactId>owlapi-distribution</artifactId>
         </dependency>
@@ -37,10 +49,6 @@
         <dependency>
             <groupId>com.hartwig</groupId>
             <artifactId>api-clients</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.hartwig</groupId>
-            <artifactId>hmf-extensions-csv</artifactId>
         </dependency>
         <dependency>
             <groupId>io.kotlintest</groupId>
