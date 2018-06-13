@@ -11,6 +11,8 @@ sealed class GenericMutation : SomaticEvent
 
 data class CodonMutations(val gene: String, val transcript: String?, val codonNumber: Int) : GenericMutation()
 
+data class CodonRangeMutations(val gene: String, val transcript: String?, val startCodon: Int, val endCodon: Int) : GenericMutation()
+
 data class ExonMutations(val gene: String, val transcript: String?, val exonNumber: Int) : GenericMutation()
 
 data class GeneMutations(val gene: String, val transcript: String?) : GenericMutation()

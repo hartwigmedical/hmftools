@@ -10,9 +10,10 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
                                override val actionability: List<Actionability>, val cgiDrugs: List<CgiDrug>) : RecordMetadata by metadata,
         ActionableRecord {
     companion object {
+        private const val NUMBER_GROUP_PATTERN = "([0-9]+)"
         private const val AMINO_ACID_LETTERS = "GALMFWKQESPVICYHRNDT"
-        private const val AMINO_ACID_CODON_PATTERN = "[$AMINO_ACID_LETTERS]([0-9]+)\\."
-        private const val ANY_CODON_PATTERN = "\\.([0-9]+)\\."
+        private const val AMINO_ACID_CODON_PATTERN = "[$AMINO_ACID_LETTERS]$NUMBER_GROUP_PATTERN\\."
+        private const val ANY_CODON_PATTERN = "\\.$NUMBER_GROUP_PATTERN\\."
         private const val CODON_PATTERN = "$AMINO_ACID_CODON_PATTERN|$ANY_CODON_PATTERN"
         private val logger = LogManager.getLogger("CgiActionableRecord")
         private val FUSION_SEPARATORS = setOf("__")
@@ -77,6 +78,8 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
                 when {
                     isGeneMutation(it)  -> GeneMutations(record["Gene"], record["transcript"])
                     isCodonMutation(it) -> CodonMutations(record["Gene"], record["transcript"], codonNumber(it))
+                    isCodonRange(it)    -> CodonRangeMutations(record["Gene"], record["transcript"],
+                                                               it.substringBefore("-").toInt(), it.substringAfter("-").toInt())
                     else                -> null
                 }
             }
@@ -121,9 +124,11 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
 
         private fun isGeneMutation(alteration: String) = alteration == "."
         private fun isCodonMutation(alteration: String) = alteration.matches(CODON_PATTERN.toRegex(RegexOption.IGNORE_CASE))
+        private fun isCodonRange(alteration: String) = alteration.matches("$NUMBER_GROUP_PATTERN-$NUMBER_GROUP_PATTERN".toRegex())
+
 
         private fun codonNumber(alteration: String): Int {
-            val matchResult = "([0-9]+)".toRegex().find(alteration)
+            val matchResult = NUMBER_GROUP_PATTERN.toRegex().find(alteration)
             return matchResult!!.groupValues[1].toInt()
         }
     }
