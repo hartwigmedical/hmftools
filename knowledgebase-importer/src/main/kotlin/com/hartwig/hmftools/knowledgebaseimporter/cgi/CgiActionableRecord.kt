@@ -36,6 +36,8 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
                     readGdnaVariants(record) + readGenericMutations(record)
         }
 
+        private fun readAlterations(record: CSVRecord) = record["Alteration"].substringAfter(":").split(",").map { it.trim() }
+
         private fun readGdnaVariants(record: CSVRecord): List<GDnaVariant> {
             return record["gDNA"].orEmpty().split("__").map { it.trim() }.filterNot { it.isBlank() }.map { GDnaVariant(it) }
         }
@@ -73,8 +75,7 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
 
         private fun readGenericMutations(record: CSVRecord): List<GenericMutation> {
             if (record["Alteration type"] != "MUT") return emptyList()
-            val alterations = record["Alteration"].substringAfter(":").split(",").map { it.trim() }
-            return alterations.mapNotNull {
+            return readAlterations(record).mapNotNull {
                 when {
                     isGeneMutation(it)  -> GeneMutations(record["Gene"], record["transcript"])
                     isCodonMutation(it) -> CodonMutations(record["Gene"], record["transcript"], codonNumber(it))
