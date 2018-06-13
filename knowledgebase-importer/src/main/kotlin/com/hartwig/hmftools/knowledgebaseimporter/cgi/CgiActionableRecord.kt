@@ -4,12 +4,13 @@ import com.hartwig.hmftools.knowledgebaseimporter.FusionReader
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.*
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
 import org.apache.commons.csv.CSVRecord
+import org.apache.logging.log4j.LogManager
 
 data class CgiActionableRecord(private val metadata: RecordMetadata, override val events: List<SomaticEvent>,
                                override val actionability: List<Actionability>, val cgiDrugs: List<CgiDrug>) : RecordMetadata by metadata,
         ActionableRecord {
     companion object {
-
+        private val logger = LogManager.getLogger("CgiActionableRecord")
         private val FUSION_SEPARATORS = setOf("__")
         private val FUSIONS_TO_FLIP = setOf(FusionPair("ABL1", "BCR"),
                                             FusionPair("PDGFRA", "FIP1L1"),
@@ -20,6 +21,7 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
         operator fun invoke(record: CSVRecord, treatmentTypeMap: Map<String, String>): CgiActionableRecord {
             val metadata = CgiMetadata(record["Gene"], record["transcript"] ?: "na")
             val events = readSomaticEvents(record)
+            if (events.isEmpty()) logger.warn("Could not extract any somatic event from alteration: ${record["Alteration"]}")
             val actionability = readActionability(record, treatmentTypeMap).filterNot { it.significance == "No Responsive" }
             return CgiActionableRecord(metadata, events, actionability, readCgiDrugs(record))
         }
