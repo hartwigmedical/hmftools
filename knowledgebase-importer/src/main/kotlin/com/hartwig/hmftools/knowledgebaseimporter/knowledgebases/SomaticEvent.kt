@@ -9,9 +9,11 @@ data class KnowledgebaseVariant(val gene: String, val chromosome: String, val po
 
 sealed class GenericMutation : SomaticEvent
 
-data class ExonMutations(val gene: String, val transcript: String, val exonNumber: Int) : GenericMutation()
+data class CodonMutations(val gene: String, val transcript: String?, val codonNumber: Int) : GenericMutation()
 
-data class GeneMutations(val gene: String, val transcript: String) : GenericMutation()
+data class ExonMutations(val gene: String, val transcript: String?, val exonNumber: Int) : GenericMutation()
+
+data class GeneMutations(val gene: String, val transcript: String?) : GenericMutation()
 
 sealed class HgvsAnnotation : SomaticEvent {
     abstract val transcript: String

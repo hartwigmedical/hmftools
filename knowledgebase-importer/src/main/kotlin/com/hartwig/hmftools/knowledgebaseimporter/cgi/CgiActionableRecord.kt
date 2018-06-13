@@ -10,6 +10,10 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
                                override val actionability: List<Actionability>, val cgiDrugs: List<CgiDrug>) : RecordMetadata by metadata,
         ActionableRecord {
     companion object {
+        private const val AMINO_ACID_LETTERS = "GALMFWKQESPVICYHRNDT"
+        private const val AMINO_ACID_CODON_PATTERN = "[$AMINO_ACID_LETTERS]([0-9]+)\\."
+        private const val ANY_CODON_PATTERN = "\\.([0-9]+)\\."
+        private const val CODON_PATTERN = "$AMINO_ACID_CODON_PATTERN|$ANY_CODON_PATTERN"
         private val logger = LogManager.getLogger("CgiActionableRecord")
         private val FUSION_SEPARATORS = setOf("__")
         private val FUSIONS_TO_FLIP = setOf(FusionPair("ABL1", "BCR"),
@@ -21,14 +25,14 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
         operator fun invoke(record: CSVRecord, treatmentTypeMap: Map<String, String>): CgiActionableRecord {
             val metadata = CgiMetadata(record["Gene"], record["transcript"] ?: "na")
             val events = readSomaticEvents(record)
-            if (events.isEmpty()) logger.warn("Could not extract any somatic event from alteration: ${record["Alteration"]}")
+            if (events.isEmpty()) logger.warn("Could not extract any somatic event from ${record["Alteration type"]}: ${record["Alteration"]}")
             val actionability = readActionability(record, treatmentTypeMap).filterNot { it.significance == "No Responsive" }
             return CgiActionableRecord(metadata, events, actionability, readCgiDrugs(record))
         }
 
         private fun readSomaticEvents(record: CSVRecord): List<SomaticEvent> {
-            return readGdnaVariants(record) + listOfNotNull(readProteinAnnotation(record), readCdnaVariant(record), readCNV(record),
-                                                            readFusion(record))
+            return listOfNotNull(readProteinAnnotation(record), readCdnaVariant(record), readCNV(record), readFusion(record)) +
+                    readGdnaVariants(record) + readGenericMutations(record)
         }
 
         private fun readGdnaVariants(record: CSVRecord): List<GDnaVariant> {
@@ -66,6 +70,18 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
             else                               -> null
         }
 
+        private fun readGenericMutations(record: CSVRecord): List<GenericMutation> {
+            if (record["Alteration type"] != "MUT") return emptyList()
+            val alterations = record["Alteration"].substringAfter(":").split(",").map { it.trim() }
+            return alterations.mapNotNull {
+                when {
+                    isGeneMutation(it)  -> GeneMutations(record["Gene"], record["transcript"])
+                    isCodonMutation(it) -> CodonMutations(record["Gene"], record["transcript"], codonNumber(it))
+                    else                -> null
+                }
+            }
+        }
+
         private fun readActionability(record: CSVRecord, treatmentTypeMap: Map<String, String>): List<Actionability> {
             val cancerTypes = record["Primary Tumor type"].split(";").map { it.trim() }
             val level = record["Evidence level"]
@@ -101,6 +117,14 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
                     .removeSurrounding("[", "]")
                     .split(",")
                     .filterNot { it.isBlank() }
+        }
+
+        private fun isGeneMutation(alteration: String) = alteration == "."
+        private fun isCodonMutation(alteration: String) = alteration.matches(CODON_PATTERN.toRegex(RegexOption.IGNORE_CASE))
+
+        private fun codonNumber(alteration: String): Int {
+            val matchResult = "([0-9]+)".toRegex().find(alteration)
+            return matchResult!!.groupValues[1].toInt()
         }
     }
 }
