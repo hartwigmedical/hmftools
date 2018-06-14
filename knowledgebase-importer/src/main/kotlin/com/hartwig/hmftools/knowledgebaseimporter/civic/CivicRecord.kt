@@ -8,6 +8,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.output.CnvEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.FusionEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.FusionPair
 import org.apache.commons.csv.CSVRecord
+import org.apache.logging.log4j.LogManager
 import java.util.regex.Pattern
 
 data class CivicRecord(private val metadata: RecordMetadata, override val additionalInfo: String,
@@ -15,6 +16,7 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
                        val cancerDoids: Map<String, String>) :
         RecordMetadata by metadata, KnownRecord, ActionableRecord {
     companion object {
+        private val logger = LogManager.getLogger("CivicRecord")
         private val FUSION_SEPARATORS = setOf("-")
         private val FUSIONS_TO_FILTER = setOf(FusionPair("BRAF", "CUL1"))
         private val fusionReader = FusionReader(separators = FUSION_SEPARATORS, filterSet = FUSIONS_TO_FILTER)
@@ -26,7 +28,10 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
             val actionability = evidence.filter { it.direction == "Supports" }.flatMap { it.actionabilityItems }
             val doids = evidence.associateBy({ it.cancerType }, { it.doid })
             val (gene, variant) = correctRecord(record["gene"], record["variant"])
-            return CivicRecord(metadata, additionalInfo, readSomaticEvents(gene, variant, record), actionability, doids)
+            val somaticEvents = readSomaticEvents(gene, variant, record)
+            if (actionability.isNotEmpty() && somaticEvents.isEmpty())
+                logger.warn("Could not extract any somatic event from ${record["gene"]}: ${record["variant"]} (${variantTypes(record)})")
+            return CivicRecord(metadata, additionalInfo, somaticEvents, actionability, doids)
         }
 
         private fun readSomaticEvents(gene: String, variant: String, record: CSVRecord): List<SomaticEvent> {
@@ -75,6 +80,7 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
                 else                            -> null
             }
         }
+        private fun variantTypes(record: CSVRecord) = record["variant_types"].orEmpty().split(",")
 
         private fun correctRecord(gene: String, variant: String): Pair<String, String> = when {
             variant.contains(Regex("MLL-MLLT3")) && gene == "KMT2A" ->
