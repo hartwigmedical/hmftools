@@ -26,7 +26,6 @@ public class TreatmentCuratorTest {
         final Optional<CuratedDrug> curatedTreatment = curator.matchSingle("Zocor");
         assertTrue(curatedTreatment.isPresent());
         assertEquals("Zocor", curatedTreatment.get().name());
-        ;
     }
 
     @Test
