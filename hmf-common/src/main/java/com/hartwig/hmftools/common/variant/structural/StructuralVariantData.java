@@ -33,4 +33,13 @@ public abstract class StructuralVariantData {
     public abstract boolean imprecise();
     public abstract int somaticScore();
 
+    public abstract double qualityScore();
+    public abstract long startIntervalStart();
+    public abstract long startIntervalEnd();
+    public abstract long endIntervalStart();
+    public abstract long endIntervalEnd();
+    public abstract long startInexactHomologyIntervalStart();
+    public abstract long startInexactHomologyIntervalEnd();
+    public abstract long endInexactHomologyIntervalStart();
+    public abstract long endInexactHomologyIntervalEnd();
 }
