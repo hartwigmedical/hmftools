@@ -93,7 +93,7 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
         }
 
         private fun readGenomicRange(record: CSVRecord): GenomicRangeMutations {
-            return GenomicRangeMutations(record["chromosome"], record["start"].toLong(), record["stop"].toLong())
+            return GenomicRangeMutations(record["gene"], record["chromosome"], record["start"].toLong(), record["stop"].toLong())
         }
 
         private fun variantTypes(record: CSVRecord): List<String> {

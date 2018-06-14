@@ -17,7 +17,7 @@ data class ExonMutations(val gene: String, val transcript: String?, val exonNumb
 
 data class GeneMutations(val gene: String, val transcript: String?) : GenericMutation()
 
-data class GenomicRangeMutations(val chromosome: String, val start: Long, val stop: Long) : GenericMutation()
+data class GenomicRangeMutations(val gene: String, val chromosome: String, val start: Long, val stop: Long) : GenericMutation()
 
 sealed class HgvsAnnotation : SomaticEvent {
     abstract val transcript: String
