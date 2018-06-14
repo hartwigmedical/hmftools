@@ -16,6 +16,7 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
         RecordMetadata by metadata, KnownRecord, ActionableRecord {
     companion object {
         private val logger = LogManager.getLogger("CivicRecord")
+        private const val RANGE_VARIANTS = "gene_variant|transcript_variant|exon_variant|coding_sequence_variant|protein_altering_variant"
         private val FUSION_SEPARATORS = setOf("-")
         private val FUSIONS_TO_FILTER = setOf(FusionPair("BRAF", "CUL1"))
         private val fusionReader = FusionReader(separators = FUSION_SEPARATORS, filterSet = FUSIONS_TO_FILTER)
@@ -35,17 +36,36 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
 
         private fun readSomaticEvents(gene: String, variant: String, record: CSVRecord): List<SomaticEvent> {
             return when {
-                isFusion(record)        -> listOfNotNull(fusionReader.read(gene, variant))
-                isCNV(variant)          -> listOfNotNull(readCNV(gene, variant))
-                isVariantRecord(record) -> readVariants(record)
-                else                    -> emptyList()
+                isFusion(record)               -> listOfNotNull(fusionReader.read(gene, variant))
+                isCNV(variant)                 -> listOfNotNull(readCNV(gene, variant))
+                isVariantRecord(record)        -> readVariants(record)
+                isGenomicRangeMutation(record) -> listOf(readGenomicRange(record))
+                else                           -> emptyList()
             }
         }
 
         private fun isCNV(variant: String) = variant == "AMPLIFICATION" || variant == "DELETION"
-        private fun isFusion(record: CSVRecord) = variantTypes(record).all { it.contains("fusion") }
+        private fun isFusion(record: CSVRecord) = variantTypes(record).isNotEmpty() && variantTypes(record).all { it.contains("fusion") }
         private fun isVariantRecord(record: CSVRecord) = variantTypes(record).none { it.contains("fusion") } &&
                 (hasKnownVariant(record) || hasHgvs(record))
+
+        private fun isGenomicRangeMutation(record: CSVRecord) = hasPosition(record) && !hasRefOrAlt(record) &&
+                variantTypes(record).isNotEmpty() && (isGenericMutation(record) || isGenericMissense(record))
+
+        private fun isGenericMutation(record: CSVRecord) = record["variant"].toLowerCase() == "mutation" ||
+                variantTypes(record).any { it.contains(RANGE_VARIANTS.toRegex()) }
+
+        private fun isGenericMissense(record: CSVRecord) = !record["variant"].contains("+") && variantTypes(record).size == 1 &&
+                !record["variant"].toLowerCase().contains(" and ") && variantTypes(record).first() == "missense_variant"
+
+        private fun hasPosition(record: CSVRecord) = !record["chromosome"].isNullOrBlank()
+                && !record["start"].isNullOrBlank() && !record["stop"].isNullOrBlank()
+
+        private fun hasRefOrAlt(record: CSVRecord) = !record["reference_bases"].isNullOrBlank() || !record["variant_bases"].isNullOrBlank()
+
+        private fun hasKnownVariant(record: CSVRecord): Boolean = hasPosition(record) && hasRefOrAlt(record)
+
+        private fun hasHgvs(record: CSVRecord) = extractHgvs(record).isNotBlank()
 
         private fun readVariants(record: CSVRecord): List<SomaticEvent> {
             val events = mutableListOf<SomaticEvent>()
@@ -60,24 +80,10 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
             return events
         }
 
-        private fun hasKnownVariant(record: CSVRecord): Boolean {
-            return (!record["chromosome"].isNullOrBlank() && !record["start"].isNullOrBlank() && !record["stop"].isNullOrBlank() &&
-                    (!record["reference_bases"].isNullOrBlank() || !record["variant_bases"].isNullOrBlank()))
-        }
-
-        private fun hasHgvs(record: CSVRecord): Boolean {
-            return extractHgvs(record).isNotBlank()
-        }
-
         private fun extractHgvs(record: CSVRecord): String {
             val hgvsField = record["hgvs_expressions"].orEmpty()
             val matcher = Pattern.compile("(ENST[0-9]+\\.[0-9+]:c\\.[0-9][^,\\t\\s\\n]+)").matcher(hgvsField)
             return if (matcher.find()) matcher.group(1) else ""
-        }
-
-        private fun additionalInfo(evidence: Collection<CivicEvidence>): String {
-            val highestEvidenceLevel = evidence.map { it.level }.sorted().firstOrNull() ?: "N"
-            return (highestEvidenceLevel == "A" || highestEvidenceLevel == "B" || highestEvidenceLevel == "C").toString()
         }
 
         private fun readCNV(gene: String, variant: String): CnvEvent? = when (variant) {
@@ -86,7 +92,23 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
             else            -> null
         }
 
-        private fun variantTypes(record: CSVRecord) = record["variant_types"].orEmpty().split(",")
+        private fun readGenomicRange(record: CSVRecord): GenomicRangeMutations {
+            return GenomicRangeMutations(record["chromosome"], record["start"].toLong(), record["stop"].toLong())
+        }
+
+        private fun variantTypes(record: CSVRecord): List<String> {
+            val variantTypes = record["variant_types"].orEmpty()
+            return if (variantTypes.matches("N/A".toRegex(RegexOption.IGNORE_CASE))) {
+                emptyList()
+            } else {
+                variantTypes.split(",")
+            }
+        }
+
+        private fun additionalInfo(evidence: Collection<CivicEvidence>): String {
+            val highestEvidenceLevel = evidence.map { it.level }.sorted().firstOrNull() ?: "N"
+            return (highestEvidenceLevel == "A" || highestEvidenceLevel == "B" || highestEvidenceLevel == "C").toString()
+        }
 
         private fun correctRecord(gene: String, variant: String): Pair<String, String> = when {
             variant.contains(Regex("MLL-MLLT3")) && gene == "KMT2A" ->
