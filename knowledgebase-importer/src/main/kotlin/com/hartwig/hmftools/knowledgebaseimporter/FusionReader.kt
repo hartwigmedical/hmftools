@@ -70,7 +70,7 @@ data class FusionReader(private val separators: Set<String> = setOf(), private v
             return fusion.contains("$separator${geneStartLetters(gene)}")
         }
 
-        private fun geneStartLetters(gene: String) = gene.substring(0, 3)
+        private fun geneStartLetters(gene: String) = if (gene.length < 3) gene else gene.substring(0, 3)
 
         private fun flipFusion(fusion: FusionEvent, pairsToFlip: Set<FusionPair>): FusionEvent {
             return if (fusion is FusionPair && pairsToFlip.contains(fusion)) {
