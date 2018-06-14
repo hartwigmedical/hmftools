@@ -10,12 +10,12 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
                                override val actionability: List<Actionability>, val cgiDrugs: List<CgiDrug>) : RecordMetadata by metadata,
         ActionableRecord {
     companion object {
+        private val logger = LogManager.getLogger("CgiActionableRecord")
         private const val NUMBER_GROUP_PATTERN = "([0-9]+)"
         private const val AMINO_ACID_LETTERS = "GALMFWKQESPVICYHRNDT"
         private const val AMINO_ACID_CODON_PATTERN = "[$AMINO_ACID_LETTERS]$NUMBER_GROUP_PATTERN\\."
         private const val ANY_CODON_PATTERN = "\\.$NUMBER_GROUP_PATTERN\\."
         private const val CODON_PATTERN = "$AMINO_ACID_CODON_PATTERN|$ANY_CODON_PATTERN"
-        private val logger = LogManager.getLogger("CgiActionableRecord")
         private val FUSION_SEPARATORS = setOf("__")
         private val FUSIONS_TO_FLIP = setOf(FusionPair("ABL1", "BCR"),
                                             FusionPair("PDGFRA", "FIP1L1"),
