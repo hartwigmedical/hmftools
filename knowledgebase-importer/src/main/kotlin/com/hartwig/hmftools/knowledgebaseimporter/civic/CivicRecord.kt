@@ -5,7 +5,6 @@ import com.hartwig.hmftools.knowledgebaseimporter.FusionReader
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.*
 import com.hartwig.hmftools.knowledgebaseimporter.output.Actionability
 import com.hartwig.hmftools.knowledgebaseimporter.output.CnvEvent
-import com.hartwig.hmftools.knowledgebaseimporter.output.FusionEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.FusionPair
 import org.apache.commons.csv.CSVRecord
 import org.apache.logging.log4j.LogManager
@@ -35,8 +34,22 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
         }
 
         private fun readSomaticEvents(gene: String, variant: String, record: CSVRecord): List<SomaticEvent> {
+            return when {
+                isFusion(record)        -> listOfNotNull(fusionReader.read(gene, variant))
+                isCNV(variant)          -> listOfNotNull(readCNV(gene, variant))
+                isVariantRecord(record) -> readVariants(record)
+                else                    -> emptyList()
+            }
+        }
+
+        private fun isCNV(variant: String) = variant == "AMPLIFICATION" || variant == "DELETION"
+        private fun isFusion(record: CSVRecord) = variantTypes(record).all { it.contains("fusion") }
+        private fun isVariantRecord(record: CSVRecord) = variantTypes(record).none { it.contains("fusion") } &&
+                (hasKnownVariant(record) || hasHgvs(record))
+
+        private fun readVariants(record: CSVRecord): List<SomaticEvent> {
             val events = mutableListOf<SomaticEvent>()
-            if (hasVariant(record)) {
+            if (hasKnownVariant(record)) {
                 events.add(KnowledgebaseVariant(record["gene"], record["chromosome"], record["start"].toLong(), record["reference_bases"],
                                                 record["variant_bases"]))
             }
@@ -44,10 +57,10 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
                 val hgvsParts = extractHgvs(record).split(":")
                 events.add(CDnaAnnotation(hgvsParts[0], hgvsParts[1]))
             }
-            return events + listOfNotNull(readCNV(gene, variant), readFusion(gene, variant, record))
+            return events
         }
 
-        private fun hasVariant(record: CSVRecord): Boolean {
+        private fun hasKnownVariant(record: CSVRecord): Boolean {
             return (!record["chromosome"].isNullOrBlank() && !record["start"].isNullOrBlank() && !record["stop"].isNullOrBlank() &&
                     (!record["reference_bases"].isNullOrBlank() || !record["variant_bases"].isNullOrBlank()))
         }
@@ -73,13 +86,6 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
             else            -> null
         }
 
-        private fun readFusion(gene: String, variant: String, record: CSVRecord): FusionEvent? {
-            val variantTypes = record["variant_types"].orEmpty()
-            return when {
-                variantTypes.contains("fusion") -> fusionReader.read(gene, variant)
-                else                            -> null
-            }
-        }
         private fun variantTypes(record: CSVRecord) = record["variant_types"].orEmpty().split(",")
 
         private fun correctRecord(gene: String, variant: String): Pair<String, String> = when {
