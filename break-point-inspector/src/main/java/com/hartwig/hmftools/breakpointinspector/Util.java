@@ -6,44 +6,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
-
-enum HMFVariantType {
-    INS,
-    DEL,
-    INV3,
-    INV5,
-    DUP;
-
-    static String getOrientation(final HMFVariantType type) {
-        switch (type) {
-            case INS:
-            case DEL:
-                return "INNIE";
-            case INV3:
-                return "TANDEM_RIGHT";
-            case INV5:
-                return "TANDEM_LEFT";
-            case DUP:
-                return "OUTIE";
-            default:
-                return "ERROR";
-        }
-    }
-}
-
-class Range {
-    final int Start;
-    final int End;
-
-    Range(int start, int end) {
-        Start = start;
-        End = end;
-    }
-
-    static Range invert(final Range r) {
-        return new Range(-r.End, r.Start);
-    }
-}
+import com.hartwig.hmftools.breakpointinspector.datamodel.HMFVariantType;
+import com.hartwig.hmftools.breakpointinspector.datamodel.Range;
 
 class HMFVariantContext {
     private static final int SHORT_VARIANT_LENGTH = 1000;

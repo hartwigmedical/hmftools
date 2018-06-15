@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.breakpointinspector.clipping.Clipping;
+import com.hartwig.hmftools.breakpointinspector.datamodel.Range;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -88,8 +89,8 @@ class Analysis {
 
     private boolean withinRange(final Location a, final Location b, final Range range) {
         final int extraUncertainty = 1;
-        return a.ReferenceIndex == b.ReferenceIndex && (a.Position >= b.Position + range.Start - extraUncertainty) && (a.Position
-                <= b.Position + range.End + extraUncertainty);
+        return a.ReferenceIndex == b.ReferenceIndex && (a.Position >= b.Position + range.start() - extraUncertainty) && (a.Position
+                <= b.Position + range.end() + extraUncertainty);
     }
 
     private static PairedReads pairs(final List<SAMRecord> list) {
@@ -478,12 +479,12 @@ class Analysis {
             return BreakpointResult.from(Pair.of(ctx.MantaBP1, ctx.MantaBP2.add(1))); // we want last match base at this stage
         } else if (ctx.InsertSequence.isEmpty()) {
             final Location bp1 = ctx.MantaBP1.add(ctx.OrientationBP1 > 0 ? ctx.HomologySequence.length() : adj);
-            final Location bp2 = ctx.MantaBP2.add(ctx.OrientationBP2 > 0 ? ctx.Uncertainty2.End : ctx.Uncertainty2.Start + adj);
+            final Location bp2 = ctx.MantaBP2.add(ctx.OrientationBP2 > 0 ? ctx.Uncertainty2.end() : ctx.Uncertainty2.start() + adj);
             return BreakpointResult.from(Pair.of(bp1, bp2));
         } else {
             final Location bp1 = ctx.MantaBP1.add(ctx.OrientationBP1 > 0 ? 0 : adj); // ignore homology when we have an insert
             // TODO: double check adding uncertainty on bp2?
-            final Location bp2 = ctx.MantaBP2.add(ctx.OrientationBP2 > 0 ? ctx.Uncertainty2.End : ctx.Uncertainty2.Start + adj);
+            final Location bp2 = ctx.MantaBP2.add(ctx.OrientationBP2 > 0 ? ctx.Uncertainty2.end() : ctx.Uncertainty2.start() + adj);
             return BreakpointResult.from(Pair.of(bp1, bp2));
         }
     }
@@ -510,10 +511,10 @@ class Analysis {
     StructuralVariantResult processStructuralVariant(final HMFVariantContext ctx) throws IOException {
 
         final QueryInterval[] intervals = QueryInterval.optimizeIntervals(new QueryInterval[] {
-                new QueryInterval(ctx.MantaBP1.ReferenceIndex, Math.max(0, ctx.MantaBP1.Position + ctx.Uncertainty1.Start - range),
-                        ctx.MantaBP1.Position + ctx.Uncertainty1.End + range),
-                new QueryInterval(ctx.MantaBP2.ReferenceIndex, Math.max(0, ctx.MantaBP2.Position + ctx.Uncertainty2.Start - range),
-                        ctx.MantaBP2.Position + ctx.Uncertainty2.End + range) });
+                new QueryInterval(ctx.MantaBP1.ReferenceIndex, Math.max(0, ctx.MantaBP1.Position + ctx.Uncertainty1.start() - range),
+                        ctx.MantaBP1.Position + ctx.Uncertainty1.end() + range),
+                new QueryInterval(ctx.MantaBP2.ReferenceIndex, Math.max(0, ctx.MantaBP2.Position + ctx.Uncertainty2.start() - range),
+                        ctx.MantaBP2.Position + ctx.Uncertainty2.end() + range) });
 
         final File TEMP_REF_BAM = queryNameSortedBAM(refReader, intervals, "ref");
         final File TEMP_TUMOR_BAM = queryNameSortedBAM(tumorReader, intervals, "tumor");

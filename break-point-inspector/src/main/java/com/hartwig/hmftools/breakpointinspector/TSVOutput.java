@@ -9,21 +9,21 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.breakpointinspector.datamodel.HMFVariantType;
 
 import org.apache.commons.lang3.ObjectUtils;
+import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 
-class TSVOutput {
+final class TSVOutput {
 
-    private static List<String> parseMantaPRSR(final Genotype genotype) {
-        String pr = (String) genotype.getExtendedAttribute("PR", "0,0");
-        String sr = (String) genotype.getExtendedAttribute("SR", "0,0");
-        return Stream.concat(Arrays.stream(pr.split(",")), Arrays.stream(sr.split(","))).collect(Collectors.toList());
+    private TSVOutput() {
     }
 
-    static void PrintHeaders() {
+    @NotNull
+    static String generateHeaders() {
         final ArrayList<String> header =
                 Lists.newArrayList("ID", "SVTYPE", "ORIENTATION", "MANTA_BP1", "MANTA_BP2", "MANTA_SVLEN", "MANTA_REF_PR_NORMAL",
                         "MANTA_REF_PR_SUPPORT", "MANTA_REF_SR_NORMAL", "MANTA_REF_SR_SUPPORT", "MANTA_TUMOR_PR_NORMAL",
@@ -35,12 +35,13 @@ class TSVOutput {
         header.add("FILTER");
         header.add("AF_BP1");
         header.add("AF_BP2");
-        System.out.println(String.join("\t", header));
+        return String.join("\t", header);
     }
 
-    static void print(final VariantContext variant, final HMFVariantContext context, final StructuralVariantResult result) {
+    @NotNull
+    static String generateVariant(@NotNull VariantContext variant, @NotNull HMFVariantContext context, @NotNull StructuralVariantResult result) {
         final List<String> fields = Lists.newArrayList(variant.getID(), variant.getStructuralVariantType().toString(),
-                HMFVariantType.getOrientation(context.Type), context.MantaBP1.toString(), context.MantaBP2.toString(),
+                HMFVariantType.orientation(context.Type), context.MantaBP1.toString(), context.MantaBP2.toString(),
                 variant.getAttributeAsString("SVLEN", ""));
 
         fields.addAll(parseMantaPRSR(variant.getGenotype(0)));
@@ -58,6 +59,13 @@ class TSVOutput {
         fields.add(String.format("%.2f", result.AlleleFrequency.getLeft()));
         fields.add(String.format("%.2f", result.AlleleFrequency.getRight()));
 
-        System.out.println(String.join("\t", fields));
+        return String.join("\t", fields);
+    }
+
+    @NotNull
+    private static List<String> parseMantaPRSR(@NotNull Genotype genotype) {
+        String pr = (String) genotype.getExtendedAttribute("PR", "0,0");
+        String sr = (String) genotype.getExtendedAttribute("SR", "0,0");
+        return Stream.concat(Arrays.stream(pr.split(",")), Arrays.stream(sr.split(","))).collect(Collectors.toList());
     }
 }
