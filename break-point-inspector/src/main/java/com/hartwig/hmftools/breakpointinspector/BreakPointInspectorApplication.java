@@ -9,12 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.breakpointinspector.datamodel.HMFVariantType;
-import com.hartwig.hmftools.breakpointinspector.datamodel.ImmutableRange;
+import com.hartwig.hmftools.breakpointinspector.datamodel.EnrichedVariantContext;
 import com.hartwig.hmftools.breakpointinspector.datamodel.Range;
 
 import org.apache.commons.cli.CommandLine;
@@ -24,7 +22,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -35,7 +32,6 @@ import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-import htsjdk.variant.variantcontext.StructuralVariantType;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextComparator;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
@@ -106,7 +102,6 @@ public class BreakPointInspectorApplication {
         final Map<String, VariantContext> variantPerIDMap = Maps.newHashMap();
         final List<VariantContext> variants = Lists.newArrayList();
         for (VariantContext variant : vcfReader) {
-
             variantPerIDMap.put(variant.getID(), variant);
 
             final VariantContext mateVariant = variant;
@@ -117,116 +112,13 @@ public class BreakPointInspectorApplication {
                 }
             }
 
-            final String variantLocation = variant.getContig() + ":" + Integer.toString(variant.getStart());
-            final Location location1 = Location.parseLocationString(variantLocation, tumorReader.getFileHeader().getSequenceDictionary());
+            final EnrichedVariantContext enrichedVariant =
+                    VariantEnrichment.enrich(variant, mateVariant, tumorReader.getFileHeader().getSequenceDictionary());
 
-            final Range uncertainty1 = extractCIPOS(variant);
-            final List<Integer> ciEndList = variant.getAttributeAsIntList("CIEND", 0);
-            Range uncertainty2 = ciEndList.size() == 2 ? ImmutableRange.of(ciEndList.get(0), ciEndList.get(1)) : null;
-            final boolean imprecise = variant.hasAttribute("IMPRECISE");
-
-            final HMFVariantType svType;
-            final Location location2;
-            switch (variant.getStructuralVariantType()) {
-                case INS:
-                    svType = HMFVariantType.INS;
-                    location2 = location1.set(variant.getAttributeAsInt("END", 0));
-                    break;
-                case INV:
-                    if (variant.hasAttribute("INV3")) {
-                        svType = HMFVariantType.INV3;
-                    } else if (variant.hasAttribute("INV5")) {
-                        svType = HMFVariantType.INV5;
-                    } else {
-                        LOGGER.warn(variant.getID() + " : expected either INV3 or INV5 flag");
-                        continue;
-                    }
-                    location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
-                    break;
-                case DEL:
-                    svType = HMFVariantType.DEL;
-                    location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
-                    break;
-                case DUP:
-                    svType = HMFVariantType.DUP;
-                    location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
-                    break;
-                case BND:
-                    final String call = variant.getAlternateAllele(0).getDisplayString();
-                    final String[] leftSplit = call.split("\\]");
-                    final String[] rightSplit = call.split("\\[");
-
-                    if (leftSplit.length >= 2) {
-                        location2 = Location.parseLocationString(leftSplit[1], tumorReader.getFileHeader().getSequenceDictionary());
-                        if (leftSplit[0].length() > 0) {
-                            svType = HMFVariantType.INV3;
-                            uncertainty2 = Range.invert(uncertainty1);
-                        } else {
-                            svType = HMFVariantType.DUP;
-                            uncertainty2 = uncertainty1;
-                        }
-                    } else if (rightSplit.length >= 2) {
-                        location2 = Location.parseLocationString(rightSplit[1], tumorReader.getFileHeader().getSequenceDictionary());
-                        if (rightSplit[0].length() > 0) {
-                            svType = HMFVariantType.DEL;
-                            uncertainty2 = uncertainty1;
-                        } else {
-                            svType = HMFVariantType.INV5;
-                            uncertainty2 = Range.invert(uncertainty1);
-                        }
-                    } else {
-                        LOGGER.warn(variant.getID() + " : Could not parse breakpoint");
-                        continue;
-                    }
-
-                    if (imprecise) {
-                        uncertainty2 = extractCIPOS(mateVariant);
-                    }
-
-                    break;
-                default:
-                    LOGGER.warn(variant.getID() + " : UNEXPECTED SVTYPE=" + variant.getStructuralVariantType());
-                    continue;
-            }
-
-            final HMFVariantContext context = new HMFVariantContext(variant.getID(), location1, location2, svType, imprecise);
-            context.Filter.addAll(variant.getFilters().stream().filter(s -> !s.startsWith("BPI")).collect(Collectors.toSet()));
-            context.Uncertainty1 = uncertainty1;
-            context.Uncertainty2 = ObjectUtils.firstNonNull(uncertainty2,
-                    fixup(uncertainty1, imprecise, svType == HMFVariantType.INV3 || svType == HMFVariantType.INV5));
-            context.HomologySequence = variant.getAttributeAsString("HOMSEQ", "");
-            if (variant.hasAttribute("LEFT_SVINSSEQ") && variant.hasAttribute("RIGHT_SVINSSEQ")) {
-                context.InsertSequence =
-                        variant.getAttributeAsString("LEFT_SVINSSEQ", "") + "..." + variant.getAttributeAsString("RIGHT_SVINSSEQ", "");
-            } else {
-                context.InsertSequence = variant.getAttributeAsString("SVINSSEQ", "");
-            }
-            context.BND = variant.getStructuralVariantType() == StructuralVariantType.BND;
-
-            switch (context.Type) {
-                case INS:
-                case DEL:
-                    context.OrientationBP1 = 1;
-                    context.OrientationBP2 = -1;
-                    break;
-                case INV3:
-                    context.OrientationBP1 = 1;
-                    context.OrientationBP2 = 1;
-                    break;
-                case INV5:
-                    context.OrientationBP1 = -1;
-                    context.OrientationBP2 = -1;
-                    break;
-                case DUP:
-                    context.OrientationBP1 = -1;
-                    context.OrientationBP2 = 1;
-                    break;
-            }
-
-            final StructuralVariantResult result = analysis.processStructuralVariant(context);
+            final StructuralVariantResult result = analysis.processStructuralVariant(enrichedVariant);
             combinedQueryIntervals.addAll(asList(result.QueryIntervals));
 
-            tsv.add(TSVOutput.generateVariant(variant, context, result));
+            tsv.add(TSVOutput.generateVariant(variant, enrichedVariant, result));
 
             final BiConsumer<VariantContext, Boolean> vcfUpdater = (v, swap) -> {
                 final Set<String> filters = v.getCommonInfo().getFiltersMaybeNull();
@@ -306,44 +198,6 @@ public class BreakPointInspectorApplication {
         tumorReader.close();
     }
 
-//    @NotNull
-//    private static HMFVariantContext buildHMFVariant(@NotNull VariantContext variant) {
-//        final HMFVariantContext context = new HMFVariantContext(variant.getID(), location1, location2, svType, imprecise);
-//        context.Filter.addAll(variant.getFilters().stream().filter(s -> !s.startsWith("BPI")).collect(Collectors.toSet()));
-//        context.Uncertainty1 = uncertainty1;
-//        context.Uncertainty2 = ObjectUtils.firstNonNull(uncertainty2,
-//                fixup(uncertainty1, imprecise, svType == HMFVariantType.INV3 || svType == HMFVariantType.INV5));
-//        context.HomologySequence = variant.getAttributeAsString("HOMSEQ", "");
-//        if (variant.hasAttribute("LEFT_SVINSSEQ") && variant.hasAttribute("RIGHT_SVINSSEQ")) {
-//            context.InsertSequence =
-//                    variant.getAttributeAsString("LEFT_SVINSSEQ", "") + "..." + variant.getAttributeAsString("RIGHT_SVINSSEQ", "");
-//        } else {
-//            context.InsertSequence = variant.getAttributeAsString("SVINSSEQ", "");
-//        }
-//        context.BND = variant.getStructuralVariantType() == StructuralVariantType.BND;
-//
-//        switch (context.Type) {
-//            case INS:
-//            case DEL:
-//                context.OrientationBP1 = 1;
-//                context.OrientationBP2 = -1;
-//                break;
-//            case INV3:
-//                context.OrientationBP1 = 1;
-//                context.OrientationBP2 = 1;
-//                break;
-//            case INV5:
-//                context.OrientationBP1 = -1;
-//                context.OrientationBP2 = -1;
-//                break;
-//            case DUP:
-//                context.OrientationBP1 = -1;
-//                context.OrientationBP2 = 1;
-//                break;
-//        }
-//
-//    }
-
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
@@ -375,12 +229,6 @@ public class BreakPointInspectorApplication {
         final HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("Break-Point-Inspector", "A second layer of filtering on top of Manta", options, "", true);
         System.exit(1);
-    }
-
-    @NotNull
-    private static Range extractCIPOS(@NotNull VariantContext variant) {
-        final List<Integer> ciPosList = variant.getAttributeAsIntList("CIPOS", 0);
-        return ciPosList.size() == 2 ? ImmutableRange.of(ciPosList.get(0), ciPosList.get(1)) : ImmutableRange.of(0, 0);
     }
 
     @NotNull

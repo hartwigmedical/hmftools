@@ -59,7 +59,7 @@ Save to a “QueryName” sorted BAM in a temporary working directory
 
 ### Homology Handling
 
-Manta would always take the 5” (relative to reference) position of the first breakpoint, which depending on the orientation of the variant, may or may not include the homology. The convention also varied if the variant was a BND or another type.
+Manta would always take the 5” (relative to reference) position of the first breakpoint, which depending on the orientationString of the variant, may or may not include the homology. The convention also varied if the variant was a BND or another type.
 
 For consistency, BPI will always include the homologous sequence in the first breakpoint, and exclude it from the second breakpoint regardless of variant type.
 
@@ -73,9 +73,9 @@ For a Manta “Precise” Call
 
 For a Manta “Imprecise” Call
 1. Process all “interesting” paired read evidence
-    1 MUST have pair orientation matching expected orientation of the variant
+    1 MUST have pair orientationString matching expected orientationString of the variant
     1 MUST have each read end from the expected chromosome
-    1 NOT proper OR has clipping on expected side (relative to variant orientation)
+    1 NOT proper OR has clipping on expected side (relative to variant orientationString)
 1. Process all SR-only (i.e. normal pairs which are clipped on an expected side)
 1. Process all pairs where there is a secondary alignment with clipping on the expected side
 1. From all these pairs, we process the clipping and build a list of clipped sequences at each location, and count the reads supporting each

@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.breakpointinspector.clipping.ClipStats;
+import com.hartwig.hmftools.breakpointinspector.datamodel.EnrichedVariantContext;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -63,7 +64,7 @@ class Filter {
         return s.PR_SR_Support + s.SR_Only_Support;
     }
 
-    static Collection<String> getFilters(final HMFVariantContext ctx, final SampleStats tumorStats, final SampleStats refStats,
+    static Collection<String> getFilters(final EnrichedVariantContext variant, final SampleStats tumorStats, final SampleStats refStats,
             final Pair<Location, Location> breakpoints, final float contamination) {
 
         final int MIN_ANCHOR_LENGTH = 30;
@@ -78,11 +79,11 @@ class Filter {
 
         final int tumor_SR = Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).mapToInt(Filter::supportSR).sum();
 
-        if (ctx.isInsert()) {
+        if (variant.isInsert()) {
 
             // no PR/SR checks
 
-        } else if (ctx.isShortVariant()) {
+        } else if (variant.isShortVariant()) {
             // short variant logic
 
             final boolean bothSidesHaveSR = Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).allMatch(s -> supportSR(s) > 0);
@@ -125,7 +126,7 @@ class Filter {
 
         // we must adjust from Manta breakpoint convention to our clipping position convention
         final List<Location> adjusted_bp =
-                Arrays.asList(breakpoints.getLeft().add(ctx.OrientationBP1), breakpoints.getRight().add(ctx.OrientationBP2));
+                Arrays.asList(breakpoints.getLeft().add(variant.orientationBP1()), breakpoints.getRight().add(variant.orientationBP2()));
 
         final Set<String> concordant_reads = Sets.newHashSet();
         for (final Location bp : adjusted_bp) {
@@ -167,7 +168,7 @@ class Filter {
             filters.add(Filters.ClippingConcordance);
         }
 
-        final Set<String> merged = Sets.newHashSet(ctx.Filter);
+        final Set<String> merged = Sets.newHashSet(variant.filters());
         merged.addAll(filters.stream().map(Filters::toString).collect(Collectors.toList()));
         return merged;
     }

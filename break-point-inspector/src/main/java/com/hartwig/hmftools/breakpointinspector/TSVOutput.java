@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.breakpointinspector.datamodel.HMFVariantType;
+import com.hartwig.hmftools.breakpointinspector.datamodel.EnrichedVariantContext;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.jetbrains.annotations.NotNull;
@@ -24,10 +24,22 @@ final class TSVOutput {
 
     @NotNull
     static String generateHeaders() {
-        final ArrayList<String> header =
-                Lists.newArrayList("ID", "SVTYPE", "ORIENTATION", "MANTA_BP1", "MANTA_BP2", "MANTA_SVLEN", "MANTA_REF_PR_NORMAL",
-                        "MANTA_REF_PR_SUPPORT", "MANTA_REF_SR_NORMAL", "MANTA_REF_SR_SUPPORT", "MANTA_TUMOR_PR_NORMAL",
-                        "MANTA_TUMOR_PR_SUPPORT", "MANTA_TUMOR_SR_NORMAL", "MANTA_TUMOR_SR_SUPPORT", "MANTA_HOMSEQ", "MANTA_INSSEQ");
+        final ArrayList<String> header = Lists.newArrayList("ID",
+                "SVTYPE",
+                "ORIENTATION",
+                "MANTA_BP1",
+                "MANTA_BP2",
+                "MANTA_SVLEN",
+                "MANTA_REF_PR_NORMAL",
+                "MANTA_REF_PR_SUPPORT",
+                "MANTA_REF_SR_NORMAL",
+                "MANTA_REF_SR_SUPPORT",
+                "MANTA_TUMOR_PR_NORMAL",
+                "MANTA_TUMOR_PR_SUPPORT",
+                "MANTA_TUMOR_SR_NORMAL",
+                "MANTA_TUMOR_SR_SUPPORT",
+                "MANTA_HOMSEQ",
+                "MANTA_INSSEQ");
         header.addAll(prefixList(SampleStats.GetHeader(), "REF_"));
         header.addAll(prefixList(SampleStats.GetHeader(), "TUMOR_"));
         header.add("BPI_BP1");
@@ -39,9 +51,13 @@ final class TSVOutput {
     }
 
     @NotNull
-    static String generateVariant(@NotNull VariantContext variant, @NotNull HMFVariantContext context, @NotNull StructuralVariantResult result) {
-        final List<String> fields = Lists.newArrayList(variant.getID(), variant.getStructuralVariantType().toString(),
-                HMFVariantType.orientation(context.Type), context.MantaBP1.toString(), context.MantaBP2.toString(),
+    static String generateVariant(@NotNull VariantContext variant, @NotNull EnrichedVariantContext context,
+            @NotNull StructuralVariantResult result) {
+        final List<String> fields = Lists.newArrayList(variant.getID(),
+                variant.getStructuralVariantType().toString(),
+                context.type().orientationString(),
+                context.location1().toString(),
+                context.location2().toString(),
                 variant.getAttributeAsString("SVLEN", ""));
 
         fields.addAll(parseMantaPRSR(variant.getGenotype(0)));

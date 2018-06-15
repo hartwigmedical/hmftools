@@ -6,15 +6,23 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.variant.variantcontext.VariantContext;
 
 public class Location implements Comparable<Location> {
-    String ReferenceName;
-    int ReferenceIndex = -1;
-    int Position = -1;
+    private String ReferenceName;
+    public int ReferenceIndex = -1;
+    public int Position = -1;
 
     private Location() {
     }
 
+    @NotNull
+    static Location parseFromVariant(@NotNull VariantContext variant, @NotNull SAMSequenceDictionary dictionary) {
+        final String variantLocation = variant.getContig() + ":" + Integer.toString(variant.getStart());
+       return Location.parseLocationString(variantLocation, dictionary);
+    }
+
+    @NotNull
     static Location parseLocationString(final String location, final SAMSequenceDictionary dictionary) throws RuntimeException {
         final Location result = new Location();
 
