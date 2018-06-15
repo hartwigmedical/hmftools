@@ -16,36 +16,65 @@ class GeneTest : StringSpec() {
     private val reverseGene = Gene(reverseStrandExons, 3, 4)
 
     init {
-        "returns null for negative codon" {
-            forwardGene.codonPositions(-1) shouldBe null
-            reverseGene.codonPositions(-1) shouldBe null
+        "returns empty for negative codon" {
+            forwardGene.codingRanges(-1).size shouldBe 0
+            reverseGene.codingRanges(-1).size shouldBe 0
         }
 
-        "returns null for codon zero" {
-            forwardGene.codonPositions(0) shouldBe null
-            reverseGene.codonPositions(0) shouldBe null
+        "returns empty for codon zero" {
+            forwardGene.codingRanges(0).size shouldBe 0
+            reverseGene.codingRanges(0).size shouldBe 0
         }
 
-        "returns null for codon five" {
-            forwardGene.codonPositions(5) shouldBe null
-            reverseGene.codonPositions(5) shouldBe null
+        "returns empty for codon five" {
+            forwardGene.codingRanges(5).size shouldBe 0
+            reverseGene.codingRanges(5).size shouldBe 0
         }
 
-        "returns correct positions for codon in first exon" {
-            forwardGene.codonPositions(1) shouldBe Triple(2L, 3L, 4L)
-            reverseGene.codonPositions(1) shouldBe Triple(12L, 13L, 14L)
-            reverseGene.codonPositions(2) shouldBe Triple(9L, 10L, 11L)
+        "returns correct coding ranges for codon in first exon" {
+            forwardGene.codingRanges(1) shouldBe listOf(2L..4L)
+            reverseGene.codingRanges(1) shouldBe listOf(12L..14L)
+            reverseGene.codingRanges(2) shouldBe listOf(9L..11L)
         }
 
-        "returns correct positions for codon in last exon" {
-            forwardGene.codonPositions(3) shouldBe Triple(9L, 10L, 11L)
-            forwardGene.codonPositions(4) shouldBe Triple(12L, 13L, 14L)
-            reverseGene.codonPositions(4) shouldBe Triple(2L, 3L, 4L)
+        "returns correct coding ranges for codon in last exon" {
+            forwardGene.codingRanges(3) shouldBe listOf(9L..11L)
+            forwardGene.codingRanges(4) shouldBe listOf(12L..14L)
+            reverseGene.codingRanges(4) shouldBe listOf(2L..4L)
         }
 
-        "returns correct positions for codon overlapping exons" {
-            forwardGene.codonPositions(2) shouldBe Triple(5L, 7L, 8L)
-            reverseGene.codonPositions(3) shouldBe Triple(5L, 7L, 8L)
+        "returns correct coding ranges for codon overlapping exons" {
+            forwardGene.codingRanges(2) shouldBe listOf(5L..5L, 7L..8L)
+            reverseGene.codingRanges(3) shouldBe listOf(5L..5L, 7L..8L)
+        }
+
+        "returns correct coding ranges for whole gene" {
+            forwardGene.codingRanges() shouldBe listOf(2L..5L, 7L..14L)
+            reverseGene.codingRanges() shouldBe listOf(2L..5L, 7L..14L)
+        }
+
+        "returns correct coding ranges for codon range in exon" {
+            forwardGene.codingRanges(3, 4) shouldBe listOf(9L..14L)
+            reverseGene.codingRanges(1, 2) shouldBe listOf(9L..14L)
+        }
+
+        "returns correct coding ranges for codon range spanning exons" {
+            forwardGene.codingRanges(1, 2) shouldBe listOf(2L..5L, 7L..8L)
+            forwardGene.codingRanges(1, 3) shouldBe listOf(2L..5L, 7L..11L)
+            reverseGene.codingRanges(1, 3) shouldBe listOf(5L..5L, 7L..14L)
+            reverseGene.codingRanges(2, 4) shouldBe listOf(2L..5L, 7L..11L)
+        }
+
+        "returns empty for invalid codon ranges" {
+            forwardGene.codingRanges(1, 9).size shouldBe 0
+            forwardGene.codingRanges(0, 3).size shouldBe 0
+            reverseGene.codingRanges(1, 9).size shouldBe 0
+            reverseGene.codingRanges(0, 3).size shouldBe 0
+        }
+
+        "returns correct last codon number" {
+            forwardGene.lastCodon shouldBe 4
+            reverseGene.lastCodon shouldBe 4
         }
     }
 }

@@ -1,14 +1,42 @@
 package com.hartwig.hmftools.knowledgebaseimporter.dao
 
 import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 class Gene(exons: List<Exon>, private val seqStart: Long, private val seqEnd: Long) {
 
     val sortedCodingExons = exons.filterNot { it.isNonCoding }.sortedBy { it.start }
     private val exonMap: Map<Exon, Double> = annotateExons()
+    val lastCodon = exonMap[sortedCodingExons.last()]!!.toInt()
 
-    //MIVO: figures out which exon pair contains a certain codon number and extracts codon positions
-    fun codonPositions(codonNumber: Int): Triple<Long, Long, Long>? {
+    //MIVO: figures out which exon pair contains a certain codon number and returns coding ranges for that codon
+    fun codingRanges(codonNumber: Int): List<ClosedRange<Long>> {
+        return codonRanges(codonPositions(codonNumber))
+    }
+
+    //MIVO: returns coding ranges between start and end codon (inclusive)
+    fun codingRanges(startCodon: Int, endCodon: Int): List<ClosedRange<Long>> {
+        // this is different depending on forward/reverse strand
+        val startCodonFirstPosition = codonPositions(startCodon)?.first
+        val endCodonLastPosition = codonPositions(endCodon)?.third
+        if (startCodonFirstPosition == null || endCodonLastPosition == null) return emptyList()
+        return sortedCodingExons.filter { it.end >= startCodonFirstPosition && it.start <= endCodonLastPosition }
+                .map { normalize(listOf(max(it.start, startCodonFirstPosition), min(it.end, endCodonLastPosition))) }
+                .map { it[0]..it[1] }
+                .sortedBy { it.first }
+    }
+
+    //MIVO: returns coding ranges for the whole gene
+    fun codingRanges(): List<ClosedRange<Long>> {
+        return codingRanges(1, lastCodon)
+    }
+
+    private fun codingStart(exon: Exon) = if (exon.isFirst) exon.start + seqStart - 1 else exon.start
+
+    private fun codingEnd(exon: Exon) = if (exon.isLast) exon.start + seqEnd - 1 else exon.end
+
+    private fun codonPositions(codonNumber: Int): Triple<Long, Long, Long>? {
         if (codonNumber <= 0) return null
         return sortedCodingExons.zipWithNext().find { (prev, next) ->
             exonMap[prev]!! >= codonNumber || exonMap[next]!! >= codonNumber
@@ -19,7 +47,7 @@ class Gene(exons: List<Exon>, private val seqStart: Long, private val seqEnd: Lo
     //  e.g. a gene with 2 exons, each spanning 10 and 15 codons respectively, will produce:
     //      exon1 -> 10
     //      exon2 -> 25
-    fun annotateExons(): Map<Exon, Double> {
+    private fun annotateExons(): Map<Exon, Double> {
         return sortedCodingExons.fold(Pair<Long, Map<Exon, Double>>(0, mapOf())) { pair, exon ->
             val exonCodingLength = codingLength(exon)
             val runningCodingLength = pair.first + exonCodingLength
@@ -50,22 +78,28 @@ class Gene(exons: List<Exon>, private val seqStart: Long, private val seqEnd: Lo
         val exonMaxCodons = exonMap[exon]!!.toInt()
         val codonsBeforeThisExon = exonMaxCodons - codingLength(exon) / 3
         val codonNumberInExon = (codonNumber - codonsBeforeThisExon - 1)
-        val seqStartOffset = if (exon.isFirst) seqStart - 1 else 0
-        val codonIndexInExon = codonNumberInExon * 3 + exon.start + exon.firstCodonStartOffset + seqStartOffset
-        return codonPositions(codonIndexInExon, codonIndexInExon + 1, codonIndexInExon + 2)
+        val codonIndexInExon = codonNumberInExon * 3 + codingStart(exon) + exon.firstCodonStartOffset
+        return Triple(codonIndexInExon, codonIndexInExon + 1, codonIndexInExon + 2)
     }
 
     //MIVO: extract codon positions when it spans 2 exons
     private fun extractOverlappingCodon(prev: Exon, next: Exon): Triple<Long, Long, Long> {
         return when {
-            prev.endPhase == 1 -> codonPositions(prev.end, next.start, next.start + 1)
-            else               -> codonPositions(prev.end - 1, prev.end, next.start)
+            prev.endPhase == 1 -> Triple(prev.end, next.start, next.start + 1)
+            else               -> Triple(prev.end - 1, prev.end, next.start)
         }
     }
 
-    //MIVO: normalize codon positions (reverse strand positions are converted to positive numbers and sorted)
-    private fun codonPositions(first: Long, second: Long, third: Long): Triple<Long, Long, Long> {
-        val positions = listOf(first, second, third).map { abs(it) }.sorted()
-        return Triple(positions[0], positions[1], positions[2])
+    private fun codonRanges(triple: Triple<Long, Long, Long>?): List<ClosedRange<Long>> {
+        triple ?: return emptyList()
+        val positions = normalize(triple.toList())
+        return when {
+            positions[2] == positions[0] + 2 -> listOf(positions[0]..positions[2])
+            positions[1] == positions[0] + 1 -> listOf(positions[0]..positions[1], positions[2]..positions[2])
+            else                             -> listOf(positions[0]..positions[0], positions[1]..positions[2])
+        }
     }
+
+    //MIVO: convert list items to positive numbers and sort
+    private fun normalize(list: List<Long>) = list.map { abs(it) }.sorted()
 }
