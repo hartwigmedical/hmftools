@@ -12,7 +12,7 @@
 
     <artifactId>break-point-inspector</artifactId>
     <packaging>jar</packaging>
-    <version>1.5</version>
+    <version>1.6</version>
     <name>HMF Tools - Break Point Inspector</name>
 
     <dependencies>

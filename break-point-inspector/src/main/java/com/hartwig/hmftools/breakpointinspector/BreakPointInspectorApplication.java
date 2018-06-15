@@ -44,54 +44,14 @@ public class BreakPointInspectorApplication {
 
     private static final String REF_PATH = "ref";
     private static final String REF_SLICE = "ref_slice";
-    private static final String TUMOR_PATH = "tumor";
+    private static final String TUMOR_BAM_PATH = "tumor";
     private static final String TUMOR_SLICE = "tumor_slice";
     private static final String PROXIMITY = "proximity";
     private static final String VCF = "vcf";
     private static final String VCF_OUT = "output_vcf";
     private static final String CONTAMINATION = "contamination_fraction";
 
-    private static Options createOptions() {
-        final Options options = new Options();
-        options.addOption(Option.builder(REF_PATH).required().hasArg().desc("the Reference BAM (required)").build());
-        options.addOption(Option.builder(REF_SLICE).hasArg().desc("the sliced Reference BAM to output (optional)").build());
-        options.addOption(Option.builder(TUMOR_PATH).required().hasArg().desc("the Tumor BAM (required)").build());
-        options.addOption(Option.builder(TUMOR_SLICE).hasArg().desc("the sliced Tumor BAM to output (optional)").build());
-        options.addOption(Option.builder(PROXIMITY).hasArg().desc("distance to scan around breakpoint (optional, default=500)").build());
-        options.addOption(Option.builder(VCF).required().hasArg().desc("Manta VCF file to batch inspect (required)").build());
-        options.addOption(Option.builder(VCF_OUT).hasArg().desc("VCF output file (optional)").build());
-        options.addOption(
-                Option.builder(CONTAMINATION).hasArg().desc("fraction of allowable normal support per tumor support read").build());
-        return options;
-    }
-
-    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
-    private static void printHelpAndExit(final Options options) {
-        final HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("Break-Point-Inspector", "A second layer of filtering on top of Manta", options, "", true);
-        System.exit(1);
-    }
-
-    private static Range extractCIPOS(final VariantContext variant) {
-        final List<Integer> CIPOS = variant.getAttributeAsIntList("CIPOS", 0);
-        return CIPOS.size() == 2 ? new Range(CIPOS.get(0), CIPOS.get(1)) : new Range(0, 0);
-    }
-
-    @NotNull
-    private static Range fixup(@NotNull final Range uncertainty1, final boolean imprecise, final boolean inversion) {
-        if (imprecise) {
-            return uncertainty1;
-        } else {
-            return inversion ? Range.invert(uncertainty1) : uncertainty1;
-        }
-    }
-
     public static void main(final String... args) throws IOException {
-
         final AnalysisBuilder analysisBuilder = new AnalysisBuilder();
         final Options options = createOptions();
         try {
@@ -99,7 +59,7 @@ public class BreakPointInspectorApplication {
 
             final String refPath = cmd.getOptionValue(REF_PATH);
             final String refSlicePath = cmd.getOptionValue(REF_SLICE);
-            final String tumorPath = cmd.getOptionValue(TUMOR_PATH);
+            final String tumorPath = cmd.getOptionValue(TUMOR_BAM_PATH);
             final String tumorSlicePath = cmd.getOptionValue(TUMOR_SLICE);
             final String vcfPath = cmd.getOptionValue(VCF);
 
@@ -340,6 +300,45 @@ public class BreakPointInspectorApplication {
         } catch (ParseException e) {
             printHelpAndExit(options);
             System.exit(1);
+        }
+    }
+
+    private static Options createOptions() {
+        final Options options = new Options();
+        options.addOption(Option.builder(REF_PATH).required().hasArg().desc("The Reference BAM (required)").build());
+        options.addOption(Option.builder(REF_SLICE).hasArg().desc("The sliced Reference BAM to output (optional)").build());
+        options.addOption(Option.builder(TUMOR_BAM_PATH).required().hasArg().desc("The Tumor BAM (required)").build());
+        options.addOption(Option.builder(TUMOR_SLICE).hasArg().desc("The sliced Tumor BAM to output (optional)").build());
+        options.addOption(Option.builder(PROXIMITY).hasArg().desc("Distance to scan around breakpoint (optional, default=500)").build());
+        options.addOption(Option.builder(VCF).required().hasArg().desc("Manta VCF file to batch inspect (required)").build());
+        options.addOption(Option.builder(VCF_OUT).hasArg().desc("VCF output file (optional)").build());
+        options.addOption(
+                Option.builder(CONTAMINATION).hasArg().desc("fraction of allowable normal support per tumor support read").build());
+        return options;
+    }
+
+    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException {
+        final CommandLineParser parser = new DefaultParser();
+        return parser.parse(options, args);
+    }
+
+    private static void printHelpAndExit(final Options options) {
+        final HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp("Break-Point-Inspector", "A second layer of filtering on top of Manta", options, "", true);
+        System.exit(1);
+    }
+
+    private static Range extractCIPOS(final VariantContext variant) {
+        final List<Integer> CIPOS = variant.getAttributeAsIntList("CIPOS", 0);
+        return CIPOS.size() == 2 ? new Range(CIPOS.get(0), CIPOS.get(1)) : new Range(0, 0);
+    }
+
+    @NotNull
+    private static Range fixup(@NotNull final Range uncertainty1, final boolean imprecise, final boolean inversion) {
+        if (imprecise) {
+            return uncertainty1;
+        } else {
+            return inversion ? Range.invert(uncertainty1) : uncertainty1;
         }
     }
 
