@@ -49,4 +49,7 @@ public interface StructuralVariant {
 
     @Nullable
     Double qualityScore();
+
+    @Nullable
+    String event();
 }

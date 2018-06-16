@@ -469,18 +469,26 @@ CREATE TABLE structuralVariant
     filter varchar(255) NOT NULL,
     somaticScore int,
     imprecise BOOLEAN NOT NULL,
-    qualScore DOUBLE PRECISION NOT NULL,
-    startPositionIntervalStart int NOT NULL,
-    startPositionIntervalEnd int NOT NULL,
-    endPositionIntervalStart int NULL,
-    endPositionIntervalEnd int NULL,
-    startPositionImpreciseHomologyIntervalStart int NOT NULL,
-    startPositionImpreciseHomologyIntervalEnd int NOT NULL,
-	endPositionImpreciseHomologyIntervalStart int NULL,
-    endPositionImpreciseHomologyIntervalEnd int NULL,
+    qualScore DOUBLE PRECISION,
+    event varchar(255),
+    startTumourVariantFragmentCount int,
+    startTumourReferenceFragmentCount int,
+    startNormalVariantFragmentCount int,
+    startNormalReferenceFragmentCount int,
+    endTumourVariantFragmentCount int,
+    endTumourReferenceFragmentCount int,
+    endNormalVariantFragmentCount int,
+    endNormalReferenceFragmentCount int,
+    startIntervalOffsetStart int,
+    startIntervalOffsetEnd int,
+    endIntervalOffsetStart int,
+    endIntervalOffsetEnd int,
+    inexactHomologyOffsetStart int,
+    inexactHomologyOffsetEnd int,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );
+
 
 DROP TABLE IF EXISTS structuralVariantBreakend;
 CREATE TABLE structuralVariantBreakend

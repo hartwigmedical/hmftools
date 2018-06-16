@@ -15,9 +15,36 @@ public interface StructuralVariantLeg extends GenomeInterval {
     @Nullable
     Double alleleFrequency();
 
-    @NotNull
-    long impreciseHomologyIntervalStart();
+    default Integer inexactHomologyLength() {
+        return inexactHomologyOffsetStart() != null && inexactHomologyOffsetStartEnd() != null ?
+                inexactHomologyOffsetStartEnd() - inexactHomologyOffsetStart() : null;
+    }
 
-    @NotNull
-    long impreciseHomologyIntervalEnd();
+    @Nullable
+    Integer inexactHomologyOffsetStart();
+
+    @Nullable
+    Integer inexactHomologyOffsetStartEnd();
+
+    default Integer tumourFragmentCount() {
+        return tumourVariantFragmentCount() != null && tumourReferenceFragmentCount() != null ?
+                tumourVariantFragmentCount() + tumourReferenceFragmentCount() : null;
+    }
+
+    default Integer normalFragmentCount() {
+        return normalVariantFragmentCount() != null && normalReferenceFragmentCount() != null ?
+                normalVariantFragmentCount() + normalReferenceFragmentCount() : null;
+    }
+
+    @Nullable
+    Integer tumourVariantFragmentCount();
+
+    @Nullable
+    Integer tumourReferenceFragmentCount();
+
+    @Nullable
+    Integer normalVariantFragmentCount();
+
+    @Nullable
+    Integer normalReferenceFragmentCount();
 }

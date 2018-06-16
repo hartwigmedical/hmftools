@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.variant.structural;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -8,6 +9,7 @@ import java.util.regex.Pattern;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
@@ -20,6 +22,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;
+import org.jetbrains.annotations.Nullable;
 
 public class StructuralVariantFactory {
 
@@ -296,6 +299,20 @@ public class StructuralVariantFactory {
                 .qualityScore(context.getPhredScaledQual())
                 .build();
 
+    }
+    @NotNull
+    private static String filters(@NotNull VariantContext context, @Nullable VariantContext pairedContext) {
+        final HashSet<String> filters = new HashSet<>(context.getFilters());
+        if (pairedContext != null) {
+            filters.addAll(pairedContext.getFilters());
+        }
+        if (filters.size() > 1) {
+            // Doesn't pass if a filter is applied to either breakend
+            filters.remove("PASS");
+        }
+        // TODO Collectors string concatenation
+        final String filtersStr = filters.stream().collect(Collectors.)
+        return filtersStr;
     }
     @NotNull
     private static boolean imprecise(@NotNull VariantContext context) {
