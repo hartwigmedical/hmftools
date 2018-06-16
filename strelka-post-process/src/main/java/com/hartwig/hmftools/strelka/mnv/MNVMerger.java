@@ -55,7 +55,7 @@ public abstract class MNVMerger {
         final List<Allele> alleles = createMnvAlleles(variants, gapReads);
         final VariantContext firstVariant = variants.get(0);
         final VariantContext lastVariant = variants.get(variants.size() - 1);
-        final Map<String, Object> attributes = createMnvAttributes(variants, gapReads.size());
+        final Map<String, Object> attributes = createMnvAttributes(variants);
         final String sampleName = firstVariant.getSampleNamesOrderedByName().get(0);
         final Genotype genotype = new GenotypeBuilder(sampleName, alleles).DP(mergeDP(variants)).AD(mergeAD(variants)).make();
         return new VariantContextBuilder(firstVariant.getSource(),
@@ -112,7 +112,7 @@ public abstract class MNVMerger {
     }
 
     @NotNull
-    private Map<String, Object> createMnvAttributes(@NotNull final List<VariantContext> variants, final int gapSize) {
+    private Map<String, Object> createMnvAttributes(@NotNull final List<VariantContext> variants) {
         final Map<String, Object> attributes;
         if (variants.stream().anyMatch(VariantContext::isIndel)) {
             attributes = mergeAttributes(variants.stream().filter(VariantContext::isIndel).collect(Collectors.toList()));
