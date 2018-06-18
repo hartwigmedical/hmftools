@@ -1,13 +1,20 @@
 package com.hartwig.hmftools.knowledgebaseimporter.knowledgebases
 
-import com.hartwig.hmftools.knowledgebaseimporter.output.CnvEvent
-import com.hartwig.hmftools.knowledgebaseimporter.output.FusionEvent
+import com.hartwig.hmftools.knowledgebaseimporter.dao.EnsemblGeneDAO
+import com.hartwig.hmftools.knowledgebaseimporter.dao.Gene
+import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableEvent
+import com.hartwig.hmftools.knowledgebaseimporter.output.GenomicRangeEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.KnownVariantOutput
 import com.hartwig.hmftools.knowledgebaseimporter.output.SomaticVariantEvent
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.*
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
+import org.apache.logging.log4j.LogManager
 
-class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFastaSequenceFile) {
+class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFastaSequenceFile, private val geneDAO: EnsemblGeneDAO) {
+    companion object {
+        private val logger = LogManager.getLogger("RecordAnalyzer")
+    }
+
     private val cdnaAnalyzer = TransvarCdnaAnalyzer(transvarLocation)
     private val proteinAnalyzer = TransvarProteinAnalyzer(transvarLocation)
 
@@ -21,10 +28,10 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
 
     fun actionableItems(knowledgebases: List<KnowledgebaseSource<*, *>>): List<ActionableItem<*>> {
         val records = knowledgebases.flatMap { it.actionableKbRecords }
-        val fusions = records.collectEvents<FusionEvent, ActionableRecord>()
-        val cnvs = records.collectEvents<CnvEvent, ActionableRecord>()
+        val genomicRangeEvents = analyzeGenomicRanges(records)
         val somaticVariants = extractSomaticVariants(records)
-        val events = fusions + cnvs + somaticVariants
+        val actionableEvents = records.collectEvents<ActionableEvent, ActionableRecord>()
+        val events = actionableEvents + somaticVariants + genomicRangeEvents
         return events.flatMap { (record, event) ->
             record.actionability.map { ActionableItem(event, it) }
         }
@@ -78,5 +85,37 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
             val somaticVariants = extractVariants(output, reference)
             somaticVariants.map { Pair(record, SomaticVariantEvent(record.gene, it)) }
         }
+    }
+
+    private fun <R : ActionableRecord> analyzeGenomicRanges(records: List<R>): List<Pair<R, GenomicRangeEvent>> {
+        val genericMutationRecords = records.collectEvents<GenericMutation, R>()
+        val geneModel = createGeneModel(genericMutationRecords.map { it.second })
+        return genericMutationRecords.flatMap { (record, mutation) ->
+            val gene = geneModel[mutation.transcript] ?: geneModel[mutation.gene]
+            mutationCodingRange(mutation, gene).map {
+                Pair(record, GenomicRangeEvent(mutation.gene, gene!!.chromosome, it.start.toString(), it.endInclusive.toString()))
+            }
+        }
+    }
+
+    private fun mutationCodingRange(mutation: GenericMutation, gene: Gene?): List<ClosedRange<Long>> {
+        if (gene == null) {
+            logger.warn("Gene model for gene ${mutation.gene}, transcript: ${mutation.transcript} is null")
+            return emptyList()
+        }
+        return when (mutation) {
+            is GeneMutations       -> gene.codingRanges()
+            is ExonMutations       -> gene.exonCodingRanges(mutation.exonNumber)
+            is CodonRangeMutations -> gene.codonCodingRanges(mutation.startCodon, mutation.endCodon)
+            is CodonMutations      -> gene.codonCodingRanges(mutation.codonNumber)
+        }
+    }
+
+    private fun createGeneModel(genericMutations: List<GenericMutation>): Map<String, Gene?> {
+        val transcriptSet = genericMutations.mapNotNull { it.transcript }.toSet()
+        val geneSet = genericMutations.filter { it.transcript == null }.map { it.gene }.toSet()
+        val transcriptGeneModel = transcriptSet.associateBy({ it }, { geneDAO.transcriptGeneModel(it) })
+        val canonicalGeneModel = geneSet.associateBy({ it }, { geneDAO.canonicalGeneModel(it) })
+        return transcriptGeneModel + canonicalGeneModel
     }
 }
