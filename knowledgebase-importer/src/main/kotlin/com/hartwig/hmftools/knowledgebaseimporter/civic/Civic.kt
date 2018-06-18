@@ -24,6 +24,7 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
     override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableKbItems.filterIsInstance<ActionableCNVOutput>() }
     override val actionableFusionPairs by lazy { actionableKbItems.filterIsInstance<ActionableFusionPairOutput>() }
     override val actionablePromiscuousGenes by lazy { actionableKbItems.filterIsInstance<ActionablePromiscuousGeneOutput>() }
+    override val actionableRanges by lazy { actionableKbItems.filterIsInstance<ActionableGenomicRangeOutput>() }
     override val cancerTypes by lazy {
         actionableKbRecords.flatMap { it.cancerDoids.entries }
                 .associateBy({ it.key }, { diseaseOntology.findDoidsForCancerType(it.key) + diseaseOntology.findDoidsForDoid(it.value) })

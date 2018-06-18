@@ -22,6 +22,7 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
     override val actionableCNVs by lazy { actionableKbItems.filterIsInstance<ActionableCNVOutput>() }
     override val actionableFusionPairs by lazy { actionableKbItems.filterIsInstance<ActionableFusionPairOutput>() }
     override val actionablePromiscuousGenes by lazy { actionableKbItems.filterIsInstance<ActionablePromiscuousGeneOutput>() }
+    override val actionableRanges by lazy { actionableKbItems.filterIsInstance<ActionableGenomicRangeOutput>() }
     override val cancerTypes by lazy {
         actionableKbRecords.flatMap { it.actionability }.map { it.cancerType }
                 .associateBy({ it }, { diseaseOntology.findDoidsForCancerType(it) })

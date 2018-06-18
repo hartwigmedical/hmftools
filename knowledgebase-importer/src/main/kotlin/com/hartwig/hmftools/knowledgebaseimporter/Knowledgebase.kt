@@ -11,5 +11,6 @@ interface Knowledgebase {
     val actionableCNVs: List<ActionableCNVOutput>
     val actionableFusionPairs: List<ActionableFusionPairOutput>
     val actionablePromiscuousGenes: List<ActionablePromiscuousGeneOutput>
+    val actionableRanges: List<ActionableGenomicRangeOutput>
     val cancerTypes: Map<String, Set<String>>
 }
