@@ -6,6 +6,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.*
 import com.hartwig.hmftools.knowledgebaseimporter.output.Actionability
 import com.hartwig.hmftools.knowledgebaseimporter.output.CnvEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.FusionPair
+import com.hartwig.hmftools.knowledgebaseimporter.output.GenomicRangeEvent
 import org.apache.commons.csv.CSVRecord
 import org.apache.logging.log4j.LogManager
 import java.util.regex.Pattern
@@ -92,8 +93,8 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
             else            -> null
         }
 
-        private fun readGenomicRange(record: CSVRecord): GenomicRangeMutations {
-            return GenomicRangeMutations(record["gene"], record["chromosome"], record["start"].toLong(), record["stop"].toLong())
+        private fun readGenomicRange(record: CSVRecord): GenomicRangeEvent {
+            return GenomicRangeEvent(record["gene"], record["chromosome"], record["start"], record["stop"])
         }
 
         private fun variantTypes(record: CSVRecord): List<String> {
