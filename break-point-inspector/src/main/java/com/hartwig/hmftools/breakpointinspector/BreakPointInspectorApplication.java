@@ -79,7 +79,7 @@ public class BreakPointInspectorApplication {
 
         LOGGER.info(String.format("Starting BPI filtering on vcf %s using tumor bam %s", vcfInputPath, tumorBamPath));
         final BPIAlgoOutput algo = BPIAlgo.run(vcfReader, tumorReader.getFileHeader().getSequenceDictionary(), analysis);
-        LOGGER.info(String.format("Finishing BPI filtering. Generated %s variants", algo.variants().size()));
+        LOGGER.info(String.format("Finished BPI filtering. Generated %s variants", algo.variants().size()));
 
         if (vcfOutputPath != null) {
             writeToVCF(vcfOutputPath, vcfReader, algo.variants());
