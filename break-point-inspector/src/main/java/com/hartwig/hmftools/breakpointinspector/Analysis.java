@@ -46,95 +46,262 @@ class Analysis {
         this.contamination = contamination;
     }
 
-    private static class PairedReads extends ArrayList<Pair<SAMRecord, SAMRecord>> {
-    }
+    @NotNull
+    StructuralVariantResult processStructuralVariant(final EnrichedVariantContext variant) throws IOException {
+        final QueryInterval[] intervals = QueryInterval.optimizeIntervals(new QueryInterval[] {
+                new QueryInterval(variant.locationBP1().referenceIndex(),
+                        Math.max(0, variant.locationBP1().position() + variant.uncertaintyBP1().start() - range),
+                        variant.locationBP1().position() + variant.uncertaintyBP1().end() + range),
+                new QueryInterval(variant.locationBP2().referenceIndex(),
+                        Math.max(0, variant.locationBP2().position() + variant.uncertaintyBP2().start() - range),
+                        variant.locationBP2().position() + variant.uncertaintyBP2().end() + range) });
 
-    private static int orientation(final SAMRecord record) {
-        return record.getReadNegativeStrandFlag() ? -1 : 1;
-    }
+        final File tmpRefBam = queryNameSortedBAM(refReader, intervals, "ref");
+        final File tmpTumorBam = queryNameSortedBAM(tumorReader, intervals, "tumor");
 
-    private static Pair<Integer, Integer> orientation(final Pair<SAMRecord, SAMRecord> pair) {
-        return Pair.of(orientation(pair.getLeft()), orientation(pair.getRight()));
-    }
+        final SamReader sortedRefReader = SamReaderFactory.makeDefault().open(tmpRefBam);
+        final SamReader sortedTumorReader = SamReaderFactory.makeDefault().open(tmpTumorBam);
 
-    private static <L> Stream<L> stream(final Pair<L, L> pair) {
-        return Stream.of(pair.getLeft(), pair.getRight());
-    }
+        final BreakpointResult breakpoints = determineBreakpoints(variant, sortedTumorReader);
 
-    private static boolean isMate(final SAMRecord read, final SAMRecord mate) {
-        return read.getReadName().equals(mate.getReadName()) && read.getMateReferenceIndex().equals(mate.getReferenceIndex())
-                && Math.abs(read.getMateAlignmentStart() - mate.getAlignmentStart()) <= 1;
-    }
+        final StructuralVariantResult result = new StructuralVariantResult();
+        result.Breakpoints = breakpoints.Breakpoints;
+        result.QueryIntervals = intervals;
 
-    private static boolean span(final Pair<SAMRecord, SAMRecord> pair, final Location breakpoint) {
-        return Location.fromSAMRecord(pair.getLeft(), true).compareTo(breakpoint) <= 0
-                && Location.fromSAMRecord(pair.getRight(), false).compareTo(breakpoint) >= 0;
-    }
+        if (breakpoints.Error != BreakpointError.NONE) {
+            result.Filters = Filter.errorFilter();
+        } else {
+            result.TumorStats = collectEvidence(variant, sortedTumorReader, result.Breakpoints);
+            result.RefStats = collectEvidence(variant, sortedRefReader, result.Breakpoints);
+            result.AlleleFrequency = AlleleFrequency.calculate(result.TumorStats);
 
-    private static boolean overlap(final SAMRecord read, final Location breakpoint) {
-        return read.getReferenceIndex() == breakpoint.referenceIndex() && read.getAlignmentStart() <= breakpoint.position()
-                && breakpoint.position() <= read.getAlignmentEnd();
-    }
+            // NERA: load sample clipping
+            sortedTumorReader.forEach(record -> Clipping.getClips(record)
+                    .forEach(clipInfo -> result.TumorStats.Sample_Clipping.add(clipInfo)));
+            sortedRefReader.forEach(record -> Clipping.getClips(record).forEach(clipInfo -> result.RefStats.Sample_Clipping.add(clipInfo)));
 
-    private static boolean overlap(final Pair<SAMRecord, SAMRecord> pair, final Location breakpoint) {
-        return stream(pair).anyMatch(r -> overlap(r, breakpoint));
-    }
+            result.Filters = Filter.filters(variant, result.TumorStats, result.RefStats, result.Breakpoints, contamination);
 
-    private static boolean clippedOnCorrectSide(final SAMRecord record, final int orientation) {
-        return (orientation > 0 ? record.getCigar().isRightClipped() : record.getCigar().isLeftClipped());
-    }
+            // NERA: adjust for homology
+            final Location bp1 = result.Breakpoints.getLeft().add(variant.orientationBP1() > 0 ? 0 : -1);
+            final Location bp2;
+            if (!variant.isInsert() && variant.insertSequence().isEmpty()) {
+                bp2 = result.Breakpoints.getRight()
+                        .add(-variant.orientationBP2() * variant.homologySequence().length())
+                        .add(variant.orientationBP2() > 0 ? 0 : -1);
+            } else {
+                bp2 = result.Breakpoints.getRight().add(variant.orientationBP2() > 0 ? 0 : -1);
+            }
+            result.Breakpoints = Pair.of(bp1, bp2);
+        }
 
-    private static boolean exactlyClipsBreakpoint(final SAMRecord record, final Location breakpoint, final int orientation) {
-        return Location.fromSAMRecord(record, orientation < 0).compareTo(breakpoint) == 0 && clippedOnCorrectSide(record, orientation);
-    }
+        result.FilterString = result.Filters.isEmpty() ? "PASS" : String.join(";", result.Filters);
 
-    private static boolean withinRange(final Location a, final Location b, final Range range) {
-        final int extraUncertainty = 1;
-        return a.referenceIndex() == b.referenceIndex() && (a.position() >= b.position() + range.start() - extraUncertainty) && (
-                a.position() <= b.position() + range.end() + extraUncertainty);
+        sortedRefReader.close();
+        sortedTumorReader.close();
+
+        if (!tmpRefBam.delete()) {
+            LOGGER.error("couldn't delete {}", tmpRefBam);
+        }
+
+        if (!tmpTumorBam.delete()) {
+            LOGGER.error("couldn't delete {}", tmpTumorBam);
+        }
+
+        return result;
     }
 
     @NotNull
-    private static PairedReads pairs(final List<SAMRecord> list) {
-        final PairedReads pairs = new PairedReads();
-        for (int i = 0; i < list.size(); ++i) {
+    private static BreakpointResult determineBreakpoints(final EnrichedVariantContext variant, final SamReader reader) {
+        final int adj = variant.isTranslocation() ? 0 : 1;
+        if (variant.isImprecise()) {
+            return determineBreakpointsImprecise(variant, reader);
+        } else if (variant.isInsert()) {
+            // NERA: We want last match base at this stage
+            return BreakpointResult.from(Pair.of(variant.locationBP1(), variant.locationBP2().add(1)));
+        } else if (variant.insertSequence().isEmpty()) {
+            final Location bp1 = variant.locationBP1().add(variant.orientationBP1() > 0 ? variant.homologySequence().length() : adj);
+            final Location bp2 = variant.locationBP2()
+                    .add(variant.orientationBP2() > 0 ? variant.uncertaintyBP2().end() : variant.uncertaintyBP2().start() + adj);
+            return BreakpointResult.from(Pair.of(bp1, bp2));
+        } else {
+            final Location bp1 =
+                    variant.locationBP1().add(variant.orientationBP1() > 0 ? 0 : adj); // ignore homology when we have an insert
+            final Location bp2 = variant.locationBP2()
+                    .add(variant.orientationBP2() > 0 ? variant.uncertaintyBP2().end() : variant.uncertaintyBP2().start() + adj);
+            return BreakpointResult.from(Pair.of(bp1, bp2));
+        }
+    }
 
-            final SAMRecord r0 = list.get(i);
-            if (r0.getReadUnmappedFlag()) {
-                continue;
-            }
+    @NotNull
+    private static BreakpointResult determineBreakpointsImprecise(@NotNull final EnrichedVariantContext variant,
+            @NotNull final SamReader reader) {
+        final Pair<Integer, Integer> variantOrientation = Pair.of(variant.orientationBP1(), variant.orientationBP2());
 
-            for (int j = i + 1; j < list.size(); ++j) {
+        final PairedReads interesting = new PairedReads();
+        final PairedReads clippedProper = new PairedReads();
+        final PairedReads secondaryPairs = new PairedReads();
 
-                final SAMRecord r1 = list.get(j);
-                if (r1.getReadUnmappedFlag()) {
+        final List<SAMRecord> currentReads = Lists.newArrayList();
+        final SAMRecordIterator iterator = reader.iterator();
+
+        while (iterator.hasNext() || !currentReads.isEmpty()) {
+            final SAMRecord record = iterator.hasNext() ? iterator.next() : null;
+            if (record != null) {
+                if (currentReads.isEmpty() || record.getReadName().equals(currentReads.get(0).getReadName())) {
+                    currentReads.add(record);
                     continue;
                 }
+            }
 
-                // check both directions due to secondary alignments
-                if (isMate(r0, r1) || isMate(r1, r0)) {
-                    pairs.add(Pair.of(r0, r1));
+            currentReads.sort(COMPARATOR);
+            final PairedReads pairs = pairs(currentReads);
+
+            currentReads.clear();
+            if (record != null) {
+                currentReads.add(record);
+            }
+
+            // NERA: extract all interesting pairs
+            for (final Pair<SAMRecord, SAMRecord> pair : pairs) {
+                final boolean correctOrientation = orientation(pair).equals(variantOrientation);
+                final boolean correctChromosome = Location.fromSAMRecord(pair.getLeft()).sameChromosomeAs(variant.locationBP1()) && Location
+                        .fromSAMRecord(pair.getRight())
+                        .sameChromosomeAs(variant.locationBP2());
+                final boolean hasExpectedClipping = clippedOnCorrectSide(pair.getLeft(), variant.orientationBP1()) || clippedOnCorrectSide(
+                        pair.getRight(),
+                        variant.orientationBP2());
+
+                final boolean sameChromosome = pair.getLeft().getReferenceIndex().equals(pair.getRight().getReferenceIndex());
+                final boolean potentialSROnly = sameChromosome && Stream.of(variant.orientationBP1(), variant.orientationBP2())
+                        .anyMatch(orientation -> clippedOnCorrectSide(orientation > 0 ? pair.getRight() : pair.getLeft(), orientation));
+
+                final boolean secondary = stream(pair).anyMatch(SAMRecord::isSecondaryOrSupplementary);
+                final boolean proper = stream(pair).anyMatch(SAMRecord::getProperPairFlag) && !secondary;
+
+                if (secondary && potentialSROnly) {
+                    secondaryPairs.add(pair);
+                } else if ((!proper || hasExpectedClipping) && correctChromosome && correctOrientation) {
+                    interesting.add(pair);
+                } else if (proper && potentialSROnly) {
+                    clippedProper.add(pair);
                 }
-
             }
 
         }
-        return pairs;
+
+        iterator.close();
+
+        // NERA: load clipping info
+
+        Clipping bp1Clipping = new Clipping();
+        Clipping bp2Clipping = new Clipping();
+
+        for (final Pair<SAMRecord, SAMRecord> pair : interesting) {
+            if (variant.orientationBP1() > 0) {
+                bp1Clipping.add(Clipping.getRightClip(pair.getLeft()));
+            } else {
+                bp1Clipping.add(Clipping.getLeftClip(pair.getLeft()));
+            }
+            if (variant.orientationBP2() > 0) {
+                bp2Clipping.add(Clipping.getRightClip(pair.getRight()));
+            } else {
+                bp2Clipping.add(Clipping.getLeftClip(pair.getRight()));
+            }
+        }
+
+        // NERA: Include more clipping information
+
+        for (final Pair<SAMRecord, SAMRecord> pair : clippedProper) {
+            if (stream(pair).allMatch(r -> Location.fromSAMRecord(r).sameChromosomeAs(variant.locationBP1()))) {
+                if (variant.orientationBP1() > 0) {
+                    bp1Clipping.add(Clipping.getRightClip(pair.getRight()));
+                } else {
+                    bp1Clipping.add(Clipping.getLeftClip(pair.getLeft()));
+                }
+            }
+
+            if (stream(pair).allMatch(r -> Location.fromSAMRecord(r).sameChromosomeAs(variant.locationBP2()))) {
+                if (variant.orientationBP2() > 0) {
+                    bp2Clipping.add(Clipping.getRightClip(pair.getRight()));
+                } else {
+                    bp2Clipping.add(Clipping.getLeftClip(pair.getLeft()));
+                }
+            }
+        }
+
+        // NERA: Include secondary clipping information
+
+        for (final Pair<SAMRecord, SAMRecord> pair : secondaryPairs) {
+            if (stream(pair).allMatch(r -> Location.fromSAMRecord(r).sameChromosomeAs(variant.locationBP1()))) {
+                if (variant.orientationBP1() > 0) {
+                    bp1Clipping.add(Clipping.getRightClip(pair.getRight()));
+                } else {
+                    bp1Clipping.add(Clipping.getLeftClip(pair.getLeft()));
+                }
+            }
+            if (stream(pair).allMatch(r -> Location.fromSAMRecord(r).sameChromosomeAs(variant.locationBP2()))) {
+                if (variant.orientationBP2() > 0) {
+                    bp2Clipping.add(Clipping.getRightClip(pair.getRight()));
+                } else {
+                    bp2Clipping.add(Clipping.getLeftClip(pair.getLeft()));
+                }
+            }
+        }
+
+        // NERA: Determine candidates based on clipping info
+        final List<Location> bp1Candidates = bp1Clipping.getSequences()
+                .stream()
+                //.filter(c -> c.LongestClipSequence.length() >= 5)
+                .map(c -> c.Alignment)
+                .filter(c -> withinRange(c, variant.locationBP1(), variant.uncertaintyBP1()))
+                .collect(Collectors.toList());
+
+        if (bp1Candidates.isEmpty()) {
+            interesting.stream()
+                    .map(Pair::getLeft)
+                    .map(r -> Location.fromSAMRecord(r, variant.orientationBP1() < 0).add(variant.orientationBP1() > 0 ? 1 : -1))
+                    .filter(l -> withinRange(l, variant.locationBP1(), variant.uncertaintyBP1()))
+                    .max((a, b) -> variant.orientationBP1() > 0 ? a.compareTo(b) : b.compareTo(a))
+                    .ifPresent(bp1Candidates::add);
+        }
+
+        final List<Location> bp2Candidates = bp2Clipping.getSequences()
+                .stream()
+                //.filter(c -> c.LongestClipSequence.length() >= 5)
+                .map(c -> c.Alignment)
+                .filter(c -> withinRange(c, variant.locationBP2(), variant.uncertaintyBP2()))
+                .collect(Collectors.toList());
+
+        if (bp2Candidates.isEmpty()) {
+            interesting.stream()
+                    .map(Pair::getRight)
+                    .map(r -> Location.fromSAMRecord(r, variant.orientationBP2() < 0).add(variant.orientationBP2() > 0 ? 1 : -1))
+                    .filter(l -> withinRange(l, variant.locationBP2(), variant.uncertaintyBP2()))
+                    .max((a, b) -> variant.orientationBP2() > 0 ? a.compareTo(b) : b.compareTo(a))
+                    .ifPresent(bp2Candidates::add);
+        }
+
+        // NERA: NOTE - we include homology on both sides here and take it out later
+        final Location breakpoint1 = bp1Candidates.isEmpty() ? null : bp1Candidates.get(0).add(-variant.orientationBP1());
+        final Location breakpoint2 = bp2Candidates.isEmpty() ? null : bp2Candidates.get(0).add(-variant.orientationBP2());
+
+        return BreakpointResult.from(Pair.of(breakpoint1, breakpoint2));
     }
 
     @NotNull
-    private static SampleStats collectEvidence(final EnrichedVariantContext context, final SamReader reader,
+    private static SampleStats collectEvidence(final EnrichedVariantContext variant, final SamReader reader,
             final Pair<Location, Location> breakpoints) {
         final Location bp1 = breakpoints.getLeft();
         final Location bp2 = breakpoints.getRight();
 
         final SampleStats result = new SampleStats();
-        final Pair<Integer, Integer> ctxOrientation = Pair.of(context.orientationBP1(), context.orientationBP2());
+        final Pair<Integer, Integer> variantOrientation = Pair.of(variant.orientationBP1(), variant.orientationBP2());
 
         final List<SAMRecord> currentReads = Lists.newArrayList();
         final SAMRecordIterator iterator = reader.iterator();
 
-        final boolean srOnly = context.isShortVariant() || context.isInsert();
+        final boolean srOnly = variant.isShortVariant() || variant.isInsert();
 
         // NERA: Iterate through all records in the bam, then go through alignments of a read pair-wise
         while (iterator.hasNext() || !currentReads.isEmpty()) {
@@ -167,29 +334,29 @@ class Analysis {
                 final boolean proper = stream(pair).anyMatch(SAMRecord::getProperPairFlag);
                 final boolean secondary = stream(pair).anyMatch(SAMRecord::isSecondaryOrSupplementary);
 
-                final boolean correctOrientation = orientation(pair).equals(ctxOrientation);
-                final boolean correctChromosome = Location.fromSAMRecord(pair.getLeft()).sameChromosomeAs(context.locationBP1()) && Location
+                final boolean correctOrientation = orientation(pair).equals(variantOrientation);
+                final boolean correctChromosome = Location.fromSAMRecord(pair.getLeft()).sameChromosomeAs(variant.locationBP1()) && Location
                         .fromSAMRecord(pair.getRight())
-                        .sameChromosomeAs(context.locationBP2());
+                        .sameChromosomeAs(variant.locationBP2());
 
                 final int MAX_INTRA_PAIR_LENGTH = 400;
-                final boolean intraPairLength = (context.orientationBP1() > 0
+                final boolean intraPairLength = (variant.orientationBP1() > 0
                         ? bp1.position() - pair.getLeft().getAlignmentEnd()
-                        : pair.getLeft().getAlignmentStart() - bp1.position()) + (context.orientationBP2() > 0
+                        : pair.getLeft().getAlignmentStart() - bp1.position()) + (variant.orientationBP2() > 0
                         ? breakpoints.getRight().position() - pair.getRight().getAlignmentEnd()
                         : pair.getRight().getAlignmentStart() - bp2.position()) < MAX_INTRA_PAIR_LENGTH;
 
                 boolean isPairEvidence = correctOrientation && correctChromosome && intraPairLength;
                 if (isPairEvidence) {
-                    final int leftOuter = Location.fromSAMRecord(pair.getLeft(), context.orientationBP1() > 0).compareTo(bp1);
-                    final int rightOuter = Location.fromSAMRecord(pair.getRight(), context.orientationBP2() > 0).compareTo(bp2);
+                    final int leftOuter = Location.fromSAMRecord(pair.getLeft(), variant.orientationBP1() > 0).compareTo(bp1);
+                    final int rightOuter = Location.fromSAMRecord(pair.getRight(), variant.orientationBP2() > 0).compareTo(bp2);
 
-                    if (context.orientationBP1() > 0) {
+                    if (variant.orientationBP1() > 0) {
                         isPairEvidence &= leftOuter < 0;
                     } else {
                         isPairEvidence &= leftOuter > 0;
                     }
-                    if (context.orientationBP2() > 0) {
+                    if (variant.orientationBP2() > 0) {
                         isPairEvidence &= rightOuter < 0;
                     } else {
                         isPairEvidence &= rightOuter > 0;
@@ -197,8 +364,8 @@ class Analysis {
                 }
 
                 if (isPairEvidence) {
-                    bp1SRSupport |= exactlyClipsBreakpoint(pair.getLeft(), bp1, context.orientationBP1());
-                    bp2SRSupport |= exactlyClipsBreakpoint(pair.getRight(), bp2, context.orientationBP2());
+                    bp1SRSupport |= exactlyClipsBreakpoint(pair.getLeft(), bp1, variant.orientationBP1());
+                    bp2SRSupport |= exactlyClipsBreakpoint(pair.getRight(), bp2, variant.orientationBP2());
                     if (!srOnly) {
                         prSupport = true;
                         result.PR_Evidence.add(pair);
@@ -206,12 +373,12 @@ class Analysis {
                 }
 
                 if (proper || secondary) {
-                    final boolean clipsBP1 = exactlyClipsBreakpoint(context.orientationBP1() > 0 ? pair.getRight() : pair.getLeft(),
+                    final boolean clipsBP1 = exactlyClipsBreakpoint(variant.orientationBP1() > 0 ? pair.getRight() : pair.getLeft(),
                             bp1,
-                            context.orientationBP1());
-                    final boolean clipsBP2 = exactlyClipsBreakpoint(context.orientationBP2() > 0 ? pair.getRight() : pair.getLeft(),
+                            variant.orientationBP1());
+                    final boolean clipsBP2 = exactlyClipsBreakpoint(variant.orientationBP2() > 0 ? pair.getRight() : pair.getLeft(),
                             bp2,
-                            context.orientationBP2());
+                            variant.orientationBP2());
 
                     final boolean spanBP1 = span(pair, bp1);
                     final boolean spanBP2 = span(pair, bp2);
@@ -274,225 +441,6 @@ class Analysis {
         return result;
     }
 
-    enum BreakpointError {
-        NONE,
-        ALGO_ERROR
-    }
-
-    private static class BreakpointResult {
-        private BreakpointResult(final Pair<Location, Location> breakpoints) {
-            Breakpoints = breakpoints;
-            if (stream(breakpoints).anyMatch(Objects::isNull)) {
-                Error = BreakpointError.ALGO_ERROR;
-            }
-        }
-
-        static BreakpointResult from(final Pair<Location, Location> breakpoints) {
-            return new BreakpointResult(breakpoints);
-        }
-
-        Pair<Location, Location> Breakpoints;
-        BreakpointError Error = BreakpointError.NONE;
-    }
-
-    private static BreakpointResult determineBreakpointsImprecise(final EnrichedVariantContext variant, final SamReader reader) {
-        final Pair<Integer, Integer> ctxOrientation = Pair.of(variant.orientationBP1(), variant.orientationBP2());
-
-        final PairedReads interesting = new PairedReads();
-        final PairedReads clipped_proper = new PairedReads();
-        final PairedReads secondary_pairs = new PairedReads();
-
-        final List<SAMRecord> currentReads = Lists.newArrayList();
-        final SAMRecordIterator iterator = reader.iterator();
-
-        while (iterator.hasNext() || !currentReads.isEmpty()) {
-
-            final SAMRecord record = iterator.hasNext() ? iterator.next() : null;
-            if (record != null) {
-                if (currentReads.isEmpty() || record.getReadName().equals(currentReads.get(0).getReadName())) {
-                    currentReads.add(record);
-                    continue;
-                }
-            }
-
-            currentReads.sort(COMPARATOR);
-            final PairedReads pairs = pairs(currentReads);
-
-            currentReads.clear();
-            if (record != null) {
-                currentReads.add(record);
-            }
-
-            // extract all interesting pairs
-
-            for (final Pair<SAMRecord, SAMRecord> pair : pairs) {
-
-                final boolean correctOrientation = orientation(pair).equals(ctxOrientation);
-                final boolean correctChromosome = Location.fromSAMRecord(pair.getLeft()).sameChromosomeAs(variant.locationBP1()) && Location
-                        .fromSAMRecord(pair.getRight())
-                        .sameChromosomeAs(variant.locationBP2());
-                final boolean hasExpectedClipping = clippedOnCorrectSide(pair.getLeft(), variant.orientationBP1()) || clippedOnCorrectSide(
-                        pair.getRight(),
-                        variant.orientationBP2());
-
-                final boolean sameChromosome = pair.getLeft().getReferenceIndex().equals(pair.getRight().getReferenceIndex());
-                final boolean potentialSROnly = sameChromosome && Stream.of(variant.orientationBP1(), variant.orientationBP2())
-                        .anyMatch(orientation -> clippedOnCorrectSide(orientation > 0 ? pair.getRight() : pair.getLeft(), orientation));
-
-                final boolean secondary = stream(pair).anyMatch(SAMRecord::isSecondaryOrSupplementary);
-                final boolean proper = stream(pair).anyMatch(SAMRecord::getProperPairFlag) && !secondary;
-
-                LOGGER.trace(
-                        "determineBreakpoints {} {}->{} {} {}->{} correctOrientation({}) correctChromosome({}) hasExpectedClipping({}) proper({}) potentialSROnly({}) secondary({})",
-                        pair.getLeft().getReadName(),
-                        pair.getLeft().getAlignmentStart(),
-                        pair.getLeft().getMateAlignmentStart(),
-                        pair.getRight().getReadName(),
-                        pair.getRight().getAlignmentStart(),
-                        pair.getRight().getMateAlignmentStart(),
-                        correctOrientation,
-                        correctChromosome,
-                        hasExpectedClipping,
-                        proper,
-                        potentialSROnly,
-                        secondary);
-
-                // TODO: check insert size?
-
-                if (secondary && potentialSROnly) {
-                    secondary_pairs.add(pair);
-                } else if ((!proper || hasExpectedClipping) && correctChromosome && correctOrientation) {
-                    interesting.add(pair);
-                } else if (proper && potentialSROnly) {
-                    clipped_proper.add(pair);
-                }
-            }
-
-        }
-
-        iterator.close();
-
-        // load clipping info
-
-        Clipping bp1_clipping = new Clipping();
-        Clipping bp2_clipping = new Clipping();
-
-        for (final Pair<SAMRecord, SAMRecord> pair : interesting) {
-            if (variant.orientationBP1() > 0) {
-                bp1_clipping.add(Clipping.getRightClip(pair.getLeft()));
-            } else {
-                bp1_clipping.add(Clipping.getLeftClip(pair.getLeft()));
-            }
-            if (variant.orientationBP2() > 0) {
-                bp2_clipping.add(Clipping.getRightClip(pair.getRight()));
-            } else {
-                bp2_clipping.add(Clipping.getLeftClip(pair.getRight()));
-            }
-        }
-
-        // include more clipping information
-
-        for (final Pair<SAMRecord, SAMRecord> pair : clipped_proper) {
-            if (stream(pair).allMatch(r -> Location.fromSAMRecord(r).sameChromosomeAs(variant.locationBP1()))) {
-                if (variant.orientationBP1() > 0) {
-                    bp1_clipping.add(Clipping.getRightClip(pair.getRight()));
-                } else {
-                    bp1_clipping.add(Clipping.getLeftClip(pair.getLeft()));
-                }
-            }
-            if (stream(pair).allMatch(r -> Location.fromSAMRecord(r).sameChromosomeAs(variant.locationBP2()))) {
-                if (variant.orientationBP2() > 0) {
-                    bp2_clipping.add(Clipping.getRightClip(pair.getRight()));
-                } else {
-                    bp2_clipping.add(Clipping.getLeftClip(pair.getLeft()));
-                }
-            }
-        }
-
-        // include secondary clipping information
-
-        for (final Pair<SAMRecord, SAMRecord> pair : secondary_pairs) {
-            if (stream(pair).allMatch(r -> Location.fromSAMRecord(r).sameChromosomeAs(variant.locationBP1()))) {
-                if (variant.orientationBP1() > 0) {
-                    bp1_clipping.add(Clipping.getRightClip(pair.getRight()));
-                } else {
-                    bp1_clipping.add(Clipping.getLeftClip(pair.getLeft()));
-                }
-            }
-            if (stream(pair).allMatch(r -> Location.fromSAMRecord(r).sameChromosomeAs(variant.locationBP2()))) {
-                if (variant.orientationBP2() > 0) {
-                    bp2_clipping.add(Clipping.getRightClip(pair.getRight()));
-                } else {
-                    bp2_clipping.add(Clipping.getLeftClip(pair.getLeft()));
-                }
-            }
-        }
-
-        // determinate candidates based on clipping info
-
-        final List<Location> bp1_candidates = bp1_clipping.getSequences()
-                .stream()
-                //.filter(c -> c.LongestClipSequence.length() >= 5)
-                .map(c -> c.Alignment)
-                .filter(c -> withinRange(c, variant.locationBP1(), variant.uncertaintyBP1()))
-                .collect(Collectors.toList());
-
-        if (bp1_candidates.isEmpty()) {
-            interesting.stream()
-                    .map(Pair::getLeft)
-                    .map(r -> Location.fromSAMRecord(r, variant.orientationBP1() < 0).add(variant.orientationBP1() > 0 ? 1 : -1))
-                    .filter(l -> withinRange(l, variant.locationBP1(), variant.uncertaintyBP1()))
-                    .max((a, b) -> variant.orientationBP1() > 0 ? a.compareTo(b) : b.compareTo(a))
-                    .ifPresent(bp1_candidates::add);
-        }
-
-        final List<Location> bp2_candidates = bp2_clipping.getSequences()
-                .stream()
-                //.filter(c -> c.LongestClipSequence.length() >= 5)
-                .map(c -> c.Alignment)
-                .filter(c -> withinRange(c, variant.locationBP2(), variant.uncertaintyBP2()))
-                .collect(Collectors.toList());
-
-        if (bp2_candidates.isEmpty()) {
-            interesting.stream()
-                    .map(Pair::getRight)
-                    .map(r -> Location.fromSAMRecord(r, variant.orientationBP2() < 0).add(variant.orientationBP2() > 0 ? 1 : -1))
-                    .filter(l -> withinRange(l, variant.locationBP2(), variant.uncertaintyBP2()))
-                    .max((a, b) -> variant.orientationBP2() > 0 ? a.compareTo(b) : b.compareTo(a))
-                    .ifPresent(bp2_candidates::add);
-        }
-
-        // NOTE: we include homology on both sides here and take it out later
-        LOGGER.trace("bp1_candidates={} bp2_candidates={}", bp1_candidates, bp2_candidates);
-        final Location breakpoint1 = bp1_candidates.isEmpty() ? null : bp1_candidates.get(0).add(-variant.orientationBP1());
-        final Location breakpoint2 = bp2_candidates.isEmpty() ? null : bp2_candidates.get(0).add(-variant.orientationBP2());
-
-        return BreakpointResult.from(Pair.of(breakpoint1, breakpoint2));
-    }
-
-    // basically, this will align to where we expect to see clipping
-    private static BreakpointResult determineBreakpoints(final EnrichedVariantContext context, final SamReader reader) {
-        final int adj = context.isTranslocation() ? 0 : 1;
-        if (context.isImprecise()) {
-            return determineBreakpointsImprecise(context, reader);
-        } else if (context.isInsert()) {
-            return BreakpointResult.from(Pair.of(context.locationBP1(),
-                    context.locationBP2().add(1))); // we want last match base at this stage
-        } else if (context.insertSequence().isEmpty()) {
-            final Location bp1 = context.locationBP1().add(context.orientationBP1() > 0 ? context.homologySequence().length() : adj);
-            final Location bp2 = context.locationBP2()
-                    .add(context.orientationBP2() > 0 ? context.uncertaintyBP2().end() : context.uncertaintyBP2().start() + adj);
-            return BreakpointResult.from(Pair.of(bp1, bp2));
-        } else {
-            final Location bp1 =
-                    context.locationBP1().add(context.orientationBP1() > 0 ? 0 : adj); // ignore homology when we have an insert
-            // TODO: double check adding uncertainty on bp2?
-            final Location bp2 = context.locationBP2()
-                    .add(context.orientationBP2() > 0 ? context.uncertaintyBP2().end() : context.uncertaintyBP2().start() + adj);
-            return BreakpointResult.from(Pair.of(bp1, bp2));
-        }
-    }
-
     @NotNull
     private static File queryNameSortedBAM(final SamReader reader, final QueryInterval[] intervals, final String name) throws IOException {
         final SAMFileHeader header = reader.getFileHeader().clone();
@@ -512,66 +460,105 @@ class Analysis {
         return file;
     }
 
+    private static int orientation(final SAMRecord record) {
+        return record.getReadNegativeStrandFlag() ? -1 : 1;
+    }
+
     @NotNull
-    StructuralVariantResult processStructuralVariant(final EnrichedVariantContext context) throws IOException {
-        final QueryInterval[] intervals = QueryInterval.optimizeIntervals(new QueryInterval[] {
-                new QueryInterval(context.locationBP1().referenceIndex(),
-                        Math.max(0, context.locationBP1().position() + context.uncertaintyBP1().start() - range),
-                        context.locationBP1().position() + context.uncertaintyBP1().end() + range),
-                new QueryInterval(context.locationBP2().referenceIndex(),
-                        Math.max(0, context.locationBP2().position() + context.uncertaintyBP2().start() - range),
-                        context.locationBP2().position() + context.uncertaintyBP2().end() + range) });
+    private static Pair<Integer, Integer> orientation(final Pair<SAMRecord, SAMRecord> pair) {
+        return Pair.of(orientation(pair.getLeft()), orientation(pair.getRight()));
+    }
 
-        final File TEMP_REF_BAM = queryNameSortedBAM(refReader, intervals, "ref");
-        final File TEMP_TUMOR_BAM = queryNameSortedBAM(tumorReader, intervals, "tumor");
+    @NotNull
+    private static <L> Stream<L> stream(final Pair<L, L> pair) {
+        return Stream.of(pair.getLeft(), pair.getRight());
+    }
 
-        final SamReader SORTED_REF_READER = SamReaderFactory.makeDefault().open(TEMP_REF_BAM);
-        final SamReader SORTED_TUMOR_READER = SamReaderFactory.makeDefault().open(TEMP_TUMOR_BAM);
+    private static boolean isMate(final SAMRecord read, final SAMRecord mate) {
+        return read.getReadName().equals(mate.getReadName()) && read.getMateReferenceIndex().equals(mate.getReferenceIndex())
+                && Math.abs(read.getMateAlignmentStart() - mate.getAlignmentStart()) <= 1;
+    }
 
-        final BreakpointResult breakpoints = determineBreakpoints(context, SORTED_TUMOR_READER);
+    private static boolean span(final Pair<SAMRecord, SAMRecord> pair, final Location breakpoint) {
+        return Location.fromSAMRecord(pair.getLeft(), true).compareTo(breakpoint) <= 0
+                && Location.fromSAMRecord(pair.getRight(), false).compareTo(breakpoint) >= 0;
+    }
 
-        final StructuralVariantResult result = new StructuralVariantResult();
-        result.Breakpoints = breakpoints.Breakpoints;
-        result.QueryIntervals = intervals;
+    private static boolean overlap(final SAMRecord read, final Location breakpoint) {
+        return read.getReferenceIndex() == breakpoint.referenceIndex() && read.getAlignmentStart() <= breakpoint.position()
+                && breakpoint.position() <= read.getAlignmentEnd();
+    }
 
-        if (breakpoints.Error != BreakpointError.NONE) {
-            result.Filters = Filter.errorFilter();
-        } else {
-            result.TumorStats = collectEvidence(context, SORTED_TUMOR_READER, result.Breakpoints);
-            result.RefStats = collectEvidence(context, SORTED_REF_READER, result.Breakpoints);
-            result.AlleleFrequency = AlleleFrequency.calculate(result.TumorStats);
+    private static boolean overlap(final Pair<SAMRecord, SAMRecord> pair, final Location breakpoint) {
+        return stream(pair).anyMatch(r -> overlap(r, breakpoint));
+    }
 
-            // NERA: load sample clipping
-            SORTED_TUMOR_READER.forEach(r -> Clipping.getClips(r).forEach(c -> result.TumorStats.Sample_Clipping.add(c)));
-            SORTED_REF_READER.forEach(r -> Clipping.getClips(r).forEach(c -> result.RefStats.Sample_Clipping.add(c)));
+    private static boolean clippedOnCorrectSide(final SAMRecord record, final int orientation) {
+        return (orientation > 0 ? record.getCigar().isRightClipped() : record.getCigar().isLeftClipped());
+    }
 
-            result.Filters = Filter.filters(context, result.TumorStats, result.RefStats, result.Breakpoints, contamination);
+    private static boolean exactlyClipsBreakpoint(final SAMRecord record, final Location breakpoint, final int orientation) {
+        return Location.fromSAMRecord(record, orientation < 0).compareTo(breakpoint) == 0 && clippedOnCorrectSide(record, orientation);
+    }
 
-            // NERA: adjust for homology
-            final Location bp1 = result.Breakpoints.getLeft().add(context.orientationBP1() > 0 ? 0 : -1);
-            final Location bp2;
-            if (!context.isInsert() && context.insertSequence().isEmpty()) {
-                bp2 = result.Breakpoints.getRight()
-                        .add(-context.orientationBP2() * context.homologySequence().length())
-                        .add(context.orientationBP2() > 0 ? 0 : -1);
-            } else {
-                bp2 = result.Breakpoints.getRight().add(context.orientationBP2() > 0 ? 0 : -1);
+    private static boolean withinRange(final Location a, final Location b, final Range range) {
+        final int extraUncertainty = 1;
+        return a.referenceIndex() == b.referenceIndex() && (a.position() >= b.position() + range.start() - extraUncertainty) && (
+                a.position() <= b.position() + range.end() + extraUncertainty);
+    }
+
+    @NotNull
+    private static PairedReads pairs(final List<SAMRecord> list) {
+        final PairedReads pairs = new PairedReads();
+        for (int i = 0; i < list.size(); ++i) {
+
+            final SAMRecord r0 = list.get(i);
+            if (r0.getReadUnmappedFlag()) {
+                continue;
             }
-            result.Breakpoints = Pair.of(bp1, bp2);
+
+            for (int j = i + 1; j < list.size(); ++j) {
+
+                final SAMRecord r1 = list.get(j);
+                if (r1.getReadUnmappedFlag()) {
+                    continue;
+                }
+
+                // NERA: check both directions due to secondary alignments
+                if (isMate(r0, r1) || isMate(r1, r0)) {
+                    pairs.add(Pair.of(r0, r1));
+                }
+
+            }
+
+        }
+        return pairs;
+    }
+
+    enum BreakpointError {
+        NONE,
+        ALGO_ERROR
+    }
+
+    private static class PairedReads extends ArrayList<Pair<SAMRecord, SAMRecord>> {
+
+    }
+
+    private static class BreakpointResult {
+
+        private BreakpointResult(@NotNull final Pair<Location, Location> breakpoints) {
+            Breakpoints = breakpoints;
+            if (stream(breakpoints).anyMatch(Objects::isNull)) {
+                Error = BreakpointError.ALGO_ERROR;
+            }
         }
 
-        result.FilterString = result.Filters.isEmpty() ? "PASS" : String.join(";", result.Filters);
-
-        SORTED_REF_READER.close();
-        SORTED_TUMOR_READER.close();
-
-        if (!TEMP_REF_BAM.delete()) {
-            LOGGER.error("couldn't delete {}", TEMP_REF_BAM);
-        }
-        if (!TEMP_TUMOR_BAM.delete()) {
-            LOGGER.error("couldn't delete {}", TEMP_TUMOR_BAM);
+        @NotNull
+        static BreakpointResult from(final Pair<Location, Location> breakpoints) {
+            return new BreakpointResult(breakpoints);
         }
 
-        return result;
+        Pair<Location, Location> Breakpoints;
+        BreakpointError Error = BreakpointError.NONE;
     }
 }

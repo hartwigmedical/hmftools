@@ -86,6 +86,7 @@ final class BPIAlgo {
                 vcfUpdater.accept(mateVariant, true);
             }
         }
+
         final QueryInterval[] optimizedIntervals =
                 QueryInterval.optimizeIntervals(combinedQueryIntervals.toArray(new QueryInterval[combinedQueryIntervals.size()]));
 

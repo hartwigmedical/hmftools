@@ -65,7 +65,7 @@ final class Filter {
             if (refSR > allowableNormalSupport) {
                 filters.add(FilterType.SR_NORMAL_SUPPORT);
             }
-        } else if (variant.isInsert()) {
+        } else if (!variant.isInsert()) {
             // NERA: we only need to check BP1 as BP1 PR+PRSR == BP2 PR+PRSR
             final int allowableNormalSupport = (int) (contamination * supportPR(tumorStats.BP1_Stats));
             if (supportPR(refStats.BP1_Stats) > allowableNormalSupport) {
