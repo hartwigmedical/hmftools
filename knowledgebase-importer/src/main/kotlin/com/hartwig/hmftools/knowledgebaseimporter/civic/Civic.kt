@@ -10,14 +10,13 @@ import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.KnowledgebaseSo
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
 import com.hartwig.hmftools.knowledgebaseimporter.readTSVRecords
-import htsjdk.samtools.reference.IndexedFastaSequenceFile
 
-class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation: String, diseaseOntology: DiseaseOntology,
-            private val reference: IndexedFastaSequenceFile, treatmentTypeMap: Map<String, String>) :
+class Civic(variantsLocation: String, evidenceLocation: String, diseaseOntology: DiseaseOntology,
+            private val recordAnalyzer: RecordAnalyzer, treatmentTypeMap: Map<String, String>) :
         Knowledgebase, KnowledgebaseSource<CivicRecord, ActionableRecord> {
 
     override val source = "civic"
-    override val knownVariants by lazy { RecordAnalyzer(transvarLocation, reference).knownVariants(listOf(this)).distinct() }
+    override val knownVariants by lazy { recordAnalyzer.knownVariants(listOf(this)).distinct() }
     override val knownFusionPairs: List<FusionPair> by lazy { knownKbRecords.flatMap { it.events }.filterIsInstance<FusionPair>().distinct() }
     override val promiscuousGenes: List<PromiscuousGene> by lazy { knownKbRecords.flatMap { it.events }.filterIsInstance<PromiscuousGene>().distinct() }
     override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableKbItems.filterIsInstance<ActionableVariantOutput>() }
@@ -32,7 +31,7 @@ class Civic(variantsLocation: String, evidenceLocation: String, transvarLocation
 
     override val knownKbRecords by lazy { preProcessCivicRecords(variantsLocation, evidenceLocation, treatmentTypeMap) }
     override val actionableKbRecords by lazy { knownKbRecords }
-    private val actionableKbItems by lazy { RecordAnalyzer(transvarLocation, reference).actionableItems(listOf(this)).distinct() }
+    private val actionableKbItems by lazy { recordAnalyzer.actionableItems(listOf(this)).distinct() }
 
     private fun preProcessCivicRecords(variantFileLocation: String, evidenceFileLocation: String,
                                        treatmentTypeMap: Map<String, String>): List<CivicRecord> {

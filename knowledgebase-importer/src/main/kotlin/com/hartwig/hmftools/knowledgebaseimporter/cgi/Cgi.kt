@@ -6,14 +6,13 @@ import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.KnowledgebaseSo
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
 import com.hartwig.hmftools.knowledgebaseimporter.readTSVRecords
-import htsjdk.samtools.reference.IndexedFastaSequenceFile
 
-class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation: String, diseaseOntology: DiseaseOntology,
-          private val reference: IndexedFastaSequenceFile, treatmentTypeMap: Map<String, String>) :
+class Cgi(variantsLocation: String, biomarkersLocation: String, diseaseOntology: DiseaseOntology,
+          private val recordAnalyzer: RecordAnalyzer, treatmentTypeMap: Map<String, String>) :
         Knowledgebase, KnowledgebaseSource<CgiKnownKbRecord, CgiActionableRecord> {
 
     override val source = "cgi"
-    override val knownVariants by lazy { RecordAnalyzer(transvarLocation, reference).knownVariants(listOf(this)).distinct() }
+    override val knownVariants by lazy { recordAnalyzer.knownVariants(listOf(this)).distinct() }
     override val knownFusionPairs: List<FusionPair> by lazy { actionableKbRecords.flatMap { it.events }.filterIsInstance<FusionPair>().distinct() }
     override val promiscuousGenes: List<PromiscuousGene> by lazy { actionableKbRecords.flatMap { it.events }.filterIsInstance<PromiscuousGene>().distinct() }
     override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableKbItems.filterIsInstance<ActionableVariantOutput>() }
@@ -29,5 +28,5 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, transvarLocation
     override val actionableKbRecords by lazy {
         readTSVRecords(biomarkersLocation) { CgiActionableRecord(it, treatmentTypeMap) }
     }
-    private val actionableKbItems by lazy { RecordAnalyzer(transvarLocation, reference).actionableItems(listOf(this)).distinct() }
+    private val actionableKbItems by lazy { recordAnalyzer.actionableItems(listOf(this)).distinct() }
 }

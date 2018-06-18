@@ -7,15 +7,13 @@ import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.KnowledgebaseSo
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
 import com.hartwig.hmftools.knowledgebaseimporter.readTSVRecords
-import htsjdk.samtools.reference.IndexedFastaSequenceFile
 
 
-class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: String, transvarLocation: String,
-             diseaseOntology: DiseaseOntology, private val reference: IndexedFastaSequenceFile,
-             treatmentTypeMap: Map<String, String>) : Knowledgebase,
+class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: String, diseaseOntology: DiseaseOntology,
+             private val recordAnalyzer: RecordAnalyzer, treatmentTypeMap: Map<String, String>) : Knowledgebase,
         KnowledgebaseSource<OncoKnownRecord, ActionableRecord> {
     override val source = "oncoKb"
-    override val knownVariants by lazy { RecordAnalyzer(transvarLocation, reference).knownVariants(listOf(this)).distinct() }
+    override val knownVariants by lazy { recordAnalyzer.knownVariants(listOf(this)).distinct() }
     override val knownFusionPairs by lazy { knownKbRecords.flatMap { it.events }.filterIsInstance<FusionPair>().distinct() }
     override val promiscuousGenes by lazy { knownKbRecords.flatMap { it.events }.filterIsInstance<PromiscuousGene>().distinct() }
     override val actionableVariants by lazy { actionableKbItems.filterIsInstance<ActionableVariantOutput>() }
@@ -29,5 +27,5 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
     }
     override val knownKbRecords by lazy { readTSVRecords(annotatedVariantsLocation) { OncoKnownRecord(it) } }
     override val actionableKbRecords by lazy { readTSVRecords(actionableVariantsLocation) { OncoActionableRecord(it, treatmentTypeMap) } }
-    private val actionableKbItems by lazy { RecordAnalyzer(transvarLocation, reference).actionableItems(listOf(this)).distinct() }
+    private val actionableKbItems by lazy { recordAnalyzer.actionableItems(listOf(this)).distinct() }
 }
