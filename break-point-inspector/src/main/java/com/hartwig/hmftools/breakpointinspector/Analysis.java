@@ -56,12 +56,15 @@ class Analysis {
                         Math.max(0, variant.locationBP2().position() + variant.uncertaintyBP2().start() - range),
                         variant.locationBP2().position() + variant.uncertaintyBP2().end() + range) });
 
+        LOGGER.info("  Creating tmp ref BAM using " + Lists.newArrayList(intervals));
         final File tmpRefBam = queryNameSortedBAM(refReader, intervals, "ref");
+        LOGGER.info("  Creating tmp tumor BAM using " + Lists.newArrayList(intervals));
         final File tmpTumorBam = queryNameSortedBAM(tumorReader, intervals, "tumor");
 
         final SamReader sortedRefReader = SamReaderFactory.makeDefault().open(tmpRefBam);
         final SamReader sortedTumorReader = SamReaderFactory.makeDefault().open(tmpTumorBam);
 
+        LOGGER.info("  Analyzing breakpoints");
         final BreakpointResult breakpoints = determineBreakpoints(variant, sortedTumorReader);
 
         final StructuralVariantResult result = new StructuralVariantResult();
@@ -76,9 +79,9 @@ class Analysis {
             result.AlleleFrequency = AlleleFrequency.calculate(result.TumorStats);
 
             // NERA: load sample clipping
+            sortedRefReader.forEach(record -> Clipping.getClips(record).forEach(clipInfo -> result.RefStats.Sample_Clipping.add(clipInfo)));
             sortedTumorReader.forEach(record -> Clipping.getClips(record)
                     .forEach(clipInfo -> result.TumorStats.Sample_Clipping.add(clipInfo)));
-            sortedRefReader.forEach(record -> Clipping.getClips(record).forEach(clipInfo -> result.RefStats.Sample_Clipping.add(clipInfo)));
 
             result.Filters = Filter.filters(variant, result.TumorStats, result.RefStats, result.Breakpoints, contamination);
 
@@ -193,7 +196,6 @@ class Analysis {
         iterator.close();
 
         // NERA: load clipping info
-
         Clipping bp1Clipping = new Clipping();
         Clipping bp2Clipping = new Clipping();
 
@@ -231,7 +233,6 @@ class Analysis {
         }
 
         // NERA: Include secondary clipping information
-
         for (final Pair<SAMRecord, SAMRecord> pair : secondaryPairs) {
             if (stream(pair).allMatch(r -> Location.fromSAMRecord(r).sameChromosomeAs(variant.locationBP1()))) {
                 if (variant.orientationBP1() > 0) {
@@ -451,11 +452,13 @@ class Analysis {
 
         final SAMRecordIterator iterator = reader.queryOverlapping(intervals);
         while (iterator.hasNext()) {
-            writer.addAlignment(iterator.next());
+            SAMRecord record = iterator.next();
+            writer.addAlignment(record);
         }
 
         iterator.close();
         writer.close();
+        LOGGER.info("    Finished writing file.");
 
         return file;
     }

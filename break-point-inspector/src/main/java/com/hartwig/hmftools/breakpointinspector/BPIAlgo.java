@@ -48,10 +48,11 @@ final class BPIAlgo {
                 }
             }
 
-            LOGGER.info(String.format("Running BPI filter on %s", variant));
             final EnrichedVariantContext enrichedVariant = VariantEnrichment.enrich(variant, mateVariant, dictionary);
 
+            LOGGER.info(String.format("Running Analysis on %s", variant));
             final StructuralVariantResult result = analysis.processStructuralVariant(enrichedVariant);
+
             combinedQueryIntervals.addAll(asList(result.QueryIntervals));
 
             tsv.add(TSVOutput.generateVariant(enrichedVariant, result));
