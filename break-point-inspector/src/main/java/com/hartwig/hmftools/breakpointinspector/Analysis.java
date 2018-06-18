@@ -72,8 +72,8 @@ class Analysis {
     }
 
     private static boolean overlap(final SAMRecord read, final Location breakpoint) {
-        return read.getReferenceIndex() == breakpoint.ReferenceIndex && read.getAlignmentStart() <= breakpoint.Position
-                && breakpoint.Position <= read.getAlignmentEnd();
+        return read.getReferenceIndex() == breakpoint.referenceIndex() && read.getAlignmentStart() <= breakpoint.position()
+                && breakpoint.position() <= read.getAlignmentEnd();
     }
 
     private static boolean overlap(final Pair<SAMRecord, SAMRecord> pair, final Location breakpoint) {
@@ -90,8 +90,8 @@ class Analysis {
 
     private static boolean withinRange(final Location a, final Location b, final Range range) {
         final int extraUncertainty = 1;
-        return a.ReferenceIndex == b.ReferenceIndex && (a.Position >= b.Position + range.start() - extraUncertainty) && (a.Position
-                <= b.Position + range.end() + extraUncertainty);
+        return a.referenceIndex() == b.referenceIndex() && (a.position() >= b.position() + range.start() - extraUncertainty) && (
+                a.position() <= b.position() + range.end() + extraUncertainty);
     }
 
     @NotNull
@@ -122,6 +122,7 @@ class Analysis {
         return pairs;
     }
 
+    @NotNull
     private static SampleStats collectEvidence(final EnrichedVariantContext context, final SamReader reader,
             final Pair<Location, Location> breakpoints) {
         final Location bp1 = breakpoints.getLeft();
@@ -135,10 +136,8 @@ class Analysis {
 
         final boolean srOnly = context.isShortVariant() || context.isInsert();
 
-        // iterate through all records in the bam
-        // then go through alignments of a read pair-wise
+        // NERA: Iterate through all records in the bam, then go through alignments of a read pair-wise
         while (iterator.hasNext() || !currentReads.isEmpty()) {
-
             final SAMRecord record = iterator.hasNext() ? iterator.next() : null;
             if (record != null) {
                 if (currentReads.isEmpty() || record.getReadName().equals(currentReads.get(0).getReadName())) {
@@ -155,17 +154,16 @@ class Analysis {
                 currentReads.add(record);
             }
 
-            boolean pr_support = false;
-            boolean bp1_sr_support = false;
-            boolean bp2_sr_support = false;
+            boolean prSupport = false;
+            boolean bp1SRSupport = false;
+            boolean bp2SRSupport = false;
 
-            boolean bp1_pr_normal = false;
-            boolean bp1_sr_normal = false;
-            boolean bp2_pr_normal = false;
-            boolean bp2_sr_normal = false;
+            boolean bp1PRNormal = false;
+            boolean bp1SRNormal = false;
+            boolean bp2PRNormal = false;
+            boolean bp2SRNormal = false;
 
             for (final Pair<SAMRecord, SAMRecord> pair : pairs) {
-
                 final boolean proper = stream(pair).anyMatch(SAMRecord::getProperPairFlag);
                 final boolean secondary = stream(pair).anyMatch(SAMRecord::isSecondaryOrSupplementary);
 
@@ -176,69 +174,63 @@ class Analysis {
 
                 final int MAX_INTRA_PAIR_LENGTH = 400;
                 final boolean intraPairLength = (context.orientationBP1() > 0
-                        ? bp1.Position - pair.getLeft().getAlignmentEnd()
-                        : pair.getLeft().getAlignmentStart() - bp1.Position) + (context.orientationBP2() > 0
-                        ? breakpoints.getRight().Position - pair.getRight().getAlignmentEnd()
-                        : pair.getRight().getAlignmentStart() - bp2.Position) < MAX_INTRA_PAIR_LENGTH;
+                        ? bp1.position() - pair.getLeft().getAlignmentEnd()
+                        : pair.getLeft().getAlignmentStart() - bp1.position()) + (context.orientationBP2() > 0
+                        ? breakpoints.getRight().position() - pair.getRight().getAlignmentEnd()
+                        : pair.getRight().getAlignmentStart() - bp2.position()) < MAX_INTRA_PAIR_LENGTH;
 
                 boolean isPairEvidence = correctOrientation && correctChromosome && intraPairLength;
                 if (isPairEvidence) {
-
-                    final int left_outer = Location.fromSAMRecord(pair.getLeft(), context.orientationBP1() > 0).compareTo(bp1);
-                    final int right_outer = Location.fromSAMRecord(pair.getRight(), context.orientationBP2() > 0).compareTo(bp2);
+                    final int leftOuter = Location.fromSAMRecord(pair.getLeft(), context.orientationBP1() > 0).compareTo(bp1);
+                    final int rightOuter = Location.fromSAMRecord(pair.getRight(), context.orientationBP2() > 0).compareTo(bp2);
 
                     if (context.orientationBP1() > 0) {
-                        isPairEvidence &= left_outer < 0;
+                        isPairEvidence &= leftOuter < 0;
                     } else {
-                        isPairEvidence &= left_outer > 0;
+                        isPairEvidence &= leftOuter > 0;
                     }
                     if (context.orientationBP2() > 0) {
-                        isPairEvidence &= right_outer < 0;
+                        isPairEvidence &= rightOuter < 0;
                     } else {
-                        isPairEvidence &= right_outer > 0;
+                        isPairEvidence &= rightOuter > 0;
                     }
-
                 }
 
                 if (isPairEvidence) {
-                    bp1_sr_support |= exactlyClipsBreakpoint(pair.getLeft(), bp1, context.orientationBP1());
-                    bp2_sr_support |= exactlyClipsBreakpoint(pair.getRight(), bp2, context.orientationBP2());
+                    bp1SRSupport |= exactlyClipsBreakpoint(pair.getLeft(), bp1, context.orientationBP1());
+                    bp2SRSupport |= exactlyClipsBreakpoint(pair.getRight(), bp2, context.orientationBP2());
                     if (!srOnly) {
-                        pr_support = true;
+                        prSupport = true;
                         result.PR_Evidence.add(pair);
                     }
                 }
 
                 if (proper || secondary) {
-                    final boolean clips_bp1 = exactlyClipsBreakpoint(context.orientationBP1() > 0 ? pair.getRight() : pair.getLeft(),
+                    final boolean clipsBP1 = exactlyClipsBreakpoint(context.orientationBP1() > 0 ? pair.getRight() : pair.getLeft(),
                             bp1,
                             context.orientationBP1());
-                    final boolean clips_bp2 = exactlyClipsBreakpoint(context.orientationBP2() > 0 ? pair.getRight() : pair.getLeft(),
+                    final boolean clipsBP2 = exactlyClipsBreakpoint(context.orientationBP2() > 0 ? pair.getRight() : pair.getLeft(),
                             bp2,
                             context.orientationBP2());
 
-                    final boolean span_bp1 = span(pair, bp1);
-                    final boolean span_bp2 = span(pair, bp2);
-                    final boolean overlap_bp1 = overlap(pair, bp1);
-                    final boolean overlap_bp2 = overlap(pair, bp2);
+                    final boolean spanBP1 = span(pair, bp1);
+                    final boolean spanBP2 = span(pair, bp2);
+                    final boolean overlapBP1 = overlap(pair, bp1);
+                    final boolean overlapBP2 = overlap(pair, bp2);
 
                     boolean addToSR = false;
-                    if (span_bp1) {
-                        if (clips_bp1) {
-                            bp1_sr_support = addToSR = true;
-                        } else if (overlap_bp1) {
-                            bp1_pr_normal = bp1_sr_normal = addToSR = true;
+                    if (spanBP1) {
+                        if (clipsBP1) {
+                            bp1SRSupport = addToSR = true;
                         } else {
-                            bp1_pr_normal = true;
+                            bp1PRNormal = !overlapBP1 || (bp1SRNormal = addToSR = true);
                         }
                     }
-                    if (span_bp2) {
-                        if (clips_bp2) {
-                            bp2_sr_support = addToSR = true;
-                        } else if (overlap_bp2) {
-                            bp2_pr_normal = bp2_sr_normal = addToSR = true;
+                    if (spanBP2) {
+                        if (clipsBP2) {
+                            bp2SRSupport = addToSR = true;
                         } else {
-                            bp2_pr_normal = true;
+                            bp2PRNormal = !overlapBP2 || (bp2SRNormal = addToSR = true);
                         }
                     }
 
@@ -246,39 +238,37 @@ class Analysis {
                         result.SR_Evidence.add(pair);
                     }
                 }
+            }
 
-            } // next pair in reads
+            // NERA: Increment read counts
+            final boolean srSupport = bp1SRSupport || bp2SRSupport;
 
-            // increment read counts
-            final boolean sr_support = bp1_sr_support || bp2_sr_support;
-
-            if (sr_support && pr_support) {
+            if (srSupport && prSupport) {
                 result.BP1_Stats.PR_SR_Support++;
-            } else if (bp1_sr_support) {
+            } else if (bp1SRSupport) {
                 result.BP1_Stats.SR_Only_Support++;
-            } else if (pr_support) {
+            } else if (prSupport) {
                 result.BP1_Stats.PR_Only_Support++;
             }
-            if (bp1_pr_normal && bp1_sr_normal) {
+            if (bp1PRNormal && bp1SRNormal) {
                 result.BP1_Stats.PR_SR_Normal++;
-            } else if (bp1_pr_normal && !srOnly) {
+            } else if (bp1PRNormal && !srOnly) {
                 result.BP1_Stats.PR_Only_Normal++;
             }
 
-            if (sr_support && pr_support) {
+            if (srSupport && prSupport) {
                 result.BP2_Stats.PR_SR_Support++;
-            } else if (bp2_sr_support) {
+            } else if (bp2SRSupport) {
                 result.BP2_Stats.SR_Only_Support++;
-            } else if (pr_support) {
+            } else if (prSupport) {
                 result.BP2_Stats.PR_Only_Support++;
             }
-            if (bp2_pr_normal && bp2_sr_normal) {
+            if (bp2PRNormal && bp2SRNormal) {
                 result.BP2_Stats.PR_SR_Normal++;
-            } else if (bp2_pr_normal && !srOnly) {
+            } else if (bp2PRNormal && !srOnly) {
                 result.BP2_Stats.PR_Only_Normal++;
             }
-
-        } // next read collection
+        }
 
         iterator.close();
         return result;
@@ -525,12 +515,12 @@ class Analysis {
     @NotNull
     StructuralVariantResult processStructuralVariant(final EnrichedVariantContext context) throws IOException {
         final QueryInterval[] intervals = QueryInterval.optimizeIntervals(new QueryInterval[] {
-                new QueryInterval(context.locationBP1().ReferenceIndex,
-                        Math.max(0, context.locationBP1().Position + context.uncertaintyBP1().start() - range),
-                        context.locationBP1().Position + context.uncertaintyBP1().end() + range),
-                new QueryInterval(context.locationBP2().ReferenceIndex,
-                        Math.max(0, context.locationBP2().Position + context.uncertaintyBP2().start() - range),
-                        context.locationBP2().Position + context.uncertaintyBP2().end() + range) });
+                new QueryInterval(context.locationBP1().referenceIndex(),
+                        Math.max(0, context.locationBP1().position() + context.uncertaintyBP1().start() - range),
+                        context.locationBP1().position() + context.uncertaintyBP1().end() + range),
+                new QueryInterval(context.locationBP2().referenceIndex(),
+                        Math.max(0, context.locationBP2().position() + context.uncertaintyBP2().start() - range),
+                        context.locationBP2().position() + context.uncertaintyBP2().end() + range) });
 
         final File TEMP_REF_BAM = queryNameSortedBAM(refReader, intervals, "ref");
         final File TEMP_TUMOR_BAM = queryNameSortedBAM(tumorReader, intervals, "tumor");
@@ -545,19 +535,19 @@ class Analysis {
         result.QueryIntervals = intervals;
 
         if (breakpoints.Error != BreakpointError.NONE) {
-            result.Filters = Filter.getErrorFilter();
+            result.Filters = Filter.errorFilter();
         } else {
             result.TumorStats = collectEvidence(context, SORTED_TUMOR_READER, result.Breakpoints);
             result.RefStats = collectEvidence(context, SORTED_REF_READER, result.Breakpoints);
             result.AlleleFrequency = AlleleFrequency.calculate(result.TumorStats);
 
-            // load sample clipping
+            // NERA: load sample clipping
             SORTED_TUMOR_READER.forEach(r -> Clipping.getClips(r).forEach(c -> result.TumorStats.Sample_Clipping.add(c)));
             SORTED_REF_READER.forEach(r -> Clipping.getClips(r).forEach(c -> result.RefStats.Sample_Clipping.add(c)));
 
-            result.Filters = Filter.getFilters(context, result.TumorStats, result.RefStats, result.Breakpoints, contamination);
+            result.Filters = Filter.filters(context, result.TumorStats, result.RefStats, result.Breakpoints, contamination);
 
-            // adjust for homology
+            // NERA: adjust for homology
             final Location bp1 = result.Breakpoints.getLeft().add(context.orientationBP1() > 0 ? 0 : -1);
             final Location bp2;
             if (!context.isInsert() && context.insertSequence().isEmpty()) {

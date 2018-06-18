@@ -113,7 +113,7 @@ final class VariantEnrichment {
             @NotNull SAMSequenceDictionary sequenceDictionary) {
         switch (variant.getStructuralVariantType()) {
             case INS:
-                return locationBP1.set(variant.getAttributeAsInt("END", 0));
+                return locationBP1.withNewPosition(variant.getAttributeAsInt("END", 0));
             case INV:
             case DEL:
             case DUP:

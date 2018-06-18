@@ -55,12 +55,12 @@ public abstract class EnrichedVariantContext {
     @Value.Derived
     public boolean isShortVariant() {
         boolean shortDelete = type() == HMFStructuralVariantType.DEL;
-        shortDelete &= locationBP1().ReferenceIndex == locationBP2().ReferenceIndex;
-        shortDelete &= (locationBP2().Position - locationBP1().Position) < SHORT_VARIANT_LENGTH;
+        shortDelete &= locationBP1().referenceIndex() == locationBP2().referenceIndex();
+        shortDelete &= (locationBP2().position() - locationBP1().position()) < SHORT_VARIANT_LENGTH;
 
         boolean shortDuplicate = type() == HMFStructuralVariantType.DUP;
-        shortDuplicate &= locationBP1().ReferenceIndex == locationBP2().ReferenceIndex;
-        shortDuplicate &= (locationBP2().Position - locationBP1().Position) < SHORT_VARIANT_LENGTH;
+        shortDuplicate &= locationBP1().referenceIndex() == locationBP2().referenceIndex();
+        shortDuplicate &= (locationBP2().position() - locationBP1().position()) < SHORT_VARIANT_LENGTH;
 
         return shortDelete || shortDuplicate;
     }

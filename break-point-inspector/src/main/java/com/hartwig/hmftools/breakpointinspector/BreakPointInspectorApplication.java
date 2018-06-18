@@ -1,18 +1,11 @@
 package com.hartwig.hmftools.breakpointinspector;
 
-import static java.util.Arrays.asList;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.BiConsumer;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.breakpointinspector.datamodel.EnrichedVariantContext;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -64,16 +57,13 @@ public class BreakPointInspectorApplication {
         final String tumorBamPath = cmd.getOptionValue(TUMOR_BAM_PATH);
         final String tumorBamSlicedOutputPath = cmd.getOptionValue(TUMOR_BAM_SLICED_OUTPUT_PATH);
         final String vcfInputPath = cmd.getOptionValue(VCF_IN);
+        final String vcfOutputPath = cmd.getOptionValue(VCF_OUT);
         final String tsvOutputPath = cmd.getOptionValue(TSV_OUT);
 
         if (refBamPath == null || tumorBamPath == null || vcfInputPath == null || tsvOutputPath == null) {
             printHelpAndExit(options);
             return;
         }
-
-        final SamReader refReader = SamReaderFactory.makeDefault().open(new File(refBamPath));
-        final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(tumorBamPath));
-        final Analysis analysis = buildAnalysis(cmd, refReader, tumorReader);
 
         final VCFFileReader vcfReader = new VCFFileReader(new File(vcfInputPath), false);
 
@@ -83,104 +73,27 @@ public class BreakPointInspectorApplication {
             System.exit(1);
         }
 
-        final List<String> tsv = Lists.newArrayList();
-        tsv.add(TSVOutput.generateHeaders());
+        final SamReader refReader = SamReaderFactory.makeDefault().open(new File(refBamPath));
+        final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(tumorBamPath));
+        final Analysis analysis = buildAnalysis(cmd, refReader, tumorReader);
 
-        final List<QueryInterval> combinedQueryIntervals = Lists.newArrayList();
+        final BPIAlgoOutput algo = BPIAlgo.run(vcfReader, tumorReader.getFileHeader().getSequenceDictionary(), analysis);
 
-        final Map<String, VariantContext> variantPerIDMap = Maps.newHashMap();
-        final List<VariantContext> variants = Lists.newArrayList();
-        for (VariantContext variant : vcfReader) {
-            variantPerIDMap.put(variant.getID(), variant);
-
-            final VariantContext mateVariant = variant;
-            if (variant.hasAttribute("MATEID")) {
-                variant = variantPerIDMap.get(variant.getAttributeAsString("MATEID", ""));
-                if (variant == null) {
-                    continue;
-                }
-            }
-
-            final EnrichedVariantContext enrichedVariant =
-                    VariantEnrichment.enrich(variant, mateVariant, tumorReader.getFileHeader().getSequenceDictionary());
-
-            final StructuralVariantResult result = analysis.processStructuralVariant(enrichedVariant);
-            combinedQueryIntervals.addAll(asList(result.QueryIntervals));
-
-            tsv.add(TSVOutput.generateVariant(enrichedVariant, result));
-
-            final BiConsumer<VariantContext, Boolean> vcfUpdater = (v, swap) -> {
-                final Set<String> filters = v.getCommonInfo().getFiltersMaybeNull();
-                if (filters != null) {
-                    filters.clear();
-                }
-                // we will map BreakpointError to a flag
-                if (result.Filters.contains(Filter.Filters.BreakpointError.toString())) {
-                    v.getCommonInfo().putAttribute("BPI_AMBIGUOUS", true, true);
-                } else {
-                    v.getCommonInfo().addFilters(result.Filters);
-                }
-                if (result.Filters.isEmpty()) {
-                    final List<Double> af = asList(result.AlleleFrequency.getLeft(), result.AlleleFrequency.getRight());
-                    v.getCommonInfo().putAttribute(AlleleFrequency.VCF_INFO_TAG, swap ? Lists.reverse(af) : af, true);
-                }
-                if (result.Breakpoints.getLeft() != null) {
-                    v.getCommonInfo().putAttribute(swap ? "BPI_END" : "BPI_START", result.Breakpoints.getLeft().Position, true);
-                }
-                if (result.Breakpoints.getRight() != null) {
-                    v.getCommonInfo().putAttribute(swap ? "BPI_START" : "BPI_END", result.Breakpoints.getRight().Position, true);
-                }
-
-                // remove CIPOS / CIEND when we have an insert sequence
-                if (!v.hasAttribute("IMPRECISE") && v.hasAttribute("SVINSSEQ")) {
-                    v.getCommonInfo().removeAttribute("CIPOS");
-                    v.getCommonInfo().removeAttribute("CIEND");
-                }
-                variants.add(v);
-            };
-
-            vcfUpdater.accept(variant, false);
-            if (mateVariant != variant) {
-                vcfUpdater.accept(mateVariant, true);
-            }
-        }
-
-        // TODO: update START, END with BPI values and save Manta values in new attributes
-
-        final String vcfOutputPath = cmd.getOptionValue(VCF_OUT);
         if (vcfOutputPath != null) {
-            final VCFHeader header = vcfReader.getFileHeader();
-            header.addMetaDataLine(new VCFInfoHeaderLine("BPI_START", 1, VCFHeaderLineType.Integer, "BPI adjusted breakend location"));
-            header.addMetaDataLine(new VCFInfoHeaderLine("BPI_END", 1, VCFHeaderLineType.Integer, "BPI adjusted breakend location"));
-            header.addMetaDataLine(new VCFInfoHeaderLine("BPI_AMBIGUOUS",
-                    0,
-                    VCFHeaderLineType.Flag,
-                    "BPI could not determine the breakpoints, inspect manually"));
-            header.addMetaDataLine(new VCFHeaderLine("bpiVersion",
-                    BreakPointInspectorApplication.class.getPackage().getImplementationVersion()));
-            Filter.UpdateVCFHeader(header);
-            AlleleFrequency.UpdateVCFHeader(header);
-
-            final VariantContextWriter writer = new VariantContextWriterBuilder().setReferenceDictionary(header.getSequenceDictionary())
-                    .setOutputFile(vcfOutputPath)
-                    .build();
-            writer.writeHeader(header);
-            variants.sort(new VariantContextComparator(header.getSequenceDictionary()));
-            variants.forEach(writer::add);
-            writer.close();
-        }
-
-        final QueryInterval[] optimizedIntervals =
-                QueryInterval.optimizeIntervals(combinedQueryIntervals.toArray(new QueryInterval[combinedQueryIntervals.size()]));
-
-        if (tumorBamSlicedOutputPath != null) {
-            writeToSlice(tumorBamSlicedOutputPath, tumorReader, optimizedIntervals);
+            writeToVCF(vcfOutputPath, vcfReader, algo.variants());
         }
 
         if (refBamSlicedOutputPath != null) {
-            writeToSlice(refBamSlicedOutputPath, refReader, optimizedIntervals);
+            writeToSlice(refBamSlicedOutputPath, refReader, algo.optimizedIntervals());
         }
 
+        if (tumorBamSlicedOutputPath != null) {
+            writeToSlice(tumorBamSlicedOutputPath, tumorReader, algo.optimizedIntervals());
+        }
+
+        final List<String> tsv = Lists.newArrayList();
+        tsv.add(TSVOutput.generateHeaders());
+        tsv.addAll(algo.tsvOutput());
         Files.write(new File(tsvOutputPath).toPath(), tsv);
 
         refReader.close();
@@ -234,6 +147,29 @@ public class BreakPointInspectorApplication {
         final HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("Break-Point-Inspector", "A second layer of filtering on top of Manta", options, "", true);
         System.exit(1);
+    }
+
+    private static void writeToVCF(@NotNull String path, @NotNull VCFFileReader vcfReader, @NotNull List<VariantContext> variants) {
+        final VCFHeader header = vcfReader.getFileHeader();
+        header.addMetaDataLine(new VCFInfoHeaderLine("BPI_START", 1, VCFHeaderLineType.Integer, "BPI adjusted breakend location"));
+        header.addMetaDataLine(new VCFInfoHeaderLine("BPI_END", 1, VCFHeaderLineType.Integer, "BPI adjusted breakend location"));
+        header.addMetaDataLine(new VCFInfoHeaderLine("BPI_AMBIGUOUS",
+                0,
+                VCFHeaderLineType.Flag,
+                "BPI could not determine the breakpoints, inspect manually"));
+        header.addMetaDataLine(new VCFHeaderLine("bpiVersion",
+                BreakPointInspectorApplication.class.getPackage().getImplementationVersion()));
+        Filter.updateVCFHeader(header);
+        AlleleFrequency.updateVCFHeader(header);
+
+        variants.sort(new VariantContextComparator(header.getSequenceDictionary()));
+
+        final VariantContextWriter writer = new VariantContextWriterBuilder().setReferenceDictionary(header.getSequenceDictionary())
+                .setOutputFile(path)
+                .build();
+        writer.writeHeader(header);
+        variants.forEach(writer::add);
+        writer.close();
     }
 
     private static void writeToSlice(@NotNull String path, @NotNull SamReader reader, @NotNull QueryInterval[] intervals) {
