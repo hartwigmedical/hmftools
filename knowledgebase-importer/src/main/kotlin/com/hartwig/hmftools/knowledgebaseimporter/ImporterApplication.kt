@@ -6,7 +6,9 @@ import com.hartwig.hmftools.extensions.csv.CsvWriter
 import com.hartwig.hmftools.knowledgebaseimporter.cgi.Cgi
 import com.hartwig.hmftools.knowledgebaseimporter.civic.Civic
 import com.hartwig.hmftools.knowledgebaseimporter.cosmic.Cosmic
+import com.hartwig.hmftools.knowledgebaseimporter.dao.EnsemblGeneDAO
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.OncoKb
 import com.hartwig.hmftools.knowledgebaseimporter.output.CancerTypeDoidOutput
 import com.hartwig.hmftools.knowledgebaseimporter.output.HmfDrug
@@ -22,14 +24,16 @@ fun main(args: Array<String>) {
     val diseaseOntology = DiseaseOntology(cmd.getOptionValue(DOID_OWL_LOCATION))
     val treatmentTypeMap = CsvReader.readTSV<HmfDrug>("treatmentTypeMapping.tsv")
             .associateBy({ it.name.toLowerCase() }, { it.type })
-
+    val ensemblGeneDAO = EnsemblGeneDAO(cmd.getOptionValue(ENSEMBL_URL), cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASSWORD))
     val transvar = cmd.getOptionValue(TRANSVAR_LOCATION)
-    val oncoKb = OncoKb(cmd.getOptionValue(ONCO_ANNOTATED_LOCATION), cmd.getOptionValue(ONCO_ACTIONABLE_LOCATION), transvar,
-                        diseaseOntology, reference, treatmentTypeMap)
-    val cgi = Cgi(cmd.getOptionValue(CGI_VALIDATED_LOCATION), cmd.getOptionValue(CGI_BIOMARKERS_LOCATION), transvar, diseaseOntology,
-                  reference, treatmentTypeMap)
-    val civic = Civic(cmd.getOptionValue(CIVIC_VARIANTS_LOCATION), cmd.getOptionValue(CIVIC_EVIDENCE_LOCATION), transvar, diseaseOntology,
-                      reference, treatmentTypeMap)
+    val recordAnalyzer = RecordAnalyzer(transvar, reference, ensemblGeneDAO)
+
+    val oncoKb = OncoKb(cmd.getOptionValue(ONCO_ANNOTATED_LOCATION), cmd.getOptionValue(ONCO_ACTIONABLE_LOCATION), diseaseOntology,
+                        recordAnalyzer, treatmentTypeMap)
+    val cgi = Cgi(cmd.getOptionValue(CGI_VALIDATED_LOCATION), cmd.getOptionValue(CGI_BIOMARKERS_LOCATION), diseaseOntology,
+                  recordAnalyzer, treatmentTypeMap)
+    val civic = Civic(cmd.getOptionValue(CIVIC_VARIANTS_LOCATION), cmd.getOptionValue(CIVIC_EVIDENCE_LOCATION), diseaseOntology,
+                      recordAnalyzer, treatmentTypeMap)
     val cosmic = Cosmic("cosmic_gene_fusions.csv")
     val knowledgebases = listOf(oncoKb, cgi, civic, cosmic)
     val cancerTypesDoids = knowledgebaseCancerDoids(knowledgebases, diseaseOntology)
@@ -60,6 +64,9 @@ private fun createOptions(): Options {
     options.addOption(Option.builder(CIVIC_EVIDENCE_LOCATION).required().hasArg().desc("path to civic evidence file").build())
     options.addOption(Option.builder(COSMIC_FUSIONS_LOCATION).required().hasArg().desc("path to cosmic fusions file").build())
     options.addOption(Option.builder(OUTPUT_DIRECTORY).required().hasArg().desc("path to output directory").build())
+    options.addOption(Option.builder(ENSEMBL_URL).required().hasArg().desc("ensembl db url").build())
+    options.addOption(Option.builder(DB_USER).required().hasArg().desc("db user").build())
+    options.addOption(Option.builder(DB_PASSWORD).required().hasArg().desc("db password").build())
     return options
 }
 
