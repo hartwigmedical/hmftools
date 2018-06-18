@@ -40,3 +40,11 @@ data class SomaticVariantEvent(val gene: String, val chromosome: String, val pos
         return "$gene $chromosome:$position $ref->$alt"
     }
 }
+
+data class GenomicRangeEvent(val gene: String, val chromosome: String, val start: String, val stop: String) :
+        ActionableEvent(), CsvData {
+
+    override fun eventString(): String {
+        return "$gene $chromosome:$start-$stop"
+    }
+}
