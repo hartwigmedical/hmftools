@@ -29,13 +29,13 @@ final class VariantEnrichment {
         final boolean imprecise = variant.hasAttribute("IMPRECISE");
         final boolean translocation = variant.getStructuralVariantType() == StructuralVariantType.BND;
 
-        final Location location1 = Location.parseFromVariant(variant, sequenceDictionary);
-        final Range uncertainty1 = extractCIPOS(variant);
+        final Location locationBP1 = Location.parseFromVariant(variant, sequenceDictionary);
+        final Range uncertaintyBP1 = extractCIPOS(variant);
 
-        final Location location2 = extractLocation2(variant, location1, sequenceDictionary);
-        final Range uncertainty2 = extractUncertainty2(variant,
+        final Location locationBP2 = extractLocationBP2(variant, locationBP1, sequenceDictionary);
+        final Range uncertaintyBP2 = extractUncertaintyBP2(variant,
                 mateVariant,
-                uncertainty1,
+                uncertaintyBP1,
                 imprecise,
                 translocation,
                 structuralVariantType.isInversion());
@@ -53,17 +53,17 @@ final class VariantEnrichment {
         return ImmutableEnrichedVariantContext.builder()
                 .variant(variant)
                 .type(structuralVariantType)
-                .location1(location1)
-                .location2(location2)
-                .imprecise(imprecise)
-                .uncertainty1(uncertainty1)
-                .uncertainty2(uncertainty2)
+                .locationBP1(locationBP1)
+                .locationBP2(locationBP2)
+                .uncertaintyBP1(uncertaintyBP1)
+                .uncertaintyBP2(uncertaintyBP2)
+                .orientationBP1(structuralVariantType.orientationBP1())
+                .orientationBP2(structuralVariantType.orientationBP2())
                 .filters(filters)
                 .insertSequence(insertSequence)
                 .homologySequence(homologySequence)
+                .isImprecise(imprecise)
                 .isTranslocation(translocation)
-                .orientationBP1(structuralVariantType.orientationBP1())
-                .orientationBP2(structuralVariantType.orientationBP2())
                 .build();
     }
 
@@ -109,15 +109,15 @@ final class VariantEnrichment {
     }
 
     @NotNull
-    private static Location extractLocation2(@NotNull VariantContext variant, @NotNull Location location1,
+    private static Location extractLocationBP2(@NotNull VariantContext variant, @NotNull Location locationBP1,
             @NotNull SAMSequenceDictionary sequenceDictionary) {
         switch (variant.getStructuralVariantType()) {
             case INS:
-                return location1.set(variant.getAttributeAsInt("END", 0));
+                return locationBP1.set(variant.getAttributeAsInt("END", 0));
             case INV:
             case DEL:
             case DUP:
-                return location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
+                return locationBP1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
             case BND:
                 final String[] leftSplit = leftSplit(variant);
                 final String[] rightSplit = rightSplit(variant);
@@ -135,10 +135,10 @@ final class VariantEnrichment {
     }
 
     @NotNull
-    private static Range extractUncertainty2(@NotNull VariantContext variant, @NotNull VariantContext mateVariant,
-            @NotNull Range uncertainty1, boolean imprecise, boolean translocation, boolean inversion) {
+    private static Range extractUncertaintyBP2(@NotNull VariantContext variant, @NotNull VariantContext mateVariant,
+            @NotNull Range uncertaintyBP1, boolean imprecise, boolean translocation, boolean inversion) {
         final List<Integer> ciEndList = variant.getAttributeAsIntList("CIEND", 0);
-        Range uncertainty2 = ciEndList.size() == 2 ? ImmutableRange.of(ciEndList.get(0), ciEndList.get(1)) : null;
+        Range uncertaintyBP2 = ciEndList.size() == 2 ? ImmutableRange.of(ciEndList.get(0), ciEndList.get(1)) : null;
 
         if (translocation) {
             final String[] leftSplit = leftSplit(variant);
@@ -146,26 +146,26 @@ final class VariantEnrichment {
 
             if (leftSplit.length >= 2) {
                 if (leftSplit[0].length() > 0) {
-                    uncertainty2 = Range.invert(uncertainty1);
+                    uncertaintyBP2 = Range.invert(uncertaintyBP1);
                 } else {
-                    uncertainty2 = uncertainty1;
+                    uncertaintyBP2 = uncertaintyBP1;
                 }
             } else if (rightSplit.length >= 2) {
                 if (rightSplit[0].length() > 0) {
-                    uncertainty2 = uncertainty1;
+                    uncertaintyBP2 = uncertaintyBP1;
                 } else {
-                    uncertainty2 = Range.invert(uncertainty1);
+                    uncertaintyBP2 = Range.invert(uncertaintyBP1);
                 }
             } else {
                 throw new IllegalStateException(variant.getID() + " : Could not parse breakpoint");
             }
 
             if (imprecise) {
-                uncertainty2 = extractCIPOS(mateVariant);
+                uncertaintyBP2 = extractCIPOS(mateVariant);
             }
         }
 
-        return ObjectUtils.firstNonNull(uncertainty2, fixup(uncertainty1, imprecise, inversion));
+        return ObjectUtils.firstNonNull(uncertaintyBP2, fixup(uncertaintyBP1, imprecise, inversion));
     }
 
     @NotNull
@@ -190,11 +190,11 @@ final class VariantEnrichment {
     }
 
     @NotNull
-    private static Range fixup(@NotNull Range uncertainty1, boolean imprecise, boolean inversion) {
+    private static Range fixup(@NotNull Range uncertaintyBP1, boolean imprecise, boolean inversion) {
         if (imprecise) {
-            return uncertainty1;
+            return uncertaintyBP1;
         } else {
-            return inversion ? Range.invert(uncertainty1) : uncertainty1;
+            return inversion ? Range.invert(uncertaintyBP1) : uncertaintyBP1;
         }
     }
 }

@@ -13,7 +13,6 @@ import java.util.function.BiConsumer;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.breakpointinspector.datamodel.EnrichedVariantContext;
-import com.hartwig.hmftools.breakpointinspector.datamodel.Range;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -72,19 +71,9 @@ public class BreakPointInspectorApplication {
             return;
         }
 
-        final AnalysisBuilder analysisBuilder = new AnalysisBuilder();
-
-        if (cmd.hasOption(PROXIMITY)) {
-            analysisBuilder.range(Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500")));
-        }
-
-        if (cmd.hasOption(CONTAMINATION_FRACTION)) {
-            analysisBuilder.contaminationFraction(Float.parseFloat(cmd.getOptionValue(CONTAMINATION_FRACTION, "0")));
-        }
-
-        final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(tumorBamPath));
         final SamReader refReader = SamReaderFactory.makeDefault().open(new File(refBamPath));
-        final Analysis analysis = analysisBuilder.refReader(refReader).tumorReader(tumorReader).createAnalysis();
+        final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(tumorBamPath));
+        final Analysis analysis = buildAnalysis(cmd, refReader, tumorReader);
 
         final VCFFileReader vcfReader = new VCFFileReader(new File(vcfInputPath), false);
 
@@ -118,7 +107,7 @@ public class BreakPointInspectorApplication {
             final StructuralVariantResult result = analysis.processStructuralVariant(enrichedVariant);
             combinedQueryIntervals.addAll(asList(result.QueryIntervals));
 
-            tsv.add(TSVOutput.generateVariant(variant, enrichedVariant, result));
+            tsv.add(TSVOutput.generateVariant(enrichedVariant, result));
 
             final BiConsumer<VariantContext, Boolean> vcfUpdater = (v, swap) -> {
                 final Set<String> filters = v.getCommonInfo().getFiltersMaybeNull();
@@ -199,6 +188,22 @@ public class BreakPointInspectorApplication {
     }
 
     @NotNull
+    private static Analysis buildAnalysis(@NotNull final CommandLine cmd, @NotNull final SamReader refReader,
+            @NotNull final SamReader tumorReader) {
+        final AnalysisBuilder analysisBuilder = new AnalysisBuilder();
+
+        if (cmd.hasOption(PROXIMITY)) {
+            analysisBuilder.range(Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500")));
+        }
+
+        if (cmd.hasOption(CONTAMINATION_FRACTION)) {
+            analysisBuilder.contaminationFraction(Float.parseFloat(cmd.getOptionValue(CONTAMINATION_FRACTION, "0")));
+        }
+
+        return analysisBuilder.refReader(refReader).tumorReader(tumorReader).createAnalysis();
+    }
+
+    @NotNull
     private static Options createOptions() {
         final Options options = new Options();
         options.addOption(Option.builder(REF_BAM_PATH).required().hasArg().desc("The reference BAM (required)").build());
@@ -229,15 +234,6 @@ public class BreakPointInspectorApplication {
         final HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("Break-Point-Inspector", "A second layer of filtering on top of Manta", options, "", true);
         System.exit(1);
-    }
-
-    @NotNull
-    private static Range fixup(@NotNull final Range uncertainty1, final boolean imprecise, final boolean inversion) {
-        if (imprecise) {
-            return uncertainty1;
-        } else {
-            return inversion ? Range.invert(uncertainty1) : uncertainty1;
-        }
     }
 
     private static void writeToSlice(@NotNull String path, @NotNull SamReader reader, @NotNull QueryInterval[] intervals) {

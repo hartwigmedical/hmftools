@@ -24,20 +24,20 @@ public abstract class EnrichedVariantContext {
     public abstract HMFStructuralVariantType type();
 
     @NotNull
-    public abstract Location location1();
+    public abstract Location locationBP1();
 
     @NotNull
-    public abstract Location location2();
+    public abstract Location locationBP2();
 
     @NotNull
-    public abstract Range uncertainty1();
+    public abstract Range uncertaintyBP1();
 
     @NotNull
-    public abstract Range uncertainty2();
+    public abstract Range uncertaintyBP2();
 
-    public abstract boolean imprecise();
+    public abstract int orientationBP1();
 
-    public abstract boolean isTranslocation();
+    public abstract int orientationBP2();
 
     @NotNull
     public abstract Set<String> filters();
@@ -48,19 +48,19 @@ public abstract class EnrichedVariantContext {
     @NotNull
     public abstract String homologySequence();
 
-    public abstract int orientationBP1();
+    public abstract boolean isImprecise();
 
-    public abstract int orientationBP2();
+    public abstract boolean isTranslocation();
 
     @Value.Derived
     public boolean isShortVariant() {
         boolean shortDelete = type() == HMFStructuralVariantType.DEL;
-        shortDelete &= location1().ReferenceIndex == location2().ReferenceIndex;
-        shortDelete &= (location2().Position - location1().Position) < SHORT_VARIANT_LENGTH;
+        shortDelete &= locationBP1().ReferenceIndex == locationBP2().ReferenceIndex;
+        shortDelete &= (locationBP2().Position - locationBP1().Position) < SHORT_VARIANT_LENGTH;
 
         boolean shortDuplicate = type() == HMFStructuralVariantType.DUP;
-        shortDuplicate &= location1().ReferenceIndex == location2().ReferenceIndex;
-        shortDuplicate &= (location2().Position - location1().Position) < SHORT_VARIANT_LENGTH;
+        shortDuplicate &= locationBP1().ReferenceIndex == locationBP2().ReferenceIndex;
+        shortDuplicate &= (locationBP2().Position - locationBP1().Position) < SHORT_VARIANT_LENGTH;
 
         return shortDelete || shortDuplicate;
     }

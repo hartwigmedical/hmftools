@@ -15,7 +15,6 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Genotype;
-import htsjdk.variant.variantcontext.VariantContext;
 
 final class TSVOutput {
 
@@ -51,20 +50,19 @@ final class TSVOutput {
     }
 
     @NotNull
-    static String generateVariant(@NotNull VariantContext variant, @NotNull EnrichedVariantContext context,
-            @NotNull StructuralVariantResult result) {
-        final List<String> fields = Lists.newArrayList(variant.getID(),
-                variant.getStructuralVariantType().toString(),
+    static String generateVariant(@NotNull EnrichedVariantContext context, @NotNull StructuralVariantResult result) {
+        final List<String> fields = Lists.newArrayList(context.variant().getID(),
+                context.variant().getStructuralVariantType().toString(),
                 context.type().orientationString(),
-                context.location1().toString(),
-                context.location2().toString(),
-                variant.getAttributeAsString("SVLEN", ""));
+                context.locationBP1().toString(),
+                context.locationBP2().toString(),
+                context.variant().getAttributeAsString("SVLEN", ""));
 
-        fields.addAll(parseMantaPRSR(variant.getGenotype(0)));
-        fields.addAll(parseMantaPRSR(variant.getGenotype(1)));
+        fields.addAll(parseMantaPRSR(context.variant().getGenotype(0)));
+        fields.addAll(parseMantaPRSR(context.variant().getGenotype(1)));
 
-        fields.add(variant.getAttributeAsString("HOMSEQ", ""));
-        fields.add(variant.getAttributeAsString("SVINSSEQ", ""));
+        fields.add(context.variant().getAttributeAsString("HOMSEQ", ""));
+        fields.add(context.variant().getAttributeAsString("SVINSSEQ", ""));
 
         fields.addAll(result.RefStats.GetData());
         fields.addAll(result.TumorStats.GetData());
