@@ -6,17 +6,23 @@ import kotlin.math.min
 
 class Gene(exons: List<Exon>, private val seqStart: Long, private val seqEnd: Long) {
 
+    val chromosome = exons.first().chromosome
     val sortedCodingExons = exons.filterNot { it.isNonCoding }.sortedBy { it.start }
     private val exonMap: Map<Exon, Double> = annotateExons()
     val lastCodon = exonMap[sortedCodingExons.last()]!!.toInt()
 
+    //MIVO: returns coding ranges for the whole gene
+    fun codingRanges(): List<ClosedRange<Long>> {
+        return codonCodingRanges(1, lastCodon)
+    }
+
     //MIVO: figures out which exon pair contains a certain codon number and returns coding ranges for that codon
-    fun codingRanges(codonNumber: Int): List<ClosedRange<Long>> {
+    fun codonCodingRanges(codonNumber: Int): List<ClosedRange<Long>> {
         return codonRanges(codonPositions(codonNumber))
     }
 
     //MIVO: returns coding ranges between start and end codon (inclusive)
-    fun codingRanges(startCodon: Int, endCodon: Int): List<ClosedRange<Long>> {
+    fun codonCodingRanges(startCodon: Int, endCodon: Int): List<ClosedRange<Long>> {
         // this is different depending on forward/reverse strand
         val startCodonFirstPosition = codonPositions(startCodon)?.first
         val endCodonLastPosition = codonPositions(endCodon)?.third
@@ -27,9 +33,12 @@ class Gene(exons: List<Exon>, private val seqStart: Long, private val seqEnd: Lo
                 .sortedBy { it.first }
     }
 
-    //MIVO: returns coding ranges for the whole gene
-    fun codingRanges(): List<ClosedRange<Long>> {
-        return codingRanges(1, lastCodon)
+    //MIVO: returns coding ranges for the specified exon number (1-based)
+    fun exonCodingRanges(exonNumber: Int): List<ClosedRange<Long>> {
+        val exon = sortedCodingExons.getOrNull(exonNumber - 1)
+        exon ?: return emptyList()
+        val normalizedPositions = normalize(listOf(codingStart(exon), codingEnd(exon)))
+        return listOf(normalizedPositions[0]..normalizedPositions[1])
     }
 
     private fun codingStart(exon: Exon) = if (exon.isFirst) exon.start + seqStart - 1 else exon.start
