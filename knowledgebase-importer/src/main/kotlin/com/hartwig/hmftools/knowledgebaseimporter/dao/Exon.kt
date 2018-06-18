@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.knowledgebaseimporter.dao
 
-data class Exon(val start: Long, val end: Long, val phase: Int, val endPhase: Int) {
+data class Exon(val chromosome: String, val start: Long, val end: Long, val phase: Int, val endPhase: Int) {
     val length = end - start + 1
     val isFirst = phase == -1
     val isLast = endPhase == -1
