@@ -162,13 +162,14 @@ public class BreakPointInspectorApplication {
         Filter.updateVCFHeader(header);
         AlleleFrequency.updateVCFHeader(header);
 
-        variants.sort(new VariantContextComparator(header.getSequenceDictionary()));
+        List<VariantContext> variantsToInclude = Lists.newArrayList(variants);
+        variantsToInclude.sort(new VariantContextComparator(header.getSequenceDictionary()));
 
         final VariantContextWriter writer = new VariantContextWriterBuilder().setReferenceDictionary(header.getSequenceDictionary())
                 .setOutputFile(path)
                 .build();
         writer.writeHeader(header);
-        variants.forEach(writer::add);
+        variantsToInclude.forEach(writer::add);
         writer.close();
     }
 
