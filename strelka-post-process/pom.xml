@@ -10,7 +10,7 @@
 
     <artifactId>strelka-post-process</artifactId>
     <packaging>jar</packaging>
-    <version>1.3</version>
+    <version>1.4</version>
     <name>HMF Tools - Strelka Post Process</name>
 
     <dependencies>
@@ -65,7 +65,7 @@
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
-                            <finalName>strelka-post-process</finalName>
+                            <finalName>strelka-post-process-${version}</finalName>
                         </configuration>
                     </execution>
                     <execution>
@@ -85,7 +85,7 @@
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
-                            <finalName>mnv-detector</finalName>
+                            <finalName>mnv-detector-${version}</finalName>
                         </configuration>
                     </execution>
                     <execution>
@@ -105,7 +105,7 @@
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
-                            <finalName>mnv-validator</finalName>
+                            <finalName>mnv-validator-${version}</finalName>
                         </configuration>
                     </execution>
                 </executions>

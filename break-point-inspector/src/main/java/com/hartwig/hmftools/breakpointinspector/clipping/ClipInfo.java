@@ -2,20 +2,29 @@ package com.hartwig.hmftools.breakpointinspector.clipping;
 
 import com.hartwig.hmftools.breakpointinspector.Location;
 
+import org.immutables.value.Value;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import htsjdk.samtools.SAMRecord;
 
-public class ClipInfo {
+@Value.Immutable
+@Value.Style(allParameters = true,
+             passAnnotations = { NotNull.class, Nullable.class })
+public abstract class ClipInfo {
 
-    final SAMRecord Record;
+    @NotNull
+    public abstract SAMRecord record();
 
-    ClipInfo(final SAMRecord record) {
-        this.Record = record;
-    }
+    @NotNull
+    public abstract Location alignment();
 
-    Location Alignment;
-    int Length = 0;
-    String Sequence = "";
-    boolean HardClipped = false;
-    boolean Left = false;
-    boolean Right = false;
+    public abstract int length();
+
+    @NotNull
+    public abstract String sequence();
+
+    public abstract boolean hardClipped();
+    public abstract boolean left();
+    public abstract boolean right();
 }

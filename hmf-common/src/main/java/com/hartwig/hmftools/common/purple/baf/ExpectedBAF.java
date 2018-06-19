@@ -2,10 +2,9 @@ package com.hartwig.hmftools.common.purple.baf;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
 
-public class ExpectedBAF {
+public final class ExpectedBAF {
 
     public static double expectedBAF(int averageDepth) {
-
         int minDepth = averageDepth / 2;
         int maxDepth = averageDepth * 3 / 2;
         double totalProbability = 0;
@@ -18,5 +17,4 @@ public class ExpectedBAF {
 
         return totalProbability / (maxDepth - minDepth);
     }
-
 }
