@@ -10,11 +10,11 @@ import htsjdk.samtools.QueryInterval;
 
 public class StructuralVariantResult {
 
-    public Pair<Location, Location> Breakpoints;
-    public Pair<Double, Double> AlleleFrequency = Pair.of(0.0, 0.0);
-    public SampleStats TumorStats = new SampleStats();
-    public SampleStats RefStats = new SampleStats();
-    public Collection<String> Filters;
-    public String FilterString = "";
-    public QueryInterval[] QueryIntervals;
+    public Pair<Location, Location> breakpoints;
+    public Pair<Double, Double> alleleFrequency = Pair.of(0.0, 0.0);
+    public SampleStats tumorStats = new SampleStats();
+    public SampleStats refStats = new SampleStats();
+    public Collection<String> filters;
+    public String filterString = "";
+    public QueryInterval[] queryIntervals;
 }

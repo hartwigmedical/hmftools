@@ -15,25 +15,25 @@ import htsjdk.samtools.SAMRecord;
 
 public class SampleStats {
 
-    public final BreakpointStats BP1_Stats = new BreakpointStats();
-    public final BreakpointStats BP2_Stats = new BreakpointStats();
-    public final Clipping Sample_Clipping = new Clipping();
-    public final List<Pair<SAMRecord, SAMRecord>> PR_Evidence = Lists.newArrayList();
-    public final List<Pair<SAMRecord, SAMRecord>> SR_Evidence = Lists.newArrayList();
+    public final BreakpointStats bp1Stats = new BreakpointStats();
+    public final BreakpointStats bp2Stats = new BreakpointStats();
+    public final Clipping sampleClipping = new Clipping();
+    public final List<Pair<SAMRecord, SAMRecord>> prEvidence = Lists.newArrayList();
+    public final List<Pair<SAMRecord, SAMRecord>> srEvidence = Lists.newArrayList();
 
     @NotNull
-    public static List<String> GetHeader() {
+    public static List<String> header() {
         final List<String> header = Lists.newArrayList();
-        header.addAll(prefixList(BreakpointStats.GetHeader(), "BP1_"));
-        header.addAll(prefixList(BreakpointStats.GetHeader(), "BP2_"));
+        header.addAll(prefixList(BreakpointStats.header(), "BP1_"));
+        header.addAll(prefixList(BreakpointStats.header(), "BP2_"));
         return header;
     }
 
     @NotNull
-    public List<String> GetData() {
+    public List<String> data() {
         final List<String> data = Lists.newArrayList();
-        data.addAll(toStrings(BP1_Stats.GetData()));
-        data.addAll(toStrings(BP2_Stats.GetData()));
+        data.addAll(toStrings(bp1Stats.data()));
+        data.addAll(toStrings(bp2Stats.data()));
         return data;
     }
 }

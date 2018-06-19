@@ -70,37 +70,37 @@ class Analysis {
         final BreakpointResult breakpoints = determineBreakpoints(variant, sortedTumorReader);
 
         final StructuralVariantResult result = new StructuralVariantResult();
-        result.Breakpoints = breakpoints.breakpoints;
-        result.QueryIntervals = intervals;
+        result.breakpoints = breakpoints.breakpoints;
+        result.queryIntervals = intervals;
 
         if (breakpoints.error != BreakpointError.NONE) {
-            result.Filters = Filter.errorFilter();
+            result.filters = Filter.errorFilter();
         } else {
-            result.TumorStats = collectEvidence(variant, sortedTumorReader, result.Breakpoints);
-            result.RefStats = collectEvidence(variant, sortedRefReader, result.Breakpoints);
-            result.AlleleFrequency = AlleleFrequency.calculate(result.TumorStats);
+            result.tumorStats = collectEvidence(variant, sortedTumorReader, result.breakpoints);
+            result.refStats = collectEvidence(variant, sortedRefReader, result.breakpoints);
+            result.alleleFrequency = AlleleFrequency.calculate(result.tumorStats);
 
             // NERA: load sample clipping
-            sortedRefReader.forEach(record -> Clipping.getClips(record).forEach(clipInfo -> result.RefStats.Sample_Clipping.add(clipInfo)));
+            sortedRefReader.forEach(record -> Clipping.getClips(record).forEach(clipInfo -> result.refStats.sampleClipping.add(clipInfo)));
             sortedTumorReader.forEach(record -> Clipping.getClips(record)
-                    .forEach(clipInfo -> result.TumorStats.Sample_Clipping.add(clipInfo)));
+                    .forEach(clipInfo -> result.tumorStats.sampleClipping.add(clipInfo)));
 
-            result.Filters = Filter.filters(variant, result.TumorStats, result.RefStats, result.Breakpoints, contamination);
+            result.filters = Filter.filters(variant, result.tumorStats, result.refStats, result.breakpoints, contamination);
 
             // NERA: adjust for homology
-            final Location bp1 = result.Breakpoints.getLeft().add(variant.orientationBP1() > 0 ? 0 : -1);
+            final Location bp1 = result.breakpoints.getLeft().add(variant.orientationBP1() > 0 ? 0 : -1);
             final Location bp2;
             if (!variant.isInsert() && variant.insertSequence().isEmpty()) {
-                bp2 = result.Breakpoints.getRight()
+                bp2 = result.breakpoints.getRight()
                         .add(-variant.orientationBP2() * variant.homologySequence().length())
                         .add(variant.orientationBP2() > 0 ? 0 : -1);
             } else {
-                bp2 = result.Breakpoints.getRight().add(variant.orientationBP2() > 0 ? 0 : -1);
+                bp2 = result.breakpoints.getRight().add(variant.orientationBP2() > 0 ? 0 : -1);
             }
-            result.Breakpoints = Pair.of(bp1, bp2);
+            result.breakpoints = Pair.of(bp1, bp2);
         }
 
-        result.FilterString = result.Filters.isEmpty() ? "PASS" : String.join(";", result.Filters);
+        result.filterString = result.filters.isEmpty() ? "PASS" : String.join(";", result.filters);
 
         sortedRefReader.close();
         sortedTumorReader.close();
@@ -371,7 +371,7 @@ class Analysis {
                     bp2SRSupport |= exactlyClipsBreakpoint(pair.getRight(), bp2, variant.orientationBP2());
                     if (!srOnly) {
                         prSupport = true;
-                        result.PR_Evidence.add(pair);
+                        result.prEvidence.add(pair);
                     }
                 }
 
@@ -405,7 +405,7 @@ class Analysis {
                     }
 
                     if (addToSR) {
-                        result.SR_Evidence.add(pair);
+                        result.srEvidence.add(pair);
                     }
                 }
             }
@@ -414,29 +414,29 @@ class Analysis {
             final boolean srSupport = bp1SRSupport || bp2SRSupport;
 
             if (srSupport && prSupport) {
-                result.BP1_Stats.PR_SR_Support++;
+                result.bp1Stats.prSrSupport++;
             } else if (bp1SRSupport) {
-                result.BP1_Stats.SR_Only_Support++;
+                result.bp1Stats.srOnlySupport++;
             } else if (prSupport) {
-                result.BP1_Stats.PR_Only_Support++;
+                result.bp1Stats.prOnlySupport++;
             }
             if (bp1PRNormal && bp1SRNormal) {
-                result.BP1_Stats.PR_SR_Normal++;
+                result.bp1Stats.prSrNormal++;
             } else if (bp1PRNormal && !srOnly) {
-                result.BP1_Stats.PR_Only_Normal++;
+                result.bp1Stats.prOnlyNormal++;
             }
 
             if (srSupport && prSupport) {
-                result.BP2_Stats.PR_SR_Support++;
+                result.bp2Stats.prSrSupport++;
             } else if (bp2SRSupport) {
-                result.BP2_Stats.SR_Only_Support++;
+                result.bp2Stats.srOnlySupport++;
             } else if (prSupport) {
-                result.BP2_Stats.PR_Only_Support++;
+                result.bp2Stats.prOnlySupport++;
             }
             if (bp2PRNormal && bp2SRNormal) {
-                result.BP2_Stats.PR_SR_Normal++;
+                result.bp2Stats.prSrNormal++;
             } else if (bp2PRNormal && !srOnly) {
-                result.BP2_Stats.PR_Only_Normal++;
+                result.bp2Stats.prOnlyNormal++;
             }
         }
 

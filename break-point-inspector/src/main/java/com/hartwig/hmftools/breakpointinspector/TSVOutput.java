@@ -41,8 +41,8 @@ final class TSVOutput {
                 "MANTA_TUMOR_SR_SUPPORT",
                 "MANTA_HOMSEQ",
                 "MANTA_INSSEQ");
-        header.addAll(prefixList(SampleStats.GetHeader(), "REF_"));
-        header.addAll(prefixList(SampleStats.GetHeader(), "TUMOR_"));
+        header.addAll(prefixList(SampleStats.header(), "REF_"));
+        header.addAll(prefixList(SampleStats.header(), "TUMOR_"));
         header.add("BPI_BP1");
         header.add("BPI_BP2");
         header.add("FILTER");
@@ -66,14 +66,14 @@ final class TSVOutput {
         fields.add(context.variant().getAttributeAsString("HOMSEQ", ""));
         fields.add(context.variant().getAttributeAsString("SVINSSEQ", ""));
 
-        fields.addAll(result.RefStats.GetData());
-        fields.addAll(result.TumorStats.GetData());
-        fields.add(ObjectUtils.firstNonNull(result.Breakpoints.getLeft(), "err").toString());
-        fields.add(ObjectUtils.firstNonNull(result.Breakpoints.getRight(), "err").toString());
-        fields.add(result.FilterString);
+        fields.addAll(result.refStats.data());
+        fields.addAll(result.tumorStats.data());
+        fields.add(ObjectUtils.firstNonNull(result.breakpoints.getLeft(), "err").toString());
+        fields.add(ObjectUtils.firstNonNull(result.breakpoints.getRight(), "err").toString());
+        fields.add(result.filterString);
 
-        fields.add(String.format("%.2f", result.AlleleFrequency.getLeft()));
-        fields.add(String.format("%.2f", result.AlleleFrequency.getRight()));
+        fields.add(String.format("%.2f", result.alleleFrequency.getLeft()));
+        fields.add(String.format("%.2f", result.alleleFrequency.getRight()));
 
         return String.join("\t", fields);
     }

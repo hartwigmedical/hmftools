@@ -54,7 +54,7 @@ final class BPIAlgo {
             LOGGER.info(String.format("Running Analysis on %s", variant));
             final StructuralVariantResult result = analysis.processStructuralVariant(enrichedVariant);
 
-            combinedQueryIntervals.addAll(asList(result.QueryIntervals));
+            combinedQueryIntervals.addAll(asList(result.queryIntervals));
 
             tsv.add(TSVOutput.generateVariant(enrichedVariant, result));
 
@@ -64,20 +64,20 @@ final class BPIAlgo {
                     filters.clear();
                 }
                 // NERA: We will map BreakpointError to a flag
-                if (result.Filters.contains(FilterType.BREAKPOINT_ERROR.toString())) {
+                if (result.filters.contains(FilterType.BREAKPOINT_ERROR.toString())) {
                     v.getCommonInfo().putAttribute("BPI_AMBIGUOUS", true, true);
                 } else {
-                    v.getCommonInfo().addFilters(result.Filters);
+                    v.getCommonInfo().addFilters(result.filters);
                 }
-                if (result.Filters.isEmpty()) {
-                    final List<Double> af = asList(result.AlleleFrequency.getLeft(), result.AlleleFrequency.getRight());
+                if (result.filters.isEmpty()) {
+                    final List<Double> af = asList(result.alleleFrequency.getLeft(), result.alleleFrequency.getRight());
                     v.getCommonInfo().putAttribute(AlleleFrequency.VCF_AF_INFO_TAG, swap ? Lists.reverse(af) : af, true);
                 }
-                if (result.Breakpoints.getLeft() != null) {
-                    v.getCommonInfo().putAttribute(swap ? "BPI_END" : "BPI_START", result.Breakpoints.getLeft().position(), true);
+                if (result.breakpoints.getLeft() != null) {
+                    v.getCommonInfo().putAttribute(swap ? "BPI_END" : "BPI_START", result.breakpoints.getLeft().position(), true);
                 }
-                if (result.Breakpoints.getRight() != null) {
-                    v.getCommonInfo().putAttribute(swap ? "BPI_START" : "BPI_END", result.Breakpoints.getRight().position(), true);
+                if (result.breakpoints.getRight() != null) {
+                    v.getCommonInfo().putAttribute(swap ? "BPI_START" : "BPI_END", result.breakpoints.getRight().position(), true);
                 }
 
                 // NERA: Remove CIPOS / CIEND when we have an insert sequence
