@@ -14,6 +14,7 @@ import com.hartwig.hmftools.breakpointinspector.clipping.ClipStats;
 import com.hartwig.hmftools.breakpointinspector.clipping.Clipping;
 import com.hartwig.hmftools.breakpointinspector.datamodel.BreakpointStats;
 import com.hartwig.hmftools.breakpointinspector.datamodel.EnrichedVariantContext;
+import com.hartwig.hmftools.breakpointinspector.datamodel.ImmutableStructuralVariantResult;
 import com.hartwig.hmftools.breakpointinspector.datamodel.Range;
 import com.hartwig.hmftools.breakpointinspector.datamodel.SampleStats;
 import com.hartwig.hmftools.breakpointinspector.datamodel.StructuralVariantResult;
@@ -75,8 +76,7 @@ class Analysis {
 
         final StructuralVariantResult result;
         if (breakpointResult.error() != BreakpointError.NONE) {
-            final Collection<String> filters = Filter.errorFilter();
-            result = StructuralVariantResult.buildFromPartialData(breakpoints, filters, intervals);
+            result = StructuralVariantResult.buildForBreakpointError(breakpoints, intervals);
         } else {
             final SampleStats refStats = collectEvidence(variant, sortedRefReader, breakpoints);
             final SampleStats tumorStats = collectEvidence(variant, sortedTumorReader, breakpoints);
@@ -87,7 +87,6 @@ class Analysis {
             sortedTumorReader.forEach(record -> Clipping.clips(record).forEach(tumorStats::addSampleClipping));
 
             final Collection<String> filters = Filter.filters(variant, tumorStats, refStats, breakpoints, contaminationFraction);
-            final String filterString = filters.isEmpty() ? "PASS" : String.join(";", filters);
 
             // NERA: adjust for homology
             final Location bp1 = breakpoints.getLeft().add(variant.orientationBP1() > 0 ? 0 : -1);
@@ -100,7 +99,14 @@ class Analysis {
                 bp2 = breakpoints.getRight().add(variant.orientationBP2() > 0 ? 0 : -1);
             }
             final Pair<Location, Location> correctedBreakPoints = Pair.of(bp1, bp2);
-            result = new StructuralVariantResult(refStats, tumorStats, correctedBreakPoints, alleleFrequency, filters, intervals);
+            result = ImmutableStructuralVariantResult.builder()
+                    .refStats(refStats)
+                    .tumorStats(tumorStats)
+                    .breakpoints(correctedBreakPoints)
+                    .alleleFrequency(alleleFrequency)
+                    .filters(filters)
+                    .queryIntervals(intervals)
+                    .build();
         }
 
         sortedRefReader.close();

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.breakpointinspector;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -13,6 +12,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.breakpointinspector.clipping.ClipStats;
 import com.hartwig.hmftools.breakpointinspector.datamodel.BreakpointStats;
 import com.hartwig.hmftools.breakpointinspector.datamodel.EnrichedVariantContext;
+import com.hartwig.hmftools.breakpointinspector.datamodel.FilterType;
 import com.hartwig.hmftools.breakpointinspector.datamodel.SampleStats;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -29,11 +29,6 @@ final class Filter {
 
     static void updateVCFHeader(@NotNull final VCFHeader header) {
         Arrays.stream(FilterType.values()).forEach(filterType -> header.addMetaDataLine(filterType.toHeaderLine()));
-    }
-
-    @NotNull
-    static Collection<String> errorFilter() {
-        return Collections.singletonList(FilterType.BREAKPOINT_ERROR.toString());
     }
 
     @NotNull

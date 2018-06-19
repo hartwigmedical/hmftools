@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.breakpointinspector;
+package com.hartwig.hmftools.breakpointinspector.datamodel;
 
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 
-enum FilterType {
+public enum FilterType {
     BREAKPOINT_ERROR("BPI_BreakpointError", "BPI failed to determine breakpoints"),
     MIN_DEPTH("BPI_MinDepth", "The depth across one of the breakpoints is <10"),
     MIN_ANCHOR_LENGTH("BPI_MinAnchorLength", "There isn't at least one PR with >=30 bases matched in both alignments"),
@@ -25,7 +25,7 @@ enum FilterType {
     }
 
     @NotNull
-    VCFFilterHeaderLine toHeaderLine() {
+    public VCFFilterHeaderLine toHeaderLine() {
         return new VCFFilterHeaderLine(name, description);
     }
 
