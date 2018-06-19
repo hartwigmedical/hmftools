@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.concurrent.ExecutionException;
 
-import com.hartwig.hmftools.common.version.VersionInfo;
+import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
+import com.hartwig.hmftools.common.context.RunContext;
+import com.hartwig.hmftools.puritypatho.variants.ReadingData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -17,14 +19,18 @@ import org.jetbrains.annotations.NotNull;
 
 public class PurityPathologyApplication {
     private static final String RUNS_DIR = "runs_dir";
-
     private static final Logger LOGGER = LogManager.getLogger(PurityPathologyApplication.class);
 
     public static void main(final String... args) throws ParseException, IOException, SQLException, ExecutionException, InterruptedException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final String runsFolderPath = cmd.getOptionValue(RUNS_DIR);
-        LOGGER.info("Set name: " + runsFolderPath);
+        LOGGER.info("runsFolderPath: " + runsFolderPath);
+        final RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runsFolderPath);
+        final String tumorSample = runContext.tumorSample();
+        LOGGER.info("tumorSample: " + tumorSample);
+        ReadingData.readingSetAmber(runsFolderPath, tumorSample);
+        ReadingData.readingCyto();
     }
 
     @NotNull
