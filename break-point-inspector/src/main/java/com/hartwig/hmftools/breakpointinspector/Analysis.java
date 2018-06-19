@@ -321,8 +321,8 @@ class Analysis {
             }
 
             boolean prSupport = false;
-            boolean bp1SRSupport = false;
-            boolean bp2SRSupport = false;
+            boolean bp1SrSupport = false;
+            boolean bp2SrSupport = false;
 
             boolean bp1PRNormal = false;
             boolean bp1SRNormal = false;
@@ -363,8 +363,8 @@ class Analysis {
                 }
 
                 if (isPairEvidence) {
-                    bp1SRSupport |= exactlyClipsBreakpoint(pair.getLeft(), bp1, variant.orientationBP1());
-                    bp2SRSupport |= exactlyClipsBreakpoint(pair.getRight(), bp2, variant.orientationBP2());
+                    bp1SrSupport |= exactlyClipsBreakpoint(pair.getLeft(), bp1, variant.orientationBP1());
+                    bp2SrSupport |= exactlyClipsBreakpoint(pair.getRight(), bp2, variant.orientationBP2());
                     if (!srOnly) {
                         prSupport = true;
                         result.prEvidence.add(pair);
@@ -387,14 +387,14 @@ class Analysis {
                     boolean addToSR = false;
                     if (spanBP1) {
                         if (clipsBP1) {
-                            bp1SRSupport = addToSR = true;
+                            bp1SrSupport = addToSR = true;
                         } else {
                             bp1PRNormal = !overlapBP1 || (bp1SRNormal = addToSR = true);
                         }
                     }
                     if (spanBP2) {
                         if (clipsBP2) {
-                            bp2SRSupport = addToSR = true;
+                            bp2SrSupport = addToSR = true;
                         } else {
                             bp2PRNormal = !overlapBP2 || (bp2SRNormal = addToSR = true);
                         }
@@ -407,32 +407,32 @@ class Analysis {
             }
 
             // NERA: Increment read counts
-            final boolean srSupport = bp1SRSupport || bp2SRSupport;
+            final boolean srSupport = bp1SrSupport || bp2SrSupport;
 
             if (srSupport && prSupport) {
-                result.bp1Stats.prSrSupport++;
-            } else if (bp1SRSupport) {
-                result.bp1Stats.srOnlySupport++;
+                result.bp1Stats.incrementPrSrSupport();
+            } else if (bp1SrSupport) {
+                result.bp1Stats.incrementSrOnlySupport();
             } else if (prSupport) {
-                result.bp1Stats.prOnlySupport++;
+                result.bp1Stats.incrementPrOnlySupport();
             }
             if (bp1PRNormal && bp1SRNormal) {
-                result.bp1Stats.prSrNormal++;
+                result.bp1Stats.incrementPrSrNormal();
             } else if (bp1PRNormal && !srOnly) {
-                result.bp1Stats.prOnlyNormal++;
+                result.bp1Stats.incrementPrOnlyNormal();
             }
 
             if (srSupport && prSupport) {
-                result.bp2Stats.prSrSupport++;
-            } else if (bp2SRSupport) {
-                result.bp2Stats.srOnlySupport++;
+                result.bp2Stats.incrementPrSrSupport();
+            } else if (bp2SrSupport) {
+                result.bp2Stats.incrementSrOnlySupport();
             } else if (prSupport) {
-                result.bp2Stats.prOnlySupport++;
+                result.bp2Stats.incrementPrOnlySupport();
             }
             if (bp2PRNormal && bp2SRNormal) {
-                result.bp2Stats.prSrNormal++;
+                result.bp2Stats.incrementPrSrNormal();
             } else if (bp2PRNormal && !srOnly) {
-                result.bp2Stats.prOnlyNormal++;
+                result.bp2Stats.incrementPrOnlyNormal();
             }
         }
 

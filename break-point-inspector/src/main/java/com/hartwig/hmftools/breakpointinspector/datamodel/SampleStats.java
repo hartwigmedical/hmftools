@@ -3,6 +3,7 @@ package com.hartwig.hmftools.breakpointinspector.datamodel;
 import static com.hartwig.hmftools.breakpointinspector.Util.prefixList;
 import static com.hartwig.hmftools.breakpointinspector.Util.toStrings;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -24,16 +25,21 @@ public class SampleStats {
     @NotNull
     public static List<String> header() {
         final List<String> header = Lists.newArrayList();
-        header.addAll(prefixList(BreakpointStats.header(), "BP1_"));
-        header.addAll(prefixList(BreakpointStats.header(), "BP2_"));
+        header.addAll(prefixList(BreakpointStats.HEADER, "BP1_"));
+        header.addAll(prefixList(BreakpointStats.HEADER, "BP2_"));
         return header;
     }
 
     @NotNull
     public List<String> data() {
         final List<String> data = Lists.newArrayList();
-        data.addAll(toStrings(bp1Stats.data()));
-        data.addAll(toStrings(bp2Stats.data()));
+        data.addAll(toStrings(data(bp1Stats)));
+        data.addAll(toStrings(data(bp2Stats)));
         return data;
+    }
+
+    @NotNull
+    private static List<Integer> data(@NotNull final BreakpointStats stats) {
+        return Arrays.asList(stats.prOnlyNormal(), stats.prSrNormal(), stats.prOnlySupport(), stats.prSrSupport(), stats.srOnlySupport());
     }
 }

@@ -42,7 +42,7 @@ final class Filter {
         final List<FilterType> filters = Lists.newArrayList();
 
         if (Stream.of(tumorStats.bp1Stats, tumorStats.bp2Stats)
-                .mapToInt(s -> s.prOnlyNormal + s.prSrNormal + s.prOnlySupport + s.prSrSupport)
+                .mapToInt(s -> s.prOnlyNormal() + s.prSrNormal() + s.prOnlySupport() + s.prSrSupport())
                 .anyMatch(i -> i < 10)) {
             filters.add(FilterType.MIN_DEPTH);
         }
@@ -134,10 +134,10 @@ final class Filter {
     }
 
     private static int supportPR(@NotNull final BreakpointStats stats) {
-        return stats.prSrSupport + stats.prOnlySupport;
+        return stats.prSrSupport() + stats.prOnlySupport();
     }
 
     private static int supportSR(@NotNull final BreakpointStats stats) {
-        return stats.prSrSupport + stats.srOnlySupport;
+        return stats.prSrSupport() + stats.srOnlySupport();
     }
 }
