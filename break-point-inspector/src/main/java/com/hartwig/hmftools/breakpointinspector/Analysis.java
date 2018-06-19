@@ -3,6 +3,7 @@ package com.hartwig.hmftools.breakpointinspector;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -11,6 +12,7 @@ import java.util.stream.Stream;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.breakpointinspector.clipping.ClipStats;
 import com.hartwig.hmftools.breakpointinspector.clipping.Clipping;
+import com.hartwig.hmftools.breakpointinspector.datamodel.BreakpointStats;
 import com.hartwig.hmftools.breakpointinspector.datamodel.EnrichedVariantContext;
 import com.hartwig.hmftools.breakpointinspector.datamodel.Range;
 import com.hartwig.hmftools.breakpointinspector.datamodel.SampleStats;
@@ -68,39 +70,38 @@ class Analysis {
         final SamReader sortedRefReader = SamReaderFactory.makeDefault().open(tmpRefBam);
         final SamReader sortedTumorReader = SamReaderFactory.makeDefault().open(tmpTumorBam);
 
-        final BreakpointResult breakpoints = determineBreakpoints(variant, sortedTumorReader);
+        final BreakpointResult breakpointResult = determineBreakpoints(variant, sortedTumorReader);
+        final Pair<Location, Location> breakpoints = breakpointResult.breakpoints();
 
-        final StructuralVariantResult result = new StructuralVariantResult();
-        result.breakpoints = breakpoints.breakpoints;
-        result.queryIntervals = intervals;
-
-        if (breakpoints.error != BreakpointError.NONE) {
-            result.filters = Filter.errorFilter();
+        final StructuralVariantResult result;
+        if (breakpointResult.error() != BreakpointError.NONE) {
+            final Collection<String> filters = Filter.errorFilter();
+            result = StructuralVariantResult.buildFromPartialData(breakpoints, filters, intervals);
         } else {
-            result.tumorStats = collectEvidence(variant, sortedTumorReader, result.breakpoints);
-            result.refStats = collectEvidence(variant, sortedRefReader, result.breakpoints);
-            result.alleleFrequency = AlleleFrequency.calculate(result.tumorStats);
+            final SampleStats refStats = collectEvidence(variant, sortedRefReader, breakpoints);
+            final SampleStats tumorStats = collectEvidence(variant, sortedTumorReader, breakpoints);
+            final Pair<Double, Double> alleleFrequency = AlleleFrequency.calculate(tumorStats);
 
             // NERA: load sample clipping
-            sortedRefReader.forEach(record -> Clipping.clips(record).forEach(clipInfo -> result.refStats.sampleClipping.add(clipInfo)));
-            sortedTumorReader.forEach(record -> Clipping.clips(record).forEach(clipInfo -> result.tumorStats.sampleClipping.add(clipInfo)));
+            sortedRefReader.forEach(record -> Clipping.clips(record).forEach(refStats::addSampleClipping));
+            sortedTumorReader.forEach(record -> Clipping.clips(record).forEach(tumorStats::addSampleClipping));
 
-            result.filters = Filter.filters(variant, result.tumorStats, result.refStats, result.breakpoints, contaminationFraction);
+            final Collection<String> filters = Filter.filters(variant, tumorStats, refStats, breakpoints, contaminationFraction);
+            final String filterString = filters.isEmpty() ? "PASS" : String.join(";", filters);
 
             // NERA: adjust for homology
-            final Location bp1 = result.breakpoints.getLeft().add(variant.orientationBP1() > 0 ? 0 : -1);
+            final Location bp1 = breakpoints.getLeft().add(variant.orientationBP1() > 0 ? 0 : -1);
             final Location bp2;
             if (!variant.isInsert() && variant.insertSequence().isEmpty()) {
-                bp2 = result.breakpoints.getRight()
+                bp2 = breakpoints.getRight()
                         .add(-variant.orientationBP2() * variant.homologySequence().length())
                         .add(variant.orientationBP2() > 0 ? 0 : -1);
             } else {
-                bp2 = result.breakpoints.getRight().add(variant.orientationBP2() > 0 ? 0 : -1);
+                bp2 = breakpoints.getRight().add(variant.orientationBP2() > 0 ? 0 : -1);
             }
-            result.breakpoints = Pair.of(bp1, bp2);
+            final Pair<Location, Location> correctedBreakPoints = Pair.of(bp1, bp2);
+            result = new StructuralVariantResult(refStats, tumorStats, correctedBreakPoints, alleleFrequency, filters, intervals);
         }
-
-        result.filterString = result.filters.isEmpty() ? "PASS" : String.join(";", result.filters);
 
         sortedRefReader.close();
         sortedTumorReader.close();
@@ -293,9 +294,12 @@ class Analysis {
             final Pair<Location, Location> breakpoints) {
         final Location bp1 = breakpoints.getLeft();
         final Location bp2 = breakpoints.getRight();
-
-        final SampleStats result = new SampleStats();
         final Pair<Integer, Integer> variantOrientation = Pair.of(variant.orientationBP1(), variant.orientationBP2());
+
+        final List<Pair<SAMRecord, SAMRecord>> srEvidence = Lists.newArrayList();
+        final List<Pair<SAMRecord, SAMRecord>> prEvidence = Lists.newArrayList();
+        final BreakpointStats bp1Stats = new BreakpointStats();
+        final BreakpointStats bp2Stats = new BreakpointStats();
 
         final List<SAMRecord> currentReads = Lists.newArrayList();
         final SAMRecordIterator iterator = reader.iterator();
@@ -367,7 +371,7 @@ class Analysis {
                     bp2SrSupport |= exactlyClipsBreakpoint(pair.getRight(), bp2, variant.orientationBP2());
                     if (!srOnly) {
                         prSupport = true;
-                        result.prEvidence.add(pair);
+                        prEvidence.add(pair);
                     }
                 }
 
@@ -401,7 +405,7 @@ class Analysis {
                     }
 
                     if (addToSR) {
-                        result.srEvidence.add(pair);
+                        srEvidence.add(pair);
                     }
                 }
             }
@@ -410,34 +414,35 @@ class Analysis {
             final boolean srSupport = bp1SrSupport || bp2SrSupport;
 
             if (srSupport && prSupport) {
-                result.bp1Stats.incrementPrSrSupport();
+                bp1Stats.incrementPrSrSupport();
+
             } else if (bp1SrSupport) {
-                result.bp1Stats.incrementSrOnlySupport();
+                bp1Stats.incrementSrOnlySupport();
             } else if (prSupport) {
-                result.bp1Stats.incrementPrOnlySupport();
+                bp1Stats.incrementPrOnlySupport();
             }
             if (bp1PRNormal && bp1SRNormal) {
-                result.bp1Stats.incrementPrSrNormal();
+                bp1Stats.incrementPrSrNormal();
             } else if (bp1PRNormal && !srOnly) {
-                result.bp1Stats.incrementPrOnlyNormal();
+                bp1Stats.incrementPrOnlyNormal();
             }
 
             if (srSupport && prSupport) {
-                result.bp2Stats.incrementPrSrSupport();
+                bp2Stats.incrementPrSrSupport();
             } else if (bp2SrSupport) {
-                result.bp2Stats.incrementSrOnlySupport();
+                bp2Stats.incrementSrOnlySupport();
             } else if (prSupport) {
-                result.bp2Stats.incrementPrOnlySupport();
+                bp2Stats.incrementPrOnlySupport();
             }
             if (bp2PRNormal && bp2SRNormal) {
-                result.bp2Stats.incrementPrSrNormal();
+                bp2Stats.incrementPrSrNormal();
             } else if (bp2PRNormal && !srOnly) {
-                result.bp2Stats.incrementPrOnlyNormal();
+                bp2Stats.incrementPrOnlyNormal();
             }
         }
 
         iterator.close();
-        return result;
+        return new SampleStats(bp1Stats, bp2Stats, srEvidence, prEvidence);
     }
 
     @NotNull
@@ -573,6 +578,16 @@ class Analysis {
             } else {
                 this.error = BreakpointError.NONE;
             }
+        }
+
+        @NotNull
+        private Pair<Location, Location> breakpoints() {
+            return breakpoints;
+        }
+
+        @NotNull
+        private BreakpointError error() {
+            return error;
         }
 
         @NotNull

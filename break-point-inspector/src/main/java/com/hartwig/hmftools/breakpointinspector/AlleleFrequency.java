@@ -29,8 +29,8 @@ final class AlleleFrequency {
 
     @NotNull
     static Pair<Double, Double> calculate(@NotNull final SampleStats stats) {
-        final BreakpointStats bp1 = stats.bp1Stats, bp2 = stats.bp2Stats;
+        final BreakpointStats bp1 = stats.bp1Stats(), bp2 = stats.bp2Stats();
         final double support = bp1.prSrSupport() + bp1.prOnlySupport() + bp1.srOnlySupport() + bp2.srOnlySupport();
-        return Pair.of(calculate(stats.bp1Stats, support), calculate(stats.bp2Stats, support));
+        return Pair.of(calculate(stats.bp1Stats(), support), calculate(stats.bp2Stats(), support));
     }
 }

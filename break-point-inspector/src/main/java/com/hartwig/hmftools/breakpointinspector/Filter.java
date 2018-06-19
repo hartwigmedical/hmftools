@@ -41,17 +41,17 @@ final class Filter {
             final Pair<Location, Location> breakpoints, final double contaminationFraction) {
         final List<FilterType> filters = Lists.newArrayList();
 
-        if (Stream.of(tumorStats.bp1Stats, tumorStats.bp2Stats)
+        if (Stream.of(tumorStats.bp1Stats(), tumorStats.bp2Stats())
                 .mapToInt(s -> s.prOnlyNormal() + s.prSrNormal() + s.prOnlySupport() + s.prSrSupport())
                 .anyMatch(i -> i < 10)) {
             filters.add(FilterType.MIN_DEPTH);
         }
 
-        final int tumorSR = Stream.of(tumorStats.bp1Stats, tumorStats.bp2Stats).mapToInt(Filter::supportSR).sum();
+        final int tumorSR = Stream.of(tumorStats.bp1Stats(), tumorStats.bp2Stats()).mapToInt(Filter::supportSR).sum();
 
         if (variant.isShortVariant()) {
-            final boolean bothSidesHaveSR = Stream.of(tumorStats.bp1Stats, tumorStats.bp2Stats).allMatch(s -> supportSR(s) > 0);
-            final boolean anchorLengthOkay = tumorStats.srEvidence.stream()
+            final boolean bothSidesHaveSR = Stream.of(tumorStats.bp1Stats(), tumorStats.bp2Stats()).allMatch(s -> supportSR(s) > 0);
+            final boolean anchorLengthOkay = tumorStats.srEvidence().stream()
                     .anyMatch(p -> Stream.of(p.getLeft(), p.getRight())
                             .anyMatch(r -> r.getAlignmentEnd() - r.getAlignmentStart() >= MIN_ANCHOR_LENGTH));
 
@@ -62,24 +62,24 @@ final class Filter {
             }
 
             // NERA: must not have SR support in normal
-            final int refSR = Stream.of(refStats.bp1Stats, refStats.bp2Stats).mapToInt(Filter::supportSR).sum();
+            final int refSR = Stream.of(refStats.bp1Stats(), refStats.bp2Stats()).mapToInt(Filter::supportSR).sum();
             final int allowableNormalSupport = (int) (contaminationFraction * tumorSR);
             if (refSR > allowableNormalSupport) {
                 filters.add(FilterType.SR_NORMAL_SUPPORT);
             }
         } else if (!variant.isInsert()) {
             // NERA: we only need to check BP1 as BP1 PR+PRSR == BP2 PR+PRSR
-            final int allowableNormalSupport = (int) (contaminationFraction * supportPR(tumorStats.bp1Stats));
-            if (supportPR(refStats.bp1Stats) > allowableNormalSupport) {
+            final int allowableNormalSupport = (int) (contaminationFraction * supportPR(tumorStats.bp1Stats()));
+            if (supportPR(refStats.bp1Stats()) > allowableNormalSupport) {
                 filters.add(FilterType.PR_NORMAL_SUPPORT);
             }
 
-            final boolean anchorLengthOkay = tumorStats.prEvidence.stream()
+            final boolean anchorLengthOkay = tumorStats.prEvidence().stream()
                     .anyMatch(p -> Stream.of(p.getLeft(), p.getRight())
                             .allMatch(r -> r.getAlignmentEnd() - r.getAlignmentStart() >= MIN_ANCHOR_LENGTH));
 
             // NERA: only applicable for longer variants
-            final int tumorPR = Stream.of(tumorStats.bp1Stats, tumorStats.bp2Stats).mapToInt(Filter::supportPR).sum();
+            final int tumorPR = Stream.of(tumorStats.bp1Stats(), tumorStats.bp2Stats()).mapToInt(Filter::supportPR).sum();
             if (tumorPR == 0) {
                 filters.add(FilterType.PR_SUPPORT_ZERO);
             } else if (!anchorLengthOkay) {
@@ -93,7 +93,7 @@ final class Filter {
 
         final Set<String> concordantReads = Sets.newHashSet();
         for (final Location bp : adjustedBP) {
-            for (final ClipStats tumorClipStats : tumorStats.sampleClipping.sequencesAt(bp)) {
+            for (final ClipStats tumorClipStats : tumorStats.sampleClipping().sequencesAt(bp)) {
                 if (tumorClipStats.longestClipSequence().length() < 5) {
                     continue;
                 }
@@ -103,7 +103,7 @@ final class Filter {
                         .substring(tumorClipStats.longestClipSequence().length() - 5)
                         : tumorClipStats.longestClipSequence().substring(0, 5);
 
-                for (final ClipStats refClipStats : refStats.sampleClipping.sequencesAt(bp)) {
+                for (final ClipStats refClipStats : refStats.sampleClipping().sequencesAt(bp)) {
                     if (tumorClipStats.left() != refClipStats.left()) {
                         continue;
                     } else if (refClipStats.longestClipSequence().length() < 5) {

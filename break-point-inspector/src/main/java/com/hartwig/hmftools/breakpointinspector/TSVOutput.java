@@ -66,14 +66,14 @@ final class TSVOutput {
         fields.add(context.variant().getAttributeAsString("HOMSEQ", ""));
         fields.add(context.variant().getAttributeAsString("SVINSSEQ", ""));
 
-        fields.addAll(result.refStats.data());
-        fields.addAll(result.tumorStats.data());
-        fields.add(ObjectUtils.firstNonNull(result.breakpoints.getLeft(), "err").toString());
-        fields.add(ObjectUtils.firstNonNull(result.breakpoints.getRight(), "err").toString());
-        fields.add(result.filterString);
+        fields.addAll(result.refStats().statsData());
+        fields.addAll(result.tumorStats().statsData());
+        fields.add(ObjectUtils.firstNonNull(result.breakpoints().getLeft(), "err").toString());
+        fields.add(ObjectUtils.firstNonNull(result.breakpoints().getRight(), "err").toString());
+        fields.add(result.filterString());
 
-        fields.add(String.format("%.2f", result.alleleFrequency.getLeft()));
-        fields.add(String.format("%.2f", result.alleleFrequency.getRight()));
+        fields.add(String.format("%.2f", result.alleleFrequency().getLeft()));
+        fields.add(String.format("%.2f", result.alleleFrequency().getRight()));
 
         return String.join("\t", fields);
     }
