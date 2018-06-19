@@ -139,7 +139,7 @@ final class StructuralVariantLegsFactory {
 
             if (allowInserts || variant.type() != StructuralVariantType.INS) {
                 final Optional<StructuralVariantLeg> start = Optional.of(variant.start()).filter(x -> x.alleleFrequency() != null);
-                final Optional<StructuralVariantLeg> end = Optional.of(variant.end()).filter(x -> x.alleleFrequency() != null);
+                final Optional<StructuralVariantLeg> end = variant.end() == null ? Optional.empty() : Optional.of(variant.end()).filter(x -> x.alleleFrequency() != null);
 
                 if (start.isPresent() || end.isPresent()) {
                     final ModifiableStructuralVariantLegs legs = ModifiableStructuralVariantLegs.create().setStart(start).setEnd(end);

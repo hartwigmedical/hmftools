@@ -485,6 +485,8 @@ CREATE TABLE structuralVariant
     endIntervalOffsetEnd int,
     inexactHomologyOffsetStart int,
     inexactHomologyOffsetEnd int,
+    #linkedBy varchar(512),
+    #vcfId varchar(255),
     PRIMARY KEY (id),
     INDEX(sampleId)
 );
