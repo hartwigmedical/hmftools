@@ -11,6 +11,7 @@ import java.util.function.BiConsumer;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.breakpointinspector.datamodel.EnrichedVariantContext;
+import com.hartwig.hmftools.breakpointinspector.datamodel.StructuralVariantResult;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

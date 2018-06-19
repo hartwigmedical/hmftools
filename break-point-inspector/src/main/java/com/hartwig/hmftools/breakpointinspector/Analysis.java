@@ -12,6 +12,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.breakpointinspector.clipping.Clipping;
 import com.hartwig.hmftools.breakpointinspector.datamodel.EnrichedVariantContext;
 import com.hartwig.hmftools.breakpointinspector.datamodel.Range;
+import com.hartwig.hmftools.breakpointinspector.datamodel.SampleStats;
+import com.hartwig.hmftools.breakpointinspector.datamodel.StructuralVariantResult;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;

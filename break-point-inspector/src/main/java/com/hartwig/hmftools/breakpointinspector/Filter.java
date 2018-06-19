@@ -11,7 +11,9 @@ import java.util.stream.Stream;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.breakpointinspector.clipping.ClipStats;
+import com.hartwig.hmftools.breakpointinspector.datamodel.BreakpointStats;
 import com.hartwig.hmftools.breakpointinspector.datamodel.EnrichedVariantContext;
+import com.hartwig.hmftools.breakpointinspector.datamodel.SampleStats;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;

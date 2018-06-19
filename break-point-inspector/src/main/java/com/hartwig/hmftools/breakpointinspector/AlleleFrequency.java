@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.breakpointinspector;
 
+import com.hartwig.hmftools.breakpointinspector.datamodel.BreakpointStats;
+import com.hartwig.hmftools.breakpointinspector.datamodel.SampleStats;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 

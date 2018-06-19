@@ -6,18 +6,18 @@ import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
 
-final class Util {
+public final class Util {
 
     private Util() {
     }
 
     @NotNull
-    static List<String> prefixList(final List<String> list, final String prefix) {
+    public static List<String> prefixList(final List<String> list, final String prefix) {
         return list.stream().map(s -> prefix + s).collect(Collectors.toList());
     }
 
     @NotNull
-    static <U> List<String> toStrings(final List<U> list) {
+    public static <U> List<String> toStrings(final List<U> list) {
         return list.stream().map(Objects::toString).collect(Collectors.toList());
     }
 }

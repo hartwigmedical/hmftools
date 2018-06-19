@@ -10,6 +10,8 @@ import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.breakpointinspector.datamodel.EnrichedVariantContext;
+import com.hartwig.hmftools.breakpointinspector.datamodel.SampleStats;
+import com.hartwig.hmftools.breakpointinspector.datamodel.StructuralVariantResult;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.jetbrains.annotations.NotNull;
