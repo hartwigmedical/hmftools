@@ -403,13 +403,17 @@ class BachelorEligibility {
     }
 
     private Stream<EligibilityReport> processStructuralVariant(final String patient, final StructuralVariant structuralVariant) {
-        final GenomePosition start = GenomePositions.create(structuralVariant.chromosome(true), structuralVariant.position(true));
-        final GenomePosition end = GenomePositions.create(structuralVariant.chromosome(false), structuralVariant.position(false));
+        if (structuralVariant.end() != null) {
+            final GenomePosition start = GenomePositions.create(structuralVariant.chromosome(true), structuralVariant.position(true));
+            final GenomePosition end = GenomePositions.create(structuralVariant.chromosome(false), structuralVariant.position(false));
 
-        final List<EligibilityReport> results = Lists.newArrayList();
-        results.addAll(processStructuralVariant(patient, start, end, structuralVariant.type()));
-        results.addAll(processStructuralVariant(patient, end, start, structuralVariant.type()));
-        return results.stream();
+            final List<EligibilityReport> results = Lists.newArrayList();
+            results.addAll(processStructuralVariant(patient, start, end, structuralVariant.type()));
+            results.addAll(processStructuralVariant(patient, end, start, structuralVariant.type()));
+            return results.stream();
+        } else {
+            return Lists.newArrayList();
+        }
     }
 
     @NotNull

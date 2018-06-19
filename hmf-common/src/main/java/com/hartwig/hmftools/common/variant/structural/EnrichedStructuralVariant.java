@@ -15,7 +15,7 @@ public abstract class EnrichedStructuralVariant implements StructuralVariant {
     @Override
     public abstract EnrichedStructuralVariantLeg start();
 
-    @NotNull
+    @Nullable
     @Override
     public abstract EnrichedStructuralVariantLeg end();
 }

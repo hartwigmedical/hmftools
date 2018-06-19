@@ -111,19 +111,23 @@ public class LoadStructuralVariants {
         if (svPONAnnotator != null && svPONAnnotator.hasEntries()) {
 
             for (EnrichedStructuralVariant variant : svList) {
-                int ponCount = svPONAnnotator.getPonOccurenceCount(variant.chromosome(true),
-                        variant.chromosome(false),
-                        variant.position(true),
-                        variant.position(false),
-                        variant.orientation(true),
-                        variant.orientation(false),
-                        variant.type().toString());
+                if (variant.end() != null) {
+                    int ponCount = svPONAnnotator.getPonOccurenceCount(variant.chromosome(true),
+                            variant.chromosome(false),
+                            variant.position(true),
+                            variant.position(false),
+                            variant.orientation(true),
+                            variant.orientation(false),
+                            variant.type().toString());
 
-                String filter = ponCount > 1 ? PON_FILTER_PON : PON_FILTER_PASS;
+                    String filter = ponCount > 1 ? PON_FILTER_PON : PON_FILTER_PASS;
 
-                final ImmutableEnrichedStructuralVariant updatedSV =
-                        ImmutableEnrichedStructuralVariant.builder().from(variant).filter(filter).build();
-                updatedSVs.add(updatedSV);
+                    final ImmutableEnrichedStructuralVariant updatedSV =
+                            ImmutableEnrichedStructuralVariant.builder().from(variant).filter(filter).build();
+                    updatedSVs.add(updatedSV);
+                } else {
+                    // TODO: single breakend PON
+                }
             }
         }
         else
