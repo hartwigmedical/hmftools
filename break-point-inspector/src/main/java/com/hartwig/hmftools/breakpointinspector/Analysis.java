@@ -34,14 +34,17 @@ class Analysis {
 
     private static final Logger LOGGER = LogManager.getLogger(Analysis.class);
     private static final SAMRecordCoordinateComparator COMPARATOR = new SAMRecordCoordinateComparator();
+    private static final int MAX_READS_PER_INTERVAL_LENGTH_FOR_DOWNSAMPLING_CUTOFF = 100;
 
+    @NotNull
     private final SamReader refReader;
+    @NotNull
     private final SamReader tumorReader;
 
     private final int range;
     private final float contamination;
 
-    Analysis(final SamReader refReader, final SamReader tumorReader, final int range, final float contamination) {
+    Analysis(@NotNull final SamReader refReader, @NotNull final SamReader tumorReader, final int range, final float contamination) {
         this.refReader = refReader;
         this.tumorReader = tumorReader;
         this.range = range;
@@ -452,55 +455,72 @@ class Analysis {
         final File file = File.createTempFile(name, ".bam");
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, file);
 
-        final SAMRecordIterator iterator = reader.queryOverlapping(intervals);
-        long readCount = 0;
-        while (iterator.hasNext()) {
-            SAMRecord record = iterator.next();
-            writer.addAlignment(record);
-            readCount++;
+        int intervalLength = 0;
+        for (QueryInterval interval :intervals) {
+            intervalLength += (1 + interval.end - interval.start);
+        }
+        double maxReads = intervalLength * MAX_READS_PER_INTERVAL_LENGTH_FOR_DOWNSAMPLING_CUTOFF;
+
+        final List<SAMRecord> records = reader.queryOverlapping(intervals).toList();
+
+        long downsampleIndex = 0;
+        if (records.size() > maxReads) {
+            downsampleIndex = Math.round((double) records.size() / maxReads);
+            if (downsampleIndex > 1) {
+                LOGGER.warn(String.format("Downsampling BAM with name %s with index %s", name, downsampleIndex));
+            }
         }
 
-        iterator.close();
+        long recordCount = 0;
+        long readCount = 0;
+        for (SAMRecord record : records) {
+            if (downsampleIndex == 0 || (recordCount % downsampleIndex == 0)) {
+                readCount++;
+                writer.addAlignment(record);
+            }
+            recordCount++;
+        }
+
         writer.close();
-        LOGGER.info(String.format("    Finished writing file. Loaded %s records", readCount));
+        LOGGER.info(String.format("    Finished writing file. Loaded %s reads from %s records", readCount, recordCount));
 
         return file;
     }
 
-    private static int orientation(final SAMRecord record) {
+    private static int orientation(@NotNull final SAMRecord record) {
         return record.getReadNegativeStrandFlag() ? -1 : 1;
     }
 
     @NotNull
-    private static Pair<Integer, Integer> orientation(final Pair<SAMRecord, SAMRecord> pair) {
+    private static Pair<Integer, Integer> orientation(@NotNull final Pair<SAMRecord, SAMRecord> pair) {
         return Pair.of(orientation(pair.getLeft()), orientation(pair.getRight()));
     }
 
     @NotNull
-    private static <L> Stream<L> stream(final Pair<L, L> pair) {
+    private static <L> Stream<L> stream(@NotNull final Pair<L, L> pair) {
         return Stream.of(pair.getLeft(), pair.getRight());
     }
 
-    private static boolean isMate(final SAMRecord read, final SAMRecord mate) {
+    private static boolean isMate(@NotNull final SAMRecord read, @NotNull final SAMRecord mate) {
         return read.getReadName().equals(mate.getReadName()) && read.getMateReferenceIndex().equals(mate.getReferenceIndex())
                 && Math.abs(read.getMateAlignmentStart() - mate.getAlignmentStart()) <= 1;
     }
 
-    private static boolean span(final Pair<SAMRecord, SAMRecord> pair, final Location breakpoint) {
+    private static boolean span(@NotNull final Pair<SAMRecord, SAMRecord> pair, @NotNull final Location breakpoint) {
         return Location.fromSAMRecord(pair.getLeft(), true).compareTo(breakpoint) <= 0
                 && Location.fromSAMRecord(pair.getRight(), false).compareTo(breakpoint) >= 0;
     }
 
-    private static boolean overlap(final SAMRecord read, final Location breakpoint) {
+    private static boolean overlap(@NotNull final SAMRecord read, @NotNull final Location breakpoint) {
         return read.getReferenceIndex() == breakpoint.referenceIndex() && read.getAlignmentStart() <= breakpoint.position()
                 && breakpoint.position() <= read.getAlignmentEnd();
     }
 
-    private static boolean overlap(final Pair<SAMRecord, SAMRecord> pair, final Location breakpoint) {
+    private static boolean overlap(@NotNull final Pair<SAMRecord, SAMRecord> pair, @NotNull final Location breakpoint) {
         return stream(pair).anyMatch(r -> overlap(r, breakpoint));
     }
 
-    private static boolean clippedOnCorrectSide(final SAMRecord record, final int orientation) {
+    private static boolean clippedOnCorrectSide(@NotNull final SAMRecord record, final int orientation) {
         return (orientation > 0 ? record.getCigar().isRightClipped() : record.getCigar().isLeftClipped());
     }
 
@@ -525,7 +545,6 @@ class Analysis {
             }
 
             for (int j = i + 1; j < list.size(); ++j) {
-
                 final SAMRecord r1 = list.get(j);
                 if (r1.getReadUnmappedFlag()) {
                     continue;
@@ -535,9 +554,7 @@ class Analysis {
                 if (isMate(r0, r1) || isMate(r1, r0)) {
                     pairs.add(Pair.of(r0, r1));
                 }
-
             }
-
         }
         return pairs;
     }
@@ -568,7 +585,7 @@ class Analysis {
         }
 
         @NotNull
-        private static BreakpointResult from(final Pair<Location, Location> breakpoints) {
+        private static BreakpointResult from(@NotNull final Pair<Location, Location> breakpoints) {
             return new BreakpointResult(breakpoints);
         }
     }
