@@ -33,7 +33,7 @@ import htsjdk.samtools.SamReaderFactory;
 class Analysis {
 
     private static final Logger LOGGER = LogManager.getLogger(Analysis.class);
-    private static final SAMRecordCoordinateComparator COMPARATOR = new SAMRecordCoordinateComparator();
+    private static final SAMRecordCoordinateComparator READS_COMPARATOR = new SAMRecordCoordinateComparator();
     private static final int MAX_READS_PER_INTERVAL_LENGTH_FOR_DOWNSAMPLING_CUTOFF = 100;
 
     @NotNull
@@ -61,15 +61,12 @@ class Analysis {
                         Math.max(0, variant.locationBP2().position() + variant.uncertaintyBP2().start() - proximity),
                         variant.locationBP2().position() + variant.uncertaintyBP2().end() + proximity) });
 
-        LOGGER.info("  Creating tmp ref BAM using " + Lists.newArrayList(intervals));
         final File tmpRefBam = queryNameSortedBAM(refReader, intervals, "ref");
-        LOGGER.info("  Creating tmp tumor BAM using " + Lists.newArrayList(intervals));
         final File tmpTumorBam = queryNameSortedBAM(tumorReader, intervals, "tumor");
 
         final SamReader sortedRefReader = SamReaderFactory.makeDefault().open(tmpRefBam);
         final SamReader sortedTumorReader = SamReaderFactory.makeDefault().open(tmpTumorBam);
 
-        LOGGER.info("  Analyzing breakpoints");
         final BreakpointResult breakpoints = determineBreakpoints(variant, sortedTumorReader);
 
         final StructuralVariantResult result = new StructuralVariantResult();
@@ -161,7 +158,7 @@ class Analysis {
                 }
             }
 
-            currentReads.sort(COMPARATOR);
+            currentReads.sort(READS_COMPARATOR);
             final PairedReads pairs = pairs(currentReads);
 
             currentReads.clear();
@@ -194,7 +191,6 @@ class Analysis {
                     clippedProper.add(pair);
                 }
             }
-
         }
 
         iterator.close();
@@ -217,7 +213,6 @@ class Analysis {
         }
 
         // NERA: Include more clipping information
-
         for (final Pair<SAMRecord, SAMRecord> pair : clippedProper) {
             if (stream(pair).allMatch(r -> Location.fromSAMRecord(r).sameChromosomeAs(variant.locationBP1()))) {
                 if (variant.orientationBP1() > 0) {
@@ -257,7 +252,6 @@ class Analysis {
         // NERA: Determine candidates based on clipping info
         final List<Location> bp1Candidates = bp1Clipping.getSequences()
                 .stream()
-                //.filter(c -> c.LongestClipSequence.length() >= 5)
                 .map(c -> c.alignment)
                 .filter(c -> withinRange(c, variant.locationBP1(), variant.uncertaintyBP1()))
                 .collect(Collectors.toList());
@@ -273,7 +267,6 @@ class Analysis {
 
         final List<Location> bp2Candidates = bp2Clipping.getSequences()
                 .stream()
-                //.filter(c -> c.LongestClipSequence.length() >= 5)
                 .map(c -> c.alignment)
                 .filter(c -> withinRange(c, variant.locationBP2(), variant.uncertaintyBP2()))
                 .collect(Collectors.toList());
@@ -318,7 +311,7 @@ class Analysis {
                 }
             }
 
-            currentReads.sort(COMPARATOR);
+            currentReads.sort(READS_COMPARATOR);
             final PairedReads pairs = pairs(currentReads);
 
             currentReads.clear();
@@ -454,6 +447,7 @@ class Analysis {
         final File file = File.createTempFile(name, ".bam");
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, file);
 
+        // KODU: Downsampling in case of ridiculous coverage (see also DEV-423)
         int intervalLength = 0;
         for (QueryInterval interval : intervals) {
             intervalLength += (1 + interval.end - interval.start);
@@ -462,26 +456,23 @@ class Analysis {
 
         final List<SAMRecord> records = reader.queryOverlapping(intervals).toList();
 
-        long downsampleIndex = 0;
+        long downsampleFactor = 0;
         if (records.size() > maxReads) {
-            downsampleIndex = Math.round((double) records.size() / maxReads);
-            if (downsampleIndex > 1) {
-                LOGGER.warn(String.format("Downsampling BAM with name %s with index %s", name, downsampleIndex));
+            downsampleFactor = Math.round((double) records.size() / maxReads);
+            if (downsampleFactor > 1) {
+                LOGGER.warn(String.format("Downsampling BAM with name %s with factor %s", name, downsampleFactor));
             }
         }
 
         long recordCount = 0;
-        long readCount = 0;
         for (SAMRecord record : records) {
-            if (downsampleIndex == 0 || (recordCount % downsampleIndex == 0)) {
-                readCount++;
+            if (downsampleFactor < 2 || (recordCount % downsampleFactor == 0)) {
                 writer.addAlignment(record);
             }
             recordCount++;
         }
 
         writer.close();
-        LOGGER.info(String.format("    Finished writing file. Loaded %s reads from %s records", readCount, recordCount));
 
         return file;
     }

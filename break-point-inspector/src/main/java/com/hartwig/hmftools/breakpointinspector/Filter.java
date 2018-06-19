@@ -93,29 +93,29 @@ final class Filter {
 
         final Set<String> concordantReads = Sets.newHashSet();
         for (final Location bp : adjustedBP) {
-            for (final ClipStats t : tumorStats.sampleClipping.sequencesAt(bp)) {
-                if (t.longestClipSequence.length() < 5) {
+            for (final ClipStats tumorClipStats : tumorStats.sampleClipping.sequencesAt(bp)) {
+                if (tumorClipStats.longestClipSequence.length() < 5) {
                     continue;
                 }
 
-                final String tumorSeq = t.left
-                        ? t.longestClipSequence.substring(t.longestClipSequence.length() - 5)
-                        : t.longestClipSequence.substring(0, 5);
+                final String tumorSeq = tumorClipStats.left
+                        ? tumorClipStats.longestClipSequence.substring(tumorClipStats.longestClipSequence.length() - 5)
+                        : tumorClipStats.longestClipSequence.substring(0, 5);
 
-                for (final ClipStats r : refStats.sampleClipping.sequencesAt(bp)) {
-                    if (t.left != r.left) {
+                for (final ClipStats refClipStats : refStats.sampleClipping.sequencesAt(bp)) {
+                    if (tumorClipStats.left != refClipStats.left) {
                         continue;
-                    } else if (r.longestClipSequence.length() < 5) {
+                    } else if (refClipStats.longestClipSequence.length() < 5) {
                         continue;
                     }
 
-                    if (t.left) {
-                        if (tumorSeq.equals(r.longestClipSequence.substring(r.longestClipSequence.length() - 5))) {
-                            concordantReads.addAll(r.supportingReads);
+                    if (tumorClipStats.left) {
+                        if (tumorSeq.equals(refClipStats.longestClipSequence.substring(refClipStats.longestClipSequence.length() - 5))) {
+                            concordantReads.addAll(refClipStats.supportingReads);
                         }
                     } else {
-                        if (tumorSeq.equals(r.longestClipSequence.substring(0, 5))) {
-                            concordantReads.addAll(r.supportingReads);
+                        if (tumorSeq.equals(refClipStats.longestClipSequence.substring(0, 5))) {
+                            concordantReads.addAll(refClipStats.supportingReads);
                         }
                     }
                 }
