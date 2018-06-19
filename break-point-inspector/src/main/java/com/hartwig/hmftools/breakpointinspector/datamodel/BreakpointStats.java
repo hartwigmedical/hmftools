@@ -1,12 +1,6 @@
 package com.hartwig.hmftools.breakpointinspector.datamodel;
 
-import java.util.Arrays;
-import java.util.List;
-
 public class BreakpointStats {
-
-    static final List<String> HEADER =
-            Arrays.asList("PR_ONLY_NORMAL", "PR_SR_NORMAL", "PR_ONLY_SUPPORT", "PR_SR_SUPPORT", "SR_ONLY_SUPPORT");
 
     private int prOnlyNormal = 0;
     private int prSrNormal = 0;

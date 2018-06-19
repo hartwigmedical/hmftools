@@ -17,6 +17,9 @@ import htsjdk.samtools.SAMRecord;
 
 public class SampleStats {
 
+    private static final List<String> BP_STATS_HEADER =
+            Arrays.asList("PR_ONLY_NORMAL", "PR_SR_NORMAL", "PR_ONLY_SUPPORT", "PR_SR_SUPPORT", "SR_ONLY_SUPPORT");
+
     @NotNull
     private final BreakpointStats bp1Stats;
     @NotNull
@@ -74,8 +77,8 @@ public class SampleStats {
     @NotNull
     public static List<String> header() {
         final List<String> header = Lists.newArrayList();
-        header.addAll(prefixList(BreakpointStats.HEADER, "BP1_"));
-        header.addAll(prefixList(BreakpointStats.HEADER, "BP2_"));
+        header.addAll(prefixList(BP_STATS_HEADER, "BP1_"));
+        header.addAll(prefixList(BP_STATS_HEADER, "BP2_"));
         return header;
     }
 
