@@ -33,6 +33,7 @@ public class SampleStats {
         // KODU: This is fairly ugly, but needed to prevent NPE.
         return new SampleStats(new BreakpointStats(), new BreakpointStats(), Lists.newArrayList(), Lists.newArrayList());
     }
+    
     public SampleStats(@NotNull final BreakpointStats bp1Stats, @NotNull final BreakpointStats bp2Stats,
             @NotNull final List<Pair<SAMRecord, SAMRecord>> srEvidence, @NotNull final List<Pair<SAMRecord, SAMRecord>> prEvidence) {
         this.bp1Stats = bp1Stats;

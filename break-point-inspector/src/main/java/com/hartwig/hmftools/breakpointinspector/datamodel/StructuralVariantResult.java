@@ -54,5 +54,4 @@ public abstract class StructuralVariantResult {
     public String filterString() {
         return filters().isEmpty() ? "PASS" : String.join(";", filters());
     }
-
 }
