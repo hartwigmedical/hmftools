@@ -68,10 +68,10 @@ class Analysis {
         final BreakpointResult breakpoints = determineBreakpoints(variant, sortedTumorReader);
 
         final StructuralVariantResult result = new StructuralVariantResult();
-        result.Breakpoints = breakpoints.Breakpoints;
+        result.Breakpoints = breakpoints.breakpoints;
         result.QueryIntervals = intervals;
 
-        if (breakpoints.Error != BreakpointError.NONE) {
+        if (breakpoints.error != BreakpointError.NONE) {
             result.Filters = Filter.errorFilter();
         } else {
             result.TumorStats = collectEvidence(variant, sortedTumorReader, result.Breakpoints);
@@ -451,14 +451,16 @@ class Analysis {
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, file);
 
         final SAMRecordIterator iterator = reader.queryOverlapping(intervals);
+        long readCount = 0;
         while (iterator.hasNext()) {
             SAMRecord record = iterator.next();
             writer.addAlignment(record);
+            readCount++;
         }
 
         iterator.close();
         writer.close();
-        LOGGER.info("    Finished writing file.");
+        LOGGER.info(String.format("    Finished writing file. Loaded %s records", readCount));
 
         return file;
     }
@@ -549,19 +551,23 @@ class Analysis {
 
     private static class BreakpointResult {
 
+        @NotNull
+        private final Pair<Location, Location> breakpoints;
+        @NotNull
+        private final BreakpointError error;
+
         private BreakpointResult(@NotNull final Pair<Location, Location> breakpoints) {
-            Breakpoints = breakpoints;
+            this.breakpoints = breakpoints;
             if (stream(breakpoints).anyMatch(Objects::isNull)) {
-                Error = BreakpointError.ALGO_ERROR;
+                this.error = BreakpointError.ALGO_ERROR;
+            } else {
+                this.error = BreakpointError.NONE;
             }
         }
 
         @NotNull
-        static BreakpointResult from(final Pair<Location, Location> breakpoints) {
+        private static BreakpointResult from(final Pair<Location, Location> breakpoints) {
             return new BreakpointResult(breakpoints);
         }
-
-        Pair<Location, Location> Breakpoints;
-        BreakpointError Error = BreakpointError.NONE;
     }
 }
