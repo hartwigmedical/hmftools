@@ -40,26 +40,26 @@ class Analysis {
     private final SamReader refReader;
     @NotNull
     private final SamReader tumorReader;
+    private final int proximity;
+    private final double contaminationFraction;
 
-    private final int range;
-    private final float contamination;
-
-    Analysis(@NotNull final SamReader refReader, @NotNull final SamReader tumorReader, final int range, final float contamination) {
+    Analysis(@NotNull final SamReader refReader, @NotNull final SamReader tumorReader, final int proximity,
+            final double contaminationFraction) {
         this.refReader = refReader;
         this.tumorReader = tumorReader;
-        this.range = range;
-        this.contamination = contamination;
+        this.proximity = proximity;
+        this.contaminationFraction = contaminationFraction;
     }
 
     @NotNull
     StructuralVariantResult processStructuralVariant(final EnrichedVariantContext variant) throws IOException {
         final QueryInterval[] intervals = QueryInterval.optimizeIntervals(new QueryInterval[] {
                 new QueryInterval(variant.locationBP1().referenceIndex(),
-                        Math.max(0, variant.locationBP1().position() + variant.uncertaintyBP1().start() - range),
-                        variant.locationBP1().position() + variant.uncertaintyBP1().end() + range),
+                        Math.max(0, variant.locationBP1().position() + variant.uncertaintyBP1().start() - proximity),
+                        variant.locationBP1().position() + variant.uncertaintyBP1().end() + proximity),
                 new QueryInterval(variant.locationBP2().referenceIndex(),
-                        Math.max(0, variant.locationBP2().position() + variant.uncertaintyBP2().start() - range),
-                        variant.locationBP2().position() + variant.uncertaintyBP2().end() + range) });
+                        Math.max(0, variant.locationBP2().position() + variant.uncertaintyBP2().start() - proximity),
+                        variant.locationBP2().position() + variant.uncertaintyBP2().end() + proximity) });
 
         LOGGER.info("  Creating tmp ref BAM using " + Lists.newArrayList(intervals));
         final File tmpRefBam = queryNameSortedBAM(refReader, intervals, "ref");
@@ -85,10 +85,9 @@ class Analysis {
 
             // NERA: load sample clipping
             sortedRefReader.forEach(record -> Clipping.clips(record).forEach(clipInfo -> result.refStats.sampleClipping.add(clipInfo)));
-            sortedTumorReader.forEach(record -> Clipping.clips(record)
-                    .forEach(clipInfo -> result.tumorStats.sampleClipping.add(clipInfo)));
+            sortedTumorReader.forEach(record -> Clipping.clips(record).forEach(clipInfo -> result.tumorStats.sampleClipping.add(clipInfo)));
 
-            result.filters = Filter.filters(variant, result.tumorStats, result.refStats, result.breakpoints, contamination);
+            result.filters = Filter.filters(variant, result.tumorStats, result.refStats, result.breakpoints, contaminationFraction);
 
             // NERA: adjust for homology
             final Location bp1 = result.breakpoints.getLeft().add(variant.orientationBP1() > 0 ? 0 : -1);
@@ -456,7 +455,7 @@ class Analysis {
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, file);
 
         int intervalLength = 0;
-        for (QueryInterval interval :intervals) {
+        for (QueryInterval interval : intervals) {
             intervalLength += (1 + interval.end - interval.start);
         }
         double maxReads = intervalLength * MAX_READS_PER_INTERVAL_LENGTH_FOR_DOWNSAMPLING_CUTOFF;

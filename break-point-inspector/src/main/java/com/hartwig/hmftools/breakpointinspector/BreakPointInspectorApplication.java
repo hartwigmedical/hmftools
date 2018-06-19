@@ -105,17 +105,17 @@ public class BreakPointInspectorApplication {
     @NotNull
     private static Analysis buildAnalysis(@NotNull final CommandLine cmd, @NotNull final SamReader refReader,
             @NotNull final SamReader tumorReader) {
-        final AnalysisBuilder analysisBuilder = new AnalysisBuilder();
-
+        int proximity = 500;
         if (cmd.hasOption(PROXIMITY)) {
-            analysisBuilder.range(Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500")));
+            proximity = Integer.parseInt(cmd.getOptionValue(PROXIMITY));
         }
 
+        double contaminationFraction = 0;
         if (cmd.hasOption(CONTAMINATION_FRACTION)) {
-            analysisBuilder.contaminationFraction(Float.parseFloat(cmd.getOptionValue(CONTAMINATION_FRACTION, "0")));
+            contaminationFraction = Double.parseDouble(cmd.getOptionValue(CONTAMINATION_FRACTION));
         }
 
-        return analysisBuilder.refReader(refReader).tumorReader(tumorReader).createAnalysis();
+        return new Analysis(refReader, tumorReader, proximity, contaminationFraction);
     }
 
     @NotNull

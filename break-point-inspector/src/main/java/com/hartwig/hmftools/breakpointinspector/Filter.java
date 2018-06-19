@@ -38,7 +38,7 @@ final class Filter {
 
     @NotNull
     static Collection<String> filters(final EnrichedVariantContext variant, final SampleStats tumorStats, final SampleStats refStats,
-            final Pair<Location, Location> breakpoints, final float contamination) {
+            final Pair<Location, Location> breakpoints, final double contaminationFraction) {
         final List<FilterType> filters = Lists.newArrayList();
 
         if (Stream.of(tumorStats.bp1Stats, tumorStats.bp2Stats)
@@ -63,13 +63,13 @@ final class Filter {
 
             // NERA: must not have SR support in normal
             final int refSR = Stream.of(refStats.bp1Stats, refStats.bp2Stats).mapToInt(Filter::supportSR).sum();
-            final int allowableNormalSupport = (int) (contamination * tumorSR);
+            final int allowableNormalSupport = (int) (contaminationFraction * tumorSR);
             if (refSR > allowableNormalSupport) {
                 filters.add(FilterType.SR_NORMAL_SUPPORT);
             }
         } else if (!variant.isInsert()) {
             // NERA: we only need to check BP1 as BP1 PR+PRSR == BP2 PR+PRSR
-            final int allowableNormalSupport = (int) (contamination * supportPR(tumorStats.bp1Stats));
+            final int allowableNormalSupport = (int) (contaminationFraction * supportPR(tumorStats.bp1Stats));
             if (supportPR(refStats.bp1Stats) > allowableNormalSupport) {
                 filters.add(FilterType.PR_NORMAL_SUPPORT);
             }
@@ -122,7 +122,7 @@ final class Filter {
             }
         }
 
-        if (concordantReads.size() > (int) (contamination * tumorSR)) {
+        if (concordantReads.size() > (int) (contaminationFraction * tumorSR)) {
             filters.add(FilterType.CLIPPING_CONCORDANCE);
         }
 
