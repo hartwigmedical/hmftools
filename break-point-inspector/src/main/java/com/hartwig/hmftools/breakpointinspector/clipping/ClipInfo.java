@@ -6,16 +6,16 @@ import htsjdk.samtools.SAMRecord;
 
 public class ClipInfo {
 
-    final SAMRecord Record;
+    final SAMRecord record;
 
     ClipInfo(final SAMRecord record) {
-        this.Record = record;
+        this.record = record;
     }
 
-    Location Alignment;
-    int Length = 0;
-    String Sequence = "";
-    boolean HardClipped = false;
-    boolean Left = false;
-    boolean Right = false;
+    Location alignment;
+    int length = 0;
+    String sequence = "";
+    boolean hardClipped = false;
+    boolean left = false;
+    boolean right = false;
 }

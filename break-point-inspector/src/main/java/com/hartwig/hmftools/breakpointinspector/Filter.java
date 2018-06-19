@@ -93,29 +93,29 @@ final class Filter {
 
         final Set<String> concordantReads = Sets.newHashSet();
         for (final Location bp : adjustedBP) {
-            for (final ClipStats t : tumorStats.sampleClipping.getSequencesAt(bp)) {
-                if (t.LongestClipSequence.length() < 5) {
+            for (final ClipStats t : tumorStats.sampleClipping.sequencesAt(bp)) {
+                if (t.longestClipSequence.length() < 5) {
                     continue;
                 }
 
-                final String tumorSeq = t.Left
-                        ? t.LongestClipSequence.substring(t.LongestClipSequence.length() - 5)
-                        : t.LongestClipSequence.substring(0, 5);
+                final String tumorSeq = t.left
+                        ? t.longestClipSequence.substring(t.longestClipSequence.length() - 5)
+                        : t.longestClipSequence.substring(0, 5);
 
-                for (final ClipStats r : refStats.sampleClipping.getSequencesAt(bp)) {
-                    if (t.Left != r.Left) {
+                for (final ClipStats r : refStats.sampleClipping.sequencesAt(bp)) {
+                    if (t.left != r.left) {
                         continue;
-                    } else if (r.LongestClipSequence.length() < 5) {
+                    } else if (r.longestClipSequence.length() < 5) {
                         continue;
                     }
 
-                    if (t.Left) {
-                        if (tumorSeq.equals(r.LongestClipSequence.substring(r.LongestClipSequence.length() - 5))) {
-                            concordantReads.addAll(r.SupportingReads);
+                    if (t.left) {
+                        if (tumorSeq.equals(r.longestClipSequence.substring(r.longestClipSequence.length() - 5))) {
+                            concordantReads.addAll(r.supportingReads);
                         }
                     } else {
-                        if (tumorSeq.equals(r.LongestClipSequence.substring(0, 5))) {
-                            concordantReads.addAll(r.SupportingReads);
+                        if (tumorSeq.equals(r.longestClipSequence.substring(0, 5))) {
+                            concordantReads.addAll(r.supportingReads);
                         }
                     }
                 }

@@ -8,29 +8,28 @@ import com.hartwig.hmftools.breakpointinspector.Location;
 import org.jetbrains.annotations.NotNull;
 
 public class ClipStats implements Comparable<ClipStats> {
-    public final Location Alignment;
-    public String LongestClipSequence = "";
-    public Set<String> SupportingReads = Sets.newHashSet();
-    public boolean Left = false;
-    boolean Right = false;
 
-    ClipStats(final Location alignment, final String sequence, final boolean left) {
-        Alignment = alignment;
-        LongestClipSequence = sequence;
-        if (left) {
-            Left = true;
-        } else {
-            Right = true;
-        }
+    @NotNull
+    public final Location alignment;
+    @NotNull
+    public String longestClipSequence;
+    @NotNull
+    public Set<String> supportingReads = Sets.newHashSet();
+    public boolean left;
+
+    ClipStats(@NotNull final Location alignment, @NotNull final String sequence, final boolean left) {
+        this.alignment = alignment;
+        this.longestClipSequence = sequence;
+        this.left = left;
     }
 
     @Override
     public String toString() {
-        return LongestClipSequence;
+        return longestClipSequence;
     }
 
     @Override
     public int compareTo(@NotNull final ClipStats o) {
-        return LongestClipSequence.compareTo(o.LongestClipSequence);
+        return longestClipSequence.compareTo(o.longestClipSequence);
     }
 }

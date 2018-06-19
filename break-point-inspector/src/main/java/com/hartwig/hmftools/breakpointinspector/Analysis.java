@@ -84,8 +84,8 @@ class Analysis {
             result.alleleFrequency = AlleleFrequency.calculate(result.tumorStats);
 
             // NERA: load sample clipping
-            sortedRefReader.forEach(record -> Clipping.getClips(record).forEach(clipInfo -> result.refStats.sampleClipping.add(clipInfo)));
-            sortedTumorReader.forEach(record -> Clipping.getClips(record)
+            sortedRefReader.forEach(record -> Clipping.clips(record).forEach(clipInfo -> result.refStats.sampleClipping.add(clipInfo)));
+            sortedTumorReader.forEach(record -> Clipping.clips(record)
                     .forEach(clipInfo -> result.tumorStats.sampleClipping.add(clipInfo)));
 
             result.filters = Filter.filters(variant, result.tumorStats, result.refStats, result.breakpoints, contamination);
@@ -109,11 +109,11 @@ class Analysis {
         sortedTumorReader.close();
 
         if (!tmpRefBam.delete()) {
-            LOGGER.error("couldn't delete {}", tmpRefBam);
+            LOGGER.error(String.format("couldn't delete %s", tmpRefBam));
         }
 
         if (!tmpTumorBam.delete()) {
-            LOGGER.error("couldn't delete {}", tmpTumorBam);
+            LOGGER.error(String.format("couldn't delete %s", tmpTumorBam));
         }
 
         return result;
@@ -206,14 +206,14 @@ class Analysis {
 
         for (final Pair<SAMRecord, SAMRecord> pair : interesting) {
             if (variant.orientationBP1() > 0) {
-                bp1Clipping.add(Clipping.getRightClip(pair.getLeft()));
+                bp1Clipping.add(Clipping.rightClip(pair.getLeft()));
             } else {
-                bp1Clipping.add(Clipping.getLeftClip(pair.getLeft()));
+                bp1Clipping.add(Clipping.leftClip(pair.getLeft()));
             }
             if (variant.orientationBP2() > 0) {
-                bp2Clipping.add(Clipping.getRightClip(pair.getRight()));
+                bp2Clipping.add(Clipping.rightClip(pair.getRight()));
             } else {
-                bp2Clipping.add(Clipping.getLeftClip(pair.getRight()));
+                bp2Clipping.add(Clipping.leftClip(pair.getRight()));
             }
         }
 
@@ -222,17 +222,17 @@ class Analysis {
         for (final Pair<SAMRecord, SAMRecord> pair : clippedProper) {
             if (stream(pair).allMatch(r -> Location.fromSAMRecord(r).sameChromosomeAs(variant.locationBP1()))) {
                 if (variant.orientationBP1() > 0) {
-                    bp1Clipping.add(Clipping.getRightClip(pair.getRight()));
+                    bp1Clipping.add(Clipping.rightClip(pair.getRight()));
                 } else {
-                    bp1Clipping.add(Clipping.getLeftClip(pair.getLeft()));
+                    bp1Clipping.add(Clipping.leftClip(pair.getLeft()));
                 }
             }
 
             if (stream(pair).allMatch(r -> Location.fromSAMRecord(r).sameChromosomeAs(variant.locationBP2()))) {
                 if (variant.orientationBP2() > 0) {
-                    bp2Clipping.add(Clipping.getRightClip(pair.getRight()));
+                    bp2Clipping.add(Clipping.rightClip(pair.getRight()));
                 } else {
-                    bp2Clipping.add(Clipping.getLeftClip(pair.getLeft()));
+                    bp2Clipping.add(Clipping.leftClip(pair.getLeft()));
                 }
             }
         }
@@ -241,16 +241,16 @@ class Analysis {
         for (final Pair<SAMRecord, SAMRecord> pair : secondaryPairs) {
             if (stream(pair).allMatch(r -> Location.fromSAMRecord(r).sameChromosomeAs(variant.locationBP1()))) {
                 if (variant.orientationBP1() > 0) {
-                    bp1Clipping.add(Clipping.getRightClip(pair.getRight()));
+                    bp1Clipping.add(Clipping.rightClip(pair.getRight()));
                 } else {
-                    bp1Clipping.add(Clipping.getLeftClip(pair.getLeft()));
+                    bp1Clipping.add(Clipping.leftClip(pair.getLeft()));
                 }
             }
             if (stream(pair).allMatch(r -> Location.fromSAMRecord(r).sameChromosomeAs(variant.locationBP2()))) {
                 if (variant.orientationBP2() > 0) {
-                    bp2Clipping.add(Clipping.getRightClip(pair.getRight()));
+                    bp2Clipping.add(Clipping.rightClip(pair.getRight()));
                 } else {
-                    bp2Clipping.add(Clipping.getLeftClip(pair.getLeft()));
+                    bp2Clipping.add(Clipping.leftClip(pair.getLeft()));
                 }
             }
         }
@@ -259,7 +259,7 @@ class Analysis {
         final List<Location> bp1Candidates = bp1Clipping.getSequences()
                 .stream()
                 //.filter(c -> c.LongestClipSequence.length() >= 5)
-                .map(c -> c.Alignment)
+                .map(c -> c.alignment)
                 .filter(c -> withinRange(c, variant.locationBP1(), variant.uncertaintyBP1()))
                 .collect(Collectors.toList());
 
@@ -275,7 +275,7 @@ class Analysis {
         final List<Location> bp2Candidates = bp2Clipping.getSequences()
                 .stream()
                 //.filter(c -> c.LongestClipSequence.length() >= 5)
-                .map(c -> c.Alignment)
+                .map(c -> c.alignment)
                 .filter(c -> withinRange(c, variant.locationBP2(), variant.uncertaintyBP2()))
                 .collect(Collectors.toList());
 

@@ -19,116 +19,116 @@ import htsjdk.samtools.SAMRecord;
 public class Clipping {
 
     @NotNull
-    private final TreeMultimap<Location, ClipStats> LocationMap = TreeMultimap.create(Comparator.naturalOrder(), Comparator.naturalOrder());
+    private final TreeMultimap<Location, ClipStats> locationMap = TreeMultimap.create(Comparator.naturalOrder(), Comparator.naturalOrder());
 
-    public void add(@Nullable final ClipInfo clip) {
-        if (clip == null) {
+    public void add(@Nullable final ClipInfo clipInfo) {
+        if (clipInfo == null) {
             return;
         }
 
         boolean found = false;
-        final SortedSet<ClipStats> existing = LocationMap.removeAll(clip.Alignment);
-        for (final ClipStats c : existing) {
-            if (clip.Left != c.Left) {
+        final SortedSet<ClipStats> existing = locationMap.removeAll(clipInfo.alignment);
+        for (final ClipStats clipStats : existing) {
+            if (clipInfo.left != clipStats.left) {
                 continue;
             }
 
             boolean addToExisting = false;
-            if (clip.Left) {
-                if (c.LongestClipSequence.length() > clip.Sequence.length()) {
-                    if (c.LongestClipSequence.endsWith(clip.Sequence)) {
+            if (clipInfo.left) {
+                if (clipStats.longestClipSequence.length() > clipInfo.sequence.length()) {
+                    if (clipStats.longestClipSequence.endsWith(clipInfo.sequence)) {
                         addToExisting = true;
                     }
-                } else if (clip.Sequence.endsWith(c.LongestClipSequence)) {
-                    c.LongestClipSequence = clip.Sequence;
+                } else if (clipInfo.sequence.endsWith(clipStats.longestClipSequence)) {
+                    clipStats.longestClipSequence = clipInfo.sequence;
                     addToExisting = true;
                 }
-            } else if (clip.Right) {
-                if (c.LongestClipSequence.length() > clip.Sequence.length()) {
-                    if (c.LongestClipSequence.startsWith(clip.Sequence)) {
+            } else if (clipInfo.right) {
+                if (clipStats.longestClipSequence.length() > clipInfo.sequence.length()) {
+                    if (clipStats.longestClipSequence.startsWith(clipInfo.sequence)) {
                         addToExisting = true;
                     }
-                } else if (clip.Sequence.startsWith(c.LongestClipSequence)) {
-                    c.LongestClipSequence = clip.Sequence;
+                } else if (clipInfo.sequence.startsWith(clipStats.longestClipSequence)) {
+                    clipStats.longestClipSequence = clipInfo.sequence;
                     addToExisting = true;
                 }
             }
 
             if (addToExisting) {
-                c.SupportingReads.add(clip.Record.getReadName());
+                clipStats.supportingReads.add(clipInfo.record.getReadName());
                 found = true;
             }
-            LocationMap.put(clip.Alignment, c);
+            locationMap.put(clipInfo.alignment, clipStats);
         }
 
         if (!found) {
-            final ClipStats stats = new ClipStats(clip.Alignment, clip.Sequence, clip.Left);
-            stats.SupportingReads.add(clip.Record.getReadName());
-            LocationMap.put(clip.Alignment, stats);
+            final ClipStats stats = new ClipStats(clipInfo.alignment, clipInfo.sequence, clipInfo.left);
+            stats.supportingReads.add(clipInfo.record.getReadName());
+            locationMap.put(clipInfo.alignment, stats);
         }
     }
 
     @NotNull
     public List<ClipStats> getSequences() {
-        return LocationMap.values()
+        return locationMap.values()
                 .stream()
-                .sorted((a, b) -> Integer.compare(b.SupportingReads.size(), a.SupportingReads.size()))
+                .sorted((a, b) -> Integer.compare(b.supportingReads.size(), a.supportingReads.size()))
                 .collect(Collectors.toList());
     }
 
     @NotNull
-    public List<ClipStats> getSequencesAt(final Location location) {
-        return Lists.newArrayList(LocationMap.get(location));
+    public List<ClipStats> sequencesAt(@NotNull final Location location) {
+        return Lists.newArrayList(locationMap.get(location));
     }
 
     @Nullable
-    public static ClipInfo getLeftClip(final SAMRecord read) {
+    public static ClipInfo leftClip(@NotNull final SAMRecord read) {
         final ClipInfo result = new ClipInfo(read);
-        result.Left = true;
+        result.left = true;
         final Cigar cigar = read.getCigar();
         if (cigar.isEmpty()) {
             return null;
         }
         switch (cigar.getFirstCigarElement().getOperator()) {
             case H:
-                result.Alignment = Location.fromSAMRecord(read, true).add(-1);
-                result.Length = cigar.getFirstCigarElement().getLength();
-                result.HardClipped = true;
+                result.alignment = Location.fromSAMRecord(read, true).add(-1);
+                result.length = cigar.getFirstCigarElement().getLength();
+                result.hardClipped = true;
                 return result;
             case S:
-                result.Alignment = Location.fromSAMRecord(read, true).add(-1);
-                result.Length = cigar.getFirstCigarElement().getLength();
-                result.Sequence = read.getReadString().substring(0, result.Length);
+                result.alignment = Location.fromSAMRecord(read, true).add(-1);
+                result.length = cigar.getFirstCigarElement().getLength();
+                result.sequence = read.getReadString().substring(0, result.length);
                 return result;
         }
         return null;
     }
 
     @Nullable
-    public static ClipInfo getRightClip(final SAMRecord read) {
+    public static ClipInfo rightClip(@NotNull final SAMRecord read) {
         final ClipInfo result = new ClipInfo(read);
-        result.Right = true;
+        result.right = true;
         final Cigar cigar = read.getCigar();
         if (cigar.isEmpty()) {
             return null;
         }
         switch (cigar.getLastCigarElement().getOperator()) {
             case H:
-                result.Alignment = Location.fromSAMRecord(read, false).add(1);
-                result.Length = cigar.getLastCigarElement().getLength();
-                result.HardClipped = true;
+                result.alignment = Location.fromSAMRecord(read, false).add(1);
+                result.length = cigar.getLastCigarElement().getLength();
+                result.hardClipped = true;
                 return result;
             case S:
-                result.Alignment = Location.fromSAMRecord(read, false).add(1);
-                result.Length = cigar.getLastCigarElement().getLength();
-                result.Sequence = read.getReadString().substring(read.getReadLength() - result.Length);
+                result.alignment = Location.fromSAMRecord(read, false).add(1);
+                result.length = cigar.getLastCigarElement().getLength();
+                result.sequence = read.getReadString().substring(read.getReadLength() - result.length);
                 return result;
         }
         return null;
     }
 
     @NotNull
-    public static Stream<ClipInfo> getClips(final SAMRecord read) {
-        return Stream.of(getLeftClip(read), getRightClip(read));
+    public static Stream<ClipInfo> clips(@NotNull final SAMRecord read) {
+        return Stream.of(leftClip(read), rightClip(read));
     }
 }
