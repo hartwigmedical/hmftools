@@ -14,8 +14,6 @@ import com.hartwig.hmftools.breakpointinspector.datamodel.EnrichedVariantContext
 import com.hartwig.hmftools.breakpointinspector.datamodel.FilterType;
 import com.hartwig.hmftools.breakpointinspector.datamodel.StructuralVariantResult;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.QueryInterval;
@@ -24,8 +22,6 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 
 final class BPIAlgo {
-
-    private static final Logger LOGGER = LogManager.getLogger(BPIAlgo.class);
 
     private BPIAlgo() {
     }
@@ -51,8 +47,6 @@ final class BPIAlgo {
             }
 
             final EnrichedVariantContext enrichedVariant = VariantEnrichment.enrich(variant, mateVariant, dictionary);
-
-            LOGGER.info(String.format("Running Analysis on %s", variant));
             final StructuralVariantResult result = analysis.processStructuralVariant(enrichedVariant);
 
             combinedQueryIntervals.addAll(asList(result.queryIntervals()));
