@@ -10,17 +10,44 @@ import org.jetbrains.annotations.NotNull;
 public class ClipStats implements Comparable<ClipStats> {
 
     @NotNull
-    public final Location alignment;
+    private final Location alignment;
     @NotNull
-    public String longestClipSequence;
+    private String longestClipSequence;
     @NotNull
-    public Set<String> supportingReads = Sets.newHashSet();
-    public boolean left;
+    private final Set<String> supportingReads = Sets.newHashSet();
+    private final boolean left;
 
     ClipStats(@NotNull final Location alignment, @NotNull final String sequence, final boolean left) {
         this.alignment = alignment;
         this.longestClipSequence = sequence;
         this.left = left;
+    }
+
+    @NotNull
+    public Location alignment() {
+        return alignment;
+    }
+
+    void newLongestClipSequence(@NotNull final String sequence) {
+        this.longestClipSequence = sequence;
+    }
+
+    @NotNull
+    public String longestClipSequence() {
+        return longestClipSequence;
+    }
+
+    void addSupportingRead(@NotNull String supportingRead) {
+        supportingReads.add(supportingRead);
+    }
+
+    @NotNull
+    public Set<String> supportingReads() {
+        return supportingReads;
+    }
+
+    public boolean left() {
+        return left;
     }
 
     @Override

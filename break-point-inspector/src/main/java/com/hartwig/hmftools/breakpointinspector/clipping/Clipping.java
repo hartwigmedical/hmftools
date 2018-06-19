@@ -29,33 +29,33 @@ public class Clipping {
         boolean found = false;
         final SortedSet<ClipStats> existing = locationMap.removeAll(clipInfo.alignment());
         for (final ClipStats clipStats : existing) {
-            if (clipInfo.left() != clipStats.left) {
+            if (clipInfo.left() != clipStats.left()) {
                 continue;
             }
 
             boolean addToExisting = false;
             if (clipInfo.left()) {
-                if (clipStats.longestClipSequence.length() > clipInfo.sequence().length()) {
-                    if (clipStats.longestClipSequence.endsWith(clipInfo.sequence())) {
+                if (clipStats.longestClipSequence().length() > clipInfo.sequence().length()) {
+                    if (clipStats.longestClipSequence().endsWith(clipInfo.sequence())) {
                         addToExisting = true;
                     }
-                } else if (clipInfo.sequence().endsWith(clipStats.longestClipSequence)) {
-                    clipStats.longestClipSequence = clipInfo.sequence();
+                } else if (clipInfo.sequence().endsWith(clipStats.longestClipSequence())) {
+                    clipStats.newLongestClipSequence(clipInfo.sequence());
                     addToExisting = true;
                 }
             } else if (clipInfo.right()) {
-                if (clipStats.longestClipSequence.length() > clipInfo.sequence().length()) {
-                    if (clipStats.longestClipSequence.startsWith(clipInfo.sequence())) {
+                if (clipStats.longestClipSequence().length() > clipInfo.sequence().length()) {
+                    if (clipStats.longestClipSequence().startsWith(clipInfo.sequence())) {
                         addToExisting = true;
                     }
-                } else if (clipInfo.sequence().startsWith(clipStats.longestClipSequence)) {
-                    clipStats.longestClipSequence = clipInfo.sequence();
+                } else if (clipInfo.sequence().startsWith(clipStats.longestClipSequence())) {
+                    clipStats.newLongestClipSequence(clipInfo.sequence());
                     addToExisting = true;
                 }
             }
 
             if (addToExisting) {
-                clipStats.supportingReads.add(clipInfo.record().getReadName());
+                clipStats.addSupportingRead(clipInfo.record().getReadName());
                 found = true;
             }
             locationMap.put(clipInfo.alignment(), clipStats);
@@ -63,7 +63,7 @@ public class Clipping {
 
         if (!found) {
             final ClipStats stats = new ClipStats(clipInfo.alignment(), clipInfo.sequence(), clipInfo.left());
-            stats.supportingReads.add(clipInfo.record().getReadName());
+            stats.addSupportingRead(clipInfo.record().getReadName());
             locationMap.put(clipInfo.alignment(), stats);
         }
     }
@@ -72,7 +72,7 @@ public class Clipping {
     public List<ClipStats> getSequences() {
         return locationMap.values()
                 .stream()
-                .sorted((a, b) -> Integer.compare(b.supportingReads.size(), a.supportingReads.size()))
+                .sorted((a, b) -> Integer.compare(b.supportingReads().size(), a.supportingReads().size()))
                 .collect(Collectors.toList());
     }
 

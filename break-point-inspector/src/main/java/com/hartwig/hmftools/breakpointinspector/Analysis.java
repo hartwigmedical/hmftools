@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.breakpointinspector.clipping.ClipStats;
 import com.hartwig.hmftools.breakpointinspector.clipping.Clipping;
 import com.hartwig.hmftools.breakpointinspector.datamodel.EnrichedVariantContext;
 import com.hartwig.hmftools.breakpointinspector.datamodel.Range;
@@ -252,7 +253,7 @@ class Analysis {
         // NERA: Determine candidates based on clipping info
         final List<Location> bp1Candidates = bp1Clipping.getSequences()
                 .stream()
-                .map(c -> c.alignment)
+                .map(ClipStats::alignment)
                 .filter(c -> withinRange(c, variant.locationBP1(), variant.uncertaintyBP1()))
                 .collect(Collectors.toList());
 
@@ -267,7 +268,7 @@ class Analysis {
 
         final List<Location> bp2Candidates = bp2Clipping.getSequences()
                 .stream()
-                .map(c -> c.alignment)
+                .map(ClipStats::alignment)
                 .filter(c -> withinRange(c, variant.locationBP2(), variant.uncertaintyBP2()))
                 .collect(Collectors.toList());
 
