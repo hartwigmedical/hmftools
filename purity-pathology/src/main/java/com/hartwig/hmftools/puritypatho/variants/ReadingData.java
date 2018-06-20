@@ -19,8 +19,13 @@ public class ReadingData {
     public static void readingFiles(@NotNull String runsFolderPath, @NotNull String tumorSample) throws IOException{
         LOGGER.info("reading Amber file: " + runsFolderPath + File.separator + AMBER_DIR + File.separator + tumorSample + EXTENSION);
         final String Amberfile = runsFolderPath + File.separator + AMBER_DIR + File.separator + tumorSample + EXTENSION;
+        int countAmber = readingLines(Amberfile).split("\n").length;
+
         LOGGER.info("reading Cytoscan file" + MAP_BAF_FILE);
-        VariantDetection.checkVariants(readingLines(Amberfile), readingLines(MAP_BAF_FILE));
+        int countCyto = readingLines(MAP_BAF_FILE).split("\n").length;
+
+        VariantDetection.checkVariants(readingLines(Amberfile), countAmber,
+                readingLines(MAP_BAF_FILE), countCyto);
     }
 
     public static String readingLines (@NotNull String file) throws IOException {
@@ -28,17 +33,11 @@ public class ReadingData {
         BufferedReader bufferedReader = new BufferedReader(fileReader);
         StringBuffer stringBuffer = new StringBuffer();
         String line;
-        int totalLines = 1;
         while ((line = bufferedReader.readLine()) != null) {
             stringBuffer.append(line);
             stringBuffer.append("\n");
-            totalLines += 1;
         }
         fileReader.close();
-        LOGGER.info("Contents of file:");
-        LOGGER.info("totalLines" + totalLines);
-        LOGGER.info(stringBuffer.toString());
-        String data = stringBuffer.toString();
-        return data;
+        return stringBuffer.toString();
     }
 }
