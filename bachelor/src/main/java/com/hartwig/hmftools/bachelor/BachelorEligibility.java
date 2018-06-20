@@ -412,7 +412,7 @@ class BachelorEligibility {
             results.addAll(processStructuralVariant(patient, end, start, structuralVariant.type()));
             return results.stream();
         } else {
-            return Lists.newArrayList();
+            return Stream.empty();
         }
     }
 

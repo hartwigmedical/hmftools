@@ -45,6 +45,7 @@ class StructuralVariantDAO {
         for (Record record : result) {
             structuralVariants.add(ImmutableStructuralVariantData.builder()
                     .id(String.valueOf(record.getValue(STRUCTURALVARIANT.ID)))
+                    .vcfId(String.valueOf(record.getValue(STRUCTURALVARIANT.VCFID)))
                     .startChromosome(record.getValue(STRUCTURALVARIANT.STARTCHROMOSOME))
                     .endChromosome(record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME))
                     .startPosition(record.getValue(STRUCTURALVARIANT.STARTPOSITION))
@@ -64,7 +65,7 @@ class StructuralVariantDAO {
                     .homology(record.getValue(STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE))
                     .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
                     .filter(record.getValue(STRUCTURALVARIANT.FILTER))
-                    .imprecise(record.getValue(STRUCTURALVARIANT.IMPRECISE).equals("false"))
+                    .imprecise(byteToBoolean(record.getValue(STRUCTURALVARIANT.IMPRECISE)))
                     .somaticScore(record.getValue(STRUCTURALVARIANT.SOMATICSCORE))
                     .qualityScore(record.getValue(STRUCTURALVARIANT.QUALSCORE))
                     .event(record.getValue(STRUCTURALVARIANT.EVENT))
@@ -82,6 +83,7 @@ class StructuralVariantDAO {
                     .endIntervalOffsetEnd(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETEND))
                     .inexactHomologyOffsetStart(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETSTART))
                     .inexactHomologyOffsetEnd(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETEND))
+                    .linkedBy(record.getValue(STRUCTURALVARIANT.LINKEDBY))
                     .build());
         }
         return structuralVariants;
@@ -157,7 +159,7 @@ class StructuralVariantDAO {
 
             final EnrichedStructuralVariant variant = ImmutableEnrichedStructuralVariant.builder()
                     .primaryKey(record.getValue(STRUCTURALVARIANT.ID))
-                    .id(record.getValue(STRUCTURALVARIANT.ID).toString())
+                    .id(record.getValue(STRUCTURALVARIANT.VCFID))
                     .start(start)
                     .end(end)
                     .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
@@ -170,6 +172,7 @@ class StructuralVariantDAO {
                     .somaticScore(record.getValue(STRUCTURALVARIANT.SOMATICSCORE))
                     .qualityScore(record.getValue(STRUCTURALVARIANT.QUALSCORE))
                     .event(record.getValue(STRUCTURALVARIANT.EVENT))
+                    .linkedBy(record.getValue(STRUCTURALVARIANT.LINKEDBY))
                     .build();
 
             regions.add(variant);
@@ -227,6 +230,8 @@ class StructuralVariantDAO {
                     STRUCTURALVARIANT.ENDINTERVALOFFSETEND,
                     STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETSTART,
                     STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETEND,
+                    STRUCTURALVARIANT.VCFID,
+                    STRUCTURALVARIANT.LINKEDBY,
                     STRUCTURALVARIANT.MODIFIED);
             batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
             inserter.execute();
@@ -275,6 +280,8 @@ class StructuralVariantDAO {
                 variant.end() == null ? null : variant.end().endOffset(),
                 variant.start().inexactHomologyOffsetStart(),
                 variant.start().inexactHomologyOffsetEnd(),
+                variant.id(),
+                variant.linkedBy(),
                 timestamp);
     }
 

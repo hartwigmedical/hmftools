@@ -40,7 +40,7 @@ public final class EnrichedStructuralVariantFactory {
                 builder.ploidy(roundedPloidy);
             }
 
-            if (ploidies.size() == 2) {
+            if (ploidies.size() > 0) {
                 final StructuralVariantLegPloidy start = ploidies.get(0);
                 final StructuralVariantLegPloidy end = ploidies.size() <= 1 ? null : ploidies.get(1);
 
@@ -48,7 +48,7 @@ public final class EnrichedStructuralVariantFactory {
                 startBuilder.adjustedCopyNumber(round(adjustedCopyNumber(start)));
                 startBuilder.adjustedCopyNumberChange(round(adjustedCopyNumberChange(start)));
 
-                if (endBuilder != null) {
+                if (end != null) {
                     endBuilder.adjustedAlleleFrequency(round(adjustedVAF(purityAdjuster, end)));
                     endBuilder.adjustedCopyNumber(round(adjustedCopyNumber(end)));
                     endBuilder.adjustedCopyNumberChange(round(adjustedCopyNumberChange(end)));

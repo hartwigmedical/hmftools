@@ -8,7 +8,7 @@ public abstract class StructuralVariantData {
 
     @Nullable
     public abstract String id();
-    @Nullable
+    public abstract String vcfId();
     public abstract String event();
 
     public abstract String startChromosome();
@@ -49,4 +49,5 @@ public abstract class StructuralVariantData {
     public abstract Integer endTumourReferenceFragmentCount();
     public abstract Integer endNormalVariantFragmentCount();
     public abstract Integer endNormalReferenceFragmentCount();
+    public abstract String linkedBy();
 }

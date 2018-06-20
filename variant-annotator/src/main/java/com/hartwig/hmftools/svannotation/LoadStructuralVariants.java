@@ -127,6 +127,8 @@ public class LoadStructuralVariants {
                     updatedSVs.add(updatedSV);
                 } else {
                     // TODO: single breakend PON
+                    // For now we just pass it through unmodified
+                    updatedSVs.add(variant);
                 }
             }
         }

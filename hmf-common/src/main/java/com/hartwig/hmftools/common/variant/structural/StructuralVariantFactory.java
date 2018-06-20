@@ -46,8 +46,10 @@ public class StructuralVariantFactory {
     private final static String VARIANT_FRAGMENT_BREAKEND_COVERAGE = "VF";
     private final static String REFERENCE_BREAKEND_READ_COVERAGE = "REF";
     private final static String REFERENCE_BREAKEND_READPAIR_COVERAGE = "REFPAIR";
+    private final static String EVENT = "EVENT";
+    private final static String LINKED_BY = "LINKED_BY";
     /**
-     * Must match the small deldup threshold in scripts/gridss/*.R
+     * Must match the small deldup threshold in scripts/gridss/gridss.config.R
      */
     private final static int SMALL_DELDUP_SIZE = 1000;
     private final static int NORMAL_GENOTYPE_ORDINAL = 0;
@@ -81,9 +83,9 @@ public class StructuralVariantFactory {
                 if (isSingleBreakend) {
                     results.add(createSingleBreakend(context));
                 } else {
-                    String mate = (String) context.getAttribute(MATE_ID);
+                    String mate = (String) context.getAttribute(PAR_ID);
                     if (mate == null) {
-                        mate = (String) context.getAttribute(PAR_ID);
+                        mate = (String) context.getAttribute(MATE_ID);
                     }
                     if (unmatched.containsKey(mate)) {
                         results.add(create(unmatched.remove(mate), context));
@@ -268,6 +270,8 @@ public class StructuralVariantFactory {
     private static ImmutableStructuralVariantImpl.Builder setCommon(@NotNull ImmutableStructuralVariantImpl.Builder builder, @NotNull VariantContext context) {
         return builder
                 .id(context.getID())
+                .event(context.getAttributeAsString(EVENT, null))
+                .linkedBy(context.getAttributeAsString(LINKED_BY, ""))
                 .imprecise(imprecise(context))
                 .somaticScore(context.hasAttribute(SOMATIC_SCORE) ? context.getAttributeAsInt(SOMATIC_SCORE, 0) : null)
                 .qualityScore(context.getPhredScaledQual());
@@ -332,7 +336,7 @@ public class StructuralVariantFactory {
             filters.addAll(pairedContext.getFilters());
         }
         if (filters.size() > 1) {
-            // Doesn't pass if a filter is applied to either breakend
+            // Doesn't pass if a filter is applied to either of the two records
             filters.remove("PASS");
         }
         // TODO Collectors string concatenation
