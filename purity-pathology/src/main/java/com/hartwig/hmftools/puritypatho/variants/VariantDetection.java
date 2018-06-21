@@ -16,14 +16,6 @@ public class VariantDetection {
     private static final String pathName = "/home/lieke/analysis/";
     private static final String outputName = "variants.txt";
 
-    public static void checkVariants(@NotNull String AmberfileReading,@NotNull int countAmber,
-            @NotNull String CytoFileReading, @NotNull int countCyto){
-        LOGGER.info("countAmber" + countAmber);
-        LOGGER.info(AmberfileReading);
-        LOGGER.info("countCyto" + countCyto);
-        LOGGER.info(CytoFileReading);
-    }
-
     public static String generateOutputFileName(){
         return pathName + outputName;
     }

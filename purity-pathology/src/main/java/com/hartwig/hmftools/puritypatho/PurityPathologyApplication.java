@@ -30,8 +30,8 @@ public class PurityPathologyApplication {
         final RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runsFolderPath);
         final String tumorSample = runContext.tumorSample();
         LOGGER.info("tumorSample: " + tumorSample);
-        ReadingData.readingFiles(runsFolderPath, tumorSample);
         final String filename = VariantDetection.generateOutputFileName();
+        ReadingData.readingFiles(runsFolderPath, tumorSample);
         VariantDetection.write(filename,"a, b, c, d");
     }
 
