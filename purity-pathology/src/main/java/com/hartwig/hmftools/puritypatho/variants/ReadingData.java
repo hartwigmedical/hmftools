@@ -10,12 +10,19 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
+import com.hartwig.hmftools.common.center.Center;
+import com.hartwig.hmftools.common.center.CenterModel;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+@Value.Immutable
+@Value.Style(allParameters = true,
+             passAnnotations = { NotNull.class, Nullable.class })
 public class ReadingData {
     public static final String DELIMITER = "\t";
     public static final String EXTENSION = ".amber.baf";
@@ -36,6 +43,7 @@ public class ReadingData {
 
         LOGGER.info(sortedBafs);
         LOGGER.info("MAP_BAF_FILE: " + MAP_BAF_FILE);
+
     }
 
     public static String toString(@NotNull final AmberBAF ratio) {

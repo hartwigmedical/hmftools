@@ -16,8 +16,13 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+@Value.Immutable
+@Value.Style(allParameters = true,
+             passAnnotations = { NotNull.class, Nullable.class })
 public class PurityPathologyApplication {
     private static final String RUNS_DIR = "runs_dir";
     private static final Logger LOGGER = LogManager.getLogger(PurityPathologyApplication.class);
