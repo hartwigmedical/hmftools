@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.actionabilityAnalyzer
 
+import com.github.davidmoten.rtree.RTree
+import com.github.davidmoten.rtree.geometry.Geometries
+import com.github.davidmoten.rtree.geometry.Line
 import com.google.common.annotations.VisibleForTesting
 import com.hartwig.hmftools.common.copynumber.CopyNumberAlteration
 import com.hartwig.hmftools.extensions.csv.CsvReader
@@ -13,11 +16,26 @@ import com.hartwig.hmftools.patientdb.data.PotentialActionableVariant
 
 class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, String>, actionableVariantsLocation: String,
                             fusionPairsLocation: String, promiscuousFiveLocation: String, promiscuousThreeLocation: String,
-                            cnvsLocation: String, cancerTypeLocation: String) {
+                            cnvsLocation: String, cancerTypeLocation: String, actionableRangesLocation: String) {
     companion object {
         private fun <T : ActionableEvent, R> createActionabilityMap(items: List<ActionableItem<T>>,
                                                                     keyMapper: (T) -> R): Map<R, List<ActionableTreatment>> {
             return items.groupBy { keyMapper(it.event) }.mapValues { (_, actionableOutputs) -> ActionableTreatment(actionableOutputs) }
+        }
+
+        private fun createActionabilityTree(items: List<ActionableGenomicRangeOutput>): Map<String, RTree<ActionableTreatment, Line>> {
+            return items.groupBy { it.event.chromosome }.mapValues { rangesToRtree(it.value) }
+        }
+
+        private fun rangesToRtree(items: List<ActionableGenomicRangeOutput>): RTree<ActionableTreatment, Line> {
+            return items.fold(RTree.create<ActionableTreatment, Line>()) { rtree, range ->
+                val actionableTreatment = ActionableTreatment(range.event.eventString(), range.actionability)
+                rtree.add(actionableTreatment, genomicPositionsToLine(range.event.start.toInt(), range.event.stop.toInt()))
+            }
+        }
+
+        private fun genomicPositionsToLine(start: Int, end: Int): Line {
+            return Geometries.line(start.toFloat(), 0.toFloat(), end.toFloat(), 0.toFloat())
         }
 
         private fun readCancerTypeMapping(fileLocation: String): Map<String, Set<String>> {
@@ -43,6 +61,7 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
     private val promiscuousThreeActionabilityMap =
             createActionabilityMap(CsvReader.readTSV<ActionablePromiscuousGeneOutput>(promiscuousThreeLocation)) { it }
     private val cnvActionabilityMap = createActionabilityMap(CsvReader.readTSV<ActionableCNVOutput>(cnvsLocation)) { it }
+    private val rangeActionabilityTree = createActionabilityTree(CsvReader.readTSV(actionableRangesLocation))
     private val cancerTypeMapping = readCancerTypeMapping(cancerTypeLocation)
     private val tumorLocationMapping = primaryTumorMapping()
 
@@ -50,6 +69,18 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
         val variantKey = VariantKey(variant)
         val cancerType = sampleTumorLocationMap[variant.sampleId()]
         return getActionability(variantActionabilityMap, variantKey, variant.sampleId(), cancerType).toSet()
+    }
+
+    fun rangeActionabilityForVariant(variant: PotentialActionableVariant): Set<ActionabilityOutput> {
+        val cancerType = sampleTumorLocationMap[variant.sampleId()]
+        val variantPosition = genomicPositionsToLine(variant.position(), variant.position())
+        val searchResults = rangeActionabilityTree[variant.chromosome()]?.search(variantPosition)
+        searchResults ?: return emptySet()
+        val treatments = searchResults.toBlocking().toIterable().map { it.value() }
+        return treatments.map {
+            val treatmentType = getTreatmentType(cancerType, it.actionability.cancerType)
+            ActionabilityOutput(variant.sampleId(), cancerType, treatmentType, it)
+        }.toSet()
     }
 
     fun actionabilityForFusion(fusion: PotentialActionableFusion): Set<ActionabilityOutput> {
