@@ -20,6 +20,7 @@ private val actionableFusionPairs = "actionableFusionPairs"
 private val actionablePromiscuousFive = "actionablePromiscuousFive"
 private val actionablePromisucousThree = "actionablePromiscuousThree"
 private val actionableCNVs = "actionableCNVs"
+private val actionableGenomicRanges = "actionableRanges"
 private val cancerTypes = "knowledgebaseCancerTypes"
 private val allDbSamples = false
 private val cohortCsvLocation = "cohort.csv"
@@ -28,7 +29,8 @@ fun main(args: Array<String>) {
     val dbAccess = DatabaseAccess(user, password, databaseUrl)
     val samplesToAnalyze = readSamples(dbAccess)
     val actionabilityAnalyzer = ActionabilityAnalyzer(samplesToAnalyze, actionableVariants, actionableFusionPairs,
-                                                      actionablePromiscuousFive, actionablePromisucousThree, actionableCNVs, cancerTypes)
+                                                      actionablePromiscuousFive, actionablePromisucousThree, actionableCNVs, cancerTypes,
+                                                      actionableGenomicRanges)
     logger.info("Start")
     queryDatabase(dbAccess, samplesToAnalyze, actionabilityAnalyzer)
     logger.info("Done.")
@@ -40,7 +42,7 @@ private fun queryDatabase(dbAccess: DatabaseAccess, samplesToAnalyze: Map<String
     potentiallyActionableVariants(dbAccess, samplesToAnalyze).use {
         val variantRecords = it.asSequence().mapIndexed { index, variant ->
             logProgress(index)
-            actionabilityAnalyzer.actionabilityForVariant(variant)
+            actionabilityAnalyzer.actionabilityForVariant(variant) + actionabilityAnalyzer.rangeActionabilityForVariant(variant)
         }.flatten().toList()
         records.addAll(variantRecords)
     }
