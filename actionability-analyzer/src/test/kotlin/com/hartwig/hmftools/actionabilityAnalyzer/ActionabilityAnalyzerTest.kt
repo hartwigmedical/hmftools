@@ -14,10 +14,11 @@ class ActionabilityAnalyzerTest : StringSpec() {
     private val actionablePromiscuousFive = Resources.getResource("actionablePromiscuousFive").path
     private val actionablePromiscuousThree = Resources.getResource("actionablePromiscuousThree").path
     private val actionableVariants = Resources.getResource("actionableVariants").path
+    private val actionableRanges = Resources.getResource("actionableRanges").path
     private val cancerTypesMapping = Resources.getResource("knowledgebaseCancerTypes").path
     private val actionabilityAnalyzer = ActionabilityAnalyzer(samplesMap, actionableVariants, actionableFusionPairs,
                                                               actionablePromiscuousFive, actionablePromiscuousThree, actionableCNVs,
-                                                              cancerTypesMapping)
+                                                              cancerTypesMapping, actionableRanges)
 
     private val brafSNV = ImmutablePotentialActionableVariant.of("CPCT99110022T", "BRAF", "7", 140453136, "A", "T")
     private val brafOtherSNV = ImmutablePotentialActionableVariant.of("CPCT99110033T", "BRAF", "7", 140453136, "A", "T")
@@ -82,6 +83,19 @@ class ActionabilityAnalyzerTest : StringSpec() {
         "does not find SNV with different alt" {
             actionabilityAnalyzer.actionabilityForVariant(brafSNV.withAlt("G")).size shouldBe 0
         }
+
+        "finds BRAF SNV range actionability" {
+            val actionability = actionabilityAnalyzer.rangeActionabilityForVariant(brafOtherSNV)
+            val drugs = drugs(actionability)
+            val sources = sources(actionability)
+            val events = actionability.map { it.actionableTreatment.event }.toSet()
+            actionability.size shouldBe 2
+            actionability.filter { it.treatmentType == ON_LABEL }.size shouldBe 1
+            events.size shouldBe 1
+            (drugs == setOf("Vemurafenib")) shouldBe true
+            (sources == setOf("civic")) shouldBe true
+        }
+
     }
 
     private fun drugs(actionability: Set<ActionabilityOutput>): Set<String> {
