@@ -94,7 +94,8 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
         }
 
         private fun readGenomicRange(record: CSVRecord): GenomicRangeEvent {
-            return GenomicRangeEvent(record["gene"], record["chromosome"], record["start"], record["stop"])
+            return GenomicRangeEvent(record["gene"], record["representative_transcript"].orEmpty(), record["chromosome"], record["start"],
+                                     record["stop"])
         }
 
         private fun variantTypes(record: CSVRecord): List<String> {
