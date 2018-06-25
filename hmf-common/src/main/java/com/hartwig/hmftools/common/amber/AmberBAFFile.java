@@ -7,6 +7,7 @@ import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.logging.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
@@ -74,6 +75,26 @@ public enum AmberBAFFile {
                 .add(String.valueOf(ratio.normalDepth()))
                 .toString();
     }
+
+    public static List readingPurityData(@NotNull List<AmberBAF> bafs) throws IOException {
+        return toLinesPurityData(bafs);
+    }
+
+    @NotNull
+    static List<String> toLinesPurityData(@NotNull final List<AmberBAF> purity) {
+        final List<String> lines = Lists.newArrayList();
+        lines.add(header());
+        purity.stream().map(AmberBAFFile::toStringPurityData).forEach(lines::add);
+        return lines;
+    }
+
+    @NotNull
+    private static String toStringPurityData(@NotNull final AmberBAF ratio) {
+        return new StringJoiner(DELIMITER).add(String.valueOf(ratio.chromosome()))
+                .add(String.valueOf(ratio.position()))
+                .toString();
+    }
+
 
     @NotNull
     private static Multimap<String, AmberBAF> fromLines(@NotNull List<String> lines) {

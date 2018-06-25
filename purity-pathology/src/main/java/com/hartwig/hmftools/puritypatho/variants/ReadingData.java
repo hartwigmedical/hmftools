@@ -38,8 +38,9 @@ public class ReadingData {
         List<AmberBAF> sortedBafs = Lists.newArrayList(AmberBAFFiles.values());
         Collections.sort(sortedBafs);
 
-        final List<String> lines = Lists.newArrayList();
-       // sortedBafs.stream().map(AmberBAFFiles::toString).forEach(lines::add);
+        final List fialPurityData = AmberBAFFile.readingPurityData(sortedBafs);
+        LOGGER.info(fialPurityData);
+
 
         LOGGER.info(sortedBafs);
         LOGGER.info("MAP_BAF_FILE: " + MAP_BAF_FILE);
