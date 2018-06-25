@@ -7,7 +7,6 @@ import java.util.concurrent.ExecutionException;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.puritypatho.variants.ReadingData;
-import com.hartwig.hmftools.puritypatho.variants.VariantDetection;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -35,9 +34,7 @@ public class PurityPathologyApplication {
         final RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runsFolderPath);
         final String tumorSample = runContext.tumorSample();
         LOGGER.info("tumorSample: " + tumorSample);
-        final String filename = VariantDetection.generateOutputFileName();
         ReadingData.readingFiles(runsFolderPath, tumorSample);
-        VariantDetection.write(filename,"a, b, c, d");
     }
 
     @NotNull
