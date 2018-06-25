@@ -62,7 +62,9 @@ public class PotentiallyActionableItemsDAO {
                 SOMATICVARIANT.CHROMOSOME,
                 SOMATICVARIANT.POSITION,
                 SOMATICVARIANT.REF,
-                SOMATICVARIANT.ALT).from(SOMATICVARIANT).where(SOMATICVARIANT.FILTER.eq("PASS"));
+                SOMATICVARIANT.ALT,
+                SOMATICVARIANT.WORSTEFFECTTRANSCRIPT,
+                SOMATICVARIANT.WORSTEFFECT).from(SOMATICVARIANT).where(SOMATICVARIANT.FILTER.eq("PASS"));
         if (samples.size() > 0) {
             query.and(SOMATICVARIANT.SAMPLEID.in(samples));
         }
