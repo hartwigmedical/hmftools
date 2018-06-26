@@ -1,3 +1,3 @@
-event.gene	event.chromosome	event.start	event.stop	actionability.source	actionability.drug.name	actionability.drug.type	actionability.cancerType	actionability.level	actionability.hmfLevel	actionability.evidenceType	actionability.significance	actionability.hmfResponse
-BRAF	7	140453136	140453137	civic	Vemurafenib	BRAF inhibitor	Non-small Cell Lung Carcinoma	B	B	Predictive	Sensitivity	Responsive
-BRAF	7	140453136	140453137	civic	Vemurafenib	BRAF inhibitor	Colorectal Cancer	B	B	Predictive	Resistance or Non-Response	Resistant
+event.gene	event.transcript	event.chromosome	event.start	event.stop	actionability.source	actionability.drug.name	actionability.drug.type	actionability.cancerType	actionability.level	actionability.hmfLevel	actionability.evidenceType	actionability.significance	actionability.hmfResponse
+BRAF	ENST00000288602	7	140453136	140453137	civic	Vemurafenib	BRAF inhibitor	Non-small Cell Lung Carcinoma	B	B	Predictive	Sensitivity	Responsive
+BRAF	ENST00000288602	7	140453136	140453137	civic	Vemurafenib	BRAF inhibitor	Colorectal Cancer	B	B	Predictive	Resistance or Non-Response	Resistant

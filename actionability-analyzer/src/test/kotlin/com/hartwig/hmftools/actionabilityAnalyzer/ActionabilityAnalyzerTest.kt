@@ -20,9 +20,10 @@ class ActionabilityAnalyzerTest : StringSpec() {
                                                               actionablePromiscuousFive, actionablePromiscuousThree, actionableCNVs,
                                                               cancerTypesMapping, actionableRanges)
 
-    private val brafSNV = ImmutablePotentialActionableVariant.of("CPCT99110022T", "BRAF", "7", 140453136, "A", "T")
-    private val brafOtherSNV = ImmutablePotentialActionableVariant.of("CPCT99110033T", "BRAF", "7", 140453136, "A", "T")
-
+    private val brafSNV = ImmutablePotentialActionableVariant.of("CPCT99110022T", "BRAF", "7", 140453136,
+                                                                 "A", "T", "ENST00000288602", "missense")
+    private val brafOtherSNV = ImmutablePotentialActionableVariant.of("CPCT99110033T", "BRAF", "7", 140453136,
+                                                                      "A", "T", "ENST00000288602", "missense")
 
     init {
         "finds BRAF SNV actionability" {
