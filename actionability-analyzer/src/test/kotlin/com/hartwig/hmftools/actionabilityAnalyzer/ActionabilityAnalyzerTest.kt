@@ -93,7 +93,7 @@ class ActionabilityAnalyzerTest : StringSpec() {
             actionability.size shouldBe 2
             actionability.filter { it.treatmentType == ON_LABEL }.size shouldBe 1
             events.size shouldBe 1
-            (drugs == setOf("Vemurafenib")) shouldBe true
+            (drugs == setOf("Vemurafenib, Dabrafenib")) shouldBe true
             (sources == setOf("civic")) shouldBe true
         }
 
