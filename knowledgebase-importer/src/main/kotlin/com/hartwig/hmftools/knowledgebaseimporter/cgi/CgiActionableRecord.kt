@@ -90,8 +90,8 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
             val cancerTypes = record["Primary Tumor type"].split(";").map { it.trim() }
             val level = record["Evidence level"]
             val association = record["Association"]
-            return Actionability("cgi", cancerTypes, readDrugs(record, treatmentTypeMap), level, association, "Predictive",
-                                 HmfLevel(level), HmfResponse(association))
+            return Actionability("cgi", record["Alteration"], cancerTypes, readDrugs(record, treatmentTypeMap), level, association,
+                                 "Predictive", HmfLevel(level), HmfResponse(association))
         }
 
         private fun readDrugs(record: CSVRecord, treatmentTypeMap: Map<String, String>): List<HmfDrug> {

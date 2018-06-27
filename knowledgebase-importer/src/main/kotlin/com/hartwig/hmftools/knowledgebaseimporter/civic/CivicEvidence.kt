@@ -16,8 +16,8 @@ data class CivicEvidence(private val csvRecord: CSVRecord, private val drugInter
     val direction: String = csvRecord["evidence_direction"].orEmpty()
     val level: String = csvRecord["evidence_level"].orEmpty()
     val significance: String = csvRecord["clinical_significance"].orEmpty()
-    val actionabilityItems: List<Actionability> = Actionability("civic", listOf(cancerType), drugs, level, significance, type,
-                                                                HmfLevel(level), HmfResponse(significance))
+    val actionabilityItems: List<Actionability> = Actionability("civic", csvRecord["evidence_id"], listOf(cancerType), drugs, level,
+                                                                significance, type, HmfLevel(level), HmfResponse(significance))
 
     companion object {
         private const val drugCharacters = "A-Z0-9a-z-\\s"

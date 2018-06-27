@@ -21,9 +21,9 @@ data class OncoActionableRecord(private val metadata: RecordMetadata, override v
             val significance = if (record["Level"].startsWith("R")) HmfResponse.Resistant else HmfResponse.Responsive
             val drugs = readDrugEntries(record, treatmentTypeMap)
             val cancerType: String = record["Cancer Type"]
-            val actionability = Actionability("oncoKb", listOf(cancerType), drugs, level, significance.name,
-                                              "Predictive", HmfLevel(record["Level"]), significance)
             val alteration = record["Alteration"]
+            val actionability = Actionability("oncoKb", "$gene $alteration", listOf(cancerType), drugs, level,
+                                              significance.name, "Predictive", HmfLevel(record["Level"]), significance)
             val metadata = OncoMetadata(gene, transcript)
             return OncoActionableRecord(metadata, somaticEventReader.read(gene, transcript, alteration), actionability)
         }
