@@ -1,3 +1,4 @@
 event.gene	event.transcript	event.chromosome	event.start	event.stop	actionability.source	actionability.reference	actionability.drug.name	actionability.drug.type	actionability.cancerType	actionability.level	actionability.hmfLevel	actionability.evidenceType	actionability.significance	actionability.hmfResponse
-BRAF	ENST00000288602	7	140453136	140453137	civic	Vemurafenib	1	BRAF inhibitor	Non-small Cell Lung Carcinoma	B	B	Predictive	Sensitivity	Responsive
-BRAF	ENST00000288602	7	140453136	140453137	civic	Dabrafenib	2	BRAF inhibitor	Colorectal Cancer	B	B	Predictive	Resistance or Non-Response	Resistant
+BRAF	ENST00000288602	7	140453136	140453137	civic	1	Vemurafenib	BRAF inhibitor	Non-small Cell Lung Carcinoma	B	B	Predictive	Sensitivity	Responsive
+BRAF	ENST00000288602	7	140453136	140453137	civic	2	Dabrafenib	BRAF inhibitor	Colorectal Cancer	B	B	Predictive	Resistance or Non-Response	Resistant
+BRAF	ENST00000288602	7	140453136	140453137	civic	3	Dabrafenib	BRAF inhibitor	Non-small Cell Lung Carcinoma	B	B	Predictive	Sensitivity	Responsive
