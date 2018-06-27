@@ -4,22 +4,19 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-class Gene(exons: List<Exon>, private val seqStart: Long, private val seqEnd: Long) {
+class Gene(exons: List<Exon>, private val startCodingExon: Exon, private val endCodingExon: Exon, private val seqStart: Long,
+           private val seqEnd: Long) {
 
     val chromosome = exons.first().chromosome
-    val sortedCodingExons = exons.filterNot { it.isNonCoding }.sortedBy { it.start }
+    private val sortedCodingExons = exons.sortedBy { it.start }.filter { it.start >= startCodingExon.start && it.start <= endCodingExon.start }
     private val exonMap: Map<Exon, Double> = annotateExons()
     val lastCodon = exonMap[sortedCodingExons.last()]!!.toInt()
 
     //MIVO: returns coding ranges for the whole gene
-    fun codingRanges(): List<ClosedRange<Long>> {
-        return codonCodingRanges(1, lastCodon)
-    }
+    fun codingRanges(): List<ClosedRange<Long>> = codonCodingRanges(1, lastCodon)
 
     //MIVO: figures out which exon pair contains a certain codon number and returns coding ranges for that codon
-    fun codonCodingRanges(codonNumber: Int): List<ClosedRange<Long>> {
-        return codonRanges(codonPositions(codonNumber))
-    }
+    fun codonCodingRanges(codonNumber: Int): List<ClosedRange<Long>> = codonRanges(codonPositions(codonNumber))
 
     //MIVO: returns coding ranges between start and end codon (inclusive)
     fun codonCodingRanges(startCodon: Int, endCodon: Int): List<ClosedRange<Long>> {
@@ -41,15 +38,34 @@ class Gene(exons: List<Exon>, private val seqStart: Long, private val seqEnd: Lo
         return listOf(normalizedPositions[0]..normalizedPositions[1])
     }
 
-    private fun codingStart(exon: Exon) = if (exon.isFirst) exon.start + seqStart - 1 else exon.start
+    fun codingRangesBetween(start: Int, end: Int): List<ClosedRange<Long>> {
+        return codingRanges().filter { start in it || end in it || (it.start >= start && it.endInclusive <= end) }
+                .map { max(it.start, start.toLong())..min(end.toLong(), it.endInclusive) }
+    }
 
-    private fun codingEnd(exon: Exon) = if (exon.isLast) exon.start + seqEnd - 1 else exon.end
+    private fun codingStart(exon: Exon) = if (exon == startCodingExon) exon.start + seqStart - 1 else exon.start
+
+    private fun codingEnd(exon: Exon) = if (exon == endCodingExon) exon.start + seqEnd - 1 else exon.end
 
     private fun codonPositions(codonNumber: Int): Triple<Long, Long, Long>? {
         if (codonNumber <= 0) return null
-        return sortedCodingExons.zipWithNext().find { (prev, next) ->
-            exonMap[prev]!! >= codonNumber || exonMap[next]!! >= codonNumber
-        }?.run { extractCodonPositions(codonNumber, first, second) }
+        val potentialExonPosition = sortedCodingExons.indexOfFirst { codonNumber <= exonMap[it]!! }
+        if (potentialExonPosition == -1) return null
+        val potentialExon = sortedCodingExons[potentialExonPosition]
+        return if (codonOverlapsExons(codonNumber, potentialExonPosition)) {
+            extractOverlappingCodon(sortedCodingExons[potentialExonPosition - 1], potentialExon)
+        } else {
+            extractCodonFromExon(codonNumber, potentialExon)
+        }
+    }
+
+    private fun codonOverlapsExons(codonNumber: Int, potentialExonPosition: Int): Boolean {
+        if (potentialExonPosition != 0) {
+            val previousExon = sortedCodingExons[potentialExonPosition - 1]
+            if (codonNumber == exonMap[previousExon]!!.toInt() + 1 && previousExon.endPhase > 0)
+                return true
+        }
+        return false
     }
 
     //MIVO: annotate exons with the running total of codons covered so far
@@ -65,22 +81,7 @@ class Gene(exons: List<Exon>, private val seqStart: Long, private val seqEnd: Lo
     }
 
     //MIVO: number of coding bases contained in the exon
-    private fun codingLength(exon: Exon): Long {
-        return when {
-            exon.isFirst -> exon.length - seqStart + 1
-            exon.isLast  -> seqEnd
-            else         -> exon.length
-        }
-    }
-
-    private fun extractCodonPositions(codonNumber: Int, prevExon: Exon, nextExon: Exon): Triple<Long, Long, Long> {
-        val prevMaxCodons = exonMap[prevExon]!!.toInt()
-        return when {
-            codonNumber <= prevMaxCodons                                -> extractCodonFromExon(codonNumber, prevExon)
-            codonNumber == (prevMaxCodons + 1) && prevExon.endPhase > 0 -> extractOverlappingCodon(prevExon, nextExon)
-            else                                                        -> extractCodonFromExon(codonNumber, nextExon)
-        }
-    }
+    private fun codingLength(exon: Exon): Long = codingEnd(exon) - codingStart(exon) + 1
 
     //MIVO: extract codon positions when it is contained inside an exon
     private fun extractCodonFromExon(codonNumber: Int, exon: Exon): Triple<Long, Long, Long> {
