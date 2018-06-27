@@ -1,5 +1,5 @@
-fiveGene	threeGene	source	drug	drugType	cancerType	level	hmfLevel	evidenceType	significance	hmfResponse
-EGFR	KDD	oncoKb	Erlotinib	EGFR inhibitor	Non-Small Cell Lung Cancer	1	A	Predictive	Responsive	Responsive
-EGFR	KDD	oncoKb	Afatinib	ERBB2 inhibitor;EGFR inhibitor	Non-Small Cell Lung Cancer	1	A	Predictive	Responsive	Responsive
-EGFR	KDD	oncoKb	Gefitinib	EGFR inhibitor	Non-Small Cell Lung Cancer	1	A	Predictive	Responsive	Responsive
-EML4	ALK	civic	Crizotinib	ALK inhibitor;MET inhibitor	Non-small Cell Lung Carcinoma	B	B	Predictive	Sensitivity	Responsive
+fiveGene	threeGene	source	reference	drug	drugType	cancerType	level	hmfLevel	evidenceType	significance	hmfResponse
+EGFR	KDD	oncoKb	1	Erlotinib	EGFR inhibitor	Non-Small Cell Lung Cancer	1	A	Predictive	Responsive	Responsive
+EGFR	KDD	oncoKb	2	Afatinib	ERBB2 inhibitor;EGFR inhibitor	Non-Small Cell Lung Cancer	1	A	Predictive	Responsive	Responsive
+EGFR	KDD	oncoKb	3	Gefitinib	EGFR inhibitor	Non-Small Cell Lung Cancer	1	A	Predictive	Responsive	Responsive
+EML4	ALK	civic	4	Crizotinib	ALK inhibitor;MET inhibitor	Non-small Cell Lung Carcinoma	B	B	Predictive	Sensitivity	Responsive

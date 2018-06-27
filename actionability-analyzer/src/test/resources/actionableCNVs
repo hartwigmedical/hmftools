@@ -1,6 +1,6 @@
-gene	cnvType	source	drug	drugType	cancerType	level	hmfLevel	evidenceType	significance	hmfResponse
-ERBB2	Amplification	oncoKb	Lapatinib + Trastuzumab	ERBB2 inhibitor + ERBB2 mAb inhibitor	Breast Cancer	1	A	Predictive	Responsive	Responsive
-ERBB2	Amplification	oncoKb	Pertuzumab + Trastuzumab	ERBB2 mAb inhibitor + ERBB2 mAb inhibitor	Breast Cancer	1	A	Predictive	Responsive	Responsive
-BRCA2	Deletion	cgi	Olaparib	PARP inhibitor	Ovary	Pre-clinical	D	Predictive	Responsive	Responsive
-ERBB2	Amplification	cgi	Pertuzumab	ERBB2 mAb inhibitor	Billiary tract	Early trials	C	Predictive	Responsive	Responsive
-ERBB2	Amplification	cgi	Trastuzumab	ERBB2 mAb inhibitor	Stomach	FDA guidelines	A	Predictive	Responsive	Responsive
+gene	cnvType	source	reference	drug	drugType	cancerType	level	hmfLevel	evidenceType	significance	hmfResponse
+ERBB2	Amplification	oncoKb	1	Lapatinib + Trastuzumab	ERBB2 inhibitor + ERBB2 mAb inhibitor	Breast Cancer	1	A	Predictive	Responsive	Responsive
+ERBB2	Amplification	oncoKb	2	Pertuzumab + Trastuzumab	ERBB2 mAb inhibitor + ERBB2 mAb inhibitor	Breast Cancer	1	A	Predictive	Responsive	Responsive
+BRCA2	Deletion	cgi	3	Olaparib	PARP inhibitor	Ovary	Pre-clinical	D	Predictive	Responsive	Responsive
+ERBB2	Amplification	cgi	4	Pertuzumab	ERBB2 mAb inhibitor	Billiary tract	Early trials	C	Predictive	Responsive	Responsive
+ERBB2	Amplification	cgi	5	Trastuzumab	ERBB2 mAb inhibitor	Stomach	FDA guidelines	A	Predictive	Responsive	Responsive

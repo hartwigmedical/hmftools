@@ -1,25 +1,25 @@
-gene	chromosome	position	ref	alt	source	drug	drugType	cancerType	level	hmfLevel	evidenceType	significance	hmfResponse
-BRAF	7	140453136	A	C	oncoKb	Vemurafenib	BRAF inhibitor	Non-Small Cell Lung Cancer	2A	B	Predictive	Responsive	Responsive
-BRAF	7	140453136	A	C	oncoKb	Dabrafenib	BRAF inhibitor	Non-Small Cell Lung Cancer	2A	B	Predictive	Responsive	Responsive
-BRAF	7	140453136	A	T	oncoKb	Vemurafenib	BRAF inhibitor	Non-Small Cell Lung Cancer	2A	B	Predictive	Responsive	Responsive
-BRAF	7	140453136	A	T	oncoKb	Dabrafenib	BRAF inhibitor	Non-Small Cell Lung Cancer	2A	B	Predictive	Responsive	Responsive
-BRAF	7	140453136	AC	TT	oncoKb	Vemurafenib	BRAF inhibitor	Melanoma	1	A	Predictive	Responsive	Responsive
-BRAF	7	140453136	AC	TT	oncoKb	Dabrafenib + Trametinib	BRAF inhibitor + MEK inhibitor	Melanoma	1	A	Predictive	Responsive	Responsive
-BRAF	7	140453136	AC	CT	oncoKb	Vemurafenib	BRAF inhibitor	Non-Small Cell Lung Cancer	2A	B	Predictive	Responsive	Responsive
-BRAF	7	140453136	AC	CT	oncoKb	Dabrafenib	BRAF inhibitor	Non-Small Cell Lung Cancer	2A	B	Predictive	Responsive	Responsive
-BRAF	7	140453136	AC	CG	oncoKb	Vemurafenib	BRAF inhibitor	Non-Small Cell Lung Cancer	2A	B	Predictive	Responsive	Responsive
-BRAF	7	140453136	AC	CG	oncoKb	Dabrafenib	BRAF inhibitor	Non-Small Cell Lung Cancer	2A	B	Predictive	Responsive	Responsive
-BRAF	7	140453136	A	C	cgi	Vemurafenib	BRAF inhibitor	Cutaneous melanoma	NCCN guidelines	B	Predictive	Responsive	Responsive
-BRAF	7	140453136	A	C	cgi	Vemurafenib	BRAF inhibitor	Non-small cell lung	NCCN guidelines	B	Predictive	Responsive	Responsive
-BRAF	7	140453136	A	T	cgi	Dabrafenib	BRAF inhibitor	Non-small cell lung	NCCN guidelines	B	Predictive	Responsive	Responsive
-BRAF	7	140453136	A	T	cgi	Dabrafenib	BRAF inhibitor	Cutaneous melanoma	FDA guidelines	A	Predictive	Responsive	Responsive
-BRAF	7	140453136	AC	TT	cgi	Vemurafenib	BRAF inhibitor	Non-small cell lung	NCCN guidelines	B	Predictive	Responsive	Responsive
-BRAF	7	140453136	AC	TT	cgi	Vemurafenib + Cobimetinib	BRAF inhibitor + MEK inhibitor	Cutaneous melanoma	FDA guidelines	A	Predictive	Responsive	Responsive
-BRAF	7	140453136	AC	CT	cgi	Trametinib	MEK inhibitor	Cutaneous melanoma	Case report	C	Predictive	Responsive	Responsive
-BRAF	7	140453136	AC	CT	cgi	Dabrafenib	BRAF inhibitor	Cutaneous melanoma	Early trials	C	Predictive	Responsive	Responsive
-BRAF	7	140453136	AC	CG	cgi	Trametinib	MEK inhibitor	Cutaneous melanoma	Case report	C	Predictive	Responsive	Responsive
-BRAF	7	140453136	AC	CG	cgi	Dabrafenib	BRAF inhibitor	Cutaneous melanoma	Early trials	C	Predictive	Responsive	Responsive
-BRAF	7	140453136	A	T	civic	Vemurafenib	BRAF inhibitor	Ovarian Cancer	B	B	Predictive	Sensitivity	Responsive
-BRAF	7	140453136	A	T	civic	Vemurafenib	BRAF inhibitor	Skin Melanoma	A	A	Predictive	Sensitivity	Responsive
-BRAF	7	140453136	AC	TT	civic	Vemurafenib	BRAF inhibitor	Melanoma	B	B	Predictive	Sensitivity	Responsive
-BRAF	7	140453136	AC	TT	civic	Dabrafenib + Trametinib	BRAF inhibitor + MEK inhibitor	Melanoma	B	B	Predictive	Sensitivity	Responsive
+gene	chromosome	position	ref	alt	source	reference	drug	drugType	cancerType	level	hmfLevel	evidenceType	significance	hmfResponse
+BRAF	7	140453136	A	C	oncoKb	1	Vemurafenib	BRAF inhibitor	Non-Small Cell Lung Cancer	2A	B	Predictive	Responsive	Responsive
+BRAF	7	140453136	A	C	oncoKb	2	Dabrafenib	BRAF inhibitor	Non-Small Cell Lung Cancer	2A	B	Predictive	Responsive	Responsive
+BRAF	7	140453136	A	T	oncoKb	3	Vemurafenib	BRAF inhibitor	Non-Small Cell Lung Cancer	2A	B	Predictive	Responsive	Responsive
+BRAF	7	140453136	A	T	oncoKb	4	Dabrafenib	BRAF inhibitor	Non-Small Cell Lung Cancer	2A	B	Predictive	Responsive	Responsive
+BRAF	7	140453136	AC	TT	oncoKb	5	Vemurafenib	BRAF inhibitor	Melanoma	1	A	Predictive	Responsive	Responsive
+BRAF	7	140453136	AC	TT	oncoKb	6	Dabrafenib + Trametinib	BRAF inhibitor + MEK inhibitor	Melanoma	1	A	Predictive	Responsive	Responsive
+BRAF	7	140453136	AC	CT	oncoKb	7	Vemurafenib	BRAF inhibitor	Non-Small Cell Lung Cancer	2A	B	Predictive	Responsive	Responsive
+BRAF	7	140453136	AC	CT	oncoKb	8	Dabrafenib	BRAF inhibitor	Non-Small Cell Lung Cancer	2A	B	Predictive	Responsive	Responsive
+BRAF	7	140453136	AC	CG	oncoKb	9	Vemurafenib	BRAF inhibitor	Non-Small Cell Lung Cancer	2A	B	Predictive	Responsive	Responsive
+BRAF	7	140453136	AC	CG	oncoKb	10	Dabrafenib	BRAF inhibitor	Non-Small Cell Lung Cancer	2A	B	Predictive	Responsive	Responsive
+BRAF	7	140453136	A	C	cgi	11	Vemurafenib	BRAF inhibitor	Cutaneous melanoma	NCCN guidelines	B	Predictive	Responsive	Responsive
+BRAF	7	140453136	A	C	cgi	12	Vemurafenib	BRAF inhibitor	Non-small cell lung	NCCN guidelines	B	Predictive	Responsive	Responsive
+BRAF	7	140453136	A	T	cgi	13	Dabrafenib	BRAF inhibitor	Non-small cell lung	NCCN guidelines	B	Predictive	Responsive	Responsive
+BRAF	7	140453136	A	T	cgi	14	Dabrafenib	BRAF inhibitor	Cutaneous melanoma	FDA guidelines	A	Predictive	Responsive	Responsive
+BRAF	7	140453136	AC	TT	cgi	15	Vemurafenib	BRAF inhibitor	Non-small cell lung	NCCN guidelines	B	Predictive	Responsive	Responsive
+BRAF	7	140453136	AC	TT	cgi	16	Vemurafenib + Cobimetinib	BRAF inhibitor + MEK inhibitor	Cutaneous melanoma	FDA guidelines	A	Predictive	Responsive	Responsive
+BRAF	7	140453136	AC	CT	cgi	17	Trametinib	MEK inhibitor	Cutaneous melanoma	Case report	C	Predictive	Responsive	Responsive
+BRAF	7	140453136	AC	CT	cgi	18	Dabrafenib	BRAF inhibitor	Cutaneous melanoma	Early trials	C	Predictive	Responsive	Responsive
+BRAF	7	140453136	AC	CG	cgi	19	Trametinib	MEK inhibitor	Cutaneous melanoma	Case report	C	Predictive	Responsive	Responsive
+BRAF	7	140453136	AC	CG	cgi	20	Dabrafenib	BRAF inhibitor	Cutaneous melanoma	Early trials	C	Predictive	Responsive	Responsive
+BRAF	7	140453136	A	T	civic	21	Vemurafenib	BRAF inhibitor	Ovarian Cancer	B	B	Predictive	Sensitivity	Responsive
+BRAF	7	140453136	A	T	civic	22	Vemurafenib	BRAF inhibitor	Skin Melanoma	A	A	Predictive	Sensitivity	Responsive
+BRAF	7	140453136	AC	TT	civic	23	Vemurafenib	BRAF inhibitor	Melanoma	B	B	Predictive	Sensitivity	Responsive
+BRAF	7	140453136	AC	TT	civic	24	Dabrafenib + Trametinib	BRAF inhibitor + MEK inhibitor	Melanoma	B	B	Predictive	Sensitivity	Responsive
