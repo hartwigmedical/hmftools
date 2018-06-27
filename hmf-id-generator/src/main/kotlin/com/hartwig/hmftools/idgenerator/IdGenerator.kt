@@ -27,6 +27,12 @@ class IdGenerator(private val password: String) {
         return updateIds(hashTriples, idsPerOldHash)
     }
 
+    fun hash(input: String): String {
+        val sha3 = SHA3.Digest256()
+        sha3.update((input + password).toByteArray())
+        return Hex.toHexString(sha3.digest())
+    }
+
     private fun updateIds(hashTriples: List<HashTriple>, idsPerOldHash: Map<OldHash, HmfId>): Map<CpctId, HmfId> {
         val highestId = idsPerOldHash.maxBy { it.value.id }?.value?.id ?: 0
         val (idsToUpdate, idsToGenerate) = hashTriples.partition { idsPerOldHash.containsKey(it.oldHash) }
@@ -39,16 +45,10 @@ class IdGenerator(private val password: String) {
     private fun includesAllOldPatients(oldIds: Map<OldHash, HmfId>, hashTriples: List<HashTriple>) {
         val oldPasswordHashes = hashTriples.map { it.oldHash }.toSet()
         if (!oldIds.keys.all { oldPasswordHashes.contains(it) }) {
-            logger.error("A hash value present in the $HMF_IDS_FILE file could not be reproduced using the provided $OLD_PASSWORD and $PORTAL_CLINICAL_DATA.")
-            logger.error("Either some patients were removed from the $PORTAL_CLINICAL_DATA file or $OLD_PASSWORD was wrong.")
+            logger.error("A hash value present in the $HMF_IDS_FILE file could not be reproduced using the provided $OLD_PASSWORD and $PATIENT_IDS_FILE.")
+            logger.error("Either some patients were removed from the $PATIENT_IDS_FILE file or $OLD_PASSWORD was wrong.")
             throw IllegalArgumentException()
         }
-    }
-
-    private fun hash(input: String): String {
-        val sha3 = SHA3.Digest256()
-        sha3.update((input + password).toByteArray())
-        return Hex.toHexString(sha3.digest())
     }
 
     private fun getOldId(idsPerOldHash: Map<OldHash, HmfId>, oldHash: OldHash): Int {

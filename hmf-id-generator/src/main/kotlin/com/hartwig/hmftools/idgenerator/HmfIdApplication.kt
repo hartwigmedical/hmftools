@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.idgenerator
 
-import com.hartwig.hmftools.common.ecrf.projections.ImmutablePortalClinicalData
-import com.hartwig.hmftools.common.ecrf.projections.PortalClinicalData
 import com.hartwig.hmftools.extensions.cli.createCommandLine
 import com.hartwig.hmftools.extensions.cli.createRunModeCommandLine
 import com.hartwig.hmftools.idgenerator.extensions.readOldIds
@@ -12,22 +10,23 @@ import org.apache.commons.cli.OptionGroup
 import org.apache.commons.cli.Options
 import org.apache.logging.log4j.LogManager
 import java.io.File
-import java.io.IOException
-import java.nio.file.Files
-import java.nio.file.Paths
 
 private val logger = LogManager.getLogger("HmfIdApplication")
 
 fun main(args: Array<String>) {
     val cmd = createOptions().createRunModeCommandLine("hmf-id", args)
     when {
-        cmd.hasOption(CREATE_MODE) -> {
-            val createCmd = createModeOptions().createCommandLine("hmf-id", args)
-            runHmfIdCreate(createCmd)
+        cmd.hasOption(CREATE_SINGLE_HASH_MODE) -> {
+            val singleHashCmd = singleHashModeOptions().createCommandLine("hmf-id", args)
+            runHmfIdSingleHash(singleHashCmd)
         }
-        cmd.hasOption(UPDATE_MODE) -> {
-            val updateCmd = updateModeOptions().createCommandLine("hmf-id", args)
-            runHmfIdUpdate(updateCmd)
+        cmd.hasOption(CREATE_IDS_MODE) -> {
+            val createIdsCmd = createIdsModeOptions().createCommandLine("hmf-id", args)
+            runHmfIdCreateIds(createIdsCmd)
+        }
+        cmd.hasOption(UPDATE_IDS_MODE) -> {
+            val updateIdsCmd = updateIdsModeOptions().createCommandLine("hmf-id", args)
+            runHmfIdUpdateIds(updateIdsCmd)
         }
     }
 }
@@ -35,83 +34,67 @@ fun main(args: Array<String>) {
 private fun createOptions(): Options {
     val options = Options()
     val inputModeOptionGroup = OptionGroup()
-    inputModeOptionGroup.addOption(Option.builder(CREATE_MODE).required().desc("create hmf ids").build())
-    inputModeOptionGroup.addOption(Option.builder(UPDATE_MODE).required().desc("update hmf ids").build())
+    inputModeOptionGroup.addOption(Option.builder(CREATE_SINGLE_HASH_MODE).required().desc("create single hash").build())
+    inputModeOptionGroup.addOption(Option.builder(CREATE_IDS_MODE).required().desc("create hmf ids").build())
+    inputModeOptionGroup.addOption(Option.builder(UPDATE_IDS_MODE).required().desc("update hmf ids").build())
     inputModeOptionGroup.isRequired = true
     options.addOptionGroup(inputModeOptionGroup)
     return options
 }
 
-private fun createModeOptions(): Options {
+private fun singleHashModeOptions(): Options {
     val options = Options()
-    options.addOption(Option.builder(CREATE_MODE).required().desc("create hmf ids").build())
+    options.addOption(Option.builder(CREATE_SINGLE_HASH_MODE).required().desc("create single hash").build())
     options.addOption(Option.builder(PASSWORD).required().hasArg().desc("password").build())
-    options.addOption(Option.builder(PORTAL_CLINICAL_DATA).required().hasArg().desc("CSV file containing portal clinical data dump").build())
+    options.addOption(Option.builder(PATIENT_ID).required().hasArg().desc("patient id to convert to hash").build())
+    return options
+}
+
+private fun createIdsModeOptions(): Options {
+    val options = Options()
+    options.addOption(Option.builder(CREATE_IDS_MODE).required().desc("create hmf ids").build())
+    options.addOption(Option.builder(PASSWORD).required().hasArg().desc("password").build())
+    options.addOption(Option.builder(PATIENT_IDS_FILE).required().hasArg().desc("file containing a list of patients per line").build())
     options.addOption(Option.builder(OUTPUT_FILE).required().hasArg().desc("output file location").build())
     return options
 }
 
-private fun updateModeOptions(): Options {
+private fun updateIdsModeOptions(): Options {
     val options = Options()
-    options.addOption(Option.builder(UPDATE_MODE).required().desc("update hmf ids").build())
+    options.addOption(Option.builder(UPDATE_IDS_MODE).required().desc("update hmf ids").build())
     options.addOption(Option.builder(PASSWORD).required().hasArg().desc("password").build())
     options.addOption(Option.builder(OLD_PASSWORD).required().hasArg().desc("password used to generate hashes in HMF ids file").build())
-    options.addOption(Option.builder(PORTAL_CLINICAL_DATA).required().hasArg().desc("CSV file containing portal clinical data dump").build())
+    options.addOption(Option.builder(PATIENT_IDS_FILE).required().hasArg().desc("file containing a list of patients per line").build())
     options.addOption(Option.builder(HMF_IDS_FILE).required().hasArg().desc("file containing current mapping of patients to HMF ids").build())
     options.addOption(Option.builder(OUTPUT_FILE).required().hasArg().desc("output file location").build())
     return options
 }
 
-private fun runHmfIdCreate(cmd: CommandLine) {
+private fun runHmfIdSingleHash(cmd: CommandLine) {
     val generator = IdGenerator(cmd.getOptionValue(PASSWORD))
-    val clinicalData = PortalClinicalData.readRecords(cmd.getOptionValue(PORTAL_CLINICAL_DATA))
-    val idMapping = generator.generateIds(clinicalData.map { it.patientIdentifier() })
-    writeAnonymizedPatients(File(cmd.getOptionValue(PORTAL_CLINICAL_DATA)), clinicalData, idMapping)
+    val patientId = cmd.getOptionValue(PATIENT_ID)
+
+    val hash = generator.hash(patientId)
+    logger.info("Generated hash id for $patientId: $hash ")
+}
+
+private fun runHmfIdCreateIds(cmd: CommandLine) {
+    val generator = IdGenerator(cmd.getOptionValue(PASSWORD))
+    val patientIds = readPatientIdsFile(cmd.getOptionValue(PATIENT_IDS_FILE))
+    val idMapping = generator.generateIds(patientIds)
     File(cmd.getOptionValue(OUTPUT_FILE)).writeHmfIds(idMapping.values)
-    logger.info("Generated hmf ids for ${idMapping.size} patients")
+    logger.info("Created hmf ids for ${idMapping.size} patients")
 }
 
-private fun runHmfIdUpdate(cmd: CommandLine) {
+private fun runHmfIdUpdateIds(cmd: CommandLine) {
     val generator = IdGenerator(cmd.getOptionValue(PASSWORD))
-    val clinicalData = PortalClinicalData.readRecords(cmd.getOptionValue(PORTAL_CLINICAL_DATA))
+    val patientIds = readPatientIdsFile(cmd.getOptionValue(PATIENT_IDS_FILE))
     val oldIds = File(cmd.getOptionValue(HMF_IDS_FILE)).readOldIds()
-    val newIdMapping = generator.updateIds(cmd.getOptionValue(OLD_PASSWORD), clinicalData.map { it.patientIdentifier() }, oldIds)
-    writeAnonymizedPatients(File(cmd.getOptionValue(PORTAL_CLINICAL_DATA)), clinicalData, newIdMapping)
+    val newIdMapping = generator.updateIds(cmd.getOptionValue(OLD_PASSWORD), patientIds, oldIds)
     File(cmd.getOptionValue(OUTPUT_FILE)).writeHmfIds(newIdMapping.values)
-    logger.info("Generated hmf ids for ${newIdMapping.size} patients")
+    logger.info("Updated hmf ids for ${newIdMapping.size} patients")
 }
 
-private fun writeAnonymizedPatients(patientsFile: File, clinicalData: List<PortalClinicalData>, hmfIdMapping: Map<CpctId, HmfId>) {
-    val canonicalPatientsFile = patientsFile.canonicalFile
-    val anonymizedData = clinicalData.map { anonymizePatient(it, hmfIdMapping) }
-    val outputPath = if (Files.isSymbolicLink(canonicalPatientsFile.toPath())) {
-        val symlinkTarget = Files.readSymbolicLink(canonicalPatientsFile.toPath())
-        symlinkTarget.toFile().parent + File.separator + "anonymized_${symlinkTarget.fileName.toFile().name}"
-    } else {
-        canonicalPatientsFile.parent + File.separator + "anonymized_${canonicalPatientsFile.name}"
-    }
-    PortalClinicalData.writeRecords(outputPath, anonymizedData)
-    updateAnonymizedSymlink(canonicalPatientsFile, outputPath)
-}
-
-private fun updateAnonymizedSymlink(patientsFile: File, outputPath: String) {
-    if (Files.isSymbolicLink(patientsFile.toPath())) {
-        val linkPath = Paths.get(patientsFile.parent + File.separator + "anonymized_${patientsFile.name}")
-        try {
-            Files.deleteIfExists(linkPath)
-            Files.createSymbolicLink(linkPath, Paths.get(outputPath))
-        } catch (e: IOException) {
-            logger.warn("Failed to update symlink $linkPath. Cause: ${e.message}")
-        }
-    }
-}
-
-private fun anonymizePatient(patientData: PortalClinicalData, hmfIdMapping: Map<CpctId, HmfId>): PortalClinicalData {
-    val patientHmfId = "HMF${hmfIdMapping[patientData.patientIdentifier()]!!.id}"
-    val sampleHmfId = if (patientData.sampleId().length > 12 && patientData.sampleId()[12] == 'T') {
-        patientHmfId + patientData.sampleId().substring(12)
-    } else {
-        patientData.sampleId()
-    }
-    return ImmutablePortalClinicalData.builder().from(patientData).hmfId(patientHmfId).sampleHmfId(sampleHmfId).build()
+private fun readPatientIdsFile(patientIdsFile: String) : List<String> {
+    return File(patientIdsFile).readLines().shuffled()
 }
