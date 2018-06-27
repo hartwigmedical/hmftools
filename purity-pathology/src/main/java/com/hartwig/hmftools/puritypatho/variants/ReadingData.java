@@ -2,7 +2,6 @@ package com.hartwig.hmftools.puritypatho.variants;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -41,19 +40,14 @@ public class ReadingData {
 
     public static void readingFiles(@NotNull String runsFolderPath, @NotNull String tumorSample) throws IOException {
 
-        LOGGER.info("MAP_BAF_FILE: " + MAP_BAF_FILE);
         ListMultimap<String, String> multimapCyto = ArrayListMultimap.create();
-        List<String> listCyto = new ArrayList<>();
         final List<String> readingCytoScanFile = CytoScanFile.read(MAP_BAF_FILE);
         for (String lineCyto : readingCytoScanFile) {
             String[] partsCyto = lineCyto.split(DELIMITER);
             String chromosomesCyto = partsCyto[0];
             String positionsCyto = partsCyto[1];
             multimapCyto.put(chromosomesCyto, positionsCyto);
-            listCyto.add(lineCyto + "\t" + "0");
         }
-        LOGGER.info("listCyto");
-        LOGGER.info(listCyto);
 
         LOGGER.info("reading Amber file: " + runsFolderPath + File.separator + AMBER_DIR + File.separator + tumorSample + EXTENSION);
         final String Amberfile = runsFolderPath + File.separator + AMBER_DIR + File.separator + tumorSample + EXTENSION;
