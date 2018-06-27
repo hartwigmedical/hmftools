@@ -17,6 +17,9 @@ data class CodonMutations(override val gene: String, override val transcript: St
 data class CodonRangeMutations(override val gene: String, override val transcript: String?, val startCodon: Int,
                                val endCodon: Int) : GenericMutation()
 
+data class GenericRangeMutations(override val gene: String, override val transcript: String?, val startPosition: Int,
+                                 val endPosition: Int) : GenericMutation()
+
 data class ExonMutations(override val gene: String, override val transcript: String?, val exonNumber: Int) : GenericMutation()
 
 data class GeneMutations(override val gene: String, override val transcript: String?) : GenericMutation()
