@@ -90,13 +90,12 @@ class ActionabilityAnalyzerTest : StringSpec() {
             val drugs = drugs(actionability)
             val sources = sources(actionability)
             val events = actionability.map { it.actionableTreatment.event }.toSet()
-            actionability.size shouldBe 2
-            actionability.filter { it.treatmentType == ON_LABEL }.size shouldBe 1
+            actionability.size shouldBe 3
+            actionability.filter { it.treatmentType == ON_LABEL }.size shouldBe 2
             events.size shouldBe 1
-            (drugs == setOf("Vemurafenib, Dabrafenib")) shouldBe true
+            (drugs == setOf("Vemurafenib", "Dabrafenib")) shouldBe true
             (sources == setOf("civic")) shouldBe true
         }
-
     }
 
     private fun drugs(actionability: Set<ActionabilityOutput>): Set<String> {
