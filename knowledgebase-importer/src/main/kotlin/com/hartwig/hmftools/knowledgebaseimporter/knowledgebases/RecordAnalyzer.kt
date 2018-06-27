@@ -105,10 +105,11 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
             return emptyList()
         }
         return when (mutation) {
-            is GeneMutations       -> gene.codingRanges()
-            is ExonMutations       -> gene.exonCodingRanges(mutation.exonNumber)
-            is CodonRangeMutations -> gene.codonCodingRanges(mutation.startCodon, mutation.endCodon)
-            is CodonMutations      -> gene.codonCodingRanges(mutation.codonNumber)
+            is GeneMutations         -> gene.codingRanges()
+            is ExonMutations         -> gene.exonCodingRanges(mutation.exonNumber)
+            is CodonRangeMutations   -> gene.codonCodingRanges(mutation.startCodon, mutation.endCodon)
+            is CodonMutations        -> gene.codonCodingRanges(mutation.codonNumber)
+            is GenericRangeMutations -> gene.codingRangesBetween(mutation.startPosition, mutation.endPosition)
         }
     }
 
