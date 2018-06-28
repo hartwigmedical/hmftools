@@ -24,6 +24,8 @@ class ActionabilityAnalyzerTest : StringSpec() {
                                                                  "A", "T", "ENST00000288602", "missense")
     private val brafOtherSNV = ImmutablePotentialActionableVariant.of("CPCT99110033T", "BRAF", "7", 140453136,
                                                                       "A", "T", "ENST00000288602", "missense")
+    private val ptenSNV = ImmutablePotentialActionableVariant.of("CPCT99110033T", "PTEN", "10", 89653781,
+                                                                 "G", "C", "ENST00000371953", "splice;intron", "SNP")
 
     init {
         "finds BRAF SNV actionability" {
@@ -95,6 +97,11 @@ class ActionabilityAnalyzerTest : StringSpec() {
             events.size shouldBe 1
             (drugs == setOf("Vemurafenib", "Dabrafenib")) shouldBe true
             (sources == setOf("civic")) shouldBe true
+        }
+
+        "does not find PTEN SNV range actionability" {
+            val actionability = actionabilityAnalyzer.rangeActionabilityForVariant(ptenSNV)
+            actionability.size shouldBe 0
         }
     }
 

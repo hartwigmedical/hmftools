@@ -2,3 +2,4 @@ event.gene	event.transcript	event.chromosome	event.start	event.stop	actionabilit
 BRAF	ENST00000288602	7	140453136	140453137	civic	1	Vemurafenib	BRAF inhibitor	Non-small Cell Lung Carcinoma	B	B	Predictive	Sensitivity	Responsive
 BRAF	ENST00000288602	7	140453136	140453137	civic	2	Dabrafenib	BRAF inhibitor	Colorectal Cancer	B	B	Predictive	Resistance or Non-Response	Resistant
 BRAF	ENST00000288602	7	140453136	140453137	civic	3	Dabrafenib	BRAF inhibitor	Non-small Cell Lung Carcinoma	B	B	Predictive	Sensitivity	Responsive
+PTEN	ENST00000371953	10	89653782	89653866	oncoKb	PTEN Oncogenic Mutations	AZD6482 + Alpelisib	Unknown + Unknown	Breast Cancer	4	D	Predictive	Responsive	Responsive
