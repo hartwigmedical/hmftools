@@ -59,17 +59,18 @@ object CsvWriter {
     // MIVO: extract CsvData values for primary constructor params
     fun <T : CsvData> KClass<T>.values(csvRecord: T): List<String?> {
         val columnCount = this.columns().size
-        return this.declaredFunctions.filter { it.isOperator && it.name.matches(Regex("component[0-9]+")) }.flatMap { component ->
-            component.isAccessible = true
-            if (component.returnType.isSubtypeOf(CsvData::class.starProjectedType)) {
-                @Suppress("unchecked_cast")
-                val returnType = component.returnType.classifier as KClass<CsvData>
-                val returnValue = component.call(csvRecord) as CsvData
-                returnType.values(returnValue)
-            } else {
-                listOf(component.call(csvRecord) as String?)
-            }
-        }.take(columnCount)
+        return this.declaredFunctions.filter { it.isOperator && it.name.matches(Regex("component[0-9]+")) }
+                .sortedBy { it.name.substringAfter("component").toInt() }.flatMap { component ->
+                    component.isAccessible = true
+                    if (component.returnType.isSubtypeOf(CsvData::class.starProjectedType)) {
+                        @Suppress("unchecked_cast")
+                        val returnType = component.returnType.classifier as KClass<CsvData>
+                        val returnValue = component.call(csvRecord) as CsvData
+                        returnType.values(returnValue)
+                    } else {
+                        listOf(component.call(csvRecord) as String?)
+                    }
+                }.take(columnCount)
     }
 
     private fun parameterNames(className: String?, prefix: Prefix, param: KParameter): List<String> {
