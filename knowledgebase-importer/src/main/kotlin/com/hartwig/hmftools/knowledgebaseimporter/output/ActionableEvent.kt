@@ -2,7 +2,6 @@ package com.hartwig.hmftools.knowledgebaseimporter.output
 
 import com.hartwig.hmftools.common.variant.SomaticVariant
 import com.hartwig.hmftools.extensions.csv.CsvData
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.GenericMutation
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.SomaticEvent
 
 sealed class ActionableEvent : SomaticEvent {
@@ -47,11 +46,5 @@ data class GenomicRangeEvent(val gene: String, val transcript: String, val chrom
 
     override fun eventString(): String {
         return "$gene($transcript) $chromosome:$start-$stop"
-    }
-}
-
-data class GeneMutations(override val gene: String, override val transcript: String?) : ActionableEvent(), GenericMutation, CsvData {
-    override fun eventString(): String {
-        return "$gene($transcript)"
     }
 }

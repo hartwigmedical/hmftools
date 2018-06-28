@@ -1,14 +1,10 @@
 package com.hartwig.hmftools.knowledgebaseimporter.oncoKb
 
 import com.hartwig.hmftools.knowledgebaseimporter.FusionReader
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.ExonMutations
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.GenericMutation
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.ProteinAnnotation
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.SomaticEvent
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.*
 import com.hartwig.hmftools.knowledgebaseimporter.output.CnvEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.FusionEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.FusionPair
-import com.hartwig.hmftools.knowledgebaseimporter.output.GeneMutations
 
 class OncoSomaticEventReader {
     companion object {

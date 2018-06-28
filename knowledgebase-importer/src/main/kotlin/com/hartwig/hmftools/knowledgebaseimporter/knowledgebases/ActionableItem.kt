@@ -14,7 +14,6 @@ interface ActionableItem<T : ActionableEvent> {
                 is FusionPair          -> ActionableFusionPairOutput(event, actionability)
                 is PromiscuousGene     -> ActionablePromiscuousGeneOutput(event, actionability)
                 is GenomicRangeEvent   -> ActionableGenomicRangeOutput(event, actionability)
-                is GeneMutations       -> ActionableGeneOutput(event, actionability)
             }
         }
     }

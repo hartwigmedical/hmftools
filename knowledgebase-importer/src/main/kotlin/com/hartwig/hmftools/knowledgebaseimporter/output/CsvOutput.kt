@@ -17,5 +17,3 @@ data class ActionableVariantOutput(override val event: SomaticVariantEvent,
 
 data class ActionableGenomicRangeOutput(override val event: GenomicRangeEvent,
                                         override val actionability: Actionability) : CsvOutput<GenomicRangeEvent>()
-
-data class ActionableGeneOutput(override val event: GeneMutations, override val actionability: Actionability) : CsvOutput<GeneMutations>()
