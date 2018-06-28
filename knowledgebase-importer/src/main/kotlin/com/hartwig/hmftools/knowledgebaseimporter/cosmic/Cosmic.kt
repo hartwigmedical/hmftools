@@ -15,6 +15,7 @@ class Cosmic(fusionsLocation: String) : Knowledgebase {
     override val actionableFusionPairs: List<ActionableFusionPairOutput> = listOf()
     override val actionablePromiscuousGenes: List<ActionablePromiscuousGeneOutput> = listOf()
     override val actionableRanges: List<ActionableGenomicRangeOutput> = listOf()
+    override val actionableGenes: List<ActionableGeneOutput> = listOf()
     override val cancerTypes: Map<String, Set<String>> = mapOf()
 
     private fun readFusion(csvRecord: CSVRecord): FusionPair {
