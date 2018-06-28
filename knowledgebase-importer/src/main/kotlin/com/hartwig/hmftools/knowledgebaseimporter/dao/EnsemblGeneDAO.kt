@@ -59,13 +59,17 @@ class EnsemblGeneDAO(url: String, user: String, password: String) {
     fun canonicalGeneModel(geneName: String): Gene? {
         val exons = canonicalExons(geneName)
         return canonicalSequenceStartEnd(geneName)?.run {
-            Gene(exons, canonicalStartExon(geneName), canonicalEndExon(geneName), first, second)
+            val startEnd = geneStartEnd(geneName).toList()
+            Gene(exons, canonicalStartExon(geneName), canonicalEndExon(geneName), first, second, startEnd.min()!!, startEnd.max()!!)
         }
     }
 
     fun transcriptGeneModel(transcript: String): Gene? {
         val exons = transcriptExons(transcript)
-        return transcriptSequenceStartEnd(transcript)?.run { Gene(exons, startExon(transcript), endExon(transcript), first, second) }
+        return transcriptSequenceStartEnd(transcript)?.run {
+            val startEnd = transcriptStartEnd(transcript).toList()
+            Gene(exons, startExon(transcript), endExon(transcript), first, second, startEnd.min()!!, startEnd.max()!!)
+        }
     }
 
     private fun canonicalExons(geneName: String): List<Exon> {
@@ -102,6 +106,12 @@ class EnsemblGeneDAO(url: String, user: String, password: String) {
                 .first()
     }
 
+    private fun geneStartEnd(geneName: String): Pair<Long, Long> {
+        return context.select(GENE.SEQ_REGION_START, GENE.SEQ_REGION_END).from(GENE).join(XREF).on(XREF.XREF_ID.eq(GENE.DISPLAY_XREF_ID))
+                .where(XREF.DISPLAY_LABEL.eq(geneName))
+                .stream().toList()
+                .map { Pair(it[GENE.SEQ_REGION_START].toLong(), it[GENE.SEQ_REGION_END].toLong()) }.first()
+    }
 
     private fun transcriptExons(transcript: String): List<Exon> {
         return baseExonQuery(context).join(TRANSCRIPT).on(EXON_TRANSCRIPT.TRANSCRIPT_ID.eq(TRANSCRIPT.TRANSCRIPT_ID))
@@ -131,5 +141,12 @@ class EnsemblGeneDAO(url: String, user: String, password: String) {
                 .stream()
                 .run(createExonsLambda)
                 .first()
+    }
+
+    private fun transcriptStartEnd(transcript: String): Pair<Long, Long> {
+        return context.select(TRANSCRIPT.SEQ_REGION_START, TRANSCRIPT.SEQ_REGION_END).from(TRANSCRIPT)
+                .where(TRANSCRIPT.STABLE_ID.eq(transcript))
+                .stream().toList()
+                .map { Pair(it[TRANSCRIPT.SEQ_REGION_START].toLong(), it[TRANSCRIPT.SEQ_REGION_END].toLong()) }.first()
     }
 }

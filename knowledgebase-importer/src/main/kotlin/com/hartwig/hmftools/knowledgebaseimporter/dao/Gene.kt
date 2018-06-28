@@ -5,12 +5,14 @@ import kotlin.math.max
 import kotlin.math.min
 
 class Gene(exons: List<Exon>, private val startCodingExon: Exon, private val endCodingExon: Exon, private val seqStart: Long,
-           private val seqEnd: Long) {
+           private val seqEnd: Long, val start: Long, val end: Long) {
 
     val chromosome = exons.first().chromosome
     private val sortedCodingExons = exons.sortedBy { it.start }.filter { it.start >= startCodingExon.start && it.start <= endCodingExon.start }
     private val exonMap: Map<Exon, Double> = annotateExons()
     val lastCodon = exonMap[sortedCodingExons.last()]!!.toInt()
+
+    fun range(): ClosedRange<Long> = start..end
 
     //MIVO: returns coding ranges for the whole gene
     fun codingRanges(): List<ClosedRange<Long>> = codonCodingRanges(1, lastCodon)
