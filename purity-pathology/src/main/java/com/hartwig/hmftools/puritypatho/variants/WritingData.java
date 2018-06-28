@@ -3,6 +3,7 @@ package com.hartwig.hmftools.puritypatho.variants;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -14,7 +15,6 @@ public class WritingData {
     private static final String outputName = "variants.txt";
     private static final String DELIMITER = "\t";
 
-
     @NotNull
     public static String generateOutputFileName(){
         return pathName + outputName;
@@ -22,7 +22,7 @@ public class WritingData {
 
     public static void writeToFile(@NotNull String fileName, @NotNull String chromosomesAmber, @NotNull String positionsAmber, int countAmber) throws
             IOException {
-        Files.write(new File(fileName).toPath(), toLines(chromosomesAmber, positionsAmber, countAmber));
+        Files.write(new File(fileName).toPath(), toLines(chromosomesAmber, positionsAmber, countAmber), StandardOpenOption.APPEND);
     }
 
     @NotNull
@@ -33,7 +33,7 @@ public class WritingData {
     }
 
     public static void writeToFileHeader(@NotNull String fileName) throws IOException{
-        Files.write(new File(fileName).toPath(), toLinesHeader());
+        Files.write(new File(fileName).toPath(), toLinesHeader(), StandardOpenOption.APPEND);
     }
 
     @NotNull

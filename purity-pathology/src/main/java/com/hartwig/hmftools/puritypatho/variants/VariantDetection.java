@@ -45,63 +45,63 @@ public class VariantDetection {
             int countAmber = 0;
 
             if (chromosomesAmber.equals("1")) {
-                filterVariant("1", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("2")) {
-                filterVariant("2", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("3")) {
-                filterVariant("3", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("4")) {
-                filterVariant("4", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("5")) {
-                filterVariant("5", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("6")) {
-                filterVariant("6", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("7")) {
-                filterVariant("7", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("8")) {
-                filterVariant("8", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("9")) {
-                filterVariant("9", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("10")) {
-                filterVariant("10", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("11")) {
-                filterVariant("11", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("12")) {
-                filterVariant("12", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("13")) {
-                filterVariant("13", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("14")) {
-                filterVariant("14", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("15")) {
-                filterVariant("15", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("16")) {
-                filterVariant("16", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("17")) {
-                filterVariant("17", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("18")) {
-                filterVariant("18", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("19")) {
-                filterVariant("19", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("20")) {
-                filterVariant("20", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("21")) {
-                filterVariant("21", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("22")) {
-                filterVariant("22", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("X")) {
-                filterVariant("X", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("Y")) {
-                filterVariant("Y", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else if (chromosomesAmber.equals("MT")) {
-                filterVariant("MT", chromosomesAmber, positionsAmber, multimapCyto, lineAmber, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
             } else {
                 LOGGER.info("No known chromosome value!");
             }
         }
     }
 
-    public static void filterVariant(@NotNull String chromosome, @NotNull String chromosomesAmber, @NotNull String positionsAmber,
-            @NotNull ListMultimap<String, String> multimapCyto, @NotNull String lineAmber, int countAmber, String fileName) throws
+    public static void filterVariant(@NotNull String chromosomesAmber, @NotNull String positionsAmber,
+            @NotNull ListMultimap<String, String> multimapCyto,int countAmber, String fileName) throws
             IOException {
         if (multimapCyto.get(chromosomesAmber).contains(positionsAmber)) {
             countAmber ++;
@@ -111,5 +111,4 @@ public class VariantDetection {
             WritingData.writeToFile(fileName, chromosomesAmber , positionsAmber, countAmber);
         }
     }
-
 }
