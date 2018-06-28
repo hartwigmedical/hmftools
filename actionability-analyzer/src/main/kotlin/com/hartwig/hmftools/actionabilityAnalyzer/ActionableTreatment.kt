@@ -6,9 +6,18 @@ import com.hartwig.hmftools.knowledgebaseimporter.output.Actionability
 
 data class ActionableTreatment(val event: String, val actionability: Actionability) : CsvData {
     companion object {
-
         operator fun invoke(items: List<ActionableItem<*>>): List<ActionableTreatment> {
-            return items.map { ActionableTreatment(it.event.eventString(), it.actionability) }
+            val actionabilityMap = groupedReferencesActionability(items.map { it.actionability })
+            return items.map { ActionableTreatment(it.event.eventString(), actionabilityMap[actionabilityKey(it.actionability)]!!) }
         }
+
+        private fun groupedReferencesActionability(actionabilityItems: List<Actionability>): Map<Actionability, Actionability> {
+            return actionabilityItems.groupBy { actionabilityKey(it) }.mapValues { (key, actionabilityList) ->
+                val concatenatedReferences = actionabilityList.map { it.reference }.toSet().joinToString(",")
+                key.copy(reference = concatenatedReferences)
+            }
+        }
+
+        private fun actionabilityKey(actionability: Actionability): Actionability = actionability.copy(reference = "")
     }
 }
