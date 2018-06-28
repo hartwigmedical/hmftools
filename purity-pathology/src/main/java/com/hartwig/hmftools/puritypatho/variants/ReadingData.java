@@ -27,9 +27,9 @@ public class ReadingData {
     private static final String MAP_BAF_FILE = "/data/common/dbs/CytoScanHD/CytoScanHD_hg19_SNPs_sorted.bed";
     private static final Logger LOGGER = LogManager.getLogger(ReadingData.class);
 
-    public static void readingFiles(@NotNull String runsFolderPath, @NotNull String tumorSample) throws IOException {
+    public static void readingFiles(@NotNull String runsFolderPath, @NotNull String tumorSample, @NotNull String countSet) throws IOException {
         LOGGER.info("Creating output file");
-        String fileName = VariantDetection.GenerateOutpurFile();
+        String fileName = VariantDetection.GenerateOutpurFile(countSet);
 
         LOGGER.info("Reading CytoScan file");
         final List<String> readingCytoScanFile = CytoScanFile.read(MAP_BAF_FILE);

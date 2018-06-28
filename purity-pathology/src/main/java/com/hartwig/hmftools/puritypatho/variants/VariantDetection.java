@@ -19,9 +19,11 @@ public class VariantDetection {
     private static final Logger LOGGER = LogManager.getLogger(VariantDetection.class);
     private static final String DELIMITER = "\t";
 
-    public static String GenerateOutpurFile() throws IOException{
+    public static String GenerateOutpurFile(@NotNull String countSet) throws IOException{
         final String filename = WritingData.generateOutputFileName();
-        WritingData.writeToFileHeader(filename);
+        if (countSet.equals("1")){
+            WritingData.writeToFileHeader(filename);
+        }
         return filename;
     }
 
@@ -105,7 +107,6 @@ public class VariantDetection {
             IOException {
         if (multimapCyto.get(chromosomesAmber).contains(positionsAmber)) {
             countAmber ++;
-            LOGGER.info(chromosomesAmber + DELIMITER + positionsAmber + DELIMITER + countAmber);
             WritingData.writeToFile(fileName, chromosomesAmber , positionsAmber, countAmber);
         } else {
             WritingData.writeToFile(fileName, chromosomesAmber , positionsAmber, countAmber);
