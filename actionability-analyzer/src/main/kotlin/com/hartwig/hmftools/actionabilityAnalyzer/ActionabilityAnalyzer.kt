@@ -35,7 +35,7 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
         }
 
         private fun genomicPositionsToLine(start: Int, end: Int): Line {
-            return Geometries.line(start.toFloat(), 0.toFloat(), end.toFloat(), 0.toFloat())
+            return Geometries.line(start.toDouble(), 0.toDouble(), end.toDouble(), 0.toDouble())
         }
 
         private fun readCancerTypeMapping(fileLocation: String): Map<String, Set<String>> {
