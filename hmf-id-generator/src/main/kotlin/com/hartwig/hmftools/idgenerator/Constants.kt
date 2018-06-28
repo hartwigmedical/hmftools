@@ -5,6 +5,7 @@ package com.hartwig.hmftools.idgenerator
 const val CREATE_SINGLE_HASH_MODE = "create_single_hash"
 const val CREATE_IDS_MODE = "create_ids"
 const val UPDATE_IDS_MODE = "update_ids"
+const val ANONYMISE_IDS_MODE = "anonymise_ids"
 
 const val PASSWORD = "password"
 const val OLD_PASSWORD = "old_password"
