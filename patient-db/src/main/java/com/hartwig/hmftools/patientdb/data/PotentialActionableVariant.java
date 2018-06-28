@@ -36,6 +36,9 @@ public abstract class PotentialActionableVariant {
     public abstract String worstEffect();
 
     @NotNull
+    public abstract String type();
+
+    @NotNull
     public static PotentialActionableVariant of(@NotNull final Record mysqlRecord) {
         return ImmutablePotentialActionableVariant.of(mysqlRecord.get(SOMATICVARIANT.SAMPLEID),
                 mysqlRecord.get(SOMATICVARIANT.GENE),
@@ -44,6 +47,7 @@ public abstract class PotentialActionableVariant {
                 mysqlRecord.get(SOMATICVARIANT.REF),
                 mysqlRecord.get(SOMATICVARIANT.ALT),
                 mysqlRecord.get(SOMATICVARIANT.WORSTEFFECTTRANSCRIPT),
-                mysqlRecord.get(SOMATICVARIANT.WORSTEFFECT));
+                mysqlRecord.get(SOMATICVARIANT.WORSTEFFECT),
+                mysqlRecord.get(SOMATICVARIANT.TYPE));
     }
 }

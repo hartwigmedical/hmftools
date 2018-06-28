@@ -64,9 +64,12 @@ public class PotentiallyActionableItemsDAO {
                 SOMATICVARIANT.REF,
                 SOMATICVARIANT.ALT,
                 SOMATICVARIANT.WORSTEFFECTTRANSCRIPT,
-                SOMATICVARIANT.WORSTEFFECT)
+                SOMATICVARIANT.WORSTEFFECT,
+                SOMATICVARIANT.TYPE)
                 .from(SOMATICVARIANT)
-                .where(SOMATICVARIANT.FILTER.eq("PASS").and(SOMATICVARIANT.WORSTCODINGEFFECT.ne("NONE")));
+                .where(SOMATICVARIANT.FILTER.eq("PASS")
+                        .and(SOMATICVARIANT.WORSTCODINGEFFECT.ne("NONE"))
+                        .and(SOMATICVARIANT.WORSTCODINGEFFECT.ne("SYNONYMOUS")));
         if (samples.size() > 0) {
             query.and(SOMATICVARIANT.SAMPLEID.in(samples));
         }
