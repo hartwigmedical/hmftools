@@ -21,9 +21,9 @@ class ActionabilityAnalyzerTest : StringSpec() {
                                                               cancerTypesMapping, actionableRanges)
 
     private val brafSNV = ImmutablePotentialActionableVariant.of("CPCT99110022T", "BRAF", "7", 140453136,
-                                                                 "A", "T", "ENST00000288602", "missense")
+                                                                 "A", "T", "ENST00000288602", "missense", "SNP")
     private val brafOtherSNV = ImmutablePotentialActionableVariant.of("CPCT99110033T", "BRAF", "7", 140453136,
-                                                                      "A", "T", "ENST00000288602", "missense")
+                                                                      "A", "T", "ENST00000288602", "missense", "SNP")
     private val ptenSNV = ImmutablePotentialActionableVariant.of("CPCT99110033T", "PTEN", "10", 89653781,
                                                                  "G", "C", "ENST00000371953", "splice;intron", "SNP")
 
@@ -32,7 +32,7 @@ class ActionabilityAnalyzerTest : StringSpec() {
             val actionability = actionabilityAnalyzer.actionabilityForVariant(brafSNV)
             val drugs = drugs(actionability)
             val sources = sources(actionability)
-            val events = actionability.map { it.actionableTreatment.event }.toSet()
+            val events = actionability.map { it.event }.toSet()
             actionability.size shouldBe 6
             actionability.filter { it.treatmentType == ON_LABEL }.size shouldBe 2
             events.size shouldBe 1
@@ -47,8 +47,8 @@ class ActionabilityAnalyzerTest : StringSpec() {
             val actionability = actionabilityAnalyzer.actionabilityForVariant(variant)
             val drugs = drugs(actionability)
             val sources = sources(actionability)
-            val events = actionability.map { it.actionableTreatment.event }.toSet()
-            val brafEvents = brafSnvActionability.map { it.actionableTreatment.event }.toSet()
+            val events = actionability.map { it.event }.toSet()
+            val brafEvents = brafSnvActionability.map { it.event }.toSet()
             actionability.size shouldBe 6
             actionability.filter { it.treatmentType == ON_LABEL }.size shouldBe 2
             events.size shouldBe 1
@@ -62,7 +62,7 @@ class ActionabilityAnalyzerTest : StringSpec() {
             val actionability = actionabilityAnalyzer.actionabilityForVariant(variant)
             val drugs = drugs(actionability)
             val sources = sources(actionability)
-            val events = actionability.map { it.actionableTreatment.event }.toSet()
+            val events = actionability.map { it.event }.toSet()
             actionability.size shouldBe 6
             actionability.filter { it.treatmentType == ON_LABEL }.size shouldBe 3
             events.size shouldBe 1
@@ -91,7 +91,7 @@ class ActionabilityAnalyzerTest : StringSpec() {
             val actionability = actionabilityAnalyzer.rangeActionabilityForVariant(brafOtherSNV)
             val drugs = drugs(actionability)
             val sources = sources(actionability)
-            val events = actionability.map { it.actionableTreatment.event }.toSet()
+            val events = actionability.map { it.event }.toSet()
             actionability.size shouldBe 3
             actionability.filter { it.treatmentType == ON_LABEL }.size shouldBe 2
             events.size shouldBe 1
@@ -106,10 +106,10 @@ class ActionabilityAnalyzerTest : StringSpec() {
     }
 
     private fun drugs(actionability: Set<ActionabilityOutput>): Set<String> {
-        return actionability.filter { it.treatmentType == ON_LABEL }.map { it.actionableTreatment.actionability.drug.name }.toSet()
+        return actionability.filter { it.treatmentType == ON_LABEL }.map { it.drug }.toSet()
     }
 
     private fun sources(actionability: Set<ActionabilityOutput>): Set<String> {
-        return actionability.filter { it.treatmentType == ON_LABEL }.map { it.actionableTreatment.actionability.source }.toSet()
+        return actionability.filter { it.treatmentType == ON_LABEL }.map { it.source }.toSet()
     }
 }
