@@ -88,7 +88,7 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
     }
 
     private fun <R : ActionableRecord> analyzeGenomicRanges(records: List<R>): List<Pair<R, GenomicRangeEvent>> {
-        val genericMutationRecords = records.collectEvents<GenericMutation, R>()
+        val genericMutationRecords = records.collectEvents<RangeMutation, R>()
         val geneModel = createGeneModel(genericMutationRecords.map { it.second })
         return genericMutationRecords.flatMap { (record, mutation) ->
             val gene = geneModel[mutation.transcript] ?: geneModel[mutation.gene]
@@ -99,13 +99,12 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
         }
     }
 
-    private fun mutationCodingRange(mutation: GenericMutation, gene: Gene?): List<ClosedRange<Long>> {
+    private fun mutationCodingRange(mutation: RangeMutation, gene: Gene?): List<ClosedRange<Long>> {
         if (gene == null) {
             logger.warn("Gene model for gene ${mutation.gene}, transcript: ${mutation.transcript} is null")
             return emptyList()
         }
         return when (mutation) {
-            is GeneMutations         -> gene.codingRanges()
             is ExonMutations         -> gene.exonCodingRanges(mutation.exonNumber)
             is CodonRangeMutations   -> gene.codonCodingRanges(mutation.startCodon, mutation.endCodon)
             is CodonMutations        -> gene.codonCodingRanges(mutation.codonNumber)
