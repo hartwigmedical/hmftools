@@ -48,6 +48,8 @@ fun main(args: Array<String>) {
     CsvWriter.writeTSV(actionablePromiscuousFive(knowledgebases), "$outputDir${File.separator}actionablePromiscuousFive.tsv")
     CsvWriter.writeTSV(actionablePromiscuousThree(knowledgebases), "$outputDir${File.separator}actionablePromiscuousThree.tsv")
     CsvWriter.writeTSV(knowledgebases.flatMap { it.actionableCNVs }, "$outputDir${File.separator}actionableCNVs.tsv")
+    CsvWriter.writeTSV(knowledgebases.flatMap { it.actionableRanges }, "$outputDir${File.separator}actionableRanges.tsv")
+    CsvWriter.writeTSV(knowledgebases.flatMap { it.actionableGenes }, "$outputDir${File.separator}actionableGenes.tsv")
     CsvWriter.writeTSV(cancerTypesDoids, "$outputDir${File.separator}knowledgebaseCancerTypes.tsv")
 }
 
