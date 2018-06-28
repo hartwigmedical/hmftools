@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -23,98 +22,28 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public class ReadingData {
-    public static final String DELIMITER = "\t";
-    public static final String EXTENSION = ".amber.baf";
-    public static final String AMBER_DIR = "amber";
-    public static final String MAP_BAF_FILE = "/data/common/dbs/CytoScanHD/CytoScanHD_hg19_SNPs_sorted.bed";
-    public static final Logger LOGGER = LogManager.getLogger(ReadingData.class);
-
-    public static void filterVariant(@NotNull String chromosome, @NotNull String chromosomesAmber, @NotNull String positionsAmber,
-            @NotNull ListMultimap<String, String> multimapCyto, @NotNull String lineAmber) {
-        if (multimapCyto.get(chromosomesAmber).contains(positionsAmber)) {
-            LOGGER.info("lineAmber: " + lineAmber);
-            LOGGER.info(chromosome + ": "  + chromosomesAmber + "\t" + positionsAmber + "\t" + "1");
-            LOGGER.info(multimapCyto.get(chromosomesAmber).contains(positionsAmber));
-        }
-    }
+    private static final String DELIMITER = "\t";
+    private static final String EXTENSION = ".amber.baf";
+    private static final String AMBER_DIR = "amber";
+    private static final String MAP_BAF_FILE = "/data/common/dbs/CytoScanHD/CytoScanHD_hg19_SNPs_sorted.bed";
+    private static final Logger LOGGER = LogManager.getLogger(ReadingData.class);
 
     public static void readingFiles(@NotNull String runsFolderPath, @NotNull String tumorSample) throws IOException {
+        LOGGER.info("Creating output file");
+        String fileName = VariantDetection.GenerateOutpurFile();
 
-        ListMultimap<String, String> multimapCyto = ArrayListMultimap.create();
+        LOGGER.info("Reading CytoScan file");
         final List<String> readingCytoScanFile = CytoScanFile.read(MAP_BAF_FILE);
-        for (String lineCyto : readingCytoScanFile) {
-            String[] partsCyto = lineCyto.split(DELIMITER);
-            String chromosomesCyto = partsCyto[0];
-            String positionsCyto = partsCyto[1];
-            multimapCyto.put(chromosomesCyto, positionsCyto);
-        }
+        ListMultimap<String, String> multimapCyto = VariantDetection.ExtractCytoData(readingCytoScanFile);
 
-        LOGGER.info("reading Amber file: " + runsFolderPath + File.separator + AMBER_DIR + File.separator + tumorSample + EXTENSION);
+        LOGGER.info("Reading Amber file: " + runsFolderPath + File.separator + AMBER_DIR + File.separator + tumorSample + EXTENSION);
         final String Amberfile = runsFolderPath + File.separator + AMBER_DIR + File.separator + tumorSample + EXTENSION;
         final Multimap<String, AmberBAF> AmberBAFFiles = AmberBAFFile.read(Amberfile);
         List<AmberBAF> sortedBafs = Lists.newArrayList(AmberBAFFiles.values());
         Collections.sort(sortedBafs);
 
+        LOGGER.info("Total BAF points of file from sample " + tumorSample + ": " + sortedBafs.size());
         final List<String> finalPurityData = AmberBAFFile.readingPurityData(sortedBafs);
-
-        for (String lineAmber : finalPurityData) {
-            String[] partsAmber = lineAmber.split(DELIMITER);
-            String chromosomesAmber = partsAmber[0];
-            String positionsAmber = partsAmber[1];
-
-           if (chromosomesAmber.equals("1")) {
-               filterVariant("1", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("2")) {
-               filterVariant("2", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("3")) {
-               filterVariant("3", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("4")) {
-               filterVariant("4", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("5")) {
-               filterVariant("5", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("6")) {
-               filterVariant("6", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("7")) {
-               filterVariant("7", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("8")) {
-               filterVariant("8", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("9")) {
-               filterVariant("9", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("10")) {
-               filterVariant("10", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("11")) {
-                filterVariant("11", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("12")) {
-                filterVariant("12", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("13")) {
-                filterVariant("13", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("14")) {
-                filterVariant("14", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("15")) {
-                filterVariant("15", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("16")) {
-                filterVariant("16", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("17")) {
-                filterVariant("17", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("18")) {
-                filterVariant("18", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("19")) {
-                filterVariant("19", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("20")) {
-                filterVariant("20", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("21")) {
-                filterVariant("21", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("22")) {
-                filterVariant("22", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("X")) {
-                filterVariant("X", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("Y")) {
-                filterVariant("Y", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else if (chromosomesAmber.equals("MT")) {
-                filterVariant("MT", chromosomesAmber, positionsAmber, multimapCyto, lineAmber);
-           } else {
-                LOGGER.info("No known chromosome value!");
-           }
-        }
+        VariantDetection.ExtractAmberData(finalPurityData, multimapCyto, fileName);
     }
 }
