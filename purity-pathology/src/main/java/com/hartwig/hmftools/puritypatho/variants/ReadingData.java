@@ -22,7 +22,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public class ReadingData {
-    private static final String DELIMITER = "\t";
     private static final String EXTENSION = ".amber.baf";
     private static final String AMBER_DIR = "amber";
     private static final String MAP_BAF_FILE = "/data/common/dbs/CytoScanHD/CytoScanHD_hg19_SNPs_sorted.bed";

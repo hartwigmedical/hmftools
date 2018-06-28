@@ -31,6 +31,10 @@ public enum AmberBAFFile {
         return fromLines(Files.readAllLines(new File(fileName).toPath()));
     }
 
+    public static List readingPurityData(@NotNull List<AmberBAF> bafs) throws IOException {
+        return toLines(bafs);
+    }
+
     public static void write(@NotNull final String filename, @NotNull Multimap<String, AmberBAF> bafs) throws IOException {
         List<AmberBAF> sortedBafs = Lists.newArrayList(bafs.values());
         Collections.sort(sortedBafs);
@@ -72,32 +76,6 @@ public enum AmberBAFFile {
                 .add(FORMAT.format(ratio.normalBAF()))
                 .add(FORMAT.format(ratio.normalModifiedBAF()))
                 .add(String.valueOf(ratio.normalDepth()))
-                .toString();
-    }
-
-    public static List readingPurityData(@NotNull List<AmberBAF> bafs) throws IOException {
-        return toLinesPurityData(bafs);
-    }
-
-    @NotNull
-    static List<String> toLinesPurityData(@NotNull final List<AmberBAF> purity) {
-        final List<String> lines = Lists.newArrayList();
-        lines.add(headerPurityData());
-        purity.stream().map(AmberBAFFile::toStringPurityData).forEach(lines::add);
-        return lines;
-    }
-
-    @NotNull
-    private static String headerPurityData() {
-        return new StringJoiner(DELIMITER, "", "").add("Chromosome")
-                .add("Position")
-                .toString();
-    }
-
-    @NotNull
-    private static String toStringPurityData(@NotNull final AmberBAF ratio) {
-        return new StringJoiner(DELIMITER).add(String.valueOf(ratio.chromosome()))
-                .add(String.valueOf(ratio.position()))
                 .toString();
     }
 

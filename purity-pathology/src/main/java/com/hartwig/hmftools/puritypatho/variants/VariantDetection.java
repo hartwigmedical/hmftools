@@ -30,7 +30,7 @@ public class VariantDetection {
         for (String lineCyto : readingCytoScanFile) {
             String[] partsCyto = lineCyto.split(DELIMITER);
             String chromosomesCyto = partsCyto[0];
-            String positionsCyto = partsCyto[1];
+            String positionsCyto = partsCyto[2];
             multimapCyto.put(chromosomesCyto, positionsCyto);
         }
         return multimapCyto;
@@ -100,7 +100,7 @@ public class VariantDetection {
         }
     }
 
-    public static void filterVariant(@NotNull String chromosomesAmber, @NotNull String positionsAmber,
+    private static void filterVariant(@NotNull String chromosomesAmber, @NotNull String positionsAmber,
             @NotNull ListMultimap<String, String> multimapCyto,int countAmber, String fileName) throws
             IOException {
         if (multimapCyto.get(chromosomesAmber).contains(positionsAmber)) {

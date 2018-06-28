@@ -26,18 +26,18 @@ public class WritingData {
     }
 
     @NotNull
-    public static List toLines(@NotNull String chromosomesAmber, @NotNull String positionsAmber, int countAmber) {
+    private static List toLines(@NotNull String chromosomesAmber, @NotNull String positionsAmber, int countAmber) {
         final List<String> result = Lists.newArrayList();
         result.add(chromosomesAmber + DELIMITER + positionsAmber + DELIMITER + countAmber);
         return result;
     }
 
     public static void writeToFileHeader(@NotNull String fileName) throws IOException{
-        Files.write(new File(fileName).toPath(), toLinesHeader(), StandardOpenOption.APPEND);
+        Files.write(new File(fileName).toPath(), toLinesHeader());
     }
 
     @NotNull
-    public static List toLinesHeader() {
+    private static List toLinesHeader() {
         final List<String> result = Lists.newArrayList();
         result.add("chromosome" + DELIMITER + "position" + DELIMITER + "count");
         return result;
