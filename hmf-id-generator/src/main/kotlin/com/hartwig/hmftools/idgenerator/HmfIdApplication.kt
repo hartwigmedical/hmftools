@@ -114,11 +114,9 @@ private fun runHmfIdAnonymiseIds(cmd: CommandLine) {
 
     println("OriginalId,AnonymousId")
     patientIds.forEach { patient ->
-        run {
-            val hash = generator.hash(patient)
-            val hmfId: HmfId? = currentIds.find { it.hash == hash }
-            println(patient + "," + (hmfId?.patientId ?: "Unknown"))
-        }
+        val hash = generator.hash(patient)
+        val hmfId: HmfId? = currentIds.find { it.hash == hash }
+        println(patient + "," + (hmfId?.patientId ?: "Unknown"))
     }
 }
 
