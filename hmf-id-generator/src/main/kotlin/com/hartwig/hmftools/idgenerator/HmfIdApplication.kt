@@ -3,7 +3,6 @@ package com.hartwig.hmftools.idgenerator
 import com.hartwig.hmftools.extensions.cli.createCommandLine
 import com.hartwig.hmftools.extensions.cli.createRunModeCommandLine
 import com.hartwig.hmftools.idgenerator.extensions.readCurrentIds
-import com.hartwig.hmftools.idgenerator.extensions.readOldIds
 import com.hartwig.hmftools.idgenerator.extensions.writeHmfIds
 import org.apache.commons.cli.CommandLine
 import org.apache.commons.cli.Option
@@ -69,9 +68,8 @@ private fun updateIdsModeOptions(): Options {
     val options = Options()
     options.addOption(Option.builder(UPDATE_IDS_MODE).required().desc("update hmf ids").build())
     options.addOption(Option.builder(PASSWORD).required().hasArg().desc("password").build())
-    options.addOption(Option.builder(OLD_PASSWORD).required().hasArg().desc("password used to generate hashes in HMF ids file").build())
+    options.addOption(Option.builder(OLD_PASSWORD).optionalArg(true).hasArg().desc("password used to generate hashes in HMF ids file").build())
     options.addOption(Option.builder(PATIENT_IDS_FILE).required().hasArg().desc("file containing a list of patients per line").build())
-    options.addOption(Option.builder(HMF_IDS_FILE).required().hasArg().desc("file containing current mapping of patients to HMF ids").build())
     options.addOption(Option.builder(OUTPUT_FILE).required().hasArg().desc("output file location").build())
     return options
 }
@@ -100,16 +98,17 @@ private fun runHmfIdCreateIds(cmd: CommandLine) {
 }
 
 private fun runHmfIdUpdateIds(cmd: CommandLine) {
-    val generator = IdGenerator(cmd.getOptionValue(PASSWORD))
+    val password = cmd.getOptionValue(PASSWORD)
+    val generator = IdGenerator(password)
     val patientIds = readPatientIdsFile(cmd.getOptionValue(PATIENT_IDS_FILE))
-    val oldIds = File(cmd.getOptionValue(HMF_IDS_FILE)).readOldIds()
-    val newIdMapping = generator.updateIds(cmd.getOptionValue(OLD_PASSWORD), patientIds, oldIds)
+    val currentIds = IdGenerator::class.java.getResource(CURRENT_IDS_FILE).openStream().readCurrentIds()
+    val newIdMapping = generator.updateIds(cmd.getOptionValue(OLD_PASSWORD, password), patientIds, currentIds)
     File(cmd.getOptionValue(OUTPUT_FILE)).writeHmfIds(newIdMapping.values)
     logger.info("Updated hmf ids for ${newIdMapping.size} patients")
 }
 
 private fun runHmfIdAnonymiseIds(cmd: CommandLine) {
-    val currentIds = IdGenerator::class.java.getResource("/hmf_id_hashes.csv").openStream().readCurrentIds()
+    val currentIds = IdGenerator::class.java.getResource(CURRENT_IDS_FILE).openStream().readCurrentIds()
     val generator = IdGenerator(cmd.getOptionValue(PASSWORD))
     val patientIds = readPatientIdsFile(cmd.getOptionValue(PATIENT_IDS_FILE))
 
@@ -122,7 +121,6 @@ private fun runHmfIdAnonymiseIds(cmd: CommandLine) {
         }
     }
 }
-
 
 private fun readPatientIdsFile(patientIdsFile: String): List<String> {
     return File(patientIdsFile).readLines().shuffled()
