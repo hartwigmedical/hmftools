@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimap;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,11 +21,8 @@ public class VariantDetection {
     private static final Logger LOGGER = LogManager.getLogger(VariantDetection.class);
     private static final String DELIMITER = "\t";
 
-    public static String GenerateOutpurFile(@NotNull String countSet) throws IOException{
+    public static String GenerateOutputFile(@NotNull String countSet) throws IOException{
         final String filename = WritingData.generateOutputFileName();
-        if (countSet.equals("1")){
-            WritingData.writeToFileHeader(filename);
-        }
         return filename;
     }
 
@@ -39,7 +38,22 @@ public class VariantDetection {
     }
 
     public static void ExtractAmberData(@NotNull List<String> finalPurityData, @NotNull ListMultimap<String, String> multimapCyto,
-            @NotNull String fileName) throws IOException {
+            @NotNull String fileName, @NotNull String countSet) throws IOException {
+        if (countSet.equals("1")){
+            WritingData.writeToFileHeader(fileName);
+        }
+        final List<String> output = ReadingFileVariantDetection.read(fileName);
+        WritingData.writeToFileHeader(fileName);
+        final Multimap<String, String> resultOutput = HashMultimap.create();
+
+        for (String lineOutput : output) {
+            String[] partsOutput = lineOutput.split(DELIMITER);
+            String outputGenomic = partsOutput[0] + "," + partsOutput[1];
+            String outputCount = partsOutput[2];
+            resultOutput.put(outputGenomic, outputCount);
+        }
+        LOGGER.info(resultOutput);
+
         for (String lineAmber : finalPurityData) {
             String[] partsAmber = lineAmber.split(DELIMITER);
             String chromosomesAmber = partsAmber[0];

@@ -29,7 +29,7 @@ public class ReadingData {
 
     public static void readingFiles(@NotNull String runsFolderPath, @NotNull String tumorSample, @NotNull String countSet) throws IOException {
         LOGGER.info("Creating output file");
-        String fileName = VariantDetection.GenerateOutpurFile(countSet);
+        String fileName = VariantDetection.GenerateOutputFile(countSet);
 
         LOGGER.info("Reading CytoScan file");
         final List<String> readingCytoScanFile = CytoScanFile.read(MAP_BAF_FILE);
@@ -43,6 +43,6 @@ public class ReadingData {
 
         LOGGER.info("Total BAF points of file from sample " + tumorSample + ": " + sortedBafs.size());
         final List<String> finalPurityData = AmberBAFFile.readingPurityData(sortedBafs);
-        VariantDetection.ExtractAmberData(finalPurityData, multimapCyto, fileName);
+        VariantDetection.ExtractAmberData(finalPurityData, multimapCyto, fileName, countSet);
     }
 }
