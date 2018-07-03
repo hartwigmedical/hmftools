@@ -100,6 +100,44 @@ class ActionabilityAnalyzerTest : StringSpec() {
             (sources == setOf("civic")) shouldBe true
         }
 
+        "finds BRAF actionability that intersects range" {
+            val variant = brafOtherSNV.copy(position = "140453135", ref = "GA", alt = "CT")
+            val actionability = actionabilityAnalyzer.rangeActionabilityForVariant(variant)
+            val drugs = drugs(actionability)
+            val sources = sources(actionability)
+            val events = actionability.map { it.event }.toSet()
+            actionability.size shouldBe 3
+            actionability.filter { it.treatmentType == ON_LABEL }.size shouldBe 2
+            events.size shouldBe 1
+            (drugs == setOf("Vemurafenib", "Dabrafenib")) shouldBe true
+            (sources == setOf("civic")) shouldBe true
+        }
+
+        "finds BRAF actionability that completely overlaps range" {
+            val variant = brafOtherSNV.copy(position = "140453135", ref = "GATC", alt = "CTAG")
+            val actionability = actionabilityAnalyzer.rangeActionabilityForVariant(variant)
+            val drugs = drugs(actionability)
+            val sources = sources(actionability)
+            val events = actionability.map { it.event }.toSet()
+            actionability.size shouldBe 3
+            actionability.filter { it.treatmentType == ON_LABEL }.size shouldBe 2
+            events.size shouldBe 1
+            (drugs == setOf("Vemurafenib", "Dabrafenib")) shouldBe true
+            (sources == setOf("civic")) shouldBe true
+        }
+
+        "does not find BRAF actionability before range" {
+            val variant = brafOtherSNV.copy(position = "140453135", ref = "G", alt = "C")
+            val actionability = actionabilityAnalyzer.rangeActionabilityForVariant(variant)
+            actionability.size shouldBe 0
+        }
+
+        "does not find BRAF actionability after range" {
+            val variant = brafOtherSNV.copy(position = "140453138", ref = "G", alt = "C")
+            val actionability = actionabilityAnalyzer.rangeActionabilityForVariant(variant)
+            actionability.size shouldBe 0
+        }
+
         "does not find PTEN SNV range actionability" {
             val actionability = actionabilityAnalyzer.rangeActionabilityForVariant(ptenSNV)
             actionability.size shouldBe 0
