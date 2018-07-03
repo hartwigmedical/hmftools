@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.puritypatho.variants;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
@@ -13,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jfree.util.StringUtils;
 
 @Value.Immutable
 @Value.Style(allParameters = true,
@@ -43,6 +46,7 @@ public class VariantDetection {
             WritingData.writeToFileHeader(fileName);
         }
         final List<String> output = ReadingFileVariantDetection.read(fileName);
+        Collections.sort(output);
         WritingData.writeToFileHeader(fileName);
         final Multimap<String, String> resultOutput = HashMultimap.create();
 
@@ -52,6 +56,7 @@ public class VariantDetection {
             String outputCount = partsOutput[2];
             resultOutput.put(outputGenomic, outputCount);
         }
+        Set genomicPosition = resultOutput.keySet();
         LOGGER.info(resultOutput);
 
         for (String lineAmber : finalPurityData) {
@@ -61,55 +66,55 @@ public class VariantDetection {
             int countAmber = 0;
 
             if (chromosomesAmber.equals("1")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("2")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("3")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("4")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("5")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("6")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("7")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("8")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("9")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("10")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("11")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("12")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("13")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("14")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("15")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("16")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("17")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("18")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("19")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("20")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("21")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("22")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("X")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("Y")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else if (chromosomesAmber.equals("MT")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName);
+                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition);
             } else {
                 LOGGER.info("No known chromosome value!");
             }
@@ -117,12 +122,21 @@ public class VariantDetection {
     }
 
     private static void filterVariant(@NotNull String chromosomesAmber, @NotNull String positionsAmber,
-            @NotNull ListMultimap<String, String> multimapCyto,int countAmber, String fileName) throws
+            @NotNull ListMultimap<String, String> multimapCyto,int countAmber, String fileName,
+            @NotNull Multimap<String, String> resultOutput, @NotNull Set genomicPosition) throws
             IOException {
         if (multimapCyto.get(chromosomesAmber).contains(positionsAmber)) {
+            final String position = chromosomesAmber + "," +positionsAmber;
+            final Boolean foundGenomicPostionInFile = genomicPosition.contains(chromosomesAmber + "," +positionsAmber);
+            if (foundGenomicPostionInFile){
+                LOGGER.info(resultOutput.get(position));
+                resultOutput.get(position).remove("[");
+                resultOutput.get(position).remove("]");
+                LOGGER.info(resultOutput.get(position));
+
+
+            }
             countAmber ++;
-            WritingData.writeToFile(fileName, chromosomesAmber , positionsAmber, countAmber);
-        } else {
             WritingData.writeToFile(fileName, chromosomesAmber , positionsAmber, countAmber);
         }
     }
