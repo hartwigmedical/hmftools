@@ -23,15 +23,14 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
         }
 
         private fun createActionabilityTree(
-                items: List<ActionableGenomicRangeOutput>): Map<String, RTree<List<ActionableTreatment>, Line>> {
+                items: List<ActionableGenomicRangeOutput>): Map<String, RTree<List<ActionableGenomicRangeOutput>, Line>> {
             return items.groupBy { it.event.chromosome }.mapValues { rangesToRtree(it.value) }
         }
 
-        private fun rangesToRtree(items: List<ActionableGenomicRangeOutput>): RTree<List<ActionableTreatment>, Line> {
-            return items.groupBy { it.event }.entries.fold(RTree.create<List<ActionableTreatment>, Line>()) { rtree, entry ->
-                val treatments = ActionableTreatment(entry.value)
+        private fun rangesToRtree(items: List<ActionableGenomicRangeOutput>): RTree<List<ActionableGenomicRangeOutput>, Line> {
+            return items.groupBy { it.event }.entries.fold(RTree.create<List<ActionableGenomicRangeOutput>, Line>()) { rtree, entry ->
                 val range = entry.key
-                rtree.add(treatments, genomicPositionsToLine(range.start.toInt(), range.stop.toInt()))
+                rtree.add(entry.value, genomicPositionsToLine(range.start.toInt(), range.stop.toInt()))
             }
         }
 
@@ -75,14 +74,9 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
     }
 
     fun rangeActionabilityForVariant(variant: CohortMutation): Set<ActionabilityOutput> {
-        if (!variant.potentiallyActionable) return emptySet()
         val cancerType = sampleTumorLocationMap[variant.sampleId]
-        val variantPosition = genomicPositionsToLine(variant.position.toInt(), variant.position.toInt() + variant.ref.length - 1)
-        val searchResults = rangeActionabilityTree[variant.chromosome]?.search(variantPosition.mbr(), 0.1)
-        searchResults ?: return emptySet()
-        val treatments = searchResults.toBlocking().toIterable().flatMap { it.value() }
         val variantString = potentialVariantString(variant)
-        return treatments.map {
+        return actionableRangeTreatments(variant).map {
             val treatmentType = getTreatmentType(cancerType, it.actionability.cancerType)
             ActionabilityOutput(variant.sampleId, variantString, variant.gene, "", variant.type, cancerType, treatmentType, it)
         }.toSet()
@@ -126,6 +120,14 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
         if (diseaseDoids.isEmpty()) return "Unknown"
         val match = cancerDoids.any { diseaseDoids.contains(it) }
         return if (match) "On-label" else "Off-label"
+    }
+
+    private fun actionableRangeTreatments(variant: CohortMutation): List<ActionableTreatment> {
+        if (!variant.potentiallyActionable) return emptyList()
+        val variantPosition = genomicPositionsToLine(variant.position.toInt(), variant.position.toInt() + variant.ref.length - 1)
+        val searchResults = rangeActionabilityTree[variant.chromosome]?.search(variantPosition.mbr(), 0.1)
+        searchResults ?: return emptyList()
+        return ActionableTreatment(searchResults.toBlocking().toIterable().flatMap { it.value() }.filter { it.event.transcript == variant.transcriptId })
     }
 
     private fun potentialVariantString(variant: CohortMutation): String {
