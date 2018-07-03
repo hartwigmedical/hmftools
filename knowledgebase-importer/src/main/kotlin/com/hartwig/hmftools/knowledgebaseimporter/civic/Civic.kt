@@ -15,6 +15,7 @@ class Civic(variantsLocation: String, evidenceLocation: String, diseaseOntology:
             private val recordAnalyzer: RecordAnalyzer, treatmentTypeMap: Map<String, String>) :
         Knowledgebase, KnowledgebaseSource<CivicRecord, ActionableRecord> {
 
+    private val blacklistedEvidenceIds = setOf("1481")
     override val source = "civic"
     override val knownVariants by lazy { recordAnalyzer.knownVariants(listOf(this)).distinct() }
     override val knownFusionPairs: List<FusionPair> by lazy { knownKbRecords.flatMap { it.events }.filterIsInstance<FusionPair>().distinct() }
@@ -44,7 +45,9 @@ class Civic(variantsLocation: String, evidenceLocation: String, diseaseOntology:
         val drugInteractionMap = civicApi.drugInteractionMap
         val evidenceMap = ArrayListMultimap.create<String, CivicEvidence>()
         readTSVRecords(evidenceLocation) { csvRecord ->
-            evidenceMap.put(csvRecord["variant_id"], CivicEvidence(csvRecord, drugInteractionMap, treatmentTypeMap))
+            if (!blacklistedEvidenceIds.contains(csvRecord["evidence_id"])) {
+                evidenceMap.put(csvRecord["variant_id"], CivicEvidence(csvRecord, drugInteractionMap, treatmentTypeMap))
+            }
         }
         civicApi.releaseResources()
         return evidenceMap
