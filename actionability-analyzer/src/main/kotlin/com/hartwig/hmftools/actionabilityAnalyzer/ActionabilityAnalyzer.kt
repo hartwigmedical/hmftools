@@ -75,7 +75,7 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
     }
 
     fun rangeActionabilityForVariant(variant: CohortMutation): Set<ActionabilityOutput> {
-        if (variant.canonicalCodingEffect == "NONE" || variant.canonicalCodingEffect == "SYNONYMOUS") return emptySet()
+        if (!variant.potentiallyActionable) return emptySet()
         val cancerType = sampleTumorLocationMap[variant.sampleId]
         val variantPosition = genomicPositionsToLine(variant.position.toInt(), variant.position.toInt() + variant.ref.length - 1)
         val searchResults = rangeActionabilityTree[variant.chromosome]?.search(variantPosition.mbr(), 0.1)
@@ -87,7 +87,6 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
             ActionabilityOutput(variant.sampleId, variantString, variant.gene, "", variant.type, cancerType, treatmentType, it)
         }.toSet()
     }
-
 
     fun actionabilityForFusion(fusion: PotentialActionableFusion): Set<ActionabilityOutput> {
         val fiveGene = fusion.fiveGene()
