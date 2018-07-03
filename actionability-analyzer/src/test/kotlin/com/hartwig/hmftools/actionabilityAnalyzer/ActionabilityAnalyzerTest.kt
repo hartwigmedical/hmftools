@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.actionabilityAnalyzer
 
 import com.google.common.io.Resources
-import com.hartwig.hmftools.patientdb.data.ImmutablePotentialActionableVariant
 import io.kotlintest.matchers.shouldBe
 import io.kotlintest.specs.StringSpec
 
+private const val ON_LABEL = "On-label"
+
 class ActionabilityAnalyzerTest : StringSpec() {
-    private val ON_LABEL = "On-label"
     private val samplesMap = mapOf("CPCT99110022T" to "Skin", "CPCT99110033T" to "Lung")
 
     private val actionableCNVs = Resources.getResource("actionableCNVs").path
@@ -20,12 +20,13 @@ class ActionabilityAnalyzerTest : StringSpec() {
                                                               actionablePromiscuousFive, actionablePromiscuousThree, actionableCNVs,
                                                               cancerTypesMapping, actionableRanges)
 
-    private val brafSNV = ImmutablePotentialActionableVariant.of("CPCT99110022T", "BRAF", "7", 140453136,
-                                                                 "A", "T", "ENST00000288602", "missense", "SNP")
-    private val brafOtherSNV = ImmutablePotentialActionableVariant.of("CPCT99110033T", "BRAF", "7", 140453136,
-                                                                      "A", "T", "ENST00000288602", "missense", "SNP")
-    private val ptenSNV = ImmutablePotentialActionableVariant.of("CPCT99110033T", "PTEN", "10", 89653781,
-                                                                 "G", "C", "ENST00000371953", "splice;intron", "SNP")
+    private val brafSNV = CohortMutation("CPCT99110022T", "7", "140453136", "A", "T", "SNP", "BRAF",
+                                         "missense", "missense", "missense", "ENST00000288602")
+    private val brafOtherSNV = CohortMutation("CPCT99110033T", "7", "140453136", "A", "T", "SNP", "BRAF",
+                                              "missense", "missense", "missense", "ENST00000288602")
+
+    private val ptenSNV = CohortMutation("CPCT99110033T", "10", "89653781", "G", "C", "SNP", "PTEN",
+                                         "splice;intron", "splice;intron", "splice;intron", "ENST00000371953")
 
     init {
         "finds BRAF SNV actionability" {
@@ -36,13 +37,13 @@ class ActionabilityAnalyzerTest : StringSpec() {
             actionability.size shouldBe 6
             actionability.filter { it.treatmentType == ON_LABEL }.size shouldBe 2
             events.size shouldBe 1
-            events.first() shouldBe "${brafSNV.gene()} ${brafSNV.chromosome()}:${brafSNV.position()} ${brafSNV.ref()}->${brafSNV.alt()}"
+            events.first() shouldBe "${brafSNV.gene} ${brafSNV.chromosome}:${brafSNV.position} ${brafSNV.ref}->${brafSNV.alt}"
             (drugs == setOf("Dabrafenib", "Vemurafenib")) shouldBe true
             (sources == setOf("civic", "cgi")) shouldBe true
         }
 
         "finding variant does not depend on gene name" {
-            val variant = brafSNV.withGene("BRAF2")
+            val variant = brafSNV.copy(gene = "BRAF2")
             val brafSnvActionability = actionabilityAnalyzer.actionabilityForVariant(variant)
             val actionability = actionabilityAnalyzer.actionabilityForVariant(variant)
             val drugs = drugs(actionability)
@@ -66,25 +67,25 @@ class ActionabilityAnalyzerTest : StringSpec() {
             actionability.size shouldBe 6
             actionability.filter { it.treatmentType == ON_LABEL }.size shouldBe 3
             events.size shouldBe 1
-            events.first() shouldBe "${variant.gene()} ${variant.chromosome()}:${variant.position()} ${variant.ref()}->${variant.alt()}"
+            events.first() shouldBe "${variant.gene} ${variant.chromosome}:${variant.position} ${variant.ref}->${variant.alt}"
             (drugs == setOf("Dabrafenib", "Vemurafenib")) shouldBe true
             (sources == setOf("oncoKb", "cgi")) shouldBe true
         }
 
         "does not find SNV with different chromosome" {
-            actionabilityAnalyzer.actionabilityForVariant(brafSNV.withChromosome("8")).size shouldBe 0
+            actionabilityAnalyzer.actionabilityForVariant(brafSNV.copy(chromosome = "8")).size shouldBe 0
         }
 
         "does not find SNV with different position" {
-            actionabilityAnalyzer.actionabilityForVariant(brafSNV.withPosition(140453137)).size shouldBe 0
+            actionabilityAnalyzer.actionabilityForVariant(brafSNV.copy(position = "140453137")).size shouldBe 0
         }
 
         "does not find SNV with different ref" {
-            actionabilityAnalyzer.actionabilityForVariant(brafSNV.withRef("C")).size shouldBe 0
+            actionabilityAnalyzer.actionabilityForVariant(brafSNV.copy(ref = "C")).size shouldBe 0
         }
 
         "does not find SNV with different alt" {
-            actionabilityAnalyzer.actionabilityForVariant(brafSNV.withAlt("G")).size shouldBe 0
+            actionabilityAnalyzer.actionabilityForVariant(brafSNV.copy(alt = "G")).size shouldBe 0
         }
 
         "finds BRAF SNV range actionability" {

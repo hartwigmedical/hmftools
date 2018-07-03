@@ -12,7 +12,6 @@ import com.hartwig.hmftools.knowledgebaseimporter.readCSVRecords
 import com.hartwig.hmftools.knowledgebaseimporter.readTSVRecords
 import com.hartwig.hmftools.patientdb.data.PotentialActionableCNV
 import com.hartwig.hmftools.patientdb.data.PotentialActionableFusion
-import com.hartwig.hmftools.patientdb.data.PotentialActionableVariant
 
 class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, String>, actionableVariantsLocation: String,
                             fusionPairsLocation: String, promiscuousFiveLocation: String, promiscuousThreeLocation: String,
@@ -67,26 +66,27 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
     private val cancerTypeMapping = readCancerTypeMapping(cancerTypeLocation)
     private val tumorLocationMapping = primaryTumorMapping()
 
-    fun actionabilityForVariant(variant: PotentialActionableVariant): Set<ActionabilityOutput> {
+    fun actionabilityForVariant(variant: CohortMutation): Set<ActionabilityOutput> {
         val variantKey = VariantKey(variant)
-        val cancerType = sampleTumorLocationMap[variant.sampleId()]
+        val cancerType = sampleTumorLocationMap[variant.sampleId]
         val variantString = potentialVariantString(variant)
-        return getActionability(variantActionabilityMap, variantKey, variantString, variant.sampleId(), cancerType, variant.gene(), "",
-                                variant.type()).toSet()
+        return getActionability(variantActionabilityMap, variantKey, variantString, variant.sampleId, cancerType, variant.gene, "",
+                                variant.type).toSet()
     }
 
-    fun rangeActionabilityForVariant(variant: PotentialActionableVariant): Set<ActionabilityOutput> {
-        val cancerType = sampleTumorLocationMap[variant.sampleId()]
-        val variantPosition = genomicPositionsToLine(variant.position(), variant.position())
-        val searchResults = rangeActionabilityTree[variant.chromosome()]?.search(variantPosition)
+    fun rangeActionabilityForVariant(variant: CohortMutation): Set<ActionabilityOutput> {
+        val cancerType = sampleTumorLocationMap[variant.sampleId]
+        val variantPosition = genomicPositionsToLine(variant.position.toInt(), variant.position.toInt())
+        val searchResults = rangeActionabilityTree[variant.chromosome]?.search(variantPosition)
         searchResults ?: return emptySet()
         val treatments = searchResults.toBlocking().toIterable().flatMap { it.value() }
         val variantString = potentialVariantString(variant)
         return treatments.map {
             val treatmentType = getTreatmentType(cancerType, it.actionability.cancerType)
-            ActionabilityOutput(variant.sampleId(), variantString, variant.gene(), "", variant.type(), cancerType, treatmentType, it)
+            ActionabilityOutput(variant.sampleId, variantString, variant.gene, "", variant.type, cancerType, treatmentType, it)
         }.toSet()
     }
+
 
     fun actionabilityForFusion(fusion: PotentialActionableFusion): Set<ActionabilityOutput> {
         val fiveGene = fusion.fiveGene()
@@ -128,7 +128,7 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
         return if (match) "On-label" else "Off-label"
     }
 
-    private fun potentialVariantString(variant: PotentialActionableVariant): String {
-        return "${variant.worstEffectTranscript()} ${variant.worstEffect()} ${variant.chromosome()} ${variant.position()}: ${variant.ref()} -> ${variant.alt()}"
+    private fun potentialVariantString(variant: CohortMutation): String {
+        return "${variant.impact} ${variant.chromosome} ${variant.position}: ${variant.ref} -> ${variant.alt}"
     }
 }
