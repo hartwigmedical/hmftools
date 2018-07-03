@@ -78,7 +78,7 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
         if (variant.canonicalCodingEffect == "NONE" || variant.canonicalCodingEffect == "SYNONYMOUS") return emptySet()
         val cancerType = sampleTumorLocationMap[variant.sampleId]
         val variantPosition = genomicPositionsToLine(variant.position.toInt(), variant.position.toInt() + variant.ref.length - 1)
-        val searchResults = rangeActionabilityTree[variant.chromosome]?.search(variantPosition)
+        val searchResults = rangeActionabilityTree[variant.chromosome]?.search(variantPosition.mbr(), 0.1)
         searchResults ?: return emptySet()
         val treatments = searchResults.toBlocking().toIterable().flatMap { it.value() }
         val variantString = potentialVariantString(variant)
