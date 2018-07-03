@@ -138,6 +138,25 @@ class ActionabilityAnalyzerTest : StringSpec() {
             actionability.size shouldBe 0
         }
 
+        "does not find BRAF actionability for insert before range" {
+            val variant = brafOtherSNV.copy(position = "140453135", ref = "G", alt = "GATC")
+            val actionability = actionabilityAnalyzer.rangeActionabilityForVariant(variant)
+            actionability.size shouldBe 0
+        }
+
+        "finds BRAF actionability for deletion that intersects range" {
+            val variant = brafOtherSNV.copy(position = "140453135", ref = "GA", alt = "G")
+            val actionability = actionabilityAnalyzer.rangeActionabilityForVariant(variant)
+            val drugs = drugs(actionability)
+            val sources = sources(actionability)
+            val events = actionability.map { it.event }.toSet()
+            actionability.size shouldBe 3
+            actionability.filter { it.treatmentType == ON_LABEL }.size shouldBe 2
+            events.size shouldBe 1
+            (drugs == setOf("Vemurafenib", "Dabrafenib")) shouldBe true
+            (sources == setOf("civic")) shouldBe true
+        }
+
         "does not find PTEN SNV range actionability" {
             val actionability = actionabilityAnalyzer.rangeActionabilityForVariant(ptenSNV)
             actionability.size shouldBe 0
