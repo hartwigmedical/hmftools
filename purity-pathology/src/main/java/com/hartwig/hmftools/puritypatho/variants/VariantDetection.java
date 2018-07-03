@@ -1,12 +1,11 @@
 package com.hartwig.hmftools.puritypatho.variants;
 
 import java.io.IOException;
-import java.util.Collections;
+
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
@@ -46,9 +45,8 @@ public class VariantDetection {
             WritingData.writeToFileHeader(fileName);
         }
         final List<String> output = ReadingFileVariantDetection.read(fileName);
-        Collections.sort(output);
         WritingData.writeToFileHeader(fileName);
-        final Multimap<String, String> resultOutput = HashMultimap.create();
+        final ListMultimap<String, String> resultOutput = ArrayListMultimap.create();
 
         for (String lineOutput : output) {
             String[] partsOutput = lineOutput.split(DELIMITER);
@@ -57,8 +55,6 @@ public class VariantDetection {
             resultOutput.put(outputGenomic, outputCount);
         }
         Set genomicPosition = resultOutput.keySet();
-        LOGGER.info(resultOutput);
-
         for (String lineAmber : finalPurityData) {
             String[] partsAmber = lineAmber.split(DELIMITER);
             String chromosomesAmber = partsAmber[0];
@@ -126,15 +122,13 @@ public class VariantDetection {
             @NotNull Multimap<String, String> resultOutput, @NotNull Set genomicPosition) throws
             IOException {
         if (multimapCyto.get(chromosomesAmber).contains(positionsAmber)) {
-            final String position = chromosomesAmber + "," +positionsAmber;
-            final Boolean foundGenomicPostionInFile = genomicPosition.contains(chromosomesAmber + "," +positionsAmber);
+            final String position = chromosomesAmber + "," + positionsAmber;
+            final Boolean foundGenomicPostionInFile = genomicPosition.contains(position);
             if (foundGenomicPostionInFile){
-                LOGGER.info(resultOutput.get(position));
-                resultOutput.get(position).remove("[");
-                resultOutput.get(position).remove("]");
-                LOGGER.info(resultOutput.get(position));
-
-
+                final String value = resultOutput.get(position).toString();
+                String valueNew = value.replace("[", "");
+                int valueDef = Integer.valueOf(valueNew.replace("]", ""));
+                int countCombined = valueDef + 1;
             }
             countAmber ++;
             WritingData.writeToFile(fileName, chromosomesAmber , positionsAmber, countAmber);
