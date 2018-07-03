@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager
 class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFastaSequenceFile, private val geneDAO: EnsemblGeneDAO) {
     companion object {
         private val logger = LogManager.getLogger("RecordAnalyzer")
+        private val blacklistedDrugs = setOf("chemotherapy")
     }
 
     private val cdnaAnalyzer = TransvarCdnaAnalyzer(transvarLocation)
@@ -33,7 +34,7 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
         val actionableEvents = records.collectEvents<ActionableEvent, ActionableRecord>()
         val events = actionableEvents + somaticVariants + genomicRangeEvents
         return events.flatMap { (record, event) ->
-            record.actionability.map { ActionableItem(event, it) }
+            record.actionability.filter { !blacklistedDrugs.contains(it.drug.name.toLowerCase()) }.map { ActionableItem(event, it) }
         }
     }
 
