@@ -70,15 +70,25 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
         val cancerType = sampleTumorLocationMap[variant.sampleId]
         val variantString = potentialVariantString(variant)
         return getActionability(variantActionabilityMap, variantKey, variantString, variant.sampleId, cancerType, variant.gene, "",
-                                variant.type).toSet()
+                                variant.type, "variant").toSet()
     }
 
     fun rangeActionabilityForVariant(variant: CohortMutation): Set<ActionabilityOutput> {
         val cancerType = sampleTumorLocationMap[variant.sampleId]
         val variantString = potentialVariantString(variant)
-        return actionableRangeTreatments(variant).map {
-            val treatmentType = getTreatmentType(cancerType, it.actionability.cancerType)
-            ActionabilityOutput(variant.sampleId, variantString, variant.gene, "", variant.type, cancerType, treatmentType, it)
+        val rangesByMatchRule = actionableRanges(variant).groupBy {
+            when {
+                it.event.transcript == variant.transcriptId -> "transcriptMatch"
+                it.event.gene == variant.gene               -> "geneMatch"
+                else                                        -> "none"
+            }
+        }.filterKeys { it != "none" }
+        return rangesByMatchRule.flatMap { (rule, ranges) ->
+            ActionableTreatment(ranges).map {
+                val treatmentType = getTreatmentType(cancerType, it.actionability.cancerType)
+                ActionabilityOutput(variant.sampleId, variantString, variant.gene, "", variant.type, cancerType, treatmentType,
+                                    it, rule)
+            }.toSet()
         }.toSet()
     }
 
@@ -89,11 +99,13 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
         val cancerType = sampleTumorLocationMap[fusion.sampleId()]
         val eventString = "$fiveGene - $threeGene fusion"
         val fusionPairActionability = getActionability(fusionActionabilityMap, FusionPair(fiveGene, threeGene), eventString, sampleId,
-                                                       cancerType, fusion.fiveGene(), fusion.threeGene(), "Fusion")
+                                                       cancerType, fusion.fiveGene(), fusion.threeGene(), "Fusion", "fusion")
         val promiscuousFiveActionability = getActionability(promiscuousFiveActionabilityMap, PromiscuousGene(fiveGene), eventString,
-                                                            sampleId, cancerType, fusion.fiveGene(), fusion.threeGene(), "Fusion")
+                                                            sampleId, cancerType, fusion.fiveGene(), fusion.threeGene(), "Fusion",
+                                                            "fusion")
         val promiscuousThreeActionability = getActionability(promiscuousThreeActionabilityMap, PromiscuousGene(threeGene), eventString,
-                                                             sampleId, cancerType, fusion.fiveGene(), fusion.threeGene(), "Fusion")
+                                                             sampleId, cancerType, fusion.fiveGene(), fusion.threeGene(), "Fusion",
+                                                             "fusion")
         return (fusionPairActionability + promiscuousFiveActionability + promiscuousThreeActionability).toSet()
     }
 
@@ -101,15 +113,15 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
         val cnvType = if (cnv.alteration() == CopyNumberAlteration.GAIN) "Amplification" else "Deletion"
         val cnvEvent = CnvEvent(cnv.gene(), cnvType)
         return getActionability(cnvActionabilityMap, cnvEvent, cnvEvent.eventString(), cnv.sampleId(),
-                                sampleTumorLocationMap[cnv.sampleId()], cnv.gene(), "", cnvType).toSet()
+                                sampleTumorLocationMap[cnv.sampleId()], cnv.gene(), "", cnvType, "cnv").toSet()
     }
 
     private fun <T> getActionability(actionabilityMap: Map<T, List<ActionableTreatment>>, event: T, eventString: String,
                                      sampleId: String, cancerType: String?, gene: String, partner: String,
-                                     eventType: String): List<ActionabilityOutput> {
+                                     eventType: String, matchRule: String): List<ActionabilityOutput> {
         return actionabilityMap[event].orEmpty().map {
             val treatmentType = getTreatmentType(cancerType, it.actionability.cancerType)
-            ActionabilityOutput(sampleId, eventString, gene, partner, eventType, cancerType, treatmentType, it)
+            ActionabilityOutput(sampleId, eventString, gene, partner, eventType, cancerType, treatmentType, it, matchRule)
         }
     }
 
@@ -122,12 +134,12 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
         return if (match) "On-label" else "Off-label"
     }
 
-    private fun actionableRangeTreatments(variant: CohortMutation): List<ActionableTreatment> {
+    private fun actionableRanges(variant: CohortMutation): List<ActionableGenomicRangeOutput> {
         if (!variant.potentiallyActionable) return emptyList()
         val variantPosition = genomicPositionsToLine(variant.position.toInt(), variant.position.toInt() + variant.ref.length - 1)
         val searchResults = rangeActionabilityTree[variant.chromosome]?.search(variantPosition.mbr(), 0.1)
         searchResults ?: return emptyList()
-        return ActionableTreatment(searchResults.toBlocking().toIterable().flatMap { it.value() }.filter { it.event.transcript == variant.transcriptId })
+        return searchResults.toBlocking().toIterable().flatMap { it.value() }
     }
 
     private fun potentialVariantString(variant: CohortMutation): String {
