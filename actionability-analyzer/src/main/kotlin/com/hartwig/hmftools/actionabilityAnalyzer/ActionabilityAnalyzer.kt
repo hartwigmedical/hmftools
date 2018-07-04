@@ -114,11 +114,11 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
     }
 
     private fun getTreatmentType(patientCancerType: String?, treatmentCancerType: String): String {
-        val cancerDoids = tumorLocationMapping[patientCancerType].orEmpty()
-        if (cancerDoids.isEmpty()) return "Unknown"
-        val diseaseDoids = cancerTypeMapping[treatmentCancerType].orEmpty()
-        if (diseaseDoids.isEmpty()) return "Unknown"
-        val match = cancerDoids.any { diseaseDoids.contains(it) }
+        val patientDoids = tumorLocationMapping[patientCancerType].orEmpty()
+        if (patientDoids.isEmpty()) return "Unknown"
+        val treatmentDoids = cancerTypeMapping[treatmentCancerType].orEmpty()
+        if (treatmentDoids.isEmpty()) return "Unknown"
+        val match = patientDoids.any { treatmentDoids.contains(it) }
         return if (match) "On-label" else "Off-label"
     }
 
@@ -131,6 +131,6 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
     }
 
     private fun potentialVariantString(variant: CohortMutation): String {
-        return "${variant.impact} ${variant.chromosome} ${variant.position}: ${variant.ref} -> ${variant.alt}"
+        return "${variant.impact}(${variant.worstCodingEffect}/${variant.canonicalCodingEffect}) ${variant.chromosome} ${variant.position}: ${variant.ref} -> ${variant.alt}"
     }
 }
