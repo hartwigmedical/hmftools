@@ -6,18 +6,18 @@ data class ActionabilityOutput(val sampleId: String, val sampleEvent: String, va
                                val eventType: String, val patientCancerType: String?, val treatmentType: String, val event: String,
                                val source: String, val references: String, val drug: String, val drugType: String, val cancerType: String,
                                val level: String, val hmfLevel: String, val evidenceType: String, val significance: String,
-                               val hmfResponse: String) : CsvData {
+                               val hmfResponse: String, val matchRule: String) : CsvData {
     companion object {
         operator fun invoke(sampleId: String, sampleEvent: String, gene: String, partnerGene: String,
                             eventType: String, patientCancerType: String?, treatmentType: String,
-                            actionableTreatment: ActionableTreatment): ActionabilityOutput {
+                            actionableTreatment: ActionableTreatment, matchRule: String): ActionabilityOutput {
             return ActionabilityOutput(sampleId, sampleEvent, gene, partnerGene, eventType, patientCancerType, treatmentType,
                                        actionableTreatment.event, actionableTreatment.actionability.source,
                                        actionableTreatment.actionability.reference, actionableTreatment.actionability.drug.name,
                                        actionableTreatment.actionability.drug.type, actionableTreatment.actionability.cancerType,
                                        actionableTreatment.actionability.level, actionableTreatment.actionability.hmfLevel,
                                        actionableTreatment.actionability.evidenceType, actionableTreatment.actionability.significance,
-                                       actionableTreatment.actionability.hmfResponse)
+                                       actionableTreatment.actionability.hmfResponse, matchRule)
 
         }
     }
