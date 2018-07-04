@@ -20,7 +20,7 @@ data class OncoActionableRecord(private val metadata: RecordMetadata, override v
             val level: String = readLevel(record["Level"])
             val significance = if (record["Level"].startsWith("R")) HmfResponse.Resistant else HmfResponse.Responsive
             val drugs = readDrugEntries(record, treatmentTypeMap)
-            val cancerType: String = record["Cancer Type"]
+            val cancerType: String = readCancerType(record)
             val alteration = record["Alteration"]
             val actionability = Actionability("oncoKb", "$gene $alteration", listOf(cancerType), drugs, level,
                                               significance.name, "Predictive", HmfLevel(record["Level"]), significance)
@@ -39,6 +39,11 @@ data class OncoActionableRecord(private val metadata: RecordMetadata, override v
             val entryType = entry.split("+")
                     .joinToString(" + ") { treatmentTypeMap[it.trim().toLowerCase()] ?: "Unknown" }
             return HmfDrug(entry, entryType)
+        }
+
+        private fun readCancerType(record: CSVRecord): String {
+            val cancerType = record["Cancer Type"]
+            return if (cancerType == "Melanoma") "Skin Melanoma" else cancerType
         }
     }
 }
