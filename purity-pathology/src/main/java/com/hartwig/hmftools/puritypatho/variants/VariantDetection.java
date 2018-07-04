@@ -60,6 +60,7 @@ public class VariantDetection {
             String chromosomesAmber = partsAmber[0];
             String positionsAmber = partsAmber[1];
             int countAmber = 0;
+            LOGGER.info(genomicPosition.size());
 
             if (chromosomesAmber.equals("1")) {
                 filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
@@ -113,6 +114,10 @@ public class VariantDetection {
                 filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
             } else {
                 LOGGER.info("No known chromosome value!");
+            }
+
+            if (genomicPosition.contains(chromosomesAmber + "," + positionsAmber)){
+                genomicPosition.remove(chromosomesAmber + "," + positionsAmber);
             }
         }
     }
