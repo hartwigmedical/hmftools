@@ -11,6 +11,7 @@ data class ActionableTreatment(val event: String, val actionability: Actionabili
             return items.map { ActionableTreatment(it.event.eventString(), actionabilityMap[actionabilityKey(it.actionability)]!!) }
         }
 
+        //MIVO: map multiple identical actionability items that only differ on reference into single item with concatenated references
         private fun groupedReferencesActionability(actionabilityItems: List<Actionability>): Map<Actionability, Actionability> {
             return actionabilityItems.groupBy { actionabilityKey(it) }.mapValues { (key, actionabilityList) ->
                 val concatenatedReferences = actionabilityList.map { it.reference }.toSet().joinToString(",")
