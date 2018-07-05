@@ -78,9 +78,10 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
         val variantString = potentialVariantString(variant)
         val rangesByMatchRule = actionableRanges(variant).groupBy {
             when {
-                it.event.transcript == variant.transcriptId -> "transcriptMatch"
-                it.event.gene == variant.gene               -> "geneMatch"
-                else                                        -> "none"
+                it.event.mutationTranscript == variant.transcriptId -> "transcriptMatch"
+                it.event.geneTranscript == variant.transcriptId     -> "canonicalTranscriptMatch"
+                it.event.gene == variant.gene                       -> "geneMatch"
+                else                                                -> "none"
             }
         }.filterKeys { it != "none" }
         return rangesByMatchRule.flatMap { (rule, ranges) ->
