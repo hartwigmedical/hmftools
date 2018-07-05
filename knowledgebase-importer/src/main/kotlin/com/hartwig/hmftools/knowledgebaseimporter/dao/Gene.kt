@@ -5,7 +5,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 class Gene(exons: List<Exon>, private val startCodingExon: Exon, private val endCodingExon: Exon, private val seqStart: Long,
-           private val seqEnd: Long, val start: Long, val end: Long) {
+           private val seqEnd: Long, val start: Long, val end: Long, val transcript: String) {
 
     val chromosome = exons.first().chromosome
     private val sortedCodingExons = exons.sortedBy { it.start }.filter { it.start >= startCodingExon.start && it.start <= endCodingExon.start }
