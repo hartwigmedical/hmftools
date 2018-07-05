@@ -14,7 +14,6 @@ import org.apache.logging.log4j.Logger;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jfree.util.StringUtils;
 
 @Value.Immutable
 @Value.Style(allParameters = true,
@@ -60,7 +59,6 @@ public class VariantDetection {
             String chromosomesAmber = partsAmber[0];
             String positionsAmber = partsAmber[1];
             int countAmber = 0;
-            LOGGER.info(genomicPosition.size());
 
             if (chromosomesAmber.equals("1")) {
                 filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
@@ -115,9 +113,15 @@ public class VariantDetection {
             } else {
                 LOGGER.info("No known chromosome value!");
             }
-
-            if (genomicPosition.contains(chromosomesAmber + "," + positionsAmber)){
-                genomicPosition.remove(chromosomesAmber + "," + positionsAmber);
+        }
+        genomicPosition.remove("chromosome" + "," +	"position");
+        if(!countSet.equals("1")){
+            LOGGER.info(genomicPosition.size());
+            for (Object postion : genomicPosition) {
+                String [] outputGenomic = postion.toString().split(",");
+                String value = resultOutput.get(postion.toString()).toString().replace("[", "");
+                Integer newValue = Integer.valueOf(value.replace("]", ""));
+                WritingData.writeToFile(fileName, outputGenomic[0] , outputGenomic[1], newValue);
             }
         }
     }
@@ -139,6 +143,7 @@ public class VariantDetection {
                     int valueDef = Integer.valueOf(valueNew.replace("]", ""));
                     int countCombined = valueDef + 1;
                     WritingData.writeToFile(fileName, chromosomesAmber , positionsAmber, countCombined);
+                    genomicPosition.remove(chromosomesAmber + "," + positionsAmber);
                 } else {
                     countAmber ++;
                     WritingData.writeToFile(fileName, chromosomesAmber , positionsAmber, countAmber);
