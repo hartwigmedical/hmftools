@@ -30,7 +30,7 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
             val (gene, variant) = correctRecord(record["gene"], record["variant"])
             val somaticEvents = readSomaticEvents(gene, variant, record)
             if (actionability.isNotEmpty() && somaticEvents.isEmpty())
-                logger.warn("Could not extract any somatic event from ${record["gene"]}: ${record["variant"]} (${variantTypes(record)})")
+                logger.warn("Could not extract somatic event from:\tcivic\t${record["gene"]}\t${record["variant"]}\t${variantTypes(record)}")
             return CivicRecord(metadata, additionalInfo, somaticEvents, actionability, doids)
         }
 
