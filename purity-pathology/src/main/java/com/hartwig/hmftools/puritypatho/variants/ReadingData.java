@@ -29,9 +29,9 @@ public class ReadingData {
 
     public static void readingFiles(@NotNull String runsFolderPath, @NotNull String tumorSample, @NotNull String countSet) throws IOException {
         LOGGER.info("Creating output file");
-        String fileName = VariantDetection.GenerateOutputFile(countSet);
+        String fileName = VariantDetection.GenerateOutputFile();
 
-        LOGGER.info("Reading CytoScan file");
+        LOGGER.info("Reading CytoScan file: " + MAP_BAF_FILE);
         final List<String> readingCytoScanFile = CytoScanFile.read(MAP_BAF_FILE);
         ListMultimap<String, String> multimapCyto = VariantDetection.ExtractCytoData(readingCytoScanFile);
 

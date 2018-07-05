@@ -22,9 +22,8 @@ public class VariantDetection {
     private static final Logger LOGGER = LogManager.getLogger(VariantDetection.class);
     private static final String DELIMITER = "\t";
 
-    public static String GenerateOutputFile(@NotNull String countSet) throws IOException{
-        final String filename = WritingData.generateOutputFileName();
-        return filename;
+    public static String GenerateOutputFile() throws IOException{
+        return WritingData.generateOutputFileName();
     }
 
     public static ListMultimap<String, String> ExtractCytoData(@NotNull List<String> readingCytoScanFile) {
@@ -38,11 +37,7 @@ public class VariantDetection {
         return multimapCyto;
     }
 
-    public static void ExtractAmberData(@NotNull List<String> finalPurityData, @NotNull ListMultimap<String, String> multimapCyto,
-            @NotNull String fileName, @NotNull String countSet) throws IOException {
-        if (countSet.equals("1")){
-            WritingData.writeToFileHeader(fileName);
-        }
+    private static ListMultimap<String, String> readingOutput(@NotNull String fileName) throws IOException{
         final List<String> output = ReadingFileVariantDetection.read(fileName);
         WritingData.writeToFileHeader(fileName);
         final ListMultimap<String, String> resultOutput = ArrayListMultimap.create();
@@ -53,7 +48,17 @@ public class VariantDetection {
             String outputCount = partsOutput[2];
             resultOutput.put(outputGenomic, outputCount);
         }
+       return resultOutput;
+    }
+
+    public static void ExtractAmberData(@NotNull List<String> finalPurityData, @NotNull ListMultimap<String, String> multimapCyto,
+            @NotNull String fileName, @NotNull String countSet) throws IOException {
+        if (countSet.equals("1")){
+            WritingData.writeToFileHeader(fileName);
+        }
+        ListMultimap<String, String> resultOutput = readingOutput(fileName);
         Set genomicPosition = resultOutput.keySet();
+
         for (String lineAmber : finalPurityData) {
             String[] partsAmber = lineAmber.split(DELIMITER);
             String chromosomesAmber = partsAmber[0];
@@ -114,20 +119,24 @@ public class VariantDetection {
                 LOGGER.info("No known chromosome value!");
             }
         }
+        uniqueValuesOfPreviousFile(genomicPosition, countSet, resultOutput, fileName);
+    }
+
+    private static void uniqueValuesOfPreviousFile(@NotNull Set genomicPosition, @NotNull String countSet,
+            @NotNull Multimap<String, String> resultOutput, @NotNull String fileName) throws IOException{
         genomicPosition.remove("chromosome" + "," +	"position");
         if(!countSet.equals("1")){
-            LOGGER.info(genomicPosition.size());
             for (Object postion : genomicPosition) {
                 String [] outputGenomic = postion.toString().split(",");
-                String value = resultOutput.get(postion.toString()).toString().replace("[", "");
-                Integer newValue = Integer.valueOf(value.replace("]", ""));
-                WritingData.writeToFile(fileName, outputGenomic[0] , outputGenomic[1], newValue);
+                String countValue = resultOutput.get(postion.toString()).toString().replace("[", "");
+                Integer countValueDef = Integer.valueOf(countValue.replace("]", ""));
+                WritingData.writeToFile(fileName, outputGenomic[0] , outputGenomic[1], countValueDef);
             }
         }
     }
 
     private static void filterVariant(@NotNull String chromosomesAmber, @NotNull String positionsAmber,
-            @NotNull ListMultimap<String, String> multimapCyto,int countAmber, String fileName,
+            @NotNull ListMultimap<String, String> multimapCyto,int countAmber, @NotNull String fileName,
             @NotNull Multimap<String, String> resultOutput, @NotNull Set genomicPosition, @NotNull String countSet) throws
             IOException {
         if (multimapCyto.get(chromosomesAmber).contains(positionsAmber)) {
@@ -138,10 +147,10 @@ public class VariantDetection {
                 final String position = chromosomesAmber + "," + positionsAmber;
                 final Boolean foundGenomicPostionInFile = genomicPosition.contains(position);
                 if (foundGenomicPostionInFile){
-                    final String value = resultOutput.get(position).toString();
-                    String valueNew = value.replace("[", "");
-                    int valueDef = Integer.valueOf(valueNew.replace("]", ""));
-                    int countCombined = valueDef + 1;
+                    final String valueCount = resultOutput.get(position).toString();
+                    String valueCountNew = valueCount.replace("[", "");
+                    int valueCountNewDef = Integer.valueOf(valueCountNew.replace("]", ""));
+                    int countCombined = valueCountNewDef + 1;
                     WritingData.writeToFile(fileName, chromosomesAmber , positionsAmber, countCombined);
                     genomicPosition.remove(chromosomesAmber + "," + positionsAmber);
                 } else {
