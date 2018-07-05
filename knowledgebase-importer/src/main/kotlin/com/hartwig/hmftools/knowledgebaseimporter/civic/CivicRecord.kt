@@ -50,7 +50,7 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
                 (hasKnownVariant(record) || hasHgvs(record))
 
         private fun isGenomicRangeMutation(record: CSVRecord) = hasPosition(record) && !hasRefOrAlt(record) &&
-                variantTypes(record).isNotEmpty() && (isGenericMutation(record) || isGenericMissense(record))
+                (isGenericMutation(record) || isGenericMissense(record))
 
         private fun isGenericMutation(record: CSVRecord) = record["variant"].toLowerCase() == "mutation" ||
                 variantTypes(record).any { it.contains(RANGE_VARIANTS.toRegex()) }
@@ -102,7 +102,7 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
             return if (variantTypes.matches("N/A".toRegex(RegexOption.IGNORE_CASE))) {
                 emptyList()
             } else {
-                variantTypes.split(",")
+                variantTypes.split(",").filterNot { it.isBlank() }
             }
         }
 
