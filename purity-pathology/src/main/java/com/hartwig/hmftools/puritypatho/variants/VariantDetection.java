@@ -2,6 +2,8 @@ package com.hartwig.hmftools.puritypatho.variants;
 
 import java.io.IOException;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -125,8 +127,10 @@ public class VariantDetection {
     private static void uniqueValuesOfPreviousFile(@NotNull Set genomicPosition, @NotNull String countSet,
             @NotNull Multimap<String, String> resultOutput, @NotNull String fileName) throws IOException{
         genomicPosition.remove("chromosome" + "," +	"position");
+        List sortedGenomicPosition = new ArrayList(genomicPosition);
+        Collections.sort(sortedGenomicPosition);
         if(!countSet.equals("1")){
-            for (Object postion : genomicPosition) {
+            for (Object postion : sortedGenomicPosition) {
                 String [] outputGenomic = postion.toString().split(",");
                 String countValue = resultOutput.get(postion.toString()).toString().replace("[", "");
                 Integer countValueDef = Integer.valueOf(countValue.replace("]", ""));
