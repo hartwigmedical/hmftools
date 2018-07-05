@@ -95,7 +95,7 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
             val gene = geneModel[mutation.transcript] ?: geneModel[mutation.gene]
             mutationCodingRange(mutation, gene).map {
                 Pair(record, GenomicRangeEvent(mutation.gene, mutation.transcript.orEmpty(), gene!!.chromosome, it.start.toString(),
-                                               it.endInclusive.toString()))
+                                               it.endInclusive.toString(), gene.transcript))
             }
         }
     }
