@@ -11,11 +11,11 @@ class GeneTest : StringSpec() {
 
     private val forwardStrandExons = listOf(Exon("1", 1, 5, -1, 1),
                                             Exon("1", 7, 16, 1, -1))
-    private val forwardGene = Gene(forwardStrandExons, forwardStrandExons[0], forwardStrandExons[1], 2, 8, 1, 16)
+    private val forwardGene = Gene(forwardStrandExons, forwardStrandExons[0], forwardStrandExons[1], 2, 8, 1, 16, "")
 
     private val reverseStrandExons = listOf(Exon("1", -16, -7, -1, 2),
                                             Exon("1", -5, -1, 2, -1))
-    private val reverseGene = Gene(reverseStrandExons, reverseStrandExons[0], reverseStrandExons[1], 3, 4, 1, 16)
+    private val reverseGene = Gene(reverseStrandExons, reverseStrandExons[0], reverseStrandExons[1], 3, 4, 1, 16, "")
 
     // MIVO: single exon gene
     //exons:        |-------------------------------------------------------------------------|
@@ -23,10 +23,10 @@ class GeneTest : StringSpec() {
     //codons:            |___________|___________|____________|______________|
 
     private val forwardSingleExon = listOf(Exon("1", 1, 16, -1, -1))
-    private val singleExonForwardGene = Gene(forwardSingleExon, forwardSingleExon[0], forwardSingleExon[0], 2, 13, 1, 16)
+    private val singleExonForwardGene = Gene(forwardSingleExon, forwardSingleExon[0], forwardSingleExon[0], 2, 13, 1, 16, "")
 
     private val reverseSingleExon = listOf(Exon("1", -16, -1, -1, -1))
-    private val singleExonReverseGene = Gene(reverseSingleExon, reverseSingleExon[0], reverseSingleExon[0], 4, 15, 1, 16)
+    private val singleExonReverseGene = Gene(reverseSingleExon, reverseSingleExon[0], reverseSingleExon[0], 4, 15, 1, 16, "")
 
     init {
         "returns empty for negative codon" {
