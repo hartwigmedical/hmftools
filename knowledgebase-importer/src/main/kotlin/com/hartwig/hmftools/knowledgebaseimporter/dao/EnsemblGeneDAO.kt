@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.knowledgebaseimporter.dao
 
+import org.apache.logging.log4j.LogManager
 import org.ensembl.database.homo_sapiens_core.Tables.*
 import org.jooq.*
 import org.jooq.impl.DSL
@@ -13,6 +14,8 @@ typealias TranslationRecord = Record2<Int, Int>
 
 class EnsemblGeneDAO(url: String, user: String, password: String) {
     companion object {
+        private val logger = LogManager.getLogger("EnsemblGeneDAO")
+
         private fun baseExonQuery(context: DSLContext): SelectOnConditionStep<ExonRecord> {
             return context.select(SEQ_REGION.NAME, EXON.SEQ_REGION_START, EXON.SEQ_REGION_END, EXON.SEQ_REGION_STRAND, EXON.PHASE,
                                   EXON.END_PHASE)
@@ -33,6 +36,13 @@ class EnsemblGeneDAO(url: String, user: String, password: String) {
             return context.select(TRANSLATION.SEQ_START, TRANSLATION.SEQ_END).from(TRANSLATION)
         }
 
+        private fun canonicalTranscriptQuery(context: DSLContext, geneName: String): List<String> {
+            return context.select(TRANSCRIPT.STABLE_ID).from(GENE)
+                    .join(TRANSCRIPT).on(GENE.CANONICAL_TRANSCRIPT_ID.eq(TRANSCRIPT.TRANSCRIPT_ID))
+                    .join(XREF).on(XREF.XREF_ID.eq(GENE.DISPLAY_XREF_ID))
+                    .where(XREF.DISPLAY_LABEL.eq(geneName)).stream().map { it.get(TRANSCRIPT.STABLE_ID) }.toList()
+        }
+
         private val createExonsLambda: (exonRecords: Stream<ExonRecord>) -> List<Exon> = {
             it.toList().map {
                 val chromosome = it[SEQ_REGION.NAME]
@@ -47,10 +57,12 @@ class EnsemblGeneDAO(url: String, user: String, password: String) {
             }
         }
 
-        private val createGeneStartEndLambda: (translationRecords: Stream<TranslationRecord>) -> Pair<Long, Long>? = {
-            val translationList = it.toList().map { Pair(it[TRANSLATION.SEQ_START].toLong(), it[TRANSLATION.SEQ_END].toLong()) }
-            assert(translationList.size <= 1)
-            translationList.firstOrNull()
+        private fun createGeneStartEndLambda(translationRecords: Stream<TranslationRecord>, gene: String): Pair<Long, Long>? {
+            val translationList = translationRecords.toList().map {
+                Pair(it[TRANSLATION.SEQ_START].toLong(), it[TRANSLATION.SEQ_END].toLong())
+            }
+            if (translationList.size > 1) logger.warn("Expected max 1 translation for gene $gene but found ${translationList.size}")
+            return translationList.firstOrNull()
         }
     }
 
@@ -60,7 +72,10 @@ class EnsemblGeneDAO(url: String, user: String, password: String) {
         val exons = canonicalExons(geneName)
         return canonicalSequenceStartEnd(geneName)?.run {
             val startEnd = geneStartEnd(geneName).toList()
-            Gene(exons, canonicalStartExon(geneName), canonicalEndExon(geneName), first, second, startEnd.min()!!, startEnd.max()!!)
+            val transcripts = canonicalTranscriptQuery(context, geneName)
+            if (transcripts.size != 1) logger.warn("Expected single canonical transcript for gene $geneName, but found ${transcripts.size}")
+            Gene(exons, canonicalStartExon(geneName), canonicalEndExon(geneName), first, second, startEnd.min()!!, startEnd.max()!!,
+                 transcripts.first())
         }
     }
 
@@ -68,7 +83,7 @@ class EnsemblGeneDAO(url: String, user: String, password: String) {
         val exons = transcriptExons(transcript)
         return transcriptSequenceStartEnd(transcript)?.run {
             val startEnd = transcriptStartEnd(transcript).toList()
-            Gene(exons, startExon(transcript), endExon(transcript), first, second, startEnd.min()!!, startEnd.max()!!)
+            Gene(exons, startExon(transcript), endExon(transcript), first, second, startEnd.min()!!, startEnd.max()!!, transcript)
         }
     }
 
@@ -85,7 +100,7 @@ class EnsemblGeneDAO(url: String, user: String, password: String) {
                 .join(XREF).on(XREF.XREF_ID.eq(GENE.DISPLAY_XREF_ID))
                 .where(XREF.DISPLAY_LABEL.eq(geneName))
                 .stream()
-                .run(createGeneStartEndLambda)
+                .run { createGeneStartEndLambda(this, geneName) }
     }
 
     private fun canonicalStartExon(geneName: String): Exon {
@@ -124,7 +139,7 @@ class EnsemblGeneDAO(url: String, user: String, password: String) {
         return baseTranslationQuery(context).join(TRANSCRIPT).on(TRANSLATION.TRANSCRIPT_ID.eq(TRANSCRIPT.TRANSCRIPT_ID))
                 .where(TRANSCRIPT.STABLE_ID.eq(transcript))
                 .stream()
-                .run(createGeneStartEndLambda)
+                .run { createGeneStartEndLambda(this, transcript) }
     }
 
     private fun startExon(transcript: String): Exon {
