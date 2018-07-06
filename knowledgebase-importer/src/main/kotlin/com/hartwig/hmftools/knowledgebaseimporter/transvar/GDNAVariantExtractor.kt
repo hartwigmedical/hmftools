@@ -75,6 +75,7 @@ private fun extractVariant(chromosome: String, variantGDna: String, reference: I
             variantGDna.contains("ins")                                -> extractInsert(chromosome, variantGDna, reference)
             variantGDna.contains("dup")                                -> extractDup(chromosome, variantGDna, reference)
             variantGDna.contains("del")                                -> extractDelete(chromosome, variantGDna, reference)
+            variantGDna.matches("[0-9]+_[0-9]+".toRegex())             -> extractRange(chromosome, variantGDna)
             else                                                       -> {
                 logger.warn("variant $chromosome: $variantGDna could not be mapped to any known type")
                 null
@@ -162,6 +163,11 @@ private fun extractDelete(chromosome: String, variantGDna: String, reference: In
         Pair(ref, alt)
     }
     return somaticVariant(chromosome, position, ref, alt)
+}
+
+private fun extractRange(chromosome: String, variantGDna: String): SomaticVariant? {
+    val (start, end) = extractPositions(variantGDna)
+    return null
 }
 
 fun somaticVariant(chromosome: String, position: Long, ref: String, alt: String): SomaticVariant {

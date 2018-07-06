@@ -24,7 +24,8 @@ class OncoSomaticEventReader {
             isTruncatingMutation(alteration)                          -> emptyList()
             isMSI(alteration)                                         -> emptyList()
             isWildtype(alteration)                                    -> emptyList()
-            isSplice(alteration)                                      -> emptyList()
+            isSplice(alteration)                                      ->
+                listOf(ProteinAnnotation(transcript, alteration.replace("_splice", "splice").replace("X", "")))
             isExonInsertion(alteration) && isExonDeletion(alteration) -> emptyList()
             isExonInsertion(alteration)                               -> emptyList()
             isExonDeletion(alteration)                                -> emptyList()
