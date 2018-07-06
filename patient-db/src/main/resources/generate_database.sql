@@ -488,7 +488,7 @@ CREATE TABLE structuralVariantBreakend
     exonRankDownstream TINYINT UNSIGNED,
     exonPhaseUpstream TINYINT,
     exonPhaseDownstream TINYINT,
-    exonMax TINYINT NOT NULL,
+    exonMax SMALLINT NOT NULL,
     PRIMARY KEY (id),
     INDEX(structuralVariantId),
     INDEX(gene),
