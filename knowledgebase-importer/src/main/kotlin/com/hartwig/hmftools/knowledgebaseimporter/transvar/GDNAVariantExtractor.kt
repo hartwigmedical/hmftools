@@ -1,12 +1,10 @@
 package com.hartwig.hmftools.knowledgebaseimporter.transvar
 
-import com.hartwig.hmftools.common.variant.CodingEffect
-import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl
-import com.hartwig.hmftools.common.variant.SomaticVariant
-import com.hartwig.hmftools.common.variant.VariantType
+import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableEvent
+import com.hartwig.hmftools.knowledgebaseimporter.output.GenomicRangeEvent
+import com.hartwig.hmftools.knowledgebaseimporter.output.SomaticVariantEvent
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.util.Strings
 import java.util.regex.Pattern
 
 private val logger = LogManager.getLogger("GDNAVariantExtractor")
@@ -24,58 +22,63 @@ private const val chrIdentifier = "chr"
 private const val chrDelimiter = ":"
 private const val gDnaDelimiter = "g."
 
-fun extractVariants(transvarOutput: TransvarOutput, reference: IndexedFastaSequenceFile): List<SomaticVariant> {
+fun extractVariants(gene: String, transcript: String, transvarOutput: TransvarOutput,
+                    reference: IndexedFastaSequenceFile): List<ActionableEvent> {
     val chromosome = extractChromosome(transvarOutput.coordinates)
     return if (chromosome.isEmpty()) {
         logger.warn("could not extract chromosome from line: $transvarOutput. Skipping")
         emptyList()
     } else {
-        listOfNotNull(parseOptimalCandidate(chromosome, transvarOutput, reference)) + parseInfo(chromosome, transvarOutput.info, reference)
+        listOfNotNull(parseOptimalCandidate(gene, transcript, chromosome, transvarOutput, reference)) +
+                parseInfo(gene, transcript, chromosome, transvarOutput.info, reference)
     }
 }
 
-private fun parseInfo(chromosome: String, info: String, reference: IndexedFastaSequenceFile): List<SomaticVariant> {
+private fun parseInfo(gene: String, transcript: String, chromosome: String, info: String,
+                      reference: IndexedFastaSequenceFile): List<ActionableEvent> {
     val snvsGDna = infoVariantsAfter(info, candidateSnvString)
     val mnvsGDna = infoVariantsAfter(info, candidateMnvString)
     val indelsGDna = infoVariantsAfter(info, candidatesString).map { it.split("/")[2] }
     val mergedVariants = snvsGDna + mnvsGDna + indelsGDna
-    return extractVariants(chromosome, mergedVariants, reference)
+    return extractVariants(gene, transcript, chromosome, mergedVariants, reference)
 }
 
 private fun infoVariantsAfter(info: String, startDelimiter: String): List<String> {
     return info.substringAfter(startDelimiter, "").substringBefore(infoDelimiter).split(variantDelimiter).filterNot { it.isEmpty() }
 }
 
-private fun parseOptimalCandidate(chromosome: String, transvarOutput: TransvarOutput,
-                                  reference: IndexedFastaSequenceFile): SomaticVariant? {
+private fun parseOptimalCandidate(gene: String, transcript: String, chromosome: String, transvarOutput: TransvarOutput,
+                                  reference: IndexedFastaSequenceFile): ActionableEvent? {
     val variantGDna = if (transvarOutput.info.contains(leftAlignedGDnaString)) {
         transvarOutput.info.substringAfter(leftAlignedGDnaString).substringAfter(gDnaDelimiter, "").substringBefore(";")
     } else {
         transvarOutput.coordinates.substringAfter(gDnaDelimiter, "").substringBefore("/")
     }
-    return extractVariant(chromosome, variantGDna, reference)
+    return extractVariant(gene, transcript, chromosome, variantGDna, reference)
 }
 
-private fun extractVariants(chromosome: String, gDnaVariants: List<String>, reference: IndexedFastaSequenceFile): List<SomaticVariant> {
+private fun extractVariants(gene: String, transcript: String, chromosome: String, gDnaVariants: List<String>,
+                            reference: IndexedFastaSequenceFile): List<ActionableEvent> {
     return gDnaVariants.map { it.substringAfter(gDnaDelimiter) }.mapNotNull {
-        extractVariant(chromosome, it, reference)
+        extractVariant(gene, transcript, chromosome, it, reference)
     }
 }
 
-fun extractVariant(gDnaVariant: String, reference: IndexedFastaSequenceFile): SomaticVariant? {
+fun extractVariant(gene: String, transcript: String, gDnaVariant: String, reference: IndexedFastaSequenceFile): ActionableEvent? {
     val chromosome = extractChromosome(gDnaVariant)
-    return extractVariant(chromosome, gDnaVariant.substringAfter(gDnaDelimiter), reference)
+    return extractVariant(gene, transcript, chromosome, gDnaVariant.substringAfter(gDnaDelimiter), reference)
 }
 
-private fun extractVariant(chromosome: String, variantGDna: String, reference: IndexedFastaSequenceFile): SomaticVariant? {
+private fun extractVariant(gene: String, transcript: String, chromosome: String, variantGDna: String,
+                           reference: IndexedFastaSequenceFile): ActionableEvent? {
     return try {
         when {
-            variantGDna.contains(">")                                  -> extractSnv(chromosome, variantGDna)
-            variantGDna.contains("del") && variantGDna.contains("ins") -> extractMnv(chromosome, variantGDna, reference)
-            variantGDna.contains("ins")                                -> extractInsert(chromosome, variantGDna, reference)
-            variantGDna.contains("dup")                                -> extractDup(chromosome, variantGDna, reference)
-            variantGDna.contains("del")                                -> extractDelete(chromosome, variantGDna, reference)
-            variantGDna.matches("[0-9]+_[0-9]+".toRegex())             -> extractRange(chromosome, variantGDna)
+            variantGDna.contains(">")                                  -> extractSnv(gene, chromosome, variantGDna)
+            variantGDna.contains("del") && variantGDna.contains("ins") -> extractMnv(gene, chromosome, variantGDna, reference)
+            variantGDna.contains("ins")                                -> extractInsert(gene, chromosome, variantGDna, reference)
+            variantGDna.contains("dup")                                -> extractDup(gene, chromosome, variantGDna, reference)
+            variantGDna.contains("del")                                -> extractDelete(gene, chromosome, variantGDna, reference)
+            variantGDna.matches("[0-9]+_[0-9]+".toRegex())             -> extractRange(gene, transcript, chromosome, variantGDna)
             else                                                       -> {
                 logger.warn("variant $chromosome: $variantGDna could not be mapped to any known type")
                 null
@@ -98,40 +101,41 @@ private fun extractPositions(variant: String): Pair<Long, Long?> {
 }
 
 // MIVO: extract SNV from gDna variant of the form: 133738357T>C
-private fun extractSnv(chromosome: String, variantGDna: String): SomaticVariant {
+private fun extractSnv(gene: String, chromosome: String, variantGDna: String): SomaticVariantEvent {
     val (start, _) = extractPositions(variantGDna)
     val ref = variantGDna.substringBefore(">").last().toString()
     val alt = variantGDna.substringAfter(">").first().toString()
-    return somaticVariant(chromosome, start, ref, alt)
+    return SomaticVariantEvent(gene, chromosome, start.toString(), ref, alt)
 }
 
 // MIVO: extract MNV from gDna variant of the form: 105239404_105239405delinsGC or 133748289_133748290delTCinsGT
-private fun extractMnv(chromosome: String, variantGDna: String, reference: IndexedFastaSequenceFile): SomaticVariant {
+private fun extractMnv(gene: String, chromosome: String, variantGDna: String, reference: IndexedFastaSequenceFile): SomaticVariantEvent {
     val (start, end) = extractPositions(variantGDna)
     return if (variantGDna.contains("delins")) {
         val endPosition = end ?: start
         val alt = variantGDna.substringAfter("delins")
         val ref = reference.getSubsequenceAt(chromosome, start, endPosition).baseString
-        somaticVariant(chromosome, start, ref, alt)
+        SomaticVariantEvent(gene, chromosome, start.toString(), ref, alt)
     } else {
         val ref = variantGDna.substringAfter("del").substringBefore("ins")
         val alt = variantGDna.substringAfter("ins")
-        return somaticVariant(chromosome, start, ref, alt)
+        return SomaticVariantEvent(gene, chromosome, start.toString(), ref, alt)
     }
 }
 
 // MIVO: extract Insert from gDna variant of the form: 41201160dupA
-private fun extractDup(chromosome: String, variantGDna: String, reference: IndexedFastaSequenceFile): SomaticVariant {
+private fun extractDup(gene: String, chromosome: String, variantGDna: String, reference: IndexedFastaSequenceFile): SomaticVariantEvent {
     val (start, _) = extractPositions(variantGDna)
     val position = start - 1
     val ref = reference.getSubsequenceAt(chromosome, position, position).baseString
     val insertedBases = variantGDna.substringAfter("dup")
     val alt = ref + insertedBases
-    return somaticVariant(chromosome, position, ref, alt)
+    return SomaticVariantEvent(gene, chromosome, position.toString(), ref, alt)
 }
 
 // MIVO: extract Insert from gDna variant of the form: 32930598_32930599insC
-private fun extractInsert(chromosome: String, variantGDna: String, reference: IndexedFastaSequenceFile): SomaticVariant? {
+private fun extractInsert(gene: String, chromosome: String, variantGDna: String,
+                          reference: IndexedFastaSequenceFile): SomaticVariantEvent? {
     val (start, _) = extractPositions(variantGDna)
     val ref = reference.getSubsequenceAt(chromosome, start, start).baseString
     val insertedBases = variantGDna.substringAfter("ins")
@@ -139,12 +143,13 @@ private fun extractInsert(chromosome: String, variantGDna: String, reference: In
     return if (alt.contains("N")) {
         null
     } else {
-        somaticVariant(chromosome, start, ref, alt)
+        SomaticVariantEvent(gene, chromosome, start.toString(), ref, alt)
     }
 }
 
 // MIVO: extract Delete from gDna variant of the form: 55152094_55152105delCATCATGCATGA or 55152095_55152106del12
-private fun extractDelete(chromosome: String, variantGDna: String, reference: IndexedFastaSequenceFile): SomaticVariant? {
+private fun extractDelete(gene: String, chromosome: String, variantGDna: String,
+                          reference: IndexedFastaSequenceFile): SomaticVariantEvent? {
     val (start, _) = extractPositions(variantGDna)
     val position = start - 1
     val deletedBases = variantGDna.substringAfter("del")
@@ -162,26 +167,10 @@ private fun extractDelete(chromosome: String, variantGDna: String, reference: In
         val alt = ref.first().toString()
         Pair(ref, alt)
     }
-    return somaticVariant(chromosome, position, ref, alt)
+    return SomaticVariantEvent(gene, chromosome, position.toString(), ref, alt)
 }
 
-private fun extractRange(chromosome: String, variantGDna: String): SomaticVariant? {
+private fun extractRange(gene: String, transcript: String, chromosome: String, variantGDna: String): GenomicRangeEvent {
     val (start, end) = extractPositions(variantGDna)
-    return null
-}
-
-fun somaticVariant(chromosome: String, position: Long, ref: String, alt: String): SomaticVariant {
-    //type, filter, gene, genesEffected, worstEffect, worstEffectTranscript, worstCodingEffect, hotspot, mappability, totalReadCount, alleleReadCount
-    return ImmutableSomaticVariantImpl.builder().chromosome(chromosome).position(position).ref(ref).alt(alt)
-            .type(VariantType.UNDEFINED)
-            .filter(Strings.EMPTY)
-            .gene(Strings.EMPTY)
-            .genesEffected(0)
-            .worstEffect(Strings.EMPTY)
-            .worstEffectTranscript(Strings.EMPTY)
-            .worstCodingEffect(CodingEffect.UNDEFINED)
-            .totalReadCount(0)
-            .alleleReadCount(0)
-            .hotspot(false)
-            .mappability(0.0).build()
+    return GenomicRangeEvent(gene, transcript, chromosome, start.toString(), end.toString(), transcript)
 }
