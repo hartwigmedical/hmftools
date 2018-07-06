@@ -303,16 +303,16 @@ public class SvUtilities {
         if(!sameChrArm(v1, v2, v1Start, v2Start))
             return false;
 
-        // start apart and heading same direction
+        // start apart or equal and heading same direction
         long pos1 = v1.position(v1Start);
         boolean headsLeft1 = (v1.orientation(v1Start) == 1);
         long pos2 = v2.position(v2Start);
         boolean headsLeft2 = (v2.orientation(v2Start) == 1);
 
-        if(pos1 < pos2 && headsLeft1 && !headsLeft2)
+        if(pos1 <= pos2 && headsLeft1 && !headsLeft2)
             return true;
 
-        if(pos2 < pos1 && !headsLeft1 && headsLeft2)
+        if(pos2 <= pos1 && !headsLeft1 && headsLeft2)
             return true;
 
         return false;

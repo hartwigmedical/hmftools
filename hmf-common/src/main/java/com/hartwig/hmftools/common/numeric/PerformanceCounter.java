@@ -19,6 +19,7 @@ public class PerformanceCounter {
 
     private long mStartTime;
     private List<Double> mTimes;
+    private List<String> mTimeNames;
 
     private static final double NANOS_IN_SECOND = 1000000000;
 
@@ -29,6 +30,7 @@ public class PerformanceCounter {
         mTotalTime = 0;
         mMaxTime = 0;
         mTimes = Lists.newArrayList();
+        mTimeNames = Lists.newArrayList();
     }
 
     public final String getName() {
@@ -38,6 +40,12 @@ public class PerformanceCounter {
     public void start() {
         mIsRunning = true;
         mStartTime = System.nanoTime();
+    }
+
+    public void start(final String intervalName) {
+        mIsRunning = true;
+        mStartTime = System.nanoTime();
+        mTimeNames.add(intervalName);
     }
 
     public void stop() {
@@ -82,12 +90,31 @@ public class PerformanceCounter {
     }
 
     public void logStats() {
-        LOGGER.info(String.format("name(%s) samples(%d) total(%.3f) avg(%.3f) max(%.3f)",
-                mName,
-                getSampleCount(),
-                getTotalTime(),
-                getAvgTime(),
-                getMaxTime()));
-
+        logStats(true);
     }
+
+    public void logStats(boolean logIntervals) {
+
+        LOGGER.info(String.format("PerfStats: name(%s) samples(%d) total(%.3f) avg(%.3f) max(%.3f)",
+                mName, getSampleCount(), getTotalTime(), getAvgTime(), getMaxTime()));
+
+        if(logIntervals && mTimes.size() > 1)
+        {
+            // log the individual interval data
+            for(int i = 0; i < mTimes.size(); ++i)
+            {
+                if(mTimes.size() == mTimeNames.size())
+                {
+                    LOGGER.info(String.format("PerfStats: interval(%s) time(%.3f)",
+                            mTimeNames.get(i), mTimes.get(i)));
+                }
+                else
+                {
+                    LOGGER.info(String.format("PerfStats: interval %d: time(%.3f)",
+                            i, mTimes.get(i)));
+                }
+            }
+        }
+    }
+
 }
