@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.center.CenterModel;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
+import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableNotAnalysableReporter;
 import com.hartwig.hmftools.patientreporter.algo.ImmutablePatientReporter;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
@@ -60,6 +61,10 @@ public class PatientReporterApplication {
     private static final String PROMISCUOUS_THREE_CSV = "promiscuous_three_csv";
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
     private static final String ENSEMBL_DB = "ensembl_db";
+    private static final String ENSEMBL_DB_LOCAL = "local_ensembl";
+    private static final String DB_USER = "db_user";
+    private static final String DB_PASS = "db_pass";
+
     private static final String FASTA_FILE_LOCATION = "fasta_file_location";
     private static final String CENTER_CSV = "center_csv";
 
@@ -125,12 +130,21 @@ public class PatientReporterApplication {
 
         final VariantAnnotator annotator;
         if (cmd.hasOption(ENSEMBL_DB)) {
-            final String url = "jdbc:" + cmd.getOptionValue(ENSEMBL_DB);
-            LOGGER.info("connecting to: {}", url);
-            annotator = MySQLAnnotator.make(url);
+            if (cmd.hasOption(ENSEMBL_DB_LOCAL)) {
+                final String ensembleJdbcUrl = "jdbc:" + cmd.getOptionValue(ENSEMBL_DB);
+                final String ensembleUser = cmd.getOptionValue(DB_USER);
+                final String ensemblePassword = cmd.getOptionValue(DB_PASS);
+
+                DatabaseAccess ensembleDBConn = new DatabaseAccess(ensembleUser, ensemblePassword, ensembleJdbcUrl);
+
+                annotator = new MySQLAnnotator(ensembleDBConn.context());
+            } else {
+                annotator = MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
+            }
         } else {
             annotator = NullAnnotator.make();
         }
+
         final StructuralVariantAnalyzer svAnalyzer =
                 new StructuralVariantAnalyzer(annotator, reporterData.panelGeneModel().regions(), reporterData.knownFusionsModel());
 
@@ -168,8 +182,7 @@ public class PatientReporterApplication {
     }
 
     private static boolean validInputForNonAnalysableReport(@NotNull final CommandLine cmd) {
-        final NotAnalysableReason notAnalysableReason =
-                NotAnalysableReason.fromIdentifier(cmd.getOptionValue(NOT_ANALYSABLE_REASON));
+        final NotAnalysableReason notAnalysableReason = NotAnalysableReason.fromIdentifier(cmd.getOptionValue(NOT_ANALYSABLE_REASON));
         final String notAnalysedSample = cmd.getOptionValue(NOT_ANALYSED_SAMPLE);
 
         if (notAnalysableReason == NotAnalysableReason.UNDEFINED) {
@@ -239,6 +252,9 @@ public class PatientReporterApplication {
         options.addOption(PROMISCUOUS_THREE_CSV, true, "Path towards a CSV containing white-listed promiscuous 3' genes.");
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
         options.addOption(ENSEMBL_DB, true, "Annotate structural variants using this Ensembl DB URI");
+        options.addOption(ENSEMBL_DB_LOCAL, false, "Flag indicating to connect to local Ensembl DB");
+        options.addOption(DB_USER, true, "Database user name to connect to local mysql instance.");
+        options.addOption(DB_PASS, true, "Database password to connect to local mysql instance.");
         options.addOption(CENTER_CSV, true, "Path towards a CSV containing center data.");
         options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
         options.addOption(FASTA_FILE_LOCATION, true, "Path towards the FASTA file containing the ref genome.");
