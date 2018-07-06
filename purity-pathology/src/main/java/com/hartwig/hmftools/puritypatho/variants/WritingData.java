@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class WritingData {
     private static final String pathName = "/home/lieke/analysis/";
-    private static final String outputName = "variants.txt";
+    private static final String outputName = "bafPointsCountsDifferentSets.txt";
     private static final String DELIMITER = "\t";
 
     @NotNull
