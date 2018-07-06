@@ -29,8 +29,10 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
             val doids = evidence.associateBy({ it.cancerType }, { it.doid })
             val (gene, variant) = correctRecord(record["gene"], record["variant"])
             val somaticEvents = readSomaticEvents(gene, variant, record)
-            if (actionability.isNotEmpty() && somaticEvents.isEmpty())
-                logger.warn("Could not extract somatic event from:\tcivic\t${record["gene"]}\t${record["variant"]}\t${variantTypes(record)}")
+            if (actionability.isNotEmpty() && somaticEvents.isEmpty()) {
+                val aOrBLevelCount = actionability.filter { it.hmfLevel == "A" || it.hmfLevel == "B" }.size
+                logger.warn("Could not extract somatic event from:\tcivic\t${record["gene"]}\t${record["variant"]}\t${variantTypes(record)}\t$aOrBLevelCount")
+            }
             return CivicRecord(metadata, additionalInfo, somaticEvents, actionability, doids)
         }
 

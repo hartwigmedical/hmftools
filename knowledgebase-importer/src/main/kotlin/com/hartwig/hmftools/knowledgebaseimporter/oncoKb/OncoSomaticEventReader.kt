@@ -5,11 +5,9 @@ import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.*
 import com.hartwig.hmftools.knowledgebaseimporter.output.CnvEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.FusionEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.FusionPair
-import org.apache.logging.log4j.LogManager
 
 class OncoSomaticEventReader {
     companion object {
-        private val logger = LogManager.getLogger("OncoSomaticEventReader")
         private const val EXON_PATTERN = "Exon\\s?([0-9]+)\\s+"
         private val FUSION_SEPARATORS = setOf("-", " - ", "?")
         private val FUSIONS_TO_FLIP = setOf(FusionPair("ROS1", "CD74"),
@@ -23,15 +21,15 @@ class OncoSomaticEventReader {
         return when {
             isFusion(alteration)                                      -> listOfNotNull(readFusions(gene, alteration, effect))
             isCnv(alteration)                                         -> listOfNotNull(readCnv(gene, alteration))
-            isTruncatingMutation(alteration)                          -> logAndSkip(gene, alteration)
-            isMSI(alteration)                                         -> logAndSkip(gene, alteration)
-            isWildtype(alteration)                                    -> logAndSkip(gene, alteration)
-            isSplice(alteration)                                      -> logAndSkip(gene, alteration)
-            isExonInsertion(alteration) && isExonDeletion(alteration) -> logAndSkip(gene, alteration)
-            isExonInsertion(alteration)                               -> logAndSkip(gene, alteration)
-            isExonDeletion(alteration)                                -> logAndSkip(gene, alteration)
-            isGainOfFunction(alteration)                              -> logAndSkip(gene, alteration)
-            isInternalTandemDuplication(alteration)                   -> logAndSkip(gene, alteration)
+            isTruncatingMutation(alteration)                          -> emptyList()
+            isMSI(alteration)                                         -> emptyList()
+            isWildtype(alteration)                                    -> emptyList()
+            isSplice(alteration)                                      -> emptyList()
+            isExonInsertion(alteration) && isExonDeletion(alteration) -> emptyList()
+            isExonInsertion(alteration)                               -> emptyList()
+            isExonDeletion(alteration)                                -> emptyList()
+            isGainOfFunction(alteration)                              -> emptyList()
+            isInternalTandemDuplication(alteration)                   -> emptyList()
             isBrafV600EV600K(alteration)                              -> listOf(ProteinAnnotation(transcript, "V600E"),
                                                                                 ProteinAnnotation(transcript, "V600K"))
             isGenericMutation(alteration)                             -> listOfNotNull(readGenericMutation(gene, transcript, alteration))
@@ -83,10 +81,5 @@ class OncoSomaticEventReader {
     private fun extractExon(alteration: String): Int {
         val matchResult = EXON_PATTERN.toRegex(RegexOption.IGNORE_CASE).find(alteration)
         return matchResult!!.groupValues[1].toInt()
-    }
-
-    private fun logAndSkip(gene: String, alteration: String): List<SomaticEvent> {
-        logger.warn("Could not extract somatic event from:\toncoKb\t$gene\t$alteration\t")
-        return emptyList()
     }
 }

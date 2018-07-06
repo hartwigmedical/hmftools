@@ -8,10 +8,12 @@ import com.hartwig.hmftools.knowledgebaseimporter.output.HmfDrug
 import com.hartwig.hmftools.knowledgebaseimporter.output.HmfLevel
 import com.hartwig.hmftools.knowledgebaseimporter.output.HmfResponse
 import org.apache.commons.csv.CSVRecord
+import org.apache.logging.log4j.LogManager
 
 data class OncoActionableRecord(private val metadata: RecordMetadata, override val events: List<SomaticEvent>,
                                 override val actionability: List<Actionability>) : RecordMetadata by metadata, ActionableRecord {
     companion object {
+        private val logger = LogManager.getLogger("OncoActionableRecord")
         private val somaticEventReader = OncoSomaticEventReader()
 
         operator fun invoke(record: CSVRecord, treatmentTypeMap: Map<String, String>): OncoActionableRecord {
@@ -25,7 +27,12 @@ data class OncoActionableRecord(private val metadata: RecordMetadata, override v
             val actionability = Actionability("oncoKb", "$gene $alteration", listOf(cancerType), drugs, level,
                                               significance.name, "Predictive", HmfLevel(record["Level"]), significance)
             val metadata = OncoMetadata(gene, transcript)
-            return OncoActionableRecord(metadata, somaticEventReader.read(gene, transcript, alteration), actionability)
+            val events = somaticEventReader.read(gene, transcript, alteration)
+            if (events.isEmpty()) {
+                val aOrBLevelCount = actionability.filter { it.hmfLevel == "A" || it.hmfLevel == "B" }.size
+                logger.warn("Could not extract somatic event from:\toncoKb\t$gene\t$alteration\t\t$aOrBLevelCount")
+            }
+            return OncoActionableRecord(metadata, events, actionability)
         }
 
         private fun readLevel(levelField: String): String = if (levelField.startsWith("R")) levelField.drop(1) else levelField

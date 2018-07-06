@@ -26,10 +26,11 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
         operator fun invoke(record: CSVRecord, treatmentTypeMap: Map<String, String>): CgiActionableRecord {
             val metadata = CgiMetadata(record["Gene"], record["transcript"] ?: "na")
             val events = readSomaticEvents(record)
-            if (events.isEmpty()) {
-                logger.warn("Could not extract somatic event from:\tcgi\t${record["Gene"]}\t${record["Alteration"]}\t${record["Alteration type"]}")
-            }
             val actionability = readActionability(record, treatmentTypeMap).filterNot { it.significance == "No Responsive" }
+            if (events.isEmpty()) {
+                val aOrBLevelCount = actionability.filter { it.hmfLevel == "A" || it.hmfLevel == "B" }.size
+                logger.warn("Could not extract somatic event from:\tcgi\t${record["Gene"]}\t${record["Alteration"]}\t${record["Alteration type"]}\t$aOrBLevelCount")
+            }
             return CgiActionableRecord(metadata, events, actionability, readCgiDrugs(record))
         }
 
