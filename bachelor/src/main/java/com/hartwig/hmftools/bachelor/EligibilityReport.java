@@ -49,4 +49,6 @@ abstract class EligibilityReport {
 
     @NotNull
     public abstract String annotations();
+
+    public abstract String hgvsProtein();
 }

@@ -19,13 +19,11 @@ public final class RepeatContextFactory {
         final Map<String, Integer> result = Maps.newHashMap();
 
         for (int start = Math.max(0, index - MAX_LENGTH); start <= index; start++) {
-
             final String prior = sequence.substring(0, start);
             final String post = sequence.substring(start);
 
             for (int end = index; end <= Math.min(sequence.length(), start + MAX_LENGTH); end++) {
                 if (end != index) {
-
                     int count = 0;
                     final String bases = sequence.substring(Math.min(start, end), Math.max(start, end));
 

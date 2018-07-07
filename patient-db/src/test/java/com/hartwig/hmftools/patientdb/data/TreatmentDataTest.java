@@ -38,7 +38,7 @@ public class TreatmentDataTest {
         assertEquals("simple/simple", withDrugs(simpleType).concatenatedType());
 
         List<DrugData> combiType = Lists.newArrayList(drugWithType("complex1"), drugWithType("complex2"));
-        assertEquals(TreatmentData.COMBI_THERAPY, withDrugs(combiType).consolidatedType());
+        assertEquals(TreatmentData.COMBI_TYPE, withDrugs(combiType).consolidatedType());
         assertEquals("complex1/complex2", withDrugs(combiType).concatenatedType());
     }
 

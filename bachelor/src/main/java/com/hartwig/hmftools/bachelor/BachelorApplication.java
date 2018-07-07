@@ -166,9 +166,9 @@ public class BachelorApplication {
         try {
             for (final EligibilityReport r : result) {
 
-                allDataWriter.write(String.format("%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s,%s",
+                allDataWriter.write(String.format("%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s",
                         sampleId, r.source().toString(), r.program(),  r.id(),
-                        r.genes(), r.transcriptId(), r.chrom(), r.pos(), r.ref(), r.alts(), r.effects(), r.annotations()));
+                        r.genes(), r.transcriptId(), r.chrom(), r.pos(), r.ref(), r.alts(), r.effects(), r.annotations(), r.hgvsProtein()));
                 allDataWriter.newLine();
 
                 bedFileWriter.write(String.format("%s\t%s\t%d\t%d",
@@ -184,7 +184,7 @@ public class BachelorApplication {
 
     private static String fileHeader() {
         return String.join(",",
-                Arrays.asList("SAMPLEID", "SOURCE", "PROGRAM", "ID", "GENE", "TRANSCRIPT_ID", "CHROM", "POS", "REF", "ALTS", "EFFECTS", "ANNOTATIONS"));
+                Arrays.asList("SAMPLEID", "SOURCE", "PROGRAM", "ID", "GENE", "TRANSCRIPT_ID", "CHROM", "POS", "REF", "ALTS", "EFFECTS", "ANNOTATIONS", "HGVS_PROTEIN"));
     }
 
     public static void main(final String... args) {

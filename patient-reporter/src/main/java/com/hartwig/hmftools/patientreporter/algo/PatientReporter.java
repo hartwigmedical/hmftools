@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.common.ecrf.doid.TumorLocationDoidMapping;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.lims.Lims;
@@ -98,19 +97,21 @@ public abstract class PatientReporter {
         final PatientTumorLocation patientTumorLocation =
                 PatientReporterHelper.extractPatientTumorLocation(baseReporterData().patientTumorLocations(), tumorSample);
 
-        final List<Alteration> alterations;
-        if (patientTumorLocation != null) {
-            final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
-            alterations = civicAnalyzer().run(variantAnalysis.variantReports(),
-                    purpleAnalysis.reportableGeneCopyNumbers(),
-                    reportableDisruptions,
-                    reportableFusions,
-                    reporterData().panelGeneModel(),
-                    doidMapping.doidsForTumorType(patientTumorLocation.primaryTumorLocation()));
-        } else {
-            LOGGER.warn("Could not run civic analyzer as (curated) primary tumor location is not known");
-            alterations = Lists.newArrayList();
-        }
+        final List<Alteration> alterations = Lists.newArrayList();
+
+        // KODU: Skip CIVIC annotation for now, not working at the moment.
+        //        if (patientTumorLocation != null) {
+        //            final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
+        //            alterations = civicAnalyzer().run(variantAnalysis.variantReports(),
+        //                    purpleAnalysis.reportableGeneCopyNumbers(),
+        //                    reportableDisruptions,
+        //                    reportableFusions,
+        //                    reporterData().panelGeneModel(),
+        //                    doidMapping.doidsForTumorType(patientTumorLocation.primaryTumorLocation()));
+        //        } else {
+        //            LOGGER.warn("Could not run civic analyzer as (curated) primary tumor location is not known");
+        //            alterations = Lists.newArrayList();
+        //        }
 
         LOGGER.info(" Printing analysis results:");
         LOGGER.info("  Number of passed variants : " + Integer.toString(passedVariantCount));
@@ -189,7 +190,7 @@ public abstract class PatientReporter {
         LOGGER.info(" Enriching structural variants with purple data.");
         final List<EnrichedStructuralVariant> enrichedStructuralVariants = purpleAnalysis.enrichStructuralVariants(structuralVariants);
         LOGGER.info(" Analysing structural variants...");
-        final StructuralVariantAnalysis structuralVariantAnalysis = structuralVariantAnalyzer().run(enrichedStructuralVariants, false);
+        final StructuralVariantAnalysis structuralVariantAnalysis = structuralVariantAnalyzer().run(enrichedStructuralVariants);
         return ImmutableGenomeAnalysis.of(sample, variantAnalysis, purpleAnalysis, structuralVariantAnalysis);
     }
 

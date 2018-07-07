@@ -84,6 +84,34 @@ public class MNVMergerTest {
         assertEquals(7, mergedVariant.getAttribute("SOMATIC_PON_COUNT"));
     }
 
+    // MIVO: 170756002: (G->T),  170756004: (T->C)
+    @Test
+    public void correctlyMerges2VariantsWithPonCountsAndGap() {
+        final Map<Integer, Character> gaps = Maps.newHashMap();
+        gaps.put(170756003, 'A');
+        final VariantContext mergedVariant = MNV_MERGER.mergeVariants(Lists.newArrayList(VARIANTS.get(25), VARIANTS.get(26)), gaps);
+        assertEquals("GAT", mergedVariant.getReference().getBaseString());
+        assertEquals(1, mergedVariant.getAlternateAlleles().size());
+        assertEquals("TAC", mergedVariant.getAlternateAllele(0).getBaseString());
+        assertEquals(0.5, mergedVariant.getAttribute("MAPPABILITY"));
+        assertEquals(10, mergedVariant.getAttribute("GERMLINE_PON_COUNT"));
+        assertEquals(15, mergedVariant.getAttribute("SOMATIC_PON_COUNT"));
+    }
+
+    // MIVO: 170756004: (T->C),  170756006: (G->T)
+    @Test
+    public void correctlyMerges2VariantsSecondWithoutPonCountsAndGap() {
+        final Map<Integer, Character> gaps = Maps.newHashMap();
+        gaps.put(170756005, 'A');
+        final VariantContext mergedVariant = MNV_MERGER.mergeVariants(Lists.newArrayList(VARIANTS.get(26), VARIANTS.get(27)), gaps);
+        assertEquals("TAG", mergedVariant.getReference().getBaseString());
+        assertEquals(1, mergedVariant.getAlternateAlleles().size());
+        assertEquals("CAT", mergedVariant.getAlternateAllele(0).getBaseString());
+        assertEquals(0.5, mergedVariant.getAttribute("MAPPABILITY"));
+        assertNull(mergedVariant.getAttribute("GERMLINE_PON_COUNT"));
+        assertNull(mergedVariant.getAttribute("SOMATIC_PON_COUNT"));
+    }
+
     // MIVO: 170756001: (C->T),  170756002: (G->T)
     @Test
     public void correctlyMerges2VariantsFirstWithoutAnyPonCount() {
@@ -121,7 +149,7 @@ public class MNVMergerTest {
         assertEquals(1, mergedVariant.getAlternateAlleles().size());
         assertEquals("TTAC", mergedVariant.getAlternateAllele(0).getBaseString());
         assertEquals(0.5, mergedVariant.getAttribute("MAPPABILITY"));
-        assertNull(mergedVariant.getAttribute("GERMLINE_PON_COUNT"));
-        assertNull(mergedVariant.getAttribute("SOMATIC_PON_COUNT"));
+        assertEquals(9, mergedVariant.getAttribute("GERMLINE_PON_COUNT"));
+        assertEquals(14, mergedVariant.getAttribute("SOMATIC_PON_COUNT"));
     }
 }

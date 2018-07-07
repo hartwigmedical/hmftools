@@ -284,6 +284,7 @@ class BachelorEligibility {
                         .alts(snpEff.allele())
                         .effects(snpEff.effects())
                         .annotations(annotationsStr)
+                        .hgvsProtein(snpEff.hgvsProtein())
                         .build();
 
                 reportList.add(report);
@@ -344,6 +345,7 @@ class BachelorEligibility {
                             .ref("")
                             .alts("")
                             .effects("")
+                            .hgvsProtein("")
                             .build())
                     .collect(Collectors.toList());
 
@@ -398,6 +400,7 @@ class BachelorEligibility {
                             .ref("")
                             .alts("")
                             .effects("")
+                            .hgvsProtein("")
                             .build())
                     .forEach(results::add);
 

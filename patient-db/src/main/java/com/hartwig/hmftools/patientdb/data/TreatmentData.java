@@ -16,8 +16,10 @@ import org.jetbrains.annotations.Nullable;
 
 public interface TreatmentData extends Comparable<TreatmentData> {
 
+    String SEPARATOR = "/";
+
     @VisibleForTesting
-    String COMBI_THERAPY = "Combi therapy";
+    String COMBI_TYPE = "Combi therapy";
 
     @VisibleForTesting
     String COMBI_MECHANISM = "Combi mechanism";
@@ -41,57 +43,66 @@ public interface TreatmentData extends Comparable<TreatmentData> {
     }
 
     @Nullable
+    @Value.Derived
     default String treatmentName() {
-        List<CuratedDrug> drugs = curatedDrugs();
-        Collections.sort(drugs);
+        List<CuratedDrug> drugs = sortedDrugs();
 
-        final String concatenatedTreatmentName = drugs.stream().map(CuratedDrug::name).collect(Collectors.joining("/"));
+        final String concatenatedTreatmentName = drugs.stream().map(CuratedDrug::name).collect(Collectors.joining(SEPARATOR));
         return Strings.emptyToNull(concatenatedTreatmentName);
     }
 
+
     @Nullable
+    @Value.Derived
     default String concatenatedType() {
-        List<CuratedDrug> drugs = curatedDrugs();
-        Collections.sort(drugs);
+        List<CuratedDrug> drugs = sortedDrugs();
 
-        final String concatenatedTreatmentType = drugs.stream().map(CuratedDrug::type).collect(Collectors.joining("/"));
-        return Strings.emptyToNull(concatenatedTreatmentType);
+        String value = drugs.stream().map(CuratedDrug::type).collect(Collectors.joining(SEPARATOR));
+        return Strings.emptyToNull(value);
     }
 
     @Nullable
-    default String consolidatedType() {
-        final Set<String> types = curatedDrugs().stream().map(CuratedDrug::type).collect(Collectors.toSet());
-        if (types.isEmpty()) {
-            return null;
-        } else if (types.size() == 1) {
-            return types.iterator().next();
-        } else {
-            return COMBI_THERAPY;
-        }
-    }
-
-    @Nullable
+    @Value.Derived
     default String concatenatedMechanism() {
+        List<CuratedDrug> drugs = sortedDrugs();
+
+        String value = drugs.stream().map(CuratedDrug::mechanism).collect(Collectors.joining(SEPARATOR));
+        return Strings.emptyToNull(value);
+    }
+
+    @NotNull
+    @Value.Derived
+    default List<CuratedDrug> sortedDrugs() {
         List<CuratedDrug> drugs = curatedDrugs();
         Collections.sort(drugs);
-
-        final String concatenatedTreatmentMechanism = drugs.stream().map(CuratedDrug::mechanism).collect(Collectors.joining("/"));
-        return Strings.emptyToNull(concatenatedTreatmentMechanism);
+        return drugs;
     }
 
     @Nullable
+    @Value.Derived
+    default String consolidatedType() {
+        return consolidate(curatedDrugs().stream().map(CuratedDrug::type).collect(Collectors.toSet()), COMBI_TYPE);
+    }
+
+    @Nullable
+    @Value.Derived
     default String consolidatedMechanism() {
-        final Set<String> types = curatedDrugs().stream().map(CuratedDrug::mechanism).collect(Collectors.toSet());
-        if (types.isEmpty()) {
+        return consolidate(curatedDrugs().stream().map(CuratedDrug::mechanism).collect(Collectors.toSet()), COMBI_MECHANISM);
+    }
+
+    @Nullable
+    static String consolidate(@NotNull Set<String> values, @NotNull String combiValue) {
+        if (values.isEmpty()) {
             return null;
-        } else if (types.size() == 1) {
-            return types.iterator().next();
+        } else if (values.size() == 1) {
+            return values.iterator().next();
         } else {
-            return COMBI_MECHANISM;
+            return combiValue;
         }
     }
 
     @Nullable
+    @Value.Derived
     default LocalDate startDate() {
         LocalDate startDate = null;
         for (final DrugData drug : drugs()) {
@@ -104,6 +115,7 @@ public interface TreatmentData extends Comparable<TreatmentData> {
     }
 
     @Nullable
+    @Value.Derived
     default LocalDate endDate() {
         if (drugs().isEmpty()) {
             return null;

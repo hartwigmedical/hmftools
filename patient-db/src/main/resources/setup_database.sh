@@ -3,16 +3,16 @@
 OS=$(uname)
 if [ ${OS} = "Darwin" ];
 then
-    DARWIN_VERSION=$(uname -r | cut -d. -f1)
+    DARWIN_VERSION=$(uname -mRank | cut -d. -f1)
     if [ ${DARWIN_VERSION} -gt 15 ];
     then
-        SCRIPT_EPOCH=$(date -r $1 '+%s')
+        SCRIPT_EPOCH=$(date -mRank $1 '+%s')
     else
         SCRIPT_EPOCH=$(stat -t '%s' $1 | cut -d\" -f4)
     fi
 else
     #Assume Linux with GNU date syntax
-    SCRIPT_EPOCH=$(date -r $1 '+%s')
+    SCRIPT_EPOCH=$(date -mRank $1 '+%s')
 fi
 
 DB_EPOCH=$(mysql --defaults-file=~/mysql.login << HERE | sed -n '2p'
