@@ -7,49 +7,49 @@ class CohortMutationTest : StringSpec() {
     init {
         "splice oncogene is not potentially actionable" {
             val variant = CohortMutation("", "", "", "", "", "", "", "", "",
-                                         "SPLICE", "", "TRUE")
+                                         "SPLICE", "", "TRUE", "")
             variant.potentiallyActionable shouldBe false
         }
 
         "splice non-oncogene is potentially actionable" {
             val variant = CohortMutation("", "", "", "", "", "", "", "", "",
-                                         "SPLICE", "", "")
+                                         "SPLICE", "", "", "")
             variant.potentiallyActionable shouldBe true
         }
 
         "nonsense or frameshift oncogene not potentially actionable" {
             val variant = CohortMutation("", "", "", "", "", "", "", "", "",
-                                         "NONSENSE_OR_FRAMESHIFT", "", "TRUE")
+                                         "NONSENSE_OR_FRAMESHIFT", "", "TRUE", "")
             variant.potentiallyActionable shouldBe false
         }
 
         "nonsense or frameshift non-oncogene is potentially actionable" {
             val variant = CohortMutation("", "", "", "", "", "", "", "", "",
-                                         "NONSENSE_OR_FRAMESHIFT", "", "")
+                                         "NONSENSE_OR_FRAMESHIFT", "", "", "")
             variant.potentiallyActionable shouldBe true
         }
 
         "synonymous effect is not potentially actionable" {
             val variant = CohortMutation("", "", "", "", "", "", "", "", "",
-                                         "SYNONYMOUS", "", "")
+                                         "SYNONYMOUS", "", "", "")
             variant.potentiallyActionable shouldBe false
         }
 
         "none effect is not potentially actionable" {
             val variant = CohortMutation("", "", "", "", "", "", "", "", "",
-                                         "NONE", "", "")
+                                         "NONE", "", "", "")
             variant.potentiallyActionable shouldBe false
         }
 
         "missense is potentially actionable" {
             val variant = CohortMutation("", "", "", "", "", "", "", "", "",
-                                         "MISSENSE", "", "")
+                                         "MISSENSE", "", "", "")
             variant.potentiallyActionable shouldBe true
         }
 
         "missense oncogene is potentially actionable" {
             val variant = CohortMutation("", "", "", "", "", "", "", "", "",
-                                         "MISSENSE", "", "TRUE")
+                                         "MISSENSE", "", "TRUE", "")
             variant.potentiallyActionable shouldBe true
         }
     }
