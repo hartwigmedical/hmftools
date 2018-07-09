@@ -21,12 +21,12 @@ class ActionabilityAnalyzerTest : StringSpec() {
                                                               cancerTypesMapping, actionableRanges)
 
     private val brafSNV = CohortMutation("CPCT99110022T", "7", "140453136", "A", "T", "SNP", "BRAF",
-                                         "missense", "missense", "missense", "ENST00000288602", "TRUE")
+                                         "missense", "missense", "missense", "ENST00000288602", "TRUE", "p.")
     private val brafOtherSNV = CohortMutation("CPCT99110033T", "7", "140453136", "A", "T", "SNP", "BRAF",
-                                              "missense", "missense", "missense", "ENST00000288602", "TRUE")
+                                              "missense", "missense", "missense", "ENST00000288602", "TRUE", "p.")
 
     private val ptenSNV = CohortMutation("CPCT99110033T", "10", "89653781", "G", "C", "SNP", "PTEN",
-                                         "splice;intron", "splice;intron", "splice;intron", "ENST00000371953", "FALSE")
+                                         "splice;intron", "splice;intron", "splice;intron", "ENST00000371953", "FALSE", "p.")
 
     init {
         "finds BRAF SNV actionability" {

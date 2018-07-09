@@ -70,7 +70,7 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
         val cancerType = sampleTumorLocationMap[variant.sampleId]
         val variantString = potentialVariantString(variant)
         return getActionability(variantActionabilityMap, variantKey, variantString, variant.sampleId, cancerType, variant.gene, "",
-                                variant.type, "variant").toSet()
+                                variant.type, "variant", variant.pHgvs).toSet()
     }
 
     fun rangeActionabilityForVariant(variant: CohortMutation): Set<ActionabilityOutput> {
@@ -88,7 +88,7 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
             ActionableTreatment(ranges).map {
                 val treatmentType = getTreatmentType(cancerType, it.actionability.cancerType)
                 ActionabilityOutput(variant.sampleId, variantString, variant.gene, "", variant.type, cancerType, treatmentType,
-                                    it, rule)
+                                    it, rule, variant.pHgvs)
             }.toSet()
         }.toSet()
     }
@@ -100,13 +100,13 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
         val cancerType = sampleTumorLocationMap[fusion.sampleId()]
         val eventString = "$fiveGene - $threeGene fusion"
         val fusionPairActionability = getActionability(fusionActionabilityMap, FusionPair(fiveGene, threeGene), eventString, sampleId,
-                                                       cancerType, fusion.fiveGene(), fusion.threeGene(), "Fusion", "fusion")
+                                                       cancerType, fusion.fiveGene(), fusion.threeGene(), "Fusion", "fusion", "")
         val promiscuousFiveActionability = getActionability(promiscuousFiveActionabilityMap, PromiscuousGene(fiveGene), eventString,
                                                             sampleId, cancerType, fusion.fiveGene(), fusion.threeGene(), "Fusion",
-                                                            "fusion")
+                                                            "fusion", "")
         val promiscuousThreeActionability = getActionability(promiscuousThreeActionabilityMap, PromiscuousGene(threeGene), eventString,
                                                              sampleId, cancerType, fusion.fiveGene(), fusion.threeGene(), "Fusion",
-                                                             "fusion")
+                                                             "fusion", "")
         return (fusionPairActionability + promiscuousFiveActionability + promiscuousThreeActionability).toSet()
     }
 
@@ -114,15 +114,15 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
         val cnvType = if (cnv.alteration() == CopyNumberAlteration.GAIN) "Amplification" else "Deletion"
         val cnvEvent = CnvEvent(cnv.gene(), cnvType)
         return getActionability(cnvActionabilityMap, cnvEvent, cnvEvent.eventString(), cnv.sampleId(),
-                                sampleTumorLocationMap[cnv.sampleId()], cnv.gene(), "", cnvType, "cnv").toSet()
+                                sampleTumorLocationMap[cnv.sampleId()], cnv.gene(), "", cnvType, "cnv", "").toSet()
     }
 
     private fun <T> getActionability(actionabilityMap: Map<T, List<ActionableTreatment>>, event: T, eventString: String,
                                      sampleId: String, cancerType: String?, gene: String, partner: String,
-                                     eventType: String, matchRule: String): List<ActionabilityOutput> {
+                                     eventType: String, matchRule: String, pHgvs: String): List<ActionabilityOutput> {
         return actionabilityMap[event].orEmpty().map {
             val treatmentType = getTreatmentType(cancerType, it.actionability.cancerType)
-            ActionabilityOutput(sampleId, eventString, gene, partner, eventType, cancerType, treatmentType, it, matchRule)
+            ActionabilityOutput(sampleId, eventString, gene, partner, eventType, cancerType, treatmentType, it, matchRule, pHgvs)
         }
     }
 
