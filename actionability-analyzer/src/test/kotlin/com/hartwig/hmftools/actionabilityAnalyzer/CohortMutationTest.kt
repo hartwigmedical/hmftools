@@ -7,7 +7,7 @@ class CohortMutationTest : StringSpec() {
     init {
         "splice oncogene is not potentially actionable" {
             val variant = CohortMutation("", "", "", "", "", "", "", "Splice", "",
-                                         "SPLICE", "", "TRUE", "")
+                                         "SPLICE", "", "", "TRUE")
             variant.potentiallyActionable shouldBe false
         }
 
@@ -19,13 +19,13 @@ class CohortMutationTest : StringSpec() {
 
         "nonsense oncogene not potentially actionable" {
             val variant = CohortMutation("", "", "", "", "", "", "", "Nonsense", "",
-                                         "NONSENSE_OR_FRAMESHIFT", "", "TRUE", "")
+                                         "NONSENSE_OR_FRAMESHIFT", "", "", "TRUE")
             variant.potentiallyActionable shouldBe false
         }
 
         "frameshift oncogene not potentially actionable" {
             val variant = CohortMutation("", "", "", "", "", "", "", "Frameshift", "",
-                                         "NONSENSE_OR_FRAMESHIFT", "", "TRUE", "")
+                                         "NONSENSE_OR_FRAMESHIFT", "", "", "TRUE")
             variant.potentiallyActionable shouldBe false
         }
 
@@ -61,7 +61,7 @@ class CohortMutationTest : StringSpec() {
 
         "missense oncogene is potentially actionable" {
             val variant = CohortMutation("", "", "", "", "", "", "", "Missense", "",
-                                         "MISSENSE", "", "TRUE", "")
+                                         "MISSENSE", "", "", "TRUE")
             variant.potentiallyActionable shouldBe true
         }
     }
