@@ -80,7 +80,7 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
             if (record["Alteration type"] != "MUT") return emptyList()
             return readAlterations(record).mapNotNull {
                 when {
-                    isGeneMutation(it)  -> GeneMutations(record["Gene"], record["transcript"])
+                    isAnyMutation(it)   -> GeneMutations(record["Gene"], record["transcript"])
                     isCodonMutation(it) -> CodonMutations(record["Gene"], record["transcript"], codonNumber(it))
                     isCodonRange(it)    -> CodonRangeMutations(record["Gene"], record["transcript"],
                                                                it.substringBefore("-").toInt(), it.substringAfter("-").toInt())
@@ -126,7 +126,7 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
                     .filterNot { it.isBlank() }
         }
 
-        private fun isGeneMutation(alteration: String) = alteration == "."
+        private fun isAnyMutation(alteration: String) = alteration == "."
         private fun isCodonMutation(alteration: String) = alteration.matches(CODON_PATTERN.toRegex(RegexOption.IGNORE_CASE))
         private fun isCodonRange(alteration: String) = alteration.matches("$NUMBER_GROUP_PATTERN-$NUMBER_GROUP_PATTERN".toRegex())
 
