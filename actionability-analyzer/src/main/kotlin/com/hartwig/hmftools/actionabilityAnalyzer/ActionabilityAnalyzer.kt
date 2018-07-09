@@ -132,7 +132,7 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
         val treatmentDoids = cancerTypeMapping[treatmentCancerType].orEmpty()
         if (treatmentDoids.isEmpty()) return "Unknown"
         val match = patientDoids.any { treatmentDoids.contains(it) }
-        return if (match) "On-label" else "Off-label"
+        return if (match) "OnLabel" else "OffLabel"
     }
 
     private fun actionableRanges(variant: CohortMutation): List<ActionableGenomicRangeOutput> {

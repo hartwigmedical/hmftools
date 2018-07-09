@@ -4,7 +4,7 @@ import com.google.common.io.Resources
 import io.kotlintest.matchers.shouldBe
 import io.kotlintest.specs.StringSpec
 
-private const val ON_LABEL = "On-label"
+private const val ON_LABEL = "OnLabel"
 
 class ActionabilityAnalyzerTest : StringSpec() {
     private val samplesMap = mapOf("CPCT99110022T" to "Skin", "CPCT99110033T" to "Lung")
