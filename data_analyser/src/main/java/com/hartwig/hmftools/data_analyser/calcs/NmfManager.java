@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.data_analyser.calcs;
 
+import static java.lang.Integer.max;
+
 import static com.hartwig.hmftools.data_analyser.DataAnalyser.OUTPUT_DIR;
 import static com.hartwig.hmftools.data_analyser.DataAnalyser.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_I1;
@@ -35,13 +37,10 @@ public class NmfManager {
 
     private NmfMatrix mSampleCountsMatrix;
 
-    private double mLowestRunScore;
-    private NmfMatrix mBestSignatures;
-    private NmfMatrix mBestContributions;
-    private List<NmfMatrix> mUniqueSignatures;
-
     private NmfCalculator mNmfCalculator;
     private SigFinder mSigFinder;
+
+    private List<NmfRun> mRuns;
 
     private NmfConfig mConfig;
 
@@ -56,11 +55,9 @@ public class NmfManager {
         mNmfCalculator = null;
         mSigFinder = null;
 
+        mRuns = Lists.newArrayList();
+
         mConfig = null;
-        mLowestRunScore = -1;
-        mBestSignatures = null;
-        mBestContributions = null;
-        mUniqueSignatures = Lists.newArrayList();
 
         mPerfCounter = new PerformanceCounter("NMF");
     }
@@ -71,6 +68,8 @@ public class NmfManager {
         mOutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID);
         mConfig = new NmfConfig(cmd);
         mDataCollection = collection;
+
+        mPerfCounter.start("DataLoad");
 
         mSampleCountsMatrix = DataUtils.createMatrixFromListData(mDataCollection.getData());
 
@@ -88,9 +87,11 @@ public class NmfManager {
             mNmfCalculator.setContributions(DataUtils.createMatrixFromListData(dataCollection.getData()));
         }
 
+        mPerfCounter.stop();
+
         if(mConfig.FindSignatures)
         {
-            mSigFinder = new SigFinder(mSampleCountsMatrix, mConfig);
+            mSigFinder = new SigFinder(mSampleCountsMatrix, mConfig, mOutputDir, mOutputFileId, mDataCollection.getFieldNames());
 
             mPerfCounter.start("SigFinder");
             mSigFinder.findSignatures();
@@ -109,6 +110,56 @@ public class NmfManager {
     }
 
     public void run()
+    {
+        mPerfCounter.start("NMF");
+
+        int startSigCount = mConfig.SigCount;
+        int maxSigCount = max(mConfig.SigExpansionCount, mConfig.SigCount);
+
+        double lowestRunScore = -1;
+        int lowestRunIndex = -1;
+
+        for(int sigCount = startSigCount; sigCount <= maxSigCount; ++sigCount)
+        {
+            LOGGER.info("starting run with sigCount({})", sigCount);
+
+            NmfRun nmfRun = new NmfRun(mConfig, sigCount, mNmfCalculator);
+
+            if(!nmfRun.run())
+            {
+                LOGGER.warn("run with sigCount({}) invalid, exiting", sigCount);
+                break;
+            }
+
+            if(lowestRunScore < 0 || nmfRun.getLowestRunScore() < lowestRunScore)
+            {
+                lowestRunScore = nmfRun.getLowestRunScore();
+                lowestRunIndex = mRuns.size();
+            }
+
+            mRuns.add(nmfRun);
+        }
+
+        mPerfCounter.stop();
+
+        if(!mRuns.isEmpty()) {
+
+            final NmfRun nmfRun = mRuns.get(lowestRunIndex);
+
+            if(mRuns.size() > 1) {
+                LOGGER.info("optimal sigCount({})", nmfRun.getSigCount());
+            }
+
+            writeSignatures(nmfRun.getBestSignatures());
+            writeContributions(nmfRun.getBestContributions());
+        }
+
+        mPerfCounter.logStats();
+
+    }
+
+    /*
+    public void runActual()
     {
         mPerfCounter.start("NMF");
 
@@ -176,7 +227,7 @@ public class NmfManager {
 
         mPerfCounter.stop();
 
-        double bestFitPercent = mLowestRunScore/mNmfCalculator.getTotalCounts();
+        double bestFitPercent = mLowestRunScore/mNmfCalculator.getTotalCount();
 
         LOGGER.info(String.format("%d run(s) complete, uniqueSigCount(%d) lowestResiduals(%.0f perc=%.3f)",
                 mConfig.RunCount, mUniqueSignatures.size(), mLowestRunScore, bestFitPercent));
@@ -192,61 +243,16 @@ public class NmfManager {
         mPerfCounter.logStats();
         runPC.logStats(false); // mConfig.LogVerbose
     }
+    */
 
-    private void logSignatureSummaryData()
-    {
-        if(mBestSignatures == null)
-            return;
-
-        CosineSim.logSimilarites(mBestSignatures, 0.98, "sig");
-
-        if(mNmfCalculator.getRefSignatures() != null && mConfig.SigFloatRate > 0)
-        {
-            // compare the starting ref sigs to the adjusted ones
-            double cssMatchCutoff = 0.90;
-            List<double[]> cssResults = getTopCssPairs(mNmfCalculator.getRefSignatures(), mBestSignatures, cssMatchCutoff, true, false);
-
-            if(cssResults.isEmpty())
-            {
-                LOGGER.debug("no similar sigs between ref and discovered");
-            }
-            else
-            {
-                for(final double[] result : cssResults)
-                {
-                    LOGGER.debug(String.format("ref sig(%.0f) matches adjusted sig(%.0f) with css(%.4f)",
-                            result[CSSR_I1], result[CSSR_I2], result[CSSR_VAL]));
-                }
-            }
-        }
-    }
-
-    private boolean signaturesEqual(final NmfMatrix sigs1, final NmfMatrix sigs2)
-    {
-        // use CSS to compare each pair of sigs from the 2 sets
-        // return true if the set of sigs are a close match
-        double cssMatchCutoff = 0.98;
-        List<double[]> cssResults = getTopCssPairs(sigs1, sigs2, cssMatchCutoff, true, false);
-
-        int sigCount = sigs1.Cols;
-
-        if(cssResults.size() != sigCount)
-        {
-            // LOGGER.debug("matched CSS sigCount({}) less than sigCount({})", cssResults.size(), sigCount);
-            return false;
-        }
-
-        return true;
-    }
-
-    public void writeSignatures()
+    public void writeSignatures(final NmfMatrix signatures)
     {
         try
         {
             BufferedWriter writer = getNewFile(mOutputDir,mOutputFileId + "_nmf_sigs.csv");
 
             int i = 0;
-            for(; i < mBestSignatures.Cols-1; ++i)
+            for(; i < signatures.Cols-1; ++i)
             {
                 writer.write(String.format("%d,", i));
             }
@@ -254,7 +260,7 @@ public class NmfManager {
 
             writer.newLine();
 
-            writeMatrixData(writer, mBestSignatures, false);
+            writeMatrixData(writer, signatures, false);
 
             writer.close();
         }
@@ -263,7 +269,7 @@ public class NmfManager {
         }
     }
 
-    public void writeContributions()
+    public void writeContributions(final NmfMatrix contributions)
     {
         try
         {
@@ -280,7 +286,7 @@ public class NmfManager {
 
             writer.newLine();
 
-            writeMatrixData(writer, mBestContributions, false);
+            writeMatrixData(writer, contributions, false);
 
             writer.close();
         }
@@ -325,7 +331,7 @@ public class NmfManager {
             }
         }
 
-        signaturesEqual(sigs1, sigs2);
+        NmfRun.signaturesEqual(sigs1, sigs2);
     }
 
 }

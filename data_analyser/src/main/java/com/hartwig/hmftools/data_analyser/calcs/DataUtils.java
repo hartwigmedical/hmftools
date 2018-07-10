@@ -13,9 +13,6 @@ import com.hartwig.hmftools.data_analyser.types.NmfMatrix;
 
 public class DataUtils {
 
-    public DataUtils()
-    {}
-
     public static double[][] convertArray(List<List<Double>> dataSet, boolean transpose)
     {
         if(dataSet.isEmpty())
@@ -50,6 +47,17 @@ public class DataUtils {
         }
 
         return total;
+    }
+
+    public static void copyVector(final double[] source, double[] dest)
+    {
+        if(source.length != dest.length)
+            return;
+
+        for(int i = 0; i < source.length; ++i)
+        {
+            dest[i] = source[i];
+        }
     }
 
     public static int getPoissonRandom(double a, final Random rnGenerator)

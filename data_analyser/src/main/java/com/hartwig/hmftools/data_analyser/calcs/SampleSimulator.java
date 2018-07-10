@@ -37,9 +37,19 @@ public class SampleSimulator {
     private String mOutputDir;
     private String mOutputFileId;
 
+    // file of simulated signature parameters
     private List<SimSigFactors> mSigFactors;
+
+    // reference signatures used to generate bucket counts
+    private NmfMatrix mInputSignatures;
+
+    // bucket counts per simulated sample
     private NmfMatrix mOutputMatrix;
-    private NmfMatrix mSignatures;
+
+    // cache the allocation of sigs to each simulated sample
+    private NmfMatrix mOutputContributions;
+
+    // random number caches
     private double[] mPoissonDecimals;
     private int[] mPoissonInts;
     private int mPoissonIndex;
@@ -59,6 +69,7 @@ public class SampleSimulator {
         mConfig = null;
         mRandom = null;
         mOutputMatrix = null;
+        mOutputContributions = null;
         mPoissonDecimals = null;
         mPoissonInts = null;
         mPoissonIndex = 0;
@@ -74,14 +85,14 @@ public class SampleSimulator {
 
         mRandom = mConfig.SeedRandom ? new Random(123456) : new Random();
 
-        mSignatures = DataUtils.createMatrixFromListData(mDataCollection.getData());
+        mInputSignatures = DataUtils.createMatrixFromListData(mDataCollection.getData());
 
         loadSignatureFactors(mConfig.SigFactorsFilename);
 
         LOGGER.info("loaded {} signature parameter sets:", mSigFactors.size());
         for(final SimSigFactors sigFactors : mSigFactors) {
 
-            if (sigFactors.SigId >= mSignatures.Cols) {
+            if (sigFactors.SigId >= mInputSignatures.Cols) {
 
                 LOGGER.error("sigFactor({}: {}) outside loaded signatures", sigFactors.SigId, sigFactors.Name);
             }
@@ -147,19 +158,26 @@ public class SampleSimulator {
 
         logBucketStats();
         writeSampleCounts();
+        writeSampleContributions();
     }
 
     private void generateSimSampleCounts()
     {
-        int buckets = mSignatures.Rows;
-        int samples = mConfig.SampleCount;
+        int buckets = mInputSignatures.Rows;
+        int sampleCount = mConfig.SampleCount;
 
-        mOutputMatrix = new NmfMatrix(buckets, samples);
+        mOutputMatrix = new NmfMatrix(buckets, sampleCount);
 
+        mOutputContributions = new NmfMatrix(mSigFactors.size(), sampleCount);
+        double[][] cData = mOutputContributions.getData();
+
+        int sigIndex = 0;
         for(final SimSigFactors sigFactors : mSigFactors) {
+
             int samplesExcluded = 0;
 
             for (int n = 0; n < mConfig.SampleCount; ++n) {
+
                 // determine whether this sig should have any presence in this sample
                 double samSigProb = mRandom.nextDouble();
 
@@ -174,6 +192,8 @@ public class SampleSimulator {
 
                 LOGGER.debug("sig({}) sample({}) variantCount({})", sigFactors.SigId, n, variantCount);
 
+                cData[sigIndex][n] = variantCount;
+
                 setBucketCounts(variantCount, n, sigFactors.SigId, mOutputMatrix);
             }
 
@@ -181,14 +201,14 @@ public class SampleSimulator {
 
             LOGGER.debug(String.format("sig(%d: %s) samplesExcluded(%d asPerc=%.3f)",
                     sigFactors.SigId, sigFactors.Name, samplesExcluded, samplePerc));
+
+            ++sigIndex;
         }
     }
 
     private int calcSigCount(int medianCount, double timeFactor, double rateFactor)
     {
         double variantCount = 0;
-        // double random = getNextRandom();
-        // double random = mRandom.nextDouble();
 
         // log-normal approach
         double meanNorm = log(medianCount);
@@ -197,9 +217,6 @@ public class SampleSimulator {
         // slow log-normal approach
         int poissonInt = getNextRandomInt();
         double logNormCount = exp(meanNorm + rateFactor*poissonInt);
-
-//        int randomInt = mRandom.nextInt(20) - 10;
-//        double logNormCount = exp(meanNorm + rateFactor*randomInt);
 
         // straight random approach
 //        double maxCount = medianCount * rateFactor * 10; // temporary
@@ -220,10 +237,10 @@ public class SampleSimulator {
         // divide the variant count amongst the applicable buckets as per their defined proportions
         double sigTotal = 0;
 
-        final double[][] sigData = mSignatures.getData();
+        final double[][] sigData = mInputSignatures.getData();
         double[][] scData = sampleCounts.getData();
 
-        for(int i = 0; i < mSignatures.Rows; ++i)
+        for(int i = 0; i < mInputSignatures.Rows; ++i)
         {
             sigTotal += sigData[i][sigLookupIndex];
         }
@@ -231,7 +248,7 @@ public class SampleSimulator {
         if(sigTotal <= 0)
             return;
 
-        for(int i = 0; i < mSignatures.Rows; ++i)
+        for(int i = 0; i < mInputSignatures.Rows; ++i)
         {
             double bucketPercent = sigData[i][sigLookupIndex] / sigTotal;
             int bucketSigCount = (int) round(bucketPercent * variantCount);
@@ -286,6 +303,31 @@ public class SampleSimulator {
             writer.newLine();
 
             writeMatrixData(writer, mOutputMatrix, true);
+
+            writer.close();
+        }
+        catch (final IOException e) {
+            LOGGER.error("error writing to outputFile");
+        }
+    }
+
+    public void writeSampleContributions()
+    {
+        try
+        {
+            final String filename = mOutputFileId + "_sim_contributions.csv";
+            BufferedWriter writer = getNewFile(mOutputDir, filename);
+
+            int i = 0;
+            for(; i < mConfig.SampleCount-1; ++i)
+            {
+                writer.write(String.format("Sample_%d,", i));
+            }
+            writer.write(String.format("Sample_%d", i));
+
+            writer.newLine();
+
+            writeMatrixData(writer, mOutputContributions, false);
 
             writer.close();
         }

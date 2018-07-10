@@ -25,13 +25,7 @@ public class NmfMatrix {
 
         final double[][] otherData = other.getData();
 
-        for(int i = 0; i < Rows; ++i) {
-
-            for (int j = 0; j < Cols; ++j) {
-
-                mData[i][j] = otherData[i][j];
-            }
-        }
+        setData(otherData);
     }
 
     public double[][] getData() { return mData; }
@@ -43,6 +37,17 @@ public class NmfMatrix {
             for (int j = 0; j < Cols; ++j) {
 
                 mData[i][j] = otherData[i][j];
+            }
+        }
+    }
+
+    public void initialise(double value)
+    {
+        for(int i = 0; i < Rows; ++i) {
+
+            for (int j = 0; j < Cols; ++j) {
+
+                mData[i][j] = value;
             }
         }
     }
@@ -82,16 +87,26 @@ public class NmfMatrix {
         return newMatrix;
     }
 
-    public NmfMatrix multiply(NmfMatrix other)
+    public NmfMatrix multiply(final NmfMatrix other)
+    {
+        NmfMatrix newMatrix = new NmfMatrix(Rows, other.Cols);
+        multiply(other, newMatrix, false);
+        return newMatrix;
+    }
+
+    public void multiply(final NmfMatrix other, NmfMatrix dest, boolean initialiseDest)
     {
         // matrix multiply: c[i][j] = sum_k a[i][k] * b[k][j]
-        NmfMatrix newMatrix = new NmfMatrix(Rows, other.Cols);
 
         if(Cols != other.Rows)
-            return null;
+            return;
 
         final double[][] otherData = other.getData();
-        double[][] newData = newMatrix.getData();
+
+        if(initialiseDest)
+            dest.initialise(0);
+
+        double[][] destData = dest.getData();
 
         for(int i = 0; i < Rows; i++)
         {
@@ -99,15 +114,12 @@ public class NmfMatrix {
             {
                 int commonColCount = Cols; // also = other.rowCount()
 
-                double sum = 0;
                 for(int c = 0; c < commonColCount; c++)
                 {
-                    newData[i][j] += mData[i][c] * otherData[c][j];
+                    destData[i][j] += mData[i][c] * otherData[c][j];
                 }
             }
         }
-
-        return newMatrix;
     }
 
     public void scalarMultiply(NmfMatrix other)

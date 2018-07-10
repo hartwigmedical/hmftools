@@ -95,8 +95,16 @@ public class PerformanceCounter {
 
     public void logStats(boolean logIntervals) {
 
-        LOGGER.info(String.format("PerfStats: name(%s) samples(%d) total(%.3f) avg(%.3f) max(%.3f)",
-                mName, getSampleCount(), getTotalTime(), getAvgTime(), getMaxTime()));
+        if(mTimes.size() > 1)
+        {
+            LOGGER.info(String.format("PerfStats: name(%s) intervals(%d) total(%.3f) avg(%.3f) max(%.3f)",
+                    mName, getSampleCount(), getTotalTime(), getAvgTime(), getMaxTime()));
+        }
+        else
+        {
+            LOGGER.info(String.format("PerfStats: name(%s) intervals(%d) total(%.3f)",
+                    mName, getSampleCount(), getTotalTime()));
+        }
 
         if(logIntervals && mTimes.size() > 1)
         {

@@ -2,12 +2,17 @@ package com.hartwig.hmftools.data_analyser.calcs;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.data_analyser.DataAnalyser.OUTPUT_DIR;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_I1;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_I2;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_VAL;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.calcCSS;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.getTopCssPairs;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getNewFile;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.writeMatrixData;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.List;
 
 import javax.xml.crypto.Data;
@@ -29,12 +34,21 @@ public class SigFinder {
     NmfMatrix mSignatures;
     NmfMatrix mContributions;
 
+    final String mOutputDir;
+    final String mOutputFileId;
+    final List<String> mSampleNames;
+
     private static final Logger LOGGER = LogManager.getLogger(SigFinder.class);
 
-    public SigFinder(final NmfMatrix sampleBucketCounts, final NmfConfig config)
+    public SigFinder(
+            final NmfMatrix sampleBucketCounts, final NmfConfig config,
+            final String outputDir,final String outputFileId, final List<String> sampleNames)
     {
         mSampleCounts = sampleBucketCounts;
         mConfig = config;
+        mOutputDir = outputDir;
+        mOutputFileId = outputFileId;
+        mSampleNames = sampleNames;
 
         mTotalVariants = mSampleCounts.sum();
 
@@ -48,11 +62,20 @@ public class SigFinder {
 
     public void findSignatures()
     {
+        LOGGER.debug("finding signatures");
+
         formSigGroups();
         createSignatures();
 
         if(mSignatures != null)
-            CosineSim.logSimilarites(mSignatures, 0.5, "sig");
+            CosineSim.logSimilarites(mSignatures, 0.8, "sig");
+
+        if(mSignatures != null && mContributions != null
+        && mOutputDir != null && !mSampleNames.isEmpty())
+        {
+            writeSignatures(mSignatures);
+            writeContributions(mContributions);
+        }
     }
 
     private void formSigGroups()
@@ -180,10 +203,11 @@ public class SigFinder {
 
         int bucketCount = mSampleCounts.Rows;
         int totalCountIncluded = 0;
+        int totalSamplesIncluded = 0;
 
         List<Integer> proposedSigs = Lists.newArrayList();
 
-        double percentCutoff = 0.05; // of the total variants
+        double percentCutoff = 0.03; // of the total variants
 
         for(int i = 0; i < mSigGroups.size(); ++i)
         {
@@ -205,26 +229,34 @@ public class SigFinder {
 
             proposedSigs.add(i);
             totalCountIncluded += sigGroup.getTotalCount();
+            totalSamplesIncluded += sigGroup.getSampleIds().size();
 
-            LOGGER.debug(String.format("sigGroup(%d) proposed with sampleCount(%d) totalCount(%d cumul=%d) css(init=%.4f worst=%.4f)",
+            LOGGER.info(String.format("sigGroup(%d) proposed with sampleCount(%d) totalCount(%d asPerc=%.3f) css(init=%.4f worst=%.4f)",
                     sigGroup.id(), sigGroup.getSampleIds().size(), sigGroup.getTotalCount(),
-                    totalCountIncluded, sigGroup.getInitialCss(), sigGroup.getWorstCss()));
+                    groupPercent, sigGroup.getInitialCss(), sigGroup.getWorstCss()));
 
             if(proposedSigs.size() >= mConfig.SigCount)
                 break;
         }
 
-        if(proposedSigs.size() == 0)
+        int sigCount = proposedSigs.size();
+
+        if(sigCount == 0)
         {
             LOGGER.info("no valid proposed signatures found");
             return;
         }
-        else if(proposedSigs.size() > mConfig.SigCount)
+        else if(sigCount > mConfig.SigCount)
         {
-            LOGGER.warn("more proposed sigs than permitted, need a ranking system");
+            LOGGER.warn("more proposed sigs({}) than permitted({}), need a ranking system", sigCount, mConfig.SigCount);
         }
 
-        int sigCount = proposedSigs.size();
+        double totalCountPercent = totalCountIncluded / mTotalVariants;
+        double totalSamplesPercent = totalSamplesIncluded / (double)mSampleCounts.Cols;
+
+        LOGGER.info(String.format("%d proposed sigs, totalCount(%d asPerc=%.3f) totalSamples(%d asPerc=%.3f)",
+                sigCount, totalCountIncluded, totalCountPercent, totalSamplesIncluded, totalSamplesPercent));
+
         mSignatures = new NmfMatrix(bucketCount, sigCount);
         double[][] sigData = mSignatures.getData();
 
@@ -244,10 +276,16 @@ public class SigFinder {
 
             for(int n = 0; n < mContributions.Cols; ++n)
             {
-                if(sigGroup.hasSampleId(n))
-                    contribData[sigIndex][n] = 1;
-                else
-                    contribData[sigIndex][n] = 0;
+                if(!sigGroup.hasSampleId(n))
+                    continue; // value left as 1
+
+                // check CSS again in case it's deviated from this sample's counts too much
+                double css = calcCSS(sigGroup.getBucketCounts(), mSampleCounts.getCol(n));
+
+                if(css < mConfig.CssCutoff)
+                    continue;
+
+                contribData[sigIndex][n] = 1;
             }
 
             // log the top 10 contributions of any significance
@@ -264,6 +302,54 @@ public class SigFinder {
             }
 
             ++sigIndex;
+        }
+    }
+
+    public void writeSignatures(final NmfMatrix signatures)
+    {
+        try
+        {
+            BufferedWriter writer = getNewFile(mOutputDir,mOutputFileId + "_sf_sigs.csv");
+
+            int i = 0;
+            for(; i < signatures.Cols-1; ++i)
+            {
+                writer.write(String.format("%d,", i));
+            }
+            writer.write(String.format("%d", i));
+
+            writer.newLine();
+
+            writeMatrixData(writer, signatures, false);
+
+            writer.close();
+        }
+        catch (final IOException e) {
+            LOGGER.error("error writing to outputFile");
+        }
+    }
+
+    public void writeContributions(final NmfMatrix contributions)
+    {
+        try
+        {
+            BufferedWriter writer = getNewFile(mOutputDir, mOutputFileId + "_sf_contribs.csv");
+
+            int i = 0;
+            for(; i < mSampleNames.size()-1; ++i)
+            {
+                writer.write(String.format("%s,", mSampleNames.get(i)));
+            }
+            writer.write(String.format("%s", mSampleNames.get(i)));
+
+            writer.newLine();
+
+            writeMatrixData(writer, contributions, false);
+
+            writer.close();
+        }
+        catch (final IOException e) {
+            LOGGER.error("error writing to outputFile");
         }
     }
 

@@ -70,6 +70,11 @@ public class CosineSim {
 
         for(int i = 0; i < matrix1.Cols; ++i) {
 
+            if(i > 0 && (i % 100) == 0)
+            {
+                LOGGER.debug("processed {} items", i);
+            }
+
             double[] data1 = matrix1.getCol(i);
 
             int j = 0;
@@ -163,7 +168,7 @@ public class CosineSim {
                 if (css < cssMatchCutoff)
                     continue;
 
-                LOGGER.debug(String.format("close CSS data: %s1(%d) vs %s2(%d) css(%.4f)", item, i, item, j, css));
+                LOGGER.debug(String.format("close CSS data: %s(%d) vs %s(%d) css(%.4f)", item, i, item, j, css));
             }
         }
     }
