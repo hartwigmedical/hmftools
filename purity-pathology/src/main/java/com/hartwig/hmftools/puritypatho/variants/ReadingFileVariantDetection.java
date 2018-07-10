@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.io.reader.FileReader;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ReadingFileVariantDetection {
+public final class ReadingFileVariantDetection {
 
     @NotNull
     public static List<String> read(@NotNull final String fileName) throws IOException {
