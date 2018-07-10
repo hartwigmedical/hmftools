@@ -1,35 +1,30 @@
 package com.hartwig.hmftools.puritypatho.variants;
 
 import java.io.IOException;
-
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-@Value.Immutable
-@Value.Style(allParameters = true,
-             passAnnotations = { NotNull.class, Nullable.class })
-public class VariantDetection {
+public final class VariantDetection {
     private static final Logger LOGGER = LogManager.getLogger(VariantDetection.class);
     private static final String DELIMITER = "\t";
 
-    public static String GenerateOutputFile() throws IOException{
+    @NotNull
+    public static String generateOutputFile() {
         return WritingData.generateOutputFileName();
     }
 
-    public static ListMultimap<String, String> ExtractCytoData(@NotNull List<String> readingCytoScanFile) {
-        ListMultimap<String, String> multimapCyto = ArrayListMultimap.create();
+    @NotNull
+    public static Multimap<String, String> extractCytoData(@NotNull List<String> readingCytoScanFile) {
+        Multimap<String, String> multimapCyto = ArrayListMultimap.create();
         for (String lineCyto : readingCytoScanFile) {
             String[] partsCyto = lineCyto.split(DELIMITER);
             String chromosomesCyto = partsCyto[0];
@@ -39,10 +34,11 @@ public class VariantDetection {
         return multimapCyto;
     }
 
-    private static ListMultimap<String, String> readingOutput(@NotNull String fileName) throws IOException{
+    @NotNull
+    private static Multimap<String, String> readingOutput(@NotNull String fileName) throws IOException {
         final List<String> output = ReadingFileVariantDetection.read(fileName);
         WritingData.writeToFileHeader(fileName);
-        final ListMultimap<String, String> resultOutput = ArrayListMultimap.create();
+        final Multimap<String, String> resultOutput = ArrayListMultimap.create();
 
         for (String lineOutput : output) {
             String[] partsOutput = lineOutput.split(DELIMITER);
@@ -50,16 +46,16 @@ public class VariantDetection {
             String outputCount = partsOutput[2];
             resultOutput.put(outputGenomic, outputCount);
         }
-       return resultOutput;
+        return resultOutput;
     }
 
-    public static void ExtractAmberData(@NotNull List<String> finalPurityData, @NotNull ListMultimap<String, String> multimapCyto,
+    public static void extractAmberData(@NotNull List<String> finalPurityData, @NotNull Multimap<String, String> multimapCyto,
             @NotNull String fileName, @NotNull String countSet) throws IOException {
-        if (countSet.equals("1")){
+        if (countSet.equals("1")) {
             WritingData.writeToFileHeader(fileName);
         }
-        ListMultimap<String, String> resultOutput = readingOutput(fileName);
-        Set genomicPosition = resultOutput.keySet();
+        Multimap<String, String> resultOutput = readingOutput(fileName);
+        Set<String> genomicPosition = resultOutput.keySet();
 
         for (String lineAmber : finalPurityData) {
             String[] partsAmber = lineAmber.split(DELIMITER);
@@ -67,99 +63,300 @@ public class VariantDetection {
             String positionsAmber = partsAmber[1];
             int countAmber = 0;
 
-            if (chromosomesAmber.equals("1")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("2")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("3")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("4")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("5")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("6")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("7")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("8")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("9")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("10")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("11")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("12")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("13")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("14")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("15")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("16")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("17")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("18")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("19")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("20")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("21")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("22")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("X")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("Y")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else if (chromosomesAmber.equals("MT")) {
-                filterVariant(chromosomesAmber, positionsAmber, multimapCyto, countAmber, fileName, resultOutput, genomicPosition, countSet);
-            } else {
-                LOGGER.info("No known chromosome value!");
+            switch (chromosomesAmber) {
+                case "1":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "2":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "3":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "4":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "5":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "6":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "7":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "8":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "9":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "10":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "11":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "12":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "13":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "14":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "15":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "16":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "17":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "18":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "19":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "20":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "21":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "22":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "X":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "Y":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                case "MT":
+                    filterVariant(chromosomesAmber,
+                            positionsAmber,
+                            multimapCyto,
+                            countAmber,
+                            fileName,
+                            resultOutput,
+                            genomicPosition,
+                            countSet);
+                    break;
+                default:
+                    LOGGER.info("No known chromosome value!");
+                    break;
             }
         }
         uniqueValuesOfPreviousFile(genomicPosition, countSet, resultOutput, fileName);
     }
 
-    private static void uniqueValuesOfPreviousFile(@NotNull Set genomicPosition, @NotNull String countSet,
-            @NotNull Multimap<String, String> resultOutput, @NotNull String fileName) throws IOException{
-        genomicPosition.remove("chromosome" + "," +	"position");
-        List sortedGenomicPosition = new ArrayList(genomicPosition);
+    private static void uniqueValuesOfPreviousFile(@NotNull Set<String> genomicPosition, @NotNull String countSet,
+            @NotNull Multimap<String, String> resultOutput, @NotNull String fileName) throws IOException {
+        genomicPosition.remove("chromosome" + "," + "position");
+        List<String> sortedGenomicPosition = Lists.newArrayList(genomicPosition);
         Collections.sort(sortedGenomicPosition);
-        if(!countSet.equals("1")){
-            for (Object postion : sortedGenomicPosition) {
-                String [] outputGenomic = postion.toString().split(",");
-                String countValue = resultOutput.get(postion.toString()).toString().replace("[", "");
+        if (!countSet.equals("1")) {
+            for (String position : sortedGenomicPosition) {
+                String[] outputGenomic = position.split(",");
+                String countValue = resultOutput.get(position).toString().replace("[", "");
                 Integer countValueDef = Integer.valueOf(countValue.replace("]", ""));
-                WritingData.writeToFile(fileName, outputGenomic[0] , outputGenomic[1], countValueDef);
+                WritingData.writeToFile(fileName, outputGenomic[0], outputGenomic[1], countValueDef);
             }
         }
     }
 
     private static void filterVariant(@NotNull String chromosomesAmber, @NotNull String positionsAmber,
-            @NotNull ListMultimap<String, String> multimapCyto,int countAmber, @NotNull String fileName,
-            @NotNull Multimap<String, String> resultOutput, @NotNull Set genomicPosition, @NotNull String countSet) throws
-            IOException {
+            @NotNull Multimap<String, String> multimapCyto, int countAmber, @NotNull String fileName,
+            @NotNull Multimap<String, String> resultOutput, @NotNull Set genomicPosition, @NotNull String countSet) throws IOException {
         if (multimapCyto.get(chromosomesAmber).contains(positionsAmber)) {
             if (countSet.equals("1")) {
-                countAmber ++;
-                WritingData.writeToFile(fileName, chromosomesAmber , positionsAmber, countAmber);
+                countAmber++;
+                WritingData.writeToFile(fileName, chromosomesAmber, positionsAmber, countAmber);
             } else {
                 final String position = chromosomesAmber + "," + positionsAmber;
-                final Boolean foundGenomicPostionInFile = genomicPosition.contains(position);
-                if (foundGenomicPostionInFile){
+                final boolean foundGenomicPositionInFile = genomicPosition.contains(position);
+                if (foundGenomicPositionInFile) {
                     final String valueCount = resultOutput.get(position).toString();
                     String valueCountNew = valueCount.replace("[", "");
                     int valueCountNewDef = Integer.valueOf(valueCountNew.replace("]", ""));
                     int countCombined = valueCountNewDef + 1;
-                    WritingData.writeToFile(fileName, chromosomesAmber , positionsAmber, countCombined);
+                    WritingData.writeToFile(fileName, chromosomesAmber, positionsAmber, countCombined);
                     genomicPosition.remove(chromosomesAmber + "," + positionsAmber);
                 } else {
-                    countAmber ++;
-                    WritingData.writeToFile(fileName, chromosomesAmber , positionsAmber, countAmber);
+                    countAmber++;
+                    WritingData.writeToFile(fileName, chromosomesAmber, positionsAmber, countAmber);
                 }
             }
         }

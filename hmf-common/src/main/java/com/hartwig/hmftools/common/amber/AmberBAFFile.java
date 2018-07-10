@@ -31,7 +31,8 @@ public enum AmberBAFFile {
         return fromLines(Files.readAllLines(new File(fileName).toPath()));
     }
 
-    public static List readingPurityData(@NotNull List<AmberBAF> bafs) throws IOException {
+    @NotNull
+    public static List<String> readingPurityData(@NotNull List<AmberBAF> bafs) {
         return toLines(bafs);
     }
 
