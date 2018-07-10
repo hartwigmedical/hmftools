@@ -46,6 +46,8 @@ public class NmfCalculator {
     private NmfMatrix mW; // the bucket-signature values (x=BucketCount, y=SigCount)
     private NmfMatrix mH; // the sample-signature contributions (x=SigCount, y=SampleCount)
     private NmfMatrix mV; // the fitted matrix of samples and bucket counts (W x H)
+    private NmfMatrix mPrevW;
+    private NmfMatrix mPrevH;
     private NmfMatrix mPrevV;
     private boolean mIsValid;
 
@@ -56,10 +58,10 @@ public class NmfCalculator {
 
     // calculated values
     private double mTotalResiduals;
+    private double mNetResiduals;
     private double mLowestCost;
     private double[] mSampleResiduals;
     private double[] mBucketResiduals;
-    private double[] mSampleNetResiduals;
 
     private Random mRandom;
 
@@ -92,9 +94,9 @@ public class NmfCalculator {
         }
 
         mTotalResiduals = 0;
+        mNetResiduals = 0;
         mLowestCost = 0;
         mSampleResiduals = new double[mSampleCount];
-        mSampleNetResiduals = new double[mSampleCount];
         mBucketResiduals = new double[mBucketCount];
 
         mW = null;
@@ -154,7 +156,7 @@ public class NmfCalculator {
         initSignatures();
         initContributions();
 
-        if(mRefSignatures != null && mRefContributions != null)
+        if(mConfig.LogVerbose && mRefSignatures != null && mRefContributions != null)
         {
             mW.multiply(mH, mV, true);
             calcResiduals();
@@ -162,6 +164,9 @@ public class NmfCalculator {
             LOGGER.debug(String.format("pre-fit: totalResiduals(%.0f) vs total(%.0f) as percent(%.5f)",
                     mTotalResiduals, mTotalCount, mTotalResiduals / mTotalCount));
         }
+
+        mPrevW = new NmfMatrix(mBucketCount, mSigCount);
+        mPrevH = new NmfMatrix(mSigCount, mSampleCount);
 
         calculate();
     }
@@ -223,7 +228,6 @@ public class NmfCalculator {
         double[][] hData = mH.getData();
 
         double[] sigFractions = new double[mSigCount];
-        double sigTotal = 0;
 
         // if there are proposed or ref contributions in use, the other sigs should
         // be given a relatively small value compared to the ref
@@ -236,7 +240,7 @@ public class NmfCalculator {
         for (int n = 0; n < mSampleCounts.Cols; ++n) {
 
             double sampleTotal = mSampleTotals[n];
-            sigTotal = 0;
+            double sigTotal = 0;
 
             // if this sample has specific contributions set, use the min contribution value for the restr
             // if not, set them all to randoms
@@ -298,9 +302,12 @@ public class NmfCalculator {
         int permittedExtensions = 2;
         for(; i < maxIterations; i++) {
 
-            // compute output
-            // mPrevV.setData(mV.getData());
+            // compute the fit
             mW.multiply(mH, mV, true);
+
+            if(mConfig.LogVerbose && i > 0) {
+                logMatrixDiffs();
+            }
 
             // compare the original counts to the calculated matrix
             currentCost = mSampleCounts.sumDiffSq(mV);
@@ -376,6 +383,14 @@ public class NmfCalculator {
 
             prevCost = currentCost;
             prevCostChange = costChange;
+
+            if(mConfig.LogVerbose) {
+
+                mPrevV.setData(mV.getData());
+                mPrevW.setData(mW.getData());
+                mPrevH.setData(mH.getData());
+            }
+
             applyAdjustments();
 
             if(i == maxIterations)
@@ -506,6 +521,7 @@ public class NmfCalculator {
     private void calcResiduals()
     {
         mTotalResiduals = 0;
+        mNetResiduals = 0;
 
         final double[][] vData = mV.getData();
         final double[][] scData = mSampleCounts.getData();
@@ -517,7 +533,6 @@ public class NmfCalculator {
         for(int n = 0; n < mSampleCount; ++n)
         {
             double sampleResiduals = 0;
-            mSampleNetResiduals[n] = 0;
 
             for(int b = 0; b < mBucketCount; ++b)
             {
@@ -528,7 +543,7 @@ public class NmfCalculator {
                 double absDiff = abs(diff);
                 sampleResiduals += absDiff;
                 mBucketResiduals[b] += absDiff;
-                mSampleNetResiduals[n] += diff;
+                mNetResiduals += diff;
             }
 
             mSampleResiduals[n] = sampleResiduals;
@@ -564,5 +579,24 @@ public class NmfCalculator {
         }
 
         return divergSum;
+    }
+
+    private void logMatrixDiffs()
+    {
+        NmfMatrix relDiff = NmfMatrix.getDiff(mV, mPrevV, true);
+        NmfMatrix absDiff = NmfMatrix.getDiff(mV, mPrevV, false);
+        double avgPercChange = relDiff.sum() / (mV.Rows * mV.Cols);
+        LOGGER.debug(String.format("V-matrix diffs: abs(%.0f) relative(%.4f)", absDiff.sum(), avgPercChange));
+
+        relDiff = NmfMatrix.getDiff(mW, mPrevW, true);
+        absDiff = NmfMatrix.getDiff(mW, mPrevW, false);
+        avgPercChange = relDiff.sum() / (mW.Rows * mW.Cols);
+        LOGGER.debug(String.format("W-matrix diffs: abs(%.0f) relative(%.4f)", absDiff.sum(), avgPercChange));
+
+        relDiff = NmfMatrix.getDiff(mH, mPrevH, true);
+        absDiff = NmfMatrix.getDiff(mH, mPrevH, false);
+        avgPercChange = relDiff.sum() / (mH.Rows * mH.Cols);
+        LOGGER.debug(String.format("H-matrix diffs: abs(%.0f) relative(%.4f)", absDiff.sum(), avgPercChange));
+
     }
 }

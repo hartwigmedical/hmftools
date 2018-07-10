@@ -2,12 +2,19 @@ package com.hartwig.hmftools.data_analyser.types;
 
 import static java.lang.Math.abs;
 
+import com.hartwig.hmftools.data_analyser.calcs.DataUtils;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class NmfMatrix {
 
     final public int Rows;
     final public int Cols;
 
     private double[][] mData;
+
+    private static final Logger LOGGER = LogManager.getLogger(NmfMatrix.class);
 
     public NmfMatrix(int r, int c)
     {
@@ -57,7 +64,10 @@ public class NmfMatrix {
     public void set(int row, int col, double value)
     {
         if(row >= Rows || col >= Cols)
+        {
+            LOGGER.error("incorrect row or column");
             return;
+        }
 
         mData[row][col] = value;
     }
@@ -65,7 +75,10 @@ public class NmfMatrix {
     public double get(int row, int col)
     {
         if(row >= Rows || col >= Cols)
+        {
+            LOGGER.error("incorrect row or column");
             return 0;
+        }
 
         return mData[row][col];
     }
@@ -99,7 +112,10 @@ public class NmfMatrix {
         // matrix multiply: c[i][j] = sum_k a[i][k] * b[k][j]
 
         if(Cols != other.Rows)
+        {
+            LOGGER.error("incorrect row or column");
             return;
+        }
 
         final double[][] otherData = other.getData();
 
@@ -170,7 +186,10 @@ public class NmfMatrix {
             for(int j = 0; j < Cols; j++)
             {
                 if(otherData[i][j] == 0)
+                {
+                    LOGGER.error("divide by zero at i={}, j={}", i, j);
                     return;
+                }
 
                 mData[i][j] /= otherData[i][j];
             }
@@ -236,7 +255,7 @@ public class NmfMatrix {
         return d;
     }
 
-    public double dist(NmfMatrix b)
+    public double euclideanDist(NmfMatrix b)
     {
         // euclidean distance
         return Math.sqrt(sumDiffSq(b));
@@ -257,5 +276,79 @@ public class NmfMatrix {
         }
 
         return true;
+    }
+
+    public static NmfMatrix getDiff(final NmfMatrix first, final NmfMatrix second, boolean relative)
+    {
+        // return a matrix with the diffs between all entries
+        NmfMatrix results = new NmfMatrix(first.Rows, first.Cols);
+
+        if(first.Rows != second.Rows || first.Cols != second.Cols)
+            return results;
+
+        final double[][] fData = first.getData();
+        final double[][] sData = second.getData();
+        double[][] resultData = results.getData();
+
+        for(int i = 0; i < first.Rows; i++) {
+
+            for (int j = 0; j < first.Cols; j++) {
+
+                double diff = fData[i][j] - sData[i][j];
+
+                if(relative)
+                {
+                    if(sData[i][j] != 0)
+                    {
+                        resultData[i][j] = diff / sData[i][j];
+                    }
+                }
+                else
+                {
+                    resultData[i][j] = diff;
+                }
+            }
+        }
+
+        return results;
+    }
+
+    public static NmfMatrix extractNonZeros(final NmfMatrix matrix) {
+
+        // check for columns with all zeros and remove them from the matrix
+        int nonZeroColCount = 0;
+
+        for (int i = 0; i < matrix.Cols; ++i) {
+
+            double colSum = DataUtils.sumVector(matrix.getCol(i));
+
+            if (colSum > 0)
+                ++nonZeroColCount;
+        }
+
+        if (nonZeroColCount == matrix.Cols)
+            return matrix;
+
+        NmfMatrix newMatrix = new NmfMatrix(matrix.Rows, nonZeroColCount);
+
+        final double[][] mData = matrix.getData();
+        double[][] nData = newMatrix.getData();
+
+        int colIndex = 0;
+        for (int i = 0; i < matrix.Cols; ++i) {
+
+            double colSum = DataUtils.sumVector(matrix.getCol(i));
+
+            if (colSum == 0)
+                continue;
+
+            for (int j = 0; j < matrix.Rows; j++) {
+                nData[j][colIndex] = mData[j][i];
+            }
+
+            ++colIndex;
+        }
+
+        return newMatrix;
     }
 }

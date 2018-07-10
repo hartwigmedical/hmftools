@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_VAL;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.getTopCssPairs;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getNewFile;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.writeMatrixData;
+import static com.hartwig.hmftools.data_analyser.types.NmfMatrix.extractNonZeros;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -72,6 +73,7 @@ public class NmfManager {
         mPerfCounter.start("DataLoad");
 
         mSampleCountsMatrix = DataUtils.createMatrixFromListData(mDataCollection.getData());
+        mSampleCountsMatrix = extractNonZeros(mSampleCountsMatrix);
 
         mNmfCalculator = new NmfCalculator(mSampleCountsMatrix, mConfig);
 
