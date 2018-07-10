@@ -6,7 +6,7 @@ Breast,1612
 Choroid,12759
 CNS,3620
 Colon/Rectum,9256;219
-CUP,162
+CUP,
 Double primary,
 Esophagus,5041;4944
 Head and neck,11934
@@ -17,7 +17,7 @@ Lymphoid,0060058
 Mesothelioma,1790
 Myeloid,4960
 Nervous system,3093
-NET,162
+NET,
 Ovary,2394
 Pancreas,1793
 Penile,11615
