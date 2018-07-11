@@ -6,8 +6,8 @@ Breast,1612
 Choroid,12759
 CNS,3620;3070
 Colon/Rectum,9256;219
-CUP,CUP_0
-Double primary,
+CUP,UNMAPPED
+Double primary,UNMAPPED
 Esophagus,5041;4944
 Head and neck,11934;8618
 Kidney,263;8411
@@ -17,7 +17,8 @@ Lymphoid,0060058
 Mesothelioma,1790
 Myeloid,4960
 Nervous system,3093
-NET,0050872;2992;4555;7207;4434;5545;3009;0050925;4119;4118;5784;5457;4715;3002;5410;1800;5777;7132;169;6659;4148;0050626;6657;6658;5409;1798
+NET,UNMAPPED
+Other,UNMAPPED
 Ovary,2394
 Pancreas,1793
 Penile,11615
@@ -28,7 +29,7 @@ Stomach,10534
 Testis,2998
 Thymus,3277
 Thyroid,1781
-Unknown,
+Unknown,UNMAPPED
 Urinary tract,3996
 Uterus,363
 Vulva,1245
