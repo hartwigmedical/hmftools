@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.puritypatho.coverages;
 
+import java.io.File;
+import java.util.List;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -13,11 +16,11 @@ public class ReadingFastqFiles {
     @NotNull
     public static void readingFiles(@NotNull String fastqDir) {
         LOGGER.info("fastqDir: " + fastqDir);
-      //  final FastqReader fastqReader = new FastqReader(fastqFile);
+        File folder = new File(fastqDir);
+        String [] fileList = folder.list();
+        for (String fileName:fileList) {
+            LOGGER.info("fileName: " + fileName);
 
-  //      for ( FastqRecord fastqRecord: fastqReader) {
-    //        LOGGER.info(fastqRecord.getReadName());
-      //  }
-
+        }
     }
 }
