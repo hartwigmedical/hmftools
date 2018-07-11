@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.common.variant.structural;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -268,15 +265,16 @@ public class StructuralVariantFactory {
 
     }
     private static ImmutableStructuralVariantImpl.Builder setCommon(@NotNull ImmutableStructuralVariantImpl.Builder builder, @NotNull VariantContext context) {
+
         return builder
                 .id(context.getID())
                 .event(context.getAttributeAsString(EVENT, null))
-                .linkedBy(context.getAttributeAsString(LINKED_BY, ""))
+                .linkedBy(context.getAttributeAsStringList(LINKED_BY, "").stream().filter(s -> !Strings.isNullOrEmpty(s)).collect(Collectors.joining( ",")))
                 .imprecise(imprecise(context))
                 .somaticScore(context.hasAttribute(SOMATIC_SCORE) ? context.getAttributeAsInt(SOMATIC_SCORE, 0) : null)
                 .qualityScore(context.getPhredScaledQual());
     }
-    private static ImmutableStructuralVariantLegImpl.Builder setLegCommon(@NotNull ImmutableStructuralVariantLegImpl.Builder builder, @NotNull VariantContext context, boolean ignoreRefpair) {
+static ImmutableStructuralVariantLegImpl.Builder setLegCommon(@NotNull ImmutableStructuralVariantLegImpl.Builder builder, @NotNull VariantContext context, boolean ignoreRefpair) {
         builder.chromosome(context.getContig());
         builder.position(context.getStart());
         if (context.hasAttribute(CIPOS)) {
