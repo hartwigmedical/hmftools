@@ -73,7 +73,7 @@ private fun createOptions(): Options {
 
 private fun knowledgebaseCancerDoids(knowledgebases: List<Knowledgebase>, ontology: DiseaseOntology): List<CancerTypeDoidOutput> {
     val extraCancerTypeDoids = readExtraCancerTypeDoids().map {
-        Pair(it.key, it.value.flatMap { doid -> ontology.findDoidsForDoid(doid) }.toSet())
+        Pair(it.key, it.value.flatMap { doid -> ontology.findDoidsForDoid(doid) }.toSet().sorted())
     }.toMap()
     val allCancerTypeDoids = knowledgebases.fold(mapOf<String, Set<String>>(), { map, it -> map + it.cancerTypes })
     return (allCancerTypeDoids + extraCancerTypeDoids).entries.map { CancerTypeDoidOutput(it.key, it.value.joinToString(";")) }
