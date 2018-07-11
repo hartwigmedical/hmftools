@@ -10,7 +10,7 @@ Bladder,4007,bladder carcinoma
 Cervix,4362,cervical cancer
 Cervix squamous cell,,
 CNS Cancer,3620,central nervous system cancer
-Dedifferentiated Liposarcoma,,
+Dedifferentiated Liposarcoma,3382,liposarcoma
 Dermatofibrosarcoma,,
 Desmoid Fibromatosis,,
 Embryonal Tumor,,
@@ -22,7 +22,7 @@ Erdheim-Chester histiocytosis,,
 Esophagogastric Cancer,5041,esophageal cancer
 Female germ cell tumor,,
 Gastrointestinal stromal,9253,gastrointestinal stromal tumor
-Giant cell astrocytoma,,
+Giant cell astrocytoma,3069,astrocytoma
 Glioblastoma,,
 Glioma,,
 Hairy-Cell leukemia,285,hairy cell leukemia
@@ -66,4 +66,4 @@ Thyroid,1781,thyroid cancer
 Urinary tract carcinoma,,
 Waldenström macroglobulinemia,,
 Waldenström's Macroglobulinemia,,
-Well-Differentiated Liposarcoma,,
+Well-Differentiated Liposarcoma,3382,liposarcoma
