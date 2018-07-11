@@ -8,9 +8,9 @@ import org.apache.commons.csv.CSVRecord
 
 data class CivicEvidence(private val csvRecord: CSVRecord, private val drugInteractionMap: Map<Int, String>,
                          private val treatmentTypeMap: Map<String, String>) {
-    val cancerType: String = csvRecord["disease"].orEmpty()
+    val cancerType: String = readDisease(csvRecord)
     val drugInteractionType = getDrugInteraction(csvRecord["evidence_id"].toIntOrNull(), drugInteractionMap)
-    val doid: String = csvRecord["doid"].orEmpty()
+    val doid: String = readDoid(csvRecord)
     val drugs: List<HmfDrug> = getDrugs(csvRecord["drugs"].orEmpty(), drugInteractionType, treatmentTypeMap)
     val type: String = csvRecord["evidence_type"].orEmpty()
     val direction: String = csvRecord["evidence_direction"].orEmpty()
@@ -52,6 +52,16 @@ data class CivicEvidence(private val csvRecord: CSVRecord, private val drugInter
             val drugNamePattern = "([$drugCharacters]+(?:\\s*(?:$roundBracketPart|$squareBracketPart)[$drugCharacters]*)*)"
             val matchResult = drugNamePattern.toRegex().findAll(drugField)
             return matchResult.map { it.groupValues[1].trim() }.toList()
+        }
+
+        fun readDisease(record: CSVRecord): String {
+            val disease = record["disease"].orEmpty()
+            return if (disease == "Melanoma") "Skin Melanoma" else disease
+        }
+
+        fun readDoid(record: CSVRecord): String {
+            val doid = record["doid"].orEmpty()
+            return if (doid == "1909") "8923" else doid
         }
     }
 }
