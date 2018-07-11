@@ -115,11 +115,11 @@ private fun extractMnv(gene: String, chromosome: String, variantGDna: String, re
         val endPosition = end ?: start
         val alt = variantGDna.substringAfter("delins")
         val ref = reference.getSubsequenceAt(chromosome, start, endPosition).baseString
-        SomaticVariantEvent(gene, chromosome, start.toString(), ref, alt)
+        correct(SomaticVariantEvent(gene, chromosome, start.toString(), ref, alt))
     } else {
         val ref = variantGDna.substringAfter("del").substringBefore("ins")
         val alt = variantGDna.substringAfter("ins")
-        return SomaticVariantEvent(gene, chromosome, start.toString(), ref, alt)
+        return correct(SomaticVariantEvent(gene, chromosome, start.toString(), ref, alt))
     }
 }
 
@@ -130,7 +130,7 @@ private fun extractDup(gene: String, chromosome: String, variantGDna: String, re
     val ref = reference.getSubsequenceAt(chromosome, position, position).baseString
     val insertedBases = variantGDna.substringAfter("dup")
     val alt = ref + insertedBases
-    return SomaticVariantEvent(gene, chromosome, position.toString(), ref, alt)
+    return correct(SomaticVariantEvent(gene, chromosome, position.toString(), ref, alt))
 }
 
 // MIVO: extract Insert from gDna variant of the form: 32930598_32930599insC
@@ -143,7 +143,7 @@ private fun extractInsert(gene: String, chromosome: String, variantGDna: String,
     return if (alt.contains("N")) {
         null
     } else {
-        SomaticVariantEvent(gene, chromosome, start.toString(), ref, alt)
+        correct(SomaticVariantEvent(gene, chromosome, start.toString(), ref, alt))
     }
 }
 
@@ -167,10 +167,24 @@ private fun extractDelete(gene: String, chromosome: String, variantGDna: String,
         val alt = ref.first().toString()
         Pair(ref, alt)
     }
-    return SomaticVariantEvent(gene, chromosome, position.toString(), ref, alt)
+    return correct(SomaticVariantEvent(gene, chromosome, position.toString(), ref, alt))
 }
 
 private fun extractRange(gene: String, transcript: String, chromosome: String, variantGDna: String): GenomicRangeEvent {
     val (start, end) = extractPositions(variantGDna)
     return GenomicRangeEvent(gene, transcript, chromosome, start.toString(), end.toString(), transcript)
+}
+
+// MIVO: correct position, ref and alt of variants for which ref and alt have a common prefix.
+// e.g. chr3:g.178927980_178927991delinsTGG will produce: 3 178927980: TGTCCATTGGCA -> TGG, with both ref and alt sharing TG as prefix
+//      this function will drop the first T and correct the variant to: 3 178927981: GTCCATTGGCA -> GG
+private fun correct(variant: SomaticVariantEvent): SomaticVariantEvent {
+    val equalBaseCount = variant.ref.zip(variant.alt).takeWhile { it.first == it.second }.count()
+    return if (equalBaseCount > 1) {
+        val basesToSkip = equalBaseCount - 1
+        val position = variant.position.toInt() + basesToSkip
+        variant.copy(position = position.toString(), ref = variant.ref.substring(basesToSkip), alt = variant.alt.substring(basesToSkip))
+    } else {
+        variant
+    }
 }
