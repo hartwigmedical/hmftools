@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.puritypatho.coverages;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.zip.GZIPInputStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,13 +18,18 @@ public class ReadingFastqFiles {
         LOGGER.info("fastqDir: " + fastqDir);
         File folder = new File(fastqDir);
         String [] fileList = folder.list();
+        final int size = 1048576;
         for (String file:fileList) {
+            final InputStream inputStream;
             if (file.endsWith(".fastq.gz")) {
-                LOGGER.info(".fastq.gz file");
+                inputStream = new GZIPInputStream(new FileInputStream(new File(fastqDir + file)), size);
+                LOGGER.info("Processing file: " + fastqDir + file);
             } else if (file.endsWith(".fastq")) {
-                LOGGER.info(".fastq file");
+                inputStream = new FileInputStream(new File(fastqDir + file));
+                LOGGER.info("Processing file: " + fastqDir + file);
+            } else {
+                LOGGER.info("Unknown file format");
             }
-            LOGGER.info("Processing file: " + file);
         }
     }
 }
