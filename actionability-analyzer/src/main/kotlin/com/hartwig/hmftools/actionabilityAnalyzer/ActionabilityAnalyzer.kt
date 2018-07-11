@@ -9,7 +9,6 @@ import com.hartwig.hmftools.extensions.csv.CsvReader
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.ActionableItem
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
 import com.hartwig.hmftools.knowledgebaseimporter.readCSVRecords
-import com.hartwig.hmftools.knowledgebaseimporter.readTSVRecords
 import com.hartwig.hmftools.patientdb.data.PotentialActionableCNV
 import com.hartwig.hmftools.patientdb.data.PotentialActionableFusion
 
@@ -39,7 +38,7 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
         }
 
         private fun readCancerTypeMapping(fileLocation: String): Map<String, Set<String>> {
-            return readTSVRecords(fileLocation) { CancerTypeDoidOutput(it["cancerType"], it["doids"].orEmpty()) }
+            return CsvReader.readTSV<CancerTypeDoidOutput>(fileLocation)
                     .map { Pair(it.cancerType, it.doidSet.split(";").filterNot { it.isBlank() }.toSet()) }
                     .toMap()
         }
