@@ -4,6 +4,9 @@ import java.awt.Color;
 
 import org.jetbrains.annotations.NotNull;
 
+import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
+import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
+
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 
 public final class MutationalLoadSection {
@@ -15,22 +18,22 @@ public final class MutationalLoadSection {
     private static final int END = 1000;
 
     @NotNull
-    public static ComponentBuilder<?, ?> build(final int mutationalLoad) {
+    public static ComponentBuilder<?, ?> build(final int mutationalLoad, @NotNull FittedPurityStatus fitStatus) {
         final int graphValue = computeGraphValue(mutationalLoad);
         final int markerValue = computeGraphValue(DRUP_THRESHOLD);
         final GradientBar gradient =
                 ImmutableGradientBar.of(new Color(239, 229, 203), new Color(159, 163, 193), "Low", "High", graphValue, markerValue);
         final SliderSection sliderSection =
-                ImmutableSliderSection.of("Tumor Mutational Load", interpret(mutationalLoad), description(), gradient);
+                ImmutableSliderSection.of("Tumor Mutational Load", interpret(mutationalLoad, fitStatus), description(), gradient);
         return sliderSection.build();
     }
 
     @NotNull
-    private static String interpret(final int mutationalLoad) {
+    private static String interpret(final int mutationalLoad, @NotNull FittedPurityStatus fitStatus) {
         if (mutationalLoad > DRUP_THRESHOLD) {
-            return "High (" + mutationalLoad + ")";
+            return "High (" + PatientReportFormat.correctCopyValueForFitStatus(fitStatus, Integer.toString(mutationalLoad))  + ")";
         } else {
-            return "Low (" + mutationalLoad + ")";
+            return "Low (" + PatientReportFormat.correctCopyValueForFitStatus(fitStatus, Integer.toString(mutationalLoad)) + ")";
         }
     }
 

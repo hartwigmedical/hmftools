@@ -34,6 +34,7 @@ import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
+import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
@@ -122,8 +123,9 @@ public abstract class PatientReporter {
         LOGGER.info("  Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
         LOGGER.info("  Number of gene disruptions to report : " + Integer.toString(reportableDisruptions.size()));
         LOGGER.info("  Number of CIViC alterations to report : " + alterations.size());
-        LOGGER.info("  Microsatellite analysis results: " + variantAnalysis.indelsPerMb() + " indels per MB");
-        LOGGER.info("  Mutational load results: " + variantAnalysis.mutationalLoad());
+        LOGGER.info("  Microsatellite analysis results: " + PatientReportFormat.correctCopyValueForFitStatus(purpleAnalysis.status(), Double.toString(variantAnalysis.indelsPerMb())) + " indels per MB");
+        LOGGER.info("  Mutational load results: " + PatientReportFormat.correctCopyValueForFitStatus(purpleAnalysis.status(),
+                Integer.toString(variantAnalysis.mutationalLoad())));
 
         final Lims lims = baseReporterData().limsModel();
         final Double pathologyTumorPercentage = lims.tumorPercentageForSample(tumorSample);
