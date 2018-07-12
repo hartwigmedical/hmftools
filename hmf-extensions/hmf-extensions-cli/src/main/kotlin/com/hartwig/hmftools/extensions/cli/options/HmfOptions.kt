@@ -18,8 +18,9 @@ class HmfOptions {
         val parsedOptions = cmd.options.toSet()
         val errorMessages = parsedOptions.mapNotNull { optionsMap[it] }
                 .mapNotNull { option -> option.validators.mapNotNull { it.validate(option, cmd) }.firstOrNull() }
+                .map { "   $it" }
         if (errorMessages.isNotEmpty()) {
-            throw IOException("Could not validate command line options:\n${errorMessages.joinToString("\n", "   ")}")
+            throw IOException("Could not validate command line options:\n${errorMessages.joinToString("\n")}")
         }
     }
 }

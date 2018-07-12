@@ -9,7 +9,7 @@ data class EnumValidator<T : Enum<T>>(private val enumClass: Class<T>) : OptionV
         if (!cmd.hasOption(option.name)) return null
         val optionValue = cmd.getOptionValue(option.name).toLowerCase()
         val valueSet = enumClass.enumConstants.map { it.name.toLowerCase() }.toSet()
-        if (!valueSet.contains(optionValue)) return "$optionValue (passed as param for -${option.name} option) is not a valid choice."
+        if (!valueSet.contains(optionValue)) return "-${option.name}: $optionValue is not a valid choice."
         return null
     }
 }

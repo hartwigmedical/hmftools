@@ -9,7 +9,7 @@ object FileSystemExistsValidator : OptionValidator {
     override fun validate(option: HmfOption, cmd: CommandLine): String? {
         if (!cmd.hasOption(option.name)) return null
         val file = File(cmd.getOptionValue(option.name))
-        if (!file.exists()) return "$file (passed as param for -${option.name} option) does not exist."
+        if (!file.exists()) return "-${option.name}: $file does not exist."
         return null
     }
 }

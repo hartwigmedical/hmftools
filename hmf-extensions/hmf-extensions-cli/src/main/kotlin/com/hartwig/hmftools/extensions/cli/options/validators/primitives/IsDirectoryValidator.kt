@@ -9,7 +9,7 @@ object IsDirectoryValidator : OptionValidator {
     override fun validate(option: HmfOption, cmd: CommandLine): String? {
         if (!cmd.hasOption(option.name)) return null
         val dir = File(cmd.getOptionValue(option.name))
-        if (!dir.isDirectory) return "$dir (passed as param for -${option.name} option) is not a directory."
+        if (!dir.isDirectory) return "-${option.name}: $dir is not a directory."
         return null
     }
 }

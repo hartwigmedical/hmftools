@@ -7,7 +7,7 @@ import kotlin.system.exitProcess
 
 fun Options.printHelpAndExit(cmdName: String, errorMessage: String): Nothing {
     val formatter = HelpFormatter()
-    formatter.printHelp(130, cmdName, cmdName, this, errorMessage, true)
+    formatter.printHelp(200, cmdName, cmdName, this, errorMessage, true)
     exitProcess(1)
 }
 
