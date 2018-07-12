@@ -87,15 +87,6 @@ public class MySQLAnnotator implements VariantAnnotator {
     @Override
     @NotNull
     public List<StructuralVariantAnnotation> annotateVariants(@NotNull List<EnrichedStructuralVariant> variants) {
-
-        List<StructuralVariantAnnotation> annotatedVars = Lists.newArrayList();
-
-        //        for(final EnrichedStructuralVariant variant : variants)
-        //        {
-        //             annotatedVars.add(annotateVariant(variant));
-        //        }
-        //
-        //        return annotatedVars;
         return variants.stream().map(this::annotateVariant).collect(Collectors.toList());
     }
 
@@ -122,10 +113,6 @@ public class MySQLAnnotator implements VariantAnnotator {
             final int geneStrand = gene.get(GENE.SEQ_REGION_STRAND);
 
             final String entrezIdsStr = gene.get(ENTREZ_IDS, String.class);
-
-            //            if(entrezIdsStr == null) {
-            //                LOGGER.debug("var({}) missing an entrezId", variant.id());
-            //            }
 
             final List<Integer> entrezIds = (entrezIdsStr == null || entrezIdsStr.isEmpty())
                     ? Lists.newArrayList()
