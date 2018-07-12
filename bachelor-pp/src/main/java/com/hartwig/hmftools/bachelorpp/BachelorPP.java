@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.bachelorpp;
 
+import static com.hartwig.hmftools.common.variant.snpeff.VariantAnnotationFactory.ANNOTATIONS_IDENTIFIER;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -46,6 +48,7 @@ import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -65,7 +68,7 @@ public class BachelorPP {
     private static final String SAMPLE = "sample";
     private static final String WRITE_VCF_FILE = "write_vcf_file";
     private static final String BACH_INPUT_FILE = "bach_input_file";
-    private static final String VCF_INPUT_FILE = "vcf_input_file";
+    private static final String VCF_HEADER_FILE = "vcf_header_file";
     private static final String REF_GENOME = "ref_genome";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String MPILEUP_DIR = "mpileup_dir";
@@ -108,9 +111,18 @@ public class BachelorPP {
         adLoader.setSampleId(sampleId);
         adLoader.loadBachelorMatchData(cmd.getOptionValue(BACH_INPUT_FILE));
 
+        if(adLoader.getBachelorVariants().isEmpty())
+        {
+            LOGGER.info("sample({}) has no records to process", sampleId);
+            return;
+        }
+
         if(cmd.hasOption(MPILEUP_DIR))
         {
-            adLoader.loadMiniPileupData(cmd.getOptionValue(MPILEUP_DIR));
+            if(!adLoader.loadMiniPileupData(cmd.getOptionValue(MPILEUP_DIR)))
+            {
+                return;
+            }
         }
 
         final List<BachelorGermlineVariant> bachRecords = adLoader.getBachelorVariants();
@@ -122,7 +134,7 @@ public class BachelorPP {
 
         if(cmd.hasOption(WRITE_VCF_FILE)) {
 
-            writeVcfFile(sampleId, bachRecords, outputDir);
+            writeVcfFile(sampleId, bachRecords, outputDir, cmd.getOptionValue(VCF_HEADER_FILE));
         }
 
         annotateRecords(sampleId, bachRecords, cmd, dbAccess);
@@ -139,14 +151,18 @@ public class BachelorPP {
     private static void buildVariants(final String sampleId, List<BachelorGermlineVariant> bachRecords)
     {
         for(final BachelorGermlineVariant bachRecord : bachRecords) {
+
+            if(bachRecord.getRefCount() == 0 || bachRecord.getAltCount() == 0)
+                continue;
+
             VariantContextBuilder builder = new VariantContextBuilder();
             builder.id(bachRecord.variantId());
-            builder.loc(bachRecord.chromosome(), bachRecord.position(), bachRecord.position());
+            builder.loc(bachRecord.chromosome(), bachRecord.position(), bachRecord.position() + bachRecord.ref().length()-1);
 
-            List<String> alleleStrings = Lists.newArrayList();
-            alleleStrings.add(bachRecord.ref());
-            alleleStrings.add(bachRecord.alts());
-            builder.alleles(alleleStrings);
+            List<Allele> alleles = Lists.newArrayList();
+            alleles.add(Allele.create(bachRecord.ref(), true));
+            alleles.add(Allele.create(bachRecord.alts(), false));
+            builder.alleles(alleles);
 
             List<Genotype> genoTypes = Lists.newArrayList();
 
@@ -160,17 +176,27 @@ public class BachelorPP {
 
             variantContext.getCommonInfo().putAttribute("AD", bachRecord.getAltCount(), true);
             variantContext.getCommonInfo().addFilter("PASS");
+            variantContext.getCommonInfo().putAttribute(ANNOTATIONS_IDENTIFIER, bachRecord.annotations());
 
+            bachRecord.setVariantContext(variantContext);
 
             Optional<SomaticVariant> somVariant = SomaticVariantFactory.unfilteredInstance().createVariant(sampleId, variantContext);
 
             if(somVariant.isPresent())
+            {
                 bachRecord.setSomaticVariant(somVariant.get());
+            }
+            else
+            {
+                LOGGER.error("somatic variant creation failed");
+            }
         }
     }
 
-    private static void writeVcfFile(final String sampleId, final List<BachelorGermlineVariant> bachRecords, final String outputDir)
+    private static void writeVcfFile(final String sampleId, final List<BachelorGermlineVariant> bachRecords, final String outputDir, final String vcfHeaderFile)
     {
+        LOGGER.debug("writing germline VCF");
+
         String outputFileName = outputDir;
         if (!outputFileName.endsWith("/")) {
             outputFileName += "/";
@@ -178,13 +204,14 @@ public class BachelorPP {
 
         outputFileName += sampleId + VCF_FILE_SUFFIX;
 
-        final File sampleVcfFile = new File("/Users/charlesshale/data/runs/sample_somatic.vcf");
+        final File sampleVcfFile = new File(vcfHeaderFile);
         final VCFFileReader vcfReader = new VCFFileReader(sampleVcfFile, false);
         final VCFHeader sampleHeader = vcfReader.getFileHeader();
 
         final VCFHeader header = sampleHeader; // new VCFHeader();
         header.addMetaDataLine(new VCFInfoHeaderLine("AD", 1, VCFHeaderLineType.Integer, "Allele Depth for germline variant"));
-        header.addMetaDataLine(new VCFHeaderLine("BachelorPP", BachelorPP.class.getPackage().getImplementationVersion()));
+        // header.addMetaDataLine(new VCFHeaderLine("BachelorPP", BachelorPP.class.getPackage().getImplementationVersion()));
+        // header.addMetaDataLine(new VCFHeaderLine("CHROM", "POS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tCPCT02040008T"));
 
         // Filter.UpdateVCFHeader(header);
         //  AlleleFrequency.UpdateVCFHeader(header);
@@ -214,17 +241,17 @@ public class BachelorPP {
         final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
         final String fastaFileLocation = cmd.getOptionValue(REF_GENOME);
 
-        List<SomaticVariant> variants = bachRecords.stream().map(BachelorGermlineVariant::getSomaticVariant).collect(Collectors.toList());
+        List<SomaticVariant> variants = Lists.newArrayList();
+        for(final BachelorGermlineVariant bachRecord : bachRecords)
+        {
+            if(bachRecord.getSomaticVariant() != null)
+                variants.add(bachRecord.getSomaticVariant());
+        }
 
         Multimap<String, GenomeRegion> highConfidenceRegions = null;
         IndexedFastaSequenceFile indexedFastaSequenceFile = null;
 
         try {
-
-            // LOGGER.info("Reading somatic VCF File");
-            // final List<SomaticVariant> variants = SomaticVariantFactory.filteredInstance(filter).fromVCFFile(sample, vcfFileLocation);
-            // variants = SomaticVariantFactory.unfilteredInstance().fromVCFFile(sampleId, vcfFile);
-
              LOGGER.debug("reading high confidence bed file");
              highConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
 
@@ -233,7 +260,7 @@ public class BachelorPP {
         }
         catch(IOException e)
         {
-            LOGGER.error("Reference file loading failed");
+            LOGGER.error("reference file loading failed");
             return;
         }
 
@@ -269,15 +296,22 @@ public class BachelorPP {
 
         final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(purityAdjustedVariants);
 
-        for(final EnrichedSomaticVariant var : enrichedVariants)
+        for(BachelorGermlineVariant bachRecord : bachRecords)
         {
-            for(BachelorGermlineVariant bachRecord : bachRecords)
+            boolean matched = false;
+            for(final EnrichedSomaticVariant var : enrichedVariants)
             {
                 if(bachRecord.chromosome().equals(var.chromosome()) && bachRecord.position() == var.position())
                 {
                     bachRecord.setEnrichedVariant(var);
+                    matched = true;
                     break;
                 }
+            }
+
+            if(!matched)
+            {
+                LOGGER.error("enriched variant not found for {}", bachRecord.variantId());
             }
         }
     }
@@ -330,7 +364,7 @@ public class BachelorPP {
         options.addOption(SAMPLE, true, "Tumor sample.");
 
         options.addOption(BACH_INPUT_FILE, true, "Name of input Bachelor file");
-        options.addOption(VCF_INPUT_FILE, true, "Optional input VCF file if not using generated one");
+        options.addOption(VCF_HEADER_FILE, true, "Temp: VCF file header example");
         options.addOption(MPILEUP_DIR, true, "Name of input Mini Pileup file");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file");
         options.addOption(HIGH_CONFIDENCE_BED, true, "Path to the high confidence bed file");

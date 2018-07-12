@@ -22,7 +22,7 @@ import com.hartwig.hmftools.common.pileup.PileupFile;
 
 public class AlleleDepthLoader {
 
-    private static int BACHELOR_CSV_FIELD_COUNT = 11;
+    private static int BACHELOR_CSV_FIELD_COUNT = 12;
     private static String MPILEUP_FILE_EXTN = ".mpu";
 
     private String mSampleId;
@@ -72,7 +72,7 @@ public class AlleleDepthLoader {
                 BachelorGermlineVariant bachRecord = new BachelorGermlineVariant(
                         patientId, items[1], items[2], items[3],
                         items[4], items[5], items[6], Long.parseLong(items[7]),
-                        items[8], items[9], items[10]);
+                        items[8], items[9], items[10], items[11]);
 
                 mBachelorVariants.add(bachRecord);
             }

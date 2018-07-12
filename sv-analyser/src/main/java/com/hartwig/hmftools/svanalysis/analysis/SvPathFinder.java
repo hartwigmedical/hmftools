@@ -105,7 +105,7 @@ public class SvPathFinder {
 
     private void assignToChrArms()
     {
-        // fassign SVs to chromosomal arms, assigning anything cross-arm to its own collection
+        // first assign SVs to chromosomal arms, assigning anything cross-arm to its own collection
         // further more, if a chr-arm has a BE in it, move all SVs in that chr-arm to a '_M' (ie mixed) instance of it
         // to separate the search for independent vs cross-arm paths
 

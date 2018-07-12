@@ -164,6 +164,9 @@ public class SvAnalyser {
             if(svRecord.filter().equals(PON_FILTER_PON))
                 continue;
 
+            if(!svRecord.filter().equals("PASS"))
+                continue;
+
             svClusterDataItems.add(new SvClusterData(svRecord));
         }
 

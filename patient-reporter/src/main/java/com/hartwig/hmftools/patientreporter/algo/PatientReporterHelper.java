@@ -31,7 +31,8 @@ final class PatientReporterHelper {
 
     private static final String SOMATIC_VCF_EXTENSION = "_post_processed_v2.2.vcf.gz";
     private static final String PURPLE_DIRECTORY = "purple";
-    private static final String SV_EXTENSION = "_somaticSV_bpi.vcf";
+    private static final String SV_EXTENSION_V3 = "_somaticSV_bpi.vcf";
+    private static final String SV_EXTENSION_V4 = "_somaticSV_bpi.vcf.gz";
     private static final String CIRCOS_PLOT_DIRECTORY = "plot";
     private static final String CIRCOS_PLOT_EXTENSION = ".circos.png";
 
@@ -61,7 +62,11 @@ final class PatientReporterHelper {
 
     @NotNull
     static Path findStructuralVariantVCF(@NotNull final String runDirectory) throws IOException {
-        final Optional<Path> path = Files.walk(Paths.get(runDirectory)).filter(p -> p.toString().endsWith(SV_EXTENSION)).findFirst();
+        // TODO (KODU): Clean up once pipeline v3 no longer exists
+        Optional<Path> path = Files.walk(Paths.get(runDirectory)).filter(p -> p.toString().endsWith(SV_EXTENSION_V3)).findFirst();
+        if (!path.isPresent()) {
+            path = Files.walk(Paths.get(runDirectory)).filter(p -> p.toString().endsWith(SV_EXTENSION_V4)).findFirst();
+        }
         assert path.isPresent();
         return path.get();
     }

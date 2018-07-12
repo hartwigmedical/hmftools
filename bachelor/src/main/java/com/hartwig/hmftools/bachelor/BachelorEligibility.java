@@ -235,7 +235,8 @@ class BachelorEligibility {
             // found a match, not collect up the details and write them to the output file
             LOGGER.debug("match found: program({}) ", programName);
 
-            for (VariantAnnotation snpEff : sampleVariant.sampleAnnotations()) {
+            for (int index = 0; index < sampleVariant.sampleAnnotations().size(); ++index) {
+                VariantAnnotation snpEff = sampleVariant.sampleAnnotations().get(index);
 
                 // re-check that this variant is one that is relevant
                 if (!program.panelTranscripts().contains(snpEff.featureID())) {
@@ -268,6 +269,8 @@ class BachelorEligibility {
                 // so write a complete record to the output file
                 LOGGER.debug("matched allele({}) transcriptId({}) effect({})", snpEff.allele(), snpEff.featureID(), snpEff.effects());
 
+                final String annotationsStr = sampleVariant.rawAnnotations().get(index);
+
                 EligibilityReport report = ImmutableEligibilityReport.builder()
                         .patient(patient)
                         .source(type)
@@ -280,6 +283,7 @@ class BachelorEligibility {
                         .ref(variant.getReference().toString())
                         .alts(snpEff.allele())
                         .effects(snpEff.effects())
+                        .annotations(annotationsStr)
                         .hgvsProtein(snpEff.hgvsProtein())
                         .build();
 

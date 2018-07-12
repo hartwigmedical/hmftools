@@ -67,6 +67,9 @@ public class GermlineVariantDAO {
 
         for(final BachelorGermlineVariant bachRecord : bachRecords)
         {
+            if(!bachRecord.isValid())
+                continue;
+
             final EnrichedSomaticVariant region = bachRecord.getEnrichedVariant();
             inserter.values(
                     sampleId,

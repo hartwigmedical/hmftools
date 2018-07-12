@@ -28,7 +28,7 @@ public class ClusterAnalyser {
     final SvClusteringConfig mConfig;
     final SvUtilities mUtils;
 
-    public static int MIN_TEMPLATED_INSERTION_LENGTH = 20;
+    public static int MIN_TEMPLATED_INSERTION_LENGTH = 30;
     private static int MAX_TEMPLATED_INSERTION_LENGTH = 500;
 
     public static String TRANS_TYPE_TRANS = "TRANS";
@@ -135,7 +135,7 @@ public class ClusterAnalyser {
                             SvLinkedPair pair = linkedPairs.get(index);
 
                             // check for a matching BE on a pair that is much shorter, and if so skip creating this new linked pair
-                            if(newPair.length() > 10000) {
+                            if(newPair.length() > mUtils.getBaseDistance()) {
 
                                 if (pair.first().equals(newPair.first()) || pair.first().equals(newPair.second()) || pair.second().equals(newPair.first()) || pair.second().equals(newPair.second())) {
 
@@ -161,7 +161,7 @@ public class ClusterAnalyser {
                         if(linkedPairs.size() > maxClusterSize * 3)
                             linkedPairs.remove(linkedPairs.size()-1);
 
-                        if(newPair.length() < 10000) {
+                        if(newPair.length() < mUtils.getBaseDistance()) {
 
                             // to avoid logging unlikely long TIs
                             LOGGER.debug("sample({}) cluster({}) adding linked {} pair({} and {}) length({}) at index({})",
@@ -193,7 +193,7 @@ public class ClusterAnalyser {
                 || (pair.second().equals(pair2.first()) && pair.secondLinkOnStart() == pair2.firstLinkOnStart())
                 || (pair.second().equals(pair2.second()) && pair.secondLinkOnStart() == pair2.secondLinkOnStart()))
                 {
-                    if(pair.length() < 10000) {
+                    if(pair.length() < mUtils.getBaseDistance()) {
                         // to avoid logging unlikely long TIs
                         LOGGER.debug("removing duplicate linked pair({} len={}) vs shorter({} len={})",
                                 pair2.toString(), pair2.length(), pair.toString(), pair.length());
@@ -409,7 +409,6 @@ public class ClusterAnalyser {
             for(SvLinkedPair pair : cluster.getLinkedPairs()) {
 
                 if (pair.length() > MAX_TEMPLATED_INSERTION_LENGTH) {
-                    // isValidSpan = false;
                     continue;
                 }
 
@@ -657,156 +656,4 @@ public class ClusterAnalyser {
             }
         }
     }
-
-    /*
-    public void resolveTransitiveSVs(final String sampleId, SvCluster cluster)
-    {
-        if(cluster.getCount() != 3)
-            return;
-
-        if(cluster.getDuplicateBESiteCount() < 2)
-            return;
-
-        if(cluster.getLineElementCount() > 0)
-            return;
-
-        if(!cluster.isConsistent())
-            return;
-
-        LOGGER.debug("cluster({}) attempting to resolve transitive SVs", cluster.getId());
-
-        // look for potential short templated insertions which can be resolved into a single variant
-
-        SvClusterData spanningSv = null; // the single SV to resolve to
-        SvClusterData transSvOnStart = null;
-        SvClusterData transSvOnEnd = null;
-        boolean startMatchesStart = false; // which ends of the spanning SV connect to the transitive
-        boolean endMatchesStart = false;
-
-        int bndCount = 0;
-        int invCount = 0;
-        boolean isValidTrans = true;
-
-        for (int i = 0; i < cluster.getCount(); ++i) {
-
-            SvClusterData var1 = cluster.getSVs().get(i);
-
-            if (var1.type() == StructuralVariantType.BND)
-                ++bndCount;
-            else if (var1.type() == StructuralVariantType.INV)
-                ++invCount;
-
-            SvBreakend beStart = new SvBreakend(var1.chromosome(true), var1.position(true), var1.orientation(true));
-            SvBreakend beEnd = new SvBreakend(var1.chromosome(false), var1.position(false), var1.orientation(false));
-
-            isValidTrans = true;
-            transSvOnStart = null;
-            transSvOnEnd = null;
-            startMatchesStart = false;
-            endMatchesStart = false;
-
-            boolean isSpanningSV = false;
-
-            for (int j = 0; j < cluster.getCount(); ++j) {
-
-                if (i == j)
-                    continue;
-
-                SvClusterData var2 = cluster.getSVs().get(j);
-                boolean matchOnStart = false;
-
-                if (cluster.variantMatchesBreakend(var2, beStart, true, cluster.PERMITED_DUP_BE_DISTANCE)) {
-
-                    if (transSvOnStart != null) {
-                        isValidTrans = false;
-                        break;
-                    }
-
-                    startMatchesStart = true;
-                    transSvOnStart = var2;
-                }
-                else if (cluster.variantMatchesBreakend(var2, beStart, false, cluster.PERMITED_DUP_BE_DISTANCE)) {
-
-                    if (transSvOnStart != null) {
-                        isValidTrans = false;
-                        break;
-                    }
-
-                    startMatchesStart = false;
-                    transSvOnStart = var2;
-                }
-                else if (cluster.variantMatchesBreakend(var2, beEnd, true, cluster.PERMITED_DUP_BE_DISTANCE)) {
-
-                    if (transSvOnEnd != null) {
-                        isValidTrans = false;
-                        break;
-                    }
-
-                    endMatchesStart = true;
-                    transSvOnEnd = var2;
-                }
-                else if (cluster.variantMatchesBreakend(var2, beEnd, false, cluster.PERMITED_DUP_BE_DISTANCE)) {
-
-                    if (transSvOnEnd != null) {
-                        isValidTrans = false;
-                        break;
-                    }
-
-                    endMatchesStart = false;
-                    transSvOnEnd = var2;
-                }
-                else {
-                    continue;
-                }
-            }
-
-            if(!isValidTrans)
-                continue;
-
-            if(transSvOnStart == null || transSvOnEnd == null || transSvOnStart == transSvOnEnd)
-                continue;
-
-            // also check for a short templated insertion formed by the 2 transitive SVs
-            // take the opposite ends to those matching the spanning SV
-            if(!mUtils.areLinkedSection(transSvOnStart, transSvOnEnd, !startMatchesStart, !endMatchesStart))
-                continue;
-
-            spanningSv = var1;
-            LOGGER.debug("cluster({}: {}) spanning SV({} - {}) found", cluster.getId(), cluster.getDesc(), spanningSv.posId(), spanningSv.type());
-            break;
-        }
-
-        if(!isValidTrans || spanningSv == null)
-            return;
-
-        //        if(bndCount == 1 || invCount == 3 || (invCount == 1 && bndCount == 0))
-        //            return;
-
-        int tiLength = mUtils.getProximity(transSvOnStart, transSvOnEnd, !startMatchesStart, !endMatchesStart);
-
-        // check for a deletion bridge at the beginngin of the spanning SV or at the end
-        int dbLenStart = 0;
-        int dbLenEnd = 0;
-        if(mUtils.areSectionBreak(spanningSv, transSvOnStart, true, startMatchesStart))
-        {
-            dbLenStart = mUtils.getProximity(spanningSv, transSvOnStart, true, startMatchesStart);
-        }
-        if(mUtils.areSectionBreak(spanningSv, transSvOnEnd, false, startMatchesStart))
-        {
-            dbLenEnd = mUtils.getProximity(spanningSv, transSvOnEnd, false, endMatchesStart);
-        }
-
-        LOGGER.info("cluster({}) spanning SV({} {} db1={} db2={}) transitive SVs({} {} and {} {}) tiLen({})",
-                cluster.getId(), spanningSv.posId(), spanningSv.type(), dbLenStart, dbLenEnd,
-                transSvOnStart.posId(), transSvOnStart.type(), transSvOnEnd.posId(), transSvOnEnd.type(), tiLength);
-
-        LOGGER.info("TRANS_CSV: {}",
-                String.format("%s,%d,%s,%d,%d",
-                        sampleId, cluster.getId(), spanningSv.toCsv(), dbLenStart, dbLenEnd,
-                        transSvOnStart.toCsv(), transSvOnEnd.toCsv(), tiLength));
-
-        // annotate with the reclassification
-
-    }
-    */
 }

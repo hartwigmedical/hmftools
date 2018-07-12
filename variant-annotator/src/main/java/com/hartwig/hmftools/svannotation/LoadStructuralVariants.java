@@ -78,12 +78,10 @@ public class LoadStructuralVariants {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        // prepare the PON data annotator
         SvPONAnnotator svPONAnnotator = null;
 
-        if(cmd.hasOption(SV_PON_FILE))
-        {
-            svPONAnnotator= new SvPONAnnotator();
+        if (cmd.hasOption(SV_PON_FILE)) {
+            svPONAnnotator = new SvPONAnnotator();
             svPONAnnotator.loadPonFile(cmd.getOptionValue(SV_PON_FILE));
         }
 
@@ -125,9 +123,7 @@ public class LoadStructuralVariants {
                         ImmutableEnrichedStructuralVariant.builder().from(variant).filter(filter).build();
                 updatedSVs.add(updatedSV);
             }
-        }
-        else
-        {
+        } else {
             updatedSVs = svList;
         }
 
@@ -136,18 +132,17 @@ public class LoadStructuralVariants {
         dbAccess.writeStructuralVariants(tumorSample, updatedSVs);
 
         if (!sourceSVsFromDB) {
-
             // NEVA: We read after we write to populate the primaryId field
             final List<EnrichedStructuralVariant> enrichedVariants = dbAccess.readStructuralVariants(tumorSample);
 
             DatabaseAccess ensembleDBConn = null;
 
-            if(cmd.hasOption(ENSEMBL_DB_LOCAL)) {
+            if (cmd.hasOption(ENSEMBL_DB_LOCAL)) {
 
-                // the same credential work for both hmf and ensembl DBs
+                // CHSH: The same credential work for both hmf and ensembl DBs
                 final String ensembleJdbcUrl = "jdbc:" + cmd.getOptionValue(ENSEMBL_DB);
                 final String ensembleUser = cmd.getOptionValue(DB_USER);
-                final String ensemblePassword =  cmd.getOptionValue(DB_PASS);
+                final String ensemblePassword = cmd.getOptionValue(DB_PASS);
 
                 LOGGER.debug("connecting to local ensembl DB: {}", cmd.getOptionValue(ENSEMBL_DB));
 
@@ -159,9 +154,9 @@ public class LoadStructuralVariants {
                 }
             }
 
-            final VariantAnnotator annotator = ensembleDBConn != null ?
-                    new MySQLAnnotator(ensembleDBConn.context()) :
-                    MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
+            final VariantAnnotator annotator = ensembleDBConn != null
+                    ? new MySQLAnnotator(ensembleDBConn.context())
+                    : MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
 
             LOGGER.info("loading Fusion data");
             final KnownFusionsModel knownFusionsModel =
@@ -172,7 +167,7 @@ public class LoadStructuralVariants {
             final StructuralVariantAnalyzer analyzer =
                     new StructuralVariantAnalyzer(annotator, HmfGenePanelSupplier.hmfPanelGeneList(), knownFusionsModel);
             LOGGER.info("analyzing structural variants for impact via disruptions and fusions");
-            final StructuralVariantAnalysis analysis = analyzer.run(enrichedVariants, sourceSVsFromDB);
+            final StructuralVariantAnalysis analysis = analyzer.run(enrichedVariants);
 
             LOGGER.info("persisting annotations to database");
             final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(dbAccess.context());

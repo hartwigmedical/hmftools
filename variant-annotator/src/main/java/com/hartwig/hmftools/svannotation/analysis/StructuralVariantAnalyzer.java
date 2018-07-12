@@ -48,11 +48,7 @@ public class StructuralVariantAnalyzer {
     }
 
     @NotNull
-    public StructuralVariantAnalysis run(@NotNull final List<EnrichedStructuralVariant> variants, boolean skipAnnotations) {
-        if (skipAnnotations) {
-            return ImmutableStructuralVariantAnalysis.empty();
-        }
-
+    public StructuralVariantAnalysis run(@NotNull final List<EnrichedStructuralVariant> variants) {
         LOGGER.debug("annotating variants");
         final List<StructuralVariantAnnotation> annotations = annotator.annotateVariants(variants);
 

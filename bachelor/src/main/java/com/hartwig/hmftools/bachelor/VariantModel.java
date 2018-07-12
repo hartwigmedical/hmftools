@@ -22,11 +22,14 @@ public class VariantModel {
     private final VariantContext context;
     private final Set<String> dbSNP;
     private final List<VariantAnnotation> sampleAnnotations;
+    private final List<String> rawAnnotations;
 
     public VariantModel(@NotNull String sample, @NotNull VariantContext context) {
         this.context = context;
         dbSNP = Lists.newArrayList(context.getID().split(",")).stream().filter(s -> s.startsWith("rs")).collect(Collectors.toSet());
         final List<VariantAnnotation> annotations = VariantAnnotationFactory.fromContext(context);
+
+        rawAnnotations = VariantAnnotationFactory.rawAnnotations(context);
 
         final List<String> alleleList =
                 context.getGenotype(sample).getAlleles().stream().map(Allele::getBaseString).collect(Collectors.toList());
@@ -51,5 +54,10 @@ public class VariantModel {
     @NotNull
     public List<VariantAnnotation> sampleAnnotations() {
         return sampleAnnotations;
+    }
+
+    @NotNull
+    public List<String> rawAnnotations() {
+        return rawAnnotations;
     }
 }
