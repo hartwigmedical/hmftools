@@ -228,6 +228,7 @@ drug,type,mechanism,synonyms
 "Rituximab, Cyclophosphamide, Doxorubicin, Vincristine, Prednisolone (R-CHOP)",Combi therapy,"Anti-CD20, alkylating, anthracycline, vinca alkaloid, glucocorticoid","R-CHOP"
 "Rociletinib",Targeted therapy,"anti-EGFR","rocelitinib"
 "Samarium-153",Nuclear therapy,"Radionuclide",""
+"SHP-2 inhibitor",Targeted therapy,"Allosteric inhibitor",""
 "Sipuleucel-T",Immunotherapy,"Other","Provenge"
 "Sirolimus",Other,"Immunosuppressant","sirolimus"
 "Somatostatine",Hormonal therapy,"Somatostatin analogue","Somatostatine analog"
