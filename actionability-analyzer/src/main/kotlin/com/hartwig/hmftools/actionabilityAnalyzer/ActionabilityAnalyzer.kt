@@ -46,7 +46,7 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
         @VisibleForTesting
         fun primaryTumorMapping(): Map<String, Set<String>> {
             return readCSVRecords(this::class.java.getResourceAsStream("/primary_tumor_locations.csv")) {
-                Pair(it["primaryTumorLocation"], it["doids"].orEmpty().split(";").filterNot { it.isBlank() }.toSet())
+                Pair(it["primaryTumorLocation"].toLowerCase(), it["doids"].orEmpty().split(";").filterNot { it.isBlank() }.toSet())
             }.toMap()
         }
     }
@@ -126,7 +126,7 @@ class ActionabilityAnalyzer(private val sampleTumorLocationMap: Map<String, Stri
     }
 
     private fun getTreatmentType(patientCancerType: String?, treatmentCancerType: String): String {
-        val patientDoids = tumorLocationMapping[patientCancerType].orEmpty()
+        val patientDoids = tumorLocationMapping[patientCancerType?.toLowerCase()].orEmpty()
         if (patientDoids.isEmpty()) return "Unknown"
         val treatmentDoids = cancerTypeMapping[treatmentCancerType].orEmpty()
         if (treatmentDoids.isEmpty()) return "Unknown"
