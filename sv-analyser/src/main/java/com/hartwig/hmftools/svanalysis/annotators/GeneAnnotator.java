@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svanalysis.annotators;
 
+import static com.hartwig.hmftools.svanalysis.types.SvGeneData.DRIVER_DEL;
 import static com.hartwig.hmftools.svanalysis.types.SvGeneData.DRIVER_TYPE_TSG;
 
 import java.io.BufferedReader;
@@ -86,9 +87,12 @@ public class GeneAnnotator {
 
         for(SvGeneData geneData : geneDataMap)
         {
-            if(!geneData.driveType().equals(DRIVER_TYPE_TSG))
+            // for now, only hanle TSG DELs since they ought to match exactly
+            if(!geneData.driverType().equals(DRIVER_TYPE_TSG))
                 continue;
 
+            if(!geneData.driver().equals(DRIVER_DEL))
+                continue;
 
             // check each breakend if the orientations face away from the deleted region
             for(int i = 0; i < 2; ++i)
@@ -98,16 +102,18 @@ public class GeneAnnotator {
                 if(!geneData.chromosome().equals(var.chromosome(useStart)))
                     continue;
 
-                if((useStart && var.orientation(useStart) != 1) || (!useStart && var.orientation(useStart) != -1))
-                    continue;
+//                if((useStart && var.orientation(useStart) != 1) || (!useStart && var.orientation(useStart) != -1))
+//                    continue;
 
-                if(geneData.startPosition() == var.position(useStart))
+                if(geneData.startCNRegion() == var.position(useStart) && var.orientation(useStart) == 1)
                 {
                     geneData.addSvData(var, true);
+                    var.setGeneData(geneData, useStart);
                 }
-                else if(geneData.endPosition() == var.position(useStart))
+                else if(geneData.endCNRegion() == var.position(useStart) && var.orientation(useStart) == -1)
                 {
                     geneData.addSvData(var, false);
+                    var.setGeneData(geneData, useStart);
                 }
             }
         }
@@ -125,7 +131,10 @@ public class GeneAnnotator {
 
         for(SvGeneData geneData : geneDataMap) {
 
-            if (!geneData.driveType().equals(DRIVER_TYPE_TSG))
+            if (!geneData.driverType().equals(DRIVER_TYPE_TSG))
+                continue;
+
+            if(!geneData.driver().equals(DRIVER_DEL))
                 continue;
 
             if(geneData.getStartSvList().isEmpty()) {
@@ -142,16 +151,16 @@ public class GeneAnnotator {
                 if(geneData.getStartSvList().size() == geneData.getEndSvList().size())
                 {
                     if(geneData.getStartSvList().get(0).equals(geneData.getEndSvList().get(0))) {
-                        LOGGER.debug("sample({}) gene({}) matches single SV({})", sampleId, geneData.gene(), geneData.getEndSvList().get(0).id());
+                        LOGGER.info("sample({}) gene({}) matches single SV({})", sampleId, geneData.gene(), geneData.getEndSvList().get(0).id());
                     }
                     else {
-                        LOGGER.debug("sample({}) gene({}) matches diff SVs({} & {})",
+                        LOGGER.info("sample({}) gene({}) matches diff SVs({} & {})",
                                 sampleId, geneData.gene(), geneData.getStartSvList().get(0).id(), geneData.getEndSvList().get(0).id());
                     }
                 }
                 else
                 {
-                    LOGGER.debug("sample({}) gene({}) matches multiple SVs, counts({} & {})",
+                    LOGGER.info("sample({}) gene({}) matches multiple SVs, counts({} & {})",
                             geneData.getStartSvList().get(0).id(), geneData.getStartSvList().size(), geneData.getEndSvList().size());
                 }
             }

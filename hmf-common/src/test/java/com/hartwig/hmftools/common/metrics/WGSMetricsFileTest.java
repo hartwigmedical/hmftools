@@ -29,7 +29,8 @@ public class WGSMetricsFileTest {
 
     private static final String EMPTY_SAMPLE = "sample3";
     private static final String INCORRECT_SAMPLE = "sample4";
-    private static final String NON_EXISTING_SAMPLE = "sample5";
+    private static final String NO_DEDUP_SAMPLE = "sample5";
+    private static final String NON_EXISTING_SAMPLE = "sample6";
 
     @Test
     public void worksForRefAndTumorInput() throws IOException {
@@ -70,6 +71,11 @@ public class WGSMetricsFileTest {
         assertNull(metrics.tumor60xCoveragePercentage());
     }
 
+    @Test
+    public void worksForNonDedupSamples() throws IOException {
+        String file = WGSMetricsFile.generateFilename(BASE_DIRECTORY, NO_DEDUP_SAMPLE);
+        assertNotNull(WGSMetricsFile.read(file));
+    }
     @Test(expected = EmptyFileException.class)
     public void emptyFileYieldsEmptyFileException() throws IOException {
         String file = WGSMetricsFile.generateFilename(BASE_DIRECTORY, EMPTY_SAMPLE);

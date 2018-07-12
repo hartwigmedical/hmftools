@@ -5,9 +5,9 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.patientreporter.BaseReporterData;
-import com.hartwig.hmftools.patientreporter.ImmutableNotSequencedPatientReport;
+import com.hartwig.hmftools.patientreporter.ImmutableNotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
-import com.hartwig.hmftools.patientreporter.NotSequencedPatientReport;
+import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 
 import org.immutables.value.Value;
@@ -17,14 +17,14 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class NotSequenceableReporter {
+public abstract class NotAnalysableReporter {
 
     @NotNull
     abstract BaseReporterData baseReporterData();
 
-    public NotSequencedPatientReport run(@NotNull final String sample, @NotNull final NotSequenceableReason reason,
+    public NotAnalysedPatientReport run(@NotNull final String sample, @NotNull final NotAnalysableReason reason,
             @Nullable final String comments) {
-        final NotSequenceableStudy study = NotSequenceableStudy.fromSample(sample);
+        final NotAnalysableStudy study = NotAnalysableStudy.fromSample(sample);
         assert study != null;
         final PatientTumorLocation patientTumorLocation =
                 PatientReporterHelper.extractPatientTumorLocation(baseReporterData().patientTumorLocations(), sample);
@@ -37,7 +37,7 @@ public abstract class NotSequenceableReporter {
                 null,
                 lims.labProceduresForSample(sample),
                 sampleRecipient);
-        return ImmutableNotSequencedPatientReport.of(sampleReport,
+        return ImmutableNotAnalysedPatientReport.of(sampleReport,
                 reason,
                 study,
                 Optional.ofNullable(comments),

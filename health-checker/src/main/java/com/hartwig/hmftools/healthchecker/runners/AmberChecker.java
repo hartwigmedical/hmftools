@@ -19,13 +19,20 @@ public class AmberChecker implements HealthChecker {
     private static final Logger LOGGER = LogManager.getLogger(AmberChecker.class);
 
     @NotNull
-    public BaseResult run(@NotNull final RunContext runContext) throws IOException {
+    @Override
+    public BaseResult run(@NotNull final RunContext runContext) {
         if (!runContext.isSomaticRun()) {
             return new NoResult(CheckType.AMBER);
         }
 
-        final String amberDirectory = runContext.runDirectory() + File.separator + "amber";
-        final AmberQC qcCheck = AmberQCFile.read(AmberQCFile.generateFilename(amberDirectory, runContext.tumorSample()));
+        final AmberQC qcCheck;
+        try {
+            final String amberDirectory = runContext.runDirectory() + File.separator + "amber";
+            qcCheck = AmberQCFile.read(AmberQCFile.generateFilename(amberDirectory, runContext.tumorSample()));
+        } catch (IOException exception) {
+            LOGGER.warn("Could not load amber qc file.");
+            return new NoResult(CheckType.AMBER);
+        }
 
         final String meanBaf = String.valueOf(qcCheck.meanBAF());
         final HealthCheck healthCheck = new HealthCheck(runContext.tumorSample(), AmberCheck.MEAN_BAF.toString(), meanBaf);

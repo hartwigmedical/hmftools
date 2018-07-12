@@ -59,7 +59,7 @@ public class PatientValidatorTest {
     private static final DrugData DRUG_FEB_ONGOING = create("Drug1", FEB, null);
     private static final DrugData DRUG_JAN_MAR = create("Drug1", JAN, MAR);
 
-    private static final CuratedDrug CURATED_DRUG = ImmutableCuratedDrug.of("Drug1", "Type1", "Drug1");
+    private static final CuratedDrug CURATED_DRUG = ImmutableCuratedDrug.of("Drug1", "Type1", "Anti-EGFR", "Drug1");
     private static final DrugData DRUG_WITH_PARTIAL_CURATED_ENTRY =
             drugBuilder().name("Drug1 Drug2 Drug3").startDate(JAN).endDate(JAN).addCuratedDrugs(CURATED_DRUG).build();
     private static final DrugData DRUG_MISSING_CURATED_ENTRY = drugBuilder().name("Drug1").startDate(JAN).endDate(JAN).build();
@@ -335,7 +335,8 @@ public class PatientValidatorTest {
 
     @NotNull
     private static DrugData create(@Nullable String name, @Nullable LocalDate startDate, @Nullable LocalDate endDate) {
-        List<CuratedDrug> curation = name != null ? Lists.newArrayList(ImmutableCuratedDrug.of(name, "Type1", name)) : Lists.newArrayList();
+        List<CuratedDrug> curation =
+                name != null ? Lists.newArrayList(ImmutableCuratedDrug.of(name, "Type1", name, "")) : Lists.newArrayList();
         return drugBuilder().name(name).startDate(startDate).endDate(endDate).addAllCuratedDrugs(curation).build();
     }
 

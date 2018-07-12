@@ -39,6 +39,9 @@ public class SvClusterData
     private int mTransLength;
     private String mTransSvLinks;
 
+    private SvGeneData mStartGeneData;
+    private SvGeneData mEndGeneData;
+
     public SvClusterData(final StructuralVariantData svData)
     {
         mId = svData.id();
@@ -63,6 +66,10 @@ public class SvClusterData
         mTransType = "";
         mTransLength = 0;
         mTransSvLinks = "";
+
+        mStartGeneData = null;
+        mEndGeneData = null;
+
     }
 
     public static SvClusterData from(final EnrichedStructuralVariant enrichedSV)
@@ -161,6 +168,17 @@ public class SvClusterData
     public boolean isDupBEEnd() { return mDupBEEnd; }
     public void setIsDupBEStart(boolean toggle) { mDupBEStart = toggle; }
     public void setIsDupBEEnd(boolean toggle) { mDupBEEnd = toggle; }
+
+    public final SvGeneData getStartGeneData() { return mStartGeneData; }
+    public final SvGeneData getEndGeneData() { return mEndGeneData; }
+
+    public void setGeneData(final SvGeneData gd, boolean isStart)
+    {
+        if(isStart)
+            mStartGeneData = gd;
+        else
+            mEndGeneData = gd;
+    }
 
     public final String typeStr()
     {

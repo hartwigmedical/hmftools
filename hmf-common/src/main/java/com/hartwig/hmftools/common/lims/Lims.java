@@ -92,6 +92,16 @@ public class Lims {
     }
 
     @NotNull
+    public String primaryTumorForSample(@NotNull final String sample) {
+        LimsJsonData sampleData = dataPerSample.get(sample);
+        if (sampleData != null) {
+            return sampleData.primaryTumor();
+        }
+        // KODU: No warning raised since initially this information was not tracked so this will be missing for early samples.
+        return "N/A";
+    }
+
+    @NotNull
     public String labProceduresForSample(@NotNull final String sample) {
         LimsJsonData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {

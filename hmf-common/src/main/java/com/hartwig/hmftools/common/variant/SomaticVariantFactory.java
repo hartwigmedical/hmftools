@@ -90,7 +90,7 @@ public class SomaticVariantFactory {
 
     @VisibleForTesting
     @NotNull
-    Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context) {
+    public Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context) {
         if (filter.test(context)) {
             final Genotype genotype = context.getGenotype(sample);
             if (genotype.hasAD() && genotype.getAD().length > 1) {

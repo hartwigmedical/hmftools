@@ -26,7 +26,7 @@ class GeneCopyNumberDAO {
 
     void writeCopyNumber(@NotNull final String sample, @NotNull List<GeneCopyNumber> copyNumbers) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
-        context.delete(GENECOPYNUMBER).where(GENECOPYNUMBER.SAMPLEID.eq(sample)).execute();
+        deleteGeneCopyNumberForSample(sample);
 
         for (List<GeneCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, DB_BATCH_INSERT_SIZE)) {
             InsertValuesStepN inserter = context.insertInto(GENECOPYNUMBER,
@@ -98,5 +98,9 @@ class GeneCopyNumberDAO {
                 gene.missenseNonBiallelicPloidy(),
                 gene.minMinorAllelePloidy(),
                 timestamp);
+    }
+
+    void deleteGeneCopyNumberForSample(@NotNull String sample) {
+        context.delete(GENECOPYNUMBER).where(GENECOPYNUMBER.SAMPLEID.eq(sample)).execute();
     }
 }

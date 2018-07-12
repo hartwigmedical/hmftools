@@ -4,7 +4,10 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.copynumber.CopyNumberAlteration;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
+import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -24,7 +27,7 @@ public final class GeneCopyNumberDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromCopyNumbers(@NotNull final List<GeneCopyNumber> copyNumbers) {
+    public static JRDataSource fromCopyNumbers(@NotNull FittedPurityStatus fitStatus, @NotNull final List<GeneCopyNumber> copyNumbers) {
         final DRDataSource copyNumberDatasource = new DRDataSource(CHROMOSOME.getName(),
                 CHROMOSOME_BAND.getName(),
                 GENE_FIELD.getName(),
@@ -33,10 +36,8 @@ public final class GeneCopyNumberDataSource {
 
         for (final GeneCopyNumber copyNumber : copyNumbers) {
             copyNumberDatasource.add(copyNumber.chromosome(),
-                    copyNumber.chromosomeBand(),
-                    copyNumber.gene(),
-                    copyNumber.alteration().description(),
-                    Integer.toString(copyNumber.value()));
+                    copyNumber.chromosomeBand(), copyNumber.gene(), type(copyNumber),
+                    PatientReportFormat.correctCopyValueForFitStatus(fitStatus, Integer.toString(copyNumber.value())));
         }
         return copyNumberDatasource;
     }
@@ -44,5 +45,20 @@ public final class GeneCopyNumberDataSource {
     @NotNull
     public static FieldBuilder<?>[] copyNumberFields() {
         return new FieldBuilder<?>[] { CHROMOSOME, CHROMOSOME_BAND, GENE_FIELD, GAIN_OR_LOSS_FIELD, COPY_NUMBER_FIELD };
+    }
+
+    @NotNull
+    private static String type(@NotNull GeneCopyNumber geneCopyNumber) {
+        if (geneCopyNumber.alteration() == CopyNumberAlteration.GAIN) {
+            return "gain";
+        } else {
+            // KODU: At this point we only have losses and gains.
+            assert geneCopyNumber.alteration() == CopyNumberAlteration.LOSS;
+            if (geneCopyNumber.maxCopyNumber() < 0.5) {
+                return "full loss";
+            } else {
+                return "partial loss";
+            }
+        }
     }
 }

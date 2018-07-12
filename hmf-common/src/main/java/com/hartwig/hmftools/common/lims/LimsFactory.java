@@ -58,9 +58,11 @@ public final class LimsFactory {
         jsonSamples.forEach(jsonSample -> {
             final JsonObject jsonSampleObject = jsonSample.getValue().getAsJsonObject();
             final String analysisType = jsonSampleObject.get("analysis_type").getAsString();
+            final String label = jsonSampleObject.get("label").getAsString();
 
             // KODU: Filter on somatic to get rid of RNA samples, see also DEV-252
-            if (analysisType != null && analysisType.toLowerCase().contains("somatic")) {
+            // KODU: We are only interested in CPCT/DRUP samples, don't care about research labeled samples.
+            if (analysisType != null && analysisType.toLowerCase().contains("somatic") && !label.equalsIgnoreCase("research")) {
                 try {
                     final LimsJsonData limsJsonData = gson.fromJson(jsonSample.getValue(), LimsJsonData.class);
                     limsDataPerSample.put(limsJsonData.sampleId(), limsJsonData);

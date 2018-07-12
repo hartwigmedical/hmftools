@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.metrics.WGSMetrics;
 import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
+import com.hartwig.hmftools.healthchecker.result.NoResult;
 import com.hartwig.hmftools.healthchecker.result.PatientResult;
 
 import org.apache.logging.log4j.LogManager;
@@ -25,8 +26,16 @@ public class CoverageChecker implements HealthChecker {
     }
 
     @NotNull
-    public BaseResult run(@NotNull final RunContext runContext) throws IOException {
-        WGSMetrics metrics = extractMetrics(runContext);
+    @Override
+    public BaseResult run(@NotNull final RunContext runContext) {
+        final WGSMetrics metrics;
+
+        try {
+            metrics = extractMetrics(runContext);
+        } catch (IOException exception) {
+            LOGGER.warn("Could not load WGS Metrics file.");
+            return new NoResult(CheckType.COVERAGE);
+        }
 
         return toCheckResult(metrics, runContext.refSample(), runContext.tumorSample());
     }

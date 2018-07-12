@@ -250,4 +250,30 @@ public class DatabaseAccess {
     public void writeValidationFindings(@NotNull final List<ValidationFinding> findings) {
         validationFindingsDAO.write(findings);
     }
+
+    public void deleteAllDataForSample(@NotNull String sample) {
+        LOGGER.info("Starting deleting data");
+
+        LOGGER.info("Deleting metric data for sample: " + sample);
+        metricDAO.deleteMetricForSample(sample);
+
+        LOGGER.info("Deleting purity data for sample: " + sample);
+        purityDAO.deletePurityForSample(sample);
+
+        LOGGER.info("Deleting copy number data for sample: " + sample);
+        copyNumberDAO.deleteCopyNumberForSample(sample);
+
+        LOGGER.info("Deleting gene copy number data for sample: " + sample);
+        geneCopyNumberDAO.deleteGeneCopyNumberForSample(sample);
+
+        LOGGER.info("Deleting somatic variant data for sample: " + sample);
+        somaticVariantDAO.deleteSomaticVariantForSample(sample);
+
+        LOGGER.info("Deleting structural variant data for sample: " + sample);
+        structuralVariantDAO.deleteStructuralVariantsForSample(sample);
+
+        LOGGER.info("All data for sample: " + sample + " is deleted");
+
+    }
 }
+

@@ -218,7 +218,7 @@ class BachelorEligibility {
 
         if (matchingPrograms.size() > 0) {
             // found a match, not collect up the details and write them to the output file
-            LOGGER.info("program match found, first entry({}) ", matchingPrograms.get(0));
+            LOGGER.debug("program match found, first entry({}) ", matchingPrograms.get(0));
         }
 
         // search the list of annotations for the correct allele and transcript ID to write to the result file
@@ -233,7 +233,7 @@ class BachelorEligibility {
             String programName = program.name();
 
             // found a match, not collect up the details and write them to the output file
-            LOGGER.info("match found: program({}) ", programName);
+            LOGGER.debug("match found: program({}) ", programName);
 
             for (VariantAnnotation snpEff : sampleVariant.sampleAnnotations()) {
 
@@ -266,7 +266,7 @@ class BachelorEligibility {
 
                 // now we have the correct allele and transcript ID as required by the XML
                 // so write a complete record to the output file
-                LOGGER.info("matched allele({}) transcriptId({}) effect({})", snpEff.allele(), snpEff.featureID(), snpEff.effects());
+                LOGGER.debug("matched allele({}) transcriptId({}) effect({})", snpEff.allele(), snpEff.featureID(), snpEff.effects());
 
                 EligibilityReport report = ImmutableEligibilityReport.builder()
                         .patient(patient)
@@ -280,6 +280,7 @@ class BachelorEligibility {
                         .ref(variant.getReference().toString())
                         .alts(snpEff.allele())
                         .effects(snpEff.effects())
+                        .hgvsProtein(snpEff.hgvsProtein())
                         .build();
 
                 reportList.add(report);
@@ -287,7 +288,7 @@ class BachelorEligibility {
         }
 
         if (!reportList.isEmpty()) {
-            LOGGER.info("writing {} matched reports", reportList.size());
+            LOGGER.debug("writing {} matched reports", reportList.size());
         }
 
         return reportList;
@@ -340,6 +341,7 @@ class BachelorEligibility {
                             .ref("")
                             .alts("")
                             .effects("")
+                            .hgvsProtein("")
                             .build())
                     .collect(Collectors.toList());
 
@@ -394,6 +396,7 @@ class BachelorEligibility {
                             .ref("")
                             .alts("")
                             .effects("")
+                            .hgvsProtein("")
                             .build())
                     .forEach(results::add);
 

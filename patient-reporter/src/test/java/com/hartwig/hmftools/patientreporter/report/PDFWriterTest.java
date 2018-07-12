@@ -24,27 +24,27 @@ import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
+import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.BaseReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
-import com.hartwig.hmftools.patientreporter.ImmutableNotSequencedPatientReport;
+import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.ImmutableNotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
-import com.hartwig.hmftools.patientreporter.ImmutableSequencedPatientReport;
-import com.hartwig.hmftools.patientreporter.NotSequencedPatientReport;
+import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestUtil;
 import com.hartwig.hmftools.patientreporter.SampleReport;
-import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
-import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
-import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
+import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
+import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
 import com.hartwig.hmftools.patientreporter.report.data.ImmutableGeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.ImmutableGeneFusionData;
-import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableVariantReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
@@ -88,14 +88,15 @@ public class PDFWriterTest {
                 reporterData.panelGeneModel(),
                 sampleReport.primaryTumorLocationString()) : mockedAlterations();
 
-        final SequencedPatientReport patientReport = ImmutableSequencedPatientReport.of(sampleReport,
+        final AnalysedPatientReport patientReport = ImmutableAnalysedPatientReport.of(sampleReport,
                 variants,
                 mutationalLoad,
                 microsatelliteIndicator,
                 copyNumbers,
                 disruptions,
                 fusions,
-                PatientReportFormat.formatPercent(impliedTumorPurity),
+                impliedTumorPurity,
+                FittedPurityStatus.NORMAL,
                 alterations,
                 Resources.getResource("circos/circos_example.png").getPath(),
                 Optional.of("this is a test report and does not relate to any real CPCT patient"),
@@ -176,10 +177,12 @@ public class PDFWriterTest {
     @NotNull
     private static List<GeneCopyNumber> createTestCopyNumbers() {
         final GeneCopyNumber copyNumber1 =
-                createCopyNumberBuilder().chromosome("9").chromosomeBand("p21.3").gene("CDKN2A").minCopyNumber(0).build();
+                createCopyNumberBuilder().chromosome("9").chromosomeBand("p21.3").gene("CDKN2A").minCopyNumber(0).maxCopyNumber(0).build();
         final GeneCopyNumber copyNumber2 =
-                createCopyNumberBuilder().chromosome("17").chromosomeBand("q12").gene("ERBB2").minCopyNumber(9).build();
-        return Lists.newArrayList(copyNumber1, copyNumber2);
+                createCopyNumberBuilder().chromosome("17").chromosomeBand("p13.1").gene("TP53").minCopyNumber(0).maxCopyNumber(2).build();
+        final GeneCopyNumber copyNumber3 =
+                createCopyNumberBuilder().chromosome("17").chromosomeBand("q12").gene("ERBB2").minCopyNumber(11).maxCopyNumber(11).build();
+        return Lists.newArrayList(copyNumber1, copyNumber2, copyNumber3);
     }
 
     @NotNull
@@ -300,7 +303,7 @@ public class PDFWriterTest {
 
     @Test
     public void canGenerateLowTumorPercentageReport() throws DRException, IOException {
-        final JasperReportBuilder report = generateNotSequenceableCPCTReport(0.1, NotSequenceableReason.LOW_TUMOR_PERCENTAGE);
+        final JasperReportBuilder report = generateNotAnalysableCPCTReport(0.1, NotAnalysableReason.LOW_TUMOR_PERCENTAGE);
         assertNotNull(report);
 
         if (SHOW_AND_PRINT) {
@@ -314,7 +317,7 @@ public class PDFWriterTest {
 
     @Test
     public void canGenerateLowDNAYieldReport() throws DRException, IOException {
-        final JasperReportBuilder report = generateNotSequenceableCPCTReport(0.6, NotSequenceableReason.LOW_DNA_YIELD);
+        final JasperReportBuilder report = generateNotAnalysableCPCTReport(0.6, NotAnalysableReason.LOW_DNA_YIELD);
         assertNotNull(report);
 
         if (SHOW_AND_PRINT) {
@@ -328,7 +331,7 @@ public class PDFWriterTest {
 
     @Test
     public void canGeneratePostDNAIsolationFailReport() throws DRException, IOException {
-        final JasperReportBuilder report = generateNotSequenceableCPCTReport(0.6, NotSequenceableReason.POST_ISOLATION_FAIL);
+        final JasperReportBuilder report = generateNotAnalysableCPCTReport(0.6, NotAnalysableReason.POST_ANALYSIS_FAIL);
         assertNotNull(report);
 
         if (SHOW_AND_PRINT) {
@@ -341,15 +344,15 @@ public class PDFWriterTest {
     }
 
     @NotNull
-    private static JasperReportBuilder generateNotSequenceableCPCTReport(final double pathologyTumorEstimate,
-            @NotNull final NotSequenceableReason reason) throws IOException {
-        final NotSequencedPatientReport patientReport = ImmutableNotSequencedPatientReport.of(testSampleReport(pathologyTumorEstimate),
+    private static JasperReportBuilder generateNotAnalysableCPCTReport(final double pathologyTumorEstimate,
+            @NotNull final NotAnalysableReason reason) throws IOException {
+        final NotAnalysedPatientReport patientReport = ImmutableNotAnalysedPatientReport.of(testSampleReport(pathologyTumorEstimate),
                 reason,
-                NotSequenceableStudy.CPCT,
+                NotAnalysableStudy.CPCT,
                 Optional.empty(),
                 PatientReporterTestUtil.SIGNATURE_PATH);
 
-        return PDFWriter.generateNotSequenceableReport(patientReport);
+        return PDFWriter.generateNotAnalysableReport(patientReport);
     }
 
     @NotNull

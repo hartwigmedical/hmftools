@@ -21,7 +21,9 @@ final class ReportableCopyNumbers {
 
     @NotNull
     static List<GeneCopyNumber> filterCopyNumbersForReport(final double samplePloidy, @NotNull final List<GeneCopyNumber> geneCopyNumbers) {
-        return geneCopyNumbers.stream().filter(x -> includeInReport(samplePloidy, x.minCopyNumber())).collect(Collectors.toList());
+        return geneCopyNumbers.stream()
+                .filter(copyNumber -> includeInReport(samplePloidy, copyNumber.value()))
+                .collect(Collectors.toList());
     }
 
     @VisibleForTesting

@@ -9,6 +9,9 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
+import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
+
 import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.report.base.expression.AbstractSimpleExpression;
@@ -31,7 +34,7 @@ public final class GeneFusionDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromGeneFusions(@NotNull List<GeneFusionData> fusions) {
+    public static JRDataSource fromGeneFusions(@NotNull FittedPurityStatus fitStatus, @NotNull List<GeneFusionData> fusions) {
         final DRDataSource dataSource = new DRDataSource(FUSION_FIELD.getName(),
                 START_TRANSCRIPT_FIELD.getName(),
                 END_TRANSCRIPT_FIELD.getName(),
@@ -45,7 +48,7 @@ public final class GeneFusionDataSource {
                 fusion.geneEndTranscript(),
                 fusion.geneContextStart(),
                 fusion.geneContextEnd(),
-                fusion.copies(),
+                PatientReportFormat.correctCopyValueForFitStatus(fitStatus, fusion.copies()),
                 fusion.source()));
 
         return dataSource;

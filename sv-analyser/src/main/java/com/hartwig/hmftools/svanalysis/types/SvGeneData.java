@@ -10,7 +10,9 @@ public class SvGeneData {
     private String mSampleId;
     private String mChromosome;
     private String mGene;
-    private String mDriveType;
+    private String mImpact;
+    private String mDriver;
+    private String mDriverType;
     private long mStartPosition;
     private long mEndPosition;
     private long mStartCNRegion;
@@ -25,11 +27,15 @@ public class SvGeneData {
     public static String DRIVER_TYPE_ONCOGENE = "ONCO";
     public static String DRIVER_TYPE_FUSION = "FUSION";
 
+    public static String DRIVER_DEL = "Del";
+
     public SvGeneData(final String[] csvData)
     {
         mSampleId = csvData[0];
         mGene = csvData[1];
-        mDriveType = csvData[5];
+        mImpact = csvData[2];
+        mDriver = csvData[3];
+        mDriverType = csvData[5];
         mChromosome = csvData[10];
         mStartPosition = Long.parseLong(csvData[11]);
         mEndPosition = Long.parseLong(csvData[12]);
@@ -45,11 +51,13 @@ public class SvGeneData {
     public final String sampleId() {return mSampleId; }
     public final String chromosome() {return mChromosome ; }
     public final String gene() {return mGene; }
-    public final String driveType() {return mDriveType; }
+    public final String impact() {return mImpact; }
+    public final String driver() {return mDriver; }
+    public final String driverType() {return mDriverType; }
     public long startPosition() {return mStartPosition; }
-    public long endPosition() {return mEndPosition + 1; } // since CN region ends just before the SV position
+    public long endPosition() {return mEndPosition; }
     public long startCNRegion() {return mStartCNRegion; }
-    public long endCNRegion() {return endCNRegion(); }
+    public long endCNRegion() {return mEndCNRegion + 1; } // since CN region ends just before the SV position
     public final String startRegionType() {return mStartRegionType; }
     public final String endRegionType() {return mEndRegionType; }
 

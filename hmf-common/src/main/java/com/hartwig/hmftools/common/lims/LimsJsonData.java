@@ -38,6 +38,10 @@ abstract class LimsJsonData {
     public abstract String tumorPercentageString();
 
     @NotNull
+    @SerializedName("primary_tum")
+    public abstract String primaryTumor();
+
+    @NotNull
     @SerializedName("lab_sop_versions")
     abstract String labSopVersions();
 

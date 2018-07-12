@@ -26,7 +26,7 @@ class SomaticVariantDAO {
 
     void write(@NotNull final String sample, @NotNull List<EnrichedSomaticVariant> variants) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
-        context.delete(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample)).execute();
+        deleteSomaticVariantForSample(sample);
 
         for (List<EnrichedSomaticVariant> splitRegions : Iterables.partition(variants, DB_BATCH_INSERT_SIZE)) {
             InsertValuesStepN inserter = context.insertInto(SOMATICVARIANT,
@@ -101,5 +101,9 @@ class SomaticVariantDAO {
                 variant.germlineStatus(),
                 DatabaseUtil.decimal(variant.minorAllelePloidy()),
                 timestamp);
+    }
+
+    void deleteSomaticVariantForSample(@NotNull String sample) {
+        context.delete(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample)).execute();
     }
 }

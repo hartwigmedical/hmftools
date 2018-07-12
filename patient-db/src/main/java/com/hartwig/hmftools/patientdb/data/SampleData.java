@@ -24,6 +24,9 @@ public abstract class SampleData implements Comparable<SampleData> {
     public abstract Integer dnaNanograms();
 
     @Nullable
+    public abstract String limsPrimaryTumor();
+
+    @Nullable
     public abstract Double tumorPercentage();
 
     @NotNull

@@ -23,7 +23,7 @@ import htsjdk.variant.vcf.VCFHeaderVersion;
 public class SomaticVariantFactoryTest {
 
     private static final String SAMPLE = "sample";
-    private static final String BASE_PATH = Resources.getResource("variants").getPath();
+    private static final String BASE_PATH = Resources.getResource("variant").getPath();
     private static final String SOMATIC_VARIANT_FILE = "somatics.vcf";
 
     private SomaticVariantFactory victim;

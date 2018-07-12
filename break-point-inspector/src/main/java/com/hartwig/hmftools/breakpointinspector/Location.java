@@ -6,80 +6,96 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.variant.variantcontext.VariantContext;
 
 public class Location implements Comparable<Location> {
-    String ReferenceName;
-    int ReferenceIndex = -1;
-    int Position = -1;
 
-    private Location() {
+    @NotNull
+    private final String referenceName;
+    private final int referenceIndex;
+    private final int position;
+
+    public Location(@NotNull final String referenceName, final int referenceIndex, final int position) {
+        this.referenceName = referenceName;
+        this.referenceIndex = referenceIndex;
+        this.position = position;
     }
 
-    static Location parseLocationString(final String location, final SAMSequenceDictionary dictionary) throws RuntimeException {
-        final Location result = new Location();
+    public int referenceIndex() {
+        return referenceIndex;
+    }
 
+    public int position() {
+        return position;
+    }
+
+    @NotNull
+    static Location parseFromVariant(@NotNull VariantContext variant, @NotNull SAMSequenceDictionary dictionary) {
+        final String variantLocation = variant.getContig() + ":" + Integer.toString(variant.getStart());
+        return Location.parseLocationString(variantLocation, dictionary);
+    }
+
+    @NotNull
+    static Location parseLocationString(final String location, final SAMSequenceDictionary dictionary) {
         final String[] split = location.split(":");
         if (split.length != 2) {
             throw new RuntimeException(location + " is not a valid location string");
         }
 
         final String chromosome = split[0];
-        result.ReferenceName = chromosome;
+
+        int position;
         try {
-            result.Position = Integer.parseInt(split[1]);
+            position = Integer.parseInt(split[1]);
         } catch (NumberFormatException e) {
             throw new RuntimeException(location + " is not a valid location string");
         }
 
-        // query the position
-        result.ReferenceIndex = dictionary.getSequenceIndex(chromosome);
-        if (result.ReferenceIndex < 0) {
+        // NERA: Query the position
+        int referenceIndex = dictionary.getSequenceIndex(chromosome);
+        if (referenceIndex < 0) {
             if (!chromosome.startsWith("chr")) {
-                result.ReferenceIndex = dictionary.getSequenceIndex("chr" + chromosome);
+                referenceIndex = dictionary.getSequenceIndex("chr" + chromosome);
             } else {
-                result.ReferenceIndex = dictionary.getSequenceIndex(chromosome.substring(3));
+                referenceIndex = dictionary.getSequenceIndex(chromosome.substring(3));
             }
         }
-        if (result.ReferenceIndex < 0) {
+        if (referenceIndex < 0) {
             throw new RuntimeException(chromosome + " is not in the BAM");
         }
 
-        return result;
+        return new Location(chromosome, referenceIndex, position);
     }
 
-    static Location fromSAMRecord(final SAMRecord record) {
+    @NotNull
+    static Location fromSAMRecord(@NotNull final SAMRecord record) {
         return fromSAMRecord(record, true);
     }
 
+    @NotNull
     public static Location fromSAMRecord(final SAMRecord record, boolean alignmentStart) {
-        final Location result = new Location();
-        result.ReferenceName = record.getReferenceName();
-        result.ReferenceIndex = record.getReferenceIndex();
-        result.Position = alignmentStart ? record.getAlignmentStart() : record.getAlignmentEnd();
-        return result;
+        return new Location(record.getReferenceName(),
+                record.getReferenceIndex(),
+                alignmentStart ? record.getAlignmentStart() : record.getAlignmentEnd());
     }
 
+    @NotNull
     public Location add(int delta) {
-        final Location result = new Location();
-        result.ReferenceName = this.ReferenceName;
-        result.ReferenceIndex = this.ReferenceIndex;
-        result.Position = this.Position + delta;
-        return result;
+        return new Location(referenceName, referenceIndex, position + delta);
     }
 
-    Location set(int position) {
-        final Location result = add(0);
-        result.Position = position;
-        return result;
+    @NotNull
+    Location withNewPosition(int newPosition) {
+        return new Location(referenceName, referenceIndex, newPosition);
     }
 
     boolean sameChromosomeAs(final Location other) {
-        return other != null && other.ReferenceIndex == ReferenceIndex;
+        return other != null && other.referenceIndex == referenceIndex;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ReferenceIndex, Position);
+        return Objects.hash(referenceIndex, position);
     }
 
     @Override
@@ -92,20 +108,20 @@ public class Location implements Comparable<Location> {
         }
 
         Location other = (Location) obj;
-        return ReferenceIndex == other.ReferenceIndex && Position == other.Position;
+        return referenceIndex == other.referenceIndex && position == other.position;
     }
 
     @Override
     public int compareTo(@NotNull final Location o) {
-        final int comp1 = Integer.compare(ReferenceIndex, o.ReferenceIndex);
+        final int comp1 = Integer.compare(referenceIndex, o.referenceIndex);
         if (comp1 == 0) {
-            return Integer.compare(Position, o.Position);
+            return Integer.compare(position, o.position);
         }
         return comp1;
     }
 
     @Override
     public String toString() {
-        return ReferenceName + ":" + Position;
+        return referenceName + ":" + position;
     }
 }

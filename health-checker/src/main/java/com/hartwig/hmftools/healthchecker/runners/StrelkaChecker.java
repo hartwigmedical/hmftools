@@ -30,12 +30,19 @@ public class StrelkaChecker implements HealthChecker {
     }
 
     @NotNull
-    public BaseResult run(@NotNull final RunContext runContext) throws IOException {
+    @Override
+    public BaseResult run(@NotNull final RunContext runContext) {
         if (!runContext.isSomaticRun()) {
             return new NoResult(CheckType.STRELKA);
         }
-        final String vcfPath = vcfFilePath(runContext.runDirectory(), STRELKA_OUTPUT_EXTENSION);
-        final List<SomaticVariant> variants = SomaticVariantFactory.unfilteredInstance().fromVCFFile(runContext.tumorSample(), vcfPath);
+        final List<SomaticVariant> variants;
+        try {
+            final String vcfPath = vcfFilePath(runContext.runDirectory(), STRELKA_OUTPUT_EXTENSION);
+            variants = SomaticVariantFactory.unfilteredInstance().fromVCFFile(runContext.tumorSample(), vcfPath);
+        } catch (IOException exc) {
+            LOGGER.warn("Could not load strelka variants.");
+            return new NoResult(CheckType.STRELKA);
+        }
         final List<SomaticVariant> snps = extractVariantsWithType(variants, VariantType.SNP);
         final List<SomaticVariant> mnps = extractVariantsWithType(variants, VariantType.MNP);
         final List<SomaticVariant> indels = extractVariantsWithType(variants, VariantType.INDEL);

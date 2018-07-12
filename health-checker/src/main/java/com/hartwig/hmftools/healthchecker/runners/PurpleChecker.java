@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.common.purple.qc.PurpleQC;
+import com.hartwig.hmftools.common.io.reader.LineReader;
 import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
@@ -21,19 +21,27 @@ public class PurpleChecker implements HealthChecker {
     private static final Logger LOGGER = LogManager.getLogger(PurpleChecker.class);
 
     @NotNull
-    public BaseResult run(@NotNull final RunContext runContext) throws IOException {
+    @Override
+    public BaseResult run(@NotNull final RunContext runContext) {
         if (!runContext.isSomaticRun()) {
             return new NoResult(CheckType.PURPLE);
         }
         final String purpleDirectory = runContext.runDirectory() + File.separator + "purple";
-        final PurpleQC qcCheck = PurpleQCFile.read(PurpleQCFile.generateFilename(purpleDirectory, runContext.tumorSample()));
-        final List<HealthCheck> checks = Lists.newArrayList();
+        String path = PurpleQCFile.generateFilename(purpleDirectory, runContext.tumorSample());
+        List<String> lines;
+        try {
+            lines = LineReader.build().readLines(new File(path).toPath(), x -> x.contains("QCStatus"));
+        } catch (IOException exc) {
+            LOGGER.warn("Could not load purple qc file.");
+            return new NoResult(CheckType.PURPLE);
+        }
 
-        final String segmentScore = String.valueOf(qcCheck.segmentScore());
-        checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.PURPLE_SEGMENT_SCORE.toString(), segmentScore));
-        checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.AMBER_GENDER.toString(), qcCheck.amberGender().toString()));
-        checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.COBALT_GENDER.toString(), qcCheck.cobaltGender().toString()));
-        checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.PURPLE_DELETED_GENES_SCORE.toString(), String.valueOf(qcCheck.deletedGenes())));
+        assert lines.size() == 1;
+
+        final List<HealthCheck> checks = Lists.newArrayList();
+        String[] parts = lines.get(0).split("\t");
+
+        checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.QC_STATUS.toString(), parts[1]));
 
         return toMultiValueResult(checks);
     }

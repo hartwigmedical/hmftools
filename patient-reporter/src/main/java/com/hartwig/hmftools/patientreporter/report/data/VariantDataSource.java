@@ -4,7 +4,9 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
+import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.jetbrains.annotations.NotNull;
@@ -34,7 +36,8 @@ public class VariantDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromVariants(@NotNull final List<VariantReport> variantReports, @NotNull DrupFilter drupFilter) {
+    public static JRDataSource fromVariants(@NotNull FittedPurityStatus fitStatus, @NotNull final List<VariantReport> variantReports,
+            @NotNull DrupFilter drupFilter) {
         final DRDataSource variantDataSource = new DRDataSource(GENE_FIELD.getName(),
                 POSITION_FIELD.getName(),
                 VARIANT_FIELD.getName(),
@@ -57,7 +60,7 @@ public class VariantDataSource {
                     variantReport.hgvsCoding(),
                     variantReport.hgvsProtein(),
                     variantReport.consequence(),
-                    variantReport.ploidyTafField());
+                    PatientReportFormat.correctCopyValueForFitStatus(fitStatus, variantReport.ploidyTafField()));
         }
 
         return variantDataSource;

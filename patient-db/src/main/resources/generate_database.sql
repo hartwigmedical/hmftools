@@ -20,8 +20,9 @@ CREATE TABLE baseline
     deathDate DATE,
     hasSystemicPreTreatment varchar(3),
     hasRadiotherapyPreTreatment varchar(3),
-    preTreatments varchar(255),
+    preTreatments varchar(800),
     preTreatmentsType varchar(510),
+    preTreatmentsMechanism varchar(510),
     PRIMARY KEY (patientId),
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
@@ -32,8 +33,9 @@ CREATE TABLE preTreatmentDrug
     patientId int NOT NULL,
     startDate DATE,
     endDate DATE,
-    name varchar(255),
+    name varchar(800),
     type varchar(255),
+    mechanism varchar(255),
     bestResponse varchar(50),
     PRIMARY KEY (id),
     FOREIGN KEY (patientId) REFERENCES patient(id)
@@ -46,6 +48,7 @@ CREATE TABLE sample
     arrivalDate DATE NOT NULL,
     samplingDate DATE,
     dnaNanograms int,
+    limsPrimaryTumor varchar(255),
     tumorPercentage DOUBLE PRECISION,
     PRIMARY KEY (sampleId),
     FOREIGN KEY (patientId) REFERENCES patient(id)
@@ -76,8 +79,9 @@ CREATE TABLE treatment
     radiotherapyGiven varchar(3),
     startDate DATE,
     endDate DATE,
-    name varchar(255),
+    name varchar(800),
     type varchar(255),
+    mechanism varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (biopsyId) REFERENCES biopsy(id),
     FOREIGN KEY (patientId) REFERENCES patient(id)
@@ -90,8 +94,9 @@ CREATE TABLE drug
     patientId int NOT NULL,
     startDate DATE,
     endDate DATE,
-    name varchar(255),
+    name varchar(800),
     type varchar(255),
+    mechanism varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (treatmentId) REFERENCES treatment(id),
     FOREIGN KEY (patientId) REFERENCES patient(id)
@@ -536,6 +541,45 @@ CREATE TABLE canonicalTranscript
     PRIMARY KEY (id),
     INDEX(gene),
     INDEX(transcriptId)
+);
+
+DROP TABLE IF EXISTS germlineVariant;
+CREATE TABLE germlineVariant
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+
+    sampleId varchar(255) NOT NULL,
+    chromosome varchar(255) NOT NULL,
+    position int not null,
+    filter varchar(255) NOT NULL,
+    type varchar(255) NOT NULL,
+    ref varchar(255) NOT NULL,
+    alt varchar(255) NOT NULL,
+    gene varchar(255) NOT NULL,
+    cosmicId varchar(255) NOT NULL,
+    dbsnpId varchar(255) NOT NULL,
+    transcript varchar(255) NOT NULL,
+    effect varchar(255) NOT NULL,
+    codingEffect varchar(255) NOT NULL,
+    microhomology varchar(255) NOT NULL,
+    repeatSequence varchar(255) NOT NULL,
+    repeatCount int NOT NULL,
+    alleleReadCount int NOT NULL,
+    totalReadCount int NOT NULL,
+    adjustedVaf DOUBLE PRECISION NOT NULL,
+    adjustedCopyNumber DOUBLE PRECISION NOT NULL,
+    highConfidence BOOLEAN NOT NULL,
+    trinucleotideContext varchar(3) NOT NULL,
+    clonality varchar(455) NOT NULL,
+    biallelic BOOLEAN NOT NULL,
+    hotspot BOOLEAN NOT NULL,
+    mappability DOUBLE PRECISION NOT NULL,
+    germlineStatus varchar(255) NOT NULL,
+    minorAllelePloidy DOUBLE PRECISION NOT NULL,
+    source varchar(255) NOT NULL,
+    program varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
 );
 
 SET FOREIGN_KEY_CHECKS = 1;

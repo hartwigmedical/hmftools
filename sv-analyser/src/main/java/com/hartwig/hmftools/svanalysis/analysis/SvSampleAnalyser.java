@@ -11,6 +11,7 @@ import com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvClusterData;
+import com.hartwig.hmftools.svanalysis.types.SvGeneData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 
 import org.apache.logging.log4j.LogManager;
@@ -175,7 +176,6 @@ public class SvSampleAnalyser {
 
         if(mGeneAnnotator.hasData()) {
             for (SvClusterData var : mAllVariants) {
-
                 mGeneAnnotator.addGeneData(mSampleId, var);
             }
 
@@ -308,7 +308,10 @@ public class SvSampleAnalyser {
                     writer.write("ChainId,ChainCount,ChainTICount,ChainDBCount,ChainIndex,");
 
                     // transitive info
-                    writer.write("TransType,TransLen,TransSvLinks");
+                    writer.write("TransType,TransLen,TransSvLinks,");
+
+                    // gene info
+                    writer.write("GeneStart,GeneDriverStart,GeneTypeStart,GeneEnd,GeneDriverEnd,GeneTypeEnd");
 
                     writer.newLine();
                 }
@@ -352,7 +355,7 @@ public class SvSampleAnalyser {
                                     duplicateBECount, duplicateBESiteCount));
 
                     // linked pair info
-                    SvLinkedPair startLP = cluster.findLinkedPair(var, true);
+                    final SvLinkedPair startLP = cluster.findLinkedPair(var, true);
                     if(startLP != null)
                         writer.write(String.format("%s,%s,%d,",
                                 startLP.first().equals(var) ? startLP.second().id() : startLP.first().id(),
@@ -360,7 +363,7 @@ public class SvSampleAnalyser {
                     else
                         writer.write("0,,-1,");
 
-                    SvLinkedPair endLP = cluster.findLinkedPair(var, false);
+                    final SvLinkedPair endLP = cluster.findLinkedPair(var, false);
                     if(endLP != null)
                         writer.write(String.format("%s,%s,%d,",
                                 endLP.first().equals(var) ? endLP.second().id() : endLP.first().id(),
@@ -369,15 +372,35 @@ public class SvSampleAnalyser {
                         writer.write("0,,-1,");
 
                     // chain info
-                    SvChain chain = cluster.findChain(var);
+                    final SvChain chain = cluster.findChain(var);
 
                     if(chain != null)
-                        writer.write(String.format("%d,%d,%d,%d,%d,",
+                        writer.write(String.format("%d,%d,%d,%d,%d",
                                 chain.getId(), chain.getLinkCount(), chain.getTICount(), chain.getDBCount(), chain.getSvIndex(var)));
                     else
-                        writer.write("0,0,0,0,0,");
+                        writer.write("0,0,0,0,0");
 
-                    writer.write(String.format("%s,%d,%s", var.getTransType(), var.getTransLength(), var.getTransSvLinks()));
+                    writer.write(String.format("%s,%d,%s,", var.getTransType(), var.getTransLength(), var.getTransSvLinks()));
+
+                    final SvGeneData geneStart = var.getStartGeneData();
+                    if(geneStart != null)
+                    {
+                        writer.write(String.format(",%s,%s,%s", geneStart.gene(), geneStart.driver(), geneStart.driverType()));
+                    }
+                    else
+                    {
+                        writer.write(String.format(",,,"));
+                    }
+
+                    final SvGeneData geneEnd = var.getEndGeneData();
+                    if(geneEnd != null)
+                    {
+                        writer.write(String.format(",%s,%s,%s", geneEnd.gene(), geneEnd.driver(), geneEnd.driverType()));
+                    }
+                    else
+                    {
+                        writer.write(String.format(",,,"));
+                    }
 
                     writer.newLine();
                 }
