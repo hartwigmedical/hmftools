@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.extensions.cli.options.filesystem
+package com.hartwig.hmftools.extensions.cli.options.strings
 
 import com.hartwig.hmftools.extensions.cli.options.HmfOption
 import com.hartwig.hmftools.extensions.cli.options.validators.OptionValidator
