@@ -18,41 +18,16 @@ import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.OncoKb
 import com.hartwig.hmftools.knowledgebaseimporter.output.CancerTypeDoidOutput
 import com.hartwig.hmftools.knowledgebaseimporter.output.HmfDrug
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
+import org.apache.commons.cli.CommandLine
 import java.io.File
 
 fun main(args: Array<String>) {
     val cmd = createOptions().createCommandLine("knowledgebase-importer", args)
     val outputDir = cmd.getOptionValue(OUTPUT_DIRECTORY)
-    val reference = IndexedFastaSequenceFile(File(cmd.getOptionValue(REFERENCE)))
     val diseaseOntology = DiseaseOntology(cmd.getOptionValue(DOID_OWL_LOCATION))
-    val treatmentTypeMap = CsvReader.readTSV<HmfDrug>(cmd.getOptionValue(TREATMENT_TYPE_MAPPING_LOCATION))
-            .associateBy({ it.name.toLowerCase() }, { it.type })
-    val ensemblGeneDAO = EnsemblGeneDAO(cmd.getOptionValue(ENSEMBL_DB), cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASSWORD))
-    val transvar = cmd.getOptionValue(TRANSVAR_LOCATION)
-    val recordAnalyzer = RecordAnalyzer(transvar, reference, ensemblGeneDAO)
-
-    val oncoKb = OncoKb(cmd.getOptionValue(ONCO_ANNOTATED_LOCATION), cmd.getOptionValue(ONCO_ACTIONABLE_LOCATION), diseaseOntology,
-                        recordAnalyzer, treatmentTypeMap)
-    val cgi = Cgi(cmd.getOptionValue(CGI_VALIDATED_LOCATION), cmd.getOptionValue(CGI_BIOMARKERS_LOCATION), diseaseOntology,
-                  recordAnalyzer, treatmentTypeMap)
-    val civic = Civic(cmd.getOptionValue(CIVIC_VARIANTS_LOCATION), cmd.getOptionValue(CIVIC_EVIDENCE_LOCATION), diseaseOntology,
-                      recordAnalyzer, treatmentTypeMap)
-    val cosmic = Cosmic(cmd.getOptionValue(COSMIC_FUSIONS_LOCATION))
-    val knowledgebases = listOf(oncoKb, cgi, civic, cosmic)
+    val knowledgebases = readKnowledgebases(cmd, diseaseOntology)
     val cancerTypesDoids = knowledgebaseCancerDoids(knowledgebases, diseaseOntology)
-
-    knowledgebases.filterNot { it.knownVariants.isEmpty() }.map { writeKnownVariants(it, outputDir) }
-    CsvWriter.writeCSV(knownFusionPairs(knowledgebases), "$outputDir${File.separator}knownFusionPairs.csv")
-    CsvWriter.writeCSV(knownPromiscuousFive(knowledgebases), "$outputDir${File.separator}knownPromiscuousFive.csv")
-    CsvWriter.writeCSV(knownPromiscuousThree(knowledgebases), "$outputDir${File.separator}knownPromiscuousFive.csv")
-
-    CsvWriter.writeTSV(knowledgebases.flatMap { it.actionableVariants }, "$outputDir${File.separator}actionableVariants.tsv")
-    CsvWriter.writeTSV(actionableFusionPairs(knowledgebases), "$outputDir${File.separator}actionableFusionPairs.tsv")
-    CsvWriter.writeTSV(actionablePromiscuousFive(knowledgebases), "$outputDir${File.separator}actionablePromiscuousFive.tsv")
-    CsvWriter.writeTSV(actionablePromiscuousThree(knowledgebases), "$outputDir${File.separator}actionablePromiscuousThree.tsv")
-    CsvWriter.writeTSV(knowledgebases.flatMap { it.actionableCNVs }, "$outputDir${File.separator}actionableCNVs.tsv")
-    CsvWriter.writeTSV(knowledgebases.flatMap { it.actionableRanges }, "$outputDir${File.separator}actionableRanges.tsv")
-    CsvWriter.writeTSV(cancerTypesDoids, "$outputDir${File.separator}knowledgebaseCancerTypes.tsv")
+    writeOutput(outputDir, knowledgebases, cancerTypesDoids)
 }
 
 private fun createOptions(): HmfOptions {
@@ -73,6 +48,40 @@ private fun createOptions(): HmfOptions {
     options.add(RequiredInputOption(DB_USER, "db user"))
     options.add(RequiredInputOption(DB_PASSWORD, "db password"))
     return options
+}
+
+private fun readKnowledgebases(cmd: CommandLine, diseaseOntology: DiseaseOntology): List<Knowledgebase> {
+    val reference = IndexedFastaSequenceFile(File(cmd.getOptionValue(REFERENCE)))
+    val ensemblJdbcUrl = "jdbc:${cmd.getOptionValue(ENSEMBL_DB)}"
+    val ensemblGeneDAO = EnsemblGeneDAO(ensemblJdbcUrl, cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASSWORD))
+    val transvar = cmd.getOptionValue(TRANSVAR_LOCATION)
+    val recordAnalyzer = RecordAnalyzer(transvar, reference, ensemblGeneDAO)
+    val treatmentTypeMap = CsvReader.readTSV<HmfDrug>(cmd.getOptionValue(TREATMENT_TYPE_MAPPING_LOCATION))
+            .associateBy({ it.name.toLowerCase() }, { it.type })
+
+    val oncoKb = OncoKb(cmd.getOptionValue(ONCO_ANNOTATED_LOCATION), cmd.getOptionValue(ONCO_ACTIONABLE_LOCATION), diseaseOntology,
+                        recordAnalyzer, treatmentTypeMap)
+    val cgi = Cgi(cmd.getOptionValue(CGI_VALIDATED_LOCATION), cmd.getOptionValue(CGI_BIOMARKERS_LOCATION), diseaseOntology,
+                  recordAnalyzer, treatmentTypeMap)
+    val civic = Civic(cmd.getOptionValue(CIVIC_VARIANTS_LOCATION), cmd.getOptionValue(CIVIC_EVIDENCE_LOCATION), diseaseOntology,
+                      recordAnalyzer, treatmentTypeMap)
+    val cosmic = Cosmic(cmd.getOptionValue(COSMIC_FUSIONS_LOCATION))
+    return listOf(oncoKb, cgi, civic, cosmic)
+}
+
+private fun writeOutput(outputDir: String, knowledgebases: List<Knowledgebase>, cancerTypesDoids: List<CancerTypeDoidOutput>) {
+    knowledgebases.filterNot { it.knownVariants.isEmpty() }.map { writeKnownVariants(it, outputDir) }
+    CsvWriter.writeCSV(knownFusionPairs(knowledgebases), "$outputDir${File.separator}knownFusionPairs.csv")
+    CsvWriter.writeCSV(knownPromiscuousFive(knowledgebases), "$outputDir${File.separator}knownPromiscuousFive.csv")
+    CsvWriter.writeCSV(knownPromiscuousThree(knowledgebases), "$outputDir${File.separator}knownPromiscuousFive.csv")
+
+    CsvWriter.writeTSV(knowledgebases.flatMap { it.actionableVariants }, "$outputDir${File.separator}actionableVariants.tsv")
+    CsvWriter.writeTSV(actionableFusionPairs(knowledgebases), "$outputDir${File.separator}actionableFusionPairs.tsv")
+    CsvWriter.writeTSV(actionablePromiscuousFive(knowledgebases), "$outputDir${File.separator}actionablePromiscuousFive.tsv")
+    CsvWriter.writeTSV(actionablePromiscuousThree(knowledgebases), "$outputDir${File.separator}actionablePromiscuousThree.tsv")
+    CsvWriter.writeTSV(knowledgebases.flatMap { it.actionableCNVs }, "$outputDir${File.separator}actionableCNVs.tsv")
+    CsvWriter.writeTSV(knowledgebases.flatMap { it.actionableRanges }, "$outputDir${File.separator}actionableRanges.tsv")
+    CsvWriter.writeTSV(cancerTypesDoids, "$outputDir${File.separator}knowledgebaseCancerTypes.tsv")
 }
 
 private fun knowledgebaseCancerDoids(knowledgebases: List<Knowledgebase>, ontology: DiseaseOntology): List<CancerTypeDoidOutput> {
