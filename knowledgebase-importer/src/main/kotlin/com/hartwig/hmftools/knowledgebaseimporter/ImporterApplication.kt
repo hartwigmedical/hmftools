@@ -1,6 +1,11 @@
 package com.hartwig.hmftools.knowledgebaseimporter
 
 import com.hartwig.hmftools.extensions.cli.createCommandLine
+import com.hartwig.hmftools.extensions.cli.options.HmfOptions
+import com.hartwig.hmftools.extensions.cli.options.commands.RequiredCommandOption
+import com.hartwig.hmftools.extensions.cli.options.filesystem.RequiredInputFileOption
+import com.hartwig.hmftools.extensions.cli.options.strings.RequiredInputOption
+import com.hartwig.hmftools.extensions.cli.options.strings.RequiredOutputOption
 import com.hartwig.hmftools.extensions.csv.CsvReader
 import com.hartwig.hmftools.extensions.csv.CsvWriter
 import com.hartwig.hmftools.knowledgebaseimporter.cgi.Cgi
@@ -13,8 +18,6 @@ import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.OncoKb
 import com.hartwig.hmftools.knowledgebaseimporter.output.CancerTypeDoidOutput
 import com.hartwig.hmftools.knowledgebaseimporter.output.HmfDrug
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
-import org.apache.commons.cli.Option
-import org.apache.commons.cli.Options
 import java.io.File
 
 fun main(args: Array<String>) {
@@ -22,9 +25,9 @@ fun main(args: Array<String>) {
     val outputDir = cmd.getOptionValue(OUTPUT_DIRECTORY)
     val reference = IndexedFastaSequenceFile(File(cmd.getOptionValue(REFERENCE)))
     val diseaseOntology = DiseaseOntology(cmd.getOptionValue(DOID_OWL_LOCATION))
-    val treatmentTypeMap = CsvReader.readTSV<HmfDrug>("treatmentTypeMapping.tsv")
+    val treatmentTypeMap = CsvReader.readTSV<HmfDrug>(cmd.getOptionValue(TREATMENT_TYPE_MAPPING_LOCATION))
             .associateBy({ it.name.toLowerCase() }, { it.type })
-    val ensemblGeneDAO = EnsemblGeneDAO(cmd.getOptionValue(ENSEMBL_URL), cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASSWORD))
+    val ensemblGeneDAO = EnsemblGeneDAO(cmd.getOptionValue(ENSEMBL_DB), cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASSWORD))
     val transvar = cmd.getOptionValue(TRANSVAR_LOCATION)
     val recordAnalyzer = RecordAnalyzer(transvar, reference, ensemblGeneDAO)
 
@@ -34,7 +37,7 @@ fun main(args: Array<String>) {
                   recordAnalyzer, treatmentTypeMap)
     val civic = Civic(cmd.getOptionValue(CIVIC_VARIANTS_LOCATION), cmd.getOptionValue(CIVIC_EVIDENCE_LOCATION), diseaseOntology,
                       recordAnalyzer, treatmentTypeMap)
-    val cosmic = Cosmic("cosmic_gene_fusions.csv")
+    val cosmic = Cosmic(cmd.getOptionValue(COSMIC_FUSIONS_LOCATION))
     val knowledgebases = listOf(oncoKb, cgi, civic, cosmic)
     val cancerTypesDoids = knowledgebaseCancerDoids(knowledgebases, diseaseOntology)
 
@@ -52,22 +55,23 @@ fun main(args: Array<String>) {
     CsvWriter.writeTSV(cancerTypesDoids, "$outputDir${File.separator}knowledgebaseCancerTypes.tsv")
 }
 
-private fun createOptions(): Options {
-    val options = Options()
-    options.addOption(Option.builder(REFERENCE).required().hasArg().desc("path to ref genome file").build())
-    options.addOption(Option.builder(TRANSVAR_LOCATION).required().hasArg().desc("path to transvar location").build())
-    options.addOption(Option.builder(DOID_OWL_LOCATION).required().hasArg().desc("path to doid owl file").build())
-    options.addOption(Option.builder(ONCO_ANNOTATED_LOCATION).required().hasArg().desc("path to oncoKb annotated variants file").build())
-    options.addOption(Option.builder(ONCO_ACTIONABLE_LOCATION).required().hasArg().desc("path to oncoKB actionable variants file").build())
-    options.addOption(Option.builder(CGI_VALIDATED_LOCATION).required().hasArg().desc("path to cgi validated mutations file").build())
-    options.addOption(Option.builder(CGI_BIOMARKERS_LOCATION).required().hasArg().desc("path to cgi biomarkers file").build())
-    options.addOption(Option.builder(CIVIC_VARIANTS_LOCATION).required().hasArg().desc("path to civic variants file").build())
-    options.addOption(Option.builder(CIVIC_EVIDENCE_LOCATION).required().hasArg().desc("path to civic evidence file").build())
-    options.addOption(Option.builder(COSMIC_FUSIONS_LOCATION).required().hasArg().desc("path to cosmic fusions file").build())
-    options.addOption(Option.builder(OUTPUT_DIRECTORY).required().hasArg().desc("path to output directory").build())
-    options.addOption(Option.builder(ENSEMBL_URL).required().hasArg().desc("ensembl db url").build())
-    options.addOption(Option.builder(DB_USER).required().hasArg().desc("db user").build())
-    options.addOption(Option.builder(DB_PASSWORD).required().hasArg().desc("db password").build())
+private fun createOptions(): HmfOptions {
+    val options = HmfOptions()
+    options.add(RequiredInputFileOption(REFERENCE, "path to ref genome file"))
+    options.add(RequiredCommandOption(TRANSVAR_LOCATION, "path to transvar location"))
+    options.add(RequiredInputFileOption(DOID_OWL_LOCATION, "path to doid owl file"))
+    options.add(RequiredInputFileOption(ONCO_ANNOTATED_LOCATION, "path to oncoKb annotated variants file"))
+    options.add(RequiredInputFileOption(ONCO_ACTIONABLE_LOCATION, "path to oncoKB actionable variants file"))
+    options.add(RequiredInputFileOption(CGI_VALIDATED_LOCATION, "path to cgi validated mutations file"))
+    options.add(RequiredInputFileOption(CGI_BIOMARKERS_LOCATION, "path to cgi biomarkers file"))
+    options.add(RequiredInputFileOption(CIVIC_VARIANTS_LOCATION, "path to civic variants file"))
+    options.add(RequiredInputFileOption(CIVIC_EVIDENCE_LOCATION, "path to civic evidence file"))
+    options.add(RequiredInputFileOption(COSMIC_FUSIONS_LOCATION, "path to cosmic fusions file"))
+    options.add(RequiredInputFileOption(TREATMENT_TYPE_MAPPING_LOCATION, "path to treatment type mapping file"))
+    options.add(RequiredOutputOption(OUTPUT_DIRECTORY, "path to output directory"))
+    options.add(RequiredInputOption(ENSEMBL_DB, "ensembl db url"))
+    options.add(RequiredInputOption(DB_USER, "db user"))
+    options.add(RequiredInputOption(DB_PASSWORD, "db password"))
     return options
 }
 

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.knowledgebaseimporter
 import com.hartwig.hmftools.extensions.cli.createCommandLine
 import com.hartwig.hmftools.extensions.cli.options.HmfOptions
 import com.hartwig.hmftools.extensions.cli.options.filesystem.RequiredInputFileOption
-import com.hartwig.hmftools.extensions.cli.options.filesystem.RequiredOutputOption
+import com.hartwig.hmftools.extensions.cli.options.strings.RequiredOutputOption
 import com.hartwig.hmftools.extensions.csv.CsvWriter
 import com.hartwig.hmftools.knowledgebaseimporter.cgi.CgiActionableRecord
 import com.hartwig.hmftools.knowledgebaseimporter.output.HmfDrug
