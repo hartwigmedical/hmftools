@@ -19,15 +19,21 @@ import com.hartwig.hmftools.knowledgebaseimporter.output.CancerTypeDoidOutput
 import com.hartwig.hmftools.knowledgebaseimporter.output.HmfDrug
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import org.apache.commons.cli.CommandLine
+import org.apache.logging.log4j.LogManager
 import java.io.File
 
+private val logger = LogManager.getLogger("KnowledgebaseImporterApplication")
+
 fun main(args: Array<String>) {
+    logger.info("Running Knowledgebase importer application")
     val cmd = createOptions().createCommandLine("knowledgebase-importer", args)
     val outputDir = cmd.getOptionValue(OUTPUT_DIRECTORY)
     val diseaseOntology = DiseaseOntology(cmd.getOptionValue(DOID_OWL_LOCATION))
     val knowledgebases = readKnowledgebases(cmd, diseaseOntology)
     val cancerTypesDoids = knowledgebaseCancerDoids(knowledgebases, diseaseOntology)
+    logger.info("Writing output files to: $outputDir")
     writeOutput(outputDir, knowledgebases, cancerTypesDoids)
+    logger.info("Done.")
 }
 
 private fun createOptions(): HmfOptions {

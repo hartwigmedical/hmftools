@@ -112,7 +112,7 @@
                             <archive>
                                 <manifest>
                                     <addClasspath>true</addClasspath>
-                                    <mainClass>com.hartwig.hmftools.knowledgebaseimporter.ImporterApplicationKt</mainClass>
+                                    <mainClass>com.hartwig.hmftools.knowledgebaseimporter.KnowledgebaseImporterApplicationKt</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>
