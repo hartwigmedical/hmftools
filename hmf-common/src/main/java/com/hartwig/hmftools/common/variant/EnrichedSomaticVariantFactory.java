@@ -99,6 +99,9 @@ public class EnrichedSomaticVariantFactory {
         if (canonicalCosmicAnnotation.isPresent()) {
             final CosmicAnnotation annotation = canonicalCosmicAnnotation.get();
             builder.canonicalCosmicID(annotation.id());
+        } // KODU: Fallback to standard COSMIC ID if there are no COSMIC annotations. Can be removed once all runs are on pipeline v4.
+        else if (variant.cosmicAnnotations().isEmpty() && variant.isCOSMIC()) {
+            builder.canonicalCosmicID(variant.cosmicIDs().get(0));
         }
     }
 
