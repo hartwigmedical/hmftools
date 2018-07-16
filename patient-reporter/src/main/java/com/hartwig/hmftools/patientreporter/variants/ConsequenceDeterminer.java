@@ -9,7 +9,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
-import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,21 +44,21 @@ class ConsequenceDeterminer {
         final List<VariantReport> reports = Lists.newArrayList();
         for (final SomaticVariant variant : variantsToReport) {
             final ImmutableVariantReport.Builder builder = ImmutableVariantReport.builder();
-            final VariantAnnotation variantAnnotation = findImpactingAnnotation(variant, transcripts);
+            final SnpEffAnnotation snpEffAnnotation = findImpactingAnnotation(variant, transcripts);
             // KODU: Variants with no impacting annotations should be filtered out by now.
-            assert variantAnnotation != null;
+            assert snpEffAnnotation != null;
 
-            if (!variantAnnotation.allele().equals(variant.alt())) {
+            if (!snpEffAnnotation.allele().equals(variant.alt())) {
                 LOGGER.warn("Annotated allele does not match alt from variant for " + variant);
             }
 
             builder.variant(variant);
-            builder.gene(variantAnnotation.gene());
-            builder.transcript(variantAnnotation.featureID());
-            builder.hgvsCoding(variantAnnotation.hgvsCoding());
-            builder.hgvsProtein(variantAnnotation.hgvsProtein());
-            builder.consequence(variantAnnotation.consequenceString());
-            final String cosmicID = variant.cosmicID();
+            builder.gene(snpEffAnnotation.gene());
+            builder.transcript(snpEffAnnotation.featureID());
+            builder.hgvsCoding(snpEffAnnotation.hgvsCoding());
+            builder.hgvsProtein(snpEffAnnotation.hgvsProtein());
+            builder.consequence(snpEffAnnotation.consequenceString());
+            final String cosmicID = !variant.cosmicIDs().isEmpty() ? variant.cosmicIDs().get(0) : null;
             if (cosmicID != null) {
                 builder.cosmicID(cosmicID);
             }
@@ -71,10 +71,10 @@ class ConsequenceDeterminer {
     }
 
     @Nullable
-    private static VariantAnnotation findImpactingAnnotation(@NotNull final SomaticVariant variant,
+    private static SnpEffAnnotation findImpactingAnnotation(@NotNull final SomaticVariant variant,
             @NotNull final Set<String> transcripts) {
-        final List<VariantAnnotation> relevantAnnotations = findAllRelevantAnnotations(variant.annotations(), transcripts);
-        for (final VariantAnnotation annotation : relevantAnnotations) {
+        final List<SnpEffAnnotation> relevantAnnotations = findAllRelevantAnnotations(variant.snpEffAnnotations(), transcripts);
+        for (final SnpEffAnnotation annotation : relevantAnnotations) {
             for (final VariantConsequence consequence : annotation.consequences()) {
                 if (VariantConsequence.IMPACTING_CONSEQUENCES.contains(consequence)) {
                     return annotation;
@@ -85,7 +85,7 @@ class ConsequenceDeterminer {
     }
 
     @NotNull
-    private static List<VariantAnnotation> findAllRelevantAnnotations(@NotNull final List<VariantAnnotation> annotations,
+    private static List<SnpEffAnnotation> findAllRelevantAnnotations(@NotNull final List<SnpEffAnnotation> annotations,
             @NotNull final Set<String> transcripts) {
         return annotations.stream()
                 .filter(annotation -> annotation.featureType().equals(FEATURE_TYPE_TRANSCRIPT)

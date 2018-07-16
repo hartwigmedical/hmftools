@@ -26,7 +26,7 @@ import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfExonRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
-import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
@@ -236,7 +236,7 @@ class BachelorEligibility {
             LOGGER.debug("match found: program({}) ", programName);
 
             for (int index = 0; index < sampleVariant.sampleAnnotations().size(); ++index) {
-                VariantAnnotation snpEff = sampleVariant.sampleAnnotations().get(index);
+                SnpEffAnnotation snpEff = sampleVariant.sampleAnnotations().get(index);
 
                 // re-check that this variant is one that is relevant
                 if (!program.panelTranscripts().contains(snpEff.featureID())) {

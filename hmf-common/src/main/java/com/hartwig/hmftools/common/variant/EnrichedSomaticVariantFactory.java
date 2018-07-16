@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.variant.snpeff.CanonicalAnnotationSelector;
-import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.apache.commons.math3.util.Pair;
 import org.apache.logging.log4j.util.Strings;
@@ -80,10 +80,10 @@ public class EnrichedSomaticVariantFactory {
     }
 
     private void addCanonicalEffect(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
-        final Optional<VariantAnnotation> canonicalAnnotation =
-                canonicalAnnotationSelector.canonical(variant.gene(), variant.annotations());
+        final Optional<SnpEffAnnotation> canonicalAnnotation =
+                canonicalAnnotationSelector.canonical(variant.gene(), variant.snpEffAnnotations());
         if (canonicalAnnotation.isPresent()) {
-            final VariantAnnotation annotation = canonicalAnnotation.get();
+            final SnpEffAnnotation annotation = canonicalAnnotation.get();
             builder.canonicalEffect(annotation.consequenceString());
             builder.canonicalCodingEffect(CodingEffect.effect(annotation.consequences()));
         } else {

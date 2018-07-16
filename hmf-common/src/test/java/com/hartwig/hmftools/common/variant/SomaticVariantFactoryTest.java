@@ -108,7 +108,7 @@ public class SomaticVariantFactoryTest {
         final SomaticVariant hasBoth = assertedGet(victim.createVariant(SAMPLE, codec.decode(both)));
         assertTrue(hasBoth.isDBSNP());
         assertTrue(hasBoth.isCOSMIC());
-        assertEquals("COSM2", hasBoth.cosmicID());
+        assertTrue(hasBoth.cosmicIDs().contains("COSM2"));
 
         final String dbsnpOnly = "15\t12345678\trs1\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:60,60:121";
         final SomaticVariant hasDBSNPOnly = assertedGet(victim.createVariant(SAMPLE, codec.decode(dbsnpOnly)));
@@ -119,7 +119,7 @@ public class SomaticVariantFactoryTest {
         final SomaticVariant hasCOSMICOnly = assertedGet(victim.createVariant(SAMPLE, codec.decode(cosmicOnly)));
         assertFalse(hasCOSMICOnly.isDBSNP());
         assertTrue(hasCOSMICOnly.isCOSMIC());
-        assertEquals("COSM2", hasCOSMICOnly.cosmicID());
+        assertTrue(hasCOSMICOnly.cosmicIDs().contains("COSM2"));
 
         final String none = "15\t12345678\tID\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:60,60:121";
         final SomaticVariant hasNone = assertedGet(victim.createVariant(SAMPLE, codec.decode(none)));

@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bachelor.VariantModel;
-import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import nl.hartwigmedicalfoundation.bachelor.ProgramBlacklist;
 
@@ -35,7 +35,7 @@ public class BlacklistPredicate implements Predicate<VariantModel> {
 
     @Override
     public boolean test(final VariantModel variantModel) {
-        for (final VariantAnnotation annotation : variantModel.sampleAnnotations()) {
+        for (final SnpEffAnnotation annotation : variantModel.sampleAnnotations()) {
             final boolean transcriptMatches = transcripts.contains(annotation.featureID());
             if (transcriptMatches) {
                 for (ProgramBlacklist.Exclusion exclusion : blacklist) {
@@ -49,7 +49,7 @@ public class BlacklistPredicate implements Predicate<VariantModel> {
     }
 
     private static boolean test(final ProgramBlacklist.Exclusion blacklist, final VariantContext context,
-            final VariantAnnotation annotation) {
+            final SnpEffAnnotation annotation) {
 
         if (blacklist.getHGVSP() != null && !annotation.hgvsProtein().isEmpty()
         && blacklist.getHGVSP().equals(annotation.hgvsProtein().replaceFirst("^p\\.", ""))) {
@@ -88,7 +88,7 @@ public class BlacklistPredicate implements Predicate<VariantModel> {
     }
 
     @NotNull
-    private static List<Integer> proteinPosition(@NotNull final VariantAnnotation annotation) {
+    private static List<Integer> proteinPosition(@NotNull final SnpEffAnnotation annotation) {
         return Arrays.stream(annotation.aaPosAndLength().split("/"))
                 .filter(s -> !s.isEmpty())
                 .map(Integer::parseInt)

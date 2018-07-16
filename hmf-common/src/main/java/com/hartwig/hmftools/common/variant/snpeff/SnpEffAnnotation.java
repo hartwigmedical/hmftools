@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class VariantAnnotation {
+public abstract class SnpEffAnnotation {
 
     @NotNull
     public abstract String allele();

@@ -26,7 +26,7 @@ public class CanonicalAnnotationSelector {
     }
 
     @NotNull
-    public Optional<VariantAnnotation> canonical(@NotNull final String gene, @NotNull final List<VariantAnnotation> annotations) {
+    public Optional<SnpEffAnnotation> canonical(@NotNull final String gene, @NotNull final List<SnpEffAnnotation> annotations) {
         if (transcripts.containsKey(gene)) {
             final String transcript = transcripts.get(gene);
             return annotations.stream().filter(x -> x.featureID().equals(transcript)).findFirst();

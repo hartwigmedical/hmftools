@@ -16,9 +16,9 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public final class VariantAnnotationFactory {
+public final class SnpEffAnnotationFactory {
 
-    private static final Logger LOGGER = LogManager.getLogger(VariantAnnotationFactory.class);
+    private static final Logger LOGGER = LogManager.getLogger(SnpEffAnnotationFactory.class);
 
     public static final String ANNOTATIONS_IDENTIFIER = "ANN";
 
@@ -27,28 +27,29 @@ public final class VariantAnnotationFactory {
 
     private static final int EXPECTED_FIELD_SIZE_PER_ANNOTATION = 16;
 
-    private VariantAnnotationFactory() {
+    private SnpEffAnnotationFactory() {
     }
 
     @NotNull
-    public static List<VariantAnnotation> fromContext(@NotNull final VariantContext context) {
+    public static List<SnpEffAnnotation> fromContext(@NotNull final VariantContext context) {
         if (context.hasAttribute(ANNOTATIONS_IDENTIFIER)) {
             return context.getAttributeAsStringList(ANNOTATIONS_IDENTIFIER, "")
                     .stream()
                     .map(x -> enforceMinLength(x.trim().split(FIELD_SEPARATOR), EXPECTED_FIELD_SIZE_PER_ANNOTATION))
-                    .filter(VariantAnnotationFactory::isCorrectNumberOfParts)
-                    .map(VariantAnnotationFactory::fromParts)
+                    .filter(SnpEffAnnotationFactory::isCorrectNumberOfParts)
+                    .map(SnpEffAnnotationFactory::fromParts)
                     .collect(Collectors.toList());
 
         }
         return Collections.emptyList();
     }
 
+    @NotNull
     public static List<String> rawAnnotations(@NotNull final VariantContext context) {
         if (context.hasAttribute(ANNOTATIONS_IDENTIFIER)) {
-
             return context.getAttributeAsStringList(ANNOTATIONS_IDENTIFIER, "");
         }
+
         return Collections.emptyList();
     }
 
@@ -65,8 +66,8 @@ public final class VariantAnnotationFactory {
     }
 
     @NotNull
-    private static VariantAnnotation fromParts(@NotNull final String[] parts) {
-        return ImmutableVariantAnnotation.builder()
+    private static SnpEffAnnotation fromParts(@NotNull final String[] parts) {
+        return ImmutableSnpEffAnnotation.builder()
                 .allele(parts[0])
                 .effects(parts[1])
                 .consequences(toConsequences(toEffects(parts[1])))
@@ -119,7 +120,6 @@ public final class VariantAnnotationFactory {
                 }
             }
             if (!found) {
-//                LOGGER.warn("Could not resolve consequence: " + part);
                 consequences.add(VariantConsequence.OTHER);
             }
         }

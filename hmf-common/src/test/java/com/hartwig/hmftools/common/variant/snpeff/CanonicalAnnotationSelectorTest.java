@@ -21,11 +21,11 @@ public class CanonicalAnnotationSelectorTest {
         final Map<String, String> geneTranscriptMap = Maps.newHashMap();
         geneTranscriptMap.put("GENE", "TRANSCRIPT1");
 
-        VariantAnnotation correct = createVariantAnnotationBuilder().gene("GENE").featureID("TRANSCRIPT1").build();
-        VariantAnnotation incorrect = createVariantAnnotationBuilder().gene("GENE").featureID("TRANSCRIPT2").build();
+        SnpEffAnnotation correct = createVariantAnnotationBuilder().gene("GENE").featureID("TRANSCRIPT1").build();
+        SnpEffAnnotation incorrect = createVariantAnnotationBuilder().gene("GENE").featureID("TRANSCRIPT2").build();
 
         CanonicalAnnotationSelector victim = new CanonicalAnnotationSelector(geneTranscriptMap);
-        Optional<VariantAnnotation> selected = victim.canonical("GENE", Lists.newArrayList(incorrect, correct));
+        Optional<SnpEffAnnotation> selected = victim.canonical("GENE", Lists.newArrayList(incorrect, correct));
         assertTrue(selected.isPresent());
         assertEquals(correct, selected.get());
 
