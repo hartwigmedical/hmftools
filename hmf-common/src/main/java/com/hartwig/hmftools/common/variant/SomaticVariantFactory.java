@@ -132,7 +132,7 @@ public class SomaticVariantFactory {
             builder.gene(snpEffAnnotation.gene());
             builder.worstEffect(snpEffAnnotation.consequenceString());
             builder.worstCodingEffect(CodingEffect.effect(snpEffAnnotation.consequences()));
-            builder.worstEffectTranscript(snpEffAnnotation.featureID());
+            builder.worstEffectTranscript(snpEffAnnotation.transcript());
         } else {
             builder.gene("");
             builder.worstEffect("");

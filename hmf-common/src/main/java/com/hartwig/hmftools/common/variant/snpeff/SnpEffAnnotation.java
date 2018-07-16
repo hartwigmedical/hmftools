@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.variant.snpeff;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.hartwig.hmftools.common.variant.TranscriptAnnotation;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 
 import org.immutables.value.Value;
@@ -11,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class SnpEffAnnotation {
+public abstract class SnpEffAnnotation implements TranscriptAnnotation {
 
     @NotNull
     public abstract String allele();
@@ -75,4 +76,11 @@ public abstract class SnpEffAnnotation {
     @NotNull
     abstract String addition();
 
+    // KODU:
+    // When we use the feature ID it is in practice always a transcript, but this mapping may not hold for every single snpeff annotation!
+    @NotNull
+    @Override
+    public String transcript() {
+        return featureID();
+    }
 }

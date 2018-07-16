@@ -54,7 +54,7 @@ class ConsequenceDeterminer {
 
             builder.variant(variant);
             builder.gene(snpEffAnnotation.gene());
-            builder.transcript(snpEffAnnotation.featureID());
+            builder.transcript(snpEffAnnotation.transcript());
             builder.hgvsCoding(snpEffAnnotation.hgvsCoding());
             builder.hgvsProtein(snpEffAnnotation.hgvsProtein());
             builder.consequence(snpEffAnnotation.consequenceString());
@@ -89,7 +89,7 @@ class ConsequenceDeterminer {
             @NotNull final Set<String> transcripts) {
         return annotations.stream()
                 .filter(annotation -> annotation.featureType().equals(FEATURE_TYPE_TRANSCRIPT)
-                        && transcripts.contains(annotation.featureID()))
+                        && transcripts.contains(annotation.transcript()))
                 .collect(Collectors.toList());
     }
 }

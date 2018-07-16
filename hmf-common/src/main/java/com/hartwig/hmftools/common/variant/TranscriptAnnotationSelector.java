@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.snpeff;
+package com.hartwig.hmftools.common.variant;
 
 import java.util.List;
 import java.util.Map;
@@ -11,25 +11,26 @@ import com.hartwig.hmftools.common.gene.TranscriptRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CanonicalAnnotationSelector {
+public class TranscriptAnnotationSelector {
 
     @NotNull
     private final Map<String, String> transcripts;
 
-    public CanonicalAnnotationSelector(@NotNull final List<CanonicalTranscript> transcripts) {
+    TranscriptAnnotationSelector(@NotNull final List<CanonicalTranscript> transcripts) {
         this(transcripts.stream().collect(Collectors.toMap(TranscriptRegion::gene, TranscriptRegion::transcriptID)));
     }
 
     @VisibleForTesting
-    CanonicalAnnotationSelector(@NotNull final Map<String, String> geneTranscriptMap) {
+    TranscriptAnnotationSelector(@NotNull final Map<String, String> geneTranscriptMap) {
         this.transcripts = geneTranscriptMap;
     }
 
     @NotNull
-    public Optional<SnpEffAnnotation> canonical(@NotNull final String gene, @NotNull final List<SnpEffAnnotation> annotations) {
+    public <T extends TranscriptAnnotation> Optional<T> canonical(@NotNull final String gene,
+            @NotNull final List<T> annotations) {
         if (transcripts.containsKey(gene)) {
             final String transcript = transcripts.get(gene);
-            return annotations.stream().filter(x -> x.featureID().equals(transcript)).findFirst();
+            return annotations.stream().filter(x -> x.transcript().equals(transcript)).findFirst();
         }
 
         return Optional.empty();

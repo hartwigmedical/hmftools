@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.purple.repeat.RepeatContextFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
-import com.hartwig.hmftools.common.variant.snpeff.CanonicalAnnotationSelector;
+import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.apache.commons.math3.util.Pair;
@@ -33,7 +33,7 @@ public class EnrichedSomaticVariantFactory {
     @NotNull
     private final ClonalityFactory clonalityFactory;
     @NotNull
-    private final CanonicalAnnotationSelector canonicalAnnotationSelector;
+    private final TranscriptAnnotationSelector transcriptAnnotationSelector;
 
     public EnrichedSomaticVariantFactory(@NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
             @NotNull final IndexedFastaSequenceFile reference, @NotNull final ClonalityFactory clonalityFactory,
@@ -41,7 +41,7 @@ public class EnrichedSomaticVariantFactory {
         this.highConfidenceSelector = GenomeRegionSelectorFactory.create(highConfidenceRegions);
         this.reference = reference;
         this.clonalityFactory = clonalityFactory;
-        this.canonicalAnnotationSelector = new CanonicalAnnotationSelector(canonicalTranscripts);
+        this.transcriptAnnotationSelector = new TranscriptAnnotationSelector(canonicalTranscripts);
     }
 
     @NotNull
@@ -63,6 +63,7 @@ public class EnrichedSomaticVariantFactory {
         addTrinucleotideContext(builder, variant);
         addGenomeContext(builder, variant);
         addCanonicalEffect(builder, variant);
+        addCanonicalCosmicID(builder, variant);
         builder.clonality(clonalityFactory.fromSample(variant));
 
         return builder.build();
@@ -80,15 +81,24 @@ public class EnrichedSomaticVariantFactory {
     }
 
     private void addCanonicalEffect(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
-        final Optional<SnpEffAnnotation> canonicalAnnotation =
-                canonicalAnnotationSelector.canonical(variant.gene(), variant.snpEffAnnotations());
-        if (canonicalAnnotation.isPresent()) {
-            final SnpEffAnnotation annotation = canonicalAnnotation.get();
+        final Optional<SnpEffAnnotation> canonicalSnpEffAnnotation =
+                transcriptAnnotationSelector.canonical(variant.gene(), variant.snpEffAnnotations());
+        if (canonicalSnpEffAnnotation.isPresent()) {
+            final SnpEffAnnotation annotation = canonicalSnpEffAnnotation.get();
             builder.canonicalEffect(annotation.consequenceString());
             builder.canonicalCodingEffect(CodingEffect.effect(annotation.consequences()));
         } else {
             builder.canonicalEffect(Strings.EMPTY);
             builder.canonicalCodingEffect(CodingEffect.UNDEFINED);
+        }
+    }
+
+    private void addCanonicalCosmicID(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
+        final Optional<CosmicAnnotation> canonicalCosmicAnnotation =
+                transcriptAnnotationSelector.canonical(variant.gene(), variant.cosmicAnnotations());
+        if (canonicalCosmicAnnotation.isPresent()) {
+            final CosmicAnnotation annotation = canonicalCosmicAnnotation.get();
+            builder.canonicalCosmicID(annotation.id());
         }
     }
 

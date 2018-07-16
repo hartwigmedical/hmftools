@@ -1,12 +1,14 @@
 package com.hartwig.hmftools.common.variant.cosmic;
 
+import com.hartwig.hmftools.common.variant.TranscriptAnnotation;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CosmicAnnotation {
+public abstract class CosmicAnnotation implements TranscriptAnnotation {
 
     @NotNull
     public abstract String id();
