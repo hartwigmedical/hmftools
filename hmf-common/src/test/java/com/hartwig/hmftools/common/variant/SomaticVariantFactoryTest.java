@@ -25,6 +25,7 @@ public class SomaticVariantFactoryTest {
     private static final String SAMPLE = "sample";
     private static final String BASE_PATH = Resources.getResource("variant").getPath();
     private static final String SOMATIC_VARIANT_FILE = "somatics.vcf";
+    private static final String COSMIC_COLLAPSED_FILE = "collapsed_cosmic.vcf";
 
     private SomaticVariantFactory victim;
     private VCFCodec codec;
@@ -46,13 +47,23 @@ public class SomaticVariantFactoryTest {
     }
 
     @Test
-    public void canLoadSomaticVCFFromFile() throws IOException {
+    public void canLoadSomaticSimpleVCFFromFile() throws IOException {
         final String file = BASE_PATH + File.separator + SOMATIC_VARIANT_FILE;
         final List<SomaticVariant> unfiltered = SomaticVariantFactory.unfilteredInstance().fromVCFFile("sample", file);
         assertEquals(3, unfiltered.size());
 
         final List<SomaticVariant> filtered = SomaticVariantFactory.passOnlyInstance().fromVCFFile("sample", file);
         assertEquals(2, filtered.size());
+    }
+
+    @Test
+    public void canLoadCollapsesCosmicVCFFromFile() throws IOException {
+        final String file = BASE_PATH + File.separator + COSMIC_COLLAPSED_FILE;
+        final List<SomaticVariant> unfiltered = SomaticVariantFactory.unfilteredInstance().fromVCFFile("sample", file);
+        assertEquals(1, unfiltered.size());
+
+        final List<SomaticVariant> filtered = SomaticVariantFactory.passOnlyInstance().fromVCFFile("sample", file);
+        assertEquals(1, filtered.size());
     }
 
     @Test

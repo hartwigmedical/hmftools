@@ -1,0 +1,4 @@
+##fileformat=VCFv4.2
+##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	sample
+11	62287501	COSM123;COSM456	T	C	.	PASS	COSM2ENST=COSM123|GENE_TRANS1|c.1A>G|p.E1E|1,COSM456|GENE_TRANS2|c.2A>G|p.E2E|1	GT:AD:DP	0/1:73,17:91
