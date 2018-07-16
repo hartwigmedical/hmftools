@@ -157,12 +157,6 @@ public abstract class PatientReporter {
 
     @NotNull
     private GenomeAnalysis analyseGenomeData(@NotNull final String sample, @NotNull final String runDirectory) throws IOException {
-        LOGGER.info(" Loading somatic snv and indels...");
-        final List<SomaticVariant> variants = PatientReporterHelper.loadPassedSomaticVariants(sample, runDirectory);
-        LOGGER.info("  " + variants.size() + " somatic passed snps, mnps and indels loaded for sample " + sample);
-        LOGGER.info(" Analyzing somatic snp/mnp and indels....");
-        final VariantAnalysis variantAnalysis = variantAnalyzer().run(variants);
-
         LOGGER.info(" Loading purity numbers...");
         final PurityContext context = PatientReporterHelper.loadPurity(runDirectory, sample);
         if (context.status().equals(FittedPurityStatus.NO_TUMOR)) {
@@ -185,6 +179,12 @@ public abstract class PatientReporter {
                 .copyNumbers(purpleCopyNumbers)
                 .panelGeneCopyNumbers(panelGeneCopyNumbers)
                 .build();
+
+        LOGGER.info(" Loading somatic snv and indels...");
+        final List<SomaticVariant> variants = PatientReporterHelper.loadPassedSomaticVariants(sample, runDirectory);
+        LOGGER.info("  " + variants.size() + " somatic passed snps, mnps and indels loaded for sample " + sample);
+        LOGGER.info(" Analyzing somatic snp/mnp and indels....");
+        final VariantAnalysis variantAnalysis = variantAnalyzer().run(variants);
 
         final Path structuralVariantVCF = PatientReporterHelper.findStructuralVariantVCF(runDirectory);
         LOGGER.info(" Loading structural variants...");

@@ -79,7 +79,7 @@ public class GermlineVariantDAO {
                     region.alt(),
                     bachRecord.gene(),
                     region.dbsnpID() == null ? "" : region.dbsnpID(),
-                    region.cosmicIDs().isEmpty() ? "" : region.cosmicIDs().get(0),
+                    region.canonicalCosmicID() == null ? "" : region.canonicalCosmicID(),
                     bachRecord.effects(),
                     region.worstCodingEffect(),
                     bachRecord.transcriptId(),
