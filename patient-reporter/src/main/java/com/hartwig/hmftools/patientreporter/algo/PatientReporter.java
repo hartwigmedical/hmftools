@@ -164,13 +164,13 @@ public abstract class PatientReporter {
         }
 
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
+        LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
+
         final List<GeneCopyNumber> panelGeneCopyNumbers = PatientReporterHelper.loadPurpleGeneCopyNumbers(runDirectory, sample)
                 .stream()
                 .filter(geneCopyNumber -> reporterData().panelGeneModel().panel().contains(geneCopyNumber.gene()))
                 .collect(Collectors.toList());
 
-        LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
-        LOGGER.info(" Analyzing purple somatic copy numbers...");
         final PurpleAnalysis purpleAnalysis = ImmutablePurpleAnalysis.builder()
                 .gender(context.gender())
                 .status(context.status())
@@ -183,6 +183,12 @@ public abstract class PatientReporter {
         LOGGER.info(" Loading somatic snv and indels...");
         final List<SomaticVariant> variants = PatientReporterHelper.loadPassedSomaticVariants(sample, runDirectory);
         LOGGER.info("  " + variants.size() + " somatic passed snps, mnps and indels loaded for sample " + sample);
+
+        // TODO (KODU): Create PurityAdjustedVariants. Missing the fitted regions to create the factory.
+
+        // TODO (KODU): Enrich purity adjusted variants.
+        //List<EnrichedSomaticVariant> enrichedSomaticVariants = reporterData().enrichedSomaticVariantFactory().enrich(purpleVariants);
+
         LOGGER.info(" Analyzing somatic snp/mnp and indels....");
         final VariantAnalysis variantAnalysis = variantAnalyzer().run(variants);
 

@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import org.apache.commons.math3.util.Pair;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
@@ -30,13 +31,19 @@ public class EnrichedSomaticVariantFactory {
     private final GenomeRegionSelector<GenomeRegion> highConfidenceSelector;
     @NotNull
     private final IndexedFastaSequenceFile reference;
-    @NotNull
+    @Nullable
     private final ClonalityFactory clonalityFactory;
     @NotNull
     private final TranscriptAnnotationSelector transcriptAnnotationSelector;
 
+    // TODO (KODU) Improve patient reporter to be able to determine clonality.
     public EnrichedSomaticVariantFactory(@NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
-            @NotNull final IndexedFastaSequenceFile reference, @NotNull final ClonalityFactory clonalityFactory,
+            @NotNull final IndexedFastaSequenceFile reference, @NotNull final List<CanonicalTranscript> canonicalTranscripts) {
+        this(highConfidenceRegions, reference, null, canonicalTranscripts);
+    }
+
+    public EnrichedSomaticVariantFactory(@NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
+            @NotNull final IndexedFastaSequenceFile reference, @Nullable final ClonalityFactory clonalityFactory,
             @NotNull final List<CanonicalTranscript> canonicalTranscripts) {
         this.highConfidenceSelector = GenomeRegionSelectorFactory.create(highConfidenceRegions);
         this.reference = reference;
@@ -64,7 +71,11 @@ public class EnrichedSomaticVariantFactory {
         addGenomeContext(builder, variant);
         addCanonicalEffect(builder, variant);
         addCanonicalCosmicID(builder, variant);
-        builder.clonality(clonalityFactory.fromSample(variant));
+        if (clonalityFactory != null) {
+            builder.clonality(clonalityFactory.fromSample(variant));
+        } else {
+            builder.clonality(Clonality.UNKNOWN);
+        }
 
         return builder.build();
     }
