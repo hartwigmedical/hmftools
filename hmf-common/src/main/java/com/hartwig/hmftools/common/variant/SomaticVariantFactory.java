@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotationFactory;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
@@ -104,7 +105,8 @@ public class SomaticVariantFactory {
                             .totalReadCount(frequencyData.totalReadCount())
                             .totalReadCount(frequencyData.totalReadCount())
                             .hotspot(HOTSPOT_FILTER.test(context))
-                            .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0));
+                            .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0))
+                            .cosmicAnnotations(CosmicAnnotationFactory.fromContext(context));
 
                     attachSnpEffAnnotations(builder, context);
                     attachFilter(builder, context);

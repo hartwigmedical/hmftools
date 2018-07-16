@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.variant;
 import java.util.List;
 
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.jetbrains.annotations.NotNull;
@@ -30,6 +31,9 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
 
     @NotNull
     List<SnpEffAnnotation> snpEffAnnotations();
+
+    @NotNull
+    List<CosmicAnnotation> cosmicAnnotations();
 
     @NotNull
     String gene();
