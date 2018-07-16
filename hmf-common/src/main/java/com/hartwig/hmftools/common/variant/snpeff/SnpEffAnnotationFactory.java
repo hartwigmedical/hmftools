@@ -20,7 +20,7 @@ public final class SnpEffAnnotationFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(SnpEffAnnotationFactory.class);
 
-    public static final String ANNOTATIONS_IDENTIFIER = "ANN";
+    public static final String SNPEFF_IDENTIFIER = "ANN";
 
     private static final String FIELD_SEPARATOR = "\\|";
     private static final String CONSEQUENCE_SEPARATOR = "&";
@@ -32,8 +32,8 @@ public final class SnpEffAnnotationFactory {
 
     @NotNull
     public static List<SnpEffAnnotation> fromContext(@NotNull final VariantContext context) {
-        if (context.hasAttribute(ANNOTATIONS_IDENTIFIER)) {
-            return context.getAttributeAsStringList(ANNOTATIONS_IDENTIFIER, "")
+        if (context.hasAttribute(SNPEFF_IDENTIFIER)) {
+            return context.getAttributeAsStringList(SNPEFF_IDENTIFIER, "")
                     .stream()
                     .map(x -> enforceMinLength(x.trim().split(FIELD_SEPARATOR), EXPECTED_FIELD_SIZE_PER_ANNOTATION))
                     .filter(SnpEffAnnotationFactory::isCorrectNumberOfParts)
@@ -46,8 +46,8 @@ public final class SnpEffAnnotationFactory {
 
     @NotNull
     public static List<String> rawAnnotations(@NotNull final VariantContext context) {
-        if (context.hasAttribute(ANNOTATIONS_IDENTIFIER)) {
-            return context.getAttributeAsStringList(ANNOTATIONS_IDENTIFIER, "");
+        if (context.hasAttribute(SNPEFF_IDENTIFIER)) {
+            return context.getAttributeAsStringList(SNPEFF_IDENTIFIER, "");
         }
 
         return Collections.emptyList();

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.bachelorpp;
 
-import static com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory.ANNOTATIONS_IDENTIFIER;
+import static com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory.SNPEFF_IDENTIFIER;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -170,7 +170,7 @@ public class BachelorPP {
 
             variantContext.getCommonInfo().putAttribute("AD", bachRecord.getAltCount(), true);
             variantContext.getCommonInfo().addFilter("PASS");
-            variantContext.getCommonInfo().putAttribute(ANNOTATIONS_IDENTIFIER, bachRecord.annotations());
+            variantContext.getCommonInfo().putAttribute(SNPEFF_IDENTIFIER, bachRecord.annotations());
 
             bachRecord.setVariantContext(variantContext);
 
