@@ -36,12 +36,6 @@ public class EnrichedSomaticVariantFactory {
     @NotNull
     private final TranscriptAnnotationSelector transcriptAnnotationSelector;
 
-    // TODO (KODU) Improve patient reporter to be able to determine clonality.
-    public EnrichedSomaticVariantFactory(@NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
-            @NotNull final IndexedFastaSequenceFile reference, @NotNull final List<CanonicalTranscript> canonicalTranscripts) {
-        this(highConfidenceRegions, reference, null, canonicalTranscripts);
-    }
-
     public EnrichedSomaticVariantFactory(@NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
             @NotNull final IndexedFastaSequenceFile reference, @Nullable final ClonalityFactory clonalityFactory,
             @NotNull final List<CanonicalTranscript> canonicalTranscripts) {
