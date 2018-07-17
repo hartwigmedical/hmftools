@@ -39,7 +39,7 @@ public final class GeneDisruptionDataSource {
                 disruption.gene(),
                 disruption.geneContext(),
                 disruption.type(),
-                PatientReportFormat.correctCopyValueForFitStatus(fitStatus, disruption.copies())));
+                PatientReportFormat.correctValueForFitStatus(fitStatus, disruption.copies())));
 
         return dataSource;
     }
