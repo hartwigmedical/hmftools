@@ -12,8 +12,8 @@ public final class AnnotationTestFactory {
     }
 
     @NotNull
-    public static ImmutableVariantAnnotation.Builder createVariantAnnotationBuilder(@NotNull VariantConsequence... consequences) {
-        return ImmutableVariantAnnotation.builder()
+    public static ImmutableSnpEffAnnotation.Builder createVariantAnnotationBuilder(@NotNull VariantConsequence... consequences) {
+        return ImmutableSnpEffAnnotation.builder()
                 .allele(Strings.EMPTY)
                 .severity(Strings.EMPTY)
                 .gene(Strings.EMPTY)

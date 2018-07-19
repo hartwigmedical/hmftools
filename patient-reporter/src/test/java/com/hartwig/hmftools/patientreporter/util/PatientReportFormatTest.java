@@ -11,7 +11,7 @@ public class PatientReportFormatTest {
 
     @Test
     public void removesCopiesWhenNoTumor() {
-        assertTrue(PatientReportFormat.correctCopyValueForFitStatus(FittedPurityStatus.NORMAL, "1").equals("1"));
-        assertFalse(PatientReportFormat.correctCopyValueForFitStatus(FittedPurityStatus.NO_TUMOR, "1").equals("1"));
+        assertTrue(PatientReportFormat.correctValueForFitStatus(FittedPurityStatus.NORMAL, "1").equals("1"));
+        assertFalse(PatientReportFormat.correctValueForFitStatus(FittedPurityStatus.NO_TUMOR, "1").equals("1"));
     }
 }

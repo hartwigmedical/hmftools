@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.snpeff;
+package com.hartwig.hmftools.common.variant;
 
 import static com.hartwig.hmftools.common.variant.snpeff.AnnotationTestFactory.createVariantAnnotationBuilder;
 
@@ -11,21 +11,22 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.junit.Test;
 
-public class CanonicalAnnotationSelectorTest {
+public class TranscriptAnnotationSelectorTest {
 
     @Test
     public void testSelectCorrectAnnotation() {
         final Map<String, String> geneTranscriptMap = Maps.newHashMap();
         geneTranscriptMap.put("GENE", "TRANSCRIPT1");
 
-        VariantAnnotation correct = createVariantAnnotationBuilder().gene("GENE").featureID("TRANSCRIPT1").build();
-        VariantAnnotation incorrect = createVariantAnnotationBuilder().gene("GENE").featureID("TRANSCRIPT2").build();
+        SnpEffAnnotation correct = createVariantAnnotationBuilder().gene("GENE").featureID("TRANSCRIPT1").build();
+        SnpEffAnnotation incorrect = createVariantAnnotationBuilder().gene("GENE").featureID("TRANSCRIPT2").build();
 
-        CanonicalAnnotationSelector victim = new CanonicalAnnotationSelector(geneTranscriptMap);
-        Optional<VariantAnnotation> selected = victim.canonical("GENE", Lists.newArrayList(incorrect, correct));
+        TranscriptAnnotationSelector victim = new TranscriptAnnotationSelector(geneTranscriptMap);
+        Optional<SnpEffAnnotation> selected = victim.canonical("GENE", Lists.newArrayList(incorrect, correct));
         assertTrue(selected.isPresent());
         assertEquals(correct, selected.get());
 

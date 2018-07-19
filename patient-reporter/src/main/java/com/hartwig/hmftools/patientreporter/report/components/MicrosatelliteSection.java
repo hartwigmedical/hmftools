@@ -32,11 +32,12 @@ public final class MicrosatelliteSection {
 
     @NotNull
     private static String interpret(final double microsatelliteIndicator, @NotNull FittedPurityStatus fitStatus) {
-        final String formattedMicrosatelliteIndicator = new DecimalFormat("#.####").format(microsatelliteIndicator);
+        final String formattedMicrosatelliteIndicator =
+                PatientReportFormat.correctValueForFitStatus(fitStatus, new DecimalFormat("#.####").format(microsatelliteIndicator));
         if (microsatelliteIndicator > MSI_THRESHOLD) {
-            return "Unstable (" + PatientReportFormat.correctCopyValueForFitStatus(fitStatus, formattedMicrosatelliteIndicator)  + ")";
+            return "Unstable (" + formattedMicrosatelliteIndicator + ")";
         } else {
-            return "Stable (" + PatientReportFormat.correctCopyValueForFitStatus(fitStatus, formattedMicrosatelliteIndicator)  + ")";
+            return "Stable (" + formattedMicrosatelliteIndicator + ")";
         }
     }
 
@@ -57,8 +58,8 @@ public final class MicrosatelliteSection {
     @NotNull
     private static String description() {
         return "The microsatellite stability score represents the number of somatic inserts and deletes in (short) repeat sections "
-                + "across the whole genome of the tumor per Mb. This metric can be considered as a good marker for instability " +
-                "in microsatellite repeat regions. Tumors with a score greater than " + MSI_THRESHOLD + " are considered microsatellite " +
-                "unstable (MSI).";
+                + "across the whole genome of the tumor per Mb. This metric can be considered as a good marker for instability "
+                + "in microsatellite repeat regions. Tumors with a score greater than " + MSI_THRESHOLD + " are considered microsatellite "
+                + "unstable (MSI).";
     }
 }

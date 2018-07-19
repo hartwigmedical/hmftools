@@ -17,14 +17,14 @@ import org.jetbrains.annotations.Nullable;
 public abstract class VariantAnalyzer {
 
     @NotNull
-    protected abstract ConsequenceDeterminer determiner();
+    abstract ConsequenceDeterminer determiner();
 
     @NotNull
-    protected abstract MicrosatelliteAnalyzer microsatelliteAnalyzer();
+    abstract MicrosatelliteAnalyzer microsatelliteAnalyzer();
 
     @NotNull
     public static VariantAnalyzer of(@NotNull HmfReporterData reporterData) {
-        Set<String> transcriptsToInclude = reporterData.panelGeneModel().transcriptMap().keySet();
+        final Set<String> transcriptsToInclude = reporterData.panelGeneModel().transcriptMap().keySet();
         return of(transcriptsToInclude, reporterData.microsatelliteAnalyzer());
     }
 

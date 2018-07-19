@@ -26,7 +26,7 @@ import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfExonRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
-import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
@@ -138,7 +138,7 @@ class BachelorEligibility {
                 final Predicate<VariantModel> panelPredicate = v -> genes.stream()
                         .anyMatch(p -> v.sampleAnnotations()
                                 .stream()
-                                .anyMatch(a -> a.featureID().equals(p.getEnsembl()) && effects.stream().anyMatch(x -> a.effects().contains(x))));
+                                .anyMatch(a -> a.transcript().equals(p.getEnsembl()) && effects.stream().anyMatch(x -> a.effects().contains(x))));
 
                 panelPredicates.add(panelPredicate);
 
@@ -236,11 +236,11 @@ class BachelorEligibility {
             LOGGER.debug("match found: program({}) ", programName);
 
             for (int index = 0; index < sampleVariant.sampleAnnotations().size(); ++index) {
-                VariantAnnotation snpEff = sampleVariant.sampleAnnotations().get(index);
+                SnpEffAnnotation snpEff = sampleVariant.sampleAnnotations().get(index);
 
                 // re-check that this variant is one that is relevant
-                if (!program.panelTranscripts().contains(snpEff.featureID())) {
-                    // LOGGER.debug("uninteresting transcript({})", snpEff.featureID());
+                if (!program.panelTranscripts().contains(snpEff.transcript())) {
+                    // LOGGER.debug("uninteresting transcript({})", snpEff.transcript());
                     continue;
                 }
 
@@ -267,7 +267,7 @@ class BachelorEligibility {
 
                 // now we have the correct allele and transcript ID as required by the XML
                 // so write a complete record to the output file
-                LOGGER.debug("matched allele({}) transcriptId({}) effect({})", snpEff.allele(), snpEff.featureID(), snpEff.effects());
+                LOGGER.debug("matched allele({}) transcriptId({}) effect({})", snpEff.allele(), snpEff.transcript(), snpEff.effects());
 
                 final String annotationsStr = sampleVariant.rawAnnotations().get(index);
 
@@ -277,7 +277,7 @@ class BachelorEligibility {
                         .program(programName)
                         .id(variant.getID())
                         .genes(snpEff.gene())
-                        .transcriptId(snpEff.featureID())
+                        .transcriptId(snpEff.transcript())
                         .chrom(variant.getContig())
                         .pos(variant.getStart())
                         .ref(variant.getReference().toString())

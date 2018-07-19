@@ -2,10 +2,10 @@ package com.hartwig.hmftools.patientreporter.report.components;
 
 import java.awt.Color;
 
-import org.jetbrains.annotations.NotNull;
-
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
+
+import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 
@@ -30,10 +30,11 @@ public final class MutationalLoadSection {
 
     @NotNull
     private static String interpret(final int mutationalLoad, @NotNull FittedPurityStatus fitStatus) {
+        final String formattedMutationalLoad = PatientReportFormat.correctValueForFitStatus(fitStatus, Integer.toString(mutationalLoad));
         if (mutationalLoad > DRUP_THRESHOLD) {
-            return "High (" + PatientReportFormat.correctCopyValueForFitStatus(fitStatus, Integer.toString(mutationalLoad))  + ")";
+            return "High (" + formattedMutationalLoad + ")";
         } else {
-            return "Low (" + PatientReportFormat.correctCopyValueForFitStatus(fitStatus, Integer.toString(mutationalLoad)) + ")";
+            return "Low (" + formattedMutationalLoad + ")";
         }
     }
 

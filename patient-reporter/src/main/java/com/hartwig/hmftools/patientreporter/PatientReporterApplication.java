@@ -66,6 +66,7 @@ public class PatientReporterApplication {
     private static final String DB_PASS = "db_pass";
 
     private static final String FASTA_FILE_LOCATION = "fasta_file_location";
+    private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String CENTER_CSV = "center_csv";
 
     private static final String SIGNATURE = "signature";
@@ -120,7 +121,8 @@ public class PatientReporterApplication {
                 cmd.getOptionValue(PROMISCUOUS_FIVE_CSV),
                 cmd.getOptionValue(PROMISCUOUS_THREE_CSV),
                 cmd.getOptionValue(DRUP_GENES_CSV),
-                cmd.getOptionValue(FASTA_FILE_LOCATION));
+                cmd.getOptionValue(FASTA_FILE_LOCATION),
+                cmd.getOptionValue(HIGH_CONFIDENCE_BED));
     }
 
     @NotNull
@@ -160,6 +162,7 @@ public class PatientReporterApplication {
         final String promiscuousThreeCsv = cmd.getOptionValue(PROMISCUOUS_THREE_CSV);
 
         final String fastaFileLocation = cmd.getOptionValue(FASTA_FILE_LOCATION);
+        final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
 
         if (runDirectory == null || !exists(runDirectory) && !isDirectory(runDirectory)) {
             LOGGER.warn(RUN_DIRECTORY + " has to be an existing directory: " + runDirectory);
@@ -175,6 +178,8 @@ public class PatientReporterApplication {
             LOGGER.warn(PROMISCUOUS_THREE_CSV + " has to be an existing file: " + promiscuousThreeCsv);
         } else if (fastaFileLocation == null || !exists(fastaFileLocation)) {
             LOGGER.warn(FASTA_FILE_LOCATION + " has to be an existing file: " + fastaFileLocation);
+        } else if (highConfidenceBed == null || !exists(highConfidenceBed)) {
+            LOGGER.warn(HIGH_CONFIDENCE_BED + " has to be an existing file: " + highConfidenceBed);
         } else {
             return true;
         }
@@ -258,6 +263,7 @@ public class PatientReporterApplication {
         options.addOption(CENTER_CSV, true, "Path towards a CSV containing center data.");
         options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
         options.addOption(FASTA_FILE_LOCATION, true, "Path towards the FASTA file containing the ref genome.");
+        options.addOption(HIGH_CONFIDENCE_BED, true, "Path towards the high confidence BED file.");
         options.addOption(COMMENTS, true, "Additional comments to be added to the report, if any.");
         return options;
     }

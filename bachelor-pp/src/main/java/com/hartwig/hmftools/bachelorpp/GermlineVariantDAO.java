@@ -21,13 +21,12 @@ public class GermlineVariantDAO {
 
     private static final String PASS = "PASS";
 
-    public GermlineVariantDAO (@NotNull final DSLContext context) {
+    GermlineVariantDAO(@NotNull final DSLContext context) {
         this.context = context;
     }
 
     public void write(final String sampleId, final List<BachelorGermlineVariant> bachRecords) {
-
-        // first remove any existing records for this patient
+        // CHSH: first remove any existing records for this patient
         context.delete(GERMLINEVARIANT).where(GERMLINEVARIANT.SAMPLEID.eq(sampleId)).execute();
 
         final Timestamp timestamp = new Timestamp(new Date().getTime());
@@ -65,14 +64,13 @@ public class GermlineVariantDAO {
                 GERMLINEVARIANT.SOURCE,
                 GERMLINEVARIANT.MODIFIED);
 
-        for(final BachelorGermlineVariant bachRecord : bachRecords)
-        {
-            if(!bachRecord.isValid())
+        for (final BachelorGermlineVariant bachRecord : bachRecords) {
+            if (!bachRecord.isValid()) {
                 continue;
+            }
 
             final EnrichedSomaticVariant region = bachRecord.getEnrichedVariant();
-            inserter.values(
-                    sampleId,
+            inserter.values(sampleId,
                     bachRecord.chromosome(),
                     bachRecord.position(),
                     PASS,
@@ -81,7 +79,7 @@ public class GermlineVariantDAO {
                     region.alt(),
                     bachRecord.gene(),
                     region.dbsnpID() == null ? "" : region.dbsnpID(),
-                    region.cosmicID() == null ? "" : region.cosmicID(),
+                    region.canonicalCosmicID() == null ? "" : region.canonicalCosmicID(),
                     bachRecord.effects(),
                     region.worstCodingEffect(),
                     bachRecord.transcriptId(),

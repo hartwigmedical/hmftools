@@ -48,7 +48,7 @@ public final class GeneFusionDataSource {
                 fusion.geneEndTranscript(),
                 fusion.geneContextStart(),
                 fusion.geneContextEnd(),
-                PatientReportFormat.correctCopyValueForFitStatus(fitStatus, fusion.copies()),
+                PatientReportFormat.correctValueForFitStatus(fitStatus, fusion.copies()),
                 fusion.source()));
 
         return dataSource;
