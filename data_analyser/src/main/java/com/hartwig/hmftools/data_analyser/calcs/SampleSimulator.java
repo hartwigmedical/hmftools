@@ -1,15 +1,20 @@
 package com.hartwig.hmftools.data_analyser.calcs;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.exp;
 import static java.lang.Math.log;
 import static java.lang.Math.min;
+import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.data_analyser.DataAnalyser.OUTPUT_DIR;
 import static com.hartwig.hmftools.data_analyser.DataAnalyser.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getNewFile;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getPoissonRandom;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getPoissonRandomLarge;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.writeMatrixData;
+import static com.hartwig.hmftools.data_analyser.types.NmfMatrix.extractNonZeros;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -27,6 +32,9 @@ import com.hartwig.hmftools.data_analyser.types.NmfMatrix;
 import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import sun.misc.Perf;
+import sun.misc.PerfCounter;
 
 public class SampleSimulator {
 
@@ -51,8 +59,14 @@ public class SampleSimulator {
 
     // random number caches
     private double[] mPoissonDecimals;
-    private int[] mPoissonInts;
+    private int[] mPoissonInts; // used for signature count distribution around the mean
     private int mPoissonIndex;
+
+    // measure residuals from rounding the counts from fractions to integers
+    private double mGrossResiduals;
+    private double mNetResiduals;
+    private int mGrossCountNoise;
+    private int mNetCountNoise;
 
     Random mRandom;
 
@@ -73,6 +87,11 @@ public class SampleSimulator {
         mPoissonDecimals = null;
         mPoissonInts = null;
         mPoissonIndex = 0;
+        mNetResiduals = 0;
+        mGrossResiduals = 0;
+        mGrossCountNoise = 0;
+        mNetCountNoise = 0;
+
     }
 
     public void initialise(final CommandLine cmd)
@@ -92,7 +111,7 @@ public class SampleSimulator {
         LOGGER.info("loaded {} signature parameter sets:", mSigFactors.size());
         for(final SimSigFactors sigFactors : mSigFactors) {
 
-            if (sigFactors.SigId >= mInputSignatures.Cols) {
+            if (sigFactors.SigId-1 >= mInputSignatures.Cols) {
 
                 LOGGER.error("sigFactor({}: {}) outside loaded signatures", sigFactors.SigId, sigFactors.Name);
             }
@@ -153,12 +172,21 @@ public class SampleSimulator {
         // testSampleCounts();
         generateSimSampleCounts();
 
+        // remove any samples with zero counts
+        mOutputMatrix = extractNonZeros(mOutputMatrix);
+
+        if(mOutputMatrix.Cols < mConfig.SampleCount)
+        {
+            LOGGER.info("actualSampleCount({}) vs config() due to zero-count simulated counts", mOutputMatrix.Cols, mConfig.SampleCount);
+        }
+
         perfCounter.stop();
-        perfCounter.logStats();
 
         logBucketStats();
         writeSampleCounts();
         writeSampleContributions();
+
+        perfCounter.logStats();
     }
 
     private void generateSimSampleCounts()
@@ -232,7 +260,7 @@ public class SampleSimulator {
 
     private void setBucketCounts(int variantCount, int sampleIndex, int sigIndex, NmfMatrix sampleCounts)
     {
-        int sigLookupIndex = sigIndex-1; // since the signatures definititon matrix is now zero-based
+        int sigLookupIndex = sigIndex-1; // since the signatures definition matrix is now zero-based
 
         // divide the variant count amongst the applicable buckets as per their defined proportions
         double sigTotal = 0;
@@ -251,16 +279,56 @@ public class SampleSimulator {
         for(int i = 0; i < mInputSignatures.Rows; ++i)
         {
             double bucketPercent = sigData[i][sigLookupIndex] / sigTotal;
-            int bucketSigCount = (int) round(bucketPercent * variantCount);
-            scData[i][sampleIndex] += bucketSigCount; // each sig's contribution is added
-        }
 
-        // optionally apply noise around the bucket counts
+            double bucketSigRaw = bucketPercent * variantCount;
+            int bucketSigCount = (int) round(bucketSigRaw);
+
+            double fraction = bucketSigRaw - bucketSigCount;
+            mNetResiduals += fraction;
+            mGrossResiduals += abs(fraction);
+
+            if(!mConfig.ApplyNoise)
+            {
+                scData[i][sampleIndex] += bucketSigCount;
+                continue;
+            }
+
+            // optionally apply noise around the bucket counts
+            int bucketSigCountAdj = applyNoise(bucketSigCount);
+
+            scData[i][sampleIndex] += bucketSigCountAdj; // each sig's contribution is added
+
+            int noiseDiff = bucketSigCountAdj - bucketSigCount;
+            mGrossCountNoise += abs(noiseDiff);
+            mNetCountNoise += noiseDiff;
+
+//            if(bucketSigCount > 50) {
+
+                LOGGER.debug(String.format("bucket(%d) count(%d raw=%.2f) adj(%d diff=%d asPerc=%.3f)",
+                        i, bucketSigCount, bucketSigRaw, bucketSigCountAdj, noiseDiff,
+                        bucketSigCount > 0 ? noiseDiff / (double) bucketSigCount : 0));
+//            }
+        }
+    }
+
+    private int applyNoise(int bucketCount)
+    {
+        if(bucketCount <= 1)
+            return bucketCount;
+        else if(bucketCount <= 100)
+            return getPoissonRandom(bucketCount, mRandom);
+        else
+            return getPoissonRandomLarge(bucketCount, mRandom);
     }
 
     private void logBucketStats() {
-        // calculate counts, min, max, mean and median values per signature and bucket
+
+        // calculate counts, min, max, mean and median values per bucket
         final double[][] scData = mOutputMatrix.getData();
+
+        double totalCount = mOutputMatrix.sum();
+        int sampleCount = mOutputMatrix.Cols;
+        int medianIndex = sampleCount / 2; // not averaged for even sample counts
 
         // by bucket
         for (int i = 0; i < mOutputMatrix.Rows; ++i) {
@@ -268,10 +336,16 @@ public class SampleSimulator {
             int total = 0;
             int min = 0;
             int max = 0;
+            double median = 0;
+
+            final double[] bucketCounts = mOutputMatrix.getRow(i);
+
+            List<Integer> sortedIndices = getSortedVectorIndices(bucketCounts, true);
 
             for (int j = 0; j < mOutputMatrix.Cols; ++j) {
 
-                int count = (int)scData[i][j];
+                int sampleIndex = sortedIndices.get(j);
+                int count = (int)scData[i][sampleIndex];
                 total += count;
 
                 if(min == 0 || (count > 0 && count < min))
@@ -279,10 +353,28 @@ public class SampleSimulator {
 
                 if(count > max)
                     max = count;
+
+                if(j == medianIndex)
+                {
+                    median = count;
+                }
             }
 
-            double avg = total/(double)mOutputMatrix.Cols;
-            LOGGER.debug(String.format("bucket(%d) min(%d) max(%d) total(%d) avg(%.0f)", i, min, max, total, avg));
+            double mean = total/(double)sampleCount;
+            LOGGER.debug(String.format("bucket(%d) min(%d) max(%d) total(%d) mean(%.0f) median(%.0f) percOfTotal(%.4f)",
+                    i, min, max, total, mean, median, total/totalCount));
+        }
+
+        if(totalCount > 0) {
+
+            LOGGER.debug(String.format("rounding residuals: gross(%.1f perc=%.4f) net(%.1f perc=%.4f) vs total(%.0f)",
+                    mGrossResiduals, mGrossResiduals / totalCount, mNetResiduals, mNetResiduals / totalCount, totalCount));
+
+            if(mConfig.ApplyNoise) {
+
+                LOGGER.debug(String.format("counts noise: gross(%d perc=%.4f) net(%d perc=%.4f) vs total(%.0f)",
+                        mGrossCountNoise, mGrossCountNoise / totalCount, mNetCountNoise, mNetCountNoise / totalCount, totalCount));
+            }
         }
     }
 
@@ -290,7 +382,7 @@ public class SampleSimulator {
     {
         try
         {
-            final String filename = mOutputFileId + "_sim_sample_counts.csv";
+            final String filename = mOutputFileId + "_sim_sc.csv";
             BufferedWriter writer = getNewFile(mOutputDir, filename);
 
             int i = 0;
@@ -375,7 +467,32 @@ public class SampleSimulator {
 
     public void runTests()
     {
-        testSampleCounts();
+        // testSampleCounts();
+
+        PerformanceCounter pc = new PerformanceCounter("PoissonLarge");
+
+        int iterations = 1000;
+
+        for(int i = 1; i <= 5; ++i) {
+
+            int range = (int)pow(10, i);
+
+            pc.start();
+
+            for(int j = 0; j < iterations; ++j) {
+
+                getPoissonRandomLarge(range, mRandom);
+            }
+
+            pc.stop();
+        }
+
+        pc.logStats();
+
+//        getPoissonRandomLarge(10, mRandom);
+//        getPoissonRandomLarge(100, mRandom);
+//        getPoissonRandomLarge(1000, mRandom);
+//        getPoissonRandomLarge(10000, mRandom);
     }
 
     private void testSampleCounts()

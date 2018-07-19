@@ -1,9 +1,13 @@
 package com.hartwig.hmftools.data_analyser.calcs;
 
 import static java.lang.Double.max;
+import static java.lang.Double.valueOf;
 import static java.lang.Math.abs;
 import static java.lang.Math.log;
 import static java.lang.Math.min;
+
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.doublesEqual;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
 
 import java.util.List;
 import java.util.Random;
@@ -43,6 +47,7 @@ public class NmfCalculator {
     private double[] mBucketTotals; // to help with seeding
     private double[] mSampleTotals;
 
+    private int mRunId;
     private NmfMatrix mW; // the bucket-signature values (x=BucketCount, y=SigCount)
     private NmfMatrix mH; // the sample-signature contributions (x=SigCount, y=SampleCount)
     private NmfMatrix mV; // the fitted matrix of samples and bucket counts (W x H)
@@ -55,22 +60,22 @@ public class NmfCalculator {
     private NmfMatrix mRefContributions;
     private double mSigFloatRate;
     private List<NmfMatrix> mStartSigs;
+    private NmfMatrix mRandomStartSignatures;
 
     // calculated values
     private double mTotalResiduals;
     private double mNetResiduals;
     private double mLowestCost;
-    private double[] mSampleResiduals;
-    private double[] mBucketResiduals;
 
     private Random mRandom;
 
     // internal constants
-    private static double MIN_COST_CHANGE_PERCENT = 0.0001;
+    private static double MIN_COST_CHANGE_PERCENT = 0.00001;
 
     public NmfCalculator(final NmfMatrix sampleBucketCounts, final NmfConfig config)
     {
         mConfig = config;
+        mRunId = 0;
 
         mSigCount = 0; // will be set for each run
         mSampleCounts = sampleBucketCounts;
@@ -83,21 +88,19 @@ public class NmfCalculator {
 
         for(int i = 0; i < mSampleCounts.Rows; ++i)
         {
-            mBucketTotals[i] = DataUtils.sumVector(mSampleCounts.getRow(i));
+            mBucketTotals[i] = sumVector(mSampleCounts.getRow(i));
         }
 
         mSampleTotals = new double[mSampleCounts.Cols];
 
         for(int i = 0; i < mSampleCounts.Cols; ++i)
         {
-            mSampleTotals[i] = DataUtils.sumVector(mSampleCounts.getCol(i));
+            mSampleTotals[i] = sumVector(mSampleCounts.getCol(i));
         }
 
         mTotalResiduals = 0;
         mNetResiduals = 0;
         mLowestCost = 0;
-        mSampleResiduals = new double[mSampleCount];
-        mBucketResiduals = new double[mBucketCount];
 
         mW = null;
         mH = null;
@@ -106,6 +109,7 @@ public class NmfCalculator {
 
         mRefSignatures = null;
         mRefContributions = null;
+        mRandomStartSignatures = null;
         mSigFloatRate = 1;
         mStartSigs = Lists.newArrayList();
 
@@ -125,6 +129,8 @@ public class NmfCalculator {
 
     public void setContributions(final NmfMatrix refContributions) { mRefContributions = refContributions; }
 
+    public void setRandomSignatures(final NmfMatrix randomSigs) { mRandomStartSignatures = randomSigs; }
+
     public final NmfMatrix getSignatures() { return mW; }
     public final NmfMatrix getContributions() { return mH; }
     public final NmfMatrix getFit() { return mV; }
@@ -132,8 +138,6 @@ public class NmfCalculator {
     public double[] getBucketTotals() { return mBucketTotals; }
     public double[] getSampleTotals() { return mSampleTotals; }
     public double getTotalResiduals() { return mTotalResiduals; }
-    public double[] getSampleResiduals() { return mSampleResiduals; }
-    public double[] getBucketResiduals() { return mBucketResiduals; }
     public void clearLowestCost() { mLowestCost = 0; }
 
     public double getTotalCount() { return mTotalCount; }
@@ -142,8 +146,9 @@ public class NmfCalculator {
 
     public boolean isValid() { return mIsValid; }
 
-    public void performRun()
+    public void performRun(final int runId)
     {
+        mRunId = runId;
         mIsValid = false;
         mTotalResiduals = 0;
 
@@ -161,8 +166,8 @@ public class NmfCalculator {
             mW.multiply(mH, mV, true);
             calcResiduals();
 
-            LOGGER.debug(String.format("pre-fit: totalResiduals(%.0f) vs total(%.0f) as percent(%.5f)",
-                    mTotalResiduals, mTotalCount, mTotalResiduals / mTotalCount));
+            LOGGER.debug(String.format("run %d: pre-fit: totalResiduals(%.0f) vs total(%.0f) as percent(%.5f)",
+                    mRunId, mTotalResiduals, mTotalCount, mTotalResiduals / mTotalCount));
         }
 
         mPrevW = new NmfMatrix(mBucketCount, mSigCount);
@@ -188,22 +193,69 @@ public class NmfCalculator {
         double[] bucketRatios = new double[mBucketCount];
         double bucketRatioTotal = 0;
 
+        List<Integer> randomSigs = Lists.newArrayList();
+        if(mRandomStartSignatures != null)
+        {
+            // get the next set of random sigs
+            int nextSigIndex = mRandom.nextInt(mRandomStartSignatures.Cols);
+            int attempts = 0;
+            while(randomSigs.size() < mSigCount && attempts < mSigCount * 5)
+            {
+                if(!randomSigs.contains(nextSigIndex))
+                {
+                    randomSigs.add(nextSigIndex);
+                }
+
+                nextSigIndex = mRandom.nextInt(mRandomStartSignatures.Cols);
+                ++attempts;
+            }
+
+            if(randomSigs.size() < mSigCount)
+            {
+                LOGGER.warn("insufficient random sigs found");
+                return;
+            }
+
+            // LOGGER.debug("using random sigs: {}", randomSigs.toString());
+        }
+
         // for each signature, either set a random bucket ratio or take the ref one
         // and add up all ratios, so they can be used to split the actual bucket count amongst them
+        int nonRefSigIndex = 0;
         for (int s = 0; s < mSigCount; ++s) {
 
             bucketRatioTotal = 0;
 
-            for (int i = 0; i < mW.Rows; ++i) {
+            if (mRefContributions != null && s < mRefSignatures.Cols) {
 
-                if (mRefContributions != null && s < mRefSignatures.Cols)
+                for (int i = 0; i < mW.Rows; ++i) {
                     bucketRatios[i] = mRefSignatures.get(i, s);
-                else
-                    bucketRatios[i] = mRandom.nextDouble();
+                    bucketRatioTotal += bucketRatios[i];
+                }
+            }
+            else if(mRandomStartSignatures != null)
+            {
+                int randomSig = randomSigs.get(nonRefSigIndex);
 
-                bucketRatioTotal += bucketRatios[i];
+                for (int i = 0; i < mW.Rows; ++i) {
+
+                    bucketRatios[i] = mRandomStartSignatures.get(i, randomSig);
+                    bucketRatioTotal += bucketRatios[i];
+                }
+
+                ++nonRefSigIndex;
+            }
+            else
+            {
+                // random values
+                for (int i = 0; i < mW.Rows; ++i) {
+
+                    bucketRatios[i] = mRandom.nextDouble();
+                    bucketRatioTotal += bucketRatios[i];
+                }
             }
 
+            // ensure sig bucket ratios total to 1 (by convention)
             for (int i = 0; i < mW.Rows; ++i) {
                 wData[i][s] = bucketRatios[i] / bucketRatioTotal;
             }
@@ -214,7 +266,7 @@ public class NmfCalculator {
 
     private void initContributions()
     {
-        if(mRefContributions != null && mRefContributions.Rows == mSigCount)
+        if(mRefContributions != null && mRefContributions.Rows == mSigCount && mConfig.UseRefSigs)
         {
             mH = new NmfMatrix(mRefContributions);
             return;
@@ -232,7 +284,8 @@ public class NmfCalculator {
         // if there are proposed or ref contributions in use, the other sigs should
         // be given a relatively small value compared to the ref
         // for now, assume there is only 1 proposed sig in play per sample
-        double refSigAllocation = 0.99;
+        double refSigAllocation = 1 - mSigFloatRate;
+        // double refSigAllocation = 0.99;
 
         // non-proposed sigs need a contribution above zero to allow them to float
         double nonRefSigPercent = (1-refSigAllocation) / (mSigCount - 1);
@@ -295,11 +348,15 @@ public class NmfCalculator {
         double prevResiduals = 0;
         double prevDivergence = 0;
         double prevCostChange = 0;
+        double initCost = 0;
+        double earlyCost = 0;
 
         int i = 0;
-        int minIterations = 10;
+        int iterCheckInterval = 10; // how often to check, rather than every time
         int maxIterations = mConfig.MaxIterations;
-        int permittedExtensions = 2;
+        int permittedExtensions = 3;
+        double projectCostExit = mLowestCost * 1.25; // build a buffer in for uncertainty
+
         for(; i < maxIterations; i++) {
 
             // compute the fit
@@ -312,9 +369,16 @@ public class NmfCalculator {
             // compare the original counts to the calculated matrix
             currentCost = mSampleCounts.sumDiffSq(mV);
 
+            if(i == 0)
+                initCost = currentCost;
+            else if(i == iterCheckInterval)
+                earlyCost = currentCost;
+
             if(Double.isNaN(currentCost) || Double.isInfinite(currentCost) || currentCost > 1e50)
             {
-                LOGGER.warn("invalid cost value: nan={} infinite={} max={}, exiting", Double.isNaN(currentCost), Double.isInfinite(currentCost), currentCost > 1e50);
+                LOGGER.warn("it={}: invalid cost value: nan={} infinite={} max={}, exiting",
+                        i, Double.isNaN(currentCost), Double.isInfinite(currentCost), currentCost > 1e50);
+
                 mIsValid = false;
                 break;
             }
@@ -337,17 +401,17 @@ public class NmfCalculator {
             }
 
             // check conditions to exit the fit routine
-            if(i >= minIterations)
+            if(i > 0 && (i % iterCheckInterval) == 0)
             {
                 if (currentCost < mConfig.ExitLevel)
                 {
-                    LOGGER.debug(String.format("%d: cost(%.0f) below cutoff(%.0f), exiting fit", i, currentCost, mConfig.ExitLevel));
+                    LOGGER.debug(String.format("run=%d, it=%d: cost(%.0f) below cutoff(%.0f), exiting fit", mRunId, i, currentCost, mConfig.ExitLevel));
                     break;
 
                 } else if (abs(costChange) < MIN_COST_CHANGE_PERCENT || costChange > 0) {
 
-                    LOGGER.debug(String.format("%d: cost(%.0f -> %.0f) percent(%.4f), small or +ve change, exiting fit",
-                            i, prevCost, currentCost, costChange));
+                    LOGGER.debug(String.format("run=%d, it=%d: cost(%.0f -> %.0f) percent(%.4f), %s change, exiting fit",
+                            mRunId, i, prevCost, currentCost, costChange, costChange > 0 ? "positive" : "small"));
                     break;
                 }
 
@@ -366,19 +430,18 @@ public class NmfCalculator {
                     {
                         // otherwise assume it also slows, so work out how many iterations until it reaches the flat line threshold
                         // but here even keeping the rate of change constant is optimistic
-                        double minChangeIts = log(MIN_COST_CHANGE_PERCENT) / log(1 - changeRate);
+                        double minChangeIts = min(log(MIN_COST_CHANGE_PERCENT) / log(1 - changeRate), remainingIts);
                         targetCostReduced = currentCost * Math.pow(1 + costChange, minChangeIts);
                     }
 
-                    if (targetCostReduced > mLowestCost && targetCostLinear > mLowestCost) {
+                    if (targetCostReduced > projectCostExit || targetCostLinear > projectCostExit) {
 
                         LOGGER.debug(String.format(
-                                "%d: costChange(%.6f -> %.6f asPerc=%.4f) to small for cost(%.0f vs low=%.0f), exiting fit",
-                                i, prevCostChange, costChange, changeRate, currentCost, mLowestCost));
+                                "run=%d, it=%d: costChange(%.6f percVsLast=%.4f) to small for cost(%.0f vs low=%.0f) projected(lin=%.0f red=%.0f), exiting fit",
+                                mRunId, i, costChange, changeRate, currentCost, mLowestCost, targetCostLinear, targetCostReduced));
                         break;
                     }
                 }
-
             }
 
             prevCost = currentCost;
@@ -393,30 +456,38 @@ public class NmfCalculator {
 
             applyAdjustments();
 
-            if(i == maxIterations)
+            if(i == maxIterations - 1)
             {
+                // prior to exiting, check if worth continuing on if the current run is already the best fit
                 if(mLowestCost > 0 && currentCost < mLowestCost && permittedExtensions > 0)
                 {
-                    LOGGER.debug(String.format("%d: extending max iterations with new lowest cost(%.0f vs prev=%.0f), exiting fit", i, currentCost, mLowestCost));
-                    maxIterations *= 1.25;
+                    LOGGER.debug(String.format("run=%d, it=%d: extending max iterations with new lowest cost(%.0f vs prev=%.0f) change(%.4f)",
+                            mRunId, i, currentCost, mLowestCost, costChange));
+
+                    maxIterations += mConfig.MaxIterations;
                     --permittedExtensions;
                 }
                 else
                 {
-                    LOGGER.debug(String.format("%d: max iterations reached with cost(%.0f), exiting fit", i, prevCost));
+                    LOGGER.debug(String.format("run=%d, it=%d: max iterations reached with cost(%.0f) change(%.6f), exiting fit",
+                            mRunId, i, currentCost, costChange));
                     break;
                 }
             }
         }
 
-        if(!mIsValid)
+        if(!mIsValid || !mW.hasValidData(false) || !mH.hasValidData(false) || !mV.hasValidData(false))
             return;
 
+        mW.multiply(mH, mV, true); // ensure fit is the latest
+        normaliseSignatures();
         calcResiduals();
+
         mLowestCost = mLowestCost == 0 ? currentCost : min(mLowestCost, currentCost);
 
-        LOGGER.info(String.format("totalResiduals(%.0f) vs total(%.0f) as percent(%.5f)",
-                mTotalResiduals, mTotalCount, mTotalResiduals / mTotalCount));
+        LOGGER.info(String.format("run=%d, it=%d: residuals(%.0f) vs total(%.0f) as percent(%.5f) cost(init=%.0f early=%.0f end=%.0f lastChg=%.5f)",
+                mRunId, i, mTotalResiduals, mTotalCount, mTotalResiduals / mTotalCount,
+                initCost, earlyCost, currentCost, prevCostChange));
     }
 
     private void applyAdjustments()
@@ -477,7 +548,7 @@ public class NmfCalculator {
         double[][] wSumData = wSum.getData();
         for(int j = 0; j < mSigCount; ++j)
         {
-            double sigTotal = DataUtils.sumVector(mW.getCol(j));
+            double sigTotal = sumVector(mW.getCol(j));
 
             for(int k = 0; k < mSampleCount; ++k)
             {
@@ -502,7 +573,7 @@ public class NmfCalculator {
         double[][] hSumData = hSum.getData();
         for(int j = 0; j < mSigCount; ++j)
         {
-            double sigTotal = DataUtils.sumVector(mH.getRow(j));
+            double sigTotal = sumVector(mH.getRow(j));
 
             for(int k = 0; k < mBucketCount; ++k)
             {
@@ -526,10 +597,6 @@ public class NmfCalculator {
         final double[][] vData = mV.getData();
         final double[][] scData = mSampleCounts.getData();
 
-        for(int b = 0; b < mBucketCount; ++b) {
-            mBucketResiduals[b] = 0;
-        }
-
         for(int n = 0; n < mSampleCount; ++n)
         {
             double sampleResiduals = 0;
@@ -542,11 +609,9 @@ public class NmfCalculator {
                 double diff = bucketCount - sbContrib;
                 double absDiff = abs(diff);
                 sampleResiduals += absDiff;
-                mBucketResiduals[b] += absDiff;
                 mNetResiduals += diff;
             }
 
-            mSampleResiduals[n] = sampleResiduals;
             mTotalResiduals += sampleResiduals;
         }
     }
@@ -579,6 +644,65 @@ public class NmfCalculator {
         }
 
         return divergSum;
+    }
+
+    private void normaliseSignatures()
+    {
+        if(mConfig.SigFloatRate == 0)
+            return;
+
+        // adjust all signature bucket ratios to sum to 1, and adjust contributions accordingly
+        double[][] wData = mW.getData();
+        double[][] hData = mH.getData();
+
+        for(int i = 0; i < mW.Cols; ++i)
+        {
+            double bucketRatioTotal = sumVector(mW.getCol(i));
+
+            if(bucketRatioTotal == 0)
+                continue;
+
+            double contribAdj = 0;
+
+            for(int j = 0; j < mW.Rows; ++j)
+            {
+                // bucket ratio: x -> x/total to make a percentage
+                if(j == 0) {
+                    double prevVal = wData[j][i];
+                    wData[j][i] /= bucketRatioTotal;
+                    contribAdj = prevVal / wData[j][i];
+                }
+                else
+                {
+                    wData[j][i] /= bucketRatioTotal;
+                }
+            }
+
+            for(int j = 0; j < mH.Cols; ++j) {
+
+                hData[i][j] *= contribAdj;
+            }
+
+                // verify bucket ratios for a sig now total 1 and so are in effect percentages
+            if(!doublesEqual(sumVector(mW.getCol(i)),1))
+            {
+                LOGGER.error("sig normalisation failed");
+                return;
+            }
+        }
+
+        // check that V hasn't changed
+        final NmfMatrix vCopy = new NmfMatrix(mV);
+        mW.multiply(mH, mV, true);
+
+        double sumDiff = mV.sumDiffSq(vCopy);
+        boolean matrixEqual = mV.equals(vCopy);
+
+        if(!doublesEqual(sumDiff, 0) || !matrixEqual)
+        {
+            LOGGER.warn(String.format("bucket ratio adjustments failed: diff(%.4f) equal(%s)",
+                    sumDiff, matrixEqual));
+        }
     }
 
     private void logMatrixDiffs()
