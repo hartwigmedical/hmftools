@@ -63,7 +63,7 @@ class RunDirectory {
     private File findSomatic() {
         try {
             try (final Stream<Path> stream = Files.walk(prefix, FileVisitOption.FOLLOW_LINKS)) {
-                return stream.filter(p -> p.toString().endsWith("_post_processed.vcf") || p.toString().endsWith("_melted.vcf"))
+                return stream.filter(p -> p.toString().endsWith("post_processed_v2.2.vcf.gz"))
                         .map(Path::toFile)
                         .findFirst()
                         .orElse(null);

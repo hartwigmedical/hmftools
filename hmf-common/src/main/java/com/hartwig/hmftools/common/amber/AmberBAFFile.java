@@ -31,6 +31,11 @@ public enum AmberBAFFile {
         return fromLines(Files.readAllLines(new File(fileName).toPath()));
     }
 
+    @NotNull
+    public static List<String> readingPurityData(@NotNull List<AmberBAF> bafs) {
+        return toLines(bafs);
+    }
+
     public static void write(@NotNull final String filename, @NotNull Multimap<String, AmberBAF> bafs) throws IOException {
         List<AmberBAF> sortedBafs = Lists.newArrayList(bafs.values());
         Collections.sort(sortedBafs);

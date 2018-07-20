@@ -32,8 +32,8 @@ import htsjdk.variant.vcf.VCFHeader;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class MNVMerger {
     private static final Logger LOGGER = LogManager.getLogger(MNVMerger.class);
-    private static final String SET_VALUE = "mnvs";
-    private static final String SET_KEY = "set";
+    private static final String MNV_SET_VALUE = "mnvs";
+    private static final String MNV_SET_KEY = "set";
     private static final String SOMATIC_PON_FIELD = "SOMATIC_PON_COUNT";
     private static final String GERMLINE_PON_FIELD = "GERMLINE_PON_COUNT";
 
@@ -55,7 +55,7 @@ public abstract class MNVMerger {
         final List<Allele> alleles = createMnvAlleles(variants, gapReads);
         final VariantContext firstVariant = variants.get(0);
         final VariantContext lastVariant = variants.get(variants.size() - 1);
-        final Map<String, Object> attributes = createMnvAttributes(variants, gapReads.size());
+        final Map<String, Object> attributes = createMnvAttributes(variants);
         final String sampleName = firstVariant.getSampleNamesOrderedByName().get(0);
         final Genotype genotype = new GenotypeBuilder(sampleName, alleles).DP(mergeDP(variants)).AD(mergeAD(variants)).make();
         return new VariantContextBuilder(firstVariant.getSource(),
@@ -112,18 +112,14 @@ public abstract class MNVMerger {
     }
 
     @NotNull
-    private Map<String, Object> createMnvAttributes(@NotNull final List<VariantContext> variants, final int gapSize) {
+    private Map<String, Object> createMnvAttributes(@NotNull final List<VariantContext> variants) {
         final Map<String, Object> attributes;
         if (variants.stream().anyMatch(VariantContext::isIndel)) {
             attributes = mergeAttributes(variants.stream().filter(VariantContext::isIndel).collect(Collectors.toList()));
         } else {
             attributes = mergeAttributes(variants);
         }
-        attributes.put(SET_KEY, SET_VALUE);
-        if (gapSize != 0) {
-            attributes.remove(SOMATIC_PON_FIELD);
-            attributes.remove(GERMLINE_PON_FIELD);
-        }
+        attributes.put(MNV_SET_KEY, MNV_SET_VALUE);
         return attributes;
     }
 

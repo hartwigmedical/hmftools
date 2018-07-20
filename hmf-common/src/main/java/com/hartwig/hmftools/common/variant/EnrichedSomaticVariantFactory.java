@@ -14,12 +14,13 @@ import com.hartwig.hmftools.common.purple.repeat.RepeatContextFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
-import com.hartwig.hmftools.common.variant.snpeff.CanonicalAnnotationSelector;
-import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
+import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.apache.commons.math3.util.Pair;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
@@ -30,18 +31,18 @@ public class EnrichedSomaticVariantFactory {
     private final GenomeRegionSelector<GenomeRegion> highConfidenceSelector;
     @NotNull
     private final IndexedFastaSequenceFile reference;
-    @NotNull
+    @Nullable
     private final ClonalityFactory clonalityFactory;
     @NotNull
-    private final CanonicalAnnotationSelector canonicalAnnotationSelector;
+    private final TranscriptAnnotationSelector transcriptAnnotationSelector;
 
     public EnrichedSomaticVariantFactory(@NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
-            @NotNull final IndexedFastaSequenceFile reference, @NotNull final ClonalityFactory clonalityFactory,
+            @NotNull final IndexedFastaSequenceFile reference, @Nullable final ClonalityFactory clonalityFactory,
             @NotNull final List<CanonicalTranscript> canonicalTranscripts) {
         this.highConfidenceSelector = GenomeRegionSelectorFactory.create(highConfidenceRegions);
         this.reference = reference;
         this.clonalityFactory = clonalityFactory;
-        this.canonicalAnnotationSelector = new CanonicalAnnotationSelector(canonicalTranscripts);
+        this.transcriptAnnotationSelector = new TranscriptAnnotationSelector(canonicalTranscripts);
     }
 
     @NotNull
@@ -63,7 +64,12 @@ public class EnrichedSomaticVariantFactory {
         addTrinucleotideContext(builder, variant);
         addGenomeContext(builder, variant);
         addCanonicalEffect(builder, variant);
-        builder.clonality(clonalityFactory.fromSample(variant));
+        addCanonicalCosmicID(builder, variant);
+        if (clonalityFactory != null) {
+            builder.clonality(clonalityFactory.fromSample(variant));
+        } else {
+            builder.clonality(Clonality.UNKNOWN);
+        }
 
         return builder.build();
     }
@@ -80,15 +86,27 @@ public class EnrichedSomaticVariantFactory {
     }
 
     private void addCanonicalEffect(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
-        final Optional<VariantAnnotation> canonicalAnnotation =
-                canonicalAnnotationSelector.canonical(variant.gene(), variant.annotations());
-        if (canonicalAnnotation.isPresent()) {
-            final VariantAnnotation annotation = canonicalAnnotation.get();
+        final Optional<SnpEffAnnotation> canonicalSnpEffAnnotation =
+                transcriptAnnotationSelector.canonical(variant.gene(), variant.snpEffAnnotations());
+        if (canonicalSnpEffAnnotation.isPresent()) {
+            final SnpEffAnnotation annotation = canonicalSnpEffAnnotation.get();
             builder.canonicalEffect(annotation.consequenceString());
             builder.canonicalCodingEffect(CodingEffect.effect(annotation.consequences()));
         } else {
             builder.canonicalEffect(Strings.EMPTY);
             builder.canonicalCodingEffect(CodingEffect.UNDEFINED);
+        }
+    }
+
+    private void addCanonicalCosmicID(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
+        final Optional<CosmicAnnotation> canonicalCosmicAnnotation =
+                transcriptAnnotationSelector.canonical(variant.gene(), variant.cosmicAnnotations());
+        if (canonicalCosmicAnnotation.isPresent()) {
+            final CosmicAnnotation annotation = canonicalCosmicAnnotation.get();
+            builder.canonicalCosmicID(annotation.id());
+        } // KODU: Fallback to standard COSMIC ID if there are no COSMIC annotations. Can be removed once all runs are on pipeline v4.
+        else if (variant.cosmicAnnotations().isEmpty() && variant.isCOSMIC()) {
+            builder.canonicalCosmicID(variant.cosmicIDs().get(0));
         }
     }
 

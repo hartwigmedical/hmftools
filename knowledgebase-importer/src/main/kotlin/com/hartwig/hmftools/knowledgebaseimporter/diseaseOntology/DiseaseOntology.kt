@@ -61,9 +61,9 @@ class DiseaseOntology(fileLocation: String) {
         }
     }
 
-    private val ontology = createOntology(fileLocation)
-    private val reasoner = createReasoner(ontology)
-    private val diseaseNameToClass = createDiseaseMapping(ontology, reasoner)
+    private val ontology by lazy { createOntology(fileLocation) }
+    private val reasoner by lazy { createReasoner(ontology) }
+    private val diseaseNameToClass by lazy { createDiseaseMapping(ontology, reasoner) }
 
     fun isPresent(cancerType: String): Boolean {
         return diseaseNameToClass.containsKey(cancerType.toLowerCase().trim())

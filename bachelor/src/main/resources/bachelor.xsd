@@ -18,7 +18,7 @@
             <xsd:enumeration value="splice_acceptor_variant"/>
             <xsd:enumeration value="splice_donor_variant"/>
             <xsd:enumeration value="start_gained"/>
-            <xsd:enumeration value="start_loss"/>
+            <xsd:enumeration value="start_lost"/>
             <xsd:enumeration value="stop_gained"/>
             <xsd:enumeration value="stop_lost"/>
             <xsd:enumeration value="prime_UTR_premature_start_codon_gain_variant"/>

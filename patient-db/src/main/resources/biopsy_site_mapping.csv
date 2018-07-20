@@ -244,7 +244,7 @@ Breast,ER-positive/HER2-negative,"liver","metastasis",Liver
 Breast,ER-positive/HER2-negative,"liver","not otherwise specified",Liver
 Breast,ER-positive/HER2-negative,"liver","not specified",Liver
 Breast,ER-positive/HER2-negative,"liver","null",Liver
-Breast,ER-positive/HER2-negative,"liver","r lobe",Liver
+Breast,ER-positive/HER2-negative,"liver","mRank lobe",Liver
 Breast,ER-positive/HER2-negative,"liver","right live lobe",Liver
 Breast,ER-positive/HER2-negative,"liver","right liver lesion",Liver
 Breast,ER-positive/HER2-negative,"liver","right liver lobe",Liver
@@ -342,7 +342,7 @@ Breast,ER-positive/HER2-negative,"skin","cutaneous metastasis under right mamma"
 Breast,ER-positive/HER2-negative,"skin","left breast",Breast
 Breast,ER-positive/HER2-negative,"skin","left mamma",Breast
 Breast,ER-positive/HER2-negative,"skin","mamma left",Breast
-Breast,ER-positive/HER2-negative,"skin","r shoulder",(Sub)cutane
+Breast,ER-positive/HER2-negative,"skin","mRank shoulder",(Sub)cutane
 Breast,ER-positive/HER2-negative,"skin","right breast",Breast
 Breast,ER-positive/HER2-negative,"skin","shoulder left",(Sub)cutane
 Breast,ER-positive/HER2-negative,"skin","skin lesion between mammae",(Sub)cutane
@@ -564,7 +564,7 @@ Colon/Rectum,,"liver","not specified",Liver
 Colon/Rectum,,"liver","omental cake/ peritoneal",Liver
 Colon/Rectum,,"liver","point of the liver right",Liver
 Colon/Rectum,,"liver","primair mass lower abdomen right",Liver
-Colon/Rectum,,"liver","r lobe",Liver
+Colon/Rectum,,"liver","mRank lobe",Liver
 Colon/Rectum,,"liver","right central",Liver
 Colon/Rectum,,"liver","right in liver",Liver
 Colon/Rectum,,"liver","right liver lob",Liver
@@ -700,7 +700,7 @@ Colon/Rectum,Anal,"epigastrium","sub-cutaneous",(Sub)cutane
 Colon/Rectum,Anal,"liver","caudal right liver lobe",Liver
 Colon/Rectum,Anal,"liver","left liver lob",Liver
 Colon/Rectum,Anal,"liver","left lobe",Liver
-Colon/Rectum,Anal,"liver","r. lobe",Liver
+Colon/Rectum,Anal,"liver","mRank. lobe",Liver
 Colon/Rectum,Anal,"liver","right lobe",Liver
 Colon/Rectum,Anal,"lung","right upperlob",Lung
 Colon/Rectum,Anal,"lung","rok",Lung
@@ -727,7 +727,7 @@ CUP,,"liver","high subcapsulair",Liver
 CUP,,"liver","left lobe",Liver
 CUP,,"liver","liver right",Liver
 CUP,,"liver","liver",Liver
-CUP,,"liver","r lobe",Liver
+CUP,,"liver","mRank lobe",Liver
 CUP,,"liver","right hemi-liver",Liver
 CUP,,"liver","right liverlobe",Liver
 CUP,,"liver","right lob",Liver
@@ -927,7 +927,7 @@ Kidney,Renal Cell,"null","muscle left leg",Muscle
 Kidney,Renal Cell,"null","skull",Bone
 Kidney,Renal Cell,"para-vertebral mass","para-vertebral right",Bone
 Kidney,Renal Cell,"primary","kidney left",Kidney
-Kidney,Renal Cell,"primary","r kidney",Kidney
+Kidney,Renal Cell,"primary","mRank kidney",Kidney
 Kidney,Renal Cell,"primary","right kidned",Kidney
 Kidney,Renal Cell,"primary","right kidney",Kidney
 Kidney,Renal Cell,"retro-peritoneal","left",Abdomen/Abdominal wall
@@ -1172,7 +1172,7 @@ Nervous system,Glioblastoma Multiforme,"primary","brain",CNS
 Nervous system,Glioblastoma Multiforme,"primary","cerebellum right",CNS
 Nervous system,Glioblastoma Multiforme,"primary","frontal right",CNS
 Nervous system,Glioblastoma Multiforme,"primary","left parietal",CNS
-Nervous system,Glioblastoma Multiforme,"primary","r temporal",CNS
+Nervous system,Glioblastoma Multiforme,"primary","mRank temporal",CNS
 Nervous system,Glioblastoma Multiforme,"primary","rechts pariëto-temporaal",CNS
 Nervous system,Glioblastoma Multiforme,"primary","supratentiorial left",CNS
 Nervous system,Glioblastoma Multiforme,"primary","supratentorial left",CNS
@@ -1546,7 +1546,7 @@ Skin,Basal cell carcinoma,"skin","skin",(Sub)cutane
 Skin,Melanoma,"abdomen","lower abdomen left",ABdomen/Abdominal wall
 Skin,Melanoma,"abdomen","subcutis",(Sub)cutane
 Skin,Melanoma,"abdominal wall","ventral median left",Abdomen/Abdominal wall
-Skin,Melanoma,"adrenal gland","r. adrenal",Adrenal gland
+Skin,Melanoma,"adrenal gland","mRank. adrenal",Adrenal gland
 Skin,Melanoma,"axilla","left",(Sub)cutane
 Skin,Melanoma,"axillary","left",(Sub)cutane
 Skin,Melanoma,"back","subcutaneous lesion left side, dorsal iliacal",(Sub)cutane

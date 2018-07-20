@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.common.ecrf.doid.TumorLocationDoidMapping;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.lims.Lims;
@@ -98,19 +97,21 @@ public abstract class PatientReporter {
         final PatientTumorLocation patientTumorLocation =
                 PatientReporterHelper.extractPatientTumorLocation(baseReporterData().patientTumorLocations(), tumorSample);
 
-        final List<Alteration> alterations;
-        if (patientTumorLocation != null) {
-            final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
-            alterations = civicAnalyzer().run(variantAnalysis.variantReports(),
-                    purpleAnalysis.reportableGeneCopyNumbers(),
-                    reportableDisruptions,
-                    reportableFusions,
-                    reporterData().panelGeneModel(),
-                    doidMapping.doidsForTumorType(patientTumorLocation.primaryTumorLocation()));
-        } else {
-            LOGGER.warn("Could not run civic analyzer as (curated) primary tumor location is not known");
-            alterations = Lists.newArrayList();
-        }
+        final List<Alteration> alterations = Lists.newArrayList();
+
+        // KODU: Skip CIVIC annotation for now, not working at the moment.
+        //        if (patientTumorLocation != null) {
+        //            final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
+        //            alterations = civicAnalyzer().run(variantAnalysis.variantReports(),
+        //                    purpleAnalysis.reportableGeneCopyNumbers(),
+        //                    reportableDisruptions,
+        //                    reportableFusions,
+        //                    reporterData().panelGeneModel(),
+        //                    doidMapping.doidsForTumorType(patientTumorLocation.primaryTumorLocation()));
+        //        } else {
+        //            LOGGER.warn("Could not run civic analyzer as (curated) primary tumor location is not known");
+        //            alterations = Lists.newArrayList();
+        //        }
 
         LOGGER.info(" Printing analysis results:");
         LOGGER.info("  Number of passed variants : " + Integer.toString(passedVariantCount));
@@ -121,8 +122,8 @@ public abstract class PatientReporter {
         LOGGER.info("  Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
         LOGGER.info("  Number of gene disruptions to report : " + Integer.toString(reportableDisruptions.size()));
         LOGGER.info("  Number of CIViC alterations to report : " + alterations.size());
-        LOGGER.info("  Microsatellite analysis results: " + variantAnalysis.indelsPerMb() + " indels per MB");
-        LOGGER.info("  Mutational load results: " + variantAnalysis.mutationalLoad());
+        LOGGER.info("  Microsatellite analysis results: " + Double.toString(variantAnalysis.indelsPerMb()) + " indels per MB");
+        LOGGER.info("  Mutational load results: " + Integer.toString(variantAnalysis.mutationalLoad()));
 
         final Lims lims = baseReporterData().limsModel();
         final Double pathologyTumorPercentage = lims.tumorPercentageForSample(tumorSample);
@@ -154,12 +155,6 @@ public abstract class PatientReporter {
 
     @NotNull
     private GenomeAnalysis analyseGenomeData(@NotNull final String sample, @NotNull final String runDirectory) throws IOException {
-        LOGGER.info(" Loading somatic snv and indels...");
-        final List<SomaticVariant> variants = PatientReporterHelper.loadPassedSomaticVariants(sample, runDirectory);
-        LOGGER.info("  " + variants.size() + " somatic passed snps, mnps and indels loaded for sample " + sample);
-        LOGGER.info(" Analyzing somatic snp/mnp and indels....");
-        final VariantAnalysis variantAnalysis = variantAnalyzer().run(variants);
-
         LOGGER.info(" Loading purity numbers...");
         final PurityContext context = PatientReporterHelper.loadPurity(runDirectory, sample);
         if (context.status().equals(FittedPurityStatus.NO_TUMOR)) {
@@ -167,13 +162,13 @@ public abstract class PatientReporter {
         }
 
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
+        LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
+
         final List<GeneCopyNumber> panelGeneCopyNumbers = PatientReporterHelper.loadPurpleGeneCopyNumbers(runDirectory, sample)
                 .stream()
                 .filter(geneCopyNumber -> reporterData().panelGeneModel().panel().contains(geneCopyNumber.gene()))
                 .collect(Collectors.toList());
 
-        LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
-        LOGGER.info(" Analyzing purple somatic copy numbers...");
         final PurpleAnalysis purpleAnalysis = ImmutablePurpleAnalysis.builder()
                 .gender(context.gender())
                 .status(context.status())
@@ -183,13 +178,25 @@ public abstract class PatientReporter {
                 .panelGeneCopyNumbers(panelGeneCopyNumbers)
                 .build();
 
+        LOGGER.info(" Loading somatic snv and indels...");
+        final List<SomaticVariant> variants = PatientReporterHelper.loadPassedSomaticVariants(sample, runDirectory);
+        LOGGER.info("  " + variants.size() + " somatic passed snps, mnps and indels loaded for sample " + sample);
+
+        // TODO (KODU): Create PurityAdjustedVariants. Missing the fitted regions to create the factory.
+
+        // TODO (KODU): Enrich purity adjusted variants.
+        //List<EnrichedSomaticVariant> enrichedSomaticVariants = reporterData().enrichedSomaticVariantFactory().enrich(purpleVariants);
+
+        LOGGER.info(" Analyzing somatic snp/mnp and indels....");
+        final VariantAnalysis variantAnalysis = variantAnalyzer().run(variants);
+
         final Path structuralVariantVCF = PatientReporterHelper.findStructuralVariantVCF(runDirectory);
         LOGGER.info(" Loading structural variants...");
         final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(structuralVariantVCF.toString(), true);
         LOGGER.info(" Enriching structural variants with purple data.");
         final List<EnrichedStructuralVariant> enrichedStructuralVariants = purpleAnalysis.enrichStructuralVariants(structuralVariants);
         LOGGER.info(" Analysing structural variants...");
-        final StructuralVariantAnalysis structuralVariantAnalysis = structuralVariantAnalyzer().run(enrichedStructuralVariants, false);
+        final StructuralVariantAnalysis structuralVariantAnalysis = structuralVariantAnalyzer().run(enrichedStructuralVariants);
         return ImmutableGenomeAnalysis.of(sample, variantAnalysis, purpleAnalysis, structuralVariantAnalysis);
     }
 

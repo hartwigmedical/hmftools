@@ -74,8 +74,8 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.puritypatho.PurityPathologyApplication
-                            </mainClass>
+                            <mainClass>com.hartwig.hmftools.puritypatho.PurityPathologyApplication</mainClass>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
 

@@ -24,21 +24,10 @@ public class SvChain {
     public int getId() { return mChainId; }
 
     public int getCount() { return mSVs.size(); }
-    // public List<SvClusterData> getSVs() { return mSVs; }
 
     public List<SvLinkedPair> getLinkedPairs() { return mLinkedPairs; }
 
     public int getLinkCount() { return mLinkedPairs.size(); }
-
-    public void addVariant(final SvClusterData variant, int tiLength)
-    {
-        mSVs.add(variant);
-
-        if(tiLength > 0)
-        {
-            mTILengths.add(tiLength);
-        }
-    }
 
     public void addLinkedPair(final SvLinkedPair pair, boolean addToStart)
     {
@@ -76,17 +65,6 @@ public class SvChain {
         }
 
         return dbCount;
-    }
-
-    public boolean hasOnlyShortTIs(long maxLength)
-    {
-        for(final SvLinkedPair pair : mLinkedPairs)
-        {
-            if(pair.linkType() != SvLinkedPair.LINK_TYPE_TI || pair.length() > maxLength )
-                return false;
-        }
-
-        return true;
     }
 
     public int getSvIndex(final SvClusterData var)

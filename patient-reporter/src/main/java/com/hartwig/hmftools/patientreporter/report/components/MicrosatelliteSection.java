@@ -3,6 +3,9 @@ package com.hartwig.hmftools.patientreporter.report.components;
 import java.awt.Color;
 import java.text.DecimalFormat;
 
+import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
+import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
+
 import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
@@ -16,20 +19,21 @@ public final class MicrosatelliteSection {
     private static final double END = 100;
 
     @NotNull
-    public static ComponentBuilder<?, ?> build(final double microsatelliteIndicator) {
+    public static ComponentBuilder<?, ?> build(final double microsatelliteIndicator, @NotNull FittedPurityStatus fitStatus) {
         final int graphValue = computeGraphValue(microsatelliteIndicator);
         final int markerValue = computeGraphValue(MSI_THRESHOLD);
 
         final GradientBar gradient =
                 ImmutableGradientBar.of(new Color(239, 239, 239), new Color(171, 191, 171), "MSS", "MSI", graphValue, markerValue);
         final SliderSection sliderSection =
-                ImmutableSliderSection.of("Microsatellite Status", interpret(microsatelliteIndicator), description(), gradient);
+                ImmutableSliderSection.of("Microsatellite Status", interpret(microsatelliteIndicator, fitStatus), description(), gradient);
         return sliderSection.build();
     }
 
     @NotNull
-    private static String interpret(final double microsatelliteIndicator) {
-        final String formattedMicrosatelliteIndicator = new DecimalFormat("#.####").format(microsatelliteIndicator);
+    private static String interpret(final double microsatelliteIndicator, @NotNull FittedPurityStatus fitStatus) {
+        final String formattedMicrosatelliteIndicator =
+                PatientReportFormat.correctValueForFitStatus(fitStatus, new DecimalFormat("#.####").format(microsatelliteIndicator));
         if (microsatelliteIndicator > MSI_THRESHOLD) {
             return "Unstable (" + formattedMicrosatelliteIndicator + ")";
         } else {
@@ -54,8 +58,8 @@ public final class MicrosatelliteSection {
     @NotNull
     private static String description() {
         return "The microsatellite stability score represents the number of somatic inserts and deletes in (short) repeat sections "
-                + "across the whole genome of the tumor per Mb. This metric can be considered as a good marker for instability " +
-                "in microsatellite repeat regions. Tumors with a score greater than " + MSI_THRESHOLD + " are considered microsatellite " +
-                "unstable (MSI).";
+                + "across the whole genome of the tumor per Mb. This metric can be considered as a good marker for instability "
+                + "in microsatellite repeat regions. Tumors with a score greater than " + MSI_THRESHOLD + " are considered microsatellite "
+                + "unstable (MSI).";
     }
 }
