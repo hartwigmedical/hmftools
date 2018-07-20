@@ -4,15 +4,18 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
+import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityRangeFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
+import com.hartwig.hmftools.common.purple.qc.PurpleQCFactory;
 import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFile;
@@ -36,6 +39,7 @@ public class LoadPurpleData {
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
+    private static final String DATA_REQUEST = "data_request";
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
         final Options options = createBasicOptions();
@@ -46,15 +50,29 @@ public class LoadPurpleData {
         final String purplePath = cmd.getOptionValue(PURPLE_DIR);
 
         LOGGER.info("Reading data from {}", purplePath);
-        final PurpleQC purpleQC = PurpleQCFile.read(PurpleQCFile.generateFilename(purplePath, tumorSample));
         final PurityContext purityContext = FittedPurityFile.read(purplePath, tumorSample);
-        final List<FittedPurity> bestFitPerPurity = FittedPurityRangeFile.read(purplePath, tumorSample);
         final List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilename(purplePath, tumorSample));
         final List<PurpleCopyNumber> copyNumbers =
                 PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilename(purplePath, tumorSample));
-        final List<PurpleCopyNumber> germlineDeletions =
-                PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateGermlineFilename(purplePath, tumorSample));
-        final List<FittedRegion> enrichedFittedRegions = FittedRegionFile.read(FittedRegionFile.generateFilename(purplePath, tumorSample));
+
+        final PurpleQC purpleQC;
+        final List<FittedPurity> bestFitPerPurity;
+        final List<PurpleCopyNumber> germlineDeletions;
+        final List<FittedRegion> enrichedFittedRegions;
+        if (cmd.hasOption(DATA_REQUEST)) {
+            LOGGER.info("Running in data request mode. Germline deletions, purity ranges and enriched regions will not be loaded.");
+            final Gender gender = copyNumbers.stream().anyMatch(x -> x.chromosome().equals("Y")) ? Gender.MALE : Gender.FEMALE;
+            purpleQC = PurpleQCFactory.create(purityContext.bestFit(), copyNumbers, gender, gender, geneCopyNumbers);
+            germlineDeletions = Lists.newArrayList();
+            bestFitPerPurity = Lists.newArrayList();
+            enrichedFittedRegions = Lists.newArrayList();
+
+        } else {
+            purpleQC = PurpleQCFile.read(PurpleQCFile.generateFilename(purplePath, tumorSample));
+            bestFitPerPurity = FittedPurityRangeFile.read(purplePath, tumorSample);
+            germlineDeletions = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateGermlineFilename(purplePath, tumorSample));
+            enrichedFittedRegions = FittedRegionFile.read(FittedRegionFile.generateFilename(purplePath, tumorSample));
+        }
 
         LOGGER.info("Persisting to db");
         persistToDatabase(dbAccess,
@@ -78,6 +96,7 @@ public class LoadPurpleData {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
+        options.addOption(DATA_REQUEST, false, "Load from data request. Minimises data requirements.");
         return options;
     }
 

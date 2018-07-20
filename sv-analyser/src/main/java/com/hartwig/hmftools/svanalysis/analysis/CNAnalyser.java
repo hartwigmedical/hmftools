@@ -351,7 +351,7 @@ public class CNAnalyser {
 
             mFileWriter.write(String.format("%s,%s,%d,%d,%d,%d,%s,%s",
                     sampleId, chr, startData.id(), endData.id(), startData.startPos(), endData.startPos(),
-                    startData.segStart(), endData.segEnd()));
+                    startData.segStart(), endData.segStart()));
 
             mFileWriter.write(String.format(",%.4f,%.4f,%.4f,%.4f,%d,%d,%s,%s",
                     lastMinCN, (1 - startData.actualBaf()) * startData.copyNumber(), (1 - endData.actualBaf()) * endData.copyNumber(),

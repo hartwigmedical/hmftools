@@ -37,7 +37,7 @@ public final class GeneCopyNumberDataSource {
         for (final GeneCopyNumber copyNumber : copyNumbers) {
             copyNumberDatasource.add(copyNumber.chromosome(),
                     copyNumber.chromosomeBand(), copyNumber.gene(), type(copyNumber),
-                    PatientReportFormat.correctCopyValueForFitStatus(fitStatus, Integer.toString(copyNumber.value())));
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, Integer.toString(copyNumber.value())));
         }
         return copyNumberDatasource;
     }

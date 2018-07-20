@@ -469,16 +469,28 @@ CREATE TABLE structuralVariant
     filter varchar(255) NOT NULL,
     somaticScore int,
     imprecise BOOLEAN NOT NULL,
-    qualScore DOUBLE PRECISION NOT NULL,
-    startIntervalOffsetStart int NOT NULL,
-    startIntervalOffsetEnd int NOT NULL,
-    endIntervalOffsetStart int NOT NULL,
-    endIntervalOffsetEnd int NOT NULL,
+    qualScore DOUBLE PRECISION,
+    event varchar(255),
+    startTumourVariantFragmentCount int,
+    startTumourReferenceFragmentCount int,
+    startNormalVariantFragmentCount int,
+    startNormalReferenceFragmentCount int,
+    endTumourVariantFragmentCount int,
+    endTumourReferenceFragmentCount int,
+    endNormalVariantFragmentCount int,
+    endNormalReferenceFragmentCount int,
+    startIntervalOffsetStart int,
+    startIntervalOffsetEnd int,
+    endIntervalOffsetStart int,
+    endIntervalOffsetEnd int,
     inexactHomologyOffsetStart int,
     inexactHomologyOffsetEnd int,
+    linkedBy varchar(512),
+    vcfId varchar(255),
     PRIMARY KEY (id),
     INDEX(sampleId)
 );
+
 
 DROP TABLE IF EXISTS structuralVariantBreakend;
 CREATE TABLE structuralVariantBreakend
@@ -495,7 +507,7 @@ CREATE TABLE structuralVariantBreakend
     exonRankDownstream TINYINT UNSIGNED,
     exonPhaseUpstream TINYINT,
     exonPhaseDownstream TINYINT,
-    exonMax TINYINT NOT NULL,
+    exonMax SMALLINT NOT NULL,
     PRIMARY KEY (id),
     INDEX(structuralVariantId),
     INDEX(gene),

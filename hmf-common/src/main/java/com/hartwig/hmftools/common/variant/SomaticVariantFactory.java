@@ -4,7 +4,6 @@ import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
@@ -13,10 +12,11 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotationFactory;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
-import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
-import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotationFactory;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -96,8 +96,8 @@ public class SomaticVariantFactory {
             if (genotype.hasAD() && genotype.getAD().length > 1) {
                 final AllelicDepth frequencyData = determineAlleleFrequencies(genotype);
                 if (frequencyData.totalReadCount() > 0) {
-                    ImmutableSomaticVariantImpl.Builder builder = ImmutableSomaticVariantImpl.builder().chromosome(context.getContig())
-                            .annotations(Collections.emptyList())
+                    ImmutableSomaticVariantImpl.Builder builder = ImmutableSomaticVariantImpl.builder()
+                            .chromosome(context.getContig())
                             .position(context.getStart())
                             .ref(context.getReference().getBaseString())
                             .alt(alt(context))
@@ -105,9 +105,10 @@ public class SomaticVariantFactory {
                             .totalReadCount(frequencyData.totalReadCount())
                             .totalReadCount(frequencyData.totalReadCount())
                             .hotspot(HOTSPOT_FILTER.test(context))
-                            .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0));
+                            .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0))
+                            .cosmicAnnotations(CosmicAnnotationFactory.fromContext(context));
 
-                    attachAnnotations(builder, context);
+                    attachSnpEffAnnotations(builder, context);
                     attachFilter(builder, context);
                     attachID(builder, context);
                     attachType(builder, context);
@@ -118,19 +119,20 @@ public class SomaticVariantFactory {
         return Optional.empty();
     }
 
-    private static void attachAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
-        final List<VariantAnnotation> allAnnotations = VariantAnnotationFactory.fromContext(context);
-        builder.annotations(allAnnotations);
+    private static void attachSnpEffAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder,
+            @NotNull VariantContext context) {
+        final List<SnpEffAnnotation> allAnnotations = SnpEffAnnotationFactory.fromContext(context);
+        builder.snpEffAnnotations(allAnnotations);
 
-        final List<VariantAnnotation> transcriptAnnotations =
+        final List<SnpEffAnnotation> transcriptAnnotations =
                 allAnnotations.stream().filter(x -> x.featureType().equals("transcript")).collect(Collectors.toList());
 
         if (!transcriptAnnotations.isEmpty()) {
-            final VariantAnnotation variantAnnotation = transcriptAnnotations.get(0);
-            builder.gene(variantAnnotation.gene());
-            builder.worstEffect(variantAnnotation.consequenceString());
-            builder.worstCodingEffect(CodingEffect.effect(variantAnnotation.consequences()));
-            builder.worstEffectTranscript(variantAnnotation.featureID());
+            final SnpEffAnnotation snpEffAnnotation = transcriptAnnotations.get(0);
+            builder.gene(snpEffAnnotation.gene());
+            builder.worstEffect(snpEffAnnotation.consequenceString());
+            builder.worstCodingEffect(CodingEffect.effect(snpEffAnnotation.consequences()));
+            builder.worstEffectTranscript(snpEffAnnotation.transcript());
         } else {
             builder.gene("");
             builder.worstEffect("");
@@ -139,7 +141,7 @@ public class SomaticVariantFactory {
         }
 
         builder.genesEffected((int) transcriptAnnotations.stream()
-                .map(VariantAnnotation::gene)
+                .map(SnpEffAnnotation::gene)
                 .filter(x -> !x.isEmpty())
                 .distinct()
                 .count());
@@ -174,16 +176,18 @@ public class SomaticVariantFactory {
 
     private static void attachID(@NotNull ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
         final String ID = context.getID();
+        final List<String> cosmicIDs = Lists.newArrayList();
         if (!ID.isEmpty()) {
             final String[] ids = ID.split(ID_SEPARATOR);
             for (final String id : ids) {
                 if (id.contains(DBSNP_IDENTIFIER)) {
                     builder.dbsnpID(id);
                 } else if (id.contains(COSMIC_IDENTIFIER)) {
-                    builder.cosmicID(id);
+                    cosmicIDs.add(id);
                 }
             }
         }
+        builder.cosmicIDs(cosmicIDs);
     }
 
     private static boolean sampleInFile(@NotNull final String sample, @NotNull final VCFHeader header) {

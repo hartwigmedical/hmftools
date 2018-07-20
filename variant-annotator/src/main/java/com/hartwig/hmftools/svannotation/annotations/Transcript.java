@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.svannotation.annotations;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jooq.types.UInteger;
 
 public class Transcript {
 
@@ -12,10 +14,14 @@ public class Transcript {
     private final int exonDownstreamPhase;
     private final int exonMax;
     private final boolean canonical;
+    @Nullable
+    private final Long codingStart;
+    @Nullable
+    private final Long codingEnd;
 
-    public Transcript(final GeneAnnotation parent, @NotNull final String transcriptId, final int exonUpstream,
-            final int exonUpstreamPhase, final int exonDownstream, final int exonDownstreamPhase, final int exonMax,
-            final boolean canonical) {
+    public Transcript(final GeneAnnotation parent, @NotNull final String transcriptId, final int exonUpstream, final int exonUpstreamPhase,
+            final int exonDownstream, final int exonDownstreamPhase, final int exonMax, final boolean canonical,
+            @Nullable final UInteger codingStart, @Nullable final UInteger codingEnd) {
         this.parent = parent;
         this.transcriptId = transcriptId;
         this.exonUpstream = exonUpstream;
@@ -24,6 +30,8 @@ public class Transcript {
         this.exonDownstreamPhase = exonDownstreamPhase;
         this.exonMax = exonMax;
         this.canonical = canonical;
+        this.codingStart = codingStart == null ? null : codingStart.longValue();
+        this.codingEnd = codingEnd == null ? null : codingEnd.longValue();
     }
 
     @NotNull
@@ -73,5 +81,15 @@ public class Transcript {
 
     public int exonMax() {
         return exonMax;
+    }
+
+    @Nullable
+    public Long codingStart() {
+        return codingStart;
+    }
+
+    @Nullable
+    public Long codingEnd() {
+        return codingEnd;
     }
 }

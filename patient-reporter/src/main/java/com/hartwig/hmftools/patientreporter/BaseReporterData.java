@@ -14,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class BaseReporterData {
+
     @NotNull
     public abstract List<PatientTumorLocation> patientTumorLocations();
 

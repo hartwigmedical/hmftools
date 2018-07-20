@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.knowledgebaseimporter
 
-import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableFusionOutput
+import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableFusionPairOutput
+import com.hartwig.hmftools.knowledgebaseimporter.output.ActionablePromiscuousGeneOutput
 import com.hartwig.hmftools.knowledgebaseimporter.output.FusionPair
 import com.hartwig.hmftools.knowledgebaseimporter.output.PromiscuousGene
 
@@ -52,20 +53,20 @@ fun knownPromiscuousThree(knowledgebases: Collection<Knowledgebase>): List<Promi
     return (inferredPromiscuousThreeGenes(knowledgebases) + externalPromiscuousThreeGenes(knowledgebases)).distinct()
 }
 
-fun actionableFusionPairs(knowledgebases: Collection<Knowledgebase>): List<ActionableFusionOutput> {
-    return knowledgebases.flatMap { it.actionableFusions }.filter { it.event is FusionPair }.distinct()
+fun actionableFusionPairs(knowledgebases: Collection<Knowledgebase>): List<ActionableFusionPairOutput> {
+    return knowledgebases.flatMap { it.actionableFusionPairs }.distinct()
 }
 
-fun actionablePromiscuousFive(knowledgebases: Collection<Knowledgebase>): List<ActionableFusionOutput> {
+fun actionablePromiscuousFive(knowledgebases: Collection<Knowledgebase>): List<ActionablePromiscuousGeneOutput> {
     val knownPromiscuousFive = knownPromiscuousFive(knowledgebases).toSet()
     return actionablePromiscuousGenes(knowledgebases).filter { knownPromiscuousFive.contains(it.event) }
 }
 
-fun actionablePromiscuousThree(knowledgebases: Collection<Knowledgebase>): List<ActionableFusionOutput> {
+fun actionablePromiscuousThree(knowledgebases: Collection<Knowledgebase>): List<ActionablePromiscuousGeneOutput> {
     val knownPromiscuousThree = knownPromiscuousThree(knowledgebases).toSet()
     return actionablePromiscuousGenes(knowledgebases).filter { knownPromiscuousThree.contains(it.event) }
 }
 
-private fun actionablePromiscuousGenes(knowledgebases: Collection<Knowledgebase>): List<ActionableFusionOutput> {
-    return knowledgebases.flatMap { it.actionableFusions }.filter { it.event is PromiscuousGene }
+private fun actionablePromiscuousGenes(knowledgebases: Collection<Knowledgebase>): List<ActionablePromiscuousGeneOutput> {
+    return knowledgebases.flatMap { it.actionablePromiscuousGenes }.distinct()
 }

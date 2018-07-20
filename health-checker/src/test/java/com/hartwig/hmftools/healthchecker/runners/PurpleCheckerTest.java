@@ -32,10 +32,7 @@ public class PurpleCheckerTest {
         Assert.assertEquals(CheckType.PURPLE, result.checkType());
         final List<HealthCheck> checks = ((MultiValueResult) result).checks();
 
-        assertCheck(checks, PurpleCheck.AMBER_GENDER.toString(), "MALE");
-        assertCheck(checks, PurpleCheck.COBALT_GENDER.toString(), "FEMALE");
-        assertCheck(checks, PurpleCheck.PURPLE_SEGMENT_SCORE.toString(), "199");
-        assertCheck(checks, PurpleCheck.PURPLE_DELETED_GENES_SCORE.toString(), "120");
+        assertCheck(checks, PurpleCheck.QC_STATUS.toString(), "FAIL_GENDER");
     }
 
     @Test

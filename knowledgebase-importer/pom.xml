@@ -27,6 +27,18 @@
             <artifactId>hmf-extensions-cli</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>hmf-extensions-csv</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>ensembl-db</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+        </dependency>
+        <dependency>
             <groupId>net.sourceforge.owlapi</groupId>
             <artifactId>owlapi-distribution</artifactId>
         </dependency>
@@ -72,6 +84,7 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>cgi-treatment-extractor</id>
                         <phase>package</phase>
                         <goals>
                             <goal>single</goal>
@@ -80,12 +93,32 @@
                             <archive>
                                 <manifest>
                                     <addClasspath>true</addClasspath>
-                                    <mainClass>com.hartwig.hmftools.knowledgebaseimporter.ImporterApplicationKt</mainClass>
+                                    <mainClass>com.hartwig.hmftools.knowledgebaseimporter.CgiTreatmentExtractorAppKt</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
+                            <finalName>cgi-treatment-extractor-${version}</finalName>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>knowledgebase-importer</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <addClasspath>true</addClasspath>
+                                    <mainClass>com.hartwig.hmftools.knowledgebaseimporter.KnowledgebaseImporterApplicationKt</mainClass>
+                                </manifest>
+                            </archive>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <finalName>knowledgebase-importer-${version}</finalName>
                         </configuration>
                     </execution>
                 </executions>

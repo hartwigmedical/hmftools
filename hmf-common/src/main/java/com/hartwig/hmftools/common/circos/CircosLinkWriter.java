@@ -27,6 +27,7 @@ public class CircosLinkWriter {
     }
 
     private static String toString(StructuralVariant variant) {
+        if (variant.end() == null) return "";
         return new StringJoiner("\t").add("hs" + variant.chromosome(true))
                 .add(String.valueOf(variant.position(true)))
                 .add(String.valueOf(variant.position(true)))

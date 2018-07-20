@@ -3,6 +3,7 @@ package com.hartwig.hmftools.idgenerator.extensions
 import com.hartwig.hmftools.idgenerator.HASH
 import com.hartwig.hmftools.idgenerator.HMF_ID
 import com.hartwig.hmftools.idgenerator.HmfId
+import com.hartwig.hmftools.idgenerator.PATIENT_ID
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import java.io.File
@@ -15,10 +16,10 @@ fun File.readOldIds(): Set<HmfId> {
 
 fun File.writeHmfIds(ids: Collection<HmfId>) {
     this.bufferedWriter().use { out ->
-        out.write("$HMF_ID,$HASH")
+        out.write("$HMF_ID,$HASH,$PATIENT_ID")
         out.newLine()
         ids.sortedBy { it.id }.forEach {
-            out.write("${it.id},${it.hash}")
+            out.write("${it.id},${it.hash},${it.patientId}")
             out.newLine()
         }
     }

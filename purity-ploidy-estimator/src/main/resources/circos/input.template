@@ -28,7 +28,7 @@ chromosomes                 = -EXCLUDE
 
 </highlights>
 
-# Default is to clip the data to range min/max.
+# Default is to clip the data to proximity min/max.
 <plots>
 
 	# -----------------------------------------------------------

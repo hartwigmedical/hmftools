@@ -5,11 +5,11 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.patientdb.LoadClinicalData;
 import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
@@ -19,11 +19,12 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
 
 public class TumorLocationCurator implements CleanableCurator {
 
     private static final InputStream TUMOR_LOCATION_MAPPING_RESOURCE =
-            LoadClinicalData.class.getResourceAsStream("/tumor_location_mapping.csv");
+            TumorLocationCurator.class.getResourceAsStream("/tumor_location_mapping.csv");
 
     @NotNull
     private final Map<String, CuratedTumorLocation> tumorLocationMap = Maps.newHashMap();
@@ -36,7 +37,7 @@ public class TumorLocationCurator implements CleanableCurator {
     }
 
     @VisibleForTesting
-    TumorLocationCurator(@NotNull final InputStream mappingInputStream) throws IOException {
+    public TumorLocationCurator(@NotNull final InputStream mappingInputStream) throws IOException {
         final CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
         for (final CSVRecord record : parser) {
             final String searchTerm = record.get("searchTerm");
@@ -68,5 +69,15 @@ public class TumorLocationCurator implements CleanableCurator {
     @Override
     public Set<String> unusedSearchTerms() {
         return unusedSearchTerms;
+    }
+
+    @TestOnly
+    @NotNull
+    public Set<String> primaryTumorLocations() {
+        return tumorLocationMap.entrySet()
+                .stream()
+                .map(Map.Entry::getValue)
+                .map(CuratedTumorLocation::primaryTumorLocation)
+                .collect(Collectors.toSet());
     }
 }

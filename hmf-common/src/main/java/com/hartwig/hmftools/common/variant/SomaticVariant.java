@@ -3,7 +3,8 @@ package com.hartwig.hmftools.common.variant;
 import java.util.List;
 
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
+import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,11 +26,14 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
     @Nullable
     String dbsnpID();
 
-    @Nullable
-    String cosmicID();
+    @NotNull
+    List<String> cosmicIDs();
 
     @NotNull
-    List<VariantAnnotation> annotations();
+    List<SnpEffAnnotation> snpEffAnnotations();
+
+    @NotNull
+    List<CosmicAnnotation> cosmicAnnotations();
 
     @NotNull
     String gene();
@@ -54,7 +58,7 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
     }
 
     default boolean isCOSMIC() {
-        return cosmicID() != null;
+        return !cosmicIDs().isEmpty();
     }
 
     default boolean isFiltered() {return !filter().equals("PASS");}
