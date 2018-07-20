@@ -182,7 +182,14 @@ public abstract class PatientReporter {
         final List<SomaticVariant> variants = PatientReporterHelper.loadPassedSomaticVariants(sample, runDirectory);
         LOGGER.info("  " + variants.size() + " somatic passed snps, mnps and indels loaded for sample " + sample);
 
-        // TODO (KODU): Create PurityAdjustedVariants. Missing the fitted regions to create the factory.
+        // KODU: Work in progress (DEV-452)
+//        final PurityAdjuster purityAdjuster = new PurityAdjuster(context.gender(), context.bestFit());
+//        final PurityAdjustedSomaticVariantFactory somaticVariantFactory =
+//                new PurityAdjustedSomaticVariantFactory(purityAdjuster, purpleCopyNumbers, Collections.emptyList());
+//        final List<PurityAdjustedSomaticVariant> purityAdjustedSomaticVariants = somaticVariantFactory.create(variants);
+//
+//        final double clonalPloidy = ClonalityCutoffKernel.clonalCutoff(purityAdjustedSomaticVariants);
+//        final ClonalityFactory clonalityFactory = new ClonalityFactory(purityAdjuster, clonalPloidy);
 
         // TODO (KODU): Enrich purity adjusted variants.
         //List<EnrichedSomaticVariant> enrichedSomaticVariants = reporterData().enrichedSomaticVariantFactory().enrich(purpleVariants);
