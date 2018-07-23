@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_I1;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_I2;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_VAL;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.calcCSS;
+import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.calcLogLikelihood;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.getTopCssPairs;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.vectorMultiply;
@@ -173,6 +174,9 @@ public class SigReporter {
 
     private void compareSignatures()
     {
+        if(mConfig.FitOnly)
+            return;
+
         // the CSS cutoff can be lower since only interested in any similarity
         double cssCutoff = 0.95;
 
@@ -295,6 +299,8 @@ public class SigReporter {
                 mBucketResiduals[b] = 0;
             }
 
+            int bucketLowProbCount = 0;
+
             for(int b = 0; b < mBucketCount; ++b)
             {
                 int bucketCount = (int)scData[b][n];
@@ -331,6 +337,7 @@ public class SigReporter {
                     continue;
 
                 totalLowProbDiff += abs(sbContrib - bucketCount);
+                ++bucketLowProbCount;
 
                 // add in order of lowest probability first
                 int index = 0;
@@ -344,6 +351,17 @@ public class SigReporter {
                 double[] probResult = {n, b, pProb, sbContrib, bucketCount};
                 ppResults.add(index, probResult);
             }
+
+            // test differences against a log-likehood of poisson noise probability
+            final double[] actualCounts = mSampleCounts.getCol(n);
+            final double[] fittedCounts = mFittedCounts.getCol(n);
+
+            double llProb = calcLogLikelihood(actualCounts, fittedCounts, false);
+
+            double sampleResidualPerc = mSampleResiduals[n] / mSampleTotals[n];
+
+            LOGGER.debug(String.format("sample(%d) residuals(%.0f vs act=%.0f perc=%.4f) bucketLowProbCount(%d) llProb(%.6f)",
+                    n, mSampleResiduals[n], mSampleTotals[n], sampleResidualPerc, bucketLowProbCount, llProb));
         }
 
         LOGGER.debug(String.format("sample-bucket residuals with low-prob: count(%d) residuals(%d perc=%.3f)",
@@ -355,6 +373,10 @@ public class SigReporter {
             LOGGER.debug(String.format("sample(%.0f) bucket(%.0f) prob(%.4g) counts(bc=%.0f fit=%.0f)",
                     result[SAMP_ID], result[BUCK_ID], result[PROB], result[SB_CONTRIB], result[BC]));
         }
+
+        LOGGER.info(String.format("total residuals(%.0f) vs count(%.0f) perc(%.5f)",
+                mTotalCount, mTotalResiduals, mTotalResiduals/mTotalCount));
+
     }
 
     private void logResidualData() {

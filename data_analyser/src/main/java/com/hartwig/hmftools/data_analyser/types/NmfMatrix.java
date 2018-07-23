@@ -212,6 +212,11 @@ public class NmfMatrix {
 
     public void scalarDivide(NmfMatrix other)
     {
+        scalarDivide(other, false);
+    }
+
+    public void scalarDivide(NmfMatrix other, boolean allowZeros)
+    {
         // scalar product; this *= b
         final double[][] otherData = other.getData();
 
@@ -221,6 +226,9 @@ public class NmfMatrix {
             {
                 if(otherData[i][j] == 0)
                 {
+                    if(allowZeros)
+                        continue;
+
                     LOGGER.error("divide by zero at i={}, j={}", i, j);
                     return;
                 }

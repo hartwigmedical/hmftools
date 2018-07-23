@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.data_analyser.calcs;
 
 import static java.lang.Double.max;
-import static java.lang.Double.valueOf;
 import static java.lang.Math.abs;
 import static java.lang.Math.log;
 import static java.lang.Math.min;
@@ -58,7 +57,6 @@ public class NmfCalculator {
 
     private NmfMatrix mRefSignatures;
     private NmfMatrix mRefContributions;
-    private double mSigFloatRate;
     private List<NmfMatrix> mStartSigs;
     private NmfMatrix mRandomStartSignatures;
 
@@ -110,7 +108,6 @@ public class NmfCalculator {
         mRefSignatures = null;
         mRefContributions = null;
         mRandomStartSignatures = null;
-        mSigFloatRate = 1;
         mStartSigs = Lists.newArrayList();
 
         mIsValid = false;
@@ -121,10 +118,9 @@ public class NmfCalculator {
 
     public void setSigCount(int sigCount) { mSigCount = sigCount; }
 
-    public void setSignatures(final NmfMatrix refSigs, double sigFloatRate)
+    public void setSignatures(final NmfMatrix refSigs)
     {
         mRefSignatures = refSigs;
-        mSigFloatRate = sigFloatRate;
     }
 
     public void setContributions(final NmfMatrix refContributions) { mRefContributions = refContributions; }
@@ -141,7 +137,6 @@ public class NmfCalculator {
     public void clearLowestCost() { mLowestCost = 0; }
 
     public double getTotalCount() { return mTotalCount; }
-    public List<NmfMatrix> getStartSigs() { return mStartSigs; }
     public final NmfMatrix getRefSignatures() { return mRefSignatures; }
 
     public boolean isValid() { return mIsValid; }
@@ -284,7 +279,7 @@ public class NmfCalculator {
         // if there are proposed or ref contributions in use, the other sigs should
         // be given a relatively small value compared to the ref
         // for now, assume there is only 1 proposed sig in play per sample
-        double refSigAllocation = 1 - mSigFloatRate;
+        double refSigAllocation = 1 - mConfig.SigFloatRate;
         // double refSigAllocation = 0.99;
 
         // non-proposed sigs need a contribution above zero to allow them to float
@@ -519,10 +514,10 @@ public class NmfCalculator {
         NmfMatrix hAdj = wt.multiply(mSampleCounts);
         NmfMatrix hd = wt.multiply(mV);
 
-        hAdj.scalarDivide(hd);
+        hAdj.scalarDivide(hd, true);
         mH.scalarMultiply(hAdj);
 
-        if(mSigFloatRate > 0) {
+        if(mConfig.SigFloatRate > 0) {
 
             // update signatures matrix
             NmfMatrix ht = mH.transpose();
@@ -530,15 +525,15 @@ public class NmfCalculator {
             NmfMatrix wd1 = mW.multiply(mH);
             NmfMatrix wd = wd1.multiply(ht);
 
-            wAdj.scalarDivide(wd);
+            wAdj.scalarDivide(wd, true);
 
-            if(mSigFloatRate == 1)
+            if(mConfig.SigFloatRate == 1)
             {
                 mW.scalarMultiply(wAdj);
             }
             else
             {
-                mW.scalarMultiplyRateAdjusted(wAdj, mSigFloatRate, mRefSignatures.Cols);
+                mW.scalarMultiplyRateAdjusted(wAdj, mConfig.SigFloatRate, mRefSignatures.Cols);
             }
         }
     }

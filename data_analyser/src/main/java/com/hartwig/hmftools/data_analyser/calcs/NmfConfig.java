@@ -31,6 +31,8 @@ public class NmfConfig {
     // where 0 means not at all, 1 as per the discovered sigs
     final public double SigFloatRate;
 
+    final public boolean FitOnly; // apply fitting routine to samples using input/ref sigs
+
     // config for pre-NMF signature discovery
     final public boolean FindSignatures;
     final public double CssCutoff;
@@ -47,6 +49,7 @@ public class NmfConfig {
     public static String NMF_USE_REF_SIGS = "nmf_use_ref_sigs";
     public static String NMF_REF_CONTRIB_FILE = "nmf_ref_contrib_file";
     public static String NMF_SIG_FLOAT_RATE = "nmf_sig_float_rate";
+    public static String NMF_FIT_ONLY = "nmf_fit_only";
 
     public static String NMF_SIG_EXPANSION = "nmf_sig_exp_count";
     public static String NMF_FIND_SIGS = "nmf_find_sigs";
@@ -81,6 +84,7 @@ public class NmfConfig {
         options.addOption(NMF_FIND_SIGS, false, "Run Sig Finder");
         options.addOption(NMF_FS_CSS_CUTOFF, true, "Sig Finder CSS cutoff");
         options.addOption(NMF_FS_MIN_SAMPLES, true, "Sig Finder min samples as a percent of cohort");
+        options.addOption(NMF_FIT_ONLY, false, "Fit to input ref sigs, apply min-sig logic");
 
         options.addOption(NMF_LOG_VERBOSE, false, "All NMF details logged");
     }
@@ -113,6 +117,7 @@ public class NmfConfig {
         RefSigFilename = cmd.hasOption(NMF_REF_SIG_FILE) ? cmd.getOptionValue(NMF_REF_SIG_FILE) : "";
         UseRefSigs = cmd.hasOption(NMF_USE_REF_SIGS);
         RefContribFilename = cmd.hasOption(NMF_REF_CONTRIB_FILE) ? cmd.getOptionValue(NMF_REF_CONTRIB_FILE) : "";
+        FitOnly = cmd.hasOption(NMF_FIT_ONLY);
 
         SigExpansionCount = cmd.hasOption(NMF_SIG_EXPANSION) ? Integer.parseInt(cmd.getOptionValue(NMF_SIG_EXPANSION)) : 0;
         FindSignatures = cmd.hasOption(NMF_FIND_SIGS);

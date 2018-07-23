@@ -87,7 +87,7 @@ public class NmfManager {
             mReferenceSigs.cacheTranspose();
 
             if(mConfig.UseRefSigs)
-                mNmfCalculator.setSignatures(mReferenceSigs, mConfig.SigFloatRate);
+                mNmfCalculator.setSignatures(mReferenceSigs);
         }
 
         if(!mConfig.RefContribFilename.isEmpty())
@@ -108,7 +108,7 @@ public class NmfManager {
 
             if(mSigFinder.getSignatures() != null)
             {
-                mNmfCalculator.setSignatures(mSigFinder.getSignatures(), mConfig.SigFloatRate);
+                mNmfCalculator.setSignatures(mSigFinder.getSignatures());
             }
 
             if(mSigFinder.getContributions() != null)
@@ -119,6 +119,15 @@ public class NmfManager {
     }
 
     public void run() {
+
+        if(mConfig.FitOnly)
+            runFitOnly();
+        else
+            runNmf();
+    }
+
+    private void runNmf()
+    {
         mPerfCounter.start("NMF");
 
         int startSigCount = mConfig.SigCount;
@@ -160,7 +169,33 @@ public class NmfManager {
         }
 
         mPerfCounter.logStats();
+    }
 
+    private void runFitOnly()
+    {
+        if(mReferenceSigs == null) {
+            // for now only works with external sigs, in time could work with sig finder's set
+            return;
+        }
+
+        mPerfCounter.start("NMF");
+
+        NmfSampleFitter sampleFitter = new NmfSampleFitter(mConfig, mSampleCountsMatrix, mReferenceSigs);
+
+        sampleFitter.fitSamples();
+
+        mPerfCounter.stop();
+
+        if(!sampleFitter.isValid())
+            return;
+
+        NmfMatrix contributions = sampleFitter.getContributions();
+        contributions.cacheTranspose();
+
+        writeSignatures(mReferenceSigs);
+        writeContributions(contributions);
+
+        mPerfCounter.logStats();
     }
 
     public void writeSignatures(final NmfMatrix signatures)
