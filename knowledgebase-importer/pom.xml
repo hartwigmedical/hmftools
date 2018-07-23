@@ -19,6 +19,10 @@
             <artifactId>kotlin-stdlib-jdk8</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-coroutines-core</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.hartwig</groupId>
             <artifactId>hmf-common</artifactId>
         </dependency>
