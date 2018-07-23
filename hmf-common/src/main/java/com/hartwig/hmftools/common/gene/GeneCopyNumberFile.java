@@ -58,7 +58,7 @@ public class GeneCopyNumberFile {
                 .add("Gene")
                 .add("MinCopyNumber")
                 .add("MaxCopyNumber")
-                .add("MeanCopyNumber") // Unused
+                .add("Unused")
                 .add("SomaticRegions")
                 .add("GermlineHomRegions")
                 .add("GermlineHet2HomRegions")
