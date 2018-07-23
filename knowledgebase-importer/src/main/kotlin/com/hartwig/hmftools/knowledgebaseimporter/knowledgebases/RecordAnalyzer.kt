@@ -13,7 +13,7 @@ import org.apache.logging.log4j.LogManager
 class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFastaSequenceFile, private val geneDAO: EnsemblGeneDAO) {
     companion object {
         private val logger = LogManager.getLogger("RecordAnalyzer")
-        private val blacklistedDrugs = setOf("chemotherapy", "aspirin", "steroids")
+        private val blacklistedDrugs = setOf("chemotherapy", "aspirin", "steroid")
     }
 
     private val cdnaAnalyzer = TransvarCdnaAnalyzer(transvarLocation)
