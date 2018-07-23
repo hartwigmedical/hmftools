@@ -43,7 +43,6 @@ interface TransvarAnalyzer<in T : HgvsAnnotation> {
     }
 
     private fun readOutputStreamAsync(process: Process) = async {
-        InputStreamReader(process.inputStream).buffered().lineSequence().onEach { println("processing output: $it") }
-                .map { TransvarOutput(it) }.toList()
+        InputStreamReader(process.inputStream).buffered().lineSequence().map { TransvarOutput(it) }.toList()
     }
 }
