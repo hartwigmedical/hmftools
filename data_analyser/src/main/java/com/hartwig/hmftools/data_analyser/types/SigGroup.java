@@ -17,6 +17,7 @@ public class SigGroup {
     List<Integer> mSampleIds;
     double mInitialCss;
     double mWorstCss;
+    double mScore;
 
     public SigGroup(int id, int bucketCount, double initialCSS)
     {
@@ -27,6 +28,7 @@ public class SigGroup {
         mInitialCss = initialCSS;
         mWorstCss = initialCSS;
         mTotalCount = 0;
+        mScore = 0;
     }
 
     public int id() { return mId; }
@@ -36,6 +38,9 @@ public class SigGroup {
     public int getTotalCount() { return (int)mTotalCount; }
     public double getInitialCss() { return mInitialCss; }
     public double getWorstCss() { return mWorstCss; }
+
+    public double getScore() { return mScore; }
+    public void setScore(double score) { mScore = score; }
 
     public void addSample(int sampleId, double[] bucketCounts, double css)
     {

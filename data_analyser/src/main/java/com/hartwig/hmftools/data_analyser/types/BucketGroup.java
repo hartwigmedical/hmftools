@@ -35,7 +35,8 @@ public class BucketGroup {
 
     public void addBucketPair(final BucketPair bucketPair)
     {
-        mBucketPairs.add(bucketPair);
+        if(!mBucketPairs.contains(bucketPair))
+            mBucketPairs.add(bucketPair);
 
         // maintain a list of unique sample and bucket IDs
         if(!mBucketIds.contains(bucketPair.getBucketA()))

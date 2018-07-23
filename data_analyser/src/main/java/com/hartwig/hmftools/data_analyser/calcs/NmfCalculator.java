@@ -481,6 +481,10 @@ public class NmfCalculator {
 
         mW.multiply(mH, mV, true); // ensure fit is the latest
         normaliseSignatures();
+
+        if(!mIsValid)
+            return;
+
         calcResiduals();
 
         mLowestCost = mLowestCost == 0 ? currentCost : min(mLowestCost, currentCost);
@@ -687,6 +691,7 @@ public class NmfCalculator {
             if(!doublesEqual(sumVector(mW.getCol(i)),1))
             {
                 LOGGER.error("sig normalisation failed");
+                mIsValid = false;
                 return;
             }
         }
@@ -695,6 +700,13 @@ public class NmfCalculator {
         final NmfMatrix vCopy = new NmfMatrix(mV);
         mW.multiply(mH, mV, true);
 
+        if(!mV.hasValidData(false))
+        {
+            LOGGER.warn("V-matrix has invalid data");
+            mIsValid = false;
+            return;
+        }
+
         double sumDiff = mV.sumDiffSq(vCopy);
         boolean matrixEqual = mV.equals(vCopy);
 
@@ -702,6 +714,7 @@ public class NmfCalculator {
         {
             LOGGER.warn(String.format("bucket ratio adjustments failed: diff(%.4f) equal(%s)",
                     sumDiff, matrixEqual));
+            mIsValid = false;
         }
     }
 

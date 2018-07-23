@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.data_analyser.calcs;
 
 import static java.lang.Double.max;
+import static java.lang.Math.abs;
 import static java.lang.Math.min;
+import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
 
 import java.io.BufferedWriter;
@@ -11,6 +13,8 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.data_analyser.types.NmfMatrix;
 
+import org.apache.commons.math3.distribution.ChiSquaredDistribution;
+import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -173,6 +177,105 @@ public class CosineSim {
         }
     }
 
+    public static double calcLogLikelihood(final double[] set1, final double[] set2, boolean logVerbose)
+    {
+        if(set1.length != set2.length || set1.length == 0)
+            return 0;
+
+        double diffTotal = 0;
+        double sameTotal = 0;
+
+        double aTotal = DataUtils.sumVector(set1);
+        double bTotal = DataUtils.sumVector(set2);
+        double ratio = aTotal/bTotal;
+
+        for(int i = 0; i < set1.length; ++i)
+        {
+            int a = (int)set1[i];
+            int b = (int)round(set2[i] * ratio);
+
+            if(a == 0 && b == 0)
+                continue;
+
+            PoissonDistribution poisson = null;
+            if(a == 0)
+            {
+                poisson = new PoissonDistribution(b);
+                diffTotal += poisson.logProbability(a);
+                sameTotal += poisson.logProbability(b);
+            }
+            else
+            {
+                poisson = new PoissonDistribution(a);
+                diffTotal += poisson.logProbability(b);
+                sameTotal += poisson.logProbability(a);
+            }
+        }
+
+        int degFreedom = set1.length - 1;
+        ChiSquaredDistribution chiSquDist = new ChiSquaredDistribution(degFreedom);
+
+        double testVal = diffTotal - sameTotal;
+        double chiInput = abs(2 * testVal);
+
+        double probability = 1 - chiSquDist.cumulativeProbability(chiInput);
+
+        if(logVerbose)
+        {
+            LOGGER.debug(String.format("prob(%.8f) totals(test=%.1f diff=%.1f same=%.1f) degFreedom(%d)",
+                    probability, testVal, diffTotal, sameTotal, degFreedom));
+        }
+
+        return probability;
+    }
+
+    public static List<double[]> getTopLogLikelihoodPairs(final NmfMatrix matrix1, final NmfMatrix matrix2, double probCutoff)
+    {
+        // use CSS to compare each pair of columns from the 2 sets
+        // returns a list of results where the CSS value is above the cutoff, ordered by CSS descending (ie closest first)
+
+        List<double[]> lliResults = Lists.newArrayList();
+
+        if(matrix1.Rows != matrix2.Rows)
+            return lliResults;
+
+        // record each combination of vector comparisons
+
+        for(int i = 0; i < matrix1.Cols; ++i) {
+
+            if(i > 0 && (i % 100) == 0)
+            {
+                LOGGER.debug("processed {} items", i);
+            }
+
+            double[] data1 = matrix1.getCol(i);
+
+            int j = i + 1;
+
+            for (; j < matrix2.Cols; ++j) {
+
+                double[] data2 = matrix2.getCol(j);
+
+                double css = calcLogLikelihood(data1, data2, false);
+
+                if (css < probCutoff)
+                    continue;
+
+                int index = 0;
+                for(;index < lliResults.size(); ++index)
+                {
+                    final double[] result = lliResults.get(index);
+                    if(css > result[CSSR_VAL])
+                        break;
+                }
+
+                double[] result = {i, j, css};
+                lliResults.add(index, result);
+            }
+        }
+
+       return lliResults;
+    }
 
     public void calcCosineSimilarities(final List<String> itemIds, final List<List<Double>> dataSets, double cutoff)
     {

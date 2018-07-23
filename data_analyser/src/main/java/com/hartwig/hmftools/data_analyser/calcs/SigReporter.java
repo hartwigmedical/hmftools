@@ -251,7 +251,7 @@ public class SigReporter {
         // compare an externally provided set of sigs (eg from Cosmic) to the generated ones
         if (mRefSignatures != null && !mConfig.UseRefSigs)
         {
-            cssResults = getTopCssPairs(mRefSignatures, mSignatures, 0.9, true, false);
+            cssResults = getTopCssPairs(mRefSignatures, mSignatures, 0.8, true, false);
 
             if (cssResults.isEmpty())
             {
@@ -261,8 +261,9 @@ public class SigReporter {
             {
                 for (final double[] result : cssResults) {
                     int externalSigId = (int)result[CSSR_I1] + 1; // bumped up to correspond to convention of starting with 1
-                    LOGGER.debug(String.format("external ref sig(%d) matches adjusted sig(%.0f) with css(%.4f)",
-                            externalSigId, result[CSSR_I2], result[CSSR_VAL]));
+                    int denovoSigId = (int)result[CSSR_I2] + 1;
+                    LOGGER.debug(String.format("external ref sig(%d) matches adjusted sig(%d) with css(%.4f)",
+                            externalSigId, denovoSigId, result[CSSR_VAL]));
                 }
             }
         }

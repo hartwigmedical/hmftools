@@ -2,6 +2,7 @@ package com.hartwig.hmftools.data_analyser.calcs;
 
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.data_analyser.calcs.NmfConfig.NMF_FS_MIN_SAMPLES;
 import static com.hartwig.hmftools.data_analyser.types.BucketPair.RATIO_MAX;
 import static com.hartwig.hmftools.data_analyser.types.BucketPair.RATIO_MIN;
 
@@ -15,6 +16,7 @@ import com.hartwig.hmftools.data_analyser.types.GenericDataCollection;
 import com.hartwig.hmftools.data_analyser.types.NmfMatrix;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -36,8 +38,8 @@ public class BucketAnalyser {
 
     private List<BucketPair> mBucketPairs;
     private List<BucketGroup> mBucketGroups;
+    private int mMinSampleCount;
 
-    private static int MIN_BG_SAMPLE_COUNT = 20; // look for decent levels of overlap
     private static int MIN_BG_BUCKET_COUNT = 20; // below which a bucket ratio is considered invalid
 
     public BucketAnalyser()
@@ -45,7 +47,7 @@ public class BucketAnalyser {
         mOutputDir = "";
         mDataCollection = null;
         mSampleCountsMatrix = null;
-        // mConfig = null;
+        mMinSampleCount = 0;
 
         mBPMatrix = null;
         mBPIds = null;
@@ -58,13 +60,22 @@ public class BucketAnalyser {
         mOutputDir = outputDir;
     }
 
+    public static void addCmdLineArgs(Options options) {
+
+    }
+
     public void initialise(GenericDataCollection collection, final CommandLine cmd)
     {
         // mConfig = new NmfConfig(cmd);
         mDataCollection = collection;
         // bucketAnalyser.setOutputDir(cmd.getOptionValue(OUTPUT_DIR));
 
+        double minSamplePerc = cmd.hasOption(NMF_FS_MIN_SAMPLES) ? Double.parseDouble(cmd.getOptionValue(NMF_FS_MIN_SAMPLES)) : 0.01;
+
         mSampleCountsMatrix = DataUtils.createMatrixFromListData(mDataCollection.getData());
+        mSampleCountsMatrix.cacheTranspose();
+
+        mMinSampleCount = (int)round(minSamplePerc * mSampleCountsMatrix.Cols);
 
         LOGGER.info("bucketCount({}) sampleCount({})", mSampleCountsMatrix.Rows, mSampleCountsMatrix.Cols);
 
@@ -195,10 +206,10 @@ public class BucketAnalyser {
             int samplesPaired = 0;
             for(BucketPair bucketPair : bucketPairs)
             {
-                if(bucketPair.getSampleIds().size() >= MIN_BG_SAMPLE_COUNT) {
+                if(bucketPair.getSampleIds().size() >= mMinSampleCount) {
 
                     mBucketPairs.add(bucketPair);
-                    sampleBucketArea += bucketPair.getSampleIds().size() * 2;
+                    sampleBucketArea += bucketPair.getSampleIds().size();
                     samplesPaired += bucketPair.getSampleIds().size();
 
                     LOGGER.debug(String.format("added pair(%d [%d][%d]: samples(%d) ratio(%.3f range=%.3f -> %.3f asPerc=%.3f) bucketPairCount(%d) areaPaired(%d)",
@@ -217,19 +228,22 @@ public class BucketAnalyser {
         int totalArea = mBPMatrix.Rows * mBPMatrix.Cols;
         double totalPairedPerc = sampleBucketArea / (double)totalArea;
 
-        LOGGER.debug(String.format("areaPaired(%d) of total(%d) percent(%.3f)",
+        LOGGER.debug(String.format("total areaPaired(%d) of total(%d) percent(%.3f)",
                 sampleBucketArea, totalArea, totalPairedPerc));
     }
 
     private void linkBucketPairs()
     {
+        // merge any bucket pairs which have over-lapping ratios
+        int initBucketPairs = mBucketPairs.size();
+
         int index1 = 0;
 
         while(index1 < mBucketPairs.size())
         {
             BucketPair bp1 = mBucketPairs.get(index1);
 
-            // and if not matched, check in the remaining set of bucket pairs
+            // check in the remaining set of bucket pairs
             for(int index2 = index1 + 1; index2 < mBucketPairs.size(); ++index2) {
 
                 final BucketPair bp2 = mBucketPairs.get(index2);
@@ -267,13 +281,18 @@ public class BucketAnalyser {
             ++index1;
 
         } // end for each BP using the first index
+
+        LOGGER.info("bucket pairs count after similar ratio joining({} -> {})", initBucketPairs, mBucketPairs.size());
     }
 
     private void formBucketGroups()
     {
+        if(mBucketPairs.isEmpty())
+            return;
+
+        LOGGER.debug("creating groups from {} bucket pairs", mBucketPairs.size());
+
         // look for linked bucket ids across groups containing the same subset of samples
-        int sampleBucketArea = 0;
-        int sampleBucketAreaGrouped = 0;
 
         int index1 = 0;
         int index2 = 0;
@@ -291,29 +310,25 @@ public class BucketAnalyser {
             // first check existing groups
             for(BucketGroup bucketGroup : mBucketGroups)
             {
-//                // check for overlapping buckets
-//                if (!bucketGroup.hasBucket(bp1.getBucketA()) && !bucketGroup.hasBucket(bp1.getBucketB()))
-//                    continue;
+                // check for overlapping buckets
+                if (!bucketGroup.hasBucket(bp1.getBucketA()) && !bucketGroup.hasBucket(bp1.getBucketB()))
+                    continue;
 
                 // and then overlapping samples
                 List<Integer> sharedSamples = bp1.getSharedSamples(bucketGroup.getSampleIds());
                 int sharedCount = sharedSamples.size();
 
-                sampleBucketArea += sharedCount;
-
-                if(sharedCount < MIN_BG_SAMPLE_COUNT)
+                if(sharedCount < mMinSampleCount)
                     continue;
 
                 // add this BP to existing group
                 bucketGroup.addBucketPair(bp1);
                 // bucketGroup.addSamples(sharedSamples); // no new samples, since only taken the union with existing
 
-                sampleBucketAreaGrouped += sharedCount;
-
-                LOGGER.debug("bucketGroup({}) added pair({} shared({} of {}) samples({}) buckets({}) pairs({}) areaGrouped({} cached={})",
-                        bucketGroup.getId(), index1, sharedCount, bp1.getSampleIds().size(),
+                LOGGER.debug("bucketGroup({}) added pair({} shared({} of {}) samples({}) buckets({}) pairs({})",
+                        bucketGroup.getId(), bp1.getId(), sharedCount, bp1.getSampleIds().size(),
                         bucketGroup.getSampleIds().size(), bucketGroup.getBucketIds().size(),
-                        bucketGroup.getBucketPairs().size(), sampleBucketArea, sampleBucketAreaGrouped);
+                        bucketGroup.getBucketPairs().size());
 
                 pairAdded = true;
                 break;
@@ -350,9 +365,8 @@ public class BucketAnalyser {
                 List<Integer> sharedSamples = bp1.getSharedSamples(bp2.getSampleIds());
 
                 int sharedCount = sharedSamples.size();
-                sampleBucketArea += sharedCount * 3; // since 1 of the 3 unique BPs are overlapping
 
-                if (sharedCount < MIN_BG_SAMPLE_COUNT)
+                if (sharedCount < mMinSampleCount)
                 {
                     ++index2;
                     continue;
@@ -364,12 +378,9 @@ public class BucketAnalyser {
                 bucketGroup.addBucketPair(bp2);
                 mBucketGroups.add(bucketGroup);
 
-                sampleBucketAreaGrouped += sharedCount * bucketGroup.getBucketIds().size();
-
-                LOGGER.debug("added new bucketGroup({}) with pairs({} & {}) samples({} of {} & {}) buckets({}) pairs({}) areaGrouped({} cached={})",
+                LOGGER.debug("added new bucketGroup({}) with pairs({} & {}) samples(shared={} of bp1={} & bp2={})",
                         bucketGroup.getId(), index1, index2, bucketGroup.getSampleIds().size(),
-                        bp1.getSampleIds().size(), bp2.getSampleIds().size(), bucketGroup.getBucketIds().size(),
-                        bucketGroup.getBucketPairs().size(), sampleBucketArea, sampleBucketAreaGrouped);
+                        bp1.getSampleIds().size(), bp2.getSampleIds().size());
 
                 pairAdded = true;
                 break;
@@ -391,20 +402,23 @@ public class BucketAnalyser {
         // report the final set of buckets
         LOGGER.info("summary of {} bucketGroups:", mBucketGroups.size());
 
+        int areaGrouped = 0;
+
         for (BucketGroup bucketGroup : mBucketGroups) {
 
+            int sampleCount = bucketGroup.getSampleIds().size();
+            int bucketCount = bucketGroup.getBucketIds().size();
+
             LOGGER.info("bucketGroup({}) samples({}) buckets({}: {}) pairs({})",
-                    bucketGroup.getId(), bucketGroup.getSampleIds().size(), bucketGroup.getBucketIds().size(), bucketGroup.getBucketIds().toString(),
+                    bucketGroup.getId(), sampleCount, bucketCount, bucketGroup.getBucketIds().toString(),
                     bucketGroup.getBucketPairs().size());
+
+            areaGrouped += sampleCount * bucketCount;
         }
 
-/*
-        for(BucketGroup bucketGroup : mBucketGroups)
-        {
+        double totalArea = mSampleCountsMatrix.Cols * mSampleCountsMatrix.Rows;
 
-
-
-        }
-*/
+        LOGGER.info(String.format("areaGrouped(%d) total(%.0f) percent(%.3f)",
+                areaGrouped, totalArea, areaGrouped/totalArea));
     }
 }
