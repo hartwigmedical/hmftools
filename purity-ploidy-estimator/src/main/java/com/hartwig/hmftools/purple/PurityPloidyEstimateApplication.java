@@ -44,7 +44,7 @@ import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.purple.qc.PurpleQCFactory;
 import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
+import com.hartwig.hmftools.common.purple.region.FittedRegionFactoryV1;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFile;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegionFactory;
@@ -176,7 +176,7 @@ public class PurityPloidyEstimateApplication {
             final FittingConfig fittingConfig = configSupplier.fittingConfig();
             final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
             final double observedBafExponent = defaultValue(cmd, OBSERVED_BAF_EXPONENT, OBSERVED_BAF_EXPONENT_DEFAULT);
-            final FittedRegionFactory fittedRegionFactory = new FittedRegionFactory(cobaltGender,
+            final FittedRegionFactoryV1 fittedRegionFactory = new FittedRegionFactoryV1(cobaltGender,
                     fittingConfig.maxPloidy(),
                     cnvRatioWeight,
                     averageTumorDepth,

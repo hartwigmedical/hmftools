@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FittedRegionFactory {
+public class FittedRegionFactoryV1 {
 
     private final Gender gender;
     private final int maxPloidy;
@@ -21,7 +21,7 @@ public class FittedRegionFactory {
     private final double observedBafExponent;
     private final BAFUtils bafUtils;
 
-    public FittedRegionFactory(final Gender gender, final int maxPloidy, final double cnvRatioWeightFactor,
+    public FittedRegionFactoryV1(final Gender gender, final int maxPloidy, final double cnvRatioWeightFactor,
             final int averageReadDepth, final double observedBafExponent) {
         this.gender = gender;
         this.maxPloidy = maxPloidy;
