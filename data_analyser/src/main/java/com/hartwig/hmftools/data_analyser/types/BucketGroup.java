@@ -9,7 +9,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-public class BucketGroup {
+public class BucketGroup implements Comparable<BucketGroup> {
 
     // keyed by a bucket pairing
     int mId;
@@ -29,6 +29,14 @@ public class BucketGroup {
 
     public int getId() { return mId; }
 
+    public int getScore() { return mBucketIds.size() * mSampleIds.size(); }
+
+    public int compareTo(final BucketGroup other)
+    {
+        // for descending order
+        return other.getScore() - getScore();
+    }
+
     public final List<Integer> getSampleIds() { return mSampleIds; }
     public final List<Integer> getBucketIds() { return mBucketIds; }
     public final List<BucketPair> getBucketPairs() { return mBucketPairs; }
@@ -46,22 +54,73 @@ public class BucketGroup {
             mBucketIds.add(bucketPair.getBucketB());
     }
 
-    public void addSamples(List<Integer> sampleIds)
-    {
-        for(Integer newSample : sampleIds)
-        {
-            if(!hasSample(newSample))
-                mSampleIds.add(newSample);
-        }
-    }
-
     public boolean hasSample(int sampleIndex)
     {
         return mSampleIds.contains(sampleIndex);
+    }
+
+    public void addSamples(List<Integer> sampleIds)
+    {
+        for(Integer sample : sampleIds)
+        {
+            addSample(sample);
+        }
+    }
+
+    public void addSample(int sampleId)
+    {
+        if(mSampleIds.contains(sampleId))
+            return;
+
+        mSampleIds.add(sampleId);
     }
 
     public boolean hasBucket(int bucketIndex)
     {
         return mBucketIds.contains(bucketIndex);
     }
+
+    public void addBuckets(List<Integer> bucketIds)
+    {
+        for(Integer bucket : bucketIds)
+        {
+            addBucket(bucket);
+        }
+    }
+
+    public void addBucket(int bucketId)
+    {
+        if(mBucketIds.contains(bucketId))
+            return;
+
+        mBucketIds.add(bucketId);
+    }
+
+    public static List<Integer> getMatchingBucketList(final List<Integer> bl1, final List<Integer> bl2)
+    {
+        List<Integer> matchedList = Lists.newArrayList();
+
+        for(Integer bucket : bl1)
+        {
+            if(bl2.contains(bucket))
+                matchedList.add(bucket);
+        }
+
+        return matchedList;
+    }
+
+    public static boolean hasMatchingBucketList(final List<Integer> bl1, final List<Integer> bl2, double matchPercent)
+    {
+        int matched = 0;
+
+        for(Integer bucket : bl1)
+        {
+            if(bl2.contains(bucket))
+                ++matched;
+        }
+
+        return matched / (double)bl1.size() >= matchPercent;
+
+    }
+
 }

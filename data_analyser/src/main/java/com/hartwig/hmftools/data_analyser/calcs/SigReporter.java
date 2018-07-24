@@ -90,6 +90,7 @@ public class SigReporter {
     {
         logSignatureData();
         compareSignatures();
+        compareContributions();
         calcResidualData();
         logResidualData();
     }
@@ -102,7 +103,8 @@ public class SigReporter {
 
         for(int sigId = 0; sigId < mSigCount; ++sigId)
         {
-            double sigTotal = sumVector(mContributions.getRow(sigId));
+            double[] sampleContribs = mContributions.getRow(sigId);
+            double sigTotal = sumVector(sampleContribs);
 
             // count number of samples where this signature is above the avg signature contribution
             int countAboveAvg = 0;
@@ -120,8 +122,24 @@ public class SigReporter {
                 }
             }
 
-            LOGGER.debug(String.format("sig(%d) summary: total(%.0f perc=%.3f) sample over-allocated(%d perc=%.3f)",
-                    sigId, sigTotal, sigTotal/mTotalCount, countAboveAvg, countAboveAvg/(double)mSampleCount));
+            final List<Integer> sortedContribs = DataUtils.getSortedVectorIndices(sampleContribs, false);
+            double maxContrib = sampleContribs[sortedContribs.get(0)];
+
+            // take median from samples with non-zero contribs
+            int positiveCount = 0;
+            for(int i = 0; i < sortedContribs.size(); ++i)
+            {
+                if(sampleContribs[sortedContribs.get(i)] < 1)
+                    break;
+
+                ++positiveCount;
+            }
+
+            int medIndex = positiveCount / 2;
+            double medContrib = sampleContribs[sortedContribs.get(medIndex)];
+
+            LOGGER.debug(String.format("sig(%d) summary: total(%.0f perc=%.3f) stats(med=%.0f max=%.0f) sample over-allocated(%d perc=%.3f)",
+                    sigId, sigTotal, sigTotal/mTotalCount, medContrib, maxContrib, countAboveAvg, countAboveAvg/(double)mSampleCount));
 
             // log top-X buckets
             final double[] bucketRatios = mSignatures.getCol(sigId);
@@ -273,7 +291,33 @@ public class SigReporter {
         }
     }
 
+    private void compareContributions()
+    {
+        // look for samples which are assigned very similar ratios of signatures
+        List<double[]> contribsResults = getTopCssPairs(mContributions, mContributions, 0.98, false, true);
+
+        if (contribsResults.isEmpty())
+        {
+            LOGGER.debug("no similar sample contributions");
+        }
+        else
+        {
+            double totalPairs = mSampleCount * (mSampleCount + 1) * 0.5;
+            double similarPerc = contribsResults.size() / totalPairs;
+            LOGGER.debug(String.format("%d similar sample contributions found (perc=%.2f):", contribsResults.size(), similarPerc));
+
+            for (final double[] result : contribsResults) {
+
+                LOGGER.debug(String.format("sample1(%.0f) sample2(%.0f) with css(%.4f)",
+                        result[CSSR_I1], result[CSSR_I2], result[CSSR_VAL]));
+            }
+        }
+
+    }
+
     private static double RESIDUAL_PROB_CUTOFF = 0.001;
+
+    // indices into the results array
     private static int SAMP_ID = 0;
     private static int BUCK_ID = 1;
     private static int PROB = 2;
@@ -289,6 +333,7 @@ public class SigReporter {
         // index 1 = sample, index 2 = bucket, index 3 = poisson prob
         List<double[]> ppResults = Lists.newArrayList();
         int totalLowProbDiff = 0;
+        int lowLLProbSampleCount = 0;
 
         for(int n = 0; n < mSampleCount; ++n)
         {
@@ -358,6 +403,9 @@ public class SigReporter {
 
             double llProb = calcLogLikelihood(actualCounts, fittedCounts, false);
 
+            if(llProb < 0.95)
+                ++lowLLProbSampleCount;
+
             double sampleResidualPerc = mSampleResiduals[n] / mSampleTotals[n];
 
             LOGGER.debug(String.format("sample(%d) residuals(%.0f vs act=%.0f perc=%.4f) bucketLowProbCount(%d) llProb(%.6f)",
@@ -367,15 +415,15 @@ public class SigReporter {
         LOGGER.debug(String.format("sample-bucket residuals with low-prob: count(%d) residuals(%d perc=%.3f)",
                 ppResults.size(), totalLowProbDiff, totalLowProbDiff/mTotalResiduals));
 
-        for(int i = 0; i < min(ppResults.size(), 20); ++i)
-        {
-            final double[] result = ppResults.get(i);
-            LOGGER.debug(String.format("sample(%.0f) bucket(%.0f) prob(%.4g) counts(bc=%.0f fit=%.0f)",
-                    result[SAMP_ID], result[BUCK_ID], result[PROB], result[SB_CONTRIB], result[BC]));
-        }
+//        for(int i = 0; i < min(ppResults.size(), 20); ++i)
+//        {
+//            final double[] result = ppResults.get(i);
+//            LOGGER.debug(String.format("sample(%.0f) bucket(%.0f) prob(%.4g) counts(bc=%.0f fit=%.0f)",
+//                    result[SAMP_ID], result[BUCK_ID], result[PROB], result[SB_CONTRIB], result[BC]));
+//        }
 
-        LOGGER.info(String.format("total residuals(%.0f) vs count(%.0f) perc(%.5f)",
-                mTotalCount, mTotalResiduals, mTotalResiduals/mTotalCount));
+        LOGGER.info(String.format("total residuals(%.0f vs count=%.0f perc=%.5f) low sample log-likelihood(%d perc=%.2f)",
+                mTotalResiduals, mTotalCount, mTotalResiduals/mTotalCount, lowLLProbSampleCount, lowLLProbSampleCount/(double)mSampleCount));
 
     }
 
