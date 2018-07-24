@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FittedRegionFactoryV1 {
+public class FittedRegionFactoryV1 implements FittedRegionFactory {
 
     private final Gender gender;
     private final int maxPloidy;
@@ -30,6 +30,7 @@ public class FittedRegionFactoryV1 {
         bafUtils = new BAFUtils(averageReadDepth);
     }
 
+    @Override
     @NotNull
     public List<FittedRegion> fitRegion(final double purity, final double normFactor,
             @NotNull final Collection<ObservedRegion> observedRegions) {
@@ -38,6 +39,7 @@ public class FittedRegionFactoryV1 {
         return observedRegions.stream().filter(valid).map(x -> fitRegion(purity, normFactor, x)).collect(Collectors.toList());
     }
 
+    @Override
     @NotNull
     public FittedRegion fitRegion(final double purity, final double normFactor, final @NotNull ObservedRegion observedRegion) {
         final PurityAdjuster purityAdjuster = new PurityAdjuster(gender, purity, normFactor);

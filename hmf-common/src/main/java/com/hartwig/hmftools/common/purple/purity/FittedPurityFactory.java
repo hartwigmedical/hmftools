@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.region.FittedRegionFactoryV1;
+import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 
@@ -36,14 +36,14 @@ public class FittedPurityFactory {
     private final double maxNormFactor;
     private final double normFactorIncrements;
     @NotNull
-    private final FittedRegionFactoryV1 fittedRegionFactory;
+    private final FittedRegionFactory fittedRegionFactory;
     private final ExecutorService executorService;
 
     private final List<FittedPurity> bestScoringPerPurity = Lists.newArrayList();
 
     public FittedPurityFactory(final ExecutorService executorService, final int maxPloidy, final double minPurity, final double maxPurity,
             final double purityIncrements, final double minNormFactor, final double maxNormFactor, final double normFactorIncrements,
-            @NotNull final FittedRegionFactoryV1 fittedRegionFactory, @NotNull final Collection<ObservedRegion> observedRegions)
+            @NotNull final FittedRegionFactory fittedRegionFactory, @NotNull final Collection<ObservedRegion> observedRegions)
             throws ExecutionException, InterruptedException {
         this.executorService = executorService;
         this.maxPloidy = maxPloidy;
@@ -70,7 +70,8 @@ public class FittedPurityFactory {
             final Chromosome chromosome = HumanChromosome.valueOf(region);
 
             if (region.bafCount() > 0 && positiveOrZero(region.observedTumorRatio()) && chromosome.isAutosome()
-                    && region.status() == GermlineStatus.DIPLOID && Doubles.lessOrEqual(region.observedTumorRatio(), MAX_TUMOR_RATIO_TO_FIT)) {
+                    && region.status() == GermlineStatus.DIPLOID && Doubles.lessOrEqual(region.observedTumorRatio(),
+                    MAX_TUMOR_RATIO_TO_FIT)) {
                 totalBAFCount += region.bafCount();
                 filteredRegions.add(region);
             }

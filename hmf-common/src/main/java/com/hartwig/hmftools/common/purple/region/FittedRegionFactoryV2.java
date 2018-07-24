@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FittedRegionFactoryV2 {
+public class FittedRegionFactoryV2 implements FittedRegionFactory {
 
     private static final double AMBIGUOUS_BAF = 0.542;
 
@@ -23,6 +23,7 @@ public class FittedRegionFactoryV2 {
         this.gender = gender;
     }
 
+    @Override
     @NotNull
     public List<FittedRegion> fitRegion(final double purity, final double normFactor,
             @NotNull final Collection<ObservedRegion> observedRegions) {
@@ -31,6 +32,7 @@ public class FittedRegionFactoryV2 {
         return observedRegions.stream().filter(valid).map(x -> fitRegion(purity, normFactor, x)).collect(Collectors.toList());
     }
 
+    @Override
     @NotNull
     public FittedRegion fitRegion(final double purity, final double normFactor, final @NotNull ObservedRegion observedRegion) {
         final PurityAdjuster purityAdjuster = new PurityAdjuster(gender, purity, normFactor);
