@@ -12,8 +12,8 @@ import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
-import com.hartwig.hmftools.common.variant.snpeff.ImmutableVariantAnnotation;
-import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
+import com.hartwig.hmftools.common.variant.snpeff.ImmutableSnpEffAnnotation;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.junit.Test;
 
@@ -41,18 +41,18 @@ public class ConsequenceDeterminerTest {
         final VariantConsequence rightConsequence = VariantConsequence.MISSENSE_VARIANT;
         final VariantConsequence wrongConsequence = VariantConsequence.OTHER;
 
-        final ImmutableVariantAnnotation.Builder annotationBuilder = createVariantAnnotationBuilder().featureID(TRANSCRIPT).
+        final ImmutableSnpEffAnnotation.Builder annotationBuilder = createVariantAnnotationBuilder().featureID(TRANSCRIPT).
                 featureType(ConsequenceDeterminer.FEATURE_TYPE_TRANSCRIPT).gene(GENE).hgvsCoding(HGVS_CODING).
                 hgvsProtein(HGVS_PROTEIN);
-        final VariantAnnotation rightAnnotation = annotationBuilder.consequences(Lists.newArrayList(rightConsequence)).build();
-        final VariantAnnotation wrongAnnotation = annotationBuilder.consequences(Lists.newArrayList(wrongConsequence)).build();
+        final SnpEffAnnotation rightAnnotation = annotationBuilder.consequences(Lists.newArrayList(rightConsequence)).build();
+        final SnpEffAnnotation wrongAnnotation = annotationBuilder.consequences(Lists.newArrayList(wrongConsequence)).build();
 
         final ImmutableSomaticVariantImpl.Builder variantBuilder = SomaticVariantTestBuilderFactory.create().
-                chromosome(CHROMOSOME).ref(REF).alt(ALT).cosmicID(COSMIC_ID).position(POSITION).
+                chromosome(CHROMOSOME).ref(REF).alt(ALT).addCosmicIDs(COSMIC_ID).position(POSITION).
                 totalReadCount(TOTAL_READ_COUNT).alleleReadCount(ALLELE_READ_COUNT);
 
-        final SomaticVariant rightVariant = variantBuilder.annotations(Lists.newArrayList(rightAnnotation)).build();
-        final SomaticVariant wrongVariant = variantBuilder.annotations(Lists.newArrayList(wrongAnnotation)).build();
+        final SomaticVariant rightVariant = variantBuilder.snpEffAnnotations(Lists.newArrayList(rightAnnotation)).build();
+        final SomaticVariant wrongVariant = variantBuilder.snpEffAnnotations(Lists.newArrayList(wrongAnnotation)).build();
 
         final List<VariantReport> variantReports = determiner.run(Lists.newArrayList(rightVariant, wrongVariant));
         assertEquals(1, variantReports.size());

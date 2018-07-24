@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientdb.data;
 
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.BASELINE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 
 import org.immutables.value.Value;
@@ -14,9 +13,6 @@ import org.jooq.Record;
 public abstract class PotentialActionableVariant {
     @NotNull
     public abstract String sampleId();
-
-    @Nullable
-    public abstract String primaryTumorLocation();
 
     @NotNull
     public abstract String gene();
@@ -34,13 +30,24 @@ public abstract class PotentialActionableVariant {
     public abstract String alt();
 
     @NotNull
+    public abstract String worstEffectTranscript();
+
+    @NotNull
+    public abstract String worstEffect();
+
+    @NotNull
+    public abstract String type();
+
+    @NotNull
     public static PotentialActionableVariant of(@NotNull final Record mysqlRecord) {
         return ImmutablePotentialActionableVariant.of(mysqlRecord.get(SOMATICVARIANT.SAMPLEID),
-                mysqlRecord.get(BASELINE.PRIMARYTUMORLOCATION),
                 mysqlRecord.get(SOMATICVARIANT.GENE),
                 mysqlRecord.get(SOMATICVARIANT.CHROMOSOME),
                 mysqlRecord.get(SOMATICVARIANT.POSITION),
                 mysqlRecord.get(SOMATICVARIANT.REF),
-                mysqlRecord.get(SOMATICVARIANT.ALT));
+                mysqlRecord.get(SOMATICVARIANT.ALT),
+                mysqlRecord.get(SOMATICVARIANT.WORSTEFFECTTRANSCRIPT),
+                mysqlRecord.get(SOMATICVARIANT.WORSTEFFECT),
+                mysqlRecord.get(SOMATICVARIANT.TYPE));
     }
 }

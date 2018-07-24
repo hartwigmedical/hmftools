@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientdb.data;
 
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.BASELINE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GENECOPYNUMBER;
 
 import com.hartwig.hmftools.common.copynumber.CopyNumberAlteration;
@@ -17,9 +16,6 @@ public abstract class PotentialActionableCNV {
     @NotNull
     public abstract String sampleId();
 
-    @Nullable
-    public abstract String primaryTumorLocation();
-
     @NotNull
     public abstract String gene();
 
@@ -30,7 +26,6 @@ public abstract class PotentialActionableCNV {
     public static PotentialActionableCNV of(@NotNull final Record mysqlRecord) {
         final int copyNumberValue = (int) Math.max(0, Math.round(mysqlRecord.get(GENECOPYNUMBER.MINCOPYNUMBER)));
         return ImmutablePotentialActionableCNV.of(mysqlRecord.get(GENECOPYNUMBER.SAMPLEID),
-                mysqlRecord.get(BASELINE.PRIMARYTUMORLOCATION),
                 mysqlRecord.get(GENECOPYNUMBER.GENE),
                 CopyNumberAlteration.fromCopyNumber(copyNumberValue));
     }

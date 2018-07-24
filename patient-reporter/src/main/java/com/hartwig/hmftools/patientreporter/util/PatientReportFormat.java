@@ -25,8 +25,8 @@ public enum PatientReportFormat {
     }
 
     @NotNull
-    public static String correctCopyValueForFitStatus(@NotNull final FittedPurityStatus fitStatus, @NotNull final String copiesValue) {
-        return fitStatus == FittedPurityStatus.NO_TUMOR ? "N/A" : copiesValue;
+    public static String correctValueForFitStatus(@NotNull final FittedPurityStatus fitStatus, @NotNull final String value) {
+        return fitStatus == FittedPurityStatus.NO_TUMOR ? "N/A" : value;
     }
 
     @NotNull

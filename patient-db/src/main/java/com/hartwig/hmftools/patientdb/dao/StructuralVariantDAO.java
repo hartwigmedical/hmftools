@@ -45,6 +45,7 @@ class StructuralVariantDAO {
         for (Record record : result) {
             structuralVariants.add(ImmutableStructuralVariantData.builder()
                     .id(String.valueOf(record.getValue(STRUCTURALVARIANT.ID)))
+                    .vcfId(String.valueOf(record.getValue(STRUCTURALVARIANT.VCFID)))
                     .startChromosome(record.getValue(STRUCTURALVARIANT.STARTCHROMOSOME))
                     .endChromosome(record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME))
                     .startPosition(record.getValue(STRUCTURALVARIANT.STARTPOSITION))
@@ -64,11 +65,27 @@ class StructuralVariantDAO {
                     .homology(record.getValue(STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE))
                     .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
                     .filter(record.getValue(STRUCTURALVARIANT.FILTER))
-                    .mantaPrecise(record.getValue(STRUCTURALVARIANT.MANTAPRECISE).equals("true"))
+                    .imprecise(byteToBoolean(record.getValue(STRUCTURALVARIANT.IMPRECISE)))
                     .somaticScore(record.getValue(STRUCTURALVARIANT.SOMATICSCORE))
+                    .qualityScore(record.getValue(STRUCTURALVARIANT.QUALSCORE))
+                    .event(record.getValue(STRUCTURALVARIANT.EVENT))
+                    .startTumourVariantFragmentCount(record.getValue(STRUCTURALVARIANT.STARTTUMOURVARIANTFRAGMENTCOUNT))
+                    .startTumourReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.STARTTUMOURREFERENCEFRAGMENTCOUNT))
+                    .startNormalVariantFragmentCount(record.getValue(STRUCTURALVARIANT.STARTNORMALVARIANTFRAGMENTCOUNT))
+                    .startNormalReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.STARTNORMALREFERENCEFRAGMENTCOUNT))
+                    .endTumourVariantFragmentCount(record.getValue(STRUCTURALVARIANT.ENDTUMOURVARIANTFRAGMENTCOUNT))
+                    .endTumourReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.ENDTUMOURREFERENCEFRAGMENTCOUNT))
+                    .endNormalVariantFragmentCount(record.getValue(STRUCTURALVARIANT.ENDNORMALVARIANTFRAGMENTCOUNT))
+                    .endNormalReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.ENDNORMALREFERENCEFRAGMENTCOUNT))
+                    .startIntervalOffsetStart(record.getValue(STRUCTURALVARIANT.STARTINTERVALOFFSETSTART))
+                    .startIntervalOffsetEnd(record.getValue(STRUCTURALVARIANT.STARTINTERVALOFFSETEND))
+                    .endIntervalOffsetStart(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETSTART))
+                    .endIntervalOffsetEnd(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETEND))
+                    .inexactHomologyOffsetStart(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETSTART))
+                    .inexactHomologyOffsetEnd(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETEND))
+                    .linkedBy(record.getValue(STRUCTURALVARIANT.LINKEDBY))
                     .build());
         }
-
         return structuralVariants;
     }
 
@@ -110,36 +127,61 @@ class StructuralVariantDAO {
                     .adjustedAlleleFrequency(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTAF))
                     .adjustedCopyNumber(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBER))
                     .adjustedCopyNumberChange(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBERCHANGE))
+                    .tumourVariantFragmentCount(record.getValue(STRUCTURALVARIANT.STARTTUMOURVARIANTFRAGMENTCOUNT))
+                    .tumourReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.STARTTUMOURREFERENCEFRAGMENTCOUNT))
+                    .normalVariantFragmentCount(record.getValue(STRUCTURALVARIANT.STARTNORMALVARIANTFRAGMENTCOUNT))
+                    .normalReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.STARTNORMALREFERENCEFRAGMENTCOUNT))
+                    .startOffset(record.getValue(STRUCTURALVARIANT.STARTINTERVALOFFSETSTART))
+                    .endOffset(record.getValue(STRUCTURALVARIANT.STARTINTERVALOFFSETEND))
+                    .inexactHomologyOffsetStart(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETSTART))
+                    .inexactHomologyOffsetEnd(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETEND))
                     .build();
 
-            final EnrichedStructuralVariantLeg end = ImmutableEnrichedStructuralVariantLeg.builder()
-                    .chromosome(record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME))
-                    .position(record.getValue(STRUCTURALVARIANT.ENDPOSITION))
-                    .orientation(record.getValue(STRUCTURALVARIANT.ENDORIENTATION))
-                    .homology(record.getValue(STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE))
-                    .alleleFrequency(record.getValue(STRUCTURALVARIANT.ENDAF))
-                    .adjustedAlleleFrequency(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDAF))
-                    .adjustedCopyNumber(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER))
-                    .adjustedCopyNumberChange(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE))
-                    .build();
+            EnrichedStructuralVariantLeg end = null;
+            if (record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME) != null) {
+                ImmutableEnrichedStructuralVariantLeg.builder()
+                        .chromosome(record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME))
+                        .position(record.getValue(STRUCTURALVARIANT.ENDPOSITION))
+                        .orientation(record.getValue(STRUCTURALVARIANT.ENDORIENTATION))
+                        .homology(record.getValue(STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE))
+                        .alleleFrequency(record.getValue(STRUCTURALVARIANT.ENDAF))
+                        .adjustedAlleleFrequency(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDAF))
+                        .adjustedCopyNumber(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER))
+                        .adjustedCopyNumberChange(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE))
+                        .tumourVariantFragmentCount(record.getValue(STRUCTURALVARIANT.ENDTUMOURVARIANTFRAGMENTCOUNT))
+                        .tumourReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.ENDTUMOURREFERENCEFRAGMENTCOUNT))
+                        .normalVariantFragmentCount(record.getValue(STRUCTURALVARIANT.ENDNORMALVARIANTFRAGMENTCOUNT))
+                        .normalReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.ENDNORMALREFERENCEFRAGMENTCOUNT))
+                        .startOffset(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETSTART))
+                        .endOffset(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETEND))
+                        .build();
+            }
 
             final EnrichedStructuralVariant variant = ImmutableEnrichedStructuralVariant.builder()
                     .primaryKey(record.getValue(STRUCTURALVARIANT.ID))
-                    .id(record.getValue(STRUCTURALVARIANT.ID).toString())
+                    .id(record.getValue(STRUCTURALVARIANT.VCFID))
                     .start(start)
                     .end(end)
                     .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
                     .type(StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
                     .ploidy(record.getValue(STRUCTURALVARIANT.PLOIDY))
                     .filter(record.getValue(STRUCTURALVARIANT.FILTER))
-                    .mantaPrecise(record.getValue(STRUCTURALVARIANT.MANTAPRECISE).equals("true"))
+                    // TODO: what's the correct approach here?
+                    // jooq type conversion or just manual mapping?
+                    .imprecise(byteToBoolean(record.getValue(STRUCTURALVARIANT.IMPRECISE)))
                     .somaticScore(record.getValue(STRUCTURALVARIANT.SOMATICSCORE))
+                    .qualityScore(record.getValue(STRUCTURALVARIANT.QUALSCORE))
+                    .event(record.getValue(STRUCTURALVARIANT.EVENT))
+                    .linkedBy(record.getValue(STRUCTURALVARIANT.LINKEDBY))
                     .build();
 
             regions.add(variant);
         }
-
         return regions;
+    }
+    private static Boolean byteToBoolean(Byte b) {
+        if (b == null) return null;
+        return b != 0;
     }
 
     void write(@NotNull final String sample, @NotNull final List<EnrichedStructuralVariant> variants) {
@@ -170,8 +212,26 @@ class StructuralVariantDAO {
                     STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE,
                     STRUCTURALVARIANT.PLOIDY,
                     STRUCTURALVARIANT.FILTER,
-                    STRUCTURALVARIANT.MANTAPRECISE,
+                    STRUCTURALVARIANT.IMPRECISE,
                     STRUCTURALVARIANT.SOMATICSCORE,
+                    STRUCTURALVARIANT.QUALSCORE,
+                    STRUCTURALVARIANT.EVENT,
+                    STRUCTURALVARIANT.STARTTUMOURVARIANTFRAGMENTCOUNT,
+                    STRUCTURALVARIANT.STARTTUMOURREFERENCEFRAGMENTCOUNT,
+                    STRUCTURALVARIANT.STARTNORMALVARIANTFRAGMENTCOUNT,
+                    STRUCTURALVARIANT.STARTNORMALREFERENCEFRAGMENTCOUNT,
+                    STRUCTURALVARIANT.ENDTUMOURVARIANTFRAGMENTCOUNT,
+                    STRUCTURALVARIANT.ENDTUMOURREFERENCEFRAGMENTCOUNT,
+                    STRUCTURALVARIANT.ENDNORMALVARIANTFRAGMENTCOUNT,
+                    STRUCTURALVARIANT.ENDNORMALREFERENCEFRAGMENTCOUNT,
+                    STRUCTURALVARIANT.STARTINTERVALOFFSETSTART,
+                    STRUCTURALVARIANT.STARTINTERVALOFFSETEND,
+                    STRUCTURALVARIANT.ENDINTERVALOFFSETSTART,
+                    STRUCTURALVARIANT.ENDINTERVALOFFSETEND,
+                    STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETSTART,
+                    STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETEND,
+                    STRUCTURALVARIANT.VCFID,
+                    STRUCTURALVARIANT.LINKEDBY,
                     STRUCTURALVARIANT.MODIFIED);
             batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
             inserter.execute();
@@ -183,27 +243,45 @@ class StructuralVariantDAO {
         //noinspection unchecked
         inserter.values(sample,
                 variant.start().chromosome(),
-                variant.end().chromosome(),
+                variant.end() == null ? null : variant.end().chromosome(),
                 variant.start().position(),
-                variant.end().position(),
+                variant.end() == null ? null : variant.end().position(),
                 variant.start().orientation(),
-                variant.end().orientation(),
+                variant.end() == null ? null : variant.end().orientation(),
                 variant.start().homology(),
-                variant.end().homology(),
+                variant.end() == null ? null : variant.end().homology(),
                 variant.insertSequence(),
                 variant.type(),
                 variant.start().alleleFrequency(),
                 variant.start().adjustedAlleleFrequency(),
                 variant.start().adjustedCopyNumber(),
                 variant.start().adjustedCopyNumberChange(),
-                variant.end().alleleFrequency(),
-                variant.end().adjustedAlleleFrequency(),
-                variant.end().adjustedCopyNumber(),
-                variant.end().adjustedCopyNumberChange(),
+                variant.end() == null ? null : variant.end().alleleFrequency(),
+                variant.end() == null ? null : variant.end().adjustedAlleleFrequency(),
+                variant.end() == null ? null : variant.end().adjustedCopyNumber(),
+                variant.end() == null ? null : variant.end().adjustedCopyNumberChange(),
                 variant.ploidy(),
                 variant.filter(),
-                variant.mantaPrecise(),
+                variant.imprecise(),
                 variant.somaticScore(),
+                variant.qualityScore(),
+                variant.event(),
+                variant.start().tumourVariantFragmentCount(),
+                variant.start().tumourReferenceFragmentCount(),
+                variant.start().normalVariantFragmentCount(),
+                variant.start().normalReferenceFragmentCount(),
+                variant.end() == null ? null : variant.end().tumourVariantFragmentCount(),
+                variant.end() == null ? null : variant.end().tumourReferenceFragmentCount(),
+                variant.end() == null ? null : variant.end().normalVariantFragmentCount(),
+                variant.end() == null ? null : variant.end().normalReferenceFragmentCount(),
+                variant.start().startOffset(),
+                variant.start().endOffset(),
+                variant.end() == null ? null : variant.end().startOffset(),
+                variant.end() == null ? null : variant.end().endOffset(),
+                variant.start().inexactHomologyOffsetStart(),
+                variant.start().inexactHomologyOffsetEnd(),
+                variant.id(),
+                variant.linkedBy(),
                 timestamp);
     }
 

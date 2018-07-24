@@ -22,7 +22,9 @@ final class ClusterVariantLegFactory {
                 positions.add(ImmutableClusterVariantLeg.builder().from(start).type(variant.type()).build());
 
                 final StructuralVariantLeg end = variant.end();
-                positions.add(ImmutableClusterVariantLeg.builder().from(end).type(variant.type()).build());
+                if (end != null) {
+                    positions.add(ImmutableClusterVariantLeg.builder().from(end).type(variant.type()).build());
+                }
             }
         }
 

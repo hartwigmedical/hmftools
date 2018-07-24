@@ -36,7 +36,6 @@ public final class ReadingData {
         Collections.sort(sortedBafs);
 
         LOGGER.info("Total BAF points of file from sample " + tumorSample + ": " + sortedBafs.size());
-        final List<String> finalPurityData = AmberBAFFile.readingPurityData(sortedBafs);
-        VariantDetection.extractAmberData(finalPurityData, multimapCyto, fileName, countSet);
+        VariantDetection.extractAmberData(multimapCyto, fileName, countSet, sortedBafs);
     }
 }

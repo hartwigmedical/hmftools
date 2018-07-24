@@ -117,7 +117,8 @@ class GenerateCircosData {
                 String.format("Generating " + type.toUpperCase() + " via command: %s", CollectionUtil.join(Arrays.asList(command), " ")));
         int result = new ProcessBuilder(command).redirectError(errorFile).redirectOutput(outputFile).start().waitFor();
         if (result != 0) {
-            LOGGER.warn("Error creating circos plot. Examine error file {} for details.", errorFile.toString());
+            LOGGER.fatal("Fatal error creating circos plot. Examine error file " +  errorFile.toString() + " for details.");
+            System.exit(1);
         }
 
         return null;

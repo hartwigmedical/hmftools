@@ -25,4 +25,7 @@ public abstract class EnrichedSomaticVariant implements PurityAdjustedSomaticVar
 
     @NotNull
     public abstract CodingEffect canonicalCodingEffect();
+
+    @Nullable
+    public abstract String canonicalCosmicID();
 }

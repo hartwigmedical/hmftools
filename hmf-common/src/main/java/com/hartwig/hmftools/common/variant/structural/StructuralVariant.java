@@ -17,7 +17,7 @@ public interface StructuralVariant {
     @NotNull
     StructuralVariantLeg start();
 
-    @NotNull
+    @Nullable
     StructuralVariantLeg end();
 
     default String chromosome(final boolean isStart) {
@@ -42,8 +42,17 @@ public interface StructuralVariant {
     String filter();
 
     @Nullable
-    Boolean mantaPrecise();
+    Boolean imprecise();
 
     @Nullable
     Integer somaticScore();
+
+    @Nullable
+    Double qualityScore();
+
+    @Nullable
+    String event();
+
+    @Nullable
+    String linkedBy();
 }

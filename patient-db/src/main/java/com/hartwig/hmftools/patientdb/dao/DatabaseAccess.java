@@ -3,6 +3,8 @@ package com.hartwig.hmftools.patientdb.dao;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -26,6 +28,7 @@ import com.hartwig.hmftools.patientdb.data.PotentialActionableFusion;
 import com.hartwig.hmftools.patientdb.data.PotentialActionableVariant;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
+import org.apache.commons.math3.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -122,18 +125,38 @@ public class DatabaseAccess {
     }
 
     @NotNull
-    public Stream<PotentialActionableVariant> potentiallyActionableVariants() {
-        return potentiallyActionableItemsDAO.potentiallyActionableVariants();
+    public Stream<PotentialActionableVariant> allPotentiallyActionableVariants() {
+        return potentiallyActionableItemsDAO.potentiallyActionableVariants(Collections.emptyList());
     }
 
     @NotNull
-    public Stream<PotentialActionableCNV> potentiallyActionableCNVs() {
-        return potentiallyActionableItemsDAO.potentiallyActionableCNVs();
+    public Stream<PotentialActionableVariant> potentiallyActionableVariants(@NotNull final Collection<String> samples) {
+        return potentiallyActionableItemsDAO.potentiallyActionableVariants(samples);
     }
 
     @NotNull
-    public Stream<PotentialActionableFusion> potentiallyActionableFusions() {
-        return potentiallyActionableItemsDAO.potentiallyActionableFusions();
+    public Stream<PotentialActionableCNV> allPotentiallyActionableCNVs() {
+        return potentiallyActionableItemsDAO.potentiallyActionableCNVs(Collections.emptyList());
+    }
+
+    @NotNull
+    public Stream<PotentialActionableCNV> potentiallyActionableCNVs(@NotNull final Collection<String> samples) {
+        return potentiallyActionableItemsDAO.potentiallyActionableCNVs(samples);
+    }
+
+    @NotNull
+    public Stream<PotentialActionableFusion> allPotentiallyActionableFusions() {
+        return potentiallyActionableItemsDAO.potentiallyActionableFusions(Collections.emptyList());
+    }
+
+    @NotNull
+    public Stream<PotentialActionableFusion> potentiallyActionableFusions(@NotNull final Collection<String> samples) {
+        return potentiallyActionableItemsDAO.potentiallyActionableFusions(samples);
+    }
+
+    @NotNull
+    public Stream<Pair<String, String>> allSamplesAndTumorLocations() {
+        return potentiallyActionableItemsDAO.allSampleAndTumorLocations();
     }
 
     public void writeStructuralVariants(@NotNull final String sampleId, @NotNull final List<EnrichedStructuralVariant> variants) {

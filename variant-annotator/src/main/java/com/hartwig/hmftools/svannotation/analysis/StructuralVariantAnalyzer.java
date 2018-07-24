@@ -26,6 +26,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class StructuralVariantAnalyzer {
     private static final int EXON_THRESHOLD = 1;
@@ -68,7 +69,6 @@ public class StructuralVariantAnalyzer {
         final List<List<Pair<Transcript, Transcript>>> fusionsPerVariant = Lists.newArrayList();
         for (final StructuralVariantAnnotation annotation : annotations) {
             final List<Pair<Transcript, Transcript>> fusions = Lists.newArrayList();
-
             for (final GeneAnnotation startGene : annotation.start()) {
                 final boolean startUpstream = isUpstream(startGene);
 
@@ -124,10 +124,10 @@ public class StructuralVariantAnalyzer {
             for (final Pair<Transcript, Transcript> fusion : fusions) {
                 final Transcript upstream = fusion.getLeft();
                 final Transcript downstream = fusion.getRight();
-
                 final boolean matchesKnownFusion = transcriptsMatchKnownFusion(knownFusionsModel, upstream, downstream);
-                final boolean reportable = reportableFusion.isPresent() && reportableFusion.get() == fusion && matchesKnownFusion;
-
+                final boolean reportable = reportableFusion.isPresent() && reportableFusion.get() == fusion && matchesKnownFusion && (
+                        (postCoding(downstream) != null && !postCoding(downstream)) && (postCoding(upstream) == null
+                                || !postCoding(upstream)) && !(intragenic(upstream, downstream) && upstream.exonUpstreamPhase() == -1));
                 final GeneFusion geneFusion = ImmutableGeneFusion.builder()
                         .reportable(reportable)
                         .upstreamLinkedAnnotation(upstream)
@@ -232,5 +232,25 @@ public class StructuralVariantAnalyzer {
     @NotNull
     private static List<Transcript> intronic(@NotNull List<Transcript> transcripts) {
         return transcripts.stream().filter(Transcript::isIntronic).collect(Collectors.toList());
+    }
+
+    private static boolean preCoding(@NotNull final Transcript transcript) {
+        final int strand = transcript.parent().strand();
+        final long position = transcript.parent().variant().position(transcript.parent().isStart());
+        return (strand == 1 && position < transcript.codingStart()) || (strand == -1 && position > transcript.codingEnd());
+    }
+
+    @Nullable
+    private static Boolean postCoding(@NotNull final Transcript transcript) {
+        if (transcript.codingEnd() == null || transcript.codingStart() == null) {
+            return null;
+        }
+        final int strand = transcript.parent().strand();
+        final long position = transcript.parent().variant().position(transcript.parent().isStart());
+        return (strand == 1 && position > transcript.codingEnd()) || (strand == -1 && position < transcript.codingStart());
+    }
+
+    private static boolean intragenic(@NotNull final Transcript upstream, @NotNull final Transcript downstream) {
+        return upstream.parent().synonyms().stream().anyMatch(downstream.parent().synonyms()::contains);
     }
 }

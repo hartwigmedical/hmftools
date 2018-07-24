@@ -30,7 +30,8 @@ public final class EnrichedStructuralVariantFactory {
             final ImmutableEnrichedStructuralVariant.Builder builder = ImmutableEnrichedStructuralVariant.builder().from(variant);
             final ImmutableEnrichedStructuralVariantLeg.Builder startBuilder =
                     ImmutableEnrichedStructuralVariantLeg.builder().from(variant.start());
-            final ImmutableEnrichedStructuralVariantLeg.Builder endBuilder =
+            final StructuralVariantLeg variantEndLeg = variant.end();
+            final ImmutableEnrichedStructuralVariantLeg.Builder endBuilder = variantEndLeg == null ? null :
                     ImmutableEnrichedStructuralVariantLeg.builder().from(variant.end());
 
             final List<StructuralVariantLegPloidy> ploidies = ploidyFactory.create(variant, copyNumbers);
@@ -39,20 +40,22 @@ public final class EnrichedStructuralVariantFactory {
                 builder.ploidy(roundedPloidy);
             }
 
-            if (ploidies.size() == 2) {
+            if (ploidies.size() > 0) {
                 final StructuralVariantLegPloidy start = ploidies.get(0);
-                final StructuralVariantLegPloidy end = ploidies.get(1);
+                final StructuralVariantLegPloidy end = ploidies.size() <= 1 ? null : ploidies.get(1);
 
                 startBuilder.adjustedAlleleFrequency(round(adjustedVAF(purityAdjuster, start)));
                 startBuilder.adjustedCopyNumber(round(adjustedCopyNumber(start)));
                 startBuilder.adjustedCopyNumberChange(round(adjustedCopyNumberChange(start)));
 
-                endBuilder.adjustedAlleleFrequency(round(adjustedVAF(purityAdjuster, end)));
-                endBuilder.adjustedCopyNumber(round(adjustedCopyNumber(end)));
-                endBuilder.adjustedCopyNumberChange(round(adjustedCopyNumberChange(end)));
+                if (end != null) {
+                    endBuilder.adjustedAlleleFrequency(round(adjustedVAF(purityAdjuster, end)));
+                    endBuilder.adjustedCopyNumber(round(adjustedCopyNumber(end)));
+                    endBuilder.adjustedCopyNumberChange(round(adjustedCopyNumberChange(end)));
+                }
             }
 
-            result.add(builder.start(startBuilder.build()).end(endBuilder.build()).build());
+            result.add(builder.start(startBuilder.build()).end(endBuilder == null ? null : endBuilder.build()).build());
         }
 
         return result;

@@ -274,12 +274,7 @@ public class SvSampleAnalyser {
 
                 if(!fileExists) {
                     // SV info
-                    writer.write("SampleId,ClusterId,ClusterCount,Id,Type,Ploidy,PONCount,PONRegionCount");
-                    writer.write(",ChrStart,PosStart,OrientStart,ArmStart,AdjAFStart,AdjCNStart,AdjCNChgStart");
-                    writer.write(",ChrEnd,PosEnd,OrientEnd,ArmEnd,AdjAFEnd,AdjCNEnd,AdjCNChgEnd");
-                    writer.write(",Homology,InsertSeq,MantaPrecise,SomaticScore");
-                    writer.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd");
-                    writer.write(",ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd");
+                    writer.write("Homology,InsertSeq,Imprecise,SomaticScore,");
 
                     // cluster-level info
                     writer.write(",ClusterDesc,Consistency,ArmCount,DupBECount,DupBESiteCount");
@@ -322,7 +317,7 @@ public class SvSampleAnalyser {
                             String.format(",%s,%s,%s,%d",
                                     var.getSvData().insertSequence().isEmpty() && var.type() != StructuralVariantType.INS ? var.getSvData().homology() : "",
                                     var.type() == StructuralVariantType.INS ? var.getSvData().insertSequence() : "",
-                                    var.getSvData().mantaPrecise(), var.getSvData().somaticScore()));
+                                    var.getSvData().imprecise(), var.getSvData().somaticScore()));
 
                     writer.write(
                             String.format(",%s,%s,%s,%s,%s,%s,%s",

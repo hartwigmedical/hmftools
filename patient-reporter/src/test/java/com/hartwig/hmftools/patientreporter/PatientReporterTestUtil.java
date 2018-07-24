@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.TreeMultimap;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.center.Center;
 import com.hartwig.hmftools.common.center.CenterModel;
@@ -40,6 +41,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public final class PatientReporterTestUtil {
 
     public static final String SIGNATURE_PATH = Resources.getResource("signature").getPath() + File.separator + "signature.png";
+
     private static final String FUSION_PAIRS_CSV = Resources.getResource("csv").getPath() + File.separator + "fusion_pairs.csv";
     private static final String PROMISCUOUS_FIVE_CSV = Resources.getResource("csv").getPath() + File.separator + "promiscuous_five.csv";
     private static final String PROMISCUOUS_THREE_CSV = Resources.getResource("csv").getPath() + File.separator + "promiscuous_three.csv";
@@ -54,8 +56,13 @@ public final class PatientReporterTestUtil {
         final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfPanelGeneList());
         final CosmicGeneModel cosmicGeneModel = CosmicGenes.readFromCSV(cosmicPath);
         final DrupFilter drupFilter = new DrupFilter(drupFilterPath);
-        final MicrosatelliteAnalyzer microsatelliteAnalyzer = testMicrosatelliteAnalyzer();
-        return ImmutableHmfReporterData.of(geneModel, cosmicGeneModel, testKnownFusionModel(), drupFilter, microsatelliteAnalyzer);
+
+        return ImmutableHmfReporterData.of(geneModel,
+                cosmicGeneModel,
+                testKnownFusionModel(),
+                drupFilter,
+                testMicrosatelliteAnalyzer(),
+                TreeMultimap.create());
     }
 
     @NotNull
@@ -67,9 +74,7 @@ public final class PatientReporterTestUtil {
 
     @NotNull
     public static MicrosatelliteAnalyzer testMicrosatelliteAnalyzer() {
-
         return new MicrosatelliteAnalyzer() {
-
             @SuppressWarnings("ConstantConditions")
             @Override
             @NotNull
@@ -133,11 +138,7 @@ public final class PatientReporterTestUtil {
 
     @NotNull
     public static AlterationAnalyzer mockedCivicAnalyzer() {
-        //@formatter:off
-        return (@NotNull final List<VariantReport> reportedVariants, @NotNull final List<GeneCopyNumber> copyNumbers,
-                @NotNull final List<GeneDisruptionData> disruptions, @NotNull final List<GeneFusionData> fusions, @NotNull final GeneModel geneModel,
-                @NotNull final Set<String> tumorDoids) -> mockedAlterations();
-        //@formatter:on
+        return (@NotNull final List<VariantReport> reportedVariants, @NotNull final List<GeneCopyNumber> copyNumbers, @NotNull final List<GeneDisruptionData> disruptions, @NotNull final List<GeneFusionData> fusions, @NotNull final GeneModel geneModel, @NotNull final Set<String> tumorDoids) -> mockedAlterations();
     }
 
     @NotNull
