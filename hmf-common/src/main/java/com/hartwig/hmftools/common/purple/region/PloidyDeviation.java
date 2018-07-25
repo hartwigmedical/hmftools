@@ -7,10 +7,12 @@ import org.apache.commons.math3.distribution.NormalDistribution;
 public class PloidyDeviation {
 
     private final double standardDeviation;
+    private final double minStandardDevitionPerPloidyPloint;
     private final NormalDistribution dist = new NormalDistribution();
 
-    PloidyDeviation(final double standardDeviation) {
+    PloidyDeviation(final double standardDeviation, final double minStandardDevitionPerPloidyPloint) {
         this.standardDeviation = standardDeviation;
+        this.minStandardDevitionPerPloidyPloint = minStandardDevitionPerPloidyPloint;
     }
 
     public double majorAlleleDeivation(final double purity, final double normFactor, final double ploidy) {
@@ -18,7 +20,7 @@ public class PloidyDeviation {
     }
 
     public double minorAlleleDeviation(final double purity, final double normFactor, final double ploidy) {
-        double probability = Math.abs(Math.round(ploidy) - ploidy) * purity * normFactor / 2 / standardDeviation;
+        double probability = Math.abs(Math.round(ploidy) - ploidy) * Math.max(minStandardDevitionPerPloidyPloint, purity * normFactor / 2 / standardDeviation);
         return 2 * dist.cumulativeProbability(probability) - 1;
     }
 

@@ -100,6 +100,7 @@ public class PurityPloidyEstimateApplication {
     private static final String EXPERIMENTAL = "experimental";
     private static final String PLOIDY_PENALTY_FACTOR = "ploidy_penalty_factor";
     private static final String PLOIDY_PENALTY_STANDARD_DEVIATION = "ploidy_penalty_standard_deviation";
+    private static final String PLOIDY_PENALTY_MIN_STANDARD_DEVIATION = "ploidy_penalty_min_standard_deviation_per_ploidy";
     private static final String VERSION = "version";
 
     private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
@@ -181,11 +182,12 @@ public class PurityPloidyEstimateApplication {
             final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
             final double observedBafExponent = defaultValue(cmd, OBSERVED_BAF_EXPONENT, OBSERVED_BAF_EXPONENT_DEFAULT);
 
-            final double ploidyPenaltyFactor = defaultValue(cmd, PLOIDY_PENALTY_FACTOR, 0.25);
+            final double ploidyPenaltyFactor = defaultValue(cmd, PLOIDY_PENALTY_FACTOR, 1);
             final double ploidyPenaltyStandardDevation = defaultValue(cmd, PLOIDY_PENALTY_STANDARD_DEVIATION, 0.03);
+            final double ploidyPenaltyMinStandardDevationPerPloidy = defaultValue(cmd, PLOIDY_PENALTY_MIN_STANDARD_DEVIATION, 3);
 
             final FittedRegionFactory fittedRegionFactory = cmd.hasOption(EXPERIMENTAL)
-                    ? new FittedRegionFactoryV2(cobaltGender, averageTumorDepth, ploidyPenaltyFactor, ploidyPenaltyStandardDevation)
+                    ? new FittedRegionFactoryV2(cobaltGender, averageTumorDepth, ploidyPenaltyFactor, ploidyPenaltyStandardDevation, ploidyPenaltyMinStandardDevationPerPloidy)
                     : new FittedRegionFactoryV1(cobaltGender,
                             fittingConfig.maxPloidy(),
                             cnvRatioWeight,
@@ -344,6 +346,7 @@ public class PurityPloidyEstimateApplication {
         options.addOption(VERSION, false, "Exit after displaying version info.");
         options.addOption(PLOIDY_PENALTY_FACTOR, true, "Ploidy Penalty Factor");
         options.addOption(PLOIDY_PENALTY_STANDARD_DEVIATION, true, "Ploidy Penalty Standard Deviation");
+        options.addOption(PLOIDY_PENALTY_MIN_STANDARD_DEVIATION, true, "Ploidy Penalty Min Standard Deviation Per Ploidy");
 
         return options;
     }

@@ -21,11 +21,11 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
     private final PloidyDeviation ploidyDeviation;
     private final BAFUtils bafUtils;
 
-    public FittedRegionFactoryV2(final Gender gender, final int averageReadDepth, double ploidyPenaltyFactor, double ploidyPenaltyStandardDeviation) {
+    public FittedRegionFactoryV2(final Gender gender, final int averageReadDepth, double ploidyPenaltyFactor, double ploidyPenaltyStandardDeviation, double ploidyPenaltyMinStandardDeviationPerPloidy) {
         this.gender = gender;
         this.ploidyPenaltyFactor = ploidyPenaltyFactor;
-        ploidyDeviation = new PloidyDeviation(ploidyPenaltyStandardDeviation);
-        bafUtils = new BAFUtils(averageReadDepth);
+        ploidyDeviation = new PloidyDeviation(ploidyPenaltyStandardDeviation, ploidyPenaltyMinStandardDeviationPerPloidy);
+        bafUtils = new BAFUtils(85);
     }
 
     @Override

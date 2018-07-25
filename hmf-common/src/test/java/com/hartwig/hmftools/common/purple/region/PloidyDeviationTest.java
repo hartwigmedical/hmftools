@@ -10,7 +10,7 @@ public class PloidyDeviationTest {
 
     @Test
     public void testMajorAlleleDeviation() {
-        final PloidyDeviation victim = new PloidyDeviation(0.03);
+        final PloidyDeviation victim = new PloidyDeviation(0.03, 0);
         assertEquals(1.000, victim.majorAlleleDeivation(0.4, 0.63, 0.1), EPSILON);
         assertEquals(1.000, victim.majorAlleleDeivation(0.4, 0.63, 0.2), EPSILON);
         assertEquals(1.000, victim.majorAlleleDeivation(0.4, 0.63, 0.3), EPSILON);
@@ -26,7 +26,7 @@ public class PloidyDeviationTest {
 
     @Test
     public void testLowPurity() {
-        final PloidyDeviation victim = new PloidyDeviation(0.03);
+        final PloidyDeviation victim = new PloidyDeviation(0.03, 0);
         assertEquals(0.326, victim.minorAlleleDeviation(0.4, 0.63, 0.1), EPSILON);
         assertEquals(0.599, victim.minorAlleleDeviation(0.4, 0.63, 0.2), EPSILON);
         assertEquals(0.792, victim.minorAlleleDeviation(0.4, 0.63, 0.3), EPSILON);
@@ -42,7 +42,7 @@ public class PloidyDeviationTest {
 
     @Test
     public void testHighPurity() {
-        final PloidyDeviation victim = new PloidyDeviation(0.03);
+        final PloidyDeviation victim = new PloidyDeviation(0.03, 0);
         assertEquals(0.706, victim.minorAlleleDeviation(1, 0.63, 0.1), EPSILON);
         assertEquals(0.964, victim.minorAlleleDeviation(1, 0.63, 0.2), EPSILON);
         assertEquals(0.998, victim.minorAlleleDeviation(1, 0.63, 0.3), EPSILON);
