@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.variant;
 
+import com.hartwig.hmftools.common.purple.region.GermlineStatus;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,4 +29,43 @@ public final class SomaticVariantTestBuilderFactory {
                 .hotspot(false)
                 .mappability(0D);
     }
+
+    @NotNull
+    public static ImmutableEnrichedSomaticVariant.Builder createEnriched() {
+        return ImmutableEnrichedSomaticVariant.builder().from(create().build())
+                .trinucleotideContext(Strings.EMPTY)
+                .highConfidenceRegion(false)
+                .microhomology(Strings.EMPTY)
+                .repeatSequence(Strings.EMPTY)
+                .repeatCount(0)
+                .clonality(Clonality.UNKNOWN)
+                .canonicalEffect(Strings.EMPTY)
+                .canonicalCodingEffect(CodingEffect.UNDEFINED)
+                .adjustedCopyNumber(0D)
+                .adjustedVAF(0D)
+                .ploidy(0D)
+                .minorAllelePloidy(0D)
+                .biallelic(false)
+                .germlineStatus(GermlineStatus.UNKNOWN);
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

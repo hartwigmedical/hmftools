@@ -36,6 +36,7 @@ final class HmfReporterDataLoader {
                 cosmicGeneModel,
                 knownFusionsModel,
                 drupFilter,
+                fastaFileLocation,
                 ImmutableMicrosatelliteAnalyzer.of(new IndexedFastaSequenceFile(new File(fastaFileLocation))),
                 BEDFileLoader.fromBedFile(highConfidenceBed));
     }

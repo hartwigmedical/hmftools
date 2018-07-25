@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientreporter.civic.AlterationAnalyzer;
 import com.hartwig.hmftools.patientreporter.civic.CivicAnalyzer;
@@ -42,6 +42,8 @@ public final class PatientReporterTestUtil {
 
     public static final String SIGNATURE_PATH = Resources.getResource("signature").getPath() + File.separator + "signature.png";
 
+    private static final String REF_GENOME_PATH = Resources.getResource("refgenome").getPath() + File.separator + "ref.fasta";
+
     private static final String FUSION_PAIRS_CSV = Resources.getResource("csv").getPath() + File.separator + "fusion_pairs.csv";
     private static final String PROMISCUOUS_FIVE_CSV = Resources.getResource("csv").getPath() + File.separator + "promiscuous_five.csv";
     private static final String PROMISCUOUS_THREE_CSV = Resources.getResource("csv").getPath() + File.separator + "promiscuous_three.csv";
@@ -61,6 +63,7 @@ public final class PatientReporterTestUtil {
                 cosmicGeneModel,
                 testKnownFusionModel(),
                 drupFilter,
+                REF_GENOME_PATH,
                 testMicrosatelliteAnalyzer(),
                 TreeMultimap.create());
     }
@@ -83,7 +86,7 @@ public final class PatientReporterTestUtil {
             }
 
             @Override
-            public double analyzeVariants(@NotNull final List<SomaticVariant> variants) {
+            public double analyzeVariants(@NotNull final List<EnrichedSomaticVariant> variants) {
                 return 0.91;
             }
         };

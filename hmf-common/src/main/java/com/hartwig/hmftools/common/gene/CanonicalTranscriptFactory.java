@@ -10,14 +10,15 @@ import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CanonicalTranscriptFactory {
+public final class CanonicalTranscriptFactory {
+
+    private CanonicalTranscriptFactory() {
+    }
 
     @NotNull
     public static List<CanonicalTranscript> create(@NotNull final Collection<HmfGenomeRegion> regions) {
-
         final List<CanonicalTranscript> transcripts = Lists.newArrayList();
         for (final HmfGenomeRegion region : regions) {
-
             final CanonicalTranscript transcript = create(region);
 
             transcripts.add(transcript);
@@ -28,7 +29,7 @@ public class CanonicalTranscriptFactory {
 
     @VisibleForTesting
     @NotNull
-    static CanonicalTranscript create(final HmfGenomeRegion region) {
+    static CanonicalTranscript create(@NotNull final HmfGenomeRegion region) {
         long codingStart = region.codingStart();
         long codingEnd = region.codingEnd();
         long exonStart = 0;
@@ -68,5 +69,4 @@ public class CanonicalTranscriptFactory {
                 .codingBases(Math.max(0, codingBases - 3))
                 .build();
     }
-
 }

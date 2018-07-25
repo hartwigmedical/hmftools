@@ -30,6 +30,9 @@ public abstract class HmfReporterData {
     public abstract DrupFilter drupFilter();
 
     @NotNull
+    public abstract String refGenomeFastaFileLocation();
+
+    @NotNull
     public abstract MicrosatelliteAnalyzer microsatelliteAnalyzer();
 
     @NotNull

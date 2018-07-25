@@ -18,6 +18,8 @@ import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.apache.commons.math3.util.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,6 +28,8 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 
 public class EnrichedSomaticVariantFactory {
+
+    private static final Logger LOGGER = LogManager.getLogger(EnrichedSomaticVariantFactory.class);
 
     @NotNull
     private final GenomeRegionSelector<GenomeRegion> highConfidenceSelector;
@@ -120,6 +124,7 @@ public class EnrichedSomaticVariantFactory {
         getRepeatContext(variant, relativePosition, sequence).ifPresent(x -> builder.repeatSequence(x.sequence()).repeatCount(x.count()));
     }
 
+    @NotNull
     public static Pair<Integer, String> relativePositionAndRef(@NotNull final SomaticVariant variant,
             @NotNull final IndexedFastaSequenceFile reference) {
         long positionBeforeEvent = variant.position();
@@ -127,7 +132,14 @@ public class EnrichedSomaticVariantFactory {
         long maxEnd = reference.getSequenceDictionary().getSequence(variant.chromosome()).getSequenceLength() - 1;
         long end = Math.min(positionBeforeEvent + 100, maxEnd);
         int relativePosition = (int) (positionBeforeEvent - start);
-        final String sequence = reference.getSubsequenceAt(variant.chromosome(), start, end).getBaseString();
+        final String sequence;
+        final int refLength = reference.getSequence(variant.chromosome()).length();
+        if (start <= refLength && end <= refLength) {
+            sequence = reference.getSubsequenceAt(variant.chromosome(), start, end).getBaseString();
+        } else {
+            sequence = Strings.EMPTY;
+            LOGGER.warn("Requested base sequence outside of chromosome region!");
+        }
         return new Pair<>(relativePosition, sequence);
     }
 
@@ -169,9 +181,13 @@ public class EnrichedSomaticVariantFactory {
     }
 
     private void addTrinucleotideContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
-        final ReferenceSequence sequence =
-                reference.getSubsequenceAt(variant.chromosome(), Math.max(1, variant.position() - 1), variant.position() + 1);
-        builder.trinucleotideContext(sequence.getBaseString());
+        if (reference.getSequence(variant.chromosome()).length() >= variant.position()) {
+            final ReferenceSequence sequence =
+                    reference.getSubsequenceAt(variant.chromosome(), Math.max(1, variant.position() - 1), variant.position() + 1);
+            builder.trinucleotideContext(sequence.getBaseString());
+        } else {
+            LOGGER.warn("Requested ref sequence beyond contig length! variant = " + variant);
+        }
     }
 
     @NotNull

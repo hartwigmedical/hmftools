@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
@@ -31,7 +32,7 @@ class ConsequenceDeterminer {
     }
 
     @NotNull
-    List<VariantReport> run(@NotNull final List<SomaticVariant> variants) {
+    List<VariantReport> run(@NotNull final List<EnrichedSomaticVariant> variants) {
         Predicate<SomaticVariant> hasImpactingAnnotation = variant -> findImpactingAnnotation(variant, transcripts) != null;
 
         List<SomaticVariant> variantsToReport = variants.stream().filter(hasImpactingAnnotation).collect(Collectors.toList());
