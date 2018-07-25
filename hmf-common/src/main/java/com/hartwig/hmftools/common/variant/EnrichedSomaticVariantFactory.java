@@ -122,14 +122,13 @@ public class EnrichedSomaticVariantFactory {
     @NotNull
     public static Pair<Integer, String> relativePositionAndRef(@NotNull final SomaticVariant variant,
             @NotNull final IndexedFastaSequenceFile reference) {
+        final int chromosomeLength = reference.getSequenceDictionary().getSequence(variant.chromosome()).getSequenceLength();
         long positionBeforeEvent = variant.position();
         long start = Math.max(positionBeforeEvent - 100, 1);
-        long maxEnd = reference.getSequenceDictionary().getSequence(variant.chromosome()).getSequenceLength() - 1;
-        long end = Math.min(positionBeforeEvent + 100, maxEnd);
+        long end = Math.min(positionBeforeEvent + 100, chromosomeLength - 1);
         int relativePosition = (int) (positionBeforeEvent - start);
         final String sequence;
-        final int refLength = reference.getSequence(variant.chromosome()).length();
-        if (start <= refLength && end <= refLength) {
+        if (start < chromosomeLength && end < chromosomeLength) {
             sequence = reference.getSubsequenceAt(variant.chromosome(), start, end).getBaseString();
         } else {
             sequence = Strings.EMPTY;
@@ -176,7 +175,8 @@ public class EnrichedSomaticVariantFactory {
     }
 
     private void addTrinucleotideContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
-        if (reference.getSequence(variant.chromosome()).length() >= variant.position()) {
+        final int chromosomeLength = reference.getSequenceDictionary().getSequence(variant.chromosome()).getSequenceLength();
+        if (variant.position() < chromosomeLength) {
             final ReferenceSequence sequence =
                     reference.getSubsequenceAt(variant.chromosome(), Math.max(1, variant.position() - 1), variant.position() + 1);
             builder.trinucleotideContext(sequence.getBaseString());
