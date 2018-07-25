@@ -123,17 +123,17 @@ public abstract class PatientReporter {
         //            alterations = Lists.newArrayList();
         //        }
 
-        LOGGER.info(" Printing analysis results:");
-        LOGGER.info("  Number of passed variants : " + Integer.toString(passedVariantCount));
-        LOGGER.info("  Number of variants to report : " + Integer.toString(reportedVariantCount));
-        LOGGER.info(" Determined copy number stats for " + Integer.toString(purpleAnalysis.genePanelSize()) + " genes which led to "
+        LOGGER.info("Printing analysis results:");
+        LOGGER.info(" Number of passed variants : " + Integer.toString(passedVariantCount));
+        LOGGER.info(" Number of variants to report : " + Integer.toString(reportedVariantCount));
+        LOGGER.info("Determined copy number stats for " + Integer.toString(purpleAnalysis.genePanelSize()) + " genes which led to "
                 + Integer.toString(purpleAnalysis.reportableGeneCopyNumbers().size()) + " copy numbers.");
-        LOGGER.info("  Number of structural variants : " + Integer.toString(structuralVariantCount));
-        LOGGER.info("  Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
-        LOGGER.info("  Number of gene disruptions to report : " + Integer.toString(reportableDisruptions.size()));
-        LOGGER.info("  Number of CIViC alterations to report : " + alterations.size());
-        LOGGER.info("  Microsatellite analysis results: " + Double.toString(variantAnalysis.indelsPerMb()) + " indels per MB");
-        LOGGER.info("  Mutational load results: " + Integer.toString(variantAnalysis.mutationalLoad()));
+        LOGGER.info(" Number of structural variants : " + Integer.toString(structuralVariantCount));
+        LOGGER.info(" Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
+        LOGGER.info(" Number of gene disruptions to report : " + Integer.toString(reportableDisruptions.size()));
+        LOGGER.info(" Number of CIViC alterations to report : " + alterations.size());
+        LOGGER.info(" Microsatellite analysis results: " + Double.toString(variantAnalysis.indelsPerMb()) + " indels per MB");
+        LOGGER.info(" Mutational load results: " + Integer.toString(variantAnalysis.mutationalLoad()));
 
         final Lims lims = baseReporterData().limsModel();
         final Double pathologyTumorPercentage = lims.tumorPercentageForSample(tumorSample);
@@ -166,14 +166,14 @@ public abstract class PatientReporter {
 
     @NotNull
     private GenomeAnalysis analyseGenomeData(@NotNull final String sample, @NotNull final String runDirectory) throws IOException {
-        LOGGER.info(" Loading purity numbers...");
+        LOGGER.info("Loading purity numbers...");
         final PurityContext purityContext = PatientReporterHelper.loadPurity(runDirectory, sample);
         if (purityContext.status().equals(FittedPurityStatus.NO_TUMOR)) {
             LOGGER.warn("PURPLE DID NOT DETECT A TUMOR. Proceed with utmost caution!");
         }
 
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
-        LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
+        LOGGER.info(" " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
 
         final List<GeneCopyNumber> panelGeneCopyNumbers = PatientReporterHelper.loadPurpleGeneCopyNumbers(runDirectory, sample)
                 .stream()
@@ -189,20 +189,21 @@ public abstract class PatientReporter {
                 .panelGeneCopyNumbers(panelGeneCopyNumbers)
                 .build();
 
-        LOGGER.info(" Loading somatic snv and indels...");
+        LOGGER.info("Loading somatic snv and indels...");
         final List<SomaticVariant> variants = PatientReporterHelper.loadPassedSomaticVariants(sample, runDirectory);
-        LOGGER.info("  " + variants.size() + " somatic passed snps, mnps and indels loaded for sample " + sample);
+        LOGGER.info(" " + variants.size() + " somatic passed snps, mnps and indels loaded for sample " + sample);
 
-        LOGGER.info(" Analyzing somatic snp/mnp and indels....");
+        LOGGER.info("Enriching somatic variants");
         final List<EnrichedSomaticVariant> enrichedSomaticVariants = enrich(variants, purpleAnalysis);
+        LOGGER.info("Analyzing somatic snp/mnp and indels....");
         final VariantAnalysis variantAnalysis = variantAnalyzer().run(enrichedSomaticVariants);
 
         final Path structuralVariantVCF = PatientReporterHelper.findStructuralVariantVCF(runDirectory);
-        LOGGER.info(" Loading structural variants...");
+        LOGGER.info("Loading structural variants...");
         final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(structuralVariantVCF.toString(), true);
-        LOGGER.info(" Enriching structural variants with purple data.");
+        LOGGER.info("Enriching structural variants with purple data.");
         final List<EnrichedStructuralVariant> enrichedStructuralVariants = purpleAnalysis.enrichStructuralVariants(structuralVariants);
-        LOGGER.info(" Analysing structural variants...");
+        LOGGER.info("Analysing structural variants...");
         final StructuralVariantAnalysis structuralVariantAnalysis = structuralVariantAnalyzer().run(enrichedStructuralVariants);
         return ImmutableGenomeAnalysis.of(sample, variantAnalysis, purpleAnalysis, structuralVariantAnalysis);
     }
@@ -223,7 +224,6 @@ public abstract class PatientReporter {
                         clonalityFactory,
                         CanonicalTranscriptFactory.create(HmfGenePanelSupplier.allGeneList()));
 
-        LOGGER.info(" Enriching somatic variants");
         return enrichedSomaticFactory.enrich(purityAdjustedSomaticVariants);
     }
 
