@@ -11,21 +11,26 @@ import htsjdk.variant.vcf.VCFHeaderVersion;
 
 public final class VariantContextFromString {
 
-    private static final VCFCodec CODEC = createTestCodec();
-
-    @NotNull
-    private static VCFCodec createTestCodec() {
-        VCFCodec codec = new VCFCodec();
-        VCFHeader header = new VCFHeader(Sets.newHashSet(), Sets.newHashSet("test_sample"));
-        codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2);
-        return codec;
-    }
-
     private VariantContextFromString() {
     }
 
     @NotNull
     public static VariantContext decode(@NotNull String line) {
-        return createTestCodec().decode(line);
+        return decode("test_sample", line);
     }
+
+    @NotNull
+    public static VariantContext decode(@NotNull String sample, @NotNull String line) {
+        return createTestCodec(sample).decode(line);
+    }
+
+    @NotNull
+    private static VCFCodec createTestCodec(@NotNull String sample) {
+        VCFCodec codec = new VCFCodec();
+        VCFHeader header = new VCFHeader(Sets.newHashSet(), Sets.newHashSet(sample));
+        codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2);
+        return codec;
+    }
+
+
 }
