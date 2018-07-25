@@ -63,8 +63,7 @@ public final class PatientReporterTestUtil {
                 cosmicGeneModel,
                 testKnownFusionModel(),
                 drupFilter,
-                REF_GENOME_PATH,
-                testMicrosatelliteAnalyzer(),
+                new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),
                 TreeMultimap.create());
     }
 

@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -59,8 +57,6 @@ import org.apache.logging.log4j.Logger;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 @Value.Immutable
 @Value.Style(allParameters = true,
@@ -210,8 +206,7 @@ public abstract class PatientReporter {
     }
 
     @NotNull
-    private List<EnrichedSomaticVariant> enrich(@NotNull List<SomaticVariant> variants, @NotNull PurpleAnalysis purpleAnalysis)
-            throws FileNotFoundException {
+    private List<EnrichedSomaticVariant> enrich(@NotNull List<SomaticVariant> variants, @NotNull PurpleAnalysis purpleAnalysis) {
         final PurityAdjuster purityAdjuster = new PurityAdjuster(purpleAnalysis.gender(), purpleAnalysis.fittedPurity());
         final PurityAdjustedSomaticVariantFactory purityAdjustedFactory =
                 new PurityAdjustedSomaticVariantFactory(purityAdjuster, purpleAnalysis.copyNumbers(), Collections.emptyList());
@@ -220,11 +215,9 @@ public abstract class PatientReporter {
         final double clonalPloidy = ClonalityCutoffKernel.clonalCutoff(purityAdjustedSomaticVariants);
         final ClonalityFactory clonalityFactory = new ClonalityFactory(purityAdjuster, clonalPloidy);
 
-        final IndexedFastaSequenceFile fastaSequenceFile =
-                new IndexedFastaSequenceFile(new File(reporterData().refGenomeFastaFileLocation()));
         final EnrichedSomaticVariantFactory enrichedSomaticFactory =
                 new EnrichedSomaticVariantFactory(reporterData().highConfidenceRegions(),
-                        fastaSequenceFile,
+                        reporterData().refGenomeFastaFile(),
                         clonalityFactory,
                         CanonicalTranscriptFactory.create(reporterData().panelGeneModel().regions()));
 

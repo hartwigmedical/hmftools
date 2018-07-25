@@ -25,7 +25,7 @@ public abstract class VariantAnalyzer {
     @NotNull
     public static VariantAnalyzer of(@NotNull HmfReporterData reporterData) {
         final Set<String> transcriptsToInclude = reporterData.panelGeneModel().transcriptMap().keySet();
-        return of(transcriptsToInclude, reporterData.microsatelliteAnalyzer());
+        return of(transcriptsToInclude, ImmutableMicrosatelliteAnalyzer.of(reporterData.refGenomeFastaFile()));
     }
 
     @VisibleForTesting
