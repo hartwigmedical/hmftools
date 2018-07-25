@@ -33,17 +33,17 @@ class ConsequenceDeterminer {
 
     @NotNull
     List<VariantReport> run(@NotNull final List<EnrichedSomaticVariant> variants) {
-        Predicate<SomaticVariant> hasImpactingAnnotation = variant -> findImpactingAnnotation(variant, transcripts) != null;
+        Predicate<EnrichedSomaticVariant> hasImpactingAnnotation = variant -> findImpactingAnnotation(variant, transcripts) != null;
 
-        List<SomaticVariant> variantsToReport = variants.stream().filter(hasImpactingAnnotation).collect(Collectors.toList());
+        List<EnrichedSomaticVariant> variantsToReport = variants.stream().filter(hasImpactingAnnotation).collect(Collectors.toList());
 
         return toVariantReport(variantsToReport);
     }
 
     @NotNull
-    private List<VariantReport> toVariantReport(@NotNull final List<SomaticVariant> variantsToReport) {
+    private List<VariantReport> toVariantReport(@NotNull final List<EnrichedSomaticVariant> variantsToReport) {
         final List<VariantReport> reports = Lists.newArrayList();
-        for (final SomaticVariant variant : variantsToReport) {
+        for (final EnrichedSomaticVariant variant : variantsToReport) {
             final ImmutableVariantReport.Builder builder = ImmutableVariantReport.builder();
             final SnpEffAnnotation snpEffAnnotation = findImpactingAnnotation(variant, transcripts);
             // KODU: Variants with no impacting annotations should be filtered out by now.
@@ -59,7 +59,7 @@ class ConsequenceDeterminer {
             builder.hgvsCoding(snpEffAnnotation.hgvsCoding());
             builder.hgvsProtein(snpEffAnnotation.hgvsProtein());
             builder.consequence(snpEffAnnotation.consequenceString());
-            final String cosmicID = !variant.cosmicIDs().isEmpty() ? variant.cosmicIDs().get(0) : null;
+            final String cosmicID = variant.canonicalCosmicID();
             if (cosmicID != null) {
                 builder.cosmicID(cosmicID);
             }
@@ -72,8 +72,7 @@ class ConsequenceDeterminer {
     }
 
     @Nullable
-    private static SnpEffAnnotation findImpactingAnnotation(@NotNull final SomaticVariant variant,
-            @NotNull final Set<String> transcripts) {
+    private static SnpEffAnnotation findImpactingAnnotation(@NotNull final SomaticVariant variant, @NotNull final Set<String> transcripts) {
         final List<SnpEffAnnotation> relevantAnnotations = findAllRelevantAnnotations(variant.snpEffAnnotations(), transcripts);
         for (final SnpEffAnnotation annotation : relevantAnnotations) {
             for (final VariantConsequence consequence : annotation.consequences()) {

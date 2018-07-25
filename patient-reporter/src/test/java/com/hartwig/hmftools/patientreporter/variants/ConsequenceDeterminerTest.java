@@ -48,7 +48,7 @@ public class ConsequenceDeterminerTest {
         final SnpEffAnnotation wrongAnnotation = annotationBuilder.consequences(Lists.newArrayList(wrongConsequence)).build();
 
         final ImmutableEnrichedSomaticVariant.Builder variantBuilder = SomaticVariantTestBuilderFactory.createEnriched().
-                chromosome(CHROMOSOME).ref(REF).alt(ALT).addCosmicIDs(COSMIC_ID).position(POSITION).
+                chromosome(CHROMOSOME).ref(REF).alt(ALT).canonicalCosmicID(COSMIC_ID).position(POSITION).
                 totalReadCount(TOTAL_READ_COUNT).alleleReadCount(ALLELE_READ_COUNT);
 
         final EnrichedSomaticVariant rightVariant = variantBuilder.snpEffAnnotations(Lists.newArrayList(rightAnnotation)).build();
