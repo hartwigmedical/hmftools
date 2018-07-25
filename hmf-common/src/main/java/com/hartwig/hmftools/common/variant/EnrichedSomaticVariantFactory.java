@@ -22,7 +22,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
@@ -35,13 +34,13 @@ public class EnrichedSomaticVariantFactory {
     private final GenomeRegionSelector<GenomeRegion> highConfidenceSelector;
     @NotNull
     private final IndexedFastaSequenceFile reference;
-    @Nullable
+    @NotNull
     private final ClonalityFactory clonalityFactory;
     @NotNull
     private final TranscriptAnnotationSelector transcriptAnnotationSelector;
 
     public EnrichedSomaticVariantFactory(@NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
-            @NotNull final IndexedFastaSequenceFile reference, @Nullable final ClonalityFactory clonalityFactory,
+            @NotNull final IndexedFastaSequenceFile reference, @NotNull final ClonalityFactory clonalityFactory,
             @NotNull final List<CanonicalTranscript> canonicalTranscripts) {
         this.highConfidenceSelector = GenomeRegionSelectorFactory.create(highConfidenceRegions);
         this.reference = reference;
@@ -69,11 +68,7 @@ public class EnrichedSomaticVariantFactory {
         addGenomeContext(builder, variant);
         addCanonicalEffect(builder, variant);
         addCanonicalCosmicID(builder, variant);
-        if (clonalityFactory != null) {
-            builder.clonality(clonalityFactory.fromSample(variant));
-        } else {
-            builder.clonality(Clonality.UNKNOWN);
-        }
+        builder.clonality(clonalityFactory.fromSample(variant));
 
         return builder.build();
     }
@@ -81,10 +76,10 @@ public class EnrichedSomaticVariantFactory {
     @NotNull
     private static Builder createBuilder(@NotNull final SomaticVariant variant) {
         return builder().from(variant)
-                .trinucleotideContext("")
-                .microhomology("")
+                .trinucleotideContext(Strings.EMPTY)
+                .microhomology(Strings.EMPTY)
                 .repeatCount(0)
-                .repeatSequence("")
+                .repeatSequence(Strings.EMPTY)
                 .highConfidenceRegion(false)
                 .clonality(Clonality.UNKNOWN);
     }
