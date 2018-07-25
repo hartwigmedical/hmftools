@@ -35,6 +35,10 @@ public class PurityAdjuster {
         return purity;
     }
 
+    public double normFactor() {
+        return normFactor;
+    }
+
     public int typicalCopyNumber(@NotNull String chromosome) {
         return HumanChromosome.fromString(chromosome).isDiploid(gender) ? 2 : 1;
     }

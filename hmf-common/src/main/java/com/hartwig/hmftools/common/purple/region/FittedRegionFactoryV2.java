@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.purple.BAFUtils;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
@@ -15,12 +16,16 @@ import org.jetbrains.annotations.NotNull;
 
 public class FittedRegionFactoryV2 implements FittedRegionFactory {
 
-    private static final double AMBIGUOUS_BAF = 0.542;
-
     private final Gender gender;
+    private final double ploidyPenaltyFactor;
+    private final PloidyDeviation ploidyDeviation;
+    private final BAFUtils bafUtils;
 
-    public FittedRegionFactoryV2(final Gender gender) {
+    public FittedRegionFactoryV2(final Gender gender, final int averageReadDepth, double ploidyPenaltyFactor, double ploidyPenaltyStandardDeviation) {
         this.gender = gender;
+        this.ploidyPenaltyFactor = ploidyPenaltyFactor;
+        ploidyDeviation = new PloidyDeviation(ploidyPenaltyStandardDeviation);
+        bafUtils = new BAFUtils(averageReadDepth);
     }
 
     @Override
@@ -45,12 +50,13 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
         double refNormalisedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedTumorRatio, observedRegion.observedNormalRatio());
 
         double majorAllelePloidy = impliedBAF * impliedCopyNumber;
-        double majorAllelePloidyDeviation = majorDeviation(majorAllelePloidy);
         double minorAllelePloidy = impliedCopyNumber - majorAllelePloidy;
-        double minorAllelePloidyDeviation = minorDeviation(minorAllelePloidy);
 
-        double ploidyPenalty = PloidyPenalty.penalty((int) Math.round(impliedCopyNumber), (int) Math.round(majorAllelePloidy));
-        double totalDeviation = minorAllelePloidyDeviation + majorAllelePloidyDeviation;
+        double majorAllelePloidyDeviation = ploidyDeviation.majorAlleleDeivation(purity, normFactor, majorAllelePloidy);
+        double minorAllelePloidyDeviation = ploidyDeviation.minorAlleleDeviation(purity, normFactor, minorAllelePloidy);
+
+        final double ploidyPenalty = PloidyPenalty.penaltyv2(ploidyPenaltyFactor, majorAllelePloidy, minorAllelePloidy);
+        final double totalDeviation = (minorAllelePloidyDeviation + majorAllelePloidyDeviation) * observedBAF;
 
         ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()
                 .from(observedRegion)
@@ -60,7 +66,7 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
                 .tumorBAF(impliedBAF)
                 .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(refNormalisedCopyNumber))
                 .modelBAF(0)
-                .modelPloidy((int)Math.round(majorAllelePloidy))
+                .modelPloidy((int) Math.round(majorAllelePloidy))
                 .modelTumorRatio(0)
                 .bafDeviation(majorAllelePloidyDeviation)
                 .cnvDeviation(minorAllelePloidyDeviation)
@@ -78,18 +84,18 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
             return 1;
         }
 
-        return Doubles.lessOrEqual(observedBAF, AMBIGUOUS_BAF)
+        return Doubles.lessOrEqual(observedBAF, bafUtils.ambiguousBAF())
                 ? bafToMinimiseDeviation(purityAdjuster, chromosome, copyNumber)
                 : purityAdjuster.purityAdjustedBAFSimple(chromosome, copyNumber, observedBAF);
 
     }
 
     @VisibleForTesting
-    static double bafToMinimiseDeviation(final PurityAdjuster purityAdjuster, final String chromosome, double impliedCopyNumber) {
+    double bafToMinimiseDeviation(final PurityAdjuster purityAdjuster, final String chromosome, double impliedCopyNumber) {
 
         final double minBAF = Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, 0.5)));
         final double maxBAF =
-                Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, AMBIGUOUS_BAF)));
+                Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, bafUtils.ambiguousBAF())));
 
         // Major Ploidy
         final double minBAFMajorAllelePloidy = minBAF * impliedCopyNumber;
@@ -113,23 +119,21 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
             return 1 - maxBAFMinorAllelePloidyCeil / impliedCopyNumber;
         }
 
+        double purity = purityAdjuster.purity();
+        double normFactor = purityAdjuster.normFactor();
+
         // Minimise
-        final double minBAFTotalDeviation = majorDeviation(minBAFMajorAllelePloidy) + minorDeviation(minBAFMinorAllelePloidy);
-        final double maxBAFTotalDeviation = majorDeviation(maxBAFMajorAllelePloidy) + minorDeviation(maxBAFMinorAllelePloidy);
-        return Doubles.lessThan(minBAFTotalDeviation, maxBAFTotalDeviation) ? 0.5 : AMBIGUOUS_BAF;
-    }
-
-    private static double majorDeviation(double majorAllelePloidy) {
-        return deviationFromWholeNumber(1, majorAllelePloidy);
-    }
-
-    private static double minorDeviation(double minorAllelePloidy) {
-        return deviationFromWholeNumber(0, minorAllelePloidy);
-    }
-
-    private static double deviationFromWholeNumber(int min, double impliedPloidy) {
-        long wholeNumber = Math.max(min, Math.round(impliedPloidy));
-        return Math.abs(impliedPloidy - wholeNumber);
+        final double minBAFTotalDeviation =
+                ploidyDeviation.majorAlleleDeivation(purity, normFactor, minBAFMajorAllelePloidy) + ploidyDeviation.minorAlleleDeviation(
+                        purity,
+                        normFactor,
+                        minBAFMinorAllelePloidy);
+        final double maxBAFTotalDeviation =
+                ploidyDeviation.majorAlleleDeivation(purity, normFactor, maxBAFMajorAllelePloidy) + ploidyDeviation.minorAlleleDeviation(
+                        purity,
+                        normFactor,
+                        maxBAFMinorAllelePloidy);
+        return Doubles.lessThan(minBAFTotalDeviation, maxBAFTotalDeviation) ? 0.5 : bafUtils.ambiguousBAF();
     }
 
 }
