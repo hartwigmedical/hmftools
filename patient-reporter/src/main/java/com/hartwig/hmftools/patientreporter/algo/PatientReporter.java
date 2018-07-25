@@ -223,7 +223,7 @@ public abstract class PatientReporter {
                         clonalityFactory,
                         CanonicalTranscriptFactory.create(HmfGenePanelSupplier.allGeneList()));
 
-        LOGGER.info(" Created enriched somatic factory");
+        LOGGER.info(" Enriching somatic variants");
         return enrichedSomaticFactory.enrich(purityAdjustedSomaticVariants);
     }
 
