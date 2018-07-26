@@ -21,7 +21,8 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
     private final PloidyDeviation ploidyDeviation;
     private final BAFUtils bafUtils;
 
-    public FittedRegionFactoryV2(final Gender gender, final int averageReadDepth, double ploidyPenaltyFactor, double ploidyPenaltyStandardDeviation, double ploidyPenaltyMinStandardDeviationPerPloidy) {
+    public FittedRegionFactoryV2(final Gender gender, final int averageReadDepth, double ploidyPenaltyFactor,
+            double ploidyPenaltyStandardDeviation, double ploidyPenaltyMinStandardDeviationPerPloidy) {
         this.gender = gender;
         this.ploidyPenaltyFactor = ploidyPenaltyFactor;
         ploidyDeviation = new PloidyDeviation(ploidyPenaltyStandardDeviation, ploidyPenaltyMinStandardDeviationPerPloidy);
@@ -66,7 +67,8 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
                 .tumorBAF(impliedBAF)
                 .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(refNormalisedCopyNumber))
                 .modelBAF(0)
-                .modelPloidy((int) Math.round(majorAllelePloidy))
+                // TODO: FIX THIS.. CURRENTLY FUDGING IT FOR DIPLOIDPROPORTION
+                .modelPloidy(modelPloidyToTrickDiploidProportionIntoWorkingCorrectly(majorAllelePloidy, minorAllelePloidy))
                 .modelTumorRatio(0)
                 .bafDeviation(majorAllelePloidyDeviation)
                 .cnvDeviation(minorAllelePloidyDeviation)
@@ -74,6 +76,16 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
                 .ploidyPenalty(ploidyPenalty);
 
         return builder.build();
+    }
+
+    private static int modelPloidyToTrickDiploidProportionIntoWorkingCorrectly(double majorAllelePloidy, double minorAllelePloidy) {
+        if (Doubles.greaterOrEqual(majorAllelePloidy, 0.8) && Doubles.lessOrEqual(majorAllelePloidy, 1.2) && Doubles.greaterOrEqual(
+                minorAllelePloidy,
+                0.8) && Doubles.lessOrEqual(minorAllelePloidy, 1.2)) {
+            return 2;
+        }
+
+        return 0;
     }
 
     public double impliedBaf(final PurityAdjuster purityAdjuster, final String chromosome, final double copyNumber,
