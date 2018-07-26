@@ -8,25 +8,30 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.purple.BAFUtils;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.baf.ExpectedBAF;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class FittedRegionFactoryV2 implements FittedRegionFactory {
 
+    private static final Logger LOGGER = LogManager.getLogger(FittedRegionFactoryV2.class);
+
     private final Gender gender;
+    private final double ambiguousBaf;
     private final double ploidyPenaltyFactor;
     private final PloidyDeviation ploidyDeviation;
-    private final BAFUtils bafUtils;
 
     public FittedRegionFactoryV2(final Gender gender, final int averageReadDepth, double ploidyPenaltyFactor,
             double ploidyPenaltyStandardDeviation, double ploidyPenaltyMinStandardDeviationPerPloidy) {
         this.gender = gender;
         this.ploidyPenaltyFactor = ploidyPenaltyFactor;
         ploidyDeviation = new PloidyDeviation(ploidyPenaltyStandardDeviation, ploidyPenaltyMinStandardDeviationPerPloidy);
-        bafUtils = new BAFUtils(85);
+        ambiguousBaf = ExpectedBAF.expectedBAF(averageReadDepth, 0.8);
+        LOGGER.info("Using ambiguous baf of {}", ambiguousBaf);
     }
 
     @Override
@@ -96,7 +101,7 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
             return 1;
         }
 
-        return Doubles.lessOrEqual(observedBAF, bafUtils.ambiguousBAF())
+        return Doubles.lessOrEqual(observedBAF, ambiguousBaf)
                 ? bafToMinimiseDeviation(purityAdjuster, chromosome, copyNumber)
                 : purityAdjuster.purityAdjustedBAFSimple(chromosome, copyNumber, observedBAF);
 
@@ -106,8 +111,7 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
     double bafToMinimiseDeviation(final PurityAdjuster purityAdjuster, final String chromosome, double impliedCopyNumber) {
 
         final double minBAF = Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, 0.5)));
-        final double maxBAF =
-                Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, bafUtils.ambiguousBAF())));
+        final double maxBAF = Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, ambiguousBaf)));
 
         // Major Ploidy
         final double minBAFMajorAllelePloidy = minBAF * impliedCopyNumber;
@@ -145,7 +149,7 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
                         purity,
                         normFactor,
                         maxBAFMinorAllelePloidy);
-        return Doubles.lessThan(minBAFTotalDeviation, maxBAFTotalDeviation) ? 0.5 : bafUtils.ambiguousBAF();
+        return Doubles.lessThan(minBAFTotalDeviation, maxBAFTotalDeviation) ? 0.5 : ambiguousBaf;
     }
 
 }
