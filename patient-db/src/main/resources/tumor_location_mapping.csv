@@ -169,7 +169,7 @@ searchTerm,primaryTumorLocation,subType
 "small cell carcinoma, unknown origin (possible SCLC)",Unknown,"Possibly SCLC"
 "solitair fibreuze tumor in brain",Nervous system,"Solitair fibreuze tumor in brain"
 "Solitary brain metastasis, primary tumor probably near rectum",Unknown,"Probably rectum"
-"Solitary fibrous tumor",Unknown,""
+"Solitary fibrous tumor",Bone/Soft tissue,"Solitary fibrous tumor"
 "spindel cell sarcoma",Bone/Soft tissue,"Spindle cell sarcoma"
 "Squamous cell carcinoma (skin cancer)",Skin,"Skin squamous cell carcinoma"
 "squamous cell carcinoma in the vagina",Vulva,"Squamous cell carcinoma in the vagina"
