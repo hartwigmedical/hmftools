@@ -1,16 +1,6 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.DOUBLE_MINUTE;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.DOUBLE_STRANDED_BREAK;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.REPLICATION_EVENT;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_ENCLOSED;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_NEIGHBOURS;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_OVERLAP;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.TEMPLATED_INSERTION;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.UNPHASED_EVENTS;
-
-import java.util.HashMap;
 import java.util.List;
 
 import com.google.common.collect.Lists;

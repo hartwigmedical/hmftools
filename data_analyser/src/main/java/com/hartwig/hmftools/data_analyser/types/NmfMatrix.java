@@ -2,6 +2,8 @@ package com.hartwig.hmftools.data_analyser.types;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.doublesEqual;
+
 import com.hartwig.hmftools.data_analyser.calcs.DataUtils;
 
 import org.apache.logging.log4j.LogManager;
@@ -13,6 +15,7 @@ public class NmfMatrix {
     final public int Cols;
 
     private double[][] mData;
+    private double[][] mDataTrans;
 
     private static final Logger LOGGER = LogManager.getLogger(NmfMatrix.class);
 
@@ -22,6 +25,7 @@ public class NmfMatrix {
         Cols = c;
 
         mData = new double[r][c];
+        mDataTrans = null;
     }
 
     public NmfMatrix(final NmfMatrix other)
@@ -33,6 +37,20 @@ public class NmfMatrix {
         final double[][] otherData = other.getData();
 
         setData(otherData);
+    }
+
+    public void cacheTranspose()
+    {
+        if(mDataTrans == null)
+            mDataTrans = new double[Cols][Rows];
+
+        for(int i = 0; i < Rows; ++i) {
+
+            for (int j = 0; j < Cols; ++j) {
+
+                mDataTrans[j][i] = mData[i][j];
+            }
+        }
     }
 
     public double[][] getData() { return mData; }
@@ -50,10 +68,10 @@ public class NmfMatrix {
 
     public void initialise(double value)
     {
-        for(int i = 0; i < Rows; ++i) {
-
-            for (int j = 0; j < Cols; ++j) {
-
+        for(int i = 0; i < Rows; ++i)
+        {
+            for (int j = 0; j < Cols; ++j)
+            {
                 mData[i][j] = value;
             }
         }
@@ -72,6 +90,28 @@ public class NmfMatrix {
         mData[row][col] = value;
     }
 
+    public void setRow(int rowIndex, final double[] data)
+    {
+        if(rowIndex >= Rows)
+            return;
+
+        for(int i = 0; i < Cols; ++i)
+        {
+            mData[rowIndex][i] = data[i];
+        }
+    }
+
+    public void setCol(int colIndex, final double[] data)
+    {
+        if(colIndex >= Cols)
+            return;
+
+        for(int i = 0; i < Rows; ++i)
+        {
+            mData[i][colIndex] = data[i];
+        }
+    }
+
     public double get(int row, int col)
     {
         if(row >= Rows || col >= Cols)
@@ -81,6 +121,23 @@ public class NmfMatrix {
         }
 
         return mData[row][col];
+    }
+
+    public boolean hasValidData(boolean allowNegative)
+    {
+        for(int i = 0; i < Rows; ++i) {
+
+            for (int j = 0; j < Cols; ++j) {
+
+                if(Double.isNaN(mData[i][j]) || Double.isInfinite(mData[i][j]))
+                    return false;
+
+                if(!allowNegative && mData[i][j] < 0)
+                    return false;
+            }
+        }
+
+        return true;
     }
 
     public NmfMatrix transpose()
@@ -110,7 +167,6 @@ public class NmfMatrix {
     public void multiply(final NmfMatrix other, NmfMatrix dest, boolean initialiseDest)
     {
         // matrix multiply: c[i][j] = sum_k a[i][k] * b[k][j]
-
         if(Cols != other.Rows)
         {
             LOGGER.error("incorrect row or column");
@@ -178,6 +234,11 @@ public class NmfMatrix {
 
     public void scalarDivide(NmfMatrix other)
     {
+        scalarDivide(other, false);
+    }
+
+    public void scalarDivide(NmfMatrix other, boolean allowZeros)
+    {
         // scalar product; this *= b
         final double[][] otherData = other.getData();
 
@@ -187,6 +248,9 @@ public class NmfMatrix {
             {
                 if(otherData[i][j] == 0)
                 {
+                    if(allowZeros)
+                        continue;
+
                     LOGGER.error("divide by zero at i={}, j={}", i, j);
                     return;
                 }
@@ -228,6 +292,9 @@ public class NmfMatrix {
 
     public double[] getCol(int c)
     {
+        if(mDataTrans != null)
+            return mDataTrans[c];
+
         double[] col = new double[Rows];
 
         for(int i = 0; i < Rows; ++i) {
@@ -264,13 +331,12 @@ public class NmfMatrix {
     public boolean equals(final NmfMatrix other)
     {
         final double[][] otherData = other.getData();
-        double epsilon = 0.000001;
 
         for(int i = 0; i < Rows; i++)
         {
             for(int j = 0; j < Cols; j++)
             {
-                if(abs(mData[i][j] - otherData[i][j]) > epsilon)
+                if(!doublesEqual(mData[i][j], otherData[i][j]))
                     return false;
             }
         }

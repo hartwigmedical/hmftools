@@ -37,6 +37,7 @@ public class NmfManager {
     private GenericDataCollection mDataCollection;
 
     private NmfMatrix mSampleCountsMatrix;
+    private NmfMatrix mReferenceSigs;
 
     private NmfCalculator mNmfCalculator;
     private SigFinder mSigFinder;
@@ -53,6 +54,7 @@ public class NmfManager {
         mOutputFileId = "";
         mDataCollection = null;
         mSampleCountsMatrix = null;
+        mReferenceSigs = null;
         mNmfCalculator = null;
         mSigFinder = null;
 
@@ -74,13 +76,18 @@ public class NmfManager {
 
         mSampleCountsMatrix = DataUtils.createMatrixFromListData(mDataCollection.getData());
         mSampleCountsMatrix = extractNonZeros(mSampleCountsMatrix);
+        mSampleCountsMatrix.cacheTranspose();
 
         mNmfCalculator = new NmfCalculator(mSampleCountsMatrix, mConfig);
 
         if(!mConfig.RefSigFilename.isEmpty())
         {
             GenericDataCollection dataCollection = GenericDataLoader.loadFile(mConfig.RefSigFilename);
-            mNmfCalculator.setSignatures(DataUtils.createMatrixFromListData(dataCollection.getData()), mConfig.SigFloatRate);
+            mReferenceSigs = DataUtils.createMatrixFromListData(dataCollection.getData());
+            mReferenceSigs.cacheTranspose();
+
+            if(mConfig.UseRefSigs)
+                mNmfCalculator.setSignatures(mReferenceSigs);
         }
 
         if(!mConfig.RefContribFilename.isEmpty())
@@ -101,7 +108,7 @@ public class NmfManager {
 
             if(mSigFinder.getSignatures() != null)
             {
-                mNmfCalculator.setSignatures(mSigFinder.getSignatures(), mConfig.SigFloatRate);
+                mNmfCalculator.setSignatures(mSigFinder.getSignatures());
             }
 
             if(mSigFinder.getContributions() != null)
@@ -111,7 +118,15 @@ public class NmfManager {
         }
     }
 
-    public void run()
+    public void run() {
+
+        if(mConfig.FitOnly)
+            runFitOnly();
+        else
+            runNmf();
+    }
+
+    private void runNmf()
     {
         mPerfCounter.start("NMF");
 
@@ -121,20 +136,17 @@ public class NmfManager {
         double lowestRunScore = -1;
         int lowestRunIndex = -1;
 
-        for(int sigCount = startSigCount; sigCount <= maxSigCount; ++sigCount)
-        {
+        for (int sigCount = startSigCount; sigCount <= maxSigCount; ++sigCount) {
             LOGGER.info("starting run with sigCount({})", sigCount);
 
-            NmfRun nmfRun = new NmfRun(mConfig, sigCount, mNmfCalculator);
+            NmfRun nmfRun = new NmfRun(mConfig, sigCount, mNmfCalculator, mReferenceSigs);
 
-            if(!nmfRun.run())
-            {
+            if (!nmfRun.run()) {
                 LOGGER.warn("run with sigCount({}) invalid, exiting", sigCount);
                 break;
             }
 
-            if(lowestRunScore < 0 || nmfRun.getLowestRunScore() < lowestRunScore)
-            {
+            if (lowestRunScore < 0 || nmfRun.getLowestRunScore() < lowestRunScore) {
                 lowestRunScore = nmfRun.getLowestRunScore();
                 lowestRunIndex = mRuns.size();
             }
@@ -144,11 +156,11 @@ public class NmfManager {
 
         mPerfCounter.stop();
 
-        if(!mRuns.isEmpty()) {
+        if (!mRuns.isEmpty()) {
 
             final NmfRun nmfRun = mRuns.get(lowestRunIndex);
 
-            if(mRuns.size() > 1) {
+            if (mRuns.size() > 1) {
                 LOGGER.info("optimal sigCount({})", nmfRun.getSigCount());
             }
 
@@ -157,95 +169,34 @@ public class NmfManager {
         }
 
         mPerfCounter.logStats();
-
     }
 
-    /*
-    public void runActual()
+    private void runFitOnly()
     {
+        if(mReferenceSigs == null) {
+            // for now only works with external sigs, in time could work with sig finder's set
+            return;
+        }
+
         mPerfCounter.start("NMF");
 
-        PerformanceCounter runPC = new PerformanceCounter("NMF Runs");
+        NmfSampleFitter sampleFitter = new NmfSampleFitter(mConfig, mSampleCountsMatrix, mReferenceSigs);
 
-        boolean hasValidRun = false;
-
-        for(int i = 0; i < mConfig.RunCount; ++i)
-        {
-            runPC.start();
-            mNmfCalculator.performRun();
-            runPC.stop();
-
-            if(!mNmfCalculator.isValid())
-            {
-                LOGGER.warn("exiting on invalid NMF run");
-                break;
-            }
-
-            double newRunScore = mNmfCalculator.getTotalResiduals();
-            final NmfMatrix newSigs = mNmfCalculator.getSignatures();
-
-            if(i == 0 || !hasValidRun)
-            {
-                hasValidRun = true;
-
-                mLowestRunScore = newRunScore;
-                mBestSignatures = new NmfMatrix(newSigs);
-                mBestContributions = new NmfMatrix(mNmfCalculator.getContributions());
-
-                mUniqueSignatures.add(new NmfMatrix(newSigs));
-            }
-            else
-            {
-                if(newRunScore < mLowestRunScore)
-                {
-                    LOGGER.debug(String.format("run %d: score lowered(%.1f > %.1f)", i, mLowestRunScore, newRunScore));
-
-                    mLowestRunScore = newRunScore;
-                    mBestSignatures = new NmfMatrix(newSigs);
-                    mBestContributions = new NmfMatrix(mNmfCalculator.getContributions());
-                }
-
-                // store if this new signature is significantly different
-                if(mUniqueSignatures.size() < 10) {
-
-                    boolean matchFound = false;
-                    for (final NmfMatrix sig : mUniqueSignatures) {
-                        if (sig.equals(newSigs))
-                            continue;
-
-                        if (signaturesEqual(sig, newSigs)) {
-                            matchFound = true;
-                            break;
-                        }
-                    }
-
-                    if (!matchFound) {
-                        LOGGER.debug(String.format("run %d: storing new unique signature", i));
-                        mUniqueSignatures.add(new NmfMatrix(newSigs));
-                    }
-                }
-            }
-        }
+        sampleFitter.fitSamples();
 
         mPerfCounter.stop();
 
-        double bestFitPercent = mLowestRunScore/mNmfCalculator.getTotalCount();
+        if(!sampleFitter.isValid())
+            return;
 
-        LOGGER.info(String.format("%d run(s) complete, uniqueSigCount(%d) lowestResiduals(%.0f perc=%.3f)",
-                mConfig.RunCount, mUniqueSignatures.size(), mLowestRunScore, bestFitPercent));
+        NmfMatrix contributions = sampleFitter.getContributions();
+        contributions.cacheTranspose();
 
-        logSignatureSummaryData();
-
-        if(hasValidRun) {
-
-            writeSignatures();
-            writeContributions();
-        }
+        writeSignatures(mReferenceSigs);
+        writeContributions(contributions);
 
         mPerfCounter.logStats();
-        runPC.logStats(false); // mConfig.LogVerbose
     }
-    */
 
     public void writeSignatures(final NmfMatrix signatures)
     {

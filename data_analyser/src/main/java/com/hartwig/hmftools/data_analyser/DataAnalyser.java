@@ -28,6 +28,7 @@ public class DataAnalyser {
     private static final String RUN_NMF = "run_nmf";
     private static final String RUN_BA = "run_buckets";
     private static final String RUN_SAMPLE_SIM = "run_sim";
+    private static final String RUN_TESTS = "run_tests";
 
     private static final String GENERIC_INPUT_FILE = "gen_input_file";
     private static final String LOG_DEBUG = "log_debug";
@@ -42,11 +43,19 @@ public class DataAnalyser {
         // allow components to add their own arg lists
         SimConfig.addCmdLineArgs(options);
         NmfConfig.addCmdLineArgs(options);
+        BucketAnalyser.addCmdLineArgs(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 
         if (cmd.hasOption(LOG_DEBUG)) {
             Configurator.setRootLevel(Level.DEBUG);
+        }
+
+        if(cmd.hasOption(RUN_TESTS)) {
+
+            LOGGER.info("running tests");
+            MiscTester.runTests();
+            return;
         }
 
         LOGGER.info("starting data analyser");
@@ -78,6 +87,7 @@ public class DataAnalyser {
         {
             SampleSimulator sampleSimulator = new SampleSimulator();
             sampleSimulator.initialise(cmd);
+            // sampleSimulator.runTests();
             sampleSimulator.run();
         }
 
@@ -95,6 +105,7 @@ public class DataAnalyser {
         options.addOption(RUN_NMF, false, "Run NMF");
         options.addOption(RUN_BA, false, "Run bucket analysis");
         options.addOption(RUN_SAMPLE_SIM, false, "Generate simulated sample counts");
+        options.addOption(RUN_TESTS, false, "Generate unit tests only");
 
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
 

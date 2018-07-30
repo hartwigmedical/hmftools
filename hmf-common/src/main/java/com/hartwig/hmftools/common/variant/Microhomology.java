@@ -1,15 +1,23 @@
 package com.hartwig.hmftools.common.variant;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 final class Microhomology {
+    private static final Logger LOGGER = LogManager.getLogger(Microhomology.class);
 
     private Microhomology() {
     }
 
     @NotNull
     static String microhomology(int position, @NotNull final String sequence, @NotNull final String ref) {
+        if (sequence.length() < position) {
+            LOGGER.warn("Attempt to determine microhomology outside of sequence length");
+            return Strings.EMPTY;
+        }
+
         String result =
                 commonPrefix(sequence.substring(position + 1), sequence.substring(position + 1 + ref.length() - 1), ref.length() - 1);
 

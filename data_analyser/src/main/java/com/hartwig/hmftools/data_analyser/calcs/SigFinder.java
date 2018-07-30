@@ -1,23 +1,26 @@
 package com.hartwig.hmftools.data_analyser.calcs;
 
+import static java.lang.Math.floor;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.pow;
 
-import static com.hartwig.hmftools.data_analyser.DataAnalyser.OUTPUT_DIR;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_I1;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_I2;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_VAL;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.calcCSS;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.getTopCssPairs;
+import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.getTopLogLikelihoodPairs;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getNewFile;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.writeMatrixData;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 
-import javax.xml.crypto.Data;
-
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.numeric.PerformanceCounter;
 import com.hartwig.hmftools.data_analyser.types.NmfMatrix;
 import com.hartwig.hmftools.data_analyser.types.SigGroup;
 
@@ -33,6 +36,8 @@ public class SigFinder {
     List<SigGroup> mSigGroups;
     NmfMatrix mSignatures;
     NmfMatrix mContributions;
+    NmfMatrix mAllocatedCounts; // a working contribution matrix for assiging counts from proposed sigs
+    List<Integer> mProposedSigs;
 
     final String mOutputDir;
     final String mOutputFileId;
@@ -49,12 +54,14 @@ public class SigFinder {
         mOutputDir = outputDir;
         mOutputFileId = outputFileId;
         mSampleNames = sampleNames;
+        mProposedSigs = Lists.newArrayList();
 
         mTotalVariants = mSampleCounts.sum();
 
         mSigGroups = Lists.newArrayList();
         mSignatures = null;
         mContributions = null;
+        mAllocatedCounts = null;
     }
 
     public final NmfMatrix getSignatures() { return mSignatures; }
@@ -64,11 +71,20 @@ public class SigFinder {
     {
         LOGGER.debug("finding signatures");
 
+        PerformanceCounter perfCounter = new PerformanceCounter("SigFinder");
+
+        perfCounter.start();
         formSigGroups();
+        proposeSignatures();
+        // applyProposedSignatures();
         createSignatures();
 
-        if(mSignatures != null)
-            CosineSim.logSimilarites(mSignatures, 0.8, "sig");
+        perfCounter.stop();
+
+        if(mSignatures == null)
+            return;
+
+        CosineSim.logSimilarites(mSignatures, 0.8, "sig");
 
         if(mSignatures != null && mContributions != null
         && mOutputDir != null && !mSampleNames.isEmpty())
@@ -76,6 +92,16 @@ public class SigFinder {
             writeSignatures(mSignatures);
             writeContributions(mContributions);
         }
+
+        perfCounter.logStats();
+    }
+
+    private double calcLogLikelihood(int sam1, int sam2)
+    {
+        double[] sData1 = mSampleCounts.getCol(sam1);
+        double[] sData2 = mSampleCounts.getCol(sam2);
+
+        return CosineSim.calcLogLikelihood(sData1, sData2, true);
     }
 
     private void formSigGroups()
@@ -84,6 +110,8 @@ public class SigFinder {
         int bucketCount = mSampleCounts.Rows;
 
         final List<double[]> cssResults = getTopCssPairs(mSampleCounts, mSampleCounts, mConfig.CssCutoff, false, true);
+
+        // final List<double[]> lliResults = getTopLogLikelihoodPairs(mSampleCounts, mSampleCounts, mConfig.CssCutoff);
 
         // create potential signature groups, only allocating a sample to at most 1 group
         List<Integer> allocatedSampleIds = Lists.newArrayList();
@@ -95,6 +123,9 @@ public class SigFinder {
 
             if(allocatedSampleIds.contains(samId1) && allocatedSampleIds.contains(samId2))
                 continue;
+
+            // compare with log-likelihood probability
+            // double lliProb = calcLogLikelihood(samId1, samId2);
 
             // check for a group with either of these samples in it already
             boolean sampleFound = false;
@@ -183,6 +214,12 @@ public class SigFinder {
             ++index1;
         }
 
+        if(mSigGroups.isEmpty())
+        {
+            LOGGER.info("no sig groups found");
+            return;
+        }
+
         LOGGER.info("created {} sigGroups allocating {} samples",
                 mSigGroups.size(), allocatedSampleIds.size());
 
@@ -190,72 +227,159 @@ public class SigFinder {
         {
             double groupPercent = sigGroup.getTotalCount() / mTotalVariants;
 
-            LOGGER.debug(String.format("sigGroup(%d) sampleCount(%d) totalCount(%d asPerc=%.2f) css(init=%.4f worst=%.4f)",
+            LOGGER.debug(String.format("sigGroup(%d) sampleCount(%d) totalCount(%d perc=%.2f) css(init=%.4f worst=%.4f)",
                     sigGroup.id(), sigGroup.getSampleIds().size(), sigGroup.getTotalCount(), groupPercent,
                     sigGroup.getInitialCss(), sigGroup.getWorstCss()));
         }
     }
 
-    private void createSignatures()
+    private void proposeSignatures()
     {
-        if(mSigGroups.isEmpty())
+        if (mSigGroups.isEmpty())
             return;
 
-        int bucketCount = mSampleCounts.Rows;
         int totalCountIncluded = 0;
         int totalSamplesIncluded = 0;
 
-        List<Integer> proposedSigs = Lists.newArrayList();
+        int allSampleCount = mSampleCounts.Cols;
+        double minSampleCount = mConfig.MinSamplePerc * allSampleCount;
+        List<Integer> tmpProposedSigs = Lists.newArrayList();
 
-        double percentCutoff = 0.03; // of the total variants
+        List<Double> proposedSigScores = Lists.newArrayList();
 
-        for(int i = 0; i < mSigGroups.size(); ++i)
+        for (int i = 0; i < mSigGroups.size(); ++i)
         {
             final SigGroup sigGroup = mSigGroups.get(i);
 
             // skip similarities only involve a few samples
-            if(sigGroup.getSampleIds().size() < mConfig.MinSampleCount)
+            int groupSampleCount = sigGroup.getSampleIds().size();
+
+            if (groupSampleCount < minSampleCount)
                 continue;
 
             // skip below significant similarity in samples
-            if(sigGroup.getWorstCss() < mConfig.CssCutoff)
+            double worstCss = sigGroup.getWorstCss();
+
+            if (worstCss < mConfig.CssCutoff)
                 continue;
 
-            double groupPercent = sigGroup.getTotalCount() / mTotalVariants;
+            double groupVarPerc = sigGroup.getTotalCount() / mTotalVariants;
 
             // skip if this signature will only affect a small percent of variants
-            if(groupPercent < percentCutoff)
+            if (groupVarPerc < mConfig.MinSamplePerc)
                 continue;
 
-            proposedSigs.add(i);
+            double groupSamplePerc = groupSampleCount / (double)allSampleCount;
+            double cssFactor = (worstCss - mConfig.CssCutoff) / (1 - mConfig.CssCutoff);
+            double sigScore = cssFactor * groupSamplePerc * groupVarPerc;
+            sigGroup.setScore(sigScore);
+
+            tmpProposedSigs.add(i);
+            proposedSigScores.add(sigScore);
             totalCountIncluded += sigGroup.getTotalCount();
             totalSamplesIncluded += sigGroup.getSampleIds().size();
 
-            LOGGER.info(String.format("sigGroup(%d) proposed with sampleCount(%d) totalCount(%d asPerc=%.3f) css(init=%.4f worst=%.4f)",
-                    sigGroup.id(), sigGroup.getSampleIds().size(), sigGroup.getTotalCount(),
-                    groupPercent, sigGroup.getInitialCss(), sigGroup.getWorstCss()));
+            LOGGER.info(String.format("sigGroup(%d) proposed with score(%.4g) sampleCount(%d perc=%.3f) totalCount(%d perc=%.3f) css(init=%.4f worst=%.4f)",
+                    sigGroup.id(), sigScore, groupSampleCount, groupSamplePerc, sigGroup.getTotalCount(),
+                    groupVarPerc, sigGroup.getInitialCss(), worstCss));
 
-            if(proposedSigs.size() >= mConfig.SigCount)
-                break;
         }
 
-        int sigCount = proposedSigs.size();
+        int sigCount = tmpProposedSigs.size();
 
-        if(sigCount == 0)
+        if (sigCount == 0)
         {
             LOGGER.info("no valid proposed signatures found");
             return;
         }
-        else if(sigCount > mConfig.SigCount)
+        else if (sigCount > mConfig.SigCount)
         {
-            LOGGER.warn("more proposed sigs({}) than permitted({}), need a ranking system", sigCount, mConfig.SigCount);
+            LOGGER.warn("more proposed sigs({}) than permitted({})", sigCount, mConfig.SigCount);
+
+            // order the proposed sigs by score and take the top X
+            double[] psValues = new double[proposedSigScores.size()];
+            for(int i = 0; i < psValues.length; ++i)
+                psValues[i] = proposedSigScores.get(i);
+
+            List<Integer> sortedScoredIndices = getSortedVectorIndices(psValues, false);
+
+            for(int i = 0; i < mConfig.SigCount; ++i)
+            {
+                int proposedSigIndex = sortedScoredIndices.get(i);
+                mProposedSigs.add(tmpProposedSigs.get(proposedSigIndex));
+            }
+        }
+        else
+        {
+            mProposedSigs = tmpProposedSigs;
         }
 
         double totalCountPercent = totalCountIncluded / mTotalVariants;
-        double totalSamplesPercent = totalSamplesIncluded / (double)mSampleCounts.Cols;
+        double totalSamplesPercent = totalSamplesIncluded / (double) mSampleCounts.Cols;
 
         LOGGER.info(String.format("%d proposed sigs, totalCount(%d asPerc=%.3f) totalSamples(%d asPerc=%.3f)",
                 sigCount, totalCountIncluded, totalCountPercent, totalSamplesIncluded, totalSamplesPercent));
+    }
+
+    private void applyProposedSignatures()
+    {
+        int bucketCount = mSampleCounts.Rows;
+        int sampleCount = mSampleCounts.Cols;
+
+        mAllocatedCounts = new NmfMatrix(bucketCount, sampleCount);
+        double[][] aData = mAllocatedCounts.getData();
+
+        for(Integer sigGroupId : mProposedSigs)
+        {
+            final SigGroup sigGroup = mSigGroups.get(sigGroupId);
+            final double[] bucketRatios = sigGroup.getBucketRatios();
+
+            for(int n = 0; n < sampleCount; ++n)
+            {
+                if(!sigGroup.hasSampleId(n))
+                    continue; // value left as 1
+
+                double lowestBucketFactor = 0;
+
+                double[] sampleCounts = mSampleCounts.getCol(n);
+
+                for(int i = 0; i < bucketCount; ++i)
+                {
+                    if(bucketRatios[i] == 0)
+                        continue;
+
+                    // a bucket count of zero is bumped up to 1 on the assumption that
+                    double sbRatio = max(sampleCounts[i],1) / bucketRatios[i];
+
+                    if(sbRatio > 0 && (i == 0 || sbRatio < lowestBucketFactor))
+                        lowestBucketFactor = sbRatio;
+                }
+
+                // now allocate/remove the corresponding counts from this sample
+                for(int i = 0; i < bucketCount; ++i)
+                {
+                    double allocatedCount = floor(lowestBucketFactor * bucketRatios[i]);
+
+                    if(allocatedCount == 0)
+                        continue;
+
+                    aData[i][n] += allocatedCount;
+
+                    LOGGER.debug(String.format("sample(%d) bucket(%d) allocated(%.0f of %.0f)",
+                            n, i, allocatedCount, sampleCounts[i]));
+                }
+            }
+        }
+    }
+
+    private void createSignatures()
+    {
+        if(mProposedSigs.isEmpty())
+            return;
+
+        int bucketCount = mSampleCounts.Rows;
+        int allSampleCount = mSampleCounts.Cols;
+        int sigCount = mProposedSigs.size();
 
         mSignatures = new NmfMatrix(bucketCount, sigCount);
         double[][] sigData = mSignatures.getData();
@@ -264,9 +388,14 @@ public class SigFinder {
         double[][] contribData = mContributions.getData();
 
         int sigIndex = 0;
-        for(final Integer sigGroupId : proposedSigs)
+        for(final Integer sigGroupId : mProposedSigs)
         {
             final SigGroup sigGroup = mSigGroups.get(sigGroupId);
+
+            LOGGER.info(String.format("proposed sig(%d) score(%.4g) sampleCount(%d perc=%.3f) totalCount(%d perc=%.3f) css(%.4f)",
+                    sigIndex, sigGroup.getScore(), sigGroup.getSampleIds().size(), sigGroup.getSampleIds().size() / (double)allSampleCount,
+                    sigGroup.getTotalCount(), sigGroup.getTotalCount() / mTotalVariants, sigGroup.getWorstCss()));
+
             final double[] bucketRatios = sigGroup.getBucketRatios();
 
             for(int j = 0; j < bucketCount; ++j)
@@ -290,11 +419,11 @@ public class SigFinder {
 
             // log the top 10 contributions of any significance
             final double[] sigValues = mSignatures.getCol(sigIndex);
-            List<Integer> sortedList = DataUtils.getSortedVector(sigValues, false);
+            List<Integer> sortedIndices = DataUtils.getSortedVectorIndices(sigValues, false);
 
             for(int i = 0; i < 5; ++i)
             {
-                int bucketIndex = sortedList.get(i);
+                int bucketIndex = sortedIndices.get(i);
                 LOGGER.debug(String.format("proposed sig(%d) bucket: %d = %.3f", sigIndex, bucketIndex, sigValues[bucketIndex]));
 
                 if(sigValues[bucketIndex] < 0.01)

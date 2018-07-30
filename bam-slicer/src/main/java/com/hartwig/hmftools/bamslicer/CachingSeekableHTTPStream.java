@@ -37,6 +37,7 @@ public class CachingSeekableHTTPStream extends SeekableStream {
         }
         LOGGER.info("Caching max {} bam chunks from {}", maxBufferSize, url);
         chunkBuffer = new ChunkHttpBuffer(httpClient, url, maxBufferSize, chunks);
+        LOGGER.info("Updating position to 0.");
         updatePosition(0);
     }
 
@@ -60,6 +61,9 @@ public class CachingSeekableHTTPStream extends SeekableStream {
     private void updatePosition(final long position) throws IOException {
         if (currentBytes == null || position >= currentBytesOffset + currentBytes.length) {
             final Map.Entry<Long, byte[]> bytesEntry = chunkBuffer.getEntryAtPosition(position);
+            if (bytesEntry.getKey() == currentBytesOffset) {
+                LOGGER.warn("Tried to seek to position {} but failed to update the current chunk.", position);
+            }
             currentBytesOffset = bytesEntry.getKey();
             currentBytes = bytesEntry.getValue();
         }
@@ -79,12 +83,16 @@ public class CachingSeekableHTTPStream extends SeekableStream {
     @Override
     public int read(byte[] buffer, int offset, int len) throws IOException {
         if (offset < 0 || len < 0 || (offset + len) > buffer.length) {
-            throw new IndexOutOfBoundsException("Offset=" + offset + ",len=" + len + ",bufflen=" + buffer.length);
+            LOGGER.error("Attempted to copy {} bytes at offset {} into buffer of size {}", len, offset, buffer.length);
+            throw new IndexOutOfBoundsException();
         }
         if (len == 0 || position == contentLength) {
             return 0;
         }
         final int sourcePosition = (int) (position - currentBytesOffset);
+        if (sourcePosition > currentBytes.length) {
+            LOGGER.error("Attempted to copy {} bytes from offset {} from buffer of size {}", len, sourcePosition, currentBytes.length);
+        }
         System.arraycopy(currentBytes, sourcePosition, buffer, offset, len);
         updatePosition(position + len);
         return len;

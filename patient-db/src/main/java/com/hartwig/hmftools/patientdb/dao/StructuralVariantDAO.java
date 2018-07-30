@@ -43,6 +43,15 @@ class StructuralVariantDAO {
         final Result<Record> result = context.select().from(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).fetch();
 
         for (Record record : result) {
+
+            // for now, ignore single-breakend SVs
+            if(record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME) == null
+            || record.getValue(STRUCTURALVARIANT.ENDPOSITION) == null
+            || record.getValue(STRUCTURALVARIANT.ENDORIENTATION) == null)
+            {
+                continue;
+            }
+
             structuralVariants.add(ImmutableStructuralVariantData.builder()
                     .id(String.valueOf(record.getValue(STRUCTURALVARIANT.ID)))
                     .vcfId(String.valueOf(record.getValue(STRUCTURALVARIANT.VCFID)))

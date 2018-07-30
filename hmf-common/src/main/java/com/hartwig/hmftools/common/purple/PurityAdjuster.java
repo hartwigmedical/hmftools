@@ -35,6 +35,10 @@ public class PurityAdjuster {
         return purity;
     }
 
+    public double normFactor() {
+        return normFactor;
+    }
+
     public int typicalCopyNumber(@NotNull String chromosome) {
         return HumanChromosome.fromString(chromosome).isDiploid(gender) ? 2 : 1;
     }
@@ -71,4 +75,14 @@ public class PurityAdjuster {
 
         return (observedFrequency * (normalTotalAllele + tumorTotalAllele) - normalBetaAllele) / tumorCopyNumber / purity;
     }
+
+    public double purityAdjustedBAFSimple(final String chromosome, final double copyNumber, final double observedFrequency) {
+        boolean isDiploid = HumanChromosome.fromString(chromosome).isDiploid(gender);
+
+        if (!isDiploid || Doubles.lessOrEqual(copyNumber, 1)) {
+            return 1;
+        }
+        return purityAdjustedFrequency(copyNumber, observedFrequency,  2,0.5);
+    }
+
 }
