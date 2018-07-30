@@ -43,6 +43,7 @@ public class DataAnalyser {
         // allow components to add their own arg lists
         SimConfig.addCmdLineArgs(options);
         NmfConfig.addCmdLineArgs(options);
+        BucketAnalyser.addCmdLineArgs(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 

@@ -68,10 +68,10 @@ public class NmfMatrix {
 
     public void initialise(double value)
     {
-        for(int i = 0; i < Rows; ++i) {
-
-            for (int j = 0; j < Cols; ++j) {
-
+        for(int i = 0; i < Rows; ++i)
+        {
+            for (int j = 0; j < Cols; ++j)
+            {
                 mData[i][j] = value;
             }
         }
@@ -88,6 +88,28 @@ public class NmfMatrix {
         }
 
         mData[row][col] = value;
+    }
+
+    public void setRow(int rowIndex, final double[] data)
+    {
+        if(rowIndex >= Rows)
+            return;
+
+        for(int i = 0; i < Cols; ++i)
+        {
+            mData[rowIndex][i] = data[i];
+        }
+    }
+
+    public void setCol(int colIndex, final double[] data)
+    {
+        if(colIndex >= Cols)
+            return;
+
+        for(int i = 0; i < Rows; ++i)
+        {
+            mData[i][colIndex] = data[i];
+        }
     }
 
     public double get(int row, int col)

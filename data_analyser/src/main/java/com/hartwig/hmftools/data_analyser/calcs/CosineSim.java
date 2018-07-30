@@ -37,6 +37,11 @@ public class CosineSim {
 
     public static double calcCSS(final double[] set1, final double[] set2)
     {
+        return calcCSS(set1, set2, false);
+    }
+
+    public static double calcCSS(final double[] set1, final double[] set2, boolean skipZeros)
+    {
         if(set1.length != set2.length || set1.length == 0)
             return 0;
 
@@ -48,6 +53,9 @@ public class CosineSim {
         {
             double a = set1[i];
             double b = set2[i];
+
+            if(skipZeros && (a == 0 || b == 0))
+                continue;
 
             aaTotal += a*a;
             bbTotal += b*b;

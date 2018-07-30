@@ -355,7 +355,7 @@ public class NmfCalculator {
         for(; i < maxIterations; i++) {
 
             // compute the fit
-            mW.multiply(mH, mV, true);
+            produceFit();
 
             if(mConfig.LogVerbose && i > 0) {
                 logMatrixDiffs();
@@ -474,7 +474,7 @@ public class NmfCalculator {
         if(!mIsValid || !mW.hasValidData(false) || !mH.hasValidData(false) || !mV.hasValidData(false))
             return;
 
-        mW.multiply(mH, mV, true); // ensure fit is the latest
+        produceFit(); // ensure fit is the latest
         normaliseSignatures();
 
         if(!mIsValid)
@@ -487,6 +487,11 @@ public class NmfCalculator {
         LOGGER.info(String.format("run=%d, it=%d: residuals(%.0f) vs total(%.0f) as percent(%.5f) cost(init=%.0f early=%.0f end=%.0f lastChg=%.5f)",
                 mRunId, i, mTotalResiduals, mTotalCount, mTotalResiduals / mTotalCount,
                 initCost, earlyCost, currentCost, prevCostChange));
+    }
+
+    public void produceFit()
+    {
+        mW.multiply(mH, mV, true); // ensure fit is the latest
     }
 
     private void applyAdjustments()
@@ -693,7 +698,7 @@ public class NmfCalculator {
 
         // check that V hasn't changed
         final NmfMatrix vCopy = new NmfMatrix(mV);
-        mW.multiply(mH, mV, true);
+        produceFit();
 
         if(!mV.hasValidData(false))
         {
