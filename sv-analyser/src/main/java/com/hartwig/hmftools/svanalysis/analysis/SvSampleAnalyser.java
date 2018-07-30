@@ -47,6 +47,11 @@ public class SvSampleAnalyser {
     GeneAnnotator mGeneAnnotator;
 
     PerformanceCounter mPerfCounter;
+    PerformanceCounter mPc1;
+    PerformanceCounter mPc2;
+    PerformanceCounter mPc3;
+    PerformanceCounter mPc4;
+    PerformanceCounter mPc5;
 
     private static final Logger LOGGER = LogManager.getLogger(SvSampleAnalyser.class);
 
@@ -75,6 +80,12 @@ public class SvSampleAnalyser {
         mGeneAnnotator.loadGeneDriverFile(mConfig.getGeneDataFile());
 
         mPerfCounter = new PerformanceCounter("Total");
+
+        mPc1 = new PerformanceCounter("Annotate&Filter");
+        mPc2 = new PerformanceCounter("BaseDist");
+        mPc3 = new PerformanceCounter("Analyse");
+        mPc4 = new PerformanceCounter("ArmStats");
+        mPc5 = new PerformanceCounter("WriteCSV");
 
         clearState();
     }
@@ -120,17 +131,17 @@ public class SvSampleAnalyser {
         if(mAllVariants.isEmpty())
             return;
 
-        mPerfCounter.start("Annotate&Filter");
+        mPc1.start();
         annotateAndFilterVariants();
-        mPerfCounter.stop();
+        mPc1.stop();
 
         LOGGER.debug("sample({}) clustering {} variants", mSampleId, mAllVariants.size());
 
-        mPerfCounter.start("BaseDist");
+        mPc2.start();
         clusterByBaseDistance();
-        mPerfCounter.stop();
+        mPc2.stop();
 
-        mPerfCounter.start("Analyse");
+        mPc3.start();
 
         for(SvCluster cluster : mClusters)
         {
@@ -145,19 +156,18 @@ public class SvSampleAnalyser {
             // mClusteringMethods.findFootprints(mSampleId, cluster);
         }
 
-        mPerfCounter.stop();
+        mPc3.stop();
 
         // mClusteringMethods.setClosestSVData(mAllVariants, mClusters);
         // mClusteringMethods.setClosestLinkedSVData(mAllVariants);
 
-        mPerfCounter.start("ArmStats");
+        mPc4.start();
         mClusteringMethods.setChromosomalArmStats(mAllVariants);
-
-        mPerfCounter.stop();
+        mPc4.stop();
 
         if(mGeneAnnotator.hasData()) {
 
-            mPerfCounter.start("GeneData");
+            // mPerfCounter.start("GeneData");
 
             for (SvClusterData var : mAllVariants) {
                 mGeneAnnotator.addGeneData(mSampleId, var);
@@ -165,15 +175,15 @@ public class SvSampleAnalyser {
 
             mGeneAnnotator.reportGeneMatchData(mSampleId);
 
-            mPerfCounter.stop();
+            // mPerfCounter.stop();
         }
 
-        mPerfCounter.start("WriteCSV");
+        mPc5.start();
 
         if(mConfig.getOutputCsvPath() != "")
             writeClusterDataOutput();
 
-        mPerfCounter.stop();
+        mPc5.stop();
     }
 
     private void annotateAndFilterVariants()
@@ -273,8 +283,20 @@ public class SvSampleAnalyser {
                 mFileWriter = writer;
 
                 if(!fileExists) {
+
+                    // definitional fields
+                    writer.write("SampleId,ClusterId,ClusterCount,Id,Type,Ploidy,PONCount,PONRegionCount");
+
+                    // position and copy number
+                    writer.write(",ChrStart,PosStart,OrientStart,ArmStart,AdjAFStart,AdjCNStart,AdjCNChgStart");
+
+                    writer.write(",ChrEnd,PosEnd,OrientEnd,ArmEnd,AdjAFEnd,AdjCNEnd,AdjCNChgEnd");
+
                     // SV info
-                    writer.write("Homology,InsertSeq,Imprecise,SomaticScore,");
+                    writer.write(",Homology,InsertSeq,Imprecise,SomaticScore");
+
+                    // location attributes
+                    writer.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd");
 
                     // cluster-level info
                     writer.write(",ClusterDesc,Consistency,ArmCount,DupBECount,DupBESiteCount");
@@ -403,7 +425,12 @@ public class SvSampleAnalyser {
         }
 
         // log perf stats
-        mPerfCounter.logStats();
+        mPerfCounter.logStats(false);
+        mPc1.logStats(false);
+        mPc2.logStats(false);
+        mPc3.logStats(false);
+        mPc4.logStats(false);
+        mPc5.logStats(false);
     }
 
     public List<SvCluster> getClusters() { return mClusters; }
