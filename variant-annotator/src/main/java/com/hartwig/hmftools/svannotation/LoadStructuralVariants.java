@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -102,7 +103,16 @@ public class LoadStructuralVariants {
             }
         } else {
             LOGGER.info("reading VCF File");
-            final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE), true);
+            // Let PON filtered SVs through since GRIDSS PON filtering is performed upstream
+            Set<String> allowableFilters = new HashSet<>();
+            allowableFilters.add("PASS");
+            allowableFilters.add(".");
+            allowableFilters.add("");
+            allowableFilters.add(PON_FILTER_PON);
+            allowableFilters.add(PON_FILTER_PASS);
+            final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE), false).stream()
+                    .filter(sv -> allowableFilters.contains(sv))
+                    .collect(Collectors.toList());
 
             LOGGER.info("enriching structural variants based on purple data");
             svList = enrichStructuralVariants(variants, dbAccess, tumorSample);
@@ -125,8 +135,9 @@ public class LoadStructuralVariants {
                     ponFiltered = ponCount > 1;
                 }
                 Set<String> filterSet = Stream.of(variant.filter().split(";"))
-                        .filter(s -> s != "PASS")
-                        .filter(s -> s != ".")
+                        .filter(s -> !s.equals("PASS"))
+                        .filter(s -> !s.equals("."))
+                        .filter(s -> !s.equals(""))
                         .collect(Collectors.toSet());
                 if (ponFiltered) {
                     filterSet.add(PON_FILTER_PON);
