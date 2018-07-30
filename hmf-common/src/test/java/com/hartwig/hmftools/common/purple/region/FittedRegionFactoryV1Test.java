@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.common.purple.region;
 
 import static com.hartwig.hmftools.common.purple.BAFUtils.bafDeviation;
-import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.cnvDeviation;
-import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.modelRatio;
+import static com.hartwig.hmftools.common.purple.region.FittedRegionFactoryV1.cnvDeviation;
+import static com.hartwig.hmftools.common.purple.region.FittedRegionFactoryV1.modelRatio;
 
 import static org.junit.Assert.assertEquals;
 
@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.purple.gender.Gender;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class FittedRegionFactoryTest {
+public class FittedRegionFactoryV1Test {
 
     private static final double EPSILON = 1e-10;
 
@@ -30,7 +30,7 @@ public class FittedRegionFactoryTest {
     }
 
     private void testTumorCopyNumber(double expectedCopyNumber, @NotNull ObservedRegion region) {
-        final FittedRegionFactory factory = new FittedRegionFactory(Gender.FEMALE, 10, 0.2, 90, 1);
+        final FittedRegionFactoryV1 factory = new FittedRegionFactoryV1(Gender.FEMALE, 10, 0.2, 90, 1);
         final FittedRegion fittedRegion = factory.fitRegion(0.5, 1, region);
         assertEquals(expectedCopyNumber, fittedRegion.tumorCopyNumber(), EPSILON);
     }
@@ -47,7 +47,7 @@ public class FittedRegionFactoryTest {
 
     @Test
     public void expectedFit() {
-        final FittedRegionFactory victim = new FittedRegionFactory(Gender.MALE, 12, 0.2, 90, 1);
+        final FittedRegionFactoryV1 victim = new FittedRegionFactoryV1(Gender.MALE, 12, 0.2, 90, 1);
         final FittedRegion result = victim.fitRegion(0.8, 0.7, create(180d / 280d + 0.01, 0.98 - 0.01));
         assertEquals(3, result.modelPloidy());
         assertEquals(0.01, result.bafDeviation(), EPSILON);

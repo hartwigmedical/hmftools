@@ -70,7 +70,8 @@ public class FittedPurityFactory {
             final Chromosome chromosome = HumanChromosome.valueOf(region);
 
             if (region.bafCount() > 0 && positiveOrZero(region.observedTumorRatio()) && chromosome.isAutosome()
-                    && region.status() == GermlineStatus.DIPLOID && Doubles.lessOrEqual(region.observedTumorRatio(), MAX_TUMOR_RATIO_TO_FIT)) {
+                    && region.status() == GermlineStatus.DIPLOID && Doubles.lessOrEqual(region.observedTumorRatio(),
+                    MAX_TUMOR_RATIO_TO_FIT)) {
                 totalBAFCount += region.bafCount();
                 filteredRegions.add(region);
             }

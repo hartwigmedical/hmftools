@@ -7,6 +7,8 @@ import java.util.Optional;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class RepeatContextFactory {
@@ -14,27 +16,36 @@ public final class RepeatContextFactory {
     private static final int MIN_COUNT = 2;
     private static final int MAX_LENGTH = 10;
 
+    private static final Logger LOGGER = LogManager.getLogger(RepeatContextFactory.class);
+
+    private RepeatContextFactory() {
+    }
+
     @NotNull
     public static Optional<RepeatContext> repeats(int index, @NotNull final String sequence) {
         final Map<String, Integer> result = Maps.newHashMap();
 
-        for (int start = Math.max(0, index - MAX_LENGTH); start <= index; start++) {
-            final String prior = sequence.substring(0, start);
-            final String post = sequence.substring(start);
+        if (sequence.length() >= index) {
+            for (int start = Math.max(0, index - MAX_LENGTH); start <= index; start++) {
+                final String prior = sequence.substring(0, start);
+                final String post = sequence.substring(start);
 
-            for (int end = index; end <= Math.min(sequence.length(), start + MAX_LENGTH); end++) {
-                if (end != index) {
-                    int count = 0;
-                    final String bases = sequence.substring(Math.min(start, end), Math.max(start, end));
+                for (int end = index; end <= Math.min(sequence.length(), start + MAX_LENGTH); end++) {
+                    if (end != index) {
+                        int count = 0;
+                        final String bases = sequence.substring(Math.min(start, end), Math.max(start, end));
 
-                    count += backwardRepeats(bases, prior);
-                    count += forwardRepeats(bases, post);
+                        count += backwardRepeats(bases, prior);
+                        count += forwardRepeats(bases, post);
 
-                    if (count >= MIN_COUNT) {
-                        result.merge(bases, count, Math::max);
+                        if (count >= MIN_COUNT) {
+                            result.merge(bases, count, Math::max);
+                        }
                     }
                 }
             }
+        } else {
+            LOGGER.warn("Repeats requested outside of sequence length");
         }
         return result.entrySet().stream().max(Comparator.comparingInt(Map.Entry::getValue)).map(RepeatContextFactory::create);
     }

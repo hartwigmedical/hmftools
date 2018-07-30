@@ -11,13 +11,13 @@ import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.region.bed.BEDFileLoader;
 import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
-import com.hartwig.hmftools.patientreporter.variants.ImmutableMicrosatelliteAnalyzer;
 
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 final class HmfReporterDataLoader {
+
     private HmfReporterDataLoader() {
     }
 
@@ -36,7 +36,7 @@ final class HmfReporterDataLoader {
                 cosmicGeneModel,
                 knownFusionsModel,
                 drupFilter,
-                ImmutableMicrosatelliteAnalyzer.of(new IndexedFastaSequenceFile(new File(fastaFileLocation))),
+                new IndexedFastaSequenceFile(new File(fastaFileLocation)),
                 BEDFileLoader.fromBedFile(highConfidenceBed));
     }
 }

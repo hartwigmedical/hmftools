@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import com.hartwig.hmftools.common.purple.repeat.ImmutableRepeatContext;
 import com.hartwig.hmftools.common.purple.repeat.RepeatContext;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class MicrosatelliteAnalyzerTest {
@@ -34,9 +35,8 @@ public class MicrosatelliteAnalyzerTest {
         assertRepeatContextRelevance(false, 4, "ATGAA");
     }
 
-    private void assertRepeatContextRelevance(boolean expectedResult, int count, String sequence) {
+    private static void assertRepeatContextRelevance(boolean expectedResult, int count, @NotNull String sequence) {
         final RepeatContext context = ImmutableRepeatContext.builder().count(count).sequence(sequence).build();
         assertEquals(expectedResult, MicrosatelliteAnalyzer.repeatContextIsRelevant(context));
     }
-
 }

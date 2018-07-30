@@ -9,8 +9,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
@@ -47,7 +47,7 @@ public class VariantAnalyzerTest {
         final SnpEffAnnotation wrongConsequence = createVariantAnnotationBuilder(VariantConsequence.OTHER).featureType(RIGHT_FEATURE_TYPE).
                 featureID(RIGHT_TRANSCRIPT).build();
 
-        final List<SomaticVariant> variants =
+        final List<EnrichedSomaticVariant> variants =
                 Lists.newArrayList(builder().snpEffAnnotations(Lists.newArrayList(rightAnnotation, wrongTranscript)).build(),
                         builder().snpEffAnnotations(Lists.newArrayList(wrongTranscript)).build(),
                         builder().snpEffAnnotations(Lists.newArrayList(wrongConsequence)).build(),
@@ -62,7 +62,7 @@ public class VariantAnalyzerTest {
     }
 
     @NotNull
-    private static ImmutableSomaticVariantImpl.Builder builder() {
-        return SomaticVariantTestBuilderFactory.create().filter(PASS_FILTER);
+    private static ImmutableEnrichedSomaticVariant.Builder builder() {
+        return SomaticVariantTestBuilderFactory.createEnriched().filter(PASS_FILTER);
     }
 }

@@ -20,6 +20,5 @@ class TumorLocationAnnotationTest : StringSpec() {
                     .forEach { logger.error("Missing DOID annotation for $it") }
             curator.primaryTumorLocations().all { ActionabilityAnalyzer.primaryTumorMapping().keys.contains(it.toLowerCase()) } shouldBe true
         }
-
     }
 }

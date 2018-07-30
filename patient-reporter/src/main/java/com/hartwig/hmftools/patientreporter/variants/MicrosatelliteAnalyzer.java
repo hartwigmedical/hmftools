@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.purple.repeat.RepeatContext;
+import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
@@ -25,7 +26,7 @@ public abstract class MicrosatelliteAnalyzer {
     @NotNull
     public abstract IndexedFastaSequenceFile reference();
 
-    public double analyzeVariants(@NotNull final List<SomaticVariant> variants) {
+    public double analyzeVariants(@NotNull final List<EnrichedSomaticVariant> variants) {
         double indelCount = 0;
         for (final SomaticVariant variant : variants) {
             if (isPassIndel(variant)) {
