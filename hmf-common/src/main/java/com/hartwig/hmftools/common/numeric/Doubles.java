@@ -40,7 +40,7 @@ public final class Doubles {
         return greaterOrEqual(value, 0);
     }
 
-    public static double distanceFromInteger(double value) {
+    public static double absDistanceFromInteger(double value) {
         return Math.abs((value - Math.round(value)));
     }
 }

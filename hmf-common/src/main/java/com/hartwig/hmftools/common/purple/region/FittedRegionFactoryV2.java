@@ -26,10 +26,10 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
     private final PloidyDeviation ploidyDeviation;
 
     public FittedRegionFactoryV2(final Gender gender, final int averageReadDepth, double ploidyPenaltyFactor,
-            double ploidyPenaltyStandardDeviation, double ploidyPenaltyMinStandardDeviationPerPloidy) {
+            double ploidyPenaltyStandardDeviation, double ploidyPenaltyMinStandardDeviationPerPloidy, final double majorAlleleSubOnePenaltyMultiplier, final double majorAlleleSubOneAdditionalPenalty, final double baselineDeviation) {
         this.gender = gender;
         this.ploidyPenaltyFactor = ploidyPenaltyFactor;
-        ploidyDeviation = new PloidyDeviation(ploidyPenaltyStandardDeviation, ploidyPenaltyMinStandardDeviationPerPloidy);
+        ploidyDeviation = new PloidyDeviation(ploidyPenaltyStandardDeviation, ploidyPenaltyMinStandardDeviationPerPloidy, majorAlleleSubOnePenaltyMultiplier, majorAlleleSubOneAdditionalPenalty, baselineDeviation);
         ambiguousBaf = ExpectedBAF.expectedBAF(averageReadDepth, 0.8);
         LOGGER.info("Using ambiguous baf of {}", ambiguousBaf);
     }
@@ -58,7 +58,7 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
         double majorAllelePloidy = impliedBAF * impliedCopyNumber;
         double minorAllelePloidy = impliedCopyNumber - majorAllelePloidy;
 
-        double majorAllelePloidyDeviation = ploidyDeviation.majorAlleleDeivation(purity, normFactor, majorAllelePloidy);
+        double majorAllelePloidyDeviation = ploidyDeviation.majorAlleleDeviation(purity, normFactor, majorAllelePloidy);
         double minorAllelePloidyDeviation = ploidyDeviation.minorAlleleDeviation(purity, normFactor, minorAllelePloidy);
 
         final double ploidyPenalty = PloidyPenalty.penaltyv2(ploidyPenaltyFactor, majorAllelePloidy, minorAllelePloidy);
@@ -140,12 +140,12 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
 
         // Minimise
         final double minBAFTotalDeviation =
-                ploidyDeviation.majorAlleleDeivation(purity, normFactor, minBAFMajorAllelePloidy) + ploidyDeviation.minorAlleleDeviation(
+                ploidyDeviation.majorAlleleDeviation(purity, normFactor, minBAFMajorAllelePloidy) + ploidyDeviation.minorAlleleDeviation(
                         purity,
                         normFactor,
                         minBAFMinorAllelePloidy);
         final double maxBAFTotalDeviation =
-                ploidyDeviation.majorAlleleDeivation(purity, normFactor, maxBAFMajorAllelePloidy) + ploidyDeviation.minorAlleleDeviation(
+                ploidyDeviation.majorAlleleDeviation(purity, normFactor, maxBAFMajorAllelePloidy) + ploidyDeviation.minorAlleleDeviation(
                         purity,
                         normFactor,
                         maxBAFMinorAllelePloidy);
