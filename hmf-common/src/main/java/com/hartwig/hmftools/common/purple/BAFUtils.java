@@ -105,7 +105,7 @@ public class BAFUtils {
 
     @VisibleForTesting
     static boolean isClonal(final double copyNumber) {
-        return Doubles.lessOrEqual(Doubles.distanceFromInteger(copyNumber), CLONAL_DISTANCE);
+        return Doubles.lessOrEqual(Doubles.absDistanceFromInteger(copyNumber), CLONAL_DISTANCE);
     }
 
 }
