@@ -86,6 +86,20 @@ public class DataUtils {
         }
     }
 
+    public static double[] listToArray(final List<Double> data)
+    {
+        if(data.isEmpty())
+            return null;
+
+        double[] array = new double[data.size()];
+        for(int i = 0; i < data.size(); ++i)
+        {
+            array[i] = data.get(i);
+        }
+
+        return array;
+    }
+
     public static boolean doublesEqual(double val1, double val2)
     {
         return abs(val1-val2) < DBL_EPSILON;

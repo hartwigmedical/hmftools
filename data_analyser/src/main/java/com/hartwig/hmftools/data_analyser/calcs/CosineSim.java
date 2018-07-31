@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.data_analyser.calcs;
 
+import static java.lang.Double.doubleToLongBits;
 import static java.lang.Double.max;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
+
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -66,6 +69,40 @@ public class CosineSim {
             return 0;
 
         return min(abTotal / (sqrt(aaTotal) * sqrt(bbTotal)), 1.0);
+    }
+
+    public static int getLeastSimilarEntry(final double[] set1, final double[] set2)
+    {
+        if(set1.length != set2.length)
+            return -1;
+
+        double refCss = calcCSS(set1, set2, true);
+
+        double[] copy = new double[set1.length];
+        copyVector(set1, copy);
+        int bestIndex = -1;
+        double bestCss = refCss;
+
+        for(int i = 0; i < set1.length; ++i)
+        {
+            if(set1[i] == 0 || set2[i] == 0)
+                continue;
+
+            copy[i] = 0;
+
+            double css = calcCSS(copy, set2, true);
+
+            if(css > bestCss)
+            {
+                bestCss = css;
+                bestIndex = i;
+            }
+
+            // restore
+            copy[i] = set1[i];
+        }
+
+        return bestIndex;
     }
 
     public static List<double[]> getTopCssPairs(final NmfMatrix matrix1, final NmfMatrix matrix2, double cssMatchCutoff, boolean applyExclusivity, boolean skipRepeats)

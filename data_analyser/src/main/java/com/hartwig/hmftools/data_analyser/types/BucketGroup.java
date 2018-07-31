@@ -89,6 +89,16 @@ public class BucketGroup implements Comparable<BucketGroup> {
         mSampleIds.add(sampleId);
     }
 
+    public void addBucket(int bucketId, double[] bucketCounts)
+    {
+        if(mBucketIds.contains(bucketId))
+            return;
+
+        mBucketIds.add(bucketId);
+
+        mCombinedBucketCounts[bucketId] = sumVector(bucketCounts);
+    }
+
     public void merge(List<Integer> sampleIds, double[] bucketCounts)
     {
         for(Integer sample : sampleIds)
