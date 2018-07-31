@@ -18,6 +18,7 @@ public class BachelorGermlineVariant {
     private String mRef;
     private String mAlts;
     private String mEffects;
+    private String mAnnotations;
 
     private int mRefCount;
     private int mAltCount;
@@ -28,7 +29,7 @@ public class BachelorGermlineVariant {
 
     public BachelorGermlineVariant(String patient, String source, String program, String varId,
             String gene, String transcriptId, String chromosome, long position,
-            String ref, String alts, String effects)
+            String ref, String alts, String effects, String annotations)
     {
         mPatient = patient;
         mSource = source;
@@ -40,6 +41,7 @@ public class BachelorGermlineVariant {
         mPosition = position;
         mRef = ref;
         mAlts = alts;
+        mAnnotations = annotations;
 
         mRef = mRef.replaceAll("\\*", "");
         mAlts = mAlts.replaceAll("\\*", "");
@@ -64,10 +66,17 @@ public class BachelorGermlineVariant {
     public String ref() { return mRef; };
     public String alts() { return mAlts; };
     public String effects() { return mEffects; };
+    public String annotations() { return mAnnotations; };
     public int getRefCount() { return mRefCount; }
     public int getAltCount() { return mAltCount; }
     public void setRefCount(int count) { mRefCount = count; }
     public void setAltCount(int count) { mAltCount = count; }
+
+    public boolean isValid()
+    {
+        return mRefCount > 0 && mAltCount > 0
+            && mSomaticVariant != null && mEnrichedVariant != null&& mVariantContext != null;
+    }
 
     public final SomaticVariant getSomaticVariant() { return mSomaticVariant; }
     public final VariantContext getVariantContext() { return mVariantContext; }

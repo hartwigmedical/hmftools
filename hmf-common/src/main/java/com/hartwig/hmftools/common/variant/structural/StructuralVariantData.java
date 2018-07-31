@@ -8,7 +8,7 @@ public abstract class StructuralVariantData {
 
     @Nullable
     public abstract String id();
-    @Nullable
+    public abstract String vcfId();
     public abstract String event();
 
     public abstract String startChromosome();
@@ -35,12 +35,12 @@ public abstract class StructuralVariantData {
     public abstract boolean imprecise();
     public abstract Integer somaticScore();
     public abstract Double qualityScore();
-    public abstract Long startIntervalOffsetStart();
-    public abstract Long startIntervalOffsetEnd();
-    public abstract Long endIntervalOffsetStart();
-    public abstract Long endIntervalOffsetEnd();
-    public abstract Long inexactHomologyOffsetStart();
-    public abstract Long inexactHomologyOffsetEnd();
+    public abstract Integer startIntervalOffsetStart();
+    public abstract Integer startIntervalOffsetEnd();
+    public abstract Integer endIntervalOffsetStart();
+    public abstract Integer endIntervalOffsetEnd();
+    public abstract Integer inexactHomologyOffsetStart();
+    public abstract Integer inexactHomologyOffsetEnd();
     public abstract Integer startTumourVariantFragmentCount();
     public abstract Integer startTumourReferenceFragmentCount();
     public abstract Integer startNormalVariantFragmentCount();
@@ -49,4 +49,5 @@ public abstract class StructuralVariantData {
     public abstract Integer endTumourReferenceFragmentCount();
     public abstract Integer endNormalVariantFragmentCount();
     public abstract Integer endNormalReferenceFragmentCount();
+    public abstract String linkedBy();
 }

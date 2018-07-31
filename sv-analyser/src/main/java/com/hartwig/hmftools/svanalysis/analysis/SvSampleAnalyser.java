@@ -47,12 +47,11 @@ public class SvSampleAnalyser {
     GeneAnnotator mGeneAnnotator;
 
     PerformanceCounter mPerfCounter;
-    PerformanceCounter mPC1;
-    PerformanceCounter mPC2;
-    PerformanceCounter mPC3;
-    PerformanceCounter mPC4;
-    PerformanceCounter mPC5;
-    PerformanceCounter mPC6;
+    PerformanceCounter mPc1;
+    PerformanceCounter mPc2;
+    PerformanceCounter mPc3;
+    PerformanceCounter mPc4;
+    PerformanceCounter mPc5;
 
     private static final Logger LOGGER = LogManager.getLogger(SvSampleAnalyser.class);
 
@@ -81,12 +80,12 @@ public class SvSampleAnalyser {
         mGeneAnnotator.loadGeneDriverFile(mConfig.getGeneDataFile());
 
         mPerfCounter = new PerformanceCounter("Total");
-        mPC1 = new PerformanceCounter("Annotate&Filter");
-        mPC3 = new PerformanceCounter("BaseDist");
-        mPC4 = new PerformanceCounter("Analyse");
-        mPC5 = new PerformanceCounter("Nearest");
-        mPC2 = new PerformanceCounter("GeneData");
-        mPC6 = new PerformanceCounter("CSV");
+
+        mPc1 = new PerformanceCounter("Annotate&Filter");
+        mPc2 = new PerformanceCounter("BaseDist");
+        mPc3 = new PerformanceCounter("Analyse");
+        mPc4 = new PerformanceCounter("ArmStats");
+        mPc5 = new PerformanceCounter("WriteCSV");
 
         clearState();
     }
@@ -132,22 +131,17 @@ public class SvSampleAnalyser {
         if(mAllVariants.isEmpty())
             return;
 
-        mPerfCounter.start();
-
-        mPC1.start();
-
+        mPc1.start();
         annotateAndFilterVariants();
-
-        mPC1.stop();
-
-        mPC3.start();
+        mPc1.stop();
 
         LOGGER.debug("sample({}) clustering {} variants", mSampleId, mAllVariants.size());
 
+        mPc2.start();
         clusterByBaseDistance();
+        mPc2.stop();
 
-        mPC3.stop();
-        mPC4.start();
+        mPc3.start();
 
         for(SvCluster cluster : mClusters)
         {
@@ -162,35 +156,34 @@ public class SvSampleAnalyser {
             // mClusteringMethods.findFootprints(mSampleId, cluster);
         }
 
-        mPC4.stop();
-        mPC5.start();
+        mPc3.stop();
 
         // mClusteringMethods.setClosestSVData(mAllVariants, mClusters);
         // mClusteringMethods.setClosestLinkedSVData(mAllVariants);
 
+        mPc4.start();
         mClusteringMethods.setChromosomalArmStats(mAllVariants);
-
-        mPC5.stop();
-
-        mPC2.start();
+        mPc4.stop();
 
         if(mGeneAnnotator.hasData()) {
+
+            // mPerfCounter.start("GeneData");
+
             for (SvClusterData var : mAllVariants) {
                 mGeneAnnotator.addGeneData(mSampleId, var);
             }
 
             mGeneAnnotator.reportGeneMatchData(mSampleId);
+
+            // mPerfCounter.stop();
         }
 
-        mPC2.stop();
-
-        mPC6.start();
+        mPc5.start();
 
         if(mConfig.getOutputCsvPath() != "")
             writeClusterDataOutput();
 
-        mPC6.stop();
-        mPerfCounter.stop();
+        mPc5.stop();
     }
 
     private void annotateAndFilterVariants()
@@ -290,28 +283,35 @@ public class SvSampleAnalyser {
                 mFileWriter = writer;
 
                 if(!fileExists) {
+
+                    // definitional fields
+                    writer.write("SampleId,ClusterId,ClusterCount,Id,Type,Ploidy,PONCount,PONRegionCount");
+
+                    // position and copy number
+                    writer.write(",ChrStart,PosStart,OrientStart,ArmStart,AdjAFStart,AdjCNStart,AdjCNChgStart");
+
+                    writer.write(",ChrEnd,PosEnd,OrientEnd,ArmEnd,AdjAFEnd,AdjCNEnd,AdjCNChgEnd");
+
                     // SV info
-                    writer.write("SampleId,ClusterId,ClusterCount,Id,Type,Ploidy,PONCount,PONRegionCount,");
-                    writer.write("ChrStart,PosStart,OrientStart,ArmStart,AdjAFStart,AdjCNStart,AdjCNChgStart,");
-                    writer.write("ChrEnd,PosEnd,OrientEnd,ArmEnd,AdjAFEnd,AdjCNEnd,AdjCNChgEnd,");
-                    writer.write("Homology,InsertSeq,Imprecise,SomaticScore,");
-                    writer.write("FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,");
-                    writer.write("ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd,");
+                    writer.write(",Homology,InsertSeq,Imprecise,SomaticScore");
+
+                    // location attributes
+                    writer.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd");
 
                     // cluster-level info
-                    writer.write("ClusterDesc,Consistency,ArmCount,DupBECount,DupBESiteCount,");
+                    writer.write(",ClusterDesc,Consistency,ArmCount,DupBECount,DupBESiteCount");
 
                     // linked pair info
-                    writer.write("LnkSvStart,LnkTypeStart,LnkLenStart,LnkSvEnd,LnkTypeEnd,LnkLenEnd,");
+                    writer.write(",LnkSvStart,LnkTypeStart,LnkLenStart,LnkSvEnd,LnkTypeEnd,LnkLenEnd");
 
                     // chain info
-                    writer.write("ChainId,ChainCount,ChainTICount,ChainDBCount,ChainIndex,");
+                    writer.write(",ChainId,ChainCount,ChainTICount,ChainDBCount,ChainIndex");
 
                     // transitive info
-                    writer.write("TransType,TransLen,TransSvLinks,");
+                    writer.write(",TransType,TransLen,TransSvLinks");
 
                     // gene info
-                    writer.write("GeneStart,GeneDriverStart,GeneTypeStart,GeneEnd,GeneDriverEnd,GeneTypeEnd");
+                    // writer.write(",GeneStart,GeneDriverStart,GeneTypeStart,GeneEnd,GeneDriverEnd,GeneTypeEnd");
 
                     writer.newLine();
                 }
@@ -324,25 +324,25 @@ public class SvSampleAnalyser {
 
                 for (final SvClusterData var : cluster.getSVs()) {
                     writer.write(
-                            String.format("%s,%d,%d,%s,%s,%.2f,%d,%d,",
+                            String.format("%s,%d,%d,%s,%s,%.2f,%d,%d",
                                     mSampleId, cluster.getId(), cluster.getCount(), var.id(), var.type(),
                                     var.getSvData().ploidy(), var.getPonCount(), var.getPonRegionCount()));
 
                     writer.write(
-                            String.format("%s,%d,%d,%s,%.2f,%.2f,%.2f,%s,%d,%d,%s,%.2f,%.2f,%.2f,",
+                            String.format(",%s,%d,%d,%s,%.2f,%.2f,%.2f,%s,%d,%d,%s,%.2f,%.2f,%.2f",
                                     var.chromosome(true), var.position(true), var.orientation(true), var.getStartArm(),
                                     var.getSvData().adjustedStartAF(), var.getSvData().adjustedStartCopyNumber(), var.getSvData().adjustedStartCopyNumberChange(),
                                     var.chromosome(false), var.position(false), var.orientation(false), var.getEndArm(),
                                     var.getSvData().adjustedEndAF(), var.getSvData().adjustedEndCopyNumber(), var.getSvData().adjustedEndCopyNumberChange()));
 
                     writer.write(
-                            String.format("%s,%s,%s,%d,",
+                            String.format(",%s,%s,%s,%d",
                                     var.getSvData().insertSequence().isEmpty() && var.type() != StructuralVariantType.INS ? var.getSvData().homology() : "",
                                     var.type() == StructuralVariantType.INS ? var.getSvData().insertSequence() : "",
                                     var.getSvData().imprecise(), var.getSvData().somaticScore()));
 
                     writer.write(
-                            String.format("%s,%s,%s,%s,%s,%s,%s,",
+                            String.format(",%s,%s,%s,%s,%s,%s,%s",
                                     // var.getNearestSVLength(), var.getNearestSVLinkType(), var.getNearestTILength(), var.getNearestDBLength(),
                                     var.isStartFragileSite(), var.isEndFragileSite(),
                                     var.isStartLineElement(), var.isEndLineElement(),
@@ -350,57 +350,57 @@ public class SvSampleAnalyser {
                                     mClusteringMethods.getChrArmData(var)));
 
                     writer.write(
-                            String.format("%s,%d,%d,%d,%d,",
+                            String.format(",%s,%d,%d,%d,%d",
                                     cluster.getDesc(), cluster.getConsistencyCount(), cluster.getChromosomalArmCount(),
                                     duplicateBECount, duplicateBESiteCount));
 
                     // linked pair info
                     final SvLinkedPair startLP = cluster.findLinkedPair(var, true);
                     if(startLP != null)
-                        writer.write(String.format("%s,%s,%d,",
+                        writer.write(String.format(",%s,%s,%d",
                                 startLP.first().equals(var) ? startLP.second().id() : startLP.first().id(),
                                 startLP.linkType(), startLP.length()));
                     else
-                        writer.write("0,,-1,");
+                        writer.write(",0,,-1");
 
                     final SvLinkedPair endLP = cluster.findLinkedPair(var, false);
                     if(endLP != null)
-                        writer.write(String.format("%s,%s,%d,",
+                        writer.write(String.format(",%s,%s,%d",
                                 endLP.first().equals(var) ? endLP.second().id() : endLP.first().id(),
                                 endLP.linkType(), endLP.length()));
                     else
-                        writer.write("0,,-1,");
+                        writer.write(",0,,-1");
 
                     // chain info
                     final SvChain chain = cluster.findChain(var);
 
                     if(chain != null)
-                        writer.write(String.format("%d,%d,%d,%d,%d",
+                        writer.write(String.format(",%d,%d,%d,%d,%d",
                                 chain.getId(), chain.getLinkCount(), chain.getTICount(), chain.getDBCount(), chain.getSvIndex(var)));
                     else
-                        writer.write("0,0,0,0,0");
+                        writer.write(",0,0,0,0,0");
 
-                    writer.write(String.format("%s,%d,%s,", var.getTransType(), var.getTransLength(), var.getTransSvLinks()));
+                    writer.write(String.format(",%s,%d,%s", var.getTransType(), var.getTransLength(), var.getTransSvLinks()));
 
-                    final SvGeneData geneStart = var.getStartGeneData();
-                    if(geneStart != null)
-                    {
-                        writer.write(String.format(",%s,%s,%s", geneStart.gene(), geneStart.driver(), geneStart.driverType()));
-                    }
-                    else
-                    {
-                        writer.write(String.format(",,,"));
-                    }
+//                    final SvGeneData geneStart = var.getStartGeneData();
+//                    if(geneStart != null)
+//                    {
+//                        writer.write(String.format(",%s,%s,%s", geneStart.gene(), geneStart.driver(), geneStart.driverType()));
+//                    }
+//                    else
+//                    {
+//                        writer.write(String.format(",,,"));
+//                    }
 
-                    final SvGeneData geneEnd = var.getEndGeneData();
-                    if(geneEnd != null)
-                    {
-                        writer.write(String.format(",%s,%s,%s", geneEnd.gene(), geneEnd.driver(), geneEnd.driverType()));
-                    }
-                    else
-                    {
-                        writer.write(String.format(",,,"));
-                    }
+//                    final SvGeneData geneEnd = var.getEndGeneData();
+//                    if(geneEnd != null)
+//                    {
+//                        writer.write(String.format(",%s,%s,%s", geneEnd.gene(), geneEnd.driver(), geneEnd.driverType()));
+//                    }
+//                    else
+//                    {
+//                        writer.write(String.format(",,,"));
+//                    }
 
                     writer.newLine();
                 }
@@ -425,13 +425,12 @@ public class SvSampleAnalyser {
         }
 
         // log perf stats
-        mPerfCounter.logStats();
-        mPC1.logStats();
-        mPC3.logStats();
-        mPC4.logStats();
-        mPC5.logStats();
-        mPC2.logStats();
-        mPC6.logStats();
+        mPerfCounter.logStats(false);
+        mPc1.logStats(false);
+        mPc2.logStats(false);
+        mPc3.logStats(false);
+        mPc4.logStats(false);
+        mPc5.logStats(false);
     }
 
     public List<SvCluster> getClusters() { return mClusters; }

@@ -60,7 +60,7 @@ public class VariantDataSource {
                     variantReport.hgvsCoding(),
                     variantReport.hgvsProtein(),
                     variantReport.consequence(),
-                    PatientReportFormat.correctCopyValueForFitStatus(fitStatus, variantReport.ploidyTafField()));
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, variantReport.ploidyTafField()));
         }
 
         return variantDataSource;

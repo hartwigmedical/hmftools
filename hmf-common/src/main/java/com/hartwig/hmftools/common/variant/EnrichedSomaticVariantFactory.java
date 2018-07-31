@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVarian
 import java.util.List;
 import java.util.Optional;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.gene.CanonicalTranscript;
@@ -14,10 +15,12 @@ import com.hartwig.hmftools.common.purple.repeat.RepeatContextFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
-import com.hartwig.hmftools.common.variant.snpeff.CanonicalAnnotationSelector;
-import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
+import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.apache.commons.math3.util.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,6 +29,8 @@ import htsjdk.samtools.reference.ReferenceSequence;
 
 public class EnrichedSomaticVariantFactory {
 
+    private static final Logger LOGGER = LogManager.getLogger(EnrichedSomaticVariantFactory.class);
+
     @NotNull
     private final GenomeRegionSelector<GenomeRegion> highConfidenceSelector;
     @NotNull
@@ -33,7 +38,7 @@ public class EnrichedSomaticVariantFactory {
     @NotNull
     private final ClonalityFactory clonalityFactory;
     @NotNull
-    private final CanonicalAnnotationSelector canonicalAnnotationSelector;
+    private final TranscriptAnnotationSelector transcriptAnnotationSelector;
 
     public EnrichedSomaticVariantFactory(@NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
             @NotNull final IndexedFastaSequenceFile reference, @NotNull final ClonalityFactory clonalityFactory,
@@ -41,7 +46,7 @@ public class EnrichedSomaticVariantFactory {
         this.highConfidenceSelector = GenomeRegionSelectorFactory.create(highConfidenceRegions);
         this.reference = reference;
         this.clonalityFactory = clonalityFactory;
-        this.canonicalAnnotationSelector = new CanonicalAnnotationSelector(canonicalTranscripts);
+        this.transcriptAnnotationSelector = new TranscriptAnnotationSelector(canonicalTranscripts);
     }
 
     @NotNull
@@ -60,9 +65,10 @@ public class EnrichedSomaticVariantFactory {
         final Builder builder = createBuilder(variant);
 
         highConfidenceSelector.select(variant).ifPresent(x -> inHighConfidenceRegion(builder));
-        addTrinucleotideContext(builder, variant);
-        addGenomeContext(builder, variant);
-        addCanonicalEffect(builder, variant);
+        addTrinucleotideContext(builder, variant, reference);
+        addGenomeContext(builder, variant, reference);
+        addCanonicalEffect(builder, variant, transcriptAnnotationSelector);
+        addCanonicalCosmicID(builder, variant, transcriptAnnotationSelector);
         builder.clonality(clonalityFactory.fromSample(variant));
 
         return builder.build();
@@ -71,19 +77,19 @@ public class EnrichedSomaticVariantFactory {
     @NotNull
     private static Builder createBuilder(@NotNull final SomaticVariant variant) {
         return builder().from(variant)
-                .trinucleotideContext("")
-                .microhomology("")
+                .trinucleotideContext(Strings.EMPTY)
+                .microhomology(Strings.EMPTY)
                 .repeatCount(0)
-                .repeatSequence("")
+                .repeatSequence(Strings.EMPTY)
                 .highConfidenceRegion(false)
                 .clonality(Clonality.UNKNOWN);
     }
 
-    private void addCanonicalEffect(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
-        final Optional<VariantAnnotation> canonicalAnnotation =
-                canonicalAnnotationSelector.canonical(variant.gene(), variant.annotations());
-        if (canonicalAnnotation.isPresent()) {
-            final VariantAnnotation annotation = canonicalAnnotation.get();
+    private static void addCanonicalEffect(@NotNull final Builder builder, @NotNull final SomaticVariant variant,
+            @NotNull TranscriptAnnotationSelector selector) {
+        final Optional<SnpEffAnnotation> canonicalSnpEffAnnotation = selector.canonical(variant.gene(), variant.snpEffAnnotations());
+        if (canonicalSnpEffAnnotation.isPresent()) {
+            final SnpEffAnnotation annotation = canonicalSnpEffAnnotation.get();
             builder.canonicalEffect(annotation.consequenceString());
             builder.canonicalCodingEffect(CodingEffect.effect(annotation.consequences()));
         } else {
@@ -92,7 +98,21 @@ public class EnrichedSomaticVariantFactory {
         }
     }
 
-    private void addGenomeContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
+    @VisibleForTesting
+    static void addCanonicalCosmicID(@NotNull final Builder builder, @NotNull final SomaticVariant variant,
+            @NotNull TranscriptAnnotationSelector selector) {
+        final Optional<CosmicAnnotation> canonicalCosmicAnnotation = selector.canonical(variant.gene(), variant.cosmicAnnotations());
+        if (canonicalCosmicAnnotation.isPresent()) {
+            final CosmicAnnotation annotation = canonicalCosmicAnnotation.get();
+            builder.canonicalCosmicID(annotation.id());
+        } // KODU: Fallback to standard COSMIC ID if there are no COSMIC annotations. Can be removed once all runs are on pipeline v4.
+        else if (variant.isCOSMIC()) {
+            builder.canonicalCosmicID(variant.cosmicIDs().get(0));
+        }
+    }
+
+    private static void addGenomeContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant,
+            @NotNull IndexedFastaSequenceFile reference) {
         final Pair<Integer, String> relativePositionAndRef = relativePositionAndRef(variant, reference);
         final Integer relativePosition = relativePositionAndRef.getFirst();
         final String sequence = relativePositionAndRef.getSecond();
@@ -102,14 +122,21 @@ public class EnrichedSomaticVariantFactory {
         getRepeatContext(variant, relativePosition, sequence).ifPresent(x -> builder.repeatSequence(x.sequence()).repeatCount(x.count()));
     }
 
+    @NotNull
     public static Pair<Integer, String> relativePositionAndRef(@NotNull final SomaticVariant variant,
             @NotNull final IndexedFastaSequenceFile reference) {
+        final int chromosomeLength = reference.getSequenceDictionary().getSequence(variant.chromosome()).getSequenceLength();
         long positionBeforeEvent = variant.position();
         long start = Math.max(positionBeforeEvent - 100, 1);
-        long maxEnd = reference.getSequenceDictionary().getSequence(variant.chromosome()).getSequenceLength() - 1;
-        long end = Math.min(positionBeforeEvent + 100, maxEnd);
+        long end = Math.min(positionBeforeEvent + 100, chromosomeLength - 1);
         int relativePosition = (int) (positionBeforeEvent - start);
-        final String sequence = reference.getSubsequenceAt(variant.chromosome(), start, end).getBaseString();
+        final String sequence;
+        if (start < chromosomeLength && end < chromosomeLength) {
+            sequence = reference.getSubsequenceAt(variant.chromosome(), start, end).getBaseString();
+        } else {
+            sequence = Strings.EMPTY;
+            LOGGER.warn("Requested base sequence outside of chromosome region!");
+        }
         return new Pair<>(relativePosition, sequence);
     }
 
@@ -150,10 +177,16 @@ public class EnrichedSomaticVariantFactory {
         return optionalPrior;
     }
 
-    private void addTrinucleotideContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
-        final ReferenceSequence sequence =
-                reference.getSubsequenceAt(variant.chromosome(), Math.max(1, variant.position() - 1), variant.position() + 1);
-        builder.trinucleotideContext(sequence.getBaseString());
+    private static void addTrinucleotideContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant,
+            @NotNull IndexedFastaSequenceFile reference) {
+        final int chromosomeLength = reference.getSequenceDictionary().getSequence(variant.chromosome()).getSequenceLength();
+        if (variant.position() < chromosomeLength) {
+            final ReferenceSequence sequence =
+                    reference.getSubsequenceAt(variant.chromosome(), Math.max(1, variant.position() - 1), variant.position() + 1);
+            builder.trinucleotideContext(sequence.getBaseString());
+        } else {
+            LOGGER.warn("Requested ref sequence beyond contig length! variant = " + variant);
+        }
     }
 
     @NotNull

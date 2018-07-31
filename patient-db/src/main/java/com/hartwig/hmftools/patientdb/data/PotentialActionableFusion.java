@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientdb.data;
 
 import static com.hartwig.hmftools.patientdb.dao.PotentiallyActionableItemsDAO.FIVE_BREAKEND;
 import static com.hartwig.hmftools.patientdb.dao.PotentiallyActionableItemsDAO.THREE_BREAKEND;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.BASELINE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 
 import org.immutables.value.Value;
@@ -17,9 +16,6 @@ public abstract class PotentialActionableFusion {
     @NotNull
     public abstract String sampleId();
 
-    @Nullable
-    public abstract String primaryTumorLocation();
-
     @NotNull
     public abstract String fiveGene();
 
@@ -29,7 +25,6 @@ public abstract class PotentialActionableFusion {
     @NotNull
     public static PotentialActionableFusion of(@NotNull final Record mysqlRecord) {
         return ImmutablePotentialActionableFusion.of(mysqlRecord.get(STRUCTURALVARIANT.SAMPLEID),
-                mysqlRecord.get(BASELINE.PRIMARYTUMORLOCATION),
                 mysqlRecord.get(FIVE_BREAKEND.GENE),
                 mysqlRecord.get(THREE_BREAKEND.GENE));
     }

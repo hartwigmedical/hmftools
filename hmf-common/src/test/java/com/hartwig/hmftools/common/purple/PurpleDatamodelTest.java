@@ -169,6 +169,17 @@ public class PurpleDatamodelTest {
                 .imprecise(true)
                 .somaticScore(0);
     }
+    @NotNull
+    public static ImmutableStructuralVariantImpl.Builder createStructuralVariantSingleBreakend(@NotNull final String startChromosome,
+           final long startPosition, double startVaf) {
+        return ImmutableStructuralVariantImpl.builder()
+                .id("")
+                .insertSequence("")
+                .type(StructuralVariantType.BND)
+                .start(createStartLeg(startChromosome, startPosition, StructuralVariantType.BND).alleleFrequency(startVaf).build())
+                .imprecise(false)
+                .somaticScore(0);
+    }
 
     @NotNull
     public static ImmutableCobaltRatio.Builder cobalt(@NotNull final String chromosome, long position, double ratio) {

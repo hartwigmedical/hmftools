@@ -3,12 +3,11 @@ package com.hartwig.hmftools.patientreporter.variants;
 import static com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory.getRepeatContext;
 import static com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory.relativePositionAndRef;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.purple.repeat.RepeatContext;
+import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
@@ -27,12 +26,7 @@ public abstract class MicrosatelliteAnalyzer {
     @NotNull
     public abstract IndexedFastaSequenceFile reference();
 
-    @NotNull
-    public static MicrosatelliteAnalyzer of(@NotNull final String fastaFileLocation) throws FileNotFoundException {
-        return ImmutableMicrosatelliteAnalyzer.of(new IndexedFastaSequenceFile(new File(fastaFileLocation)));
-    }
-
-    public double analyzeVariants(@NotNull final List<SomaticVariant> variants) {
+    public double analyzeVariants(@NotNull final List<EnrichedSomaticVariant> variants) {
         double indelCount = 0;
         for (final SomaticVariant variant : variants) {
             if (isPassIndel(variant)) {

@@ -78,7 +78,7 @@ class SomaticVariantDAO {
                 variant.alt(),
                 variant.gene(),
                 variant.genesEffected(),
-                variant.cosmicID() == null ? "" : variant.cosmicID(),
+                variant.canonicalCosmicID() == null ? "" : variant.canonicalCosmicID(),
                 variant.dbsnpID() == null ? "" : variant.dbsnpID(),
                 variant.worstEffect(),
                 variant.worstCodingEffect() == CodingEffect.UNDEFINED ? "" : variant.worstCodingEffect(),

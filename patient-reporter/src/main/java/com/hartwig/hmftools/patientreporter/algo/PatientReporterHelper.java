@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,9 +30,11 @@ final class PatientReporterHelper {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterHelper.class);
 
-    private static final String SOMATIC_VCF_EXTENSION = "_post_processed_v2.2.vcf.gz";
+    private static final String SOMATIC_VCF_EXTENSION_V3 = "_post_processed_v2.2.vcf.gz";
+    private static final String SOMATIC_VCF_EXTENSION_V4 = "_post_processed.vcf.gz";
     private static final String PURPLE_DIRECTORY = "purple";
-    private static final String SV_EXTENSION = "_somaticSV_bpi.vcf";
+    private static final String SV_EXTENSION_V3 = "_somaticSV_bpi.vcf";
+    private static final String SV_EXTENSION_V4 = "_somaticSV_bpi.vcf.gz";
     private static final String CIRCOS_PLOT_DIRECTORY = "plot";
     private static final String CIRCOS_PLOT_EXTENSION = ".circos.png";
 
@@ -61,7 +64,11 @@ final class PatientReporterHelper {
 
     @NotNull
     static Path findStructuralVariantVCF(@NotNull final String runDirectory) throws IOException {
-        final Optional<Path> path = Files.walk(Paths.get(runDirectory)).filter(p -> p.toString().endsWith(SV_EXTENSION)).findFirst();
+        // TODO (KODU): Clean up once pipeline v3 no longer exists
+        Optional<Path> path = Files.walk(Paths.get(runDirectory)).filter(p -> p.toString().endsWith(SV_EXTENSION_V3)).findFirst();
+        if (!path.isPresent()) {
+            path = Files.walk(Paths.get(runDirectory)).filter(p -> p.toString().endsWith(SV_EXTENSION_V4)).findFirst();
+        }
         assert path.isPresent();
         return path.get();
     }
@@ -74,8 +81,14 @@ final class PatientReporterHelper {
 
     @NotNull
     static List<SomaticVariant> loadPassedSomaticVariants(@NotNull final String sample, @NotNull final String path) throws IOException {
-        final String vcfPath = PathExtensionFinder.build().findPath(path, SOMATIC_VCF_EXTENSION).toString();
-        return SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, vcfPath);
+        // TODO (KODU): Clean up once pipeline v3 no longer exists
+        Path vcfPath;
+        try {
+            vcfPath = PathExtensionFinder.build().findPath(path, SOMATIC_VCF_EXTENSION_V3);
+        } catch (FileNotFoundException exception) {
+            vcfPath = PathExtensionFinder.build().findPath(path, SOMATIC_VCF_EXTENSION_V4);
+        }
+        return SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, vcfPath.toString());
     }
 
     @Nullable

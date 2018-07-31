@@ -153,12 +153,12 @@ public abstract class FindingsPage {
 
     @NotNull
     private static ComponentBuilder<?, ?> mutationalLoadReport(@NotNull AnalysedPatientReport report) {
-        return MutationalLoadSection.build(report.mutationalLoad());
+        return MutationalLoadSection.build(report.mutationalLoad(), report.fitStatus());
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> microsatelliteReport(@NotNull AnalysedPatientReport report) {
-        return MicrosatelliteSection.build(report.microsatelliteIndicator());
+        return MicrosatelliteSection.build(report.microsatelliteIndicator(), report.fitStatus());
     }
 
     @NotNull

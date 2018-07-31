@@ -127,7 +127,8 @@ class ChunkHttpBuffer {
                     if (response.isSuccessful() && body != null) {
                         resultFuture.set(body.bytes());
                     } else {
-                        final Exception e = new IOException("Response was not successful or body was null.");
+                        final String nullBody = body == null ? "body = null" : "";
+                        final Exception e = new IOException("Response " + response.code() + ": " + response.message() + "; " + nullBody);
                         retryCall(call, e, retryCount, resultFuture);
                     }
                 } catch (final Exception e) {
@@ -144,8 +145,10 @@ class ChunkHttpBuffer {
     private void retryCall(@NotNull final Call call, @NotNull final Exception exception, final int remainingRetries,
             @NotNull final SettableFuture<byte[]> resultFuture) {
         if (remainingRetries <= 0) {
-            LOGGER.info("Call {} to {} failed with exception: {}", call.request().method(), call.request().url(), exception.getMessage());
-            LOGGER.info("Call headers: {}", call.request().headers());
+            LOGGER.error("Call {} [{}] failed with exception: {}",
+                    call.request().method(),
+                    call.request().headers(),
+                    exception.getMessage());
             resultFuture.setException(exception);
         } else {
             call.clone().enqueue(retryingCallback(remainingRetries - 1, resultFuture));

@@ -43,19 +43,28 @@ public class RExecutor {
 
     public static int executeFromClasspath(final String rScriptName, final String... arguments) throws IOException, InterruptedException {
         final File scriptFile = writeScriptFile(rScriptName);
-        final int returnCode = executeFromFile(scriptFile, arguments);
+
+        final int returnCode = executeFromFile(rScriptName, scriptFile, arguments);
         htsjdk.samtools.util.IOUtil.deleteFiles(scriptFile);
         return returnCode;
     }
 
-    public static int executeFromFile(final File scriptFile, final String... arguments) throws IOException, InterruptedException {
+    public static int executeFromFile(final String rScriptName, final File scriptFile, final String... arguments) throws IOException, InterruptedException {
         final String[] command = new String[arguments.length + 2];
         command[0] = R_EXE;
         command[1] = scriptFile.getAbsolutePath();
         System.arraycopy(arguments, 0, command, 2, arguments.length);
-        LOGGER.info(String.format("Executing R script via command: %s", CollectionUtil.join(Arrays.asList(command), " ")));
 
-        return Runtime.getRuntime().exec(command).waitFor();
+        final File outputFile = File.createTempFile(rScriptName, ".out");
+        final File errorFile = File.createTempFile(rScriptName, ".error");
+
+        LOGGER.info(String.format("Executing R script via command: %s", CollectionUtil.join(Arrays.asList(command), " ")));
+        int result = new ProcessBuilder(command).redirectError(errorFile).redirectOutput(outputFile).start().waitFor();
+        if (result != 0) {
+            LOGGER.fatal("Error executing R script. Examine error file " +  errorFile.toString() + " for details.");
+        }
+
+        return result;
     }
 
     private static File writeScriptFile(final String rScriptName) throws IOException {

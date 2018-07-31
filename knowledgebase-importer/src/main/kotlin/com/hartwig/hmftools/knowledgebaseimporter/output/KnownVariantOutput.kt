@@ -1,10 +1,6 @@
 package com.hartwig.hmftools.knowledgebaseimporter.output
 
-data class KnownVariantOutput(private val gene: String, private val transcript: String, private val additionalInfo: String,
-                              private val variant: SomaticVariantEvent) {
-    companion object {
-        val header = listOf("gene", "transcript", "info") + SomaticVariantEvent.header
-    }
+import com.hartwig.hmftools.extensions.csv.CsvData
 
-    val record: List<String> = listOf(gene, transcript, additionalInfo) + variant.record
-}
+data class KnownVariantOutput(private val transcript: String, private val additionalInfo: String,
+                              private val variant: SomaticVariantEvent) : CsvData

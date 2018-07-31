@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.puritypatho;
 
 import java.io.IOException;
-import java.sql.SQLException;
-import java.util.concurrent.ExecutionException;
 
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
@@ -19,24 +17,27 @@ import org.jetbrains.annotations.NotNull;
 
 public class PurityPathologyApplication {
     private static final String RUNS_DIR = "runs_dir";
+    private static final String COUNT_SET = "count_set";
     private static final Logger LOGGER = LogManager.getLogger(PurityPathologyApplication.class);
 
-    public static void main(final String... args) throws ParseException, IOException, SQLException, ExecutionException, InterruptedException {
+    public static void main(final String... args) throws ParseException, IOException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final String runsFolderPath = cmd.getOptionValue(RUNS_DIR);
+        final String countSet = cmd.getOptionValue(COUNT_SET);
         LOGGER.info("runsFolderPath: " + runsFolderPath);
         final RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runsFolderPath);
         final String tumorSample = runContext.tumorSample();
         LOGGER.info("tumorSample: " + tumorSample);
-        ReadingData.readingSetAmber(runsFolderPath, tumorSample);
-        ReadingData.readingCyto();
+        LOGGER.info("countSet: " + countSet);
+        ReadingData.readingFiles(runsFolderPath, tumorSample, countSet);
     }
 
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
         options.addOption(RUNS_DIR, true, "Path towards the folder containing patient runs.");
+        options.addOption(COUNT_SET, true, "Count of set");
         return options;
     }
 

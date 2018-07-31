@@ -114,7 +114,6 @@ public class PDFWriterTest {
 
         if (WRITE_TO_PDF) {
             mainReport.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "test_report.pdf"));
-            evidenceReport.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "test_evidence_report.pdf"));
         }
     }
 

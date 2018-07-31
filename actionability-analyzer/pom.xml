@@ -31,6 +31,14 @@
             <artifactId>hmf-extensions-cli</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>hmf-extensions-csv</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.davidmoten</groupId>
+            <artifactId>rtree</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.kotlintest</groupId>
             <artifactId>kotlintest</artifactId>
             <scope>test</scope>

@@ -3,13 +3,17 @@ package com.hartwig.hmftools.patientreporter.variants;
 import java.util.List;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class MutationalLoadAnalyzer {
+public final class MutationalLoadAnalyzer {
 
-    static int analyzeVariants(@NotNull final List<SomaticVariant> variants) {
+    private MutationalLoadAnalyzer() {
+    }
+
+    static int analyzeVariants(@NotNull final List<EnrichedSomaticVariant> variants) {
         int mutationalLoadSize = 0;
         for (final SomaticVariant variant : variants) {
             if (mutationalLoadCheck(variant)) {

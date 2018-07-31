@@ -105,6 +105,16 @@ public class StructuralVariantLegsFactoryTest {
 
     }
 
+    @Test
+    public void testSingleBreakend() {
+        final StructuralVariant first = breakend(100, 0.25);
+
+        final List<StructuralVariantLegs> legs = StructuralVariantLegsFactory.create(Lists.newArrayList(first));
+        assertEquals(1, legs.size());
+        assertTrue(legs.get(0).start().isPresent());
+        assertFalse(legs.get(0).end().isPresent());
+    }
+
     private void assertLeg(int orientation, double vaf, @NotNull final StructuralVariantLeg victim) {
         assertEquals(vaf, victim.alleleFrequency(), EPSILON);
         assertEquals(orientation, victim.orientation());
@@ -124,6 +134,11 @@ public class StructuralVariantLegsFactoryTest {
     @NotNull
     private static StructuralVariant sv(long start, long end, StructuralVariantType type, double startAF, double endAF) {
         return PurpleDatamodelTest.createStructuralVariant(CHROMOSOME, start, CHROMOSOME, end, type, startAF, endAF).build();
+    }
+
+    @NotNull
+    private static StructuralVariant breakend(long start, double startAF) {
+        return PurpleDatamodelTest.createStructuralVariantSingleBreakend(CHROMOSOME, start, startAF).build();
     }
 
     @NotNull

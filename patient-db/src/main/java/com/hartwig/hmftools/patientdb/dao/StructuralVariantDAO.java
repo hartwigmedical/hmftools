@@ -43,8 +43,18 @@ class StructuralVariantDAO {
         final Result<Record> result = context.select().from(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).fetch();
 
         for (Record record : result) {
+
+            // for now, ignore single-breakend SVs
+            if(record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME) == null
+            || record.getValue(STRUCTURALVARIANT.ENDPOSITION) == null
+            || record.getValue(STRUCTURALVARIANT.ENDORIENTATION) == null)
+            {
+                continue;
+            }
+
             structuralVariants.add(ImmutableStructuralVariantData.builder()
                     .id(String.valueOf(record.getValue(STRUCTURALVARIANT.ID)))
+                    .vcfId(String.valueOf(record.getValue(STRUCTURALVARIANT.VCFID)))
                     .startChromosome(record.getValue(STRUCTURALVARIANT.STARTCHROMOSOME))
                     .endChromosome(record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME))
                     .startPosition(record.getValue(STRUCTURALVARIANT.STARTPOSITION))
@@ -64,17 +74,25 @@ class StructuralVariantDAO {
                     .homology(record.getValue(STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE))
                     .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
                     .filter(record.getValue(STRUCTURALVARIANT.FILTER))
-                    .imprecise(record.getValue(STRUCTURALVARIANT.IMPRECISE).equals("false"))
+                    .imprecise(byteToBoolean(record.getValue(STRUCTURALVARIANT.IMPRECISE)))
                     .somaticScore(record.getValue(STRUCTURALVARIANT.SOMATICSCORE))
                     .qualityScore(record.getValue(STRUCTURALVARIANT.QUALSCORE))
-                    .startIntervalStart(record.getValue(STRUCTURALVARIANT.STARTPOSITIONINTERVALSTART))
-                    .startIntervalEnd(record.getValue(STRUCTURALVARIANT.STARTPOSITIONINTERVALEND))
-                    .endIntervalStart(record.getValue(STRUCTURALVARIANT.ENDPOSITIONINTERVALSTART))
-                    .endIntervalEnd(record.getValue(STRUCTURALVARIANT.ENDPOSITIONINTERVALEND))
-                    .startInexactHomologyIntervalStart(record.getValue(STRUCTURALVARIANT.STARTPOSITIONIMPRECISEHOMOLOGYINTERVALSTART))
-                    .startInexactHomologyIntervalEnd(record.getValue(STRUCTURALVARIANT.STARTPOSITIONIMPRECISEHOMOLOGYINTERVALEND))
-                    .endInexactHomologyIntervalStart(record.getValue(STRUCTURALVARIANT.ENDPOSITIONIMPRECISEHOMOLOGYINTERVALSTART))
-                    .endInexactHomologyIntervalEnd(record.getValue(STRUCTURALVARIANT.ENDPOSITIONIMPRECISEHOMOLOGYINTERVALEND))
+                    .event(record.getValue(STRUCTURALVARIANT.EVENT))
+                    .startTumourVariantFragmentCount(record.getValue(STRUCTURALVARIANT.STARTTUMOURVARIANTFRAGMENTCOUNT))
+                    .startTumourReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.STARTTUMOURREFERENCEFRAGMENTCOUNT))
+                    .startNormalVariantFragmentCount(record.getValue(STRUCTURALVARIANT.STARTNORMALVARIANTFRAGMENTCOUNT))
+                    .startNormalReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.STARTNORMALREFERENCEFRAGMENTCOUNT))
+                    .endTumourVariantFragmentCount(record.getValue(STRUCTURALVARIANT.ENDTUMOURVARIANTFRAGMENTCOUNT))
+                    .endTumourReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.ENDTUMOURREFERENCEFRAGMENTCOUNT))
+                    .endNormalVariantFragmentCount(record.getValue(STRUCTURALVARIANT.ENDNORMALVARIANTFRAGMENTCOUNT))
+                    .endNormalReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.ENDNORMALREFERENCEFRAGMENTCOUNT))
+                    .startIntervalOffsetStart(record.getValue(STRUCTURALVARIANT.STARTINTERVALOFFSETSTART))
+                    .startIntervalOffsetEnd(record.getValue(STRUCTURALVARIANT.STARTINTERVALOFFSETEND))
+                    .endIntervalOffsetStart(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETSTART))
+                    .endIntervalOffsetEnd(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETEND))
+                    .inexactHomologyOffsetStart(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETSTART))
+                    .inexactHomologyOffsetEnd(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETEND))
+                    .linkedBy(record.getValue(STRUCTURALVARIANT.LINKEDBY))
                     .build());
         }
         return structuralVariants;
@@ -112,16 +130,20 @@ class StructuralVariantDAO {
             final EnrichedStructuralVariantLeg start = ImmutableEnrichedStructuralVariantLeg.builder()
                     .chromosome(record.getValue(STRUCTURALVARIANT.STARTCHROMOSOME))
                     .position(record.getValue(STRUCTURALVARIANT.STARTPOSITION))
-                    .startPosition(record.getValue(STRUCTURALVARIANT.STARTPOSITIONINTERVALSTART))
-                    .endPosition(record.getValue(STRUCTURALVARIANT.STARTPOSITIONINTERVALEND))
-                    .impreciseHomologyIntervalStart(record.getValue(STRUCTURALVARIANT.STARTPOSITIONIMPRECISEHOMOLOGYINTERVALSTART))
-                    .impreciseHomologyIntervalEnd(record.getValue(STRUCTURALVARIANT.STARTPOSITIONIMPRECISEHOMOLOGYINTERVALEND))
                     .orientation(record.getValue(STRUCTURALVARIANT.STARTORIENTATION))
                     .homology(record.getValue(STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE))
                     .alleleFrequency(record.getValue(STRUCTURALVARIANT.STARTAF))
                     .adjustedAlleleFrequency(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTAF))
                     .adjustedCopyNumber(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBER))
                     .adjustedCopyNumberChange(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBERCHANGE))
+                    .tumourVariantFragmentCount(record.getValue(STRUCTURALVARIANT.STARTTUMOURVARIANTFRAGMENTCOUNT))
+                    .tumourReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.STARTTUMOURREFERENCEFRAGMENTCOUNT))
+                    .normalVariantFragmentCount(record.getValue(STRUCTURALVARIANT.STARTNORMALVARIANTFRAGMENTCOUNT))
+                    .normalReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.STARTNORMALREFERENCEFRAGMENTCOUNT))
+                    .startOffset(record.getValue(STRUCTURALVARIANT.STARTINTERVALOFFSETSTART))
+                    .endOffset(record.getValue(STRUCTURALVARIANT.STARTINTERVALOFFSETEND))
+                    .inexactHomologyOffsetStart(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETSTART))
+                    .inexactHomologyOffsetEnd(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETEND))
                     .build();
 
             EnrichedStructuralVariantLeg end = null;
@@ -129,22 +151,24 @@ class StructuralVariantDAO {
                 ImmutableEnrichedStructuralVariantLeg.builder()
                         .chromosome(record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME))
                         .position(record.getValue(STRUCTURALVARIANT.ENDPOSITION))
-                        .startPosition(record.getValue(STRUCTURALVARIANT.ENDPOSITIONINTERVALSTART))
-                        .endPosition(record.getValue(STRUCTURALVARIANT.ENDPOSITIONINTERVALEND))
-                        .impreciseHomologyIntervalStart(record.getValue(STRUCTURALVARIANT.ENDPOSITIONIMPRECISEHOMOLOGYINTERVALSTART))
-                        .impreciseHomologyIntervalEnd(record.getValue(STRUCTURALVARIANT.ENDPOSITIONIMPRECISEHOMOLOGYINTERVALEND))
                         .orientation(record.getValue(STRUCTURALVARIANT.ENDORIENTATION))
                         .homology(record.getValue(STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE))
                         .alleleFrequency(record.getValue(STRUCTURALVARIANT.ENDAF))
                         .adjustedAlleleFrequency(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDAF))
                         .adjustedCopyNumber(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER))
                         .adjustedCopyNumberChange(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE))
+                        .tumourVariantFragmentCount(record.getValue(STRUCTURALVARIANT.ENDTUMOURVARIANTFRAGMENTCOUNT))
+                        .tumourReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.ENDTUMOURREFERENCEFRAGMENTCOUNT))
+                        .normalVariantFragmentCount(record.getValue(STRUCTURALVARIANT.ENDNORMALVARIANTFRAGMENTCOUNT))
+                        .normalReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.ENDNORMALREFERENCEFRAGMENTCOUNT))
+                        .startOffset(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETSTART))
+                        .endOffset(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETEND))
                         .build();
             }
 
             final EnrichedStructuralVariant variant = ImmutableEnrichedStructuralVariant.builder()
                     .primaryKey(record.getValue(STRUCTURALVARIANT.ID))
-                    .id(record.getValue(STRUCTURALVARIANT.ID).toString())
+                    .id(record.getValue(STRUCTURALVARIANT.VCFID))
                     .start(start)
                     .end(end)
                     .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
@@ -156,6 +180,8 @@ class StructuralVariantDAO {
                     .imprecise(byteToBoolean(record.getValue(STRUCTURALVARIANT.IMPRECISE)))
                     .somaticScore(record.getValue(STRUCTURALVARIANT.SOMATICSCORE))
                     .qualityScore(record.getValue(STRUCTURALVARIANT.QUALSCORE))
+                    .event(record.getValue(STRUCTURALVARIANT.EVENT))
+                    .linkedBy(record.getValue(STRUCTURALVARIANT.LINKEDBY))
                     .build();
 
             regions.add(variant);
@@ -198,14 +224,23 @@ class StructuralVariantDAO {
                     STRUCTURALVARIANT.IMPRECISE,
                     STRUCTURALVARIANT.SOMATICSCORE,
                     STRUCTURALVARIANT.QUALSCORE,
-                    STRUCTURALVARIANT.STARTPOSITIONINTERVALSTART,
-                    STRUCTURALVARIANT.STARTPOSITIONINTERVALEND,
-                    STRUCTURALVARIANT.ENDPOSITIONINTERVALSTART,
-                    STRUCTURALVARIANT.ENDPOSITIONINTERVALEND,
-                    STRUCTURALVARIANT.STARTPOSITIONIMPRECISEHOMOLOGYINTERVALSTART,
-                    STRUCTURALVARIANT.STARTPOSITIONIMPRECISEHOMOLOGYINTERVALEND,
-                    STRUCTURALVARIANT.ENDPOSITIONIMPRECISEHOMOLOGYINTERVALSTART,
-                    STRUCTURALVARIANT.ENDPOSITIONIMPRECISEHOMOLOGYINTERVALEND,
+                    STRUCTURALVARIANT.EVENT,
+                    STRUCTURALVARIANT.STARTTUMOURVARIANTFRAGMENTCOUNT,
+                    STRUCTURALVARIANT.STARTTUMOURREFERENCEFRAGMENTCOUNT,
+                    STRUCTURALVARIANT.STARTNORMALVARIANTFRAGMENTCOUNT,
+                    STRUCTURALVARIANT.STARTNORMALREFERENCEFRAGMENTCOUNT,
+                    STRUCTURALVARIANT.ENDTUMOURVARIANTFRAGMENTCOUNT,
+                    STRUCTURALVARIANT.ENDTUMOURREFERENCEFRAGMENTCOUNT,
+                    STRUCTURALVARIANT.ENDNORMALVARIANTFRAGMENTCOUNT,
+                    STRUCTURALVARIANT.ENDNORMALREFERENCEFRAGMENTCOUNT,
+                    STRUCTURALVARIANT.STARTINTERVALOFFSETSTART,
+                    STRUCTURALVARIANT.STARTINTERVALOFFSETEND,
+                    STRUCTURALVARIANT.ENDINTERVALOFFSETSTART,
+                    STRUCTURALVARIANT.ENDINTERVALOFFSETEND,
+                    STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETSTART,
+                    STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETEND,
+                    STRUCTURALVARIANT.VCFID,
+                    STRUCTURALVARIANT.LINKEDBY,
                     STRUCTURALVARIANT.MODIFIED);
             batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
             inserter.execute();
@@ -239,14 +274,23 @@ class StructuralVariantDAO {
                 variant.imprecise(),
                 variant.somaticScore(),
                 variant.qualityScore(),
-                variant.start().startPosition(),
-                variant.start().endPosition(),
-                variant.end() == null ? null : variant.end().startPosition(),
-                variant.end() == null ? null : variant.end().endPosition(),
-                variant.start().impreciseHomologyIntervalStart(),
-                variant.start().impreciseHomologyIntervalEnd(),
-                variant.end() == null ? null : variant.end().impreciseHomologyIntervalStart(),
-                variant.end() == null ? null : variant.end().impreciseHomologyIntervalEnd(),
+                variant.event(),
+                variant.start().tumourVariantFragmentCount(),
+                variant.start().tumourReferenceFragmentCount(),
+                variant.start().normalVariantFragmentCount(),
+                variant.start().normalReferenceFragmentCount(),
+                variant.end() == null ? null : variant.end().tumourVariantFragmentCount(),
+                variant.end() == null ? null : variant.end().tumourReferenceFragmentCount(),
+                variant.end() == null ? null : variant.end().normalVariantFragmentCount(),
+                variant.end() == null ? null : variant.end().normalReferenceFragmentCount(),
+                variant.start().startOffset(),
+                variant.start().endOffset(),
+                variant.end() == null ? null : variant.end().startOffset(),
+                variant.end() == null ? null : variant.end().endOffset(),
+                variant.start().inexactHomologyOffsetStart(),
+                variant.start().inexactHomologyOffsetEnd(),
+                variant.id(),
+                variant.linkedBy(),
                 timestamp);
     }
 

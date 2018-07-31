@@ -1,14 +1,17 @@
 package com.hartwig.hmftools.patientreporter;
 
+import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.cosmic.CosmicGeneModel;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.gene.GeneModel;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
-import com.hartwig.hmftools.patientreporter.variants.MicrosatelliteAnalyzer;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 @Value.Immutable
 @Value.Style(allParameters = true,
@@ -28,5 +31,8 @@ public abstract class HmfReporterData {
     public abstract DrupFilter drupFilter();
 
     @NotNull
-    public abstract MicrosatelliteAnalyzer microsatelliteAnalyzer();
+    public abstract IndexedFastaSequenceFile refGenomeFastaFile();
+
+    @NotNull
+    public abstract Multimap<String, GenomeRegion> highConfidenceRegions();
 }

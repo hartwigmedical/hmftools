@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 
 import org.immutables.value.Value;
@@ -17,15 +17,15 @@ import org.jetbrains.annotations.Nullable;
 public abstract class VariantAnalyzer {
 
     @NotNull
-    protected abstract ConsequenceDeterminer determiner();
+    abstract ConsequenceDeterminer determiner();
 
     @NotNull
-    protected abstract MicrosatelliteAnalyzer microsatelliteAnalyzer();
+    abstract MicrosatelliteAnalyzer microsatelliteAnalyzer();
 
     @NotNull
     public static VariantAnalyzer of(@NotNull HmfReporterData reporterData) {
-        Set<String> transcriptsToInclude = reporterData.panelGeneModel().transcriptMap().keySet();
-        return of(transcriptsToInclude, reporterData.microsatelliteAnalyzer());
+        final Set<String> transcriptsToInclude = reporterData.panelGeneModel().transcriptMap().keySet();
+        return of(transcriptsToInclude, ImmutableMicrosatelliteAnalyzer.of(reporterData.refGenomeFastaFile()));
     }
 
     @VisibleForTesting
@@ -35,12 +35,12 @@ public abstract class VariantAnalyzer {
     }
 
     @NotNull
-    public VariantAnalysis run(@NotNull final List<SomaticVariant> passedVariants) {
-        final double indelsPerMb = microsatelliteAnalyzer().analyzeVariants(passedVariants);
-        final int mutationalLoad = MutationalLoadAnalyzer.analyzeVariants(passedVariants);
+    public VariantAnalysis run(@NotNull final List<EnrichedSomaticVariant> variants) {
+        final double indelsPerMb = microsatelliteAnalyzer().analyzeVariants(variants);
+        final int mutationalLoad = MutationalLoadAnalyzer.analyzeVariants(variants);
 
-        final List<VariantReport> variantReports = determiner().run(passedVariants);
+        final List<VariantReport> variantReports = determiner().run(variants);
 
-        return ImmutableVariantAnalysis.of(passedVariants, variantReports, indelsPerMb, mutationalLoad);
+        return ImmutableVariantAnalysis.of(variants, variantReports, indelsPerMb, mutationalLoad);
     }
 }

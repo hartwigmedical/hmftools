@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.TreeMultimap;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.center.Center;
 import com.hartwig.hmftools.common.center.CenterModel;
@@ -19,7 +20,7 @@ import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientreporter.civic.AlterationAnalyzer;
 import com.hartwig.hmftools.patientreporter.civic.CivicAnalyzer;
@@ -40,6 +41,9 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public final class PatientReporterTestUtil {
 
     public static final String SIGNATURE_PATH = Resources.getResource("signature").getPath() + File.separator + "signature.png";
+
+    private static final String REF_GENOME_PATH = Resources.getResource("refgenome").getPath() + File.separator + "ref.fasta";
+
     private static final String FUSION_PAIRS_CSV = Resources.getResource("csv").getPath() + File.separator + "fusion_pairs.csv";
     private static final String PROMISCUOUS_FIVE_CSV = Resources.getResource("csv").getPath() + File.separator + "promiscuous_five.csv";
     private static final String PROMISCUOUS_THREE_CSV = Resources.getResource("csv").getPath() + File.separator + "promiscuous_three.csv";
@@ -54,8 +58,13 @@ public final class PatientReporterTestUtil {
         final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfPanelGeneList());
         final CosmicGeneModel cosmicGeneModel = CosmicGenes.readFromCSV(cosmicPath);
         final DrupFilter drupFilter = new DrupFilter(drupFilterPath);
-        final MicrosatelliteAnalyzer microsatelliteAnalyzer = testMicrosatelliteAnalyzer();
-        return ImmutableHmfReporterData.of(geneModel, cosmicGeneModel, testKnownFusionModel(), drupFilter, microsatelliteAnalyzer);
+
+        return ImmutableHmfReporterData.of(geneModel,
+                cosmicGeneModel,
+                testKnownFusionModel(),
+                drupFilter,
+                new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),
+                TreeMultimap.create());
     }
 
     @NotNull
@@ -67,9 +76,7 @@ public final class PatientReporterTestUtil {
 
     @NotNull
     public static MicrosatelliteAnalyzer testMicrosatelliteAnalyzer() {
-
         return new MicrosatelliteAnalyzer() {
-
             @SuppressWarnings("ConstantConditions")
             @Override
             @NotNull
@@ -78,7 +85,7 @@ public final class PatientReporterTestUtil {
             }
 
             @Override
-            public double analyzeVariants(@NotNull final List<SomaticVariant> variants) {
+            public double analyzeVariants(@NotNull final List<EnrichedSomaticVariant> variants) {
                 return 0.91;
             }
         };
@@ -133,11 +140,7 @@ public final class PatientReporterTestUtil {
 
     @NotNull
     public static AlterationAnalyzer mockedCivicAnalyzer() {
-        //@formatter:off
-        return (@NotNull final List<VariantReport> reportedVariants, @NotNull final List<GeneCopyNumber> copyNumbers,
-                @NotNull final List<GeneDisruptionData> disruptions, @NotNull final List<GeneFusionData> fusions, @NotNull final GeneModel geneModel,
-                @NotNull final Set<String> tumorDoids) -> mockedAlterations();
-        //@formatter:on
+        return (@NotNull final List<VariantReport> reportedVariants, @NotNull final List<GeneCopyNumber> copyNumbers, @NotNull final List<GeneDisruptionData> disruptions, @NotNull final List<GeneFusionData> fusions, @NotNull final GeneModel geneModel, @NotNull final Set<String> tumorDoids) -> mockedAlterations();
     }
 
     @NotNull

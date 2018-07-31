@@ -2,10 +2,6 @@ package com.hartwig.hmftools.common.purple.region;
 
 class PloidyPenalty {
 
-    static double penalty(int ploidy) {
-        return Math.max(ploidy, 2) / 2.0;
-    }
-
     static double penalty(int ploidy, int majorAllele) {
         int minorAllele = ploidy - majorAllele;
 
@@ -14,4 +10,12 @@ class PloidyPenalty {
 
         return 1 + Math.min(singleEventDistance, wholeGenomeDoublingDistance);
     }
+
+    static double penaltyv2(double ploidyPenaltyFactor, double majorAllele, double minorAllele) {
+        double wholeGenomeDoublingDistance = 1 + (Math.abs(majorAllele - 2)) + (Math.abs(minorAllele - 2));
+        double singleEventDistance = (Math.abs(majorAllele - 1)) + (Math.abs(minorAllele - 1));
+
+        return 1 + ploidyPenaltyFactor * Math.min(singleEventDistance, wholeGenomeDoublingDistance);
+    }
+
 }

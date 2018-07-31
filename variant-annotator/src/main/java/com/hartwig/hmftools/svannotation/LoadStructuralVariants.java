@@ -6,7 +6,12 @@ import static com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator.PON_FILT
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -78,12 +83,10 @@ public class LoadStructuralVariants {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        // prepare the PON data annotator
         SvPONAnnotator svPONAnnotator = null;
 
-        if(cmd.hasOption(SV_PON_FILE))
-        {
-            svPONAnnotator= new SvPONAnnotator();
+        if (cmd.hasOption(SV_PON_FILE)) {
+            svPONAnnotator = new SvPONAnnotator();
             svPONAnnotator.loadPonFile(cmd.getOptionValue(SV_PON_FILE));
         }
 
@@ -100,7 +103,16 @@ public class LoadStructuralVariants {
             }
         } else {
             LOGGER.info("reading VCF File");
-            final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE), true);
+            // Let PON filtered SVs through since GRIDSS PON filtering is performed upstream
+            Set<String> allowableFilters = new HashSet<>();
+            allowableFilters.add("PASS");
+            allowableFilters.add(".");
+            allowableFilters.add("");
+            allowableFilters.add(PON_FILTER_PON);
+            allowableFilters.add(PON_FILTER_PASS);
+            final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE), false).stream()
+                    .filter(sv -> allowableFilters.contains(sv))
+                    .collect(Collectors.toList());
 
             LOGGER.info("enriching structural variants based on purple data");
             svList = enrichStructuralVariants(variants, dbAccess, tumorSample);
@@ -111,23 +123,31 @@ public class LoadStructuralVariants {
         if (svPONAnnotator != null && svPONAnnotator.hasEntries()) {
 
             for (EnrichedStructuralVariant variant : svList) {
-                int ponCount = svPONAnnotator.getPonOccurenceCount(variant.chromosome(true),
-                        variant.chromosome(false),
-                        variant.position(true),
-                        variant.position(false),
-                        variant.orientation(true),
-                        variant.orientation(false),
-                        variant.type().toString());
-
-                String filter = ponCount > 1 ? PON_FILTER_PON : PON_FILTER_PASS;
-
-                final ImmutableEnrichedStructuralVariant updatedSV =
-                        ImmutableEnrichedStructuralVariant.builder().from(variant).filter(filter).build();
+                boolean ponFiltered = false;
+                if (variant.end() != null) {
+                    int ponCount = svPONAnnotator.getPonOccurenceCount(variant.chromosome(true),
+                            variant.chromosome(false),
+                            variant.position(true),
+                            variant.position(false),
+                            variant.orientation(true),
+                            variant.orientation(false),
+                            variant.type().toString());
+                    ponFiltered = ponCount > 1;
+                }
+                Set<String> filterSet = Stream.of(variant.filter().split(";"))
+                        .filter(s -> !s.equals("PASS"))
+                        .filter(s -> !s.equals("."))
+                        .filter(s -> !s.equals(""))
+                        .collect(Collectors.toSet());
+                if (ponFiltered) {
+                    filterSet.add(PON_FILTER_PON);
+                }
+                String filter = filterSet.size() == 0 ? "PASS" : filterSet.stream().sorted().collect(Collectors.joining(";" ));
+                final ImmutableEnrichedStructuralVariant updatedSV = ImmutableEnrichedStructuralVariant.builder()
+                    .from(variant).filter(filter).build();
                 updatedSVs.add(updatedSV);
             }
-        }
-        else
-        {
+        } else {
             updatedSVs = svList;
         }
 
@@ -136,18 +156,17 @@ public class LoadStructuralVariants {
         dbAccess.writeStructuralVariants(tumorSample, updatedSVs);
 
         if (!sourceSVsFromDB) {
-
             // NEVA: We read after we write to populate the primaryId field
             final List<EnrichedStructuralVariant> enrichedVariants = dbAccess.readStructuralVariants(tumorSample);
 
             DatabaseAccess ensembleDBConn = null;
 
-            if(cmd.hasOption(ENSEMBL_DB_LOCAL)) {
+            if (cmd.hasOption(ENSEMBL_DB_LOCAL)) {
 
-                // the same credential work for both hmf and ensembl DBs
+                // CHSH: The same credential work for both hmf and ensembl DBs
                 final String ensembleJdbcUrl = "jdbc:" + cmd.getOptionValue(ENSEMBL_DB);
                 final String ensembleUser = cmd.getOptionValue(DB_USER);
-                final String ensemblePassword =  cmd.getOptionValue(DB_PASS);
+                final String ensemblePassword = cmd.getOptionValue(DB_PASS);
 
                 LOGGER.debug("connecting to local ensembl DB: {}", cmd.getOptionValue(ENSEMBL_DB));
 
@@ -159,11 +178,11 @@ public class LoadStructuralVariants {
                 }
             }
 
-            final VariantAnnotator annotator = ensembleDBConn != null ?
-                    new MySQLAnnotator(ensembleDBConn.context()) :
-                    MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
+            final VariantAnnotator annotator = ensembleDBConn != null
+                    ? new MySQLAnnotator(ensembleDBConn.context())
+                    : MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
 
-            LOGGER.info("loading Cosmic Fusion data");
+            LOGGER.info("loading Fusion data");
             final KnownFusionsModel knownFusionsModel =
                     KnownFusionsModel.fromInputStreams(new FileInputStream(cmd.getOptionValue(FUSION_PAIRS_CSV)),
                             new FileInputStream(cmd.getOptionValue(PROMISCUOUS_FIVE_CSV)),
@@ -172,7 +191,7 @@ public class LoadStructuralVariants {
             final StructuralVariantAnalyzer analyzer =
                     new StructuralVariantAnalyzer(annotator, HmfGenePanelSupplier.hmfPanelGeneList(), knownFusionsModel);
             LOGGER.info("analyzing structural variants for impact via disruptions and fusions");
-            final StructuralVariantAnalysis analysis = analyzer.run(enrichedVariants, sourceSVsFromDB);
+            final StructuralVariantAnalysis analysis = analyzer.run(enrichedVariants);
 
             LOGGER.info("persisting annotations to database");
             final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(dbAccess.context());
