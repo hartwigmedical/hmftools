@@ -111,7 +111,7 @@ public class LoadStructuralVariants {
             allowableFilters.add(PON_FILTER_PON);
             allowableFilters.add(PON_FILTER_PASS);
             final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE), false).stream()
-                    .filter(sv -> allowableFilters.contains(sv))
+                    .filter(sv -> allowableFilters.contains(sv.filter()))
                     .collect(Collectors.toList());
 
             LOGGER.info("enriching structural variants based on purple data");
