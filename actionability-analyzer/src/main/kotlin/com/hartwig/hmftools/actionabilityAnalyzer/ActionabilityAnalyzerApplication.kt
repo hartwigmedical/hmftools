@@ -18,7 +18,7 @@ private val databaseUrl = "jdbc:mysql://"
 private val actionableVariants = "actionableVariants"
 private val actionableFusionPairs = "actionableFusionPairs"
 private val actionablePromiscuousFive = "actionablePromiscuousFive"
-private val actionablePromisucousThree = "actionablePromiscuousThree"
+private val actionablePromiscuousThree = "actionablePromiscuousThree"
 private val actionableCNVs = "actionableCNVs"
 private val actionableGenomicRanges = "actionableRanges"
 private val cancerTypes = "knowledgebaseCancerTypes"
@@ -30,7 +30,7 @@ fun main(args: Array<String>) {
     val dbAccess = DatabaseAccess(user, password, databaseUrl)
     val samplesToAnalyze = readSamples(dbAccess)
     val actionabilityAnalyzer = ActionabilityAnalyzer(samplesToAnalyze, actionableVariants, actionableFusionPairs,
-                                                      actionablePromiscuousFive, actionablePromisucousThree, actionableCNVs, cancerTypes,
+                                                      actionablePromiscuousFive, actionablePromiscuousThree, actionableCNVs, cancerTypes,
                                                       actionableGenomicRanges)
     logger.info("Start")
     queryDatabase(dbAccess, samplesToAnalyze, actionabilityAnalyzer)
