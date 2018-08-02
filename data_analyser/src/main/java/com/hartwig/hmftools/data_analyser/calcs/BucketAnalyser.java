@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_VAL;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.calcCSS;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.getLeastSimilarEntry;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.getTopCssPairs;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.convertArray;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getNewFile;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.listToArray;
@@ -24,6 +25,7 @@ import static com.hartwig.hmftools.data_analyser.calcs.NmfConfig.NMF_REF_SIG_FIL
 import static com.hartwig.hmftools.data_analyser.types.BucketGroup.getCombinedBuckets;
 import static com.hartwig.hmftools.data_analyser.types.BucketGroup.getMatchingBucketList;
 import static com.hartwig.hmftools.data_analyser.types.GenericDataCollection.GD_TYPE_STRING;
+import static com.hartwig.hmftools.data_analyser.types.NmfMatrix.redimension;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -60,6 +62,7 @@ public class BucketAnalyser {
     HashMap<Integer, List<Integer>> mAllSampleBucketGroups;
     HashMap<Integer, List<Integer>> mWorkingSBGroups; // will be reduced as samples are assigned
     private NmfMatrix mProposedSigs;
+    private List<Integer> mSigToBgMapping;
     private NmfMatrix mReferenceSigs;
 
     // external sample data for verification and correlation
@@ -81,7 +84,6 @@ public class BucketAnalyser {
     private static String BA_CSS_LOW_THRESHOLD = "ba_css_low";
     private static String BA_MAX_PROPOSED_SIGS = "ba_max_proposed_sigs";
 
-    private static int MIN_BG_BUCKET_COUNT = 20; // below which a bucket ratio is considered invalid
     private static double MIN_BUCKET_ALLOCATION = 0.9; // consider a sample fully allocated if X% of its buckets are attributed to groups
     private static double DOMINANT_CATEGORY_PERCENT = 0.75; /// mark a group with a category if X% of samples in it have this attribute (eg cancer type, UV)
 
@@ -109,6 +111,7 @@ public class BucketAnalyser {
         mExtCategoriesMap = null;
         mReferenceSigs = null;
         mProposedSigs = null;
+        mSigToBgMapping = Lists.newArrayList();
 
         mBucketGroups = Lists.newArrayList();
 
@@ -120,7 +123,8 @@ public class BucketAnalyser {
 
         mSampleWatchList = Lists.newArrayList();
 
-        //mSampleWatchList.add(1424);
+        mSampleWatchList.add(1424);
+        mSampleWatchList.add(2024);
     }
 
     public static void addCmdLineArgs(Options options) {
@@ -191,6 +195,10 @@ public class BucketAnalyser {
         collectElevatedSampleBuckets();
         perfCounter.stop();
 
+//        perfCounter.start("ReportSamplePairs");
+//        calcSampleOverlaps();
+//        perfCounter.stop();
+
         perfCounter.start("BucketGroups");
 
         // start by looking for near-exact matches in buckets across samples, forming bucket groups
@@ -200,10 +208,14 @@ public class BucketAnalyser {
 
         checkBucketsAgainstAllSamples();
 
+        formBucketGroupsFromSubsets();
+
         // in this version, a sample can be part of more than one group with overlapping buckets
         // so its counts can be included more than one, so some latter recalc will be required
         // befor sigs are inferred from the bucket count ratios
         mergeBucketGroups(mHighCssThreshold);
+        collapseBucketSamples();
+        recalcBucketData();
 
         /*
         // now consider samples belonging to more than 1 bucket group
@@ -225,7 +237,7 @@ public class BucketAnalyser {
         perfCounter.start("AnalyseResults");
         analyseGroupsVsExtData();
         logBucketGroups(true);
-
+        writeBucketGroups();
         logSampleResults();
 
         createSignatures();
@@ -497,6 +509,160 @@ public class BucketAnalyser {
                 groupsCreated, groupsAdjusted, mBucketGroups.size(), mWorkingSBGroups.size());
     }
 
+    private int MIN_BUCKET_COUNT_OVERLAP = 5;
+
+    private void formBucketGroupsFromSubsets()
+    {
+        int sampleCount = mSampleCounts.Cols;
+        final double[][] scData = mSampleCounts.getData();
+
+        int groupsCreated = 0;
+        double startCssThreshold = 1 - (1 - mHighCssThreshold) * 0.5;
+
+        for (int samIndex1 = 0; samIndex1 < sampleCount; ++samIndex1)
+        {
+            final List<Integer> bl1 = mAllSampleBucketGroups.get(samIndex1);
+
+            if (bl1 == null)
+                continue;
+
+//            if(!getSampleBucketGroups(samIndex1).isEmpty())
+//                continue;
+
+            for (int samIndex2 = samIndex1 + 1; samIndex2 < sampleCount; ++samIndex2)
+            {
+                final List<Integer> bl2 = mAllSampleBucketGroups.get(samIndex2);
+
+                if (bl2 == null)
+                    continue;
+
+                if(mSampleWatchList.contains(samIndex1) && mSampleWatchList.contains(samIndex2))
+                {
+                    LOGGER.debug("specific sample");
+                }
+
+//                if(!getSampleBucketGroups(samIndex2).isEmpty())
+//                    continue;
+
+                List<Integer> commonBuckets = getMatchingBucketList(bl1, bl2);
+                int commonBucketCount = commonBuckets.size();
+
+                if (commonBucketCount < MIN_BUCKET_COUNT_OVERLAP)
+                    continue;
+
+                // check whether samples are already grouped
+                boolean hasBoth = false;
+                for(final BucketGroup bucketGroup : mBucketGroups)
+                {
+                    if(bucketGroup.hasSample(samIndex1) && bucketGroup.hasSample(samIndex2))
+                    {
+                        hasBoth = true;
+                        break;
+                    }
+                }
+
+                if(hasBoth)
+                    continue;
+
+                double[] sc1 = extractBucketCountSubset(samIndex1, commonBuckets);
+                double[] sc2 = extractBucketCountSubset(samIndex2, commonBuckets);
+                double bcCss = calcSharedCSS(sc1, sc2);
+
+                boolean addGroup = false;
+
+                List<Integer> removedBuckets = Lists.newArrayList();
+
+                if (bcCss >= startCssThreshold)
+                {
+                    addGroup = true;
+                }
+                else if (commonBucketCount > MIN_BUCKET_COUNT_OVERLAP)
+                {
+                    // attempt to find a match using less overlapping buckets
+                    int currentBucketCount = commonBucketCount;
+
+                    while (!addGroup && currentBucketCount > MIN_BUCKET_COUNT_OVERLAP)
+                    {
+                        int lastTestBucket = -1;
+                        double bestCss = 0;
+                        int bestTestBucket = 0;
+
+                        --currentBucketCount;
+
+                        double bucketOverlapPerc = currentBucketCount / (double)commonBucketCount;
+                        double cssThreshold = 1 - (1-startCssThreshold)*pow(bucketOverlapPerc, 2);
+
+                        for (Integer removedBucket : removedBuckets)
+                        {
+                            sc1[removedBucket] = 0;
+                            sc2[removedBucket] = 0;
+                        }
+
+                        for (Integer testBucket : commonBuckets)
+                        {
+                            sc1[testBucket] = 0;
+                            sc2[testBucket] = 0;
+
+                            // restore previous test bucket
+                            if (lastTestBucket != -1)
+                            {
+                                sc1[lastTestBucket] = scData[lastTestBucket][samIndex1];
+                                sc2[lastTestBucket] = scData[lastTestBucket][samIndex2];
+                            }
+
+                            // run CSS on this reduced set of buckets
+                            bcCss = calcSharedCSS(sc1, sc2);
+                            lastTestBucket = testBucket;
+
+                            if (bcCss > bestCss)
+                            {
+                                bestCss = bcCss;
+                                bestTestBucket = testBucket;
+                            }
+
+                            if (bcCss >= cssThreshold)
+                                break;
+                        }
+
+                        removedBuckets.add(bestTestBucket);
+
+                        if (bestCss >= cssThreshold)
+                        {
+                            addGroup = true;
+                        }
+                    }
+                }
+
+                if(addGroup)
+                {
+                    BucketGroup bucketGroup = new BucketGroup(mBucketGroups.size());
+
+                    List<Integer> matchedBuckets = Lists.newArrayList();
+                    for(Integer bucket : commonBuckets)
+                    {
+                        if(removedBuckets.contains(bucket))
+                            continue;
+
+                        matchedBuckets.add(bucket);
+                    }
+
+                    bucketGroup.addBuckets(matchedBuckets);
+                    bucketGroup.addSample(samIndex1, sc1);
+                    bucketGroup.addSample(samIndex2, sc2);
+
+                    LOGGER.debug(String.format("added bg(%d) samples(%d and %d) with buckets(s1=%d and s2=%d common=%d matched=%d) css(%.4f)",
+                            bucketGroup.getId(), samIndex1, samIndex2, bl1.size(), bl2.size(), commonBuckets.size(), matchedBuckets.size(), bcCss));
+
+                    mBucketGroups.add(bucketGroup);
+                    ++groupsCreated;
+
+                }
+            }
+        }
+
+        LOGGER.debug("bucket groups created({}) total({})", groupsCreated, mBucketGroups.size());
+    }
+
     private void broadenBucketGroupDefinitions()
     {
         int bucketCount = mSampleCounts.Rows;
@@ -507,7 +673,8 @@ public class BucketAnalyser {
             // but only apply if the samples in the group show evidence of being elevated in the new buckets being considered
             final List<Integer> startBuckets = bucketGroup.getBucketIds();
             final List<Integer> sampleIds = bucketGroup.getSampleIds();
-            List<Integer> workingBuckets = bucketGroup.getBucketIds();
+            List<Integer> workingBuckets = Lists.newArrayList();
+            workingBuckets.addAll(startBuckets);
 
             // populate the matrix
             NmfMatrix sampleCounts = new NmfMatrix(bucketCount, sampleIds.size());
@@ -580,7 +747,7 @@ public class BucketAnalyser {
                     lastTestedBucket = -1; // to retain this for future tests
 
                     // add this bucket
-                    bucketGroup.addBucket(testBucket, sampleCounts.getRow(testBucket));
+                    bucketGroup.addBucket(testBucket, sampleCounts.getRow(testBucket), false);
                 }
             }
 
@@ -616,6 +783,11 @@ public class BucketAnalyser {
             {
                 if(bucketGroup.hasSample(sampleId))
                     continue; // ignore those already assigned
+
+                if(mSampleWatchList.contains(sampleId))
+                {
+                    LOGGER.debug("specific sample");
+                }
 
                 double[] samCounts = extractBucketCountSubset(sampleId, groupBuckets);
                 double bcCss = calcSharedCSS(samCounts, bucketGroup.getBucketCounts());
@@ -654,9 +826,6 @@ public class BucketAnalyser {
 
         LOGGER.debug("added {} samples to existing bucket groups", samplesAdded);
     }
-
-
-    private int MIN_BUCKET_COUNT_OVERLAP = 3;
 
     private void formSampleSubGroups()
     {
@@ -961,7 +1130,16 @@ public class BucketAnalyser {
 
     private void mergeBucketGroups(double cssThreshold)
     {
-        double reqMatchPercent = 0.85;
+        double reqAllMatchPercent = 0.85; // bucket overlap including those from widening
+        double reqInitMatchPercent = 0.95; // bucket overlap from initial set of elevated buckets
+
+        // what bucket similarity should be considered to merge 2 bucket groups?
+        // mustn't lose unique buckets, eg if not explained by some other bucket group
+        // and the collapsing-sample routine to come will also do some of the same work
+
+        // rules: merge smaller sample count into larger
+        // rules: merge only if the diff buckets in the smaller group can be explained by another BG exactly
+        // OR don't merge if the differing buckets are from the initial sets
 
         int bgIndex1 = 0;
         while (bgIndex1 < mBucketGroups.size())
@@ -973,84 +1151,277 @@ public class BucketAnalyser {
             while (bgIndex2 < mBucketGroups.size())
             {
                 BucketGroup bg2 = mBucketGroups.get(bgIndex2);
-                boolean removeBg2 = false;
 
-                final List<Integer> commonBuckets = getMatchingBucketList(bg1.getBucketIds(), bg2.getBucketIds());
-
-                int commmonBucketCount = commonBuckets.size();
-                double bg1Match = commmonBucketCount / (double) bg1.getBucketIds().size();
-                double bg2Match = commmonBucketCount / (double) bg2.getBucketIds().size();
-                double minMatch = min(bg1Match, bg2Match);
+                // first check CSS on the common buckets only
                 double bcCss = calcSharedCSS(bg1.getBucketCounts(), bg2.getBucketCounts());
 
-                if (minMatch >= reqMatchPercent && bcCss >= cssThreshold)
+                if (bcCss < cssThreshold)
                 {
-                    int bg1SC = bg1.getSampleIds().size();
-                    int bg2SC = bg2.getSampleIds().size();
+                    ++bgIndex2;
+                    continue;
+                }
 
-                    if(minMatch < 1)
-                    {
-                        // should new buckets be merged in? or just go with the common set or most prevalent set
-                        if (bg1SC > 1.5 * bg2SC)
-                        {
-                            bg1.merge(bg2.getSampleIds(), bg2.getBucketCounts());
-                            removeBg2 = true;
-                        }
-                        else if (bg2SC > 1.5 * bg1SC)
-                        {
-                            bg2.merge(bg1.getSampleIds(), bg1.getBucketCounts());
-                            removeBg1 = true;
-                        }
-                        else
-                        {
-                            // go with the common set only
-                            bg1.merge(bg2.getSampleIds(), bg2.getBucketCounts());
-                            bg1.reduceToBucketSet(commonBuckets);
-                            removeBg2 = true;
-                        }
-                    }
-                    else
+                boolean removeBg2 = false;
+
+                final List<Integer> commonInitBuckets = getMatchingBucketList(bg1.getInitialBucketIds(), bg2.getInitialBucketIds());
+                final List<Integer> commonAllBuckets = getMatchingBucketList(bg1.getBucketIds(), bg2.getBucketIds());
+
+                int commonInitCount = commonInitBuckets.size();
+                int commonAllCount = commonAllBuckets.size();
+                int bc1 = bg1.getBucketIds().size();
+                int bc2 = bg2.getBucketIds().size();
+
+                double minMatchInit = min(commonInitCount/(double)bc1, commonInitCount/(double)bc2);
+                double minMatchAll = min(commonAllCount/(double)bc1, commonAllCount/(double)bc2);
+
+                if (minMatchAll < reqAllMatchPercent || minMatchInit < reqInitMatchPercent)
+                {
+//                    if(minMatchAll >= reqAllMatchPercent * 0.8 && bcCss >= 0.98)
+//                    {
+//                        LOGGER.debug(String.format("bg(%d) vs bg(%d) close-to-merge buckets(bg1=%d bg2=%d match=%d) css(%.4f)",
+//                                bg1.getId(), bg2.getId(), bg1.getBucketIds().size(), bg2.getBucketIds().size(), commmonBucketCount, bcCss));
+//                    }
+//                    else if(minMatch >= 0.8 && bcCss < 0.5)
+//                    {
+//                        // check for overlapping different processes?
+//                        LOGGER.debug(String.format("bg(%d) vs bg(%d) very diff despite buckets(bg1=%d bg2=%d match=%d) css(%.4f)",
+//                                bg1.getId(), bg2.getId(), bg1.getBucketIds().size(), bg2.getBucketIds().size(), commmonBucketCount, bcCss));
+//                    }
+
+                    ++bgIndex2;
+                    continue;
+                }
+
+                int bg1SC = bg1.getSampleIds().size();
+                int bg2SC = bg2.getSampleIds().size();
+
+                if(minMatchAll < 1 || minMatchInit < 1)
+                {
+                    // should new buckets be merged in? or just go with the common set or most prevalent set
+                    if (bg1SC > 1.5 * bg2SC)
                     {
                         bg1.merge(bg2.getSampleIds(), bg2.getBucketCounts());
                         removeBg2 = true;
                     }
-
-                    LOGGER.debug(String.format("bg(%d) %s bg(%d) buckets(bg1=%d bg2=%d match=%d) css(%.4f) samples(bg1=%d bg2=%d total=%d)",
-                            bg1.getId(), removeBg2 ? "merges in" : "merged into", bg2.getId(), bg1.getBucketIds().size(), bg2.getBucketIds().size(),
-                            commmonBucketCount, bcCss, bg1SC, bg2SC, bg1SC + bg2SC));
-
-                    if(removeBg2)
-                        mBucketGroups.remove(bgIndex2);
+                    else if (bg2SC > 1.5 * bg1SC)
+                    {
+                        bg2.merge(bg1.getSampleIds(), bg1.getBucketCounts());
+                        removeBg1 = true;
+                    }
                     else
-                        break;
+                    {
+                        // go with the common set only
+                        bg1.merge(bg2.getSampleIds(), bg2.getBucketCounts());
+                        bg1.reduceToBucketSet(commonAllBuckets);
+                        removeBg2 = true;
+                    }
+                }
+                else
+                {
+                    // both groups have the same buckets so merging either direction is fine
+                    bg1.merge(bg2.getSampleIds(), bg2.getBucketCounts());
+                    removeBg2 = true;
+                }
 
-                    continue;
-                }
-                else if(minMatch >= reqMatchPercent * 0.8 && bcCss >= 0.98)
-                {
-                    LOGGER.debug(String.format("bg(%d) vs bg(%d) close-to-merge buckets(bg1=%d bg2=%d match=%d) css(%.4f)",
-                            bg1.getId(), bg2.getId(), bg1.getBucketIds().size(), bg2.getBucketIds().size(), commmonBucketCount, bcCss));
-                }
-                else if(minMatch >= 0.3 && bcCss < 0.5)
-                {
-                    // check for overlapping different processes?
-                    LOGGER.debug(String.format("bg(%d) vs bg(%d) very diff despite buckets(bg1=%d bg2=%d match=%d) css(%.4f)",
-                            bg1.getId(), bg2.getId(), bg1.getBucketIds().size(), bg2.getBucketIds().size(), commmonBucketCount, bcCss));
-                }
+                LOGGER.debug(String.format("bg(%d) %s bg(%d) buckets(bg1=%d bg2=%d matchInit=%.2f matchAll=%.2f) css(%.4f) samples(bg1=%d bg2=%d total=%d)",
+                        bg1.getId(), removeBg2 ? "merges in" : "merged into", bg2.getId(), bg1.getBucketIds().size(), bg2.getBucketIds().size(),
+                        minMatchInit, minMatchAll, bcCss, bg1SC, bg2SC, bg1SC + bg2SC));
 
                 if(removeBg2)
+                {
                     mBucketGroups.remove(bgIndex2);
+                    continue;
+                }
                 else
-                    ++bgIndex2;
-
-                if(removeBg1)
+                {
+                    // BG 1 will be removed
                     break;
+                }
             }
 
             if(removeBg1)
                 mBucketGroups.remove(bgIndex1);
             else
                 ++bgIndex1;
+        }
+    }
+
+    private void collapseBucketSamples()
+    {
+        // if a sample is allocated to 2 bucket groups, where one is wholy covered by another,
+        // then remove it from the smaller group
+        for (int bgIndex1 = 0; bgIndex1 < mBucketGroups.size(); ++bgIndex1)
+        {
+            BucketGroup bg1 = mBucketGroups.get(bgIndex1);
+
+            for (int bgIndex2 = bgIndex1 + 1; bgIndex2 < mBucketGroups.size(); ++bgIndex2)
+            {
+                BucketGroup bg2 = mBucketGroups.get(bgIndex2);
+
+                final List<Integer> commonBuckets = getMatchingBucketList(bg1.getBucketIds(), bg2.getBucketIds());
+                int commmonBucketCount = commonBuckets.size();
+
+                if (commmonBucketCount != bg1.getBucketIds().size() && commmonBucketCount != bg2.getBucketIds().size())
+                    continue;
+
+                double bcCss = calcSharedCSS(bg1.getBucketCounts(), bg2.getBucketCounts());
+
+                if (bcCss < mHighCssThreshold)
+                    continue;
+
+                // move samples out of this bucket group if they're in the larger group
+                boolean bg1IsSubset = commmonBucketCount == bg1.getBucketIds().size();
+
+                final List<Integer> mainSamples = bg1IsSubset ? bg2.getSampleIds() : bg1.getSampleIds();
+                List<Integer> subsetSamples = bg1IsSubset ? bg1.getSampleIds() : bg2.getSampleIds();
+
+                int samplesRemoved = 0;
+                int samIndex = 0;
+                while(samIndex < subsetSamples.size())
+                {
+                    Integer sampleId = subsetSamples.get(samIndex);
+
+                    if(mainSamples.contains(sampleId))
+                    {
+                        subsetSamples.remove(samIndex);
+                        ++samplesRemoved;
+                    }
+                    else
+                    {
+                        ++samIndex;
+                    }
+                }
+
+                if(samplesRemoved > 0)
+                {
+                    LOGGER.debug(String.format("bg(%d) %s with bg(%d) buckets(bg1=%d bg2=%d match=%d) css(%.4f) samples(bg1=%d bg2=%d switched=%d)",
+                            bg1.getId(), bg1IsSubset ? "subset" : "superset", bg2.getId(), bg1.getBucketIds().size(), bg2.getBucketIds().size(),
+                            commmonBucketCount, bcCss, bg1.getSampleIds().size(), bg2.getSampleIds().size(), samplesRemoved));
+                }
+            }
+        }
+
+        // finally remove any bucket groups which now have no samples
+        int bgIndex = 0;
+        int bgRemoved = 0;
+        while(bgIndex < mBucketGroups.size())
+        {
+            BucketGroup bucketGroup = mBucketGroups.get(bgIndex);
+
+            if(bucketGroup.getSampleIds().size() < 2)
+            {
+                mBucketGroups.remove(bgIndex);
+                ++bgRemoved;
+            }
+            else
+            {
+                ++bgIndex;
+            }
+        }
+
+        if(bgRemoved > 0)
+        {
+            LOGGER.debug("removed {} bucket groups with < 2 samples after merging", bgRemoved);
+        }
+    }
+
+    private void recalcBucketData()
+    {
+        // post merging, recalc bucket counts across all samples for a group
+        // and work out purity as percentage of all sample buckets that are elevated
+        int bucketCount = mSampleCounts.Rows;
+
+        final double[][] scData = mSampleCounts.getData();
+
+        for (final BucketGroup bucketGroup : mBucketGroups)
+        {
+            final List<Integer> sampleIds = bucketGroup.getSampleIds();
+            final List<Integer> bucketIds = bucketGroup.getBucketIds();
+            int lowProbCount = 0;
+
+            // recalc the bucket count totals since merging can double-count some samples
+            double[] bucketCounts = new double[bucketCount];
+
+            for (Integer sampleId : sampleIds)
+            {
+                final List<Integer> elevatedBuckets = mAllSampleBucketGroups.get(sampleId);
+
+                for (Integer bucketId : bucketIds)
+                {
+                    bucketCounts[bucketId] += scData[bucketId][sampleId];
+
+                    if (elevatedBuckets != null && elevatedBuckets.contains(bucketId))
+                    {
+                        ++lowProbCount;
+                    }
+                }
+            }
+
+            bucketGroup.setBucketCounts(bucketCounts);
+
+            double purity = lowProbCount / (double)bucketGroup.getSize();
+            bucketGroup.setPurity(purity);
+
+            LOGGER.debug(String.format("bg(%d) size(%d samples=%d buckets=%d) purity(%.2f) score(%.0f)",
+                    bucketGroup.getId(), bucketGroup.getSize(), sampleIds.size(), bucketIds.size(),
+                    purity, bucketGroup.calcScore()));
+        }
+    }
+
+    private void analyseGroupsVsExtData()
+    {
+        if(mExtSampleData == null)
+            return;
+
+        LOGGER.debug("analysing {} bucket groups", mBucketGroups.size());
+
+        // check counts for each external data category against the samples in each bucket group
+
+        // want to know if:
+        // a) the samples have 1 or more identical categoroes and
+        // b) the proportion of these categories out of the cohort (ie missing other samples, linked to other bucket groups)
+
+        for (BucketGroup bucketGroup : mBucketGroups)
+        {
+            final List<Integer> sampleIds = bucketGroup.getSampleIds();
+            int sampleCount = sampleIds.size();
+
+            HashMap<String,Integer> categoryCounts = populateSampleCategoryMap(sampleIds);
+
+            for(Map.Entry<String,Integer> entrySet : categoryCounts.entrySet())
+            {
+                final String catName = entrySet.getKey();
+                int catSampleCount = entrySet.getValue();
+                double samplesPerc = catSampleCount/(double)sampleCount;
+
+                if(samplesPerc < DOMINANT_CATEGORY_PERCENT * 0.5)
+                    continue;
+
+                int catAllCount = mExtCategoriesMap.get(catName);
+                double catPerc = catSampleCount / (double) catAllCount;
+
+                LOGGER.debug(String.format("bg(%d) category(%s) count(%d of %d) perc(group=%.3f category=%.3f) buckets(%d)",
+                        bucketGroup.getId(), catName, catSampleCount, sampleCount, samplesPerc, catPerc, bucketGroup.getBucketIds().size()));
+
+                if(samplesPerc >= DOMINANT_CATEGORY_PERCENT)
+                {
+                    if(extractCategoryName(catName).equals(CATEGORY_CANCER_TYPE))
+                    {
+                        bucketGroup.setCancerType(extractCategoryValue(catName));
+                    }
+                    else
+                    {
+                        String effects = bucketGroup.getEffects();
+
+                        if(effects.isEmpty())
+                            effects = catName;
+                        else
+                            effects += ";" + catName;
+
+                        bucketGroup.setEffects(effects);
+                    }
+                }
+            }
         }
     }
 
@@ -1061,9 +1432,10 @@ public class BucketAnalyser {
 
         // log top groups
         int maxToLog = clearTypesOnly ? mBucketGroups.size() : min(mBucketGroups.size(), 40);
-        int minScore = clearTypesOnly ? 0 : 10; // 4 samples x 5 buckets, or 2 x 10
+        int minScore = clearTypesOnly ? 0 : 10; // 4 samples x 5 buckets, or 2 x 10, and adjusted for purity
 
-        LOGGER.debug("logging top {} buckets", clearTypesOnly ? "clear-type" : maxToLog);
+        LOGGER.debug("logging top {} bucket groups of total({})",
+                clearTypesOnly ? "clear-type" : maxToLog, mBucketGroups.size());
 
         for (int i = 0; i < maxToLog; ++i)
         {
@@ -1072,22 +1444,79 @@ public class BucketAnalyser {
             if (bucketGroup.calcScore() < minScore)
                 break;
 
-            if(clearTypesOnly)
+            if (clearTypesOnly)
             {
-                if(bucketGroup.getCancerType().isEmpty())
+                if (bucketGroup.getCancerType().isEmpty())
                     continue;
 
-                LOGGER.debug(String.format("rank %d: bg(%d) cancer(%s) score(%.0f) samples(%d) buckets(%d: %s) effects(%s)",
-                        i, bucketGroup.getId(), bucketGroup.getCancerType(), bucketGroup.calcScore(), bucketGroup.getSampleIds().size(),
-                        bucketGroup.getBucketIds().size(), bucketGroup.getBucketIds().toString(), bucketGroup.getEffects()));
+                String bucketIdsStr = bucketGroup.getInitialBucketIds().toString();
+
+                if (!bucketGroup.getExtraBucketIds().isEmpty())
+                {
+                    bucketIdsStr += " extra=" + bucketGroup.getExtraBucketIds().toString();
+                }
+
+                LOGGER.debug(String.format("rank %d: bg(%d) cancer(%s) score(%.0f size=%d purity=%.2f) samples(%d) buckets(%d: %s) effects(%s)",
+                        i, bucketGroup.getId(), bucketGroup.getCancerType(), bucketGroup.calcScore(), bucketGroup.getSize(), bucketGroup.getPurity(),
+                        bucketGroup.getSampleIds().size(), bucketGroup.getBucketIds().size(), bucketIdsStr, bucketGroup.getEffects()));
             }
             else
             {
-                LOGGER.debug(String.format("rank %d: bg(%d) score(%.0f) samples(%d) buckets(%d)",
-                        i, bucketGroup.getId(), bucketGroup.calcScore(), bucketGroup.getSampleIds().size(),
-                        bucketGroup.getBucketIds().size()));
+                LOGGER.debug(String.format("rank %d: bg(%d) score(%.0f size=%d purity=%.2f) samples(%d) buckets(%d)",
+                        i, bucketGroup.getId(), bucketGroup.calcScore(), bucketGroup.getSize(), bucketGroup.getPurity(),
+                        bucketGroup.getSampleIds().size(), bucketGroup.getBucketIds().size()));
             }
         }
+    }
+
+    private void writeBucketGroups()
+    {
+        try
+        {
+            BufferedWriter writer = getNewFile(mOutputDir, mOutputFileId + "_ba_group_data.csv");
+
+            writer.write("Rank,BgId,CancerType,Effects,SampleCount,BucketCount,MutLoad,Purity");
+
+            int bucketCount = mSampleCounts.Rows;
+
+            for(int i = 0; i < bucketCount; ++i)
+            {
+                writer.write(String.format(",%d", i));
+            }
+
+            writer.newLine();
+
+            int minScore = 20;
+
+            for (int bgIndex = 0; bgIndex < mBucketGroups.size(); ++bgIndex)
+            {
+                BucketGroup bucketGroup = mBucketGroups.get(bgIndex);
+
+                if (bucketGroup.calcScore() < minScore)
+                    break;
+
+                writer.write(String.format("%d,%d,%s,%s,%d,%d,%.0f,%.2f",
+                        bgIndex, bucketGroup.getId(), bucketGroup.getCancerType(), bucketGroup.getEffects(),
+                        bucketGroup.getSampleIds().size(), bucketGroup.getBucketIds().size(),
+                        sumVector(bucketGroup.getBucketCounts()), bucketGroup.getPurity()));
+
+                double[] bucketRatios = bucketGroup.getBucketRatios();
+
+                for(int i = 0; i < bucketCount; ++i)
+                {
+                    writer.write(String.format(",%.6f", bucketRatios[i]));
+                }
+
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch(IOException exception)
+        {
+            LOGGER.error("failed to write output file: bucket groups");
+        }
+
     }
 
     private void logSampleResults()
@@ -1165,8 +1594,9 @@ public class BucketAnalyser {
                     continue;
 
                 final List<Integer> commonBuckets = getMatchingBucketList(bucketGroup.getBucketIds(), samBucketList);
+                int commonBucketCount = commonBuckets.size();
 
-                if(commonBuckets.size() < 0.5 * samBucketList.size())
+                if(commonBucketCount < 0.5 * samBucketList.size() || commonBucketCount < 2)
                     continue;
 
                 double[] sc1 = extractBucketCountSubset(sampleId, commonBuckets);
@@ -1201,63 +1631,6 @@ public class BucketAnalyser {
                 unallocated, someMatchCount, noMatchCount, mBucketGroups.size());
     }
 
-    private void analyseGroupsVsExtData()
-    {
-        if(mExtSampleData == null)
-            return;
-
-        LOGGER.debug("analysing {} bucket groups", mBucketGroups.size());
-
-        // check counts for each external data category against the samples in each bucket group
-
-        // want to know if:
-        // a) the samples have 1 or more identical categoroes and
-        // b) the proportion of these categories out of the cohort (ie missing other samples, linked to other bucket groups)
-
-        for (BucketGroup bucketGroup : mBucketGroups)
-        {
-            final List<Integer> sampleIds = bucketGroup.getSampleIds();
-            int sampleCount = sampleIds.size();
-
-            HashMap<String,Integer> categoryCounts = populateSampleCategoryMap(sampleIds);
-
-            for(Map.Entry<String,Integer> entrySet : categoryCounts.entrySet())
-            {
-                final String catName = entrySet.getKey();
-                int catSampleCount = entrySet.getValue();
-                double samplesPerc = catSampleCount/(double)sampleCount;
-
-                if(samplesPerc < DOMINANT_CATEGORY_PERCENT * 0.5)
-                    continue;
-
-                int catAllCount = mExtCategoriesMap.get(catName);
-                double catPerc = catSampleCount / (double) catAllCount;
-
-                LOGGER.debug(String.format("bg(%d) category(%s) count(%d of %d) perc(group=%.3f category=%.3f) buckets(%d)",
-                        bucketGroup.getId(), catName, catSampleCount, sampleCount, samplesPerc, catPerc, bucketGroup.getBucketIds().size()));
-
-                if(samplesPerc >= DOMINANT_CATEGORY_PERCENT)
-                {
-                    if(extractCategoryName(catName).equals(CATEGORY_CANCER_TYPE))
-                    {
-                        bucketGroup.setCancerType(extractCategoryValue(catName));
-                    }
-                    else
-                    {
-                        String effects = bucketGroup.getEffects();
-
-                        if(effects.isEmpty())
-                            effects = catName;
-                        else
-                            effects += ";" + catName;
-
-                        bucketGroup.setEffects(effects);
-                    }
-                }
-            }
-        }
-    }
-
     private void compareSignatures()
     {
         if(mProposedSigs != null)
@@ -1272,14 +1645,14 @@ public class BucketAnalyser {
             {
                 for (final double[] result : cssResults)
                 {
-                    int bgId1 = (int)result[CSSR_I1];
-                    int bgId2 = (int)result[CSSR_I2];
-                    final BucketGroup bg1 = mBucketGroups.get(bgId1);
-                    final BucketGroup bg2 = mBucketGroups.get(bgId2);
+                    int sigId1 = (int)result[CSSR_I1];
+                    int sigId2 = (int)result[CSSR_I2];
+                    final BucketGroup bg1 = mBucketGroups.get(mSigToBgMapping.get(sigId1));
+                    final BucketGroup bg2 = mBucketGroups.get(mSigToBgMapping.get(sigId2));
 
-                    LOGGER.debug(String.format("proposed sigs bg(%d: ct=%s eff=%s samples=%d) matches bg(%d: ct=%s eff=%s samples=%d) with css(%.4f)",
-                            bg1.getId(), bg1.getCancerType(), bg1.getEffects(), bg1.getSampleIds().size(),
-                            bg2.getId(), bg2.getCancerType(), bg2.getEffects(), bg2.getSampleIds().size(), result[CSSR_VAL]));
+                    LOGGER.debug(String.format("proposed sig(%s bg=%d: ct=%s eff=%s samples=%d) matches sig(%d bg=%d: ct=%s eff=%s samples=%d) with css(%.4f)",
+                            sigId1, bg1.getId(), bg1.getCancerType(), bg1.getEffects(), bg1.getSampleIds().size(),
+                            sigId2, bg2.getId(), bg2.getCancerType(), bg2.getEffects(), bg2.getSampleIds().size(), result[CSSR_VAL]));
                 }
             }
         }
@@ -1298,12 +1671,12 @@ public class BucketAnalyser {
             for (final double[] result : cssResults)
             {
                 int externalSigId = (int)result[CSSR_I1] + 1; // bumped up to correspond to convention of starting with 1
-                int bgId = (int)result[CSSR_I2];
-                final BucketGroup bucketGroup = mBucketGroups.get(bgId);
+                int proposedSigId = (int)result[CSSR_I2];
+                final BucketGroup bucketGroup = mBucketGroups.get(mSigToBgMapping.get(proposedSigId));
 
-                LOGGER.debug(String.format("external ref sig(%d) matches bg(%d: ct=%s eff=%s samples=%d) with css(%.4f)",
+                LOGGER.debug(String.format("external ref sig(%d) matches bg(%d: ct=%s eff=%s samples=%d purity=%.2f) with css(%.4f)",
                         externalSigId, bucketGroup.getId(), bucketGroup.getCancerType(), bucketGroup.getEffects(),
-                        bucketGroup.getSampleIds().size(), result[CSSR_VAL]));
+                        bucketGroup.getSampleIds().size(), bucketGroup.getPurity(), result[CSSR_VAL]));
             }
         }
     }
@@ -1400,7 +1773,7 @@ public class BucketAnalyser {
 
         for(int sampleId = 0; sampleId < sampleCount; ++sampleId)
         {
-            final List<Integer> bucketGroups = getSampleBucketGroups(sampleId);
+            final List<Integer> bucketGroups = getSampleBucketGroupIndices(sampleId);
             final List<Integer> elevatedBuckets = mAllSampleBucketGroups.get(sampleId);
 
             int expAboveActual = 0;
@@ -1466,52 +1839,209 @@ public class BucketAnalyser {
                 }
             }
 
-            if(expAboveActual > 0.5 * elevatedCount || expAboveActualTotal > 0.1 * bgSampleTotal || lowProbExpAboveActual > 0)
-            {
-                LOGGER.debug(String.format("sample(%d) totals(bg=%.0f elev=%.0f bgExp=%.0f act=%.0f) expAboveActual(%d total=%.0f) elevated(%d lowProb=%d clash=%d)",
-                        sampleId, bgTotal, elevTotal, bgSampleTotal, mSampleTotals[sampleId],
-                        expAboveActual, expAboveActualTotal, elevatedCount, lowProbCount, lowProbExpAboveActual));
-            }
+//            if(expAboveActual > 0.5 * elevatedCount || expAboveActualTotal > 0.1 * bgSampleTotal || lowProbExpAboveActual > 0)
+//            {
+//                LOGGER.debug(String.format("sample(%d) totals(bg=%.0f elev=%.0f bgExp=%.0f act=%.0f) expAboveActual(%d total=%.0f) elevated(%d lowProb=%d clash=%d)",
+//                        sampleId, bgTotal, elevTotal, bgSampleTotal, mSampleTotals[sampleId],
+//                        expAboveActual, expAboveActualTotal, elevatedCount, lowProbCount, lowProbExpAboveActual));
+//            }
         }
 
-        writeSampleMatrixData(elevatedData, "ba_elevated_sc.csv");
-        writeSampleMatrixData(mBackgroundCounts, "ba_background_sc.csv");
+        writeSampleMatrixData(elevatedData, "_ba_elevated_sc.csv");
+        writeSampleMatrixData(mBackgroundCounts, "_ba_background_sc.csv");
+    }
+
+    private void calcSampleOverlaps()
+    {
+        try
+        {
+            BufferedWriter writer = getNewFile(mOutputDir,mOutputFileId + "_ba_all_sample_css.csv");
+
+            writer.write("SamId1,SamName2,SamCT1,S1Elevated,SamId2,SamName2,SamCT2,S2Elevated,Common,Matched,CSS,Buckets");
+            writer.newLine();
+
+            int sampleCount = mSampleCounts.Cols;
+            final double[][] scData = mSampleCounts.getData();
+
+            for (int samIndex1 = 0; samIndex1 < sampleCount; ++samIndex1)
+            {
+                final List<Integer> bl1 = mAllSampleBucketGroups.get(samIndex1);
+
+                if (bl1 == null)
+                    continue;
+
+                final String sName1 = getSampleName(samIndex1);
+                final List<String> sData1 = getSampleExtData(sName1);
+
+                for (int samIndex2 = samIndex1 + 1; samIndex2 < sampleCount; ++samIndex2)
+                {
+                    final List<Integer> bl2 = mAllSampleBucketGroups.get(samIndex2);
+
+                    if (bl2 == null)
+                        continue;
+
+                    List<Integer> commonBuckets = getMatchingBucketList(bl1, bl2);
+                    int commonBucketCount = commonBuckets.size();
+
+                    if(commonBucketCount < 2)
+                        continue;
+
+                    double[] sc1 = extractBucketCountSubset(samIndex1, commonBuckets);
+                    double[] sc2 = extractBucketCountSubset(samIndex2, commonBuckets);
+                    double bcCss = calcSharedCSS(sc1, sc2);
+
+                    double cssMatched = 0;
+                    int cssMatchedCount = 0;
+
+                    List<Integer> removedBuckets = Lists.newArrayList();
+
+                    if(bcCss >= mHighCssThreshold)
+                    {
+                        cssMatched = bcCss;
+                        cssMatchedCount = commonBucketCount;
+                    }
+                    else if(commonBucketCount > 2)
+                    {
+                        // attempt to find a match using less overlapping buckets
+                        int currentBucketCount = commonBucketCount;
+
+                        while(currentBucketCount > 2 && bcCss < mHighCssThreshold)
+                        {
+                            int lastTestBucket = -1;
+                            double bestCss = 0;
+                            int bestTestBucket = 0;
+
+                            for(Integer removedBucket : removedBuckets)
+                            {
+                                sc1[removedBucket] = 0;
+                                sc2[removedBucket] = 0;
+                            }
+
+                            for(Integer testBucket : commonBuckets)
+                            {
+                                sc1[testBucket] = 0;
+                                sc2[testBucket] = 0;
+
+                                // restore previous test bucket
+                                if(lastTestBucket != -1)
+                                {
+                                    sc1[lastTestBucket] = scData[lastTestBucket][samIndex1];
+                                    sc2[lastTestBucket] = scData[lastTestBucket][samIndex2];
+                                }
+
+                                // run CSS on this reduced set of buckets
+                                bcCss = calcSharedCSS(sc1, sc2);
+                                lastTestBucket = testBucket;
+
+                                if(bcCss > bestCss)
+                                {
+                                    bestCss = bcCss;
+                                    bestTestBucket = testBucket;
+                                }
+
+                                if(bcCss >= mHighCssThreshold)
+                                    break;
+                            }
+
+                            --currentBucketCount;
+                            cssMatched = bestCss;
+                            removedBuckets.add(bestTestBucket);
+
+                            if(bestCss >= mHighCssThreshold)
+                            {
+                                cssMatchedCount = currentBucketCount;
+                            }
+                        }
+                    }
+
+                    String bucketIdsStr = "";
+                    for(Integer bucket : commonBuckets)
+                    {
+                        if(removedBuckets.contains(bucket))
+                            continue;
+
+                        if(!bucketIdsStr.isEmpty())
+                            bucketIdsStr += ";";
+
+                        bucketIdsStr += bucket;
+                    }
+
+                    final String sName2 = getSampleName(samIndex2);
+                    final List<String> sData2 = getSampleExtData(sName2);
+
+                    writer.write(String.format("%d,%s,%s,%d,%d,%s,%s,%d,%d,%d,%.6f,%s",
+                            samIndex1, sName1, sData1.get(COL_CANCER_TYPE), bl1.size(),
+                            samIndex2, sName2, sData2.get(COL_CANCER_TYPE), bl2.size(),
+                            commonBucketCount, cssMatchedCount, cssMatched, bucketIdsStr));
+
+                    writer.newLine();
+                }
+            }
+
+            writer.close();
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing to outputFile");
+        }
     }
 
     private void createSignatures()
     {
+        LOGGER.debug("creating signatures");
+
         int bucketCount = mSampleCounts.Rows;
 
         int proposedSigCount = min(mMaxProposedSigs, mBucketGroups.size());
 
         mProposedSigs = new NmfMatrix(bucketCount, proposedSigCount);
-        double[][] sigData = mProposedSigs.getData();
-        final double[][] scData = mSampleCounts.getData();
 
-        for(int sigId = 0; sigId < proposedSigCount; ++sigId)
+        NmfMatrix sigTest = new NmfMatrix(bucketCount, 1);
+
+        double purityThreshold = 0.7;
+        int scoreThreshold = 50;
+        int minSamples = 10;
+
+        int sigId = 0;
+
+
+        for(int bgIndex = 0; bgIndex < mBucketGroups.size(); ++bgIndex)
         {
-            final BucketGroup bucketGroup = mBucketGroups.get(sigId);
+            final BucketGroup bucketGroup = mBucketGroups.get(bgIndex);
 
-            final List<Integer> sampleIds = bucketGroup.getSampleIds();
-            final List<Integer> bucketIds = bucketGroup.getBucketIds();
+            if(bucketGroup.getPurity() < purityThreshold || bucketGroup.calcScore() < scoreThreshold
+            || bucketGroup.getSampleIds().size() < minSamples)
+                continue;
 
-            // recalc the bucket count totals since merging can double-count some samples
-            double[] bucketCounts = new double[bucketCount];
-            for(Integer bucketId : bucketIds)
+            final double[] bucketRatios = bucketGroup.getBucketRatios();
+
+            sigTest.setCol(0, bucketRatios);
+
+            List<double[]> cssResults = getTopCssPairs(sigTest, mProposedSigs, 0.995, false, false);
+
+            if (!cssResults.isEmpty())
             {
-                for(Integer sampleId : sampleIds)
-                {
-                    bucketCounts[bucketId] += scData[bucketId][sampleId];
-                }
+                final double[] result = cssResults.get(0);
+                LOGGER.debug(String.format("bg(%d) too similar to sig(%d) with css(%.4f)", bucketGroup.getId(), (int)result[CSSR_I2], result[CSSR_VAL]));
+                continue;
             }
 
-            double totalCount = sumVector(bucketCounts);
+            LOGGER.debug(String.format("bg(%d) added as sig(%d): score(%.0f purity=%.2f sam=%d buckets=%s) type(%s effects=%s)",
+                    bucketGroup.getId(), sigId, bucketGroup.calcScore(), bucketGroup.getPurity(), bucketGroup.getSampleIds().size(),
+                    bucketGroup.getBucketIds().size(), bucketGroup.getCancerType(), bucketGroup.getEffects()));
 
-            // now normalise the signature to percents
-            for(int i = 0; i < bucketCount; ++i)
-            {
-                sigData[i][sigId] = bucketCounts[i] / totalCount;
-            }
+            mProposedSigs.setCol(sigId, bucketRatios);
+            mSigToBgMapping.add(bgIndex);
+
+            ++sigId;
+
+            if(sigId >= proposedSigCount)
+                break;
+        }
+
+        if(sigId != proposedSigCount)
+        {
+            mProposedSigs = redimension(mProposedSigs, mProposedSigs.Rows, sigId);
         }
 
         writeSignatures(mProposedSigs);
@@ -1534,7 +2064,17 @@ public class BucketAnalyser {
         return false;
     }
 
-    private List<Integer> getSampleBucketGroups(int sample)
+    private List<Integer> getSampleBucketGroupIds(int sampleId)
+    {
+        return getSampleBucketGroups(sampleId, true);
+    }
+
+    private List<Integer> getSampleBucketGroupIndices(int sampleId)
+    {
+        return getSampleBucketGroups(sampleId, false);
+    }
+
+    private List<Integer> getSampleBucketGroups(int sampleId, boolean getIds)
     {
         List<Integer> groupIds = Lists.newArrayList();
 
@@ -1542,8 +2082,8 @@ public class BucketAnalyser {
         {
             BucketGroup bucketGroup = mBucketGroups.get(i);
 
-            if (bucketGroup.hasSample(sample))
-                groupIds.add(i);
+            if (bucketGroup.hasSample(sampleId))
+                groupIds.add(getIds ? bucketGroup.getId() : i);
         }
 
         return groupIds;
@@ -1551,7 +2091,7 @@ public class BucketAnalyser {
 
     private int getSampleGroupMembershipCount(int sample)
     {
-        return getSampleBucketGroups(sample).size();
+        return getSampleBucketGroupIndices(sample).size();
     }
 
     private boolean areMostSampleBucketsAllocated(int sample, final List<Integer> sampleBuckets, double reqPercent)
@@ -1701,7 +2241,7 @@ public class BucketAnalyser {
                 if(sampleBuckets == null)
                     continue;;
 
-                final List<Integer> bgIds = getSampleBucketGroups(i);
+                final List<Integer> bgIds = getSampleBucketGroupIndices(i);
                 final String sampleName = getSampleName(i);
 
                 int bucketsAllocated = getSampleBucketsAllocated(i, sampleBuckets);
@@ -1720,10 +2260,15 @@ public class BucketAnalyser {
 
                 if(!bgIds.isEmpty())
                 {
-                    final BucketGroup bucketGroup = mBucketGroups.get(bgIds.get(0));
-                    String bgIdsStr = bgIds.toString().substring(1, bgIds.toString().length()-1);
-                    if(bgIds.size() > 1)
-                        bgIdsStr = bgIdsStr.replaceAll(", ", ";");
+                    final BucketGroup bucketGroup = mBucketGroups.get(bgIds.get(0)); // take cancer type from the first entry
+
+                    String bgIdsStr = String.valueOf(bucketGroup.getId());
+
+                    for(int j = 1; j < bgIds.size(); ++j)
+                    {
+                        final BucketGroup bg = mBucketGroups.get(bgIds.get(j));
+                        bgIdsStr += ";" + bg.getId();
+                    }
 
                     writer.write(String.format(",%s,%s,%s",
                             bgIdsStr, bucketGroup.getCancerType(), bucketGroup.getEffects()));

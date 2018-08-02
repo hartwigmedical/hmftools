@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.data_analyser.types;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.doublesEqual;
 
@@ -320,6 +321,31 @@ public class NmfMatrix {
         }
 
         return d;
+    }
+
+    public static NmfMatrix redimension(final NmfMatrix other, int rows, int cols)
+    {
+        if(other.Rows == rows && other.Cols== cols)
+            return other;
+
+        // returns a resized matrix, copying any data that can be
+        NmfMatrix matrix = new NmfMatrix(rows, cols);
+
+        int minRows = min(other.Rows, matrix.Rows);
+        int minCols = min(other.Cols, matrix.Cols);
+
+        final double[][] otherData = other.getData();
+        final double[][] mData = matrix.getData();
+
+        for(int i = 0; i < minRows; i++)
+        {
+            for (int j = 0; j < minCols; j++)
+            {
+                mData[i][j] = otherData[i][j];
+            }
+        }
+
+        return matrix;
     }
 
     public double euclideanDist(NmfMatrix b)

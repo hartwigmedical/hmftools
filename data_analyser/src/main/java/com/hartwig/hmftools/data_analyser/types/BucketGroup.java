@@ -2,6 +2,8 @@ package com.hartwig.hmftools.data_analyser.types;
 
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.doublesEqual;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
 
 import java.util.List;
@@ -15,6 +17,8 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
     List<Integer> mSampleIds;
     List<Integer> mBucketIds;
+    List<Integer> mInitialBucketIds;
+    List<Integer> mExtraBucketIds;
 
     // the bucket counts from the samples as per the specific buckets in this groiup
     double[] mCombinedBucketCounts;
@@ -26,7 +30,7 @@ public class BucketGroup implements Comparable<BucketGroup> {
     private String mCancerType;
     private String mEffects;
 
-    double mPurity; // how similar are the constituent samples' buckets (0-1)
+    double mPurity; // for now a percentage of sample buckets that are elevated
 
     public BucketGroup(int id)
     {
@@ -34,6 +38,8 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
         mSampleIds = Lists.newArrayList();
         mBucketIds = Lists.newArrayList();
+        mInitialBucketIds = Lists.newArrayList();
+        mExtraBucketIds = Lists.newArrayList();
         mCombinedBucketCounts = null;
         mBucketRatios = null;
         mBucketRatiosClean = false;
@@ -45,9 +51,18 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
     public int getId() { return mId; }
 
-    public double calcScore() { return mBucketIds.size() * mSampleIds.size(); }
+    public int getSize() { return mBucketIds.size() * mSampleIds.size(); }
+
+    public double calcScore()
+    {
+        if(mPurity == 0)
+            return getSize();
+
+        return getSize() * mPurity;
+    }
 
     public double getPurity() { return mPurity; }
+    public void setPurity(double purity) { mPurity = purity; }
 
     public void setCancerType(final String type) { mCancerType = type; }
     public final String getCancerType() { return mCancerType; }
@@ -63,6 +78,8 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
     public final List<Integer> getSampleIds() { return mSampleIds; }
     public final List<Integer> getBucketIds() { return mBucketIds; }
+    public final List<Integer> getInitialBucketIds() { return mInitialBucketIds; }
+    public final List<Integer> getExtraBucketIds() { return mExtraBucketIds; }
 
     public boolean hasSample(int sampleIndex)
     {
@@ -87,16 +104,6 @@ public class BucketGroup implements Comparable<BucketGroup> {
         mBucketRatiosClean = false;
 
         mSampleIds.add(sampleId);
-    }
-
-    public void addBucket(int bucketId, double[] bucketCounts)
-    {
-        if(mBucketIds.contains(bucketId))
-            return;
-
-        mBucketIds.add(bucketId);
-
-        mCombinedBucketCounts[bucketId] = sumVector(bucketCounts);
     }
 
     public void merge(List<Integer> sampleIds, double[] bucketCounts)
@@ -147,19 +154,40 @@ public class BucketGroup implements Comparable<BucketGroup> {
     {
         for(Integer bucket : bucketIds)
         {
-            addBucket(bucket);
+            addBucket(bucket,true);
         }
     }
 
-    public void addBucket(int bucketId)
+    public void addBucket(int bucketId, double[] bucketCounts, boolean isInitial)
+    {
+        if(mBucketIds.contains(bucketId))
+            return;
+
+        addBucket(bucketId, isInitial);
+
+        mCombinedBucketCounts[bucketId] = sumVector(bucketCounts);
+    }
+
+    private void addBucket(int bucketId, boolean isInitial)
     {
         if(mBucketIds.contains(bucketId))
             return;
 
         mBucketIds.add(bucketId);
+
+        if(isInitial)
+            mInitialBucketIds.add(bucketId);
+        else
+            mExtraBucketIds.add(bucketId);
     }
 
     public final double[] getBucketCounts() { return mCombinedBucketCounts; }
+
+    public void setBucketCounts(final double[] other)
+    {
+        copyVector(other, mCombinedBucketCounts);
+        mBucketRatiosClean = false;
+    }
 
     public final double[] getBucketRatios()
     {
@@ -175,7 +203,9 @@ public class BucketGroup implements Comparable<BucketGroup> {
                 mBucketRatios[i] = mCombinedBucketCounts[i] / totalCount;
             }
 
-            mBucketRatiosClean = true;
+            double ratioTotal = sumVector(mBucketRatios);
+            if(doublesEqual(ratioTotal, 1))
+                mBucketRatiosClean = true;
         }
 
         return mBucketRatios;
@@ -193,6 +223,20 @@ public class BucketGroup implements Comparable<BucketGroup> {
         }
 
         return matchedList;
+    }
+
+    public static List<Integer> getDiffBucketList(final List<Integer> bl1, final List<Integer> bl2)
+    {
+        // returns list of buckets in 1 but not in 2
+        List<Integer> diffList = Lists.newArrayList();
+
+        for(Integer bucket : bl1)
+        {
+            if(!bl2.contains(bucket))
+                diffList.add(bucket);
+        }
+
+        return diffList;
     }
 
     public static List<Integer> getCombinedBuckets(final List<Integer> bl1, final List<Integer> bl2)
