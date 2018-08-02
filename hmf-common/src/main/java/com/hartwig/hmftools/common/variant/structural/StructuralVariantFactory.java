@@ -208,8 +208,10 @@ public class StructuralVariantFactory {
         String insertedSequence = match.group(1).length() > 0 ?
                 match.group(1).substring(1) :
                 match.group(4).substring(0, match.group(4).length() - 1);
-
-        final String mantaInsertedSequence = first.getAttributeAsString(INS_SEQ, "");
+        if (Strings.isNullOrEmpty(insertedSequence)) {
+            final String mantaInsertedSequence = first.getAttributeAsString(INS_SEQ, "");
+            insertedSequence = mantaInsertedSequence;
+        }
         final boolean isSmallDelDup = first.getContig().equals(second.getContig()) &&
                 Math.abs(first.getStart() - second.getStart()) <= SMALL_DELDUP_SIZE &&
                 startOrientation != endOrientation;
@@ -228,12 +230,24 @@ public class StructuralVariantFactory {
                 .alleleFrequency(af.size() == 2 ? af.get(1) : null)
                 .build();
 
+        StructuralVariantType inferredType = StructuralVariantType.BND;
+        if (endLeg != null && startLeg.chromosome().equals(endLeg.chromosome())) {
+            if (startLeg.orientation() == endLeg.orientation()) {
+                inferredType = StructuralVariantType.INV;
+            } else if (startLeg.orientation() == -1) {
+                inferredType = StructuralVariantType.DUP;
+            } else if (insertedSequence != null && insertedSequence.length() > endLeg.position() - startLeg.position()) {
+                inferredType = StructuralVariantType.INS;
+            } else {
+                inferredType = StructuralVariantType.DEL;
+            }
+        }
         return setCommon(ImmutableStructuralVariantImpl.builder(), first)
                 .start(startLeg)
                 .end(endLeg)
                 .mateId(second.getID())
-                .insertSequence(Strings.isNullOrEmpty(mantaInsertedSequence) ? insertedSequence : mantaInsertedSequence)
-                .type(StructuralVariantType.BND)
+                .insertSequence(insertedSequence)
+                .type(inferredType)
                 .filter(filters(first, second))
                 .build();
     }
@@ -338,7 +352,7 @@ static ImmutableStructuralVariantLegImpl.Builder setLegCommon(@NotNull Immutable
             filters.remove("PASS");
         }
         // TODO Collectors string concatenation
-        final String filtersStr = filters.stream().collect(Collectors.joining(";"));
+        final String filtersStr = filters.stream().sorted().collect(Collectors.joining(";"));
         return filtersStr;
     }
     @NotNull

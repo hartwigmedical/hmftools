@@ -6,7 +6,12 @@ import static com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator.PON_FILT
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -98,7 +103,16 @@ public class LoadStructuralVariants {
             }
         } else {
             LOGGER.info("reading VCF File");
-            final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE), true);
+            // Let PON filtered SVs through since GRIDSS PON filtering is performed upstream
+            Set<String> allowableFilters = new HashSet<>();
+            allowableFilters.add("PASS");
+            allowableFilters.add(".");
+            allowableFilters.add("");
+            allowableFilters.add(PON_FILTER_PON);
+            allowableFilters.add(PON_FILTER_PASS);
+            final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE), false).stream()
+                    .filter(sv -> allowableFilters.contains(sv.filter()))
+                    .collect(Collectors.toList());
 
             LOGGER.info("enriching structural variants based on purple data");
             svList = enrichStructuralVariants(variants, dbAccess, tumorSample);
@@ -109,6 +123,7 @@ public class LoadStructuralVariants {
         if (svPONAnnotator != null && svPONAnnotator.hasEntries()) {
 
             for (EnrichedStructuralVariant variant : svList) {
+                boolean ponFiltered = false;
                 if (variant.end() != null) {
                     int ponCount = svPONAnnotator.getPonOccurenceCount(variant.chromosome(true),
                             variant.chromosome(false),
@@ -117,17 +132,20 @@ public class LoadStructuralVariants {
                             variant.orientation(true),
                             variant.orientation(false),
                             variant.type().toString());
-
-                    String filter = ponCount > 1 ? PON_FILTER_PON : PON_FILTER_PASS;
-
-                    final ImmutableEnrichedStructuralVariant updatedSV =
-                            ImmutableEnrichedStructuralVariant.builder().from(variant).filter(filter).build();
-                    updatedSVs.add(updatedSV);
-                } else {
-                    // TODO: single breakend PON
-                    // For now we just pass it through unmodified
-                    updatedSVs.add(variant);
+                    ponFiltered = ponCount > 1;
                 }
+                Set<String> filterSet = Stream.of(variant.filter().split(";"))
+                        .filter(s -> !s.equals("PASS"))
+                        .filter(s -> !s.equals("."))
+                        .filter(s -> !s.equals(""))
+                        .collect(Collectors.toSet());
+                if (ponFiltered) {
+                    filterSet.add(PON_FILTER_PON);
+                }
+                String filter = filterSet.size() == 0 ? "PASS" : filterSet.stream().sorted().collect(Collectors.joining(";" ));
+                final ImmutableEnrichedStructuralVariant updatedSV = ImmutableEnrichedStructuralVariant.builder()
+                    .from(variant).filter(filter).build();
+                updatedSVs.add(updatedSV);
             }
         } else {
             updatedSVs = svList;
