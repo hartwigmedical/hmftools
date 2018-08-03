@@ -33,12 +33,6 @@ public final class TreatmentMatcher {
         Collections.sort(biopsies);
         Collections.sort(treatments);
 
-        if (firstTreatmentBeforeFirstBiopsy(biopsies, treatments)) {
-            findings.add(treatmentMatchFinding(patientIdentifier,
-                    "First treatment prior to first biopsy",
-                    "biopsy date: " + biopsies.get(0).date() + ", first treatment start: " + treatments.get(0).startDate()));
-        }
-
         List<BiopsyTreatmentData> yesTreatments = getYesTreatments(treatments);
         List<BiopsyTreatmentData> notYesTreatments = getNotYesTreatments(treatments);
 
@@ -59,9 +53,6 @@ public final class TreatmentMatcher {
                     matchedTreatments.add(ImmutableBiopsyTreatmentData.builder().from(treatment).biopsyId(bestMatch.id()).build());
                     remainingBiopsies.remove(bestMatch);
                 } else {
-                    findings.add(treatmentMatchFinding(patientIdentifier,
-                            "Could not find a biopsy match for a given treatment and having a start date!",
-                            treatment.toString()));
                     matchedTreatments.add(treatment);
                 }
             }
@@ -111,20 +102,6 @@ public final class TreatmentMatcher {
             }
         }
         return findings;
-    }
-
-    private static boolean firstTreatmentBeforeFirstBiopsy(@NotNull final List<BiopsyData> sortedBiopsies,
-            @NotNull final List<BiopsyTreatmentData> sortedTreatments) {
-        if (sortedBiopsies.size() > 0 && sortedTreatments.size() > 0) {
-            LocalDate firstBiopsyDate = sortedBiopsies.get(0).date();
-            LocalDate firstTreatmentStart = sortedTreatments.get(0).startDate();
-
-            if (firstBiopsyDate != null && firstTreatmentStart != null) {
-                return firstTreatmentStart.isBefore(firstBiopsyDate);
-            }
-        }
-
-        return false;
     }
 
     private static boolean isPossibleMatch(@NotNull final BiopsyData biopsy, @NotNull final LocalDate treatmentStartDate) {
