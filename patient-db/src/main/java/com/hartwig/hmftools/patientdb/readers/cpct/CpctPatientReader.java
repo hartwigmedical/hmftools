@@ -59,9 +59,11 @@ public class CpctPatientReader implements PatientReader {
                 BiopsyMatcher.matchBiopsiesToTumorSamples(ecrfPatient.patientId(), sequencedBiopsies, clinicalBiopsies);
         final MatchResult<BiopsyTreatmentData> matchedTreatments =
                 TreatmentMatcher.matchTreatmentsToBiopsies(ecrfPatient.patientId(), withSampleMatchOnly(matchedBiopsies), treatments);
+
+        // KODU: We also match responses to unmatched treatments. Not sure that is optimal. See also DEV-477.
         final MatchResult<BiopsyTreatmentResponseData> matchedResponses = TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(
                 ecrfPatient.patientId(),
-                withBiopsyMatchOnly(matchedTreatments),
+                matchedTreatments.values(),
                 treatmentResponses);
 
         final List<ValidationFinding> findings = Lists.newArrayList();
@@ -90,16 +92,5 @@ public class CpctPatientReader implements PatientReader {
             }
         }
         return biopsiesWithMatchedSample;
-    }
-
-    @NotNull
-    private static List<BiopsyTreatmentData> withBiopsyMatchOnly(@NotNull MatchResult<BiopsyTreatmentData> treatments) {
-        List<BiopsyTreatmentData> treatmentsWithMatchedBiopsy = Lists.newArrayList();
-        for (BiopsyTreatmentData treatment : treatments.values()) {
-            if (treatment.biopsyId() != null) {
-                treatmentsWithMatchedBiopsy.add(treatment);
-            }
-        }
-        return treatmentsWithMatchedBiopsy;
     }
 }
