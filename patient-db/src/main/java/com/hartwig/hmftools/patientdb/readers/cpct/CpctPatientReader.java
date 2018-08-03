@@ -58,10 +58,10 @@ public class CpctPatientReader implements PatientReader {
         final MatchResult<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples(ecrfPatient.patientId(), sequencedBiopsies, clinicalBiopsies);
         final MatchResult<BiopsyTreatmentData> matchedTreatments =
-                TreatmentMatcher.matchTreatmentsToBiopsies(ecrfPatient.patientId(), matchedBiopsies.values(), treatments);
+                TreatmentMatcher.matchTreatmentsToBiopsies(ecrfPatient.patientId(), withSampleMatchOnly(matchedBiopsies), treatments);
         final MatchResult<BiopsyTreatmentResponseData> matchedResponses = TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(
                 ecrfPatient.patientId(),
-                matchedTreatments.values(),
+                withBiopsyMatchOnly(matchedTreatments),
                 treatmentResponses);
 
         final List<ValidationFinding> findings = Lists.newArrayList();
@@ -79,5 +79,27 @@ public class CpctPatientReader implements PatientReader {
                 tumorMarkers,
                 ranoMeasurements,
                 findings);
+    }
+
+    @NotNull
+    private static List<BiopsyData> withSampleMatchOnly(@NotNull MatchResult<BiopsyData> biopsies) {
+        List<BiopsyData> biopsiesWithMatchedSample = Lists.newArrayList();
+        for (BiopsyData biopsy : biopsies.values()) {
+            if (biopsy.sampleId() != null) {
+                biopsiesWithMatchedSample.add(biopsy);
+            }
+        }
+        return biopsiesWithMatchedSample;
+    }
+
+    @NotNull
+    private static List<BiopsyTreatmentData> withBiopsyMatchOnly(@NotNull MatchResult<BiopsyTreatmentData> treatments) {
+        List<BiopsyTreatmentData> treatmentsWithMatchedBiopsy = Lists.newArrayList();
+        for (BiopsyTreatmentData treatment : treatments.values()) {
+            if (treatment.biopsyId() != null) {
+                treatmentsWithMatchedBiopsy.add(treatment);
+            }
+        }
+        return treatmentsWithMatchedBiopsy;
     }
 }
