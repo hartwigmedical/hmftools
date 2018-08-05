@@ -100,6 +100,55 @@ public class DataUtils {
         return array;
     }
 
+    public static List<Integer> getMatchingList(final List<Integer> list1, final List<Integer> list2)
+    {
+        // gets union/common set
+        List<Integer> matchedList = Lists.newArrayList();
+
+        for(Integer value : list1)
+        {
+            if(list2.contains(value))
+                matchedList.add(value);
+        }
+
+        return matchedList;
+    }
+
+    public static List<Integer> getDiffList(final List<Integer> list1, final List<Integer> list2)
+    {
+        // returns list of values in 1 but not in 2
+        List<Integer> diffList = Lists.newArrayList();
+
+        for(Integer value : list1)
+        {
+            if(!list2.contains(value))
+                diffList.add(value);
+        }
+
+        return diffList;
+    }
+
+    public static List<Integer> getCombinedList(final List<Integer> list1, final List<Integer> list2)
+    {
+        // gets super set, including non-common values
+        List<Integer> combinedSet = Lists.newArrayList();
+
+        for(Integer value : list1)
+        {
+            if(!combinedSet.contains(value))
+                combinedSet.add(value);
+        }
+
+        for(Integer value : list2)
+        {
+            if(!combinedSet.contains(value))
+                combinedSet.add(value);
+        }
+
+        return combinedSet;
+    }
+
+
     public static boolean doublesEqual(double val1, double val2)
     {
         return abs(val1-val2) < DBL_EPSILON;
@@ -220,6 +269,48 @@ public class DataUtils {
                 data[i][j] = rnGenerator.nextDouble() * (max - min) + min;
             }
         }
+    }
+
+    public double calcLinearLeastSquares(final double[] params, final double[] data)
+    {
+        if(data.length != params.length)
+            return 0;
+
+        // returns the best ratio applying the params to the data
+        // assuming direct ratio (ie line through origin)
+        double paramTotal = 0;
+        double multTotal = 0;
+
+        for(int i = 0; i < data.length; ++i)
+        {
+            paramTotal += params[i] * params[i];
+            multTotal += params[i] * data[i];
+        }
+
+        return paramTotal > 0 ? multTotal/paramTotal : 0;
+    }
+
+    public double calcMinPositiveRatio(final double[] params, final double[] data)
+    {
+        if(data.length != params.length)
+            return 0;
+
+        // returns the max ratio applying the params to the data
+        // where the fit values does not exceed the actual data
+        double minRatio = 0;
+
+        for(int i = 0; i < data.length; ++i)
+        {
+            if(data[i] == 0)
+                continue;
+
+            double ratio = params[i] / data[i];
+
+            if(ratio < minRatio || minRatio == 0)
+                minRatio = ratio;
+        }
+
+        return minRatio;
     }
 
     public void calcLeastSquares(final NmfMatrix matrix, final double[] data)

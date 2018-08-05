@@ -25,12 +25,14 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
     boolean mBucketRatiosClean;
     double[] mBucketRatios;
+    double mTotalCount;
 
     // annotations
     private String mCancerType;
     private String mEffects;
 
     double mPurity; // for now a percentage of sample buckets that are elevated
+    double mLoadFactor;
 
     public BucketGroup(int id)
     {
@@ -44,6 +46,8 @@ public class BucketGroup implements Comparable<BucketGroup> {
         mBucketRatios = null;
         mBucketRatiosClean = false;
         mPurity = 0;
+        mLoadFactor = 0;
+        mTotalCount = 0;
 
         mCancerType = "Unclear";
         mEffects = "";
@@ -55,14 +59,28 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
     public double calcScore()
     {
-        if(mPurity == 0)
-            return getSize();
+        int score = getSize();
 
-        return getSize() * mPurity;
+        if(mPurity > 0)
+            score *= mPurity;
+
+        if(mLoadFactor > 0)
+            score *= mLoadFactor;
+
+        return score;
     }
 
     public double getPurity() { return mPurity; }
     public void setPurity(double purity) { mPurity = purity; }
+    public double getLoadFactor() { return mLoadFactor; }
+    public void setLoadFactor(double value) { mLoadFactor = value; }
+    public double getTotalCount() { return mTotalCount; }
+
+    public double getAvgCount()
+    {
+        // per contributing sample bucket count item
+        return mTotalCount/getSize();
+    }
 
     public void setCancerType(final String type) { mCancerType = type; }
     public final String getCancerType() { return mCancerType; }
@@ -187,6 +205,7 @@ public class BucketGroup implements Comparable<BucketGroup> {
     {
         copyVector(other, mCombinedBucketCounts);
         mBucketRatiosClean = false;
+        mTotalCount = sumVector(mCombinedBucketCounts);
     }
 
     public final double[] getBucketRatios()
@@ -209,54 +228,6 @@ public class BucketGroup implements Comparable<BucketGroup> {
         }
 
         return mBucketRatios;
-    }
-
-    public static List<Integer> getMatchingBucketList(final List<Integer> bl1, final List<Integer> bl2)
-    {
-        // gets union/common set
-        List<Integer> matchedList = Lists.newArrayList();
-
-        for(Integer bucket : bl1)
-        {
-            if(bl2.contains(bucket))
-                matchedList.add(bucket);
-        }
-
-        return matchedList;
-    }
-
-    public static List<Integer> getDiffBucketList(final List<Integer> bl1, final List<Integer> bl2)
-    {
-        // returns list of buckets in 1 but not in 2
-        List<Integer> diffList = Lists.newArrayList();
-
-        for(Integer bucket : bl1)
-        {
-            if(!bl2.contains(bucket))
-                diffList.add(bucket);
-        }
-
-        return diffList;
-    }
-
-    public static List<Integer> getCombinedBuckets(final List<Integer> bl1, final List<Integer> bl2)
-    {
-        // gets super set, including non-common buckets
-        List<Integer> combinedSet = Lists.newArrayList();
-
-        for(Integer bucket : bl1)
-        {
-            if(!combinedSet.contains(bucket))
-                combinedSet.add(bucket);
-        }
-
-        for(Integer bucket : bl2)
-        {
-            if(!combinedSet.contains(bucket))
-                combinedSet.add(bucket);
-        }
-
-        return combinedSet;
     }
 
 }

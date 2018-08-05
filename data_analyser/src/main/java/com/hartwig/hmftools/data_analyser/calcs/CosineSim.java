@@ -8,6 +8,7 @@ import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -59,6 +60,48 @@ public class CosineSim {
 
             if(skipZeros && (a == 0 || b == 0))
                 continue;
+
+            aaTotal += a*a;
+            bbTotal += b*b;
+            abTotal += a*b;
+        }
+
+        if(aaTotal <= 0 || bbTotal <= 0)
+            return 0;
+
+        return min(abTotal / (sqrt(aaTotal) * sqrt(bbTotal)), 1.0);
+    }
+
+    public static double calcCSSRelative(final double[] set1, final double[] set2)
+    {
+        if(set1.length != set2.length || set1.length == 0)
+            return 0;
+
+        double aaTotal = 0;
+        double bbTotal = 0;
+        double abTotal = 0;
+
+        // reduce each pair of values to be roughly in line with the median pair
+        double total1 = sumVector(set1);
+        double total2 = sumVector(set2);
+
+        if(total1 == 0 || total2 == 0)
+            return 0;
+
+        double total = (total1 + total2) * 0.5;
+
+        for(int i = 0; i < set1.length; ++i)
+        {
+            double a = set1[i];
+            double b = set2[i];
+
+            if(a == 0 || b == 0)
+                continue;
+
+            double ratioToTotal = ((a + b) * 0.5) / total;
+
+            a /= ratioToTotal;
+            b /= ratioToTotal;
 
             aaTotal += a*a;
             bbTotal += b*b;
@@ -230,8 +273,8 @@ public class CosineSim {
         double diffTotal = 0;
         double sameTotal = 0;
 
-        double aTotal = DataUtils.sumVector(set1);
-        double bTotal = DataUtils.sumVector(set2);
+        double aTotal = sumVector(set1);
+        double bTotal = sumVector(set2);
         double ratio = aTotal/bTotal;
 
         for(int i = 0; i < set1.length; ++i)
