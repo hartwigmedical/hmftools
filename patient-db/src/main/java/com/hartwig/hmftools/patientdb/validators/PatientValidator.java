@@ -172,8 +172,10 @@ public final class PatientValidator {
                             currentTreatment.formStatus()));
                 }
             }
-            final List<BiopsyTreatmentData> nonFinishedTreatments =
-                    matchedTreatments.stream().filter(treatment -> treatment.endDate() == null).collect(Collectors.toList());
+            final List<BiopsyTreatmentData> nonFinishedTreatments = matchedTreatments.stream()
+                    .filter(treatment -> treatment.startDate() != null)
+                    .filter(treatment -> treatment.endDate() == null)
+                    .collect(Collectors.toList());
             if (nonFinishedTreatments.size() > 1) {
                 nonFinishedTreatments.forEach(treatment -> findings.add(ValidationFinding.of(ECRF_LEVEL,
                         patientIdentifier,
