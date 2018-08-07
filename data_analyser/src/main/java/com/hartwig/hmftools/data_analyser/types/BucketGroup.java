@@ -22,6 +22,7 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
     // the bucket counts from the samples as per the specific buckets in this groiup
     double[] mCombinedBucketCounts;
+    List<Double> mSampleCountTotals;
 
     boolean mBucketRatiosClean;
     double[] mBucketRatios;
@@ -33,6 +34,9 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
     double mPurity; // for now a percentage of sample buckets that are elevated
     double mLoadFactor;
+
+    BucketGroup mClosestBG;
+    double mClosestBGCss;
 
     public BucketGroup(int id)
     {
@@ -49,8 +53,11 @@ public class BucketGroup implements Comparable<BucketGroup> {
         mLoadFactor = 0;
         mTotalCount = 0;
 
-        mCancerType = "Unclear";
+        mCancerType = "";
         mEffects = "";
+
+        mClosestBG = null;
+        mClosestBGCss = 0;
     }
 
     public int getId() { return mId; }
@@ -82,11 +89,19 @@ public class BucketGroup implements Comparable<BucketGroup> {
         return mTotalCount/getSize();
     }
 
+    public List<Double> getSampleCountTotals() { return mSampleCountTotals; }
+    public void setSampleCountTotals(List<Double> totals) { mSampleCountTotals = totals; }
+
     public void setCancerType(final String type) { mCancerType = type; }
     public final String getCancerType() { return mCancerType; }
 
     public void setEffects(final String effects) { mEffects = effects; }
     public final String getEffects() { return mEffects; }
+
+    public void setClosestBG(final BucketGroup bg) { mClosestBG = bg; }
+    public final BucketGroup getClosestBG() { return mClosestBG; }
+    public void setClosestBGCss(final double css) { mClosestBGCss = css; }
+    public final double getClosestBGCss() { return mClosestBGCss; }
 
     public int compareTo(final BucketGroup other)
     {
@@ -184,6 +199,7 @@ public class BucketGroup implements Comparable<BucketGroup> {
         addBucket(bucketId, isInitial);
 
         mCombinedBucketCounts[bucketId] = sumVector(bucketCounts);
+        mBucketRatiosClean = false;
     }
 
     private void addBucket(int bucketId, boolean isInitial)
@@ -205,7 +221,6 @@ public class BucketGroup implements Comparable<BucketGroup> {
     {
         copyVector(other, mCombinedBucketCounts);
         mBucketRatiosClean = false;
-        mTotalCount = sumVector(mCombinedBucketCounts);
     }
 
     public final double[] getBucketRatios()
@@ -215,11 +230,11 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
         if(!mBucketRatiosClean)
         {
-            double totalCount = sumVector(mCombinedBucketCounts);
+            mTotalCount = sumVector(mCombinedBucketCounts);
 
             for (int i = 0; i < mBucketRatios.length; ++i)
             {
-                mBucketRatios[i] = mCombinedBucketCounts[i] / totalCount;
+                mBucketRatios[i] = mCombinedBucketCounts[i] / mTotalCount;
             }
 
             double ratioTotal = sumVector(mBucketRatios);

@@ -344,25 +344,82 @@ public class CosineSim {
 
                 double[] data2 = matrix2.getCol(j);
 
-                double css = calcLogLikelihood(data1, data2, false);
+                double llProb = calcLogLikelihood(data1, data2, false);
 
-                if (css < probCutoff)
+                if (llProb < probCutoff)
                     continue;
 
                 int index = 0;
                 for(;index < lliResults.size(); ++index)
                 {
                     final double[] result = lliResults.get(index);
-                    if(css > result[CSSR_VAL])
+                    if(llProb > result[CSSR_VAL])
                         break;
                 }
 
-                double[] result = {i, j, css};
+                double[] result = {i, j, llProb};
                 lliResults.add(index, result);
             }
         }
 
        return lliResults;
+    }
+
+    private static double POISSON_RANGE_PERCENT = 0.1;
+
+    public static int calcPoissonRangeGivenProb(int value, double requiredProb)
+    {
+        if(value <= 10)
+            return 9;
+
+        PoissonDistribution poisson = new PoissonDistribution(value);
+
+        int maxIterations = 10;
+        int iterations = 0;
+
+        double initRange = 3.7 / sqrt(value); // works for requiredProb = 1e-4
+        int testValue = (int)max(round(value * (1 - initRange)), 0);
+        int testValueUpper = (int)max(round(value * (1 - initRange*0.5)), 0);
+        int testValueLower = (int)max(round(value * (1 - initRange*2)), 0);
+
+        double currentProb = poisson.cumulativeProbability(testValue);
+        double probDiff = 0;
+
+        while(iterations < maxIterations)
+        {
+            probDiff = abs(requiredProb - currentProb) / requiredProb;
+
+            if(probDiff < 0.1)
+                break;
+
+            // if prob is too high, need to lower the test value
+            if(currentProb > requiredProb)
+            {
+                if(testValue <= testValueLower + 1)
+                    break;
+
+                testValueUpper = testValue;
+                testValue = (int)round((testValue + testValueLower) * 0.5);
+            }
+            else
+            {
+                if(testValue >= testValueUpper - 1)
+                    break;
+
+                testValueLower = testValue;
+                testValue = (int)round((testValue + testValueUpper) * 0.5);
+            }
+
+            currentProb = poisson.cumulativeProbability(testValue);
+            ++iterations;
+        }
+
+        if(iterations >= maxIterations)
+        {
+            LOGGER.warn(String.format("max iterations reached: value(%d) test(%d) prob(%.4f diff=%.4f)", value, testValue, currentProb, probDiff));
+        }
+
+        return value - testValue;
     }
 
     public void calcCosineSimilarities(final List<String> itemIds, final List<List<Double>> dataSets, double cutoff)
