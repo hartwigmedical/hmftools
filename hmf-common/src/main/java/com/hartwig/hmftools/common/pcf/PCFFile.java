@@ -35,17 +35,23 @@ public final class PCFFile {
             throws IOException {
         ListMultimap<String, PCFPosition> result = ArrayListMultimap.create();
         final Window window = new Window(windowSize);
-        long end = 0;
+        long prev = 0;
         for (String line : Files.readAllLines(new File(filename).toPath())) {
             if (!line.startsWith(HEADER_PREFIX)) {
                 String[] values = line.split(DELIMITER);
                 final String chromosomeName = values[1];
-                long start = window.start(Long.valueOf(values[3]));
-                if (start != end) {
-                    result.put(chromosomeName, position(chromosomeName, start, source));
+
+                long current = window.start(Long.valueOf(values[3]));
+                if (current > prev) {
+                    result.put(chromosomeName, position(chromosomeName, current, source));
+                    prev = current;
                 }
-                end = window.start(Long.valueOf(values[4])) + windowSize;
-                result.put(chromosomeName, position(chromosomeName, end, source));
+
+                current = window.start(Long.valueOf(values[4])) + windowSize;
+                if (current > prev) {
+                    result.put(chromosomeName, position(chromosomeName, current, source));
+                    prev = current;
+                }
             }
         }
 
