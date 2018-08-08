@@ -48,6 +48,18 @@ Arguments without default values are mandatory.
 java -jar cobalt.jar -reference REFERENCE -reference_bam /run_dir/REFERENCE.bam -tumor TUMOR -tumor_bam /run_dir/TUMOR.bam -output_dir /run_dir/cobalt -threads 24 -gc_profile /path/to/GC_profile.1000bp.cnp
 ```
 
+## Input
+
+GCProfile should be a tab delimited file (without header) with the following format:
+
+Chromosome | Start (zero-based index) | GC Content | Non N Percentage | Mappable Percentage
+---|---|---|---|---
+1 | 1465000 | 0.557 | 1 | 0.903
+1 | 1466000 | 0.511 | 1 | 0.849
+
+Note that a window must have a mappable percentage >= 0.85 to be considered mappable. 
+
+
 
 ## Output
 The following tab delimited files are written:
