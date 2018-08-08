@@ -103,7 +103,7 @@ public class CountBamLinesApplication {
         LOGGER.info("Thread Count: {}, Window Size: {}, Min Quality {}", threadCount, windowSize, minMappingQuality);
 
         LOGGER.info("Reading GC Profile");
-        final Multimap<String, GCProfile> gcProfiles = GCProfileFactory.loadGCContent(cmd.getOptionValue(GC_PROFILE));
+        final Multimap<String, GCProfile> gcProfiles = GCProfileFactory.loadGCContent(windowSize, cmd.getOptionValue(GC_PROFILE));
 
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("bam-%d").build();
         final ExecutorService executorService = Executors.newFixedThreadPool(threadCount, namedThreadFactory);

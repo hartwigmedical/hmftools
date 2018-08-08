@@ -16,7 +16,7 @@ public class GCProfileFactoryTest {
 
     @Test
     public void canLoadNormalFile() throws IOException {
-        final Multimap<String, GCProfile> gcContent = GCProfileFactory.loadGCContent(BASE_PATH + "GC_profile.1000bp.cnp");
+        final Multimap<String, GCProfile> gcContent = GCProfileFactory.loadGCContent(1000, BASE_PATH + "GC_profile.1000bp.cnp");
         assertEquals(100, gcContent.size());
     }
 }

@@ -22,15 +22,15 @@ public enum GCProfileFactory {
     private static final int MAPPABLE_PERCENTAGE_COLUMN = 4;
 
     @NotNull
-    public static Multimap<String, GCProfile> loadGCContent(@NotNull final String fileName) throws IOException {
-        return loadGCContent(LineReader.build().readLines(new File(fileName).toPath(), x -> true));
+    public static Multimap<String, GCProfile> loadGCContent(int windowSize, @NotNull final String fileName) throws IOException {
+        return loadGCContent(windowSize, LineReader.build().readLines(new File(fileName).toPath(), x -> true));
     }
 
     @NotNull
-    private static Multimap<String, GCProfile> loadGCContent(@NotNull final List<String> lines) {
+    private static Multimap<String, GCProfile> loadGCContent(int windowSize, @NotNull final List<String> lines) {
         final Multimap<String, GCProfile> result = ArrayListMultimap.create();
         for (String line : lines) {
-            final GCProfile gcProfile = fromLine(line);
+            final GCProfile gcProfile = fromLine(windowSize, line);
             result.put(gcProfile.chromosome(), gcProfile);
         }
 
@@ -39,7 +39,7 @@ public enum GCProfileFactory {
 
     @NotNull
     @VisibleForTesting
-    static GCProfile fromLine(@NotNull final String ratioLine) {
+    static GCProfile fromLine(int windowSize, @NotNull final String ratioLine) {
         final String[] values = ratioLine.split(RATIO_COLUMN_SEPARATOR);
 
         final String chromosome = values[CHROMOSOME_COLUMN].trim();
@@ -50,8 +50,8 @@ public enum GCProfileFactory {
 
         return ImmutableGCProfile.builder()
                 .chromosome(chromosome)
-                .start(position + 1)
-                .end(position + 1000)
+                .start(position + 1) // GCProfile is zero-indexed
+                .end(position + windowSize)
                 .gcContent(gcContent)
                 .nonNPercentage(nonNPercentage)
                 .mappablePercentage(mappablePercentage)
