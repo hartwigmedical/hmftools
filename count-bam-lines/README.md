@@ -36,9 +36,8 @@ Argument | Default | Description
 -reference | None | Name of reference sample
 -tumor | None | Name of tumor sample
 -threads | 4 | Number of threads to use
--window_size | 1000 | Size of window
 -min_quality | 10 | Min quality
--gc_profile | None | Location of GC profile.
+-gc_profile | None | Location of GC profile. Available to [download here.](https://nc.hartwigmedicalfoundation.nl/index.php/s/a8lgLsUrZI5gndd/download?path=%2FHMF-Pipeline-Resources&files=GC_profile.1000bp.cnp.gz)
 
 Arguments without default values are mandatory.
 

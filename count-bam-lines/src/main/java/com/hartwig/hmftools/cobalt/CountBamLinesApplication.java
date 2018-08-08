@@ -42,7 +42,6 @@ public class CountBamLinesApplication {
     private static final String TUMOR_BAM = "tumor_bam";
     private static final String OUTPUT_DIR = "output_dir";
     private static final String GC_PROFILE = "gc_profile";
-    private static final String WINDOW_SIZE = "window_size";
     private static final String MIN_MAPPING_QUALITY = "min_quality";
 
     private static final int WINDOW_SIZE_DEFAULT = 1000;
@@ -97,7 +96,7 @@ public class CountBamLinesApplication {
         }
 
         final int threadCount = cmd.hasOption(THREADS) ? Integer.valueOf(cmd.getOptionValue(THREADS)) : 4;
-        final int windowSize = cmd.hasOption(WINDOW_SIZE) ? Integer.valueOf(cmd.getOptionValue(WINDOW_SIZE)) : WINDOW_SIZE_DEFAULT;
+        final int windowSize = WINDOW_SIZE_DEFAULT;
         final int minMappingQuality =
                 cmd.hasOption(MIN_MAPPING_QUALITY) ? Integer.valueOf(cmd.getOptionValue(MIN_MAPPING_QUALITY)) : MIN_MAPPING_QUALITY_DEFAULT;
         LOGGER.info("Thread Count: {}, Window Size: {}, Min Quality {}", threadCount, windowSize, minMappingQuality);
@@ -166,7 +165,6 @@ public class CountBamLinesApplication {
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
-        options.addOption(WINDOW_SIZE, true, "Window size. Default 1000.");
         options.addOption(THREADS, true, "Number of threads. Default 4.");
         options.addOption(REFERENCE, true, "Name of reference sample");
         options.addOption(REFERENCE_BAM, true, "Reference bam file");
