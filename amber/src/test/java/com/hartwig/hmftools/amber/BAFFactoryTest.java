@@ -71,4 +71,12 @@ public class BAFFactoryTest {
         assertEquals(0, result.size());
     }
 
+    @Test
+    public void testUMC() {
+        final Pileup normal = PileupFile.fromString("16\t76595025\tA\t1\t*\tf");
+        final Pileup tumor = PileupFile.fromString("16\t76595025\tA\t1\t.\tm");
+        final List<AmberBAF> result = VICTIM.create(Collections.singletonList(normal), Collections.singletonList(tumor));
+        assertEquals(0, result.size());
+    }
+
 }

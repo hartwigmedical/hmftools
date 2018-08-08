@@ -62,7 +62,7 @@ class BAFFactory {
     }
 
     private static boolean isValidBAF(@NotNull final AmberBAF baf) {
-        return Doubles.isFinite(baf.tumorBAF());
+        return Doubles.isFinite(baf.tumorBAF()) & Doubles.isFinite(baf.normalBAF());
     }
 
     @VisibleForTesting
