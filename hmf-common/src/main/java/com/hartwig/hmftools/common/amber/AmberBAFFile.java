@@ -12,11 +12,14 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public enum AmberBAFFile {
     ;
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
+    private static final Logger LOGGER = LogManager.getLogger(AmberBAFFile.class);
 
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "Chr";
@@ -83,13 +86,22 @@ public enum AmberBAFFile {
     @NotNull
     private static Multimap<String, AmberBAF> fromLines(@NotNull List<String> lines) {
         Multimap<String, AmberBAF> result = ArrayListMultimap.create();
+        int i = 0;
         for (String line : lines) {
-            if (!line.startsWith(HEADER_PREFIX)) {
-                final AmberBAF region = fromString(line);
-                result.put(region.chromosome(), region);
+            i++;
+            try {
+                if (!line.startsWith(HEADER_PREFIX)) {
+                    final AmberBAF region = fromString(line);
+                    result.put(region.chromosome(), region);
+                }
+            } catch (RuntimeException e) {
+                LOGGER.info("Unable to parse line {}: {}", i, line);
+                throw e;
             }
         }
+
         return result;
+
     }
 
     @NotNull
