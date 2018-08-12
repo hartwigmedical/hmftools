@@ -1,6 +1,12 @@
 package com.hartwig.hmftools.data_analyser.calcs;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.log10;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static java.lang.Math.round;
+
+import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.calcLogLikelihood;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -13,9 +19,14 @@ import java.util.Random;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.data_analyser.types.NmfMatrix;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class DataUtils {
 
     public static double DBL_EPSILON = 1e-10;
+
+    private static final Logger LOGGER = LogManager.getLogger(DataUtils.class);
 
     public static double[][] convertArray(List<List<Double>> dataSet, boolean transpose)
     {
@@ -271,13 +282,12 @@ public class DataUtils {
         }
     }
 
-    public double calcLinearLeastSquares(final double[] params, final double[] data)
+    public static double calcLinearLeastSquares(final double[] params, final double[] data)
     {
         if(data.length != params.length)
             return 0;
 
-        // returns the best ratio applying the params to the data
-        // assuming direct ratio (ie line through origin)
+        // returns the best ratio applying the params to the data assuming direct ratio (ie line through origin)
         double paramTotal = 0;
         double multTotal = 0;
 
@@ -290,7 +300,93 @@ public class DataUtils {
         return paramTotal > 0 ? multTotal/paramTotal : 0;
     }
 
-    public double calcMinPositiveRatio(final double[] params, final double[] data)
+    public static double calcBestFitWithinProbability(final double[] ratios, final double[] data, double requiredProb, double reqResidualsPerc)
+    {
+        if(data.length != ratios.length)
+            return 0;
+
+        int itemCount = data.length;
+        double ratio = 0;
+
+        // calculate least squares and min positive as the upper and lower starting bounds
+        double lsAlloc = calcLinearLeastSquares(ratios, data);
+        double minPosAlloc = calcMinPositiveRatio(ratios, data);
+        double dataTotal = sumVector(data);
+
+        double[] currentFit = new double[data.length];
+        double[] reducedData = new double[data.length];
+
+        int iterations = 0;
+        int maxIterations = 10;
+
+        double currentAlloc = dataTotal; // (minPosAlloc + lsAlloc) * 0.5;
+        double lowerAlloc = minPosAlloc;
+        double upperAlloc = dataTotal;
+        double probDiff = 0;
+        double currentProb = 0;
+        double residuals = 0;
+        double residualsPerc = 0;
+
+        while(iterations < maxIterations)
+        {
+            // work out probability of the current fit
+            for(int i = 0; i < itemCount; ++i)
+            {
+                currentFit[i] = currentAlloc * ratios[i];
+                reducedData[i] = min(currentFit[i], data[i]);
+            }
+
+            residuals = calcAbsDiffs(currentFit, reducedData);
+            currentProb = calcLogLikelihood(currentFit, reducedData, false);
+            probDiff = abs(requiredProb - currentProb) / requiredProb;
+            residualsPerc = residuals / dataTotal;
+
+            if(probDiff < 0.1 && residualsPerc < reqResidualsPerc)
+                break;
+
+            // if prob is too high, need to increase the counts allocation
+            if(currentProb > requiredProb)
+            {
+                if(currentAlloc >= upperAlloc - 1)
+                    break;
+
+                lowerAlloc = currentAlloc;
+                currentAlloc = (int)round((currentAlloc + upperAlloc) * 0.5);
+            }
+            else
+            {
+                if(currentAlloc <= lowerAlloc + 1)
+                    break;
+
+                upperAlloc = currentAlloc;
+                currentAlloc = (int)round((currentAlloc + lowerAlloc) * 0.5);
+            }
+
+            ++iterations;
+        }
+
+//        LOGGER.debug(String.format("total(%.0f) finalAlloc(%.0f minRatio=%.0f leastSq=%.0f) residuals(%.0f perc=%.3f) prob(%.4f) iter(%s)",
+//                dataTotal, currentAlloc, minPosAlloc, lsAlloc, residuals, residualsPerc, currentProb,
+//                iterations >= maxIterations ? "max" : String.valueOf(iterations)));
+
+        return currentAlloc;
+    }
+
+    public static double calcAbsDiffs(final double[] set1, final double[] set2)
+    {
+        if(set1.length != set2.length)
+            return 0;
+
+        double diffTotal = 0;
+        for(int i = 0; i < set1.length; ++i)
+        {
+            diffTotal += abs(set1[i] - set2[i]);
+        }
+
+        return diffTotal;
+    }
+
+    public static double calcMinPositiveRatio(final double[] params, final double[] data)
     {
         if(data.length != params.length)
             return 0;
@@ -304,7 +400,7 @@ public class DataUtils {
             if(data[i] == 0)
                 continue;
 
-            double ratio = params[i] / data[i];
+            double ratio = data[i] / params[i];
 
             if(ratio < minRatio || minRatio == 0)
                 minRatio = ratio;
@@ -313,10 +409,16 @@ public class DataUtils {
         return minRatio;
     }
 
-    public void calcLeastSquares(final NmfMatrix matrix, final double[] data)
+    public static String sizeToStr(double size)
     {
+        double log = log10(size);
 
-
+        if(log >= 6)
+            return String.format("%.1fM", size/1e6);
+        else if(log >= 3)
+            return String.format("%.1fK", size/1e3);
+        else
+            return String.format("%.0f", size);
     }
 
     public static BufferedWriter getNewFile(final String outputDir, final String fileName) throws IOException

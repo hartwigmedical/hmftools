@@ -79,7 +79,12 @@ public class DataAnalyser {
         if(cmd.hasOption(RUN_BA))
         {
             BucketAnalyser bucketAnalyser = new BucketAnalyser();
-            bucketAnalyser.initialise(collection, cmd);
+            if(!bucketAnalyser.initialise(collection, cmd))
+            {
+                LOGGER.info("init failed");
+                return;
+            }
+
             bucketAnalyser.run();
         }
 

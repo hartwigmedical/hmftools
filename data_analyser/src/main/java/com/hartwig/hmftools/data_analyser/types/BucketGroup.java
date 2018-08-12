@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.data_analyser.types;
 
 import static java.lang.Math.round;
+import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.doublesEqual;
@@ -66,7 +67,7 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
     public double calcScore()
     {
-        int score = getSize();
+        double score = sqrt(mBucketIds.size()) * mSampleIds.size();
 
         if(mPurity > 0)
             score *= mPurity;
@@ -117,6 +118,18 @@ public class BucketGroup implements Comparable<BucketGroup> {
     public boolean hasSample(int sampleIndex)
     {
         return mSampleIds.contains(sampleIndex);
+    }
+
+    public void clearSamples()
+    {
+        mSampleIds.clear();
+        calcBucketRatios();
+        mTotalCount = 0;
+
+        for(int i = 0; i < mCombinedBucketCounts.length; ++i)
+        {
+            mCombinedBucketCounts[i] += 0;
+        }
     }
 
     public void addSample(int sampleId, double[] bucketCounts)
@@ -183,6 +196,17 @@ public class BucketGroup implements Comparable<BucketGroup> {
         return mBucketIds.contains(bucketIndex);
     }
 
+    public boolean hasBuckets(final List<Integer> bucketIds)
+    {
+        for(Integer bucket : bucketIds)
+        {
+            if(!mBucketIds.contains(bucket))
+                return false;
+        }
+
+        return true;
+    }
+
     public void addBuckets(List<Integer> bucketIds)
     {
         for(Integer bucket : bucketIds)
@@ -223,25 +247,39 @@ public class BucketGroup implements Comparable<BucketGroup> {
         mBucketRatiosClean = false;
     }
 
-    public final double[] getBucketRatios()
+    public void setBucketRatios(final double[] other)
     {
         if(mBucketRatios == null)
             mBucketRatios = new double[mCombinedBucketCounts.length];
 
-        if(!mBucketRatiosClean)
+        copyVector(other, mBucketRatios);
+        mTotalCount = sumVector(mCombinedBucketCounts);
+        mBucketRatiosClean = true;
+    }
+
+    public final void calcBucketRatios()
+    {
+        if(mBucketRatios == null)
+            mBucketRatios = new double[mCombinedBucketCounts.length];
+
+        if(mBucketRatiosClean)
+            return;
+
+        mTotalCount = sumVector(mCombinedBucketCounts);
+
+        for (int i = 0; i < mBucketRatios.length; ++i)
         {
-            mTotalCount = sumVector(mCombinedBucketCounts);
-
-            for (int i = 0; i < mBucketRatios.length; ++i)
-            {
-                mBucketRatios[i] = mCombinedBucketCounts[i] / mTotalCount;
-            }
-
-            double ratioTotal = sumVector(mBucketRatios);
-            if(doublesEqual(ratioTotal, 1))
-                mBucketRatiosClean = true;
+            mBucketRatios[i] = mCombinedBucketCounts[i] / mTotalCount;
         }
 
+        double ratioTotal = sumVector(mBucketRatios);
+        if(doublesEqual(ratioTotal, 1))
+            mBucketRatiosClean = true;
+    }
+
+    public final double[] getBucketRatios()
+    {
+        calcBucketRatios();
         return mBucketRatios;
     }
 

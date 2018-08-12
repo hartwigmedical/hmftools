@@ -76,8 +76,13 @@ public class BucketFamily
         {
             String[] newTypes = group.getCancerType().split(";");
 
-            for(final String type : newTypes)
+            for(String type : newTypes)
             {
+                if(type.contains("="))
+                {
+                    type = type.substring(0, type.indexOf("="));
+                }
+
                 if (mCancerType.isEmpty())
                     mCancerType = type;
                 else if (!mCancerType.contains(type))
@@ -89,8 +94,13 @@ public class BucketFamily
         {
             String[] newTypes = group.getEffects().split(";");
 
-            for(final String type : newTypes)
+            for(String type : newTypes)
             {
+                if(type.contains("="))
+                {
+                    type = type.substring(0, type.indexOf("="));
+                }
+
                 if (mEffects.isEmpty())
                     mEffects = type;
                 else if (!mEffects.contains(type))
@@ -138,7 +148,7 @@ public class BucketFamily
 
             for (Integer bucket : mBucketIds)
             {
-                sampleBucketTotal += sampleCounts.get(bucket, sampleId);
+                sampleBucketTotal += scData[bucket][sampleId];
             }
 
             sampleTotals.add(sampleBucketTotal);
