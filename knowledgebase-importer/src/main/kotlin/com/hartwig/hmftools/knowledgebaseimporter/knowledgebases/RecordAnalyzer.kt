@@ -21,8 +21,9 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
 
     fun knownVariants(knowledgebases: List<KnowledgebaseSource<*, *>>): List<KnownVariantOutput> {
         val records = knowledgebases.flatMap { it.knownKbRecords }
-        val knownSomaticVariants = extractSomaticVariants(records)
-                .filter { it.second is SomaticVariantEvent }.map { Pair(it.first, it.second as SomaticVariantEvent) }
+        val somaticVariantRecords = extractSomaticVariants(records) + extractOtherSomaticVariants(records)
+        val knownSomaticVariants = somaticVariantRecords.filter { it.second is SomaticVariantEvent }
+                .map { Pair(it.first, it.second as SomaticVariantEvent) }
         return knownSomaticVariants.map { (record, variant) ->
             KnownVariantOutput(record.transcript, record.additionalInfo, variant)
         }
@@ -39,12 +40,17 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
         }
     }
 
-    private fun <R : KnowledgebaseRecord> extractSomaticVariants(records: List<R>): List<Pair<R, ActionableEvent>> {
-        return extractGdnaVariants(records) + extractTransvarVariants(records) + extractVariants(records)
+    private fun <R : KnowledgebaseRecord> extractOtherSomaticVariants(records: List<R>): List<Pair<R, ActionableEvent>> {
+        return extractGdnaVariants(records.collectOtherEvents()) + analyzeAnnotations(records.collectOtherEvents(), proteinAnalyzer) +
+                analyzeAnnotations(records.collectEvents(), cdnaAnalyzer) + extractVariants(records.collectOtherEvents())
     }
 
-    private fun <R : KnowledgebaseRecord> extractGdnaVariants(records: List<R>): List<Pair<R, ActionableEvent>> {
-        val recordEventPairs = records.collectEvents<GDnaVariant, R>()
+    private fun <R : KnowledgebaseRecord> extractSomaticVariants(records: List<R>): List<Pair<R, ActionableEvent>> {
+        return extractGdnaVariants(records.collectEvents()) + extractTransvarVariants(records) + extractVariants(records.collectEvents())
+    }
+
+    private fun <R : KnowledgebaseRecord> extractGdnaVariants(
+            recordEventPairs: List<Pair<R, GDnaVariant>>): List<Pair<R, ActionableEvent>> {
         return recordEventPairs.flatMap { (record, gdnaVariant) ->
             listOfNotNull(extractVariant(record.gene, record.transcript, gdnaVariant.gDnaImpact, reference))
                     .map { Pair(record, it) }
@@ -52,11 +58,12 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
     }
 
     private fun <R : KnowledgebaseRecord> extractTransvarVariants(records: List<R>): List<Pair<R, ActionableEvent>> {
-        return analyzeAnnotations(records, proteinAnalyzer) + analyzeAnnotations(records, cdnaAnalyzer)
+        return analyzeAnnotations(records.collectEvents(), proteinAnalyzer) + analyzeAnnotations(records.collectEvents(), cdnaAnalyzer)
     }
 
-    private fun <R : KnowledgebaseRecord> extractVariants(records: List<R>): List<Pair<R, SomaticVariantEvent>> {
-        return records.collectEvents<KnowledgebaseVariant, R>().map { Pair(it.first, extractVariant(it.second)) }
+    private fun <R : KnowledgebaseRecord> extractVariants(
+            recordEventPairs: List<Pair<R, KnowledgebaseVariant>>): List<Pair<R, SomaticVariantEvent>> {
+        return recordEventPairs.map { Pair(it.first, extractVariant(it.second)) }
     }
 
     private fun extractVariant(variant: KnowledgebaseVariant): SomaticVariantEvent {
@@ -75,13 +82,18 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
         }
     }
 
+    private inline fun <reified T, R : KnowledgebaseRecord> List<R>.collectOtherEvents(): List<Pair<R, T>> {
+        return this.flatMap { record ->
+            record.events.filterIsInstance<OtherEvents>().flatMap { it.events.filterIsInstance<T>() }.map { Pair(record, it) }
+        }
+    }
+
     private inline fun <reified T, R : KnowledgebaseRecord> List<R>.collectEvents(): List<Pair<R, T>> {
         return this.flatMap { record -> record.events.filterIsInstance<T>().map { Pair(record, it) } }
     }
 
-    private inline fun <reified T, R> analyzeAnnotations(records: List<R>, analyzer: TransvarAnalyzer<T>)
+    private inline fun <reified T, R> analyzeAnnotations(recordEventPairs: List<Pair<R, T>>, analyzer: TransvarAnalyzer<T>)
             : List<Pair<R, ActionableEvent>> where T : HgvsAnnotation, R : KnowledgebaseRecord {
-        val recordEventPairs = records.collectEvents<T, R>()
         val transvarOutput = analyzer.analyze(recordEventPairs.map { it.second })
         return recordEventPairs.map { it.first }.zip(transvarOutput).flatMap { (record, output) ->
             extractVariants(record.gene, record.transcript, output, reference).map { Pair(record, it) }
