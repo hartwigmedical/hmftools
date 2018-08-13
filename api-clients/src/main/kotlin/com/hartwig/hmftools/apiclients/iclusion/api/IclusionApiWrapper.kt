@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.apiclients.iclusion.api
 
-import com.hartwig.hmftools.apiclients.iclusion.data.IclusionResponseAdapter
-import com.hartwig.hmftools.apiclients.iclusion.data.Indication
-import com.hartwig.hmftools.apiclients.iclusion.data.Token
+import com.hartwig.hmftools.apiclients.iclusion.data.*
 import com.hartwig.hmftools.apiclients.iclusion.http.httpClient
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -45,11 +43,25 @@ class IclusionApiWrapper {
         return api.getAccessToken(requestBody)
     }
 
-    fun indications(token: Token): Observable<Indication> {
-        return api.indications("Bearer ${token.access_token}").flatMapIterable { it }
+    fun indications(token: Token): Observable<IclusionIndication> {
+        return api.indications(tokenBearer(token)).flatMapIterable { it }
+    }
+
+    fun indication(token: Token, indicationId: String): Observable<IclusionIndication> {
+        return api.indication(tokenBearer(token), indicationId)
+    }
+
+    fun genes(token: Token): Observable<IclusionGene> {
+        return api.genes(tokenBearer(token)).flatMapIterable { it }
+    }
+
+    fun variants(token: Token): Observable<IclusionVariant> {
+        return api.variants(tokenBearer(token)).flatMapIterable { it }
     }
 
     fun close() {
         httpClient.dispatcher().executorService().shutdown()
     }
+
+    private fun tokenBearer(token: Token): String = "Bearer ${token.access_token}"
 }
