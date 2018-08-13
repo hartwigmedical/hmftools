@@ -30,7 +30,7 @@ class IclusionApiWrapper {
     }
 
     private val httpClient = httpClient()
-    val api = createApi(httpClient)
+    private val api = createApi(httpClient)
 
     fun getAccessToken(clientId: String, clientSecret: String, user: String, password: String): Observable<Token> {
         val requestBody = MultipartBody.Builder().setType(MultipartBody.FORM)
