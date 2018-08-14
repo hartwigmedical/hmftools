@@ -40,12 +40,12 @@ object CsvWriter {
         printer.close()
     }
 
-    inline fun <reified T : CsvData> writeCSV(records: List<T>, location: String) {
-        write(records, location, DEFAULT_CSV_FORMAT)
+    inline fun <reified T : CsvData> writeCSV(records: List<T>, location: String, nullString: String = DEFAULT_NULL_STRING) {
+        write(records, location, DEFAULT_CSV_FORMAT.withNullString(nullString))
     }
 
-    inline fun <reified T : CsvData> writeTSV(records: List<T>, location: String) {
-        write(records, location, DEFAULT_TSV_FORMAT)
+    inline fun <reified T : CsvData> writeTSV(records: List<T>, location: String, nullString: String = DEFAULT_NULL_STRING) {
+        write(records, location, DEFAULT_TSV_FORMAT.withNullString(nullString))
     }
 
     // MIVO: generate CsvData header record based on primary constructor parameter list
