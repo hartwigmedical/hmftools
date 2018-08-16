@@ -2,6 +2,7 @@ hmf_id_hashes has been generated using v1.2 of hmf-id-generator.
 
 The set of 3611 patient ids was queried on August 16th 2018, 12:10:00 with the following:
 
+```sql
 select distinct patientIdentifier from
 (select patientIdentifier from patient
 UNION
@@ -11,3 +12,4 @@ WHERE CPCTCNT.patientId = CPCTPN.patientId AND CTCT2YN.patientId = CPCTCNT.patie
   AND CPCTCNT.item = 'FLD.REG.CPCTCNT' AND CPCTCNT.itemValue != ''
   AND CPCTPN.item = 'FLD.REG.CPCTPN' AND CPCTPN.itemValue != ''
   AND CTCT2YN.item = 'FLD.REG.CTCT2YN' AND CTCT2YN.itemValue = 'Yes') a
+```
