@@ -42,14 +42,14 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
                 isCNV(variant)                 -> listOfNotNull(readCNV(gene, variant))
                 isVariantRecord(record)        -> readVariants(record)
                 isGenomicRangeMutation(record) -> listOf(readGenomicRange(record))
-                else                           -> emptyList()
+                else                           -> readOtherEvents(record)
             }
         }
 
         private fun isCNV(variant: String) = variant == "AMPLIFICATION" || variant == "DELETION"
         private fun isFusion(record: CSVRecord) = variantTypes(record).isNotEmpty() && variantTypes(record).all { it.contains("fusion") }
-        private fun isVariantRecord(record: CSVRecord) = variantTypes(record).none { it.contains("fusion") } &&
-                (hasKnownVariant(record) || hasHgvs(record))
+        private fun hasVariant(record: CSVRecord) = hasKnownVariant(record) || hasHgvs(record)
+        private fun isVariantRecord(record: CSVRecord) = variantTypes(record).none { it.contains("fusion") } && hasVariant(record)
 
         private fun isGenomicRangeMutation(record: CSVRecord) = hasPosition(record) && !hasRefOrAlt(record) &&
                 (isGenericMutation(record) || isGenericMissense(record))
@@ -106,6 +106,14 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
             } else {
                 variantTypes.split(",").filterNot { it.isBlank() }
             }
+        }
+
+        private fun readOtherEvents(record: CSVRecord): List<SomaticEvent> {
+            val events = mutableListOf<SomaticEvent>()
+            if (hasVariant(record)) {
+                events.add(OtherEvents(readVariants(record)))
+            }
+            return events
         }
 
         private fun additionalInfo(evidence: Collection<CivicEvidence>): String {

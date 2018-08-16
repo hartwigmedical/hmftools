@@ -7,6 +7,8 @@ data class GDnaVariant(val gDnaImpact: String) : SomaticEvent
 data class KnowledgebaseVariant(val gene: String, val chromosome: String, val position: Long, val ref: String?, val alt: String?) :
         SomaticEvent
 
+data class OtherEvents(val events: List<SomaticEvent>) : SomaticEvent
+
 sealed class GenericMutation : SomaticEvent {
     abstract val transcript: String?
     abstract val gene: String

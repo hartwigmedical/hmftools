@@ -25,11 +25,30 @@ object CsvReader {
         return parser.asSequence().map { clazz.read(it) }.toList()
     }
 
-    inline fun <reified T : CsvData> readTSV(fileLocation: String): List<T> =
-            read(T::class, fileLocation, DEFAULT_TSV_FORMAT.withFirstRecordAsHeader())
+    inline fun <reified T : CsvData> readTSV(fileLocation: String, nullString: String? = DEFAULT_NULL_STRING): List<T> =
+            read(T::class, fileLocation, DEFAULT_TSV_FORMAT.withNullString(nullString).withFirstRecordAsHeader())
 
-    inline fun <reified T : CsvData> readCSV(fileLocation: String): List<T> =
-            read(T::class, fileLocation, DEFAULT_CSV_FORMAT.withFirstRecordAsHeader())
+    inline fun <reified T : CsvData> readCSV(fileLocation: String, nullString: String? = DEFAULT_NULL_STRING): List<T> =
+            read(T::class, fileLocation, DEFAULT_CSV_FORMAT.withNullString(nullString).withFirstRecordAsHeader())
+
+    /**
+     * Reads CsvData records from a file. Builds CsvData objects selecting only the CSV columns that match the primary constructor parameters by name
+     *
+     * @param clazz the class of the records to be read. Needs to be a data class and must not contain nested CsvData fields.
+     * @param fileLocation input file location
+     * @param format CSV format
+     */
+
+    fun <T : CsvData> readByName(clazz: KClass<T>, fileLocation: String, format: CSVFormat): List<T> {
+        val parser = CSVParser.parse(File(fileLocation), Charset.defaultCharset(), format)
+        return parser.asSequence().map { clazz.read(it.toMap()) }.toList()
+    }
+
+    inline fun <reified T : CsvData> readTSVByName(fileLocation: String, nullString: String? = DEFAULT_NULL_STRING): List<T> =
+            readByName(T::class, fileLocation, DEFAULT_TSV_FORMAT.withNullString(nullString).withFirstRecordAsHeader())
+
+    inline fun <reified T : CsvData> readCSVByName(fileLocation: String, nullString: String? = DEFAULT_NULL_STRING): List<T> =
+            readByName(T::class, fileLocation, DEFAULT_CSV_FORMAT.withNullString(nullString).withFirstRecordAsHeader())
 
     fun <T> readRecords(fileLocation: String, format: CSVFormat, recordParser: (CSVRecord) -> T): List<T> {
         val parser = CSVParser.parse(File(fileLocation), Charset.defaultCharset(), format)
@@ -47,7 +66,7 @@ object CsvReader {
 
     private fun <T : CsvData> KClass<T>.read(values: List<*>): Pair<T, List<*>> {
         if (!this.isData) {
-            throw IllegalArgumentException("Cannot write value of type ${this.qualifiedName} to CSV. Must be a data class.")
+            throw IllegalArgumentException("Cannot read value of type ${this.qualifiedName} to CSV. Must be a data class.")
         }
         val constructor = this.primaryConstructor!!
         val nestedValues = constructor.parameters.foldIndexed(values) { index, remainingValues, param ->
@@ -68,5 +87,25 @@ object CsvReader {
         }
         return Pair(this.primaryConstructor!!.call(*nestedValues.take(this.primaryConstructor!!.parameters.size).toTypedArray()),
                     nestedValues.drop(this.primaryConstructor!!.parameters.size))
+    }
+
+    private fun <T : CsvData> KClass<T>.read(record: Map<String, String>): T {
+        if (!this.isData) {
+            throw IllegalArgumentException("Cannot read value of type ${this.qualifiedName} to CSV. Must be a data class.")
+        }
+        val constructor = this.primaryConstructor!!
+        val paramValues = constructor.parameters.map {
+            when {
+                it.type.isSubtypeOf(String::class.starProjectedType.withNullability(true)) -> {
+                    if (!record.containsKey(it.name)) error("Could not find column for field ${it.name} in CSV file.")
+                    if (!it.type.isMarkedNullable && record[it.name] == null) error("Found null CSV value for non-nullable field ${it.name}")
+                    record[it.name]
+                }
+                else                                                                       -> {
+                    error("Cannot read value of type ${this.qualifiedName} from CSV. All fields in primary constructor must be String or String?")
+                }
+            }
+        }
+        return this.primaryConstructor!!.call(*paramValues.toTypedArray())
     }
 }
