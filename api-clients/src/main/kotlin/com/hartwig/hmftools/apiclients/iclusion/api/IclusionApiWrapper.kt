@@ -59,6 +59,10 @@ class IclusionApiWrapper {
         return api.variants(tokenBearer(token)).flatMapIterable { it }
     }
 
+    fun studies(token: Token): Observable<IclusionStudy> {
+        return api.studies(tokenBearer(token)).flatMapIterable { it }
+    }
+
     fun close() {
         httpClient.dispatcher().executorService().shutdown()
     }
