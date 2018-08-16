@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.apiclients.iclusion.api
 
-import com.hartwig.hmftools.apiclients.iclusion.data.IclusionGene
-import com.hartwig.hmftools.apiclients.iclusion.data.IclusionIndication
-import com.hartwig.hmftools.apiclients.iclusion.data.IclusionVariant
-import com.hartwig.hmftools.apiclients.iclusion.data.Token
+import com.hartwig.hmftools.apiclients.iclusion.data.*
 import io.reactivex.Observable
 import okhttp3.RequestBody
 import retrofit2.http.*
@@ -23,4 +20,7 @@ interface IclusionApi {
 
     @GET("variants")
     fun variants(@Header("Authorization") tokenBearer: String): Observable<List<IclusionVariant>>
+
+    @GET("studies")
+    fun studies(@Header("Authorization") tokenBearer: String): Observable<List<IclusionStudy>>
 }
