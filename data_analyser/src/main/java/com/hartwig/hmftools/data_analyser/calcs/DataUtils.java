@@ -64,6 +64,17 @@ public class DataUtils {
         return total;
     }
 
+    public static void sumVectors(final double[] source, double[] dest)
+    {
+        if(source.length != dest.length)
+            return;
+
+        for(int i = 0; i < source.length; ++i)
+        {
+            dest[i] += source[i];
+        }
+    }
+
     public static double[] vectorMultiply(final double[] vec1, final double[] vec2)
     {
         if(vec1.length != vec2.length)
@@ -109,6 +120,16 @@ public class DataUtils {
         }
 
         return array;
+    }
+
+    public static void convertToPercentages(double[] counts)
+    {
+        double total = sumVector(counts);
+
+        for(int i = 0; i < counts.length; ++i)
+        {
+            counts[i] /= total;
+        }
     }
 
     public static List<Integer> getMatchingList(final List<Integer> list1, final List<Integer> list2)
@@ -159,6 +180,10 @@ public class DataUtils {
         return combinedSet;
     }
 
+    public static double capValue(double value, double minValue, double maxValue)
+    {
+        return max(min(value, maxValue), minValue);
+    }
 
     public static boolean doublesEqual(double val1, double val2)
     {
@@ -411,7 +436,7 @@ public class DataUtils {
 
     public static String sizeToStr(double size)
     {
-        double log = log10(size);
+        double log = log10(abs(size));
 
         if(log >= 6)
             return String.format("%.1fM", size/1e6);

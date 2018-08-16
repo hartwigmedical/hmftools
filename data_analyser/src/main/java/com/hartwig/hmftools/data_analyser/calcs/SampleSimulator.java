@@ -109,11 +109,12 @@ public class SampleSimulator {
         loadSignatureFactors(mConfig.SigFactorsFilename);
 
         LOGGER.info("loaded {} signature parameter sets:", mSigFactors.size());
-        for(final SimSigFactors sigFactors : mSigFactors) {
 
-            if (sigFactors.SigId-1 >= mInputSignatures.Cols) {
-
-                LOGGER.error("sigFactor({}: {}) outside loaded signatures", sigFactors.SigId, sigFactors.Name);
+        for(final SimSigFactors sigFactors : mSigFactors)
+        {
+            if (sigFactors.SigId-1 >= mInputSignatures.Cols)
+            {
+               LOGGER.error("sigFactor({}: {}) outside loaded signatures", sigFactors.SigId, sigFactors.Name);
             }
 
             LOGGER.info("{}", sigFactors.toString());
