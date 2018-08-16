@@ -103,7 +103,7 @@ public class StrelkaPostProcessApplication {
             if (filter.test(variantContext)) {
                 final VariantContext simplifiedVariant = StrelkaPostProcess.simplifyVariant(variantContext, sampleName);
                 final PotentialMNVRegion potentialMNV = outputPair.getLeft();
-                outputPair = MNVDetector.fitsMNVRegion(potentialMNV, simplifiedVariant);
+                outputPair = MNVDetector.addMnvToRegion(potentialMNV, simplifiedVariant);
                 outputPair.getRight().ifPresent(mnvRegion -> validator.mergeVariants(mnvRegion, merger).forEach(writer::add));
             }
         }
