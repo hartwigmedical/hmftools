@@ -63,6 +63,24 @@ class IclusionApiWrapper {
         return api.studies(tokenBearer(token)).flatMapIterable { it }
     }
 
+    fun studyDetails(token: Token): List<IclusionStudyDetails> {
+        val studies = studies(token).blockingIterable().toList()
+        val indications = indications(token).blockingIterable().toList().associateBy { it.id }
+        val genes = genes(token).blockingIterable().toList().associateBy { it.id }
+        val variants = variants(token).blockingIterable().toList().associateBy { it.id }
+        return studies.filterNot { it.mutations.isEmpty() }.map {
+            val indicationsForStudy = it.indication_ids.mapNotNull { indications[it] }
+            val mutationsDetails = it.mutations.mapNotNull {
+                val geneName = genes[it.gene_id]?.gene_name
+                val variantName = variants[it.variant_id]?.variant_name
+                geneName ?: return@mapNotNull null
+                variantName ?: return@mapNotNull null
+                return@mapNotNull IclusionMutationDetails(geneName, variantName)
+            }
+            IclusionStudyDetails(it, indicationsForStudy, mutationsDetails)
+        }.filterNot { it.mutations.isEmpty() }
+    }
+
     fun close() {
         httpClient.dispatcher().executorService().shutdown()
     }
