@@ -62,5 +62,13 @@ class ProteinModelTest : StringSpec() {
             ProteinModel.isCodonAlteration("V0") shouldBe false
             ProteinModel.hasCodonAlteration("V0") shouldBe false
         }
+
+        "codon mutation does not match part of gene"{
+            ProteinModel.hasCodonAlteration("RANBP2-ALK") shouldBe false
+        }
+
+        "hgvs protein annotation matches codon mutation"{
+            ProteinModel.hasCodonAlteration("p.C420_A423delinsW") shouldBe true
+        }
     }
 }
