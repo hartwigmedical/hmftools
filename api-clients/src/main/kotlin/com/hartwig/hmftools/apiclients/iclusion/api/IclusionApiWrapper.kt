@@ -13,7 +13,8 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 
 private const val ICLUSION_ENDPOINT = "http://api.iclusion.nl/"
 
-class IclusionApiWrapper {
+class IclusionApiWrapper(private val clientId: String, private val clientSecret: String, private val user: String,
+                         private val password: String) {
     companion object {
         private fun createApi(httpClient: OkHttpClient): IclusionApi {
             val retrofit = Retrofit.Builder().baseUrl(ICLUSION_ENDPOINT)
@@ -31,8 +32,9 @@ class IclusionApiWrapper {
 
     private val httpClient = httpClient()
     private val api = createApi(httpClient)
+    private val tokenBearer = "Bearer ${getAccessToken().blockingFirst().access_token}"
 
-    fun getAccessToken(clientId: String, clientSecret: String, user: String, password: String): Observable<Token> {
+    private fun getAccessToken(): Observable<Token> {
         val requestBody = MultipartBody.Builder().setType(MultipartBody.FORM)
                 .addFormDataPart("grant_type", "password")
                 .addFormDataPart("client_id", clientId)
@@ -43,31 +45,31 @@ class IclusionApiWrapper {
         return api.getAccessToken(requestBody)
     }
 
-    fun indications(token: Token): Observable<IclusionIndication> {
-        return api.indications(tokenBearer(token)).flatMapIterable { it }
+    fun indications(): Observable<IclusionIndication> {
+        return api.indications(tokenBearer).flatMapIterable { it }
     }
 
-    fun indication(token: Token, indicationId: String): Observable<IclusionIndication> {
-        return api.indication(tokenBearer(token), indicationId)
+    fun indication(indicationId: String): Observable<IclusionIndication> {
+        return api.indication(tokenBearer, indicationId)
     }
 
-    fun genes(token: Token): Observable<IclusionGene> {
-        return api.genes(tokenBearer(token)).flatMapIterable { it }
+    fun genes(): Observable<IclusionGene> {
+        return api.genes(tokenBearer).flatMapIterable { it }
     }
 
-    fun variants(token: Token): Observable<IclusionVariant> {
-        return api.variants(tokenBearer(token)).flatMapIterable { it }
+    fun variants(): Observable<IclusionVariant> {
+        return api.variants(tokenBearer).flatMapIterable { it }
     }
 
-    fun studies(token: Token): Observable<IclusionStudy> {
-        return api.studies(tokenBearer(token)).flatMapIterable { it }
+    fun studies(): Observable<IclusionStudy> {
+        return api.studies(tokenBearer).flatMapIterable { it }
     }
 
-    fun studyDetails(token: Token): List<IclusionStudyDetails> {
-        val studies = studies(token).blockingIterable().toList()
-        val indications = indications(token).blockingIterable().toList().associateBy { it.id }
-        val genes = genes(token).blockingIterable().toList().associateBy { it.id }
-        val variants = variants(token).blockingIterable().toList().associateBy { it.id }
+    fun studyDetails(): List<IclusionStudyDetails> {
+        val studies = studies().blockingIterable().toList()
+        val indications = indications().blockingIterable().toList().associateBy { it.id }
+        val genes = genes().blockingIterable().toList().associateBy { it.id }
+        val variants = variants().blockingIterable().toList().associateBy { it.id }
         return studies.filterNot { it.mutations.isEmpty() }.map {
             val indicationsForStudy = it.indication_ids.mapNotNull { indications[it] }
             val mutationsDetails = it.mutations.mapNotNull {
@@ -84,6 +86,4 @@ class IclusionApiWrapper {
     fun close() {
         httpClient.dispatcher().executorService().shutdown()
     }
-
-    private fun tokenBearer(token: Token): String = "Bearer ${token.access_token}"
 }
