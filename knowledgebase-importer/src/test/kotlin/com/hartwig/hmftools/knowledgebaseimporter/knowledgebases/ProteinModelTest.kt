@@ -55,5 +55,12 @@ class ProteinModelTest : StringSpec() {
             ProteinModel.hasCodonAlteration("V600E") shouldBe false
             ProteinModel.hasCodonAlteration("Val600Glu") shouldBe false
         }
+
+        "does not match invalid codon number"{
+            ProteinModel.isProteinAlteration("V0E") shouldBe false
+            ProteinModel.hasProteinAlteration("V0E") shouldBe false
+            ProteinModel.isCodonAlteration("V0") shouldBe false
+            ProteinModel.hasCodonAlteration("V0") shouldBe false
+        }
     }
 }
