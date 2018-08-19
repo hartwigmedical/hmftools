@@ -89,6 +89,14 @@ public class DataUtils {
         return output;
     }
 
+    public static void initVector(double[] vec, double value)
+    {
+        for(int i = 0; i < vec.length; ++i)
+        {
+            vec[i] = value;
+        }
+    }
+
     public static void vectorMultiply(double[] vec, double value)
     {
         for(int i = 0; i < vec.length; ++i)

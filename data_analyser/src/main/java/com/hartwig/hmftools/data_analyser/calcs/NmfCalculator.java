@@ -352,8 +352,8 @@ public class NmfCalculator {
         int permittedExtensions = 3;
         double projectCostExit = mLowestCost * 1.25; // build a buffer in for uncertainty
 
-        for(; i < maxIterations; i++) {
-
+        for(; i < maxIterations; i++)
+        {
             // compute the fit
             produceFit();
 
@@ -380,8 +380,8 @@ public class NmfCalculator {
 
             double costChange = prevCost > 0 ? (currentCost - prevCost) / prevCost : 0;
 
-            if (mConfig.LogVerbose) {
-
+            if (mConfig.LogVerbose)
+            {
                 calcResiduals();
                 double residualsChange = prevResiduals > 0 ? (mTotalResiduals - prevResiduals) / prevResiduals : 0;
 
@@ -403,7 +403,9 @@ public class NmfCalculator {
                     LOGGER.debug(String.format("run=%d, it=%d: cost(%.0f) below cutoff(%.0f), exiting fit", mRunId, i, currentCost, mConfig.ExitLevel));
                     break;
 
-                } else if (abs(costChange) < MIN_COST_CHANGE_PERCENT || costChange > 0) {
+                }
+                else if (abs(costChange) < MIN_COST_CHANGE_PERCENT || costChange > 0)
+                {
 
                     LOGGER.debug(String.format("run=%d, it=%d: cost(%.0f -> %.0f) percent(%.4f), %s change, exiting fit",
                             mRunId, i, prevCost, currentCost, costChange, costChange > 0 ? "positive" : "small"));
@@ -411,8 +413,8 @@ public class NmfCalculator {
                 }
 
                 // also check the rate of change to project whether it is likely to reach the current lowest cost level
-                if(i > 10 && mLowestCost > 0) {
-
+                if(i > 10 && mLowestCost > 0)
+                {
                     double changeRate = (prevCostChange - costChange) / prevCostChange;
                     int remainingIts = mConfig.MaxIterations - i;
 
@@ -429,8 +431,8 @@ public class NmfCalculator {
                         targetCostReduced = currentCost * Math.pow(1 + costChange, minChangeIts);
                     }
 
-                    if (targetCostReduced > projectCostExit || targetCostLinear > projectCostExit) {
-
+                    if (targetCostReduced > projectCostExit || targetCostLinear > projectCostExit)
+                    {
                         LOGGER.debug(String.format(
                                 "run=%d, it=%d: costChange(%.6f percVsLast=%.4f) to small for cost(%.0f vs low=%.0f) projected(lin=%.0f red=%.0f), exiting fit",
                                 mRunId, i, costChange, changeRate, currentCost, mLowestCost, targetCostLinear, targetCostReduced));
@@ -620,7 +622,6 @@ public class NmfCalculator {
         }
     }
 
-
     private double calcDivergenceCost(boolean useVAsRef)
     {
         // Kullback-Leibler divergence: Aij * log(Aij/Bij) - Aij + Bij
@@ -687,7 +688,7 @@ public class NmfCalculator {
                 hData[i][j] *= contribAdj;
             }
 
-                // verify bucket ratios for a sig now total 1 and so are in effect percentages
+            // verify bucket ratios for a sig now total 1 and so are in effect percentages
             if(!doublesEqual(sumVector(mW.getCol(i)),1))
             {
                 LOGGER.error("sig normalisation failed");

@@ -28,6 +28,7 @@ public class SampleData
     private double mElevatedTotal;
     private double mAllocTotal;
     private double mUnallocTotal;
+    private double mNoiseAlloc;
 
     private String mCancerType;
 
@@ -51,6 +52,7 @@ public class SampleData
         mAllocPercent = 0;
         mAllocTotal = 0;
         mUnallocTotal = 0;
+        mNoiseAlloc = 0;
         mVarTotal = 0;
     }
 
@@ -101,6 +103,7 @@ public class SampleData
     public double getElevatedCount() { return mElevatedTotal; }
     public double getAllocatedCount() { return mAllocTotal; }
     public double getUnallocatedCount() { return mUnallocTotal; }
+    public double getAllocNoise() { return mNoiseAlloc; }
 
     public final double[] getAllocBucketCounts() { return mAllocBucketCounts; }
     public final double[] getUnallocBucketCounts() { return mUnallocBucketCounts; }
@@ -127,12 +130,27 @@ public class SampleData
         mUnallocTotal = mElevatedTotal;
     }
 
-    public double[] getBestPotentialAllocation(final double[] bucketRatios, final List<Integer> requiredBuckets)
+    public void clearAllocations()
     {
-        return getBestPotentialAllocation(bucketRatios, requiredBuckets, null);
+        mElevBucketGroups.clear();
+        mUnallocBuckets.clear();
+        mUnallocBuckets.addAll(mElevatedBuckets);
+
+        copyVector(mElevBucketCounts, mUnallocBucketCounts);
+        mAllocBucketCounts = new double[mUnallocBucketCounts.length];
+        mUnallocTotal = mElevatedTotal;
+        mGroupAllocPercents.clear();
+        mAllocPercent = 0;
+        mAllocTotal = 0;
+        mNoiseAlloc = 0;
     }
 
-    public double[] getBestPotentialAllocation(final double[] bucketRatios, final List<Integer> requiredBuckets, final List<Double> ratioRanges)
+    public double[] getPotentialAllocation(final double[] bucketRatios, final List<Integer> requiredBuckets)
+    {
+        return getPotentialAllocation(bucketRatios, requiredBuckets, null);
+    }
+
+    public double[] getPotentialAllocation(final double[] bucketRatios, final List<Integer> requiredBuckets, final List<Double> bucketRatioRanges)
     {
         // must cap at the actual sample counts
         // allow to go as high as the elevated probability range
@@ -140,6 +158,9 @@ public class SampleData
 
         // first extract the remaining unallocated counts per bucket
         double[] bestAllocCounts = new double[bucketRatios.length];
+
+        // TEMP: ratio rangs not used
+        final List<Double> ratioRanges = null;
 
         double minAlloc = 0;
 
@@ -158,13 +179,12 @@ public class SampleData
                 break;
             }
 
-            bestAllocCounts[bucket] = unallocCount;
+            double unallocPerc = unallocCount / mElevBucketCounts[bucket];
+            double potentialAlloc = unallocCount + unallocPerc * mCountRanges[bucket];
 
             // use the low range ratio to give max possible allocation to this bucket
             double adjBucketRatio = bucketRatios[bucket] * (1 - ratioRange);
 
-            double unallocPerc = unallocCount / mElevBucketCounts[bucket];
-            double potentialAlloc = unallocCount + unallocPerc * mCountRanges[bucket];
             double alloc = potentialAlloc / adjBucketRatio;
 
             if(minAlloc == 0 || alloc < minAlloc)
@@ -179,7 +199,8 @@ public class SampleData
             Integer bucket = requiredBuckets.get(bIndex);
             double ratioRange = ratioRanges != null ? ratioRanges.get(bIndex) : 0;
 
-            bestAllocCounts[bucket] = minAlloc * bucketRatios[bucket] * (1 + ratioRange);
+            double potentialAlloc = minAlloc * bucketRatios[bucket] * (1 + ratioRange);
+            bestAllocCounts[bucket] = min(mUnallocBucketCounts[bucket] + mCountRanges[bucket], potentialAlloc);
         }
 
         return bestAllocCounts;
@@ -212,6 +233,12 @@ public class SampleData
             if (mUnallocBucketCounts[i] < counts[i])
             {
                 mAllocBucketCounts[i] += mUnallocBucketCounts[i];
+
+                if(mUnallocBucketCounts[i] + mCountRanges[i] > counts[i]) // eg if unalloc = 10, noise = 15, count = 20, then just allocate 10 of noise
+                    mNoiseAlloc += counts[i] - mUnallocBucketCounts[i];
+                else
+                    mNoiseAlloc += mCountRanges[i]; // eg if unalloc = 10, noise = 5, count = 20, then allocate all 5 of noise
+
                 counts[i] = min(mUnallocBucketCounts[i] + mCountRanges[i], counts[i]);
                 mUnallocBucketCounts[i] = 0;
                 removeUnallocBucket(i);

@@ -1,11 +1,22 @@
 package com.hartwig.hmftools.data_analyser.calcs;
 
-import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.calcCSS;
-import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
-import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.calcCSS;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.calcAbsDiffs;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.initVector;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sizeToStr;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVectors;
+
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.data_analyser.types.NmfMatrix;
 
+import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.BOBYQAOptimizer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -362,5 +373,214 @@ public class NmfSampleFitter {
 
         return sigsAdded;
     }
+
+    public static boolean fitCountsToRatios(
+            int sampleId, final double[] counts, final double[] countsMargin, final List<double[]> ratiosCollection,
+            double[] contribs, double minContribPerc)
+    {
+        // constraints are that the fitted counts cannot exceed the actual counts (plus the margin for noise)
+        // if any single contrib drops below the required contribution percent, zero-out its sig
+
+        int SCOL = 0; // the first and only column in the per-sample matrix, since only one set of data is handled at a time
+
+        // validate inputs
+        int bucketCount = counts.length;
+
+        for(final double[] ratios : ratiosCollection)
+        {
+            if(ratios.length != bucketCount)
+                return false;
+        }
+
+        int sigCount = ratiosCollection.size();
+
+        double totalCount = sumVector(counts);
+
+        // perform standard adjustments
+        NmfMatrix w = new NmfMatrix(bucketCount, sigCount);
+        NmfMatrix h = new NmfMatrix(sigCount, 1);
+
+        for(int sig = 0; sig < sigCount; ++sig)
+        {
+            w.setCol(sig, ratiosCollection.get(sig));
+            h.set(sig, SCOL, contribs[sig]);
+        }
+
+        NmfMatrix actualCounts = new NmfMatrix(bucketCount, 1);
+        actualCounts.setCol(0, counts);
+
+        NmfMatrix fittedCounts = new NmfMatrix(bucketCount, 1);
+
+        // test out initial contributions and residuals
+        w.multiply(h, fittedCounts, true);
+
+        int iterations = 0;
+        int iterationsCap = 50;
+        int iterationsIncrement = 50;
+        int maxIterations = 250;
+
+        minContribPerc *= 0.9; // give a buffer in case a sig drops just below the min to allow it to resurface
+
+        double currentCost = 0;
+        double residuals = 0;
+        double residualsPerc = 0;
+        double prevCost = 0;
+        double costChange = 0;
+        double prevCostChange = 0;
+        double prevResiduals = residuals;
+
+        final double[][] fitData = fittedCounts.getData();
+
+        List<Integer> zeroedSigs = Lists.newArrayList();
+
+        while(iterations < iterationsCap)
+        {
+            // calc residuals
+            prevCost = currentCost;
+            prevResiduals = residuals;
+            currentCost = actualCounts.sumDiffSq(fittedCounts);
+            residuals = calcAbsDiffs(counts, fittedCounts.getCol(SCOL));
+            residualsPerc = residuals / totalCount;
+
+            if(Double.isNaN(currentCost) || Double.isInfinite(currentCost) || currentCost > 1e50)
+            {
+                LOGGER.warn("iter({}): invalid cost value: nan={} infinite={} max={}, exiting",
+                        iterations, Double.isNaN(currentCost), Double.isInfinite(currentCost), currentCost > 1e50);
+
+                return false;
+            }
+
+            if(residualsPerc < 0.01)
+                break;
+
+            if(iterations > 0)
+            {
+                prevCostChange = costChange;
+                costChange = (prevCost - currentCost) / prevCost;
+
+                if(abs(costChange) < 0.0001)
+                    break;
+            }
+
+            // fit again
+            NmfMatrix wt = w.transpose();
+            NmfMatrix hAdj = wt.multiply(actualCounts);
+            NmfMatrix hd = wt.multiply(fittedCounts);
+
+            hAdj.scalarDivide(hd, true);
+            h.scalarMultiply(hAdj);
+
+            w.multiply(h, fittedCounts, true);
+
+            // zero-out any tiny contributions
+            for(int s = 0; s < sigCount; ++s)
+            {
+                if(zeroedSigs.contains(s))
+                    continue;;
+
+                double sigPerc = h.get(s, SCOL) / totalCount;
+                if(sigPerc < minContribPerc)
+                {
+                    zeroedSigs.add(s);
+                    h.set(s, SCOL, 0);
+
+                    for(int b = 0; b < bucketCount; ++b)
+                    {
+                        w.set(b, s, 0);
+                    }
+                }
+            }
+
+            ++iterations;
+
+            if(iterations >= iterationsCap && iterations <= maxIterations && costChange > 0.001) // 100 out of 100K, keep going if still progressing
+            {
+                iterationsCap += iterationsIncrement;
+            }
+        }
+
+        // before beginning the next set of adjustments, check for any bucket exceeding the permitted range
+        /* Ensure fitted counts are within the permitted noise range:
+            - check each bucket's fitted vs actual count
+            - if the fitted count exceeds the actual, calculate the required reduction per contributing sig for that bucket
+         */
+
+        double[] contribAdj = new double[sigCount];
+        double[][] contribData = h.getData();
+        final double[][] sigsData = w.getData();
+
+        double contribTotal = h.sum();
+
+        for(int b = 0; b < bucketCount; ++b)
+        {
+            double excessCount = fitData[b][SCOL] - (counts[b] + countsMargin[b]);
+
+            if (excessCount <= 0)
+                continue;
+
+            double[] sigInvCosts = new double[sigCount];
+            double invCostTotal = 0;
+
+            for(int s = 0; s < sigCount; ++s)
+            {
+                // how much this sig contributed to this bucket
+                double sigBucketContrib = contribData[s][SCOL] * sigsData[b][s];
+
+                if (sigBucketContrib == 0)
+                {
+                    continue;
+                }
+                // the cost basis per unit
+                double sigCostBasis = excessCount * (1 / sigsData[b][s]);
+
+                // reversed percent allocation
+                double invCost = 1 / sigCostBasis;
+
+                invCostTotal += invCost;
+                sigInvCosts[s] = invCost;
+            }
+
+            for(int s = 0; s < sigCount; ++s)
+            {
+                double sigAttribPerc = sigInvCosts[s] / invCostTotal;
+
+                if(sigAttribPerc == 0)
+                    continue;
+
+                double sigAdjust = excessCount * sigAttribPerc * (1 / sigsData[b][s]);
+
+                contribAdj[s] = max(contribAdj[s], sigAdjust);
+
+                if(sigAdjust > contribData[s][SCOL] * 1.01)
+                {
+                    LOGGER.error("excess contrib adjust");
+                }
+            }
+        }
+
+        // set the final contributions minus any adjustments
+        for(int s = 0; s < sigCount; ++s)
+        {
+            contribData[s][SCOL] -= contribAdj[s];
+            contribs[s] = max(contribData[s][SCOL], 0);
+        }
+
+        double contribAdjustments = sumVector(contribAdj);
+
+        if(contribAdjustments > 0)
+        {
+            w.multiply(h, fittedCounts, true);
+            residuals = calcAbsDiffs(counts, fittedCounts.getCol(SCOL));
+            residualsPerc = residuals / totalCount;
+        }
+
+        LOGGER.debug(String.format("sample(%d) sigs(%d -> %d) total(%s) contrib(init=%s less adj=%s) new residuals(%s perc=%.4f) iters(%d) costChg(%.4f -> %.4f)",
+                sampleId, sigCount, sigCount - zeroedSigs.size(),
+                sizeToStr(totalCount), sizeToStr(contribTotal), sizeToStr(contribAdjustments),
+                sizeToStr(residuals), residualsPerc, iterations, prevCostChange, costChange));
+
+        return true;
+    }
+
 
 }

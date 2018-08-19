@@ -7,7 +7,9 @@ import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.doublesEqual;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 
@@ -25,6 +27,7 @@ public class BucketGroup implements Comparable<BucketGroup> {
     // the bucket counts from the samples as per the specific buckets in this groiup
     private double[] mCombinedBucketCounts;
     private List<Double> mSampleCountTotals;
+    private Map<Integer,Double> mSampleCountsMap;
 
     private boolean mBucketRatiosClean;
     private double[] mBucketRatios;
@@ -58,6 +61,7 @@ public class BucketGroup implements Comparable<BucketGroup> {
         mExtraBucketIds = Lists.newArrayList();
         mSampleCountTotals = Lists.newArrayList();
         mRatioRanges = Lists.newArrayList();
+        mSampleCountsMap = new HashMap();
         mCombinedBucketCounts = null;
         mBucketRatios = null;
         mBucketRatioRanges = null;
@@ -131,6 +135,7 @@ public class BucketGroup implements Comparable<BucketGroup> {
     }
 
     public List<Double> getSampleCountTotals() { return mSampleCountTotals; }
+    public Map<Integer, Double> getSampleCountsMap() { return mSampleCountsMap; }
     public void setSampleCountTotals(List<Double> totals) { mSampleCountTotals = totals; }
 
     public void setCancerType(final String type) { mCancerType = type; }
@@ -164,6 +169,7 @@ public class BucketGroup implements Comparable<BucketGroup> {
     {
         mSampleIds.clear();
         mSampleCountTotals.clear();
+        mSampleCountsMap.clear();
         calcBucketRatios();
         mTotalCount = 0;
 
@@ -195,7 +201,10 @@ public class BucketGroup implements Comparable<BucketGroup> {
             mBucketRatiosClean = false;
 
         mSampleIds.add(sampleId);
-        mSampleCountTotals.add(sumVector(bucketCounts));
+
+        double sampleTotal = sumVector(bucketCounts);
+        mSampleCountTotals.add(sampleTotal);
+        mSampleCountsMap.put(sampleId, sampleTotal);
     }
 
     public void merge(List<Integer> sampleIds, double[] bucketCounts)
