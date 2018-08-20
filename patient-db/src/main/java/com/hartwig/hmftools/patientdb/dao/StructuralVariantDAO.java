@@ -36,6 +36,9 @@ class StructuralVariantDAO {
         this.context = context;
     }
 
+    private Double getValueNotNull(Double value) { return value != null ? value : 0; }
+    private Integer getValueNotNull(Integer value) { return value != null ? value : 0; }
+
     @NotNull
     public final List<StructuralVariantData> read(@NotNull final String sample) {
         List<StructuralVariantData> structuralVariants = Lists.newArrayList();
@@ -66,16 +69,16 @@ class StructuralVariantDAO {
                     .adjustedStartCopyNumber(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBER))
                     .adjustedStartCopyNumberChange(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBERCHANGE))
                     .endAF(record.getValue(STRUCTURALVARIANT.ENDAF))
-                    .adjustedEndAF(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDAF))
-                    .adjustedEndCopyNumber(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER))
-                    .adjustedEndCopyNumberChange(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE))
-                    .ploidy(record.getValue(STRUCTURALVARIANT.PLOIDY))
+                    .adjustedEndAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDAF)))
+                    .adjustedEndCopyNumber(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER)))
+                    .adjustedEndCopyNumberChange(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE)))
+                    .ploidy(getValueNotNull(record.getValue(STRUCTURALVARIANT.PLOIDY)))
                     .type(StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
                     .homology(record.getValue(STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE))
                     .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
                     .filter(record.getValue(STRUCTURALVARIANT.FILTER))
                     .imprecise(byteToBoolean(record.getValue(STRUCTURALVARIANT.IMPRECISE)))
-                    .somaticScore(record.getValue(STRUCTURALVARIANT.SOMATICSCORE))
+                    .somaticScore(getValueNotNull(record.getValue(STRUCTURALVARIANT.SOMATICSCORE)))
                     .qualityScore(record.getValue(STRUCTURALVARIANT.QUALSCORE))
                     .event(record.getValue(STRUCTURALVARIANT.EVENT))
                     .startTumourVariantFragmentCount(record.getValue(STRUCTURALVARIANT.STARTTUMOURVARIANTFRAGMENTCOUNT))
@@ -86,12 +89,12 @@ class StructuralVariantDAO {
                     .endTumourReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.ENDTUMOURREFERENCEFRAGMENTCOUNT))
                     .endNormalVariantFragmentCount(record.getValue(STRUCTURALVARIANT.ENDNORMALVARIANTFRAGMENTCOUNT))
                     .endNormalReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.ENDNORMALREFERENCEFRAGMENTCOUNT))
-                    .startIntervalOffsetStart(record.getValue(STRUCTURALVARIANT.STARTINTERVALOFFSETSTART))
-                    .startIntervalOffsetEnd(record.getValue(STRUCTURALVARIANT.STARTINTERVALOFFSETEND))
-                    .endIntervalOffsetStart(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETSTART))
-                    .endIntervalOffsetEnd(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETEND))
-                    .inexactHomologyOffsetStart(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETSTART))
-                    .inexactHomologyOffsetEnd(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETEND))
+                    .startIntervalOffsetStart(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTINTERVALOFFSETSTART)))
+                    .startIntervalOffsetEnd(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTINTERVALOFFSETEND)))
+                    .endIntervalOffsetStart(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETSTART)))
+                    .endIntervalOffsetEnd(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETEND)))
+                    .inexactHomologyOffsetStart(getValueNotNull(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETSTART)))
+                    .inexactHomologyOffsetEnd(getValueNotNull(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETEND)))
                     .linkedBy(record.getValue(STRUCTURALVARIANT.LINKEDBY))
                     .build());
         }
