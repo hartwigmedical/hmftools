@@ -46,11 +46,12 @@ public abstract class PotentialMNVRegion {
     }
 
     @NotNull
-    static PotentialMNVRegion addVariant(@NotNull final PotentialMNVRegion region, @NotNull final VariantContext variant) {
+    static PotentialMNVRegion addVariant(@NotNull final PotentialMNVRegion region, @NotNull final VariantContext variant,
+            final int gapSize) {
         if (region.equals(PotentialMNVRegion.empty())) {
             return fromVariant(variant);
         } else {
-            final List<PotentialMNV> mnvs = addVariantToPotentialMnvs(region.mnvs(), variant);
+            final List<PotentialMNV> mnvs = addVariantToPotentialMnvs(region.mnvs(), variant, gapSize);
             final List<VariantContext> variants = Lists.newArrayList(region.variants());
             variants.add(variant);
             final int mnvEnd = Math.max(region.end(), variant.getStart() + variant.getReference().getBaseString().length());
@@ -59,40 +60,41 @@ public abstract class PotentialMNVRegion {
     }
 
     @NotNull
-    static PotentialMNVRegion addVariants(@NotNull final PotentialMNVRegion region, @NotNull final List<VariantContext> variants) {
+    static PotentialMNVRegion addVariants(@NotNull final PotentialMNVRegion region, @NotNull final List<VariantContext> variants,
+            final int gapSize) {
         PotentialMNVRegion updatedRegion = region;
         for (final VariantContext variant : variants) {
-            updatedRegion = addVariant(updatedRegion, variant);
+            updatedRegion = addVariant(updatedRegion, variant, gapSize);
         }
         return updatedRegion;
     }
 
     @NotNull
     static PotentialMNVRegion fromVariant(@NotNull final VariantContext variant) {
-        final List<PotentialMNV> mnvs = addVariantToPotentialMnvs(Lists.newArrayList(), variant);
+        final List<PotentialMNV> mnvs = addVariantToPotentialMnvs(Lists.newArrayList(), variant, Integer.MAX_VALUE);
         return ImmutablePotentialMNVRegion.of(variant.getContig(), variant.getStart(),
                 variant.getStart() + variant.getReference().getBaseString().length(), Lists.newArrayList(variant), mnvs);
     }
 
     @NotNull
     private static List<PotentialMNV> addVariantToPotentialMnvs(@NotNull final List<PotentialMNV> mnvs,
-            @NotNull final VariantContext variant) {
+            @NotNull final VariantContext variant, final int gapSize) {
         if (variant.getAlternateAlleles().size() > 1) {
-            return addVariantsToPotentialMnvs(mnvs, splitMultiAlleleVariant(variant));
+            return addVariantsToPotentialMnvs(mnvs, splitMultiAlleleVariant(variant), gapSize);
         } else {
-            return addVariantsToPotentialMnvs(mnvs, Lists.newArrayList(variant));
+            return addVariantsToPotentialMnvs(mnvs, Lists.newArrayList(variant), gapSize);
         }
     }
 
     @NotNull
     private static List<PotentialMNV> addVariantsToPotentialMnvs(@NotNull final List<PotentialMNV> mnvs,
-            @NotNull final List<VariantContext> variants) {
+            @NotNull final List<VariantContext> variants, final int gapSize) {
         final List<PotentialMNV> updatedMnvs = Lists.newArrayList(mnvs);
         variants.forEach(variant -> {
             updatedMnvs.add(PotentialMNV.fromVariant(variant));
             mnvs.stream()
                     .filter(potentialMNV -> potentialMNV.chromosome().equals(variant.getContig())
-                            && variant.getStart() - potentialMNV.end() <= 1 && variant.getStart() - potentialMNV.end() >= 0)
+                            && variant.getStart() - potentialMNV.end() <= gapSize && variant.getStart() - potentialMNV.end() >= 0)
                     .forEach(potentialMNV -> updatedMnvs.add(PotentialMNV.addVariant(potentialMNV, variant)));
         });
         updatedMnvs.sort(Comparator.comparing(PotentialMNV::start).thenComparing(PotentialMNV::end));

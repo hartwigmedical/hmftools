@@ -1,16 +1,14 @@
 package com.hartwig.hmftools.idgenerator
 
-import org.apache.logging.log4j.LogManager
 import org.bouncycastle.jcajce.provider.digest.SHA3
 import org.bouncycastle.util.encoders.Hex
+import kotlin.math.sqrt
 
 typealias CpctId = String
 typealias OldHash = String
 typealias NewHash = String
 
 class IdGenerator(private val password: String) {
-    private val logger = LogManager.getLogger(IdGenerator::class)
-
     private data class HashTriple(val cpctId: CpctId, val oldHash: OldHash, val newHash: NewHash)
 
     fun generateIds(patientIds: List<CpctId>): Map<CpctId, HmfId> {
@@ -23,7 +21,7 @@ class IdGenerator(private val password: String) {
         val idsPerOldHash = oldIds.distinct().associateBy { it.hash }
         val oldGenerator = IdGenerator(oldPassword)
         val hashTriples = patientIds.distinct().map { HashTriple(it, oldGenerator.hash(it), hash(it)) }
-        includesAllOldPatients(idsPerOldHash, hashTriples)
+        checkOldPasswordMatched(idsPerOldHash, hashTriples)
         return updateIds(hashTriples, idsPerOldHash)
     }
 
@@ -41,14 +39,18 @@ class IdGenerator(private val password: String) {
         return (updatedIds + newIds).toMap()
     }
 
-    //MIVO: check that all old patients are included in the new list
-    private fun includesAllOldPatients(oldIds: Map<OldHash, HmfId>, hashTriples: List<HashTriple>) {
-        val oldPasswordHashes = hashTriples.map { it.oldHash }.toSet()
-        if (!oldIds.keys.all { oldPasswordHashes.contains(it) }) {
-            logger.error("A hash value present in the current file could not be reproduced using the provided $OLD_PASSWORD and $PATIENT_IDS_FILE.")
-            logger.error("Either some patients were removed from the $PATIENT_IDS_FILE file or $OLD_PASSWORD was wrong.")
-            throw IllegalArgumentException()
+    //MIVO: check that at least some of the old patients are included in the new list
+    private fun checkOldPasswordMatched(oldIds: Map<OldHash, HmfId>, hashTriples: List<HashTriple>) {
+        val oldHashMatches = numberOfOldHashMatches(oldIds, hashTriples)
+        if (oldHashMatches <= sqrt(oldIds.size.toDouble())) {
+            error("Could only reproduce $oldHashMatches of the existing hashes using the provided $OLD_PASSWORD and $PATIENT_IDS_FILE. " +
+                          "Either too many patients were removed from the $PATIENT_IDS_FILE file or $OLD_PASSWORD was wrong.")
         }
+    }
+
+    private fun numberOfOldHashMatches(oldIds: Map<OldHash, HmfId>, hashTriples: List<HashTriple>): Int {
+        val oldPasswordHashes = hashTriples.map { it.oldHash }.toSet()
+        return oldPasswordHashes.filter { oldIds.containsKey(it) }.size
     }
 
     private fun getOldId(idsPerOldHash: Map<OldHash, HmfId>, oldHash: OldHash): Int {

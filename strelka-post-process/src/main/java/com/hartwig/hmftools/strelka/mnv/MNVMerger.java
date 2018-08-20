@@ -70,16 +70,18 @@ public abstract class MNVMerger {
             @NotNull final Map<Integer, Character> gapReads) {
         final StringBuilder refBases = new StringBuilder();
         final StringBuilder altBases = new StringBuilder();
-        variants.forEach(variant -> {
-            final int positionBeforeVariant = variant.getStart() - 1;
-            if (gapReads.containsKey(positionBeforeVariant)) {
-                final Character gapRead = gapReads.get(positionBeforeVariant);
+        int currentPosition = variants.get(0).getStart();
+        for (final VariantContext variant : variants) {
+            while (currentPosition != variant.getStart()) {
+                final Character gapRead = gapReads.get(currentPosition);
                 refBases.append(gapRead);
                 altBases.append(gapRead);
+                currentPosition++;
             }
             refBases.append(variant.getReference().getBaseString());
             altBases.append(variant.getAlternateAllele(0).getBaseString());
-        });
+            currentPosition = variant.getStart() + variant.getReference().length();
+        }
         final Allele ref = Allele.create(refBases.toString(), true);
         final Allele alt = Allele.create(altBases.toString(), false);
         return Lists.newArrayList(ref, alt);

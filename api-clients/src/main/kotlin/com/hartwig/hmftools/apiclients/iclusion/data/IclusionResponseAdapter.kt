@@ -17,4 +17,9 @@ object IclusionResponseAdapter {
     fun variants(json: Map<String, IclusionVariant>): List<IclusionVariant> {
         return json.values.toList()
     }
+
+    @FromJson
+    fun studies(json: Map<String, IclusionStudy>): List<IclusionStudy> {
+        return json.values.toList()
+    }
 }

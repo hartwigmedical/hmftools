@@ -87,7 +87,7 @@ public class MNVDetectorApplication {
                     strelka ? StrelkaPostProcess.simplifyVariant(rawVariant, StrelkaPostProcess.TUMOR_GENOTYPE) : rawVariant;
 
             final PotentialMNVRegion potentialMNVregion = outputPair.getLeft();
-            outputPair = MNVDetector.fitsMNVRegion(potentialMNVregion, variant);
+            outputPair = MNVDetector.addMnvToRegion(potentialMNVregion, variant);
             outputPair.getRight()
                     .ifPresent(mnvRegion -> filterMnvRegion(mnvRegion).ifPresent(filteredRegion -> writeMnvRegionToFiles(filteredRegion,
                             vcfWriter,

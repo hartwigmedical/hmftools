@@ -25,6 +25,7 @@ import htsjdk.variant.vcf.VCFHeader;
 public class MNVValidatorTest {
     private static final Logger LOGGER = LogManager.getLogger(MNVValidatorTest.class);
 
+    private static final int GAP_SIZE = 1;
     private static final File VCF_FILE = new File(Resources.getResource("mnvs.vcf").getPath());
     private static final VCFFileReader VCF_FILE_READER = new VCFFileReader(VCF_FILE, false);
     private static final VCFHeader VCF_OUTPUT_HEADER = generateOutputHeader(VCF_FILE_READER.getFileHeader(), "TUMOR");
@@ -35,7 +36,7 @@ public class MNVValidatorTest {
     @Test
     public void correctlyDetectsNonMnvVariant() {
         final PotentialMNVRegion region =
-                PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(), Lists.newArrayList(VARIANTS.get(7), VARIANTS.get(9)));
+                PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(), Lists.newArrayList(VARIANTS.get(7), VARIANTS.get(9)), GAP_SIZE);
         assertEquals(2, region.potentialMnvs().size());
         final List<VariantContext> nonMnvs = MNVRegionValidator.nonMnvVariants(region, Sets.newHashSet(region.potentialMnvs().get(0)));
         assertEquals(1, nonMnvs.size());
@@ -48,7 +49,7 @@ public class MNVValidatorTest {
     @Test
     public void correctlyDetectsMultiAltNonMnvVariant() {
         final PotentialMNVRegion region =
-                PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(), Lists.newArrayList(VARIANTS.get(7), VARIANTS.get(9)));
+                PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(), Lists.newArrayList(VARIANTS.get(7), VARIANTS.get(9)), GAP_SIZE);
         assertEquals(2, region.potentialMnvs().size());
         final List<VariantContext> nonMnvs = MNVRegionValidator.nonMnvVariants(region, Sets.newHashSet());
         assertEquals(2, nonMnvs.size());
@@ -65,8 +66,9 @@ public class MNVValidatorTest {
     // MIVO:    2 records contain both;
     @Test
     public void correctOutputForMnvOf2InRegionOf2() {
-        final PotentialMNVRegion region =
-                PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(), Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12)));
+        final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
+                Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12)),
+                GAP_SIZE);
         final SAMRecord recordWith1and2 = TestUtils.buildSamRecord(170755999, "6M", "CATTAG");
         final List<SAMRecord> records = Lists.newArrayList(recordWith1and2, recordWith1and2);
         final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
@@ -82,8 +84,9 @@ public class MNVValidatorTest {
     // MIVO:    1 record contains first; 1 record contains second, 1 record contains both
     @Test
     public void correctOutputForNoMnvOfInRegionOf2() {
-        final PotentialMNVRegion region =
-                PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(), Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12)));
+        final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
+                Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12)),
+                GAP_SIZE);
         final SAMRecord recordWith1and2 = TestUtils.buildSamRecord(170755999, "6M", "CATTAG");
         final SAMRecord recordWith1 = TestUtils.buildSamRecord(170755999, "6M", "CATGAG");
         final SAMRecord recordWith2 = TestUtils.buildSamRecord(170755999, "6M", "CACTAG");
@@ -101,7 +104,8 @@ public class MNVValidatorTest {
     @Test
     public void correctOutputForMnvOf3InRegionOf3() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
-                Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(13)));
+                Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(13)),
+                GAP_SIZE);
         final SAMRecord recordWith1and2and3 = TestUtils.buildSamRecord(170756000, "6M", "ATTTGC");
         final List<SAMRecord> records = Lists.newArrayList(recordWith1and2and3, recordWith1and2and3);
         final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
@@ -117,7 +121,8 @@ public class MNVValidatorTest {
     @Test
     public void correctOutputForMnvOf2InRegionOf3() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
-                Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(13)));
+                Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(13)),
+                GAP_SIZE);
         final SAMRecord recordWith1and2 = TestUtils.buildSamRecord(170755999, "6M", "CATTAG");
         final SAMRecord recordWith1and2and3 = TestUtils.buildSamRecord(170756000, "6M", "ATTTGC");
         final List<SAMRecord> records = Lists.newArrayList(recordWith1and2, recordWith1and2and3);
@@ -135,7 +140,8 @@ public class MNVValidatorTest {
     @Test
     public void correctOutputForMnvOf2InRegionOf3With2AtSamePos() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
-                Lists.newArrayList(VARIANTS.get(15), VARIANTS.get(16), VARIANTS.get(17)));
+                Lists.newArrayList(VARIANTS.get(15), VARIANTS.get(16), VARIANTS.get(17)),
+                GAP_SIZE);
         final SAMRecord recordWith1and3 = TestUtils.buildSamRecord(14, "6M", "CTCAGC");
         final SAMRecord recordWith2and3 = TestUtils.buildSamRecord(14, "2M1D3M", "CCAGC");
         final List<SAMRecord> records =
@@ -154,7 +160,7 @@ public class MNVValidatorTest {
     @Test
     public void correctOutputForMnvOf2With2Alts() {
         final PotentialMNVRegion region =
-                PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(), Lists.newArrayList(VARIANTS.get(7), VARIANTS.get(9)));
+                PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(), Lists.newArrayList(VARIANTS.get(7), VARIANTS.get(9)), GAP_SIZE);
         final SAMRecord recordWith1and2 = TestUtils.buildSamRecord(170755900, "6M", "CTCAAG");
         final SAMRecord recordWith1and3 = TestUtils.buildSamRecord(170755900, "6M", "CTCTAG");
         final List<SAMRecord> records =
@@ -176,7 +182,8 @@ public class MNVValidatorTest {
     @Test
     public void correctOutputFor2PotentialMnvInRegionOf3() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
-                Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(13)));
+                Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(13)),
+                GAP_SIZE);
         final SAMRecord recordWith1and2 = TestUtils.buildSamRecord(170755999, "6M", "CATTAG");
         final SAMRecord recordWith2and3 = TestUtils.buildSamRecord(170755999, "6M", "CACTTG");
         final SAMRecord recordWith1and2and3 = TestUtils.buildSamRecord(170756000, "6M", "ATTTGC");
@@ -201,7 +208,8 @@ public class MNVValidatorTest {
     @Test
     public void correctOutputForMnvOf4InRegionOf4() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
-                Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(13), VARIANTS.get(14)));
+                Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(13), VARIANTS.get(14)),
+                GAP_SIZE);
         final SAMRecord recordWith1and2and3and4 = TestUtils.buildSamRecord(170756001, "5M", "TTTCC");
         final List<SAMRecord> records = Lists.newArrayList(recordWith1and2and3and4, recordWith1and2and3and4);
         final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
@@ -217,7 +225,8 @@ public class MNVValidatorTest {
     @Test
     public void correctOutputFor2MnvOf3InRegionOf4() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
-                Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(13), VARIANTS.get(14)));
+                Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(13), VARIANTS.get(14)),
+                GAP_SIZE);
         final SAMRecord recordWith1and2and3 = TestUtils.buildSamRecord(170755999, "6M", "CATTTT");
         final SAMRecord recordWith2and3and4 = TestUtils.buildSamRecord(170756000, "6M", "ACTTCC");
         final SAMRecord recordWith1and2and3and4 = TestUtils.buildSamRecord(170756001, "5M", "TTTCC");
@@ -241,7 +250,8 @@ public class MNVValidatorTest {
     @Test
     public void correctOutputFor2MnvOf2InRegionOf4() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
-                Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(13), VARIANTS.get(14)));
+                Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(13), VARIANTS.get(14)),
+                GAP_SIZE);
         final SAMRecord recordWith1and2 = TestUtils.buildSamRecord(170755999, "6M", "CATTAT");
         final SAMRecord recordWith3and4 = TestUtils.buildSamRecord(170756000, "6M", "ACGTCC");
         final SAMRecord recordWith1and2and3and4 = TestUtils.buildSamRecord(170756001, "5M", "TTTCC");

@@ -1,50 +1,36 @@
 package com.hartwig.hmftools.knowledgebaseimporter.civic
 
+import com.hartwig.hmftools.knowledgebaseimporter.civic.input.CivicEvidenceInput
 import com.hartwig.hmftools.knowledgebaseimporter.output.Actionability
 import com.hartwig.hmftools.knowledgebaseimporter.output.HmfDrug
 import com.hartwig.hmftools.knowledgebaseimporter.output.HmfLevel
 import com.hartwig.hmftools.knowledgebaseimporter.output.HmfResponse
-import org.apache.commons.csv.CSVRecord
 
-data class CivicEvidence(private val csvRecord: CSVRecord, private val drugInteractionMap: Map<Int, String>,
+data class CivicEvidence(private val input: CivicEvidenceInput, private val drugInteractionMap: Map<Int, String>,
                          private val treatmentTypeMap: Map<String, String>) {
-    val cancerType: String = readDisease(csvRecord)
-    val drugInteractionType = getDrugInteraction(csvRecord["evidence_id"].toIntOrNull(), drugInteractionMap)
-    val doid: String = readDoid(csvRecord)
-    val drugs: List<HmfDrug> = getDrugs(csvRecord["drugs"].orEmpty(), drugInteractionType, treatmentTypeMap)
-    val type: String = csvRecord["evidence_type"].orEmpty()
-    val direction: String = csvRecord["evidence_direction"].orEmpty()
-    val level: String = csvRecord["evidence_level"].orEmpty()
-    val significance: String = csvRecord["clinical_significance"].orEmpty()
-    val actionabilityItems: List<Actionability> = Actionability("civic", csvRecord["evidence_id"], listOf(cancerType), drugs, level,
-                                                                significance, type, HmfLevel(level), HmfResponse(significance))
+    val cancerType: String = input.cancerType
+    val doid: String = input.cancerDoid
+    val type: String = input.evidence_type
+    val direction: String = input.evidence_direction
+    val level: String = input.evidence_level
+    val actionabilityItems = Actionability("civic", input.evidence_id, listOf(cancerType),
+                                           getDrugs(input, drugInteractionMap, treatmentTypeMap), level, input.clinical_significance, type,
+                                           HmfLevel(level), HmfResponse(input.clinical_significance))
 
     companion object {
         private const val drugCharacters = "A-Z0-9a-z-\\s"
         private const val squareBracketPart = "\\[.*?\\]"
         private const val roundBracketPart = "\\(.*?\\)"
 
-        private fun getDrugInteraction(evidenceId: Int?, drugInteractionMap: Map<Int, String>): String {
-            evidenceId ?: return ""
-            return drugInteractionMap[evidenceId].orEmpty()
-        }
-
-        private fun getDrugs(drugField: String, drugInteraction: String, treatmentTypeMap: Map<String, String>): List<HmfDrug> {
-            val drugs = splitDrugs(drugField).filterNot { it.isEmpty() }
-            val treatmentTypes = drugs.map { treatmentTypeMap[it.toLowerCase()] ?: "Unknown" }
+        private fun getDrugs(input: CivicEvidenceInput, drugInteractionMap: Map<Int, String>,
+                             treatmentTypeMap: Map<String, String>): List<HmfDrug> {
+            val drugInteraction = drugInteractionMap[input.evidence_id.toInt()].orEmpty()
+            val drugNames = splitDrugs(input.drugs).filterNot { it.isEmpty() }
             return when {
-                drugInteraction.isBlank()                      -> drugs.zip(treatmentTypes).map { HmfDrug(it.first, it.second) }
-                drugInteraction.toLowerCase() == "substitutes" -> drugs.zip(treatmentTypes).map { HmfDrug(it.first, it.second) }
-                drugInteraction.toLowerCase() == "combination" -> {
-                    val name = drugs.joinToString(" + ")
-                    val type = treatmentTypes.joinToString(" + ")
-                    listOf(HmfDrug(name, type))
-                }
-                else                                           -> {
-                    val name = drugs.joinToString(", ") + " ($drugInteraction)"
-                    val type = treatmentTypes.joinToString(", ") + " ($drugInteraction)"
-                    listOf(HmfDrug(name, type))
-                }
+                drugInteraction.isBlank()                      -> drugNames.map { toHmfDrug(it, treatmentTypeMap) }
+                drugInteraction.toLowerCase() == "substitutes" -> drugNames.map { toHmfDrug(it, treatmentTypeMap) }
+                drugInteraction.toLowerCase() == "combination" -> listOf(combiHmfDrug(drugNames, treatmentTypeMap))
+                else                                           -> listOf(otherHmfDrug(drugNames, drugInteraction, treatmentTypeMap))
             }
         }
 
@@ -54,14 +40,18 @@ data class CivicEvidence(private val csvRecord: CSVRecord, private val drugInter
             return matchResult.map { it.groupValues[1].trim() }.toList()
         }
 
-        fun readDisease(record: CSVRecord): String {
-            val disease = record["disease"].orEmpty()
-            return if (disease == "Melanoma") "Skin Melanoma" else disease
+        private fun drugType(name: String, typeMap: Map<String, String>): String = typeMap[name.toLowerCase()] ?: "Unknown"
+        private fun toHmfDrug(name: String, typeMap: Map<String, String>): HmfDrug = HmfDrug(name, drugType(name, typeMap))
+
+        private fun combiHmfDrug(names: List<String>, typeMap: Map<String, String>): HmfDrug {
+            val types = names.map { drugType(it, typeMap) }
+            return HmfDrug(names.joinToString(" + "), types.joinToString(" + "))
         }
 
-        fun readDoid(record: CSVRecord): String {
-            val doid = record["doid"].orEmpty()
-            return if (doid == "1909") "8923" else doid
+        private fun otherHmfDrug(names: List<String>, interaction: String, typeMap: Map<String, String>): HmfDrug {
+            val name = names.joinToString(", ") + " ($interaction)"
+            val type = names.joinToString(", ") { drugType(it, typeMap) } + " ($interaction)"
+            return HmfDrug(name, type)
         }
     }
 }

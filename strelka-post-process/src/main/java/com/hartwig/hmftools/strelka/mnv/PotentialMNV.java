@@ -34,8 +34,8 @@ public abstract class PotentialMNV {
         final List<VariantContext> variants = Lists.newArrayList(potentialMnv.variants());
         variants.add(variant);
         final List<Integer> gaps = Lists.newArrayList(potentialMnv.gapPositions());
-        if (potentialMnv.end() != variant.getStart()) {
-            gaps.add(potentialMnv.end());
+        for (int gapPosition = potentialMnv.end(); gapPosition < variant.getStart(); gapPosition++) {
+            gaps.add(gapPosition);
         }
         return ImmutablePotentialMNV.of(potentialMnv.chromosome(), potentialMnv.start(),
                 variant.getStart() + variant.getReference().getBaseString().length(), variants, gaps);

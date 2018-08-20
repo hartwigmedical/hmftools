@@ -81,7 +81,7 @@ public class MNVValidatorApplication {
         Pair<PotentialMNVRegion, Optional<PotentialMNVRegion>> outputPair = ImmutablePair.of(PotentialMNVRegion.empty(), Optional.empty());
         for (final VariantContext variant : vcfReader) {
             final PotentialMNVRegion potentialMNV = outputPair.getLeft();
-            outputPair = MNVDetector.fitsMNVRegion(potentialMNV, variant);
+            outputPair = MNVDetector.addMnvToRegion(potentialMNV, variant);
             outputPair.getRight().ifPresent(mnvRegion -> validator.mergeVariants(mnvRegion, merger).forEach(vcfWriter::add));
         }
         validator.mergeVariants(outputPair.getLeft(), merger).forEach(vcfWriter::add);

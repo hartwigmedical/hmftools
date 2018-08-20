@@ -16,6 +16,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 
 public class PotentialMNVRegionTest {
+    private static final int GAP_SIZE = 1;
     private static final File VCF_FILE = new File(Resources.getResource("mnvs.vcf").getPath());
     private static final VCFFileReader VCF_FILE_READER = new VCFFileReader(VCF_FILE, false);
     private static final List<VariantContext> VARIANTS = Streams.stream(VCF_FILE_READER).collect(Collectors.toList());
@@ -32,8 +33,8 @@ public class PotentialMNVRegionTest {
     @Test
     public void correctlyMakesCombinationsOfConsecutiveVariants() {
         final PotentialMNVRegion oneVariantRegion = PotentialMNVRegion.fromVariant(CONSECUTIVE_SNP1);
-        final PotentialMNVRegion twoVariantRegion = PotentialMNVRegion.addVariant(oneVariantRegion, CONSECUTIVE_SNP2);
-        final PotentialMNVRegion threeVariantRegion = PotentialMNVRegion.addVariant(twoVariantRegion, CONSECUTIVE_SNP3);
+        final PotentialMNVRegion twoVariantRegion = PotentialMNVRegion.addVariant(oneVariantRegion, CONSECUTIVE_SNP2, GAP_SIZE);
+        final PotentialMNVRegion threeVariantRegion = PotentialMNVRegion.addVariant(twoVariantRegion, CONSECUTIVE_SNP3, GAP_SIZE);
         assertEquals(3, twoVariantRegion.mnvs().size());
         assertEquals(1, twoVariantRegion.potentialMnvs().size());
         assertEquals(7, threeVariantRegion.mnvs().size());
@@ -45,8 +46,8 @@ public class PotentialMNVRegionTest {
     @Test
     public void correctlyMakesCombinationsOfVariants() {
         final PotentialMNVRegion oneVariantRegion = PotentialMNVRegion.fromVariant(CONSECUTIVE_SNP1);
-        final PotentialMNVRegion twoVariantRegion = PotentialMNVRegion.addVariant(oneVariantRegion, CONSECUTIVE_SNP2);
-        final PotentialMNVRegion threeVariantRegion = PotentialMNVRegion.addVariant(twoVariantRegion, CONSECUTIVE_SNP4);
+        final PotentialMNVRegion twoVariantRegion = PotentialMNVRegion.addVariant(oneVariantRegion, CONSECUTIVE_SNP2, GAP_SIZE);
+        final PotentialMNVRegion threeVariantRegion = PotentialMNVRegion.addVariant(twoVariantRegion, CONSECUTIVE_SNP4, GAP_SIZE);
         assertEquals(3, twoVariantRegion.mnvs().size());
         assertEquals(1, twoVariantRegion.potentialMnvs().size());
         assertEquals(6, threeVariantRegion.mnvs().size());
@@ -58,7 +59,7 @@ public class PotentialMNVRegionTest {
     @Test
     public void correctlyMakesCombinationsWithMultipleAlts() {
         final PotentialMNVRegion oneVariantRegion = PotentialMNVRegion.fromVariant(SNP);
-        final PotentialMNVRegion twoVariantRegion = PotentialMNVRegion.addVariant(oneVariantRegion, MULTI_ALT);
+        final PotentialMNVRegion twoVariantRegion = PotentialMNVRegion.addVariant(oneVariantRegion, MULTI_ALT, GAP_SIZE);
         assertEquals(5, twoVariantRegion.mnvs().size());
         assertEquals(2, twoVariantRegion.potentialMnvs().size());
         assertEquals(Lists.newArrayList(SNP, MULTI_ALT), twoVariantRegion.variants());
@@ -68,8 +69,8 @@ public class PotentialMNVRegionTest {
     @Test
     public void correctlyMakesCombinationsWithSNPAfterDEL() {
         final PotentialMNVRegion oneVariantRegion = PotentialMNVRegion.fromVariant(SNP);
-        final PotentialMNVRegion twoVariantRegion = PotentialMNVRegion.addVariant(oneVariantRegion, DEL);
-        final PotentialMNVRegion threeVariantRegion = PotentialMNVRegion.addVariant(twoVariantRegion, SNP_AFTER_DEL);
+        final PotentialMNVRegion twoVariantRegion = PotentialMNVRegion.addVariant(oneVariantRegion, DEL, GAP_SIZE);
+        final PotentialMNVRegion threeVariantRegion = PotentialMNVRegion.addVariant(twoVariantRegion, SNP_AFTER_DEL, GAP_SIZE);
         assertEquals(2, twoVariantRegion.mnvs().size());
         assertEquals(0, twoVariantRegion.potentialMnvs().size());
         assertEquals(4, threeVariantRegion.mnvs().size());
@@ -81,8 +82,9 @@ public class PotentialMNVRegionTest {
     //      possible mnvs: (1,3A) (1,3T) (1,3A,4) (1,3T,4) (1del,3A) (1del,3T) (1del,4) (1del,3A,4) (1del,3T,4) (3A,4) (3T,4)
     @Test
     public void correctlyMakesCombinationsWithSNPAfterDELAndMultiAlt() {
-        final PotentialMNVRegion region =
-                PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(), Lists.newArrayList(SNP, DEL, MULTI_ALT, SNP_AFTER_DEL));
+        final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
+                Lists.newArrayList(SNP, DEL, MULTI_ALT, SNP_AFTER_DEL),
+                GAP_SIZE);
         assertEquals(16, region.mnvs().size());
         assertEquals(11, region.potentialMnvs().size());
         assertEquals(Lists.newArrayList(SNP, DEL, MULTI_ALT, SNP_AFTER_DEL), region.variants());

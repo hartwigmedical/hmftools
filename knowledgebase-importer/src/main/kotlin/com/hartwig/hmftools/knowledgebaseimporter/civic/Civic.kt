@@ -3,13 +3,15 @@ package com.hartwig.hmftools.knowledgebaseimporter.civic
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import com.hartwig.hmftools.apiclients.civic.api.CivicApiWrapper
+import com.hartwig.hmftools.extensions.csv.CsvReader
 import com.hartwig.hmftools.knowledgebaseimporter.Knowledgebase
+import com.hartwig.hmftools.knowledgebaseimporter.civic.input.CivicEvidenceInput
+import com.hartwig.hmftools.knowledgebaseimporter.civic.input.CivicVariantInput
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.ActionableRecord
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.KnowledgebaseSource
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
-import com.hartwig.hmftools.knowledgebaseimporter.readTSVRecords
 
 class Civic(variantsLocation: String, evidenceLocation: String, diseaseOntology: DiseaseOntology,
             private val recordAnalyzer: RecordAnalyzer, treatmentTypeMap: Map<String, String>) :
@@ -37,16 +39,19 @@ class Civic(variantsLocation: String, evidenceLocation: String, diseaseOntology:
     private fun preProcessCivicRecords(variantFileLocation: String, evidenceFileLocation: String,
                                        treatmentTypeMap: Map<String, String>): List<CivicRecord> {
         val variantEvidenceMap = readEvidenceMap(evidenceFileLocation, treatmentTypeMap)
-        return readTSVRecords(variantFileLocation) { CivicRecord(it, variantEvidenceMap) }
+        return CsvReader.readTSVByName<CivicVariantInput>(variantFileLocation).map {
+            val correctedInput = CivicVariantInput.correct(it)
+            CivicRecord(correctedInput, variantEvidenceMap[it.variant_id])
+        }
     }
 
     private fun readEvidenceMap(evidenceLocation: String, treatmentTypeMap: Map<String, String>): Multimap<String, CivicEvidence> {
         val civicApi = CivicApiWrapper()
         val drugInteractionMap = civicApi.drugInteractionMap
         val evidenceMap = ArrayListMultimap.create<String, CivicEvidence>()
-        readTSVRecords(evidenceLocation) { csvRecord ->
-            if (!blacklistedEvidenceIds.contains(csvRecord["evidence_id"])) {
-                evidenceMap.put(csvRecord["variant_id"], CivicEvidence(csvRecord, drugInteractionMap, treatmentTypeMap))
+        CsvReader.readTSVByName<CivicEvidenceInput>(evidenceLocation).map {
+            if (!blacklistedEvidenceIds.contains(it.evidence_id)) {
+                evidenceMap.put(it.variant_id, CivicEvidence(it, drugInteractionMap, treatmentTypeMap))
             }
         }
         civicApi.releaseResources()
