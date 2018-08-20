@@ -99,10 +99,9 @@ public class MiscTester {
 
         // boolean calcOk = fitCountsToRatios(sample, counts, countsMargin, ratiosCollection, contribs, 0.001);
 
-        SigContributionOptimiser sigOptim = new SigContributionOptimiser(sample, counts, countsMargin, ratiosCollection, contribs);
-        boolean calcOk = sigOptim.fitToSample(0.001);
-
-        // boolean calcOk = fitCountsToRatios_v2(sample, counts, countsMargin, ratiosCollection, contribs, 0.001);
+        SigContributionOptimiser sigOptim = new SigContributionOptimiser(bucketCount, true, 0.01, 0.99, false);
+        sigOptim.initialise(sample, counts, countsMargin, ratiosCollection, contribs);
+        boolean calcOk = sigOptim.fitToSample(0.99, 0.01);
 
         if (!calcOk)
             return;
@@ -128,7 +127,7 @@ public class MiscTester {
             }
         }
 
-        if(allOk)
+        if(allOk && sigOptim.getAllocPerc() == 1)
             LOGGER.debug("sig optimisation test success");
     }
 

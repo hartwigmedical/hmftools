@@ -198,6 +198,28 @@ public class DataUtils {
         return abs(val1-val2) < DBL_EPSILON;
     }
 
+    /*
+    public static boolean greaterOrEqual(double val1, double val2)
+    {
+        return doublesEqual(val1, val2) || val1 - val2 > DBL_EPSILON;
+    }
+
+    public static boolean greaterThan(double val1, double val2)
+    {
+        return val1 - val2 > DBL_EPSILON;
+    }
+
+    public static boolean lessOrEqual(double val1, double val2)
+    {
+        return !greaterThan(val1, val2);
+    }
+
+    public static boolean lessThan(double val1, double val2)
+    {
+        return !greaterOrEqual(val1, val2);
+    }
+    */
+
     public static int getPoissonRandom(double a, final Random rnGenerator)
     {
         double limit = Math.exp(-a);

@@ -19,6 +19,7 @@ public class SampleData
     private boolean mExcluded;
 
     private double[] mBucketCounts;
+    private double[] mBackgroundCounts; // those assigned to the background signature
     private double[] mElevBucketCounts;
     private double[] mCountRanges;
     private double[] mAllocBucketCounts;
@@ -29,13 +30,15 @@ public class SampleData
     private double mAllocTotal;
     private double mUnallocTotal;
     private double mNoiseAlloc;
+    private double mNoiseTotal;
 
     private String mCancerType;
 
     private final List<Integer> mElevatedBuckets;
     private final List<Integer> mUnallocBuckets;
     private final List<String> mCategoryData;
-    private final List<BucketGroup> mElevBucketGroups;
+    private List<BucketGroup> mElevBucketGroups;
+    private BucketGroup mBackgroundGroup;
     private final List<Double> mGroupAllocPercents;
 
     public SampleData(int id)
@@ -49,10 +52,12 @@ public class SampleData
         mElevatedBuckets = Lists.newArrayList();
         mUnallocBuckets = Lists.newArrayList();
         mGroupAllocPercents = Lists.newArrayList();
+        mBackgroundGroup = null;
         mAllocPercent = 0;
         mAllocTotal = 0;
         mUnallocTotal = 0;
         mNoiseAlloc = 0;
+        mNoiseTotal = 0;
         mVarTotal = 0;
     }
 
@@ -85,6 +90,13 @@ public class SampleData
         mGroupAllocPercents.clear();
     }
 
+    public final BucketGroup getBackgroundGroup() { return mBackgroundGroup; }
+
+    public void setBackgroundGroup(final BucketGroup group)
+    {
+        mBackgroundGroup = group;
+    }
+
     public void addElevBucketGroup(final BucketGroup group)
     {
         mElevBucketGroups.add(group);
@@ -98,12 +110,14 @@ public class SampleData
 
     public final double[] getBucketCounts() { return mBucketCounts; }
     public final double[] getElevatedBucketCounts() { return mElevBucketCounts; }
+    public final double[] getBackgroundCounts() { return mBackgroundCounts; }
     public final double[] getCountRanges() { return mCountRanges; }
     public double getTotalCount() { return mVarTotal; }
     public double getElevatedCount() { return mElevatedTotal; }
     public double getAllocatedCount() { return mAllocTotal; }
     public double getUnallocatedCount() { return mUnallocTotal; }
     public double getAllocNoise() { return mNoiseAlloc; }
+    public double getNoiseTotal() { return mNoiseTotal; }
 
     public final double[] getAllocBucketCounts() { return mAllocBucketCounts; }
     public final double[] getUnallocBucketCounts() { return mUnallocBucketCounts; }
@@ -128,6 +142,7 @@ public class SampleData
         copyVector(ranges, mCountRanges);
         mElevatedTotal = sumVector(counts);
         mUnallocTotal = mElevatedTotal;
+        mNoiseTotal = sumVector(ranges);
     }
 
     public void clearAllocations()
@@ -145,12 +160,30 @@ public class SampleData
         mNoiseAlloc = 0;
     }
 
-    public double[] getPotentialAllocation(final double[] bucketRatios, final List<Integer> requiredBuckets)
+    public double[] getPotentialUnallocCounts(final double[] bucketRatios, final List<Integer> requiredBuckets)
     {
-        return getPotentialAllocation(bucketRatios, requiredBuckets, null);
+        return getPotentialAllocation(bucketRatios, mUnallocBucketCounts, mUnallocTotal, requiredBuckets, null);
     }
 
+    public double[] getPotentialElevCounts(final double[] bucketRatios, final List<Integer> requiredBuckets)
+    {
+        return getPotentialAllocation(bucketRatios, mElevBucketCounts, mElevatedTotal, requiredBuckets, null);
+    }
+
+    /*
+    public double[] getPotentialAllocation(final double[] bucketRatios, final List<Integer> requiredBuckets)
+    {
+        return getPotentialAllocation(bucketRatios, mUnallocBucketCounts, mUnallocTotal, requiredBuckets, null);
+    }
+    */
+
     public double[] getPotentialAllocation(final double[] bucketRatios, final List<Integer> requiredBuckets, final List<Double> bucketRatioRanges)
+    {
+        return getPotentialAllocation(bucketRatios, mUnallocBucketCounts, mUnallocTotal, requiredBuckets, bucketRatioRanges);
+    }
+
+    public double[] getPotentialAllocation(final double[] bucketRatios, final double[] sampleCounts, double countsTotal,
+            final List<Integer> requiredBuckets, final List<Double> bucketRatioRanges)
     {
         // must cap at the actual sample counts
         // allow to go as high as the elevated probability range
@@ -171,7 +204,7 @@ public class SampleData
 
             // if any of the required buckets are already fully allocated, no others can be allocated
 
-            double unallocCount = max(mUnallocBucketCounts[bucket], 0);
+            double unallocCount = max(sampleCounts[bucket], 0);
 
             if(unallocCount == 0)
             {
@@ -179,8 +212,9 @@ public class SampleData
                 break;
             }
 
-            double unallocPerc = unallocCount / mElevBucketCounts[bucket];
-            double potentialAlloc = unallocCount + unallocPerc * mCountRanges[bucket];
+            // allow full allocation of noise, not proportional to allocated counts to make consistent with fitter
+            // double unallocPerc = unallocCount / mElevBucketCounts[bucket];
+            double potentialAlloc = unallocCount + mCountRanges[bucket]; // unallocPerc * mCountRanges[bucket];
 
             // use the low range ratio to give max possible allocation to this bucket
             double adjBucketRatio = bucketRatios[bucket] * (1 - ratioRange);
@@ -192,7 +226,7 @@ public class SampleData
         }
 
         // cap by the actual unallocated before working out allocation
-        minAlloc = capValue(minAlloc, 0, mUnallocTotal);
+        minAlloc = capValue(minAlloc, 0, countsTotal);
 
         for(int bIndex = 0; bIndex < requiredBuckets.size(); ++bIndex)
         {
@@ -200,7 +234,7 @@ public class SampleData
             double ratioRange = ratioRanges != null ? ratioRanges.get(bIndex) : 0;
 
             double potentialAlloc = minAlloc * bucketRatios[bucket] * (1 + ratioRange);
-            bestAllocCounts[bucket] = min(mUnallocBucketCounts[bucket] + mCountRanges[bucket], potentialAlloc);
+            bestAllocCounts[bucket] = min(sampleCounts[bucket] + mCountRanges[bucket], potentialAlloc);
         }
 
         return bestAllocCounts;

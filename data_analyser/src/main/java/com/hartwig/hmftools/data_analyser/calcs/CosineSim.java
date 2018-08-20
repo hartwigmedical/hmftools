@@ -365,8 +365,6 @@ public class CosineSim {
        return lliResults;
     }
 
-    private static double POISSON_RANGE_PERCENT = 0.1;
-
     public static int calcPoissonRangeGivenProb(int value, double requiredProb)
     {
         if(value <= 10)
