@@ -40,6 +40,7 @@ class TransvarProteinMatcherTest : StringSpec() {
             TransvarProteinMatcher.contains("EWSR1-FLI1 Type 1") shouldBe false
             TransvarProteinMatcher.contains("DPYD*2A HOMOZYGOSITY") shouldBe false
             TransvarProteinMatcher.contains("3` UTR Polymorphism") shouldBe false
+            TransvarProteinMatcher.contains("Splicing alteration (c.463+2C>T)") shouldBe false
         }
 
         "codon mutation does not match gene fusion"{
