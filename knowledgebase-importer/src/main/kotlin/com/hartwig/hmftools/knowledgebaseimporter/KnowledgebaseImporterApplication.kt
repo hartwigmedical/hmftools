@@ -11,7 +11,7 @@ import com.hartwig.hmftools.extensions.csv.CsvWriter
 import com.hartwig.hmftools.knowledgebaseimporter.cgi.Cgi
 import com.hartwig.hmftools.knowledgebaseimporter.civic.Civic
 import com.hartwig.hmftools.knowledgebaseimporter.cosmic.Cosmic
-import com.hartwig.hmftools.knowledgebaseimporter.dao.EnsemblGeneDAO
+import com.hartwig.hmftools.knowledgebaseimporter.dao.GeneDAO
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.OncoKb
@@ -51,6 +51,7 @@ private fun createOptions(): HmfOptions {
     options.add(RequiredInputFileOption(TREATMENT_TYPE_MAPPING_LOCATION, "path to treatment type mapping file"))
     options.add(RequiredOutputOption(OUTPUT_DIRECTORY, "path to output directory"))
     options.add(RequiredInputOption(ENSEMBL_DB, "ensembl db url"))
+    options.add(RequiredInputOption(HMFPATIENTS_DB, "hmfpatients db url"))
     options.add(RequiredInputOption(DB_USER, "db user"))
     options.add(RequiredInputOption(DB_PASSWORD, "db password"))
     return options
@@ -59,7 +60,8 @@ private fun createOptions(): HmfOptions {
 private fun readKnowledgebases(cmd: CommandLine, diseaseOntology: DiseaseOntology): List<Knowledgebase> {
     val reference = IndexedFastaSequenceFile(File(cmd.getOptionValue(REFERENCE)))
     val ensemblJdbcUrl = "jdbc:${cmd.getOptionValue(ENSEMBL_DB)}"
-    val ensemblGeneDAO = EnsemblGeneDAO(ensemblJdbcUrl, cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASSWORD))
+    val hmfpatientsJdbcUrl = "jdbc:${cmd.getOptionValue(HMFPATIENTS_DB)}"
+    val ensemblGeneDAO = GeneDAO(ensemblJdbcUrl, hmfpatientsJdbcUrl, cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASSWORD))
     val transvar = cmd.getOptionValue(TRANSVAR_LOCATION)
     val recordAnalyzer = RecordAnalyzer(transvar, reference, ensemblGeneDAO)
     val treatmentTypeMap = CsvReader.readTSV<HmfDrug>(cmd.getOptionValue(TREATMENT_TYPE_MAPPING_LOCATION))

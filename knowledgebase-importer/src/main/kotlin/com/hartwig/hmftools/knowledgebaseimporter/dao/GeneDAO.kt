@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.knowledgebaseimporter.dao
 
+import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CANONICALTRANSCRIPT
 import org.apache.logging.log4j.LogManager
 import org.ensembl.database.homo_sapiens_core.Tables.*
 import org.jooq.*
@@ -12,9 +13,9 @@ import kotlin.streams.toList
 typealias ExonRecord = Record6<String, UInteger, UInteger, Byte, Byte, Byte>
 typealias TranslationRecord = Record2<Int, Int>
 
-class EnsemblGeneDAO(url: String, user: String, password: String) {
+class GeneDAO(ensemblDbUrl: String, hmfpatientsDbUrl: String, user: String, password: String) {
     companion object {
-        private val logger = LogManager.getLogger("EnsemblGeneDAO")
+        private val logger = LogManager.getLogger("GeneDAO")
 
         private fun baseExonQuery(context: DSLContext): SelectOnConditionStep<ExonRecord> {
             return context.select(SEQ_REGION.NAME, EXON.SEQ_REGION_START, EXON.SEQ_REGION_END, EXON.SEQ_REGION_STRAND, EXON.PHASE,
@@ -36,11 +37,9 @@ class EnsemblGeneDAO(url: String, user: String, password: String) {
             return context.select(TRANSLATION.SEQ_START, TRANSLATION.SEQ_END).from(TRANSLATION)
         }
 
-        private fun canonicalTranscriptQuery(context: DSLContext, geneName: String): List<String> {
-            return context.select(TRANSCRIPT.STABLE_ID).from(GENE)
-                    .join(TRANSCRIPT).on(GENE.CANONICAL_TRANSCRIPT_ID.eq(TRANSCRIPT.TRANSCRIPT_ID))
-                    .join(XREF).on(XREF.XREF_ID.eq(GENE.DISPLAY_XREF_ID))
-                    .where(XREF.DISPLAY_LABEL.eq(geneName)).stream().map { it.get(TRANSCRIPT.STABLE_ID) }.toList()
+        private fun canonicalTranscriptQuery(hmfContext: DSLContext, geneName: String): List<String> {
+            return hmfContext.select(CANONICALTRANSCRIPT.TRANSCRIPTID).from(CANONICALTRANSCRIPT)
+                    .where(CANONICALTRANSCRIPT.GENE.eq(geneName)).stream().map { it.get(CANONICALTRANSCRIPT.TRANSCRIPTID) }.toList()
         }
 
         private val createExonsLambda: (exonRecords: Stream<ExonRecord>) -> List<Exon> = {
@@ -66,14 +65,20 @@ class EnsemblGeneDAO(url: String, user: String, password: String) {
         }
     }
 
-    private val context = DSL.using(DriverManager.getConnection(url, user, password), SQLDialect.MYSQL)
+    private val hmfContext = DSL.using(DriverManager.getConnection(hmfpatientsDbUrl, user, password), SQLDialect.MYSQL)
+    private val context = DSL.using(DriverManager.getConnection(ensemblDbUrl, user, password), SQLDialect.MYSQL)
+
+    fun hmfCanonicalTranscript(geneName: String): List<String> {
+        val transcripts = canonicalTranscriptQuery(hmfContext, geneName)
+        if (transcripts.size != 1) logger.warn("Expected single canonical transcript for gene $geneName, but found ${transcripts.size}")
+        return transcripts
+    }
 
     fun canonicalGeneModel(geneName: String): Gene? {
         val exons = canonicalExons(geneName)
         return canonicalSequenceStartEnd(geneName)?.run {
             val startEnd = geneStartEnd(geneName).toList()
-            val transcripts = canonicalTranscriptQuery(context, geneName)
-            if (transcripts.size != 1) logger.warn("Expected single canonical transcript for gene $geneName, but found ${transcripts.size}")
+            val transcripts = hmfCanonicalTranscript(geneName)
             Gene(exons, canonicalStartExon(geneName), canonicalEndExon(geneName), first, second, startEnd.min()!!, startEnd.max()!!,
                  transcripts.first())
         }
