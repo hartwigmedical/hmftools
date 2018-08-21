@@ -11,7 +11,7 @@ object IclusionFusionReader : SomaticEventReader<IclusionEvent, FusionEvent> {
     private val fusionReader = FusionReader(separators = setOf(FUSION_SEPARATOR))
 
     private fun match(event: IclusionEvent): Boolean {
-        return (event.types.size == 1 && event.types.contains(EventType.FUS))
+        return event.types.size == 1 && event.types.contains(EventType.FUS)
     }
 
     override fun read(event: IclusionEvent): List<FusionEvent> {

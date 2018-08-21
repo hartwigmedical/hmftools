@@ -7,7 +7,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.output.CnvEvent
 
 object IclusionCnvReader : SomaticEventReader<IclusionEvent, CnvEvent> {
     private fun match(event: IclusionEvent): Boolean {
-        return (event.types.size == 1 && event.types.contains(EventType.CNV))
+        return event.types.size == 1 && event.types.contains(EventType.CNV)
     }
 
     override fun read(event: IclusionEvent): List<CnvEvent> {
