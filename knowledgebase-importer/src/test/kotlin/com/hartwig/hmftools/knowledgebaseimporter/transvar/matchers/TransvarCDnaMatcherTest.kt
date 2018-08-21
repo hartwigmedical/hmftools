@@ -33,7 +33,6 @@ class TransvarCDnaMatcherTest : StringSpec() {
 
         "matches insertions" {
             TransvarCDnaMatcher.matches("c.76_77insT") shouldBe true
-
         }
 
         "matches indels" {
