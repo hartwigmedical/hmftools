@@ -31,9 +31,12 @@ class TransvarProteinMatcherTest : StringSpec() {
             TransvarProteinMatcher.contains("Y175fs (c.526delA)") shouldBe true
             TransvarProteinMatcher.contains("F76del (c.226_228delTTC)") shouldBe true
             TransvarProteinMatcher.contains("R108ins (c.324InsCGC)") shouldBe true
+            TransvarProteinMatcher.contains("G12/G13") shouldBe true
+        }
+
+        "does not match other variants" {
             TransvarProteinMatcher.contains("DUX4 Fusions") shouldBe false
             TransvarProteinMatcher.contains("SH2 DOMAIN MUTATION") shouldBe false
-            TransvarProteinMatcher.contains("G12/G13") shouldBe true
             TransvarProteinMatcher.contains("DEL 485-490") shouldBe false
             TransvarProteinMatcher.contains("RARE EX 18-21 MUT") shouldBe false
             TransvarProteinMatcher.contains("Exon 12 splice site insertion") shouldBe false
