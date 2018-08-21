@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.knowledgebaseimporter.iclusion
 
 import com.hartwig.hmftools.apiclients.iclusion.data.IclusionMutationDetails
+import com.hartwig.hmftools.knowledgebaseimporter.iclusion.readers.IclusionExonMutationReader.EXON_MUTATION_REGEX
 import com.hartwig.hmftools.knowledgebaseimporter.iclusion.readers.IclusionFusionReader
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.EventType
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.KnowledgebaseEvent
-import com.hartwig.hmftools.knowledgebaseimporter.transvar.matchers.TransvarCDnaMatcher
-import com.hartwig.hmftools.knowledgebaseimporter.transvar.matchers.TransvarProteinMatcher
+import com.hartwig.hmftools.knowledgebaseimporter.transvar.matchers.TransvarMatcher
 import org.apache.logging.log4j.LogManager
 
 data class IclusionEvent(override val gene: String, override val transcript: String, override val variant: String,
@@ -42,8 +42,7 @@ data class IclusionEvent(override val gene: String, override val transcript: Str
 
         private fun mutationTypes(variant: String): List<EventType> {
             return if (variant == "MUTATION" || variant == "ALTERATION" || variant == "ACTIVATING MUTATION" || variant == "INACTIVATING MUTATION" ||
-                    variant.contains("Splicing alteration") || TransvarProteinMatcher.contains(variant) ||
-                    TransvarCDnaMatcher.contains(variant) || variant.matches("exon [0-9]+ mutation".toRegex(RegexOption.IGNORE_CASE)) ||
+                    variant.contains("Splicing alteration") || TransvarMatcher.contains(variant) || variant.matches(EXON_MUTATION_REGEX) ||
                     variant.toLowerCase().contains("utr mutation") || variant.toLowerCase().contains("utr alteration") || variant == "TRUNCATING MUTATION") {
                 listOf(EventType.MUT)
             } else {
