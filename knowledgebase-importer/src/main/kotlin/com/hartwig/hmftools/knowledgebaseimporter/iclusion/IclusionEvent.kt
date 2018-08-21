@@ -24,6 +24,7 @@ data class IclusionEvent(override val gene: String, override val transcript: Str
             types.addAll(expressionTypes(variant))
             types.addAll(fusionTypes(gene, variant))
             if (variant == "Wild-type") types.add(EventType.WILD_TYPE)
+            if (gene == "MSI") types.add(EventType.MSI)
             if (types.isEmpty()) {
                 logger.warn("could not map: $gene $variant to event type")
             }
