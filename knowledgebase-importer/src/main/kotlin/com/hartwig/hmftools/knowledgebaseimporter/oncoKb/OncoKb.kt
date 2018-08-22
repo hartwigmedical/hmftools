@@ -23,7 +23,7 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
     override val actionableRanges by lazy { actionableKbItems.filterIsInstance<ActionableGenomicRangeOutput>() }
     override val cancerTypes by lazy {
         actionableKbRecords.flatMap { it.actionability }.map { it.cancerType }
-                .associateBy({ it }, { diseaseOntology.findDoidsForCancerType(it) })
+                .associateBy({ it }, { diseaseOntology.findDoids(it) })
     }
     override val knownKbRecords by lazy { readTSVRecords(annotatedVariantsLocation) { OncoKnownRecord(it) } }
     override val actionableKbRecords by lazy { readTSVRecords(actionableVariantsLocation) { OncoActionableRecord(it, treatmentTypeMap) } }
