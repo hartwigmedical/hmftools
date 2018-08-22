@@ -46,6 +46,7 @@ class PurityDAO {
                 .score(result.getValue(PURITY.SCORE))
                 .diploidProportion(result.getValue(PURITY.DIPLOIDPROPORTION))
                 .ploidy(result.getValue(PURITY.PLOIDY))
+                .somaticDeviation(result.getValue(PURITY.SOMATICDEVIATION))
                 .build();
 
         final FittedPurityScore score = ImmutableFittedPurityScore.builder()
@@ -83,6 +84,7 @@ class PurityDAO {
                 PURITY.QCSTATUS,
                 PURITY.NORMFACTOR,
                 PURITY.SCORE,
+                PURITY.SOMATICDEVIATION,
                 PURITY.PLOIDY,
                 PURITY.DIPLOIDPROPORTION,
                 PURITY.MINDIPLOIDPROPORTION,
@@ -101,6 +103,7 @@ class PurityDAO {
                         checks.status().toString(),
                         bestFit.normFactor(),
                         bestFit.score(),
+                        bestFit.somaticDeviation(),
                         bestFit.ploidy(),
                         bestFit.diploidProportion(),
                         score.minDiploidProportion(),

@@ -119,7 +119,14 @@ public class PDFWriterTest {
 
     @NotNull
     private static FittedPurity createFittedPurity(double impliedPurity) {
-        return ImmutableFittedPurity.builder().purity(impliedPurity).diploidProportion(0).normFactor(0).score(0).ploidy(2).build();
+        return ImmutableFittedPurity.builder()
+                .purity(impliedPurity)
+                .diploidProportion(0)
+                .normFactor(0)
+                .score(0)
+                .ploidy(2)
+                .somaticDeviation(0)
+                .build();
     }
 
     @NotNull

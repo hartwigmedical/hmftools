@@ -52,6 +52,7 @@ public enum FittedPurityRangeFile {
                 .add("Score")
                 .add("DiploidProportion")
                 .add("Ploidy")
+                .add("SomaticDeviation")
                 .toString();
     }
 
@@ -62,6 +63,7 @@ public enum FittedPurityRangeFile {
                 .add(String.valueOf(purity.score()))
                 .add(String.valueOf(purity.diploidProportion()))
                 .add(String.valueOf(purity.ploidy()))
+                .add(String.valueOf(purity.somaticDeviation()))
                 .toString();
     }
 
@@ -74,6 +76,7 @@ public enum FittedPurityRangeFile {
                 .score(Double.valueOf(values[2]))
                 .diploidProportion(Double.valueOf(values[3]))
                 .ploidy(Double.valueOf(values[4]))
+                .somaticDeviation(Double.valueOf(values[5]))
                 .build();
     }
 }

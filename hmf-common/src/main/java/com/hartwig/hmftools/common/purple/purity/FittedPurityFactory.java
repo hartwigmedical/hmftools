@@ -136,6 +136,10 @@ public class FittedPurityFactory {
             }
         }
 
-        return builder.score(ploidyPenalty * modelDeviation).diploidProportion(diploidProportion).ploidy(averagePloidy).build();
+        return builder.somaticDeviation(0)
+                .score(ploidyPenalty * modelDeviation)
+                .diploidProportion(diploidProportion)
+                .ploidy(averagePloidy)
+                .build();
     }
 }
