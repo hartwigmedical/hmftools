@@ -28,6 +28,7 @@ public class BucketGroup implements Comparable<BucketGroup> {
     private double[] mCombinedBucketCounts;
     private List<Double> mSampleCountTotals;
     private Map<Integer,Double> mSampleCountsMap;
+    private List<double[]> mSampleCounts;
 
     private boolean mBucketRatiosClean;
     private double[] mBucketRatios;
@@ -60,6 +61,7 @@ public class BucketGroup implements Comparable<BucketGroup> {
         mInitialBucketIds = Lists.newArrayList();
         mExtraBucketIds = Lists.newArrayList();
         mSampleCountTotals = Lists.newArrayList();
+        mSampleCounts = Lists.newArrayList();
         mRatioRanges = Lists.newArrayList();
         mSampleCountsMap = new HashMap();
         mCombinedBucketCounts = null;
@@ -137,6 +139,7 @@ public class BucketGroup implements Comparable<BucketGroup> {
     public List<Double> getSampleCountTotals() { return mSampleCountTotals; }
     public Map<Integer, Double> getSampleCountsMap() { return mSampleCountsMap; }
     public void setSampleCountTotals(List<Double> totals) { mSampleCountTotals = totals; }
+    public List<double[]> getSampleCounts() { return mSampleCounts; }
 
     public void setCancerType(final String type) { mCancerType = type; }
     public final String getCancerType() { return mCancerType; }
@@ -170,6 +173,7 @@ public class BucketGroup implements Comparable<BucketGroup> {
         mSampleIds.clear();
         mSampleCountTotals.clear();
         mSampleCountsMap.clear();
+        mSampleCounts.clear();
         calcBucketRatios();
         mTotalCount = 0;
 
@@ -201,6 +205,7 @@ public class BucketGroup implements Comparable<BucketGroup> {
             mBucketRatiosClean = false;
 
         mSampleIds.add(sampleId);
+        mSampleCounts.add(bucketCounts);
 
         double sampleTotal = sumVector(bucketCounts);
         mSampleCountTotals.add(sampleTotal);

@@ -368,7 +368,7 @@ public class CosineSim {
     public static int calcPoissonRangeGivenProb(int value, double requiredProb)
     {
         if(value <= 10)
-            return 9;
+            return 10;
 
         PoissonDistribution poisson = new PoissonDistribution(value);
 

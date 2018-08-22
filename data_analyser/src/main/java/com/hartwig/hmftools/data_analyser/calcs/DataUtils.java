@@ -420,9 +420,9 @@ public class DataUtils {
             ++iterations;
         }
 
-//        LOGGER.debug(String.format("total(%.0f) finalAlloc(%.0f minRatio=%.0f leastSq=%.0f) residuals(%.0f perc=%.3f) prob(%.4f) iter(%s)",
-//                dataTotal, currentAlloc, minPosAlloc, lsAlloc, residuals, residualsPerc, currentProb,
-//                iterations >= maxIterations ? "max" : String.valueOf(iterations)));
+        LOGGER.debug(String.format("total(%.0f) finalAlloc(%.0f minRatio=%.0f leastSq=%.0f) residuals(%.0f perc=%.3f) prob(%.4f) iter(%s)",
+                dataTotal, currentAlloc, minPosAlloc, lsAlloc, residuals, residualsPerc, currentProb,
+                iterations >= maxIterations ? "max" : String.valueOf(iterations)));
 
         return currentAlloc;
     }

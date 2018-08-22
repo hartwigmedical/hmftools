@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.capValue;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.initVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
 
 import java.util.List;
@@ -24,6 +25,7 @@ public class SampleData
     private double[] mCountRanges;
     private double[] mAllocBucketCounts;
     private double[] mUnallocBucketCounts;
+    private double[] mPartialUnallocBucketCounts; // purely for the discovery phase, holding some allocated counts back
     private double mAllocPercent;
     private double mVarTotal;
     private double mElevatedTotal;
@@ -40,6 +42,8 @@ public class SampleData
     private List<BucketGroup> mElevBucketGroups;
     private BucketGroup mBackgroundGroup;
     private final List<Double> mGroupAllocPercents;
+
+    public static double PARTIAL_ALLOC_PERCENT = 0.2;
 
     public SampleData(int id)
     {
@@ -121,6 +125,7 @@ public class SampleData
 
     public final double[] getAllocBucketCounts() { return mAllocBucketCounts; }
     public final double[] getUnallocBucketCounts() { return mUnallocBucketCounts; }
+    public final double[] getPartialUnallocBucketCounts() { return mPartialUnallocBucketCounts; }
     public double getAllocPercent() { return mAllocPercent; }
     public double getUnallocPercent() { return 1 - mAllocPercent; }
 
@@ -136,8 +141,10 @@ public class SampleData
         mElevBucketCounts = new double[counts.length];
         mAllocBucketCounts = new double[counts.length];
         mUnallocBucketCounts = new double[counts.length];
+        mPartialUnallocBucketCounts = new double[counts.length];
         mCountRanges = new double[counts.length];
         copyVector(counts, mUnallocBucketCounts);
+        copyVector(counts, mPartialUnallocBucketCounts);
         copyVector(counts, mElevBucketCounts);
         copyVector(ranges, mCountRanges);
         mElevatedTotal = sumVector(counts);
@@ -152,12 +159,27 @@ public class SampleData
         mUnallocBuckets.addAll(mElevatedBuckets);
 
         copyVector(mElevBucketCounts, mUnallocBucketCounts);
+        copyVector(mElevBucketCounts, mPartialUnallocBucketCounts);
         mAllocBucketCounts = new double[mUnallocBucketCounts.length];
         mUnallocTotal = mElevatedTotal;
         mGroupAllocPercents.clear();
         mAllocPercent = 0;
         mAllocTotal = 0;
         mNoiseAlloc = 0;
+    }
+
+    public void populateBucketCountSubset(double[] counts, final List<Integer> bucketSubset, boolean usePartials)
+    {
+        // extract the counts for the specified subset, leaving the rest zeroed
+        initVector(counts, 0);
+
+        for(Integer bucketId : bucketSubset)
+        {
+            if(usePartials)
+                counts[bucketId] = max(mPartialUnallocBucketCounts[bucketId], 0);
+            else
+            counts[bucketId] = max(mUnallocBucketCounts[bucketId], 0);
+        }
     }
 
     public double[] getPotentialUnallocCounts(final double[] bucketRatios, final List<Integer> requiredBuckets)
@@ -169,13 +191,6 @@ public class SampleData
     {
         return getPotentialAllocation(bucketRatios, mElevBucketCounts, mElevatedTotal, requiredBuckets, null);
     }
-
-    /*
-    public double[] getPotentialAllocation(final double[] bucketRatios, final List<Integer> requiredBuckets)
-    {
-        return getPotentialAllocation(bucketRatios, mUnallocBucketCounts, mUnallocTotal, requiredBuckets, null);
-    }
-    */
 
     public double[] getPotentialAllocation(final double[] bucketRatios, final List<Integer> requiredBuckets, final List<Double> bucketRatioRanges)
     {
@@ -203,13 +218,18 @@ public class SampleData
             double ratioRange = ratioRanges != null ? ratioRanges.get(bIndex) : 0;
 
             // if any of the required buckets are already fully allocated, no others can be allocated
-
             double unallocCount = max(sampleCounts[bucket], 0);
 
             if(unallocCount == 0)
             {
-                minAlloc = 0;
-                break;
+                if(mBucketCounts[bucket] > 0 && mElevBucketCounts[bucket] > 0)
+                {
+                    // fully allocated
+                    minAlloc = 0;
+                    break;
+                }
+
+                // otherwise it is valid to use non-negative noise with a zero elevated count
             }
 
             // allow full allocation of noise, not proportional to allocated counts to make consistent with fitter
@@ -282,6 +302,9 @@ public class SampleData
                 mUnallocBucketCounts[i] -= counts[i];
                 mAllocBucketCounts[i] += counts[i];
             }
+
+            // maintain an extra unallocated count for discovery purposes - eg 10% higher at all times
+            mPartialUnallocBucketCounts[i] = min(mUnallocBucketCounts[i] + PARTIAL_ALLOC_PERCENT * mElevBucketCounts[i], mElevBucketCounts[i]);
         }
 
         mAllocTotal = capValue(sumVector(mAllocBucketCounts), 0, mElevatedTotal);

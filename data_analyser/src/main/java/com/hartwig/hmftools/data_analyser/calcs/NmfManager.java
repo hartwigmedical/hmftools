@@ -217,7 +217,8 @@ public class NmfManager {
 
             writer.close();
         }
-        catch (final IOException e) {
+        catch (final IOException e)
+        {
             LOGGER.error("error writing to outputFile");
         }
     }
@@ -243,7 +244,8 @@ public class NmfManager {
 
             writer.close();
         }
-        catch (final IOException e) {
+        catch (final IOException e)
+        {
             LOGGER.error("error writing to outputFile");
         }
     }

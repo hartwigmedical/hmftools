@@ -21,6 +21,7 @@ public class MiscTester {
     public static void runTests()
     {
         sampleFitTest();
+        stringTest();
 
         // chiSquaredTests();
 
@@ -129,6 +130,13 @@ public class MiscTester {
 
         if(allOk && sigOptim.getAllocPerc() == 1)
             LOGGER.debug("sig optimisation test success");
+    }
+
+    private static void stringTest()
+    {
+        String tmp = "AID=0.23131;UV=0.93";
+
+        String tmp2 = tmp.replaceAll("[0-9.=]", "");
     }
 
 }

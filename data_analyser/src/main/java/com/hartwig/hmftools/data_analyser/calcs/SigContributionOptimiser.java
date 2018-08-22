@@ -166,6 +166,7 @@ public class SigContributionOptimiser
 
     public final double[] getFittedCounts() { return mCurrentCounts; }
     public final double[] getContribs() { return mContribs; }
+    public final double getContribTotal() { return mContribTotal; }
     public double getResiduals() { return mResiduals; }
     public double getAllocPerc() { return mCurrentAllocPerc; }
     public boolean isValid() { return mIsValid; }
