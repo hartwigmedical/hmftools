@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.purple.region;
 
 class PloidyPenalty {
 
+    @Deprecated
     static double penalty(int ploidy, int majorAllele) {
         int minorAllele = ploidy - majorAllele;
 
@@ -11,6 +12,7 @@ class PloidyPenalty {
         return 1 + Math.min(singleEventDistance, wholeGenomeDoublingDistance);
     }
 
+    // TODO: Rename to eventPenalty?
     static double penaltyv2(double ploidyPenaltyFactor, double majorAllele, double minorAllele) {
         double wholeGenomeDoublingDistance = 1 + (Math.abs(majorAllele - 2)) + (Math.abs(minorAllele - 2));
         double singleEventDistance = (Math.abs(majorAllele - 1)) + (Math.abs(minorAllele - 1));

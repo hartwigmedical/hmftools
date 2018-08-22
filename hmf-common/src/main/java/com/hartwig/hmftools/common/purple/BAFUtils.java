@@ -6,6 +6,7 @@ import com.hartwig.hmftools.common.purple.baf.ExpectedBAF;
 
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 public class BAFUtils {
 
     private static final double AMBIGUOUS_OFFSET = 0.007;

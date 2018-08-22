@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 public class FittedRegionFactoryV1 implements FittedRegionFactory {
 
     private final Gender gender;
