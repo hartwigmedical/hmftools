@@ -2,6 +2,7 @@ package com.hartwig.hmftools.knowledgebaseimporter.civic
 
 import com.hartwig.hmftools.knowledgebaseimporter.FusionReader
 import com.hartwig.hmftools.knowledgebaseimporter.civic.input.CivicVariantInput
+import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.Doid
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.*
 import com.hartwig.hmftools.knowledgebaseimporter.output.Actionability
 import com.hartwig.hmftools.knowledgebaseimporter.output.CnvEvent
@@ -10,7 +11,7 @@ import org.apache.logging.log4j.LogManager
 
 data class CivicRecord(private val metadata: RecordMetadata, override val additionalInfo: String,
                        override val events: List<SomaticEvent>, override val actionability: List<Actionability>,
-                       val cancerDoids: Map<String, String>) :
+                       val cancerDoids: Map<String, Doid>) :
         RecordMetadata by metadata, KnownRecord, ActionableRecord {
     companion object {
         private val logger = LogManager.getLogger("CivicRecord")
@@ -22,7 +23,7 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
             val metadata = CivicMetadata(input.gene, input.representative_transcript)
             val additionalInfo = additionalInfo(evidence)
             val actionability = evidence.filter { it.direction == "Supports" }.flatMap { it.actionabilityItems }
-            val doids = evidence.associateBy({ it.cancerType }, { it.doid })
+            val doids = evidence.associateBy({ it.cancerType }, { Doid(it.doid) })
             val somaticEvents = readSomaticEvents(input)
             if (actionability.isNotEmpty() && somaticEvents.isEmpty()) {
                 val aOrBLevelCount = actionability.filter { it.hmfLevel == "A" || it.hmfLevel == "B" }.size

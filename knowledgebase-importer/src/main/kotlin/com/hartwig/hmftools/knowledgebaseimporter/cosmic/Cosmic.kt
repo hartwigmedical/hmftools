@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.knowledgebaseimporter.cosmic
 
 import com.hartwig.hmftools.knowledgebaseimporter.Knowledgebase
+import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.Doid
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
 import com.hartwig.hmftools.knowledgebaseimporter.readCSVRecords
 import org.apache.commons.csv.CSVRecord
@@ -15,7 +16,7 @@ class Cosmic(fusionsLocation: String) : Knowledgebase {
     override val actionableFusionPairs: List<ActionableFusionPairOutput> = listOf()
     override val actionablePromiscuousGenes: List<ActionablePromiscuousGeneOutput> = listOf()
     override val actionableRanges: List<ActionableGenomicRangeOutput> = listOf()
-    override val cancerTypes: Map<String, Set<String>> = mapOf()
+    override val cancerTypes: Map<String, Set<Doid>> = mapOf()
 
     private fun readFusion(csvRecord: CSVRecord): FusionPair {
         val fiveGene = csvRecord["5' Partner"].split("_").first()

@@ -13,6 +13,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.civic.Civic
 import com.hartwig.hmftools.knowledgebaseimporter.cosmic.Cosmic
 import com.hartwig.hmftools.knowledgebaseimporter.dao.GeneDAO
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
+import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.Doid
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.OncoKb
 import com.hartwig.hmftools.knowledgebaseimporter.output.CancerTypeDoidOutput
@@ -94,15 +95,15 @@ private fun writeOutput(outputDir: String, knowledgebases: List<Knowledgebase>, 
 
 private fun knowledgebaseCancerDoids(knowledgebases: List<Knowledgebase>, ontology: DiseaseOntology): List<CancerTypeDoidOutput> {
     val extraCancerTypeDoids = readExtraCancerTypeDoids().map {
-        Pair(it.key, it.value.flatMap { doid -> ontology.findDoidsForDoid(doid) }.toSet().sorted())
+        Pair(it.key, it.value.flatMap { doid -> ontology.findDoidsForDoid(doid) }.toSet().sortedBy { it.value })
     }.toMap()
-    val allCancerTypeDoids = knowledgebases.fold(mapOf<String, Set<String>>(), { map, it -> map + it.cancerTypes })
+    val allCancerTypeDoids = knowledgebases.fold(mapOf<String, Set<Doid>>()) { map, it -> map + it.cancerTypes }
     return (allCancerTypeDoids + extraCancerTypeDoids).entries.map { CancerTypeDoidOutput(it.key, it.value.joinToString(";")) }
 }
 
-private fun readExtraCancerTypeDoids(): Map<String, Set<String>> {
+private fun readExtraCancerTypeDoids(): Map<String, Set<Doid>> {
     return readCSVRecords(object {}.javaClass.getResourceAsStream("/knowledgebase_disease_doids.csv")) {
-        Pair(it["cancerType"], it["doids"].orEmpty().split(";").filterNot { it.isBlank() }.map { it.trim() }.toSet())
+        Pair(it["cancerType"], it["doids"].orEmpty().split(";").filterNot { it.isBlank() }.map { Doid(it.trim()) }.toSet())
     }.toMap()
 }
 
