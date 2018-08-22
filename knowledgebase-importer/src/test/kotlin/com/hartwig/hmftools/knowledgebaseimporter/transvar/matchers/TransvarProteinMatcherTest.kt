@@ -84,6 +84,8 @@ class TransvarProteinMatcherTest : StringSpec() {
         }
 
         "matches hgvs protein duplications"{
+            TransvarProteinMatcher.matches("G10dup") shouldBe true
+            TransvarProteinMatcher.matches("T1151dup") shouldBe true
             TransvarProteinMatcher.matches("Gly4_Gln6dup") shouldBe true
             TransvarProteinMatcher.matches("His7_Gln8dup") shouldBe true
             TransvarProteinMatcher.matches("A502_Y503dup") shouldBe true
