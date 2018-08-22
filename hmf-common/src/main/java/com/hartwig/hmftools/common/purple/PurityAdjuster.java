@@ -61,9 +61,41 @@ public class PurityAdjuster {
 
     public double purityAdjustedVAF(@NotNull final String chromosome, final double copyNumber, final double observedFrequency) {
         int typicalCopyNumber = typicalCopyNumber(chromosome);
-        return purityAdjustedFrequency(copyNumber, observedFrequency, typicalCopyNumber, 0);
+        return purityAdjustedFrequency(typicalCopyNumber,0, copyNumber, observedFrequency);
+
     }
 
+    public double purityAdjustedBAFSimple(final String chromosome, final double copyNumber, final double observedFrequency) {
+        boolean isDiploid = HumanChromosome.fromString(chromosome).isDiploid(gender);
+
+        if (!isDiploid || Doubles.lessOrEqual(copyNumber, 1)) {
+            return 1;
+        }
+        return purityAdjustedFrequency(2, 1, copyNumber, observedFrequency);
+    }
+
+    public double purityAdjustedFrequency(final int normalCopyNumber, final int normalPloidy, final double tumorCopyNumber,
+            final double observedFrequency) {
+        return purityAdjustedPloidy(normalCopyNumber, normalPloidy, tumorCopyNumber, observedFrequency) / tumorCopyNumber;
+    }
+
+    public double purityAdjustedPloidy(final int normalCopyNumber, final int normalPloidy, final double tumorCopyNumber,
+            final double observedFrequency) {
+        double totalObservations = purity * tumorCopyNumber + normalCopyNumber * (1 - purity);
+        double normalObservations = normalPloidy * (1 - purity);
+        return (observedFrequency * totalObservations - normalObservations) / purity;
+    }
+
+    public double expectedFrequency(final int normalCopyNumber, final int normalPloidy, final double tumorCopyNumber,
+            final double tumorPloidy) {
+        double totalObservations = purity * tumorCopyNumber + normalCopyNumber * (1 - purity);
+        double normalObservations = normalPloidy * (1 - purity);
+        double tumorObservations = tumorPloidy * purity;
+
+        return (normalObservations + tumorObservations) / totalObservations;
+    }
+
+    @Deprecated
     double purityAdjustedFrequency(final double tumorCopyNumber, final double observedFrequency, final int normalCopyNumber,
             final double normalFrequency) {
         assert (greaterThan(tumorCopyNumber, 0));
@@ -74,15 +106,6 @@ public class PurityAdjuster {
         double tumorTotalAllele = tumorCopyNumber * purity;
 
         return (observedFrequency * (normalTotalAllele + tumorTotalAllele) - normalBetaAllele) / tumorCopyNumber / purity;
-    }
-
-    public double purityAdjustedBAFSimple(final String chromosome, final double copyNumber, final double observedFrequency) {
-        boolean isDiploid = HumanChromosome.fromString(chromosome).isDiploid(gender);
-
-        if (!isDiploid || Doubles.lessOrEqual(copyNumber, 1)) {
-            return 1;
-        }
-        return purityAdjustedFrequency(copyNumber, observedFrequency,  2,0.5);
     }
 
 }
