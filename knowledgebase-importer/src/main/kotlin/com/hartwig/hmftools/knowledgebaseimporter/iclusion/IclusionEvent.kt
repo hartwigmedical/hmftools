@@ -3,18 +3,19 @@ package com.hartwig.hmftools.knowledgebaseimporter.iclusion
 import com.hartwig.hmftools.apiclients.iclusion.data.IclusionMutationDetails
 import com.hartwig.hmftools.knowledgebaseimporter.iclusion.readers.IclusionExonMutationReader.EXON_MUTATION_REGEX
 import com.hartwig.hmftools.knowledgebaseimporter.iclusion.readers.IclusionFusionReader
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.EventType
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.KnowledgebaseEvent
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.EventType
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.KnowledgebaseEvent
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.matchers.TransvarMatcher
 import org.apache.logging.log4j.LogManager
 
-data class IclusionEvent(override val gene: String, override val transcript: String, override val variant: String,
-                         override val types: List<EventType> = emptyList()) : KnowledgebaseEvent {
+data class IclusionEvent(override val gene: String, override val variant: String, val transcript: String,
+                         override val types: List<EventType> = emptyList()) :
+        KnowledgebaseEvent {
     companion object {
         private val logger = LogManager.getLogger("IclusionEvent")
 
-        operator fun invoke(mutation: IclusionMutationDetails): IclusionEvent {
-            return IclusionEvent(mutation.geneName, "TODO", mutation.variantName, eventTypes(mutation.geneName, mutation.variantName))
+        operator fun invoke(mutation: IclusionMutationDetails, transcript: String): IclusionEvent {
+            return IclusionEvent(mutation.geneName, mutation.variantName, transcript, eventTypes(mutation.geneName, mutation.variantName))
         }
 
         private fun eventTypes(gene: String, variant: String): List<EventType> {
@@ -68,6 +69,4 @@ data class IclusionEvent(override val gene: String, override val transcript: Str
             }
         }
     }
-
-    override val source = "iclusion"
 }

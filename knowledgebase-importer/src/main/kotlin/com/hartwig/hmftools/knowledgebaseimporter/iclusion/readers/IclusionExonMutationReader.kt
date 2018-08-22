@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.knowledgebaseimporter.iclusion.readers
 
 import com.hartwig.hmftools.knowledgebaseimporter.iclusion.IclusionEvent
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.EventType
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.ExonMutations
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.EventType
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.readers.SomaticEventReader
 
 object IclusionExonMutationReader : SomaticEventReader<IclusionEvent, ExonMutations> {
