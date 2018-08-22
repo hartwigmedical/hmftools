@@ -95,7 +95,7 @@ private fun writeOutput(outputDir: String, knowledgebases: List<Knowledgebase>, 
 
 private fun knowledgebaseCancerDoids(knowledgebases: List<Knowledgebase>, ontology: DiseaseOntology): List<CancerTypeDoidOutput> {
     val extraCancerTypeDoids = readExtraCancerTypeDoids().map {
-        Pair(it.key, it.value.flatMap { doid -> ontology.findDoidsForDoid(doid) }.toSet().sortedBy { it.value })
+        Pair(it.key, it.value.flatMap { doid -> ontology.findDoids(doid) }.toSet().sortedBy { it.value })
     }.toMap()
     val allCancerTypeDoids = knowledgebases.fold(mapOf<String, Set<Doid>>()) { map, it -> map + it.cancerTypes }
     return (allCancerTypeDoids + extraCancerTypeDoids).entries.map { CancerTypeDoidOutput(it.key, it.value.joinToString(";")) }

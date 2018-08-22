@@ -102,7 +102,7 @@ class TransvarProteinMatcherTest : StringSpec() {
             TransvarProteinMatcher.matches("Cys28_Lys29delinsTrp") shouldBe true
             TransvarProteinMatcher.matches("Cys28delinsTrpVal") shouldBe true
             TransvarProteinMatcher.matches("Pro578_Lys579delinsLeuTer") shouldBe true
-            TransvarProteinMatcher.matches("Pro578_Gln598de") shouldBe true
+            TransvarProteinMatcher.matches("Pro578_Gln598del") shouldBe true
             TransvarProteinMatcher.matches("Arg97Glyfs*26") shouldBe true
             TransvarProteinMatcher.matches("Arg97GlyfsTer26") shouldBe true
             TransvarProteinMatcher.matches("Arg97fs") shouldBe true
