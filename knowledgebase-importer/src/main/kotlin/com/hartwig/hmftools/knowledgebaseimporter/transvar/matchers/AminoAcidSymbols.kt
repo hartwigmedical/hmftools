@@ -23,8 +23,11 @@ object AminoAcidSymbols {
                                    "N" to "Asn",
                                    "D" to "Asp",
                                    "T" to "Thr",
+            // MIVO: ambiguous amino acids:
                                    "Z" to "Glx",
-                                   "B" to "Asx")
+                                   "B" to "Asx",
+            // MIVO: stop codon:
+                                   "*" to "Ter")
 
     private val threeToOne = oneToThree.map { (letter, letters) -> Pair(letters, letter) }.toMap()
     private val oneLetterPattern = "[${oneToThree.map { it.key }.joinToString("")}]"
