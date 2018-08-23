@@ -209,6 +209,7 @@ public class PurityPloidyEstimateApplication {
                             observedBafExponent);
 
             final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
+                    cobaltGender,
                     fittingConfig.maxPloidy(),
                     fittingConfig.minPurity(),
                     fittingConfig.maxPurity(),
@@ -217,7 +218,8 @@ public class PurityPloidyEstimateApplication {
                     fittingConfig.maxNormFactor(),
                     fittingConfig.normFactorIncrement(),
                     fittedRegionFactory,
-                    observedRegions);
+                    observedRegions,
+                    somaticVariants);
 
             final List<FittedPurity> bestFitPerPurity = fittedPurityFactory.bestFitPerPurity();
 

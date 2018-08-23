@@ -21,6 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep7;
+import org.jooq.InsertValuesStep8;
 import org.jooq.Record;
 
 class PurityDAO {
@@ -86,6 +87,7 @@ class PurityDAO {
                 PURITY.SCORE,
                 PURITY.SOMATICDEVIATION,
                 PURITY.PLOIDY,
+                PURITY.SOMATICDEVIATION,
                 PURITY.DIPLOIDPROPORTION,
                 PURITY.MINDIPLOIDPROPORTION,
                 PURITY.MAXDIPLOIDPROPORTION,
@@ -104,6 +106,7 @@ class PurityDAO {
                         bestFit.normFactor(),
                         bestFit.score(),
                         bestFit.somaticDeviation(),
+                        bestFit.somaticDeviation(),
                         bestFit.ploidy(),
                         bestFit.diploidProportion(),
                         score.minDiploidProportion(),
@@ -121,11 +124,12 @@ class PurityDAO {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(PURITYRANGE).where(PURITYRANGE.SAMPLEID.eq(sample)).execute();
 
-        InsertValuesStep7 inserter = context.insertInto(PURITYRANGE,
+        InsertValuesStep8 inserter = context.insertInto(PURITYRANGE,
                 PURITYRANGE.SAMPLEID,
                 PURITYRANGE.PURITY,
                 PURITYRANGE.NORMFACTOR,
                 PURITYRANGE.SCORE,
+                PURITYRANGE.SOMATICDEVIATION,
                 PURITYRANGE.PLOIDY,
                 PURITYRANGE.DIPLOIDPROPORTION,
                 PURITYRANGE.MODIFIED);
@@ -134,13 +138,14 @@ class PurityDAO {
         inserter.execute();
     }
 
-    private static void addPurity(@NotNull Timestamp timestamp, @NotNull InsertValuesStep7 inserter, @NotNull String sample,
+    private static void addPurity(@NotNull Timestamp timestamp, @NotNull InsertValuesStep8 inserter, @NotNull String sample,
             @NotNull FittedPurity purity) {
         //noinspection unchecked
         inserter.values(sample,
                 purity.purity(),
                 purity.normFactor(),
                 purity.score(),
+                purity.somaticDeviation(),
                 purity.ploidy(),
                 purity.diploidProportion(),
                 timestamp);

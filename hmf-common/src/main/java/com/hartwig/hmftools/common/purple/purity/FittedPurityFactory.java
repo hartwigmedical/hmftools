@@ -17,10 +17,12 @@ import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -35,15 +37,18 @@ public class FittedPurityFactory {
     private final double minNormFactor;
     private final double maxNormFactor;
     private final double normFactorIncrements;
+    private final Gender gender;
     @NotNull
     private final FittedRegionFactory fittedRegionFactory;
     private final ExecutorService executorService;
+    private final Collection<SomaticVariant> variants;
 
     private final List<FittedPurity> bestScoringPerPurity = Lists.newArrayList();
 
-    public FittedPurityFactory(final ExecutorService executorService, final int maxPloidy, final double minPurity, final double maxPurity,
-            final double purityIncrements, final double minNormFactor, final double maxNormFactor, final double normFactorIncrements,
-            @NotNull final FittedRegionFactory fittedRegionFactory, @NotNull final Collection<ObservedRegion> observedRegions)
+    public FittedPurityFactory(final ExecutorService executorService, final Gender gender, final int maxPloidy, final double minPurity,
+            final double maxPurity, final double purityIncrements, final double minNormFactor, final double maxNormFactor,
+            final double normFactorIncrements, @NotNull final FittedRegionFactory fittedRegionFactory,
+            @NotNull final Collection<ObservedRegion> observedRegions, @NotNull final Collection<SomaticVariant> variants)
             throws ExecutionException, InterruptedException {
         this.executorService = executorService;
         this.maxPloidy = maxPloidy;
@@ -54,6 +59,8 @@ public class FittedPurityFactory {
         this.maxNormFactor = maxNormFactor;
         this.normFactorIncrements = normFactorIncrements;
         this.fittedRegionFactory = fittedRegionFactory;
+        this.gender = gender;
+        this.variants = variants;
 
         fitPurity(observedRegions);
     }
@@ -126,6 +133,7 @@ public class FittedPurityFactory {
 
         //TODO: FIX AVERAGE PLOIDY
 
+        final List<FittedRegion> fittedRegions = Lists.newArrayList();
         for (final ObservedRegion enrichedRegion : observedRegions) {
             final FittedRegion fittedRegion = fittedRegionFactory.fitRegion(purity, normFactor, enrichedRegion);
             ploidyPenalty += enrichedRegion.bafCount() / totalBafCount * fittedRegion.ploidyPenalty();
@@ -134,12 +142,18 @@ public class FittedPurityFactory {
             if (fittedRegion.modelPloidy() == 2) {
                 diploidProportion += enrichedRegion.bafCount() / totalBafCount;
             }
+
+            fittedRegions.add(fittedRegion);
         }
 
-        return builder.somaticDeviation(0)
-                .score(ploidyPenalty * modelDeviation)
+//        final PurityAdjuster purityAdjuster = new PurityAdjuster(gender, purity, normFactor);
+//        double somaticDeviation = new SomaticDeviationFactory(purityAdjuster).deviation(fittedRegions, variants);
+
+
+        return builder.score(ploidyPenalty * modelDeviation)
                 .diploidProportion(diploidProportion)
                 .ploidy(averagePloidy)
+                .somaticDeviation(0)
                 .build();
     }
 }

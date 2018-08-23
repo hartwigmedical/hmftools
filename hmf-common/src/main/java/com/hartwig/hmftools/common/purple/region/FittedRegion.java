@@ -32,4 +32,12 @@ public abstract class FittedRegion implements ObservedRegion {
     public abstract double segmentTumorCopyNumber();
 
     public abstract double segmentBAF();
+
+    public double majorAllelePloidy() {
+        return tumorBAF() * tumorCopyNumber();
+    }
+
+    public double minorAllelePloidy() {
+        return tumorCopyNumber() - majorAllelePloidy();
+    }
 }
