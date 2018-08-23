@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.circos.CircosFileWriter;
 import com.hartwig.hmftools.common.circos.CircosINDELWriter;
 import com.hartwig.hmftools.common.circos.CircosLinkWriter;
 import com.hartwig.hmftools.common.circos.CircosSNPWriter;
+import com.hartwig.hmftools.common.collection.Downsample;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
@@ -81,8 +82,8 @@ class GenerateCircosData {
         writeCopyNumbers(copyNumber);
         writeEnrichedSomatics(somaticVariants);
         writeStructuralVariants(structuralVariants);
-        writeFittedRegions(downsample(regions));
-        writeBafs(downsample(bafs));
+        writeFittedRegions(Downsample.downsample(MAX_PLOT_POINTS,regions));
+        writeBafs(Downsample.downsample(10, bafs));
 
         final List<Future<Object>> futures = Lists.newArrayList();
         final Optional<String> circosBinary = config.circosBinary();
@@ -153,8 +154,8 @@ class GenerateCircosData {
     }
 
     private void writeEnrichedSomatics(@NotNull final List<PurityAdjustedSomaticVariant> somaticVariants) throws IOException {
-        CircosSNPWriter.writePositions(baseCircosTumorSample + ".snp.circos", downsample(snp(somaticVariants)));
-        CircosINDELWriter.writePositions(baseCircosTumorSample + ".indel.circos", downsample(indel(somaticVariants)));
+        CircosSNPWriter.writePositions(baseCircosTumorSample + ".snp.circos", Downsample.downsample(MAX_PLOT_POINTS, snp(somaticVariants)));
+        CircosINDELWriter.writePositions(baseCircosTumorSample + ".indel.circos", Downsample.downsample(MAX_PLOT_POINTS, indel(somaticVariants)));
     }
 
     private void writeConfig(@NotNull final Gender gender) throws IOException {
@@ -205,19 +206,4 @@ class GenerateCircosData {
                 .collect(Collectors.toList());
     }
 
-    @NotNull
-    private static <T> List<T> downsample(@NotNull List<T> variants) {
-        if (variants.size() <= MAX_PLOT_POINTS) {
-            return variants;
-        }
-
-        long scale = Math.round(Math.ceil(1.0 * variants.size() / MAX_PLOT_POINTS));
-        final List<T> result = Lists.newArrayList();
-        for (int i = 0; i < variants.size(); i++) {
-            if (i % scale == 0) {
-                result.add(variants.get(i));
-            }
-        }
-        return result;
-    }
 }

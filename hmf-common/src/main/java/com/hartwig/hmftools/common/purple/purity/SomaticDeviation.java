@@ -25,7 +25,7 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer> {
 
     SomaticDeviation() {
         this.maxConceivableCache =
-                CacheBuilder.newBuilder().maximumSize(20000).removalListener(this).build(new CacheLoader<Double, Integer>() {
+                CacheBuilder.newBuilder().maximumSize(50000).removalListener(this).build(new CacheLoader<Double, Integer>() {
 
                     @Override
                     public Integer load(final Double p) {
@@ -69,7 +69,7 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer> {
     int maxConceivableReads(@NotNull final PurityAdjuster purityAdjuster, int normalCopyNumber, @NotNull final AllelicDepth depth,
             double tumorCopyNumber, double tumorMajorAllelePloidy) {
         double expectedVAF = purityAdjuster.expectedFrequency(normalCopyNumber, 0, tumorCopyNumber, tumorMajorAllelePloidy);
-        double p = 1d * Math.round(expectedVAF * depth.totalReadCount() * 1000) / 1000 / TRIALS;
+        double p = 1d * Math.round(expectedVAF * depth.totalReadCount() * 100) / 100 / TRIALS;
         return maxConceivableCache.getUnchecked(p);
     }
 
