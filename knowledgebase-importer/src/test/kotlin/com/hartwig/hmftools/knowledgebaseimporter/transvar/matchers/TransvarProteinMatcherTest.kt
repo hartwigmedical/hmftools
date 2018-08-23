@@ -30,7 +30,6 @@ class TransvarProteinMatcherTest : StringSpec() {
             TransvarProteinMatcher.contains("Fusion + Val600") shouldBe true
             TransvarProteinMatcher.contains("Y175fs (c.526delA)") shouldBe true
             TransvarProteinMatcher.contains("F76del (c.226_228delTTC)") shouldBe true
-            TransvarProteinMatcher.contains("R108ins (c.324InsCGC)") shouldBe true
             TransvarProteinMatcher.contains("G12/G13") shouldBe true
         }
 
@@ -53,7 +52,6 @@ class TransvarProteinMatcherTest : StringSpec() {
         "matches hgvs protein mutation"{
             TransvarProteinMatcher.matches("Y175fs") shouldBe true
             TransvarProteinMatcher.matches("F76del") shouldBe true
-            TransvarProteinMatcher.matches("R108ins") shouldBe true
             TransvarProteinMatcher.matches("Cys28delinsTrpVal") shouldBe true
             TransvarProteinMatcher.matches("Arg97GlyfsTer26") shouldBe true
             TransvarProteinMatcher.matches("Arg97Glyfs*26") shouldBe true
@@ -121,6 +119,11 @@ class TransvarProteinMatcherTest : StringSpec() {
             TransvarProteinMatcher.matches("Ile327Argfs*?") shouldBe true
             TransvarProteinMatcher.matches("Ile327fs") shouldBe true
             TransvarProteinMatcher.matches("Gln151Thrfs*9") shouldBe true
+        }
+
+        "does not match invalid frameshift"{
+            TransvarProteinMatcher.matches("K442Nfs*") shouldBe false
+            TransvarProteinMatcher.matches("N1333Gfs*") shouldBe false
         }
     }
 }
