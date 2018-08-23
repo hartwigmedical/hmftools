@@ -54,5 +54,8 @@ public interface StructuralVariant {
     String event();
 
     @Nullable
-    String linkedBy();
+    String startLinkedBy();
+
+    @Nullable
+    String endLinkedBy();
 }
