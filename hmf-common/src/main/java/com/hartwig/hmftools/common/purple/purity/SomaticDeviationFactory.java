@@ -13,37 +13,47 @@ import org.jetbrains.annotations.NotNull;
 
 public class SomaticDeviationFactory {
 
-    private final SomaticDeviation somaticDeviation;
+    public static double deviation(final PurityAdjuster purityAdjuster, @NotNull Collection<FittedRegion> regions,
+            Collection<SomaticVariant> variants) {
+        final SomaticDeviation somaticDeviation = SomaticDeviation.INSTANCE;
 
-    protected SomaticDeviationFactory(final PurityAdjuster purityAdjuster) {
-        somaticDeviation = new SomaticDeviation(purityAdjuster);
-    }
-
-    public double deviation(@NotNull Collection<FittedRegion> regions, Collection<SomaticVariant> variants) {
         final GenomePositionSelector<SomaticVariant> variantSelector = GenomePositionSelectorFactory.create(variants);
         double score = 0;
+        int variantCount = 0;
 
         for (FittedRegion region : regions) {
-            SomaticVariantConsumer consumer = new SomaticVariantConsumer(region);
+            SomaticVariantConsumer consumer = new SomaticVariantConsumer(purityAdjuster, somaticDeviation, region);
             variantSelector.select(region, consumer);
             score += consumer.score();
+            variantCount += consumer.variants();
         }
 
-        return score / variants.size();
+        return variantCount == 0 ? 0 : score / variantCount;
     }
 
-    private class SomaticVariantConsumer implements Consumer<SomaticVariant> {
+    private static class SomaticVariantConsumer implements Consumer<SomaticVariant> {
 
+        final PurityAdjuster purityAdjuster;
+        private final SomaticDeviation somaticDeviation;
         private final FittedRegion region;
         private double score;
+        private int variants;
 
-        private SomaticVariantConsumer(final FittedRegion region) {
+        private SomaticVariantConsumer(final PurityAdjuster purityAdjuster, final SomaticDeviation somaticDeviation,
+                final FittedRegion region) {
+            this.purityAdjuster = purityAdjuster;
+            this.somaticDeviation = somaticDeviation;
             this.region = region;
         }
 
         @Override
         public void accept(final SomaticVariant variant) {
-            score += somaticDeviation.deviationFromMax(region, variant);
+            score += somaticDeviation.deviationFromMax(purityAdjuster, region, variant);
+            variants++;
+        }
+
+        public int variants() {
+            return variants;
         }
 
         public double score() {

@@ -105,6 +105,7 @@ public class PurityPloidyEstimateApplication {
     private static final String PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_MULTIPLIER = "ploidy_penalty_major_allele_sub_one_multiplier";
     private static final String PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_ADDITIONAL = "ploidy_penalty_major_allele_sub_one_additional";
     private static final String PLOIDY_PENALTY_BASELINE_DEVIATION = "ploidy_penalty_baseline_deviation";
+    private static final String SOMATIC_DEVIATION_WEIGHT = "somatic_deviation_weight";
     private static final String VERSION = "version";
 
     private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
@@ -188,10 +189,11 @@ public class PurityPloidyEstimateApplication {
 
             final double ploidyPenaltyFactor = defaultValue(cmd, PLOIDY_PENALTY_FACTOR, 0.3);
             final double ploidyPenaltyStandardDevation = defaultValue(cmd, PLOIDY_PENALTY_STANDARD_DEVIATION, 0.05);
-            final double ploidyPenaltyMinStandardDevationPerPloidy = defaultValue(cmd, PLOIDY_PENALTY_MIN_STANDARD_DEVIATION, 0);
-            final double majorAlleleSubOnePenaltyMultiplier = defaultValue(cmd, PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_MULTIPLIER, 3);
-            final double majorAlleleSubOneAdditionalPenalty = defaultValue(cmd, PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_ADDITIONAL, 2.5);
-            final double baselineDeviation = defaultValue(cmd, PLOIDY_PENALTY_BASELINE_DEVIATION, 0.075);
+            final double ploidyPenaltyMinStandardDevationPerPloidy = defaultValue(cmd, PLOIDY_PENALTY_MIN_STANDARD_DEVIATION, 1);
+            final double majorAlleleSubOnePenaltyMultiplier = defaultValue(cmd, PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_MULTIPLIER, 2);
+            final double majorAlleleSubOneAdditionalPenalty = defaultValue(cmd, PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_ADDITIONAL, 1.5);
+            final double baselineDeviation = defaultValue(cmd, PLOIDY_PENALTY_BASELINE_DEVIATION, 0.2);
+            final double somaticDeviationWeight = defaultValue(cmd, SOMATIC_DEVIATION_WEIGHT, 0);
 
             final FittedRegionFactory fittedRegionFactory = cmd.hasOption(EXPERIMENTAL)
                     ? new FittedRegionFactoryV2(cobaltGender,
@@ -217,6 +219,7 @@ public class PurityPloidyEstimateApplication {
                     fittingConfig.minNormFactor(),
                     fittingConfig.maxNormFactor(),
                     fittingConfig.normFactorIncrement(),
+                    somaticDeviationWeight,
                     fittedRegionFactory,
                     observedRegions,
                     somaticVariants);
@@ -368,6 +371,7 @@ public class PurityPloidyEstimateApplication {
         options.addOption(PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_MULTIPLIER, true, "PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_MULTIPLIER");
         options.addOption(PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_ADDITIONAL, true, "PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_ADDITIONAL");
         options.addOption(PLOIDY_PENALTY_BASELINE_DEVIATION, true, "PLOIDY_PENALTY_BASELINE_DEVIATION");
+        options.addOption(SOMATIC_DEVIATION_WEIGHT, true, "SOMATIC_DEVIATION_WEIGHT");
 
         return options;
     }
