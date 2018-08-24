@@ -47,7 +47,7 @@ public final class XMLPatientReader extends EcrfReader {
     private static final String ITEM_VALUE_ATTRIBUTE = "Value";
 
     // KODU: See DEV-491
-    private static final List DROPDOWN_ITEMS_TO_IGNORE_FOR_WARNING = Lists.newArrayList("FLD.DDEL.DDELINV", "FLD.DDEL.DEELINST");
+    private static final List DROPDOWN_ITEMS_TO_IGNORE_FOR_WARNING = Lists.newArrayList("FLD.DDEL.DDELINV", "FLD.DDEL.DDELINST");
 
     private XMLPatientReader() {
     }
