@@ -9,8 +9,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.transvar.matchers.TransvarMatc
 import org.apache.logging.log4j.LogManager
 
 data class IclusionEvent(override val gene: String, override val variant: String, val transcript: String,
-                         override val types: List<EventType> = emptyList()) :
-        KnowledgebaseEvent {
+                         override val types: List<EventType> = emptyList()) : KnowledgebaseEvent {
     companion object {
         private val logger = LogManager.getLogger("IclusionEvent")
 

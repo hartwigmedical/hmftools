@@ -8,12 +8,12 @@ import com.hartwig.hmftools.knowledgebaseimporter.output.HmfResponse
 
 data class CivicEvidence(private val input: CivicEvidenceInput, private val drugInteractionMap: Map<Int, String>,
                          private val treatmentTypeMap: Map<String, String>) {
-    val cancerType: String = input.cancerType
-    val doid: String = input.cancerDoid
+    val disease: String = input.disease
+    val doid: String = input.doid
     val type: String = input.evidence_type
     val direction: String = input.evidence_direction
     val level: String = input.evidence_level
-    val actionabilityItems = Actionability("civic", input.evidence_id, listOf(cancerType),
+    val actionabilityItems = Actionability("civic", input.evidence_id, listOf(disease),
                                            getDrugs(input, drugInteractionMap, treatmentTypeMap), level, input.clinical_significance, type,
                                            HmfLevel(level), HmfResponse(input.clinical_significance))
 

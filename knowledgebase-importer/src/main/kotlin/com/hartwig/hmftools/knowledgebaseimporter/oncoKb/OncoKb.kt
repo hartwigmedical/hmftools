@@ -7,8 +7,8 @@ import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.ActionableRecor
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.KnowledgebaseSource
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.input.OncoActionableInput
+import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.input.OncoKnownInput
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
-import com.hartwig.hmftools.knowledgebaseimporter.readTSVRecords
 
 
 class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: String, diseaseOntology: DiseaseOntology,
@@ -27,10 +27,10 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
         actionableKbRecords.flatMap { it.actionability }.map { it.cancerType }
                 .associateBy({ it }, { diseaseOntology.findDoids(it) })
     }
-    override val knownKbRecords by lazy { readTSVRecords(annotatedVariantsLocation) { OncoKnownRecord(it) } }
+    override val knownKbRecords by lazy { CsvReader.readTSVByName<OncoKnownInput>(annotatedVariantsLocation).map { OncoKnownRecord(it.corrected()) } }
     override val actionableKbRecords by lazy {
         CsvReader.readTSVByName<OncoActionableInput>(actionableVariantsLocation, nullString = "null")
-                .map { OncoActionableRecord(it, treatmentTypeMap) }
+                .map { OncoActionableRecord(it.corrected(), treatmentTypeMap) }
     }
     private val actionableKbItems by lazy { recordAnalyzer.actionableItems(listOf(this)).distinct() }
 }

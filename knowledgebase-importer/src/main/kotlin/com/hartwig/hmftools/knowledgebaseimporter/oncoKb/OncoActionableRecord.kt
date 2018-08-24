@@ -16,8 +16,7 @@ data class OncoActionableRecord(private val metadata: RecordMetadata, override v
 
         operator fun invoke(input: OncoActionableInput, treatmentTypeMap: Map<String, String>): OncoActionableRecord {
             val drugs = readDrugEntries(input, treatmentTypeMap)
-            val cancerType: String = readCancerType(input)
-            val actionability = Actionability("oncoKb", input.reference, listOf(cancerType), drugs, input.level,
+            val actionability = Actionability("oncoKb", input.reference, listOf(input.`Cancer Type`), drugs, input.level,
                                               input.significance.name, "Predictive", input.hmfLevel, input.significance)
             val metadata = OncoMetadata(input.Gene, input.transcript)
             val events = somaticEventReader.read(input.Gene, input.transcript, input.Alteration)
@@ -37,11 +36,6 @@ data class OncoActionableRecord(private val metadata: RecordMetadata, override v
             val entryType = entry.split("+")
                     .joinToString(" + ") { treatmentTypeMap[it.trim().toLowerCase()] ?: "Unknown" }
             return HmfDrug(entry, entryType)
-        }
-
-        private fun readCancerType(input: OncoActionableInput): String {
-            val cancerType = input.`Cancer Type`
-            return if (cancerType == "Melanoma") "Skin Melanoma" else cancerType
         }
     }
 }

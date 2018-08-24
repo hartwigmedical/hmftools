@@ -23,7 +23,7 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
             val metadata = CivicMetadata(input.gene, input.representative_transcript)
             val additionalInfo = additionalInfo(evidence)
             val actionability = evidence.filter { it.direction == "Supports" }.flatMap { it.actionabilityItems }
-            val doids = evidence.associateBy({ it.cancerType }, { Doid(it.doid) })
+            val doids = evidence.associateBy({ it.disease }, { Doid(it.doid) })
             val somaticEvents = readSomaticEvents(input)
             if (actionability.isNotEmpty() && somaticEvents.isEmpty()) {
                 val aOrBLevelCount = actionability.filter { it.hmfLevel == "A" || it.hmfLevel == "B" }.size
