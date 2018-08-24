@@ -92,7 +92,8 @@ class StructuralVariantDAO {
                     .endIntervalOffsetEnd(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETEND))
                     .inexactHomologyOffsetStart(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETSTART))
                     .inexactHomologyOffsetEnd(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETEND))
-                    .linkedBy(record.getValue(STRUCTURALVARIANT.LINKEDBY))
+                    .startLinkedBy(record.getValue(STRUCTURALVARIANT.STARTLINKEDBY))
+                    .endLinkedBy(record.getValue(STRUCTURALVARIANT.ENDLINKEDBY))
                     .build());
         }
         return structuralVariants;
@@ -181,7 +182,8 @@ class StructuralVariantDAO {
                     .somaticScore(record.getValue(STRUCTURALVARIANT.SOMATICSCORE))
                     .qualityScore(record.getValue(STRUCTURALVARIANT.QUALSCORE))
                     .event(record.getValue(STRUCTURALVARIANT.EVENT))
-                    .linkedBy(record.getValue(STRUCTURALVARIANT.LINKEDBY))
+                    .startLinkedBy(record.getValue(STRUCTURALVARIANT.STARTLINKEDBY))
+                    .endLinkedBy(record.getValue(STRUCTURALVARIANT.ENDLINKEDBY))
                     .build();
 
             regions.add(variant);
@@ -240,7 +242,8 @@ class StructuralVariantDAO {
                     STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETSTART,
                     STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETEND,
                     STRUCTURALVARIANT.VCFID,
-                    STRUCTURALVARIANT.LINKEDBY,
+                    STRUCTURALVARIANT.STARTLINKEDBY,
+                    STRUCTURALVARIANT.ENDLINKEDBY,
                     STRUCTURALVARIANT.MODIFIED);
             batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
             inserter.execute();
@@ -290,7 +293,8 @@ class StructuralVariantDAO {
                 variant.start().inexactHomologyOffsetStart(),
                 variant.start().inexactHomologyOffsetEnd(),
                 variant.id(),
-                variant.linkedBy(),
+                variant.startLinkedBy(),
+                variant.endLinkedBy(),
                 timestamp);
     }
 

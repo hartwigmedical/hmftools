@@ -44,7 +44,8 @@ public class StructuralVariantFactory {
     private final static String REFERENCE_BREAKEND_READ_COVERAGE = "REF";
     private final static String REFERENCE_BREAKEND_READPAIR_COVERAGE = "REFPAIR";
     private final static String EVENT = "EVENT";
-    private final static String LINKED_BY = "LINKED_BY";
+    private final static String LOCAL_LINKED_BY = "LOCAL_LINKED_BY";
+    private final static String REMOTE_LINKED_BY = "REMOTE_LINKED_BY";
     /**
      * Must match the small deldup threshold in scripts/gridss/gridss.config.R
      */
@@ -283,7 +284,8 @@ public class StructuralVariantFactory {
         return builder
                 .id(context.getID())
                 .event(context.getAttributeAsString(EVENT, null))
-                .linkedBy(context.getAttributeAsStringList(LINKED_BY, "").stream().filter(s -> !Strings.isNullOrEmpty(s)).collect(Collectors.joining( ",")))
+                .startLinkedBy(context.getAttributeAsStringList(LOCAL_LINKED_BY, "").stream().filter(s -> !Strings.isNullOrEmpty(s)).collect(Collectors.joining( ",")))
+                .endLinkedBy(context.getAttributeAsStringList(REMOTE_LINKED_BY, "").stream().filter(s -> !Strings.isNullOrEmpty(s)).collect(Collectors.joining( ",")))
                 .imprecise(imprecise(context))
                 .somaticScore(context.hasAttribute(SOMATIC_SCORE) ? context.getAttributeAsInt(SOMATIC_SCORE, 0) : null)
                 .qualityScore(context.getPhredScaledQual());
