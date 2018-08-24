@@ -6,8 +6,11 @@ import static com.hartwig.hmftools.data_analyser.calcs.NmfSampleFitter.fitCounts
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.data_analyser.calcs.NmfSampleFitter;
+import com.hartwig.hmftools.data_analyser.calcs.DataUtils;
 import com.hartwig.hmftools.data_analyser.calcs.SigContributionOptimiser;
+import com.hartwig.hmftools.data_analyser.loaders.GenericDataLoader;
+import com.hartwig.hmftools.data_analyser.types.GenericDataCollection;
+import com.hartwig.hmftools.data_analyser.types.NmfMatrix;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.distribution.PoissonDistribution;
@@ -20,8 +23,9 @@ public class MiscTester {
 
     public static void runTests()
     {
-        sampleFitTest();
-        stringTest();
+        // sampleFitTest();
+        // stringTest();
+        testSigOptimiserActuals();
 
         // chiSquaredTests();
 
@@ -137,6 +141,52 @@ public class MiscTester {
         String tmp = "AID=0.23131;UV=0.93";
 
         String tmp2 = tmp.replaceAll("[0-9.=]", "");
+    }
+
+    private static void testSigOptimiserActuals()
+    {
+        // load counts and sigs to fit with
+        String countsFile = "/Users/charlesshale/data/r_data/snv_nmf_matrix_data.csv";
+        GenericDataCollection dataCollection = GenericDataLoader.loadFile(countsFile);
+        NmfMatrix sampleCountsMatrix = DataUtils.createMatrixFromListData(dataCollection.getData());
+        sampleCountsMatrix.cacheTranspose();
+
+        String noiseFile = "/Users/charlesshale/dev/nmf/snv_ba_sample_noise.csv";
+        dataCollection = GenericDataLoader.loadFile(noiseFile);
+        NmfMatrix sampleNoiseMatrix = DataUtils.createMatrixFromListData(dataCollection.getData());
+        sampleNoiseMatrix.cacheTranspose();
+
+        String sigsFile = "/Users/charlesshale/dev/nmf/snv_ba_predefined_sigs.csv";
+        dataCollection = GenericDataLoader.loadFile(sigsFile);
+        NmfMatrix sigs = DataUtils.createMatrixFromListData(dataCollection.getData());
+        sigs.cacheTranspose();
+
+
+        int sampleId = 118;
+
+        final double[] sampleCounts = sampleCountsMatrix.getCol(sampleId);
+        final double[] sampleNoise = sampleNoiseMatrix.getCol(sampleId);
+
+        List<double[]> ratiosCollection = Lists.newArrayList();
+
+        ratiosCollection.add(sigs.getCol(10)); // bg 10
+        ratiosCollection.add(sigs.getCol(25)); // bg 915
+        ratiosCollection.add(sigs.getCol(26)); // bg 134
+        //ratiosCollection.add(sigs.getCol(33));
+        //ratiosCollection.add(sigs.getCol(35));
+
+        double[] contribs = new double[ratiosCollection.size()];
+
+        SigContributionOptimiser sigOptim = new SigContributionOptimiser(sampleCounts.length, true, 0.03, 0.99, true);
+        sigOptim.initialise(sampleId, sampleCounts, sampleNoise, ratiosCollection, contribs);
+        boolean calcOk = sigOptim.fitToSample(0.99, 0.03);
+
+        if (!calcOk)
+            return;
+
+        // final double[] finalContribs = sigOptim.getContribs();
+
+
     }
 
 }

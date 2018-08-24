@@ -52,6 +52,7 @@ public class SigContributionOptimiser
     private double mCountsTotal; // total of the counts including any applied noise
     private double mVarCount; // total of the actual variant counts
     private double mResiduals;
+    private double mCurrentAllocTotal; // sum of contributions above the require percent and capped at actual counts, not noise
     private double mCurrentAllocPerc;
     private double mInitAllocPerc;
     private double mMinContribChange;
@@ -81,8 +82,10 @@ public class SigContributionOptimiser
         mZeroedSigs = Lists.newArrayList();
         mRatiosCollection = Lists.newArrayList();
 
+        mRawCounts = new double[mBucketCount];
         mCurrentCounts = new double[mBucketCount];
         mCounts = new double[mBucketCount];
+        mCountsNoise = new double[mBucketCount];
     }
 
     public void initialise(int sampleId, final double[] counts, final double[] countsNoise, final List<double[]> ratiosCollection, final double[] contribs)
@@ -91,9 +94,8 @@ public class SigContributionOptimiser
 
         mSigCount = ratiosCollection.size();
 
-        mRawCounts = counts;
-        mCountsNoise = countsNoise;
-
+        copyVector(counts, mRawCounts);
+        copyVector(countsNoise, mCountsNoise);
         copyVector(counts, mCounts);
 
         mTargetSig = -1;
@@ -635,22 +637,35 @@ public class SigContributionOptimiser
 
         double allocAboveMinRequired = 0;
 
+        double[] currentCountsNoNoise = new double[mBucketCount];
+
+        final double[][] sigData = mSigs.getData();
         for (Integer s : sortedContribIndices)
         {
             if (mContribs[s] == 0)
                 continue;
 
-            if(mContribs[s] / mVarCount >= mMinContribPercent)
+            if(mContribs[s]/mVarCount >= mMinContribPercent)
+            {
                 allocAboveMinRequired += mContribs[s];
+
+                // also calc an allocation limited by the actual counts, not factoring in noise
+                for (int i = 0; i < mBucketCount; ++i)
+                {
+                    currentCountsNoNoise[i] = min(currentCountsNoNoise[i] + (mContribs[s] * sigData[i][s]), mRawCounts[i]);
+                }
+            }
 
             if(s == mRequiredSig)
                 continue;
 
-            if(mContribs[s] / mVarCount < mMinContribPercent)
+            if(mContribs[s]/mVarCount < mMinContribPercent)
                 mHasLowContribSigs = true;
         }
 
-        mCurrentAllocPerc = min(allocAboveMinRequired/mVarCount, 1);
+        mCurrentAllocTotal = sumVector(currentCountsNoNoise);
+
+        mCurrentAllocPerc = min(mCurrentAllocTotal/mVarCount, 1);
         mIsFullyAllocated = mCurrentAllocPerc >= mTargetAllocPercent;
     }
 
@@ -664,7 +679,7 @@ public class SigContributionOptimiser
             if(mZeroedSigs.contains(s))
                 continue;
 
-            if (mContribs[s] / mVarCount < mMinContribPercent)
+            if (mContribs[s]/mVarCount < mMinContribPercent)
             {
                 zeroSigContrib(s);
             }
@@ -682,8 +697,8 @@ public class SigContributionOptimiser
 
         double actualResiduals = max(mVarCount - mContribTotal, 0);
 
-        LOGGER.debug(String.format("sample(%d) totalCount(%s wn=%s) contrib(%s perc=%.3f) residuals(%s perc=%.3f)",
-                mSampleId, sizeToStr(mVarCount), sizeToStr(mCountsTotal), sizeToStr(mContribTotal), mCurrentAllocPerc,
+        LOGGER.debug(String.format("sample(%d) totalCount(%s wn=%s) allocated(%s act=%.3f can=%.3f) residuals(%s perc=%.3f)",
+                mSampleId, sizeToStr(mVarCount), sizeToStr(mCountsTotal), sizeToStr(mContribTotal), mContribTotal/mVarCount, mCurrentAllocPerc,
                 sizeToStr(actualResiduals), actualResiduals/mVarCount));
 
         String contribStr = "";

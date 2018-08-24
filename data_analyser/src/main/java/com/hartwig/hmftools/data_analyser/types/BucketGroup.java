@@ -5,7 +5,9 @@ import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.doublesEqual;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.initVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVectors;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +22,7 @@ public class BucketGroup implements Comparable<BucketGroup> {
     private String mTag; // free-form info about the group
 
     private List<Integer> mSampleIds;
+    private List<Integer> mInitialSampleIds; // those which led to the creation of the group
     private List<Integer> mBucketIds;
     private List<Integer> mInitialBucketIds;
     private List<Integer> mExtraBucketIds;
@@ -38,14 +41,12 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
     private double mPotentialAllocation;
     private double mPotentialAdjAllocation;
-    private boolean mIsSelected;
 
     // annotations
     private String mCancerType;
     private String mEffects;
 
     private double mPurity; // for now a percentage of sample buckets that are elevated
-    private double mLoadFactor;
     private double mScoreOverride;
 
     private BucketGroup mClosestBG;
@@ -57,6 +58,7 @@ public class BucketGroup implements Comparable<BucketGroup> {
         mTag = "";
 
         mSampleIds = Lists.newArrayList();
+        mInitialSampleIds = Lists.newArrayList();
         mBucketIds = Lists.newArrayList();
         mInitialBucketIds = Lists.newArrayList();
         mExtraBucketIds = Lists.newArrayList();
@@ -69,13 +71,11 @@ public class BucketGroup implements Comparable<BucketGroup> {
         mBucketRatioRanges = null;
         mBucketRatiosClean = false;
         mPurity = 0;
-        mLoadFactor = 0;
         mScoreOverride = 0;
 
         mTotalCount = 0;
         mPotentialAllocation = 0;
         mPotentialAdjAllocation = 0;
-        mIsSelected = false;
 
         mCancerType = "";
         mEffects = "";
@@ -113,21 +113,11 @@ public class BucketGroup implements Comparable<BucketGroup> {
         if(mPurity > 0)
             score *= mPurity;
 
-        if(mLoadFactor > 0)
-            score *= mLoadFactor;
-
         return score;
     }
 
-    public void setScoreOverride(double score) { mScoreOverride = score; }
-
-    public void setSelected(boolean toggle) { mIsSelected = toggle; }
-    public boolean isSelected() { return mIsSelected; }
-
     public double getPurity() { return mPurity; }
     public void setPurity(double purity) { mPurity = purity; }
-    public double getLoadFactor() { return mLoadFactor; }
-    public void setLoadFactor(double value) { mLoadFactor = value; }
     public double getTotalCount() { return mTotalCount; }
 
     public double getAvgCount()
@@ -138,8 +128,14 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
     public List<Double> getSampleCountTotals() { return mSampleCountTotals; }
     public Map<Integer, Double> getSampleCountsMap() { return mSampleCountsMap; }
-    public void setSampleCountTotals(List<Double> totals) { mSampleCountTotals = totals; }
     public List<double[]> getSampleCounts() { return mSampleCounts; }
+    public double getSampleCount(Integer sampleId)
+    {
+        if(mSampleCountsMap.containsKey(sampleId))
+            return mSampleCountsMap.get(sampleId);
+        else
+            return 0;
+    }
 
     public void setCancerType(final String type) { mCancerType = type; }
     public final String getCancerType() { return mCancerType; }
@@ -159,13 +155,19 @@ public class BucketGroup implements Comparable<BucketGroup> {
     }
 
     public final List<Integer> getSampleIds() { return mSampleIds; }
+    public final List<Integer> getInitialSampleIds() { return mInitialSampleIds; }
     public final List<Integer> getBucketIds() { return mBucketIds; }
     public final List<Integer> getInitialBucketIds() { return mInitialBucketIds; }
     public final List<Integer> getExtraBucketIds() { return mExtraBucketIds; }
 
-    public boolean hasSample(int sampleIndex)
+    public boolean hasSample(Integer sampleId)
     {
-        return mSampleIds.contains(sampleIndex);
+        return mSampleIds.contains(sampleId);
+    }
+
+    public boolean hasInitialSample(Integer sampleId)
+    {
+        return mInitialSampleIds.contains(sampleId);
     }
 
     public void clearSamples()
@@ -177,10 +179,15 @@ public class BucketGroup implements Comparable<BucketGroup> {
         calcBucketRatios();
         mTotalCount = 0;
 
-        for(int i = 0; i < mCombinedBucketCounts.length; ++i)
-        {
-            mCombinedBucketCounts[i] = 0;
-        }
+        initVector(mCombinedBucketCounts, 0);
+    }
+
+    public void addInitialSample(int sampleId)
+    {
+        if(mInitialSampleIds.contains(sampleId))
+            return;
+
+        mInitialSampleIds.add(sampleId);
     }
 
     public void addSample(int sampleId, double[] bucketCounts)
@@ -212,70 +219,38 @@ public class BucketGroup implements Comparable<BucketGroup> {
         mSampleCountsMap.put(sampleId, sampleTotal);
     }
 
-    public void merge(List<Integer> sampleIds, double[] bucketCounts)
+    public boolean removeSampleAllocation(int samIndex, int sampleId, double elevatedCount)
     {
-        for(Integer sample : sampleIds)
+        if(!mSampleIds.contains(sampleId))
+            return false;
+
+        double sampleAlloc = mSampleCountTotals.get(samIndex);
+        mPotentialAllocation -= sampleAlloc;
+        mPotentialAdjAllocation -= sampleAlloc/elevatedCount;
+
+        final double[] sampleCounts = mSampleCounts.get(samIndex);
+        for(Integer bucketId : mBucketIds)
         {
-            if(!mSampleIds.contains(sample))
-                mSampleIds.add(sample);
+            mCombinedBucketCounts[bucketId] = sampleCounts[bucketId];
+            mTotalCount += sampleCounts[bucketId];
         }
 
-        for(int i = 0; i < bucketCounts.length; ++i)
+        mSampleIds.remove(samIndex);
+        mSampleCountTotals.remove(samIndex);
+        mSampleCountsMap.remove(sampleId);
+        mSampleCounts.remove(samIndex);
+
+        if(mSampleIds.size() != mSampleCountTotals.size() || mSampleIds.size() != mSampleCountsMap.size() || mSampleIds.size() != mSampleCounts.size())
         {
-            // only merge counts applicable for this group's bucket collection
-            if(bucketCounts[i] > 0 && mBucketIds.contains(i))
-                mCombinedBucketCounts[i] += bucketCounts[i];
-        }
-
-        mBucketRatiosClean = false;
-    }
-
-    public void reduceToBucketSet(List<Integer> targetBucketIds)
-    {
-        int bucketIndex = 0;
-        while(bucketIndex < mBucketIds.size())
-        {
-            int bucket = mBucketIds.get(bucketIndex);
-
-            if(targetBucketIds.contains(bucket))
-            {
-                ++bucketIndex;
-                continue;
-            }
-
-            // clear these out
-            mCombinedBucketCounts[bucket] = 0;
-            mBucketIds.remove(bucketIndex);
-        }
-
-        mBucketRatiosClean = false;
-    }
-
-    public boolean hasBucket(int bucketIndex)
-    {
-        return mBucketIds.contains(bucketIndex);
-    }
-
-    public boolean hasAllBuckets(final List<Integer> bucketIds)
-    {
-        for(Integer bucket : bucketIds)
-        {
-            if(!mBucketIds.contains(bucket))
-                return false;
+            return false;
         }
 
         return true;
     }
 
-    public boolean hasAnyBucket(final List<Integer> bucketIds)
+    public boolean hasBucket(int bucketIndex)
     {
-        for(Integer bucket : bucketIds)
-        {
-            if(mBucketIds.contains(bucket))
-                return true;
-        }
-
-        return false;
+        return mBucketIds.contains(bucketIndex);
     }
 
     public void addBuckets(List<Integer> bucketIds)
@@ -300,13 +275,6 @@ public class BucketGroup implements Comparable<BucketGroup> {
     }
 
     public final double[] getBucketCounts() { return mCombinedBucketCounts; }
-
-    public void setBucketCounts(final double[] other)
-    {
-        initialise(other);
-        copyVector(other, mCombinedBucketCounts);
-        mBucketRatiosClean = false;
-    }
 
     public void setBucketRatios(final double[] other)
     {

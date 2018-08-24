@@ -23,6 +23,7 @@ public class SampleData
     private double[] mBackgroundCounts; // those assigned to the background signature
     private double[] mElevBucketCounts;
     private double[] mCountRanges;
+    private double[] mAllocNoiseCounts;
     private double[] mAllocBucketCounts;
     private double[] mUnallocBucketCounts;
     private double[] mPartialUnallocBucketCounts; // purely for the discovery phase, holding some allocated counts back
@@ -31,7 +32,7 @@ public class SampleData
     private double mElevatedTotal;
     private double mAllocTotal;
     private double mUnallocTotal;
-    private double mNoiseAlloc;
+    private double mNoiseAllocTotal;
     private double mNoiseTotal;
 
     private String mCancerType;
@@ -60,7 +61,7 @@ public class SampleData
         mAllocPercent = 0;
         mAllocTotal = 0;
         mUnallocTotal = 0;
-        mNoiseAlloc = 0;
+        mNoiseAllocTotal = 0;
         mNoiseTotal = 0;
         mVarTotal = 0;
     }
@@ -120,7 +121,7 @@ public class SampleData
     public double getElevatedCount() { return mElevatedTotal; }
     public double getAllocatedCount() { return mAllocTotal; }
     public double getUnallocatedCount() { return mUnallocTotal; }
-    public double getAllocNoise() { return mNoiseAlloc; }
+    public double getAllocNoise() { return mNoiseAllocTotal; }
     public double getNoiseTotal() { return mNoiseTotal; }
 
     public final double[] getAllocBucketCounts() { return mAllocBucketCounts; }
@@ -140,6 +141,7 @@ public class SampleData
     {
         mElevBucketCounts = new double[counts.length];
         mAllocBucketCounts = new double[counts.length];
+        mAllocNoiseCounts = new double[counts.length];
         mUnallocBucketCounts = new double[counts.length];
         mPartialUnallocBucketCounts = new double[counts.length];
         mCountRanges = new double[counts.length];
@@ -160,12 +162,13 @@ public class SampleData
 
         copyVector(mElevBucketCounts, mUnallocBucketCounts);
         copyVector(mElevBucketCounts, mPartialUnallocBucketCounts);
-        mAllocBucketCounts = new double[mUnallocBucketCounts.length];
+        initVector(mAllocBucketCounts, 0);
+        initVector(mAllocNoiseCounts, 0);
         mUnallocTotal = mElevatedTotal;
         mGroupAllocPercents.clear();
         mAllocPercent = 0;
         mAllocTotal = 0;
-        mNoiseAlloc = 0;
+        mNoiseAllocTotal = 0;
     }
 
     public void populateBucketCountSubset(double[] counts, final List<Integer> bucketSubset, boolean usePartials)
@@ -178,31 +181,32 @@ public class SampleData
             if(usePartials)
                 counts[bucketId] = max(mPartialUnallocBucketCounts[bucketId], 0);
             else
-            counts[bucketId] = max(mUnallocBucketCounts[bucketId], 0);
+                counts[bucketId] = max(mUnallocBucketCounts[bucketId], 0);
         }
     }
 
     public double[] getPotentialUnallocCounts(final double[] bucketRatios, final List<Integer> requiredBuckets)
     {
-        return getPotentialAllocation(bucketRatios, mUnallocBucketCounts, mUnallocTotal, requiredBuckets, null);
+        return getPotentialAllocation(bucketRatios, true, requiredBuckets, null);
     }
 
     public double[] getPotentialElevCounts(final double[] bucketRatios, final List<Integer> requiredBuckets)
     {
-        return getPotentialAllocation(bucketRatios, mElevBucketCounts, mElevatedTotal, requiredBuckets, null);
+        return getPotentialAllocation(bucketRatios, false, requiredBuckets, null);
     }
 
-    public double[] getPotentialAllocation(final double[] bucketRatios, final List<Integer> requiredBuckets, final List<Double> bucketRatioRanges)
-    {
-        return getPotentialAllocation(bucketRatios, mUnallocBucketCounts, mUnallocTotal, requiredBuckets, bucketRatioRanges);
-    }
+//    public double[] getPotentialAllocation(final double[] bucketRatios, final List<Integer> requiredBuckets, final List<Double> bucketRatioRanges)
+//    {
+//        return getPotentialAllocation(bucketRatios, mUnallocBucketCounts, mUnallocTotal, requiredBuckets, bucketRatioRanges);
+//    }
 
-    public double[] getPotentialAllocation(final double[] bucketRatios, final double[] sampleCounts, double countsTotal,
-            final List<Integer> requiredBuckets, final List<Double> bucketRatioRanges)
+    private double[] getPotentialAllocation(final double[] bucketRatios, boolean useUnallocated, final List<Integer> requiredBuckets, final List<Double> bucketRatioRanges)
     {
         // must cap at the actual sample counts
         // allow to go as high as the elevated probability range
         // if a single bucket required by the ratios has zero unallocated, then all are zeroed
+        final double[] sampleCounts = useUnallocated ? mUnallocBucketCounts : mElevBucketCounts;
+        double countsTotal = useUnallocated ? mUnallocTotal : mElevatedTotal;
 
         // first extract the remaining unallocated counts per bucket
         double[] bestAllocCounts = new double[bucketRatios.length];
@@ -216,6 +220,7 @@ public class SampleData
         {
             Integer bucket = requiredBuckets.get(bIndex);
             double ratioRange = ratioRanges != null ? ratioRanges.get(bIndex) : 0;
+            double noiseCount = useUnallocated ? max(mCountRanges[bucket] - mAllocNoiseCounts[bucket], 0) : mCountRanges[bucket];
 
             // if any of the required buckets are already fully allocated, no others can be allocated
             double unallocCount = max(sampleCounts[bucket], 0);
@@ -233,8 +238,7 @@ public class SampleData
             }
 
             // allow full allocation of noise, not proportional to allocated counts to make consistent with fitter
-            // double unallocPerc = unallocCount / mElevBucketCounts[bucket];
-            double potentialAlloc = unallocCount + mCountRanges[bucket]; // unallocPerc * mCountRanges[bucket];
+            double potentialAlloc = unallocCount + noiseCount;
 
             // use the low range ratio to give max possible allocation to this bucket
             double adjBucketRatio = bucketRatios[bucket] * (1 - ratioRange);
@@ -254,7 +258,8 @@ public class SampleData
             double ratioRange = ratioRanges != null ? ratioRanges.get(bIndex) : 0;
 
             double potentialAlloc = minAlloc * bucketRatios[bucket] * (1 + ratioRange);
-            bestAllocCounts[bucket] = min(sampleCounts[bucket] + mCountRanges[bucket], potentialAlloc);
+            double noiseCount = useUnallocated ? max(mCountRanges[bucket] - mAllocNoiseCounts[bucket], 0) : mCountRanges[bucket];
+            bestAllocCounts[bucket] = min(sampleCounts[bucket] + noiseCount, potentialAlloc);
         }
 
         return bestAllocCounts;
@@ -264,18 +269,20 @@ public class SampleData
     {
         double allocatedCount = 0;
 
-        // do a preliminary check that this allocation will actually apply the required percentage count
+        // do a preliminary check that this allocation will actually achieve the required percentage count
         for(int i = 0; i < counts.length; ++i)
         {
-            allocatedCount += min(mUnallocBucketCounts[i] + mCountRanges[i], counts[i]);
+            double noiseCount = max(mCountRanges[i] - mAllocNoiseCounts[i], 0);
+            allocatedCount += min(mUnallocBucketCounts[i] + noiseCount, counts[i]);
         }
 
         if(reqAllocationPercent > 0 && allocatedCount < reqAllocationPercent * mElevatedTotal)
             return allocatedCount;
 
-        // allow allocation up to the unallocated counts plus the permitted noise range, which
+        // allow allocation for the caller to go up to the unallocated counts plus the permitted noise range, which
         // will only be allocated once (when count > unallocated)
         // modify the caller's count values if limited in any way
+        // internal allocation counts and total are limited to actuals
         for(int i = 0; i < counts.length; ++i)
         {
             if(mUnallocBucketCounts[i] == 0)
@@ -286,14 +293,22 @@ public class SampleData
 
             if (mUnallocBucketCounts[i] < counts[i])
             {
+                double unallocNoise = max(mCountRanges[i] - mAllocNoiseCounts[i], 0);
+
                 mAllocBucketCounts[i] += mUnallocBucketCounts[i];
 
-                if(mUnallocBucketCounts[i] + mCountRanges[i] > counts[i]) // eg if unalloc = 10, noise = 15, count = 20, then just allocate 10 of noise
-                    mNoiseAlloc += counts[i] - mUnallocBucketCounts[i];
+                if(mUnallocBucketCounts[i] + unallocNoise > counts[i]) // eg if unalloc = 10, noise = 15, count = 20, then just allocate 10 of noise
+                {
+                    mNoiseAllocTotal += counts[i] - mUnallocBucketCounts[i];
+                    mAllocNoiseCounts[i] += counts[i] - mUnallocBucketCounts[i];
+                }
                 else
-                    mNoiseAlloc += mCountRanges[i]; // eg if unalloc = 10, noise = 5, count = 20, then allocate all 5 of noise
+                {
+                    mNoiseAllocTotal += unallocNoise; // eg if unalloc = 10, noise = 5, count = 20, then allocate all 5 of noise
+                    mAllocNoiseCounts[i] = mCountRanges[i]; // noise exhausted
+                }
 
-                counts[i] = min(mUnallocBucketCounts[i] + mCountRanges[i], counts[i]);
+                counts[i] = min(mUnallocBucketCounts[i] + unallocNoise, counts[i]);
                 mUnallocBucketCounts[i] = 0;
                 removeUnallocBucket(i);
             }
