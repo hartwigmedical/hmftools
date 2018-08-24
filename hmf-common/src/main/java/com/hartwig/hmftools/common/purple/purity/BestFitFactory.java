@@ -17,18 +17,21 @@ public class BestFitFactory {
 
     private static final double PERCENT_RANGE = 0.1;
     private static final double ABS_RANGE = 0.0005;
-    private static final double HIGHLY_DIPLOID_PERCENTAGE = 0.98;
+//    private static final double HIGHLY_DIPLOID_PERCENTAGE = 0.98;
     private static final double LOWEST_SCORE_MIN_PURITY = 0.15;
     private static final double MIN_PURITY_SPREAD = 0.15;
 
     private final FittedPurity bestFit;
     private final FittedPurityScore score;
     private final FittedPurityStatus status;
+    private final double highlyDiploidPercentage;
     private final int minVariants;
 
-    public BestFitFactory(int minVariants, int minPeak, final List<FittedPurity> fittedPurities, List<SomaticVariant> somatics) {
+    public BestFitFactory(int minVariants, int minPeak, double highlyDiploidPercentage, final List<FittedPurity> fittedPurities,
+            List<SomaticVariant> somatics) {
         assert (!fittedPurities.isEmpty());
         this.minVariants = minVariants;
+        this.highlyDiploidPercentage = highlyDiploidPercentage;
 
         Collections.sort(fittedPurities);
         FittedPurity lowestScore = fittedPurities.get(0);
@@ -68,7 +71,7 @@ public class BestFitFactory {
     }
 
     private boolean isHighlyDiploid(@NotNull final FittedPurityScore score) {
-        return Doubles.greaterOrEqual(score.maxDiploidProportion(), HIGHLY_DIPLOID_PERCENTAGE);
+        return Doubles.greaterOrEqual(score.maxDiploidProportion(), highlyDiploidPercentage);
     }
 
     public FittedPurityStatus status() {

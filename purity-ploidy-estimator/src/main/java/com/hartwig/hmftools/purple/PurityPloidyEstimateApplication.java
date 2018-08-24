@@ -106,6 +106,7 @@ public class PurityPloidyEstimateApplication {
     private static final String PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_ADDITIONAL = "ploidy_penalty_major_allele_sub_one_additional";
     private static final String PLOIDY_PENALTY_BASELINE_DEVIATION = "ploidy_penalty_baseline_deviation";
     private static final String SOMATIC_DEVIATION_WEIGHT = "somatic_deviation_weight";
+    private static final String HIGHLY_DIPLOID_PERCENTAGE = "highly_diploid_percentage";
     private static final String VERSION = "version";
 
     private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
@@ -194,6 +195,7 @@ public class PurityPloidyEstimateApplication {
             final double majorAlleleSubOneAdditionalPenalty = defaultValue(cmd, PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_ADDITIONAL, 1.5);
             final double baselineDeviation = defaultValue(cmd, PLOIDY_PENALTY_BASELINE_DEVIATION, 0.2);
             final double somaticDeviationWeight = defaultValue(cmd, SOMATIC_DEVIATION_WEIGHT, 0);
+            final double highlyDiploidPercentage = defaultValue(cmd, HIGHLY_DIPLOID_PERCENTAGE, 0.98);
 
             final FittedRegionFactory fittedRegionFactory = cmd.hasOption(EXPERIMENTAL)
                     ? new FittedRegionFactoryV2(cobaltGender,
@@ -229,8 +231,11 @@ public class PurityPloidyEstimateApplication {
             final SomaticConfig somaticConfig = configSupplier.somaticConfig();
             final List<SomaticVariant> snps =
                     somaticVariants.stream().filter(x -> x.type() == VariantType.SNP).collect(Collectors.toList());
-            final BestFitFactory bestFitFactory =
-                    new BestFitFactory(somaticConfig.minTotalVariants(), somaticConfig.minPeakVariants(), bestFitPerPurity, snps);
+            final BestFitFactory bestFitFactory = new BestFitFactory(somaticConfig.minTotalVariants(),
+                    somaticConfig.minPeakVariants(),
+                    highlyDiploidPercentage,
+                    bestFitPerPurity,
+                    snps);
             final FittedPurity bestFit = bestFitFactory.bestFit();
 
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
@@ -372,6 +377,7 @@ public class PurityPloidyEstimateApplication {
         options.addOption(PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_ADDITIONAL, true, "PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_ADDITIONAL");
         options.addOption(PLOIDY_PENALTY_BASELINE_DEVIATION, true, "PLOIDY_PENALTY_BASELINE_DEVIATION");
         options.addOption(SOMATIC_DEVIATION_WEIGHT, true, "SOMATIC_DEVIATION_WEIGHT");
+        options.addOption(HIGHLY_DIPLOID_PERCENTAGE, true, "HIGHLY_DIPLOID_PERCENTAGE");
 
         return options;
     }
