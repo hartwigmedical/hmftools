@@ -35,29 +35,26 @@ public class FittedPurityFactory {
     private static final double MAX_TUMOR_RATIO_TO_FIT = 3;
 
     private final int maxPloidy;
-    private final Gender gender;
     private final double minPurity;
     private final double maxPurity;
-    private final int totalBAFCount;
+    private final double purityIncrements;
     private final double minNormFactor;
     private final double maxNormFactor;
-    private final double purityIncrements;
     private final double normFactorIncrements;
+    private final Gender gender;
     private final double somaticDeviationWeight;
 
     @NotNull
     private final FittedRegionFactory fittedRegionFactory;
     private final ExecutorService executorService;
-    private final List<SomaticVariant> downsampledVariants;
+    private final Collection<SomaticVariant> variants;
+
     private final List<FittedPurity> bestScoringPerPurity = Lists.newArrayList();
-    private final List<ObservedRegion> filteredObservedRegions = Lists.newArrayList();
-
-
 
     public FittedPurityFactory(final ExecutorService executorService, final Gender gender, final int maxPloidy, final double minPurity,
             final double maxPurity, final double purityIncrements, final double minNormFactor, final double maxNormFactor,
             final double normFactorIncrements, final double somaticDeviationWeight, @NotNull final FittedRegionFactory fittedRegionFactory,
-            @NotNull final Collection<ObservedRegion> observedRegions, @NotNull final List<SomaticVariant> variants)
+            @NotNull final Collection<ObservedRegion> observedRegions, @NotNull final Collection<SomaticVariant> variants)
             throws ExecutionException, InterruptedException {
         this.executorService = executorService;
         this.maxPloidy = maxPloidy;
@@ -71,34 +68,36 @@ public class FittedPurityFactory {
         this.fittedRegionFactory = fittedRegionFactory;
         this.gender = gender;
 
+
+        final List<ObservedRegion> filteredRegions = Lists.newArrayList();
         final List<SomaticVariant> filteredVariants = Lists.newArrayList();
         final GenomePositionSelector<SomaticVariant> variantSelector = GenomePositionSelectorFactory.create(variants);
 
         for (final ObservedRegion region : observedRegions) {
             final Chromosome chromosome = HumanChromosome.valueOf(region);
+
             if (region.bafCount() > 0 && positiveOrZero(region.observedTumorRatio()) && chromosome.isAutosome()
                     && region.status() == GermlineStatus.DIPLOID && Doubles.lessOrEqual(region.observedTumorRatio(),
                     MAX_TUMOR_RATIO_TO_FIT)) {
-                filteredObservedRegions.add(region);
+                filteredRegions.add(region);
                 variantSelector.select(region, filteredVariants::add);
             }
         }
-
-        totalBAFCount = observedRegions.stream().mapToInt(ObservedRegion::bafCount).sum();
-        downsampledVariants = Downsample.downsample(MAX_SOMATICS_TO_FIT, filteredVariants);
-
-        fitPurity();
+        this.variants = Downsample.downsample(MAX_SOMATICS_TO_FIT, filteredVariants);
+        fitPurity(filteredRegions);
     }
 
     public List<FittedPurity> bestFitPerPurity() {
         return bestScoringPerPurity;
     }
 
-    private void fitPurity() throws ExecutionException, InterruptedException {
+    private void fitPurity(@NotNull final Collection<ObservedRegion> filteredRegions) throws ExecutionException, InterruptedException {
 
-        final List<Future<List<FittedPurity>>> futures = Lists.newArrayList();
+        final int totalBAFCount = filteredRegions.stream().mapToInt(ObservedRegion::bafCount).sum();
+
+        List<Future<List<FittedPurity>>> futures = Lists.newArrayList();
         for (double purity = minPurity; lessOrEqual(purity, maxPurity); purity += purityIncrements) {
-            futures.add(executorService.submit(callableFitPurity(purity)));
+            futures.add(executorService.submit(callableFitPurity(purity, totalBAFCount, filteredRegions)));
         }
 
         for (Future<List<FittedPurity>> future : futures) {
@@ -113,18 +112,20 @@ public class FittedPurityFactory {
     }
 
     @NotNull
-    private Callable<List<FittedPurity>> callableFitPurity(final double purity) {
-        return () -> fitPurity(purity);
+    private Callable<List<FittedPurity>> callableFitPurity(final double purity, final double totalBAFCount,
+            @NotNull final Collection<ObservedRegion> observedRegions) {
+        return () -> fitPurity(purity, totalBAFCount, observedRegions);
     }
 
     @NotNull
-    private List<FittedPurity> fitPurity(final double purity) {
+    private List<FittedPurity> fitPurity(final double purity, final double totalBAFCount,
+            @NotNull final Collection<ObservedRegion> observedRegions) {
         final List<FittedPurity> fittedPurities = Lists.newArrayList();
         for (double normFactor = minNormFactor; lessOrEqual(normFactor, maxNormFactor); normFactor += normFactorIncrements) {
             double impliedPloidy = PurityAdjuster.impliedSamplePloidy(purity, normFactor);
 
             if (greaterOrEqual(impliedPloidy, 1) && lessOrEqual(impliedPloidy, maxPloidy)) {
-                fittedPurities.add(fitPurity(purity, normFactor));
+                fittedPurities.add(fitPurity(purity, normFactor, totalBAFCount, observedRegions));
             }
         }
 
@@ -133,7 +134,8 @@ public class FittedPurityFactory {
     }
 
     @NotNull
-    private FittedPurity fitPurity(final double purity, final double normFactor) {
+    private FittedPurity fitPurity(final double purity, final double normFactor, final double totalBafCount,
+            @NotNull final Collection<ObservedRegion> observedRegions) {
         ImmutableFittedPurity.Builder builder = ImmutableFittedPurity.builder().purity(purity).normFactor(normFactor);
         double ploidyPenalty = 0;
         double modelDeviation = 0;
@@ -141,20 +143,22 @@ public class FittedPurityFactory {
         double averagePloidy = 0;
 
         final List<FittedRegion> fittedRegions = Lists.newArrayList();
-        for (final ObservedRegion enrichedRegion : filteredObservedRegions) {
+        for (final ObservedRegion enrichedRegion : observedRegions) {
             final FittedRegion fittedRegion = fittedRegionFactory.fitRegion(purity, normFactor, enrichedRegion);
-            ploidyPenalty += enrichedRegion.bafCount() / totalBAFCount * fittedRegion.ploidyPenalty();
-            modelDeviation += enrichedRegion.bafCount() / totalBAFCount * fittedRegion.deviation();
-            averagePloidy += fittedRegion.tumorCopyNumber() * fittedRegion.bafCount() / totalBAFCount;
+            ploidyPenalty += enrichedRegion.bafCount() / totalBafCount * fittedRegion.ploidyPenalty();
+            modelDeviation += enrichedRegion.bafCount() / totalBafCount * fittedRegion.deviation();
+            averagePloidy += fittedRegion.tumorCopyNumber() * fittedRegion.bafCount() / totalBafCount;
             if (fittedRegion.modelPloidy() == 2) {
-                diploidProportion += enrichedRegion.bafCount() / totalBAFCount;
+                diploidProportion += enrichedRegion.bafCount() / totalBafCount;
             }
 
             fittedRegions.add(fittedRegion);
         }
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(gender, purity, normFactor);
-        final double somaticDeviation = SomaticDeviationFactory.deviation(purityAdjuster, fittedRegions, downsampledVariants);
+        final double somaticDeviation = Doubles.greaterThan(somaticDeviationWeight, 0)
+                ? SomaticDeviationFactory.deviation(purityAdjuster, fittedRegions, variants)
+                : 0;
 
         return builder.score(ploidyPenalty * modelDeviation + somaticDeviationWeight * somaticDeviation)
                 .diploidProportion(diploidProportion)
