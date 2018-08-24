@@ -22,13 +22,14 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer> {
     private static final int TRIALS = 10_000;
     private static final Logger LOGGER = LogManager.getLogger(SomaticDeviation.class);
     private final LoadingCache<Double, Integer> maxConceivableCache;
+    private boolean errorLogged = false;
 
     SomaticDeviation() {
         this.maxConceivableCache =
                 CacheBuilder.newBuilder().maximumSize(50000).removalListener(this).build(new CacheLoader<Double, Integer>() {
 
                     @Override
-                    public Integer load(final Double p) {
+                    public Integer load(@NotNull final Double p) {
                         final BinomialDistribution dist = new BinomialDistribution(TRIALS, Math.min(1, p));
                         return dist.inverseCumulativeProbability(0.99);
                     }
@@ -60,9 +61,8 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer> {
         final int maxConceivableReads =
                 maxConceivableReads(purityAdjuster, normalCopyNumber, depth, tumorCopyNumber, tumorMajorAllelePloidy);
         final double maxConceivableVAF = 1d * maxConceivableReads / depth.totalReadCount();
-        final double maxConceivablePloidy = purityAdjuster.purityAdjustedPloidy(normalCopyNumber, 0, tumorCopyNumber, maxConceivableVAF);
 
-        return maxConceivablePloidy;
+        return purityAdjuster.purityAdjustedPloidy(normalCopyNumber, 0, tumorCopyNumber, maxConceivableVAF);
     }
 
     @VisibleForTesting
@@ -75,6 +75,9 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer> {
 
     @Override
     public void onRemoval(@NotNull final RemovalNotification<Double, Integer> removalNotification) {
-        LOGGER.warn("Removed value from somatic deviation cache.");
+        if (!errorLogged) {
+            errorLogged = true;
+            LOGGER.warn("Somatic deviation cache limit exceeded. This indicates a potential performance issue but will otherwise not effect any calculations.");
+        }
     }
 }
