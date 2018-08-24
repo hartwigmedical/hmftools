@@ -35,13 +35,14 @@ public class FittedPurityFactory {
     private static final double MAX_TUMOR_RATIO_TO_FIT = 3;
 
     private final int maxPloidy;
+    private final Gender gender;
     private final double minPurity;
     private final double maxPurity;
+    private final int totalBAFCount;
     private final double purityIncrements;
+    private final double normFactorIncrements;
     private final double minNormFactor;
     private final double maxNormFactor;
-    private final double normFactorIncrements;
-    private final Gender gender;
     private final double somaticDeviationWeight;
 
     @NotNull
@@ -50,6 +51,7 @@ public class FittedPurityFactory {
     private final Collection<SomaticVariant> variants;
 
     private final List<FittedPurity> bestScoringPerPurity = Lists.newArrayList();
+    private final List<ObservedRegion> filteredRegions = Lists.newArrayList();
 
     public FittedPurityFactory(final ExecutorService executorService, final Gender gender, final int maxPloidy, final double minPurity,
             final double maxPurity, final double purityIncrements, final double minNormFactor, final double maxNormFactor,
@@ -68,8 +70,6 @@ public class FittedPurityFactory {
         this.fittedRegionFactory = fittedRegionFactory;
         this.gender = gender;
 
-
-        final List<ObservedRegion> filteredRegions = Lists.newArrayList();
         final List<SomaticVariant> filteredVariants = Lists.newArrayList();
         final GenomePositionSelector<SomaticVariant> variantSelector = GenomePositionSelectorFactory.create(variants);
 
@@ -84,20 +84,19 @@ public class FittedPurityFactory {
             }
         }
         this.variants = Downsample.downsample(MAX_SOMATICS_TO_FIT, filteredVariants);
-        fitPurity(filteredRegions);
+        this.totalBAFCount = filteredRegions.stream().mapToInt(ObservedRegion::bafCount).sum();
+
+        fitPurity();
     }
 
     public List<FittedPurity> bestFitPerPurity() {
         return bestScoringPerPurity;
     }
 
-    private void fitPurity(@NotNull final Collection<ObservedRegion> filteredRegions) throws ExecutionException, InterruptedException {
-
-        final int totalBAFCount = filteredRegions.stream().mapToInt(ObservedRegion::bafCount).sum();
-
-        List<Future<List<FittedPurity>>> futures = Lists.newArrayList();
+    private void fitPurity() throws ExecutionException, InterruptedException {
+        final List<Future<List<FittedPurity>>> futures = Lists.newArrayList();
         for (double purity = minPurity; lessOrEqual(purity, maxPurity); purity += purityIncrements) {
-            futures.add(executorService.submit(callableFitPurity(purity, totalBAFCount, filteredRegions)));
+            futures.add(executorService.submit(callableFitPurity(purity)));
         }
 
         for (Future<List<FittedPurity>> future : futures) {
@@ -112,20 +111,18 @@ public class FittedPurityFactory {
     }
 
     @NotNull
-    private Callable<List<FittedPurity>> callableFitPurity(final double purity, final double totalBAFCount,
-            @NotNull final Collection<ObservedRegion> observedRegions) {
-        return () -> fitPurity(purity, totalBAFCount, observedRegions);
+    private Callable<List<FittedPurity>> callableFitPurity(final double purity) {
+        return () -> fitPurity(purity);
     }
 
     @NotNull
-    private List<FittedPurity> fitPurity(final double purity, final double totalBAFCount,
-            @NotNull final Collection<ObservedRegion> observedRegions) {
+    private List<FittedPurity> fitPurity(final double purity) {
         final List<FittedPurity> fittedPurities = Lists.newArrayList();
         for (double normFactor = minNormFactor; lessOrEqual(normFactor, maxNormFactor); normFactor += normFactorIncrements) {
             double impliedPloidy = PurityAdjuster.impliedSamplePloidy(purity, normFactor);
 
             if (greaterOrEqual(impliedPloidy, 1) && lessOrEqual(impliedPloidy, maxPloidy)) {
-                fittedPurities.add(fitPurity(purity, normFactor, totalBAFCount, observedRegions));
+                fittedPurities.add(fitPurity(purity, normFactor));
             }
         }
 
@@ -133,9 +130,12 @@ public class FittedPurityFactory {
         return fittedPurities;
     }
 
+    private double weightWithBaf(double value, int bafCount) {
+        return 1d * value * bafCount / totalBAFCount;
+    }
+
     @NotNull
-    private FittedPurity fitPurity(final double purity, final double normFactor, final double totalBafCount,
-            @NotNull final Collection<ObservedRegion> observedRegions) {
+    private FittedPurity fitPurity(final double purity, final double normFactor) {
         ImmutableFittedPurity.Builder builder = ImmutableFittedPurity.builder().purity(purity).normFactor(normFactor);
         double ploidyPenalty = 0;
         double modelDeviation = 0;
@@ -143,13 +143,13 @@ public class FittedPurityFactory {
         double averagePloidy = 0;
 
         final List<FittedRegion> fittedRegions = Lists.newArrayList();
-        for (final ObservedRegion enrichedRegion : observedRegions) {
+        for (final ObservedRegion enrichedRegion : filteredRegions) {
             final FittedRegion fittedRegion = fittedRegionFactory.fitRegion(purity, normFactor, enrichedRegion);
-            ploidyPenalty += enrichedRegion.bafCount() / totalBafCount * fittedRegion.ploidyPenalty();
-            modelDeviation += enrichedRegion.bafCount() / totalBafCount * fittedRegion.deviation();
-            averagePloidy += fittedRegion.tumorCopyNumber() * fittedRegion.bafCount() / totalBafCount;
+            ploidyPenalty += weightWithBaf(fittedRegion.ploidyPenalty(), enrichedRegion.bafCount());
+            modelDeviation += weightWithBaf(fittedRegion.deviation(), enrichedRegion.bafCount());
+            averagePloidy +=  weightWithBaf(fittedRegion.tumorCopyNumber(), enrichedRegion.bafCount());
             if (fittedRegion.modelPloidy() == 2) {
-                diploidProportion += enrichedRegion.bafCount() / totalBafCount;
+                diploidProportion += weightWithBaf(1, enrichedRegion.bafCount());
             }
 
             fittedRegions.add(fittedRegion);
