@@ -15,13 +15,13 @@ public class SomaticDeviationTest {
     public void testMaxPloidy() {
         PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.FEMALE, 0.12, 0.98);
         int maxReads = SomaticDeviation.INSTANCE.maxConceivableReads(purityAdjuster, 2, depth(18, 55),  3.0965, 2.2021);
-        assertEquals(14, maxReads);
+        assertEquals(16, maxReads);
 
         double maxPloidy = SomaticDeviation.INSTANCE.maxConceivablePloidy(purityAdjuster, 2, depth(18, 55),  3.0965, 2.2021);
-        assertEquals(4.52, maxPloidy, 0.01);
+        assertEquals(5.16, maxPloidy, 0.01);
 
         double deviationFromMax = SomaticDeviation.INSTANCE.deviationFromMax(purityAdjuster, 2, depth(18, 55),  3.0965, 2.2021);
-        assertEquals(1.29, deviationFromMax, 0.01);
+        assertEquals(0.65, deviationFromMax, 0.01);
     }
 
     private AllelicDepth depth(int alleleReadCount, int totalReadCount) {

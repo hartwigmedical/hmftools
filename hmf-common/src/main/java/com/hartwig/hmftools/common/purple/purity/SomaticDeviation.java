@@ -31,7 +31,7 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer> {
                     @Override
                     public Integer load(@NotNull final Double p) {
                         final BinomialDistribution dist = new BinomialDistribution(TRIALS, Math.min(1, p));
-                        return dist.inverseCumulativeProbability(0.99);
+                        return dist.inverseCumulativeProbability(0.999);
                     }
                 });
     }
