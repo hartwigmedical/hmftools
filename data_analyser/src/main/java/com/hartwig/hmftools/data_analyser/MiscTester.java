@@ -25,6 +25,7 @@ public class MiscTester {
     {
         // sampleFitTest();
         // stringTest();
+        // sampleFitTest2();
         testSigOptimiserActuals();
 
         // chiSquaredTests();
@@ -136,6 +137,84 @@ public class MiscTester {
             LOGGER.debug("sig optimisation test success");
     }
 
+    private static void sampleFitTest2()
+    {
+        int bucketCount = 5;
+        int sigCount = 4;
+
+        double[] counts = new double[bucketCount];
+
+        List<double[]> ratiosCollection = Lists.newArrayList();
+
+        double[] sig1 = { 0.2, 0.2, 0.2, 0.2, 0.2 };
+        ratiosCollection.add(sig1);
+
+        double[] sig2 = { 0.0, 0.60, 0.1, 0.1, 0.20 };
+        ratiosCollection.add(sig2);
+
+        double[] sig3 = { 0.4, 0.05, 0.05, 0.4, 0.1 };
+        ratiosCollection.add(sig3);
+
+        double[] sig4 = { 0.15, 0.20, 0.25, 0.15, 0.25 };
+        ratiosCollection.add(sig4);
+
+        double[] actualContribs = {40, 30, 60, 20};
+
+        for (int j = 0; j < sigCount; ++j)
+        {
+            final double[] sigRatios = ratiosCollection.get(j);
+
+            for(int i = 0; i < bucketCount; ++i)
+            {
+                counts[i] += actualContribs[j] * sigRatios[i];
+            }
+        }
+
+        // double[] counts = {26, 34, 15, 19, 26};
+
+
+        // set initial contribution
+        double[] contribs = new double[sigCount];
+
+        double[] countsMargin = new double[bucketCount]; // { 2, 3, 1, 1, 2 };
+
+        // copyVector(actualContribs, contribs);
+        int sample = 0;
+
+        // boolean calcOk = fitCountsToRatios(sample, counts, countsMargin, ratiosCollection, contribs, 0.001);
+
+        SigContributionOptimiser sigOptim = new SigContributionOptimiser(bucketCount, true, 0.01, 0.99, false);
+        sigOptim.initialise(sample, counts, countsMargin, ratiosCollection, contribs);
+        boolean calcOk = sigOptim.fitToSample(0.99, 0.01);
+
+        if (!calcOk)
+            return;
+
+        final double[] finalContribs = sigOptim.getContribs();
+
+        // validatation that fitted counts are below the actuals + noise
+        boolean allOk = true;
+        for (int i = 0; i < bucketCount; ++i)
+        {
+            double fittedCount = 0;
+
+            for (int j = 0; j < sigCount; ++j)
+            {
+                final double[] sigRatios = ratiosCollection.get(j);
+                fittedCount += sigRatios[i] * finalContribs[j];
+            }
+
+            if (fittedCount > counts[i] + countsMargin[i])
+            {
+                LOGGER.error(String.format("bucket(%d) fitted count(%.1f) exceeds count(%.0f) + noise(%.0f)", i, fittedCount, counts[i], countsMargin[i]));
+                allOk = false;
+            }
+        }
+
+        if(allOk && sigOptim.getAllocPerc() == 1)
+            LOGGER.debug("sig optimisation test success");
+    }
+
     private static void stringTest()
     {
         String tmp = "AID=0.23131;UV=0.93";
@@ -169,9 +248,9 @@ public class MiscTester {
 
         List<double[]> ratiosCollection = Lists.newArrayList();
 
-        ratiosCollection.add(sigs.getCol(10)); // bg 10
-        ratiosCollection.add(sigs.getCol(25)); // bg 915
         ratiosCollection.add(sigs.getCol(26)); // bg 134
+        ratiosCollection.add(sigs.getCol(25)); // bg 915
+        ratiosCollection.add(sigs.getCol(10)); // bg 10
         //ratiosCollection.add(sigs.getCol(33));
         //ratiosCollection.add(sigs.getCol(35));
 

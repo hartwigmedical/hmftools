@@ -49,9 +49,6 @@ public class BucketGroup implements Comparable<BucketGroup> {
     private double mPurity; // for now a percentage of sample buckets that are elevated
     private double mScoreOverride;
 
-    private BucketGroup mClosestBG;
-    private double mClosestBGCss;
-
     public BucketGroup(int id)
     {
         mId = id;
@@ -79,9 +76,6 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
         mCancerType = "";
         mEffects = "";
-
-        mClosestBG = null;
-        mClosestBGCss = 0;
     }
 
     private void initialise(final double[] counts)
@@ -142,11 +136,6 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
     public void setEffects(final String effects) { mEffects = effects; }
     public final String getEffects() { return mEffects; }
-
-    public void setClosestBG(final BucketGroup bg) { mClosestBG = bg; }
-    public final BucketGroup getClosestBG() { return mClosestBG; }
-    public void setClosestBGCss(final double css) { mClosestBGCss = css; }
-    public final double getClosestBGCss() { return mClosestBGCss; }
 
     public int compareTo(final BucketGroup other)
     {

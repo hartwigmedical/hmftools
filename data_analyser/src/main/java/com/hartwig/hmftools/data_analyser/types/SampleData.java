@@ -117,6 +117,7 @@ public class SampleData
     public final double[] getElevatedBucketCounts() { return mElevBucketCounts; }
     public final double[] getBackgroundCounts() { return mBackgroundCounts; }
     public final double[] getCountRanges() { return mCountRanges; }
+    public final double[] getAllocNoiseCounts() { return mAllocNoiseCounts; }
     public double getTotalCount() { return mVarTotal; }
     public double getElevatedCount() { return mElevatedTotal; }
     public double getAllocatedCount() { return mAllocTotal; }
@@ -333,11 +334,4 @@ public class SampleData
         mUnallocBuckets.remove(bucketId);
     }
 
-    public double calcBucketRange(int bucketId)
-    {
-        if(mElevBucketCounts[bucketId] == 0)
-            return 0;
-
-        return mCountRanges[bucketId] / mElevBucketCounts[bucketId];
-    }
 }
