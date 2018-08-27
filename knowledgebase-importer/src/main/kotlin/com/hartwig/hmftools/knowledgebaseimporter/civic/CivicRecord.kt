@@ -58,8 +58,8 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
         }
 
         private fun readCNV(gene: String, variant: String): CnvEvent? = when (variant) {
-            "AMPLIFICATION" -> CnvEvent(gene, "Amplification")
-            "DELETION"      -> CnvEvent(gene, "Deletion")
+            "AMPLIFICATION" -> CnvEvent.amplification(gene)
+            "DELETION"      -> CnvEvent.deletion(gene)
             else            -> null
         }
 

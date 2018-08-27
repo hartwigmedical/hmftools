@@ -67,8 +67,8 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
 
         private fun readCNV(record: CSVRecord): CnvEvent? = when {
             record["Alteration type"] != "CNA"   -> null
-            record["Alteration"].contains("amp") -> CnvEvent(record["Gene"], "Amplification")
-            else                                 -> CnvEvent(record["Gene"], "Deletion")
+            record["Alteration"].contains("amp") -> CnvEvent.amplification(record["Gene"])
+            else                                 -> CnvEvent.deletion(record["Gene"])
         }
 
         private fun readFusion(record: CSVRecord): FusionEvent? = when {

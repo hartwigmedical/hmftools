@@ -23,6 +23,11 @@ data class PromiscuousGene(val gene: String) : FusionEvent(), CsvData {
 }
 
 data class CnvEvent(val gene: String, val cnvType: String) : ActionableEvent(), CsvData {
+    companion object {
+        fun amplification(gene: String) = CnvEvent(gene, "Amplification")
+        fun deletion(gene: String) = CnvEvent(gene, "Deletion")
+    }
+
     override fun eventString(): String {
         return "$gene $cnvType"
     }

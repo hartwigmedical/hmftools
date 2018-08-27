@@ -60,8 +60,8 @@ class OncoSomaticEventReader {
 
     private fun readCnv(gene: String, alteration: String): CnvEvent? {
         return when (alteration) {
-            "Amplification" -> CnvEvent(gene, "Amplification")
-            "Deletion"      -> CnvEvent(gene, "Deletion")
+            "Amplification" -> CnvEvent.amplification(gene)
+            "Deletion"      -> CnvEvent.deletion(gene)
             else            -> null
         }
     }
