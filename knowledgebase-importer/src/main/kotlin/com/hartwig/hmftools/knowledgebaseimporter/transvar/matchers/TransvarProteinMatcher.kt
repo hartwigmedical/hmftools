@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.knowledgebaseimporter.transvar.matchers
 
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.SequenceVariantType
+
 //MIVO: rules based on:
 // - https://github.com/zwdzwd/transvar/blob/v2.4.0.20180701/transvar/mutation.py
 // - http://varnomen.hgvs.org/recommendations/protein/
@@ -35,4 +37,14 @@ object TransvarProteinMatcher : Matcher {
     private fun matchesInsertion(input: String) = input.matchesPattern(INSERTION)
     private fun matchesDelIns(input: String) = input.matchesPattern(DELINS) || input.matchesPattern(DELINS_RANGE)
     private fun matchesFrameshift(input: String) = input.matchesPattern(FRAMESHIFT) || input.matchesPattern(FRAMESHIFT_WITH_ALT)
+
+    fun type(input: String) = when {
+        matchesSubstitution(input) -> SequenceVariantType.SUBSTITUTION
+        matchesDeletion(input)     -> SequenceVariantType.DELETION
+        matchesDuplication(input)  -> SequenceVariantType.DUPLICATION
+        matchesInsertion(input)    -> SequenceVariantType.INSERTION
+        matchesDelIns(input)       -> SequenceVariantType.DELINS
+        matchesFrameshift(input)   -> SequenceVariantType.FRAMESHIFT
+        else                       -> SequenceVariantType.OTHER
+    }
 }
