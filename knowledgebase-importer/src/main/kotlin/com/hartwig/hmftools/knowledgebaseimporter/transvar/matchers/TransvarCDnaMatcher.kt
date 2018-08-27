@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.knowledgebaseimporter.transvar.matchers
 
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.SequenceVariantType
+
 //MIVO: Pattern based on: https://github.com/zwdzwd/transvar/blob/v2.4.0.20180701/transvar/mutation.py
 object TransvarCDnaMatcher : Matcher {
     private const val PATTERN = "(c\\.)([\\d*+-]+)(_([\\d*+-]+))?(\\.)?(del([atgcnATGCN\\d]*))?(ins([atgcnATGCN]*))?(([atgcnATGCN?]*)>([atgcnATGCN?]*))?(dup([atgcnATGCN\\d]*))?\$"
@@ -8,4 +10,6 @@ object TransvarCDnaMatcher : Matcher {
         val input = string.trim()
         return PATTERN.toRegex(RegexOption.IGNORE_CASE).matches(input)
     }
+
+    fun type(input: String) = SequenceVariantType.OTHER
 }
