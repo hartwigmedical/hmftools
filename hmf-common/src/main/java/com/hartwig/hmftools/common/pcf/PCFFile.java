@@ -11,6 +11,7 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.window.Window;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class PCFFile {
@@ -35,22 +36,26 @@ public final class PCFFile {
             throws IOException {
         ListMultimap<String, PCFPosition> result = ArrayListMultimap.create();
         final Window window = new Window(windowSize);
-        long prev = 0;
+        long prevStart = 0;
+        String prevChromosome = Strings.EMPTY;
+
         for (String line : Files.readAllLines(new File(filename).toPath())) {
             if (!line.startsWith(HEADER_PREFIX)) {
                 String[] values = line.split(DELIMITER);
-                final String chromosomeName = values[1];
+                final String chromosome = values[1];
 
                 long current = window.start(Long.valueOf(values[3]));
-                if (current > prev) {
-                    result.put(chromosomeName, position(chromosomeName, current, source));
-                    prev = current;
+                if (current > prevStart || !chromosome.equals(prevChromosome)) {
+                    result.put(chromosome, position(chromosome, current, source));
+                    prevStart = current;
+                    prevChromosome = chromosome;
                 }
 
                 current = window.start(Long.valueOf(values[4])) + windowSize;
-                if (current > prev) {
-                    result.put(chromosomeName, position(chromosomeName, current, source));
-                    prev = current;
+                if (current > prevStart || !chromosome.equals(prevChromosome)) {
+                    result.put(chromosome, position(chromosome, current, source));
+                    prevStart = current;
+                    prevChromosome = chromosome;
                 }
             }
         }

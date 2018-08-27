@@ -46,6 +46,9 @@ public final class XMLPatientReader extends EcrfReader {
     private static final String ITEM_OID_ATTRIBUTE = "ItemOID";
     private static final String ITEM_VALUE_ATTRIBUTE = "Value";
 
+    // KODU: See DEV-491
+    private static final List DROPDOWN_ITEMS_TO_IGNORE_FOR_WARNING = Lists.newArrayList("FLD.DDEL.DDELINV", "FLD.DDEL.DDELINST");
+
     private XMLPatientReader() {
     }
 
@@ -110,7 +113,9 @@ public final class XMLPatientReader extends EcrfReader {
                 try {
                     value = datamodel.resolveValue(OID, reader.getAttributeValue("", ITEM_VALUE_ATTRIBUTE));
                 } catch (EcrfResolveException exception) {
-                    LOGGER.warn("Resolve issue for " + patientId + ": " + exception.getMessage());
+                    if (!DROPDOWN_ITEMS_TO_IGNORE_FOR_WARNING.contains(OID)) {
+                        LOGGER.warn("Resolve issue for " + patientId + ": " + exception.getMessage());
+                    }
                 }
                 currentItemGroup.addItem(OID, value);
                 fields.add(EcrfDataField.of(patientId, currentStudyEventOID, currentStudyEventIdx, currentFormOID, currentFormIdx,

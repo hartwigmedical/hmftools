@@ -20,16 +20,16 @@ class Civic(variantsLocation: String, evidenceLocation: String, diseaseOntology:
     private val blacklistedEvidenceIds = setOf("1481")
     override val source = "civic"
     override val knownVariants by lazy { recordAnalyzer.knownVariants(listOf(this)).distinct() }
-    override val knownFusionPairs: List<FusionPair> by lazy { knownKbRecords.flatMap { it.events }.filterIsInstance<FusionPair>().distinct() }
-    override val promiscuousGenes: List<PromiscuousGene> by lazy { knownKbRecords.flatMap { it.events }.filterIsInstance<PromiscuousGene>().distinct() }
-    override val actionableVariants: List<ActionableVariantOutput> by lazy { actionableKbItems.filterIsInstance<ActionableVariantOutput>() }
-    override val actionableCNVs: List<ActionableCNVOutput> by lazy { actionableKbItems.filterIsInstance<ActionableCNVOutput>() }
+    override val knownFusionPairs by lazy { knownKbRecords.flatMap { it.events }.filterIsInstance<FusionPair>().distinct() }
+    override val promiscuousGenes by lazy { knownKbRecords.flatMap { it.events }.filterIsInstance<PromiscuousGene>().distinct() }
+    override val actionableVariants by lazy { actionableKbItems.filterIsInstance<ActionableVariantOutput>() }
+    override val actionableCNVs by lazy { actionableKbItems.filterIsInstance<ActionableCNVOutput>() }
     override val actionableFusionPairs by lazy { actionableKbItems.filterIsInstance<ActionableFusionPairOutput>() }
     override val actionablePromiscuousGenes by lazy { actionableKbItems.filterIsInstance<ActionablePromiscuousGeneOutput>() }
     override val actionableRanges by lazy { actionableKbItems.filterIsInstance<ActionableGenomicRangeOutput>() }
     override val cancerTypes by lazy {
         actionableKbRecords.flatMap { it.cancerDoids.entries }
-                .associateBy({ it.key }, { diseaseOntology.findDoidsForCancerType(it.key) + diseaseOntology.findDoidsForDoid(it.value) })
+                .associateBy({ it.key }, { diseaseOntology.findDoids(it.key) + diseaseOntology.findDoids(it.value) })
     }
 
     override val knownKbRecords by lazy { preProcessCivicRecords(variantsLocation, evidenceLocation, treatmentTypeMap) }
@@ -40,8 +40,7 @@ class Civic(variantsLocation: String, evidenceLocation: String, diseaseOntology:
                                        treatmentTypeMap: Map<String, String>): List<CivicRecord> {
         val variantEvidenceMap = readEvidenceMap(evidenceFileLocation, treatmentTypeMap)
         return CsvReader.readTSVByName<CivicVariantInput>(variantFileLocation).map {
-            val correctedInput = CivicVariantInput.correct(it)
-            CivicRecord(correctedInput, variantEvidenceMap[it.variant_id])
+            CivicRecord(it.corrected(), variantEvidenceMap[it.variant_id])
         }
     }
 
@@ -51,7 +50,7 @@ class Civic(variantsLocation: String, evidenceLocation: String, diseaseOntology:
         val evidenceMap = ArrayListMultimap.create<String, CivicEvidence>()
         CsvReader.readTSVByName<CivicEvidenceInput>(evidenceLocation).map {
             if (!blacklistedEvidenceIds.contains(it.evidence_id)) {
-                evidenceMap.put(it.variant_id, CivicEvidence(it, drugInteractionMap, treatmentTypeMap))
+                evidenceMap.put(it.variant_id, CivicEvidence(it.corrected(), drugInteractionMap, treatmentTypeMap))
             }
         }
         civicApi.releaseResources()

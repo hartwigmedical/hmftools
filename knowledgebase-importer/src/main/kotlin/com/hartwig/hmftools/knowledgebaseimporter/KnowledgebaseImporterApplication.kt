@@ -11,8 +11,9 @@ import com.hartwig.hmftools.extensions.csv.CsvWriter
 import com.hartwig.hmftools.knowledgebaseimporter.cgi.Cgi
 import com.hartwig.hmftools.knowledgebaseimporter.civic.Civic
 import com.hartwig.hmftools.knowledgebaseimporter.cosmic.Cosmic
-import com.hartwig.hmftools.knowledgebaseimporter.dao.EnsemblGeneDAO
+import com.hartwig.hmftools.knowledgebaseimporter.dao.GeneDAO
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
+import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.Doid
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.OncoKb
 import com.hartwig.hmftools.knowledgebaseimporter.output.CancerTypeDoidOutput
@@ -51,6 +52,7 @@ private fun createOptions(): HmfOptions {
     options.add(RequiredInputFileOption(TREATMENT_TYPE_MAPPING_LOCATION, "path to treatment type mapping file"))
     options.add(RequiredOutputOption(OUTPUT_DIRECTORY, "path to output directory"))
     options.add(RequiredInputOption(ENSEMBL_DB, "ensembl db url"))
+    options.add(RequiredInputOption(HMFPATIENTS_DB, "hmfpatients db url"))
     options.add(RequiredInputOption(DB_USER, "db user"))
     options.add(RequiredInputOption(DB_PASSWORD, "db password"))
     return options
@@ -59,7 +61,8 @@ private fun createOptions(): HmfOptions {
 private fun readKnowledgebases(cmd: CommandLine, diseaseOntology: DiseaseOntology): List<Knowledgebase> {
     val reference = IndexedFastaSequenceFile(File(cmd.getOptionValue(REFERENCE)))
     val ensemblJdbcUrl = "jdbc:${cmd.getOptionValue(ENSEMBL_DB)}"
-    val ensemblGeneDAO = EnsemblGeneDAO(ensemblJdbcUrl, cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASSWORD))
+    val hmfpatientsJdbcUrl = "jdbc:${cmd.getOptionValue(HMFPATIENTS_DB)}"
+    val ensemblGeneDAO = GeneDAO(ensemblJdbcUrl, hmfpatientsJdbcUrl, cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASSWORD))
     val transvar = cmd.getOptionValue(TRANSVAR_LOCATION)
     val recordAnalyzer = RecordAnalyzer(transvar, reference, ensemblGeneDAO)
     val treatmentTypeMap = CsvReader.readTSV<HmfDrug>(cmd.getOptionValue(TREATMENT_TYPE_MAPPING_LOCATION))
@@ -92,15 +95,15 @@ private fun writeOutput(outputDir: String, knowledgebases: List<Knowledgebase>, 
 
 private fun knowledgebaseCancerDoids(knowledgebases: List<Knowledgebase>, ontology: DiseaseOntology): List<CancerTypeDoidOutput> {
     val extraCancerTypeDoids = readExtraCancerTypeDoids().map {
-        Pair(it.key, it.value.flatMap { doid -> ontology.findDoidsForDoid(doid) }.toSet().sorted())
+        Pair(it.key, it.value.flatMap { doid -> ontology.findDoids(doid) }.toSet().sortedBy { it.value })
     }.toMap()
-    val allCancerTypeDoids = knowledgebases.fold(mapOf<String, Set<String>>(), { map, it -> map + it.cancerTypes })
+    val allCancerTypeDoids = knowledgebases.fold(mapOf<String, Set<Doid>>()) { map, it -> map + it.cancerTypes }
     return (allCancerTypeDoids + extraCancerTypeDoids).entries.map { CancerTypeDoidOutput(it.key, it.value.joinToString(";")) }
 }
 
-private fun readExtraCancerTypeDoids(): Map<String, Set<String>> {
+private fun readExtraCancerTypeDoids(): Map<String, Set<Doid>> {
     return readCSVRecords(object {}.javaClass.getResourceAsStream("/knowledgebase_disease_doids.csv")) {
-        Pair(it["cancerType"], it["doids"].orEmpty().split(";").filterNot { it.isBlank() }.map { it.trim() }.toSet())
+        Pair(it["cancerType"], it["doids"].orEmpty().split(";").filterNot { it.isBlank() }.map { Doid(it.trim()) }.toSet())
     }.toMap()
 }
 

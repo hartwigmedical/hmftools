@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.idgenerator
 
+import io.kotlintest.matchers.shouldBe
 import io.kotlintest.properties.forAll
 import io.kotlintest.properties.forNone
 import io.kotlintest.specs.StringSpec
@@ -74,6 +75,25 @@ class IdGeneratorTest : StringSpec() {
                     hmfId(c, generator2, newIds.values) == (previousMaxId + 1)
                 }
             }
+        }
+
+        "can update when existing sample list is empty" {
+            val newSample = "sample_A"
+            val samples = emptyList<String>()
+            val newSamples = samples + newSample
+            val oldIds = generator.generateIds(samples).values
+            val newIds = generator2.updateIds(PASSWORD1, newSamples, oldIds)
+            hmfId(newSample, generator2, newIds.values)!! shouldBe 1
+        }
+
+        "can update when existing sample list contains only one id" {
+            val sampleA = "sample_A"
+            val newSample = "sample_B"
+            val samples = listOf(sampleA)
+            val newSamples = samples + newSample
+            val oldIds = generator.generateIds(samples).values
+            val newIds = generator2.updateIds(PASSWORD1, newSamples, oldIds)
+            hmfId(newSample, generator2, newIds.values)!! shouldBe 2
         }
     }
 

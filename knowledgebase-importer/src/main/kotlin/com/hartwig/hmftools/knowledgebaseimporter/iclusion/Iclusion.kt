@@ -1,20 +1,22 @@
-package com.hartwig.hmftools.knowledgebaseimporter.oncoKb
+package com.hartwig.hmftools.knowledgebaseimporter.iclusion
 
-import com.hartwig.hmftools.extensions.csv.CsvReader
+import com.hartwig.hmftools.apiclients.iclusion.api.IclusionApiWrapper
 import com.hartwig.hmftools.knowledgebaseimporter.Knowledgebase
+import com.hartwig.hmftools.knowledgebaseimporter.dao.GeneDAO
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.ActionableRecord
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.KnowledgebaseSource
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordAnalyzer
-import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.input.OncoActionableInput
-import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.input.OncoKnownInput
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
 
+class Iclusion(iclusionApiWrapper: IclusionApiWrapper, diseaseOntology: DiseaseOntology, recordAnalyzer: RecordAnalyzer, geneDAO: GeneDAO) :
+        Knowledgebase, KnowledgebaseSource<IclusionRecord, ActionableRecord> {
+    override val source: String = "iclusion"
 
-class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: String, diseaseOntology: DiseaseOntology,
-             private val recordAnalyzer: RecordAnalyzer, treatmentTypeMap: Map<String, String>) : Knowledgebase,
-        KnowledgebaseSource<OncoKnownRecord, ActionableRecord> {
-    override val source = "oncoKb"
+    private val iclusionStudies = iclusionApiWrapper.studyDetails()
+    private val canonicalTranscripts = iclusionStudies.flatMap { it.mutations.map { it.geneName } }.distinct().map {
+        Pair(it, geneDAO.hmfCanonicalTranscript(it).getOrNull(0))
+    }.toMap()
     override val knownVariants by lazy { recordAnalyzer.knownVariants(listOf(this)).distinct() }
     override val knownFusionPairs by lazy { knownKbRecords.flatMap { it.events }.filterIsInstance<FusionPair>().distinct() }
     override val promiscuousGenes by lazy { knownKbRecords.flatMap { it.events }.filterIsInstance<PromiscuousGene>().distinct() }
@@ -24,13 +26,12 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
     override val actionablePromiscuousGenes by lazy { actionableKbItems.filterIsInstance<ActionablePromiscuousGeneOutput>() }
     override val actionableRanges by lazy { actionableKbItems.filterIsInstance<ActionableGenomicRangeOutput>() }
     override val cancerTypes by lazy {
-        actionableKbRecords.flatMap { it.actionability }.map { it.cancerType }
-                .associateBy({ it }, { diseaseOntology.findDoids(it) })
+        actionableKbRecords.flatMap { it.doids.entries }
+                .associateBy({ it.key }, { it.value.flatMap { diseaseOntology.findDoids(it) }.toSet() })
     }
-    override val knownKbRecords by lazy { CsvReader.readTSVByName<OncoKnownInput>(annotatedVariantsLocation).map { OncoKnownRecord(it.corrected()) } }
-    override val actionableKbRecords by lazy {
-        CsvReader.readTSVByName<OncoActionableInput>(actionableVariantsLocation, nullString = "null")
-                .map { OncoActionableRecord(it.corrected(), treatmentTypeMap) }
-    }
+
+    override val knownKbRecords: List<IclusionRecord> by lazy { iclusionStudies.flatMap { IclusionRecord(it, canonicalTranscripts) } }
+
+    override val actionableKbRecords = knownKbRecords
     private val actionableKbItems by lazy { recordAnalyzer.actionableItems(listOf(this)).distinct() }
 }

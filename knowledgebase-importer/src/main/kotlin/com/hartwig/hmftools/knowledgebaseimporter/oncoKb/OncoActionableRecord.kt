@@ -3,11 +3,9 @@ package com.hartwig.hmftools.knowledgebaseimporter.oncoKb
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.ActionableRecord
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordMetadata
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.SomaticEvent
+import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.input.OncoActionableInput
 import com.hartwig.hmftools.knowledgebaseimporter.output.Actionability
 import com.hartwig.hmftools.knowledgebaseimporter.output.HmfDrug
-import com.hartwig.hmftools.knowledgebaseimporter.output.HmfLevel
-import com.hartwig.hmftools.knowledgebaseimporter.output.HmfResponse
-import org.apache.commons.csv.CSVRecord
 import org.apache.logging.log4j.LogManager
 
 data class OncoActionableRecord(private val metadata: RecordMetadata, override val events: List<SomaticEvent>,
@@ -16,29 +14,21 @@ data class OncoActionableRecord(private val metadata: RecordMetadata, override v
         private val logger = LogManager.getLogger("OncoActionableRecord")
         private val somaticEventReader = OncoSomaticEventReader()
 
-        operator fun invoke(record: CSVRecord, treatmentTypeMap: Map<String, String>): OncoActionableRecord {
-            val gene = record["Gene"]
-            val transcript = record["Isoform"]
-            val level: String = readLevel(record["Level"])
-            val significance = if (record["Level"].startsWith("R")) HmfResponse.Resistant else HmfResponse.Responsive
-            val drugs = readDrugEntries(record, treatmentTypeMap)
-            val cancerType: String = readCancerType(record)
-            val alteration = record["Alteration"]
-            val actionability = Actionability("oncoKb", "$gene $alteration", listOf(cancerType), drugs, level,
-                                              significance.name, "Predictive", HmfLevel(record["Level"]), significance)
-            val metadata = OncoMetadata(gene, transcript)
-            val events = somaticEventReader.read(gene, transcript, alteration)
+        operator fun invoke(input: OncoActionableInput, treatmentTypeMap: Map<String, String>): OncoActionableRecord {
+            val drugs = readDrugEntries(input, treatmentTypeMap)
+            val actionability = Actionability("oncoKb", input.reference, listOf(input.`Cancer Type`), drugs, input.level,
+                                              input.significance.name, "Predictive", input.hmfLevel, input.significance)
+            val metadata = OncoMetadata(input.Gene, input.transcript)
+            val events = somaticEventReader.read(input.Gene, input.transcript, input.Alteration)
             if (events.isEmpty()) {
                 val aOrBLevelCount = actionability.filter { it.hmfLevel == "A" || it.hmfLevel == "B" }.size
-                logger.warn("Could not extract somatic event from:\toncoKb\t$gene\t$alteration\t\t$aOrBLevelCount")
+                logger.warn("Could not extract somatic event from:\toncoKb\t${input.Gene}\t${input.Alteration}\t\t$aOrBLevelCount")
             }
             return OncoActionableRecord(metadata, events, actionability)
         }
 
-        private fun readLevel(levelField: String): String = if (levelField.startsWith("R")) levelField.drop(1) else levelField
-
-        private fun readDrugEntries(record: CSVRecord, treatmentTypeMap: Map<String, String>): List<HmfDrug> {
-            val drugNames = record["Drugs(s)"].split(",").map { it.trim() }
+        private fun readDrugEntries(input: OncoActionableInput, treatmentTypeMap: Map<String, String>): List<HmfDrug> {
+            val drugNames = input.`Drugs(s)`.split(",").map { it.trim() }
             return drugNames.map { annotateDrugEntry(it, treatmentTypeMap) }
         }
 
@@ -46,11 +36,6 @@ data class OncoActionableRecord(private val metadata: RecordMetadata, override v
             val entryType = entry.split("+")
                     .joinToString(" + ") { treatmentTypeMap[it.trim().toLowerCase()] ?: "Unknown" }
             return HmfDrug(entry, entryType)
-        }
-
-        private fun readCancerType(record: CSVRecord): String {
-            val cancerType = record["Cancer Type"]
-            return if (cancerType == "Melanoma") "Skin Melanoma" else cancerType
         }
     }
 }

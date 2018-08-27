@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.knowledgebaseimporter
 
+import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.Doid
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
 
 interface Knowledgebase {
@@ -12,5 +13,5 @@ interface Knowledgebase {
     val actionableFusionPairs: List<ActionableFusionPairOutput>
     val actionablePromiscuousGenes: List<ActionablePromiscuousGeneOutput>
     val actionableRanges: List<ActionableGenomicRangeOutput>
-    val cancerTypes: Map<String, Set<String>>
+    val cancerTypes: Map<String, Set<Doid>>
 }

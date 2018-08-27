@@ -1,12 +1,16 @@
 package com.hartwig.hmftools.knowledgebaseimporter.civic.input
 
 import com.hartwig.hmftools.extensions.csv.CsvData
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.CorrectedInput
 
 data class CivicEvidenceInput(val evidence_id: String, val variant_id: String, val evidence_type: String, val evidence_direction: String,
-                              val evidence_level: String, val drugs: String, private val disease: String, private val doid: String,
-                              val clinical_significance: String) : CsvData {
+                              val evidence_level: String, val drugs: String, val disease: String, val doid: String,
+                              val clinical_significance: String) : CsvData, CorrectedInput<CivicEvidenceInput> {
 
     //MIVO: map melanoma to skin melanoma
-    val cancerType = if (disease == "Melanoma") "Skin Melanoma" else disease
-    val cancerDoid = if (doid == "1909") "8923" else doid
+    override fun correct(): CivicEvidenceInput {
+        val disease = if (disease == "Melanoma") "Skin Melanoma" else disease
+        val doid = if (doid == "1909") "8923" else doid
+        return copy(disease = disease, doid = doid)
+    }
 }

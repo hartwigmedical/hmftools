@@ -4,17 +4,12 @@ import com.hartwig.hmftools.knowledgebaseimporter.FusionReader
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.*
 import com.hartwig.hmftools.knowledgebaseimporter.output.CnvEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.FusionEvent
-import com.hartwig.hmftools.knowledgebaseimporter.output.FusionPair
 
 class OncoSomaticEventReader {
     companion object {
         private const val EXON_PATTERN = "Exon\\s?([0-9]+)\\s+"
         private val FUSION_SEPARATORS = setOf("-", " - ", "?")
-        private val FUSIONS_TO_FLIP = setOf(FusionPair("ROS1", "CD74"),
-                                            FusionPair("EP300", "MLL"),
-                                            FusionPair("EP300", "MOZ"),
-                                            FusionPair("RET", "CCDC6"))
-        private val fusionReader = FusionReader(separators = FUSION_SEPARATORS, flipSet = FUSIONS_TO_FLIP)
+        private val fusionReader = FusionReader(separators = FUSION_SEPARATORS)
     }
 
     fun read(gene: String, transcript: String, alteration: String, effect: String = ""): List<SomaticEvent> {

@@ -2,3 +2,6 @@ sampleID	chrom	arm	start.pos	end.pos	n.probes	mean
 TumorModifiedBAF	1	q	93548479	193799919	6725	0.5381
 TumorModifiedBAF	1	q	193803174	193803174	1	0.8
 TumorModifiedBAF	1	q	193803574	193803574	1	0.7
+TumorModifiedBAF	2	q	93548479	193799919	6725	0.5381
+TumorModifiedBAF	2	q	193803174	193803174	1	0.8
+TumorModifiedBAF	2	q	193803574	193803574	1	0.7

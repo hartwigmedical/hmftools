@@ -1,19 +1,14 @@
 package com.hartwig.hmftools.knowledgebaseimporter.civic.input
 
 import com.hartwig.hmftools.extensions.csv.CsvData
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.CorrectedInput
 
 data class CivicVariantInput(val gene: String, val representative_transcript: String, val variant_id: String, val variant: String,
                              val chromosome: String, val start: String, val stop: String, val reference_bases: String,
-                             val variant_bases: String, val hgvs_expressions: String, private val variant_types: String) : CsvData {
-
+                             val variant_bases: String, val hgvs_expressions: String, private val variant_types: String) : CsvData,
+        CorrectedInput<CivicVariantInput> {
     companion object {
         private const val RANGE_VARIANTS = "gene_variant|transcript_variant|exon_variant|coding_sequence_variant|protein_altering_variant"
-
-        fun correct(input: CivicVariantInput): CivicVariantInput = when {
-            input.variant.contains(Regex("MLL-MLLT3")) && input.gene == "KMT2A" ->
-                input.copy(variant = input.variant.replace("MLL-MLLT3", "KMT2A-MLLT3"))
-            else                                                                -> input
-        }
     }
 
     val variantTypes: List<String> =
@@ -36,4 +31,9 @@ data class CivicVariantInput(val gene: String, val representative_transcript: St
     val hasVariant = hasKnownVariant || hasHgvs
     val isVariantRecord = variantTypes.none { it.contains("fusion") } && hasVariant
     val isGenomicRangeMutation = hasPosition && !hasRefOrAlt && (isGenericMutation || isGenericMissense)
+
+    override fun correct(): CivicVariantInput = when {
+        variant.contains(Regex("MLL-MLLT3")) && gene == "KMT2A" -> copy(variant = variant.replace("MLL-MLLT3", "KMT2A-MLLT3"))
+        else                                                    -> this
+    }
 }

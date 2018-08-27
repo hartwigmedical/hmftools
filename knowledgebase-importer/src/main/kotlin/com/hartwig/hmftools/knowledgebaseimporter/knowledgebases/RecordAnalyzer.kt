@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.knowledgebaseimporter.knowledgebases
 
-import com.hartwig.hmftools.knowledgebaseimporter.dao.EnsemblGeneDAO
 import com.hartwig.hmftools.knowledgebaseimporter.dao.Gene
+import com.hartwig.hmftools.knowledgebaseimporter.dao.GeneDAO
 import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.GenomicRangeEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.KnownVariantOutput
@@ -10,7 +10,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.transvar.*
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import org.apache.logging.log4j.LogManager
 
-class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFastaSequenceFile, private val geneDAO: EnsemblGeneDAO) {
+class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFastaSequenceFile, private val geneDAO: GeneDAO) {
     companion object {
         private val logger = LogManager.getLogger("RecordAnalyzer")
         private val blacklistedDrugs = setOf("chemotherapy", "aspirin", "steroid")

@@ -42,7 +42,7 @@ class IdGenerator(private val password: String) {
     //MIVO: check that at least some of the old patients are included in the new list
     private fun checkOldPasswordMatched(oldIds: Map<OldHash, HmfId>, hashTriples: List<HashTriple>) {
         val oldHashMatches = numberOfOldHashMatches(oldIds, hashTriples)
-        if (oldHashMatches <= sqrt(oldIds.size.toDouble())) {
+        if (oldHashMatches != oldIds.size && oldHashMatches <= sqrt(oldIds.size.toDouble())) {
             error("Could only reproduce $oldHashMatches of the existing hashes using the provided $OLD_PASSWORD and $PATIENT_IDS_FILE. " +
                           "Either too many patients were removed from the $PATIENT_IDS_FILE file or $OLD_PASSWORD was wrong.")
         }

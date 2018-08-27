@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.collect.ListMultimap;
 import com.google.common.io.Resources;
 
 import org.jetbrains.annotations.NotNull;
@@ -18,14 +19,25 @@ public class PCFFileTest {
 
     @Test
     public void testBafFile() throws IOException {
-        final List<PCFPosition> results =
-                PCFFile.readPositions(WINDOW, PCFSource.TUMOR_BAF, BASE_PATH + File.separator + "baf.pcf").get("1");
 
-        assertEquals(4, results.size());
-        assertPosition(93548001, results.get(0));
-        assertPosition(193800001, results.get(1));
-        assertPosition(193803001, results.get(2));
-        assertPosition(193804001, results.get(3));
+        final ListMultimap<String, PCFPosition> resultMap =
+                PCFFile.readPositions(WINDOW, PCFSource.TUMOR_BAF, BASE_PATH + File.separator + "baf.pcf");
+
+        final List<PCFPosition> chromOneResults = resultMap.get("1");
+
+        assertEquals(4, chromOneResults.size());
+        assertPosition(93548001, chromOneResults.get(0));
+        assertPosition(193800001, chromOneResults.get(1));
+        assertPosition(193803001, chromOneResults.get(2));
+        assertPosition(193804001, chromOneResults.get(3));
+
+        final List<PCFPosition> chromTwoResults = resultMap.get("2");
+
+        assertEquals(4, chromTwoResults.size());
+        assertPosition(93548001, chromTwoResults.get(0));
+        assertPosition(193800001, chromTwoResults.get(1));
+        assertPosition(193803001, chromTwoResults.get(2));
+        assertPosition(193804001, chromTwoResults.get(3));
     }
 
     @Test
