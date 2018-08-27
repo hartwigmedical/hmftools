@@ -22,7 +22,7 @@ data class KnowledgebaseEventReader<in R, out T>(val source: String, val readers
             logger.warn("More than 1 reader (${events.map { it.first }.joinToString(", ")}) returned events for record: $event")
         }
         if (events.isEmpty()) {
-            logger.warn("Could not extract somatic event from:\t$source\t${event.gene}\t${event.variant}\t${event.types}")
+            logger.warn("Could not extract somatic event from:\t$source\t${event.gene}\t${event.variant}")
         }
         return events.map { it.second }.flatten()
     }
