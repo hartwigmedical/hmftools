@@ -65,8 +65,8 @@ class Analysis {
                         Math.max(0, variant.locationBP2().position() + variant.uncertaintyBP2().start() - proximity),
                         variant.locationBP2().position() + variant.uncertaintyBP2().end() + proximity) });
 
-        final File tmpRefBam = queryNameSortedBAM(refReader, intervals, "ref");
-        final File tmpTumorBam = queryNameSortedBAM(tumorReader, intervals, "tumor");
+        final File tmpRefBam = queryNameSortedBAM(refReader, intervals, variant, "ref");
+        final File tmpTumorBam = queryNameSortedBAM(tumorReader, intervals, variant, "tumor");
 
         final SamReader sortedRefReader = SamReaderFactory.makeDefault().open(tmpRefBam);
         final SamReader sortedTumorReader = SamReaderFactory.makeDefault().open(tmpTumorBam);
@@ -452,7 +452,8 @@ class Analysis {
     }
 
     @NotNull
-    private static File queryNameSortedBAM(final SamReader reader, final QueryInterval[] intervals, final String name) throws IOException {
+    private static File queryNameSortedBAM(final SamReader reader, final QueryInterval[] intervals, final EnrichedVariantContext variant,
+            final String name) throws IOException {
         final SAMFileHeader header = reader.getFileHeader().clone();
         header.setSortOrder(SAMFileHeader.SortOrder.queryname);
 
@@ -472,7 +473,12 @@ class Analysis {
         if (records.size() > maxReads) {
             downsampleFactor = Math.round((double) records.size() / maxReads);
             if (downsampleFactor > 1) {
-                LOGGER.warn(String.format("Downsampling BAM with name %s with factor %s", name, downsampleFactor));
+                LOGGER.warn(String.format("Downsampling BAM with name %s with factor %s on SV (%s -> %s) on intervalLength %s",
+                        name,
+                        downsampleFactor,
+                        variant.locationBP1(),
+                        variant.locationBP2(),
+                        intervalLength));
             }
         }
 
