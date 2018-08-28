@@ -19,7 +19,7 @@ data class KnowledgebaseEventReader<in R, out T>(val source: String, val readers
     fun read(event: R): List<T> {
         val events = readers.map { Pair(it.javaClass.name, it.read(event)) }.filterNot { it.second.isEmpty() }
         if (events.size > 1) {
-            logger.warn("More than 1 reader (${events.map { it.first }.joinToString(", ")}) returned events for record: $event")
+            logger.warn("More than 1 reader (${events.joinToString(", ") { it.first }}) returned events for record: $event")
         }
         if (events.isEmpty()) {
             logger.warn("Could not extract somatic event from:\t$source\t${event.gene}\t${event.variant}")
