@@ -459,7 +459,7 @@ class Analysis {
         final File file = File.createTempFile(name, ".bam");
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, file);
 
-        // KODU: Downsampling in case of ridiculous coverage (see also DEV-423)
+        // KODU: Downsampling in case of ridiculous coverage (see also DEV-427)
         int intervalLength = 0;
         for (QueryInterval interval : intervals) {
             intervalLength += (1 + interval.end - interval.start);
