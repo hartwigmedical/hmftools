@@ -473,12 +473,14 @@ class Analysis {
         if (records.size() > maxReads) {
             downsampleFactor = Math.round((double) records.size() / maxReads);
             if (downsampleFactor > 1) {
-                LOGGER.warn(String.format("Downsampling BAM with name %s with factor %s on SV (%s -> %s) on intervalLength %s",
+                LOGGER.warn(String.format(
+                        "Downsampling BAM with name %s with factor %s on SV (%s -> %s) with interval length %s and having %s reads",
                         name,
                         downsampleFactor,
                         variant.locationBP1(),
                         variant.locationBP2(),
-                        intervalLength));
+                        intervalLength,
+                        records.size()));
             }
         }
 
