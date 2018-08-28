@@ -4,6 +4,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.FusionReader
 import com.hartwig.hmftools.knowledgebaseimporter.civic.input.CivicVariantInput
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.Doid
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.*
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.SequenceVariantType
 import com.hartwig.hmftools.knowledgebaseimporter.output.Actionability
 import com.hartwig.hmftools.knowledgebaseimporter.output.CnvEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.FusionPair
@@ -54,12 +55,12 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
 
         private fun readCDnaAnnotation(input: CivicVariantInput): CDnaAnnotation {
             val hgvsParts = input.hgvs!!.split(":")
-            return CDnaAnnotation(hgvsParts[0], hgvsParts[1])
+            return CDnaAnnotation(hgvsParts[0], hgvsParts[1], SequenceVariantType.OTHER)
         }
 
         private fun readCNV(gene: String, variant: String): CnvEvent? = when (variant) {
-            "AMPLIFICATION" -> CnvEvent(gene, "Amplification")
-            "DELETION"      -> CnvEvent(gene, "Deletion")
+            "AMPLIFICATION" -> CnvEvent.amplification(gene)
+            "DELETION"      -> CnvEvent.deletion(gene)
             else            -> null
         }
 

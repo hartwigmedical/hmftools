@@ -2,6 +2,7 @@ package com.hartwig.hmftools.knowledgebaseimporter.cgi
 
 import com.hartwig.hmftools.knowledgebaseimporter.FusionReader
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.*
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.SequenceVariantType
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
 import org.apache.commons.csv.CSVRecord
 import org.apache.logging.log4j.LogManager
@@ -51,7 +52,7 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
             return if (proteinAnnotation.isNullOrBlank() || transcript.isNullOrBlank()) {
                 null
             } else {
-                ProteinAnnotation(transcript, proteinAnnotation!!)
+                ProteinAnnotation(transcript, proteinAnnotation!!, SequenceVariantType.OTHER)
             }
         }
 
@@ -61,14 +62,14 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
             return if (cdnaAnnotation.isNullOrBlank() || transcript.isNullOrBlank()) {
                 null
             } else {
-                CDnaAnnotation(transcript, cdnaAnnotation!!)
+                CDnaAnnotation(transcript, cdnaAnnotation!!, SequenceVariantType.OTHER)
             }
         }
 
         private fun readCNV(record: CSVRecord): CnvEvent? = when {
             record["Alteration type"] != "CNA"   -> null
-            record["Alteration"].contains("amp") -> CnvEvent(record["Gene"], "Amplification")
-            else                                 -> CnvEvent(record["Gene"], "Deletion")
+            record["Alteration"].contains("amp") -> CnvEvent.amplification(record["Gene"])
+            else                                 -> CnvEvent.deletion(record["Gene"])
         }
 
         private fun readFusion(record: CSVRecord): FusionEvent? = when {

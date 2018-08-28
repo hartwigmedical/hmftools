@@ -2,6 +2,7 @@ package com.hartwig.hmftools.knowledgebaseimporter.oncoKb
 
 import com.hartwig.hmftools.knowledgebaseimporter.FusionReader
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.*
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.SequenceVariantType
 import com.hartwig.hmftools.knowledgebaseimporter.output.CnvEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.FusionEvent
 
@@ -26,10 +27,10 @@ class OncoSomaticEventReader {
             isExonDeletion(alteration)                                -> emptyList()
             isGainOfFunction(alteration)                              -> emptyList()
             isInternalTandemDuplication(alteration)                   -> emptyList()
-            isBrafV600EV600K(alteration)                              -> listOf(ProteinAnnotation(transcript, "V600E"),
-                                                                                ProteinAnnotation(transcript, "V600K"))
+            isBrafV600EV600K(alteration)                              -> listOf(ProteinAnnotation(transcript, "V600E", SequenceVariantType.OTHER),
+                                                                                ProteinAnnotation(transcript, "V600K", SequenceVariantType.OTHER))
             isGenericMutation(alteration)                             -> listOfNotNull(readGenericMutation(gene, transcript, alteration))
-            else                                                      -> listOf(ProteinAnnotation(transcript, alteration))
+            else                                                      -> listOf(ProteinAnnotation(transcript, alteration, SequenceVariantType.OTHER))
         }
     }
 
@@ -60,8 +61,8 @@ class OncoSomaticEventReader {
 
     private fun readCnv(gene: String, alteration: String): CnvEvent? {
         return when (alteration) {
-            "Amplification" -> CnvEvent(gene, "Amplification")
-            "Deletion"      -> CnvEvent(gene, "Deletion")
+            "Amplification" -> CnvEvent.amplification(gene)
+            "Deletion"      -> CnvEvent.deletion(gene)
             else            -> null
         }
     }

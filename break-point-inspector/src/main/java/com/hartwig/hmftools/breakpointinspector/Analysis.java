@@ -38,7 +38,8 @@ class Analysis {
 
     private static final Logger LOGGER = LogManager.getLogger(Analysis.class);
     private static final SAMRecordCoordinateComparator READS_COMPARATOR = new SAMRecordCoordinateComparator();
-    private static final int MAX_READS_PER_INTERVAL_LENGTH_FOR_DOWNSAMPLING_CUTOFF = 100;
+    // KODU: With a read length of 150, below leads to a max coverage of around 1k.
+    private static final int MAX_READS_PER_BASE_FOR_DOWNSAMPLING = 7;
 
     @NotNull
     private final SamReader refReader;
@@ -65,8 +66,8 @@ class Analysis {
                         Math.max(0, variant.locationBP2().position() + variant.uncertaintyBP2().start() - proximity),
                         variant.locationBP2().position() + variant.uncertaintyBP2().end() + proximity) });
 
-        final File tmpRefBam = queryNameSortedBAM(refReader, intervals, "ref");
-        final File tmpTumorBam = queryNameSortedBAM(tumorReader, intervals, "tumor");
+        final File tmpRefBam = queryNameSortedBAM(refReader, intervals, variant, "ref");
+        final File tmpTumorBam = queryNameSortedBAM(tumorReader, intervals, variant, "tumor");
 
         final SamReader sortedRefReader = SamReaderFactory.makeDefault().open(tmpRefBam);
         final SamReader sortedTumorReader = SamReaderFactory.makeDefault().open(tmpTumorBam);
@@ -137,8 +138,8 @@ class Analysis {
                     .add(variant.orientationBP2() > 0 ? variant.uncertaintyBP2().end() : variant.uncertaintyBP2().start() + adj);
             return BreakpointResult.from(Pair.of(bp1, bp2));
         } else {
-            final Location bp1 =
-                    variant.locationBP1().add(variant.orientationBP1() > 0 ? 0 : adj); // ignore homology when we have an insert
+            // NERA: Ignore homology when we have an insert
+            final Location bp1 = variant.locationBP1().add(variant.orientationBP1() > 0 ? 0 : adj);
             final Location bp2 = variant.locationBP2()
                     .add(variant.orientationBP2() > 0 ? variant.uncertaintyBP2().end() : variant.uncertaintyBP2().start() + adj);
             return BreakpointResult.from(Pair.of(bp1, bp2));
@@ -452,19 +453,21 @@ class Analysis {
     }
 
     @NotNull
-    private static File queryNameSortedBAM(final SamReader reader, final QueryInterval[] intervals, final String name) throws IOException {
+    private static File queryNameSortedBAM(final SamReader reader, final QueryInterval[] intervals, final EnrichedVariantContext variant,
+            final String name) throws IOException {
         final SAMFileHeader header = reader.getFileHeader().clone();
         header.setSortOrder(SAMFileHeader.SortOrder.queryname);
 
         final File file = File.createTempFile(name, ".bam");
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, file);
 
-        // KODU: Downsampling in case of ridiculous coverage (see also DEV-423)
+        // KODU: Downsampling in case of ridiculous coverage (see also DEV-427 & DEV-497)
         int intervalLength = 0;
         for (QueryInterval interval : intervals) {
             intervalLength += (1 + interval.end - interval.start);
         }
-        double maxReads = intervalLength * MAX_READS_PER_INTERVAL_LENGTH_FOR_DOWNSAMPLING_CUTOFF;
+
+        double maxReads = intervalLength * MAX_READS_PER_BASE_FOR_DOWNSAMPLING;
 
         final List<SAMRecord> records = reader.queryOverlapping(intervals).toList();
 
@@ -472,7 +475,14 @@ class Analysis {
         if (records.size() > maxReads) {
             downsampleFactor = Math.round((double) records.size() / maxReads);
             if (downsampleFactor > 1) {
-                LOGGER.warn(String.format("Downsampling BAM with name %s with factor %s", name, downsampleFactor));
+                LOGGER.warn(String.format(
+                        "Downsampling BAM with name %s with factor %s on SV (%s -> %s) with interval length %s and having %s reads covering this interval",
+                        name,
+                        downsampleFactor,
+                        variant.locationBP1(),
+                        variant.locationBP2(),
+                        intervalLength,
+                        records.size()));
             }
         }
 
