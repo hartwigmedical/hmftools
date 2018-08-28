@@ -31,6 +31,8 @@ class TransvarProteinMatcherTest : StringSpec() {
             TransvarProteinMatcher.matches("*4del") shouldBe true
             TransvarProteinMatcher.matches("p.Cys28_Met30del") shouldBe true
             TransvarProteinMatcher.matches("Cys28_Met30del") shouldBe true
+            TransvarProteinMatcher.matches("534_536del") shouldBe true
+            TransvarProteinMatcher.matches("533_534del") shouldBe true
         }
 
         "matches duplications"{
@@ -71,6 +73,7 @@ class TransvarProteinMatcherTest : StringSpec() {
             TransvarProteinMatcher.matches("Glu5Valfs*5") shouldBe true
             TransvarProteinMatcher.matches("p.Ile327Argfs*?") shouldBe true
             TransvarProteinMatcher.matches("Ile327Argfs*?") shouldBe true
+            TransvarProteinMatcher.matches("R259fs*15") shouldBe true
         }
 
         "does not match codon mutations" {
@@ -104,6 +107,10 @@ class TransvarProteinMatcherTest : StringSpec() {
         "does not match invalid frameshift"{
             TransvarProteinMatcher.matches("K442Nfs*") shouldBe false
             TransvarProteinMatcher.matches("N1333Gfs*") shouldBe false
+        }
+
+        "does not match insertions without range"{
+            TransvarProteinMatcher.matches("T574insTQLPYD") shouldBe false
         }
 
         "finds protein mutation in complex variant"{
