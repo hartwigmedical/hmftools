@@ -188,12 +188,12 @@ public class SampleData
 
     public double[] getPotentialUnallocCounts(final double[] bucketRatios, final List<Integer> requiredBuckets)
     {
-        return getPotentialAllocation(bucketRatios, true, requiredBuckets, null);
+        return getPotentialAllocation(bucketRatios, true, requiredBuckets);
     }
 
     public double[] getPotentialElevCounts(final double[] bucketRatios, final List<Integer> requiredBuckets)
     {
-        return getPotentialAllocation(bucketRatios, false, requiredBuckets, null);
+        return getPotentialAllocation(bucketRatios, false, requiredBuckets);
     }
 
 //    public double[] getPotentialAllocation(final double[] bucketRatios, final List<Integer> requiredBuckets, final List<Double> bucketRatioRanges)
@@ -201,7 +201,7 @@ public class SampleData
 //        return getPotentialAllocation(bucketRatios, mUnallocBucketCounts, mUnallocTotal, requiredBuckets, bucketRatioRanges);
 //    }
 
-    private double[] getPotentialAllocation(final double[] bucketRatios, boolean useUnallocated, final List<Integer> requiredBuckets, final List<Double> bucketRatioRanges)
+    private double[] getPotentialAllocation(final double[] bucketRatios, boolean useUnallocated, final List<Integer> requiredBuckets)
     {
         // must cap at the actual sample counts
         // allow to go as high as the elevated probability range
@@ -220,7 +220,6 @@ public class SampleData
         for(int bIndex = 0; bIndex < requiredBuckets.size(); ++bIndex)
         {
             Integer bucket = requiredBuckets.get(bIndex);
-            double ratioRange = ratioRanges != null ? ratioRanges.get(bIndex) : 0;
             double noiseCount = useUnallocated ? max(mCountRanges[bucket] - mAllocNoiseCounts[bucket], 0) : mCountRanges[bucket];
 
             // if any of the required buckets are already fully allocated, no others can be allocated
@@ -242,9 +241,9 @@ public class SampleData
             double potentialAlloc = unallocCount + noiseCount;
 
             // use the low range ratio to give max possible allocation to this bucket
-            double adjBucketRatio = bucketRatios[bucket] * (1 - ratioRange);
+            // double adjBucketRatio = bucketRatios[bucket] * (1 - ratioRange);
 
-            double alloc = potentialAlloc / adjBucketRatio;
+            double alloc = potentialAlloc / bucketRatios[bucket];
 
             if(minAlloc == 0 || alloc < minAlloc)
                 minAlloc = alloc;
@@ -256,9 +255,9 @@ public class SampleData
         for(int bIndex = 0; bIndex < requiredBuckets.size(); ++bIndex)
         {
             Integer bucket = requiredBuckets.get(bIndex);
-            double ratioRange = ratioRanges != null ? ratioRanges.get(bIndex) : 0;
+            // double ratioRange = ratioRanges != null ? ratioRanges.get(bIndex) : 0;
 
-            double potentialAlloc = minAlloc * bucketRatios[bucket] * (1 + ratioRange);
+            double potentialAlloc = minAlloc * bucketRatios[bucket];
             double noiseCount = useUnallocated ? max(mCountRanges[bucket] - mAllocNoiseCounts[bucket], 0) : mCountRanges[bucket];
             bestAllocCounts[bucket] = min(sampleCounts[bucket] + noiseCount, potentialAlloc);
         }

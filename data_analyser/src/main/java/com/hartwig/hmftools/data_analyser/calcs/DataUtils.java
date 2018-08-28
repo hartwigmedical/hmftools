@@ -24,8 +24,6 @@ import org.apache.logging.log4j.Logger;
 
 public class DataUtils {
 
-    public static double DBL_EPSILON = 1e-10;
-
     private static final Logger LOGGER = LogManager.getLogger(DataUtils.class);
 
     public static double[][] convertArray(List<List<Double>> dataSet, boolean transpose)
@@ -195,18 +193,19 @@ public class DataUtils {
 
     public static boolean doublesEqual(double val1, double val2)
     {
-        return abs(val1-val2) < DBL_EPSILON;
+        return abs(val1-val2) < DBL_LARGE_EPSILON;
     }
 
-    /*
+    public static double DBL_LARGE_EPSILON = 1e-4;
+
     public static boolean greaterOrEqual(double val1, double val2)
     {
-        return doublesEqual(val1, val2) || val1 - val2 > DBL_EPSILON;
+        return doublesEqual(val1, val2) || val1 - val2 > DBL_LARGE_EPSILON;
     }
 
     public static boolean greaterThan(double val1, double val2)
     {
-        return val1 - val2 > DBL_EPSILON;
+        return val1 - val2 > DBL_LARGE_EPSILON;
     }
 
     public static boolean lessOrEqual(double val1, double val2)
@@ -218,7 +217,6 @@ public class DataUtils {
     {
         return !greaterOrEqual(val1, val2);
     }
-    */
 
     public static int getPoissonRandom(double a, final Random rnGenerator)
     {
@@ -466,14 +464,36 @@ public class DataUtils {
 
     public static String sizeToStr(double size)
     {
+        return sizeToStr(size, false);
+    }
+
+    public static String doubleToStr(double size)
+    {
+        return sizeToStr(size, true);
+    }
+
+    public static String sizeToStr(double size, boolean withPrecision)
+    {
         double log = log10(abs(size));
 
-        if(log >= 6)
-            return String.format("%.1fM", size/1e6);
-        else if(log >= 3)
-            return String.format("%.1fK", size/1e3);
+        if(withPrecision)
+        {
+            if (log >= 6)
+                return String.format("%.3fM", size / 1e6);
+            else if (log >= 3)
+                return String.format("%.3fK", size / 1e3);
+            else
+                return String.format("%.3f", size);
+        }
         else
-            return String.format("%.0f", size);
+        {
+            if (log >= 6)
+                return String.format("%.1fM", size / 1e6);
+            else if (log >= 3)
+                return String.format("%.1fK", size / 1e3);
+            else
+                return String.format("%.0f", size);
+        }
     }
 
     public static BufferedWriter getNewFile(final String outputDir, final String fileName) throws IOException

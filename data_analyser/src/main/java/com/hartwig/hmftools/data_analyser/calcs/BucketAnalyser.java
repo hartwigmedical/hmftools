@@ -1226,7 +1226,7 @@ public class BucketAnalyser {
 
         LOGGER.debug("finding top potential bucket group from count({} new={})", mBucketGroups.size(), mBucketGroups.size() - mLastRunGroupCount);
 
-        SigContributionOptimiser sigOptim = new SigContributionOptimiser(mBucketCount, false, MIN_GROUP_ALLOC_PERCENT_LOWER, SAMPLE_ALLOCATED_PERCENT, true);
+        SigContributionOptimiser sigOptim = new SigContributionOptimiser(mBucketCount, false, SAMPLE_ALLOCATED_PERCENT, true);
 
         int exceededOnSoloAlloc = 0;
         int exceededOnUnalloc = 0;
@@ -1368,7 +1368,7 @@ public class BucketAnalyser {
                     sigOptim.initialise(sample.Id, sample.getElevatedBucketCounts(), sample.getCountRanges(), ratiosCollection, prevContribs);
                     sigOptim.setLogVerbose(sampleLog);
                     sigOptim.setTargetSig(candidateSigIndex);
-                    boolean validCalc = sigOptim.fitToSample(SAMPLE_ALLOCATED_PERCENT, reqAllocPercent);
+                    boolean validCalc = sigOptim.fitToSample(reqAllocPercent);
 
                     if (!validCalc) // couldn't reach the required percent for this canidate sig
                     {
@@ -1555,7 +1555,7 @@ public class BucketAnalyser {
         double[] avgBucketRatios = new double[mBucketCount];
         copyVector(topBucketRatios, avgBucketRatios);
 
-        int maxComparisons = 50;
+        int maxComparisons = 100;
         double topPotentialAlloc = topBucketGroup.getPotentialAllocation();
         List<Integer> candidateNewBuckets = Lists.newArrayList();
         List<BucketGroup> similarGroups = Lists.newArrayList();
@@ -1569,6 +1569,14 @@ public class BucketAnalyser {
             double groupCss = calcCSS(topBucketRatios, bucketRatios);
             if (groupCss < mHighCssThreshold)
                 continue;
+
+            List<Integer> deficientBuckets = getDiffList(topBucketGroup.getBucketIds(), bucketGroup.getBucketIds());
+
+            if(!deficientBuckets.isEmpty())
+            {
+                similarGroups.add(bucketGroup);
+                continue;
+            }
 
             // don't merge the group if there are no new samples to add
             List<Integer> newSamples = getDiffList(bucketGroup.getSampleIds(), topSampleIds);
@@ -1587,9 +1595,9 @@ public class BucketAnalyser {
                 avgBucketRatios[bucket] += bucketRatios[bucket];
             }
 
-            List<Integer> missingBuckets = getDiffList(bucketGroup.getBucketIds(), topBucketGroup.getBucketIds());
+            List<Integer> extraBuckets = getDiffList(bucketGroup.getBucketIds(), topBucketGroup.getBucketIds());
 
-            for (Integer bucket : missingBuckets)
+            for (Integer bucket : extraBuckets)
             {
                 if (!candidateNewBuckets.contains(bucket))
                     candidateNewBuckets.add(bucket);
@@ -1616,7 +1624,7 @@ public class BucketAnalyser {
 
             LOGGER.debug(String.format("top bg(%d) merged with bg(%d) alloc(%s adj=%s) css(%.4f) samples(bg1=%d bg2=%d added=%d) diffBuckets(%d)",
                     topBucketGroup.getId(), bucketGroup.getId(), sizeToStr(bucketGroup.getPotentialAllocation()),
-                    sizeToStr(bucketGroup.getPotentialAdjAllocation()), groupCss, topSampleIds.size(), bgSamples.size(), samplesAdded, missingBuckets.size()));
+                    sizeToStr(bucketGroup.getPotentialAdjAllocation()), groupCss, topSampleIds.size(), bgSamples.size(), samplesAdded, extraBuckets.size()));
 
             // remove this from the candidate set so it doesn't impact the skipped-sample logic
             similarGroups.add(bucketGroup);
@@ -1648,15 +1656,23 @@ public class BucketAnalyser {
 
         SigOptimiser sigOptim = new SigOptimiser(topBucketGroup.getId(), samples, proposedAllocs, avgBucketRatios, candidateNewBuckets);
         sigOptim.setLogVerbose(true);
-        boolean validCalc = sigOptim.fitRatios();
+        boolean validCalc = sigOptim.optimiseBucketRatios();
 
-        if(validCalc)
+        if(validCalc && sigOptim.hasChanged())
         {
             copyVector(sigOptim.getFittedRatios(), avgBucketRatios);
+
             final List<Integer> newBuckets = sigOptim.getNewBuckets();
-            for(Integer newBucket : newBuckets)
+            for (Integer newBucket : newBuckets)
             {
                 topBucketGroup.addBucket(newBucket, false);
+            }
+
+            // take the new samples allocations as well
+            for (int samIndex = 0; samIndex < topSampleIds.size(); ++samIndex)
+            {
+                sampleAllocTotals.set(samIndex, sigOptim.getRevisedSampleAlloc(samIndex));
+                sampleCounts.set(samIndex, sigOptim.getRevisedSampleAllocCounts(samIndex));
             }
         }
 
@@ -2013,7 +2029,7 @@ public class BucketAnalyser {
 
         double reqAllocPercent = MIN_GROUP_ALLOC_PERCENT_LOWER;
 
-        SigContributionOptimiser sigOptim = new SigContributionOptimiser(mBucketCount, false, MIN_GROUP_ALLOC_PERCENT_LOWER, SAMPLE_ALLOCATED_PERCENT, true);
+        SigContributionOptimiser sigOptim = new SigContributionOptimiser(mBucketCount, false, SAMPLE_ALLOCATED_PERCENT, true);
 
         if(mNoBackgroundCounts)
         {
@@ -2137,7 +2153,7 @@ public class BucketAnalyser {
 
             // each sample's background sig will remain in the list even if it drops below the required threshold
             sigOptim.setRequiredSig(backgroundGroupIndex);
-            boolean validCalc = sigOptim.fitToSample(SAMPLE_ALLOCATED_PERCENT, MIN_GROUP_ALLOC_PERCENT_LOWER);
+            boolean validCalc = sigOptim.fitToSample(MIN_GROUP_ALLOC_PERCENT_LOWER);
 
             if(!validCalc)
             {
@@ -2229,6 +2245,7 @@ public class BucketAnalyser {
                     sizeToStr(sample.getAllocatedCount()), sizeToStr(sample.getElevatedCount()), sizeToStr(maxAllocTotal), sizeToStr(fitAllocTotal)));
 
             // log any missed allocations
+            /*
             if(sample.getAllocPercent() < 0.9)
             {
                 for (final BucketGroup bucketGroup : mSkippedBucketGroups)
@@ -2246,6 +2263,7 @@ public class BucketAnalyser {
                     }
                 }
             }
+            */
         }
 
         LOGGER.debug(String.format("small alloc total(%s)", sizeToStr(smallAllocsTotal)));

@@ -23,11 +23,11 @@ public class MiscTester {
 
     public static void runTests()
     {
-        // sampleFitTest();
-        // stringTest();
-        // sampleFitTest2();
-        testSigOptimiserActuals();
+        sampleFitTest();
+        sampleFitTest2();
+        // testSigOptimiserActuals();
 
+        // stringTest();
         // chiSquaredTests();
 
     }
@@ -50,6 +50,8 @@ public class MiscTester {
 
     private static void sampleFitTest()
     {
+        LOGGER.info("sampleFitTest");
+
         int bucketCount = 5;
         int sigCount = 3;
 
@@ -105,9 +107,9 @@ public class MiscTester {
 
         // boolean calcOk = fitCountsToRatios(sample, counts, countsMargin, ratiosCollection, contribs, 0.001);
 
-        SigContributionOptimiser sigOptim = new SigContributionOptimiser(bucketCount, true, 0.01, 0.99, false);
+        SigContributionOptimiser sigOptim = new SigContributionOptimiser(bucketCount, true,  1.0, false);
         sigOptim.initialise(sample, counts, countsMargin, ratiosCollection, contribs);
-        boolean calcOk = sigOptim.fitToSample(0.99, 0.01);
+        boolean calcOk = sigOptim.fitToSample(0.001);
 
         if (!calcOk)
             return;
@@ -133,12 +135,19 @@ public class MiscTester {
             }
         }
 
-        if(allOk && sigOptim.getAllocPerc() == 1)
-            LOGGER.debug("sig optimisation test success");
+        if(!allOk)
+            LOGGER.debug("sampleFitTest: error");
+
+        if(sigOptim.getAllocPerc() == 1)
+            LOGGER.debug("sampleFitTest: success");
+        else
+            LOGGER.debug("sampleFitTest: non-optimal fit");
     }
 
     private static void sampleFitTest2()
     {
+        LOGGER.info("sampleFitTest2");
+
         int bucketCount = 5;
         int sigCount = 4;
 
@@ -183,12 +192,15 @@ public class MiscTester {
 
         // boolean calcOk = fitCountsToRatios(sample, counts, countsMargin, ratiosCollection, contribs, 0.001);
 
-        SigContributionOptimiser sigOptim = new SigContributionOptimiser(bucketCount, true, 0.01, 0.99, false);
+        SigContributionOptimiser sigOptim = new SigContributionOptimiser(bucketCount, true, 1.0, false);
         sigOptim.initialise(sample, counts, countsMargin, ratiosCollection, contribs);
-        boolean calcOk = sigOptim.fitToSample(0.99, 0.01);
+        boolean calcOk = sigOptim.fitToSample(0.001);
 
         if (!calcOk)
+        {
+            LOGGER.error("sampleFitTest2 failed");
             return;
+        }
 
         final double[] finalContribs = sigOptim.getContribs();
 
@@ -211,8 +223,13 @@ public class MiscTester {
             }
         }
 
-        if(allOk && sigOptim.getAllocPerc() == 1)
-            LOGGER.debug("sig optimisation test success");
+        if(!allOk)
+            LOGGER.debug("sampleFitTest2: error");
+
+        if(sigOptim.getAllocPerc() == 1)
+            LOGGER.debug("sampleFitTest2: success");
+        else
+            LOGGER.debug("sampleFitTest2: non-optimal fit");
     }
 
     private static void stringTest()
@@ -248,17 +265,17 @@ public class MiscTester {
 
         List<double[]> ratiosCollection = Lists.newArrayList();
 
-        ratiosCollection.add(sigs.getCol(26)); // bg 134
-        ratiosCollection.add(sigs.getCol(25)); // bg 915
         ratiosCollection.add(sigs.getCol(10)); // bg 10
+        ratiosCollection.add(sigs.getCol(25)); // bg 915
+        ratiosCollection.add(sigs.getCol(26)); // bg 134
         //ratiosCollection.add(sigs.getCol(33));
         //ratiosCollection.add(sigs.getCol(35));
 
         double[] contribs = new double[ratiosCollection.size()];
 
-        SigContributionOptimiser sigOptim = new SigContributionOptimiser(sampleCounts.length, true, 0.03, 0.99, true);
+        SigContributionOptimiser sigOptim = new SigContributionOptimiser(sampleCounts.length, true, 0.999, true);
         sigOptim.initialise(sampleId, sampleCounts, sampleNoise, ratiosCollection, contribs);
-        boolean calcOk = sigOptim.fitToSample(0.99, 0.03);
+        boolean calcOk = sigOptim.fitToSample(0.03);
 
         if (!calcOk)
             return;
