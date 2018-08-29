@@ -2,15 +2,18 @@ package com.hartwig.hmftools.knowledgebaseimporter.civic.input
 
 import com.hartwig.hmftools.extensions.csv.CsvData
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.CorrectedInput
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.KnowledgebaseEvent
 
-data class CivicVariantInput(val gene: String, val representative_transcript: String, val variant_id: String, val variant: String,
-                             val chromosome: String, val start: String, val stop: String, val reference_bases: String,
-                             val variant_bases: String, val hgvs_expressions: String, private val variant_types: String) : CsvData,
-        CorrectedInput<CivicVariantInput> {
+data class CivicVariantInput(override val gene: String, private val representative_transcript: String, val variant_id: String,
+                             override val variant: String, val chromosome: String, val start: String, val stop: String,
+                             val reference_bases: String, val variant_bases: String, val hgvs_expressions: String,
+                             private val variant_types: String) : CsvData,
+        CorrectedInput<CivicVariantInput>, KnowledgebaseEvent {
     companion object {
         private const val RANGE_VARIANTS = "gene_variant|transcript_variant|exon_variant|coding_sequence_variant|protein_altering_variant"
     }
 
+    override val transcript = representative_transcript
     val variantTypes: List<String> =
             if (variant_types.matches("N/A".toRegex(RegexOption.IGNORE_CASE))) emptyList()
             else variant_types.split(",").filterNot { it.isBlank() }
