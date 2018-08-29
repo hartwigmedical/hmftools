@@ -17,8 +17,7 @@ public class BestFitFactory {
 
     private static final double PERCENT_RANGE = 0.1;
     private static final double ABS_RANGE = 0.0005;
-//    private static final double HIGHLY_DIPLOID_PERCENTAGE = 0.98;
-    private static final double LOWEST_SCORE_MIN_PURITY = 0.15;
+    private static final double LOWEST_SCORE_MIN_PURITY = 0.16;
     private static final double MIN_PURITY_SPREAD = 0.15;
 
     private final FittedPurity bestFit;
@@ -36,15 +35,14 @@ public class BestFitFactory {
         Collections.sort(fittedPurities);
         FittedPurity lowestScore = fittedPurities.get(0);
 
-        final List<FittedPurity> candidates = candidates(lowestScore.score(), fittedPurities);
-        score = FittedPurityScoreFactory.score(candidates);
+        score = FittedPurityScoreFactory.score(inRangeOfLowest(lowestScore.score(), fittedPurities));
 
         if (Doubles.greaterOrEqual(score.puritySpread(), MIN_PURITY_SPREAD) && isHighlyDiploid(score)) {
             if (noDetectableTumor(somatics.size())) {
                 status = FittedPurityStatus.NO_TUMOR;
                 bestFit = lowestScore;
             } else {
-                final Optional<FittedPurity> somaticFit = new SomaticFitFactory(minPeak).fromSomatics(candidates, somatics);
+                final Optional<FittedPurity> somaticFit = new SomaticFitFactory(minPeak).fromSomatics(fittedPurities, somatics);
                 if (somaticsWontHelp(somatics.size(), lowestScore.purity(), somaticFit)) {
                     status = FittedPurityStatus.HIGHLY_DIPLOID;
                     bestFit = lowestScore;
@@ -87,12 +85,12 @@ public class BestFitFactory {
     }
 
     @NotNull
-    private static List<FittedPurity> candidates(double lowestScore, @NotNull final List<FittedPurity> purities) {
-        return purities.stream().filter(inRange(lowestScore)).collect(Collectors.toList());
+    private static List<FittedPurity> inRangeOfLowest(double lowestScore, @NotNull final List<FittedPurity> purities) {
+        return purities.stream().filter(inRangeOfLowest(lowestScore)).collect(Collectors.toList());
     }
 
     @NotNull
-    private static Predicate<FittedPurity> inRange(final double score) {
+    private static Predicate<FittedPurity> inRangeOfLowest(final double score) {
         return fittedPurity -> {
             double absDifference = Math.abs(fittedPurity.score() - score);
             double relDifference = Math.abs(absDifference / score);
