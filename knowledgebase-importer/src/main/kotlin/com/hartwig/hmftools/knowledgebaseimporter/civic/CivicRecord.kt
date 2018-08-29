@@ -21,7 +21,7 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
         private val fusionReader = FusionReader(separators = FUSION_SEPARATORS, filterSet = FUSIONS_TO_FILTER)
 
         operator fun invoke(input: CivicVariantInput, evidence: Collection<CivicEvidence>): CivicRecord {
-            val metadata = CivicMetadata(input.gene, input.representative_transcript)
+            val metadata = CivicMetadata(input.gene, input.transcript)
             val additionalInfo = additionalInfo(evidence)
             val actionability = evidence.filter { it.direction == "Supports" }.flatMap { it.actionabilityItems }
             val doids = evidence.associateBy({ it.disease }, { Doid(it.doid) })
@@ -65,7 +65,7 @@ data class CivicRecord(private val metadata: RecordMetadata, override val additi
         }
 
         private fun readGenomicRange(input: CivicVariantInput): GenericRangeMutations {
-            return GenericRangeMutations(input.gene, input.representative_transcript.substringBefore("."), input.start.toInt(),
+            return GenericRangeMutations(input.gene, input.transcript.substringBefore("."), input.start.toInt(),
                                          input.stop.toInt())
         }
 
