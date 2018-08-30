@@ -95,6 +95,17 @@ public class DataUtils {
         }
     }
 
+    public static boolean equalVector(double[] vec1, double[] vec2)
+    {
+        for(int i = 0; i < vec1.length; ++i)
+        {
+            if(!doublesEqual(vec1[i], vec2[i]))
+                return false;
+        }
+
+        return true;
+    }
+
     public static void vectorMultiply(double[] vec, double value)
     {
         for(int i = 0; i < vec.length; ++i)
@@ -353,13 +364,12 @@ public class DataUtils {
         return paramTotal > 0 ? multTotal/paramTotal : 0;
     }
 
-    public static double calcBestFitWithinProbability(final double[] ratios, final double[] data, double requiredProb, double reqResidualsPerc)
+    public static double calcBestFitWithinProbability(int itemId, final double[] ratios, final double[] data, double requiredProb, double reqResidualsPerc)
     {
         if(data.length != ratios.length)
             return 0;
 
         int itemCount = data.length;
-        double ratio = 0;
 
         // calculate least squares and min positive as the upper and lower starting bounds
         double lsAlloc = calcLinearLeastSquares(ratios, data);
@@ -418,8 +428,8 @@ public class DataUtils {
             ++iterations;
         }
 
-        LOGGER.debug(String.format("total(%.0f) finalAlloc(%.0f minRatio=%.0f leastSq=%.0f) residuals(%.0f perc=%.3f) prob(%.4f) iter(%s)",
-                dataTotal, currentAlloc, minPosAlloc, lsAlloc, residuals, residualsPerc, currentProb,
+        LOGGER.debug(String.format("item(%d) total(%.0f) finalAlloc(%.0f minRatio=%.0f leastSq=%.0f) residuals(%.0f perc=%.3f) prob(%.4f) iter(%s)",
+                itemId, dataTotal, currentAlloc, minPosAlloc, lsAlloc, residuals, residualsPerc, currentProb,
                 iterations >= maxIterations ? "max" : String.valueOf(iterations)));
 
         return currentAlloc;

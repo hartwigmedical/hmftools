@@ -8,6 +8,7 @@ import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.equalVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
 
 import java.io.BufferedWriter;
@@ -52,6 +53,7 @@ public class CosineSim {
         double aaTotal = 0;
         double bbTotal = 0;
         double abTotal = 0;
+        int nonZeroCount = 0;
 
         for(int i = 0; i < set1.length; ++i)
         {
@@ -64,9 +66,10 @@ public class CosineSim {
             aaTotal += a*a;
             bbTotal += b*b;
             abTotal += a*b;
+            ++nonZeroCount;
         }
 
-        if(aaTotal <= 0 || bbTotal <= 0)
+        if(aaTotal <= 0 || bbTotal <= 0 || nonZeroCount < 2)
             return 0;
 
         return min(abTotal / (sqrt(aaTotal) * sqrt(bbTotal)), 1.0);
@@ -148,7 +151,16 @@ public class CosineSim {
         return bestIndex;
     }
 
-    public static List<double[]> getTopCssPairs(final NmfMatrix matrix1, final NmfMatrix matrix2, double cssMatchCutoff, boolean applyExclusivity, boolean skipRepeats)
+    public static List<double[]> getTopCssPairs(
+            final NmfMatrix matrix1, final NmfMatrix matrix2, double cssMatchCutoff,
+            boolean applyExclusivity, boolean skipRepeats)
+    {
+        return getTopCssPairs(matrix1, matrix2, cssMatchCutoff, applyExclusivity, skipRepeats, false, false);
+    }
+
+    public static List<double[]> getTopCssPairs(
+            final NmfMatrix matrix1, final NmfMatrix matrix2, double cssMatchCutoff,
+            boolean applyExclusivity, boolean skipRepeats, boolean skipAllZeros, boolean skipZeroEntries)
     {
         // use CSS to compare each pair of columns from the 2 sets
         // returns a list of results where the CSS value is above the cutoff, ordered by CSS descending (ie closest first)
@@ -158,8 +170,9 @@ public class CosineSim {
         if(matrix1.Rows != matrix2.Rows)
             return cssResults;
 
-        // record each combination of vector comparisons
+        double[] emptyData = new double[matrix1.Rows];
 
+        // record each combination of vector comparisons
         for(int i = 0; i < matrix1.Cols; ++i) {
 
             if(i > 0 && (i % 100) == 0)
@@ -168,6 +181,9 @@ public class CosineSim {
             }
 
             double[] data1 = matrix1.getCol(i);
+
+            if(skipAllZeros && equalVector(data1, emptyData))
+                continue;
 
             int j = 0;
 
@@ -178,7 +194,10 @@ public class CosineSim {
 
                 double[] data2 = matrix2.getCol(j);
 
-                double css = CosineSim.calcCSS(data1, data2);
+                if(skipAllZeros && equalVector(data2, emptyData))
+                    continue;
+
+                double css = calcCSS(data1, data2, skipZeroEntries);
 
                 if (css < cssMatchCutoff)
                     continue;

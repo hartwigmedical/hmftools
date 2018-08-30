@@ -145,10 +145,14 @@ public class SigOptimiser
                 double sbCount = max(maxUnalloc, proposed);
 
                 if(sbCount == 0)
+                    sbCount = max(allCounts[b], noise[b]);
+
+                if(sbCount == 0)
                 {
+
                     mIsValid = false;
-                    LOGGER.error(String.format("grp(%d) sample(%d) invalid bucket(%d) count(elev=%.2f unalloc=%.1f, noise=%.1f/%.1f prop=%.1f)",
-                            mGroupId, s, b, allCounts[b], counts[b], noise[b], allocNoise[b], proposedAllocCounts[b]));
+                    LOGGER.error(String.format("grp(%d) sample(%d) invalid bucket(%d) count(elev=%.2f unalloc=%.1f, noise=%.1f/%.1f prop=%.1f) propTotal(%.1f)",
+                            mGroupId, sample.Id, b, allCounts[b], counts[b], noise[b], allocNoise[b], proposedAllocCounts[b], mProposedTotals[s]));
                     break;
                 }
 
@@ -250,7 +254,7 @@ public class SigOptimiser
                 }
             }
 
-            double avgNoiseRange = capValue(noisePercentTotal / percentTotal, 0, 0.5);
+            double avgNoiseRange = capValue(noisePercentTotal / percentTotal, 0, 0.25);
             double avgCountsRange = capValue(countsPercentTotal / percentTotal, 0, 0.5);
 
             mRatioRanges[b] = avgCountsRange;
