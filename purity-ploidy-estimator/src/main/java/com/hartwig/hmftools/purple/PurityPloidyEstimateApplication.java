@@ -194,8 +194,8 @@ public class PurityPloidyEstimateApplication {
             final double majorAlleleSubOnePenaltyMultiplier = defaultValue(cmd, PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_MULTIPLIER, 2);
             final double majorAlleleSubOneAdditionalPenalty = defaultValue(cmd, PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_ADDITIONAL, 1.5);
             final double baselineDeviation = defaultValue(cmd, PLOIDY_PENALTY_BASELINE_DEVIATION, 0.2);
-            final double somaticDeviationWeight = defaultValue(cmd, SOMATIC_DEVIATION_WEIGHT, 0);
-            final double highlyDiploidPercentage = defaultValue(cmd, HIGHLY_DIPLOID_PERCENTAGE, 0.98);
+            final double somaticDeviationWeight = defaultValue(cmd, SOMATIC_DEVIATION_WEIGHT, 1);
+            final double highlyDiploidPercentage = defaultValue(cmd, HIGHLY_DIPLOID_PERCENTAGE, 0.95);
 
             final FittedRegionFactory fittedRegionFactory = cmd.hasOption(EXPERIMENTAL)
                     ? new FittedRegionFactoryV2(cobaltGender,
