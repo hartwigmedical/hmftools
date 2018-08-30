@@ -13,6 +13,7 @@ import kotlin.streams.toList
 typealias ExonRecord = Record6<String, UInteger, UInteger, Byte, Byte, Byte>
 typealias TranslationRecord = Record2<Int, Int>
 
+// TODO (MIVO) Replace by hmf-gene-panel
 class GeneDAO(ensemblDbUrl: String, hmfpatientsDbUrl: String, user: String, password: String) {
     companion object {
         private val logger = LogManager.getLogger("GeneDAO")
