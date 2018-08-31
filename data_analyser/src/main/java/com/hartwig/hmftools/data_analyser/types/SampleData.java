@@ -247,7 +247,7 @@ public class SampleData
         if(minAlloc == 0)
             return bestAllocCounts;
 
-        double noiseTotal = 0;
+        double noiseTotal = useUnallocated ? mNoiseAllocTotal : 0;
 
         for(int bIndex = 0; bIndex < requiredBuckets.size(); ++bIndex)
         {
@@ -281,7 +281,7 @@ public class SampleData
     {
         double allocatedCount = 0;
         double allocatedActualCount = 0;
-        double noiseTotal = 0;
+        double noiseTotal = mNoiseAllocTotal;
 
         // do a preliminary check that this allocation will actually achieve the required percentage count
         for(int i = 0; i < counts.length; ++i)
@@ -297,6 +297,11 @@ public class SampleData
             }
 
             double allocCount = min(mUnallocBucketCounts[i] + unallocNoise, counts[i]);
+
+            // if even a single bucket restricts a non-zero count being allocated, fail the whole allocation
+            if(allocCount == 0)
+                return 0;
+
             allocatedCount += allocCount;
 
             if(unallocNoise > 0 && mUnallocBucketCounts[i] < allocCount)
@@ -323,7 +328,7 @@ public class SampleData
         // will only be allocated once (when count > unallocated)
         // modify the caller's count values if limited in any way
         // internal allocation counts and total are limited to actuals
-        noiseTotal = 0;
+        noiseTotal = mNoiseAllocTotal;
 
         for(int i = 0; i < counts.length; ++i)
         {

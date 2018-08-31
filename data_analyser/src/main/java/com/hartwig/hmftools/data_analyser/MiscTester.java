@@ -23,9 +23,9 @@ public class MiscTester {
 
     public static void runTests()
     {
-        sampleFitTest();
-        sampleFitTest2();
-        // testSigOptimiserActuals();
+        //sampleFitTest();
+        //sampleFitTest2();
+        testSigOptimiserActuals();
 
         // stringTest();
         // chiSquaredTests();
@@ -108,8 +108,8 @@ public class MiscTester {
         // boolean calcOk = fitCountsToRatios(sample, counts, countsMargin, ratiosCollection, contribs, 0.001);
 
         SigContributionOptimiser sigOptim = new SigContributionOptimiser(bucketCount, true,  1.0, false);
-        sigOptim.initialise(sample, counts, countsMargin, ratiosCollection, contribs);
-        boolean calcOk = sigOptim.fitToSample(0.001);
+        sigOptim.initialise(sample, counts, countsMargin, ratiosCollection, contribs, 0.001, 0);
+        boolean calcOk = sigOptim.fitToSample();
 
         if (!calcOk)
             return;
@@ -193,8 +193,8 @@ public class MiscTester {
         // boolean calcOk = fitCountsToRatios(sample, counts, countsMargin, ratiosCollection, contribs, 0.001);
 
         SigContributionOptimiser sigOptim = new SigContributionOptimiser(bucketCount, true, 1.0, false);
-        sigOptim.initialise(sample, counts, countsMargin, ratiosCollection, contribs);
-        boolean calcOk = sigOptim.fitToSample(0.001);
+        sigOptim.initialise(sample, counts, countsMargin, ratiosCollection, contribs, 0.001, 0);
+        boolean calcOk = sigOptim.fitToSample();
 
         if (!calcOk)
         {
@@ -258,24 +258,36 @@ public class MiscTester {
         sigs.cacheTranspose();
 
 
-        int sampleId = 118;
+        int sampleId = 1848;
 
         final double[] sampleCounts = sampleCountsMatrix.getCol(sampleId);
         final double[] sampleNoise = sampleNoiseMatrix.getCol(sampleId);
 
         List<double[]> ratiosCollection = Lists.newArrayList();
 
-        ratiosCollection.add(sigs.getCol(10)); // bg 10
-        ratiosCollection.add(sigs.getCol(25)); // bg 915
-        ratiosCollection.add(sigs.getCol(26)); // bg 134
-        //ratiosCollection.add(sigs.getCol(33));
-        //ratiosCollection.add(sigs.getCol(35));
+        ratiosCollection.add(sigs.getCol(36)); // bg
+        ratiosCollection.add(sigs.getCol(24)); // bg
+        ratiosCollection.add(sigs.getCol(42)); // bg
+        ratiosCollection.add(sigs.getCol(43));
+        ratiosCollection.add(sigs.getCol(12));
+        ratiosCollection.add(sigs.getCol(37));
 
         double[] contribs = new double[ratiosCollection.size()];
 
         SigContributionOptimiser sigOptim = new SigContributionOptimiser(sampleCounts.length, true, 0.999, true);
-        sigOptim.initialise(sampleId, sampleCounts, sampleNoise, ratiosCollection, contribs);
-        boolean calcOk = sigOptim.fitToSample(0.03);
+        sigOptim.initialise(sampleId, sampleCounts, sampleNoise, ratiosCollection, contribs, 0.03, 400);
+        sigOptim.setRequiredSig(4);
+
+        List<Integer> sigIds = Lists.newArrayList();
+        sigIds.add(1015);
+        sigIds.add(479);
+        sigIds.add(1471);
+        sigIds.add(1502);
+        sigIds.add(12);
+        sigIds.add(1450);
+        sigOptim.setSigIds(sigIds);
+
+        boolean calcOk = sigOptim.fitToSample();
 
         if (!calcOk)
             return;
