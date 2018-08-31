@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.portal.converter
 
+import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory
@@ -38,7 +39,8 @@ private fun createOptions(): Options {
     return options
 }
 
-private fun convertSamples(runContexts: List<RunContext>, outputDirectory: String, patientDataFile: File) {
+@VisibleForTesting
+internal fun convertSamples(runContexts: List<RunContext>, outputDirectory: String, patientDataFile: File) {
     val clinicalRecords: Multimap<String, SampleClinicalData> = ArrayListMultimap.create()
     val samplesData = patientDataFile.readSamplesData()
     val dataPerSample = samplesData.associateBy { it.sampleId }

@@ -1,0 +1,2 @@
+analyzed_sample_id	specimen_id	analyzed_sample_interval	percentage_cellularity	level_of_cellularity	analyzed_sample_notes	study
+HMF1T	HMF1T	-888	-888	-888	-888	-888
