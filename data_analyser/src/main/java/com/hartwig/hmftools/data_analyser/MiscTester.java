@@ -107,7 +107,7 @@ public class MiscTester
 
         // boolean calcOk = fitCountsToRatios(sample, counts, countsMargin, ratiosCollection, contribs, 0.001);
 
-        SigContributionOptimiser sigOptim = new SigContributionOptimiser(bucketCount, true, 1.0, false);
+        SigContributionOptimiser sigOptim = new SigContributionOptimiser(bucketCount, true, 1.0);
         sigOptim.initialise(sample, counts, countsMargin, ratiosCollection, 0.001, 0);
         boolean calcOk = sigOptim.fitToSample();
 
@@ -189,7 +189,7 @@ public class MiscTester
 
         // boolean calcOk = fitCountsToRatios(sample, counts, countsMargin, ratiosCollection, contribs, 0.001);
 
-        SigContributionOptimiser sigOptim = new SigContributionOptimiser(bucketCount, true, 1.0, false);
+        SigContributionOptimiser sigOptim = new SigContributionOptimiser(bucketCount, true, 1.0);
         sigOptim.initialise(sample, counts, countsMargin, ratiosCollection, 0.001, 0);
         boolean calcOk = sigOptim.fitToSample();
 
@@ -334,7 +334,7 @@ public class MiscTester
 
         double[] contribs = new double[ratiosCollection.size()];
 
-        SigContributionOptimiser sigOptim = new SigContributionOptimiser(sampleCounts.length, true, 0.999, true);
+        SigContributionOptimiser sigOptim = new SigContributionOptimiser(sampleCounts.length, true, 0.999);
         sigOptim.initialise(sampleId, sampleCounts, sampleNoise, ratiosCollection, 0.03, 400);
         sigOptim.setRequiredSig(1);
 

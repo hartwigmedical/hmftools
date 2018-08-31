@@ -339,8 +339,8 @@ public class SampleData
         }
 
         // now only factors in the allocation to remaining actual counts
-        if(reqAllocationPercent > 0 && allocatedActualCount < reqAllocationPercent * mElevatedTotal)
-            return allocatedActualCount;
+        if(reqAllocationPercent > 0 && allocatedCount < reqAllocationPercent * mElevatedTotal)
+            return allocatedCount;
 
         // allow allocation for the caller to go up to the unallocated counts plus the permitted noise range, which
         // will only be allocated once (when count > unallocated)

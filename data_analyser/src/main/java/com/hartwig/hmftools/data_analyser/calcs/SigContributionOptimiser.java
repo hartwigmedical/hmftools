@@ -48,7 +48,6 @@ public class SigContributionOptimiser
     private double mContribTotal;
 
     private NmfMatrix mSigs;
-    private NmfMatrix mSigCostBasis;
 
     private int mBucketCount;
     private int mSigCount;
@@ -62,26 +61,30 @@ public class SigContributionOptimiser
     private boolean mHasLowContribSigs;
     private boolean mIsFullyAllocated;
 
+    // diagnostics and stats
     private int mNoImproveCount;
     private double mLastImprovedAllocPercent;
+    private int mIterations;
+    private int mInstances;
+    private double mAvgIterations;
+    private double mAvgPercImprove;
 
     private boolean mLogVerbose;
-    private boolean mApplyNoise;
 
     // constants and control config
     private static double MIN_COUNT_CHG_PERC = 0.001;
     private static double MIN_COUNT_CHG = 1;
+    private static int MAX_TEST_ITERATIONS = 100;
 
     private static final Logger LOGGER = LogManager.getLogger(SigContributionOptimiser.class);
 
-    public SigContributionOptimiser(int bucketCount, boolean logVerbose, double targetAllocPercent, boolean applyNoise)
+    public SigContributionOptimiser(int bucketCount, boolean logVerbose, double targetAllocPercent)
     {
         mBucketCount = bucketCount;
 
         mLogVerbose = logVerbose;
         mMinContribPercent = 0.001;
         mTargetAllocPercent = targetAllocPercent;
-        mApplyNoise = applyNoise;
 
         mTargetSig = -1;
         mRequiredSig = -1;
@@ -92,6 +95,10 @@ public class SigContributionOptimiser
         mCurrentCounts = new double[mBucketCount];
         mCounts = new double[mBucketCount];
         mCountsNoise = new double[mBucketCount];
+
+        mInstances = 0;
+        mAvgIterations = 0;
+        mAvgPercImprove = 0;
     }
 
     public void initialise(int sampleId, final double[] counts, final double[] countsNoise, final List<double[]> ratiosCollection, double minSigPercent, int minAllocCount)
@@ -134,6 +141,7 @@ public class SigContributionOptimiser
         mIsFullyAllocated = false;
         mNoImproveCount = 0;
         mLastImprovedAllocPercent = 0;
+        mIterations = 0;
 
         calcMinContribChange();
 
@@ -144,8 +152,6 @@ public class SigContributionOptimiser
 
         // extract sigs their cost basis (just the inverse)
         mSigs = new NmfMatrix(mBucketCount, mSigCount);
-        mSigCostBasis = new NmfMatrix(mBucketCount, mSigCount);
-        // mSigCss = new NmfMatrix(mSigCount, mSigCount);
 
         if (mContribs.length != ratiosCollection.size())
         {
@@ -154,8 +160,6 @@ public class SigContributionOptimiser
         }
 
         double[][] sigData = mSigs.getData();
-        // double[][] cssData = mSigCss.getData();
-        double[][] cbData = mSigCostBasis.getData();
 
         for (int sig = 0; sig < mSigCount; ++sig)
         {
@@ -170,9 +174,6 @@ public class SigContributionOptimiser
             for (int b = 0; b < mBucketCount; ++b)
             {
                 sigData[b][sig] = sigRatios[b];
-
-                if (sigRatios[b] > 0)
-                    cbData[b][sig] = 1 / sigRatios[b];
             }
 
             mContribs[sig] = 0;
@@ -192,50 +193,18 @@ public class SigContributionOptimiser
         }
     }
 
-    public final double[] getFittedCounts()
-    {
-        return mCurrentCounts;
-    }
-
-    public final double[] getContribs()
-    {
-        return mContribs;
-    }
-
-    public final double getContribTotal()
-    {
-        return mContribTotal;
-    }
-
-    public double getAllocPerc()
-    {
-        return mCurrentAllocPerc;
-    }
-
-    public boolean isValid()
-    {
-        return mIsValid;
-    }
-
-    public boolean isFullyAllocated()
-    {
-        return mIsFullyAllocated;
-    }
-
-    public void setTargetSig(int sig)
-    {
-        mTargetSig = sig;
-    }
-
-    public void setRequiredSig(int sig)
-    {
-        mRequiredSig = sig;
-    }
-
-    public void setLogVerbose(boolean toggle)
-    {
-        mLogVerbose = toggle;
-    }
+    public final double[] getFittedCounts() { return mCurrentCounts; }
+    public final double[] getContribs() { return mContribs; }
+    public final double getContribTotal() { return mContribTotal; }
+    public double getAllocPerc() { return mCurrentAllocPerc; }
+    public boolean isValid() { return mIsValid; }
+    public boolean isFullyAllocated() { return mIsFullyAllocated; }
+    public int getInstances() { return mInstances; }
+    public double getAvgIterations() { return mAvgIterations; }
+    public double getAvgImprovePerc() { return mAvgPercImprove; }
+    public void setTargetSig(int sig) { mTargetSig = sig; }
+    public void setRequiredSig(int sig) { mRequiredSig = sig; }
+    public void setLogVerbose(boolean toggle) { mLogVerbose = toggle; }
 
     private void applyInitialContributions()
     {
@@ -259,8 +228,6 @@ public class SigContributionOptimiser
         }
 
         copyVector(mContribs, mInitContribs);
-        double initContrib = sumVector(mInitContribs);
-        mInitAllocPerc = initContrib / mVarCount;
 
         for (int s = 0; s < mSigCount; ++s)
         {
@@ -270,6 +237,9 @@ public class SigContributionOptimiser
             if (!aboveMinReqContrib(mInitContribs[s]))
                 mHasLowContribSigs = true;
         }
+
+        logStats();
+        mInitAllocPerc = mCurrentAllocPerc;
     }
 
     public boolean fitToSample()
@@ -279,7 +249,6 @@ public class SigContributionOptimiser
 
         // first apply all the sigs' allocations in turn to exhaust as much of the mCounts as possible
         applyInitialContributions();
-        logStats();
 
         if (!mIsValid)
             return false;
@@ -287,16 +256,21 @@ public class SigContributionOptimiser
         if (mIsFullyAllocated)
         {
             clearLowContribSigs();
+            updateStats();
             return true;
         }
 
         boolean foundImprovements = findAdjustments();
+        ++mIterations;
+
+        boolean targetSigZeroed = false;
 
         while (foundImprovements || mHasLowContribSigs)
         {
             // strip out the worst contributor if below teh required threshold and try again
             List<Integer> sortedContribIndices = getSortedVectorIndices(mContribs, true);
 
+            boolean sigZeroed = false;
             for (Integer s : sortedContribIndices)
             {
                 if (mContribs[s] == 0)
@@ -312,36 +286,60 @@ public class SigContributionOptimiser
                     if (s == mTargetSig)
                     {
                         // LOGGER.debug("sample({}) target sig({}) too low", mSampleId, s);
-                        return true;
+                        targetSigZeroed = true;
+                        break;
                     }
 
                     //if(mLogVerbose)
                     //    LOGGER.debug("sample({}) removed low-percent sig({})", mSampleId, s);
 
                     calcAllContributions();
+                    sigZeroed = true;
                     break; // only remove the worst
                 }
             }
 
+            if(sigZeroed)
+                logStats();
+
             // otherwise try again
-            logStats();
             foundImprovements = findAdjustments();
+            ++mIterations;
 
             if (!mIsValid)
                 return false;
 
             if(mNoImproveCount > 10)
-            {
                 foundImprovements = false;
-            }
+
+            if(targetSigZeroed)
+                break;
 
             if (mIsFullyAllocated)
             {
                 clearLowContribSigs();
-                return true;
+                break;
+            }
+
+            if(mIterations >= MAX_TEST_ITERATIONS * 0.75)
+            {
+                if(!mLogVerbose)
+                {
+                    // turn on logging to see what's happening
+                    LOGGER.warn("sample({}) close to max iterations({}) reached", mSampleId, mIterations);
+                    mLogVerbose = true;
+                }
+
+                if(mIterations >= MAX_TEST_ITERATIONS)
+                {
+                    LOGGER.warn("sample({}) max iterations({}) reached", mSampleId, mIterations);
+                    logStats();
+                    break;
+                }
             }
         }
 
+        updateStats();
         return mIsValid;
     }
 
@@ -367,26 +365,6 @@ public class SigContributionOptimiser
             }
 
             boolean foundTransfers = false;
-
-            /*
-            List<Integer> sortedContribIndices = getSortedVectorIndices(mContribs, false);
-
-            for (Integer sig : sortedContribIndices)
-            {
-                foundTransfers = reduceSigContribution(sig, exhaustedBuckets);
-
-                if(!mIsValid)
-                    return false;
-
-                if (foundTransfers)
-                {
-                    // if any contributions have changed, need to break and begin the process again
-                    recalcRequired = true;
-                    logStats();
-                    break;
-                }
-            }
-            */
 
             double[] maxOtherSigContribGains = new double[mSigCount];
             double maxReducedSigLoss = 0;
@@ -442,7 +420,6 @@ public class SigContributionOptimiser
     private double testSigReduction(int rs, List<Integer> exhaustedBuckets, double[] otherSigContribGains)
     {
         double[][] sigData = mSigs.getData();
-        double[][] cbData = mSigCostBasis.getData();
 
         double sig1ContribLoss = 0;
         double[] maxOtherSigContribs = new double[mSigCount];
@@ -458,11 +435,11 @@ public class SigContributionOptimiser
             double minSig1ContribLoss = 0;
             for (Integer eb : exhaustedBuckets)
             {
-                if (cbData[eb][rs] == 0)
-                    continue; // return 0;
+                if (sigData[eb][rs] == 0)
+                    continue;
 
                 // calc the minimum the contribution loss in the exhausted bucket for the sig being reduced
-                double contribLoss = mMinContribChange * cbData[eb][rs];
+                double contribLoss = mMinContribChange / sigData[eb][rs];
 
                 if (minSig1ContribLoss == 0 || contribLoss < minSig1ContribLoss)
                 {
@@ -636,8 +613,8 @@ public class SigContributionOptimiser
 
         for (Integer s2 : otherSigContribIndices)
         {
-            if (s2 == rs)
-                continue;
+//            if (s2 == rs)
+//                continue;
 
             if (otherSigContribGains[s2] == 0)
                 break;
@@ -673,13 +650,12 @@ public class SigContributionOptimiser
 
     private double calcSigContribution(int sig, final double[] currentCounts)
     {
-        double[][] cbData = mSigCostBasis.getData();
-
         double minAlloc = 0;
+        double[][] sigData = mSigs.getData();
 
         for (int b = 0; b < mBucketCount; ++b)
         {
-            if (cbData[b][sig] == 0)
+            if (sigData[b][sig] == 0)
                 continue;
 
             if (currentCounts[b] >= mCounts[b])
@@ -688,7 +664,7 @@ public class SigContributionOptimiser
                 break;
             }
 
-            double alloc = (mCounts[b] - currentCounts[b]) * cbData[b][sig];
+            double alloc = (mCounts[b] - currentCounts[b]) / sigData[b][sig];
 
             alloc = min(alloc, mCountsTotal);
 
@@ -755,7 +731,6 @@ public class SigContributionOptimiser
         mZeroedSigs.add(sig);
 
         double[][] sigData = mSigs.getData();
-        double[][] cbData = mSigCostBasis.getData();
 
         for (int b = 0; b < mBucketCount; ++b)
         {
@@ -780,7 +755,6 @@ public class SigContributionOptimiser
         for (int b = 0; b < mBucketCount; ++b)
         {
             sigData[b][sig] = 0;
-            cbData[b][sig] = 0;
         }
     }
 
@@ -950,6 +924,17 @@ public class SigContributionOptimiser
         }
     }
 
+    private void updateStats()
+    {
+        if(!mIsValid)
+            return;
+
+        mAvgIterations = (mInstances * mAvgIterations + mIterations) / (double)(mInstances + 1);
+        double percImprove = max(mCurrentAllocPerc - mInitAllocPerc, 0);
+        mAvgPercImprove = (mInstances * mAvgPercImprove + percImprove) / (mInstances + 1);
+        ++mInstances;
+    }
+
     private List<Integer> getExhaustedBuckets(double percFull)
     {
         List<Integer> exhaustedBuckets = Lists.newArrayList();
@@ -971,145 +956,6 @@ public class SigContributionOptimiser
         {
             mResiduals += abs(mCounts[i] - mCurrentCounts[i]);
         }
-    }
-
-    // old method
-    private boolean reduceSigContribution(int rs, List<Integer> exhaustedBuckets)
-    {
-        double[][] sigData = mSigs.getData();
-        double[][] cbData = mSigCostBasis.getData();
-
-        // search through the exhausted buckets to find the one which delivers the largest gain in the reducing sig
-        double maxSig1EBContribLoss = 0;
-        for (Integer eb : exhaustedBuckets)
-        {
-            if (cbData[eb][rs] == 0)
-                return false;
-
-            // calc the minimum the contribution loss in the exhausted bucket for the sig being reduced
-            double contribLoss = mMinContribChange * cbData[eb][rs]; // mMinContribChange
-
-            if (maxSig1EBContribLoss == 0 || contribLoss < maxSig1EBContribLoss)
-            {
-                maxSig1EBContribLoss = contribLoss;
-            }
-        }
-
-        double[] lessSig1Counts = new double[mBucketCount];
-
-        double sig1EBContribLoss = min(maxSig1EBContribLoss, mContribs[rs]); // cannot reduce past zero
-
-        double cumulativeSig1ContribLoss = 0;
-        double totalSig1ContribLoss = 0;
-
-        double[] otherSigContribGains = new double[mSigCount];
-
-        while (mContribs[rs] > 0)
-        {
-            initVector(otherSigContribGains, 0);
-
-            copyVector(mCurrentCounts, lessSig1Counts);
-
-            cumulativeSig1ContribLoss += sig1EBContribLoss;
-
-            if (mContribs[rs] - cumulativeSig1ContribLoss < 0) // cannot reduce further
-                break;
-
-            // remove this sig across the board from a 1-lot contrib to this exhausted bucket
-            for (int b = 0; b < mBucketCount; ++b)
-            {
-                lessSig1Counts[b] -= cumulativeSig1ContribLoss * sigData[b][rs];
-            }
-
-            // now look at the potential gain to all the sigs in each bucket, having had sig1 removed
-            for (int s2 = 0; s2 < mSigCount; ++s2)
-            {
-                if (rs == s2)
-                    continue;
-
-                double minAlloc = calcSigContribution(s2, lessSig1Counts);
-
-                if (minAlloc > 0)
-                {
-                    otherSigContribGains[s2] = minAlloc;
-                }
-            }
-
-            double totalOtherSigGain = sumVector(otherSigContribGains);
-
-            if (totalOtherSigGain < cumulativeSig1ContribLoss)
-                break;
-
-            // sort into order of greatest effect
-            List<Integer> otherSigContribIndices = getSortedVectorIndices(otherSigContribGains, false);
-
-            double totalActualOtherGain = 0;
-            int otherSigGainCount = 0;
-
-            // test out the proposed change to find the max that can be applied
-            for (Integer s2 : otherSigContribIndices)
-            {
-                if (s2 == rs)
-                    continue;
-
-                // LOGGER.debug(String.format("testing sig(%d) gain(%s) vs current(%s)", s2, sizeToStr(otherSigContribGains[s2]), sizeToStr(mContribs[s2])));
-
-                double newAlloc = calcSigContribution(s2, lessSig1Counts);
-
-                if (newAlloc <= 0)
-                {
-                    otherSigContribGains[s2] = 0;
-                    break;
-                }
-
-                ++otherSigGainCount;
-                otherSigContribGains[s2] = newAlloc; // take adjustment if required
-                totalActualOtherGain += newAlloc;
-
-                for (int b = 0; b < mBucketCount; ++b)
-                {
-                    double newCount = newAlloc * sigData[b][s2];
-
-                    if (greaterThan(lessSig1Counts[b] + newCount, mCounts[b]))
-                        break;
-
-                    lessSig1Counts[b] += newCount;
-                }
-            }
-
-            if (totalActualOtherGain < cumulativeSig1ContribLoss)
-                break;
-
-            if (mLogVerbose)
-            {
-                LOGGER.debug(String.format("reduceSig(%s cur=%s loss=%s) for %d actual other sigs gain(%s)", rs, doubleToStr(mContribs[rs]), doubleToStr(cumulativeSig1ContribLoss), otherSigGainCount, doubleToStr(totalActualOtherGain)));
-            }
-
-            applyContribution(rs, -cumulativeSig1ContribLoss);
-
-            for (Integer s2 : otherSigContribIndices)
-            {
-                if (s2 == rs)
-                    continue;
-
-                if (otherSigContribGains[s2] == 0)
-                    break;
-
-                if (mLogVerbose)
-                {
-                    LOGGER.debug(String.format("apply sig(%d) contrib(%s -> %s gain=%s)", s2, doubleToStr(mContribs[s2] + otherSigContribGains[s2]), doubleToStr(mContribs[s2]), doubleToStr(otherSigContribGains[s2])));
-                }
-
-                applyContribution(s2, otherSigContribGains[s2]);
-            }
-
-            logStats();
-
-            totalSig1ContribLoss += cumulativeSig1ContribLoss;
-            cumulativeSig1ContribLoss = 0;
-        }
-
-        return totalSig1ContribLoss > 0;
     }
 
 }

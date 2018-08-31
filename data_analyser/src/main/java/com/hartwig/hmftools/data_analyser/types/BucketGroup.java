@@ -49,6 +49,8 @@ public class BucketGroup implements Comparable<BucketGroup> {
     private double mPurity; // for now a percentage of sample buckets that are elevated
     private double mScoreOverride;
 
+    public static String BG_BACKGROUND_TYPE = "background";
+
     public BucketGroup(int id)
     {
         mId = id;
@@ -94,6 +96,7 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
     public String getTag() { return mTag; }
     public void setTag(final String tag) { mTag = tag; }
+    public boolean isBackground() { return mTag.equals(BG_BACKGROUND_TYPE); }
 
     public int getSize() { return mBucketIds.size() * mSampleIds.size(); }
 
@@ -208,14 +211,17 @@ public class BucketGroup implements Comparable<BucketGroup> {
         mSampleCountsMap.put(sampleId, sampleTotal);
     }
 
-    public boolean removeSampleAllocation(int samIndex, int sampleId, double elevatedCount)
+    public boolean removeSampleAllocation(int samIndex, int sampleId, double elevatedCount, boolean removePotentialAlloc)
     {
         if(!mSampleIds.contains(sampleId))
             return false;
 
-        double sampleAlloc = mSampleCountTotals.get(samIndex);
-        mPotentialAllocation -= sampleAlloc;
-        mPotentialAdjAllocation -= sampleAlloc/elevatedCount;
+        if(removePotentialAlloc)
+        {
+            double sampleAlloc = mSampleCountTotals.get(samIndex);
+            mPotentialAllocation -= sampleAlloc;
+            mPotentialAdjAllocation -= sampleAlloc / elevatedCount;
+        }
 
         final double[] sampleCounts = mSampleCounts.get(samIndex);
         for(Integer bucketId : mBucketIds)
