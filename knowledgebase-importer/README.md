@@ -21,3 +21,7 @@ The knowledgebase importer reads various knowledgebases and produces a consisten
   - CiViC variant summaries (https://civicdb.org/releases): Use file "VariantSummaries.tsv".
   - OncoKB actionable variants (http://oncokb.org/#/dataAccess): Use link "actionable alterations".
   - OncoKB annotated variants (http://oncokb.org/#/dataAccess): Use link "all alterations")
+  
+  # iclusion
+  
+  Iclusion provides personalized API access to their knowledgebase and has no publicly downloadable data available.
