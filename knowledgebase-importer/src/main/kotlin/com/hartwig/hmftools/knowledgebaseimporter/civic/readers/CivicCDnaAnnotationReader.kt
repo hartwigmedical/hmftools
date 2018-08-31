@@ -6,7 +6,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.CDnaAnnotation
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.readers.SomaticEventReader
 
 object CivicCDnaAnnotationReader : SomaticEventReader<CivicVariantInput, CDnaAnnotation> {
-    private const val ENSEMBL_PATTERN = "(ENST[0-9]+)(?:\\.[0-9]+)?"
+    private const val ENSEMBL_PATTERN = "(ENST[0-9]+(?:\\.[0-9]+)?)"
     private const val ENSEMBL_ANNOTATION_PATTERN = "($ENSEMBL_PATTERN):([^,\\t\\s\\n]+)"
 
     fun match(event: CivicVariantInput) = ENSEMBL_ANNOTATION_PATTERN.toRegex(RegexOption.IGNORE_CASE).find(event.hgvs_expressions) != null
