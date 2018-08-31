@@ -35,8 +35,9 @@ data class CivicVariantInput(override val gene: String, private val representati
     val isVariantRecord = variantTypes.none { it.contains("fusion") } && hasVariant
     val isGenomicRangeMutation = hasPosition && !hasRefOrAlt && (isGenericMutation || isGenericMissense)
 
-    override fun correct(): CivicVariantInput = when {
+    override fun correct(): CivicVariantInput? = when {
         variant.contains(Regex("MLL-MLLT3")) && gene == "KMT2A" -> copy(variant = variant.replace("MLL-MLLT3", "KMT2A-MLLT3"))
+        variant == "BRAF-CUL1"                                  -> null
         else                                                    -> this
     }
 }
