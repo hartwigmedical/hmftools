@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.data_analyser;
 
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
 import static com.hartwig.hmftools.data_analyser.calcs.NmfSampleFitter.fitCountsToRatios;
 
 import java.util.List;
@@ -11,13 +12,15 @@ import com.hartwig.hmftools.data_analyser.calcs.SigContributionOptimiser;
 import com.hartwig.hmftools.data_analyser.loaders.GenericDataLoader;
 import com.hartwig.hmftools.data_analyser.types.GenericDataCollection;
 import com.hartwig.hmftools.data_analyser.types.NmfMatrix;
+import com.hartwig.hmftools.data_analyser.types.SampleData;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class MiscTester {
+public class MiscTester
+{
 
     private static final Logger LOGGER = LogManager.getLogger(MiscTester.class);
 
@@ -25,7 +28,8 @@ public class MiscTester {
     {
         //sampleFitTest();
         //sampleFitTest2();
-        testSigOptimiserActuals();
+        testSampleAllocActuals();
+        // testSigOptimiserActuals();
 
         // stringTest();
         // chiSquaredTests();
@@ -84,13 +88,13 @@ public class MiscTester {
         }
         */
 
-        double[] counts = {26, 34, 15, 19, 26};
+        double[] counts = { 26, 34, 15, 19, 26 };
 
-//        counts[0] = 35;
-//        counts[1] = 32;
-//        counts[2] = 16;
-//        counts[3] = 18;
-//        counts[4] = 24;
+        //        counts[0] = 35;
+        //        counts[1] = 32;
+        //        counts[2] = 16;
+        //        counts[3] = 18;
+        //        counts[4] = 24;
 
         // set initial contribution
         double[] contribs = new double[sigCount];
@@ -99,16 +103,12 @@ public class MiscTester {
 
         // copyVector(actualContribs, contribs);
 
-        contribs[0] = 70;
-        contribs[1] = 50;
-        contribs[2] = 30;
-
         int sample = 0;
 
         // boolean calcOk = fitCountsToRatios(sample, counts, countsMargin, ratiosCollection, contribs, 0.001);
 
-        SigContributionOptimiser sigOptim = new SigContributionOptimiser(bucketCount, true,  1.0, false);
-        sigOptim.initialise(sample, counts, countsMargin, ratiosCollection, contribs, 0.001, 0);
+        SigContributionOptimiser sigOptim = new SigContributionOptimiser(bucketCount, true, 1.0, false);
+        sigOptim.initialise(sample, counts, countsMargin, ratiosCollection, 0.001, 0);
         boolean calcOk = sigOptim.fitToSample();
 
         if (!calcOk)
@@ -135,10 +135,10 @@ public class MiscTester {
             }
         }
 
-        if(!allOk)
+        if (!allOk)
             LOGGER.debug("sampleFitTest: error");
 
-        if(sigOptim.getAllocPerc() == 1)
+        if (sigOptim.getAllocPerc() == 1)
             LOGGER.debug("sampleFitTest: success");
         else
             LOGGER.debug("sampleFitTest: non-optimal fit");
@@ -167,13 +167,13 @@ public class MiscTester {
         double[] sig4 = { 0.15, 0.20, 0.25, 0.15, 0.25 };
         ratiosCollection.add(sig4);
 
-        double[] actualContribs = {40, 30, 60, 20};
+        double[] actualContribs = { 40, 30, 60, 20 };
 
         for (int j = 0; j < sigCount; ++j)
         {
             final double[] sigRatios = ratiosCollection.get(j);
 
-            for(int i = 0; i < bucketCount; ++i)
+            for (int i = 0; i < bucketCount; ++i)
             {
                 counts[i] += actualContribs[j] * sigRatios[i];
             }
@@ -181,10 +181,7 @@ public class MiscTester {
 
         // double[] counts = {26, 34, 15, 19, 26};
 
-
         // set initial contribution
-        double[] contribs = new double[sigCount];
-
         double[] countsMargin = new double[bucketCount]; // { 2, 3, 1, 1, 2 };
 
         // copyVector(actualContribs, contribs);
@@ -193,7 +190,7 @@ public class MiscTester {
         // boolean calcOk = fitCountsToRatios(sample, counts, countsMargin, ratiosCollection, contribs, 0.001);
 
         SigContributionOptimiser sigOptim = new SigContributionOptimiser(bucketCount, true, 1.0, false);
-        sigOptim.initialise(sample, counts, countsMargin, ratiosCollection, contribs, 0.001, 0);
+        sigOptim.initialise(sample, counts, countsMargin, ratiosCollection, 0.001, 0);
         boolean calcOk = sigOptim.fitToSample();
 
         if (!calcOk)
@@ -223,10 +220,10 @@ public class MiscTester {
             }
         }
 
-        if(!allOk)
+        if (!allOk)
             LOGGER.debug("sampleFitTest2: error");
 
-        if(sigOptim.getAllocPerc() == 1)
+        if (sigOptim.getAllocPerc() == 1)
             LOGGER.debug("sampleFitTest2: success");
         else
             LOGGER.debug("sampleFitTest2: non-optimal fit");
@@ -237,6 +234,63 @@ public class MiscTester {
         String tmp = "AID=0.23131;UV=0.93";
 
         String tmp2 = tmp.replaceAll("[0-9.=]", "");
+    }
+
+    private static void testSampleAllocActuals()
+    {
+        // load counts and sigs to fit with
+        String countsFile = "/Users/charlesshale/data/r_data/snv_nmf_matrix_data.csv";
+        GenericDataCollection dataCollection = GenericDataLoader.loadFile(countsFile);
+        NmfMatrix sampleCountsMatrix = DataUtils.createMatrixFromListData(dataCollection.getData());
+        sampleCountsMatrix.cacheTranspose();
+
+        String noiseFile = "/Users/charlesshale/dev/nmf/snv_ba_sample_noise.csv";
+        dataCollection = GenericDataLoader.loadFile(noiseFile);
+        NmfMatrix sampleNoiseMatrix = DataUtils.createMatrixFromListData(dataCollection.getData());
+        sampleNoiseMatrix.cacheTranspose();
+
+        String sigsFile = "/Users/charlesshale/dev/nmf/snv_ba_predefined_sigs.csv";
+        dataCollection = GenericDataLoader.loadFile(sigsFile);
+        NmfMatrix sigs = DataUtils.createMatrixFromListData(dataCollection.getData());
+        sigs.cacheTranspose();
+
+        int sampleId = 2207;
+
+        final double[] sampleCounts = sampleCountsMatrix.getCol(sampleId);
+        final double[] sampleNoise = sampleNoiseMatrix.getCol(sampleId);
+
+        SampleData sample = new SampleData(sampleId);
+        sample.setBucketCounts(sampleCounts);
+        sample.setElevatedBucketCounts(sampleCounts, sampleNoise);
+
+        // try adding the specific groups in turn
+        double[] bgRatios = sigs.getCol(6);
+
+        List<Integer> bucketIds = Lists.newArrayList();
+        for(int b = 0; b < bgRatios.length; ++b)
+        {
+            if(bgRatios[b] > 0)
+                bucketIds.add(b);
+        }
+
+        double[] sampleAllocCounts = sample.getPotentialElevCounts(bgRatios, bucketIds);
+        double allocTotal = sumVector(sampleAllocCounts);
+        sample.allocateBucketCounts(sampleAllocCounts, 0.03);
+
+        bgRatios = sigs.getCol(22);
+
+        bucketIds.clear();
+        for(int b = 0; b < bgRatios.length; ++b)
+        {
+            if(bgRatios[b] > 0)
+                bucketIds.add(b);
+        }
+
+        // sampleAllocCounts = sample.getPotentialElevCounts(bgRatios, bucketIds);
+        sampleAllocCounts = sample.getPotentialUnallocCounts(bgRatios, bucketIds);
+        allocTotal = sumVector(sampleAllocCounts);
+        sample.allocateBucketCounts(sampleAllocCounts, 0.03);
+
     }
 
     private static void testSigOptimiserActuals()
@@ -258,33 +312,41 @@ public class MiscTester {
         sigs.cacheTranspose();
 
 
-        int sampleId = 1848;
+        int sampleId = 2207;
 
         final double[] sampleCounts = sampleCountsMatrix.getCol(sampleId);
         final double[] sampleNoise = sampleNoiseMatrix.getCol(sampleId);
 
+        SampleData sample = new SampleData(sampleId);
+        sample.setBucketCounts(sampleCounts);
+        sample.setElevatedBucketCounts(sampleCounts, sampleNoise);
+
         List<double[]> ratiosCollection = Lists.newArrayList();
 
-        ratiosCollection.add(sigs.getCol(36)); // bg
-        ratiosCollection.add(sigs.getCol(24)); // bg
+        ratiosCollection.add(sigs.getCol(22)); // bg
+        ratiosCollection.add(sigs.getCol(6)); // bg
+        /*
         ratiosCollection.add(sigs.getCol(42)); // bg
         ratiosCollection.add(sigs.getCol(43));
         ratiosCollection.add(sigs.getCol(12));
         ratiosCollection.add(sigs.getCol(37));
+        */
 
         double[] contribs = new double[ratiosCollection.size()];
 
         SigContributionOptimiser sigOptim = new SigContributionOptimiser(sampleCounts.length, true, 0.999, true);
-        sigOptim.initialise(sampleId, sampleCounts, sampleNoise, ratiosCollection, contribs, 0.03, 400);
-        sigOptim.setRequiredSig(4);
+        sigOptim.initialise(sampleId, sampleCounts, sampleNoise, ratiosCollection, 0.03, 400);
+        sigOptim.setRequiredSig(1);
 
         List<Integer> sigIds = Lists.newArrayList();
-        sigIds.add(1015);
-        sigIds.add(479);
+        sigIds.add(22);
+        sigIds.add(6);
+        /*
         sigIds.add(1471);
         sigIds.add(1502);
         sigIds.add(12);
         sigIds.add(1450);
+        */
         sigOptim.setSigIds(sigIds);
 
         boolean calcOk = sigOptim.fitToSample();

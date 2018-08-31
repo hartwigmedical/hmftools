@@ -6,8 +6,11 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.data_analyser.calcs.BucketAnalyser.MAX_NOISE_ALLOC_PERC;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.capValue;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.greaterThan;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.initVector;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.lessThan;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.vectorMultiply;
 
 import java.util.List;
 
@@ -265,7 +268,11 @@ public class SampleData
                 noiseCount = max(mVarTotal * MAX_NOISE_ALLOC_PERC - noiseTotal, 0);
             }
 
-            double allocCount = min(sampleCounts[bucket] + noiseCount, potentialAlloc);
+            double allocCount = potentialAlloc;
+
+            if(greaterThan(allocCount, sampleCounts[bucket] + noiseCount))
+                allocCount = sampleCounts[bucket] + noiseCount; // shouldn't happen since should have determined above
+
             bestAllocCounts[bucket] = allocCount;
 
             if(noiseCount > 0 && sampleCounts[bucket] < allocCount)
@@ -282,6 +289,7 @@ public class SampleData
         double allocatedCount = 0;
         double allocatedActualCount = 0;
         double noiseTotal = mNoiseAllocTotal;
+        double reductionFactor = 1;
 
         // do a preliminary check that this allocation will actually achieve the required percentage count
         for(int i = 0; i < counts.length; ++i)
@@ -297,6 +305,8 @@ public class SampleData
             }
 
             double allocCount = min(mUnallocBucketCounts[i] + unallocNoise, counts[i]);
+
+            reductionFactor = min(reductionFactor, allocCount / counts[i]);
 
             // if even a single bucket restricts a non-zero count being allocated, fail the whole allocation
             if(allocCount == 0)
@@ -318,6 +328,14 @@ public class SampleData
             {
                 allocatedActualCount += counts[i];
             }
+        }
+
+        if(lessThan(reductionFactor, 1))
+        {
+            // assumption is that the counts are in proportion (eg if generated off
+            allocatedActualCount *= reductionFactor;
+            allocatedCount *= reductionFactor;
+            vectorMultiply(counts, reductionFactor);
         }
 
         // now only factors in the allocation to remaining actual counts
