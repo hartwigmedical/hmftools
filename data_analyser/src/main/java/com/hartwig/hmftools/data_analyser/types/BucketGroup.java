@@ -211,16 +211,26 @@ public class BucketGroup implements Comparable<BucketGroup> {
         mSampleCountsMap.put(sampleId, sampleTotal);
     }
 
-    public boolean removeSampleAllocation(int samIndex, int sampleId, double elevatedCount, boolean removePotentialAlloc)
+    public boolean removeSampleAllocation(final SampleData sample, boolean removePotentialAlloc)
     {
-        if(!mSampleIds.contains(sampleId))
+        int samIndex = -1;
+        for(int index = 0; index < mSampleIds.size(); ++index)
+        {
+            if(mSampleIds.get(index) == sample.Id)
+            {
+                samIndex = index;
+                break;
+            }
+        }
+
+        if(samIndex == -1)
             return false;
 
         if(removePotentialAlloc)
         {
             double sampleAlloc = mSampleCountTotals.get(samIndex);
             mPotentialAllocation -= sampleAlloc;
-            mPotentialAdjAllocation -= sampleAlloc / elevatedCount;
+            mPotentialAdjAllocation -= sampleAlloc / sample.getElevatedCount();
         }
 
         final double[] sampleCounts = mSampleCounts.get(samIndex);
@@ -232,7 +242,7 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
         mSampleIds.remove(samIndex);
         mSampleCountTotals.remove(samIndex);
-        mSampleCountsMap.remove(sampleId);
+        mSampleCountsMap.remove(sample.Id);
         mSampleCounts.remove(samIndex);
 
         if(mSampleIds.size() != mSampleCountTotals.size() || mSampleIds.size() != mSampleCountsMap.size() || mSampleIds.size() != mSampleCounts.size())

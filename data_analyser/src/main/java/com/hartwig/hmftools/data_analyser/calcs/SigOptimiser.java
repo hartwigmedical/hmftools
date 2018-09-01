@@ -58,6 +58,8 @@ public class SigOptimiser
     private boolean mLogVerbose;
     private boolean mHasChanged;
 
+    private static double MIN_IMPROVE_PERCENT = 0.005;
+
     private static final Logger LOGGER = LogManager.getLogger(SigOptimiser.class);
 
     public SigOptimiser(int groupId, final List<SampleData> samples, final List<double[]> proposedAllocs,
@@ -183,12 +185,11 @@ public class SigOptimiser
         if(!mIsValid)
             return false;
 
-        logStats();
-
         LOGGER.debug(String.format("grp(%d) optimising for samples(%d) buckets(%d) candidates(%d) count(%s unalloc=%s)",
                 mGroupId, mSampleCount, mNonZeroBuckets.size(), mCandiateNewBuckets.size(),
                 sizeToStr(mCountsTotal), sizeToStr(mTotalUnallocCount)));
 
+        logStats(false);
         logRatios();
 
         testCandidateExtraBuckets();
@@ -197,7 +198,11 @@ public class SigOptimiser
 
         calcOptimalRatios();
 
-        logRatios();
+        if(mHasChanged)
+        {
+            logStats(false);
+            logRatios();
+        }
 
         return true;
     }
@@ -260,10 +265,13 @@ public class SigOptimiser
             mRatioRanges[b] = avgCountsRange;
             mNoiseRanges[b] = avgNoiseRange;
 
+            /*
             if(mLogVerbose)
             {
-                LOGGER.debug(String.format("grp(%d) bucket(%d) ratio(%.4f) range(noise=%.4f counts=%.4f)", mGroupId, b, bucketRatios[b], avgNoiseRange, avgCountsRange));
+                LOGGER.debug(String.format("grp(%d) bucket(%d) ratio(%.4f) range(noise=%.4f counts=%.4f)",
+                        mGroupId, b, bucketRatios[b], avgNoiseRange, avgCountsRange));
             }
+            */
         }
     }
 
@@ -322,12 +330,9 @@ public class SigOptimiser
                 bestRatios[bucket] = bestRatio;
                 convertToPercentages(bestRatios);
 
-                if (mLogVerbose)
-                {
-                    mHasChanged = true;
-                    LOGGER.debug(String.format("grp(%d) bucket(%d) best ratio(%.4f converted=%.4f) vs start(%.4f)",
-                            mGroupId, bucket, bestRatio, bestRatios[bucket], mCurrentRatios[bucket]));
-                }
+                mHasChanged = true;
+                LOGGER.debug(String.format("grp(%d) bucket(%d) best ratio(%.4f converted=%.4f) vs start(%.4f)",
+                        mGroupId, bucket, bestRatio, bestRatios[bucket], mCurrentRatios[bucket]));
             }
         }
 
@@ -341,7 +346,7 @@ public class SigOptimiser
                 copyVector(bestRatios, mCurrentRatios);
             }
 
-            logStats();
+            logStats(true);
         }
     }
 
@@ -352,7 +357,7 @@ public class SigOptimiser
 
         /* current logic:
             - some similar groups threw up additional buckets to consider including
-            - walk through all samples and extra an implied ratio for each of these buckets
+            - walk through all samples and extract an implied ratio for each of these buckets
          */
         double[][] scData = mSampleCounts.getData();
 
@@ -526,10 +531,11 @@ public class SigOptimiser
                         maxLimByCount, maxLimByAlloc, maxLimByNoCount, doubleToStr(maxAllocTotal), doubleToStr(mProposedTotal)));
             }
 
-            if (maxAllocTotal > mProposedTotal)
+            double percIncrease = (maxAllocTotal - mProposedTotal) / mProposedTotal;
+            if (percIncrease >= MIN_IMPROVE_PERCENT)
             {
-                LOGGER.debug(String.format("grp(%d) adding candidate bucket(%d) optimal ratio(%.4f) with allocTotal(%s) vs total(%s)",
-                        mGroupId, bucket, selectedRatio, doubleToStr(maxAllocTotal), doubleToStr(mProposedTotal)));
+                LOGGER.debug(String.format("grp(%d) adding candidate bucket(%d) optimal ratio(%.4f) with alloc improve(%.3f %s prev=%s)",
+                        mGroupId, bucket, selectedRatio, percIncrease, doubleToStr(maxAllocTotal), doubleToStr(mProposedTotal)));
 
                 mHasChanged = true;
                 recalcRequired = true;
@@ -559,7 +565,7 @@ public class SigOptimiser
                     sampleBucketAllocs[bucket] = bucketAlloc;
                 }
 
-                logStats();
+                logStats(true);
             }
         }
 
@@ -611,7 +617,7 @@ public class SigOptimiser
         mTotalUnallocCount = calcTotalUnallocatedCounts(mCurrentRatios, mUnallocatedBucketCounts);
     }
 
-    private void logStats()
+    private void logStats(boolean checkVerbose)
     {
         recalcStats();
 

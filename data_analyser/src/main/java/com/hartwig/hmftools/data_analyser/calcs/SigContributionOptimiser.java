@@ -62,19 +62,21 @@ public class SigContributionOptimiser
     private boolean mIsFullyAllocated;
 
     // diagnostics and stats
-    private int mNoImproveCount;
-    private double mLastImprovedAllocPercent;
     private int mIterations;
     private int mInstances;
     private double mAvgIterations;
     private double mAvgPercImprove;
+    private List<Double> mRecentAllocPercents;
+    private boolean mStagnantAllocChange;
 
     private boolean mLogVerbose;
+    private boolean mLogVerboseOverride;
 
     // constants and control config
     private static double MIN_COUNT_CHG_PERC = 0.001;
     private static double MIN_COUNT_CHG = 1;
     private static int MAX_TEST_ITERATIONS = 100;
+    private static int MAX_NO_IMPROVE_COUNT = 10;
 
     private static final Logger LOGGER = LogManager.getLogger(SigContributionOptimiser.class);
 
@@ -90,6 +92,7 @@ public class SigContributionOptimiser
         mRequiredSig = -1;
         mZeroedSigs = Lists.newArrayList();
         mRatiosCollection = Lists.newArrayList();
+        mRecentAllocPercents = Lists.newArrayList();
 
         mRawCounts = new double[mBucketCount];
         mCurrentCounts = new double[mBucketCount];
@@ -139,9 +142,10 @@ public class SigContributionOptimiser
         mInitAllocPerc = 0;
         mHasLowContribSigs = false;
         mIsFullyAllocated = false;
-        mNoImproveCount = 0;
-        mLastImprovedAllocPercent = 0;
+        mRecentAllocPercents.clear();
+        mStagnantAllocChange = false;
         mIterations = 0;
+        mLogVerboseOverride = false;
 
         calcMinContribChange();
 
@@ -300,7 +304,10 @@ public class SigContributionOptimiser
             }
 
             if(sigZeroed)
+            {
+                mRecentAllocPercents.clear(); // since allocations are likely to start moving again
                 logStats();
+            }
 
             // otherwise try again
             foundImprovements = findAdjustments();
@@ -309,7 +316,7 @@ public class SigContributionOptimiser
             if (!mIsValid)
                 return false;
 
-            if(mNoImproveCount > 10)
+            if(mStagnantAllocChange)
                 foundImprovements = false;
 
             if(targetSigZeroed)
@@ -323,11 +330,11 @@ public class SigContributionOptimiser
 
             if(mIterations >= MAX_TEST_ITERATIONS * 0.75)
             {
-                if(!mLogVerbose)
+                if(!mLogVerboseOverride)
                 {
                     // turn on logging to see what's happening
                     LOGGER.warn("sample({}) close to max iterations({}) reached", mSampleId, mIterations);
-                    mLogVerbose = true;
+                    mLogVerboseOverride = true;
                 }
 
                 if(mIterations >= MAX_TEST_ITERATIONS)
@@ -345,76 +352,54 @@ public class SigContributionOptimiser
 
     private boolean findAdjustments()
     {
-        // continue optimising until there has been a run through all exhausted buckets with no improvements
-        int iterations = 0;
-        int maxIterations = 100;
+        List<Integer> exhaustedBuckets = getExhaustedBuckets(0.9);
 
-        boolean recalcRequired = false;
-
-        while (iterations < maxIterations)
+        if (exhaustedBuckets.isEmpty())
         {
-            List<Integer> exhaustedBuckets = getExhaustedBuckets(0.9);
+            calcAllContributions();
+            exhaustedBuckets = getExhaustedBuckets(0.9);
 
             if (exhaustedBuckets.isEmpty())
-            {
-                calcAllContributions();
-                exhaustedBuckets = getExhaustedBuckets(0.9);
-
-                if (exhaustedBuckets.isEmpty())
-                    return false;
-            }
-
-            boolean foundTransfers = false;
-
-            double[] maxOtherSigContribGains = new double[mSigCount];
-            double maxReducedSigLoss = 0;
-            double maxNetGain = 0;
-            int maxReducedSig = -1;
-
-            // find the sig with the max net gain from being reduced
-            for (int sig = 0; sig < mSigCount; ++sig)
-            {
-                double[] otherSigContribGains = new double[mSigCount];
-                double reducedSigContribLoss = testSigReduction(sig, exhaustedBuckets, otherSigContribGains);
-                double netGain = sumVector(otherSigContribGains) - reducedSigContribLoss;
-
-                if (reducedSigContribLoss > 0 && netGain > maxNetGain)
-                {
-                    maxNetGain = netGain;
-                    maxReducedSig = sig;
-                    maxReducedSigLoss = reducedSigContribLoss;
-                    copyVector(otherSigContribGains, maxOtherSigContribGains);
-                }
-            }
-
-            if (maxReducedSig >= 0)
-            {
-                applySigAdjustments(maxReducedSig, maxReducedSigLoss, maxOtherSigContribGains);
-
-                if (!mIsValid)
-                    return false;
-
-                recalcRequired = true;
-                foundTransfers = true;
-                logStats();
-                break;
-            }
-
-            if (mIsFullyAllocated)
-            {
-                if (mLogVerbose)
-                    LOGGER.debug(String.format("sample(%d) allocPerc(%.3f) exceeds target", mSampleId, mCurrentAllocPerc));
-
-                break;
-            }
-
-            if (!foundTransfers) // no point continuing to look
-                break;
-
-            ++iterations;
+                return false;
         }
 
-        return recalcRequired;
+        double[] maxOtherSigContribGains = new double[mSigCount];
+        double maxReducedSigLoss = 0;
+        double maxNetGain = 0;
+        int maxReducedSig = -1;
+
+        // find the sig with the max net gain from being reduced
+        for (int sig = 0; sig < mSigCount; ++sig)
+        {
+            double[] otherSigContribGains = new double[mSigCount];
+            double reducedSigContribLoss = testSigReduction(sig, exhaustedBuckets, otherSigContribGains);
+            double netGain = sumVector(otherSigContribGains) - reducedSigContribLoss;
+
+            if (reducedSigContribLoss > 0 && netGain > maxNetGain)
+            {
+                maxNetGain = netGain;
+                maxReducedSig = sig;
+                maxReducedSigLoss = reducedSigContribLoss;
+                copyVector(otherSigContribGains, maxOtherSigContribGains);
+            }
+        }
+
+        if (maxReducedSig >= 0)
+        {
+            applySigAdjustments(maxReducedSig, maxReducedSigLoss, maxOtherSigContribGains);
+
+            if (!mIsValid)
+                return false;
+
+            logStats();
+
+            if (mIsFullyAllocated && mLogVerbose)
+                LOGGER.debug(String.format("sample(%d) allocPerc(%.3f) exceeds target", mSampleId, mCurrentAllocPerc));
+
+            return true;
+        }
+
+        return false;
     }
 
     private double testSigReduction(int rs, List<Integer> exhaustedBuckets, double[] otherSigContribGains)
@@ -598,7 +583,7 @@ public class SigContributionOptimiser
     {
         if(rs >= 0)
         {
-            if (mLogVerbose)
+            if (log())
             {
                 double totalActualOtherGain = sumVector(otherSigContribGains);
 
@@ -619,7 +604,7 @@ public class SigContributionOptimiser
             if (otherSigContribGains[s2] == 0)
                 break;
 
-            if (mLogVerbose)
+            if (log())
             {
                 LOGGER.debug(String.format("apply sig(%d) contrib(%s -> %s gain=%s)",
                         mSigIds[s2], doubleToStr(mContribs[s2]), doubleToStr(mContribs[s2] + otherSigContribGains[s2]), doubleToStr(otherSigContribGains[s2])));
@@ -746,7 +731,7 @@ public class SigContributionOptimiser
             }
         }
 
-        if (mLogVerbose)
+        if (log())
             LOGGER.debug(String.format("sample(%d) sig(%d) contrib(%s) zeroed", mSampleId, mSigIds[sig], doubleToStr(mContribs[sig])));
 
         mContribTotal -= mContribs[sig];
@@ -819,14 +804,35 @@ public class SigContributionOptimiser
         mCurrentAllocPerc = min(mCurrentAllocTotal / mVarCount, 1);
         mIsFullyAllocated = mCurrentAllocPerc >= mTargetAllocPercent;
 
-        if(mCurrentAllocPerc > mLastImprovedAllocPercent)
+        mRecentAllocPercents.add(mCurrentAllocPerc);
+
+        if(mRecentAllocPercents.size() >= MAX_NO_IMPROVE_COUNT)
         {
-            mLastImprovedAllocPercent = mCurrentAllocPerc;
-            mNoImproveCount = 0;
-        }
-        else
-        {
-            ++mNoImproveCount;
+            double maxVal = 0;
+            double minVal = 1;
+            for(Double allocPerc : mRecentAllocPercents)
+            {
+                maxVal = max(allocPerc, maxVal);
+                minVal = min(allocPerc, minVal);
+            }
+
+            double range = maxVal - minVal;
+            double recentMove = mCurrentAllocPerc - mRecentAllocPercents.get(0);
+
+            if(range < 0.01 || recentMove < 0.01)
+            {
+                mStagnantAllocChange = true;
+
+                if(mTargetSig == -1)
+                {
+                    LOGGER.debug(String.format("sample(%d) stagnant recent %d moves: range(%.3f min=%.3f max=%.3f start=%.3f end=%.3f)",
+                            mSampleId, mRecentAllocPercents.size(), range, minVal, maxVal, mRecentAllocPercents.get(0), mCurrentAllocPerc));
+
+                    mLogVerboseOverride = true;
+                }
+            }
+
+            mRecentAllocPercents.remove(0);
         }
 
         calcMinContribChange();
@@ -877,18 +883,20 @@ public class SigContributionOptimiser
         recalcStats();
     }
 
+    private boolean log() { return mLogVerbose || mLogVerboseOverride; }
+
     private void logStats()
     {
         recalcStats();
 
-        if (!mLogVerbose)
+        if (!log())
             return;
 
         double actualResiduals = max(mVarCount - mContribTotal, 0);
 
-        LOGGER.debug(String.format("sample(%d) totalCount(%s wn=%s) allocated(%s act=%.3f can=%.3f) residuals(%s perc=%.3f) minChg(%.1f) hasLow(%s)",
-                mSampleId, doubleToStr(mVarCount), doubleToStr(mCountsTotal), doubleToStr(mContribTotal), mContribTotal / mVarCount,
-                mCurrentAllocPerc, doubleToStr(actualResiduals), actualResiduals / mVarCount, mMinContribChange, mHasLowContribSigs));
+        LOGGER.debug(String.format("sample(%d) totalCount(%s wn=%s) allocated(%s act=%.3f can=%.3f init=%.3f) res(%s perc=%.3f) data(mc=%.1f ls=%s it=%d)",
+                mSampleId, doubleToStr(mVarCount), doubleToStr(mCountsTotal), doubleToStr(mContribTotal), mContribTotal / mVarCount, mCurrentAllocPerc, mInitAllocPerc,
+                doubleToStr(actualResiduals), actualResiduals / mVarCount, mMinContribChange, mHasLowContribSigs, mIterations));
 
         String contribStr = "";
         int sigCount = 0;

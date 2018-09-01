@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.data_analyser;
 
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.greaterThan;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
 import static com.hartwig.hmftools.data_analyser.calcs.NmfSampleFitter.fitCountsToRatios;
 
@@ -26,9 +27,9 @@ public class MiscTester
 
     public static void runTests()
     {
-        //sampleFitTest();
-        //sampleFitTest2();
-        testSampleAllocActuals();
+        // sampleFitTest();
+        sampleFitTest2();
+        // testSampleAllocActuals();
         // testSigOptimiserActuals();
 
         // stringTest();
@@ -128,9 +129,9 @@ public class MiscTester
                 fittedCount += sigRatios[i] * finalContribs[j];
             }
 
-            if (fittedCount > counts[i] + countsMargin[i])
+            if (greaterThan(fittedCount, counts[i] + countsMargin[i]))
             {
-                LOGGER.error(String.format("bucket(%d) fitted count(%.1f) exceeds count(%.0f) + noise(%.0f)", i, fittedCount, counts[i], countsMargin[i]));
+                LOGGER.error(String.format("bucket(%d) fitted count(%f) exceeds count(%f) + noise(%f)", i, fittedCount, counts[i], countsMargin[i]));
                 allOk = false;
             }
         }
@@ -213,9 +214,9 @@ public class MiscTester
                 fittedCount += sigRatios[i] * finalContribs[j];
             }
 
-            if (fittedCount > counts[i] + countsMargin[i])
+            if (greaterThan(fittedCount, counts[i] + countsMargin[i]))
             {
-                LOGGER.error(String.format("bucket(%d) fitted count(%.1f) exceeds count(%.0f) + noise(%.0f)", i, fittedCount, counts[i], countsMargin[i]));
+                LOGGER.error(String.format("bucket(%d) fitted count(%f) exceeds count(%f) + noise(%f)", i, fittedCount, counts[i], countsMargin[i]));
                 allOk = false;
             }
         }
