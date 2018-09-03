@@ -41,10 +41,11 @@ fun main(args: Array<String>) {
     logger.info(sampleId)
     val user = cmd.getOptionValue(DB_USER)
     val password = cmd.getOptionValue(DB_PASSWORD)
-    val databaseUrl = cmd.getOptionValue(HMFPATIENTS_DB)
+    val databaseUrl = "jdbc:${cmd.getOptionValue(HMFPATIENTS_DB)}"
 
-    //val dbAccess = DatabaseAccess(user, password, databaseUrl)
-    //val samplesToAnalyze = readSamples(sampleId, dbAccess)
+    val dbAccess = DatabaseAccess(user, password, databaseUrl)
+    val samplesToAnalyze = readSamples(sampleId, dbAccess)
+    logger.info("samplesToAnalyze" + samplesToAnalyze)
     //  val actionabilityAnalyzer = ActionabilityAnalyzer(samplesToAnalyze, actionableVariants, actionableFusionPairs,
     //                                                  actionablePromiscuousFive, actionablePromiscuousThree, actionableCNVs, cancerTypes,
     //                                                actionableGenomicRanges)
@@ -62,6 +63,11 @@ private fun createOptions(): HmfOptions {
     options.add(RequiredInputOption(DB_PASSWORD, "db password"))
     return options
 }
+
+private fun readSamples(sampleId: String, dbAccess: DatabaseAccess) =
+        if (sampleId.isNotEmpty() && sampleId.isNotBlank()) dbAccess.allSamplesAndTumorLocations().toList().associate { Pair(it.key, it.value) }
+        else logger.info("no sampleId")
+
 private fun queryDatabase(outputDir: String, dbAccess: DatabaseAccess, samplesToAnalyze: Map<String, String>, actionabilityAnalyzer: ActionabilityAnalyzer) {
     val records = mutableListOf<ActionabilityOutput>()
     cohortMutations(samplesToAnalyze).forEach { mutation ->
@@ -81,10 +87,6 @@ private fun queryDatabase(outputDir: String, dbAccess: DatabaseAccess, samplesTo
     CsvWriter.writeTSV(records, "$outputDir${File.separator}actionableVariantsPerSample.tsv")
     logger.info("Done.")
 }
-
-private fun readSamples(sampleId: String, dbAccess: DatabaseAccess) =
-        if (sampleId.isNotEmpty() && sampleId.isNotBlank()) dbAccess.allSamplesAndTumorLocations().toList().associate { Pair(it.key, it.value) }
-        else logger.info("no sampleId")
 
 private fun cohortMutations(samplesToAnalyze: Map<String, String>): List<CohortMutation> {
     logger.info("Looking up cohort mutations")
