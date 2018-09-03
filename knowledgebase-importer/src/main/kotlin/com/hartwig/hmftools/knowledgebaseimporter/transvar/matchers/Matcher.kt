@@ -6,7 +6,5 @@ interface Matcher {
     }
 
     fun matches(string: String): Boolean
-    fun contains(string: String): Boolean {
-        return string.split(SPLIT_PATTERN.toRegex()).any { matches(it) }
-    }
+    fun contains(string: String, separatorPattern: String = SPLIT_PATTERN) = string.split(separatorPattern.toRegex()).any { matches(it) }
 }

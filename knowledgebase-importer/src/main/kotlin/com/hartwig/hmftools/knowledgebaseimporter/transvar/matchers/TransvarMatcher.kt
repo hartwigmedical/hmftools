@@ -7,7 +7,5 @@ object TransvarMatcher : Matcher {
         return nestedMatchers.any { it.matches(string) }
     }
 
-    override fun contains(string: String): Boolean {
-        return nestedMatchers.any { it.contains(string) }
-    }
+    override fun contains(string: String, separatorPattern: String) = nestedMatchers.any { it.contains(string) }
 }
