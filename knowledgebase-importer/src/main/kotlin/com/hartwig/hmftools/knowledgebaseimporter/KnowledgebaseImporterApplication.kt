@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.knowledgebaseimporter
 
+import com.hartwig.hmftools.apiclients.iclusion.api.IclusionApiWrapper
 import com.hartwig.hmftools.extensions.cli.createCommandLine
 import com.hartwig.hmftools.extensions.cli.options.HmfOptions
 import com.hartwig.hmftools.extensions.cli.options.commands.RequiredCommandOption
@@ -14,6 +15,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.cosmic.Cosmic
 import com.hartwig.hmftools.knowledgebaseimporter.dao.GeneDAO
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.Doid
+import com.hartwig.hmftools.knowledgebaseimporter.iclusion.Iclusion
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.OncoKb
 import com.hartwig.hmftools.knowledgebaseimporter.output.CancerTypeDoidOutput
@@ -50,11 +52,15 @@ private fun createOptions(): HmfOptions {
     options.add(RequiredInputFileOption(CIVIC_EVIDENCE_LOCATION, "path to civic evidence file"))
     options.add(RequiredInputFileOption(COSMIC_FUSIONS_LOCATION, "path to cosmic fusions file"))
     options.add(RequiredInputFileOption(TREATMENT_TYPE_MAPPING_LOCATION, "path to treatment type mapping file"))
-    options.add(RequiredOutputOption(OUTPUT_DIRECTORY, "path to output directory"))
     options.add(RequiredInputOption(ENSEMBL_DB, "ensembl db url"))
     options.add(RequiredInputOption(HMFPATIENTS_DB, "hmfpatients db url"))
     options.add(RequiredInputOption(DB_USER, "db user"))
     options.add(RequiredInputOption(DB_PASSWORD, "db password"))
+    options.add(RequiredInputOption(ICLUSION_CLIENT_ID, "iclusion clientId"))
+    options.add(RequiredInputOption(ICLUSION_CLIENT_SECRET, "iclusion client secret"))
+    options.add(RequiredInputOption(ICLUSION_USER, "iclusion user"))
+    options.add(RequiredInputOption(ICLUSION_PASSWORD, "iclusion password"))
+    options.add(RequiredOutputOption(OUTPUT_DIRECTORY, "path to output directory"))
     return options
 }
 
@@ -75,7 +81,10 @@ private fun readKnowledgebases(cmd: CommandLine, diseaseOntology: DiseaseOntolog
     val civic = Civic(cmd.getOptionValue(CIVIC_VARIANTS_LOCATION), cmd.getOptionValue(CIVIC_EVIDENCE_LOCATION), diseaseOntology,
                       recordAnalyzer, treatmentTypeMap)
     val cosmic = Cosmic(cmd.getOptionValue(COSMIC_FUSIONS_LOCATION))
-    return listOf(oncoKb, cgi, civic, cosmic)
+    val iclusionApi = IclusionApiWrapper(cmd.getOptionValue(ICLUSION_CLIENT_ID), cmd.getOptionValue(ICLUSION_CLIENT_SECRET),
+                                         cmd.getOptionValue(ICLUSION_USER), cmd.getOptionValue(ICLUSION_PASSWORD))
+    val iclusion = Iclusion(iclusionApi, diseaseOntology, recordAnalyzer, ensemblGeneDAO)
+    return listOf(oncoKb, cgi, civic, cosmic, iclusion)
 }
 
 private fun writeOutput(outputDir: String, knowledgebases: List<Knowledgebase>, cancerTypesDoids: List<CancerTypeDoidOutput>) {
