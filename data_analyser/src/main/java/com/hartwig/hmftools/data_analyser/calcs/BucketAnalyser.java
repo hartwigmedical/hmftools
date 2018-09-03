@@ -228,7 +228,7 @@ public class BucketAnalyser {
 
         mSampleWatchList = Lists.newArrayList();
 
-        // mSampleWatchList.add(793);
+        // mSampleWatchList.add(2178);
         // mSampleWatchList.add(814);
 //        mSampleWatchList.add(2617);
 
@@ -436,8 +436,8 @@ public class BucketAnalyser {
             // formExactBucketGroups(false);
 
             // and then the best sub-groups
-            if(mRunId >= mExcessDiscoveryRunId)
-                formExcessBucketGroups();
+            //if(mRunId >= mExcessDiscoveryRunId)
+            //    formExcessBucketGroups();
 
             formBucketGroupsFromSamplePairs(false);
 
@@ -1491,10 +1491,7 @@ public class BucketAnalyser {
 
         for(BucketGroup bucketGroup : newGroups)
         {
-            if(bucketGroup.getSampleIds().size() < minSamplesCount)
-                continue;
-
-            if(bucketGroup.getBucketIds().size() < minBucketsCount)
+            if(bucketGroup.getSampleIds().size() < minSamplesCount || bucketGroup.getBucketIds().size() < minBucketsCount)
                 continue;
 
             samplesList.clear();
@@ -1527,7 +1524,7 @@ public class BucketAnalyser {
             }
 
             SigOptimiser sigOptim = new SigOptimiser(bucketGroup.getId(), samplesList, null, bucketGroup.getBucketRatios(), candidateBuckets);
-            sigOptim.setLogVerbose(true);
+            // sigOptim.setLogVerbose(true);
 
             boolean isValid = sigOptim.optimiseBucketRatios();
 
@@ -1660,16 +1657,6 @@ public class BucketAnalyser {
                     {
                         // exceedsMinAllocPerc = true;
                         ++exceededOnSoloAlloc;
-
-                        /*
-                        allocPercent = maxPotentialPerc - sample.getAllocPercent();
-                        allocCounts = bgSampleElevCounts;
-                        allocCountTotal = sumVector(allocCounts);
-
-                        // scale back by the percent difference made
-
-                        // leave up to the fit to handle this
-                        */
                     }
                 }
 

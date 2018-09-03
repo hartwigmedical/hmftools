@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.lessThan;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sizeToStr;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVectors;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.vectorMultiply;
 
 import java.util.List;
 
@@ -43,7 +44,6 @@ public class SigContribOptimiser
     private double[] mCounts; // sample counts, optionally including noise
     private double[] mCurrentCounts;
     private double[] mContribs;
-    private double[] mMaxContribs; // per sig if by itself
     private double mContribTotal;
 
     private NmfMatrix mSigs;
@@ -131,7 +131,6 @@ public class SigContribOptimiser
 
         mContribs = new double[mSigCount];
         mInitContribs = new double[mSigCount];
-        mMaxContribs = new double[mSigCount];
         mContribTotal = 0;
 
         mVarCount = sumVector(mRawCounts);
@@ -211,14 +210,6 @@ public class SigContribOptimiser
 
     private void applyInitialContributions()
     {
-        // calc the theoretical max for each sig
-        /*
-        for (int s = 0; s < mSigCount; ++s)
-        {
-            mMaxContribs[s] = calcSigContribution(s);
-        }
-        */
-
         // try various approaches to find the best init allocations
         double[] sigContribGains = new double[mSigCount];
         List<Integer> emptyBuckets = Lists.newArrayList();
@@ -329,14 +320,12 @@ public class SigContribOptimiser
 
             if(mIterations >= MAX_TEST_ITERATIONS * 0.5)
             {
-                /*
                 if(!mLogVerboseOverride)
                 {
                     // turn on logging to see what's happening
                     LOGGER.warn("sample({}) close to max iterations({}) reached", mSampleId, mIterations);
                     mLogVerboseOverride = true;
                 }
-                */
 
                 if(mIterations >= MAX_TEST_ITERATIONS)
                 {
@@ -387,6 +376,16 @@ public class SigContribOptimiser
 
         if (maxReducedSig >= 0)
         {
+            // work out how many multiples of this combination of reductions and increases can be made before
+            // either the reduced sig is exhausted or another sigs hits a limit elsewhere
+            int applyMultiple = calcAdjustmentMultiple(maxReducedSig, maxReducedSigLoss, maxOtherSigContribGains);
+
+            if(applyMultiple > 1)
+            {
+                maxReducedSigLoss *= applyMultiple;
+                vectorMultiply(maxOtherSigContribGains, applyMultiple);
+            }
+
             applySigAdjustments(maxReducedSig, maxReducedSigLoss, maxOtherSigContribGains);
 
             if (!mIsValid)
@@ -452,7 +451,7 @@ public class SigContribOptimiser
             }
         }
 
-        // now look at the potential gain to all the sigs in each bucket, having had sig1 removed
+        // now look at the potential gain to all the sigs in each bucket, having had the reduction sig's contribution removed
         for (int s2 = 0; s2 < mSigCount; ++s2)
         {
             if (rs == s2)
@@ -577,7 +576,81 @@ public class SigContribOptimiser
         if (maxOtherSigsGain < sig1ContribLoss)
             return 0;
 
+        // check for minisule gains and loss
+        if(maxOtherSigsGain < 0.001)
+            return 0;
+
         return sig1ContribLoss;
+    }
+
+    private int calcAdjustmentMultiple(int rs, double sigContribLoss, double[] otherSigContribGains)
+    {
+        double[] testCounts = new double[mBucketCount];
+        copyVector(mCurrentCounts, testCounts);
+        double[] testContribs = new double[mSigCount];
+        copyVector(mContribs, testContribs);
+
+        int applyMultiple = 0;
+        boolean appliedOk = true;
+
+        final double[][] sigData = mSigs.getData();
+
+        while(appliedOk)
+        {
+            // reduce the main sig
+            for (int b = 0; b < mBucketCount; ++b)
+            {
+                double newCount = sigContribLoss * sigData[b][rs];
+
+                if (lessThan(testCounts[b] - newCount, 0))
+                {
+                    appliedOk = false;
+                    break;
+                }
+
+                testCounts[b] -= newCount;
+            }
+
+            if(!appliedOk)
+                break;
+
+            if(lessThan(testContribs[rs] - sigContribLoss, 0))
+                break;
+
+            testContribs[rs] -= sigContribLoss;
+
+            // increase all the others
+            for(int sig = 0; sig < mSigCount; ++sig)
+            {
+                if(otherSigContribGains[sig] == 0)
+                    continue;
+
+                for (int b = 0; b < mBucketCount; ++b)
+                {
+                    double newCount = otherSigContribGains[sig] * sigData[b][sig];
+
+                    if (greaterThan(testCounts[b] + newCount, mCounts[b]))
+                    {
+                        appliedOk = false;
+                        break;
+                    }
+
+                    testCounts[b] += newCount;
+                }
+
+                testContribs[sig] += otherSigContribGains[sig];
+            }
+
+            if(!appliedOk)
+                break;
+
+            if(greaterThan(sumVector(testContribs), mCountsTotal))
+                break;
+
+            ++applyMultiple;
+        }
+
+        return applyMultiple;
     }
 
     private void applySigAdjustments(int rs, double sigContribLoss, double[] otherSigContribGains)
@@ -599,9 +672,6 @@ public class SigContribOptimiser
 
         for (Integer s2 : otherSigContribIndices)
         {
-//            if (s2 == rs)
-//                continue;
-
             if (otherSigContribGains[s2] == 0)
                 break;
 
@@ -613,8 +683,6 @@ public class SigContribOptimiser
 
             applyContribution(s2, otherSigContribGains[s2]);
         }
-
-        // logStats();
     }
 
     private void calcAllContributions()
