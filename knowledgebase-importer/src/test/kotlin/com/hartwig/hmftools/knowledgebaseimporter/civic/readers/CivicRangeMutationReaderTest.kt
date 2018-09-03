@@ -53,7 +53,6 @@ class CivicRangeMutationReaderTest : StringSpec() {
         "does not read range mutation from record with position and ref/alt" {
             CivicRangeMutationReader.read(codonMutation.copy(reference_bases = "A")) shouldBe emptyList<SomaticEvent>()
             CivicRangeMutationReader.read(codonMutation.copy(variant_bases = "A")) shouldBe emptyList<SomaticEvent>()
-
         }
     }
 }

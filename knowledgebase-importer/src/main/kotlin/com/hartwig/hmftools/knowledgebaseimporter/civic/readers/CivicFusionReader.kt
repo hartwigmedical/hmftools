@@ -6,8 +6,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.readers.Somatic
 import com.hartwig.hmftools.knowledgebaseimporter.output.FusionEvent
 
 object CivicFusionReader : SomaticEventReader<CivicVariantInput, FusionEvent> {
-    private val FUSION_SEPARATORS = setOf("-")
-    private val fusionReader = FusionReader(separators = FUSION_SEPARATORS)
+    private val fusionReader = FusionReader(separators = setOf("-"))
 
     private fun matches(event: CivicVariantInput) = event.variantTypes.isNotEmpty() && event.variantTypes.all { it.contains("fusion") }
 

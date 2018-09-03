@@ -8,15 +8,17 @@ import io.kotlintest.matchers.shouldBe
 import io.kotlintest.specs.StringSpec
 
 class CivicFusionReaderTest : StringSpec() {
-    private val complexVariant = CivicVariantInput("ALK", "ENST00000389048.3", "", "ALK FUSION F1245C", "2",
-                                                   "29436859", "29436859", "A", "C",
-                                                   "NM_004304.4:c.3734T>G,NP_004295.2:p.Phe1245Cys,NC_000002.11:g.29436859A>C,ENST00000389048.3:c.3734T>G",
-                                                   "missense_variant,transcript_fusion")
-    private val fusionVariant = CivicVariantInput("NTRK1", "ENST00000368300.4", "", "LMNA-NTRK1", "1",
-                                                  "156084498", "156108548", "", "", "", "transcript_fusion")
+    companion object {
+        private val complexVariant = CivicVariantInput("ALK", "ENST00000389048.3", "", "ALK FUSION F1245C", "2",
+                                                       "29436859", "29436859", "A", "C",
+                                                       "NM_004304.4:c.3734T>G,NP_004295.2:p.Phe1245Cys,NC_000002.11:g.29436859A>C,ENST00000389048.3:c.3734T>G",
+                                                       "missense_variant,transcript_fusion")
+        val fusionVariant = CivicVariantInput("NTRK1", "ENST00000368300.4", "", "LMNA-NTRK1", "1",
+                                              "156084498", "156108548", "", "", "", "transcript_fusion")
 
-    private val promiscuousGene = CivicVariantInput("FGFR1", "ENST00000425967.3", "", "FGFR1 FUSIONS", "8",
-                                                    "38268656", "38325363", "", "", "", "transcript_fusion")
+        val promiscuousGene = CivicVariantInput("FGFR1", "ENST00000425967.3", "", "FGFR1 FUSIONS", "8",
+                                                "38268656", "38325363", "", "", "", "transcript_fusion")
+    }
 
     init {
         "can read fusion pair" {

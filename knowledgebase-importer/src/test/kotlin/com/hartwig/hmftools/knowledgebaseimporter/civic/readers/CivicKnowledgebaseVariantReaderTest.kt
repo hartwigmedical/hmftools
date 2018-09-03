@@ -7,9 +7,11 @@ import io.kotlintest.matchers.shouldBe
 import io.kotlintest.specs.StringSpec
 
 class CivicKnowledgebaseVariantReaderTest : StringSpec() {
-    private val variant = CivicVariantInput("BRAF", "ENST00000288602", "", "V600E", "7",
-                                            "140453136", "140453136", "A", "T", "", "")
-    private val expectedResult = KnowledgebaseVariant("BRAF", "7", 140453136, "A", "T")
+    companion object {
+        val variant = CivicVariantInput("BRAF", "ENST00000288602", "", "V600E", "7",
+                                        "140453136", "140453136", "A", "T", "", "")
+        private val expectedResult = KnowledgebaseVariant("BRAF", "7", 140453136, "A", "T")
+    }
 
     init {
         "can read knowledgebase substitution variant" {

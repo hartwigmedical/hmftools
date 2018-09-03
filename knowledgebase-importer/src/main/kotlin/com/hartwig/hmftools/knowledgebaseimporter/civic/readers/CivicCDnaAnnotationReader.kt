@@ -9,7 +9,8 @@ object CivicCDnaAnnotationReader : SomaticEventReader<CivicVariantInput, CDnaAnn
     private const val ENSEMBL_PATTERN = "(ENST[0-9]+(?:\\.[0-9]+)?)"
     private const val ENSEMBL_ANNOTATION_PATTERN = "($ENSEMBL_PATTERN):([^,\\t\\s\\n]+)"
 
-    fun match(event: CivicVariantInput) = ENSEMBL_ANNOTATION_PATTERN.toRegex(RegexOption.IGNORE_CASE).find(event.hgvs_expressions) != null
+    private fun match(event: CivicVariantInput) =
+            ENSEMBL_ANNOTATION_PATTERN.toRegex(RegexOption.IGNORE_CASE).find(event.hgvs_expressions) != null
 
     override fun read(event: CivicVariantInput): List<CDnaAnnotation> {
         return if (match(event)) {
