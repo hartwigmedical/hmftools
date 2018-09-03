@@ -1,11 +1,10 @@
-package com.hartwig.hmftools.knowledgebaseimporter.iclusion.readers
+package com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.readers
 
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.CDnaAnnotation
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.KnowledgebaseEvent
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.readers.SomaticEventReader
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.matchers.TransvarCDnaMatcher
 
-object IclusionCDnaAnnotationReader : SomaticEventReader<KnowledgebaseEvent, CDnaAnnotation> {
+object CDnaAnnotationReader : SomaticEventReader<KnowledgebaseEvent, CDnaAnnotation> {
     private fun match(event: KnowledgebaseEvent) = TransvarCDnaMatcher.matches(event.variant)
 
     override fun read(event: KnowledgebaseEvent): List<CDnaAnnotation> {

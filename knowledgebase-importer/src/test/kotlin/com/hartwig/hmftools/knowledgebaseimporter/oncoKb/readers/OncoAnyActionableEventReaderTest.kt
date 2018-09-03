@@ -1,17 +1,17 @@
 package com.hartwig.hmftools.knowledgebaseimporter.oncoKb.readers
 
-import com.hartwig.hmftools.knowledgebaseimporter.iclusion.readers.IclusionProteinAnnotationReader
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.ProteinAnnotation
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.SomaticEvent
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.SequenceVariantType
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.readers.KnowledgebaseEventReader
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.readers.ProteinAnnotationReader
 import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.input.OncoActionableInput
 import io.kotlintest.matchers.shouldBe
 import io.kotlintest.specs.StringSpec
 
 class OncoAnyActionableEventReaderTest : StringSpec() {
     private val actionable = OncoActionableInput("ENST00000000", "BRAF", "", "", "", "")
-    private val individualReaders = KnowledgebaseEventReader("", IclusionProteinAnnotationReader)
+    private val individualReaders = KnowledgebaseEventReader("", ProteinAnnotationReader)
     private val reader = OncoAnyActionableEventReader(individualReaders)
 
     init {

@@ -2,12 +2,14 @@ package com.hartwig.hmftools.knowledgebaseimporter.iclusion.readers
 
 import com.hartwig.hmftools.knowledgebaseimporter.iclusion.IclusionEvent
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.HgvsAnnotation
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.readers.CDnaAnnotationReader
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.readers.ProteinAnnotationReader
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.readers.SomaticEventReader
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.matchers.Matcher
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.matchers.TransvarMatcher
 
 object IclusionTransvarReader : SomaticEventReader<IclusionEvent, HgvsAnnotation> {
-    private val nestedReaders = listOf(IclusionCDnaAnnotationReader, IclusionProteinAnnotationReader)
+    private val nestedReaders = listOf(CDnaAnnotationReader, ProteinAnnotationReader)
 
     private fun match(event: IclusionEvent) = TransvarMatcher.matches(event.variant)
 

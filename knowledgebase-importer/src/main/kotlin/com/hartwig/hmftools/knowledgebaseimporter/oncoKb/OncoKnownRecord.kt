@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.knowledgebaseimporter.oncoKb
 
-import com.hartwig.hmftools.knowledgebaseimporter.iclusion.readers.IclusionProteinAnnotationReader
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.KnownRecord
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordMetadata
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.SomaticEvent
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.readers.KnowledgebaseEventReader
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.readers.ProteinAnnotationReader
 import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.input.OncoKnownInput
 import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.readers.*
 import com.hartwig.hmftools.knowledgebaseimporter.output.FusionEvent
@@ -13,9 +13,9 @@ data class OncoKnownRecord(private val metadata: RecordMetadata, override val ad
                            override val events: List<SomaticEvent>) : KnownRecord,
         RecordMetadata by metadata {
     companion object {
-        private val multiSnvReader = OncoAnyKnownEventReader(KnowledgebaseEventReader("oncoKb", IclusionProteinAnnotationReader))
+        private val multiSnvReader = OncoAnyKnownEventReader(KnowledgebaseEventReader("oncoKb", ProteinAnnotationReader))
         private val reader = KnowledgebaseEventReader("oncoKb", OncoCnvReader, OncoExonMutationReader, OncoFusionReader,
-                                                      OncoGeneMutationReader, IclusionProteinAnnotationReader, multiSnvReader)
+                                                      OncoGeneMutationReader, ProteinAnnotationReader, multiSnvReader)
 
         operator fun invoke(input: OncoKnownInput): OncoKnownRecord {
             val metadata = OncoMetadata(input.gene, input.transcript!!)

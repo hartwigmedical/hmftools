@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.knowledgebaseimporter.civic.readers
 
 import com.hartwig.hmftools.knowledgebaseimporter.civic.input.CivicVariantInput
-import com.hartwig.hmftools.knowledgebaseimporter.iclusion.readers.IclusionCDnaAnnotationReader
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.CDnaAnnotation
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.readers.CDnaAnnotationReader
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.readers.SomaticEventReader
 
 object CivicCDnaAnnotationReader : SomaticEventReader<CivicVariantInput, CDnaAnnotation> {
@@ -14,7 +14,7 @@ object CivicCDnaAnnotationReader : SomaticEventReader<CivicVariantInput, CDnaAnn
 
     override fun read(event: CivicVariantInput): List<CDnaAnnotation> {
         return if (match(event)) {
-            return IclusionCDnaAnnotationReader.read(extractAnnotation(event))
+            return CDnaAnnotationReader.read(extractAnnotation(event))
         } else {
             emptyList()
         }
