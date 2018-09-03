@@ -10,7 +10,7 @@ The knowledgebase importer reads various knowledgebases and produces one consist
  The following knowledgebases are integrated:
    - COSMIC for fusions (details to come...)
    - CGI for actionability and hotspots/fusions (https://www.cancergenomeinterpreter.org, and  https://doi.org/10.1101/140475)
-   - OncoKB for actionability and hotspots/fusions (http://oncokb.org)
+   - OncoKB for actionability and hotspots/fusions (http://oncokb.org, and , and https://doi.org/10.1200/PO.17.00011)
    - CiViC for actionability and hotspots/fusions (https://civicdb.org, and https://www.ncbi.nlm.nih.gov/pubmed/28138153)
    - iClusion for (Dutch) clinical trials (https://iclusion.org)
    
