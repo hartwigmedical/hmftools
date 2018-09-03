@@ -107,13 +107,15 @@ public class PotentiallyActionableItemsDAO {
     }
 
     @NotNull
-    Stream<Pair<String, String>> allSampleAndTumorLocations() {
+    Stream<Pair<String, String>> allSampleAndTumorLocations(@NotNull final String sampleId) {
         return context.select(SAMPLE.SAMPLEID, BASELINE.PRIMARYTUMORLOCATION)
                 .from(SAMPLE.leftJoin(BASELINE).on(SAMPLE.PATIENTID.eq(BASELINE.PATIENTID)))
+                .where(SAMPLE.SAMPLEID.eq(sampleId))
                 .fetch()
                 .stream()
                 .map(result -> Pair.create(result.get(SAMPLE.SAMPLEID), result.get(BASELINE.PRIMARYTUMORLOCATION)))
                 .distinct();
+
     }
 
     private static <T extends Record> Stream<T> streamResults(@NotNull final ResultQuery<T> query) {

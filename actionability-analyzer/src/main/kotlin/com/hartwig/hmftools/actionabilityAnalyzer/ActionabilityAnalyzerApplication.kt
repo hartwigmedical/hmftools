@@ -3,18 +3,15 @@ package com.hartwig.hmftools.actionabilityAnalyzer
 import com.hartwig.hmftools.extensions.cli.createCommandLine
 import com.hartwig.hmftools.extensions.cli.options.HmfOptions
 import com.hartwig.hmftools.extensions.cli.options.strings.RequiredInputOption
-import com.hartwig.hmftools.extensions.cli.options.strings.RequiredOutputOption
 import com.hartwig.hmftools.extensions.csv.CsvReader
 import com.hartwig.hmftools.extensions.csv.CsvWriter
 import com.hartwig.hmftools.knowledgebaseimporter.DB_PASSWORD
 import com.hartwig.hmftools.knowledgebaseimporter.DB_USER
 import com.hartwig.hmftools.knowledgebaseimporter.HMFPATIENTS_DB
-import com.hartwig.hmftools.knowledgebaseimporter.readCSVRecords
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess
 import com.hartwig.hmftools.patientdb.data.PotentialActionableCNV
 import com.hartwig.hmftools.patientdb.data.PotentialActionableFusion
 import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 import java.io.File
 import java.util.stream.Stream
 import kotlin.streams.asSequence
@@ -46,12 +43,11 @@ fun main(args: Array<String>) {
     val dbAccess = DatabaseAccess(user, password, databaseUrl)
     val samplesToAnalyze = readSamples(sampleId, dbAccess)
     logger.info("samplesToAnalyze" + samplesToAnalyze)
-    //  val actionabilityAnalyzer = ActionabilityAnalyzer(samplesToAnalyze, actionableVariants, actionableFusionPairs,
-    //                                                  actionablePromiscuousFive, actionablePromiscuousThree, actionableCNVs, cancerTypes,
-    //                                                actionableGenomicRanges)
-
+    //val actionabilityAnalyzer = ActionabilityAnalyzer(samplesToAnalyze.toString(), actionableVariants, actionableFusionPairs,
+      //                                                  actionablePromiscuousFive, actionablePromiscuousThree, actionableCNVs, cancerTypes,
+        //                                                actionableGenomicRanges)
+    //logger.info("actionabilityAnalyzer" + actionabilityAnalyzer)
     //   queryDatabase(outputDir, dbAccess, samplesToAnalyze, actionabilityAnalyzer)
-    //logger.info("sampleToAnalyse" + samplesToAnalyze)
     logger.info("Done.")
 }
 
@@ -65,7 +61,7 @@ private fun createOptions(): HmfOptions {
 }
 
 private fun readSamples(sampleId: String, dbAccess: DatabaseAccess) =
-        if (sampleId.isNotEmpty() && sampleId.isNotBlank()) dbAccess.allSamplesAndTumorLocations().toList().associate { Pair(it.key, it.value) }
+        if (sampleId.isNotEmpty() && sampleId.isNotBlank()) dbAccess.allSamplesAndTumorLocations(sampleId).toList().associate { Pair(it.key, it.value) }
         else logger.info("no sampleId")
 
 private fun queryDatabase(outputDir: String, dbAccess: DatabaseAccess, samplesToAnalyze: Map<String, String>, actionabilityAnalyzer: ActionabilityAnalyzer) {
