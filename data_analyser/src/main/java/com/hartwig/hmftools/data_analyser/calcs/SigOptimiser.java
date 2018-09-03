@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.convertToPercen
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.doubleToStr;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.greaterThan;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.initVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.lessThan;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sizeToStr;
@@ -50,8 +51,11 @@ public class SigOptimiser
     private double[] mCurrentRatios;
     private double mCurrentAllocPerc;
     private double[] mUnallocatedBucketCounts;
-    private double mTotalUnallocCount;
+    private double mUnallocTotal;
+    private double mAllocTotal;
     private List<Integer> mNewBuckets; // added from accepted candidates
+    private List<Integer> mRemovedBuckets; // added from accepted candidates
+    private List<Integer> mZeroedSamples;
 
     // state
     private boolean mIsValid;
@@ -69,7 +73,7 @@ public class SigOptimiser
         mIsValid = true;
         mHasChanged = false;
 
-        if(samples.size() != proposedAllocs.size())
+        if(proposedAllocs != null && samples.size() != proposedAllocs.size())
         {
             mIsValid = false;
         }
@@ -88,6 +92,7 @@ public class SigOptimiser
         mNoiseRanges = new double[mBucketCount];
 
         mNewBuckets = Lists.newArrayList();
+        mRemovedBuckets = Lists.newArrayList();
 
         mNonZeroBuckets = Lists.newArrayList();
         for(int b = 0; b < mBucketCount; ++b)
@@ -115,12 +120,18 @@ public class SigOptimiser
         mSampleNoiseRatio = new NmfMatrix(mBucketCount, samples.size());
 
         mProposedAllocs = Lists.newArrayList();
-        mProposedAllocs.addAll(proposedAllocs);
+
+        if(proposedAllocs != null)
+           mProposedAllocs.addAll(proposedAllocs);
+
         mProposedTotals = new double[mSampleCount];
+
+        mZeroedSamples = Lists.newArrayList();
 
         mCurrentAllocPerc = 0;
         mUnallocatedBucketCounts = new double[mBucketCount];
-        mTotalUnallocCount = 0;
+        mUnallocTotal = 0;
+        mAllocTotal = 0;
 
         mCountsTotal = mSampleCounts.sum();
         mSampleTotals = new double[mSampleCount];
@@ -135,9 +146,19 @@ public class SigOptimiser
             final double[] allCounts = sample.getElevatedBucketCounts();
             final double[] noise = sample.getCountRanges();
             final double[] allocNoise = sample.getAllocNoiseCounts();
-            final double[] proposedAllocCounts = mProposedAllocs.get(s);
 
-            mProposedTotals[s] = sumVector(proposedAllocCounts);
+            double[] proposedAllocCounts = null;
+
+            if(proposedAllocs != null)
+            {
+                proposedAllocCounts = proposedAllocs.get(s);
+                mProposedTotals[s] = sumVector(proposedAllocCounts);
+            }
+            else
+            {
+                proposedAllocCounts = new double[mBucketCount];
+                mProposedAllocs.add(proposedAllocCounts);
+            }
 
             for(Integer b : mNonZeroBuckets)
             {
@@ -171,10 +192,11 @@ public class SigOptimiser
     }
 
     public final double[] getFittedRatios() { return mCurrentRatios; }
-    public double getAllocPerc() { return mCurrentAllocPerc; }
     public boolean isValid() { return mIsValid; }
     public boolean hasChanged() { return mHasChanged; }
     public List<Integer> getNewBuckets() { return mNewBuckets; }
+    public List<Integer> getNonZeroBuckets() { return mNonZeroBuckets; }
+    public double getAllocTotal() { return mAllocTotal; }
     public double[] getRevisedSampleAllocCounts(int sampleIndex) { return mProposedAllocs.get(sampleIndex); }
     public double getRevisedSampleAlloc(int sampleIndex) { return mProposedTotals[sampleIndex]; }
 
@@ -185,18 +207,18 @@ public class SigOptimiser
         if(!mIsValid)
             return false;
 
-        LOGGER.debug(String.format("grp(%d) optimising for samples(%d) buckets(%d) candidates(%d) count(%s unalloc=%s)",
+        LOGGER.debug(String.format("grp(%d) optimising for samples(%d) buckets(%d) candidates(%d) count(%s alloc=%s unalloc=%s)",
                 mGroupId, mSampleCount, mNonZeroBuckets.size(), mCandiateNewBuckets.size(),
-                sizeToStr(mCountsTotal), sizeToStr(mTotalUnallocCount)));
+                sizeToStr(mCountsTotal), sizeToStr(mAllocTotal), sizeToStr(mUnallocTotal)));
 
         logStats(false);
         logRatios();
 
-        testCandidateExtraBuckets();
-
         calcBucketRatioRanges();
 
         calcOptimalRatios();
+
+        testCandidateExtraBuckets();
 
         if(mHasChanged)
         {
@@ -265,13 +287,11 @@ public class SigOptimiser
             mRatioRanges[b] = avgCountsRange;
             mNoiseRanges[b] = avgNoiseRange;
 
-            /*
             if(mLogVerbose)
             {
                 LOGGER.debug(String.format("grp(%d) bucket(%d) ratio(%.4f) range(noise=%.4f counts=%.4f)",
                         mGroupId, b, bucketRatios[b], avgNoiseRange, avgCountsRange));
             }
-            */
         }
     }
 
@@ -282,28 +302,46 @@ public class SigOptimiser
         copyVector(mCurrentRatios, currentRatios);
         copyVector(mCurrentRatios, bestRatios);
         double[] testUnallocCounts = new double[mBucketCount];
+        double[] testSampleAllocs = new double[mSampleCount];
 
         int bucketIncr = 4; // translate this 2*x + 1 test ratios, x negative and x positive
 
-        double bestUnllocTotal = mTotalUnallocCount;
+        double bestAllocTotal = 0;
+        List<Integer> bucketsToRemove = Lists.newArrayList();
 
         for(Integer bucket : mNonZeroBuckets)
         {
             double startRatio = bestRatios[bucket]; // start with the existing ratio
 
             double range = max(mRatioRanges[bucket], mNoiseRanges[bucket]);
+
+            if(range == 0)
+                continue;
+
             range = min(range, startRatio * 3);
 
-            // double range = mRatioRanges[bucket] / 100; // is a percentage
             double rangeFrag = range / bucketIncr;
 
-            // double bestBucketUnallocTotal = bestUnllocTotal;
             boolean changed = false;
             double bestRatio = 0;
+            boolean zeroTested = false;
 
-            for(int i = -bucketIncr; i <= bucketIncr; ++i)
+            for(int i = -bucketIncr; i <= bucketIncr+1; ++i)
             {
-                double testRatio = startRatio + i * rangeFrag; // need to use the current normalised ratio as the anchor point
+                double testRatio = 0;
+
+                if(i == bucketIncr+1)
+                {
+                    if(zeroTested)
+                        break;
+
+                    // always try zero on every bucket if not already covered by the range
+                    zeroTested = true;
+                }
+                else
+                {
+                    testRatio = startRatio + i * rangeFrag; // need to use the current normalised ratio as the anchor point
+                }
 
                 if(testRatio < 0)
                     continue;
@@ -314,11 +352,12 @@ public class SigOptimiser
                 convertToPercentages(currentRatios);
 
                 // now test the effect on every sample
-                double unallocTotal = calcTotalUnallocatedCounts(currentRatios, testUnallocCounts);
+                // double unallocTotal = calcTotalUnallocatedCounts(currentRatios, testUnallocCounts, null);
+                double allocTotal = calcTotalAllocatedCounts(currentRatios, testUnallocCounts, testSampleAllocs, null);
 
-                if (lessThan(unallocTotal, bestUnllocTotal))
+                if (greaterThan(allocTotal, bestAllocTotal))
                 {
-                    bestUnllocTotal = unallocTotal;
+                    bestAllocTotal = allocTotal;
                     bestRatio = testRatio;
                     changed = true;
                 }
@@ -333,18 +372,30 @@ public class SigOptimiser
                 mHasChanged = true;
                 LOGGER.debug(String.format("grp(%d) bucket(%d) best ratio(%.4f converted=%.4f) vs start(%.4f)",
                         mGroupId, bucket, bestRatio, bestRatios[bucket], mCurrentRatios[bucket]));
+
+                if(bestRatio == 0)
+                    bucketsToRemove.add(bucket);
             }
         }
 
-        if(bestUnllocTotal < mTotalUnallocCount)
+        for(Integer bucket : bucketsToRemove)
         {
-            if(mLogVerbose)
-            {
-                LOGGER.debug(String.format("grp(%d) lowered unalloc count(%s -> %s)",
-                        mGroupId, doubleToStr(mTotalUnallocCount), doubleToStr(bestUnllocTotal)));
+            mNonZeroBuckets.remove(bucket);
+            mRemovedBuckets.add(bucket);
 
-                copyVector(bestRatios, mCurrentRatios);
+            for (int s = 0; s < mSampleCount; ++s)
+            {
+                double[] sampleBucketAllocs = mProposedAllocs.get(s);
+                sampleBucketAllocs[bucket] = 0;
             }
+        }
+
+        if(bestAllocTotal > mAllocTotal)
+        {
+            LOGGER.debug(String.format("grp(%d) ratio optimisation increased alloc count(%s -> %s)",
+                    mGroupId, doubleToStr(mAllocTotal), doubleToStr(bestAllocTotal)));
+
+            copyVector(bestRatios, mCurrentRatios);
 
             logStats(true);
         }
@@ -460,12 +511,14 @@ public class SigOptimiser
             double maxAllocTotal = sumVector(adjSampleAllocs);
             double selectedRatio = trialRatio;
 
+            /*
             if(mLogVerbose)
             {
                 LOGGER.debug(String.format("grp(%d) candidate bucket(%d) ratios(%.4f min=%.4f max=%.4f lsq=%.4f med=%.4f avg=%.4f) limits(count=%d total=%s zero=%d) with allocTotal(%s) vs total(%s)",
                         mGroupId, bucket, selectedRatio, minSampleRatio, maxSampleRatio, lsqRatio, medianRatio, avgRatio,
                         limitedByCount, limitedByAlloc, limitedByZero, doubleToStr(maxAllocTotal), doubleToStr(mProposedTotal)));
             }
+            */
 
             // test each of the ratios by calculating the allocation gain across each sample to use that ratio
             // any sample with zero counts in this bucket would mean a total loss of its allocation
@@ -531,11 +584,11 @@ public class SigOptimiser
                         maxLimByCount, maxLimByAlloc, maxLimByNoCount, doubleToStr(maxAllocTotal), doubleToStr(mProposedTotal)));
             }
 
-            double percIncrease = (maxAllocTotal - mProposedTotal) / mProposedTotal;
+            double percIncrease = (maxAllocTotal - mAllocTotal) / mAllocTotal;
             if (percIncrease >= MIN_IMPROVE_PERCENT)
             {
                 LOGGER.debug(String.format("grp(%d) adding candidate bucket(%d) optimal ratio(%.4f) with alloc improve(%.3f %s prev=%s)",
-                        mGroupId, bucket, selectedRatio, percIncrease, doubleToStr(maxAllocTotal), doubleToStr(mProposedTotal)));
+                        mGroupId, bucket, selectedRatio, percIncrease, doubleToStr(maxAllocTotal), doubleToStr(mAllocTotal)));
 
                 mHasChanged = true;
                 recalcRequired = true;
@@ -574,7 +627,8 @@ public class SigOptimiser
             convertToPercentages(mCurrentRatios);
         }
     }
-    private double calcTotalUnallocatedCounts(final double[] ratios, double[] unallocatedBucketCounts)
+
+    private double calcTotalUnallocatedCounts(final double[] ratios, double[] unallocatedBucketCounts, List<Integer> zeroedSamples)
     {
         final double[][] scData = mSampleCounts.getData();
         initVector(unallocatedBucketCounts, 0);
@@ -595,7 +649,8 @@ public class SigOptimiser
                     minAlloc = alloc;
             }
 
-            // assert minAlloc > 0
+            if(minAlloc == 0 && zeroedSamples != null)
+                zeroedSamples.add(s);
 
             // translate into counts across the board
             for(Integer b : mNonZeroBuckets)
@@ -612,22 +667,70 @@ public class SigOptimiser
         return totalUnallocated;
     }
 
+    private double calcTotalAllocatedCounts(final double[] ratios, double[] allocatedBucketCounts, double[] allocatedSampleCounts, List<Integer> zeroedSamples)
+    {
+        // goes through each sample and applies the input ratios to calculate what can be allocated
+        // return data:
+        // - allocated bucket counts - per-bucket counts with the input ratios
+        // - zeroed samples - any sample which cannot allocate anthing with the input ratios
+        // - total allocated count across all samples
+
+        final double[][] scData = mSampleCounts.getData();
+        initVector(allocatedBucketCounts, 0);
+        initVector(allocatedSampleCounts, 0);
+
+        // find the limiting bucket and alloc
+        double totalAllocated = 0;
+
+        for(int s = 0; s < mSampleCount; ++s)
+        {
+            double minAlloc = 0;
+
+            for(Integer b : mNonZeroBuckets)
+            {
+                double sampleCount = scData[b][s];
+                double alloc = sampleCount / ratios[b];
+
+                if(minAlloc == 0 || alloc < minAlloc)
+                    minAlloc = alloc;
+            }
+
+            if(minAlloc == 0 && zeroedSamples != null)
+                zeroedSamples.add(s);
+
+            allocatedSampleCounts[s] = minAlloc;
+
+            // translate into counts across the board
+            for(Integer b : mNonZeroBuckets)
+            {
+                double allocCount = minAlloc * ratios[b];
+                totalAllocated += allocCount;
+                allocatedBucketCounts[b] += allocCount;
+            }
+        }
+
+        return totalAllocated;
+    }
+
     private void recalcStats()
     {
-        mTotalUnallocCount = calcTotalUnallocatedCounts(mCurrentRatios, mUnallocatedBucketCounts);
+        mZeroedSamples.clear();
+        // mUnallocTotal = calcTotalUnallocatedCounts(mCurrentRatios, mUnallocatedBucketCounts, mZeroedSamples);
+        mAllocTotal = calcTotalAllocatedCounts(mCurrentRatios, mUnallocatedBucketCounts, mProposedTotals, mZeroedSamples);
+        mUnallocTotal = mCountsTotal - mAllocTotal;
     }
 
     private void logStats(boolean checkVerbose)
     {
         recalcStats();
 
-        if(!mLogVerbose)
+        if(!mLogVerbose && !checkVerbose)
             return;
 
-        LOGGER.debug(String.format("grp(%d) total(%s) alloc(%s proposed=%s) unalloc(%s perc=%.3f) buckets(%d added=%d)",
-                mGroupId, doubleToStr(mCountsTotal), doubleToStr(mCountsTotal - mTotalUnallocCount), doubleToStr(mProposedTotal),
-                doubleToStr(mTotalUnallocCount), mTotalUnallocCount/mCountsTotal,
-                mNonZeroBuckets.size(), mNewBuckets.size()));
+        LOGGER.debug(String.format("grp(%d) total(%s) alloc(%s perc=%.3f proposed=%s) unalloc(%s perc=%.3f) buckets(%d add=%d remove=%d) samples(%d zeroed=%d)",
+                mGroupId, doubleToStr(mCountsTotal), doubleToStr(mAllocTotal),mAllocTotal/mCountsTotal, doubleToStr(mProposedTotal),
+                doubleToStr(mUnallocTotal), mUnallocTotal /mCountsTotal,
+                mNonZeroBuckets.size(), mNewBuckets.size(), mRemovedBuckets.size(), mSampleCount, mZeroedSamples.size()));
     }
 
     private void logRatios()

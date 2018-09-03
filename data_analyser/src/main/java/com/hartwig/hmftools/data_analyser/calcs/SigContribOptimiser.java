@@ -4,7 +4,6 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.calcCSS;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.doubleToStr;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getSortedVectorIndices;
@@ -23,7 +22,7 @@ import com.hartwig.hmftools.data_analyser.types.NmfMatrix;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SigContributionOptimiser
+public class SigContribOptimiser
 {
     private int mSampleId;
     private boolean mIsValid;
@@ -78,9 +77,9 @@ public class SigContributionOptimiser
     private static int MAX_TEST_ITERATIONS = 100;
     private static int MAX_NO_IMPROVE_COUNT = 10;
 
-    private static final Logger LOGGER = LogManager.getLogger(SigContributionOptimiser.class);
+    private static final Logger LOGGER = LogManager.getLogger(SigContribOptimiser.class);
 
-    public SigContributionOptimiser(int bucketCount, boolean logVerbose, double targetAllocPercent)
+    public SigContribOptimiser(int bucketCount, boolean logVerbose, double targetAllocPercent)
     {
         mBucketCount = bucketCount;
 
@@ -328,14 +327,16 @@ public class SigContributionOptimiser
                 break;
             }
 
-            if(mIterations >= MAX_TEST_ITERATIONS * 0.75)
+            if(mIterations >= MAX_TEST_ITERATIONS * 0.5)
             {
+                /*
                 if(!mLogVerboseOverride)
                 {
                     // turn on logging to see what's happening
                     LOGGER.warn("sample({}) close to max iterations({}) reached", mSampleId, mIterations);
                     mLogVerboseOverride = true;
                 }
+                */
 
                 if(mIterations >= MAX_TEST_ITERATIONS)
                 {

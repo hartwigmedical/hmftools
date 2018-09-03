@@ -1,15 +1,13 @@
 package com.hartwig.hmftools.data_analyser;
 
-import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.greaterThan;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
-import static com.hartwig.hmftools.data_analyser.calcs.NmfSampleFitter.fitCountsToRatios;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.data_analyser.calcs.DataUtils;
-import com.hartwig.hmftools.data_analyser.calcs.SigContributionOptimiser;
+import com.hartwig.hmftools.data_analyser.calcs.SigContribOptimiser;
 import com.hartwig.hmftools.data_analyser.loaders.GenericDataLoader;
 import com.hartwig.hmftools.data_analyser.types.GenericDataCollection;
 import com.hartwig.hmftools.data_analyser.types.NmfMatrix;
@@ -108,7 +106,7 @@ public class MiscTester
 
         // boolean calcOk = fitCountsToRatios(sample, counts, countsMargin, ratiosCollection, contribs, 0.001);
 
-        SigContributionOptimiser sigOptim = new SigContributionOptimiser(bucketCount, true, 1.0);
+        SigContribOptimiser sigOptim = new SigContribOptimiser(bucketCount, true, 1.0);
         sigOptim.initialise(sample, counts, countsMargin, ratiosCollection, 0.001, 0);
         boolean calcOk = sigOptim.fitToSample();
 
@@ -190,7 +188,7 @@ public class MiscTester
 
         // boolean calcOk = fitCountsToRatios(sample, counts, countsMargin, ratiosCollection, contribs, 0.001);
 
-        SigContributionOptimiser sigOptim = new SigContributionOptimiser(bucketCount, true, 1.0);
+        SigContribOptimiser sigOptim = new SigContribOptimiser(bucketCount, true, 1.0);
         sigOptim.initialise(sample, counts, countsMargin, ratiosCollection, 0.001, 0);
         boolean calcOk = sigOptim.fitToSample();
 
@@ -335,7 +333,7 @@ public class MiscTester
 
         double[] contribs = new double[ratiosCollection.size()];
 
-        SigContributionOptimiser sigOptim = new SigContributionOptimiser(sampleCounts.length, true, 0.999);
+        SigContribOptimiser sigOptim = new SigContribOptimiser(sampleCounts.length, true, 0.999);
         sigOptim.initialise(sampleId, sampleCounts, sampleNoise, ratiosCollection, 0.03, 400);
         sigOptim.setRequiredSig(1);
 
