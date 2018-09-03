@@ -5,13 +5,13 @@ The knowledgebase importer reads various knowledgebases and produces one consist
  - Known Somatic Fusions
  - Evidence for actionability (which variants may imply responsiveness or resistant to certain treatments?)
  
- The knowledgebase importer requires the full DOID definition (doid.owl) from  http://www.obofoundry.org/ontology/doid.html
+ The knowledgebase importer requires the full DOID definition (doid.owl) from  http://www.obofoundry.org/ontology/doid.html. The DOID definition is managed by http://www.disease-ontology.org.
  
  The following knowledgebases are integrated:
    - COSMIC for fusions (details to come...)
-   - CGI for actionability and hotspots/fusions (https://www.cancergenomeinterpreter.org)
+   - CGI for actionability and hotspots/fusions (https://www.cancergenomeinterpreter.org, and  https://doi.org/10.1101/140475)
    - OncoKB for actionability and hotspots/fusions (http://oncokb.org)
-   - CiViC for actionability and hotspots/fusions (https://civicdb.org)
+   - CiViC for actionability and hotspots/fusions (https://civicdb.org, https://www.ncbi.nlm.nih.gov/pubmed/28138153)
    - iClusion for (Dutch) clinical trials (https://iclusion.org)
    
  More specifically, the following files are required:
