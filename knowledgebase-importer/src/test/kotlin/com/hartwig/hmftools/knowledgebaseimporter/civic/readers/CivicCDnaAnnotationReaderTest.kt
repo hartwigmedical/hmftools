@@ -14,7 +14,7 @@ class CivicCDnaAnnotationReaderTest : StringSpec() {
     private val noEnsemblHgvs = "NM_004333.4:c.1799T>A,NP_004324.2:p.Val600Glu,NC_000007.13:g.140453136A>T"
     private val variant = CivicVariantInput("BRAF", "ENST00000288602", "", "V600E", "7",
                                             "140453136", "140453136", "A", "T", hgvsEnd, "")
-    private val expectedResult = CDnaAnnotation("ENST00000288602", "c.1799T>A", SequenceVariantType.SUBSTITUTION)
+    private val expectedResult = CDnaAnnotation("ENST00000288602.6", "c.1799T>A", SequenceVariantType.SUBSTITUTION)
 
     init {
         "can read cdna annotation" {
