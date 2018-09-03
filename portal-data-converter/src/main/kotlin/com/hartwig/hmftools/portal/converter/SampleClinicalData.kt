@@ -35,7 +35,7 @@ data class SampleClinicalData(val cpctId: String, val sampleId: String, private 
         }
 
         private fun determineTumorLocation(curatedTumorLocation: String): String {
-            return if (curatedTumorLocation.isBlank()) "Missing" else curatedTumorLocation
+            return if (curatedTumorLocation.isBlank()) "Missing" else curatedTumorLocation.replace('/', '-')
         }
 
         private fun determineSpecimenType(ecrfBiopsySite: String): Pair<String, String> {
@@ -63,4 +63,5 @@ data class SampleClinicalData(val cpctId: String, val sampleId: String, private 
     val donor = Donor(hmfId, gender, ageAtEnrollment)
     val sample = Sample(sampleHmfId)
     val specimen = Specimen(sampleHmfId, specimenType, specimenTypeOther, hmfId)
+
 }

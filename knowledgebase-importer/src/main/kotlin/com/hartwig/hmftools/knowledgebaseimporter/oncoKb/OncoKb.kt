@@ -27,10 +27,12 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
         actionableKbRecords.flatMap { it.actionability }.map { it.cancerType }
                 .associateBy({ it }, { diseaseOntology.findDoids(it) })
     }
-    override val knownKbRecords by lazy { CsvReader.readTSVByName<OncoKnownInput>(annotatedVariantsLocation).map { OncoKnownRecord(it.corrected()) } }
+    override val knownKbRecords by lazy {
+        CsvReader.readTSVByName<OncoKnownInput>(annotatedVariantsLocation).mapNotNull { it.corrected() }.map { OncoKnownRecord(it) }
+    }
     override val actionableKbRecords by lazy {
-        CsvReader.readTSVByName<OncoActionableInput>(actionableVariantsLocation, nullString = "null")
-                .map { OncoActionableRecord(it.corrected(), treatmentTypeMap) }
+        CsvReader.readTSVByName<OncoActionableInput>(actionableVariantsLocation, nullString = "null").mapNotNull { it.corrected() }
+                .map { OncoActionableRecord(it, treatmentTypeMap) }
     }
     private val actionableKbItems by lazy { recordAnalyzer.actionableItems(listOf(this)).distinct() }
 }

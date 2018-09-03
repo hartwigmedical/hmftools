@@ -155,8 +155,8 @@ public class DatabaseAccess {
     }
 
     @NotNull
-    public Stream<Pair<String, String>> allSamplesAndTumorLocations() {
-        return potentiallyActionableItemsDAO.allSampleAndTumorLocations();
+    public Stream<Pair<String, String>> allSamplesAndTumorLocations(@NotNull final String sampleId) {
+        return potentiallyActionableItemsDAO.allSampleAndTumorLocations(sampleId);
     }
 
     public void writeStructuralVariants(@NotNull final String sampleId, @NotNull final List<EnrichedStructuralVariant> variants) {

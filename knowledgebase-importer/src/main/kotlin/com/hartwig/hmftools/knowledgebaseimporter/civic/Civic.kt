@@ -39,8 +39,8 @@ class Civic(variantsLocation: String, evidenceLocation: String, diseaseOntology:
     private fun preProcessCivicRecords(variantFileLocation: String, evidenceFileLocation: String,
                                        treatmentTypeMap: Map<String, String>): List<CivicRecord> {
         val variantEvidenceMap = readEvidenceMap(evidenceFileLocation, treatmentTypeMap)
-        return CsvReader.readTSVByName<CivicVariantInput>(variantFileLocation).map {
-            CivicRecord(it.corrected(), variantEvidenceMap[it.variant_id])
+        return CsvReader.readTSVByName<CivicVariantInput>(variantFileLocation).mapNotNull { it.corrected() }.map {
+            CivicRecord(it, variantEvidenceMap[it.variant_id])
         }
     }
 
@@ -48,9 +48,9 @@ class Civic(variantsLocation: String, evidenceLocation: String, diseaseOntology:
         val civicApi = CivicApiWrapper()
         val drugInteractionMap = civicApi.drugInteractionMap
         val evidenceMap = ArrayListMultimap.create<String, CivicEvidence>()
-        CsvReader.readTSVByName<CivicEvidenceInput>(evidenceLocation).map {
+        CsvReader.readTSVByName<CivicEvidenceInput>(evidenceLocation).mapNotNull { it.corrected() }.map {
             if (!blacklistedEvidenceIds.contains(it.evidence_id)) {
-                evidenceMap.put(it.variant_id, CivicEvidence(it.corrected(), drugInteractionMap, treatmentTypeMap))
+                evidenceMap.put(it.variant_id, CivicEvidence(it, drugInteractionMap, treatmentTypeMap))
             }
         }
         civicApi.releaseResources()

@@ -1,0 +1,2 @@
+patientIdentifier,sampleId,gender,birthYear,registrationDate,primaryTumorLocation,biopsyType,hmfId,sampleHmfId
+CPCT02919999,CPCT02919999T,male,1900,2010-01-10,Colon/Rectum,Liver,HMF1,HMF1T

@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.knowledgebaseimporter.oncoKb
 
-import com.hartwig.hmftools.knowledgebaseimporter.iclusion.readers.IclusionProteinAnnotationReader
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.ActionableRecord
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordMetadata
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.SomaticEvent
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.readers.KnowledgebaseEventReader
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.readers.ProteinAnnotationReader
 import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.input.OncoActionableInput
 import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.readers.*
 import com.hartwig.hmftools.knowledgebaseimporter.output.Actionability
@@ -14,9 +14,9 @@ data class OncoActionableRecord(private val metadata: RecordMetadata, override v
                                 override val actionability: List<Actionability>) :
         RecordMetadata by metadata, ActionableRecord {
     companion object {
-        private val multiSnvReader = OncoAnyActionableEventReader(KnowledgebaseEventReader("oncoKb", IclusionProteinAnnotationReader))
+        private val multiSnvReader = OncoAnyActionableEventReader(KnowledgebaseEventReader("oncoKb", ProteinAnnotationReader))
         private val reader = KnowledgebaseEventReader("oncoKb", OncoCnvReader, OncoExonMutationReader, OncoFusionReader,
-                                                      OncoGeneMutationReader, IclusionProteinAnnotationReader, multiSnvReader)
+                                                      OncoGeneMutationReader, ProteinAnnotationReader, multiSnvReader)
 
         operator fun invoke(input: OncoActionableInput, treatmentTypeMap: Map<String, String>): OncoActionableRecord {
             val drugs = readDrugEntries(input, treatmentTypeMap)

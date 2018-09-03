@@ -17,8 +17,8 @@ data class CivicVariantInput(override val gene: String, private val representati
     val variantTypes: List<String> =
             if (variant_types.matches("N/A".toRegex(RegexOption.IGNORE_CASE))) emptyList()
             else variant_types.split(",").filterNot { it.isBlank() }
-    private val hasPosition = chromosome.isNotBlank() && start.isNotBlank() && stop.isNotBlank()
-    private val hasRefOrAlt = reference_bases.isNotBlank() || variant_bases.isNotBlank()
+    val hasPosition = chromosome.isNotBlank() && start.isNotBlank() && stop.isNotBlank()
+    val hasRefOrAlt = reference_bases.isNotBlank() || variant_bases.isNotBlank()
     private val isGenericMutation = variant.toLowerCase() == "mutation" || variantTypes.any { it.contains(RANGE_VARIANTS.toRegex()) }
     private val isGenericMissense = !variant.contains("+") && variantTypes.size == 1 && !variant.toLowerCase().contains(" and ") &&
             variantTypes.first() == "missense_variant"
@@ -35,8 +35,9 @@ data class CivicVariantInput(override val gene: String, private val representati
     val isVariantRecord = variantTypes.none { it.contains("fusion") } && hasVariant
     val isGenomicRangeMutation = hasPosition && !hasRefOrAlt && (isGenericMutation || isGenericMissense)
 
-    override fun correct(): CivicVariantInput = when {
+    override fun correct(): CivicVariantInput? = when {
         variant.contains(Regex("MLL-MLLT3")) && gene == "KMT2A" -> copy(variant = variant.replace("MLL-MLLT3", "KMT2A-MLLT3"))
+        variant == "BRAF-CUL1"                                  -> null
         else                                                    -> this
     }
 }

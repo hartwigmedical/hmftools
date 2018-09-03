@@ -7,11 +7,14 @@ interface CorrectedInput<T : CorrectedInput<T>> {
         private val logger = LogManager.getLogger(this::class.java)
     }
 
-    fun correct(): T
+    fun correct(): T?
 
-    fun corrected(): T {
+    fun corrected(): T? {
         val correctedValue = correct()
-        if (this != correctedValue) logger.info("Corrected $this to $correctedValue")
+        when {
+            correctedValue == null -> logger.info("Deleted $this")
+            this != correctedValue -> logger.info("Corrected $this to $correctedValue")
+        }
         return correctedValue
     }
 }
