@@ -1,11 +1,39 @@
 package com.hartwig.hmftools.knowledgebaseimporter.transvar.matchers
 
-//MIVO: Source: https://github.com/zwdzwd/transvar/blob/v2.4.0.20180701/transvar/mutation.py
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.SequenceVariantType
+
+//MIVO: rules based on:
+// https://github.com/zwdzwd/transvar/blob/v2.4.0.20180701/transvar/mutation.py
+// https://github.com/biocommons/hgvs/blob/113eeee31b7d4d0a2ca1cfcc0579023992593841/hgvs/_data/hgvs.pymeta
+// https://hgvs.readthedocs.io/en/stable/grammar.html
 object TransvarGDnaMatcher : Matcher {
-    private const val PATTERN = "(g\\.)(\\d+)(_(\\d+))?(\\.)?(del([atgcnATGCN\\d]*))?(ins([atgcnATGCN]*))?(([atgcnATGCN?]*)>([atgcnATGCN?]*))?(dup([atgcnATGCN\\d]*))?\$"
+    private const val PREFIX = "(g\\.)?"
+    private const val NUM = "[\\d]+"
+    private const val POSITION = "($NUM)"
+    private const val INTERVAL = "(${POSITION}_$POSITION|$POSITION)"
 
     override fun matches(string: String): Boolean {
         val input = string.trim()
-        return PATTERN.toRegex(RegexOption.IGNORE_CASE).matches(input)
+        return matchesSubstitution(input) || matchesDeletion(input) || matchesDuplication(input) || matchesInsertion(input) ||
+                matchesDelIns(input)
+    }
+
+    private fun matchesSubstitution(input: String) = input.matchesPattern("$INTERVAL${DnaMutations.DNA_SUBSTITUTION}")
+    private fun matchesDeletion(input: String) = input.matchesPattern("$INTERVAL${DnaMutations.DNA_DELETION}")
+    private fun matchesDuplication(input: String) = input.matchesPattern("$INTERVAL${DnaMutations.DNA_DUPLICATION}")
+    private fun matchesInsertion(input: String) = input.matchesPattern("$INTERVAL${DnaMutations.DNA_INSERTION}")
+    private fun matchesDelIns(input: String) = input.matchesPattern("$INTERVAL${DnaMutations.DNA_DELINS}")
+
+    private fun String.matchesPattern(pattern: String): Boolean {
+        return "$PREFIX$pattern".toRegex(RegexOption.IGNORE_CASE).matches(this)
+    }
+
+    fun type(input: String) = when {
+        matchesSubstitution(input) -> SequenceVariantType.SUBSTITUTION
+        matchesDeletion(input)     -> SequenceVariantType.DELETION
+        matchesDuplication(input)  -> SequenceVariantType.DUPLICATION
+        matchesInsertion(input)    -> SequenceVariantType.INSERTION
+        matchesDelIns(input)       -> SequenceVariantType.DELINS
+        else                       -> SequenceVariantType.OTHER
     }
 }
