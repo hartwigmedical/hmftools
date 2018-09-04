@@ -47,5 +47,9 @@ class CgiActionableCodonMutationsReaderTest : StringSpec() {
         "does not read from input with any mutation" {
             CgiActionableCodonMutationsReader.read(actionableInput.copy(Alteration = ".")) shouldBe emptyList<SomaticEvent>()
         }
+
+        "does not read from input with protein mutation" {
+            CgiActionableCodonMutationsReader.read(actionableInput.copy(Alteration = "V600e")) shouldBe emptyList<SomaticEvent>()
+        }
     }
 }

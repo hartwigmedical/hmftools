@@ -11,14 +11,21 @@ object CgiActionableCodonMutationsReader : SomaticEventReader<CgiActionableInput
 
     //MIVO: cgi codon mutations have the form: 'V600.'
     private fun matches(event: CgiActionableInput): Boolean {
-        val lastCodonIndex = max(0, event.variant.length - 1)
-        val codon = event.variant.substring(0, lastCodonIndex)
-        return event.`Alteration type` == "MUT" && (CodonMatcher.matches(codon) || ANY_CODON_PATTERN.matches(event.variant))
+        return event.`Alteration type` == "MUT" && (CodonMatcher.matches(codon(event)) || ANY_CODON_PATTERN.matches(event.variant))
     }
 
     override fun read(event: CgiActionableInput): List<CodonMutations> {
         if (matches(event)) return listOf(CodonMutations(event.gene, event.transcript, codonNumber(event)))
         return emptyList()
+    }
+
+    private fun codon(event: CgiActionableInput): String {
+        val lastCodonIndex = max(0, event.variant.length - 1)
+        return if (lastCodonIndex > 0 && event.variant[lastCodonIndex] == '.') {
+            event.variant.substring(0, lastCodonIndex)
+        } else {
+            event.variant
+        }
     }
 
     private fun codonNumber(event: CgiActionableInput) = "([\\d]+)".toRegex().find(event.variant)!!.groupValues[1].toInt()
