@@ -207,6 +207,7 @@ public class SigContribOptimiser
     public void setTargetSig(int sig) { mTargetSig = sig; }
     public void setRequiredSig(int sig) { mRequiredSig = sig; }
     public void setLogVerbose(boolean toggle) { mLogVerbose = toggle; }
+    public int contributingSigCount() { return mSigCount - mZeroedSigs.size(); }
 
     private void applyInitialContributions()
     {
@@ -712,7 +713,7 @@ public class SigContribOptimiser
             if (sigData[b][sig] == 0)
                 continue;
 
-            if (currentCounts[b] >= mCounts[b])
+            if (mCounts[b] > 0 && currentCounts[b] >= mCounts[b])
             {
                 minAlloc = 0;
                 break;
@@ -759,6 +760,9 @@ public class SigContribOptimiser
         for (int b = 0; b < mBucketCount; ++b)
         {
             double newCount = newContrib * sigData[b][sig];
+
+            if(newCount == 0)
+                continue;
 
             if (greaterThan(mCurrentCounts[b] + newCount, mCounts[b]))
             {

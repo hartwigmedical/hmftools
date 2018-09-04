@@ -157,11 +157,6 @@ public class BucketGroup implements Comparable<BucketGroup> {
         return mSampleIds.contains(sampleId);
     }
 
-    public boolean hasInitialSample(Integer sampleId)
-    {
-        return mInitialSampleIds.contains(sampleId);
-    }
-
     public void clearSamples()
     {
         mSampleIds.clear();
@@ -230,14 +225,14 @@ public class BucketGroup implements Comparable<BucketGroup> {
         {
             double sampleAlloc = mSampleCountTotals.get(samIndex);
             mPotentialAllocation -= sampleAlloc;
-            mPotentialAdjAllocation -= sampleAlloc / sample.getElevatedCount();
+            mPotentialAdjAllocation -= sampleAlloc * (sampleAlloc / sample.getElevatedCount());
         }
 
         final double[] sampleCounts = mSampleCounts.get(samIndex);
         for(Integer bucketId : mBucketIds)
         {
-            mCombinedBucketCounts[bucketId] = sampleCounts[bucketId];
-            mTotalCount += sampleCounts[bucketId];
+            mCombinedBucketCounts[bucketId] -= sampleCounts[bucketId];
+            mTotalCount -= sampleCounts[bucketId];
         }
 
         mSampleIds.remove(samIndex);

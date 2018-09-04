@@ -175,10 +175,12 @@ public class CosineSim {
         // record each combination of vector comparisons
         for(int i = 0; i < matrix1.Cols; ++i) {
 
+            /*
             if(i > 0 && (i % 100) == 0)
             {
                 LOGGER.debug("processed {} items", i);
             }
+            */
 
             double[] data1 = matrix1.getCol(i);
 
