@@ -1,23 +1,22 @@
 package com.hartwig.hmftools.knowledgebaseimporter.cgi
 
+import com.hartwig.hmftools.knowledgebaseimporter.cgi.input.CgiKnownInput
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.*
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.SequenceVariantType
-import org.apache.commons.csv.CSVRecord
 
 data class CgiKnownKbRecord(private val metadata: RecordMetadata, override val additionalInfo: String,
                             override val events: List<SomaticEvent>) : RecordMetadata by metadata, KnownRecord {
     companion object {
-        operator fun invoke(csvRecord: CSVRecord): CgiKnownKbRecord? {
-            if (csvRecord["context"] != "somatic") return null
-            val metadata = CgiMetadata(csvRecord["gene"], csvRecord["transcript"])
-            val events = readSomaticEvents(csvRecord)
+        operator fun invoke(input: CgiKnownInput): CgiKnownKbRecord {
+            val metadata = CgiMetadata(input.gene, input.transcript)
+            val events = readSomaticEvents(input)
             return CgiKnownKbRecord(metadata, "", events)
         }
 
-        private fun readSomaticEvents(csvRecord: CSVRecord): List<SomaticEvent> {
-            val gDnaVariants = csvRecord["gdna"].orEmpty().split("__").map { it.trim() }.filterNot { it.isBlank() }.map { GDnaVariant(it) }
-            val proteinAnnotations = listOfNotNull(csvRecord["protein"]).filterNot { it.isBlank() }.map {
-                ProteinAnnotation(csvRecord["transcript"], it, SequenceVariantType.OTHER)
+        private fun readSomaticEvents(input: CgiKnownInput): List<SomaticEvent> {
+            val gDnaVariants = input.gdna.split("__").map { it.trim() }.filterNot { it.isBlank() }.map { GDnaVariant(it) }
+            val proteinAnnotations = listOfNotNull(input.protein).filterNot { it.isBlank() }.map {
+                ProteinAnnotation(input.transcript, it, SequenceVariantType.OTHER)
             }
             return gDnaVariants + proteinAnnotations
         }
