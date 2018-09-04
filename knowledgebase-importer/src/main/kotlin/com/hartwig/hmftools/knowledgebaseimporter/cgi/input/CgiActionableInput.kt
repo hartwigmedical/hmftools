@@ -6,10 +6,10 @@ import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.CorrectedInput
 data class CgiActionableInput(@get:JvmName("getGene_") private val Gene: String, override val transcript: String?, val Alteration: String,
                               val `Alteration type`: String, val gDNA: String?, val cDNA: String?, val individual_mutation: String?,
                               val `Primary Tumor type`: String, val `Evidence level`: String, val Association: String, val Drug: String?,
-                              val `Drug family`: String?, override val variant: String = "") : CsvData, CorrectedInput<CgiActionableInput>,
-        CgiInput {
+                              val `Drug family`: String?) : CsvData, CorrectedInput<CgiActionableInput>, CgiInput {
 
     override val gene: String = Gene
+    override val variant: String = Alteration
     override val gdna: String = gDNA.orEmpty()
 
     override fun correct(): CgiActionableInput? {
