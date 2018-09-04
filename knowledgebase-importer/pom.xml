@@ -107,7 +107,7 @@
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
-                            <finalName>cgi-treatment-extractor-${version}</finalName>
+                            <finalName>cgi-treatment-extractor-${project.version}</finalName>
                         </configuration>
                     </execution>
                     <execution>
@@ -126,7 +126,7 @@
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
-                            <finalName>knowledgebase-importer-${version}</finalName>
+                            <finalName>knowledgebase-importer-${project.version}</finalName>
                         </configuration>
                     </execution>
                 </executions>
