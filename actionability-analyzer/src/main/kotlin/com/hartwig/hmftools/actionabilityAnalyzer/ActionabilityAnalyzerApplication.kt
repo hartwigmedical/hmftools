@@ -60,11 +60,6 @@ private fun readSamples(sampleId: String, dbAccess: DatabaseAccess) : Map<String
 
 private fun queryDatabase(outputDir: String, dbAccess: DatabaseAccess, samplesToAnalyze: Map<String, String>, actionabilityAnalyzer: ActionabilityAnalyzer) {
     val records = mutableListOf<ActionabilityOutput>()
-   // cohortMutations(samplesToAnalyze).forEach { mutation ->
-     //   val variantRecords = actionabilityAnalyzer.actionabilityForVariant(mutation) +
-       //         actionabilityAnalyzer.rangeActionabilityForVariant(mutation)
-       // records.addAll(variantRecords)
-   // }
     potentiallyActionableCNVs(dbAccess, samplesToAnalyze).use {
         val cnvRecords = it.asSequence().flatMap { actionabilityAnalyzer.actionabilityForCNV(it).asSequence() }.toList()
         records.addAll(cnvRecords)
@@ -76,12 +71,6 @@ private fun queryDatabase(outputDir: String, dbAccess: DatabaseAccess, samplesTo
     logger.info("Done. Writing results to file...")
     CsvWriter.writeTSV(records, "$outputDir${File.separator}actionableVariantsPerSample.tsv")
 }
-
-//private fun cohortMutations(samplesToAnalyze: Map<String, String>): List<CohortMutation> {
-  //  logger.info("Looking up cohort mutations")
-    //return CsvReader.readTSV<CohortMutation>(cohortMutations).filter { samplesToAnalyze.containsKey(it.sampleId) }
-  //          .flatMap { mutation -> mutation.alt.split(",").map { mutation.copy(alt = it) } }
-//}
 
 private fun potentiallyActionableCNVs(dbAccess: DatabaseAccess, samplesToAnalyze: Map<String, String>): Stream<PotentialActionableCNV> {
     logger.info("Querying actionable cnvs.")
