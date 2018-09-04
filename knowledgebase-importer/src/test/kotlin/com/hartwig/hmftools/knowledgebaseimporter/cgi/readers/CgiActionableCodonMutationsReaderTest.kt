@@ -14,7 +14,7 @@ class CgiActionableCodonMutationsReaderTest : StringSpec() {
     }
 
     init {
-        "can codon mutation from actionable input" {
+        "can read codon mutation from actionable input" {
             CgiActionableCodonMutationsReader.read(actionableInput) shouldBe listOf(CodonMutations("BRAF", null, 600))
         }
 
