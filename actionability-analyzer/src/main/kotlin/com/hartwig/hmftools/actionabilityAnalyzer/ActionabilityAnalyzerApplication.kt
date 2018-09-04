@@ -3,7 +3,6 @@ package com.hartwig.hmftools.actionabilityAnalyzer
 import com.hartwig.hmftools.extensions.cli.createCommandLine
 import com.hartwig.hmftools.extensions.cli.options.HmfOptions
 import com.hartwig.hmftools.extensions.cli.options.strings.RequiredInputOption
-import com.hartwig.hmftools.extensions.csv.CsvReader
 import com.hartwig.hmftools.extensions.csv.CsvWriter
 import com.hartwig.hmftools.knowledgebaseimporter.DB_PASSWORD
 import com.hartwig.hmftools.knowledgebaseimporter.DB_USER
@@ -29,7 +28,7 @@ const val SAMPLE_ID = "sample_ID"
 const val OUTPUT_DIRECTORY = "/data/common/dbs/knowledgebases/actionability/"
 
 fun main(args: Array<String>) {
-    logger.info("Start")
+    logger.info("Start processing actionability")
     val cmd = createOptions().createCommandLine("actionability-analyzer", args)
     val sampleId = cmd.getOptionValue(SAMPLE_ID)
     logger.info(sampleId)
@@ -39,13 +38,11 @@ fun main(args: Array<String>) {
 
     val dbAccess = DatabaseAccess(user, password, databaseUrl)
     val samplesToAnalyze = readSamples(sampleId, dbAccess)
-    logger.info("samplesToAnalyze" + samplesToAnalyze)
     val actionabilityAnalyzer = ActionabilityAnalyzer(samplesToAnalyze, actionableVariants, actionableFusionPairs,
                                                         actionablePromiscuousFive, actionablePromiscuousThree, actionableCNVs, cancerTypes,
                                                         actionableGenomicRanges)
-    logger.info("actionabilityAnalyzer" + actionabilityAnalyzer)
     queryDatabase(OUTPUT_DIRECTORY, dbAccess, samplesToAnalyze, actionabilityAnalyzer)
-    logger.info("Done.")
+    logger.info("Done processing actionability")
 }
 
 private fun createOptions(): HmfOptions {
@@ -78,7 +75,6 @@ private fun queryDatabase(outputDir: String, dbAccess: DatabaseAccess, samplesTo
     }
     logger.info("Done. Writing results to file...")
     CsvWriter.writeTSV(records, "$outputDir${File.separator}actionableVariantsPerSample.tsv")
-    logger.info("Done.")
 }
 
 //private fun cohortMutations(samplesToAnalyze: Map<String, String>): List<CohortMutation> {
