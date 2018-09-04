@@ -9,8 +9,8 @@ import io.kotlintest.specs.StringSpec
 class CgiActionableCodonMutationsReaderTest : StringSpec() {
 
     companion object {
-        private val actionableInput = CgiActionableInput("BRAF", null, "BRAF:V600.", "MUT", "", "",
-                                                         "", "", "", "", "", "", "V600.")
+        private val actionableInput = CgiActionableInput("BRAF", null, "V600.", "MUT", "", "",
+                                                         "", "", "", "", "", "")
     }
 
     init {
@@ -19,7 +19,7 @@ class CgiActionableCodonMutationsReaderTest : StringSpec() {
         }
 
         "can read codon mutation from input with generic codon" {
-            CgiActionableCodonMutationsReader.read(actionableInput.copy(variant = ".537.")) shouldBe
+            CgiActionableCodonMutationsReader.read(actionableInput.copy(Alteration = ".537.")) shouldBe
                     listOf(CodonMutations("BRAF", null, 537))
         }
 
@@ -37,15 +37,15 @@ class CgiActionableCodonMutationsReaderTest : StringSpec() {
         }
 
         "does not read from input with missing mutation" {
-            CgiActionableCodonMutationsReader.read(actionableInput.copy(variant = "")) shouldBe emptyList<SomaticEvent>()
+            CgiActionableCodonMutationsReader.read(actionableInput.copy(Alteration = "")) shouldBe emptyList<SomaticEvent>()
         }
 
         "does not read from input with codon range" {
-            CgiActionableCodonMutationsReader.read(actionableInput.copy(variant = "500-600")) shouldBe emptyList<SomaticEvent>()
+            CgiActionableCodonMutationsReader.read(actionableInput.copy(Alteration = "500-600")) shouldBe emptyList<SomaticEvent>()
         }
 
         "does not read from input with any mutation" {
-            CgiActionableCodonMutationsReader.read(actionableInput.copy(variant = ".")) shouldBe emptyList<SomaticEvent>()
+            CgiActionableCodonMutationsReader.read(actionableInput.copy(Alteration = ".")) shouldBe emptyList<SomaticEvent>()
         }
     }
 }

@@ -9,8 +9,8 @@ import io.kotlintest.specs.StringSpec
 class CgiActionableGeneMutationsReaderTest : StringSpec() {
 
     companion object {
-        private val actionableInput = CgiActionableInput("ARAF", null, "ARAF:.", "MUT", "", "",
-                                                         "", "", "", "", "", "", ".")
+        private val actionableInput = CgiActionableInput("ARAF", null, ".", "MUT", "", "",
+                                                         "", "", "", "", "", "")
     }
 
     init {
@@ -32,15 +32,15 @@ class CgiActionableGeneMutationsReaderTest : StringSpec() {
         }
 
         "does not read from input with missing mutation" {
-            CgiActionableGeneMutationsReader.read(actionableInput.copy(variant = "")) shouldBe emptyList<SomaticEvent>()
+            CgiActionableGeneMutationsReader.read(actionableInput.copy(Alteration = "")) shouldBe emptyList<SomaticEvent>()
         }
 
         "does not read from input with codon mutation" {
-            CgiActionableGeneMutationsReader.read(actionableInput.copy(variant = "V600.")) shouldBe emptyList<SomaticEvent>()
+            CgiActionableGeneMutationsReader.read(actionableInput.copy(Alteration = "V600.")) shouldBe emptyList<SomaticEvent>()
         }
 
         "does not read from input with codon range mutation" {
-            CgiActionableGeneMutationsReader.read(actionableInput.copy(variant = "550-600")) shouldBe emptyList<SomaticEvent>()
+            CgiActionableGeneMutationsReader.read(actionableInput.copy(Alteration = "550-600")) shouldBe emptyList<SomaticEvent>()
         }
     }
 }

@@ -8,7 +8,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.readers.Somatic
 object CgiActionableCDnaAnnotationReader : SomaticEventReader<CgiActionableInput, CDnaAnnotation> {
     override fun read(event: CgiActionableInput): List<CDnaAnnotation> {
         if (event.`Alteration type` == "MUT")
-            return CDnaAnnotationReader.read(event.copy(variant = event.cDNA.orEmpty()))
+            return CDnaAnnotationReader.read(event.copy(Alteration = event.cDNA.orEmpty()))
         return emptyList()
     }
 }

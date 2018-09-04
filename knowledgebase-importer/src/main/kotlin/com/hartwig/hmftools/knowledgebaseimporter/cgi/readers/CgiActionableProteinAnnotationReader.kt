@@ -8,7 +8,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.readers.Somatic
 object CgiActionableProteinAnnotationReader : SomaticEventReader<CgiActionableInput, ProteinAnnotation> {
     override fun read(event: CgiActionableInput): List<ProteinAnnotation> {
         if (event.`Alteration type` == "MUT")
-            return ProteinAnnotationReader.read(event.copy(variant = event.individual_mutation.orEmpty().substringAfter(':', "")))
+            return ProteinAnnotationReader.read(event.copy(Alteration = event.individual_mutation.orEmpty().substringAfter(':', "")))
         return emptyList()
     }
 }
