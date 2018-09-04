@@ -18,18 +18,15 @@ import kotlin.streams.asSequence
 import kotlin.streams.toList
 
 private val logger = LogManager.getLogger("ActionabilityAnalyzerApplication")
-private val actionableVariants = "actionableVariants"
-private val actionableFusionPairs = "actionableFusionPairs"
-private val actionablePromiscuousFive = "actionablePromiscuousFive"
-private val actionablePromiscuousThree = "actionablePromiscuousThree"
-private val actionableCNVs = "actionableCNVs"
-private val actionableGenomicRanges = "actionableRanges"
-private val cancerTypes = "knowledgebaseCancerTypes"
-private val allDbSamples = false
-private val cohortCsvLocation = "cohort.csv"
-private val cohortMutations = "cohortMutations.tsv"
+private val actionableVariants = "/data/common/dbs/knowledgebases/output_180822/actionableVariants.tsv"
+private val actionableFusionPairs = "/data/common/dbs/knowledgebases/output_180822/actionableFusionPairs.tsv"
+private val actionablePromiscuousFive = "/data/common/dbs/knowledgebases/output_180822/actionablePromiscuousFive.tsv"
+private val actionablePromiscuousThree = "/data/common/dbs/knowledgebases/output_180822/actionablePromiscuousThree.tsv"
+private val actionableCNVs = "/data/common/dbs/knowledgebases/output_180822/actionableCNVs.tsv"
+private val actionableGenomicRanges = "/data/common/dbs/knowledgebases/output_180822/actionableRanges.tsv"
+private val cancerTypes = "/data/common/dbs/knowledgebases/output_180822/knowledgebaseCancerTypes.tsv"
 const val SAMPLE_ID = "sample_ID"
-const val OUTPUT_DIRECTORY = "/data/common/dbs/knowledgebases/actionability"
+const val OUTPUT_DIRECTORY = "/data/common/dbs/knowledgebases/actionability/"
 
 fun main(args: Array<String>) {
     logger.info("Start")
@@ -43,11 +40,11 @@ fun main(args: Array<String>) {
     val dbAccess = DatabaseAccess(user, password, databaseUrl)
     val samplesToAnalyze = readSamples(sampleId, dbAccess)
     logger.info("samplesToAnalyze" + samplesToAnalyze)
-    //val actionabilityAnalyzer = ActionabilityAnalyzer(samplesToAnalyze.toString(), actionableVariants, actionableFusionPairs,
-      //                                                  actionablePromiscuousFive, actionablePromiscuousThree, actionableCNVs, cancerTypes,
-        //                                                actionableGenomicRanges)
-    //logger.info("actionabilityAnalyzer" + actionabilityAnalyzer)
-    //   queryDatabase(outputDir, dbAccess, samplesToAnalyze, actionabilityAnalyzer)
+    val actionabilityAnalyzer = ActionabilityAnalyzer(samplesToAnalyze, actionableVariants, actionableFusionPairs,
+                                                        actionablePromiscuousFive, actionablePromiscuousThree, actionableCNVs, cancerTypes,
+                                                        actionableGenomicRanges)
+    logger.info("actionabilityAnalyzer" + actionabilityAnalyzer)
+    queryDatabase(OUTPUT_DIRECTORY, dbAccess, samplesToAnalyze, actionabilityAnalyzer)
     logger.info("Done.")
 }
 
@@ -60,17 +57,17 @@ private fun createOptions(): HmfOptions {
     return options
 }
 
-private fun readSamples(sampleId: String, dbAccess: DatabaseAccess) =
+private fun readSamples(sampleId: String, dbAccess: DatabaseAccess) : Map<String, String> =
         if (sampleId.isNotEmpty() && sampleId.isNotBlank()) dbAccess.allSamplesAndTumorLocations(sampleId).toList().associate { Pair(it.key, it.value) }
-        else logger.info("no sampleId")
+        else mapOf(sampleId to "It is no tumor sample")
 
 private fun queryDatabase(outputDir: String, dbAccess: DatabaseAccess, samplesToAnalyze: Map<String, String>, actionabilityAnalyzer: ActionabilityAnalyzer) {
     val records = mutableListOf<ActionabilityOutput>()
-    cohortMutations(samplesToAnalyze).forEach { mutation ->
-        val variantRecords = actionabilityAnalyzer.actionabilityForVariant(mutation) +
-                actionabilityAnalyzer.rangeActionabilityForVariant(mutation)
-        records.addAll(variantRecords)
-    }
+   // cohortMutations(samplesToAnalyze).forEach { mutation ->
+     //   val variantRecords = actionabilityAnalyzer.actionabilityForVariant(mutation) +
+       //         actionabilityAnalyzer.rangeActionabilityForVariant(mutation)
+       // records.addAll(variantRecords)
+   // }
     potentiallyActionableCNVs(dbAccess, samplesToAnalyze).use {
         val cnvRecords = it.asSequence().flatMap { actionabilityAnalyzer.actionabilityForCNV(it).asSequence() }.toList()
         records.addAll(cnvRecords)
@@ -84,21 +81,21 @@ private fun queryDatabase(outputDir: String, dbAccess: DatabaseAccess, samplesTo
     logger.info("Done.")
 }
 
-private fun cohortMutations(samplesToAnalyze: Map<String, String>): List<CohortMutation> {
-    logger.info("Looking up cohort mutations")
-    return CsvReader.readTSV<CohortMutation>(cohortMutations).filter { samplesToAnalyze.containsKey(it.sampleId) }
-            .flatMap { mutation -> mutation.alt.split(",").map { mutation.copy(alt = it) } }
-}
+//private fun cohortMutations(samplesToAnalyze: Map<String, String>): List<CohortMutation> {
+  //  logger.info("Looking up cohort mutations")
+    //return CsvReader.readTSV<CohortMutation>(cohortMutations).filter { samplesToAnalyze.containsKey(it.sampleId) }
+  //          .flatMap { mutation -> mutation.alt.split(",").map { mutation.copy(alt = it) } }
+//}
 
 private fun potentiallyActionableCNVs(dbAccess: DatabaseAccess, samplesToAnalyze: Map<String, String>): Stream<PotentialActionableCNV> {
     logger.info("Querying actionable cnvs.")
-    return if (allDbSamples) dbAccess.allPotentiallyActionableCNVs()
+    return if (false) dbAccess.allPotentiallyActionableCNVs()
     else dbAccess.potentiallyActionableCNVs(samplesToAnalyze.keys)
 }
 
 private fun potentiallyActionableFusions(dbAccess: DatabaseAccess,
                                          samplesToAnalyze: Map<String, String>): Stream<PotentialActionableFusion> {
     logger.info("Querying actionable fusions.")
-    return if (allDbSamples) dbAccess.allPotentiallyActionableFusions()
+    return if (false) dbAccess.allPotentiallyActionableFusions()
     else dbAccess.potentiallyActionableFusions(samplesToAnalyze.keys)
 }
