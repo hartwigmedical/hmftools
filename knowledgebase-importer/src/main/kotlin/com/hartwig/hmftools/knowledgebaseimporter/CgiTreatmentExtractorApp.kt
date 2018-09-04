@@ -4,8 +4,10 @@ import com.hartwig.hmftools.extensions.cli.createCommandLine
 import com.hartwig.hmftools.extensions.cli.options.HmfOptions
 import com.hartwig.hmftools.extensions.cli.options.filesystem.RequiredInputFileOption
 import com.hartwig.hmftools.extensions.cli.options.strings.RequiredOutputOption
+import com.hartwig.hmftools.extensions.csv.CsvReader
 import com.hartwig.hmftools.extensions.csv.CsvWriter
 import com.hartwig.hmftools.knowledgebaseimporter.cgi.CgiActionableRecord
+import com.hartwig.hmftools.knowledgebaseimporter.cgi.input.CgiActionableInput
 import com.hartwig.hmftools.knowledgebaseimporter.output.HmfDrug
 import org.apache.logging.log4j.LogManager
 import java.io.File
@@ -18,7 +20,8 @@ fun main(args: Array<String>) {
     if (!outputFile.parentFile.exists() && !outputFile.parentFile.mkdirs()) {
         logger.error("Could not create parent directories for ")
     }
-    val cgiActionableRecords = readTSVRecords(cmd.getOptionValue(CGI_BIOMARKERS_LOCATION)) { CgiActionableRecord(it, mapOf()) }
+    val cgiActionableRecords = CsvReader.readTSVByName<CgiActionableInput>(CGI_BIOMARKERS_LOCATION)
+            .mapNotNull { it.corrected() }.map { CgiActionableRecord(it, mapOf()) }
     CsvWriter.writeTSV(bootstrapTreatmentTypeMapping(cgiActionableRecords), "$outputFile")
 }
 

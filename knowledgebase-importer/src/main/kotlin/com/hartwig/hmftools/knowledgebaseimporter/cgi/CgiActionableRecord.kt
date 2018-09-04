@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.knowledgebaseimporter.cgi
 
 import com.hartwig.hmftools.knowledgebaseimporter.FusionReader
+import com.hartwig.hmftools.knowledgebaseimporter.cgi.input.CgiActionableInput
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.*
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.SequenceVariantType
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
-import org.apache.commons.csv.CSVRecord
 import org.apache.logging.log4j.LogManager
 
 data class CgiActionableRecord(private val metadata: RecordMetadata, override val events: List<SomaticEvent>,
@@ -24,82 +24,79 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
         private val FUSIONS_TO_FILTER = setOf(FusionPair("RET", "TPCN1"))
         private val fusionReader = FusionReader(separators = FUSION_SEPARATORS, filterSet = FUSIONS_TO_FILTER, flipSet = FUSIONS_TO_FLIP)
 
-        operator fun invoke(record: CSVRecord, treatmentTypeMap: Map<String, String>): CgiActionableRecord {
-            val metadata = CgiMetadata(record["Gene"], record["transcript"] ?: "na")
-            val events = readSomaticEvents(record)
-            val actionability = readActionability(record, treatmentTypeMap).filterNot { it.significance == "No Responsive" }
+        operator fun invoke(input: CgiActionableInput, treatmentTypeMap: Map<String, String>): CgiActionableRecord {
+            val metadata = CgiMetadata(input.gene, input.transcript ?: "na")
+            val events = readSomaticEvents(input)
+            val actionability = readActionability(input, treatmentTypeMap)
             if (events.isEmpty()) {
                 val aOrBLevelCount = actionability.filter { it.hmfLevel == "A" || it.hmfLevel == "B" }.size
-                logger.warn("Could not extract somatic event from:\tcgi\t${record["Gene"]}\t${record["Alteration"]}\t${record["Alteration type"]}\t$aOrBLevelCount")
+                logger.warn("Could not extract somatic event from:\tcgi\t${input.gene}\t${input.Alteration}\t${input.`Alteration type`}\t$aOrBLevelCount")
             }
-            return CgiActionableRecord(metadata, events, actionability, readCgiDrugs(record))
+            return CgiActionableRecord(metadata, events, actionability, readCgiDrugs(input))
         }
 
-        private fun readSomaticEvents(record: CSVRecord): List<SomaticEvent> {
-            return listOfNotNull(readProteinAnnotation(record), readCdnaVariant(record), readCNV(record), readFusion(record)) +
-                    readGdnaVariants(record) + readGenericMutations(record)
+        private fun readSomaticEvents(input: CgiActionableInput): List<SomaticEvent> {
+            return listOfNotNull(readProteinAnnotation(input), readCdnaVariant(input), readCNV(input), readFusion(input)) +
+                    readGdnaVariants(input) + readGenericMutations(input)
         }
 
-        private fun readAlterations(record: CSVRecord) = record["Alteration"].substringAfter(":").split(",").map { it.trim() }
+        private fun readAlterations(input: CgiActionableInput) = input.Alteration.substringAfter(":").split(",").map { it.trim() }
 
-        private fun readGdnaVariants(record: CSVRecord): List<GDnaVariant> {
-            return record["gDNA"].orEmpty().split("__").map { it.trim() }.filterNot { it.isBlank() }.map { GDnaVariant(it) }
+        private fun readGdnaVariants(input: CgiActionableInput): List<GDnaVariant> {
+            return input.gDNA.orEmpty().split("__").map { it.trim() }.filterNot { it.isBlank() }.map { GDnaVariant(it) }
         }
 
-        private fun readProteinAnnotation(record: CSVRecord): ProteinAnnotation? {
-            val transcript = record["transcript"]
-            val proteinAnnotation = record["individual_mutation"]?.substringAfter(':', "")
-            return if (proteinAnnotation.isNullOrBlank() || transcript.isNullOrBlank()) {
+        private fun readProteinAnnotation(input: CgiActionableInput): ProteinAnnotation? {
+            val proteinAnnotation = input.individual_mutation?.substringAfter(':', "")
+            return if (proteinAnnotation.isNullOrBlank() || input.transcript.isNullOrBlank()) {
                 null
             } else {
-                ProteinAnnotation(transcript, proteinAnnotation!!, SequenceVariantType.OTHER)
+                ProteinAnnotation(input.transcript!!, proteinAnnotation!!, SequenceVariantType.OTHER)
             }
         }
 
-        private fun readCdnaVariant(record: CSVRecord): CDnaAnnotation? {
-            val transcript = record["transcript"]
-            val cdnaAnnotation = record["cDNA"]
-            return if (cdnaAnnotation.isNullOrBlank() || transcript.isNullOrBlank()) {
+        private fun readCdnaVariant(input: CgiActionableInput): CDnaAnnotation? {
+            return if (input.cDNA.isNullOrBlank() || input.transcript.isNullOrBlank()) {
                 null
             } else {
-                CDnaAnnotation(transcript, cdnaAnnotation!!, SequenceVariantType.OTHER)
+                CDnaAnnotation(input.transcript!!, input.cDNA!!, SequenceVariantType.OTHER)
             }
         }
 
-        private fun readCNV(record: CSVRecord): CnvEvent? = when {
-            record["Alteration type"] != "CNA"   -> null
-            record["Alteration"].contains("amp") -> CnvEvent.amplification(record["Gene"])
-            else                                 -> CnvEvent.deletion(record["Gene"])
+        private fun readCNV(input: CgiActionableInput): CnvEvent? = when {
+            input.`Alteration type` != "CNA" -> null
+            input.Alteration.contains("amp") -> CnvEvent.amplification(input.gene)
+            else                             -> CnvEvent.deletion(input.gene)
         }
 
-        private fun readFusion(record: CSVRecord): FusionEvent? = when {
-            record["Alteration type"] == "FUS" -> fusionReader.read(record["Gene"], record["Alteration"])
+        private fun readFusion(input: CgiActionableInput): FusionEvent? = when {
+            input.`Alteration type` == "FUS"   -> fusionReader.read(input.gene, input.Alteration)
             else                               -> null
         }
 
-        private fun readGenericMutations(record: CSVRecord): List<GenericMutation> {
-            if (record["Alteration type"] != "MUT") return emptyList()
-            return readAlterations(record).mapNotNull {
+        private fun readGenericMutations(input: CgiActionableInput): List<GenericMutation> {
+            if (input.`Alteration type` != "MUT") return emptyList()
+            return readAlterations(input).mapNotNull {
                 when {
-                    isAnyMutation(it)   -> GeneMutations(record["Gene"], record["transcript"])
-                    isCodonMutation(it) -> CodonMutations(record["Gene"], record["transcript"], codonNumber(it))
-                    isCodonRange(it)    -> CodonRangeMutations(record["Gene"], record["transcript"],
+                    isAnyMutation(it)   -> GeneMutations(input.gene, input.transcript)
+                    isCodonMutation(it) -> CodonMutations(input.gene, input.transcript, codonNumber(it))
+                    isCodonRange(it)    -> CodonRangeMutations(input.gene, input.transcript,
                                                                it.substringBefore("-").toInt(), it.substringAfter("-").toInt())
                     else                -> null
                 }
             }
         }
 
-        private fun readActionability(record: CSVRecord, treatmentTypeMap: Map<String, String>): List<Actionability> {
-            val cancerTypes = record["Primary Tumor type"].split(";").map { it.trim() }
-            val level = record["Evidence level"]
-            val association = record["Association"]
-            return Actionability("cgi", record["Alteration"], cancerTypes, readDrugs(record, treatmentTypeMap), level, association,
+        private fun readActionability(input: CgiActionableInput, treatmentTypeMap: Map<String, String>): List<Actionability> {
+            val cancerTypes = input.`Primary Tumor type`.split(";").map { it.trim() }
+            val level = input.`Evidence level`
+            val association = input.Association
+            return Actionability("cgi", input.Alteration, cancerTypes, readDrugs(input, treatmentTypeMap), level, association,
                                  "Predictive", HmfLevel(level), HmfResponse(association))
         }
 
-        private fun readDrugs(record: CSVRecord, treatmentTypeMap: Map<String, String>): List<HmfDrug> {
-            val drugs = readDrugNames(record)
+        private fun readDrugs(input: CgiActionableInput, treatmentTypeMap: Map<String, String>): List<HmfDrug> {
+            val drugs = readDrugNames(input)
             return drugs.map { name ->
                 if (name.contains("+")) {
                     val type = name.split("+").map { it.trim() }
@@ -111,10 +108,10 @@ data class CgiActionableRecord(private val metadata: RecordMetadata, override va
             }
         }
 
-        private fun readDrugNames(record: CSVRecord): List<String> {
-            val drugNames = readDrugsField(record["Drug"].orEmpty())
+        private fun readDrugNames(input: CgiActionableInput): List<String> {
+            val drugNames = readDrugsField(input.Drug.orEmpty())
             return if (drugNames.isEmpty()) {
-                readDrugsField(record["Drug family"].orEmpty())
+                readDrugsField(input.`Drug family`.orEmpty())
             } else {
                 drugNames
             }
