@@ -18,6 +18,11 @@ class CgiActionableCodonMutationsReaderTest : StringSpec() {
             CgiActionableCodonMutationsReader.read(actionableInput) shouldBe listOf(CodonMutations("BRAF", null, 600))
         }
 
+        "can read codon mutation from input with generic codon" {
+            CgiActionableCodonMutationsReader.read(actionableInput.copy(variant = ".537.")) shouldBe
+                    listOf(CodonMutations("BRAF", null, 537))
+        }
+
         "does not read from FUS input" {
             CgiActionableCodonMutationsReader.read(actionableInput.copy(`Alteration type` = "FUS")) shouldBe emptyList<SomaticEvent>()
         }
