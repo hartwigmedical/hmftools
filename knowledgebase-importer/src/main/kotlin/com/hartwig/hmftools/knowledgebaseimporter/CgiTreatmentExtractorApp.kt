@@ -20,7 +20,7 @@ fun main(args: Array<String>) {
     if (!outputFile.parentFile.exists() && !outputFile.parentFile.mkdirs()) {
         logger.error("Could not create parent directories for ")
     }
-    val cgiActionableRecords = CsvReader.readTSVByName<CgiActionableInput>(CGI_BIOMARKERS_LOCATION)
+    val cgiActionableRecords = CsvReader.readTSVByName<CgiActionableInput>(cmd.getOptionValue(CGI_BIOMARKERS_LOCATION))
             .mapNotNull { it.corrected() }.map { CgiActionableRecord(it, mapOf()) }
     CsvWriter.writeTSV(bootstrapTreatmentTypeMapping(cgiActionableRecords), "$outputFile")
 }
