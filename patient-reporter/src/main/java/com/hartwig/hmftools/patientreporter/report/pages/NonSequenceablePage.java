@@ -61,8 +61,7 @@ public abstract class NonSequenceablePage {
             case LOW_DNA_YIELD: {
                 title = "Notification tumor sample on hold for sequencing";
                 subTitle = "Insufficient amount of DNA";
-                message = "The amount of isolated DNA was <300 ng, which is insufficient for sequencing. "
-                        + "This sample is on hold for further processing awaiting optimization of protocols.";
+                message = "The amount of isolated DNA was <50 ng, which is insufficient for sequencing. ";
                 break;
             }
             case LOW_TUMOR_PERCENTAGE: {
