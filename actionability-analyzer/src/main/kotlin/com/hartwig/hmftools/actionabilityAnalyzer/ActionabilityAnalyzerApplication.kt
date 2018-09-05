@@ -31,17 +31,16 @@ fun main(args: Array<String>) {
     logger.info("Start processing actionability")
     val cmd = createOptions().createCommandLine("actionability-analyzer", args)
     val sampleId = cmd.getOptionValue(SAMPLE_ID)
-    logger.info(sampleId)
     val user = cmd.getOptionValue(DB_USER)
     val password = cmd.getOptionValue(DB_PASSWORD)
     val databaseUrl = "jdbc:${cmd.getOptionValue(HMFPATIENTS_DB)}"
 
     val dbAccess = DatabaseAccess(user, password, databaseUrl)
-    val samplesToAnalyze = readSamples(sampleId, dbAccess)
-    val actionabilityAnalyzer = ActionabilityAnalyzer(samplesToAnalyze, actionableVariants, actionableFusionPairs,
+    val sampleToAnalyze = readSample(sampleId, dbAccess)
+    val actionabilityAnalyzer = ActionabilityAnalyzer(sampleToAnalyze, actionableVariants, actionableFusionPairs,
                                                         actionablePromiscuousFive, actionablePromiscuousThree, actionableCNVs, cancerTypes,
                                                         actionableGenomicRanges)
-    queryDatabase(OUTPUT_DIRECTORY, dbAccess, samplesToAnalyze, actionabilityAnalyzer)
+    queryDatabase(OUTPUT_DIRECTORY, dbAccess, sampleToAnalyze, actionabilityAnalyzer)
     logger.info("Done processing actionability")
 }
 
@@ -54,17 +53,17 @@ private fun createOptions(): HmfOptions {
     return options
 }
 
-private fun readSamples(sampleId: String, dbAccess: DatabaseAccess) : Map<String, String> =
-        if (sampleId.isNotEmpty() && sampleId.isNotBlank()) dbAccess.allSamplesAndTumorLocations(sampleId).toList().associate { Pair(it.key, it.value) }
+private fun readSample(sampleId: String, dbAccess: DatabaseAccess) : Map<String, String> =
+        if (sampleId.isNotEmpty() && sampleId.isNotBlank()) dbAccess.sampleAndTumorLocation(sampleId).toList().associate { Pair(it.key, it.value) }
         else mapOf(sampleId to "It is no tumor sample")
 
-private fun queryDatabase(outputDir: String, dbAccess: DatabaseAccess, samplesToAnalyze: Map<String, String>, actionabilityAnalyzer: ActionabilityAnalyzer) {
+private fun queryDatabase(outputDir: String, dbAccess: DatabaseAccess, sampleToAnalyze: Map<String, String>, actionabilityAnalyzer: ActionabilityAnalyzer) {
     val records = mutableListOf<ActionabilityOutput>()
-    potentiallyActionableCNVs(dbAccess, samplesToAnalyze).use {
+    potentiallyActionableCNVs(dbAccess, sampleToAnalyze).use {
         val cnvRecords = it.asSequence().flatMap { actionabilityAnalyzer.actionabilityForCNV(it).asSequence() }.toList()
         records.addAll(cnvRecords)
     }
-    potentiallyActionableFusions(dbAccess, samplesToAnalyze).use {
+    potentiallyActionableFusions(dbAccess, sampleToAnalyze).use {
         val fusionRecords = it.asSequence().flatMap { actionabilityAnalyzer.actionabilityForFusion(it).asSequence() }.toList()
         records.addAll(fusionRecords)
     }
@@ -72,15 +71,15 @@ private fun queryDatabase(outputDir: String, dbAccess: DatabaseAccess, samplesTo
     CsvWriter.writeTSV(records, "$outputDir${File.separator}actionableVariantsPerSample.tsv")
 }
 
-private fun potentiallyActionableCNVs(dbAccess: DatabaseAccess, samplesToAnalyze: Map<String, String>): Stream<PotentialActionableCNV> {
+private fun potentiallyActionableCNVs(dbAccess: DatabaseAccess, sampleToAnalyze: Map<String, String>): Stream<PotentialActionableCNV> {
     logger.info("Querying actionable cnvs.")
     return if (false) dbAccess.allPotentiallyActionableCNVs()
-    else dbAccess.potentiallyActionableCNVs(samplesToAnalyze.keys)
+    else dbAccess.potentiallyActionableCNVs(sampleToAnalyze.keys)
 }
 
 private fun potentiallyActionableFusions(dbAccess: DatabaseAccess,
-                                         samplesToAnalyze: Map<String, String>): Stream<PotentialActionableFusion> {
+                                         sampleToAnalyze: Map<String, String>): Stream<PotentialActionableFusion> {
     logger.info("Querying actionable fusions.")
     return if (false) dbAccess.allPotentiallyActionableFusions()
-    else dbAccess.potentiallyActionableFusions(samplesToAnalyze.keys)
+    else dbAccess.potentiallyActionableFusions(sampleToAnalyze.keys)
 }

@@ -140,8 +140,8 @@ public class DatabaseAccess {
     }
 
     @NotNull
-    public Stream<PotentialActionableCNV> potentiallyActionableCNVs(@NotNull final Collection<String> samples) {
-        return potentiallyActionableItemsDAO.potentiallyActionableCNVs(samples);
+    public Stream<PotentialActionableCNV> potentiallyActionableCNVs(@NotNull final Collection<String> sample) {
+        return potentiallyActionableItemsDAO.potentiallyActionableCNVs(sample);
     }
 
     @NotNull
@@ -150,13 +150,13 @@ public class DatabaseAccess {
     }
 
     @NotNull
-    public Stream<PotentialActionableFusion> potentiallyActionableFusions(@NotNull final Collection<String> samples) {
-        return potentiallyActionableItemsDAO.potentiallyActionableFusions(samples);
+    public Stream<PotentialActionableFusion> potentiallyActionableFusions(@NotNull final Collection<String> sample) {
+        return potentiallyActionableItemsDAO.potentiallyActionableFusions(sample);
     }
 
     @NotNull
-    public Stream<Pair<String, String>> allSamplesAndTumorLocations(@NotNull final String sampleId) {
-        return potentiallyActionableItemsDAO.allSampleAndTumorLocations(sampleId);
+    public Stream<Pair<String, String>> sampleAndTumorLocation(@NotNull final String sampleId) {
+        return potentiallyActionableItemsDAO.sampleAndTumorLocation(sampleId);
     }
 
     public void writeStructuralVariants(@NotNull final String sampleId, @NotNull final List<EnrichedStructuralVariant> variants) {
