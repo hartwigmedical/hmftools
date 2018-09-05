@@ -11,13 +11,11 @@ import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
 
-private const val ICLUSION_ENDPOINT = "http://api.iclusion.nl/"
-
-class IclusionApiWrapper(private val clientId: String, private val clientSecret: String, private val user: String,
-                         private val password: String) {
+class IclusionApiWrapper(endpoint: String, private val clientId: String, private val clientSecret: String,
+                         private val user: String, private val password: String) {
     companion object {
-        private fun createApi(httpClient: OkHttpClient): IclusionApi {
-            val retrofit = Retrofit.Builder().baseUrl(ICLUSION_ENDPOINT)
+        private fun createApi(httpClient: OkHttpClient, endpoint: String): IclusionApi {
+            val retrofit = Retrofit.Builder().baseUrl(endpoint)
                     .addConverterFactory(moshiConverter())
                     .addCallAdapterFactory(RxJava2CallAdapterFactory.createAsync())
                     .client(httpClient)
@@ -31,7 +29,7 @@ class IclusionApiWrapper(private val clientId: String, private val clientSecret:
     }
 
     private val httpClient = httpClient()
-    private val api = createApi(httpClient)
+    private val api = createApi(httpClient, endpoint)
     private val tokenBearer = "Bearer ${getAccessToken().blockingFirst().access_token}"
 
     private fun getAccessToken(): Observable<Token> {

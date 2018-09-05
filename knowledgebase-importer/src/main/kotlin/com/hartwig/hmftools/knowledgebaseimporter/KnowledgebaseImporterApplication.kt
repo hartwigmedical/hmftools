@@ -56,6 +56,7 @@ private fun createOptions(): HmfOptions {
     options.add(RequiredInputOption(HMFPATIENTS_DB, "hmfpatients db url"))
     options.add(RequiredInputOption(DB_USER, "db user"))
     options.add(RequiredInputOption(DB_PASSWORD, "db password"))
+    options.add(RequiredInputOption(ICLUSION_ENDPOINT, "iclusion endpoint"))
     options.add(RequiredInputOption(ICLUSION_CLIENT_ID, "iclusion clientId"))
     options.add(RequiredInputOption(ICLUSION_CLIENT_SECRET, "iclusion client secret"))
     options.add(RequiredInputOption(ICLUSION_USER, "iclusion user"))
@@ -75,16 +76,17 @@ private fun readKnowledgebases(cmd: CommandLine, diseaseOntology: DiseaseOntolog
             .associateBy({ it.name.toLowerCase() }, { it.type })
 
     val oncoKb = OncoKb(cmd.getOptionValue(ONCO_ANNOTATED_LOCATION), cmd.getOptionValue(ONCO_ACTIONABLE_LOCATION), diseaseOntology,
-                        recordAnalyzer, treatmentTypeMap)
+            recordAnalyzer, treatmentTypeMap)
     val cgi = Cgi(cmd.getOptionValue(CGI_VALIDATED_LOCATION), cmd.getOptionValue(CGI_BIOMARKERS_LOCATION), diseaseOntology,
-                  recordAnalyzer, treatmentTypeMap)
+            recordAnalyzer, treatmentTypeMap)
     val civic = Civic(cmd.getOptionValue(CIVIC_VARIANTS_LOCATION), cmd.getOptionValue(CIVIC_EVIDENCE_LOCATION), diseaseOntology,
-                      recordAnalyzer, treatmentTypeMap)
+            recordAnalyzer, treatmentTypeMap)
     val cosmic = Cosmic(cmd.getOptionValue(COSMIC_FUSIONS_LOCATION))
-    val iclusionApi = IclusionApiWrapper(cmd.getOptionValue(ICLUSION_CLIENT_ID), cmd.getOptionValue(ICLUSION_CLIENT_SECRET),
-                                         cmd.getOptionValue(ICLUSION_USER), cmd.getOptionValue(ICLUSION_PASSWORD))
+    val iclusionApi = IclusionApiWrapper(cmd.getOptionValue(ICLUSION_ENDPOINT), cmd.getOptionValue(ICLUSION_CLIENT_ID),
+            cmd.getOptionValue(ICLUSION_CLIENT_SECRET), cmd.getOptionValue(ICLUSION_USER), cmd.getOptionValue(ICLUSION_PASSWORD))
     val iclusion = Iclusion(iclusionApi, diseaseOntology, recordAnalyzer, ensemblGeneDAO)
-    return listOf(oncoKb, cgi, civic, cosmic, iclusion)
+    return listOf(iclusion)
+//    return listOf(oncoKb, cgi, civic, cosmic, iclusion)
 }
 
 private fun writeOutput(outputDir: String, knowledgebases: List<Knowledgebase>, cancerTypesDoids: List<CancerTypeDoidOutput>) {
