@@ -17,36 +17,42 @@ import kotlin.streams.asSequence
 import kotlin.streams.toList
 
 private val logger = LogManager.getLogger("ActionabilityAnalyzerApplication")
-private val actionableVariants = "/data/common/dbs/knowledgebases/output_180822/actionableVariants.tsv"
-private val actionableFusionPairs = "/data/common/dbs/knowledgebases/output_180822/actionableFusionPairs.tsv"
-private val actionablePromiscuousFive = "/data/common/dbs/knowledgebases/output_180822/actionablePromiscuousFive.tsv"
-private val actionablePromiscuousThree = "/data/common/dbs/knowledgebases/output_180822/actionablePromiscuousThree.tsv"
-private val actionableCNVs = "/data/common/dbs/knowledgebases/output_180822/actionableCNVs.tsv"
-private val actionableGenomicRanges = "/data/common/dbs/knowledgebases/output_180822/actionableRanges.tsv"
-private val cancerTypes = "/data/common/dbs/knowledgebases/output_180822/knowledgebaseCancerTypes.tsv"
 const val SAMPLE_ID = "sample_ID"
-const val OUTPUT_DIRECTORY = "/data/common/dbs/knowledgebases/actionability/"
+const val OUTPUT_DIRECTORY = "output_dir"
+const val KNOWLEDGEBASE = "knowledgebase"
 
 fun main(args: Array<String>) {
     logger.info("Start processing actionability")
     val cmd = createOptions().createCommandLine("actionability-analyzer", args)
     val sampleId = cmd.getOptionValue(SAMPLE_ID)
+    val outputDir = cmd.getOptionValue(OUTPUT_DIRECTORY)
+    val knowledgebase = cmd.getOptionValue(KNOWLEDGEBASE)
     val user = cmd.getOptionValue(DB_USER)
     val password = cmd.getOptionValue(DB_PASSWORD)
     val databaseUrl = "jdbc:${cmd.getOptionValue(HMFPATIENTS_DB)}"
+
+    val actionableVariants = "$knowledgebase/actionableVariants.tsv"
+    val actionableFusionPairs = "$knowledgebase/actionableFusionPairs.tsv"
+    val actionablePromiscuousFive = "$knowledgebase/actionablePromiscuousFive.tsv"
+    val actionablePromiscuousThree = "$knowledgebase/actionablePromiscuousThree.tsv"
+    val actionableCNVs = "$knowledgebase/actionableCNVs.tsv"
+    val actionableGenomicRanges = "$knowledgebase/actionableRanges.tsv"
+    val cancerTypes = "$knowledgebase/knowledgebaseCancerTypes.tsv"
 
     val dbAccess = DatabaseAccess(user, password, databaseUrl)
     val sampleToAnalyze = readSample(sampleId, dbAccess)
     val actionabilityAnalyzer = ActionabilityAnalyzer(sampleToAnalyze, actionableVariants, actionableFusionPairs,
                                                         actionablePromiscuousFive, actionablePromiscuousThree, actionableCNVs, cancerTypes,
                                                         actionableGenomicRanges)
-    queryDatabase(OUTPUT_DIRECTORY, dbAccess, sampleToAnalyze, actionabilityAnalyzer)
+    queryDatabase(outputDir, dbAccess, sampleToAnalyze, actionabilityAnalyzer)
     logger.info("Done processing actionability")
 }
 
 private fun createOptions(): HmfOptions {
     val options = HmfOptions()
     options.add(RequiredInputOption(SAMPLE_ID, "sample_ID"))
+    options.add(RequiredInputOption(OUTPUT_DIRECTORY, "output_dir"))
+    options.add(RequiredInputOption(KNOWLEDGEBASE, "knowledgebase"))
     options.add(RequiredInputOption(HMFPATIENTS_DB, "hmfpatients db url"))
     options.add(RequiredInputOption(DB_USER, "db user"))
     options.add(RequiredInputOption(DB_PASSWORD, "db password"))
