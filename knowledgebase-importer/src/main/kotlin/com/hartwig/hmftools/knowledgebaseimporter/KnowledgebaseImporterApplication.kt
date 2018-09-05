@@ -118,5 +118,7 @@ private fun readExtraCancerTypeDoids(): Map<String, Set<Doid>> {
 }
 
 private fun writeKnownVariants(knowledgebase: Knowledgebase, outputDirectory: String) {
+    val dir = File(outputDirectory)
+    if(!dir.exists()) dir.mkdirs()
     CsvWriter.writeTSV(knowledgebase.knownVariants.distinct(), "$outputDirectory${File.separator}${knowledgebase.source}KnownVariants.tsv")
 }
