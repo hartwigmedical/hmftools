@@ -11,7 +11,5 @@ object IclusionCodonReader : SomaticEventReader<IclusionEvent, CodonMutations> {
         else emptyList()
     }
 
-    private fun codonNumber(event: IclusionEvent): Int {
-        return "([\\d]+)".toRegex().find(event.variant)!!.groupValues[1].toInt()
-    }
+    private fun codonNumber(event: IclusionEvent) = "([\\d]+)".toRegex().find(event.variant)!!.groupValues[1].toInt()
 }
