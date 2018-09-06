@@ -12,6 +12,7 @@ import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
+import com.hartwig.hmftools.patientreporter.report.Commons;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 
 import org.immutables.value.Value;
@@ -43,7 +44,7 @@ public abstract class NonSequenceablePage {
 
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
-        return cmp.verticalList(MainPageTopSection.build("HMF Sequencing Report", sampleReport()), cmp.verticalGap(SECTION_VERTICAL_GAP),
+        return cmp.verticalList(MainPageTopSection.build("HMF Sequencing Report v", Commons.TITLE, sampleReport()), cmp.verticalGap(SECTION_VERTICAL_GAP),
                 mainPageNotAnalysableSection());
     }
 

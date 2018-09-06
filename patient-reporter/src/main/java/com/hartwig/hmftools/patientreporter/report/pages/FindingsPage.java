@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
+import com.hartwig.hmftools.patientreporter.report.Commons;
 import com.hartwig.hmftools.patientreporter.report.components.DataExpression;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSection;
@@ -45,7 +46,7 @@ public abstract class FindingsPage {
 
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
-        return cmp.verticalList(MainPageTopSection.buildWithImpliedPurity("HMF Sequencing Report",
+        return cmp.verticalList(MainPageTopSection.buildWithImpliedPurity("HMF Sequencing Report", Commons.TITLE,
                 report().sampleReport(),
                 impliedPurityString(report())),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),

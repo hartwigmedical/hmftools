@@ -21,8 +21,8 @@ public final class MainPageTopSection {
     private static final String REPORT_LOGO_PATH = "pdf/hartwig_logo.jpg";
 
     @NotNull
-    public static ComponentBuilder<?, ?> build(@NotNull final String title, @NotNull final SampleReport report) {
-        return build(title,
+    public static ComponentBuilder<?, ?> build(@NotNull final String title,@NotNull final String version, @NotNull final SampleReport report) {
+        return build(title, version,
                 report.sampleId(),
                 report.primaryTumorLocationString(), report.cancerSubTypeString(),
                 "Pathology Tumor Percentage",
@@ -30,9 +30,9 @@ public final class MainPageTopSection {
     }
 
     @NotNull
-    public static ComponentBuilder<?, ?> buildWithImpliedPurity(@NotNull final String title, @NotNull final SampleReport report,
+    public static ComponentBuilder<?, ?> buildWithImpliedPurity(@NotNull final String title,@NotNull final String version, @NotNull final SampleReport report,
             @NotNull String purityString) {
-        return build(title,
+        return build(title, version,
                 report.sampleId(),
                 report.primaryTumorLocationString(),
                 report.cancerSubTypeString(),
@@ -41,7 +41,7 @@ public final class MainPageTopSection {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> build(@NotNull String title, @NotNull String sample, @NotNull String primaryTumorLocation,
+    private static ComponentBuilder<?, ?> build(@NotNull String title, @NotNull String version, @NotNull String sample, @NotNull String primaryTumorLocation,
             @NotNull String cancerSubType, @NotNull String tumorPercentageTitle, @NotNull String tumorPercentage) {
         final ComponentBuilder<?, ?> mainDiagnosisInfo =
                 cmp.horizontalList(cmp.verticalList(cmp.text("Report Date").setStyle(tableHeaderStyle()),
@@ -52,7 +52,7 @@ public final class MainPageTopSection {
                                 cmp.text(cancerSubType).setStyle(dataTableStyle())),
                         cmp.verticalList(cmp.text(tumorPercentageTitle).setStyle(tableHeaderStyle()),
                                 cmp.text(tumorPercentage).setStyle(dataTableStyle()))).setHeight(32);
-        return cmp.verticalList(cmp.horizontalList(cmp.image(REPORT_LOGO_PATH).setWidth(42).setHeight(65), cmp.text(title + " - " + sample)
+        return cmp.verticalList(cmp.horizontalList(cmp.image(REPORT_LOGO_PATH).setWidth(42).setHeight(65), cmp.text(title + version + " - " + sample)
                         .setStyle(fontStyle().bold().setFontSize(14).setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
                         .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER), cmp.horizontalGap(40)),
                 cmp.verticalGap(3),
