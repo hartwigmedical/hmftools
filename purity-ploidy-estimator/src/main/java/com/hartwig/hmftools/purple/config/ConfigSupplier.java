@@ -38,7 +38,7 @@ public class ConfigSupplier {
     private static final String SOMATIC_MIN_PEAK = "somatic_min_peak";
     private static final int SOMATIC_MIN_PEAK_DEFAULT = 50;
     private static final String SOMATIC_MIN_TOTAL = "somatic_min_total";
-    private static final int SOMATIC_MIN_TOTAL_DEFAULT = 1000;
+    private static final int SOMATIC_MIN_TOTAL_DEFAULT = 300;
 
     private static final String DB_ENABLED = "db_enabled";
     private static final String DB_USER = "db_user";

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.purple.purity;
 
 import static com.hartwig.hmftools.common.numeric.Doubles.lessOrEqual;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +20,7 @@ public class BestFitFactory {
     private static final double ABS_RANGE = 0.0005;
     private static final double LOWEST_SCORE_MIN_PURITY = 0.16;
     private static final double MIN_PURITY_SPREAD = 0.15;
+    private static final double MIN_SOMATIC_UNADJUSTED_VAF = 0.1;
 
     private final FittedPurity bestFit;
     private final FittedPurityScore score;
@@ -32,25 +34,26 @@ public class BestFitFactory {
         this.minVariants = minVariants;
         this.highlyDiploidPercentage = highlyDiploidPercentage;
 
+        long somaticCount = somaticCount(somatics);
+
         Collections.sort(fittedPurities);
         FittedPurity lowestScore = fittedPurities.get(0);
 
         score = FittedPurityScoreFactory.score(inRangeOfLowest(lowestScore.score(), fittedPurities));
 
         if (Doubles.greaterOrEqual(score.puritySpread(), MIN_PURITY_SPREAD) && isHighlyDiploid(score)) {
-            if (noDetectableTumor(somatics.size())) {
+            final Optional<FittedPurity> somaticFit = new SomaticFitFactory(minPeak).fromSomatics(fittedPurities, somatics);
+
+            if (noDetectableTumor(somaticCount)) {
                 status = FittedPurityStatus.NO_TUMOR;
+                bestFit = somaticFit.orElse(lowestScore);
+            } else if (somaticsWontHelp(somatics.size(), lowestScore.purity(), somaticFit)) {
+                status = FittedPurityStatus.HIGHLY_DIPLOID;
                 bestFit = lowestScore;
             } else {
-                final Optional<FittedPurity> somaticFit = new SomaticFitFactory(minPeak).fromSomatics(fittedPurities, somatics);
-                if (somaticsWontHelp(somatics.size(), lowestScore.purity(), somaticFit)) {
-                    status = FittedPurityStatus.HIGHLY_DIPLOID;
-                    bestFit = lowestScore;
-                } else {
-                    status = FittedPurityStatus.SOMATIC;
-                    assert somaticFit.isPresent();
-                    bestFit = somaticFit.get();
-                }
+                status = FittedPurityStatus.SOMATIC;
+                assert somaticFit.isPresent();
+                bestFit = somaticFit.get();
             }
 
         } else {
@@ -59,7 +62,11 @@ public class BestFitFactory {
         }
     }
 
-    private boolean noDetectableTumor(int somaticCount) {
+    private long somaticCount(@NotNull Collection<SomaticVariant> variants) {
+        return variants.stream().filter(x -> x.alleleFrequency() > MIN_SOMATIC_UNADJUSTED_VAF).count();
+    }
+
+    private boolean noDetectableTumor(long somaticCount) {
         return somaticCount > 0 && somaticCount < minVariants;
     }
 
