@@ -4,6 +4,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.data_analyser.calcs.BucketAnalyser.getRatioRange;
+import static com.hartwig.hmftools.data_analyser.calcs.BucketAnalyser.ratioRange;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.doubleToStr;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getSortedVectorIndices;
@@ -40,6 +42,7 @@ public class SigContribOptimiser
     private int mTargetSig; // to check if a specific sig remains above the require contribution percent
     private int mRequiredSig; // keep this specific sig even if it falls below the require contribution percent
     private List<Integer> mZeroedSigs; // the signature bucket ratios
+    private boolean mApplyRange; // to the bucket ratios
 
     private double[] mCounts; // sample counts, optionally including noise
     private double[] mCurrentCounts;
@@ -101,6 +104,7 @@ public class SigContribOptimiser
         mInstances = 0;
         mAvgIterations = 0;
         mAvgPercImprove = 0;
+        mApplyRange = false;
     }
 
     public void initialise(int sampleId, final double[] counts, final double[] countsNoise, final List<double[]> ratiosCollection, double minSigPercent, int minAllocCount)
@@ -207,6 +211,7 @@ public class SigContribOptimiser
     public void setTargetSig(int sig) { mTargetSig = sig; }
     public void setRequiredSig(int sig) { mRequiredSig = sig; }
     public void setLogVerbose(boolean toggle) { mLogVerbose = toggle; }
+    public void setApplyRange(boolean toggle) { mApplyRange = toggle; }
     public int contributingSigCount() { return mSigCount - mZeroedSigs.size(); }
 
     private void applyInitialContributions()
@@ -336,6 +341,8 @@ public class SigContribOptimiser
                 }
             }
         }
+
+        // applyFinalContributions();
 
         updateStats();
         return mIsValid;
@@ -705,6 +712,11 @@ public class SigContribOptimiser
 
     private double calcSigContribution(int sig, final double[] currentCounts)
     {
+        return calcSigContribution(sig, currentCounts, false);
+    }
+
+    private double calcSigContribution(int sig, final double[] currentCounts, boolean useRange)
+    {
         double minAlloc = 0;
         double[][] sigData = mSigs.getData();
 
@@ -719,7 +731,8 @@ public class SigContribOptimiser
                 break;
             }
 
-            double alloc = (mCounts[b] - currentCounts[b]) / sigData[b][sig];
+            double sigRatio = useRange ? ratioRange(sigData[b][sig], true) : sigData[b][sig];
+            double alloc = (mCounts[b] - currentCounts[b]) / sigRatio;
 
             alloc = min(alloc, mCountsTotal);
 
@@ -733,6 +746,11 @@ public class SigContribOptimiser
     }
 
     private void applyContribution(int sig, double newContrib)
+    {
+        applyContribution(sig, newContrib, false);
+    }
+
+    private void applyContribution(int sig, double newContrib, boolean useRange)
     {
         if(newContrib == 0)
             return;
@@ -759,21 +777,74 @@ public class SigContribOptimiser
 
         for (int b = 0; b < mBucketCount; ++b)
         {
-            double newCount = newContrib * sigData[b][sig];
-
-            if(newCount == 0)
+            if(sigData[b][sig] == 0)
                 continue;
 
-            if (greaterThan(mCurrentCounts[b] + newCount, mCounts[b]))
+            double newCount;
+
+            if(!useRange)
             {
-                LOGGER.error(String.format("sig(%d contrib=%f) count(%f) + newCount(%f) exceeds maxCount(%f) diff(%f)",
-                        mSigIds[sig], mContribs[sig], mCurrentCounts[b], newCount, mCounts[b],
-                        mCurrentCounts[b] + newCount - mCounts[b]));
-                mIsValid = false;
-                return;
+                newCount = newContrib * sigData[b][sig];
+
+                if (greaterThan(mCurrentCounts[b] + newCount, mCounts[b]))
+                {
+                    LOGGER.error(String.format("sig(%d contrib=%f) count(%f) + newCount(%f) exceeds maxCount(%f) diff(%f)",
+                            mSigIds[sig], mContribs[sig], mCurrentCounts[b], newCount, mCounts[b],
+                            mCurrentCounts[b] + newCount - mCounts[b]));
+                    mIsValid = false;
+                    return;
+                }
+            }
+            else
+            {
+                double newCountMax = newContrib * ratioRange(sigData[b][sig], false);
+                double newCountMin = newContrib * ratioRange(sigData[b][sig], true);
+
+                if (greaterThan(mCurrentCounts[b] + newCountMin, mCounts[b]))
+                {
+                    LOGGER.error(String.format("sig(%d contrib=%f) count(%f) + newCount(%f) exceeds maxCount(%f) diff(%f)",
+                            mSigIds[sig], mContribs[sig], mCurrentCounts[b], newCountMin, mCounts[b],
+                            mCurrentCounts[b] + newCountMin - mCounts[b]));
+                    mIsValid = false;
+                    return;
+                }
+
+                newCount = min(mCounts[b] - mCurrentCounts[b], newCountMax);
             }
 
             mCurrentCounts[b] += newCount;
+        }
+    }
+
+    private void applyFinalContributions()
+    {
+        if(!mApplyRange || getRatioRange() == 0)
+            return;
+
+        double prevAllocPerc = mCurrentAllocPerc;
+
+        List<Integer> sortedContribIndices = getSortedVectorIndices(mContribs, false);
+
+        for (Integer s : sortedContribIndices)
+        {
+            if (mContribs[s] == 0)
+                break;
+
+            double alloc = calcSigContribution(s, mCurrentCounts, true);
+
+            if(alloc > 0)
+                applyContribution(s, alloc, true);
+        }
+
+        if(true)
+        {
+            recalcStats();
+
+            if (mCurrentAllocPerc >= prevAllocPerc * 1.005)
+            {
+                LOGGER.debug(String.format("sample(%d) final alloc(%.3f -> %.3f) using range-logic",
+                        mSampleId, mCurrentAllocPerc, prevAllocPerc));
+            }
         }
     }
 

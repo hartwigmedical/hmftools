@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.data_analyser.calcs;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.floor;
 import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.calcLogLikelihood;
@@ -504,6 +506,15 @@ public class DataUtils {
             else
                 return String.format("%.0f", size);
         }
+    }
+
+    public static double scaleRoundRatio(double value, int roundFactor)
+    {
+        int logScale = (int)round(log10(abs(value)));
+
+        double roundUnit = pow(10, logScale - roundFactor);
+
+        return round(value/roundUnit) * roundUnit;
     }
 
     public static BufferedWriter getNewFile(final String outputDir, final String fileName) throws IOException

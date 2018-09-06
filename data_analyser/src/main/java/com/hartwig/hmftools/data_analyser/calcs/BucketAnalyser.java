@@ -40,6 +40,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -109,7 +111,8 @@ public class BucketAnalyser {
     private boolean mNoBackgroundCounts; // whether to make a distinction between background and elevated counts
     private boolean mApplyNoise; // whether to factor Poisson noise into the sample counts and fits
 
-    BufferedWriter mBucketGroupFileWriter;
+    BufferedWriter mBgInterimFileWriter;
+    BufferedWriter mBgRatiosFileWriter;
     PerformanceCounter mPerfCounter;
 
     // config
@@ -136,6 +139,7 @@ public class BucketAnalyser {
     private static String BA_PREDEFINED_SIG_APPLY_COUNT = "ba_predefined_sig_apply_count";
     private static String BA_MIN_SAM_ALLOC_COUNT = "ba_min_sample_alloc_count";
     private static String BA_MUT_LOAD_CAP = "ba_mut_load_cap";
+    private static String BA_EXCESS_GRP_RUN_INDEX = "ba_excess_grp_run_index";
 
     // constraint constants - consider moving any allocation-related ones to config to make them visible
     private static double SAMPLE_ALLOCATED_PERCENT = 0.995;
@@ -150,6 +154,18 @@ public class BucketAnalyser {
     private static int MAX_CANDIDATE_GROUPS = 1500; // in place for speed and memory considerations
     private static double MAX_NOISE_TO_SAMPLE_RATIO = 5; // per sample, the total potential noise across all buckets cannot exceeds this multiple of variant total
     public static double MAX_NOISE_ALLOC_PERC = 0.5; // per sample, the max vs total variants which can be allocated to noise
+    public static double BUCKET_RATIO_RANGE = 0.0; // trial-only - fluctuations in the bucket group ratios
+
+    public static double ratioRange(double ratio, boolean takeMin)
+    {
+        if(BUCKET_RATIO_RANGE == 0 || ratio == 0)
+            return ratio;
+
+        double range = ratio * BUCKET_RATIO_RANGE;
+        return takeMin ? ratio - range : ratio + range;
+    }
+
+    public static double getRatioRange() { return BUCKET_RATIO_RANGE; }
 
     // external data file attributes
     private static String BA_EXT_SAMPLE_DATA_FILE = "ba_ext_data_file";
@@ -208,7 +224,8 @@ public class BucketAnalyser {
         mSkippedSamples = Lists.newArrayList();
         mReassessSamples = Lists.newArrayList();
         mSkippedBucketGroups = Lists.newArrayList();
-        mBucketGroupFileWriter = null;
+        mBgInterimFileWriter = null;
+        mBgRatiosFileWriter = null;
 
         mHighCssThreshold = 0.995;
         mMaxProposedSigs = 0;
@@ -218,7 +235,7 @@ public class BucketAnalyser {
         mLastRunGroupCount = 0;
         mApplyPredefinedSigCount = 0;
         mFinalFitOnly = false;
-        mExcessDiscoveryRunId = 5;
+        mExcessDiscoveryRunId = -1;
 
         mPerfCounter = new PerformanceCounter("BucketAnalyser");
 
@@ -228,8 +245,8 @@ public class BucketAnalyser {
 
         mSampleWatchList = Lists.newArrayList();
 
-        mSampleWatchList.add(1570);
-        mSampleWatchList.add(460);
+        //mSampleWatchList.add(1570);
+        //mSampleWatchList.add(460);
 //        mSampleWatchList.add(2617);
 
         // mSpecificSampleId = 305;
@@ -252,6 +269,7 @@ public class BucketAnalyser {
         options.addOption(BA_PREDEFINED_SIG_APPLY_COUNT, true, "How many predefined sigs to apply prior to discovery");
         options.addOption(BA_MIN_SAM_ALLOC_COUNT, true, "Min count to allocate a sample to a group");
         options.addOption(BA_MUT_LOAD_CAP, true, "Mutational load cap used in background counts calc");
+        options.addOption(BA_EXCESS_GRP_RUN_INDEX, true, "Run id for excess-unalloc group logic to kick in");
     }
 
     public boolean initialise(GenericDataCollection collection, final CommandLine cmd)
@@ -266,6 +284,7 @@ public class BucketAnalyser {
         mMutationalLoadCap = Integer.parseInt(cmd.getOptionValue(BA_MUT_LOAD_CAP, "10000"));
         mApplyPredefinedSigCount = Integer.parseInt(cmd.getOptionValue(BA_PREDEFINED_SIG_APPLY_COUNT, "0"));
         mMinSampleAllocCount = Integer.parseInt(cmd.getOptionValue(BA_MIN_SAM_ALLOC_COUNT, "1"));
+        mExcessDiscoveryRunId = Integer.parseInt(cmd.getOptionValue(BA_EXCESS_GRP_RUN_INDEX, "-1"));
 
         mRunCount = Integer.parseInt(cmd.getOptionValue(BA_RUN_COUNT, "25"));
 
@@ -436,8 +455,8 @@ public class BucketAnalyser {
             // formExactBucketGroups(false);
 
             // and then the best sub-groups
-            //if(mRunId >= mExcessDiscoveryRunId)
-            //    formExcessBucketGroups();
+            if(mExcessDiscoveryRunId >= 0 && mRunId >= mExcessDiscoveryRunId)
+                formExcessBucketGroups();
 
             formBucketGroupsFromSamplePairs(false);
 
@@ -481,6 +500,8 @@ public class BucketAnalyser {
 
                 logOverallStats();
                 mFinalBucketGroups.add(nextBestGroup);
+
+                assessSampleGroupAllocations(nextBestGroup);
             }
 
             perfCounter.stop();
@@ -556,8 +577,11 @@ public class BucketAnalyser {
     {
         try
         {
-            if(mBucketGroupFileWriter != null)
-                mBucketGroupFileWriter.close();
+            if(mBgInterimFileWriter != null)
+                mBgInterimFileWriter.close();
+
+            if(mBgRatiosFileWriter != null)
+                mBgRatiosFileWriter.close();
         }
         catch(IOException e)
         {
@@ -1296,8 +1320,6 @@ public class BucketAnalyser {
                         bucketGroup.getId(), samIndex1, maxOtherSample, maxSharedBuckets.size(), maxCss, sizeToStr(maxAllocaTotal)));
             }
 
-            // refineBucketGroupBuckets(bucketGroup);
-
             mBucketGroups.add(bucketGroup);
             ++groupsCreated;
         }
@@ -1808,7 +1830,7 @@ public class BucketAnalyser {
                 }
 
                 // remove this potential alloc
-                bucketGroup.removeSampleAllocation(sample, true);
+                bucketGroup.removeSampleAllocation(sample, samIndex,true);
             }
         }
     }
@@ -1922,13 +1944,13 @@ public class BucketAnalyser {
                     sampleGroupList.add(samGroup);
 
                     // not critical to do since all reset in final fit, but reassess sample-group allocations
-                    samGroup.removeSampleAllocation(sample, false);
+                    samGroup.removeSampleAllocation(sample,  -1,false);
                 }
 
                 sampleGroupList.add(topBucketGroup);
 
                 sample.clearAllocations();
-                boolean fitAllocated = fitSampleWithGroups(sigOptim, sample, sampleGroupList, prevAllocPerc, reqAllocPercent, false);
+                boolean fitAllocated = fitSampleWithGroups(sigOptim, sample, sampleGroupList, prevAllocPerc, reqAllocPercent, false, false);
 
                 if(!fitAllocated)
                 {
@@ -2269,6 +2291,123 @@ public class BucketAnalyser {
         }
     }
 
+    private void assessSampleGroupAllocations(final BucketGroup bucketGroup)
+    {
+        final List<double[]> sampleGroupAllocCounts = bucketGroup.getSampleCounts();
+        final List<Integer> sampleIds = bucketGroup.getSampleIds();
+        final List<Integer> bucketIds = bucketGroup.getBucketIds();
+        final double[] bucketRatios = bucketGroup.getBucketRatios();
+
+        List<Double> fixedRatioSet = Lists.newArrayList(); // for now just a percent, range 0 - 1
+
+        double ratioIncrement = 0.05;
+        double startRatio = 0;
+        for (int i = 0; i <= 20; ++i)
+        {
+            fixedRatioSet.add(startRatio + ratioIncrement * i);
+        }
+
+        // fixed ratios count x 3 values: fixed ratio, sample count with this ratio, unalloc total with this ratio
+        double[][] unallocVsTotalRatioFreqSet = new double[fixedRatioSet.size()][3];
+        int FIXED_RATIO = 0;
+        int SAM_COUNT = 1;
+        int UNALLOC = 2;
+
+        try
+        {
+            if(mBgRatiosFileWriter == null)
+            {
+                mBgRatiosFileWriter = getNewFile(mOutputDir, mOutputFileId + "_ba_bkt_unalloc_ratios.csv");
+
+                mBgRatiosFileWriter.write("BgId,SampleCount,Bucket,Ratio,TotalCount,AllocCount,UnallocCount");
+
+                // all unallocated bucket counts will be written out
+                for(Double ratio : fixedRatioSet)
+                {
+                    mBgRatiosFileWriter.write(String.format(",%.2f", ratio));
+                }
+
+                for(Double ratio : fixedRatioSet)
+                {
+                    mBgRatiosFileWriter.write(String.format(",%.2f", ratio));
+                }
+
+                mBgRatiosFileWriter.newLine();
+            }
+
+            BufferedWriter writer = mBgRatiosFileWriter;
+
+            for(Integer bucket : bucketIds)
+            {
+                for(int i = 0; i < fixedRatioSet.size(); ++i)
+                {
+                    Double ratio = fixedRatioSet.get(i);
+                    unallocVsTotalRatioFreqSet[i][FIXED_RATIO] = ratio;
+                    unallocVsTotalRatioFreqSet[i][SAM_COUNT] = 0;
+                    unallocVsTotalRatioFreqSet[i][UNALLOC] = 0;
+                }
+
+                double bucketTotal = 0;
+                double groupBucketTotal = 0;
+                double unallocBucketTotal = 0;
+
+                for (int samIndex = 0; samIndex < sampleIds.size(); ++samIndex)
+                {
+                    final SampleData sample = mSampleData.get(sampleIds.get(samIndex));
+                    double groupBucketCount = sampleGroupAllocCounts.get(samIndex)[bucket];
+                    double sampleBucketCount = sample.getElevatedBucketCounts()[bucket];
+                    double unallocCount = sample.getUnallocBucketCounts()[bucket];
+
+                    bucketTotal += sampleBucketCount;
+                    groupBucketTotal += groupBucketCount;
+
+                    if(unallocCount == 0)
+                    {
+                        unallocVsTotalRatioFreqSet[0][SAM_COUNT] += 1;
+                        continue;
+                    }
+
+                    unallocBucketTotal += unallocCount;
+
+                    // form a ratio from what has been allocated to this group vs what is left over
+                    double unallocVsTotalRatio = unallocCount / sampleBucketCount;
+
+                    // insert these into the frequency set
+                    int index = 0;
+                    while (index < fixedRatioSet.size() - 1)
+                    {
+                        if (abs(unallocVsTotalRatioFreqSet[index][0] - unallocVsTotalRatio) <= 0.5 * ratioIncrement)
+                            break;
+
+                        ++index;
+                    }
+
+                    unallocVsTotalRatioFreqSet[index][SAM_COUNT] += 1;
+                    unallocVsTotalRatioFreqSet[index][UNALLOC] += unallocCount;
+                }
+
+                writer.write(String.format("%d,%d,%d,%.4f,%.0f,%.0f,%.0f",
+                        bucketGroup.getId(), sampleIds.size(), bucket, bucketRatios[bucket], bucketTotal, groupBucketTotal, unallocBucketTotal));
+
+                for(int i = 0; i < fixedRatioSet.size(); ++i)
+                {
+                    writer.write(String.format(",%.0f", unallocVsTotalRatioFreqSet[i][SAM_COUNT]));
+                }
+
+                for(int i = 0; i < fixedRatioSet.size(); ++i)
+                {
+                    writer.write(String.format(",%.0f", unallocVsTotalRatioFreqSet[i][UNALLOC]));
+                }
+
+                writer.newLine();
+            }
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing to unalloc bucket-ratios file: {}", e.toString());
+        }
+    }
+
     private void clearBucketGroups()
     {
         if(mBucketGroups.isEmpty())
@@ -2320,7 +2459,7 @@ public class BucketAnalyser {
                 // ++sharedCount;
 
                 // remove this sample's allocation to the group
-                boolean ok = bucketGroup.removeSampleAllocation(sample, true);
+                boolean ok = bucketGroup.removeSampleAllocation(sample, samIndex,true);
 
                 if(!ok)
                 {
@@ -2354,7 +2493,8 @@ public class BucketAnalyser {
         if (mPredefinedSigs == null || mApplyPredefinedSigCount < 1)
             return;
 
-        int bgSigCount = mSpecificCancer.isEmpty() || mBackgroundGroups.size() == 1 ? mBackgroundGroups.size() : mCancerSamplesMap.size();
+        // int bgSigCount = mSpecificCancer.isEmpty() || mBackgroundGroups.size() == 1 ? mBackgroundGroups.size() : mCancerSamplesMap.size();
+        int bgSigCount = mCancerSamplesMap.size();
 
         // assume that the first X sigs are background, so start with the first elevated sig
         int sigsApplied = 0;
@@ -2407,6 +2547,7 @@ public class BucketAnalyser {
         double reqAllocPercent = MIN_GROUP_ALLOC_PERCENT_LOWER;
 
         SigContribOptimiser sigOptim = new SigContribOptimiser(mBucketCount, false, SAMPLE_ALLOCATED_PERCENT);
+        sigOptim.setApplyRange(true);
 
         if(mNoBackgroundCounts)
         {
@@ -2489,14 +2630,14 @@ public class BucketAnalyser {
                 continue;
             }
 
-            boolean useNewFit = fitSampleWithGroups(sigOptim, sample, potentialGroupList, prevAllocPerc, reqAllocPercent, true);
+            boolean useNewFit = fitSampleWithGroups(sigOptim, sample, potentialGroupList, prevAllocPerc, reqAllocPercent, true, true);
             boolean usePrevFit = false;
 
             if(!useNewFit)
             {
                 // revert back to the previous set of groups added through discovery
                 sample.clearAllocations();
-                usePrevFit = fitSampleWithGroups(sigOptim, sample, prevGroupList, 0, reqAllocPercent, false);
+                usePrevFit = fitSampleWithGroups(sigOptim, sample, prevGroupList, 0, reqAllocPercent, false, true);
             }
 
             if(!usePrevFit && !useNewFit)
@@ -2538,7 +2679,7 @@ public class BucketAnalyser {
 
     private boolean fitSampleWithGroups(
             SigContribOptimiser sigOptim, SampleData sample, List<BucketGroup> bucketGroups,
-            double prevAllocPerc, double reqAllocPerc, boolean removeAllocsOnFail)
+            double prevAllocPerc, double reqAllocPerc, boolean removeAllocsOnFail, boolean useRange)
     {
         List<double[]> ratiosCollection = Lists.newArrayList();
         List<Integer> sigIds = Lists.newArrayList();
@@ -2575,7 +2716,6 @@ public class BucketAnalyser {
         }
 
         // if all ok, allocate each contribution to the sample
-
         final double[] newGroupContribs = sigOptim.getContribs();
 
         double fitAllocPerc = sigOptim.getAllocPerc();
@@ -2616,7 +2756,9 @@ public class BucketAnalyser {
             final double[] bucketRatios = bucketGroup.getBucketRatios();
             for (int b = 0; b < mBucketCount; ++b)
             {
-                allocCounts[b] = fitAlloc * bucketRatios[b];
+                // double ratio = bucketRatios[b];
+                double ratio = useRange ? ratioRange(bucketRatios[b], false) : bucketRatios[b];
+                allocCounts[b] = fitAlloc * ratio;
             }
 
             double actualAlloc = sample.allocateBucketCounts(allocCounts, grpReqAllocPerc);
@@ -2652,7 +2794,7 @@ public class BucketAnalyser {
                 for (BucketGroup bucketGroup : addedGroups)
                 {
                     int samIndex = bucketGroup.getSampleIds().size() - 1;
-                    bucketGroup.removeSampleAllocation(sample, false);
+                    bucketGroup.removeSampleAllocation(sample, -1,false);
                 }
 
                 return false;
@@ -2907,21 +3049,21 @@ public class BucketAnalyser {
     {
         try
         {
-            if(mBucketGroupFileWriter == null)
+            if(mBgInterimFileWriter == null)
             {
-                mBucketGroupFileWriter = getNewFile(mOutputDir, mOutputFileId + "_ba_interim_groups.csv");
+                mBgInterimFileWriter = getNewFile(mOutputDir, mOutputFileId + "_ba_interim_groups.csv");
 
-                mBucketGroupFileWriter.write("RunId,Rank,BgId,Type,CancerType,Effects,SampleCount,BucketCount,MutLoad,PotAlloc,PotAllocAdj");
+                mBgInterimFileWriter.write("RunId,Rank,BgId,Type,CancerType,Effects,SampleCount,BucketCount,MutLoad,PotAlloc,PotAllocAdj");
 
                 for(int i = 0; i < mBucketCount; ++i)
                 {
-                    mBucketGroupFileWriter.write(String.format(",%d", i));
+                    mBgInterimFileWriter.write(String.format(",%d", i));
                 }
 
-                mBucketGroupFileWriter.newLine();
+                mBgInterimFileWriter.newLine();
             }
 
-            BufferedWriter writer = mBucketGroupFileWriter;
+            BufferedWriter writer = mBgInterimFileWriter;
 
             for (int bgIndex = 0; bgIndex < mTopAllocBucketGroups.size(); ++bgIndex)
             {
@@ -3011,7 +3153,7 @@ public class BucketAnalyser {
             noisAllocated += sample.getAllocNoise();
         }
 
-        LOGGER.debug(String.format("overall: samples(%d alloc=%d) groups(%d) counts: total(%s) background(%s perc=%.3f) elevated(%s perc=%.3f) allocated(%s perc=%.3f) allocNoise(%s perc=%.3f)",
+        LOGGER.debug(String.format("overall: samples(%d alloc=%d) groups(%d) counts: total(%s) background(%s perc=%.3f) elevated(%s perc=%.3f) alloc(%s perc=%.3f) noise(%s perc=%.3f)",
                 mSampleCount, fullyAllocated, mFinalBucketGroups.size(), sizeToStr(mTotalCount), sizeToStr(mBackgroundCount), mBackgroundCount/mTotalCount,
                 sizeToStr(mElevatedCount), mElevatedCount/mTotalCount, sizeToStr(mAllocatedCount), mAllocatedCount/mElevatedCount,
                 sizeToStr(noisAllocated), noisAllocated/mElevatedCount));
@@ -3163,8 +3305,11 @@ public class BucketAnalyser {
                     sizeToStr(sample.getElevatedCount()), sample.getUnallocPercent(), unallocTotal/mElevatedCount, sample.getElevBucketGroups().size()));
         }
 
-        LOGGER.debug(String.format("worst %d (perc=%.3f) samples have unallocted(%s perc=%.3f of %s)",
-                sampleCount, sampleCount/(double)nonExcludedSampleCount, sizeToStr(totalUnallocated), totalUnallocated/mElevatedCount, sizeToStr(mElevatedCount)));
+        double allUnallocTotal = mElevatedCount - mAllocatedCount;
+
+        LOGGER.debug(String.format("worst %d (perc=%.3f) samples have unalloc(%s) ofAllUnalloc(perc=%.3f of %s) ofTotal(%.3f)",
+                sampleCount, sampleCount/(double)nonExcludedSampleCount, sizeToStr(totalUnallocated), totalUnallocated/allUnallocTotal,
+                sizeToStr(allUnallocTotal), totalUnallocated/mAllocatedCount));
 
         // report worst allocated buckets in a similar way
         List<Integer> worstBucketIndices = getSortedVectorIndices(sigUnallocatedByBucket, false);
@@ -3309,7 +3454,7 @@ public class BucketAnalyser {
         List<Integer> testSigBuckets = Lists.newArrayList();
         double minRatioThreshold = 0.001;
 
-        for(final BucketGroup testGroup : mFinalBucketGroups)
+        for (final BucketGroup testGroup : mFinalBucketGroups)
         {
             if (testGroup.isBackground())
                 continue;
@@ -3321,9 +3466,9 @@ public class BucketAnalyser {
             ratiosCollection.clear();
             sigIds.clear();
 
-            for(int b = 0; b < mBucketCount; ++b)
+            for (int b = 0; b < mBucketCount; ++b)
             {
-                if(testGroupRatios[b] > 0)
+                if (testGroupRatios[b] > 0)
                     testSigBuckets.add(b);
             }
 
@@ -3336,11 +3481,11 @@ public class BucketAnalyser {
                 copyVector(otherGroup.getBucketRatios(), otherGroupRatios);
 
                 boolean hasDiffBuckets = false;
-                for(int b = 0; b < mBucketCount; ++b)
+                for (int b = 0; b < mBucketCount; ++b)
                 {
-                    if(otherGroupRatios[b] > 0 && !testSigBuckets.contains(b))
+                    if (otherGroupRatios[b] > 0 && !testSigBuckets.contains(b))
                     {
-                        if(otherGroupRatios[b] < minRatioThreshold)
+                        if (otherGroupRatios[b] < minRatioThreshold)
                         {
                             otherGroupRatios[b] = 0; // skip this bucket and continue on
                             continue;
@@ -3351,14 +3496,14 @@ public class BucketAnalyser {
                     }
                 }
 
-                if(hasDiffBuckets)
+                if (hasDiffBuckets)
                     continue;
 
                 ratiosCollection.add(otherGroupRatios);
                 sigIds.add(otherGroup.getId());
             }
 
-            if(ratiosCollection.size() < 2)
+            if (ratiosCollection.size() < 2)
             {
                 // LOGGER.debug(String.format("bg(%d) insufficient overlapping sigs for reconstruction", testGroup.getId()));
                 continue;
@@ -3370,10 +3515,10 @@ public class BucketAnalyser {
 
             boolean validCalc = sigOptim.fitToSample();
 
-            if(!validCalc)
+            if (!validCalc)
                 continue;
 
-            if(sigOptim.getAllocPerc() < 0.95)
+            if (sigOptim.getAllocPerc() < 0.8)
             {
                 LOGGER.debug(String.format("bg(%d) achieved low reconstruction from %d sigs to %.3f percent",
                         testGroup.getId(), sigOptim.contributingSigCount(), sigOptim.getAllocPerc()));
@@ -3384,9 +3529,44 @@ public class BucketAnalyser {
                     testGroup.getId(), sigOptim.contributingSigCount(), sigOptim.getAllocPerc()));
 
             final double[] sigContribs = sigOptim.getContribs();
-            for(int sig = 0; sig < ratiosCollection.size(); ++sig)
+            for (int sig = 0; sig < ratiosCollection.size(); ++sig)
             {
-                LOGGER.debug(String.format("bg(%d) from sigId(%d: %d) contrib(%.3f) percent", testGroup.getId(), sig, sigIds.get(sig), sigContribs[sig]/100));
+                LOGGER.debug(String.format("bg(%d) from sigId(%d: %d) contrib(%.3f) percent", testGroup.getId(), sig, sigIds.get(sig),
+                        sigContribs[sig] / 100));
+            }
+        }
+
+        // additionally check for any sig whose buckets are wholly contained within another sig and has a large overlap in samples
+        for (final BucketGroup testGroup : mFinalBucketGroups)
+        {
+            if (testGroup.isBackground())
+                continue;
+
+            final List<Integer> bucketIds = testGroup.getBucketIds();
+            final List<Integer> sampleIds = testGroup.getSampleIds();
+
+            for (final BucketGroup otherGroup : mFinalBucketGroups)
+            {
+                if(otherGroup.isBackground() || otherGroup == testGroup)
+                    continue;
+
+                final List<Integer> otherBucketIds = otherGroup.getBucketIds();
+
+                final List<Integer> commonBuckets = getMatchingList(bucketIds, otherBucketIds);
+
+                if(commonBuckets.size() < otherBucketIds.size())
+                    continue;
+
+                final List<Integer> otherSampleIds = otherGroup.getSampleIds();
+
+                final List<Integer> commonSamples = getMatchingList(sampleIds, otherSampleIds);
+
+                if(commonSamples.size() >= 0.25 * sampleIds.size() || commonSamples.size() >= 0.25 * otherSampleIds.size())
+                {
+                    LOGGER.debug(String.format("bg(%d) has possible correction bg(%d) buckets(bg1=%d bg2=%d) sample(bg1=%d bg2=%d match=%d)",
+                            testGroup.getId(), otherGroup.getId(), bucketIds.size(), otherBucketIds.size(),
+                            sampleIds.size(), otherSampleIds.size(), commonSamples.size()));
+                }
             }
         }
     }

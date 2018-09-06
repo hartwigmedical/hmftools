@@ -2,6 +2,7 @@ package com.hartwig.hmftools.data_analyser;
 
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.greaterThan;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.scaleRoundRatio;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.vectorMultiply;
 
@@ -31,10 +32,11 @@ public class MiscTester
         // sampleFitTest2();
         // testSampleAllocActuals();
         // testSigOptimiserActuals();
-        testSigRecontruction();
+        // testSigRecontruction();
 
         // stringTest();
         // chiSquaredTests();
+        testRoundFunction();
 
     }
 
@@ -461,6 +463,19 @@ public class MiscTester
                 LOGGER.debug(String.format("bg(%d) from sigig(%d) contrib(%.3f) percent", testSigId, sig, sigContribs[sig]/100));
             }
         }
+    }
+
+    private static void testRoundFunction()
+    {
+        double value = 0.25214;
+        double result = scaleRoundRatio(value, 1);
+        result = scaleRoundRatio(value, 2);
+        result = scaleRoundRatio(value, 3);
+
+        value = 0.75214; // should scale to be rounded to 0.1
+        result = scaleRoundRatio(value, 1);
+        result = scaleRoundRatio(value, 2);
+
     }
 
 }

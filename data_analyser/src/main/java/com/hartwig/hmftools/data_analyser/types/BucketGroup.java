@@ -206,20 +206,22 @@ public class BucketGroup implements Comparable<BucketGroup> {
         mSampleCountsMap.put(sampleId, sampleTotal);
     }
 
-    public boolean removeSampleAllocation(final SampleData sample, boolean removePotentialAlloc)
+    public boolean removeSampleAllocation(final SampleData sample, int samIndex, boolean removePotentialAlloc)
     {
-        int samIndex = -1;
-        for(int index = 0; index < mSampleIds.size(); ++index)
-        {
-            if(mSampleIds.get(index) == sample.Id)
-            {
-                samIndex = index;
-                break;
-            }
-        }
-
         if(samIndex == -1)
-            return false;
+        {
+            for (int index = 0; index < mSampleIds.size(); ++index)
+            {
+                if (mSampleIds.get(index) == sample.Id)
+                {
+                    samIndex = index;
+                    break;
+                }
+            }
+
+            if (samIndex == -1)
+                return false;
+        }
 
         if(removePotentialAlloc)
         {

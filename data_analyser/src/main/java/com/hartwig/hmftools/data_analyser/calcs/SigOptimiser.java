@@ -343,11 +343,16 @@ public class SigOptimiser
                 if(j == 1)
                 {
                     if(bucketBestRatio == startRatio)
-                        break;
-
-                    // refine the search
-                    range = abs(startRatio - bucketBestRatio);
-                    startRatio = bucketBestRatio;
+                    {
+                        // try again but with a much tighter increment
+                        range *= 0.2;
+                    }
+                    else
+                    {
+                        // refine the search
+                        range = abs(startRatio - bucketBestRatio);
+                        startRatio = bucketBestRatio;
+                    }
                 }
 
                 if (startRatio - range <= 0)
