@@ -94,7 +94,8 @@ public abstract class NonSequenceablePage {
                                 + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
                                 + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The biopsies evaluated for this sample have arrived on " + formattedDate(sampleReport().tumorArrivalDate()))
+                cmp.text("The biopsies evaluated for this sample have arrived on " + formattedDate(sampleReport().tumorArrivalDate())
+                        + " at Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam")
                         .setStyle(fontStyle()), cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("This report is generated and verified by: " + user() + " and is addressed at " + sampleReport().recipient())
                         .setStyle(fontStyle()), cmp.verticalGap(SECTION_VERTICAL_GAP),
