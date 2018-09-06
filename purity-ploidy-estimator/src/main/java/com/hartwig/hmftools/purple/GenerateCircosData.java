@@ -83,7 +83,7 @@ class GenerateCircosData {
         writeEnrichedSomatics(somaticVariants);
         writeStructuralVariants(structuralVariants);
         writeFittedRegions(Downsample.downsample(MAX_PLOT_POINTS,regions));
-        writeBafs(Downsample.downsample(10, bafs));
+        writeBafs(Downsample.downsample(MAX_PLOT_POINTS, bafs));
 
         final List<Future<Object>> futures = Lists.newArrayList();
         final Optional<String> circosBinary = config.circosBinary();
