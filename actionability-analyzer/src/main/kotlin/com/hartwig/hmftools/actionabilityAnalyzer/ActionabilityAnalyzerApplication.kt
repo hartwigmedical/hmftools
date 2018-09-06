@@ -10,6 +10,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.HMFPATIENTS_DB
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess
 import com.hartwig.hmftools.patientdb.data.PotentialActionableCNV
 import com.hartwig.hmftools.patientdb.data.PotentialActionableFusion
+import com.hartwig.hmftools.patientdb.data.PotentialActionableVariant
 import org.apache.logging.log4j.LogManager
 import java.io.File
 import java.util.stream.Stream
@@ -75,6 +76,12 @@ private fun queryDatabase(outputDir: String, dbAccess: DatabaseAccess, sampleToA
         val fusionRecords = it.asSequence().flatMap { actionabilityAnalyzer.actionabilityForFusion(it).asSequence() }.toList()
         records.addAll(fusionRecords)
     }
+
+    potentiallyActionableVariant(dbAccess, sampleToAnalyze).use {
+       // val variantRecords = it.asSequence().flatMap { actionabilityAnalyzer.actionabilityForVariant(it).asSequence() }.toList()
+      //  records.addAll(variantRecords)
+    }
+
     logger.info("Done. Writing results to file ${outputDir}${File.separator}actionableVariantsSample_$sampleId")
     CsvWriter.writeTSV(records, "${outputDir}${File.separator}actionableVariantsSample_$sampleId.csv")
 }
@@ -90,4 +97,10 @@ private fun potentiallyActionableFusions(dbAccess: DatabaseAccess,
     logger.info("Querying actionable fusions.")
     return if (false) dbAccess.allPotentiallyActionableFusions()
     else dbAccess.potentiallyActionableFusions(sampleToAnalyze.keys)
+}
+
+private fun potentiallyActionableVariant(dbAccess: DatabaseAccess, sampleToAnalyze: Map<String, String>): Stream<PotentialActionableVariant> {
+    logger.info("Querying actionable variants.")
+    return if (false) dbAccess.allPotentiallyActionableVariants()
+    else dbAccess.potentiallyActionableVariants(sampleToAnalyze.keys)
 }
