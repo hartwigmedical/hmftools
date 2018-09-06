@@ -102,6 +102,8 @@ public class ConfigSupplier {
 
         options.addOption(MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE, true,
                 "Minimum ratio count while smoothing before diploid regions become suspect while approaching centromere.");
+
+        FitScoreConfig.addOptions(options);
     }
 
     private final CommonConfig commonConfig;
@@ -112,6 +114,7 @@ public class ConfigSupplier {
     private final DBConfig dbConfig;
     private final FittingConfig fittingConfig;
     private final SmoothingConfig smoothingConfig;
+    private final FitScoreConfig fitScoreConfig;
 
     public ConfigSupplier(@NotNull CommandLine cmd, @NotNull Options opt) throws ParseException, IOException {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
@@ -178,6 +181,11 @@ public class ConfigSupplier {
         circosConfig = createCircosConfig(cmd, commonConfig);
         dbConfig = createDBConfig(cmd);
         fittingConfig = createFittingConfig(cmd);
+        fitScoreConfig = FitScoreConfig.createConfig(cmd);
+    }
+
+    public FitScoreConfig fitScoreConfig() {
+        return fitScoreConfig;
     }
 
     @NotNull
