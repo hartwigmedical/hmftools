@@ -54,16 +54,18 @@ public class PDFWriter {
 
     public void writeNonSequenceableReport(@NotNull final NotAnalysedPatientReport report) throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generateNotAnalysableReport(report);
-
         switch (report.reason()) {
             case LOW_DNA_YIELD: {
                 writeReport(fileName(report.sampleReport().sampleId(), NotAnalysableReason.LOW_DNA_YIELD.toString().toLowerCase(), "_hmf_report.pdf"), reportBuilder);
+                break;
             }
             case LOW_TUMOR_PERCENTAGE: {
                 writeReport(fileName(report.sampleReport().sampleId(), NotAnalysableReason.LOW_TUMOR_PERCENTAGE.toString().toLowerCase(), "_hmf_report.pdf"), reportBuilder);
+                break;
             }
             case POST_ANALYSIS_FAIL: {
                 writeReport(fileName(report.sampleReport().sampleId(), NotAnalysableReason.POST_ANALYSIS_FAIL.toString().toLowerCase(), "_hmf_report.pdf"), reportBuilder);
+                break;
             }
         }
     }
