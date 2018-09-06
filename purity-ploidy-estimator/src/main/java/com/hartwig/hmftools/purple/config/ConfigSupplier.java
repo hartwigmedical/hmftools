@@ -39,33 +39,16 @@ public class ConfigSupplier {
     private static final String SOMATIC_MIN_TOTAL = "somatic_min_total";
     private static final int SOMATIC_MIN_TOTAL_DEFAULT = 300;
 
-    private static final String DB_ENABLED = "db_enabled";
-    private static final String DB_USER = "db_user";
-    private static final String DB_PASS = "db_pass";
-    private static final String DB_URL = "db_url";
+
 
     private static final String BAF = "baf";
     private static final String CIRCOS = "circos";
-
-    private static final String MIN_PURITY = "min_purity";
-    private static final String MAX_PURITY = "max_purity";
-    private static final String PURITY_INCREMENT = "purity_increment";
-    private static final String MIN_NORM_FACTOR = "min_norm_factor";
-    private static final String MAX_NORM_FACTOR = "max_norm_factor";
-    private static final String NORM_FACTOR_INCREMENTS = "norm_factor_increment";
 
     private static final String MIN_DIPLOID_TUMOR_RATIO_COUNT = "min_diploid_tumor_ratio_count";
     private static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT = 30;
 
     private static final String MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE = "min_diploid_tumor_ratio_count_centromere";
     private static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT = 50;
-
-    static final double MIN_PURITY_DEFAULT = 0.08;
-    static final double MAX_PURITY_DEFAULT = 1.0;
-    static final double MIN_NORM_FACTOR_DEFAULT = 0.33;
-    static final double MAX_NORM_FACTOR_DEFAULT = 2.0;
-    private static final double PURITY_INCREMENT_DEFAULT = 0.01;
-    private static final double NORM_FACTOR_INCREMENTS_DEFAULT = 0.01;
 
     public static void addOptions(@NotNull Options options) {
         options.addOption(REF_SAMPLE, true, "The reference sample name. Defaults to value in metadata.");
@@ -84,18 +67,6 @@ public class ConfigSupplier {
         options.addOption(SOMATIC_MIN_PEAK, true, "Minimum number of somatic variants to consider a peak.");
         options.addOption(SOMATIC_MIN_TOTAL, true, "Minimum number of somatic variants required to assist highly diploid fits.");
 
-        options.addOption(DB_ENABLED, false, "Persist data to DB.");
-        options.addOption(DB_USER, true, "Database user name.");
-        options.addOption(DB_PASS, true, "Database password.");
-        options.addOption(DB_URL, true, "Database url.");
-
-        options.addOption(MIN_PURITY, true, "Minimum purity (default 0.05)");
-        options.addOption(MAX_PURITY, true, "Maximum purity (default 1.0)");
-        options.addOption(PURITY_INCREMENT, true, "Purity increment (default 0.01)");
-
-        options.addOption(MIN_NORM_FACTOR, true, "Minimum norm factor (default 0.33)");
-        options.addOption(MAX_NORM_FACTOR, true, "Maximum norm factor (default 2.0)");
-        options.addOption(NORM_FACTOR_INCREMENTS, true, "Norm factor increments (default 0.01)");
 
         options.addOption(MIN_DIPLOID_TUMOR_RATIO_COUNT, true,
                 "Minimum ratio count while smoothing before diploid regions become suspect.");
@@ -103,6 +74,8 @@ public class ConfigSupplier {
         options.addOption(MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE, true,
                 "Minimum ratio count while smoothing before diploid regions become suspect while approaching centromere.");
 
+        DBConfig.addOptions(options);
+        FittingConfig.addOptions(options);
         FitScoreConfig.addOptions(options);
     }
 
@@ -179,8 +152,8 @@ public class ConfigSupplier {
 
         bafConfig = createBAFConfig(cmd, opt, commonConfig);
         circosConfig = createCircosConfig(cmd, commonConfig);
-        dbConfig = createDBConfig(cmd);
-        fittingConfig = createFittingConfig(cmd);
+        dbConfig = DBConfig.createConfig(cmd);
+        fittingConfig = FittingConfig.createConfig(cmd);
         fitScoreConfig = FitScoreConfig.createConfig(cmd);
     }
 
@@ -299,37 +272,6 @@ public class ConfigSupplier {
 
         printHelp(opt);
         throw new ParseException("Baf file " + amberBaf + " not found. Please supply -baf argument.");
-    }
-
-    @NotNull
-    private static DBConfig createDBConfig(@NotNull final CommandLine cmd) {
-        boolean enabled = cmd.hasOption(DB_ENABLED);
-        return ImmutableDBConfig.builder()
-                .enabled(enabled)
-                .user(enabled ? cmd.getOptionValue(DB_USER) : "")
-                .password(enabled ? cmd.getOptionValue(DB_PASS) : "")
-                .url("jdbc:" + (enabled ? cmd.getOptionValue(DB_URL) : ""))
-                .build();
-    }
-
-    @NotNull
-    private static FittingConfig createFittingConfig(@NotNull final CommandLine cmd) {
-        final double minPurity = defaultValue(cmd, MIN_PURITY, MIN_PURITY_DEFAULT);
-        final double maxPurity = defaultValue(cmd, MAX_PURITY, MAX_PURITY_DEFAULT);
-        final double purityIncrement = defaultValue(cmd, PURITY_INCREMENT, PURITY_INCREMENT_DEFAULT);
-        final double minNormFactor = defaultValue(cmd, MIN_NORM_FACTOR, MIN_NORM_FACTOR_DEFAULT);
-        final double maxNormFactor = defaultValue(cmd, MAX_NORM_FACTOR, MAX_NORM_FACTOR_DEFAULT);
-        final double normFactorIncrement = defaultValue(cmd, NORM_FACTOR_INCREMENTS, NORM_FACTOR_INCREMENTS_DEFAULT);
-
-        return ImmutableFittingConfig.builder()
-                .minPurity(minPurity)
-                .maxPurity(maxPurity)
-                .purityIncrement(purityIncrement)
-                .minNormFactor(minNormFactor)
-                .maxNormFactor(maxNormFactor)
-                .normFactorIncrement(normFactorIncrement)
-                .build();
-
     }
 
     private static void printHelp(@NotNull Options opt) {
