@@ -28,8 +28,6 @@ public interface CommonConfig {
     @NotNull
     String gcProfile();
 
-    boolean forceSegmentation();
-
     default int windowSize() {
         return WINDOW_SIZE;
     }

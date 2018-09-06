@@ -23,7 +23,6 @@ public class ConfigSupplier {
 
     private static final Logger LOGGER = LogManager.getLogger(CommonConfig.class);
 
-    private static final String FORCE = "force";
     private static final String REF_SAMPLE = "ref_sample";
     private static final String TUMOR_SAMPLE = "tumor_sample";
     private static final String RUN_DIRECTORY = "run_dir";
@@ -73,7 +72,6 @@ public class ConfigSupplier {
         options.addOption(TUMOR_SAMPLE, true, "The tumor sample name. Defaults to value in metadata.");
         options.addOption(RUN_DIRECTORY, true, "The path containing the data for a single run.");
         options.addOption(OUTPUT_DIRECTORY, true, "The output path. Defaults to run_dir/purple/");
-        options.addOption(FORCE, false, "Force recalculation of data. Do not use cached results");
 
         options.addOption(STRUCTURAL_VARIANTS, true, "Optional location of structural variant vcf for more accurate segmentation.");
         options.addOption(SOMATIC_VARIANTS, true, "Optional location of somatic variant vcf to assist fitting in highly-diploid samples.");
@@ -154,7 +152,6 @@ public class ConfigSupplier {
                 .outputDirectory(outputDirectory)
                 .amberDirectory(amberDirectory)
                 .cobaltDirectory(cobaltDirectory)
-                .forceSegmentation(cmd.hasOption(FORCE))
                 .gcProfile(gcProfile)
                 .build();
 
