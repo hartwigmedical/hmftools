@@ -23,6 +23,7 @@ const val KNOWLEDGEBASE = "knowledgebase"
 
 fun main(args: Array<String>) {
     logger.info("Start processing actionability")
+
     val cmd = createOptions().createCommandLine("actionability-analyzer", args)
     val sampleId = cmd.getOptionValue(SAMPLE_ID)
     val outputDir = cmd.getOptionValue(OUTPUT_DIRECTORY)
@@ -44,7 +45,7 @@ fun main(args: Array<String>) {
     val actionabilityAnalyzer = ActionabilityAnalyzer(sampleToAnalyze, actionableVariants, actionableFusionPairs,
                                                         actionablePromiscuousFive, actionablePromiscuousThree, actionableCNVs, cancerTypes,
                                                         actionableGenomicRanges)
-    queryDatabase(outputDir, dbAccess, sampleToAnalyze, actionabilityAnalyzer)
+    queryDatabase(outputDir, dbAccess, sampleToAnalyze, actionabilityAnalyzer, sampleId)
     logger.info("Done processing actionability")
 }
 
@@ -63,7 +64,8 @@ private fun readSample(sampleId: String, dbAccess: DatabaseAccess) : Map<String,
         if (sampleId.isNotEmpty() && sampleId.isNotBlank()) dbAccess.sampleAndTumorLocation(sampleId).toList().associate { Pair(it.key, it.value) }
         else mapOf(sampleId to "It is no tumor sample")
 
-private fun queryDatabase(outputDir: String, dbAccess: DatabaseAccess, sampleToAnalyze: Map<String, String>, actionabilityAnalyzer: ActionabilityAnalyzer) {
+private fun queryDatabase(outputDir: String, dbAccess: DatabaseAccess, sampleToAnalyze: Map<String, String>, actionabilityAnalyzer: ActionabilityAnalyzer,
+                          sampleId: String) {
     val records = mutableListOf<ActionabilityOutput>()
     potentiallyActionableCNVs(dbAccess, sampleToAnalyze).use {
         val cnvRecords = it.asSequence().flatMap { actionabilityAnalyzer.actionabilityForCNV(it).asSequence() }.toList()
@@ -73,8 +75,8 @@ private fun queryDatabase(outputDir: String, dbAccess: DatabaseAccess, sampleToA
         val fusionRecords = it.asSequence().flatMap { actionabilityAnalyzer.actionabilityForFusion(it).asSequence() }.toList()
         records.addAll(fusionRecords)
     }
-    logger.info("Done. Writing results to file...")
-    CsvWriter.writeTSV(records, "$outputDir${File.separator}actionableVariantsPerSample.tsv")
+    logger.info("Done. Writing results to file ${outputDir}${File.separator}actionableVariantsSample_$sampleId")
+    CsvWriter.writeTSV(records, "${outputDir}${File.separator}actionableVariantsSample_$sampleId.csv")
 }
 
 private fun potentiallyActionableCNVs(dbAccess: DatabaseAccess, sampleToAnalyze: Map<String, String>): Stream<PotentialActionableCNV> {
