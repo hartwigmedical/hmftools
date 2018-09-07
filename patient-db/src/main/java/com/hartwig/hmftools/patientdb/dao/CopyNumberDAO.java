@@ -144,14 +144,13 @@ class CopyNumberDAO {
                     COPYNUMBERREGION.OBSERVEDNORMALRATIO,
                     COPYNUMBERREGION.OBSERVEDTUMORRATIOCOUNT,
                     COPYNUMBERREGION.GCCONTENT,
-                    COPYNUMBERREGION.MODELPLOIDY,
-                    COPYNUMBERREGION.MODELBAF,
-                    COPYNUMBERREGION.MODELTUMORRATIO,
+                    COPYNUMBERREGION.MINORALLELEPLOIDY,
+                    COPYNUMBERREGION.MAJORALLELEPLOIDY,
                     COPYNUMBERREGION.ACTUALTUMORBAF,
                     COPYNUMBERREGION.ACTUALTUMORCOPYNUMBER,
                     COPYNUMBERREGION.REFNORMALISEDTUMORCOPYNUMBER,
-                    COPYNUMBERREGION.CNVDEVIATION,
-                    COPYNUMBERREGION.BAFDEVIATION,
+                    COPYNUMBERREGION.MINORALLELEPLOIDYDEVIATION,
+                    COPYNUMBERREGION.MAJORALLELEPLOIDYDEVIATION,
                     COPYNUMBERREGION.TOTALDEVIATION,
                     COPYNUMBERREGION.PLOIDYPENALTY,
                     COPYNUMBERREGION.FITTEDBAF,
@@ -178,14 +177,13 @@ class CopyNumberDAO {
                 region.observedNormalRatio(),
                 region.observedTumorRatioCount(),
                 region.gcContent(),
-                region.modelPloidy(),
-                region.modelBAF(),
-                region.modelTumorRatio(),
+                region.minorAllelePloidy(),
+                region.majorAllelePloidy(),
                 region.tumorBAF(),
                 region.tumorCopyNumber(),
                 region.refNormalisedCopyNumber(),
-                region.cnvDeviation(),
-                region.bafDeviation(),
+                region.minorAllelePloidyDeviation(),
+                region.majorAllelePloidyDeviation(),
                 region.deviation(),
                 region.ploidyPenalty(),
                 region.fittedBAF(),
@@ -214,14 +212,13 @@ class CopyNumberDAO {
                     .observedNormalRatio(record.getValue(COPYNUMBERREGION.OBSERVEDNORMALRATIO))
                     .observedTumorRatioCount(record.getValue(COPYNUMBERREGION.OBSERVEDTUMORRATIOCOUNT))
                     .gcContent(record.getValue(COPYNUMBERREGION.GCCONTENT))
-                    .modelPloidy(record.getValue(COPYNUMBERREGION.MODELPLOIDY))
-                    .modelBAF(record.getValue(COPYNUMBERREGION.MODELBAF))
-                    .modelTumorRatio(record.getValue(COPYNUMBERREGION.MODELTUMORRATIO))
+                    .minorAllelePloidy(record.getValue(COPYNUMBERREGION.MINORALLELEPLOIDY))
+                    .majorAllelePloidy(record.getValue(COPYNUMBERREGION.MAJORALLELEPLOIDY))
                     .tumorBAF(record.getValue(COPYNUMBERREGION.ACTUALTUMORBAF))
                     .tumorCopyNumber(record.getValue(COPYNUMBERREGION.ACTUALTUMORCOPYNUMBER))
                     .refNormalisedCopyNumber(record.getValue(COPYNUMBERREGION.REFNORMALISEDTUMORCOPYNUMBER))
-                    .cnvDeviation(record.getValue(COPYNUMBERREGION.CNVDEVIATION))
-                    .bafDeviation(record.getValue(COPYNUMBERREGION.BAFDEVIATION))
+                    .minorAllelePloidyDeviation(record.getValue(COPYNUMBERREGION.MINORALLELEPLOIDYDEVIATION))
+                    .majorAllelePloidyDeviation(record.getValue(COPYNUMBERREGION.MAJORALLELEPLOIDYDEVIATION))
                     .deviation(record.getValue(COPYNUMBERREGION.TOTALDEVIATION))
                     .fittedBAF(record.getValue(COPYNUMBERREGION.FITTEDBAF))
                     .fittedTumorCopyNumber(record.getValue(COPYNUMBERREGION.FITTEDCOPYNUMBER))

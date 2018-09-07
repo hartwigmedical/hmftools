@@ -148,7 +148,7 @@ public class FittedPurityFactory {
             ploidyPenalty += weightWithBaf(fittedRegion.ploidyPenalty(), enrichedRegion.bafCount());
             modelDeviation += weightWithBaf(fittedRegion.deviation(), enrichedRegion.bafCount());
             averagePloidy +=  weightWithBaf(fittedRegion.tumorCopyNumber(), enrichedRegion.bafCount());
-            if (fittedRegion.modelPloidy() == 2) {
+            if (fittedRegion.isDiploid()) {
                 diploidProportion += weightWithBaf(1, enrichedRegion.bafCount());
             }
 
@@ -166,4 +166,5 @@ public class FittedPurityFactory {
                 .somaticDeviation(somaticDeviation)
                 .build();
     }
+
 }

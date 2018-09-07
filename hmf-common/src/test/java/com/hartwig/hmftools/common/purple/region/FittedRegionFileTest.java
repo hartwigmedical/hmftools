@@ -13,23 +13,6 @@ import org.junit.Test;
 public class FittedRegionFileTest {
 
     @Test
-    public void testSupportOlderFileFormat() {
-        final FittedRegion complete = createRandom(new Random());
-        final FittedRegion expectedTruncated = ImmutableFittedRegion.builder().from(complete).ploidyPenalty(0).build();
-
-        final String completeString = FittedRegionFile.toString(complete);
-        final String values[] = completeString.split("\t");
-
-        final StringJoiner truncatedStringJoiner = new StringJoiner("\t");
-        for (int i = 0; i < values.length - 1; i++) {
-            truncatedStringJoiner.add(values[i]);
-        }
-
-        final FittedRegion truncated = FittedRegionFile.fromString(truncatedStringJoiner.toString());
-        assertEquals(expectedTruncated, truncated);
-    }
-
-    @Test
     public void testToFromString() {
         final FittedRegion expected = createRandom(new Random());
         final FittedRegion decoded = FittedRegionFile.fromString(FittedRegionFile.toString(expected));
@@ -43,16 +26,15 @@ public class FittedRegionFileTest {
                 .start(random.nextLong())
                 .end(random.nextLong())
                 .status(GermlineStatus.DIPLOID)
-                .modelPloidy(random.nextInt())
                 .bafCount(random.nextInt())
                 .observedBAF(random.nextDouble())
                 .tumorBAF(random.nextDouble())
-                .modelBAF(random.nextDouble())
-                .bafDeviation(random.nextDouble())
+                .minorAllelePloidy(random.nextDouble())
+                .minorAllelePloidyDeviation(random.nextDouble())
                 .observedTumorRatio(random.nextDouble())
                 .observedNormalRatio(random.nextDouble())
-                .modelTumorRatio(random.nextDouble())
-                .cnvDeviation(random.nextDouble())
+                .majorAllelePloidy(random.nextDouble())
+                .majorAllelePloidyDeviation(random.nextDouble())
                 .deviation(random.nextDouble())
                 .tumorCopyNumber(random.nextDouble())
                 .fittedTumorCopyNumber(random.nextDouble())
