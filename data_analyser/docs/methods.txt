@@ -1,0 +1,148 @@
+Signature Bucket Analyser - Method and Routines
+===============================================
+
+CONFIG AND PARAMETERS
+
+Key constants (could become config):
+- data prep
+	- elevated probability - currently 1e-12
+    - PERMITTED_PROB_NOISE  1e-4
+	- MAX_NOISE_TO_SAMPLE_RATIO = 5; // per sample, the total potential noise across all buckets cannot exceeds this multiple of variant total
+	- MAX_NOISE_ALLOC_PERC = 0.5; // per sample, the max vs total variants which can be allocated to noise
+	- MutationalLoadCap (config):
+		- SNVs: 10K
+		- INDELs: 1500
+		- MNVs: reassess
+
+- discovery
+	- min sample-pair bucket overlap for discovery of BGs - config, default = 3
+    - min sample count percent = 0.0001 -  % of cohort to consider a pair of samples similar (5K at 0.01% of 55M)
+    - MAX_CANDIDATE_GROUPS = 1500; // in place for speed and memory considerations
+    - sample counts CSS threshold (config) = 0.995
+    - run count or until negligible
+    - excess unalloc method (config) - kicks in at Nth run
+
+- fit and allocation
+    - SKIP_ALLOC_FACTOR = 2.0; // skip adding a sample to a group if another candidate not chosen to allocate X times as much
+    - MIN_GROUP_ALLOC_PERCENT = 0.10; // only allocate a sample to a group if it takes at this much of the elevated count
+    - MIN_GROUP_ALLOC_PERCENT_LOWER = 0.03; // hard lower limit
+	- min sample count for allocation:
+		- SNVs: 400
+		- INDELs: 80
+		- MNVs: 4
+
+
+Input Data
+- sample counts matrix
+- sample external data - cancer type and any other known attributes of the sample (eg Smoking, UV, MSI)
+- config as above
+
+
+ROUTINE STEPS and LOGIC
+
+Step 1: Calc Preparation
+
+Step 1: Sample Count Splits, Probabilities and Background Allocations
+
+Step 1A: Median Background Sig Ratios
+- within each cancer type, find all samples <= MutationalLoadCap
+- if less than X or Y% are found, abort
+- take their sample counts as implied bucket ratios (vs their sample total)
+- average these out - this defines the background signature per cancer type
+
+Step 1B: Allocate sample BG sig counts
+- background allocations are optionally cached in a file and reloaded in each run to save recalc
+- take min of sample count or MutationLoadCap
+- use BG sig's bucket ratios to assign an initial expected count for each bucket to this BG sig
+- use fit with Poisson noise to allocate to BG signature
+	- checks each attempted fit using log-likelihood and input Poisson prob of 99%
+	- check this all again??
+- output is a sample allocation to the BG sig
+	- which should fit that amount within the bounds of noise for each sample
+	- can this instead just be swapped out for the standard fit routine? that's what's done anyway
+- cache result in a file
+
+Step 1C: Splitting counts and probabilities
+- set BG count and elevated count (being actual count - background)
+- calc Poisson probability, adjusted for FDR (samples * buckets)
+- background counts used for probabilities but then folded in with elevated counts for all subsequent discovery and group allocation
+
+Step 1D: Calc noise
+- using Poisson prob to calc noise range for each sample bucket count
+- limit noise total per sample to 5x sample count (affects the lower mut load sample)
+
+
+Repeated Routine
+- repeat Steps 2 & 3 until:
+	- no candiate groups potential allocation exceeds 0.001 of cohort size (or no new candidate groups found)
+- proceed to final fit in Step 4
+- log final analyses
+
+
+Step 2: Candidate Group Discovery
+
+Step 2A: Find Candidate Groups from sample pair subset buckets
+- start with overlapping elevated buckets for a pair of samoples
+- if the unallocated counts in these buckets have CSS > threshold (eg 0.995), form a group
+- if not, remove the worst bucket and continue down to min of 3 overlapping buckets
+- constraints:
+	- CSS > 0.995
+	- sample count >= min sample count percent (eg 0.0001 * cohort total, eg 55M)
+	- each of the 2 samples' potential allocation >= 10% (GroupAllocMinPerc)
+
+Step 2B: Candidate Groups from excess unalloc counts:
+- take each sample pairs' unalloc buckets (ie the ids)
+- if overlap >= 80%, form a group
+- constraints:
+	- min bucket overlap (eg 2 or 3) 
+	- sample count >= min sample count percent (eg 0.0001 * cohort total, eg 55M)
+	- each of the 2 samples' potential allocation >= 10% (GroupAllocMinPerc)
+
+
+Step 3: Candidate Group Selection
+
+Step 3A: Rank Candidate Groups
+- take each proposed candidate group
+- test fit for every sample against every group (ie reshuffling existing group allocs)
+- add a sample as a potential allocation if:
+	- >= GroupAllocMinPerc (eg 10%)
+	- would not be allocated X times that to another group (SkipAllocFactor, currently 2)
+- calculate a total potential alloc per candidate group, weighted by sample alloc percent
+	- eg if a sample would allocate 10K variants to a group, and this would then be a 80% alloc for that sample, 
+	- then potential adjusted alloc = 8K
+- take the group with the highest potential adjusted allocation
+
+Step 3B: Top Group Refinement
+- merge in the samples from any other candidate group with CSS from ratios > CSS threshold
+- add as candidates any additional buckets from these merged groups
+- run SigOptimiser routine to refine the bucket group ratios and to test out adding candidate buckets
+	- tests each bucket ratio independently for optimal value
+	- must increase the overall allocation for samples in the group
+	- candidate buckets must additionally have sample ratios between 10 and 90th percentiles fall within X% range (currently 20%)
+
+Step 3C: Top Group Sample Allocation
+- allocate any sample if alloc counts exceeds MinAllocGroup threshold
+- at the same time run the SigContrib optimsation to reshuffle sig allocs
+- this can cause a sample to change the groups it is currently allocated to
+
+Step 3D: Check skipped samples
+- after each run of new group allocation, check the set of skipped samples from previous runs
+- any sample not allocated and not skipped again, can now be allocated if other criteria is met (ie above MinGroupAlloc threshold)
+
+
+Step 4: Final Sample Fit Allocation
+- clear all existing allocations
+- run an optimal fit routine on each sample with:
+	- its relevant background sig (by cancer type)
+	- any other bucket group with potential alloc >= MinGroupAllocPercLower (eg 3%)
+- apply all the optimally-fitted group allocs
+
+
+Step 5: Analysis of Results
+- search external sample data for dominant cancer types and other features & effects
+- find worst samples and buckets
+- compare sigs, look for sig-reconstruction and corrections and similar sig-contributions
+- compare proposed sigs to PCAWG
+- write out various data sets for post-run R analysis and presentation
+
+

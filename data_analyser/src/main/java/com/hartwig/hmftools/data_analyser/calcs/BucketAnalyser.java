@@ -40,8 +40,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -121,6 +119,7 @@ public class BucketAnalyser {
     private String mSpecificCancer;
     private int mSpecificSampleId; // purely for testing
     private double mHighCssThreshold; // CSS level for samples or groups to be consider similar
+    private int mMinBucketCountOverlap; // used for pairings of samples with reduced bucket overlap
     private int mMaxProposedSigs;
     private int mMutationalLoadCap;
     private int mApplyPredefinedSigCount; // how many loaded sigs to apply prior to discovery (optimisation)
@@ -140,12 +139,12 @@ public class BucketAnalyser {
     private static String BA_MIN_SAM_ALLOC_COUNT = "ba_min_sample_alloc_count";
     private static String BA_MUT_LOAD_CAP = "ba_mut_load_cap";
     private static String BA_EXCESS_GRP_RUN_INDEX = "ba_excess_grp_run_index";
+    private static String BA_MIN_BUCKET_COUNT_OVERLAP = "ba_min_bc_overlap";
 
     // constraint constants - consider moving any allocation-related ones to config to make them visible
     private static double SAMPLE_ALLOCATED_PERCENT = 0.995;
-    private static double DOMINANT_CATEGORY_PERCENT = 0.7; /// mark a group with a category if X% of samples in it have this attribute (eg cancer type, UV)
+    private static double DOMINANT_CATEGORY_PERCENT = 0.7; // mark a group with a category if X% of samples in it have this attribute (eg cancer type, UV)
     private static double MAX_ELEVATED_PROB = 1e-12;
-    private int MIN_BUCKET_COUNT_OVERLAP = 3; // used for pairings of samples with reduced bucket overlap
     private static double MIN_DISCOVERY_SAMPLE_COUNT = 0.0001; // % of cohort to consider a pair of samples similar (5K at 0.01% of 55M)
     private static double PERMITTED_PROB_NOISE = 1e-4;
     private static double MIN_GROUP_ALLOC_PERCENT = 0.10; // only allocate a sample to a group if it takes at this much of the elevated count
@@ -236,6 +235,7 @@ public class BucketAnalyser {
         mApplyPredefinedSigCount = 0;
         mFinalFitOnly = false;
         mExcessDiscoveryRunId = -1;
+        mMinBucketCountOverlap = 3;
 
         mPerfCounter = new PerformanceCounter("BucketAnalyser");
 
@@ -270,6 +270,7 @@ public class BucketAnalyser {
         options.addOption(BA_MIN_SAM_ALLOC_COUNT, true, "Min count to allocate a sample to a group");
         options.addOption(BA_MUT_LOAD_CAP, true, "Mutational load cap used in background counts calc");
         options.addOption(BA_EXCESS_GRP_RUN_INDEX, true, "Run id for excess-unalloc group logic to kick in");
+        options.addOption(BA_MIN_BUCKET_COUNT_OVERLAP, true, "Min buckets for candidate group discovery");
     }
 
     public boolean initialise(GenericDataCollection collection, final CommandLine cmd)
@@ -285,6 +286,7 @@ public class BucketAnalyser {
         mApplyPredefinedSigCount = Integer.parseInt(cmd.getOptionValue(BA_PREDEFINED_SIG_APPLY_COUNT, "0"));
         mMinSampleAllocCount = Integer.parseInt(cmd.getOptionValue(BA_MIN_SAM_ALLOC_COUNT, "1"));
         mExcessDiscoveryRunId = Integer.parseInt(cmd.getOptionValue(BA_EXCESS_GRP_RUN_INDEX, "-1"));
+        mMinBucketCountOverlap = Integer.parseInt(cmd.getOptionValue(BA_MIN_BUCKET_COUNT_OVERLAP, "3"));
 
         mRunCount = Integer.parseInt(cmd.getOptionValue(BA_RUN_COUNT, "25"));
 
@@ -409,6 +411,10 @@ public class BucketAnalyser {
 
         perfCounter.start("SplitCounts");
         calcBucketMedianData();
+
+        if(mHasErrors)
+            return;
+
         calcSampleBackgroundCounts();
         splitSampleCounts();
         calcCountsNoise();
@@ -469,7 +475,7 @@ public class BucketAnalyser {
 
             if(mBucketGroups.isEmpty())
             {
-                LOGGER.debug("no new groups found for run({})", mRunId);
+                LOGGER.debug("no groups found at run({})", mRunId);
 
                 if(onFinalRun)
                     break;
@@ -638,6 +644,15 @@ public class BucketAnalyser {
                 sampleBucketRatios.add(bucketRatios);
             }
 
+            double includedSamplesPerc = samplesIncluded / (double)sampleIds.size();
+            if(samplesIncluded < 5 || includedSamplesPerc < 0.25)
+            {
+                // now convert back to average counts
+                LOGGER.warn("cancerType({}) has too few({}) low mutational load samples vs total({})", cancerType, samplesIncluded, sampleIds.size());
+                mHasErrors = true;
+                break;
+            }
+
             // now convert back to average counts
             LOGGER.debug("cancerType({}) has {} low mutational load samples", cancerType, samplesIncluded);
 
@@ -693,11 +708,9 @@ public class BucketAnalyser {
         for (Map.Entry<String, List<Double>> entry : mBucketMediansMap.entrySet())
         {
             final String type = entry.getKey();
-
-            List<Double> medianRatios = entry.getValue();
-
             List<Integer> sampleIds = mCancerSamplesMap.get(type);
 
+            List<Double> medianRatios = entry.getValue();
             final double[] bucketRatios = listToArray(medianRatios);
 
             for (Integer sampleId : sampleIds)
@@ -721,12 +734,12 @@ public class BucketAnalyser {
         LOGGER.debug("splitting sample counts");
 
         // work out bucket median values (literally 50th percentile values
-        mBucketMedianRatios = new NmfMatrix(mBucketCount, mSampleCount);
+        // mBucketMedianRatios = new NmfMatrix(mBucketCount, mSampleCount);
         mBucketProbs = new NmfMatrix(mBucketCount, mSampleCount);
         mBackgroundCounts = new NmfMatrix(mBucketCount, mSampleCount);
         mElevatedCounts = new NmfMatrix(mBucketCount, mSampleCount);
 
-        double[][] brData = mBucketMedianRatios.getData();
+        // double[][] brData = mBucketMedianRatios.getData();
         double[][] probData = mBucketProbs.getData();
         double[][] bgData = mBackgroundCounts.getData();
         double[][] elevData = mElevatedCounts.getData();
@@ -761,19 +774,17 @@ public class BucketAnalyser {
 
                     int backgroundCount = (int)round(bucketMedianRatio * bgAllocation);
 
-                    // expData[i][j] = expectedCount;
-                    // if(expectedCount < backgroundCount)
-                    //    backgroundCount = expectedCount;
-
                     if(sbCount < backgroundCount) // must be capped by the actual count
                         backgroundCount = sbCount;
 
                     bgData[i][j] = backgroundCount;
 
+                    /*
                     if (backgroundCount > 0)
                     {
                         brData[i][j] = sbCount / (double)backgroundCount;
                     }
+                    */
 
                     int elevatedCount = sbCount - backgroundCount;
 
@@ -935,39 +946,14 @@ public class BucketAnalyser {
         mPermittedBgRange.cacheTranspose();
 
         // TEMP to write out sample noise values
-        try
-        {
-            BufferedWriter writer = getNewFile(mOutputDir, mOutputFileId + "_ba_sample_noise.csv");
-
-            List<String> sampleNames = mDataCollection.getFieldNames();
-
-            int i = 0;
-            for(; i < sampleNames.size()-1; ++i)
-            {
-                writer.write(String.format("%s,", sampleNames.get(i)));
-            }
-            writer.write(String.format("%s", sampleNames.get(i)));
-
-            writer.newLine();
-
-            writeMatrixData(writer, mPermittedElevRange, true);
-
-            writer.close();
-        }
-        catch (final IOException e)
-        {
-            LOGGER.error("error writing sample noise file");
-        }
+        // writeSampleCountsNoise();
     }
 
     private void collectElevatedSampleBuckets()
     {
-        mAllSampleBucketGroups = new HashMap();
-
         int totalCount = 0;
+        int elevSampleCount = 0;
         double[][] probData = mBucketProbs.getData();
-
-        double[] countRanges = new double[mBucketCount];
 
         for (int i = 0; i < mSampleCount; ++i)
         {
@@ -990,7 +976,7 @@ public class BucketAnalyser {
             if (!bucketList.isEmpty())
             {
                 sample.setElevatedBuckets(bucketList);
-                mAllSampleBucketGroups.put(i, bucketList);
+                ++elevSampleCount;
             }
         }
 
@@ -1014,8 +1000,7 @@ public class BucketAnalyser {
         }
 
         LOGGER.debug(String.format("samples with elevated buckets: count(%d perc=%.2f), buckets(%d perc=%.3f)",
-                mAllSampleBucketGroups.size(), mAllSampleBucketGroups.size()/(double)mSampleCount,
-                totalCount, totalCount/(double)(mBucketCount*mSampleCount)));
+                elevSampleCount, elevSampleCount/(double)mSampleCount, totalCount, totalCount/(double)(mBucketCount*mSampleCount)));
     }
 
     private void formBackgroundBucketGroups()
@@ -1176,7 +1161,7 @@ public class BucketAnalyser {
                 List<Integer> commonBuckets = getMatchingList(bl1, bl2);
                 int commonBucketCount = commonBuckets.size();
 
-                if (commonBucketCount < 2)
+                if (commonBucketCount < mMinBucketCountOverlap)
                     continue;
 
                 sample1.populateBucketCountSubset(sc1, commonBuckets, usePartialUnallocated);
@@ -1202,7 +1187,7 @@ public class BucketAnalyser {
                 {
                     addGroup = true;
                 }
-                else if (commonBucketCount > MIN_BUCKET_COUNT_OVERLAP)
+                else if (commonBucketCount > mMinBucketCountOverlap)
                 {
                     // attempt to find a match using less overlapping buckets
                     double[] cssResults = new double[commonBuckets.size()];
@@ -1254,7 +1239,7 @@ public class BucketAnalyser {
                             break;
                         }
 
-                        if(commonBucketCount - removedBuckets.size() <= MIN_BUCKET_COUNT_OVERLAP)
+                        if(commonBucketCount - removedBuckets.size() <= mMinBucketCountOverlap)
                             break;
                     }
                 }
@@ -1378,6 +1363,8 @@ public class BucketAnalyser {
             if (bl1.isEmpty())
                 continue;
 
+            double reqSam1AllocPercent = minAllocPercent(sample1, false);
+
             List<Integer> sam1CoveredBuckets = Lists.newArrayList();
 
             // for check groups just created
@@ -1409,6 +1396,12 @@ public class BucketAnalyser {
                     continue;
 
                 sample1.populateBucketCountSubset(sc1, commonBuckets, false);
+
+                double sam1ElevTotal = sumVector(sc1);
+
+                if(sam1ElevTotal/sample1.getElevatedCount() < reqSam1AllocPercent)
+                    continue;
+
                 bucketGroup.addSample(samIndex1, sc1, true);
                 addedToGroup = true;
 
@@ -1449,13 +1442,24 @@ public class BucketAnalyser {
                 if (bl2.isEmpty())
                     continue;
 
+                double reqSam2AllocPercent = minAllocPercent(sample2, false);
+
                 List<Integer> commonBuckets = getMatchingList(bl1, bl2);
                 int commonBucketCount = commonBuckets.size();
 
-                if (commonBucketCount < MIN_BUCKET_COUNT_OVERLAP)
+                if (commonBucketCount < mMinBucketCountOverlap)
                     continue;
 
                 if (commonBucketCount < minBucketOverlapPerc * bl1.size() || commonBucketCount < minBucketOverlapPerc * bl2.size())
+                    continue;
+
+                sample1.populateBucketCountSubset(sc1, commonBuckets, false);
+                sample2.populateBucketCountSubset(sc2, commonBuckets, false);
+
+                double sam1ElevTotal = sumVector(sc1);
+                double sam2ElevTotal = sumVector(sc2);
+
+                if(sam1ElevTotal/sample1.getElevatedCount() < reqSam1AllocPercent || sam2ElevTotal/sample2.getElevatedCount() < reqSam2AllocPercent)
                     continue;
 
                 final List<Integer> alreadyCovered = getMatchingList(commonBuckets, sam1CoveredBuckets);
@@ -1470,8 +1474,6 @@ public class BucketAnalyser {
                 bucketGroup.addInitialSample(samIndex2);
                 bucketGroup.addBuckets(commonBuckets);
 
-                sample1.populateBucketCountSubset(sc1, commonBuckets, false);
-                sample2.populateBucketCountSubset(sc2, commonBuckets, false);
                 bucketGroup.addSample(samIndex1, sc1, false);
                 bucketGroup.addSample(samIndex2, sc2, false);
 
@@ -1651,7 +1653,8 @@ public class BucketAnalyser {
                     }
                 }
 
-                if (sample.getElevatedBuckets().isEmpty() || sample.getUnallocPercent() < reqAllocPercent)
+                // skip if already largely allocated, even though reshuffling could potentially lead to an alloc above the min %
+                if (sample.getUnallocPercent() < reqAllocPercent)
                     continue;
 
                 // optimisation: check whether the buckets for this group and sample
@@ -1721,8 +1724,6 @@ public class BucketAnalyser {
                         continue;
                     }
 
-//                    double fitAllocTotal = sigOptim.getContribTotal();
-//                    allocCountTotal = fitAllocTotal - (sample.getAllocatedCount() + sample.getAllocNoise());
                     double candidateAlloc = sigOptim.getContribs()[candidateSigIndex];
                     allocCountTotal = candidateAlloc;
                     allocPercent = allocCountTotal / sample.getElevatedCount();
@@ -1730,8 +1731,7 @@ public class BucketAnalyser {
                     if (allocPercent < reqAllocPercent || allocCountTotal < mMinSampleAllocCount)
                         continue;
 
-                    // turn the fitted contribution into new counts
-
+                    // translate the fitted contribution into new counts
                     if(candidateAlloc < allocCountTotal * 0.99)
                         continue; // shouldn't happen but in case a reshuffle of sigs didn't actually include the new sig
 
@@ -1808,13 +1808,6 @@ public class BucketAnalyser {
             {
                 Integer sampleId = sampleIds.get(samIndex);
                 double proposedAllocTotal = sampleAllocTotals.get(samIndex);
-
-                /*
-                if(mSampleWatchList.contains(sampleId) && mSampleWatchList.contains(bucketGroup.getId()))
-                {
-                    LOGGER.debug("spec sample");
-                }
-                */
 
                 final SampleData sample = mSampleData.get(sampleId);
 
@@ -1955,6 +1948,7 @@ public class BucketAnalyser {
                 if(!fitAllocated)
                 {
                     LOGGER.warn("sample({}) fit failed", sample.Id);
+                    mHasErrors = true;
                 }
                 else
                 {
@@ -4170,5 +4164,29 @@ public class BucketAnalyser {
         }
     }
 
+    private void writeSampleCountsNoise()
+    {
+        try
+        {
+            BufferedWriter writer = getNewFile(mOutputDir, mOutputFileId + "_ba_sample_noise.csv");
 
+            List<String> sampleNames = mDataCollection.getFieldNames();
+
+            int i = 0;
+            for (; i < sampleNames.size() - 1; ++i)
+            {
+                writer.write(String.format("%s,", sampleNames.get(i)));
+            }
+            writer.write(String.format("%s", sampleNames.get(i)));
+
+            writer.newLine();
+
+            writeMatrixData(writer, mPermittedElevRange, true);
+
+            writer.close();
+        } catch (final IOException e)
+        {
+            LOGGER.error("error writing sample noise file");
+        }
+    }
 }
