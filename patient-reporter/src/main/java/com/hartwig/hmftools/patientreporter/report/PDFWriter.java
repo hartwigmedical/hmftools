@@ -46,7 +46,7 @@ public class PDFWriter {
     public void writeSequenceReport(@NotNull final AnalysedPatientReport report, @NotNull final HmfReporterData reporterData)
             throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generatePatientReport(report, reporterData);
-        writeReport(fileName(report.sampleReport().sampleId(),  "sequence", "_hmf_report.pdf"), reportBuilder);
+        writeReport(fileName(report.sampleReport().sampleId(), "sequence", "_hmf_report.pdf"), reportBuilder);
         // TODO (KODU) Final cleanup once we switched to proper actionability
         //        final JasperReportBuilder evidenceReportBuilder = EvidenceReport.generate(report);
         //        writeReport(fileName(report.sampleReport().sampleId(), "_evidence_items.pdf"), evidenceReportBuilder);
@@ -54,23 +54,11 @@ public class PDFWriter {
 
     public void writeNonSequenceableReport(@NotNull final NotAnalysedPatientReport report) throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generateNotAnalysableReport(report);
-        switch (report.reason()) {
-            case LOW_DNA_YIELD: {
-                writeReport(fileName(report.sampleReport().sampleId(), NotAnalysableReason.LOW_DNA_YIELD.toString().toLowerCase(), "_hmf_report.pdf"), reportBuilder);
-                break;
-            }
-            case LOW_TUMOR_PERCENTAGE: {
-                writeReport(fileName(report.sampleReport().sampleId(), NotAnalysableReason.LOW_TUMOR_PERCENTAGE.toString().toLowerCase(), "_hmf_report.pdf"), reportBuilder);
-                break;
-            }
-            case POST_ANALYSIS_FAIL: {
-                writeReport(fileName(report.sampleReport().sampleId(), NotAnalysableReason.POST_ANALYSIS_FAIL.toString().toLowerCase(), "_hmf_report.pdf"), reportBuilder);
-                break;
-            }
-        }
+
+        writeReport(fileName(report.sampleReport().sampleId(), report.reason().toString().toLowerCase(), "_hmf_report.pdf"), reportBuilder);
     }
 
-    private void writeReport(@NotNull final String fileName, @NotNull final JasperReportBuilder report)
+    private static void writeReport(@NotNull final String fileName, @NotNull final JasperReportBuilder report)
             throws FileNotFoundException, DRException {
         if (Files.exists(new File(fileName).toPath())) {
             LOGGER.warn(" Could not write " + fileName + " as it already exists.");
@@ -82,7 +70,7 @@ public class PDFWriter {
 
     @NotNull
     private String fileName(@NotNull final String sample, @NotNull String reasonNotAnalysable, @NotNull final String suffix) {
-        return reportDirectory + File.separator + sample + "_" +  reasonNotAnalysable + suffix;
+        return reportDirectory + File.separator + sample + "_" + reasonNotAnalysable + suffix;
     }
 
     @VisibleForTesting

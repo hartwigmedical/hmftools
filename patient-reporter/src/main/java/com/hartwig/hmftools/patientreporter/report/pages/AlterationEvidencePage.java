@@ -37,7 +37,7 @@ public abstract class AlterationEvidencePage {
 
     @NotNull
     public static ComponentBuilder<?, ?> reportComponent(@NotNull final SampleReport sampleReport, @NotNull final String impliedPurity) {
-        return cmp.verticalList(MainPageTopSection.buildWithImpliedPurity("HMF Civic Evidence Supplement v", Commons.TITLE, sampleReport, impliedPurity),
+        return cmp.verticalList(MainPageTopSection.buildWithImpliedPurity(Commons.TITLE, sampleReport, impliedPurity),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("Knowledgebase drug association of reported genomic alterations").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(10),

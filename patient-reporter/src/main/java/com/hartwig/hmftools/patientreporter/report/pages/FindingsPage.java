@@ -46,7 +46,7 @@ public abstract class FindingsPage {
 
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
-        return cmp.verticalList(MainPageTopSection.buildWithImpliedPurity("HMF Sequencing Report", Commons.TITLE,
+        return cmp.verticalList(MainPageTopSection.buildWithImpliedPurity(Commons.TITLE,
                 report().sampleReport(),
                 impliedPurityString(report())),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
