@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -55,16 +56,20 @@ class ConsequenceDeterminer {
 
             builder.variant(variant);
             builder.gene(snpEffAnnotation.gene());
-            builder.transcript(snpEffAnnotation.transcript());
-            builder.hgvsCoding(snpEffAnnotation.hgvsCoding());
-            builder.hgvsProtein(snpEffAnnotation.hgvsProtein());
-            builder.consequence(snpEffAnnotation.consequenceString());
+            builder.proteinImpact(snpEffAnnotation.hgvsProtein());
+            builder.proteinImpactType(snpEffAnnotation.consequenceString());
             final String cosmicID = variant.canonicalCosmicID();
             if (cosmicID != null) {
-                builder.cosmicID(cosmicID);
+                builder.knowledgebaseKey(cosmicID);
             }
             builder.totalReadCount(variant.totalReadCount());
             builder.alleleReadCount(variant.alleleReadCount());
+            builder.ploidy(Strings.EMPTY);
+            builder.purityAdjustedVAF(0D);
+            builder.clonalityStatus(Strings.EMPTY);
+            builder.wildTypeStatus(Strings.EMPTY);
+            builder.driverStatus(Strings.EMPTY);
+            builder.actionabilityStatus(Strings.EMPTY);
             reports.add(builder.build());
         }
 

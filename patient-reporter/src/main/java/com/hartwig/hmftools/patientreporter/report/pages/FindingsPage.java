@@ -81,14 +81,18 @@ public abstract class FindingsPage {
                 !report.variants().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(VariantDataSource.variantFields())
                         .columns(col.column("Gene", VariantDataSource.GENE_FIELD),
-                                col.column("Position", VariantDataSource.POSITION_FIELD),
                                 col.column("Variant", VariantDataSource.VARIANT_FIELD),
-                                col.column("Depth (VAF)", VariantDataSource.DEPTH_VAF_FIELD),
-                                col.componentColumn("Predicted Effect", predictedEffectColumn()),
-                                col.column("Cosmic", VariantDataSource.COSMIC_FIELD)
-                                        .setHyperLink(hyperLink(VariantDataSource.cosmicHyperlink()))
+                                col.column("Type", VariantDataSource.VARIANT_TYPE_FIELD),
+                                col.column("Read Depth", VariantDataSource.READ_DEPTH_FIELD),
+                                col.column("Knowledgebase", VariantDataSource.KNOWLEDGEBASE_KEY_FIELD)
+                                        .setHyperLink(hyperLink(VariantDataSource.knowledgeBaseHyperlink()))
                                         .setStyle(linkStyle()),
-                                col.column("Ploidy (TAF)", VariantDataSource.PLOIDY_TAF_FIELD)))
+                                col.column("Ploidy", VariantDataSource.PLOIDY_FIELD),
+                                col.column("VAF", VariantDataSource.VAF_FIELD),
+                                col.column("Clonal?", VariantDataSource.CLONAL_FIELD),
+                                col.column("Wildtype?", VariantDataSource.WILDTYPE_FIELD),
+                                col.column("Driver?", VariantDataSource.DRIVER_FIELD),
+                                col.column("Actionable?", VariantDataSource.ACTIONABLE_FIELD)))
                         .setDataSource(VariantDataSource.fromVariants(report.fitStatus(), report.variants(), drupFilter))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
@@ -101,12 +105,12 @@ public abstract class FindingsPage {
                         cmp.text(geneMutationAddition).setStyle(fontStyle().setFontSize(8))));
     }
 
-    @NotNull
-    private static ComponentBuilder<?, ?> predictedEffectColumn() {
-        return cmp.verticalList(cmp.horizontalList(cmp.text(DataExpression.fromField(VariantDataSource.HGVS_CODING_FIELD)),
-                cmp.text(DataExpression.fromField(VariantDataSource.HGVS_PROTEIN_FIELD))),
-                cmp.text(DataExpression.fromField(VariantDataSource.CONSEQUENCE_FIELD))).setFixedWidth(170);
-    }
+//    @NotNull
+//    private static ComponentBuilder<?, ?> predictedEffectColumn() {
+//        return cmp.verticalList(cmp.horizontalList(cmp.text(DataExpression.fromField(VariantDataSource.HGVS_CODING_FIELD)),
+//                cmp.text(DataExpression.fromField(VariantDataSource.HGVS_PROTEIN_FIELD))),
+//                cmp.text(DataExpression.fromField(VariantDataSource.CONSEQUENCE_FIELD))).setFixedWidth(170);
+//    }
 
     @NotNull
     private static ComponentBuilder<?, ?> geneCopyNumberReport(@NotNull final AnalysedPatientReport report) {

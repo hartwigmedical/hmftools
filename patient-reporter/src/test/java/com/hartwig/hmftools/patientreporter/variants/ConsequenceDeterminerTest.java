@@ -32,7 +32,7 @@ public class ConsequenceDeterminerTest {
     private static final int TOTAL_READ_COUNT = 2;
 
     private static final String HGVS_CODING = "c.RtoA";
-    private static final String HGVS_PROTEIN = "p.RtoA";
+    private static final String PROTEIN_IMPACT = "p.RtoA";
 
     @Test
     public void worksAsExpected() {
@@ -43,7 +43,7 @@ public class ConsequenceDeterminerTest {
 
         final ImmutableSnpEffAnnotation.Builder annotationBuilder = createVariantAnnotationBuilder().featureID(TRANSCRIPT).
                 featureType(ConsequenceDeterminer.FEATURE_TYPE_TRANSCRIPT).gene(GENE).hgvsCoding(HGVS_CODING).
-                hgvsProtein(HGVS_PROTEIN);
+                hgvsProtein(PROTEIN_IMPACT);
         final SnpEffAnnotation rightAnnotation = annotationBuilder.consequences(Lists.newArrayList(rightConsequence)).build();
         final SnpEffAnnotation wrongAnnotation = annotationBuilder.consequences(Lists.newArrayList(wrongConsequence)).build();
 
@@ -62,11 +62,9 @@ public class ConsequenceDeterminerTest {
         assertEquals(CHROMOSOME + ":" + POSITION, variantReport.variant().chromosomePosition());
         assertEquals(REF, variantReport.variant().ref());
         assertEquals(ALT, variantReport.variant().alt());
-        assertEquals(TRANSCRIPT, variantReport.transcript());
-        assertEquals(HGVS_CODING, variantReport.hgvsCoding());
-        assertEquals(HGVS_PROTEIN, variantReport.hgvsProtein());
-        assertEquals(rightConsequence.readableSequenceOntologyTerm(), variantReport.consequence());
-        assertEquals(COSMIC_ID, variantReport.cosmicID());
+        assertEquals(PROTEIN_IMPACT, variantReport.proteinImpact());
+        assertEquals(rightConsequence.readableSequenceOntologyTerm(), variantReport.proteinImpactType());
+        assertEquals(COSMIC_ID, variantReport.knowledgebaseKey());
         assertEquals(TOTAL_READ_COUNT, variantReport.totalReadCount());
         assertEquals(ALLELE_READ_COUNT, variantReport.alleleReadCount());
     }

@@ -1,11 +1,8 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
-import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.formatPercent;
-
-import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 
-import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,61 +12,58 @@ import org.jetbrains.annotations.Nullable;
 public interface VariantReport {
 
     @NotNull
-    String gene();
-
-    @NotNull
     SomaticVariant variant();
 
     @NotNull
-    String transcript();
-
-    @NotNull
-    String hgvsCoding();
-
-    @NotNull
-    String hgvsProtein();
-
-    @NotNull
-    String consequence();
-
-    @NotNull
-    @Value.Default
-    default String cosmicID() {
-        return Strings.EMPTY;
-    }
-
-    @NotNull
-    @Value.Default
-    default String baf() {
-        return Strings.EMPTY;
-    }
-
-    @Value.Default
-    default double impliedVAF() {
-        return 0;
-    }
+    String gene();
 
     int totalReadCount();
 
     int alleleReadCount();
 
+    @Value.Derived
     default double alleleFrequency() {
         return (double) alleleReadCount() / totalReadCount();
     }
 
     @NotNull
-    default String depthVafField() {
-        return Integer.toString(alleleReadCount()) + " / " + Integer.toString(totalReadCount()) + " (" + formatPercent(alleleFrequency())
-                + ")";
+    @Value.Derived
+    default String readDepthField() {
+        return alleleReadCount() + " / " + totalReadCount() + " (" + PatientReportFormat.formatPercent(alleleFrequency()) + ")";
     }
 
     @NotNull
-    default String ploidyTafField() {
-        return Doubles.isZero(impliedVAF()) ? Strings.EMPTY : baf() + " (" + formatPercent(impliedVAF()) + ")";
+    String proteinImpact();
+
+    @NotNull
+    String proteinImpactType();
+
+    @Nullable
+    String knowledgebaseKey();
+
+    @Nullable
+    String knowledgebaseUrl();
+
+    @NotNull
+    String ploidy();
+
+    double purityAdjustedVAF();
+
+    @NotNull
+    @Value.Derived
+    default String purityAdjustedVAFField() {
+        return PatientReportFormat.formatPercent(purityAdjustedVAF());
     }
 
     @NotNull
-    default String variantField() {
-        return variant().ref() + " > " + variant().alt();
-    }
+    String clonalityStatus();
+
+    @NotNull
+    String wildTypeStatus();
+
+    @NotNull
+    String driverStatus();
+
+    @NotNull
+    String actionabilityStatus();
 }
