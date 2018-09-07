@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
@@ -38,10 +37,8 @@ import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
-import com.hartwig.hmftools.patientreporter.civic.AlterationAnalyzer;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutablePurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
-import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalysis;
@@ -78,9 +75,6 @@ public abstract class PatientReporter {
     public abstract StructuralVariantAnalyzer structuralVariantAnalyzer();
 
     @NotNull
-    public abstract AlterationAnalyzer civicAnalyzer();
-
-    @NotNull
     public AnalysedPatientReport run(@NotNull final String runDirectory, @Nullable final String comments) throws IOException {
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
         final GenomeAnalysis genomeAnalysis = analyseGenomeData(run.tumorSample(), runDirectory);
@@ -107,22 +101,6 @@ public abstract class PatientReporter {
         final PatientTumorLocation patientTumorLocation =
                 PatientReporterHelper.extractPatientTumorLocation(baseReporterData().patientTumorLocations(), tumorSample);
 
-        final List<Alteration> alterations = Lists.newArrayList();
-
-        // KODU: Skip CIVIC annotation for now, not working at the moment.
-        //        if (patientTumorLocation != null) {
-        //            final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
-        //            alterations = civicAnalyzer().run(variantAnalysis.variantReports(),
-        //                    purpleAnalysis.reportableGeneCopyNumbers(),
-        //                    reportableDisruptions,
-        //                    reportableFusions,
-        //                    reporterData().panelGeneModel(),
-        //                    doidMapping.doidsForTumorType(patientTumorLocation.primaryTumorLocation()));
-        //        } else {
-        //            LOGGER.warn("Could not run civic analyzer as (curated) primary tumor location is not known");
-        //            alterations = Lists.newArrayList();
-        //        }
-
         LOGGER.info("Printing analysis results:");
         LOGGER.info(" Number of passed variants : " + Integer.toString(passedVariantCount));
         LOGGER.info(" Number of variants to report : " + Integer.toString(reportedVariantCount));
@@ -131,7 +109,6 @@ public abstract class PatientReporter {
         LOGGER.info(" Number of structural variants : " + Integer.toString(structuralVariantCount));
         LOGGER.info(" Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
         LOGGER.info(" Number of gene disruptions to report : " + Integer.toString(reportableDisruptions.size()));
-        LOGGER.info(" Number of CIViC alterations to report : " + alterations.size());
         LOGGER.info(" Microsatellite analysis results: " + Double.toString(variantAnalysis.indelsPerMb()) + " indels per MB");
         LOGGER.info(" Mutational load results: " + Integer.toString(variantAnalysis.mutationalLoad()));
 
@@ -158,7 +135,6 @@ public abstract class PatientReporter {
                 reportableFusions,
                 purpleAnalysis.fittedPurity().purity(),
                 purpleAnalysis.status(),
-                alterations,
                 PatientReporterHelper.findCircosPlotPath(runDirectory, tumorSample),
                 Optional.ofNullable(comments),
                 baseReporterData().signaturePath());

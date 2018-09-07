@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.mockedCivicAnalyzer;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReporterData;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testHmfReporterData;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testKnownFusionModel;
@@ -42,7 +41,7 @@ public class PatientReporterTest {
         final StructuralVariantAnalyzer svAnalyzer =
                 new StructuralVariantAnalyzer(new TestAnnotator(), geneModel.regions(), testKnownFusionModel());
         final PatientReporter algo =
-                ImmutablePatientReporter.of(baseReporterData, reporterData, variantAnalyzer, svAnalyzer, mockedCivicAnalyzer());
+                ImmutablePatientReporter.of(baseReporterData, reporterData, variantAnalyzer, svAnalyzer);
         assertNotNull(algo.run(RUN_DIRECTORY, null));
     }
 

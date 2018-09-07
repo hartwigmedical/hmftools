@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.report;
 
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.mockedAlterations;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReporterData;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testHmfReporterData;
 
@@ -40,7 +39,6 @@ import com.hartwig.hmftools.patientreporter.PatientReporterTestUtil;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
-import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
 import com.hartwig.hmftools.patientreporter.report.data.ImmutableGeneDisruptionData;
@@ -56,7 +54,6 @@ import net.sf.dynamicreports.report.exception.DRException;
 
 public class PDFWriterTest {
 
-    private static final boolean RUN_CIVIC_ANALYSIS = false;
     private static final boolean SHOW_AND_PRINT = false;
     private static final boolean WRITE_TO_PDF = false;
 
@@ -81,12 +78,6 @@ public class PDFWriterTest {
         final List<GeneFusionData> fusions = createTestFusions();
 
         final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
-        final List<Alteration> alterations = RUN_CIVIC_ANALYSIS ? PatientReporterTestUtil.runCivicAnalysis(variants,
-                copyNumbers,
-                disruptions,
-                fusions,
-                reporterData.panelGeneModel(),
-                sampleReport.primaryTumorLocationString()) : mockedAlterations();
 
         final AnalysedPatientReport patientReport = ImmutableAnalysedPatientReport.of(sampleReport,
                 variants,
@@ -97,16 +88,12 @@ public class PDFWriterTest {
                 fusions,
                 impliedTumorPurity,
                 FittedPurityStatus.NORMAL,
-                alterations,
                 Resources.getResource("circos/circos_example.png").getPath(),
                 Optional.of("this is a test report and does not relate to any real CPCT patient"),
                 baseReporterData.signaturePath());
 
         final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport, reporterData);
         assertNotNull(mainReport);
-
-        final JasperReportBuilder evidenceReport = EvidenceReport.generate(patientReport);
-        assertNotNull(evidenceReport);
 
         if (SHOW_AND_PRINT) {
             mainReport.show().print();
