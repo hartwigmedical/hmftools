@@ -26,10 +26,16 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
     private final PloidyDeviation ploidyDeviation;
 
     public FittedRegionFactoryV2(final Gender gender, final int averageReadDepth, double ploidyPenaltyFactor,
-            double ploidyPenaltyStandardDeviation, double ploidyPenaltyMinStandardDeviationPerPloidy, final double majorAlleleSubOnePenaltyMultiplier, final double majorAlleleSubOneAdditionalPenalty, final double baselineDeviation) {
+            double ploidyPenaltyStandardDeviation, double ploidyPenaltyMinStandardDeviationPerPloidy,
+            final double majorAlleleSubOnePenaltyMultiplier, final double majorAlleleSubOneAdditionalPenalty,
+            final double baselineDeviation) {
         this.gender = gender;
         this.ploidyPenaltyFactor = ploidyPenaltyFactor;
-        ploidyDeviation = new PloidyDeviation(ploidyPenaltyStandardDeviation, ploidyPenaltyMinStandardDeviationPerPloidy, majorAlleleSubOnePenaltyMultiplier, majorAlleleSubOneAdditionalPenalty, baselineDeviation);
+        ploidyDeviation = new PloidyDeviation(ploidyPenaltyStandardDeviation,
+                ploidyPenaltyMinStandardDeviationPerPloidy,
+                majorAlleleSubOnePenaltyMultiplier,
+                majorAlleleSubOneAdditionalPenalty,
+                baselineDeviation);
         ambiguousBaf = ExpectedBAF.expectedBAF(averageReadDepth, 0.8);
         LOGGER.info("Using ambiguous baf of {}", ambiguousBaf);
     }
@@ -66,8 +72,8 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
 
         ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()
                 .from(observedRegion)
-                .segmentBAF(0)
-                .segmentTumorCopyNumber(0)
+                .fittedBAF(0)
+                .fittedTumorCopyNumber(0)
                 .tumorCopyNumber(impliedCopyNumber)
                 .tumorBAF(impliedBAF)
                 .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(refNormalisedCopyNumber))

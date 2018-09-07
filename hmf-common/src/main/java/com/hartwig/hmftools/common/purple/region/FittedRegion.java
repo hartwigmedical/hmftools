@@ -11,15 +11,15 @@ public abstract class FittedRegion implements ObservedRegion {
 
     public abstract int modelPloidy();
 
-    public abstract double deviation();
-
     public abstract double modelBAF();
+
+    public abstract double modelTumorRatio();
+
+    public abstract double deviation();
 
     public abstract double ploidyPenalty();
 
     public abstract double bafDeviation();
-
-    public abstract double modelTumorRatio();
 
     public abstract double cnvDeviation();
 
@@ -29,9 +29,9 @@ public abstract class FittedRegion implements ObservedRegion {
 
     public abstract double tumorBAF();
 
-    public abstract double segmentTumorCopyNumber();
+    public abstract double fittedTumorCopyNumber();
 
-    public abstract double segmentBAF();
+    public abstract double fittedBAF();
 
     public double majorAllelePloidy() {
         return tumorBAF() * tumorCopyNumber();

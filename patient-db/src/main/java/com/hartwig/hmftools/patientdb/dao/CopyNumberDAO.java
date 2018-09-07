@@ -188,8 +188,8 @@ class CopyNumberDAO {
                 region.bafDeviation(),
                 region.deviation(),
                 region.ploidyPenalty(),
-                region.segmentBAF(),
-                region.segmentTumorCopyNumber(),
+                region.fittedBAF(),
+                region.fittedTumorCopyNumber(),
                 timestamp);
     }
 
@@ -223,8 +223,8 @@ class CopyNumberDAO {
                     .cnvDeviation(record.getValue(COPYNUMBERREGION.CNVDEVIATION))
                     .bafDeviation(record.getValue(COPYNUMBERREGION.BAFDEVIATION))
                     .deviation(record.getValue(COPYNUMBERREGION.TOTALDEVIATION))
-                    .segmentBAF(record.getValue(COPYNUMBERREGION.FITTEDBAF))
-                    .segmentTumorCopyNumber(record.getValue(COPYNUMBERREGION.FITTEDCOPYNUMBER))
+                    .fittedBAF(record.getValue(COPYNUMBERREGION.FITTEDBAF))
+                    .fittedTumorCopyNumber(record.getValue(COPYNUMBERREGION.FITTEDCOPYNUMBER))
                     .ploidyPenalty(record.getValue(COPYNUMBERREGION.PLOIDYPENALTY))
                     .build());
         }

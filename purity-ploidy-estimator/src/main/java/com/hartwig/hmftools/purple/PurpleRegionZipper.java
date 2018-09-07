@@ -61,8 +61,8 @@ class PurpleRegionZipper implements RegionZipperHandler<PurpleCopyNumber, Fitted
         BiFunction<PurpleCopyNumber, FittedRegion, FittedRegion> transform =
                 (consolidatedRegion, copyNumber) -> ImmutableFittedRegion.builder()
                         .from(copyNumber)
-                        .segmentBAF(consolidatedRegion.averageActualBAF())
-                        .segmentTumorCopyNumber(consolidatedRegion.averageTumorCopyNumber())
+                        .fittedBAF(consolidatedRegion.averageActualBAF())
+                        .fittedTumorCopyNumber(consolidatedRegion.averageTumorCopyNumber())
                         .build();
 
         PurpleRegionZipper zipper = new PurpleRegionZipper(transform);

@@ -54,8 +54,8 @@ public class FittedRegionFactoryV1 implements FittedRegionFactory {
 
         ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()
                 .from(observedRegion)
-                .segmentBAF(0)
-                .segmentTumorCopyNumber(0)
+                .fittedBAF(0)
+                .fittedTumorCopyNumber(0)
                 .tumorCopyNumber(purityAdjustedCopyNumber)
                 .tumorBAF(tumorBAF)
                 .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(refNormalisedCopyNumber));
