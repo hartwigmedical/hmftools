@@ -95,17 +95,4 @@ public class PurityAdjuster {
         return (normalObservations + tumorObservations) / totalObservations;
     }
 
-    @Deprecated
-    double purityAdjustedFrequency(final double tumorCopyNumber, final double observedFrequency, final int normalCopyNumber,
-            final double normalFrequency) {
-        assert (greaterThan(tumorCopyNumber, 0));
-        assert (greaterThan(purity, 0));
-
-        double normalTotalAllele = normalCopyNumber * (1 - purity);
-        double normalBetaAllele = normalTotalAllele * normalFrequency;
-        double tumorTotalAllele = tumorCopyNumber * purity;
-
-        return (observedFrequency * (normalTotalAllele + tumorTotalAllele) - normalBetaAllele) / tumorCopyNumber / purity;
-    }
-
 }

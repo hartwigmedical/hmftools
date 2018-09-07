@@ -44,14 +44,8 @@ public class PurityAdjusterTest {
 
         double expectedFrequency = victim.expectedFrequency(normalCopyNumber, normalPloidy, tumorCopyNumber, tumorPloidy);
         double actualTumorPloidy = victim.purityAdjustedPloidy(normalCopyNumber, normalPloidy, tumorCopyNumber, expectedFrequency);
-        double actualFrequencyPolidyOld =
-                victim.purityAdjustedFrequency(tumorCopyNumber, expectedFrequency, normalCopyNumber, normalPloidy * 1d / normalCopyNumber)
-                        * tumorCopyNumber;
-
-        //System.out.println("Freq: " + expectedFrequency + ", Ploidy:" + actualTumorPloidy);
 
         assertEquals(tumorPloidy, actualTumorPloidy, EPSILON);
-        assertEquals(actualTumorPloidy, actualFrequencyPolidyOld, EPSILON);
 
     }
 
