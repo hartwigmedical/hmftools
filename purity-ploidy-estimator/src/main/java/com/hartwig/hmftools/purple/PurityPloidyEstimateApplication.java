@@ -46,7 +46,6 @@ import com.hartwig.hmftools.common.purple.qc.PurpleQCFactory;
 import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
-import com.hartwig.hmftools.common.purple.region.FittedRegionFactoryV1;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactoryV2;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFile;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
@@ -103,12 +102,6 @@ public class PurityPloidyEstimateApplication {
     private static final String SOMATIC_DEVIATION_WEIGHT = "somatic_deviation_weight";
     private static final String HIGHLY_DIPLOID_PERCENTAGE = "highly_diploid_percentage";
     private static final String VERSION = "version";
-
-    private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
-    private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
-
-    private static final String OBSERVED_BAF_EXPONENT = "observed_baf_exponent";
-    private static final double OBSERVED_BAF_EXPONENT_DEFAULT = 1;
 
     public static void main(final String... args)
             throws ParseException, IOException, SQLException, ExecutionException, InterruptedException {
@@ -179,29 +172,20 @@ public class PurityPloidyEstimateApplication {
             final List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, bafs, ratios, gcProfiles);
 
             LOGGER.info("Fitting purity");
-            final FittingConfig fittingConfig = configSupplier.fittingConfig();
-            final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
-            final double observedBafExponent = defaultValue(cmd, OBSERVED_BAF_EXPONENT, OBSERVED_BAF_EXPONENT_DEFAULT);
-
             final FitScoreConfig fitScoreConfig = configSupplier.fitScoreConfig();
             final double somaticDeviationWeight = defaultValue(cmd, SOMATIC_DEVIATION_WEIGHT, 1);
             final double highlyDiploidPercentage = defaultValue(cmd, HIGHLY_DIPLOID_PERCENTAGE, 0.95);
 
-            final FittedRegionFactory fittedRegionFactory = cmd.hasOption(EXPERIMENTAL)
-                    ? new FittedRegionFactoryV2(cobaltGender,
+            final FittedRegionFactory fittedRegionFactory = new FittedRegionFactoryV2(cobaltGender,
                     averageTumorDepth,
                     fitScoreConfig.ploidyPenaltyFactor(),
                     fitScoreConfig.ploidyPenaltyStandardDeviation(),
                     fitScoreConfig.ploidyPenaltyMinStandardDeviationPerPloidy(),
                     fitScoreConfig.ploidyPenaltyMajorAlleleSubOneMultiplier(),
                     fitScoreConfig.ploidyPenaltyMajorAlleleSubOneAdditional(),
-                    fitScoreConfig.ploidyPenaltyBaselineDeviation())
-                    : new FittedRegionFactoryV1(cobaltGender,
-                            fittingConfig.maxPloidy(),
-                            cnvRatioWeight,
-                            averageTumorDepth,
-                            observedBafExponent);
+                    fitScoreConfig.ploidyPenaltyBaselineDeviation());
 
+            final FittingConfig fittingConfig = configSupplier.fittingConfig();
             final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
                     cobaltGender,
                     fittingConfig.maxPloidy(),
@@ -353,9 +337,6 @@ public class PurityPloidyEstimateApplication {
     private static Options createOptions() {
         final Options options = new Options();
         ConfigSupplier.addOptions(options);
-
-        options.addOption(OBSERVED_BAF_EXPONENT, true, "Observed baf exponent. Default 1");
-        options.addOption(CNV_RATIO_WEIGHT_FACTOR, true, "CNV ratio deviation scaling.");
 
         options.addOption(THREADS, true, "Number of threads (default 2)");
         options.addOption(EXPERIMENTAL, false, "Anything goes!");
