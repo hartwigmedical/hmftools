@@ -46,7 +46,7 @@ public class PDFWriter {
     public void writeSequenceReport(@NotNull final AnalysedPatientReport report, @NotNull final HmfReporterData reporterData)
             throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generatePatientReport(report, reporterData);
-        writeReport(fileName(report.sampleReport().sampleId(), "sequence", "_hmf_report.pdf"), reportBuilder);
+        writeReport(fileName(report.sampleReport().sampleId(), "sequence"), reportBuilder);
         // TODO (KODU) Final cleanup once we switched to proper actionability
         //        final JasperReportBuilder evidenceReportBuilder = EvidenceReport.generate(report);
         //        writeReport(fileName(report.sampleReport().sampleId(), "_evidence_items.pdf"), evidenceReportBuilder);
@@ -54,8 +54,7 @@ public class PDFWriter {
 
     public void writeNonSequenceableReport(@NotNull final NotAnalysedPatientReport report) throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generateNotAnalysableReport(report);
-
-        writeReport(fileName(report.sampleReport().sampleId(), report.reason().toString().toLowerCase(), "_hmf_report.pdf"), reportBuilder);
+        writeReport(fileName(report.sampleReport().sampleId(), report.reason().toString().toLowerCase()), reportBuilder);
     }
 
     private static void writeReport(@NotNull final String fileName, @NotNull final JasperReportBuilder report)
@@ -69,8 +68,8 @@ public class PDFWriter {
     }
 
     @NotNull
-    private String fileName(@NotNull final String sample, @NotNull String reasonNotAnalysable, @NotNull final String suffix) {
-        return reportDirectory + File.separator + sample + "_" + reasonNotAnalysable + suffix;
+    private String fileName(@NotNull final String sample, @NotNull String reportTitle) {
+        return reportDirectory + File.separator + sample + "_" + reportTitle + "_hmf_report.pdf";
     }
 
     @VisibleForTesting
