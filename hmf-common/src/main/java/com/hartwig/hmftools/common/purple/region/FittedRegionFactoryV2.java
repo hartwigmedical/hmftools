@@ -67,7 +67,7 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
         double majorAllelePloidyDeviation = ploidyDeviation.majorAlleleDeviation(purity, normFactor, majorAllelePloidy);
         double minorAllelePloidyDeviation = ploidyDeviation.minorAlleleDeviation(purity, normFactor, minorAllelePloidy);
 
-        final double ploidyPenalty = PloidyPenalty.penaltyv2(ploidyPenaltyFactor, majorAllelePloidy, minorAllelePloidy);
+        final double ploidyPenalty = PloidyPenalty.penalty(ploidyPenaltyFactor, majorAllelePloidy, minorAllelePloidy);
         final double totalDeviation = (minorAllelePloidyDeviation + majorAllelePloidyDeviation) * observedBAF;
 
         ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()

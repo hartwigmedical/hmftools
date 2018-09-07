@@ -24,8 +24,8 @@ public class PloidyPenaltyTest {
 
 
     private static void assertNew(double expectedResult, @NotNull final String descriptiveBAF) {
-        int ploidy = descriptiveBAF.length();
         int major = (int) descriptiveBAF.chars().filter(x -> x == 'A').count();
-        assertEquals(expectedResult, PloidyPenalty.penalty(ploidy, major), EPSILON);
+        int minor = (int) descriptiveBAF.chars().filter(x -> x == 'B').count();
+        assertEquals(expectedResult, PloidyPenalty.penalty(1, minor, major), EPSILON);
     }
 }
