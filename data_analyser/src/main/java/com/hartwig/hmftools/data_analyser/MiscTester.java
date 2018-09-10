@@ -277,7 +277,7 @@ public class MiscTester
                 bucketIds.add(b);
         }
 
-        double[] sampleAllocCounts = sample.getPotentialElevCounts(bgRatios, bucketIds);
+        double[] sampleAllocCounts = sample.getPotentialElevCounts(bgRatios, bucketIds, null);
         double allocTotal = sumVector(sampleAllocCounts);
         sample.allocateBucketCounts(sampleAllocCounts, 0.03);
 
@@ -291,7 +291,7 @@ public class MiscTester
         }
 
         // sampleAllocCounts = sample.getPotentialElevCounts(bgRatios, bucketIds);
-        sampleAllocCounts = sample.getPotentialUnallocCounts(bgRatios, bucketIds);
+        sampleAllocCounts = sample.getPotentialUnallocCounts(bgRatios, bucketIds, null);
         allocTotal = sumVector(sampleAllocCounts);
         sample.allocateBucketCounts(sampleAllocCounts, 0.03);
 

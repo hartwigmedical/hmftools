@@ -4,15 +4,12 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.data_analyser.calcs.BucketAnalyser.getRatioRange;
-import static com.hartwig.hmftools.data_analyser.calcs.BucketAnalyser.ratioRange;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.doubleToStr;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.greaterThan;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.initVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.lessThan;
-import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sizeToStr;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVectors;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.vectorMultiply;
@@ -731,7 +728,7 @@ public class SigContribOptimiser
                 break;
             }
 
-            double sigRatio = useRange ? ratioRange(sigData[b][sig], true) : sigData[b][sig];
+            double sigRatio = sigData[b][sig]; // useRange ? ratioRange(sigData[b][sig], true) : sigData[b][sig];
             double alloc = (mCounts[b] - currentCounts[b]) / sigRatio;
 
             alloc = min(alloc, mCountsTotal);
@@ -780,7 +777,7 @@ public class SigContribOptimiser
             if(sigData[b][sig] == 0)
                 continue;
 
-            double newCount;
+            double newCount = 0;
 
             if(!useRange)
             {
@@ -797,6 +794,7 @@ public class SigContribOptimiser
             }
             else
             {
+                /*
                 double newCountMax = newContrib * ratioRange(sigData[b][sig], false);
                 double newCountMin = newContrib * ratioRange(sigData[b][sig], true);
 
@@ -810,6 +808,7 @@ public class SigContribOptimiser
                 }
 
                 newCount = min(mCounts[b] - mCurrentCounts[b], newCountMax);
+                */
             }
 
             mCurrentCounts[b] += newCount;
@@ -818,7 +817,7 @@ public class SigContribOptimiser
 
     private void applyFinalContributions()
     {
-        if(!mApplyRange || getRatioRange() == 0)
+        if(!mApplyRange)
             return;
 
         double prevAllocPerc = mCurrentAllocPerc;

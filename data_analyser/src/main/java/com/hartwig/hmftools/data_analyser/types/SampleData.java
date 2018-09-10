@@ -4,7 +4,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.data_analyser.calcs.BucketAnalyser.MAX_NOISE_ALLOC_PERC;
-import static com.hartwig.hmftools.data_analyser.calcs.BucketAnalyser.ratioRange;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.capValue;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.greaterThan;
@@ -12,6 +11,7 @@ import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.initVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.lessThan;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.vectorMultiply;
+import static com.hartwig.hmftools.data_analyser.types.BucketGroup.ratioRange;
 
 import java.util.List;
 
@@ -185,17 +185,17 @@ public class SampleData
         }
     }
 
-    public double[] getPotentialUnallocCounts(final double[] bucketRatios, final List<Integer> requiredBuckets)
+    public double[] getPotentialUnallocCounts(final double[] bucketRatios, final List<Integer> requiredBuckets, final double[] ratioRanges)
     {
-        return getPotentialAllocation(bucketRatios, true, requiredBuckets, false);
+        return getPotentialAllocation(bucketRatios, true, requiredBuckets, ratioRanges);
     }
 
-    public double[] getPotentialElevCounts(final double[] bucketRatios, final List<Integer> requiredBuckets)
+    public double[] getPotentialElevCounts(final double[] bucketRatios, final List<Integer> requiredBuckets, final double[] ratioRanges)
     {
-        return getPotentialAllocation(bucketRatios, false, requiredBuckets, false);
+        return getPotentialAllocation(bucketRatios, false, requiredBuckets, ratioRanges);
     }
 
-    private double[] getPotentialAllocation(final double[] bucketRatios, boolean useUnallocated, final List<Integer> requiredBuckets, boolean useRange)
+    private double[] getPotentialAllocation(final double[] bucketRatios, boolean useUnallocated, final List<Integer> requiredBuckets, final double[] ratioRanges)
     {
         // must cap at the actual sample counts
         // allow to go as high as the elevated probability range
@@ -230,7 +230,7 @@ public class SampleData
             double potentialAlloc = unallocCount + noiseCount;
 
             // use the low range ratio to give max possible allocation to this bucket
-            double ratio = useRange ? ratioRange(bucketRatios[bucket], true) : bucketRatios[bucket];
+            double ratio = bucketRatios[bucket] + ratioRange(ratioRanges, bucket, true);
             double alloc = potentialAlloc / ratio;
 
             if(minAlloc == 0 || alloc < minAlloc)
@@ -251,7 +251,7 @@ public class SampleData
         {
             Integer bucket = requiredBuckets.get(bIndex);
 
-            double ratio = useRange ? ratioRange(bucketRatios[bucket], false) : bucketRatios[bucket];
+            double ratio = bucketRatios[bucket] + ratioRange(ratioRanges, bucket, false);
             double potentialAlloc = minAlloc * ratio;
 
             if(potentialAlloc == 0)

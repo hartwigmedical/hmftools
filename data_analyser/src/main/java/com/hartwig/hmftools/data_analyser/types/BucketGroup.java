@@ -36,7 +36,6 @@ public class BucketGroup implements Comparable<BucketGroup> {
     private boolean mBucketRatiosClean;
     private double[] mBucketRatios;
     private double[] mBucketRatioRanges;
-    private List<Double> mRatioRanges;
     private double mTotalCount;
 
     private double mPotentialAllocation;
@@ -63,7 +62,6 @@ public class BucketGroup implements Comparable<BucketGroup> {
         mExtraBucketIds = Lists.newArrayList();
         mSampleCountTotals = Lists.newArrayList();
         mSampleCounts = Lists.newArrayList();
-        mRatioRanges = Lists.newArrayList();
         mSampleCountsMap = new HashMap();
         mCombinedBucketCounts = null;
         mBucketRatios = null;
@@ -310,22 +308,20 @@ public class BucketGroup implements Comparable<BucketGroup> {
         return mBucketRatios;
     }
 
-    // public final double[] getBucketRatioRanges() { return mBucketRatioRanges; }
-    public final List<Double> getBucketRatioRanges() { return mRatioRanges; }
+    public final double[] getRatioRanges() { return mBucketRatioRanges; }
 
-    public void setBucketRatioRanges(final List<Double> ranges)
+    public void setBucketRatioRanges(final double[] ratioRanges)
     {
-        mRatioRanges.clear();
-        mRatioRanges.addAll(ranges);
+        if(ratioRanges != null)
+            copyVector(ratioRanges, mBucketRatioRanges);
+    }
 
-        if (mBucketIds.size() != ranges.size())
-            return;
+    public static double ratioRange(final double[] ranges, int bucket, boolean takeMin)
+    {
+        if(ranges == null || ranges[bucket] == 0)
+            return 0;
 
-        for (int bIndex = 0; bIndex < mBucketIds.size(); ++bIndex)
-        {
-            Integer bucket = mBucketIds.get(bIndex);
-            mBucketRatioRanges[bucket] = ranges.get(bIndex);
-        }
+        return takeMin ? -ranges[bucket] : ranges[bucket];
     }
 
     public double getPotentialAllocation() { return mPotentialAllocation; }
