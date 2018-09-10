@@ -82,9 +82,7 @@ public abstract class FindingsPage {
                         .columns(col.column("Gene", VariantDataSource.GENE_FIELD),
                                 col.column("Variant", VariantDataSource.VARIANT_DETAILS_FIELD).setFixedWidth(160),
                                 col.column("Read Depth", VariantDataSource.READ_DEPTH_FIELD).setFixedWidth(60),
-                                col.column("Cosmic", VariantDataSource.COSMIC_ID_FIELD)
-                                        .setHyperLink(hyperLink(VariantDataSource.cosmicHyperlink()))
-                                        .setStyle(linkStyle()),
+                                col.column("Hotspot ?", VariantDataSource.IS_HOTSPOT_FIELD),
                                 col.column("Ploidy (VAF)", VariantDataSource.PLOIDY_VAF_FIELD),
                                 col.column("Clonal Probability", VariantDataSource.CLONAL_PERCENTAGE_FIELD),
                                 col.column("Wildtype Status", VariantDataSource.WILDTYPE_STATUS_FIELD),

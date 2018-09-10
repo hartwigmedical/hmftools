@@ -125,7 +125,6 @@ public class PDFWriterTest {
                 .alleleReadCount(18)
                 .totalReadCount(99)
                 .variantDetails("c.1799T>A (p.Val600Glu)")
-                .cosmicID("COSM476")
                 .ploidy("AAAB")
                 .purityAdjustedVAF(purityAdjuster.purityAdjustedVAF("7", 4, 0.18 / 0.99))
                 .clonalProbability(0.8)

@@ -27,7 +27,6 @@ public class ConsequenceDeterminerTest {
 
     private static final String REF = "R";
     private static final String ALT = "A";
-    private static final String COSMIC_ID = "123";
     private static final int ALLELE_READ_COUNT = 1;
     private static final int TOTAL_READ_COUNT = 2;
 
@@ -49,7 +48,7 @@ public class ConsequenceDeterminerTest {
         final SnpEffAnnotation wrongAnnotation = annotationBuilder.consequences(Lists.newArrayList(wrongConsequence)).build();
 
         final ImmutableEnrichedSomaticVariant.Builder variantBuilder = SomaticVariantTestBuilderFactory.createEnriched().
-                chromosome(CHROMOSOME).ref(REF).alt(ALT).canonicalCosmicID(COSMIC_ID).position(POSITION).
+                chromosome(CHROMOSOME).ref(REF).alt(ALT).position(POSITION).
                 totalReadCount(TOTAL_READ_COUNT).alleleReadCount(ALLELE_READ_COUNT);
 
         final EnrichedSomaticVariant rightVariant = variantBuilder.snpEffAnnotations(Lists.newArrayList(rightAnnotation)).build();
@@ -61,7 +60,6 @@ public class ConsequenceDeterminerTest {
         final VariantReport variantReport = variantReports.get(0);
         assertEquals(GENE, variantReport.gene());
         assertEquals(VARIANT_DETAILS, variantReport.variantDetails());
-        assertEquals(COSMIC_ID, variantReport.cosmicID());
         assertEquals(TOTAL_READ_COUNT, variantReport.totalReadCount());
         assertEquals(ALLELE_READ_COUNT, variantReport.alleleReadCount());
     }

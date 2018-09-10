@@ -22,8 +22,7 @@ public class VariantDataSource {
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
     public static final FieldBuilder<?> VARIANT_DETAILS_FIELD = field("variant_details", String.class);
     public static final FieldBuilder<?> READ_DEPTH_FIELD = field("read_depth", String.class);
-    public static final FieldBuilder<?> COSMIC_ID_FIELD = field("cosmic_id", String.class);
-    private static final FieldBuilder<?> COSMIC_URL_FIELD = field("cosmic_url", String.class);
+    public static final FieldBuilder<?> IS_HOTSPOT_FIELD = field("is_hotspot", String.class);
     public static final FieldBuilder<?> PLOIDY_VAF_FIELD = field("ploidy_vaf", String.class);
     public static final FieldBuilder<?> CLONAL_PERCENTAGE_FIELD = field("clonal_probability", String.class);
     public static final FieldBuilder<?> WILDTYPE_STATUS_FIELD = field("wildtype_status", String.class);
@@ -39,8 +38,7 @@ public class VariantDataSource {
         final DRDataSource variantDataSource = new DRDataSource(GENE_FIELD.getName(),
                 VARIANT_DETAILS_FIELD.getName(),
                 READ_DEPTH_FIELD.getName(),
-                COSMIC_ID_FIELD.getName(),
-                COSMIC_URL_FIELD.getName(),
+                IS_HOTSPOT_FIELD.getName(),
                 PLOIDY_VAF_FIELD.getName(),
                 CLONAL_PERCENTAGE_FIELD.getName(),
                 WILDTYPE_STATUS_FIELD.getName(),
@@ -52,13 +50,12 @@ public class VariantDataSource {
             variantDataSource.add(displayGene,
                     variantReport.variantDetails(),
                     variantReport.readDepth(),
-                    variantReport.cosmicID(),
-                    variantReport.cosmicUrl(),
+                    variantReport.isHotspotField(),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, variantReport.ploidyVaf()),
                     PatientReportFormat.correctValueForFitStatus(fitStatus,
-                            PatientReportFormat.formatPercent(variantReport.clonalProbability())),
+                            PatientReportFormat.formatPercentWithDefaultCutoffs(variantReport.clonalProbability())),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, variantReport.wildTypeStatus()),
-                    PatientReportFormat.formatPercent(variantReport.driverProbability()),
+                    PatientReportFormat.formatPercentWithDefaultCutoffs(variantReport.driverProbability()),
                     variantReport.actionabilityLevel());
         }
 
@@ -67,17 +64,17 @@ public class VariantDataSource {
 
     @NotNull
     public static FieldBuilder<?>[] variantFields() {
-        return new FieldBuilder<?>[] { GENE_FIELD, VARIANT_DETAILS_FIELD, READ_DEPTH_FIELD, COSMIC_ID_FIELD, COSMIC_URL_FIELD, PLOIDY_VAF_FIELD,
+        return new FieldBuilder<?>[] { GENE_FIELD, VARIANT_DETAILS_FIELD, READ_DEPTH_FIELD, IS_HOTSPOT_FIELD, PLOIDY_VAF_FIELD,
                 CLONAL_PERCENTAGE_FIELD, WILDTYPE_STATUS_FIELD, DRIVER_PROBABILITY_FIELD, ACTIONABILITY_LEVEL_FIELD };
     }
 
-    @NotNull
-    public static AbstractSimpleExpression<String> cosmicHyperlink() {
-        return new AbstractSimpleExpression<String>() {
-            @Override
-            public String evaluate(@NotNull final ReportParameters data) {
-                return data.getValue(COSMIC_URL_FIELD.getName());
-            }
-        };
-    }
+//    @NotNull
+//    public static AbstractSimpleExpression<String> cosmicHyperlink() {
+//        return new AbstractSimpleExpression<String>() {
+//            @Override
+//            public String evaluate(@NotNull final ReportParameters data) {
+//                return data.getValue(COSMIC_URL_FIELD.getName());
+//            }
+//        };
+//    }
 }

@@ -59,7 +59,6 @@ class ConsequenceDeterminer {
             builder.variantDetails(snpEffAnnotation.hgvsCoding() + " (" + snpEffAnnotation.hgvsProtein() + ")");
             builder.totalReadCount(variant.totalReadCount());
             builder.alleleReadCount(variant.alleleReadCount());
-            builder.cosmicID(variant.canonicalCosmicID());
             builder.ploidy(Strings.EMPTY);
             builder.purityAdjustedVAF(0D);
             builder.clonalProbability(0D);
