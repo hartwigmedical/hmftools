@@ -121,7 +121,7 @@ public class PDFWriterTest {
     private static List<VariantReport> createTestVariants(@NotNull final PurityAdjuster purityAdjuster) {
         final VariantReport variant1 = ImmutableVariantReport.builder()
                 .gene("BRAF")
-                .variant(createTestVariant("7", 140453136, "A", "T"))
+                .variant(createTestVariant("7", 140453136, "A", "T", true))
                 .alleleReadCount(18)
                 .totalReadCount(99)
                 .variantDetails("c.1799T>A (p.Val600Glu)")
@@ -135,7 +135,7 @@ public class PDFWriterTest {
 
         final VariantReport variant2 = ImmutableVariantReport.builder()
                 .gene("MYC")
-                .variant(createTestVariant("8", 128748854, "GG", "CA"))
+                .variant(createTestVariant("8", 128748854, "GG", "CA", false))
                 .alleleReadCount(20)
                 .totalReadCount(88)
                 .variantDetails("c.15_16delinsCA (p.Val6Ile)")
@@ -149,7 +149,7 @@ public class PDFWriterTest {
 
         final VariantReport variant3 = ImmutableVariantReport.builder()
                 .gene("TP53")
-                .variant(createTestVariant("17", 7577111, "GCACAAA", "G"))
+                .variant(createTestVariant("17", 7577111, "GCACAAA", "G", false))
                 .alleleReadCount(20)
                 .totalReadCount(87)
                 .variantDetails("c.821_826delTTTGTG (p.Val274_Cys275del)")
@@ -165,8 +165,14 @@ public class PDFWriterTest {
 
     @NotNull
     private static SomaticVariant createTestVariant(@NotNull final String chromosome, final long position, @NotNull final String ref,
-            @NotNull final String alt) {
-        return SomaticVariantTestBuilderFactory.create().chromosome(chromosome).position(position).ref(ref).alt(alt).build();
+            @NotNull final String alt, boolean hotspot) {
+        return SomaticVariantTestBuilderFactory.create()
+                .chromosome(chromosome)
+                .position(position)
+                .ref(ref)
+                .alt(alt)
+                .hotspot(hotspot)
+                .build();
     }
 
     @NotNull
