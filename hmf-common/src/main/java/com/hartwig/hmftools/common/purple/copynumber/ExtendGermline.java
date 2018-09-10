@@ -190,11 +190,11 @@ class ExtendGermline {
         assert (end <= parent.end());
 
         int bafCount = 0;
-        int observedTumorRatioCount = 0;
+        int depthWindowCount = 0;
         for (FittedRegion fittedRegion : parent.regions()) {
             if (fittedRegion.start() >= start && fittedRegion.end() <= end) {
                 bafCount += fittedRegion.bafCount();
-                observedTumorRatioCount += fittedRegion.observedTumorRatioCount();
+                depthWindowCount += fittedRegion.depthWindowCount();
             }
         }
 
@@ -203,7 +203,7 @@ class ExtendGermline {
                 .setStart(start)
                 .setEnd(end)
                 .setBafCount(bafCount)
-                .setObservedTumorRatioCount(observedTumorRatioCount);
+                .setDepthWindowCount(depthWindowCount);
 
         CombinedRegion result = new CombinedRegion(parent.isBafWeighted(), smallerRegion);
         result.setCopyNumberMethod(parent.copyNumberMethod());

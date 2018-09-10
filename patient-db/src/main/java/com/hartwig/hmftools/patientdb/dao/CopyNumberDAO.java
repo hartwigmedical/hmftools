@@ -142,7 +142,7 @@ class CopyNumberDAO {
                     COPYNUMBERREGION.OBSERVEDBAF,
                     COPYNUMBERREGION.OBSERVEDTUMORRATIO,
                     COPYNUMBERREGION.OBSERVEDNORMALRATIO,
-                    COPYNUMBERREGION.OBSERVEDTUMORRATIOCOUNT,
+                    COPYNUMBERREGION.DEPTHWINDOWCOUNT,
                     COPYNUMBERREGION.GCCONTENT,
                     COPYNUMBERREGION.MINORALLELEPLOIDY,
                     COPYNUMBERREGION.MAJORALLELEPLOIDY,
@@ -175,7 +175,7 @@ class CopyNumberDAO {
                 DatabaseUtil.decimal(region.observedBAF()),
                 DatabaseUtil.decimal(region.observedTumorRatio()),
                 DatabaseUtil.decimal(region.observedNormalRatio()),
-                DatabaseUtil.decimal(region.observedTumorRatioCount()),
+                DatabaseUtil.decimal(region.depthWindowCount()),
                 DatabaseUtil.decimal(region.gcContent()),
                 DatabaseUtil.decimal(region.minorAllelePloidy()),
                 DatabaseUtil.decimal(region.majorAllelePloidy()),
@@ -210,7 +210,7 @@ class CopyNumberDAO {
                     .observedBAF(record.getValue(COPYNUMBERREGION.OBSERVEDBAF))
                     .observedTumorRatio(record.getValue(COPYNUMBERREGION.OBSERVEDTUMORRATIO))
                     .observedNormalRatio(record.getValue(COPYNUMBERREGION.OBSERVEDNORMALRATIO))
-                    .observedTumorRatioCount(record.getValue(COPYNUMBERREGION.OBSERVEDTUMORRATIOCOUNT))
+                    .depthWindowCount(record.getValue(COPYNUMBERREGION.DEPTHWINDOWCOUNT))
                     .gcContent(record.getValue(COPYNUMBERREGION.GCCONTENT))
                     .minorAllelePloidy(record.getValue(COPYNUMBERREGION.MINORALLELEPLOIDY))
                     .majorAllelePloidy(record.getValue(COPYNUMBERREGION.MAJORALLELEPLOIDY))

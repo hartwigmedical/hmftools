@@ -13,7 +13,7 @@ public interface ObservedRegion extends GenomeRegion {
 
     double observedBAF();
 
-    int observedTumorRatioCount();
+    int depthWindowCount();
 
     double observedTumorRatio();
 

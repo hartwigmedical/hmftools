@@ -59,7 +59,7 @@ public class PurpleDatamodelTest {
                 .start(start)
                 .end(end)
                 .observedTumorRatio(1)
-                .observedTumorRatioCount(1)
+                .depthWindowCount(1)
                 .observedNormalRatio(1)
                 .ratioSupport(true)
                 .svCluster(false)

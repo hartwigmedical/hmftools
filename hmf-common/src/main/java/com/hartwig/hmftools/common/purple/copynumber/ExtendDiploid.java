@@ -136,11 +136,11 @@ class ExtendDiploid {
     }
 
     private boolean isValid(@NotNull final FittedRegion region) {
-        return region.status() == GermlineStatus.DIPLOID && (region.support().isSV() || region.observedTumorRatioCount() >= minTumorCount);
+        return region.status() == GermlineStatus.DIPLOID && (region.support().isSV() || region.depthWindowCount() >= minTumorCount);
     }
 
     private boolean isDubious(@NotNull final FittedRegion region) {
-        return region.status() == GermlineStatus.DIPLOID && !region.support().isSV() && region.observedTumorRatioCount() < minTumorCount;
+        return region.status() == GermlineStatus.DIPLOID && !region.support().isSV() && region.depthWindowCount() < minTumorCount;
     }
 
     private boolean nextBigBreakIsCentromereOrTelomere(@NotNull final List<CombinedRegion> regions, @NotNull final Direction direction,
@@ -176,7 +176,7 @@ class ExtendDiploid {
             }
 
             if (isDubious(neighbour)) {
-                dubiousCount += neighbour.observedTumorRatioCount();
+                dubiousCount += neighbour.depthWindowCount();
                 if (dubiousCount >= minTumorCount) {
                     return false;
                 }
@@ -223,8 +223,8 @@ class ExtendDiploid {
                     indexOfLargestBaf = i;
                 }
 
-                if (region.observedTumorRatioCount() > largestTumorRatioCount) {
-                    largestTumorRatioCount = region.observedTumorRatioCount();
+                if (region.depthWindowCount() > largestTumorRatioCount) {
+                    largestTumorRatioCount = region.depthWindowCount();
                     indexOfTumorRatioCount = i;
                 }
 

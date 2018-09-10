@@ -388,7 +388,7 @@ CREATE TABLE copyNumberRegion
     observedBaf DOUBLE PRECISION not null,
     observedTumorRatio DOUBLE PRECISION not null,
     observedNormalRatio DOUBLE PRECISION not null,
-    observedTumorRatioCount int not null,
+    depthWindowCount int not null,
     gcContent DOUBLE PRECISION not null,
     minorAllelePloidy DOUBLE PRECISION not null,
     majorAllelePloidy DOUBLE PRECISION not null,

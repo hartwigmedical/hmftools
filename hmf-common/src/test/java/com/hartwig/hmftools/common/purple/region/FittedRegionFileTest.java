@@ -27,25 +27,30 @@ public class FittedRegionFileTest {
                 .end(random.nextLong())
                 .status(GermlineStatus.DIPLOID)
                 .bafCount(random.nextInt())
-                .observedBAF(random.nextDouble())
-                .tumorBAF(random.nextDouble())
-                .minorAllelePloidy(random.nextDouble())
-                .minorAllelePloidyDeviation(random.nextDouble())
-                .observedTumorRatio(random.nextDouble())
-                .observedNormalRatio(random.nextDouble())
-                .majorAllelePloidy(random.nextDouble())
-                .majorAllelePloidyDeviation(random.nextDouble())
-                .deviation(random.nextDouble())
-                .tumorCopyNumber(random.nextDouble())
-                .fittedTumorCopyNumber(random.nextDouble())
-                .fittedBAF(random.nextDouble())
-                .refNormalisedCopyNumber(random.nextDouble())
+                .observedBAF(nextDouble(random))
+                .tumorBAF(nextDouble(random))
+                .minorAllelePloidy(nextDouble(random))
+                .minorAllelePloidyDeviation(nextDouble(random))
+                .observedTumorRatio(nextDouble(random))
+                .observedNormalRatio(nextDouble(random))
+                .majorAllelePloidy(nextDouble(random))
+                .majorAllelePloidyDeviation(nextDouble(random))
+                .deviation(nextDouble(random))
+                .tumorCopyNumber(nextDouble(random))
+                .fittedTumorCopyNumber(nextDouble(random))
+                .fittedBAF(nextDouble(random))
+                .refNormalisedCopyNumber(nextDouble(random))
                 .ratioSupport(random.nextBoolean())
                 .support(SegmentSupport.BND)
-                .observedTumorRatioCount(random.nextInt())
+                .depthWindowCount(random.nextInt())
                 .svCluster(random.nextBoolean())
-                .gcContent(random.nextDouble())
-                .ploidyPenalty(random.nextDouble())
+                .gcContent(nextDouble(random))
+                .ploidyPenalty(nextDouble(random))
                 .build();
     }
+
+    private static double nextDouble(@NotNull final Random random) {
+        return Math.round(random.nextDouble() * 10000) / 10000;
+    }
+
 }

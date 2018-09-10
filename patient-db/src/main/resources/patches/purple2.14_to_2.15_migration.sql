@@ -15,4 +15,5 @@ ALTER TABLE copyNumberRegion
     ADD COLUMN minorAllelePloidyDeviation DOUBLE PRECISION not null AFTER refNormalisedTumorCopyNumber,
     ADD COLUMN majorAllelePloidyDeviation DOUBLE PRECISION not null AFTER minorAllelePloidyDeviation,
     ADD COLUMN minorAllelePloidy DOUBLE PRECISION not null AFTER gcContent,
-    ADD COLUMN majorAllelePloidy DOUBLE PRECISION not null AFTER minorAllelePloidy;
+    ADD COLUMN majorAllelePloidy DOUBLE PRECISION not null AFTER minorAllelePloidy,
+    CHANGE observedTumorRatioCount depthWindowCount int not null;

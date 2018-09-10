@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.text.DecimalFormat;
 import java.util.Collection;
 import java.util.List;
 import java.util.StringJoiner;
@@ -16,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 
 public enum FittedRegionFile {
     ;
-
+    private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final String EXTENSION = ".purple.fitted";
     private static final String DELIMITER = "\t";
     static final String HEADER_PREFIX = "#";
@@ -65,7 +66,7 @@ public enum FittedRegionFile {
                 .add("refNormalisedCopyNumber")
                 .add("ratioSupport")
                 .add("support")
-                .add("observedTumorRatioCount")
+                .add("depthWindowCount")
                 .add("tumorBAF")
                 .add("gcContent")
                 .add("svCluster")
@@ -81,25 +82,25 @@ public enum FittedRegionFile {
                 .add(String.valueOf(copyNumber.status()))
                 .add("")
                 .add(String.valueOf(copyNumber.bafCount()))
-                .add(String.valueOf(copyNumber.observedBAF()))
-                .add(String.valueOf(copyNumber.minorAllelePloidy()))
-                .add(String.valueOf(copyNumber.minorAllelePloidyDeviation()))
-                .add(String.valueOf(copyNumber.observedTumorRatio()))
-                .add(String.valueOf(copyNumber.observedNormalRatio()))
-                .add(String.valueOf(copyNumber.majorAllelePloidy()))
-                .add(String.valueOf(copyNumber.majorAllelePloidyDeviation()))
-                .add(String.valueOf(copyNumber.deviation()))
-                .add(String.valueOf(copyNumber.tumorCopyNumber()))
-                .add(String.valueOf(copyNumber.fittedTumorCopyNumber()))
-                .add(String.valueOf(copyNumber.fittedBAF()))
-                .add(String.valueOf(copyNumber.refNormalisedCopyNumber()))
+                .add(FORMAT.format(copyNumber.observedBAF()))
+                .add(FORMAT.format(copyNumber.minorAllelePloidy()))
+                .add(FORMAT.format(copyNumber.minorAllelePloidyDeviation()))
+                .add(FORMAT.format(copyNumber.observedTumorRatio()))
+                .add(FORMAT.format(copyNumber.observedNormalRatio()))
+                .add(FORMAT.format(copyNumber.majorAllelePloidy()))
+                .add(FORMAT.format(copyNumber.majorAllelePloidyDeviation()))
+                .add(FORMAT.format(copyNumber.deviation()))
+                .add(FORMAT.format(copyNumber.tumorCopyNumber()))
+                .add(FORMAT.format(copyNumber.fittedTumorCopyNumber()))
+                .add(FORMAT.format(copyNumber.fittedBAF()))
+                .add(FORMAT.format(copyNumber.refNormalisedCopyNumber()))
                 .add(String.valueOf(copyNumber.ratioSupport()))
                 .add(String.valueOf(copyNumber.support()))
-                .add(String.valueOf(copyNumber.observedTumorRatioCount()))
-                .add(String.valueOf(copyNumber.tumorBAF()))
-                .add(String.valueOf(copyNumber.gcContent()))
+                .add(String.valueOf(copyNumber.depthWindowCount()))
+                .add(FORMAT.format(copyNumber.tumorBAF()))
+                .add(FORMAT.format(copyNumber.gcContent()))
                 .add(String.valueOf(copyNumber.svCluster()))
-                .add(String.valueOf(copyNumber.ploidyPenalty()))
+                .add(FORMAT.format(copyNumber.ploidyPenalty()))
                 .toString();
     }
 
@@ -126,7 +127,7 @@ public enum FittedRegionFile {
                 .refNormalisedCopyNumber(Double.valueOf(values[17]))
                 .ratioSupport(Boolean.valueOf(values[18]))
                 .support(SegmentSupport.valueOf(values[19]))
-                .observedTumorRatioCount(Integer.valueOf(values[20]))
+                .depthWindowCount(Integer.valueOf(values[20]))
                 .tumorBAF(Double.valueOf(values[21]))
                 .gcContent(Double.valueOf(values[22]))
                 .svCluster(Boolean.valueOf(values[23]))
