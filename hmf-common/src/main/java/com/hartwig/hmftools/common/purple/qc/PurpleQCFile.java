@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.purple.qc;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
@@ -16,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class PurpleQCFile {
 
-    private static final NumberFormat FORMATTER = NumberFormat.getNumberInstance(Locale.ENGLISH);
+    private static final DecimalFormat FORMATTER = new DecimalFormat("0.0000");
     private static final String DELIMITER = "\t";
     private static final String EXTENSION = ".purple.qc";
 

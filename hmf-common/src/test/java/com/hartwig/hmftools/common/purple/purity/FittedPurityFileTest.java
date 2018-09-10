@@ -26,7 +26,7 @@ public class FittedPurityFileTest {
                 .score(createRandomScore(random))
                 .gender(Gender.values()[random.nextInt(Gender.values().length)])
                 .status(FittedPurityStatus.values()[random.nextInt(FittedPurityStatus.values().length)])
-                .polyClonalProportion(random.nextDouble())
+                .polyClonalProportion(nextDouble(random))
                 .build();
 
         final List<String> lines = toLines(input);
@@ -40,24 +40,28 @@ public class FittedPurityFileTest {
     @NotNull
     private static FittedPurityScore createRandomScore(@NotNull Random random) {
         return ImmutableFittedPurityScore.builder()
-                .minPurity(random.nextDouble())
-                .maxPurity(random.nextDouble())
-                .minPloidy(random.nextDouble())
-                .maxPloidy(random.nextDouble())
-                .minDiploidProportion(random.nextDouble())
-                .maxDiploidProportion(random.nextDouble())
+                .minPurity(nextDouble(random))
+                .maxPurity(nextDouble(random))
+                .minPloidy(nextDouble(random))
+                .maxPloidy(nextDouble(random))
+                .minDiploidProportion(nextDouble(random))
+                .maxDiploidProportion(nextDouble(random))
                 .build();
     }
 
     @NotNull
     static FittedPurity createRandomPurity(@NotNull Random random) {
         return ImmutableFittedPurity.builder()
-                .purity(random.nextDouble())
-                .normFactor(random.nextDouble())
-                .score(random.nextDouble())
-                .diploidProportion(random.nextDouble())
-                .ploidy(random.nextDouble())
-                .somaticDeviation(random.nextDouble())
+                .purity(nextDouble(random))
+                .normFactor(nextDouble(random))
+                .score(nextDouble(random))
+                .diploidProportion(nextDouble(random))
+                .ploidy(nextDouble(random))
+                .somaticDeviation(nextDouble(random))
                 .build();
+    }
+
+    private static double nextDouble(@NotNull final Random random) {
+        return Math.round(random.nextDouble() * 10000) / 10000;
     }
 }

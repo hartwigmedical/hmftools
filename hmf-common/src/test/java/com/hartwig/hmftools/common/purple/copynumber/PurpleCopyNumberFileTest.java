@@ -51,13 +51,18 @@ public class PurpleCopyNumberFileTest {
 
     @NotNull
     private static PurpleCopyNumber createRandom(@NotNull Random random) {
-        return PurpleDatamodelTest.createCopyNumber(random.nextInt(22) + "", random.nextLong(), random.nextLong(), random.nextDouble())
+        return PurpleDatamodelTest.createCopyNumber(random.nextInt(22) + "", random.nextLong(), random.nextLong(), nextDouble(random))
                 .bafCount(random.nextInt())
-                .averageObservedBAF(random.nextDouble())
-                .averageActualBAF(random.nextDouble())
+                .averageObservedBAF(nextDouble(random))
+                .averageActualBAF(nextDouble(random))
                 .segmentStartSupport(SegmentSupport.values()[random.nextInt(SegmentSupport.values().length)])
                 .segmentEndSupport(SegmentSupport.values()[random.nextInt(SegmentSupport.values().length)])
                 .method(CopyNumberMethod.values()[random.nextInt(CopyNumberMethod.values().length)])
                 .build();
     }
+
+    private static double nextDouble(@NotNull final Random random) {
+        return Math.round(random.nextDouble() * 10000) / 10000;
+    }
+
 }

@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -15,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 public enum FittedPurityRangeFile {
     ;
 
+    private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final int MAX_RECORDS = 100;
     private static final String DELIMITER = "\t";
     static final String HEADER_PREFIX = "#";
@@ -58,12 +60,12 @@ public enum FittedPurityRangeFile {
 
     @NotNull
     private static String toString(@NotNull final FittedPurity purity) {
-        return new StringJoiner(DELIMITER).add(String.valueOf(purity.purity()))
-                .add(String.valueOf(purity.normFactor()))
-                .add(String.valueOf(purity.score()))
-                .add(String.valueOf(purity.diploidProportion()))
-                .add(String.valueOf(purity.ploidy()))
-                .add(String.valueOf(purity.somaticDeviation()))
+        return new StringJoiner(DELIMITER).add(FORMAT.format(purity.purity()))
+                .add(FORMAT.format(purity.normFactor()))
+                .add(FORMAT.format(purity.score()))
+                .add(FORMAT.format(purity.diploidProportion()))
+                .add(FORMAT.format(purity.ploidy()))
+                .add(FORMAT.format(purity.somaticDeviation()))
                 .toString();
     }
 

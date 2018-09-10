@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -18,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 public class GeneCopyNumberFile {
     ;
 
+    private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "Chr";
     private static final String EXTENSION = ".purple.gene.cnv";
@@ -91,8 +93,8 @@ public class GeneCopyNumberFile {
                 .add(String.valueOf(geneCopyNumber.start()))
                 .add(String.valueOf(geneCopyNumber.end()))
                 .add(String.valueOf(geneCopyNumber.gene()))
-                .add(String.valueOf(geneCopyNumber.minCopyNumber()))
-                .add(String.valueOf(geneCopyNumber.maxCopyNumber()))
+                .add(FORMAT.format(geneCopyNumber.minCopyNumber()))
+                .add(FORMAT.format(geneCopyNumber.maxCopyNumber()))
                 .add(String.valueOf(0))
                 .add(String.valueOf(geneCopyNumber.somaticRegions()))
                 .add(String.valueOf(geneCopyNumber.germlineHomRegions()))
@@ -108,14 +110,14 @@ public class GeneCopyNumberFile {
                 .add(String.valueOf(geneCopyNumber.minRegionMethod()))
                 .add(String.valueOf(geneCopyNumber.nonsenseBiallelicCount()))
                 .add(String.valueOf(geneCopyNumber.nonsenseNonBiallelicCount()))
-                .add(String.valueOf(geneCopyNumber.nonsenseNonBiallelicPloidy()))
+                .add(FORMAT.format(geneCopyNumber.nonsenseNonBiallelicPloidy()))
                 .add(String.valueOf(geneCopyNumber.spliceBiallelicCount()))
                 .add(String.valueOf(geneCopyNumber.spliceNonBiallelicCount()))
-                .add(String.valueOf(geneCopyNumber.spliceNonBiallelicPloidy()))
+                .add(FORMAT.format(geneCopyNumber.spliceNonBiallelicPloidy()))
                 .add(String.valueOf(geneCopyNumber.missenseBiallelicCount()))
                 .add(String.valueOf(geneCopyNumber.missenseNonBiallelicCount()))
-                .add(String.valueOf(geneCopyNumber.missenseNonBiallelicPloidy()))
-                .add(String.valueOf(geneCopyNumber.minMinorAllelePloidy()))
+                .add(FORMAT.format(geneCopyNumber.missenseNonBiallelicPloidy()))
+                .add(FORMAT.format(geneCopyNumber.minMinorAllelePloidy()))
                 .toString();
     }
 

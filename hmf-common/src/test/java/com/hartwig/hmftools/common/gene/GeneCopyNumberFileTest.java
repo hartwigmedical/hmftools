@@ -52,8 +52,8 @@ public class GeneCopyNumberFileTest {
                 .start(random.nextLong())
                 .end(random.nextLong())
                 .gene("gene" + random.nextInt())
-                .minCopyNumber(random.nextDouble())
-                .maxCopyNumber(random.nextDouble())
+                .minCopyNumber(nextDouble(random))
+                .maxCopyNumber(nextDouble(random))
                 .somaticRegions(random.nextInt())
                 .germlineHomRegions(random.nextInt())
                 .germlineHet2HomRegions(random.nextInt())
@@ -68,14 +68,14 @@ public class GeneCopyNumberFileTest {
                 .minRegionEndSupport(randomSupport(random))
                 .nonsenseBiallelicCount(random.nextInt())
                 .nonsenseNonBiallelicCount(random.nextInt())
-                .nonsenseNonBiallelicPloidy(random.nextInt())
+                .nonsenseNonBiallelicPloidy(nextDouble(random))
                 .spliceBiallelicCount(random.nextInt())
                 .spliceNonBiallelicCount(random.nextInt())
-                .spliceNonBiallelicPloidy(random.nextInt())
+                .spliceNonBiallelicPloidy(nextDouble(random))
                 .missenseBiallelicCount(random.nextInt())
                 .missenseNonBiallelicCount(random.nextInt())
                 .missenseNonBiallelicPloidy(random.nextInt())
-                .minMinorAllelePloidy(random.nextInt());
+                .minMinorAllelePloidy(nextDouble(random));
     }
 
     @NotNull
@@ -87,5 +87,10 @@ public class GeneCopyNumberFileTest {
     private static SegmentSupport randomSupport(@NotNull Random random) {
         return SegmentSupport.values()[random.nextInt(SegmentSupport.values().length)];
     }
+    
+    private static double nextDouble(@NotNull final Random random) {
+        return Math.round(random.nextDouble() * 10000) / 10000;
+    }
+    
 
 }
