@@ -18,8 +18,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class FittedRegionFactoryV2 implements FittedRegionFactory {
 
-    private static final Logger LOGGER = LogManager.getLogger(FittedRegionFactoryV2.class);
-
     private final Gender gender;
     private final double ambiguousBaf;
     private final double ploidyPenaltyFactor;
@@ -36,8 +34,7 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
                 majorAlleleSubOnePenaltyMultiplier,
                 majorAlleleSubOneAdditionalPenalty,
                 baselineDeviation);
-        ambiguousBaf = ExpectedBAF.expectedBAF(averageReadDepth, 0.8);
-        LOGGER.info("Using ambiguous baf of {}", ambiguousBaf);
+        ambiguousBaf = ExpectedBAF.expectedBAF(averageReadDepth);
     }
 
     @Override

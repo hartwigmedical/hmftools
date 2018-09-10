@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.purple.PurpleRegionZipper.updateRegionsWithCo
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.pcf.PCFPosition;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.baf.ExpectedBAF;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
@@ -137,7 +139,9 @@ public class PurityPloidyEstimateApplication {
             final Multimap<String, AmberBAF> bafs = AmberBAFFile.read(amberFile);
             int averageTumorDepth =
                     (int) Math.round(bafs.values().stream().mapToInt(AmberBAF::tumorDepth).filter(x -> x > 0).average().orElse(100));
-            LOGGER.info("Average amber tumor depth is {} reads", averageTumorDepth);
+            LOGGER.info("Average amber tumor depth is {} reads implying an ambiguous BAF of {}",
+                    averageTumorDepth,
+                    new DecimalFormat("0.000").format(ExpectedBAF.expectedBAF(averageTumorDepth)));
 
             // JOBA: Load Ratios from COBALT
             final String ratioFilename = CobaltRatioFile.generateFilename(config.cobaltDirectory(), config.tumorSample());
