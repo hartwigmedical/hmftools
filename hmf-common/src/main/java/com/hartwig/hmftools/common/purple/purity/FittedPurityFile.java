@@ -104,14 +104,19 @@ public enum FittedPurityFile {
     @NotNull
     @VisibleForTesting
     static FittedPurity bestFit(@NotNull final String[] values) {
-        return ImmutableFittedPurity.builder()
+        final ImmutableFittedPurity.Builder builder = ImmutableFittedPurity.builder()
                 .purity(Double.valueOf(values[0]))
                 .normFactor(Double.valueOf(values[1]))
                 .score(Double.valueOf(values[2]))
                 .diploidProportion(Double.valueOf(values[3]))
                 .ploidy(Double.valueOf(values[4]))
-                .somaticDeviation(Double.valueOf(values[15]))
-                .build();
+                .somaticDeviation(0);
+
+        if (values.length > 15) {
+            builder.somaticDeviation(Double.valueOf(values[15]));
+        }
+
+        return builder.build();
     }
 
     @NotNull
