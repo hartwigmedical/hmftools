@@ -72,7 +72,7 @@ public class VariantDataSource {
     }
 
     @NotNull
-    public static AbstractSimpleExpression<String> knowledgeBaseHyperlink() {
+    public static AbstractSimpleExpression<String> cosmicHyperlink() {
         return new AbstractSimpleExpression<String>() {
             @Override
             public String evaluate(@NotNull final ReportParameters data) {

@@ -80,16 +80,16 @@ public abstract class FindingsPage {
                 !report.variants().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(VariantDataSource.variantFields())
                         .columns(col.column("Gene", VariantDataSource.GENE_FIELD),
-                                col.column("Variant", VariantDataSource.VARIANT_DETAILS_FIELD),
-                                col.column("Read Depth", VariantDataSource.READ_DEPTH_FIELD),
+                                col.column("Variant", VariantDataSource.VARIANT_DETAILS_FIELD).setFixedWidth(160),
+                                col.column("Read Depth", VariantDataSource.READ_DEPTH_FIELD).setFixedWidth(60),
                                 col.column("Cosmic", VariantDataSource.COSMIC_ID_FIELD)
-                                        .setHyperLink(hyperLink(VariantDataSource.knowledgeBaseHyperlink()))
+                                        .setHyperLink(hyperLink(VariantDataSource.cosmicHyperlink()))
                                         .setStyle(linkStyle()),
                                 col.column("Ploidy (VAF)", VariantDataSource.PLOIDY_VAF_FIELD),
-                                col.column("Clonal %", VariantDataSource.CLONAL_PERCENTAGE_FIELD),
-                                col.column("Wildtype", VariantDataSource.WILDTYPE_STATUS_FIELD),
-                                col.column("Driver %", VariantDataSource.DRIVER_PROBABILITY_FIELD),
-                                col.column("Actionability", VariantDataSource.ACTIONABILITY_LEVEL_FIELD)))
+                                col.column("Clonal Probability", VariantDataSource.CLONAL_PERCENTAGE_FIELD),
+                                col.column("Wildtype Status", VariantDataSource.WILDTYPE_STATUS_FIELD),
+                                col.column("Driver Probability", VariantDataSource.DRIVER_PROBABILITY_FIELD),
+                                col.column("Actionability Level", VariantDataSource.ACTIONABILITY_LEVEL_FIELD)))
                         .setDataSource(VariantDataSource.fromVariants(report.fitStatus(), report.variants(), drupFilter))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
