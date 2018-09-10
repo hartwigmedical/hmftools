@@ -43,26 +43,6 @@ class IclusionApiWrapper(endpoint: String, private val clientId: String, private
         return api.getAccessToken(requestBody)
     }
 
-    fun indications(): Observable<IclusionIndication> {
-        return api.indications(tokenBearer).flatMapIterable { it }
-    }
-
-    fun indication(indicationId: String): Observable<IclusionIndication> {
-        return api.indication(tokenBearer, indicationId)
-    }
-
-    fun genes(): Observable<IclusionGene> {
-        return api.genes(tokenBearer).flatMapIterable { it }
-    }
-
-    fun variants(): Observable<IclusionVariant> {
-        return api.variants(tokenBearer).flatMapIterable { it }
-    }
-
-    fun studies(): Observable<IclusionStudy> {
-        return api.studies(tokenBearer).flatMapIterable { it }
-    }
-
     fun studyDetails(): List<IclusionStudyDetails> {
         val studies = studies().blockingIterable().toList()
         val indications = indications().blockingIterable().toList().associateBy { it.id }
@@ -81,6 +61,23 @@ class IclusionApiWrapper(endpoint: String, private val clientId: String, private
         }.filterNot { it.mutations.isEmpty() }
     }
 
+    private fun indications(): Observable<IclusionIndication> {
+        return api.indications(tokenBearer).flatMapIterable { it }
+    }
+
+    private fun genes(): Observable<IclusionGene> {
+        return api.genes(tokenBearer).flatMapIterable { it }
+    }
+
+    private fun variants(): Observable<IclusionVariant> {
+        return api.variants(tokenBearer).flatMapIterable { it }
+    }
+
+    private fun studies(): Observable<IclusionStudy> {
+        return api.studies(tokenBearer).flatMapIterable { it }
+    }
+
+    // TODO (KODU): Shouldn't this be called?
     fun close() {
         httpClient.dispatcher().executorService().shutdown()
     }
