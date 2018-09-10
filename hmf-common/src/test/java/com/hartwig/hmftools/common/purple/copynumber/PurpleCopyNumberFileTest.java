@@ -58,6 +58,7 @@ public class PurpleCopyNumberFileTest {
                 .segmentStartSupport(SegmentSupport.values()[random.nextInt(SegmentSupport.values().length)])
                 .segmentEndSupport(SegmentSupport.values()[random.nextInt(SegmentSupport.values().length)])
                 .method(CopyNumberMethod.values()[random.nextInt(CopyNumberMethod.values().length)])
+                .depthWindowCount(random.nextInt())
                 .build();
     }
 

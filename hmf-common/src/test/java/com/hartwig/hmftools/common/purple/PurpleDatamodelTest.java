@@ -46,6 +46,7 @@ public class PurpleDatamodelTest {
                 .segmentEndSupport(SegmentSupport.NONE)
                 .method(CopyNumberMethod.UNKNOWN)
                 .bafCount(0)
+                .depthWindowCount(1)
                 .averageObservedBAF(0.5)
                 .averageActualBAF(0.5);
     }

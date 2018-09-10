@@ -21,6 +21,8 @@ public abstract class PurpleCopyNumber implements CopyNumber {
 
     public abstract double averageTumorCopyNumber();
 
+    public abstract int depthWindowCount();
+
     public abstract SegmentSupport segmentStartSupport();
 
     public abstract SegmentSupport segmentEndSupport();

@@ -38,8 +38,7 @@ public enum PurpleCopyNumberFile {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<PurpleCopyNumber> copyNumbers)
-            throws IOException {
+    public static void write(@NotNull final String filename, @NotNull List<PurpleCopyNumber> copyNumbers) throws IOException {
         Files.write(new File(filename).toPath(), toLines(copyNumbers));
     }
 
@@ -68,6 +67,7 @@ public enum PurpleCopyNumberFile {
                 .add("segmentStartSupport")
                 .add("segmentEndSupport")
                 .add("method")
+                .add("depthWindowCount")
                 .toString();
     }
 
@@ -83,13 +83,14 @@ public enum PurpleCopyNumberFile {
                 .add(String.valueOf(copyNumber.segmentStartSupport()))
                 .add(String.valueOf(copyNumber.segmentEndSupport()))
                 .add(String.valueOf(copyNumber.method()))
+                .add(String.valueOf(copyNumber.depthWindowCount()))
                 .toString();
     }
 
     @NotNull
     private static PurpleCopyNumber fromString(@NotNull final String copyNumber) {
         String[] values = copyNumber.split(DELIMITER);
-        return ImmutablePurpleCopyNumber.builder()
+        final ImmutablePurpleCopyNumber.Builder builder = ImmutablePurpleCopyNumber.builder()
                 .chromosome(values[0])
                 .start(Long.valueOf(values[1]))
                 .end(Long.valueOf(values[2]))
@@ -100,6 +101,10 @@ public enum PurpleCopyNumberFile {
                 .segmentStartSupport(SegmentSupport.valueOf(values[7]))
                 .segmentEndSupport(SegmentSupport.valueOf(values[8]))
                 .method(CopyNumberMethod.valueOf(values[9]))
-                .build();
+                .depthWindowCount(0);
+        if (values.length > 10) {
+            builder.depthWindowCount(Integer.valueOf(values[10]));
+        }
+        return builder.build();
     }
 }

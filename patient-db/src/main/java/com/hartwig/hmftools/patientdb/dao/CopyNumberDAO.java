@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep12;
+import org.jooq.InsertValuesStep13;
 import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -54,6 +55,7 @@ class CopyNumberDAO {
                     .averageActualBAF(record.getValue(COPYNUMBER.ACTUALBAF))
                     .averageObservedBAF(record.getValue(COPYNUMBER.OBSERVEDBAF))
                     .averageTumorCopyNumber(record.getValue(COPYNUMBER.COPYNUMBER_))
+                    .depthWindowCount(record.getValue(COPYNUMBER.DEPTHWINDOWCOUNT))
                     .build());
         }
 
@@ -66,7 +68,7 @@ class CopyNumberDAO {
         context.delete(COPYNUMBER).where(COPYNUMBER.SAMPLEID.eq(sample)).execute();
 
         for (List<PurpleCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep12 inserter = context.insertInto(COPYNUMBER,
+            InsertValuesStep13 inserter = context.insertInto(COPYNUMBER,
                     COPYNUMBER.SAMPLEID,
                     COPYNUMBER.CHROMOSOME,
                     COPYNUMBER.START,
@@ -78,6 +80,7 @@ class CopyNumberDAO {
                     COPYNUMBER.OBSERVEDBAF,
                     COPYNUMBER.ACTUALBAF,
                     COPYNUMBER.COPYNUMBER_,
+                    COPYNUMBER.DEPTHWINDOWCOUNT,
                     COPYNUMBER.MODIFIED);
             splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
@@ -89,7 +92,7 @@ class CopyNumberDAO {
         context.delete(COPYNUMBERGERMLINE).where(COPYNUMBERGERMLINE.SAMPLEID.eq(sample)).execute();
 
         for (List<PurpleCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep12 inserter = context.insertInto(COPYNUMBERGERMLINE,
+            InsertValuesStep13 inserter = context.insertInto(COPYNUMBERGERMLINE,
                     COPYNUMBERGERMLINE.SAMPLEID,
                     COPYNUMBERGERMLINE.CHROMOSOME,
                     COPYNUMBERGERMLINE.START,
@@ -101,13 +104,14 @@ class CopyNumberDAO {
                     COPYNUMBERGERMLINE.OBSERVEDBAF,
                     COPYNUMBERGERMLINE.ACTUALBAF,
                     COPYNUMBERGERMLINE.COPYNUMBER,
+                    COPYNUMBERGERMLINE.DEPTHWINDOWCOUNT,
                     COPYNUMBERGERMLINE.MODIFIED);
             splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
 
-    private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep12 inserter, @NotNull String sample,
+    private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep13 inserter, @NotNull String sample,
             @NotNull PurpleCopyNumber region) {
         //noinspection unchecked
         inserter.values(sample,
@@ -121,6 +125,7 @@ class CopyNumberDAO {
                 DatabaseUtil.decimal(region.averageObservedBAF()),
                 DatabaseUtil.decimal(region.averageActualBAF()),
                 DatabaseUtil.decimal(region.averageTumorCopyNumber()),
+                region.depthWindowCount(),
                 timestamp);
     }
 
@@ -155,6 +160,7 @@ class CopyNumberDAO {
                     COPYNUMBERREGION.PLOIDYPENALTY,
                     COPYNUMBERREGION.FITTEDBAF,
                     COPYNUMBERREGION.FITTEDCOPYNUMBER,
+                    COPYNUMBERREGION.DEPTHWINDOWCOUNT,
                     COPYNUMBERREGION.MODIFIED);
             splitRegions.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
@@ -188,6 +194,7 @@ class CopyNumberDAO {
                 DatabaseUtil.decimal(region.ploidyPenalty()),
                 DatabaseUtil.decimal(region.fittedBAF()),
                 DatabaseUtil.decimal(region.fittedTumorCopyNumber()),
+                region.depthWindowCount(),
                 timestamp);
     }
 
@@ -223,6 +230,7 @@ class CopyNumberDAO {
                     .fittedBAF(record.getValue(COPYNUMBERREGION.FITTEDBAF))
                     .fittedTumorCopyNumber(record.getValue(COPYNUMBERREGION.FITTEDCOPYNUMBER))
                     .ploidyPenalty(record.getValue(COPYNUMBERREGION.PLOIDYPENALTY))
+                    .depthWindowCount(record.getValue(COPYNUMBERREGION.DEPTHWINDOWCOUNT))
                     .build());
         }
 

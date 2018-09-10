@@ -17,3 +17,9 @@ ALTER TABLE copyNumberRegion
     ADD COLUMN minorAllelePloidy DOUBLE PRECISION not null AFTER gcContent,
     ADD COLUMN majorAllelePloidy DOUBLE PRECISION not null AFTER minorAllelePloidy,
     CHANGE observedTumorRatioCount depthWindowCount int not null;
+
+ALTER TABLE copyNumber
+    ADD COLUMN depthWindowCount int not null AFTER segmentEndSupport;
+
+ALTER TABLE copyNumberGermline
+    ADD COLUMN depthWindowCount int not null AFTER segmentEndSupport;
