@@ -44,9 +44,28 @@ public abstract class NonSequenceablePage {
 
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
-        return cmp.verticalList(MainPageTopSection.buildWithPathologyTumorPercentage(Commons.TITLE_LOW_TUMOR, sampleReport()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                mainPageNotAnalysableSection());
+            return cmp.verticalList(MainPageTopSection.buildWithPathologyTumorPercentage(titelOfRapportsNonSequenceableReason(), sampleReport()),
+                    cmp.verticalGap(SECTION_VERTICAL_GAP),
+                    mainPageNotAnalysableSection());
+    }
+
+    public String titelOfRapportsNonSequenceableReason() {
+        String rapportTitel = "";
+        switch (reason()) {
+            case LOW_DNA_YIELD: {
+                rapportTitel =  Commons.TITLE_LOW_DNA_YIELD;
+                break;
+            }
+            case LOW_TUMOR_PERCENTAGE: {
+                rapportTitel =  Commons.TITLE_LOW_TUMOR;
+                break;
+            }
+            case POST_ANALYSIS_FAIL: {
+                rapportTitel = Commons.TITLE_POST_DNA_ISOLATION;
+                break;
+            }
+        }
+        return rapportTitel;
     }
 
     @NotNull
