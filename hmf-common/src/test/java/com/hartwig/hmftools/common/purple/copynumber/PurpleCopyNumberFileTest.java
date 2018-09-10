@@ -7,10 +7,13 @@ import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Random;
 
 import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
@@ -37,6 +40,11 @@ public class PurpleCopyNumberFileTest {
         for (int i = 0; i < expected.size(); i++) {
             assertEquals(expected.get(i), victim.get(i));
         }
+    }
+
+    @Test
+    public void testCompatibilityWith2_14() throws IOException {
+        PurpleCopyNumberFile.fromLines(Resources.readLines(Resources.getResource("purple/v2-14.purple.cnv"), Charset.defaultCharset()));
     }
 
     @NotNull

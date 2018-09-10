@@ -7,9 +7,12 @@ import static com.hartwig.hmftools.common.purple.purity.FittedPurityFile.toLines
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Random;
 
+import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
@@ -35,6 +38,12 @@ public class FittedPurityFileTest {
 
         final PurityContext output = fromLine(lines.get(1));
         assertEquals(input, output);
+    }
+
+    @Test
+    public void testCompatibilityWith2_14() throws IOException {
+        FittedPurityFile.fromLine(Resources.readLines(Resources.getResource("purple/v2-14.purple.purity"), Charset.defaultCharset())
+                .get(1));
     }
 
     @NotNull
