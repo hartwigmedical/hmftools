@@ -31,8 +31,9 @@ public class ConsequenceDeterminerTest {
     private static final int ALLELE_READ_COUNT = 1;
     private static final int TOTAL_READ_COUNT = 2;
 
-    private static final String HGVS_CODING = "c.RtoA";
+    private static final String CODING_IMPACT = "c.RtoA";
     private static final String PROTEIN_IMPACT = "p.RtoA";
+    private static final String VARIANT_DETAILS = CODING_IMPACT + " (" + PROTEIN_IMPACT + ")";
 
     @Test
     public void worksAsExpected() {
@@ -42,7 +43,7 @@ public class ConsequenceDeterminerTest {
         final VariantConsequence wrongConsequence = VariantConsequence.OTHER;
 
         final ImmutableSnpEffAnnotation.Builder annotationBuilder = createVariantAnnotationBuilder().featureID(TRANSCRIPT).
-                featureType(ConsequenceDeterminer.FEATURE_TYPE_TRANSCRIPT).gene(GENE).hgvsCoding(HGVS_CODING).
+                featureType(ConsequenceDeterminer.FEATURE_TYPE_TRANSCRIPT).gene(GENE).hgvsCoding(CODING_IMPACT).
                 hgvsProtein(PROTEIN_IMPACT);
         final SnpEffAnnotation rightAnnotation = annotationBuilder.consequences(Lists.newArrayList(rightConsequence)).build();
         final SnpEffAnnotation wrongAnnotation = annotationBuilder.consequences(Lists.newArrayList(wrongConsequence)).build();
@@ -59,12 +60,8 @@ public class ConsequenceDeterminerTest {
 
         final VariantReport variantReport = variantReports.get(0);
         assertEquals(GENE, variantReport.gene());
-        assertEquals(CHROMOSOME + ":" + POSITION, variantReport.variant().chromosomePosition());
-        assertEquals(REF, variantReport.variant().ref());
-        assertEquals(ALT, variantReport.variant().alt());
-        assertEquals(PROTEIN_IMPACT, variantReport.proteinImpact());
-        assertEquals(rightConsequence.readableSequenceOntologyTerm(), variantReport.proteinImpactType());
-        assertEquals(COSMIC_ID, variantReport.knowledgebaseKey());
+        assertEquals(VARIANT_DETAILS, variantReport.variantDetails());
+        assertEquals(COSMIC_ID, variantReport.cosmicID());
         assertEquals(TOTAL_READ_COUNT, variantReport.totalReadCount());
         assertEquals(ALLELE_READ_COUNT, variantReport.alleleReadCount());
     }

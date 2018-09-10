@@ -56,20 +56,16 @@ class ConsequenceDeterminer {
 
             builder.variant(variant);
             builder.gene(snpEffAnnotation.gene());
-            builder.proteinImpact(snpEffAnnotation.hgvsProtein());
-            builder.proteinImpactType(snpEffAnnotation.consequenceString());
-            final String cosmicID = variant.canonicalCosmicID();
-            if (cosmicID != null) {
-                builder.knowledgebaseKey(cosmicID);
-            }
+            builder.variantDetails(snpEffAnnotation.hgvsCoding() + " (" + snpEffAnnotation.hgvsProtein() + ")");
             builder.totalReadCount(variant.totalReadCount());
             builder.alleleReadCount(variant.alleleReadCount());
+            builder.cosmicID(variant.canonicalCosmicID());
             builder.ploidy(Strings.EMPTY);
             builder.purityAdjustedVAF(0D);
-            builder.clonalityStatus(Strings.EMPTY);
+            builder.clonalProbability(0D);
             builder.wildTypeStatus(Strings.EMPTY);
-            builder.driverStatus(Strings.EMPTY);
-            builder.actionabilityStatus(Strings.EMPTY);
+            builder.driverProbability(0D);
+            builder.actionabilityLevel(Strings.EMPTY);
             reports.add(builder.build());
         }
 

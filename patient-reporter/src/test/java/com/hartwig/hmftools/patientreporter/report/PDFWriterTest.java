@@ -46,6 +46,7 @@ import com.hartwig.hmftools.patientreporter.report.data.ImmutableGeneFusionData;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableVariantReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -123,15 +124,14 @@ public class PDFWriterTest {
                 .variant(createTestVariant("7", 140453136, "A", "T"))
                 .alleleReadCount(18)
                 .totalReadCount(99)
-                .proteinImpact("Val600Glu")
-                .proteinImpactType("Missense")
-                .knowledgebaseKey("COSM476")
+                .variantDetails("Val600Glu")
+                .cosmicID("COSM476")
                 .ploidy("AAAB")
                 .purityAdjustedVAF(purityAdjuster.purityAdjustedVAF("7", 4, 0.18 / 0.99))
-                .clonalityStatus("Yes")
+                .clonalProbability(0.8)
                 .wildTypeStatus("Present")
-                .driverStatus("Likely")
-                .actionabilityStatus("Yes")
+                .driverProbability(1)
+                .actionabilityLevel("A")
                 .build();
 
         final VariantReport variant2 = ImmutableVariantReport.builder()
@@ -139,14 +139,13 @@ public class PDFWriterTest {
                 .variant(createTestVariant("8", 128748854, "GG", "CA"))
                 .alleleReadCount(20)
                 .totalReadCount(88)
-                .proteinImpact("Val6Ile")
-                .proteinImpactType("Missense")
+                .variantDetails("Val6Ile")
                 .ploidy("AB")
                 .purityAdjustedVAF(purityAdjuster.purityAdjustedVAF("8", 2, 0.2 / 0.88))
-                .clonalityStatus("Yes")
+                .clonalProbability(0.3)
                 .wildTypeStatus("Present")
-                .driverStatus("Potentially")
-                .actionabilityStatus("No")
+                .driverProbability(0.4)
+                .actionabilityLevel(Strings.EMPTY)
                 .build();
 
         final VariantReport variant3 = ImmutableVariantReport.builder()
@@ -154,14 +153,13 @@ public class PDFWriterTest {
                 .variant(createTestVariant("17", 7577111, "GCACAAA", "G"))
                 .alleleReadCount(20)
                 .totalReadCount(87)
-                .proteinImpact("Val274_Cys275del")
-                .proteinImpactType("Missense")
+                .variantDetails("Val274_Cys275del")
                 .ploidy("AAA")
                 .purityAdjustedVAF(purityAdjuster.purityAdjustedVAF("17", 3, 0.20 / 0.87))
-                .clonalityStatus("Potentially")
+                .clonalProbability(0.98)
                 .wildTypeStatus("Present")
-                .driverStatus("Likely")
-                .actionabilityStatus("No")
+                .driverProbability(0.71)
+                .actionabilityLevel(Strings.EMPTY)
                 .build();
         return Lists.newArrayList(variant1, variant2, variant3);
     }

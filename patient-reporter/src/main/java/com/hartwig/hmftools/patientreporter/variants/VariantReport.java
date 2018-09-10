@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.variants;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 
+import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,6 +18,9 @@ public interface VariantReport {
     @NotNull
     String gene();
 
+    @NotNull
+    String variantDetails();
+
     int totalReadCount();
 
     int alleleReadCount();
@@ -28,21 +32,32 @@ public interface VariantReport {
 
     @NotNull
     @Value.Derived
-    default String readDepthField() {
+    default String readDepth() {
         return alleleReadCount() + " / " + totalReadCount() + " (" + PatientReportFormat.formatPercent(alleleFrequency()) + ")";
     }
 
-    @NotNull
-    String proteinImpact();
-
-    @NotNull
-    String proteinImpactType();
-
     @Nullable
-    String knowledgebaseKey();
+    String cosmicID();
 
-    @Nullable
-    String knowledgebaseUrl();
+    @NotNull
+    @Value.Derived
+    default String cosmicUrl() {
+        String COSMIC_IDENTIFIER = "COSM";
+        String cosmicID = cosmicID();
+
+        if (cosmicID == null) {
+            return Strings.EMPTY;
+        }
+        final int identifierPos = cosmicID.indexOf(COSMIC_IDENTIFIER);
+        String cosmicIdentifier;
+        if (identifierPos >= 0) {
+            cosmicIdentifier = cosmicID.substring(identifierPos + COSMIC_IDENTIFIER.length());
+        } else {
+            cosmicIdentifier = cosmicID;
+        }
+
+        return "http://cancer.sanger.ac.uk/cosmic/mutation/overview?genome=37&id=" + cosmicIdentifier;
+    }
 
     @NotNull
     String ploidy();
@@ -51,19 +66,17 @@ public interface VariantReport {
 
     @NotNull
     @Value.Derived
-    default String purityAdjustedVAFField() {
-        return PatientReportFormat.formatPercent(purityAdjustedVAF());
+    default String ploidyVaf() {
+        return ploidy() + " (" + PatientReportFormat.formatPercent(purityAdjustedVAF()) + ")";
     }
 
-    @NotNull
-    String clonalityStatus();
+    double clonalProbability();
 
     @NotNull
     String wildTypeStatus();
 
-    @NotNull
-    String driverStatus();
+    double driverProbability();
 
     @NotNull
-    String actionabilityStatus();
+    String actionabilityLevel();
 }

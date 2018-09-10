@@ -15,7 +15,6 @@ import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 import com.hartwig.hmftools.patientreporter.report.Commons;
-import com.hartwig.hmftools.patientreporter.report.components.DataExpression;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSection;
 import com.hartwig.hmftools.patientreporter.report.components.MutationalLoadSection;
@@ -81,18 +80,16 @@ public abstract class FindingsPage {
                 !report.variants().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(VariantDataSource.variantFields())
                         .columns(col.column("Gene", VariantDataSource.GENE_FIELD),
-                                col.column("Variant", VariantDataSource.VARIANT_FIELD),
-                                col.column("Type", VariantDataSource.VARIANT_TYPE_FIELD),
+                                col.column("Variant", VariantDataSource.VARIANT_DETAILS_FIELD),
                                 col.column("Read Depth", VariantDataSource.READ_DEPTH_FIELD),
-                                col.column("Knowledgebase", VariantDataSource.KNOWLEDGEBASE_KEY_FIELD)
+                                col.column("Cosmic", VariantDataSource.COSMIC_ID_FIELD)
                                         .setHyperLink(hyperLink(VariantDataSource.knowledgeBaseHyperlink()))
                                         .setStyle(linkStyle()),
-                                col.column("Ploidy", VariantDataSource.PLOIDY_FIELD),
-                                col.column("VAF", VariantDataSource.VAF_FIELD),
-                                col.column("Clonal?", VariantDataSource.CLONAL_FIELD),
-                                col.column("Wildtype?", VariantDataSource.WILDTYPE_FIELD),
-                                col.column("Driver?", VariantDataSource.DRIVER_FIELD),
-                                col.column("Actionable?", VariantDataSource.ACTIONABLE_FIELD)))
+                                col.column("Ploidy (VAF)", VariantDataSource.PLOIDY_VAF_FIELD),
+                                col.column("Clonal %", VariantDataSource.CLONAL_PERCENTAGE_FIELD),
+                                col.column("Wildtype", VariantDataSource.WILDTYPE_STATUS_FIELD),
+                                col.column("Driver %", VariantDataSource.DRIVER_PROBABILITY_FIELD),
+                                col.column("Actionability", VariantDataSource.ACTIONABILITY_LEVEL_FIELD)))
                         .setDataSource(VariantDataSource.fromVariants(report.fitStatus(), report.variants(), drupFilter))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
