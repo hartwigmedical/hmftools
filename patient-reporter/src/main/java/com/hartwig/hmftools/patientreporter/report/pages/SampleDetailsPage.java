@@ -46,7 +46,7 @@ public abstract class SampleDetailsPage {
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
         return cmp.verticalList(cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text(Commons.TITLE + " - Sample Details & Disclaimer").setStyle(sectionHeaderStyle()),
+                cmp.text(Commons.TITLE_SEQUENCE + " - Sample Details & Disclaimer").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 sampleDetailsSection(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),

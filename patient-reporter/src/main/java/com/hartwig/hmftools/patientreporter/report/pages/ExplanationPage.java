@@ -22,7 +22,7 @@ public abstract class ExplanationPage {
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
         return cmp.verticalList(cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text(Commons.TITLE + " - Report Explanation").setStyle(sectionHeaderStyle()),
+                cmp.text(Commons.TITLE_SEQUENCE + " - Report Explanation").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 generalExplanationSection(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),

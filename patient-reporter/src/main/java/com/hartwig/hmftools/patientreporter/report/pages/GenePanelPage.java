@@ -33,7 +33,7 @@ public abstract class GenePanelPage {
 
     public ComponentBuilder<?, ?> reportComponent() {
         return cmp.verticalList(cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text(Commons.TITLE + " - Gene Panel").setStyle(sectionHeaderStyle()),
+                cmp.text(Commons.TITLE_SEQUENCE+ " - Gene Panel").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 build(reporterData()));
     }

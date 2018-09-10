@@ -44,7 +44,7 @@ public abstract class NonSequenceablePage {
 
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
-        return cmp.verticalList(MainPageTopSection.buildWithPathologyTumorPercentage(Commons.TITLE, sampleReport()),
+        return cmp.verticalList(MainPageTopSection.buildWithPathologyTumorPercentage(Commons.TITLE_LOW_TUMOR, sampleReport()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 mainPageNotAnalysableSection());
     }
