@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Comparator;
@@ -37,6 +39,7 @@ import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
+import com.hartwig.hmftools.patientreporter.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutablePurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
@@ -79,6 +82,19 @@ public abstract class PatientReporter {
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
         final GenomeAnalysis genomeAnalysis = analyseGenomeData(run.tumorSample(), runDirectory);
         assert run.isSomaticRun() && run.tumorSample().equals(genomeAnalysis.sample());
+
+        String file = "/data/com...";
+        if (Files.exists(new File(file).toPath())) {
+            ActionabilityAnalyzer analyzer = ActionabilityAnalyzer.loadFromFile(file);
+            // TODO (LISC) try out actionability
+            for (SomaticVariant variant : genomeAnalysis.variantAnalysis().passedVariants()) {
+                if (analyzer.isActionable(variant)) {
+                    LOGGER.info("YESSS! " + variant);
+                }
+             }
+        } else {
+            LOGGER.warn("File does not exist: " + file);
+        }
 
         final String tumorSample = genomeAnalysis.sample();
         final VariantAnalysis variantAnalysis = genomeAnalysis.variantAnalysis();
