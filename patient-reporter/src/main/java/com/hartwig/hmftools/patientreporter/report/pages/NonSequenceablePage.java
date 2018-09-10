@@ -105,7 +105,7 @@ public abstract class NonSequenceablePage {
                 cmp.text("This report is generated and verified by: " + user() + " and is addressed at " + sampleReport().recipient())
                         .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The results on which this report is based is generated from tests that are performed under ISO/ICE-17025:2005 accreditation.").setStyle(fontStyle()),
+                cmp.text("The results on this report are based is generated from tests that are performed under ISO/ICE-17025:2005 accreditation.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("For questions, please contact us via info@hartwigmedicalfoundation.nl").setStyle(fontStyle()));
     }
