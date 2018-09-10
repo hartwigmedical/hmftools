@@ -15,6 +15,7 @@ import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.report.Commons;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 
+import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 
@@ -44,28 +45,9 @@ public abstract class NonSequenceablePage {
 
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
-            return cmp.verticalList(MainPageTopSection.buildWithPathologyTumorPercentage(titelOfRapportsNonSequenceableReason(), sampleReport()),
-                    cmp.verticalGap(SECTION_VERTICAL_GAP),
-                    mainPageNotAnalysableSection());
-    }
-
-    public String titelOfRapportsNonSequenceableReason() {
-        String rapportTitel = "";
-        switch (reason()) {
-            case LOW_DNA_YIELD: {
-                rapportTitel =  Commons.TITLE_LOW_DNA_YIELD;
-                break;
-            }
-            case LOW_TUMOR_PERCENTAGE: {
-                rapportTitel =  Commons.TITLE_LOW_TUMOR;
-                break;
-            }
-            case POST_ANALYSIS_FAIL: {
-                rapportTitel = Commons.TITLE_POST_DNA_ISOLATION;
-                break;
-            }
-        }
-        return rapportTitel;
+        return cmp.verticalList(MainPageTopSection.buildWithPathologyTumorPercentage(reason().title(), sampleReport()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                mainPageNotAnalysableSection());
     }
 
     @NotNull

@@ -45,7 +45,7 @@ public class PDFWriter {
     public void writeSequenceReport(@NotNull final AnalysedPatientReport report, @NotNull final HmfReporterData reporterData)
             throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generatePatientReport(report, reporterData);
-        writeReport(fileName(report.sampleReport().sampleId(), "_hmf_report.pdf"), reportBuilder);
+        writeReport(fileName(report.sampleReport().sampleId()), reportBuilder);
         // TODO (KODU) Final cleanup once we switched to proper actionability
         //        final JasperReportBuilder evidenceReportBuilder = EvidenceReport.generate(report);
         //        writeReport(fileName(report.sampleReport().sampleId(), "_evidence_items.pdf"), evidenceReportBuilder);
@@ -53,7 +53,7 @@ public class PDFWriter {
 
     public void writeNonSequenceableReport(@NotNull final NotAnalysedPatientReport report) throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generateNotAnalysableReport(report);
-        writeReport(fileName(report.sampleReport().sampleId(), "_hmf_report.pdf"), reportBuilder);
+        writeReport(fileName(report.sampleReport().sampleId()), reportBuilder);
     }
 
     private static void writeReport(@NotNull final String fileName, @NotNull final JasperReportBuilder report)
@@ -67,8 +67,8 @@ public class PDFWriter {
     }
 
     @NotNull
-    private String fileName(@NotNull final String sample, @NotNull String suffix) {
-        return reportDirectory + File.separator + sample + suffix;
+    private String fileName(@NotNull final String sample) {
+        return reportDirectory + File.separator + sample + "_hmf_report.pdf";
     }
 
     @VisibleForTesting

@@ -22,9 +22,6 @@ import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
 public final class Commons {
 
     public static final String TITLE_SEQUENCE = "HMF Sequencing Report v" + PatientReporterApplication.VERSION;
-    public static final String TITLE_LOW_TUMOR = "HMF Low Tumor Report v" + PatientReporterApplication.VERSION;
-    public static final String TITLE_LOW_DNA_YIELD = "HMF Low DNA Yield Report v" + PatientReporterApplication.VERSION;
-    public static final String TITLE_POST_DNA_ISOLATION = "HMF Failed Post DNA Isolation Report v" + PatientReporterApplication.VERSION;
 
     public static final String DATE_TIME_FORMAT = "dd-MMM-yyyy";
     public static final String HARTWIG_ADDRESS = "Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam";
