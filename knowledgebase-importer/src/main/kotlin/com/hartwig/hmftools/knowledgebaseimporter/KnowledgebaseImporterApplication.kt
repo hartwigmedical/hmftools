@@ -85,7 +85,8 @@ private fun readKnowledgebases(cmd: CommandLine, diseaseOntology: DiseaseOntolog
     val iclusionApi = IclusionApiWrapper(cmd.getOptionValue(ICLUSION_ENDPOINT), cmd.getOptionValue(ICLUSION_CLIENT_ID),
             cmd.getOptionValue(ICLUSION_CLIENT_SECRET), cmd.getOptionValue(ICLUSION_USER), cmd.getOptionValue(ICLUSION_PASSWORD))
     val iclusion = Iclusion(iclusionApi, diseaseOntology, recordAnalyzer, ensemblGeneDAO)
-    return listOf(oncoKb, cgi, civic, cosmic, iclusion)
+    return listOf(iclusion)
+//    return listOf(oncoKb, cgi, civic, cosmic, iclusion)
 }
 
 private fun writeOutput(outputDir: String, knowledgebases: List<Knowledgebase>, cancerTypesDoids: List<CancerTypeDoidOutput>) {
