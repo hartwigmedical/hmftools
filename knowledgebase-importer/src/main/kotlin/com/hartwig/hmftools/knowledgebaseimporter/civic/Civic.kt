@@ -17,6 +17,8 @@ class Civic(variantsLocation: String, evidenceLocation: String, diseaseOntology:
             private val recordAnalyzer: RecordAnalyzer, treatmentTypeMap: Map<String, String>) :
         Knowledgebase, KnowledgebaseSource<CivicRecord, ActionableRecord> {
 
+    // KODU: This is a TP53 B-level evidence item that is dubious, so is filtered out.
+    // KODU: See also https://civicdb.org/events/genes/45/summary/variants/222/summary/evidence/1481/summary#evidence
     private val blacklistedEvidenceIds = setOf("1481")
 
     override val source = "civic"
