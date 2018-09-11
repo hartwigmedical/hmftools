@@ -59,27 +59,4 @@ public class EnrichedSomaticVariantFactoryTest {
         assertEquals(CodingEffect.SYNONYMOUS, enrichedSomaticVariant.canonicalCodingEffect());
     }
 
-    @Ignore
-    public void testProblem2() {
-        final String line =
-                "13\t24871731\t.\tC\tT\t.\tPASS\tAC=0;AF=0;AN=0;MAPPABILITY=1.000000;NT=ref;QSS=43;QSS_NT=43;SGT=CC->CT;SOMATIC;TQSS=1;TQSS_NT=1;set=snvs;ANN=T|synonymous_variant|LOW|RP11-307N16.6|ENSG00000273167|transcript|ENST00000382141|nonsense_mediated_decay|12/16|c.3075C>T|p.Leu1025Leu|3653/4157|3075/3318|1025/1105||,T|synonymous_variant|LOW|SPATA13|ENSG00000182957|transcript|ENST00000382108|protein_coding|11/13|c.3441C>T|p.Leu1147Leu|3763/8457|3441/3834|1147/1277||,T|synonymous_variant|LOW|SPATA13|ENSG00000182957|transcript|ENST00000424834|protein_coding|13/15|c.3441C>T|p.Leu1147Leu|3914/8603|3441/3834|1147/1277||,T|synonymous_variant|LOW|SPATA13|ENSG00000182957|transcript|ENST00000382095|protein_coding|10/12|c.1566C>T|p.Leu522Leu|1973/6665|1566/1959|522/652||,T|synonymous_variant|LOW|SPATA13|ENSG00000182957|transcript|ENST00000434675|protein_coding|7/9|c.1260C>T|p.Leu420Leu|1260/2001|1260/1653|420/550||WARNING_TRANSCRIPT_NO_START_CODON,T|synonymous_variant|LOW|SPATA13|ENSG00000182957|transcript|ENST00000399949|protein_coding|8/10|c.1332C>T|p.Leu444Leu|1502/3026|1332/1725|444/574||,T|synonymous_variant|LOW|SPATA13|ENSG00000182957|transcript|ENST00000409126|protein_coding|7/9|c.1146C>T|p.Leu382Leu|1285/2111|1146/1539|382/512||,T|synonymous_variant|LOW|SPATA13|ENSG00000182957|transcript|ENST00000343003|protein_coding|9/11|c.1398C>T|p.Leu466Leu|1613/2080|1398/1791|466/596||\tGT:AD:DP\t0/1:36,38:75";
-        final String sample = "sample";
-        final VariantContext context = VariantContextFromString.decode(sample, line);
-        final Optional<SomaticVariant> optVariant = SomaticVariantFactory.passOnlyInstance().createVariant(sample, context);
-        assert optVariant.isPresent();
-        final SomaticVariant variant = optVariant.get();
-
-        final ImmutableEnrichedSomaticVariant.Builder builder = SomaticVariantTestBuilderFactory.createEnriched();
-        final Map<String, String> geneToTranscriptMap = Maps.newHashMap();
-        geneToTranscriptMap.put("SPATA13", "ENST00000424834");
-
-        final TranscriptAnnotationSelector selector = new TranscriptAnnotationSelector(geneToTranscriptMap);
-        EnrichedSomaticVariantFactory.addCanonicalEffect(builder, variant, selector);
-
-        final EnrichedSomaticVariant enrichedSomaticVariant = builder.build();
-
-        assertEquals(CodingEffect.SYNONYMOUS, enrichedSomaticVariant.canonicalCodingEffect());
-
-    }
-
 }
