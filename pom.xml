@@ -33,7 +33,7 @@
         <module>knowledgebase-importer</module>
         <module>actionability-analyzer</module>
         <module>data_analyser</module>
-        <module>purity-pathology</module>
+        <module>actionability_for_SOC</module>
     </modules>
 
     <properties>

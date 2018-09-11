@@ -8,10 +8,10 @@
         <version>1</version>
     </parent>
 
-    <artifactId>purity-pathology</artifactId>
+    <artifactId>actionability_for_SOC</artifactId>
     <packaging>jar</packaging>
     <version>1.0</version>
-    <name>HMF Tools - Purity pathology</name>
+    <name>HMF Tools - Actionability for SOC</name>
 
     <dependencies>
         <dependency>
@@ -70,7 +70,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.puritypatho.PurityPathologyApplication</mainClass>
+                            <mainClass>com.hartwig.hmftools.actionability.ActionabilityApplication</mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
