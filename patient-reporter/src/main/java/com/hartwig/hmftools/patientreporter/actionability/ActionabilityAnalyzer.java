@@ -22,10 +22,9 @@ public class ActionabilityAnalyzer {
     }
 
     @NotNull
-    static String [] fromLine(@NotNull String line) {
+    static ActionableVariant fromLine(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
-        // add immutable builder
-        return values;
+        return ImmutableActionableVariant.builder().gene(values[0]).chromosome(values[1]).build();
     }
 
     public boolean isActionable(@NotNull SomaticVariant variant) {
