@@ -7,6 +7,8 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import io.reactivex.Observable
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
+import org.apache.logging.log4j.Level
+import org.apache.logging.log4j.LogManager
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -28,6 +30,8 @@ class IclusionApiWrapper(endpoint: String, private val clientId: String, private
         }
     }
 
+    private val logger = LogManager.getLogger("IclusionApiWrapper")
+
     private val httpClient = httpClient()
     private val api = createApi(httpClient, endpoint)
     private val tokenBearer = "Bearer ${getAccessToken().blockingFirst().access_token}"
@@ -45,9 +49,21 @@ class IclusionApiWrapper(endpoint: String, private val clientId: String, private
 
     fun studyDetails(): List<IclusionStudyDetails> {
         val studies = studies().blockingIterable().toList()
+        studies.forEach {
+            logger.log(Level.INFO, "study: $it")
+        }
         val indications = indications().blockingIterable().toList().associateBy { it.id }
+        indications.forEach {
+            logger.log(Level.INFO, "indication: $it")
+        }
         val genes = genes().blockingIterable().toList().associateBy { it.id }
+        genes.forEach {
+            logger.log(Level.INFO, "gene: $it")
+        }
         val variants = variants().blockingIterable().toList().associateBy { it.id }
+        variants.forEach {
+            logger.log(Level.INFO, "variant: $it")
+        }
         return studies.filterNot { it.mutations.isEmpty() }.map {
             val indicationsForStudy = it.indication_ids.mapNotNull { indications[it] }
             val mutationsDetails = it.mutations.mapNotNull {
@@ -59,6 +75,10 @@ class IclusionApiWrapper(endpoint: String, private val clientId: String, private
             }
             IclusionStudyDetails(it, indicationsForStudy, mutationsDetails)
         }.filterNot { it.mutations.isEmpty() }
+    }
+
+    fun close() {
+        httpClient.dispatcher().executorService().shutdown()
     }
 
     private fun indications(): Observable<IclusionIndication> {
@@ -75,10 +95,5 @@ class IclusionApiWrapper(endpoint: String, private val clientId: String, private
 
     private fun studies(): Observable<IclusionStudy> {
         return api.studies(tokenBearer).flatMapIterable { it }
-    }
-
-    // TODO (KODU): Shouldn't this be called?
-    fun close() {
-        httpClient.dispatcher().executorService().shutdown()
     }
 }
