@@ -107,6 +107,11 @@ private fun readIclusionStudies(cmd : CommandLine): List<IclusionStudyDetails> {
     val iclusionStudies = iclusionApi.studyDetails()
     iclusionApi.close()
 
+    iclusionStudies.forEach {
+        logger.info("iclusion study: $it");
+    }
+    logger.info("Queried and filtered ${iclusionStudies.size} studies from iclusion API")
+
     return iclusionStudies
 }
 
