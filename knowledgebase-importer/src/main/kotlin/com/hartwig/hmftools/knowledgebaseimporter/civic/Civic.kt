@@ -18,6 +18,7 @@ class Civic(variantsLocation: String, evidenceLocation: String, diseaseOntology:
         Knowledgebase, KnowledgebaseSource<CivicRecord, ActionableRecord> {
 
     private val blacklistedEvidenceIds = setOf("1481")
+
     override val source = "civic"
     override val knownVariants by lazy { recordAnalyzer.knownVariants(listOf(this)).distinct() }
     override val knownFusionPairs by lazy { knownKbRecords.flatMap { it.events }.filterIsInstance<FusionPair>().distinct() }

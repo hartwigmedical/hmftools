@@ -9,7 +9,6 @@ data class CivicEvidenceInput(val evidence_id: String, val variant_id: String, v
 
     //MIVO: map melanoma to skin melanoma
     override fun correct(): CivicEvidenceInput? {
-        if (evidence_id == "1481") return null
         val disease = if (disease == "Melanoma") "Skin Melanoma" else disease
         val doid = if (doid == "1909") "8923" else doid
         return copy(disease = disease, doid = doid)
