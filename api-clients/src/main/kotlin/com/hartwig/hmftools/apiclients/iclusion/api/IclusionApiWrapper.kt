@@ -52,18 +52,26 @@ class IclusionApiWrapper(endpoint: String, private val clientId: String, private
         studies.forEach {
             logger.log(Level.INFO, "study: $it")
         }
+        logger.info("Loaded ${studies.size} studies.")
+
         val indications = indications().blockingIterable().toList().associateBy { it.id }
         indications.forEach {
             logger.log(Level.INFO, "indication: $it")
         }
+        logger.info("Loaded ${indications.size} indications.")
+
         val genes = genes().blockingIterable().toList().associateBy { it.id }
         genes.forEach {
             logger.log(Level.INFO, "gene: $it")
         }
+        logger.info("Loaded ${genes.size} genes.")
+
         val variants = variants().blockingIterable().toList().associateBy { it.id }
         variants.forEach {
             logger.log(Level.INFO, "variant: $it")
         }
+        logger.info("Loaded ${variants.size} variants.")
+
         return studies.filterNot { it.mutations.isEmpty() }.map {
             val indicationsForStudy = it.indication_ids.mapNotNull { indications[it] }
             val mutationsDetails = it.mutations.mapNotNull {
