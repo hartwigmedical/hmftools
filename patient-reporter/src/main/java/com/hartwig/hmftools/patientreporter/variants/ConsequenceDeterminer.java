@@ -5,7 +5,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -21,9 +20,6 @@ import org.jetbrains.annotations.Nullable;
 class ConsequenceDeterminer {
 
     private static final Logger LOGGER = LogManager.getLogger(ConsequenceDeterminer.class);
-
-    @VisibleForTesting
-    static final String FEATURE_TYPE_TRANSCRIPT = "transcript";
 
     @NotNull
     private final Set<String> transcripts;
@@ -88,8 +84,7 @@ class ConsequenceDeterminer {
     private static List<SnpEffAnnotation> findAllRelevantAnnotations(@NotNull final List<SnpEffAnnotation> annotations,
             @NotNull final Set<String> transcripts) {
         return annotations.stream()
-                .filter(annotation -> annotation.featureType().equals(FEATURE_TYPE_TRANSCRIPT)
-                        && transcripts.contains(annotation.transcript()))
+                .filter(annotation -> annotation.isTranscriptFeature() && transcripts.contains(annotation.transcript()))
                 .collect(Collectors.toList());
     }
 }

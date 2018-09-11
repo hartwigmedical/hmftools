@@ -125,7 +125,7 @@ public class SomaticVariantFactory {
         builder.snpEffAnnotations(allAnnotations);
 
         final List<SnpEffAnnotation> transcriptAnnotations =
-                allAnnotations.stream().filter(x -> x.featureType().equals("transcript")).collect(Collectors.toList());
+                allAnnotations.stream().filter(SnpEffAnnotation::isTranscriptFeature).collect(Collectors.toList());
 
         if (!transcriptAnnotations.isEmpty()) {
             final SnpEffAnnotation snpEffAnnotation = transcriptAnnotations.get(0);

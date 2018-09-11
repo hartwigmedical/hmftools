@@ -6,6 +6,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
@@ -42,7 +43,7 @@ public class ConsequenceDeterminerTest {
         final VariantConsequence wrongConsequence = VariantConsequence.OTHER;
 
         final ImmutableSnpEffAnnotation.Builder annotationBuilder = createVariantAnnotationBuilder().featureID(TRANSCRIPT).
-                featureType(ConsequenceDeterminer.FEATURE_TYPE_TRANSCRIPT).gene(GENE).hgvsCoding(CODING_IMPACT).
+                featureType(SnpEffAnnotation.FEATURE_TYPE_TRANSCRIPT).gene(GENE).hgvsCoding(CODING_IMPACT).
                 hgvsProtein(PROTEIN_IMPACT);
         final SnpEffAnnotation rightAnnotation = annotationBuilder.consequences(Lists.newArrayList(rightConsequence)).build();
         final SnpEffAnnotation wrongAnnotation = annotationBuilder.consequences(Lists.newArrayList(wrongConsequence)).build();
