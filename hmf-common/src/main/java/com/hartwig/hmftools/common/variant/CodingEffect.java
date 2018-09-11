@@ -15,8 +15,7 @@ public enum CodingEffect {
 
     @NotNull
     public static CodingEffect effect(@NotNull final List<VariantConsequence> consequences) {
-        final List<CodingEffect> simplifiedEffects =
-                consequences.stream().map(CodingEffect::effect).collect(Collectors.toList());
+        final List<CodingEffect> simplifiedEffects = consequences.stream().map(CodingEffect::effect).collect(Collectors.toList());
         if (simplifiedEffects.stream().anyMatch(x -> x.equals(NONSENSE_OR_FRAMESHIFT))) {
             return NONSENSE_OR_FRAMESHIFT;
         }
@@ -41,6 +40,9 @@ public enum CodingEffect {
         switch (consequence) {
             case FRAMESHIFT_VARIANT:
             case STOP_GAINED:
+            case STOP_LOST:
+            case START_LOST:
+            case INITIATOR_CODON_VARIANT:
                 return NONSENSE_OR_FRAMESHIFT;
             case MISSENSE_VARIANT:
             case PROTEIN_PROTEIN_CONTACT:
