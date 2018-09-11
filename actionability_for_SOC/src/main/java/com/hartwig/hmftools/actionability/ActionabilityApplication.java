@@ -12,6 +12,8 @@ public abstract class ActionabilityApplication {
     private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(ActionabilityApplication.class);
 
     public static void main(final String... args)  {
+        //final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
+        //final List<SomaticVariant> variants = PatientReporterHelper.loadPassedSomaticVariants(run.tumorSample(), runDirectory);
         LOGGER.info("hello");
 
     }
