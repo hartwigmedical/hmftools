@@ -32,15 +32,15 @@ public abstract class ActionabilityApplication {
     private static final String SOMATIC_VCF_EXTENSION_V3 = "_post_processed_v2.2.vcf.gz";
     private static final String SOMATIC_VCF_EXTENSION_V4 = "_post_processed.vcf.gz";
 
-    public void main(final String... args) throws ParseException, IOException, SQLException {
+    public static void main(final String... args) throws ParseException, IOException, SQLException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
         final String runDir = cmd.getOptionValue(RUN_DIRECTORY);
-        LOGGER.info(runDir);
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDir);
-        LOGGER.info(run);
         final List<SomaticVariant> variants = loadPassedSomaticVariants(run.tumorSample(), runDir);
-        LOGGER.info(variants);
+        LOGGER.info("Tumor sample: " + run.tumorSample());
+        // read knowledgebase file /data/common/dbs/knowledgebases/output/actionableVariants.tsv
+        // check actionability variants
     }
 
     @NotNull
@@ -57,7 +57,7 @@ public abstract class ActionabilityApplication {
     }
 
     @NotNull
-    private List<SomaticVariant> loadPassedSomaticVariants(@NotNull final String sample, @NotNull final String path) throws IOException {
+    public static List<SomaticVariant> loadPassedSomaticVariants(@NotNull final String sample, @NotNull final String path) throws IOException {
         // TODO (KODU): Clean up once pipeline v3 no longer exists
         Path vcfPath;
         try {
