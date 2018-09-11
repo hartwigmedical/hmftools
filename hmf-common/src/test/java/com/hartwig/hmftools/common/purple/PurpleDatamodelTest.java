@@ -46,6 +46,7 @@ public class PurpleDatamodelTest {
                 .segmentEndSupport(SegmentSupport.NONE)
                 .method(CopyNumberMethod.UNKNOWN)
                 .bafCount(0)
+                .depthWindowCount(1)
                 .averageObservedBAF(0.5)
                 .averageActualBAF(0.5);
     }
@@ -59,7 +60,7 @@ public class PurpleDatamodelTest {
                 .start(start)
                 .end(end)
                 .observedTumorRatio(1)
-                .observedTumorRatioCount(1)
+                .depthWindowCount(1)
                 .observedNormalRatio(1)
                 .ratioSupport(true)
                 .svCluster(false)
@@ -76,18 +77,17 @@ public class PurpleDatamodelTest {
                 .from(observedRegion)
                 .tumorCopyNumber(2)
                 .tumorBAF(0.5)
-                .segmentBAF(0)
-                .segmentTumorCopyNumber(0)
-                .cnvDeviation(0)
+                .fittedBAF(0)
+                .fittedTumorCopyNumber(0)
                 .deviation(0)
-                .modelPloidy(0)
-                .modelBAF(0)
-                .modelTumorRatio(0)
+                .minorAllelePloidy(0)
+                .minorAllelePloidyDeviation(0)
+                .majorAllelePloidy(0)
+                .majorAllelePloidyDeviation(0)
                 .refNormalisedCopyNumber(2)
                 .ratioSupport(true)
                 .support(SegmentSupport.NONE)
-                .ploidyPenalty(0)
-                .bafDeviation(0);
+                .ploidyPenalty(0);
     }
 
     @NotNull

@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.knowledgebaseimporter.cgi
 
+import com.hartwig.hmftools.extensions.csv.CsvReader
 import com.hartwig.hmftools.knowledgebaseimporter.Knowledgebase
+import com.hartwig.hmftools.knowledgebaseimporter.cgi.input.CgiActionableInput
+import com.hartwig.hmftools.knowledgebaseimporter.cgi.input.CgiKnownInput
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.KnowledgebaseSource
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
-import com.hartwig.hmftools.knowledgebaseimporter.readTSVRecords
 
 class Cgi(variantsLocation: String, biomarkersLocation: String, diseaseOntology: DiseaseOntology,
           private val recordAnalyzer: RecordAnalyzer, treatmentTypeMap: Map<String, String>) :
@@ -24,9 +26,12 @@ class Cgi(variantsLocation: String, biomarkersLocation: String, diseaseOntology:
         actionableKbRecords.flatMap { it.actionability }.map { it.cancerType }
                 .associateBy({ it }, { diseaseOntology.findDoids(it) })
     }
-    override val knownKbRecords by lazy { readTSVRecords(variantsLocation) { CgiKnownKbRecord(it) }.filterNotNull() }
+    override val knownKbRecords by lazy {
+        CsvReader.readTSVByName<CgiKnownInput>(variantsLocation, nullString = "").mapNotNull { it.corrected() }.map { CgiKnownKbRecord(it) }
+    }
     override val actionableKbRecords by lazy {
-        readTSVRecords(biomarkersLocation) { CgiActionableRecord(it, treatmentTypeMap) }
+        CsvReader.readTSVByName<CgiActionableInput>(biomarkersLocation, nullString = "").mapNotNull { it.corrected() }
+                .map { CgiActionableRecord(it, treatmentTypeMap) }
     }
     private val actionableKbItems by lazy { recordAnalyzer.actionableItems(listOf(this)).distinct() }
 }

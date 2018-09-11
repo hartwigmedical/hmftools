@@ -19,18 +19,15 @@ import net.sf.jasperreports.engine.JRDataSource;
 
 public class VariantDataSource {
 
-    private static final String COSMIC_IDENTIFIER = "COSM";
-
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
-    public static final FieldBuilder<?> POSITION_FIELD = field("position", String.class);
-    public static final FieldBuilder<?> VARIANT_FIELD = field("variant", String.class);
-    public static final FieldBuilder<?> HGVS_CODING_FIELD = field("hgvs_coding", String.class);
-    public static final FieldBuilder<?> HGVS_PROTEIN_FIELD = field("hgvs_protein", String.class);
-    public static final FieldBuilder<?> CONSEQUENCE_FIELD = field("consequence", String.class);
-    public static final FieldBuilder<?> COSMIC_FIELD = field("cosmic", String.class);
-    private static final FieldBuilder<?> COSMIC_NR_FIELD = field("cosmic_nr", String.class);
-    public static final FieldBuilder<?> DEPTH_VAF_FIELD = field("depth_vaf", String.class);
-    public static final FieldBuilder<?> PLOIDY_TAF_FIELD = field("ploidy_taf", String.class);
+    public static final FieldBuilder<?> VARIANT_DETAILS_FIELD = field("variant_details", String.class);
+    public static final FieldBuilder<?> READ_DEPTH_FIELD = field("read_depth", String.class);
+    public static final FieldBuilder<?> IS_HOTSPOT_FIELD = field("is_hotspot", String.class);
+    public static final FieldBuilder<?> PLOIDY_VAF_FIELD = field("ploidy_vaf", String.class);
+    public static final FieldBuilder<?> CLONAL_PERCENTAGE_FIELD = field("clonal_probability", String.class);
+    public static final FieldBuilder<?> WILDTYPE_STATUS_FIELD = field("wildtype_status", String.class);
+    public static final FieldBuilder<?> DRIVER_PROBABILITY_FIELD = field("driver_probability", String.class);
+    public static final FieldBuilder<?> ACTIONABILITY_LEVEL_FIELD = field("actionability_level", String.class);
 
     private VariantDataSource() {
     }
@@ -39,56 +36,45 @@ public class VariantDataSource {
     public static JRDataSource fromVariants(@NotNull FittedPurityStatus fitStatus, @NotNull final List<VariantReport> variantReports,
             @NotNull DrupFilter drupFilter) {
         final DRDataSource variantDataSource = new DRDataSource(GENE_FIELD.getName(),
-                POSITION_FIELD.getName(),
-                VARIANT_FIELD.getName(),
-                DEPTH_VAF_FIELD.getName(),
-                COSMIC_FIELD.getName(),
-                COSMIC_NR_FIELD.getName(),
-                HGVS_CODING_FIELD.getName(),
-                HGVS_PROTEIN_FIELD.getName(),
-                CONSEQUENCE_FIELD.getName(),
-                PLOIDY_TAF_FIELD.getName());
+                VARIANT_DETAILS_FIELD.getName(),
+                READ_DEPTH_FIELD.getName(),
+                IS_HOTSPOT_FIELD.getName(),
+                PLOIDY_VAF_FIELD.getName(),
+                CLONAL_PERCENTAGE_FIELD.getName(),
+                WILDTYPE_STATUS_FIELD.getName(),
+                DRIVER_PROBABILITY_FIELD.getName(),
+                ACTIONABILITY_LEVEL_FIELD.getName());
 
         for (final VariantReport variantReport : variantReports) {
             final String displayGene = drupFilter.test(variantReport) ? variantReport.gene() + " *" : variantReport.gene();
             variantDataSource.add(displayGene,
-                    variantReport.variant().chromosomePosition(),
-                    variantReport.variantField(),
-                    variantReport.depthVafField(),
-                    variantReport.cosmicID(),
-                    stripCosmicIdentifier(variantReport.cosmicID()),
-                    variantReport.hgvsCoding(),
-                    variantReport.hgvsProtein(),
-                    variantReport.consequence(),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, variantReport.ploidyTafField()));
+                    variantReport.variantDetails(),
+                    variantReport.readDepth(),
+                    variantReport.isHotspotField(),
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, variantReport.ploidyVaf()),
+                    PatientReportFormat.correctValueForFitStatus(fitStatus,
+                            PatientReportFormat.formatPercentWithDefaultCutoffs(variantReport.clonalProbability())),
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, variantReport.wildTypeStatus()),
+                    PatientReportFormat.formatPercentWithDefaultCutoffs(variantReport.driverProbability()),
+                    variantReport.actionabilityLevel());
         }
 
         return variantDataSource;
     }
 
     @NotNull
-    private static String stripCosmicIdentifier(@NotNull final String cosmicID) {
-        final int identifierPos = cosmicID.indexOf(COSMIC_IDENTIFIER);
-        if (identifierPos >= 0) {
-            return cosmicID.substring(identifierPos + COSMIC_IDENTIFIER.length());
-        } else {
-            return cosmicID;
-        }
-    }
-
-    @NotNull
     public static FieldBuilder<?>[] variantFields() {
-        return new FieldBuilder<?>[] { GENE_FIELD, POSITION_FIELD, VARIANT_FIELD, HGVS_CODING_FIELD, HGVS_PROTEIN_FIELD, CONSEQUENCE_FIELD,
-                COSMIC_FIELD, COSMIC_NR_FIELD, DEPTH_VAF_FIELD, PLOIDY_TAF_FIELD };
+        return new FieldBuilder<?>[] { GENE_FIELD, VARIANT_DETAILS_FIELD, READ_DEPTH_FIELD, IS_HOTSPOT_FIELD, PLOIDY_VAF_FIELD,
+                CLONAL_PERCENTAGE_FIELD, WILDTYPE_STATUS_FIELD, DRIVER_PROBABILITY_FIELD, ACTIONABILITY_LEVEL_FIELD };
     }
 
-    @NotNull
-    public static AbstractSimpleExpression<String> cosmicHyperlink() {
-        return new AbstractSimpleExpression<String>() {
-            @Override
-            public String evaluate(@NotNull final ReportParameters data) {
-                return "http://cancer.sanger.ac.uk/cosmic/mutation/overview?genome=37&id=" + data.getValue(COSMIC_NR_FIELD.getName());
-            }
-        };
-    }
+//    @NotNull
+//    public static AbstractSimpleExpression<String> cosmicHyperlink() {
+//        return new AbstractSimpleExpression<String>() {
+//            @Override
+//            public String evaluate(@NotNull final ReportParameters data) {
+//                return data.getValue(COSMIC_URL_FIELD.getName());
+//            }
+//        };
+//    }
 }

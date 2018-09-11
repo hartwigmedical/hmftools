@@ -6,6 +6,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
@@ -27,12 +28,12 @@ public class ConsequenceDeterminerTest {
 
     private static final String REF = "R";
     private static final String ALT = "A";
-    private static final String COSMIC_ID = "123";
     private static final int ALLELE_READ_COUNT = 1;
     private static final int TOTAL_READ_COUNT = 2;
 
-    private static final String HGVS_CODING = "c.RtoA";
-    private static final String HGVS_PROTEIN = "p.RtoA";
+    private static final String CODING_IMPACT = "c.RtoA";
+    private static final String PROTEIN_IMPACT = "p.RtoA";
+    private static final String VARIANT_DETAILS = CODING_IMPACT + " (" + PROTEIN_IMPACT + ")";
 
     @Test
     public void worksAsExpected() {
@@ -42,13 +43,13 @@ public class ConsequenceDeterminerTest {
         final VariantConsequence wrongConsequence = VariantConsequence.OTHER;
 
         final ImmutableSnpEffAnnotation.Builder annotationBuilder = createVariantAnnotationBuilder().featureID(TRANSCRIPT).
-                featureType(ConsequenceDeterminer.FEATURE_TYPE_TRANSCRIPT).gene(GENE).hgvsCoding(HGVS_CODING).
-                hgvsProtein(HGVS_PROTEIN);
+                featureType(SnpEffAnnotation.FEATURE_TYPE_TRANSCRIPT).gene(GENE).hgvsCoding(CODING_IMPACT).
+                hgvsProtein(PROTEIN_IMPACT);
         final SnpEffAnnotation rightAnnotation = annotationBuilder.consequences(Lists.newArrayList(rightConsequence)).build();
         final SnpEffAnnotation wrongAnnotation = annotationBuilder.consequences(Lists.newArrayList(wrongConsequence)).build();
 
         final ImmutableEnrichedSomaticVariant.Builder variantBuilder = SomaticVariantTestBuilderFactory.createEnriched().
-                chromosome(CHROMOSOME).ref(REF).alt(ALT).canonicalCosmicID(COSMIC_ID).position(POSITION).
+                chromosome(CHROMOSOME).ref(REF).alt(ALT).position(POSITION).
                 totalReadCount(TOTAL_READ_COUNT).alleleReadCount(ALLELE_READ_COUNT);
 
         final EnrichedSomaticVariant rightVariant = variantBuilder.snpEffAnnotations(Lists.newArrayList(rightAnnotation)).build();
@@ -59,14 +60,7 @@ public class ConsequenceDeterminerTest {
 
         final VariantReport variantReport = variantReports.get(0);
         assertEquals(GENE, variantReport.gene());
-        assertEquals(CHROMOSOME + ":" + POSITION, variantReport.variant().chromosomePosition());
-        assertEquals(REF, variantReport.variant().ref());
-        assertEquals(ALT, variantReport.variant().alt());
-        assertEquals(TRANSCRIPT, variantReport.transcript());
-        assertEquals(HGVS_CODING, variantReport.hgvsCoding());
-        assertEquals(HGVS_PROTEIN, variantReport.hgvsProtein());
-        assertEquals(rightConsequence.readableSequenceOntologyTerm(), variantReport.consequence());
-        assertEquals(COSMIC_ID, variantReport.cosmicID());
+        assertEquals(VARIANT_DETAILS, variantReport.variantDetails());
         assertEquals(TOTAL_READ_COUNT, variantReport.totalReadCount());
         assertEquals(ALLELE_READ_COUNT, variantReport.alleleReadCount());
     }

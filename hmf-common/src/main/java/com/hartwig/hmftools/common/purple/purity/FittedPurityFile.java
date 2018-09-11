@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.purple.purity;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -15,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 public enum FittedPurityFile {
     ;
 
+    private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     static final String DELIMITER = "\t";
     static final String HEADER_PREFIX = "#";
     private static final String EXTENSION = ".purple.purity";
@@ -72,6 +74,7 @@ public enum FittedPurityFile {
                 .add("MinDiploidProportion")
                 .add("MaxDiploidProportion")
                 .add("Version")
+                .add("SomaticDeviation")
                 .toString();
     }
 
@@ -79,34 +82,41 @@ public enum FittedPurityFile {
     private static String toString(@NotNull final PurityContext context) {
         final FittedPurity purity = context.bestFit();
         final FittedPurityScore score = context.score();
-        return new StringJoiner(DELIMITER).add(String.valueOf(purity.purity()))
-                .add(String.valueOf(purity.normFactor()))
-                .add(String.valueOf(purity.score()))
-                .add(String.valueOf(purity.diploidProportion()))
-                .add(String.valueOf(purity.ploidy()))
+        return new StringJoiner(DELIMITER).add(FORMAT.format(purity.purity()))
+                .add(FORMAT.format(purity.normFactor()))
+                .add(FORMAT.format(purity.score()))
+                .add(FORMAT.format(purity.diploidProportion()))
+                .add(FORMAT.format(purity.ploidy()))
                 .add(String.valueOf(context.gender()))
                 .add(String.valueOf(context.status()))
-                .add(String.valueOf(context.polyClonalProportion()))
-                .add(String.valueOf(score.minPurity()))
-                .add(String.valueOf(score.maxPurity()))
-                .add(String.valueOf(score.minPloidy()))
-                .add(String.valueOf(score.maxPloidy()))
-                .add(String.valueOf(score.minDiploidProportion()))
-                .add(String.valueOf(score.maxDiploidProportion()))
+                .add(FORMAT.format(context.polyClonalProportion()))
+                .add(FORMAT.format(score.minPurity()))
+                .add(FORMAT.format(score.maxPurity()))
+                .add(FORMAT.format(score.minPloidy()))
+                .add(FORMAT.format(score.maxPloidy()))
+                .add(FORMAT.format(score.minDiploidProportion()))
+                .add(FORMAT.format(score.maxDiploidProportion()))
                 .add(String.valueOf(context.version()))
+                .add(FORMAT.format(purity.somaticDeviation()))
                 .toString();
     }
 
     @NotNull
     @VisibleForTesting
     static FittedPurity bestFit(@NotNull final String[] values) {
-        return ImmutableFittedPurity.builder()
+        final ImmutableFittedPurity.Builder builder = ImmutableFittedPurity.builder()
                 .purity(Double.valueOf(values[0]))
                 .normFactor(Double.valueOf(values[1]))
                 .score(Double.valueOf(values[2]))
                 .diploidProportion(Double.valueOf(values[3]))
                 .ploidy(Double.valueOf(values[4]))
-                .build();
+                .somaticDeviation(0);
+
+        if (values.length > 15) {
+            builder.somaticDeviation(Double.valueOf(values[15]));
+        }
+
+        return builder.build();
     }
 
     @NotNull

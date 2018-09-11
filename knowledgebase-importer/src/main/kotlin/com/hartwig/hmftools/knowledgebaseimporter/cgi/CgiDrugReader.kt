@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.knowledgebaseimporter.cgi
 
-import org.apache.commons.csv.CSVRecord
+import com.hartwig.hmftools.knowledgebaseimporter.cgi.input.CgiActionableInput
 import org.apache.logging.log4j.LogManager
 
 private val logger = LogManager.getLogger("CgiDrugReader")
 
-fun readCgiDrugs(record: CSVRecord): List<CgiDrug> {
-    val familyField = record["Drug family"].orEmpty()
-    val namesField = record["Drug"].orEmpty()
+fun readCgiDrugs(input: CgiActionableInput): List<CgiDrug> {
+    val familyField = input.`Drug family`.orEmpty()
+    val namesField = input.Drug.orEmpty()
     val cgiDrugs = readGenericDrugs(familyField, namesField) + readGroupedDrugs(familyField, namesField) +
             readDrugs(familyField, namesField)
     if (cgiDrugs.isEmpty()) {

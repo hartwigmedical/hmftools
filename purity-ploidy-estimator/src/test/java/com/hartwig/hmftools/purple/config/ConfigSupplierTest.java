@@ -10,9 +10,9 @@ public class ConfigSupplierTest {
 
     @Test
     public void testDefaultValues() {
-        assertEquals(0.08, ConfigSupplier.MIN_PURITY_DEFAULT, EPSILON);
-        assertEquals(1.0, ConfigSupplier.MAX_PURITY_DEFAULT, EPSILON);
-        assertEquals(0.33, ConfigSupplier.MIN_NORM_FACTOR_DEFAULT, EPSILON);
-        assertEquals(2.0, ConfigSupplier.MAX_NORM_FACTOR_DEFAULT, EPSILON);
+        assertEquals(0.08, FittingConfig.MIN_PURITY_DEFAULT, EPSILON);
+        assertEquals(1.0, FittingConfig.MAX_PURITY_DEFAULT, EPSILON);
+        assertEquals(0.33, FittingConfig.MIN_NORM_FACTOR_DEFAULT, EPSILON);
+        assertEquals(2.0, FittingConfig.MAX_NORM_FACTOR_DEFAULT, EPSILON);
     }
 }

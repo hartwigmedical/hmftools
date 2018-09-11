@@ -18,20 +18,23 @@ import org.jetbrains.annotations.NotNull;
 
 public class FittedRegionFactoryV2 implements FittedRegionFactory {
 
-    private static final Logger LOGGER = LogManager.getLogger(FittedRegionFactoryV2.class);
-
     private final Gender gender;
     private final double ambiguousBaf;
     private final double ploidyPenaltyFactor;
     private final PloidyDeviation ploidyDeviation;
 
     public FittedRegionFactoryV2(final Gender gender, final int averageReadDepth, double ploidyPenaltyFactor,
-            double ploidyPenaltyStandardDeviation, double ploidyPenaltyMinStandardDeviationPerPloidy, final double majorAlleleSubOnePenaltyMultiplier, final double majorAlleleSubOneAdditionalPenalty, final double baselineDeviation) {
+            double ploidyPenaltyStandardDeviation, double ploidyPenaltyMinStandardDeviationPerPloidy,
+            final double majorAlleleSubOnePenaltyMultiplier, final double majorAlleleSubOneAdditionalPenalty,
+            final double baselineDeviation) {
         this.gender = gender;
         this.ploidyPenaltyFactor = ploidyPenaltyFactor;
-        ploidyDeviation = new PloidyDeviation(ploidyPenaltyStandardDeviation, ploidyPenaltyMinStandardDeviationPerPloidy, majorAlleleSubOnePenaltyMultiplier, majorAlleleSubOneAdditionalPenalty, baselineDeviation);
-        ambiguousBaf = ExpectedBAF.expectedBAF(averageReadDepth, 0.8);
-        LOGGER.info("Using ambiguous baf of {}", ambiguousBaf);
+        ploidyDeviation = new PloidyDeviation(ploidyPenaltyStandardDeviation,
+                ploidyPenaltyMinStandardDeviationPerPloidy,
+                majorAlleleSubOnePenaltyMultiplier,
+                majorAlleleSubOneAdditionalPenalty,
+                baselineDeviation);
+        ambiguousBaf = ExpectedBAF.expectedBAF(averageReadDepth);
     }
 
     @Override
@@ -61,37 +64,27 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
         double majorAllelePloidyDeviation = ploidyDeviation.majorAlleleDeviation(purity, normFactor, majorAllelePloidy);
         double minorAllelePloidyDeviation = ploidyDeviation.minorAlleleDeviation(purity, normFactor, minorAllelePloidy);
 
-        final double ploidyPenalty = PloidyPenalty.penaltyv2(ploidyPenaltyFactor, majorAllelePloidy, minorAllelePloidy);
+        final double ploidyPenalty = PloidyPenalty.penalty(ploidyPenaltyFactor, majorAllelePloidy, minorAllelePloidy);
         final double totalDeviation = (minorAllelePloidyDeviation + majorAllelePloidyDeviation) * observedBAF;
 
         ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()
                 .from(observedRegion)
-                .segmentBAF(0)
-                .segmentTumorCopyNumber(0)
+                .fittedBAF(0)
+                .fittedTumorCopyNumber(0)
                 .tumorCopyNumber(impliedCopyNumber)
                 .tumorBAF(impliedBAF)
                 .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(refNormalisedCopyNumber))
-                .modelBAF(0)
-                // TODO: FIX THIS.. CURRENTLY FUDGING IT FOR DIPLOIDPROPORTION
-                .modelPloidy(modelPloidyToTrickDiploidProportionIntoWorkingCorrectly(majorAllelePloidy, minorAllelePloidy))
-                .modelTumorRatio(0)
-                .bafDeviation(majorAllelePloidyDeviation)
-                .cnvDeviation(minorAllelePloidyDeviation)
+                .minorAllelePloidy(minorAllelePloidy)
+                .majorAllelePloidy(majorAllelePloidy)
+                .minorAllelePloidyDeviation(minorAllelePloidyDeviation)
+                .majorAllelePloidyDeviation(majorAllelePloidyDeviation)
                 .deviation(totalDeviation)
                 .ploidyPenalty(ploidyPenalty);
 
         return builder.build();
     }
 
-    private static int modelPloidyToTrickDiploidProportionIntoWorkingCorrectly(double majorAllelePloidy, double minorAllelePloidy) {
-        if (Doubles.greaterOrEqual(majorAllelePloidy, 0.8) && Doubles.lessOrEqual(majorAllelePloidy, 1.2) && Doubles.greaterOrEqual(
-                minorAllelePloidy,
-                0.8) && Doubles.lessOrEqual(minorAllelePloidy, 1.2)) {
-            return 2;
-        }
 
-        return 0;
-    }
 
     public double impliedBaf(final PurityAdjuster purityAdjuster, final String chromosome, final double copyNumber,
             final double observedBAF) {

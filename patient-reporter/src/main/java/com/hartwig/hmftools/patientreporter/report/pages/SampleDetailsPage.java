@@ -46,7 +46,7 @@ public abstract class SampleDetailsPage {
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
         return cmp.verticalList(cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text(Commons.TITLE + " - Sample Details & Disclaimer").setStyle(sectionHeaderStyle()),
+                cmp.text(Commons.TITLE_SEQUENCE + " - Sample Details & Disclaimer").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 sampleDetailsSection(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -73,7 +73,7 @@ public abstract class SampleDetailsPage {
         recipient = recipient != null ? recipient : "?";
 
         final List<String> lines = Lists.newArrayList(
-                "The samples have been sequenced at Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam",
+                "The samples have been sequenced at " + Commons.HARTWIG_ADDRESS,
                 "The samples have been analyzed by Next Generation Sequencing",
                 "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate()),
                 "The pathology tumor percentage for this sample is " + sampleReport().pathologyTumorPercentageString(),

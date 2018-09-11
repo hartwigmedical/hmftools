@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.text.DecimalFormat;
 import java.util.Collection;
 import java.util.List;
 import java.util.StringJoiner;
@@ -16,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 
 public enum FittedRegionFile {
     ;
-
+    private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final String EXTENSION = ".purple.fitted";
     private static final String DELIMITER = "\t";
     static final String HEADER_PREFIX = "#";
@@ -49,23 +50,23 @@ public enum FittedRegionFile {
                 .add("start")
                 .add("end")
                 .add("germlineStatus")
-                .add("fittedPloidy")
+                .add("UNUSED")
                 .add("bafCount")
                 .add("observedBAF")
-                .add("modelBAF")
-                .add("bafDeviation")
+                .add("minorAllelePloidy")
+                .add("minorAllelePloidyDeviation")
                 .add("observedTumorRatio")
                 .add("observedNormalRatio")
-                .add("modelTumorRatio")
-                .add("cnvDeviation")
+                .add("majorAllelePloidy")
+                .add("majorAllelePloidyDeviation")
                 .add("deviation")
                 .add("tumorCopyNumber")
-                .add("segmentTumorCopyNumber")
-                .add("segmentBAF")
+                .add("fittedTumorCopyNumber")
+                .add("fittedBAF")
                 .add("refNormalisedCopyNumber")
                 .add("ratioSupport")
                 .add("support")
-                .add("observedTumorRatioCount")
+                .add("depthWindowCount")
                 .add("tumorBAF")
                 .add("gcContent")
                 .add("svCluster")
@@ -79,27 +80,27 @@ public enum FittedRegionFile {
                 .add(String.valueOf(copyNumber.start()))
                 .add(String.valueOf(copyNumber.end()))
                 .add(String.valueOf(copyNumber.status()))
-                .add(String.valueOf(copyNumber.modelPloidy()))
+                .add("")
                 .add(String.valueOf(copyNumber.bafCount()))
-                .add(String.valueOf(copyNumber.observedBAF()))
-                .add(String.valueOf(copyNumber.modelBAF()))
-                .add(String.valueOf(copyNumber.bafDeviation()))
-                .add(String.valueOf(copyNumber.observedTumorRatio()))
-                .add(String.valueOf(copyNumber.observedNormalRatio()))
-                .add(String.valueOf(copyNumber.modelTumorRatio()))
-                .add(String.valueOf(copyNumber.cnvDeviation()))
-                .add(String.valueOf(copyNumber.deviation()))
-                .add(String.valueOf(copyNumber.tumorCopyNumber()))
-                .add(String.valueOf(copyNumber.segmentTumorCopyNumber()))
-                .add(String.valueOf(copyNumber.segmentBAF()))
-                .add(String.valueOf(copyNumber.refNormalisedCopyNumber()))
+                .add(FORMAT.format(copyNumber.observedBAF()))
+                .add(FORMAT.format(copyNumber.minorAllelePloidy()))
+                .add(FORMAT.format(copyNumber.minorAllelePloidyDeviation()))
+                .add(FORMAT.format(copyNumber.observedTumorRatio()))
+                .add(FORMAT.format(copyNumber.observedNormalRatio()))
+                .add(FORMAT.format(copyNumber.majorAllelePloidy()))
+                .add(FORMAT.format(copyNumber.majorAllelePloidyDeviation()))
+                .add(FORMAT.format(copyNumber.deviation()))
+                .add(FORMAT.format(copyNumber.tumorCopyNumber()))
+                .add(FORMAT.format(copyNumber.fittedTumorCopyNumber()))
+                .add(FORMAT.format(copyNumber.fittedBAF()))
+                .add(FORMAT.format(copyNumber.refNormalisedCopyNumber()))
                 .add(String.valueOf(copyNumber.ratioSupport()))
                 .add(String.valueOf(copyNumber.support()))
-                .add(String.valueOf(copyNumber.observedTumorRatioCount()))
-                .add(String.valueOf(copyNumber.tumorBAF()))
-                .add(String.valueOf(copyNumber.gcContent()))
+                .add(String.valueOf(copyNumber.depthWindowCount()))
+                .add(FORMAT.format(copyNumber.tumorBAF()))
+                .add(FORMAT.format(copyNumber.gcContent()))
                 .add(String.valueOf(copyNumber.svCluster()))
-                .add(String.valueOf(copyNumber.ploidyPenalty()))
+                .add(FORMAT.format(copyNumber.ploidyPenalty()))
                 .toString();
     }
 
@@ -111,31 +112,26 @@ public enum FittedRegionFile {
                 .start(Long.valueOf(values[1]))
                 .end(Long.valueOf(values[2]))
                 .status(GermlineStatus.fromString(values[3]))
-                .modelPloidy(Integer.valueOf(values[4]))
                 .bafCount(Integer.valueOf(values[5]))
                 .observedBAF(Double.valueOf(values[6]))
-                .modelBAF(Double.valueOf(values[7]))
-                .bafDeviation(Double.valueOf(values[8]))
+                .minorAllelePloidy(Double.valueOf(values[7]))
+                .minorAllelePloidyDeviation(Double.valueOf(values[8]))
                 .observedTumorRatio(Double.valueOf(values[9]))
                 .observedNormalRatio(Double.valueOf(values[10]))
-                .modelTumorRatio(Double.valueOf(values[11]))
-                .cnvDeviation(Double.valueOf(values[12]))
+                .majorAllelePloidy(Double.valueOf(values[11]))
+                .majorAllelePloidyDeviation(Double.valueOf(values[12]))
                 .deviation(Double.valueOf(values[13]))
                 .tumorCopyNumber(Double.valueOf(values[14]))
-                .segmentTumorCopyNumber(Double.valueOf(values[15]))
-                .segmentBAF(Double.valueOf(values[16]))
+                .fittedTumorCopyNumber(Double.valueOf(values[15]))
+                .fittedBAF(Double.valueOf(values[16]))
                 .refNormalisedCopyNumber(Double.valueOf(values[17]))
                 .ratioSupport(Boolean.valueOf(values[18]))
                 .support(SegmentSupport.valueOf(values[19]))
-                .observedTumorRatioCount(Integer.valueOf(values[20]))
+                .depthWindowCount(Integer.valueOf(values[20]))
                 .tumorBAF(Double.valueOf(values[21]))
                 .gcContent(Double.valueOf(values[22]))
                 .svCluster(Boolean.valueOf(values[23]))
-                .ploidyPenalty(0);
-
-        if (values.length == 25) {
-            builder.ploidyPenalty(Double.valueOf(values[24]));
-        }
+                .ploidyPenalty(Double.valueOf(values[24]));
 
         return builder.build();
     }

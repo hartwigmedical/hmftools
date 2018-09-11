@@ -48,10 +48,6 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.hartwig</groupId>
-            <artifactId>hmf-gene-panel</artifactId>
-        </dependency>
     </dependencies>
 
     <build>

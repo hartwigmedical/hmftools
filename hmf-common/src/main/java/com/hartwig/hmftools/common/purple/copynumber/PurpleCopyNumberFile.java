@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -16,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 public enum PurpleCopyNumberFile {
     ;
 
+    private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final String DELIMITER = "\t";
     static final String HEADER_PREFIX = "#";
     private static final String EXTENSION = ".purple.cnv";
@@ -36,8 +38,7 @@ public enum PurpleCopyNumberFile {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<PurpleCopyNumber> copyNumbers)
-            throws IOException {
+    public static void write(@NotNull final String filename, @NotNull List<PurpleCopyNumber> copyNumbers) throws IOException {
         Files.write(new File(filename).toPath(), toLines(copyNumbers));
     }
 
@@ -66,6 +67,7 @@ public enum PurpleCopyNumberFile {
                 .add("segmentStartSupport")
                 .add("segmentEndSupport")
                 .add("method")
+                .add("depthWindowCount")
                 .toString();
     }
 
@@ -74,20 +76,21 @@ public enum PurpleCopyNumberFile {
         return new StringJoiner(DELIMITER).add(String.valueOf(copyNumber.chromosome()))
                 .add(String.valueOf(copyNumber.start()))
                 .add(String.valueOf(copyNumber.end()))
-                .add(String.valueOf(copyNumber.averageTumorCopyNumber()))
+                .add(FORMAT.format(copyNumber.averageTumorCopyNumber()))
                 .add(String.valueOf(copyNumber.bafCount()))
-                .add(String.valueOf(copyNumber.averageObservedBAF()))
-                .add(String.valueOf(copyNumber.averageActualBAF()))
+                .add(FORMAT.format(copyNumber.averageObservedBAF()))
+                .add(FORMAT.format(copyNumber.averageActualBAF()))
                 .add(String.valueOf(copyNumber.segmentStartSupport()))
                 .add(String.valueOf(copyNumber.segmentEndSupport()))
                 .add(String.valueOf(copyNumber.method()))
+                .add(String.valueOf(copyNumber.depthWindowCount()))
                 .toString();
     }
 
     @NotNull
     private static PurpleCopyNumber fromString(@NotNull final String copyNumber) {
         String[] values = copyNumber.split(DELIMITER);
-        return ImmutablePurpleCopyNumber.builder()
+        final ImmutablePurpleCopyNumber.Builder builder = ImmutablePurpleCopyNumber.builder()
                 .chromosome(values[0])
                 .start(Long.valueOf(values[1]))
                 .end(Long.valueOf(values[2]))
@@ -98,6 +101,10 @@ public enum PurpleCopyNumberFile {
                 .segmentStartSupport(SegmentSupport.valueOf(values[7]))
                 .segmentEndSupport(SegmentSupport.valueOf(values[8]))
                 .method(CopyNumberMethod.valueOf(values[9]))
-                .build();
+                .depthWindowCount(0);
+        if (values.length > 10) {
+            builder.depthWindowCount(Integer.valueOf(values[10]));
+        }
+        return builder.build();
     }
 }

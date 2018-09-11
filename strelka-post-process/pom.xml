@@ -65,7 +65,7 @@
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
-                            <finalName>strelka-post-process-${version}</finalName>
+                            <finalName>strelka-post-process-${project.version}</finalName>
                         </configuration>
                     </execution>
                     <execution>
@@ -85,7 +85,7 @@
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
-                            <finalName>mnv-detector-${version}</finalName>
+                            <finalName>mnv-detector-${project.version}</finalName>
                         </configuration>
                     </execution>
                     <execution>
@@ -105,7 +105,7 @@
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
-                            <finalName>mnv-validator-${version}</finalName>
+                            <finalName>mnv-validator-${project.version}</finalName>
                         </configuration>
                     </execution>
                 </executions>

@@ -6,12 +6,16 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.gene.CanonicalTranscript;
+import com.hartwig.hmftools.common.gene.CanonicalTranscriptFactory;
+import com.hartwig.hmftools.common.gene.TranscriptRegion;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotationFactory;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
@@ -32,26 +36,15 @@ import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class SomaticVariantFactory {
-    private static final HotspotFilter HOTSPOT_FILTER = new HotspotFilter();
-    private static final String DBSNP_IDENTIFIER = "rs";
-    private static final String COSMIC_IDENTIFIER = "COSM";
-    private static final String ID_SEPARATOR = ";";
-    private static final String MAPPABILITY_TAG = "MAPPABILITY";
-
-    @NotNull
-    private final VariantContextFilter filter;
 
     @NotNull
     public static SomaticVariantFactory unfilteredInstance() {
-        return new SomaticVariantFactory(new ChromosomeFilter());
+        return filteredInstance();
     }
 
     @NotNull
     public static SomaticVariantFactory passOnlyInstance() {
-        final CompoundFilter filter = new CompoundFilter(true);
-        filter.add(new ChromosomeFilter());
-        filter.add(new PassingVariantFilter());
-        return new SomaticVariantFactory(filter);
+        return filteredInstance(new PassingVariantFilter());
     }
 
     @NotNull
@@ -62,8 +55,22 @@ public class SomaticVariantFactory {
         return new SomaticVariantFactory(filter);
     }
 
+    private static final HotspotFilter HOTSPOT_FILTER = new HotspotFilter();
+    private static final String DBSNP_IDENTIFIER = "rs";
+    private static final String COSMIC_IDENTIFIER = "COSM";
+    private static final String ID_SEPARATOR = ";";
+    private static final String MAPPABILITY_TAG = "MAPPABILITY";
+
+    @NotNull
+    private final VariantContextFilter filter;
+    @NotNull
+    private final List<CanonicalTranscript> canonicalTranscripts;
+    private final Set<String> canonicalGenes;
+
     private SomaticVariantFactory(@NotNull final VariantContextFilter filter) {
         this.filter = filter;
+        this.canonicalTranscripts = CanonicalTranscriptFactory.create();
+        this.canonicalGenes = canonicalTranscripts.stream().map(TranscriptRegion::gene).collect(Collectors.toSet());
     }
 
     @NotNull
@@ -119,22 +126,23 @@ public class SomaticVariantFactory {
         return Optional.empty();
     }
 
-    private static void attachSnpEffAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder,
-            @NotNull VariantContext context) {
+    private void attachSnpEffAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
         final List<SnpEffAnnotation> allAnnotations = SnpEffAnnotationFactory.fromContext(context);
         builder.snpEffAnnotations(allAnnotations);
 
         final List<SnpEffAnnotation> transcriptAnnotations =
-                allAnnotations.stream().filter(x -> x.featureType().equals("transcript")).collect(Collectors.toList());
+                allAnnotations.stream().filter(SnpEffAnnotation::isTranscriptFeature).collect(Collectors.toList());
+
+        final String firstGene = transcriptAnnotations.stream().map(SnpEffAnnotation::gene).findFirst().orElse("");
+        final String gene = transcriptAnnotations.stream().map(SnpEffAnnotation::gene).filter(canonicalGenes::contains).findFirst().orElse(firstGene);
+        builder.gene(gene);
 
         if (!transcriptAnnotations.isEmpty()) {
             final SnpEffAnnotation snpEffAnnotation = transcriptAnnotations.get(0);
-            builder.gene(snpEffAnnotation.gene());
             builder.worstEffect(snpEffAnnotation.consequenceString());
             builder.worstCodingEffect(CodingEffect.effect(snpEffAnnotation.consequences()));
             builder.worstEffectTranscript(snpEffAnnotation.transcript());
         } else {
-            builder.gene("");
             builder.worstEffect("");
             builder.worstCodingEffect(CodingEffect.UNDEFINED);
             builder.worstEffectTranscript("");

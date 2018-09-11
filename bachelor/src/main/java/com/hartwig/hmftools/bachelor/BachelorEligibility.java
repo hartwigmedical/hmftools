@@ -29,7 +29,7 @@ import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 
 import nl.hartwigmedicalfoundation.bachelor.GeneIdentifier;
 import nl.hartwigmedicalfoundation.bachelor.OtherEffect;

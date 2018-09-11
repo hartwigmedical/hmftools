@@ -7,10 +7,13 @@ import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Random;
 
 import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
@@ -39,6 +42,11 @@ public class PurpleCopyNumberFileTest {
         }
     }
 
+    @Test
+    public void testCompatibilityWith2_14() throws IOException {
+        PurpleCopyNumberFile.fromLines(Resources.readLines(Resources.getResource("purple/v2-14.purple.cnv"), Charset.defaultCharset()));
+    }
+
     @NotNull
     private static List<PurpleCopyNumber> create(int count) {
         Random random = new Random();
@@ -51,13 +59,19 @@ public class PurpleCopyNumberFileTest {
 
     @NotNull
     private static PurpleCopyNumber createRandom(@NotNull Random random) {
-        return PurpleDatamodelTest.createCopyNumber(random.nextInt(22) + "", random.nextLong(), random.nextLong(), random.nextDouble())
+        return PurpleDatamodelTest.createCopyNumber(random.nextInt(22) + "", random.nextLong(), random.nextLong(), nextDouble(random))
                 .bafCount(random.nextInt())
-                .averageObservedBAF(random.nextDouble())
-                .averageActualBAF(random.nextDouble())
+                .averageObservedBAF(nextDouble(random))
+                .averageActualBAF(nextDouble(random))
                 .segmentStartSupport(SegmentSupport.values()[random.nextInt(SegmentSupport.values().length)])
                 .segmentEndSupport(SegmentSupport.values()[random.nextInt(SegmentSupport.values().length)])
                 .method(CopyNumberMethod.values()[random.nextInt(CopyNumberMethod.values().length)])
+                .depthWindowCount(random.nextInt())
                 .build();
     }
+
+    private static double nextDouble(@NotNull final Random random) {
+        return Math.round(random.nextDouble() * 10000) / 10000;
+    }
+
 }

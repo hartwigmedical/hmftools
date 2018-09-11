@@ -43,7 +43,7 @@ public abstract class CircosPage {
 
     @NotNull
     private static TextFieldBuilder<String> title() {
-        return cmp.text(Commons.TITLE + " - CIRCOS plot").setStyle(sectionHeaderStyle());
+        return cmp.text(Commons.TITLE_SEQUENCE + " - CIRCOS plot").setStyle(sectionHeaderStyle());
     }
 
     @NotNull

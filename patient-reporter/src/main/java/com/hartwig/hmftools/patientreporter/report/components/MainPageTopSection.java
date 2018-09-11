@@ -21,17 +21,19 @@ public final class MainPageTopSection {
     private static final String REPORT_LOGO_PATH = "pdf/hartwig_logo.jpg";
 
     @NotNull
-    public static ComponentBuilder<?, ?> build(@NotNull final String title, @NotNull final SampleReport report) {
+    public static ComponentBuilder<?, ?> buildWithPathologyTumorPercentage(@NotNull final String title,
+            @NotNull final SampleReport report) {
         return build(title,
                 report.sampleId(),
-                report.primaryTumorLocationString(), report.cancerSubTypeString(),
+                report.primaryTumorLocationString(),
+                report.cancerSubTypeString(),
                 "Pathology Tumor Percentage",
                 report.pathologyTumorPercentageString());
     }
 
     @NotNull
-    public static ComponentBuilder<?, ?> buildWithImpliedPurity(@NotNull final String title, @NotNull final SampleReport report,
-            @NotNull String purityString) {
+    public static ComponentBuilder<?, ?> buildWithImpliedPurity(@NotNull final String title,
+            @NotNull final SampleReport report, @NotNull String purityString) {
         return build(title,
                 report.sampleId(),
                 report.primaryTumorLocationString(),
@@ -52,10 +54,10 @@ public final class MainPageTopSection {
                                 cmp.text(cancerSubType).setStyle(dataTableStyle())),
                         cmp.verticalList(cmp.text(tumorPercentageTitle).setStyle(tableHeaderStyle()),
                                 cmp.text(tumorPercentage).setStyle(dataTableStyle()))).setHeight(32);
-        return cmp.verticalList(cmp.horizontalList(cmp.image(REPORT_LOGO_PATH).setWidth(42).setHeight(65), cmp.text(title + " - " + sample)
+        return cmp.verticalList(cmp.horizontalList(cmp.image(REPORT_LOGO_PATH).setWidth(42).setHeight(65),
+                cmp.text(title + " - " + sample)
                         .setStyle(fontStyle().bold().setFontSize(14).setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
-                        .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER), cmp.horizontalGap(40)),
-                cmp.verticalGap(3),
-                mainDiagnosisInfo);
+                        .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER),
+                cmp.horizontalGap(40)), cmp.verticalGap(3), mainDiagnosisInfo);
     }
 }

@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
-import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
@@ -42,9 +41,6 @@ public abstract class AnalysedPatientReport implements PatientReport {
 
     @NotNull
     public abstract FittedPurityStatus fitStatus();
-
-    @NotNull
-    public abstract List<Alteration> civicAlterations();
 
     @NotNull
     public abstract String circosPath();

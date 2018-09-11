@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep12;
+import org.jooq.InsertValuesStep13;
 import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -54,6 +55,7 @@ class CopyNumberDAO {
                     .averageActualBAF(record.getValue(COPYNUMBER.ACTUALBAF))
                     .averageObservedBAF(record.getValue(COPYNUMBER.OBSERVEDBAF))
                     .averageTumorCopyNumber(record.getValue(COPYNUMBER.COPYNUMBER_))
+                    .depthWindowCount(record.getValue(COPYNUMBER.DEPTHWINDOWCOUNT))
                     .build());
         }
 
@@ -66,7 +68,7 @@ class CopyNumberDAO {
         context.delete(COPYNUMBER).where(COPYNUMBER.SAMPLEID.eq(sample)).execute();
 
         for (List<PurpleCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep12 inserter = context.insertInto(COPYNUMBER,
+            InsertValuesStep13 inserter = context.insertInto(COPYNUMBER,
                     COPYNUMBER.SAMPLEID,
                     COPYNUMBER.CHROMOSOME,
                     COPYNUMBER.START,
@@ -78,6 +80,7 @@ class CopyNumberDAO {
                     COPYNUMBER.OBSERVEDBAF,
                     COPYNUMBER.ACTUALBAF,
                     COPYNUMBER.COPYNUMBER_,
+                    COPYNUMBER.DEPTHWINDOWCOUNT,
                     COPYNUMBER.MODIFIED);
             splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
@@ -89,7 +92,7 @@ class CopyNumberDAO {
         context.delete(COPYNUMBERGERMLINE).where(COPYNUMBERGERMLINE.SAMPLEID.eq(sample)).execute();
 
         for (List<PurpleCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep12 inserter = context.insertInto(COPYNUMBERGERMLINE,
+            InsertValuesStep13 inserter = context.insertInto(COPYNUMBERGERMLINE,
                     COPYNUMBERGERMLINE.SAMPLEID,
                     COPYNUMBERGERMLINE.CHROMOSOME,
                     COPYNUMBERGERMLINE.START,
@@ -101,13 +104,14 @@ class CopyNumberDAO {
                     COPYNUMBERGERMLINE.OBSERVEDBAF,
                     COPYNUMBERGERMLINE.ACTUALBAF,
                     COPYNUMBERGERMLINE.COPYNUMBER,
+                    COPYNUMBERGERMLINE.DEPTHWINDOWCOUNT,
                     COPYNUMBERGERMLINE.MODIFIED);
             splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
 
-    private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep12 inserter, @NotNull String sample,
+    private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep13 inserter, @NotNull String sample,
             @NotNull PurpleCopyNumber region) {
         //noinspection unchecked
         inserter.values(sample,
@@ -118,9 +122,10 @@ class CopyNumberDAO {
                 region.segmentStartSupport(),
                 region.segmentEndSupport(),
                 region.bafCount(),
-                region.averageObservedBAF(),
-                region.averageActualBAF(),
-                region.averageTumorCopyNumber(),
+                DatabaseUtil.decimal(region.averageObservedBAF()),
+                DatabaseUtil.decimal(region.averageActualBAF()),
+                DatabaseUtil.decimal(region.averageTumorCopyNumber()),
+                region.depthWindowCount(),
                 timestamp);
     }
 
@@ -142,20 +147,20 @@ class CopyNumberDAO {
                     COPYNUMBERREGION.OBSERVEDBAF,
                     COPYNUMBERREGION.OBSERVEDTUMORRATIO,
                     COPYNUMBERREGION.OBSERVEDNORMALRATIO,
-                    COPYNUMBERREGION.OBSERVEDTUMORRATIOCOUNT,
+                    COPYNUMBERREGION.DEPTHWINDOWCOUNT,
                     COPYNUMBERREGION.GCCONTENT,
-                    COPYNUMBERREGION.MODELPLOIDY,
-                    COPYNUMBERREGION.MODELBAF,
-                    COPYNUMBERREGION.MODELTUMORRATIO,
+                    COPYNUMBERREGION.MINORALLELEPLOIDY,
+                    COPYNUMBERREGION.MAJORALLELEPLOIDY,
                     COPYNUMBERREGION.ACTUALTUMORBAF,
                     COPYNUMBERREGION.ACTUALTUMORCOPYNUMBER,
                     COPYNUMBERREGION.REFNORMALISEDTUMORCOPYNUMBER,
-                    COPYNUMBERREGION.CNVDEVIATION,
-                    COPYNUMBERREGION.BAFDEVIATION,
+                    COPYNUMBERREGION.MINORALLELEPLOIDYDEVIATION,
+                    COPYNUMBERREGION.MAJORALLELEPLOIDYDEVIATION,
                     COPYNUMBERREGION.TOTALDEVIATION,
                     COPYNUMBERREGION.PLOIDYPENALTY,
                     COPYNUMBERREGION.FITTEDBAF,
                     COPYNUMBERREGION.FITTEDCOPYNUMBER,
+                    COPYNUMBERREGION.DEPTHWINDOWCOUNT,
                     COPYNUMBERREGION.MODIFIED);
             splitRegions.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
@@ -173,23 +178,23 @@ class CopyNumberDAO {
                 region.ratioSupport(),
                 region.support(),
                 region.bafCount(),
-                region.observedBAF(),
-                region.observedTumorRatio(),
-                region.observedNormalRatio(),
-                region.observedTumorRatioCount(),
-                region.gcContent(),
-                region.modelPloidy(),
-                region.modelBAF(),
-                region.modelTumorRatio(),
-                region.tumorBAF(),
-                region.tumorCopyNumber(),
-                region.refNormalisedCopyNumber(),
-                region.cnvDeviation(),
-                region.bafDeviation(),
-                region.deviation(),
-                region.ploidyPenalty(),
-                region.segmentBAF(),
-                region.segmentTumorCopyNumber(),
+                DatabaseUtil.decimal(region.observedBAF()),
+                DatabaseUtil.decimal(region.observedTumorRatio()),
+                DatabaseUtil.decimal(region.observedNormalRatio()),
+                DatabaseUtil.decimal(region.depthWindowCount()),
+                DatabaseUtil.decimal(region.gcContent()),
+                DatabaseUtil.decimal(region.minorAllelePloidy()),
+                DatabaseUtil.decimal(region.majorAllelePloidy()),
+                DatabaseUtil.decimal(region.tumorBAF()),
+                DatabaseUtil.decimal(region.tumorCopyNumber()),
+                DatabaseUtil.decimal(region.refNormalisedCopyNumber()),
+                DatabaseUtil.decimal(region.minorAllelePloidyDeviation()),
+                DatabaseUtil.decimal(region.majorAllelePloidyDeviation()),
+                DatabaseUtil.decimal(region.deviation()),
+                DatabaseUtil.decimal(region.ploidyPenalty()),
+                DatabaseUtil.decimal(region.fittedBAF()),
+                DatabaseUtil.decimal(region.fittedTumorCopyNumber()),
+                region.depthWindowCount(),
                 timestamp);
     }
 
@@ -212,20 +217,20 @@ class CopyNumberDAO {
                     .observedBAF(record.getValue(COPYNUMBERREGION.OBSERVEDBAF))
                     .observedTumorRatio(record.getValue(COPYNUMBERREGION.OBSERVEDTUMORRATIO))
                     .observedNormalRatio(record.getValue(COPYNUMBERREGION.OBSERVEDNORMALRATIO))
-                    .observedTumorRatioCount(record.getValue(COPYNUMBERREGION.OBSERVEDTUMORRATIOCOUNT))
+                    .depthWindowCount(record.getValue(COPYNUMBERREGION.DEPTHWINDOWCOUNT))
                     .gcContent(record.getValue(COPYNUMBERREGION.GCCONTENT))
-                    .modelPloidy(record.getValue(COPYNUMBERREGION.MODELPLOIDY))
-                    .modelBAF(record.getValue(COPYNUMBERREGION.MODELBAF))
-                    .modelTumorRatio(record.getValue(COPYNUMBERREGION.MODELTUMORRATIO))
+                    .minorAllelePloidy(record.getValue(COPYNUMBERREGION.MINORALLELEPLOIDY))
+                    .majorAllelePloidy(record.getValue(COPYNUMBERREGION.MAJORALLELEPLOIDY))
                     .tumorBAF(record.getValue(COPYNUMBERREGION.ACTUALTUMORBAF))
                     .tumorCopyNumber(record.getValue(COPYNUMBERREGION.ACTUALTUMORCOPYNUMBER))
                     .refNormalisedCopyNumber(record.getValue(COPYNUMBERREGION.REFNORMALISEDTUMORCOPYNUMBER))
-                    .cnvDeviation(record.getValue(COPYNUMBERREGION.CNVDEVIATION))
-                    .bafDeviation(record.getValue(COPYNUMBERREGION.BAFDEVIATION))
+                    .minorAllelePloidyDeviation(record.getValue(COPYNUMBERREGION.MINORALLELEPLOIDYDEVIATION))
+                    .majorAllelePloidyDeviation(record.getValue(COPYNUMBERREGION.MAJORALLELEPLOIDYDEVIATION))
                     .deviation(record.getValue(COPYNUMBERREGION.TOTALDEVIATION))
-                    .segmentBAF(record.getValue(COPYNUMBERREGION.FITTEDBAF))
-                    .segmentTumorCopyNumber(record.getValue(COPYNUMBERREGION.FITTEDCOPYNUMBER))
+                    .fittedBAF(record.getValue(COPYNUMBERREGION.FITTEDBAF))
+                    .fittedTumorCopyNumber(record.getValue(COPYNUMBERREGION.FITTEDCOPYNUMBER))
                     .ploidyPenalty(record.getValue(COPYNUMBERREGION.PLOIDYPENALTY))
+                    .depthWindowCount(record.getValue(COPYNUMBERREGION.DEPTHWINDOWCOUNT))
                     .build());
         }
 

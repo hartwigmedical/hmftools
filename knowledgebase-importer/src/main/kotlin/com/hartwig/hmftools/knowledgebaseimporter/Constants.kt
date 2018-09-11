@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.knowledgebaseimporter
 
-// CLI options
+// MIVO: CLI options
 
 const val REFERENCE = "reference"
 const val TRANSVAR_LOCATION = "transvar_location"
@@ -19,6 +19,7 @@ const val ENSEMBL_DB = "ensembl_db"
 const val HMFPATIENTS_DB = "hmfpatients_db"
 const val DB_USER = "db_user"
 const val DB_PASSWORD = "db_password"
+const val ICLUSION_ENDPOINT = "iclusion_endpoint"
 const val ICLUSION_CLIENT_ID = "iclusion_client_id"
 const val ICLUSION_CLIENT_SECRET = "iclusion_client_secret"
 const val ICLUSION_USER = "iclusion_user"

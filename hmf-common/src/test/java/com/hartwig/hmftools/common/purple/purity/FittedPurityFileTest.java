@@ -7,9 +7,12 @@ import static com.hartwig.hmftools.common.purple.purity.FittedPurityFile.toLines
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Random;
 
+import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +29,7 @@ public class FittedPurityFileTest {
                 .score(createRandomScore(random))
                 .gender(Gender.values()[random.nextInt(Gender.values().length)])
                 .status(FittedPurityStatus.values()[random.nextInt(FittedPurityStatus.values().length)])
-                .polyClonalProportion(random.nextDouble())
+                .polyClonalProportion(nextDouble(random))
                 .build();
 
         final List<String> lines = toLines(input);
@@ -37,26 +40,37 @@ public class FittedPurityFileTest {
         assertEquals(input, output);
     }
 
+    @Test
+    public void testCompatibilityWith2_14() throws IOException {
+        FittedPurityFile.fromLine(Resources.readLines(Resources.getResource("purple/v2-14.purple.purity"), Charset.defaultCharset())
+                .get(1));
+    }
+
     @NotNull
     private static FittedPurityScore createRandomScore(@NotNull Random random) {
         return ImmutableFittedPurityScore.builder()
-                .minPurity(random.nextDouble())
-                .maxPurity(random.nextDouble())
-                .minPloidy(random.nextDouble())
-                .maxPloidy(random.nextDouble())
-                .minDiploidProportion(random.nextDouble())
-                .maxDiploidProportion(random.nextDouble())
+                .minPurity(nextDouble(random))
+                .maxPurity(nextDouble(random))
+                .minPloidy(nextDouble(random))
+                .maxPloidy(nextDouble(random))
+                .minDiploidProportion(nextDouble(random))
+                .maxDiploidProportion(nextDouble(random))
                 .build();
     }
 
     @NotNull
     static FittedPurity createRandomPurity(@NotNull Random random) {
         return ImmutableFittedPurity.builder()
-                .purity(random.nextDouble())
-                .normFactor(random.nextDouble())
-                .score(random.nextDouble())
-                .diploidProportion(random.nextDouble())
-                .ploidy(random.nextDouble())
+                .purity(nextDouble(random))
+                .normFactor(nextDouble(random))
+                .score(nextDouble(random))
+                .diploidProportion(nextDouble(random))
+                .ploidy(nextDouble(random))
+                .somaticDeviation(nextDouble(random))
                 .build();
+    }
+
+    private static double nextDouble(@NotNull final Random random) {
+        return Math.round(random.nextDouble() * 10000) / 10000;
     }
 }

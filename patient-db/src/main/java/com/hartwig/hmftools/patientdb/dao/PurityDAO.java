@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep7;
+import org.jooq.InsertValuesStep8;
 import org.jooq.Record;
 
 class PurityDAO {
@@ -46,6 +46,7 @@ class PurityDAO {
                 .score(result.getValue(PURITY.SCORE))
                 .diploidProportion(result.getValue(PURITY.DIPLOIDPROPORTION))
                 .ploidy(result.getValue(PURITY.PLOIDY))
+                .somaticDeviation(result.getValue(PURITY.SOMATICDEVIATION))
                 .build();
 
         final FittedPurityScore score = ImmutableFittedPurityScore.builder()
@@ -83,6 +84,7 @@ class PurityDAO {
                 PURITY.QCSTATUS,
                 PURITY.NORMFACTOR,
                 PURITY.SCORE,
+                PURITY.SOMATICDEVIATION,
                 PURITY.PLOIDY,
                 PURITY.DIPLOIDPROPORTION,
                 PURITY.MINDIPLOIDPROPORTION,
@@ -95,21 +97,22 @@ class PurityDAO {
                 PURITY.MODIFIED)
                 .values(purity.version(),
                         sample,
-                        bestFit.purity(),
+                        DatabaseUtil.decimal(bestFit.purity()),
                         purity.gender().toString(),
                         purity.status().toString(),
                         checks.status().toString(),
-                        bestFit.normFactor(),
-                        bestFit.score(),
-                        bestFit.ploidy(),
-                        bestFit.diploidProportion(),
-                        score.minDiploidProportion(),
-                        score.maxDiploidProportion(),
-                        score.minPurity(),
-                        score.maxPurity(),
-                        score.minPloidy(),
-                        score.maxPloidy(),
-                        purity.polyClonalProportion(),
+                        DatabaseUtil.decimal(bestFit.normFactor()),
+                        DatabaseUtil.decimal(bestFit.score()),
+                        DatabaseUtil.decimal(bestFit.somaticDeviation()),
+                        DatabaseUtil.decimal(bestFit.ploidy()),
+                        DatabaseUtil.decimal(bestFit.diploidProportion()),
+                        DatabaseUtil.decimal(score.minDiploidProportion()),
+                        DatabaseUtil.decimal(score.maxDiploidProportion()),
+                        DatabaseUtil.decimal(score.minPurity()),
+                        DatabaseUtil.decimal(score.maxPurity()),
+                        DatabaseUtil.decimal(score.minPloidy()),
+                        DatabaseUtil.decimal(score.maxPloidy()),
+                        DatabaseUtil.decimal(purity.polyClonalProportion()),
                         timestamp)
                 .execute();
     }
@@ -118,11 +121,12 @@ class PurityDAO {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(PURITYRANGE).where(PURITYRANGE.SAMPLEID.eq(sample)).execute();
 
-        InsertValuesStep7 inserter = context.insertInto(PURITYRANGE,
+        InsertValuesStep8 inserter = context.insertInto(PURITYRANGE,
                 PURITYRANGE.SAMPLEID,
                 PURITYRANGE.PURITY,
                 PURITYRANGE.NORMFACTOR,
                 PURITYRANGE.SCORE,
+                PURITYRANGE.SOMATICDEVIATION,
                 PURITYRANGE.PLOIDY,
                 PURITYRANGE.DIPLOIDPROPORTION,
                 PURITYRANGE.MODIFIED);
@@ -131,15 +135,16 @@ class PurityDAO {
         inserter.execute();
     }
 
-    private static void addPurity(@NotNull Timestamp timestamp, @NotNull InsertValuesStep7 inserter, @NotNull String sample,
+    private static void addPurity(@NotNull Timestamp timestamp, @NotNull InsertValuesStep8 inserter, @NotNull String sample,
             @NotNull FittedPurity purity) {
         //noinspection unchecked
         inserter.values(sample,
-                purity.purity(),
-                purity.normFactor(),
-                purity.score(),
-                purity.ploidy(),
-                purity.diploidProportion(),
+                DatabaseUtil.decimal(purity.purity()),
+                DatabaseUtil.decimal(purity.normFactor()),
+                DatabaseUtil.decimal(purity.score()),
+                DatabaseUtil.decimal(purity.somaticDeviation()),
+                DatabaseUtil.decimal(purity.ploidy()),
+                DatabaseUtil.decimal(purity.diploidProportion()),
                 timestamp);
     }
 

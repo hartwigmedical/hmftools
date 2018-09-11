@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.purple.PurpleRegionZipper.updateRegionsWithCo
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.pcf.PCFPosition;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.baf.ExpectedBAF;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
@@ -46,7 +48,6 @@ import com.hartwig.hmftools.common.purple.qc.PurpleQCFactory;
 import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
-import com.hartwig.hmftools.common.purple.region.FittedRegionFactoryV1;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactoryV2;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFile;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
@@ -66,12 +67,13 @@ import com.hartwig.hmftools.common.variant.filter.SGTFilter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.version.VersionInfo;
-import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.config.CircosConfig;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 import com.hartwig.hmftools.purple.config.ConfigSupplier;
 import com.hartwig.hmftools.purple.config.DBConfig;
+import com.hartwig.hmftools.purple.config.FitScoreConfig;
 import com.hartwig.hmftools.purple.config.FittingConfig;
 import com.hartwig.hmftools.purple.config.SmoothingConfig;
 import com.hartwig.hmftools.purple.config.SomaticConfig;
@@ -99,19 +101,9 @@ public class PurityPloidyEstimateApplication {
 
     private static final String THREADS = "threads";
     private static final String EXPERIMENTAL = "experimental";
-    private static final String PLOIDY_PENALTY_FACTOR = "ploidy_penalty_factor";
-    private static final String PLOIDY_PENALTY_STANDARD_DEVIATION = "ploidy_penalty_standard_deviation";
-    private static final String PLOIDY_PENALTY_MIN_STANDARD_DEVIATION = "ploidy_penalty_min_standard_deviation_per_ploidy";
-    private static final String PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_MULTIPLIER = "ploidy_penalty_major_allele_sub_one_multiplier";
-    private static final String PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_ADDITIONAL = "ploidy_penalty_major_allele_sub_one_additional";
-    private static final String PLOIDY_PENALTY_BASELINE_DEVIATION = "ploidy_penalty_baseline_deviation";
+    private static final String SOMATIC_DEVIATION_WEIGHT = "somatic_deviation_weight";
+    private static final String HIGHLY_DIPLOID_PERCENTAGE = "highly_diploid_percentage";
     private static final String VERSION = "version";
-
-    private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
-    private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
-
-    private static final String OBSERVED_BAF_EXPONENT = "observed_baf_exponent";
-    private static final double OBSERVED_BAF_EXPONENT_DEFAULT = 1;
 
     public static void main(final String... args)
             throws ParseException, IOException, SQLException, ExecutionException, InterruptedException {
@@ -147,7 +139,9 @@ public class PurityPloidyEstimateApplication {
             final Multimap<String, AmberBAF> bafs = AmberBAFFile.read(amberFile);
             int averageTumorDepth =
                     (int) Math.round(bafs.values().stream().mapToInt(AmberBAF::tumorDepth).filter(x -> x > 0).average().orElse(100));
-            LOGGER.info("Average amber tumor depth is {} reads", averageTumorDepth);
+            LOGGER.info("Average amber tumor depth is {} reads implying an ambiguous BAF of {}",
+                    averageTumorDepth,
+                    new DecimalFormat("0.000").format(ExpectedBAF.expectedBAF(averageTumorDepth)));
 
             // JOBA: Load Ratios from COBALT
             final String ratioFilename = CobaltRatioFile.generateFilename(config.cobaltDirectory(), config.tumorSample());
@@ -182,33 +176,22 @@ public class PurityPloidyEstimateApplication {
             final List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, bafs, ratios, gcProfiles);
 
             LOGGER.info("Fitting purity");
-            final FittingConfig fittingConfig = configSupplier.fittingConfig();
-            final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
-            final double observedBafExponent = defaultValue(cmd, OBSERVED_BAF_EXPONENT, OBSERVED_BAF_EXPONENT_DEFAULT);
+            final FitScoreConfig fitScoreConfig = configSupplier.fitScoreConfig();
+            final double somaticDeviationWeight = defaultValue(cmd, SOMATIC_DEVIATION_WEIGHT, 1);
+            final double highlyDiploidPercentage = defaultValue(cmd, HIGHLY_DIPLOID_PERCENTAGE, 0.95);
 
-            final double ploidyPenaltyFactor = defaultValue(cmd, PLOIDY_PENALTY_FACTOR, 0.3);
-            final double ploidyPenaltyStandardDevation = defaultValue(cmd, PLOIDY_PENALTY_STANDARD_DEVIATION, 0.05);
-            final double ploidyPenaltyMinStandardDevationPerPloidy = defaultValue(cmd, PLOIDY_PENALTY_MIN_STANDARD_DEVIATION, 0);
-            final double majorAlleleSubOnePenaltyMultiplier = defaultValue(cmd, PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_MULTIPLIER, 3);
-            final double majorAlleleSubOneAdditionalPenalty = defaultValue(cmd, PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_ADDITIONAL, 2.5);
-            final double baselineDeviation = defaultValue(cmd, PLOIDY_PENALTY_BASELINE_DEVIATION, 0.075);
-
-            final FittedRegionFactory fittedRegionFactory = cmd.hasOption(EXPERIMENTAL)
-                    ? new FittedRegionFactoryV2(cobaltGender,
+            final FittedRegionFactory fittedRegionFactory = new FittedRegionFactoryV2(cobaltGender,
                     averageTumorDepth,
-                    ploidyPenaltyFactor,
-                    ploidyPenaltyStandardDevation,
-                    ploidyPenaltyMinStandardDevationPerPloidy,
-                    majorAlleleSubOnePenaltyMultiplier,
-                    majorAlleleSubOneAdditionalPenalty,
-                    baselineDeviation)
-                    : new FittedRegionFactoryV1(cobaltGender,
-                            fittingConfig.maxPloidy(),
-                            cnvRatioWeight,
-                            averageTumorDepth,
-                            observedBafExponent);
+                    fitScoreConfig.ploidyPenaltyFactor(),
+                    fitScoreConfig.ploidyPenaltyStandardDeviation(),
+                    fitScoreConfig.ploidyPenaltyMinStandardDeviationPerPloidy(),
+                    fitScoreConfig.ploidyPenaltyMajorAlleleSubOneMultiplier(),
+                    fitScoreConfig.ploidyPenaltyMajorAlleleSubOneAdditional(),
+                    fitScoreConfig.ploidyPenaltyBaselineDeviation());
 
+            final FittingConfig fittingConfig = configSupplier.fittingConfig();
             final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
+                    cobaltGender,
                     fittingConfig.maxPloidy(),
                     fittingConfig.minPurity(),
                     fittingConfig.maxPurity(),
@@ -216,16 +199,21 @@ public class PurityPloidyEstimateApplication {
                     fittingConfig.minNormFactor(),
                     fittingConfig.maxNormFactor(),
                     fittingConfig.normFactorIncrement(),
+                    somaticDeviationWeight,
                     fittedRegionFactory,
-                    observedRegions);
+                    observedRegions,
+                    somaticVariants);
 
             final List<FittedPurity> bestFitPerPurity = fittedPurityFactory.bestFitPerPurity();
 
             final SomaticConfig somaticConfig = configSupplier.somaticConfig();
             final List<SomaticVariant> snps =
                     somaticVariants.stream().filter(x -> x.type() == VariantType.SNP).collect(Collectors.toList());
-            final BestFitFactory bestFitFactory =
-                    new BestFitFactory(somaticConfig.minTotalVariants(), somaticConfig.minPeakVariants(), bestFitPerPurity, snps);
+            final BestFitFactory bestFitFactory = new BestFitFactory(somaticConfig.minTotalVariants(),
+                    somaticConfig.minPeakVariants(),
+                    highlyDiploidPercentage,
+                    bestFitPerPurity,
+                    snps);
             final FittedPurity bestFit = bestFitFactory.bestFit();
 
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
@@ -354,18 +342,12 @@ public class PurityPloidyEstimateApplication {
         final Options options = new Options();
         ConfigSupplier.addOptions(options);
 
-        options.addOption(OBSERVED_BAF_EXPONENT, true, "Observed baf exponent. Default 1");
-        options.addOption(CNV_RATIO_WEIGHT_FACTOR, true, "CNV ratio deviation scaling.");
-
         options.addOption(THREADS, true, "Number of threads (default 2)");
         options.addOption(EXPERIMENTAL, false, "Anything goes!");
         options.addOption(VERSION, false, "Exit after displaying version info.");
-        options.addOption(PLOIDY_PENALTY_FACTOR, true, "Ploidy Penalty Factor");
-        options.addOption(PLOIDY_PENALTY_STANDARD_DEVIATION, true, "Ploidy Penalty Standard Deviation");
-        options.addOption(PLOIDY_PENALTY_MIN_STANDARD_DEVIATION, true, "Ploidy Penalty Min Standard Deviation Per Ploidy");
-        options.addOption(PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_MULTIPLIER, true, "PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_MULTIPLIER");
-        options.addOption(PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_ADDITIONAL, true, "PLOIDY_PENALTY_MAJOR_ALLELE_SUB_ONE_ADDITIONAL");
-        options.addOption(PLOIDY_PENALTY_BASELINE_DEVIATION, true, "PLOIDY_PENALTY_BASELINE_DEVIATION");
+
+        options.addOption(SOMATIC_DEVIATION_WEIGHT, true, "SOMATIC_DEVIATION_WEIGHT");
+        options.addOption(HIGHLY_DIPLOID_PERCENTAGE, true, "HIGHLY_DIPLOID_PERCENTAGE");
 
         return options;
     }

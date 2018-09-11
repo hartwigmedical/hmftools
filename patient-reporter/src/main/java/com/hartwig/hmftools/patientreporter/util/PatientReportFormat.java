@@ -9,6 +9,9 @@ import org.jetbrains.annotations.Nullable;
 public enum PatientReportFormat {
     ;
 
+    private static final double DEFAULT_MIN_PERCENTAGE_CUTOFF = 0.05;
+    private static final double DEFAULT_MAX_PERCENTAGE_CUTOFF = 0.95;
+
     @NotNull
     public static String formatNullablePercent(final @Nullable Double percentage) {
         return percentage != null ? formatPercent(percentage) : "N/A";
@@ -17,6 +20,17 @@ public enum PatientReportFormat {
     @NotNull
     public static String formatPercent(final double percentage) {
         return Long.toString(Math.round(percentage * 100D)) + "%";
+    }
+
+    @NotNull
+    public static String formatPercentWithDefaultCutoffs(final double percentage) {
+        if (percentage < DEFAULT_MIN_PERCENTAGE_CUTOFF) {
+            return "<" + formatPercent(DEFAULT_MIN_PERCENTAGE_CUTOFF);
+        } else if (percentage > DEFAULT_MAX_PERCENTAGE_CUTOFF) {
+            return ">" + formatPercent(DEFAULT_MAX_PERCENTAGE_CUTOFF);
+        } else {
+            return formatPercent(percentage);
+        }
     }
 
     @NotNull

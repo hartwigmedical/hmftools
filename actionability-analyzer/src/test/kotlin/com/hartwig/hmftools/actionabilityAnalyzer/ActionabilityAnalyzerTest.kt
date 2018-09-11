@@ -7,7 +7,7 @@ import io.kotlintest.specs.StringSpec
 private const val ON_LABEL = "OnLabel"
 
 class ActionabilityAnalyzerTest : StringSpec() {
-    private val samplesMap = mapOf("CPCT99110022T" to "Skin", "CPCT99110033T" to "Lung")
+    private val sampleMap = mapOf("CPCT99110033T" to "Lung")
 
     private val actionableCNVs = Resources.getResource("actionableCNVs").path
     private val actionableFusionPairs = Resources.getResource("actionableFusionPairs").path
@@ -16,11 +16,11 @@ class ActionabilityAnalyzerTest : StringSpec() {
     private val actionableVariants = Resources.getResource("actionableVariants").path
     private val actionableRanges = Resources.getResource("actionableRanges").path
     private val cancerTypesMapping = Resources.getResource("knowledgebaseCancerTypes").path
-    private val actionabilityAnalyzer = ActionabilityAnalyzer(samplesMap, actionableVariants, actionableFusionPairs,
+    private val actionabilityAnalyzer = ActionabilityAnalyzer(sampleMap, actionableVariants, actionableFusionPairs,
                                                               actionablePromiscuousFive, actionablePromiscuousThree, actionableCNVs,
                                                               cancerTypesMapping, actionableRanges)
 
-    private val brafSNV = CohortMutation("CPCT99110022T", "7", "140453136", "A", "T", "SNP", "BRAF",
+    private val brafSNV = CohortMutation("CPCT99110033T", "7", "140453136", "A", "T", "SNP", "BRAF",
                                          "missense", "missense", "missense", "ENST00000288602", "TRUE", "p.")
     private val brafOtherSNV = CohortMutation("CPCT99110033T", "7", "140453136", "A", "T", "SNP", "BRAF",
                                               "missense", "missense", "missense", "ENST00000288602", "TRUE", "p.")
@@ -35,11 +35,11 @@ class ActionabilityAnalyzerTest : StringSpec() {
             val sources = sources(actionability)
             val events = actionability.map { it.event }.toSet()
             actionability.size shouldBe 6
-            actionability.filter { it.treatmentType == ON_LABEL }.size shouldBe 2
+            actionability.filter { it.treatmentType == ON_LABEL }.size shouldBe 3
             events.size shouldBe 1
             events.first() shouldBe "${brafSNV.gene} ${brafSNV.chromosome}:${brafSNV.position} ${brafSNV.ref}->${brafSNV.alt}"
-            (drugs == setOf("Dabrafenib", "Vemurafenib")) shouldBe true
-            (sources == setOf("civic", "cgi")) shouldBe true
+            (drugs == setOf("Dabrafenib", "Dabrafenib", "Vemurafenib")) shouldBe true
+            (sources == setOf("oncoKb", "civic", "cgi")) shouldBe false
         }
 
         "finding variant does not depend on gene name" {
@@ -51,11 +51,11 @@ class ActionabilityAnalyzerTest : StringSpec() {
             val events = actionability.map { it.event }.toSet()
             val brafEvents = brafSnvActionability.map { it.event }.toSet()
             actionability.size shouldBe 6
-            actionability.filter { it.treatmentType == ON_LABEL }.size shouldBe 2
+            actionability.filter { it.treatmentType == ON_LABEL }.size shouldBe 3
             events.size shouldBe 1
             events shouldBe brafEvents
-            (drugs == setOf("Dabrafenib", "Vemurafenib")) shouldBe true
-            (sources == setOf("civic", "cgi")) shouldBe true
+            (drugs == setOf("Dabrafenib", "Dabrafenib", "Vemurafenib")) shouldBe true
+            (sources == setOf("oncoKb", "civic", "cgi")) shouldBe false
         }
 
         "finds BRAF SNV actionability for different primary tumor" {

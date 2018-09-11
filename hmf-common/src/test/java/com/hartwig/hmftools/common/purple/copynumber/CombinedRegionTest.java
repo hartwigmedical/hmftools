@@ -29,28 +29,28 @@ public class CombinedRegionTest {
     }
 
     @Test
-    public void testObservedTumorRatioCountSummationOnlyAppliesToSomatic() {
+    public void testDepthWindowCountSummationOnlyAppliesToSomatic() {
         final FittedRegion somaticRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 2001, 3000)
-                .observedTumorRatioCount(2)
+                .depthWindowCount(2)
                 .status(GermlineStatus.DIPLOID)
                 .build();
         final CombinedRegion region = new CombinedRegion(true, somaticRegion);
-        assertEquals(2, region.region().observedTumorRatioCount());
+        assertEquals(2, region.region().depthWindowCount());
 
         final FittedRegion amplificationRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 1, 1000)
-                .observedTumorRatioCount(2)
+                .depthWindowCount(2)
                 .status(GermlineStatus.AMPLIFICATION)
                 .build();
 
         region.extend(amplificationRegion);
-        assertEquals(2, region.region().observedTumorRatioCount());
+        assertEquals(2, region.region().depthWindowCount());
 
         final FittedRegion germlineRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 1001, 2000)
-                .observedTumorRatioCount(2)
+                .depthWindowCount(2)
                 .status(GermlineStatus.AMPLIFICATION)
                 .build();
         region.extend(germlineRegion);
-        assertEquals(2, region.region().observedTumorRatioCount());
+        assertEquals(2, region.region().depthWindowCount());
     }
 
     @Test

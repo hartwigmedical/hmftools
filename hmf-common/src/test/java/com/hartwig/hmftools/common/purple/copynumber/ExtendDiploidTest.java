@@ -181,7 +181,7 @@ public class ExtendDiploidTest {
                 .observedNormalRatio(0.5)
                 .bafCount(bafCount)
                 .support(support)
-                .observedTumorRatioCount(MIN_TUMOR_COUNT)
+                .depthWindowCount(MIN_TUMOR_COUNT)
                 .build();
     }
 
@@ -204,7 +204,7 @@ public class ExtendDiploidTest {
                 .observedNormalRatio(0.5)
                 .bafCount(bafCount)
                 .support(support)
-                .observedTumorRatioCount(ratioCount)
+                .depthWindowCount(ratioCount)
                 .build();
     }
 

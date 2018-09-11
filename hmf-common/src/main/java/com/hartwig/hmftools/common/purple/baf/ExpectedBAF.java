@@ -4,8 +4,10 @@ import org.apache.commons.math3.distribution.BinomialDistribution;
 
 public final class ExpectedBAF {
 
+    private static final double DEFAULT_PERCENT = 0.8;
+
     public static double expectedBAF(int averageDepth) {
-        return expectedBAF(averageDepth, 0.75);
+        return expectedBAF(averageDepth, DEFAULT_PERCENT);
     }
 
     public static double expectedBAF(int averageDepth, double percent) {

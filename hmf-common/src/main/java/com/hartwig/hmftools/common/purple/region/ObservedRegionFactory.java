@@ -65,7 +65,7 @@ public class ObservedRegionFactory {
                     .observedNormalRatio(normalRatio)
                     .ratioSupport(region.ratioSupport())
                     .support(region.support())
-                    .observedTumorRatioCount(cobalt.tumorCount())
+                    .depthWindowCount(cobalt.tumorCount())
                     .gcContent(gc.averageGCContent())
                     .status(statusFactory.status(region, normalRatio, tumorRatio))
                     .svCluster(region.svCluster())

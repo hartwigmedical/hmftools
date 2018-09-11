@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.report;
 
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.mockedAlterations;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReporterData;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testHmfReporterData;
 
@@ -40,7 +39,6 @@ import com.hartwig.hmftools.patientreporter.PatientReporterTestUtil;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
-import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
 import com.hartwig.hmftools.patientreporter.report.data.ImmutableGeneDisruptionData;
@@ -48,6 +46,7 @@ import com.hartwig.hmftools.patientreporter.report.data.ImmutableGeneFusionData;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableVariantReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -56,7 +55,6 @@ import net.sf.dynamicreports.report.exception.DRException;
 
 public class PDFWriterTest {
 
-    private static final boolean RUN_CIVIC_ANALYSIS = false;
     private static final boolean SHOW_AND_PRINT = false;
     private static final boolean WRITE_TO_PDF = false;
 
@@ -81,12 +79,6 @@ public class PDFWriterTest {
         final List<GeneFusionData> fusions = createTestFusions();
 
         final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
-        final List<Alteration> alterations = RUN_CIVIC_ANALYSIS ? PatientReporterTestUtil.runCivicAnalysis(variants,
-                copyNumbers,
-                disruptions,
-                fusions,
-                reporterData.panelGeneModel(),
-                sampleReport.primaryTumorLocationString()) : mockedAlterations();
 
         final AnalysedPatientReport patientReport = ImmutableAnalysedPatientReport.of(sampleReport,
                 variants,
@@ -97,16 +89,12 @@ public class PDFWriterTest {
                 fusions,
                 impliedTumorPurity,
                 FittedPurityStatus.NORMAL,
-                alterations,
                 Resources.getResource("circos/circos_example.png").getPath(),
                 Optional.of("this is a test report and does not relate to any real CPCT patient"),
                 baseReporterData.signaturePath());
 
         final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport, reporterData);
         assertNotNull(mainReport);
-
-        final JasperReportBuilder evidenceReport = EvidenceReport.generate(patientReport);
-        assertNotNull(evidenceReport);
 
         if (SHOW_AND_PRINT) {
             mainReport.show().print();
@@ -119,58 +107,72 @@ public class PDFWriterTest {
 
     @NotNull
     private static FittedPurity createFittedPurity(double impliedPurity) {
-        return ImmutableFittedPurity.builder().purity(impliedPurity).diploidProportion(0).normFactor(0).score(0).ploidy(2).build();
+        return ImmutableFittedPurity.builder()
+                .purity(impliedPurity)
+                .diploidProportion(0)
+                .normFactor(0)
+                .score(0)
+                .ploidy(2)
+                .somaticDeviation(0)
+                .build();
     }
 
     @NotNull
     private static List<VariantReport> createTestVariants(@NotNull final PurityAdjuster purityAdjuster) {
         final VariantReport variant1 = ImmutableVariantReport.builder()
                 .gene("BRAF")
-                .variant(createTestVariant("7", 140453136, "A", "T"))
-                .transcript("ENST00000377970.6")
-                .hgvsCoding("c.1799T>A")
-                .hgvsProtein("p.Val600Glu")
-                .consequence("missense variant")
-                .cosmicID("COSM476")
+                .variant(createTestVariant("7", 140453136, "A", "T", true))
                 .alleleReadCount(18)
                 .totalReadCount(99)
-                .baf("AAAB")
-                .impliedVAF(purityAdjuster.purityAdjustedVAF("7", 4, 0.18 / 0.99))
+                .variantDetails("c.1799T>A (p.Val600Glu)")
+                .ploidy("AAAB")
+                .purityAdjustedVAF(purityAdjuster.purityAdjustedVAF("7", 4, 0.18 / 0.99))
+                .clonalProbability(0.8)
+                .wildTypeStatus("Present")
+                .driverProbability(1)
+                .actionabilityLevel("A")
                 .build();
 
         final VariantReport variant2 = ImmutableVariantReport.builder()
                 .gene("MYC")
-                .variant(createTestVariant("8", 128748854, "GG", "CA"))
-                .transcript("ENST00000377970.2")
-                .hgvsCoding("c.15_16delinsCA")
-                .hgvsProtein("p.Val6Ile")
-                .consequence("missense variant")
-                .cosmicID("")
+                .variant(createTestVariant("8", 128748854, "GG", "CA", false))
                 .alleleReadCount(20)
                 .totalReadCount(88)
-                .impliedVAF(purityAdjuster.purityAdjustedVAF("8", 2, 0.2 / 0.88))
-                .baf("AB")
+                .variantDetails("c.15_16delinsCA (p.Val6Ile)")
+                .ploidy("AB")
+                .purityAdjustedVAF(purityAdjuster.purityAdjustedVAF("8", 2, 0.2 / 0.88))
+                .clonalProbability(0.3)
+                .wildTypeStatus("Present")
+                .driverProbability(0.4)
+                .actionabilityLevel(Strings.EMPTY)
                 .build();
 
         final VariantReport variant3 = ImmutableVariantReport.builder()
                 .gene("TP53")
-                .variant(createTestVariant("17", 7577111, "GCACAAA", "G"))
-                .transcript("ENST00000269305.4")
-                .hgvsCoding("c.821_826delTTTGTG")
-                .hgvsProtein("p.Val274_Cys275del")
-                .consequence("inframe deletion")
+                .variant(createTestVariant("17", 7577111, "GCACAAA", "G", false))
                 .alleleReadCount(20)
                 .totalReadCount(87)
-                .impliedVAF(purityAdjuster.purityAdjustedVAF("17", 3, 0.20 / 0.87))
-                .baf("AAA")
+                .variantDetails("c.821_826delTTTGTG (p.Val274_Cys275del)")
+                .ploidy("AAA")
+                .purityAdjustedVAF(purityAdjuster.purityAdjustedVAF("17", 3, 0.20 / 0.87))
+                .clonalProbability(0.98)
+                .wildTypeStatus("Present")
+                .driverProbability(0.71)
+                .actionabilityLevel(Strings.EMPTY)
                 .build();
         return Lists.newArrayList(variant1, variant2, variant3);
     }
 
     @NotNull
     private static SomaticVariant createTestVariant(@NotNull final String chromosome, final long position, @NotNull final String ref,
-            @NotNull final String alt) {
-        return SomaticVariantTestBuilderFactory.create().chromosome(chromosome).position(position).ref(ref).alt(alt).build();
+            @NotNull final String alt, boolean hotspot) {
+        return SomaticVariantTestBuilderFactory.create()
+                .chromosome(chromosome)
+                .position(position)
+                .ref(ref)
+                .alt(alt)
+                .hotspot(hotspot)
+                .build();
     }
 
     @NotNull

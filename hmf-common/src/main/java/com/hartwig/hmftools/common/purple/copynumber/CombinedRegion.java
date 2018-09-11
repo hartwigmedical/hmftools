@@ -113,7 +113,7 @@ class CombinedRegion implements GenomeRegion {
         extend(region);
 
         combined.setStatus(GermlineStatus.DIPLOID); //TODO Remove this
-        combined.setObservedTumorRatioCount(combined.observedTumorRatioCount() + region.observedTumorRatioCount());
+        combined.setDepthWindowCount(combined.depthWindowCount() + region.depthWindowCount());
 
         final long currentWeight;
         final long newWeight;

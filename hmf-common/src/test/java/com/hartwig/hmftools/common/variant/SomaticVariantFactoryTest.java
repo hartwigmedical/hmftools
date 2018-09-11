@@ -116,6 +116,22 @@ public class SomaticVariantFactoryTest {
         assertFalse(hasNone.isCOSMIC());
     }
 
+    @Test
+    public void favourCanonicalGeneWhenPossible() {
+        final String line =
+                "13\t24871731\t.\tC\tT\t.\tPASS\tAC=0;AF=0;AN=0;MAPPABILITY=1.000000;NT=ref;QSS=43;QSS_NT=43;SGT=CC->CT;SOMATIC;TQSS=1;TQSS_NT=1;set=snvs;ANN=T|synonymous_variant|LOW|RP11-307N16.6|ENSG00000273167|transcript|ENST00000382141|nonsense_mediated_decay|12/16|c.3075C>T|p.Leu1025Leu|3653/4157|3075/3318|1025/1105||,T|synonymous_variant|LOW|SPATA13|ENSG00000182957|transcript|ENST00000382108|protein_coding|11/13|c.3441C>T|p.Leu1147Leu|3763/8457|3441/3834|1147/1277||\tGT:AD:DP\t0/1:36,38:75";
+        final SomaticVariant variant = assertedGet(victim.createVariant(SAMPLE, codec.decode(line)));
+        assertEquals("SPATA13", variant.gene());
+    }
+
+    @Test
+    public void useFirstGeneIfNonInCanonical() {
+        final String line =
+                "13\t24871731\t.\tC\tT\t.\tPASS\tAC=0;AF=0;AN=0;MAPPABILITY=1.000000;NT=ref;QSS=43;QSS_NT=43;SGT=CC->CT;SOMATIC;TQSS=1;TQSS_NT=1;set=snvs;ANN=T|synonymous_variant|LOW|RP11-307N16.6|ENSG00000273167|transcript|ENST00000382141|nonsense_mediated_decay|12/16|c.3075C>T|p.Leu1025Leu|3653/4157|3075/3318|1025/1105||,T|synonymous_variant|LOW|SPATA131|ENSG00000182957|transcript|ENST00000382108|protein_coding|11/13|c.3441C>T|p.Leu1147Leu|3763/8457|3441/3834|1147/1277||\tGT:AD:DP\t0/1:36,38:75";
+        final SomaticVariant variant = assertedGet(victim.createVariant(SAMPLE, codec.decode(line)));
+        assertEquals("RP11-307N16.6", variant.gene());
+    }
+
     @NotNull
     private static SomaticVariant assertedGet(@NotNull Optional<SomaticVariant> variant) {
         assert variant.isPresent();

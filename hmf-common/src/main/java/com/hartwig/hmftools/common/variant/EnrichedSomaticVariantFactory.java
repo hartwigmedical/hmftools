@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVarian
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -85,9 +86,12 @@ public class EnrichedSomaticVariantFactory {
                 .clonality(Clonality.UNKNOWN);
     }
 
-    private static void addCanonicalEffect(@NotNull final Builder builder, @NotNull final SomaticVariant variant,
+    @VisibleForTesting
+    static void addCanonicalEffect(@NotNull final Builder builder, @NotNull final SomaticVariant variant,
             @NotNull TranscriptAnnotationSelector selector) {
-        final Optional<SnpEffAnnotation> canonicalSnpEffAnnotation = selector.canonical(variant.gene(), variant.snpEffAnnotations());
+        final List<SnpEffAnnotation> transcriptAnnotations =
+                variant.snpEffAnnotations().stream().filter(SnpEffAnnotation::isTranscriptFeature).collect(Collectors.toList());
+        final Optional<SnpEffAnnotation> canonicalSnpEffAnnotation = selector.canonical(variant.gene(), transcriptAnnotations);
         if (canonicalSnpEffAnnotation.isPresent()) {
             final SnpEffAnnotation annotation = canonicalSnpEffAnnotation.get();
             builder.canonicalEffect(annotation.consequenceString());

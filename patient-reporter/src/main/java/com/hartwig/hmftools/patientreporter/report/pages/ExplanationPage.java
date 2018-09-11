@@ -22,7 +22,7 @@ public abstract class ExplanationPage {
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
         return cmp.verticalList(cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text(Commons.TITLE + " - Report Explanation").setStyle(sectionHeaderStyle()),
+                cmp.text(Commons.TITLE_SEQUENCE + " - Report Explanation").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 generalExplanationSection(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -57,7 +57,7 @@ public abstract class ExplanationPage {
                                 + "the total number of reads in this location in the format 'alt / total (%)'.",
                         "The 'Predicted Effect' provides additional information on the variant, including "
                                 + "the change in coding sequence ('c.'), the change in protein ('p.') and "
-                                + "the predicted impact on the final protein on the second line of this field.",
+                                + "the predicted variantDetails on the final protein on the second line of this field.",
                         "The 'Cosmic' fields display a link to the COSMIC database which contains "
                                 + "additional information on the variant. If the variant could not be found in the "
                                 + "COSMIC database, this field will be left blank. The COSMIC v76 database is used "

@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.gene.CanonicalTranscript;
 import com.hartwig.hmftools.common.gene.CanonicalTranscriptFactory;
-import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;

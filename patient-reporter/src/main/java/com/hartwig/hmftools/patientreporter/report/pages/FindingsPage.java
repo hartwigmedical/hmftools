@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
-import com.hartwig.hmftools.patientreporter.report.components.DataExpression;
+import com.hartwig.hmftools.patientreporter.report.Commons;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSection;
 import com.hartwig.hmftools.patientreporter.report.components.MutationalLoadSection;
@@ -45,7 +45,7 @@ public abstract class FindingsPage {
 
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
-        return cmp.verticalList(MainPageTopSection.buildWithImpliedPurity("HMF Sequencing Report",
+        return cmp.verticalList(MainPageTopSection.buildWithImpliedPurity(Commons.TITLE_SEQUENCE,
                 report().sampleReport(),
                 impliedPurityString(report())),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -80,14 +80,14 @@ public abstract class FindingsPage {
                 !report.variants().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(VariantDataSource.variantFields())
                         .columns(col.column("Gene", VariantDataSource.GENE_FIELD),
-                                col.column("Position", VariantDataSource.POSITION_FIELD),
-                                col.column("Variant", VariantDataSource.VARIANT_FIELD),
-                                col.column("Depth (VAF)", VariantDataSource.DEPTH_VAF_FIELD),
-                                col.componentColumn("Predicted Effect", predictedEffectColumn()),
-                                col.column("Cosmic", VariantDataSource.COSMIC_FIELD)
-                                        .setHyperLink(hyperLink(VariantDataSource.cosmicHyperlink()))
-                                        .setStyle(linkStyle()),
-                                col.column("Ploidy (TAF)", VariantDataSource.PLOIDY_TAF_FIELD)))
+                                col.column("Variant", VariantDataSource.VARIANT_DETAILS_FIELD).setFixedWidth(160),
+                                col.column("Read Depth", VariantDataSource.READ_DEPTH_FIELD).setFixedWidth(60),
+                                col.column("Hotspot ?", VariantDataSource.IS_HOTSPOT_FIELD),
+                                col.column("Ploidy (VAF)", VariantDataSource.PLOIDY_VAF_FIELD),
+                                col.column("Clonal Probability", VariantDataSource.CLONAL_PERCENTAGE_FIELD),
+                                col.column("Wildtype Status", VariantDataSource.WILDTYPE_STATUS_FIELD),
+                                col.column("Driver Probability", VariantDataSource.DRIVER_PROBABILITY_FIELD),
+                                col.column("Actionability Level", VariantDataSource.ACTIONABILITY_LEVEL_FIELD)))
                         .setDataSource(VariantDataSource.fromVariants(report.fitStatus(), report.variants(), drupFilter))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
@@ -100,12 +100,12 @@ public abstract class FindingsPage {
                         cmp.text(geneMutationAddition).setStyle(fontStyle().setFontSize(8))));
     }
 
-    @NotNull
-    private static ComponentBuilder<?, ?> predictedEffectColumn() {
-        return cmp.verticalList(cmp.horizontalList(cmp.text(DataExpression.fromField(VariantDataSource.HGVS_CODING_FIELD)),
-                cmp.text(DataExpression.fromField(VariantDataSource.HGVS_PROTEIN_FIELD))),
-                cmp.text(DataExpression.fromField(VariantDataSource.CONSEQUENCE_FIELD))).setFixedWidth(170);
-    }
+//    @NotNull
+//    private static ComponentBuilder<?, ?> predictedEffectColumn() {
+//        return cmp.verticalList(cmp.horizontalList(cmp.text(DataExpression.fromField(VariantDataSource.HGVS_CODING_FIELD)),
+//                cmp.text(DataExpression.fromField(VariantDataSource.HGVS_PROTEIN_FIELD))),
+//                cmp.text(DataExpression.fromField(VariantDataSource.CONSEQUENCE_FIELD))).setFixedWidth(170);
+//    }
 
     @NotNull
     private static ComponentBuilder<?, ?> geneCopyNumberReport(@NotNull final AnalysedPatientReport report) {

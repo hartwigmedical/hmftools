@@ -16,6 +16,8 @@ public abstract class FittedPurity implements Comparable<FittedPurity> {
 
     public abstract double diploidProportion();
 
+    public abstract double somaticDeviation();
+
     @Override
     public int compareTo(@NotNull FittedPurity o) {
         return Double.compare(score(), o.score());

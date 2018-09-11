@@ -10,7 +10,7 @@
 
     <artifactId>purity-ploidy-estimator</artifactId>
     <packaging>jar</packaging>
-    <version>2.14</version>
+    <version>2.15</version>
     <name>HMF Tools - Purity Ploidy Estimator</name>
 
     <dependencies>
@@ -21,10 +21,6 @@
         <dependency>
             <groupId>com.hartwig</groupId>
             <artifactId>hmf-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.hartwig</groupId>
-            <artifactId>hmf-gene-panel</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-cli</groupId>

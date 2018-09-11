@@ -21,8 +21,10 @@ import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
 
 public final class Commons {
 
-    public static final String TITLE = "HMF Sequencing Report v" + PatientReporterApplication.VERSION;
+    public static final String TITLE_SEQUENCE = "HMF Sequencing Report v" + PatientReporterApplication.VERSION;
+
     public static final String DATE_TIME_FORMAT = "dd-MMM-yyyy";
+    public static final String HARTWIG_ADDRESS = "Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam";
 
     public static final int SECTION_VERTICAL_GAP = 25;
     public static final int HEADER_TO_DETAIL_VERTICAL_GAP = 8;

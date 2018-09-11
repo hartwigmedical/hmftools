@@ -18,7 +18,6 @@ import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReporter;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.algo.PatientReporter;
-import com.hartwig.hmftools.patientreporter.civic.CivicAnalyzer;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 import com.hartwig.hmftools.svannotation.MySQLAnnotator;
@@ -45,7 +44,7 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // KODU: Uncomment this line when generating an example report using PDFWriterTest
-    //    public static final String VERSION = "4.18";
+    //    public static final String VERSION = "5.0";
 
     private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
     private static final String LIMS_JSON = "lims_json";
@@ -150,7 +149,7 @@ public class PatientReporterApplication {
         final StructuralVariantAnalyzer svAnalyzer =
                 new StructuralVariantAnalyzer(annotator, reporterData.panelGeneModel().regions(), reporterData.knownFusionsModel());
 
-        return ImmutablePatientReporter.of(buildBaseReporterData(cmd), reporterData, variantAnalyzer, svAnalyzer, new CivicAnalyzer());
+        return ImmutablePatientReporter.of(buildBaseReporterData(cmd), reporterData, variantAnalyzer, svAnalyzer);
     }
 
     private static boolean validInputForPatientReporter(@NotNull final CommandLine cmd) {

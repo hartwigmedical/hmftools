@@ -72,8 +72,8 @@ public abstract class PurpleAnalysis {
                                 variantReport.alleleFrequency()));
                 result.add(ImmutableVariantReport.builder()
                         .from(variantReport)
-                        .baf(copyNumber.descriptiveBAF())
-                        .impliedVAF(adjustedVAF)
+                        .ploidy(copyNumber.descriptiveBAF())
+                        .purityAdjustedVAF(adjustedVAF)
                         .build());
             } else {
                 result.add(variantReport);

@@ -12,7 +12,7 @@ interface CorrectedInput<T : CorrectedInput<T>> {
     fun corrected(): T? {
         val correctedValue = correct()
         when {
-            correctedValue == null -> logger.info("Deleted $this")
+            correctedValue == null -> logger.info("Ignoring $this")
             this != correctedValue -> logger.info("Corrected $this to $correctedValue")
         }
         return correctedValue

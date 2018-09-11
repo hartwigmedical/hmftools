@@ -33,6 +33,11 @@ class TransvarProteinMatcherTest : StringSpec() {
             TransvarProteinMatcher.matches("Cys28_Met30del") shouldBe true
             TransvarProteinMatcher.matches("534_536del") shouldBe true
             TransvarProteinMatcher.matches("533_534del") shouldBe true
+            TransvarProteinMatcher.matches("p.K601delK") shouldBe true
+            TransvarProteinMatcher.matches("K601delK") shouldBe true
+            TransvarProteinMatcher.matches("p.D898_E901delDVYE") shouldBe true
+            TransvarProteinMatcher.matches("D898_E901delDVYE") shouldBe true
+
         }
 
         "matches duplications"{
@@ -40,6 +45,10 @@ class TransvarProteinMatcherTest : StringSpec() {
             TransvarProteinMatcher.matches("G10dup") shouldBe true
             TransvarProteinMatcher.matches("p.Gly4_Gln6dup") shouldBe true
             TransvarProteinMatcher.matches("Gly4_Gln6dup") shouldBe true
+            TransvarProteinMatcher.matches("p.G10dupG") shouldBe true
+            TransvarProteinMatcher.matches("G10dupG") shouldBe true
+            TransvarProteinMatcher.matches("p.V777_S779dupVGS") shouldBe true
+            TransvarProteinMatcher.matches("V777_S779dupVGS") shouldBe true
         }
 
         "matches insertions"{

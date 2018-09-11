@@ -5,7 +5,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -14,15 +13,13 @@ import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 class ConsequenceDeterminer {
 
     private static final Logger LOGGER = LogManager.getLogger(ConsequenceDeterminer.class);
-
-    @VisibleForTesting
-    static final String FEATURE_TYPE_TRANSCRIPT = "transcript";
 
     @NotNull
     private final Set<String> transcripts;
@@ -55,16 +52,15 @@ class ConsequenceDeterminer {
 
             builder.variant(variant);
             builder.gene(snpEffAnnotation.gene());
-            builder.transcript(snpEffAnnotation.transcript());
-            builder.hgvsCoding(snpEffAnnotation.hgvsCoding());
-            builder.hgvsProtein(snpEffAnnotation.hgvsProtein());
-            builder.consequence(snpEffAnnotation.consequenceString());
-            final String cosmicID = variant.canonicalCosmicID();
-            if (cosmicID != null) {
-                builder.cosmicID(cosmicID);
-            }
+            builder.variantDetails(snpEffAnnotation.hgvsCoding() + " (" + snpEffAnnotation.hgvsProtein() + ")");
             builder.totalReadCount(variant.totalReadCount());
             builder.alleleReadCount(variant.alleleReadCount());
+            builder.ploidy(Strings.EMPTY);
+            builder.purityAdjustedVAF(0D);
+            builder.clonalProbability(0D);
+            builder.wildTypeStatus(Strings.EMPTY);
+            builder.driverProbability(0D);
+            builder.actionabilityLevel(Strings.EMPTY);
             reports.add(builder.build());
         }
 
@@ -88,8 +84,7 @@ class ConsequenceDeterminer {
     private static List<SnpEffAnnotation> findAllRelevantAnnotations(@NotNull final List<SnpEffAnnotation> annotations,
             @NotNull final Set<String> transcripts) {
         return annotations.stream()
-                .filter(annotation -> annotation.featureType().equals(FEATURE_TYPE_TRANSCRIPT)
-                        && transcripts.contains(annotation.transcript()))
+                .filter(annotation -> annotation.isTranscriptFeature() && transcripts.contains(annotation.transcript()))
                 .collect(Collectors.toList());
     }
 }

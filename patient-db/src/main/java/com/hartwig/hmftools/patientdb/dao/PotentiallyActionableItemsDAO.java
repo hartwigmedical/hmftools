@@ -44,14 +44,14 @@ public class PotentiallyActionableItemsDAO {
     }
 
     @NotNull
-    Stream<PotentialActionableCNV> potentiallyActionableCNVs(@NotNull final Collection<String> samples) {
-        final ResultQuery<?> query = potentiallyActionableCNVsQuery(samples);
+    Stream<PotentialActionableCNV> potentiallyActionableCNVs(@NotNull final Collection<String> sample) {
+        final ResultQuery<?> query = potentiallyActionableCNVsQuery(sample);
         return streamResults(query).map(PotentialActionableCNV::of).filter(cnv -> cnv.alteration() != CopyNumberAlteration.NEUTRAL);
     }
 
     @NotNull
-    Stream<PotentialActionableFusion> potentiallyActionableFusions(@NotNull final Collection<String> samples) {
-        final ResultQuery<?> query = potentiallyActionableFusionsQuery(samples);
+    Stream<PotentialActionableFusion> potentiallyActionableFusions(@NotNull final Collection<String> sample) {
+        final ResultQuery<?> query = potentiallyActionableFusionsQuery(sample);
         return streamResults(query).map(PotentialActionableFusion::of);
     }
 
@@ -107,7 +107,7 @@ public class PotentiallyActionableItemsDAO {
     }
 
     @NotNull
-    Stream<Pair<String, String>> allSampleAndTumorLocations(@NotNull final String sampleId) {
+    Stream<Pair<String, String>> sampleAndTumorLocation(@NotNull final String sampleId) {
         return context.select(SAMPLE.SAMPLEID, BASELINE.PRIMARYTUMORLOCATION)
                 .from(SAMPLE.leftJoin(BASELINE).on(SAMPLE.PATIENTID.eq(BASELINE.PATIENTID)))
                 .where(SAMPLE.SAMPLEID.eq(sampleId))
