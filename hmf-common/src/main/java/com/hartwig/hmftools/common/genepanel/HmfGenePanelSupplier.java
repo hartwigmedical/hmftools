@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.genepanel;
+package com.hartwig.hmftools.common.genepanel;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,7 +29,7 @@ public enum HmfGenePanelSupplier {
     @NotNull
     @VisibleForTesting
     static Set<String> hmfPanelGeneSet() throws IOException {
-        return Sets.newHashSet(Resources.readLines(Resources.getResource("gene_panel"), Charset.defaultCharset()));
+        return Sets.newHashSet(Resources.readLines(Resources.getResource("genepanel/gene_panel"), Charset.defaultCharset()));
     }
 
     @NotNull
@@ -39,7 +39,7 @@ public enum HmfGenePanelSupplier {
 
     @NotNull
     public static List<HmfGenomeRegion> allGeneList() {
-        final InputStream inputStream = HmfGenePanelSupplier.class.getResourceAsStream("/all_genes.tsv");
+        final InputStream inputStream = HmfGenePanelSupplier.class.getResourceAsStream("/genepanel/all_genes.tsv");
         return HmfGenomeFileLoader.fromInputStream(inputStream);
     }
 

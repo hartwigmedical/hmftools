@@ -18,10 +18,7 @@
             <groupId>com.hartwig</groupId>
             <artifactId>hmf-common</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.hartwig</groupId>
-            <artifactId>hmf-gene-panel</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>com.hartwig</groupId>
             <artifactId>variant-annotator</artifactId>

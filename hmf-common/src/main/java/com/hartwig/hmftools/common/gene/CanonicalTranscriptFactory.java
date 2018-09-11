@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfExonRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 
@@ -13,6 +14,11 @@ import org.jetbrains.annotations.NotNull;
 public final class CanonicalTranscriptFactory {
 
     private CanonicalTranscriptFactory() {
+    }
+
+    @NotNull
+    public static List<CanonicalTranscript> create() {
+        return create(HmfGenePanelSupplier.allGeneList());
     }
 
     @NotNull

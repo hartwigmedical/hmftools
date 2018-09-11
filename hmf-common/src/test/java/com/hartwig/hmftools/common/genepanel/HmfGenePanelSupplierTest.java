@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.genepanel;
+package com.hartwig.hmftools.common.genepanel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.SortedSetMultimap;
 import com.hartwig.hmftools.common.gene.TranscriptRegion;
+import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 
 import org.junit.Test;
