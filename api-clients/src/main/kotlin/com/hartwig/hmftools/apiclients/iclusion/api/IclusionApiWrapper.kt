@@ -50,25 +50,25 @@ class IclusionApiWrapper(endpoint: String, private val clientId: String, private
     fun studyDetails(): List<IclusionStudyDetails> {
         val studies = studies().blockingIterable().toList()
         studies.forEach {
-            logger.log(Level.INFO, "study: $it")
+            logger.info("study: $it")
         }
         logger.info("Queried ${studies.size} studies via iclusion API.")
 
         val indications = indications().blockingIterable().toList().associateBy { it.id }
         indications.forEach {
-            logger.log(Level.INFO, "indication: $it")
+            logger.info("indication: $it")
         }
         logger.info("Queried ${indications.size} indications via iclusion API.")
 
         val genes = genes().blockingIterable().toList().associateBy { it.id }
         genes.forEach {
-            logger.log(Level.INFO, "gene: $it")
+            logger.info("gene: $it")
         }
         logger.info("Queried ${genes.size} genes via iclusion API.")
 
         val variants = variants().blockingIterable().toList().associateBy { it.id }
         variants.forEach {
-            logger.log(Level.INFO, "variant: $it")
+            logger.info("variant: $it")
         }
         logger.info("Queried ${variants.size} variants via iclusion API.")
 
