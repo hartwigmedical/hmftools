@@ -140,7 +140,7 @@ public class SomaticVariantFactory {
         if (!transcriptAnnotations.isEmpty()) {
             final SnpEffAnnotation snpEffAnnotation = transcriptAnnotations.get(0);
             builder.worstEffect(snpEffAnnotation.consequenceString());
-            builder.worstCodingEffect(CodingEffect.effect(snpEffAnnotation.consequences()));
+            builder.worstCodingEffect(CodingEffect.effect(gene, snpEffAnnotation.consequences()));
             builder.worstEffectTranscript(snpEffAnnotation.transcript());
         } else {
             builder.worstEffect("");

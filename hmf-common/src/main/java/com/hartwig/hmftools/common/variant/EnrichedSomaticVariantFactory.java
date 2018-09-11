@@ -95,7 +95,7 @@ public class EnrichedSomaticVariantFactory {
         if (canonicalSnpEffAnnotation.isPresent()) {
             final SnpEffAnnotation annotation = canonicalSnpEffAnnotation.get();
             builder.canonicalEffect(annotation.consequenceString());
-            builder.canonicalCodingEffect(CodingEffect.effect(annotation.consequences()));
+            builder.canonicalCodingEffect(CodingEffect.effect(variant.gene(), annotation.consequences()));
         } else {
             builder.canonicalEffect(Strings.EMPTY);
             builder.canonicalCodingEffect(CodingEffect.UNDEFINED);

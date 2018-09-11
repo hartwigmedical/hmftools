@@ -28,35 +28,43 @@ import org.junit.Test;
 
 public class CodingEffectTest {
 
+    private static final String RANDOM_GENE = "RANDOM";
+
     @Test
     public void testSingleEffect() {
-        assertEffect(NONSENSE_OR_FRAMESHIFT, FRAMESHIFT_VARIANT);
-        assertEffect(NONSENSE_OR_FRAMESHIFT, STOP_GAINED);
+        assertEffect(NONSENSE_OR_FRAMESHIFT, RANDOM_GENE, FRAMESHIFT_VARIANT);
+        assertEffect(NONSENSE_OR_FRAMESHIFT, RANDOM_GENE, STOP_GAINED);
 
-        assertEffect(MISSENSE, MISSENSE_VARIANT);
-        assertEffect(MISSENSE, PROTEIN_PROTEIN_CONTACT);
-        assertEffect(MISSENSE, STRUCTURAL_INTERACTION_VARIANT);
-        assertEffect(MISSENSE, INFRAME_DELETION);
-        assertEffect(MISSENSE, INFRAME_INSERTION);
+        assertEffect(MISSENSE, RANDOM_GENE, MISSENSE_VARIANT);
+        assertEffect(MISSENSE, RANDOM_GENE, PROTEIN_PROTEIN_CONTACT);
+        assertEffect(MISSENSE, RANDOM_GENE, STRUCTURAL_INTERACTION_VARIANT);
+        assertEffect(MISSENSE, RANDOM_GENE, INFRAME_DELETION);
+        assertEffect(MISSENSE, RANDOM_GENE, INFRAME_INSERTION);
 
-        assertEffect(SPLICE, SPLICE_ACCEPTOR_VARIANT);
-        assertEffect(SPLICE, SPLICE_DONOR_VARIANT);
-        assertEffect(SYNONYMOUS, SYNONYMOUS_VARIANT);
+        assertEffect(SPLICE, RANDOM_GENE, SPLICE_ACCEPTOR_VARIANT);
+        assertEffect(SPLICE, RANDOM_GENE, SPLICE_DONOR_VARIANT);
+        assertEffect(SYNONYMOUS, RANDOM_GENE, SYNONYMOUS_VARIANT);
 
-        assertEffect(NONE, SPLICE_REGION_VARIANT);
-        assertEffect(NONE, INTRON_VARIANT);
+        assertEffect(NONE, RANDOM_GENE, SPLICE_REGION_VARIANT);
+        assertEffect(NONE, RANDOM_GENE, INTRON_VARIANT);
     }
 
     @Test
     public void testEffectPriority() {
-        assertEffect(NONSENSE_OR_FRAMESHIFT, STOP_GAINED, SPLICE_ACCEPTOR_VARIANT, MISSENSE_VARIANT, INTRON_VARIANT);
-        assertEffect(SPLICE, SPLICE_ACCEPTOR_VARIANT, MISSENSE_VARIANT, INTRON_VARIANT);
-        assertEffect(MISSENSE, MISSENSE_VARIANT, SYNONYMOUS_VARIANT, INTRON_VARIANT);
-        assertEffect(SYNONYMOUS, SYNONYMOUS_VARIANT, INTRON_VARIANT);
-        assertEffect(NONE, INTRON_VARIANT);
+        assertEffect(NONSENSE_OR_FRAMESHIFT, RANDOM_GENE, STOP_GAINED, MISSENSE_VARIANT, SPLICE_ACCEPTOR_VARIANT, INTRON_VARIANT);
+        assertEffect(MISSENSE, RANDOM_GENE, MISSENSE_VARIANT, SPLICE_ACCEPTOR_VARIANT, SYNONYMOUS_VARIANT, INTRON_VARIANT);
+        assertEffect(SPLICE, RANDOM_GENE, SPLICE_ACCEPTOR_VARIANT, INTRON_VARIANT);
+        assertEffect(SYNONYMOUS, RANDOM_GENE, SYNONYMOUS_VARIANT, INTRON_VARIANT);
+        assertEffect(NONE, RANDOM_GENE, INTRON_VARIANT);
     }
 
-    private static void assertEffect(@NotNull CodingEffect expected, @NotNull final VariantConsequence... consequences) {
-        assertEquals(expected, effect(Lists.newArrayList(consequences)));
+    @Test
+    public void testTP53SpliceRegionVariant() {
+        assertEffect(NONE, RANDOM_GENE, SPLICE_REGION_VARIANT);
+        assertEffect(SPLICE, "TP53", SPLICE_REGION_VARIANT);
+    }
+
+    private static void assertEffect(@NotNull final CodingEffect expected, @NotNull final String gene, @NotNull final VariantConsequence... consequences) {
+        assertEquals(expected, effect(gene, Lists.newArrayList(consequences)));
     }
 }
