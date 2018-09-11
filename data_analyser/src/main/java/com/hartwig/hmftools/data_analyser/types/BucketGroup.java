@@ -204,18 +204,48 @@ public class BucketGroup implements Comparable<BucketGroup> {
         mSampleCountsMap.put(sampleId, sampleTotal);
     }
 
+    public void addSampleCounts(int samIndex, double[] bucketCounts)
+    {
+        // add to existing counts for an existing sample
+        if(samIndex < 0 || samIndex >= mSampleIds.size())
+            return;
+
+        int sampleId = mSampleIds.get(samIndex);
+
+        double[] existingCounts = mSampleCounts.get(samIndex);
+
+        double countsTotal = 0;
+        for(Integer bucketId : mBucketIds)
+        {
+            mCombinedBucketCounts[bucketId] += bucketCounts[bucketId];
+            existingCounts[bucketId] += bucketCounts[bucketId];
+            countsTotal += bucketCounts[bucketId];
+        }
+
+        mTotalCount += countsTotal;
+        double newTotal = mSampleCountTotals.get(samIndex) + countsTotal;
+        mSampleCountTotals.set(samIndex, newTotal);
+        mSampleCountsMap.put(sampleId, newTotal);
+    }
+
+    public int getSampleIndex(int sampleId)
+    {
+        for (int index = 0; index < mSampleIds.size(); ++index)
+        {
+            if (mSampleIds.get(index) == sampleId)
+            {
+                return index;
+            }
+        }
+
+        return -1;
+    }
+
     public boolean removeSampleAllocation(final SampleData sample, int samIndex, boolean removePotentialAlloc)
     {
         if(samIndex == -1)
         {
-            for (int index = 0; index < mSampleIds.size(); ++index)
-            {
-                if (mSampleIds.get(index) == sample.Id)
-                {
-                    samIndex = index;
-                    break;
-                }
-            }
+            samIndex = getSampleIndex(sample.Id);
 
             if (samIndex == -1)
                 return false;
@@ -314,6 +344,14 @@ public class BucketGroup implements Comparable<BucketGroup> {
     {
         if(ratioRanges != null)
             copyVector(ratioRanges, mBucketRatioRanges);
+    }
+
+    public void setRatioRangePerc(double rangePerc)
+    {
+        for(Integer bucket : mBucketIds)
+        {
+            mBucketRatioRanges[bucket] = mBucketRatios[bucket] * rangePerc;
+        }
     }
 
     public static double ratioRange(final double[] ranges, int bucket, boolean takeMin)

@@ -55,7 +55,6 @@ public class SigOptimiser
     private double[] mNoiseRanges;
     private double[] mRatioRanges;
     private double[] mCurrentRatios;
-    private double[] mBucketTotals;
     private double[] mRangesLow;
     private double[] mRangesHigh;
     private double[] mCalcRanges;
@@ -76,6 +75,8 @@ public class SigOptimiser
     private static double MIN_IMPROVE_PERCENT = 0.005;
     private static int BUCKET_RATIO_SEGMENT_COUNT = 50; // for dividing ratio percents into small segments
     private static double SMALL_RATIO_PERC_CUTOFF = 0.01; // so for a max bucket ratio of 0.36, a minor bucket ratio of 0.0036 would be ignored
+    private static double BUCKET_RATIO_RANGE_PERCENTILE = 0.8;
+    private static double BUCKET_RANGE_SCORE_THRESHOLD = 0.05; // 0.5 allocation of samples and >= 10% of max ratio
 
     private static final Logger LOGGER = LogManager.getLogger(SigOptimiser.class);
 
@@ -103,8 +104,6 @@ public class SigOptimiser
         copyVector(startRatios, mCurrentRatios);
         mRatioRanges = new double[mBucketCount];
         mNoiseRanges = new double[mBucketCount];
-
-        mBucketTotals = new double[mBucketCount];
 
         mNewBuckets = Lists.newArrayList();
         mRemovedBuckets = Lists.newArrayList();
@@ -281,16 +280,20 @@ public class SigOptimiser
         bucketIds.addAll(mNonZeroBuckets);
         bucketIds.addAll(mCandidateNewBuckets);
 
-        for(Integer b : bucketIds)
+        double[] unallocBucketTotals = new double[mBucketCount];
+
+        for (Integer b : bucketIds)
         {
-            for(final SampleData sample : mSamples)
-                mBucketTotals[b] += sample.getElevatedBucketCounts()[b];
+            for (final SampleData sample : mSamples)
+                unallocBucketTotals[b] += sample.getUnallocBucketCounts()[b];
         }
+
+        removeLowCandidateBuckets(bucketIds, unallocBucketTotals);
 
         double[] ratioIncrements = new double[mBucketCount];
         initVector(ratioIncrements, 1 / (double) BUCKET_RATIO_SEGMENT_COUNT);
 
-        assignBucketRatioFrequencies(bucketIds, ratioIncrements, mBucketTotals);
+        assignBucketRatioFrequencies(bucketIds, ratioIncrements, unallocBucketTotals, false);
 
         // calculate a cache a mean and max for each bucket from the weighted sample count ratios
         double[] meanBucketRatios = new double[mBucketCount];
@@ -298,42 +301,24 @@ public class SigOptimiser
 
         calcBucketDistributionStats(bucketIds, ratioIncrements, meanBucketRatios, maxBucketRatios);
 
-        // scale the frequencies to a more appropriate set of incremental ratio values
-        for(Integer b : bucketIds)
-        {
-            if (meanBucketRatios[b] == 0)
-                continue;
+        setRatioIncrements(bucketIds, ratioIncrements, meanBucketRatios, maxBucketRatios);
 
-            double refRatio = max(meanBucketRatios[b], maxBucketRatios[b]);
-
-            if(refRatio >= 0.5)
-                ratioIncrements[b] = 1 / (double) BUCKET_RATIO_SEGMENT_COUNT;
-            else if(refRatio >= 0.25)
-                ratioIncrements[b] = 0.5 / (double) BUCKET_RATIO_SEGMENT_COUNT;
-            else if(refRatio >= 0.1)
-                ratioIncrements[b] = 0.2 / (double) BUCKET_RATIO_SEGMENT_COUNT;
-            else if(refRatio >= 0.05)
-                ratioIncrements[b] = 0.1 / (double) BUCKET_RATIO_SEGMENT_COUNT;
-            else
-                ratioIncrements[b] = 0.05 / (double) BUCKET_RATIO_SEGMENT_COUNT;
-        }
-
-        assignBucketRatioFrequencies(bucketIds, ratioIncrements, mBucketTotals);
+        assignBucketRatioFrequencies(bucketIds, ratioIncrements, unallocBucketTotals, false);
 
         calcBucketDistributionStats(bucketIds, ratioIncrements, meanBucketRatios, maxBucketRatios);
 
         // assess the results
         double maxMeanBucketRatio = 0;
 
-        for(Integer b : bucketIds)
+        for (Integer b : bucketIds)
         {
-            if(meanBucketRatios[b] > maxMeanBucketRatio)
+            if (meanBucketRatios[b] > maxMeanBucketRatio)
                 maxMeanBucketRatio = meanBucketRatios[b];
         }
 
-        for(Integer b : bucketIds)
+        for (Integer b : bucketIds)
         {
-            examineBucketDistribution(b, meanBucketRatios[b], ratioIncrements[b]);
+            examineBucketDistribution(b, meanBucketRatios[b], ratioIncrements[b], unallocBucketTotals);
         }
 
         // finally update the final ratios
@@ -342,30 +327,59 @@ public class SigOptimiser
 
         convertToPercentages(mCurrentRatios);
 
-        logStats(true);
+        // TEMP:
+        copyVector(mStartRatios, mCurrentRatios);
+
+        for (Integer b : bucketIds)
+        {
+            mCalcRanges[b] = min(mCalcRanges[b], mCurrentRatios[b] - 0.001); // to prevent negatives on the min ratio side
+        }
     }
 
-    private void assignBucketRatioFrequencies(final List<Integer> bucketIds, final double[] ratioIncrements, final double[] bucketTotals)
+    private void setRatioIncrements(final List<Integer> bucketIds, final double[] ratioIncrements, final double[] meanBucketRatios, final double[] maxBucketRatios)
+    {
+        // scale the frequency rounding unit to a more appropriate set of incremental ratio values
+        for (Integer b : bucketIds)
+        {
+            if (meanBucketRatios[b] == 0)
+                continue;
+
+            double refRatio = max(meanBucketRatios[b], maxBucketRatios[b]);
+
+            if (refRatio >= 0.5)
+                ratioIncrements[b] = 1 / (double) BUCKET_RATIO_SEGMENT_COUNT;
+            else if (refRatio >= 0.25)
+                ratioIncrements[b] = 0.5 / (double) BUCKET_RATIO_SEGMENT_COUNT;
+            else if (refRatio >= 0.1)
+                ratioIncrements[b] = 0.2 / (double) BUCKET_RATIO_SEGMENT_COUNT;
+            else if (refRatio >= 0.05)
+                ratioIncrements[b] = 0.1 / (double) BUCKET_RATIO_SEGMENT_COUNT;
+            else
+                ratioIncrements[b] = 0.05 / (double) BUCKET_RATIO_SEGMENT_COUNT;
+        }
+    }
+
+    private void assignBucketRatioFrequencies(final List<Integer> bucketIds, final double[] ratioIncrements, final double[] bucketTotals, boolean isInit)
     {
         double[][] brwData = mBucketRatioWeights.getData();
         double[][] brfData = mBucketRatioFrequencies.getData();
 
-        // re-init data
-        for(Integer b : bucketIds)
+        if(!isInit)
         {
-            for (int i = 0; i < BUCKET_RATIO_SEGMENT_COUNT; ++i)
+            // re-init data
+            for (Integer b : bucketIds)
             {
-                brwData[b][i] = 0;
-                brfData[b][i] = 0;
+                for (int i = 0; i < BUCKET_RATIO_SEGMENT_COUNT; ++i)
+                {
+                    brwData[b][i] = 0;
+                    brfData[b][i] = 0;
+                }
             }
         }
 
         for(final SampleData sample : mSamples)
         {
-            double sampleTotal = sample.getTotalCount();
-
             final double[] counts = sample.getUnallocBucketCounts();
-            // final double[] sampleCounts = sample.getElevatedBucketCounts();
             final double[] noise = sample.getCountRanges();
             final double[] allocNoise = sample.getAllocNoiseCounts();
 
@@ -393,7 +407,7 @@ public class SigOptimiser
                 if(ratioIndex < 0 || ratioIndex >= BUCKET_RATIO_SEGMENT_COUNT)
                 {
                     LOGGER.debug(String.format("sample(%d) bucket(%d) skipping ratioIndex(%d) outside range from sbCount(%s) sampleTotal(%s) rawRatio(%.4f)",
-                            sample.Id, b, ratioIndex, sizeToStr(sbCount), sizeToStr(sampleTotal), rawBucketRatio));
+                            sample.Id, b, ratioIndex, sizeToStr(sbCount), sizeToStr(sample.getTotalCount()), rawBucketRatio));
                     continue;
                 }
 
@@ -401,6 +415,40 @@ public class SigOptimiser
                 brwData[b][ratioIndex] += sampleWeight;
                 brfData[b][ratioIndex] += 1;
             }
+        }
+    }
+
+    private void removeLowCandidateBuckets(List<Integer> bucketIds, double[] bucketTotals)
+    {
+        // remove any candidate bucket that is below a required min vs the total across all buckets to save on evaluating it
+        double totalCount = sumVector(bucketTotals);
+
+        double maxRatio = 0;
+        for(Integer bucket : bucketIds)
+        {
+            maxRatio = max(maxRatio, bucketTotals[bucket] / totalCount);
+        }
+
+        int index = 0;
+        while(index < bucketIds.size())
+        {
+            int bucket = bucketIds.get(index);
+
+            if(!mCandidateNewBuckets.contains(bucket))
+            {
+                ++index;
+                continue;
+            }
+
+            double bucketPerc = bucketTotals[bucket] / totalCount;
+
+            if(bucketPerc >= SMALL_RATIO_PERC_CUTOFF * maxRatio)
+            {
+                ++index;
+                continue;
+            }
+
+            bucketIds.remove(index);
         }
     }
 
@@ -440,11 +488,7 @@ public class SigOptimiser
         }
     }
 
-    private static double BUCKET_RATIO_RANGE_PERCENTILE = 0.8;
-    private static double BUCKET_RANGE_REQ_SAMPLE_PERC = 0.75;
-    private static double BUCKET_RANGE_SCORE_THRESHOLD = 0.05; // 0.5 allocation of samples and >= 10% of max ratio
-
-    private void examineBucketDistribution(int bucket, double origMeanRatio, double ratioIncrement)
+    private void examineBucketDistribution(int bucket, double origMeanRatio, double ratioIncrement, double[] bucketTotals)
     {
         double lastSampleWeight = 0;
 
@@ -548,7 +592,6 @@ public class SigOptimiser
 
         mRangesLow[bucket] = startRatio;
         mRangesHigh[bucket] = endRatio;
-        mCurrentRatios[bucket] = rangeBoundMean;
 
         double minRange = min(rangeBoundMean - startRatio, endRatio - rangeBoundMean);
 
@@ -557,11 +600,11 @@ public class SigOptimiser
 
         if(mLogVerbose)
         {
-            double countsTotal = weightTotal * mBucketTotals[bucket];
+            double countsTotal = weightTotal * bucketTotals[bucket];
 
             LOGGER.debug(String.format("grp(%d) bucket(%d %s) score(%.3f) mean(%.3f raw=%.3f) range(%.3f -> %.3f min=%.3f indx=%d -> %d) max(%.3f) total(%.3f %s of %s)",
                     mGroupId, bucket, isCandidate ? "cand" : "init", allocScore, rangeBoundMean, origMeanRatio, startRatio, endRatio, minRange,
-                    distStartIndex, distEndIndex, rangeBoundMax, weightTotal, sizeToStr(countsTotal), sizeToStr(mBucketTotals[bucket])));
+                    distStartIndex, distEndIndex, rangeBoundMax, weightTotal, sizeToStr(countsTotal), sizeToStr(bucketTotals[bucket])));
         }
 
         if(!isCandidate)
@@ -607,6 +650,156 @@ public class SigOptimiser
             double[] sampleBucketAllocs = mProposedAllocs.get(s);
             sampleBucketAllocs[bucket] = bucketAlloc;
         }
+    }
+
+    public static double[] optimiseSampleFit(final SampleData sample, final List<Integer> bucketIds, final double[] bucketRatios, final double[] ratioRanges, final double[] startAllocCounts, boolean logVerbose)
+    {
+        // tweak the ratios within the specified ranges to find the optimal alloc for this sample
+        double startAllocTotal = sumVector(startAllocCounts);
+
+        int bucketCount = bucketRatios.length;
+
+        final double[] unallocCounts = sample.getUnallocBucketCounts();
+        double[] currentUnallocCounts = new double[bucketCount];
+        copyVector(unallocCounts, currentUnallocCounts);
+
+        // first back out the currently allocated counts from this sig
+        for (Integer bucket : bucketIds)
+        {
+            currentUnallocCounts[bucket] = currentUnallocCounts[bucket] + startAllocCounts[bucket];
+        }
+
+        double[] currentRatios = new double[bucketCount];
+        double[] bestRatios = new double[bucketCount];
+        copyVector(bucketRatios, currentRatios);
+        copyVector(bucketRatios, bestRatios);
+
+        int bucketIncr = 5;
+
+        double bestAllocTotal = startAllocTotal;
+        List<Double> testRatios = Lists.newArrayList();
+
+        for (Integer bucket : bucketIds)
+        {
+            double startRatio = bestRatios[bucket]; // start with the existing ratio
+
+            double range = ratioRanges[bucket];
+
+            boolean changed = false;
+            double bestRatio = 0;
+            double testMin = 1;
+            double testMax = 0;
+            double bucketBestAllocTotal = 0;
+            double bucketBestRatio = 0;
+
+            // test a range of values around the starting ratio
+            // and repeat the process with a tighter range centered around the new best ratio the second time through
+            for (int j = 0; j < 2; ++j)
+            {
+                testRatios.clear();
+
+                if (j == 1)
+                {
+                    if (bucketBestRatio == startRatio)
+                    {
+                        // try again but with a much tighter increment
+                        range *= 0.2;
+                    }
+                    else
+                    {
+                        // refine the search
+                        range = abs(startRatio - bucketBestRatio);
+                        startRatio = bucketBestRatio;
+                    }
+                }
+
+                if (startRatio - range <= 0)
+                    testRatios.add(0.0);
+
+                double rangeFrag = min(range, startRatio) / bucketIncr;
+
+                for (int i = -bucketIncr; i <= bucketIncr + 1; ++i)
+                {
+                    double testRatio = startRatio + i * rangeFrag;
+
+                    if (testRatio > 0)
+                        testRatios.add(testRatio);
+                }
+
+                for (Double testRatio : testRatios)
+                {
+                    testMax = max(testMax, testRatio);
+                    testMin = min(testMin, testRatio);
+
+                    // always start with the current best set of ratios and add in the trial one
+                    copyVector(bestRatios, currentRatios);
+                    currentRatios[bucket] = testRatio;
+                    convertToPercentages(currentRatios);
+
+                    // now test the effect of this ratio adjustment
+                    double allocTotal = 0;
+                    boolean initialised = false;
+                    for (Integer b : bucketIds)
+                    {
+                        if (currentRatios[b] == 0)
+                            continue;
+
+                        double alloc = currentUnallocCounts[b] / currentRatios[b];
+
+                        if (!initialised || alloc < allocTotal)
+                        {
+                            initialised = true;
+                            allocTotal = alloc;
+                        }
+                    }
+
+                    // double allocTotal = calcTotalAllocatedCounts(currentRatios, testSampleAllocs, null);
+
+                    if (greaterThan(allocTotal, bucketBestAllocTotal))
+                    {
+                        bucketBestAllocTotal = allocTotal;
+                        bucketBestRatio = testRatio;
+                    }
+
+                    if (greaterThan(allocTotal, bestAllocTotal))
+                    {
+                        bestAllocTotal = allocTotal;
+                        bestRatio = testRatio;
+                        changed = true;
+                    }
+                }
+            }
+
+            if (changed)
+            {
+                // keep the best ratios for this bucket and move on
+                bestRatios[bucket] = bestRatio;
+                convertToPercentages(bestRatios);
+
+                if(logVerbose)
+                {
+                    LOGGER.debug(String.format("sample(%d) bucket(%d) best ratio(%.4f converted=%.4f) vs start(%.4f) testRange(%.4f -> %.4f)",
+                            sample.Id, bucket, bestRatio, bestRatios[bucket], bucketRatios[bucket], testMin, testMax));
+                }
+            }
+        }
+
+        if (bestAllocTotal <= startAllocTotal)
+            return null;
+
+        double allocPercImprove = (bestAllocTotal - startAllocTotal) / sample.getElevatedCount();
+        LOGGER.debug(String.format("sample(%d) ratio optimisation increased alloc count(%s -> %s) perc(%.3f of %s)",
+                sample.Id, doubleToStr(startAllocTotal), doubleToStr(bestAllocTotal), allocPercImprove, sizeToStr(sample.getElevatedCount())));
+
+        // produce a final optimal set of alloc counts
+        double[] additionalAllocCounts = new double[bucketCount];
+        for (Integer b : bucketIds)
+        {
+            additionalAllocCounts[b] = bestAllocTotal * bestRatios[b];
+            additionalAllocCounts[b] = max(additionalAllocCounts[b] - startAllocCounts[b], 0);
+        }
+
+        return additionalAllocCounts;
     }
 
     private void calcBucketRatioRanges()

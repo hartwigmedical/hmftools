@@ -709,11 +709,6 @@ public class SigContribOptimiser
 
     private double calcSigContribution(int sig, final double[] currentCounts)
     {
-        return calcSigContribution(sig, currentCounts, false);
-    }
-
-    private double calcSigContribution(int sig, final double[] currentCounts, boolean useRange)
-    {
         double minAlloc = 0;
         double[][] sigData = mSigs.getData();
 
@@ -728,7 +723,7 @@ public class SigContribOptimiser
                 break;
             }
 
-            double sigRatio = sigData[b][sig]; // useRange ? ratioRange(sigData[b][sig], true) : sigData[b][sig];
+            double sigRatio = sigData[b][sig];
             double alloc = (mCounts[b] - currentCounts[b]) / sigRatio;
 
             alloc = min(alloc, mCountsTotal);
@@ -743,11 +738,6 @@ public class SigContribOptimiser
     }
 
     private void applyContribution(int sig, double newContrib)
-    {
-        applyContribution(sig, newContrib, false);
-    }
-
-    private void applyContribution(int sig, double newContrib, boolean useRange)
     {
         if(newContrib == 0)
             return;
@@ -777,73 +767,18 @@ public class SigContribOptimiser
             if(sigData[b][sig] == 0)
                 continue;
 
-            double newCount = 0;
+            double newCount = newContrib * sigData[b][sig];
 
-            if(!useRange)
+            if (greaterThan(mCurrentCounts[b] + newCount, mCounts[b]))
             {
-                newCount = newContrib * sigData[b][sig];
-
-                if (greaterThan(mCurrentCounts[b] + newCount, mCounts[b]))
-                {
-                    LOGGER.error(String.format("sig(%d contrib=%f) count(%f) + newCount(%f) exceeds maxCount(%f) diff(%f)",
-                            mSigIds[sig], mContribs[sig], mCurrentCounts[b], newCount, mCounts[b],
-                            mCurrentCounts[b] + newCount - mCounts[b]));
-                    mIsValid = false;
-                    return;
-                }
-            }
-            else
-            {
-                /*
-                double newCountMax = newContrib * ratioRange(sigData[b][sig], false);
-                double newCountMin = newContrib * ratioRange(sigData[b][sig], true);
-
-                if (greaterThan(mCurrentCounts[b] + newCountMin, mCounts[b]))
-                {
-                    LOGGER.error(String.format("sig(%d contrib=%f) count(%f) + newCount(%f) exceeds maxCount(%f) diff(%f)",
-                            mSigIds[sig], mContribs[sig], mCurrentCounts[b], newCountMin, mCounts[b],
-                            mCurrentCounts[b] + newCountMin - mCounts[b]));
-                    mIsValid = false;
-                    return;
-                }
-
-                newCount = min(mCounts[b] - mCurrentCounts[b], newCountMax);
-                */
+                LOGGER.error(String.format("sig(%d contrib=%f) count(%f) + newCount(%f) exceeds maxCount(%f) diff(%f)",
+                        mSigIds[sig], mContribs[sig], mCurrentCounts[b], newCount, mCounts[b],
+                        mCurrentCounts[b] + newCount - mCounts[b]));
+                mIsValid = false;
+                return;
             }
 
             mCurrentCounts[b] += newCount;
-        }
-    }
-
-    private void applyFinalContributions()
-    {
-        if(!mApplyRange)
-            return;
-
-        double prevAllocPerc = mCurrentAllocPerc;
-
-        List<Integer> sortedContribIndices = getSortedVectorIndices(mContribs, false);
-
-        for (Integer s : sortedContribIndices)
-        {
-            if (mContribs[s] == 0)
-                break;
-
-            double alloc = calcSigContribution(s, mCurrentCounts, true);
-
-            if(alloc > 0)
-                applyContribution(s, alloc, true);
-        }
-
-        if(true)
-        {
-            recalcStats();
-
-            if (mCurrentAllocPerc >= prevAllocPerc * 1.005)
-            {
-                LOGGER.debug(String.format("sample(%d) final alloc(%.3f -> %.3f) using range-logic",
-                        mSampleId, mCurrentAllocPerc, prevAllocPerc));
-            }
         }
     }
 
