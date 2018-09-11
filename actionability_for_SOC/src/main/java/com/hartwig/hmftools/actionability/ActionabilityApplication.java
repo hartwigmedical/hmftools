@@ -1,5 +1,22 @@
 package com.hartwig.hmftools.actionability;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.sql.SQLException;
+import java.util.List;
+
+import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
+import com.hartwig.hmftools.common.context.RunContext;
+import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -11,14 +28,43 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ActionabilityApplication {
     private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(ActionabilityApplication.class);
 
-    public static void main(final String... args)  {
-        //final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
-        //final List<SomaticVariant> variants = PatientReporterHelper.loadPassedSomaticVariants(run.tumorSample(), runDirectory);
-        LOGGER.info("hello");
+    private static final String RUN_DIRECTORY = "run_dir";
+    private static final String SOMATIC_VCF_EXTENSION_V3 = "_post_processed_v2.2.vcf.gz";
+    private static final String SOMATIC_VCF_EXTENSION_V4 = "_post_processed.vcf.gz";
 
+    public void main(final String... args) throws ParseException, IOException, SQLException {
+        final Options options = createOptions();
+        final CommandLine cmd = createCommandLine(options, args);
+        final String runDir = cmd.getOptionValue(RUN_DIRECTORY);
+        LOGGER.info(runDir);
+        final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDir);
+        LOGGER.info(run);
+        final List<SomaticVariant> variants = loadPassedSomaticVariants(run.tumorSample(), runDir);
+        LOGGER.info(variants);
     }
 
+    @NotNull
+    private static Options createOptions() {
+        final Options options = new Options();
+        options.addOption(RUN_DIRECTORY, true, "Complete path towards a single run dir where patient reporter will run on.");
+        return options;
+    }
 
+    @NotNull
+    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException {
+        final CommandLineParser parser = new DefaultParser();
+        return parser.parse(options, args);
+    }
 
-
+    @NotNull
+    private List<SomaticVariant> loadPassedSomaticVariants(@NotNull final String sample, @NotNull final String path) throws IOException {
+        // TODO (KODU): Clean up once pipeline v3 no longer exists
+        Path vcfPath;
+        try {
+            vcfPath = PathExtensionFinder.build().findPath(path, SOMATIC_VCF_EXTENSION_V3);
+        } catch (FileNotFoundException exception) {
+            vcfPath = PathExtensionFinder.build().findPath(path, SOMATIC_VCF_EXTENSION_V4);
+        }
+        return SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, vcfPath.toString());
+    }
 }

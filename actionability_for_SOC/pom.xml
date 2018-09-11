@@ -40,6 +40,11 @@
             <artifactId>patient-db</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>patient-reporter</artifactId>
+            <version>5.0</version>
+        </dependency>
+        <dependency>
             <groupId>org.immutables</groupId>
             <artifactId>value</artifactId>
             <scope>provided</scope>
