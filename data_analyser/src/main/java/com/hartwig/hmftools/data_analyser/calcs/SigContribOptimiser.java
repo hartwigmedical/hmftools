@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.doubleToStr;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.doublesEqual;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.greaterThan;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.initVector;
@@ -17,6 +18,7 @@ import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.vectorMultiply;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.data_analyser.types.NmfMatrix;
 
 import org.apache.logging.log4j.LogManager;
@@ -168,6 +170,13 @@ public class SigContribOptimiser
         {
             double[] sigRatios = ratiosCollection.get(sig);
 
+            if(!Doubles.equal(sumVector(sigRatios), 1))
+            {
+                LOGGER.error("sig({}) has invalid ratios", sig);
+                mIsValid = false;
+                return;
+            }
+
             if (sigRatios.length != mBucketCount)
             {
                 mIsValid = false;
@@ -196,12 +205,9 @@ public class SigContribOptimiser
         }
     }
 
-    public final double[] getFittedCounts() { return mCurrentCounts; }
     public final double[] getContribs() { return mContribs; }
-    public final double getContribTotal() { return mContribTotal; }
     public double getAllocPerc() { return mCurrentAllocPerc; }
     public boolean isValid() { return mIsValid; }
-    public boolean isFullyAllocated() { return mIsFullyAllocated; }
     public int getInstances() { return mInstances; }
     public double getAvgIterations() { return mAvgIterations; }
     public double getAvgImprovePerc() { return mAvgPercImprove; }

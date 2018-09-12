@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.calcBestFitWith
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.convertToPercentages;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.doubleToStr;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.doublesEqual;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getDiffList;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getMatchingList;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getNewFile;
@@ -39,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.numeric.PerformanceCounter;
 import com.hartwig.hmftools.data_analyser.loaders.GenericDataLoader;
 import com.hartwig.hmftools.data_analyser.types.BucketGroup;
@@ -103,6 +105,7 @@ public class BucketAnalyser {
     private boolean mApplyNoise; // whether to factor Poisson noise into the sample counts and fits
 
     BufferedWriter mBgInterimFileWriter;
+    BufferedWriter mBgRatioRangeFileWriter;
     PerformanceCounter mPerfCounter;
 
     // config
@@ -142,7 +145,7 @@ public class BucketAnalyser {
     private static double MAX_ELEVATED_PROB = 1e-12;
     private static double MIN_DISCOVERY_SAMPLE_COUNT = 0.0001; // % of cohort to consider a pair of samples similar (5K at 0.01% of 55M)
     private static double PERMITTED_PROB_NOISE = 1e-4;
-    private static double MIN_GROUP_ALLOC_PERCENT = 0.10; // only allocate a sample to a group if it takes at this much of the elevated count
+    private static double MIN_GROUP_ALLOC_PERCENT = 0.30; // only allocate a sample to a group if it takes at this much of the elevated count
     public static double MIN_GROUP_ALLOC_PERCENT_LOWER = 0.03; // hard lower limit
     private static double SKIP_ALLOC_FACTOR = 2.0; // skip adding a sample to a group if another candidate not chosen to allocate X times as much
     private static int MAX_CANDIDATE_GROUPS = 1500; // in place for speed and memory considerations
@@ -205,6 +208,7 @@ public class BucketAnalyser {
         mReassessSamples = Lists.newArrayList();
         mSkippedBucketGroups = Lists.newArrayList();
         mBgInterimFileWriter = null;
+        mBgRatioRangeFileWriter = null;
 
         mHighCssThreshold = 0.995;
         mMaxProposedSigs = 0;
@@ -225,7 +229,7 @@ public class BucketAnalyser {
 
         mSampleWatchList = Lists.newArrayList();
 
-        mSampleWatchList.add(430);
+        mSampleWatchList.add(4);
         // mSampleWatchList.add(2024);
 //        mSampleWatchList.add(2617);
 
@@ -413,8 +417,6 @@ public class BucketAnalyser {
         mReporter.logOverallStats();
         perfCounter.stop();
 
-        // calcBucketDistributions();
-
         if(mApplyPredefinedSigCount > 0)
         {
             applyPredefinedSigs();
@@ -424,7 +426,12 @@ public class BucketAnalyser {
         if(mFinalFitOnly)
             mRunCount = 0;
 
+        // TEMP:
+        boolean throttleDiscovery = true;
+
         boolean onFinalRun = false;
+        boolean runDiscovery = true;
+
         for(mRunId = 0; mRunId < mRunCount; ++mRunId)
         {
             perfCounter.start(String.format("FindBucketGroup run %d", mRunId));
@@ -432,36 +439,43 @@ public class BucketAnalyser {
             if(!onFinalRun && mRunId == mRunCount - 1)
                 onFinalRun = true;
 
-            if(!onFinalRun)
+            if(runDiscovery)
             {
-                clearBucketGroups();
+                if (!onFinalRun)
+                {
+                    clearBucketGroups(false);
+                }
+                else
+                {
+                    // clear all state and try again in case anything was missed (due to logical state bugs)
+                    mReassessSamples.clear();
+                    mBucketGroups.clear();
+                }
+
+                mLastRunGroupCount = mBucketGroups.size();
             }
             else
             {
-                // clear all state and try again in case anything was missed (due to logical state bugs)
+                // keep the same groups, but clear recently allocated samples so they'll be reassessed
                 mReassessSamples.clear();
-                mBucketGroups.clear();
+                mLastRunGroupCount = 0;
+                clearBucketGroups(true);
             }
-
-            mLastRunGroupCount = mBucketGroups.size();
 
             LOGGER.debug("starting run({}) to find next top bucket group", mRunId);
 
             // find candidate bucket groups via various methods
-            // formExactBucketGroups(false);
-
-            // and then the best sub-groups
-            if(mExcessDiscoveryRunId >= 0 && mRunId >= mExcessDiscoveryRunId)
-                formExcessBucketGroups();
-
-            formBucketGroupsFromSamplePairs(false);
-
-            /*
-            if(mRunId > 0)
+            if(runDiscovery)
             {
-                formBucketGroupsFromSamplePairs(true);
+                if (mExcessDiscoveryRunId >= 0 && mRunId >= mExcessDiscoveryRunId)
+                    formExcessBucketGroups();
+
+                formBucketGroupsFromSamplePairs(false);
+                runDiscovery = false;
             }
-            */
+
+            // if(mRunId > 0)
+            //    formBucketGroupsFromSamplePairs(true);
 
             if(mBucketGroups.isEmpty())
             {
@@ -471,6 +485,7 @@ public class BucketAnalyser {
                     break;
 
                 onFinalRun = true;
+                runDiscovery = true;
                 continue;
             }
 
@@ -482,8 +497,8 @@ public class BucketAnalyser {
                 assessCandidateBucketGroups();
 
             // uncomment to log interim groups
-            analyseGroupsVsExtData(mTopAllocBucketGroups, false);
-            writeInterimBucketGroups();
+            // analyseGroupsVsExtData(mTopAllocBucketGroups, false);
+            // writeInterimBucketGroups();
 
             // allocated elevated counts to the best group
             BucketGroup nextBestGroup = allocateTopBucketGroup();
@@ -515,6 +530,7 @@ public class BucketAnalyser {
 
                 LOGGER.debug("no top ground found, starting final run", nextBestGroup.getId());
                 onFinalRun = true;
+                runDiscovery = true;
                 continue;
             }
 
@@ -527,6 +543,7 @@ public class BucketAnalyser {
                     break;
 
                 onFinalRun = true;
+                runDiscovery = true;
                 continue;
             }
 
@@ -571,6 +588,9 @@ public class BucketAnalyser {
         {
             if(mBgInterimFileWriter != null)
                 mBgInterimFileWriter.close();
+
+            if(mBgRatioRangeFileWriter != null)
+                mBgRatioRangeFileWriter.close();
         }
         catch(IOException e)
         {
@@ -1279,6 +1299,12 @@ public class BucketAnalyser {
 
             bucketGroup.setBucketRatios(bucketRatios);
 
+            if(!bucketGroup.isValid())
+            {
+                LOGGER.warn("bg({}) has invalid ratios");
+                continue;
+            }
+
             if(mLogVerbose)
             {
                 LOGGER.debug(String.format("added bg(%d) samples(%d and %d) with buckets(%d) css(%.4f) allocCalcTotal(%s)",
@@ -1580,15 +1606,26 @@ public class BucketAnalyser {
         {
             BucketGroup bucketGroup = mBucketGroups.get(bgIndex);
 
+            if(!bucketGroup.isValid() || !Doubles.equal(sumVector(bucketGroup.getBucketRatios()), 1))
+            {
+                bucketGroup.recalcBucketRatios();
+
+                if(!bucketGroup.isValid())
+                {
+                    LOGGER.warn("bg({}) skipped since invalid", bucketGroup.getId());
+                    continue;
+                }
+            }
+
+            double[] bgRatios = new double[mBucketCount];
+            copyVector(bucketGroup.getBucketRatios(), bgRatios); // won't be recomputed as sample counts are added
+
             if(!keepPreviousAllocs || bgIndex >= mLastRunGroupCount)
             {
                 // clear any existing allocations for any new, unassessed groups
                 bucketGroup.clearSamples();
                 bucketGroup.resetPotentialAllocation();
             }
-
-            double[] bgRatios = new double[mBucketCount];
-            copyVector(bucketGroup.getBucketRatios(), bgRatios); // won't be recomputed as sample counts are added
 
             final List<Integer> groupBuckets = bucketGroup.getBucketIds();
 
@@ -1599,7 +1636,7 @@ public class BucketAnalyser {
                 if(sample.isExcluded())
                     continue;
 
-                if(mSampleWatchList.contains(sampleId)) //
+                if(mSampleWatchList.contains(sampleId))
                 {
                     // LOGGER.debug("spec sample");
                 }
@@ -2054,13 +2091,9 @@ public class BucketAnalyser {
             similarGroups.add(bucketGroup);
         }
 
-        for (final BucketGroup candidateBg : mBucketGroups)
+        for (BucketGroup similarGroup : similarGroups)
         {
-            if (similarGroups.contains(candidateBg))
-            {
-                mBucketGroups.remove(candidateBg);
-                break;
-            }
+            mBucketGroups.remove(similarGroup);
         }
 
         // convert back to percentages
@@ -2077,7 +2110,8 @@ public class BucketAnalyser {
 
         SigOptimiser sigOptim = new SigOptimiser(topBucketGroup.getId(), samples, proposedAllocs, avgBucketRatios, candidateNewBuckets);
         sigOptim.setLogVerbose(true);
-        sigOptim.setUseRatioMethod(mUseRatioRanges);
+        sigOptim.setCacheBucketInfo(true);
+        // sigOptim.setUseRatioMethod(mUseRatioRanges);
 
         boolean validCalc = sigOptim.optimiseBucketRatios(true);
 
@@ -2098,6 +2132,8 @@ public class BucketAnalyser {
                 sampleAllocTotals.set(samIndex, sigOptim.getRevisedSampleAlloc(samIndex));
                 sampleCounts.set(samIndex, sigOptim.getRevisedSampleAllocCounts(samIndex));
             }
+
+            writeBucketGroupRatioRangeData(topBucketGroup, sigOptim);
         }
 
         topBucketGroup.setBucketRatios(avgBucketRatios);
@@ -2323,7 +2359,7 @@ public class BucketAnalyser {
         }
     }
 
-    private void clearBucketGroups()
+    private void clearBucketGroups(boolean finalGroupsOnly)
     {
         if(mBucketGroups.isEmpty())
             return;
@@ -2338,6 +2374,12 @@ public class BucketAnalyser {
             if(mFinalBucketGroups.contains(bucketGroup))
             {
                 mBucketGroups.remove(bgIndex);
+                continue;
+            }
+
+            if(finalGroupsOnly)
+            {
+                ++bgIndex;
                 continue;
             }
 
@@ -2360,8 +2402,6 @@ public class BucketAnalyser {
             }
 
             // remove any samples from this group which were just allocated
-            // int sharedCount = 0;
-            // double bgSampleCount = bucketGroup.getSampleIds().size();
             for(int samIndex = 0; samIndex < bucketGroup.getSampleIds().size(); ++samIndex)
             {
                 int sampleId = bucketGroup.getSampleIds().get(samIndex);
@@ -2370,8 +2410,6 @@ public class BucketAnalyser {
                     continue;
 
                 SampleData sample = mSampleData.get(sampleId);
-
-                // ++sharedCount;
 
                 // remove this sample's allocation to the group
                 boolean ok = bucketGroup.removeSampleAllocation(sample, samIndex,true);
@@ -2383,8 +2421,6 @@ public class BucketAnalyser {
                     return;
                 }
             }
-
-            // double sharedPerc = sharedCount/bgSampleCount;
 
             if(bucketGroup.getSampleIds().isEmpty())
             {
@@ -2947,7 +2983,7 @@ public class BucketAnalyser {
             {
                 BucketGroup bucketGroup = mTopAllocBucketGroups.get(bgIndex);
 
-                String groupType = bucketGroup.getTag().equalsIgnoreCase("background") ? "BG" : "Elev";
+                String groupType = bucketGroup.isBackground() ? BG_TYPE_BACKGROUND : bucketGroup.getTag();
 
                 writer.write(String.format("%d,%d,%d,%s,%s,%s,%d,%d,%.0f,%.0f,%.0f",
                         mRunId, bgIndex, bucketGroup.getId(), groupType, bucketGroup.getCancerType(), bucketGroup.getEffects(),
@@ -2967,6 +3003,46 @@ public class BucketAnalyser {
         catch(IOException exception)
         {
             LOGGER.error("failed to write output file: interim bucket groups");
+        }
+    }
+
+    private void writeBucketGroupRatioRangeData(final BucketGroup bucketGroup, final SigOptimiser sigOptim)
+    {
+        try
+        {
+            if(mBgRatioRangeFileWriter == null)
+            {
+                mBgRatioRangeFileWriter = getNewFile(mOutputDir, mOutputFileId + "_ba_grp_ratio_ranges.csv");
+
+                mBgRatioRangeFileWriter.write("BgId,Type,CancerType,Effects,SampleCount,BucketCount,Bucket,");
+
+                mBgRatioRangeFileWriter.write(SigOptimiser.getBucketInfoHeader());
+
+                mBgRatioRangeFileWriter.newLine();
+            }
+
+            BufferedWriter writer = mBgRatioRangeFileWriter;
+
+            List<Integer> bucketIds = Lists.newArrayList();
+            bucketIds.addAll(sigOptim.getNonZeroBuckets());
+
+            for(Integer bucket : bucketIds)
+            {
+                writer.write(String.format("%d,%s,%s,%s,%d,%d,%d,",
+                        bucketGroup.getId(), bucketGroup.getTag(), bucketGroup.getCancerType(), bucketGroup.getEffects(),
+                        bucketGroup.getSampleIds().size(), bucketGroup.getBucketIds().size(), bucket));
+
+                String bucketData = sigOptim.getBucketInfo(bucket);
+
+                if(bucketData != null)
+                    writer.write(bucketData);
+
+                writer.newLine();
+            }
+        }
+        catch(IOException exception)
+        {
+            LOGGER.error("failed to write output file: bucket group ratio range data");
         }
     }
 
