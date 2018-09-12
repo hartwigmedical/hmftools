@@ -3,7 +3,7 @@ package com.hartwig.hmftools.actionability.variants;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
@@ -14,9 +14,11 @@ public class ActionabilityAnalyzer {
 
     @NotNull
     public static ActionabilityAnalyzer loadFromFile(String file) throws IOException {
-        final String line =  Files.readAllLines(new File(file).toPath()).get(1);
-        fromLine(line);
-        LOGGER.info(fromLine(line));
+        final List<String> line =  Files.readAllLines(new File(file).toPath());
+        for (int i = 1; i< line.size(); i++) {
+            fromLine(line.get(i));
+            LOGGER.info(fromLine(line.get(i)));
+        }
         return null;
     }
 

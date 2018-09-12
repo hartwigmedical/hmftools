@@ -47,17 +47,25 @@ public abstract class ActionabilityApplication {
         LOGGER.info("");
         LOGGER.info("Start processing actionability variants");
 
-        String file = "/data/common/dbs/knowledgebases/output/actionableVariants.tsv";
-        if (Files.exists(new File(file).toPath())) {
-            ActionabilityAnalyzer analyzer = ActionabilityAnalyzer.loadFromFile(file);
+        String fileActionabilityVariants = "/data/common/dbs/knowledgebases/output/actionableVariants.tsv";
+     //   String fileActionabilityRanges = "/data/common/dbs/knowledgebases/output/actionableRanges.tsv";
+
+        if (Files.exists(new File(fileActionabilityVariants).toPath())) {
+            ActionabilityAnalyzer analyzer = ActionabilityAnalyzer.loadFromFile(fileActionabilityVariants);
         } else {
-            LOGGER.warn("File does not exist: " + file);
+            LOGGER.warn("File does not exist: " + fileActionabilityVariants);
         }
         LOGGER.info("");
         LOGGER.info("Start processing actionability fusions");
+     //   String fileActionabilityFusionPairs = "/data/common/dbs/knowledgebases/output/actionableFusionPairs.tsv";
+     //   String fileActionabilityPromiscuousFive = "/data/common/dbs/knowledgebases/output/actionablePromiscuousFive.tsv";
+      //  String fileActionabilityPromiscuousThree = "/data/common/dbs/knowledgebases/output/actionablePromiscuousThree.tsv";
+
 
         LOGGER.info("");
         LOGGER.info("Start processing actionability cnvs");
+       // String fileActionabilityCNVs = "/data/common/dbs/knowledgebases/output/actionableCNVs.tsv";
+
 
         LOGGER.info("");
         LOGGER.info("Writing output data to file");
