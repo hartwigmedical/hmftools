@@ -2,10 +2,13 @@ package com.hartwig.hmftools.actionability;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.List;
+import java.io.File;
 
+import com.hartwig.hmftools.actionability.variants.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
@@ -33,14 +36,34 @@ public abstract class ActionabilityApplication {
     private static final String SOMATIC_VCF_EXTENSION_V4 = "_post_processed.vcf.gz";
 
     public static void main(final String... args) throws ParseException, IOException, SQLException {
+        LOGGER.info("Determining actionability variants.");
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
         final String runDir = cmd.getOptionValue(RUN_DIRECTORY);
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDir);
         final List<SomaticVariant> variants = loadPassedSomaticVariants(run.tumorSample(), runDir);
         LOGGER.info("Tumor sample: " + run.tumorSample());
-        // read knowledgebase file /data/common/dbs/knowledgebases/output/actionableVariants.tsv
-        // check actionability variants
+
+        LOGGER.info("");
+        LOGGER.info("Start processing actionability variants");
+
+        String file = "/data/common/dbs/knowledgebases/output/actionableVariants.tsv";
+        if (Files.exists(new File(file).toPath())) {
+            ActionabilityAnalyzer analyzer = ActionabilityAnalyzer.loadFromFile(file);
+        } else {
+            LOGGER.warn("File does not exist: " + file);
+        }
+        LOGGER.info("");
+        LOGGER.info("Start processing actionability fusions");
+
+        LOGGER.info("");
+        LOGGER.info("Start processing actionability cnvs");
+
+        LOGGER.info("");
+        LOGGER.info("Writing output data to file");
+
+        LOGGER.info("");
+        LOGGER.info("Finish orocessing actionability variants");
     }
 
     @NotNull
