@@ -57,8 +57,6 @@ class IclusionApiWrapper(endpoint: String, private val clientId: String, private
         logger.info(" Studies with NCT identifier: ${studies.filterNot { it.nct.isEmpty() }.size}")
         logger.info(" Studies with IPN ?: ${studies.filterNot { it.ipn.isNullOrEmpty() }.size}")
 
-        studies.filterNot { it.ipn.isNullOrEmpty() }.forEach { logger.info(it) }
-
         val indications = indications().blockingIterable().toList().associateBy { it.id }
         logger.info("Queried ${indications.size} indications via iclusion API.")
 
