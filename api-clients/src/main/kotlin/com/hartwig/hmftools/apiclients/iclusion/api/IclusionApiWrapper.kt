@@ -51,6 +51,14 @@ class IclusionApiWrapper(endpoint: String, private val clientId: String, private
         val studies = studies().blockingIterable().toList()
         logger.info("Queried ${studies.size} studies via iclusion API.")
 
+        logger.info(" Studies with CCMO identifier: ${studies.filterNot { it.ccmo.isEmpty() }.size}")
+        logger.info(" Studies with mutations configured: ${studies.filterNot { it.mutations.isEmpty() }.size}")
+        logger.info(" Studies with EUDRA identifier: ${studies.filterNot { it.eudra.isEmpty() }.size}")
+        logger.info(" Studies with NCT identifier: ${studies.filterNot { it.nct.isEmpty() }.size}")
+        logger.info(" Studies with IPN ?: ${studies.filterNot { it.ipn.isNullOrEmpty() }.size}")
+
+        studies.filterNot { it.ipn.isNullOrEmpty() }.forEach { logger.info(it) }
+
         val indications = indications().blockingIterable().toList().associateBy { it.id }
         logger.info("Queried ${indications.size} indications via iclusion API.")
 
