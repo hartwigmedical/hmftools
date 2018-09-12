@@ -52,12 +52,14 @@ public abstract class ActionabilityApplication {
 
         if (Files.exists(new File(fileActionabilityVariants).toPath())) {
             ActionabilityVariantsAnalyzer analyzer = ActionabilityVariantsAnalyzer.loadFromFile(fileActionabilityVariants);
+            // Look for every variant for this sample
+            for (int i = 0; i < variants.size(); i ++){
+                LOGGER.info("varaints: " + variants.get(i).gene() + " " + variants.get(i).chromosome() + " " +
+                        variants.get(i).chromosomePosition() + " " + variants.get(i).ref() + " " + variants.get(i).alt());
+            }
         } else {
             LOGGER.warn("File does not exist: " + fileActionabilityVariants);
         }
-
-        // look for evy variant in file from fileActionabilityVariants
-      //  LOGGER.info("variants van tumorSample" + variants.get(1).alt());
 
         LOGGER.info("");
         LOGGER.info("Start processing actionability fusions");
