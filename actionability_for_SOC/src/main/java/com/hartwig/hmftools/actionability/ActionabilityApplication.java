@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.io.File;
 
-import com.hartwig.hmftools.actionability.variants.ActionabilityAnalyzer;
+import com.hartwig.hmftools.actionability.variants.ActionabilityVariantsAnalyzer;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
@@ -30,7 +30,7 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ActionabilityApplication {
     private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(ActionabilityApplication.class);
-
+    //add tumor locations of database
     private static final String RUN_DIRECTORY = "run_dir";
     private static final String SOMATIC_VCF_EXTENSION_V3 = "_post_processed_v2.2.vcf.gz";
     private static final String SOMATIC_VCF_EXTENSION_V4 = "_post_processed.vcf.gz";
@@ -51,10 +51,14 @@ public abstract class ActionabilityApplication {
      //   String fileActionabilityRanges = "/data/common/dbs/knowledgebases/output/actionableRanges.tsv";
 
         if (Files.exists(new File(fileActionabilityVariants).toPath())) {
-            ActionabilityAnalyzer analyzer = ActionabilityAnalyzer.loadFromFile(fileActionabilityVariants);
+            ActionabilityVariantsAnalyzer analyzer = ActionabilityVariantsAnalyzer.loadFromFile(fileActionabilityVariants);
         } else {
             LOGGER.warn("File does not exist: " + fileActionabilityVariants);
         }
+
+        // look for evy variant in file from fileActionabilityVariants
+      //  LOGGER.info("variants van tumorSample" + variants.get(1).alt());
+
         LOGGER.info("");
         LOGGER.info("Start processing actionability fusions");
      //   String fileActionabilityFusionPairs = "/data/common/dbs/knowledgebases/output/actionableFusionPairs.tsv";
@@ -78,6 +82,7 @@ public abstract class ActionabilityApplication {
     private static Options createOptions() {
         final Options options = new Options();
         options.addOption(RUN_DIRECTORY, true, "Complete path towards a single run dir where patient reporter will run on.");
+        //add tumor locations of database
         return options;
     }
 
