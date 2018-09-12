@@ -13,25 +13,25 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-class RefCdsCvFile {
+class DndsDriverLikelihoodFile {
     private static final Logger LOGGER = LogManager.getLogger(AmberBAFFile.class);
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "gene";
 
     @NotNull
-    public static Map<String, RefCdsCv> read(@NotNull final String fileName) throws IOException {
+    public static Map<String, DndsDriverLikelihood> read(@NotNull final String fileName) throws IOException {
         return fromLines(Files.readAllLines(new File(fileName).toPath()));
     }
 
     @NotNull
-    static Map<String, RefCdsCv> fromLines(@NotNull List<String> lines) {
-        Map<String, RefCdsCv> result = Maps.newHashMap();
+    static Map<String, DndsDriverLikelihood> fromLines(@NotNull List<String> lines) {
+        Map<String, DndsDriverLikelihood> result = Maps.newHashMap();
         int i = 0;
         for (String line : lines) {
             i++;
             try {
                 if (!line.startsWith(HEADER_PREFIX)) {
-                    final RefCdsCv entry = fromString(line);
+                    final DndsDriverLikelihood entry = fromString(line);
                     result.put(entry.gene(), entry);
                 }
             } catch (RuntimeException e) {
@@ -44,19 +44,14 @@ class RefCdsCvFile {
     }
 
     @NotNull
-    private static RefCdsCv fromString(@NotNull final String line) {
+    private static DndsDriverLikelihood fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
-        final ImmutableRefCdsCv.Builder builder = ImmutableRefCdsCv.builder()
+        final ImmutableDndsDriverLikelihood.Builder builder = ImmutableDndsDriverLikelihood.builder()
                 .gene(values[0])
-                .synonymousN(Integer.valueOf(values[1]))
-                .missenseN(Integer.valueOf(values[2]))
-                .nonsenseN(Integer.valueOf(values[3]))
-                .spliceN(Integer.valueOf(values[4]))
-                .indelN(Integer.valueOf(values[5]))
-                .missenseW(Double.valueOf(values[6]))
-                .nonsenseW(Double.valueOf(values[7]))
-                .spliceW(Double.valueOf(values[8]))
-                .indelW(Double.valueOf(values[9]));
+                .indel(Double.valueOf(values[1]))
+                .missense(Double.valueOf(values[2]))
+                .nonsense(Double.valueOf(values[3]))
+                .splice(Double.valueOf(values[4]));
 
         return builder.build();
     }
