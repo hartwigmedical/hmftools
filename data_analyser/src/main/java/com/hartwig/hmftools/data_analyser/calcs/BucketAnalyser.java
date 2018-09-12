@@ -9,9 +9,6 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.data_analyser.DataAnalyser.OUTPUT_DIR;
 import static com.hartwig.hmftools.data_analyser.DataAnalyser.OUTPUT_FILE_ID;
-import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_I1;
-import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_I2;
-import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_VAL;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.calcCSS;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.getTopCssPairs;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.calcBestFitWithinProbability;
@@ -25,22 +22,21 @@ import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getSortedVector
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.listToArray;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sizeToStr;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
-import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVectors;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.vectorMultiply;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.writeMatrixData;
 import static com.hartwig.hmftools.data_analyser.calcs.NmfConfig.NMF_REF_SIG_FILE;
-import static com.hartwig.hmftools.data_analyser.types.BucketGroup.BG_BACKGROUND_TYPE;
+import static com.hartwig.hmftools.data_analyser.types.BucketGroup.BG_TYPE_BACKGROUND;
+import static com.hartwig.hmftools.data_analyser.types.BucketGroup.BG_TYPE_MAJOR;
+import static com.hartwig.hmftools.data_analyser.types.BucketGroup.BG_TYPE_UNIQUE;
 import static com.hartwig.hmftools.data_analyser.types.GenericDataCollection.GD_TYPE_STRING;
 import static com.hartwig.hmftools.data_analyser.types.NmfMatrix.redimension;
 import static com.hartwig.hmftools.data_analyser.types.SampleData.PARTIAL_ALLOC_PERCENT;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.PerformanceCounter;
@@ -76,7 +72,6 @@ public class BucketAnalyser {
     private NmfMatrix mBackgroundCounts;
     private NmfMatrix mElevatedCounts; // actual - expected, capped at zero
     private double mElevatedCount;
-    private double mAllocatedCount;
     private double mBackgroundCount;
     private NmfMatrix mPermittedElevRange;
     private NmfMatrix mPermittedBgRange;
@@ -84,7 +79,6 @@ public class BucketAnalyser {
 
     private NmfMatrix mProposedSigs;
     private List<Integer> mSigToBgMapping;
-    private NmfMatrix mReferenceSigs;
     private NmfMatrix mPredefinedSigs;
     private boolean mFinalFitOnly; // using predefined sigs
 
@@ -126,6 +120,7 @@ public class BucketAnalyser {
     private boolean mLogVerbose;
     private int mMinSampleAllocCount; // hard lower limit to allocate a sample to a group
     private int mExcessDiscoveryRunId; // run iteration from which to begin discovery using excess-unalloc method
+    private int mUniqueGroupAssessment; // run iteration from which to begin consideration of unique groups
     private boolean mUseRatioRanges;
 
     private static String BA_CSS_HIGH_THRESHOLD = "ba_css_high";
@@ -161,11 +156,9 @@ public class BucketAnalyser {
     private static int COL_CANCER_TYPE = 1;
     private static int CATEGORY_COL_COUNT = 3;
     private static String CATEGORY_CANCER_TYPE = "Cancer";
-    private static String EFFECT_TRUE = "TRUE";
     private static String BA_SAMPLE_CALC_DATA_FILE = "ba_sam_calc_data_file";
 
     private static int SCD_COL_SAMPLE_ID = 0;
-    private static int SCD_COL_SAMPLE_NAME = 1;
     private static int SCD_COL_BG_ALLOC = 2;
 
     private List<Integer> mSampleWatchList;
@@ -188,7 +181,6 @@ public class BucketAnalyser {
         mBackgroundCounts = null;
         mElevatedCounts = null;
         mElevatedCount = 0;
-        mAllocatedCount = 0;
         mBackgroundCount = 0;
         mPermittedElevRange = null;
         mPermittedBgRange = null;
@@ -200,7 +192,6 @@ public class BucketAnalyser {
         mExtSampleData = null;
         mExtCategoriesMap = null;
         mCancerSamplesMap = null;
-        mReferenceSigs = null;
         mProposedSigs = null;
         mSigToBgMapping = Lists.newArrayList();
         mLoadedSampleCalcData = false;
@@ -234,8 +225,8 @@ public class BucketAnalyser {
 
         mSampleWatchList = Lists.newArrayList();
 
-        // mSampleWatchList.add(144);
-        //mSampleWatchList.add(460);
+        mSampleWatchList.add(430);
+        // mSampleWatchList.add(2024);
 //        mSampleWatchList.add(2617);
 
         // mSpecificSampleId = 305;
@@ -278,6 +269,8 @@ public class BucketAnalyser {
         mExcessDiscoveryRunId = Integer.parseInt(cmd.getOptionValue(BA_EXCESS_GRP_RUN_INDEX, "-1"));
         mMinBucketCountOverlap = Integer.parseInt(cmd.getOptionValue(BA_MIN_BUCKET_COUNT_OVERLAP, "3"));
         mUseRatioRanges = cmd.hasOption(BA_USE_RATIO_RANGES);
+
+        mUniqueGroupAssessment = 5;
 
         mRunCount = Integer.parseInt(cmd.getOptionValue(BA_RUN_COUNT, "25"));
 
@@ -481,13 +474,16 @@ public class BucketAnalyser {
                 continue;
             }
 
-            double prevAllocCount = mAllocatedCount;
+            double prevAllocCount = mReporter.getAllocatedCount();
 
             populateTopBucketGroups();
 
+            if(mRunId >= mUniqueGroupAssessment)
+                assessCandidateBucketGroups();
+
             // uncomment to log interim groups
-            // analyseGroupsVsExtData(mTopAllocBucketGroups, false);
-            // writeInterimBucketGroups();
+            analyseGroupsVsExtData(mTopAllocBucketGroups, false);
+            writeInterimBucketGroups();
 
             // allocated elevated counts to the best group
             BucketGroup nextBestGroup = allocateTopBucketGroup();
@@ -522,10 +518,10 @@ public class BucketAnalyser {
                 continue;
             }
 
-            if((mAllocatedCount - prevAllocCount) / mElevatedCount < 0.001) // eg 55K out of 55M
+            double newAllocCount = mReporter.getAllocatedCount();
+            if(mRunId > 0 && (newAllocCount - prevAllocCount) / mElevatedCount < 0.001) // eg 55K out of 55M
             {
-                LOGGER.debug(String.format("negligible allocPercChange(%s -> %s) at run(%d)",
-                        doubleToStr(prevAllocCount), doubleToStr(mAllocatedCount), mRunId));
+                LOGGER.debug(String.format("negligible allocPercChange(%s -> %s) at run(%d)", doubleToStr(prevAllocCount), doubleToStr(newAllocCount), mRunId));
 
                 if(onFinalRun)
                     break;
@@ -545,29 +541,20 @@ public class BucketAnalyser {
         fitAllSamples();
         perfCounter.stop();
 
-        mReporter.setFinalState(mProposedSigs, mSigToBgMapping);
-
         perfCounter.start("AnalyseResults");
         analyseGroupsVsExtData(mFinalBucketGroups, true);
-        mReporter.logBucketGroups(true);
-        mReporter.logSampleResults();
-        mReporter.logWorstAllocatedSamples();
-        mReporter.logSimilarSampleContribs();
-        mReporter.logSigReconstructions();
+        mReporter.postRunAnalysis();
         perfCounter.stop();
 
         if(mMaxProposedSigs > 0)
         {
             createSignatures();
-            mReporter.compareSignatures();
             writeSampleContributions();
         }
 
         writeFinalBucketGroups();
 
         writeSampleData();
-        // writeBackgroundSigs();
-        // writeSampleMatrixData(mElevatedCounts, "_ba_elevated_counts.csv");
         writeSampleCalcData();
 
         perfCounter.logStats();
@@ -1025,7 +1012,8 @@ public class BucketAnalyser {
         BucketGroup bucketGroup = new BucketGroup(mNextBucketId++);
         bucketGroup.addBuckets(bucketIds);
         bucketGroup.setCancerType(cancerType);
-        bucketGroup.setTag(BG_BACKGROUND_TYPE);
+        bucketGroup.setGroupType(BG_TYPE_BACKGROUND);
+        bucketGroup.setTag(BG_TYPE_BACKGROUND);
         bucketGroup.setBucketRatios(bucketRatios);
 
         if(mUseRatioRanges)
@@ -1131,7 +1119,7 @@ public class BucketAnalyser {
 
                 if(mSampleWatchList.contains(samIndex1) && mSampleWatchList.contains(samIndex2))
                 {
-                    //LOGGER.debug("spec sample");
+                    // LOGGER.debug("spec sample");
                 }
 
                 if(usePartialUnallocated && sample2.getAllocPercent() < PARTIAL_ALLOC_PERCENT)
@@ -1544,7 +1532,7 @@ public class BucketAnalyser {
             sigOptim.setLogVerbose(false);
             // sigOptim.setUseRatioMethod(mUseRatioRanges);
 
-            boolean isValid = sigOptim.optimiseBucketRatios();
+            boolean isValid = sigOptim.optimiseBucketRatios(false);
 
             if(isValid)
             {
@@ -1554,8 +1542,6 @@ public class BucketAnalyser {
 
                     if(mUseRatioRanges)
                         bucketGroup.setRatioRangePerc(DEFAULT_SIG_RATIO_RANGE_PERC);
-
-                    // bucketGroup.setBucketRatioRanges(sigOptim.getRatioRanges());
 
                     bucketGroup.getBucketIds().clear();
                     bucketGroup.getBucketIds().addAll(sigOptim.getNonZeroBuckets());
@@ -1870,7 +1856,7 @@ public class BucketAnalyser {
 
             if (mSampleWatchList.contains(sampleId))
             {
-                LOGGER.debug("spec sample");
+                //LOGGER.debug("spec sample");
             }
 
             BucketGroup maxOtherGroup = getSampleMaxAllocationGroup(sample, topBucketGroup);
@@ -2093,7 +2079,7 @@ public class BucketAnalyser {
         sigOptim.setLogVerbose(true);
         sigOptim.setUseRatioMethod(mUseRatioRanges);
 
-        boolean validCalc = sigOptim.optimiseBucketRatios();
+        boolean validCalc = sigOptim.optimiseBucketRatios(true);
 
         if(validCalc && sigOptim.hasChanged())
         {
@@ -2115,6 +2101,57 @@ public class BucketAnalyser {
         }
 
         topBucketGroup.setBucketRatios(avgBucketRatios);
+    }
+
+    private void assessCandidateBucketGroups()
+    {
+        // looking for very unique groups and groups which overlap existing groups significantly
+        if(mFinalBucketGroups.isEmpty())
+            return;
+
+        for(final BucketGroup bucketGroup : mBucketGroups)
+        {
+            double maxCss = 0;
+            int maxBucketOverlap = 0;
+
+            if(mSampleWatchList.contains(bucketGroup.getId()))
+            {
+                LOGGER.debug("spec group");
+            }
+
+            for(final BucketGroup existingGroup : mFinalBucketGroups)
+            {
+                double css = calcCSS(bucketGroup.getBucketRatios(), existingGroup.getBucketRatios());
+
+                maxCss = max(maxCss, css);
+
+                List<Integer> commonBuckets = getMatchingList(bucketGroup.getBucketIds(), existingGroup.getBucketIds());
+                maxBucketOverlap = max(maxBucketOverlap, commonBuckets.size());
+            }
+
+            int bucketCount = bucketGroup.getBucketIds().size();
+            double bucketOverlapPerc = maxBucketOverlap / (double)bucketGroup.getBucketIds().size();
+
+            // check average percent alloc for samples in this candidate group
+            double allocPercTotal = 0;
+            for(int sampleId : bucketGroup.getSampleIds())
+            {
+                double allocPerc = bucketGroup.getSampleCount(sampleId) / mSampleTotals[sampleId];
+                allocPercTotal += allocPerc;
+            }
+
+            double avgAllocPerc = allocPercTotal / bucketGroup.getSampleIds().size();
+
+            if(avgAllocPerc >= 0.3 && maxCss < 0.3)
+            {
+                setBucketGroupFeatures(bucketGroup, false);
+                bucketGroup.setGroupType(BG_TYPE_UNIQUE);
+
+                LOGGER.debug(String.format("bg(%d) unique candidate: maxCss(%.3f) bucketOverlap(%d of %d, perc=%.2f) samples(%d) avgAllocPerc(%.3f) potAlloc(%s) ct(%s) effects(%s)",
+                        bucketGroup.getId(), maxCss, maxBucketOverlap, bucketCount, bucketOverlapPerc, bucketGroup.getSampleIds().size(),
+                        avgAllocPerc, sizeToStr(bucketGroup.getPotentialAllocation()), bucketGroup.getCancerType(), bucketGroup.getEffects()));
+            }
+        }
     }
 
     private BucketGroup getSampleMaxAllocationGroup(final SampleData sample, final BucketGroup excludeGroup)
@@ -2406,7 +2443,19 @@ public class BucketAnalyser {
 
         if(!mFinalBucketGroups.isEmpty())
         {
+            // ratio ranges aren't currently loaded so don't try to apply them when sigs are pre-loaded
+            boolean rangeState = mUseRatioRanges;
+            mUseRatioRanges = false;
+
+            List<BucketGroup> elevatedGroups = Lists.newArrayList();
+            elevatedGroups.addAll(mFinalBucketGroups);
+
             fitAllSamples();
+            mUseRatioRanges = rangeState;
+
+            // restore the final BGs so they only include elevated groups
+            mFinalBucketGroups.clear();
+            mFinalBucketGroups.addAll(elevatedGroups);
 
             analyseGroupsVsExtData(mFinalBucketGroups, false);
             mReporter.logBucketGroups(true);
@@ -2466,7 +2515,7 @@ public class BucketAnalyser {
 
             if(mSampleWatchList.contains(sample.Id))
             {
-                 LOGGER.debug("spec sample");
+                 //LOGGER.debug("spec sample");
             }
 
             potentialGroupList.clear();
@@ -2633,7 +2682,7 @@ public class BucketAnalyser {
 
             sigOptim.initialise(sample.Id, sample.getElevatedBucketCounts(), sample.getCountRanges(), ratiosCollection, MIN_GROUP_ALLOC_PERCENT_LOWER, mMinSampleAllocCount);
             sigOptim.setSigIds(sigIds);
-            sigOptim.setLogVerbose(mSampleWatchList.contains(sample.Id));
+            //sigOptim.setLogVerbose(mSampleWatchList.contains(sample.Id));
 
             // each sample's background sig will remain in the list even if it drops below the required threshold
             sigOptim.setRequiredSig(backgroundGroupIndex);
@@ -2758,115 +2807,120 @@ public class BucketAnalyser {
 
         for (BucketGroup bucketGroup : bgList)
         {
-            final List<Integer> sampleIds = bucketGroup.getSampleIds();
-            int sampleCount = sampleIds.size();
-
-            // clear any previous
-            bucketGroup.setCancerType("");
-            bucketGroup.setEffects("");
-
-            String groupEffectsStr = "";
-            String groupCancerTypeStr = "";
-            String catEffectsStr = "";
-            String catCancerTypeStr = "";
-
-            HashMap<String,Integer> categoryCounts = populateSampleCategoryMap(sampleIds);
-
-            for(Map.Entry<String,Integer> entrySet : categoryCounts.entrySet())
-            {
-                final String catName = entrySet.getKey();
-                int catSampleCount = entrySet.getValue();
-                double samplesPerc = catSampleCount/(double)sampleCount; // percentage of samples within the group
-
-                int catAllCount = mExtCategoriesMap.get(catName);
-                double catPerc = catSampleCount / (double) catAllCount; // percentage of all instances of this
-
-                // ignore small & rare effects unless they're the majority of this group
-                boolean ignoreCatPercent = catAllCount < 0.5 * sampleCount && catAllCount < 30;
-                boolean hasDominantSamplePerc = samplesPerc >= DOMINANT_CATEGORY_PERCENT;
-                boolean hasProminentSamplePerc = samplesPerc >= DOMINANT_CATEGORY_PERCENT * 0.5;
-                boolean hasDominantCatPerc = catPerc >= DOMINANT_CATEGORY_PERCENT && !ignoreCatPercent;
-                boolean hasProminentCatPerc = (catPerc >= DOMINANT_CATEGORY_PERCENT * 0.5) && !ignoreCatPercent;
-
-                if(!hasProminentSamplePerc && !hasProminentCatPerc)
-                    continue;
-
-                if(verbose)
-                {
-                    LOGGER.debug(String.format("bg(%d) category(%s) count(%d of %d) perc(group=%.3f category=%.3f)",
-                            bucketGroup.getId(), catName, catSampleCount, sampleCount, samplesPerc, catPerc));
-                }
-
-                if(extractCategoryName(catName).equals(CATEGORY_CANCER_TYPE))
-                {
-                    String cancerType = extractCategoryValue(catName);
-
-                    if(hasDominantSamplePerc)
-                    {
-                        groupCancerTypeStr = String.format("%s=%.2f", cancerType, samplesPerc);
-                    }
-                    else if(hasProminentSamplePerc)
-                    {
-                        if(!groupCancerTypeStr.isEmpty())
-                            groupCancerTypeStr += ";";
-
-                        groupCancerTypeStr += String.format("%s=%.2f", cancerType, samplesPerc);
-                    }
-
-                    if(hasDominantCatPerc)
-                    {
-                        if(!catCancerTypeStr.isEmpty())
-                            catCancerTypeStr += ";";
-
-                        catCancerTypeStr += String.format("%s=%.2f", cancerType, catPerc);
-                    }
-                }
-                else
-                {
-                    String effect = catName.length() > 10 ? catName.substring(0, 10) : catName;
-
-                    if(hasDominantSamplePerc)
-                    {
-                        if (!groupEffectsStr.isEmpty())
-                            groupEffectsStr += ";";
-
-                        groupEffectsStr += String.format("%s=%.2f", effect, samplesPerc);
-                    }
-
-                    if(hasDominantCatPerc)
-                    {
-                        if(!catEffectsStr.isEmpty())
-                            catEffectsStr += ";";
-
-                        catEffectsStr += String.format("%s=%.2f", effect, catPerc);
-                    }
-                }
-            }
-
-            String cancerTypeStr = groupCancerTypeStr;
-
-            if(!catCancerTypeStr.isEmpty())
-            {
-                if(!cancerTypeStr.isEmpty())
-                    cancerTypeStr += ";";
-
-                cancerTypeStr += "cat:" + catCancerTypeStr;
-            }
-
-            bucketGroup.setCancerType(cancerTypeStr);
-
-            String effectsStr = groupEffectsStr;
-
-            if(!catEffectsStr.isEmpty())
-            {
-                if(!effectsStr.isEmpty())
-                    effectsStr += ";";
-
-                effectsStr += "cat:" + catEffectsStr;
-            }
-
-            bucketGroup.setEffects(effectsStr);
+            setBucketGroupFeatures(bucketGroup, verbose);
         }
+    }
+
+    private void setBucketGroupFeatures(BucketGroup bucketGroup, boolean verbose)
+    {
+        final List<Integer> sampleIds = bucketGroup.getSampleIds();
+        int sampleCount = sampleIds.size();
+
+        // clear any previous
+        bucketGroup.setCancerType("");
+        bucketGroup.setEffects("");
+
+        String groupEffectsStr = "";
+        String groupCancerTypeStr = "";
+        String catEffectsStr = "";
+        String catCancerTypeStr = "";
+
+        HashMap<String,Integer> categoryCounts = populateSampleCategoryMap(sampleIds);
+
+        for(Map.Entry<String,Integer> entrySet : categoryCounts.entrySet())
+        {
+            final String catName = entrySet.getKey();
+            int catSampleCount = entrySet.getValue();
+            double samplesPerc = catSampleCount/(double)sampleCount; // percentage of samples within the group
+
+            int catAllCount = mExtCategoriesMap.get(catName);
+            double catPerc = catSampleCount / (double) catAllCount; // percentage of all instances of this
+
+            // ignore small & rare effects unless they're the majority of this group
+            boolean ignoreCatPercent = catAllCount < 0.5 * sampleCount && catAllCount < 30;
+            boolean hasDominantSamplePerc = samplesPerc >= DOMINANT_CATEGORY_PERCENT;
+            boolean hasProminentSamplePerc = samplesPerc >= DOMINANT_CATEGORY_PERCENT * 0.5;
+            boolean hasDominantCatPerc = catPerc >= DOMINANT_CATEGORY_PERCENT && !ignoreCatPercent;
+            boolean hasProminentCatPerc = (catPerc >= DOMINANT_CATEGORY_PERCENT * 0.5) && !ignoreCatPercent;
+
+            if(!hasProminentSamplePerc && !hasProminentCatPerc)
+                continue;
+
+            if(verbose)
+            {
+                LOGGER.debug(String.format("bg(%d) category(%s) count(%d of %d) perc(group=%.3f category=%.3f)",
+                        bucketGroup.getId(), catName, catSampleCount, sampleCount, samplesPerc, catPerc));
+            }
+
+            if(extractCategoryName(catName).equals(CATEGORY_CANCER_TYPE))
+            {
+                String cancerType = extractCategoryValue(catName);
+
+                if(hasDominantSamplePerc)
+                {
+                    groupCancerTypeStr = String.format("%s=%.2f", cancerType, samplesPerc);
+                }
+                else if(hasProminentSamplePerc)
+                {
+                    if(!groupCancerTypeStr.isEmpty())
+                        groupCancerTypeStr += ";";
+
+                    groupCancerTypeStr += String.format("%s=%.2f", cancerType, samplesPerc);
+                }
+
+                if(hasDominantCatPerc)
+                {
+                    if(!catCancerTypeStr.isEmpty())
+                        catCancerTypeStr += ";";
+
+                    catCancerTypeStr += String.format("%s=%.2f", cancerType, catPerc);
+                }
+            }
+            else
+            {
+                String effect = catName.length() > 10 ? catName.substring(0, 10) : catName;
+
+                if(hasDominantSamplePerc)
+                {
+                    if (!groupEffectsStr.isEmpty())
+                        groupEffectsStr += ";";
+
+                    groupEffectsStr += String.format("%s=%.2f", effect, samplesPerc);
+                }
+
+                if(hasDominantCatPerc)
+                {
+                    if(!catEffectsStr.isEmpty())
+                        catEffectsStr += ";";
+
+                    catEffectsStr += String.format("%s=%.2f", effect, catPerc);
+                }
+            }
+        }
+
+        String cancerTypeStr = groupCancerTypeStr;
+
+        if(!catCancerTypeStr.isEmpty())
+        {
+            if(!cancerTypeStr.isEmpty())
+                cancerTypeStr += ";";
+
+            cancerTypeStr += "cat:" + catCancerTypeStr;
+        }
+
+        bucketGroup.setCancerType(cancerTypeStr);
+
+        String effectsStr = groupEffectsStr;
+
+        if(!catEffectsStr.isEmpty())
+        {
+            if(!effectsStr.isEmpty())
+                effectsStr += ";";
+
+            effectsStr += "cat:" + catEffectsStr;
+        }
+
+        bucketGroup.setEffects(effectsStr);
     }
 
     private void writeInterimBucketGroups()
@@ -2922,8 +2976,9 @@ public class BucketAnalyser {
         {
             BufferedWriter writer = getNewFile(mOutputDir, mOutputFileId + "_ba_group_data.csv");
 
-            writer.write("Rank,BgId,Type,CancerType,Effects,SampleCount,BucketCount,MutLoad,PotentialAlloc,Purity");
+            writer.write("Rank,BgId,Type,CancerType,Effects,SampleCount,BucketCount,MutLoad,PotentialAlloc,RefSigs,GrpLinks,ParentId");
 
+            // bucket ratios follow
             for(int i = 0; i < mBucketCount; ++i)
             {
                 writer.write(String.format(",%d", i));
@@ -2935,12 +2990,29 @@ public class BucketAnalyser {
             {
                 BucketGroup bucketGroup = mFinalBucketGroups.get(bgIndex);
 
-                String groupType = bucketGroup.getTag().equalsIgnoreCase("background") ? "BG" : "Elev";
+                // check for a parent group amongst the majors
+                int parentId = -1;
+                for (int bgIndex2 = 0; bgIndex2 < bgIndex; ++bgIndex2)
+                {
+                    BucketGroup otherGroup = mFinalBucketGroups.get(bgIndex2);
 
-                writer.write(String.format("%d,%d,%s,%s,%s,%d,%d,%.0f,%.0f,%.2f",
-                        bgIndex, bucketGroup.getId(), groupType, bucketGroup.getCancerType(), bucketGroup.getEffects(),
+                    if(!otherGroup.getGroupType().equals(BG_TYPE_MAJOR))
+                        continue;
+
+                    String searchStr = String.format("bg_%d", otherGroup.getId());
+                    if(bucketGroup.getGroupLinks().contains(searchStr))
+                    {
+                        parentId = otherGroup.getId();
+                        break;
+                    }
+                }
+
+                writer.write(String.format("%d,%d,%s,%s,%s,%d,%d,%.0f,%.0f",
+                        bgIndex, bucketGroup.getId(), bucketGroup.getGroupType(), bucketGroup.getCancerType(), bucketGroup.getEffects(),
                         bucketGroup.getSampleIds().size(), bucketGroup.getBucketIds().size(),
-                        sumVector(bucketGroup.getBucketCounts()), bucketGroup.getPotentialAllocation(), bucketGroup.getPurity()));
+                        sumVector(bucketGroup.getBucketCounts()), bucketGroup.getPotentialAllocation()));
+
+                writer.write(String.format(",%s,%s,%s", bucketGroup.getRefSigs(), bucketGroup.getGroupLinks(), parentId >= 0 ? String.valueOf(parentId) : ""));
 
                 double[] bucketRatios = bucketGroup.getBucketRatios();
 
@@ -2971,12 +3043,6 @@ public class BucketAnalyser {
         LOGGER.debug("creating {} signatures", proposedSigCount);
 
         mProposedSigs = new NmfMatrix(mBucketCount, proposedSigCount);
-
-//        NmfMatrix sigTest = new NmfMatrix(mBucketCount, 1);
-//
-//        double purityThreshold = 0.7;
-//        int scoreThreshold = 50; // eg 100% pure, 2 samples 10 buckets, LF=2.5
-//        int minSamples = 2;
 
         int sigId = 0;
 
@@ -3027,29 +3093,6 @@ public class BucketAnalyser {
 
             final double[] bucketRatios = bucketGroup.getBucketRatios();
 
-            /*
-            if(bucketGroup.getPurity() < purityThreshold || bucketGroup.calcScore() < scoreThreshold
-            || bucketGroup.getSampleIds().size() < minSamples)
-                continue;
-
-
-            sigTest.setCol(0, bucketRatios);
-
-            List<double[]> cssResults = getTopCssPairs(sigTest, mProposedSigs, mSigCssThreshold, false, false);
-
-            if (!cssResults.isEmpty())
-            {
-                final double[] result = cssResults.get(0);
-                // LOGGER.debug(String.format("bg(%d) too similar to sig(%d) with css(%.4f)", bucketGroup.getId(), (int)result[CSSR_I2], result[CSSR_VAL]));
-                continue;
-            }
-
-            LOGGER.debug(String.format("bg(%d) added proposed sig(%d): score(%.0f purity=%.2f sam=%d buckets=%s) type(%s effects=%s)",
-                    bucketGroup.getId(), sigId, bucketGroup.calcScore(), bucketGroup.getPurity(), bucketGroup.getSampleIds().size(),
-                    bucketGroup.getBucketIds().size(), bucketGroup.getCancerType(), bucketGroup.getEffects()));
-
-            */
-
             mProposedSigs.setCol(sigId, bucketRatios);
             mSigToBgMapping.add(bgIndex);
 
@@ -3065,6 +3108,9 @@ public class BucketAnalyser {
         }
 
         writeSignatures(mProposedSigs, "_ba_sigs.csv", sigNames);
+
+        mReporter.setFinalState(mProposedSigs, mSigToBgMapping);
+        mReporter.compareSignatures();
     }
 
     private double calcSharedCSS(final double[] set1, final double[] set2)

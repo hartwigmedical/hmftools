@@ -224,7 +224,7 @@ public class SigOptimiser
     public void setLogVerbose(boolean toggle) { mLogVerbose = toggle; }
     public void setUseRatioMethod(boolean toggle) { mUseRatioMethod = toggle; }
 
-    public boolean optimiseBucketRatios()
+    public boolean optimiseBucketRatios(boolean calcRangeDistributions)
     {
         if (!mIsValid)
             return false;
@@ -236,23 +236,21 @@ public class SigOptimiser
         logStats(false);
         logRatios();
 
-        if(mUseRatioMethod)
+        calcBucketRatioRanges();
+
+        testCandidateExtraBuckets();
+
+        if (!mIsValid)
+            return false;
+
+        if (!mIsValid)
+            return false;
+
+        calcOptimalRatios();
+
+        if(calcRangeDistributions)
         {
             calcBucketDistributions();
-        }
-        else
-        {
-            calcBucketRatioRanges();
-
-            testCandidateExtraBuckets();
-
-            if (!mIsValid)
-                return false;
-
-            if (!mIsValid)
-                return false;
-
-            calcOptimalRatios();
         }
 
         if (!mIsValid)
@@ -278,7 +276,12 @@ public class SigOptimiser
 
         List<Integer> bucketIds = Lists.newArrayList();
         bucketIds.addAll(mNonZeroBuckets);
-        bucketIds.addAll(mCandidateNewBuckets);
+
+        for(Integer bucket : mCandidateNewBuckets)
+        {
+            if(!mNewBuckets.contains(bucket)) // in case they've been added already
+                bucketIds.add(bucket);
+        }
 
         double[] unallocBucketTotals = new double[mBucketCount];
 
@@ -530,7 +533,7 @@ public class SigOptimiser
             return;
         }
 
-        int maxIndexRange = 10; // make a proportion of the segement count or relate to % of bucket ratio
+        int maxIndexRange = 10; // make a proportion of the segment count or relate to % of bucket ratio
         int distRange = distEndIndex - distStartIndex;
         if(distRange > maxIndexRange)
         {
@@ -586,9 +589,17 @@ public class SigOptimiser
             */
         }
 
-        double rangeBoundMean = bucketRatioTotal / weightTotal;
         double startRatio = distStartIndex >= 0 ? distStartIndex * ratioIncrement : 0;
         double endRatio = distEndIndex >= 0 ? distEndIndex * ratioIncrement : 0;
+
+        if(weightTotal == 0)
+        {
+            LOGGER.error(String.format("grp(%d) bucket(%d) rawMean(%.3f) range(%.3f -> %.3f indx=%d -> %d) total%s)",
+                    mGroupId, bucket, origMeanRatio, startRatio, endRatio, distStartIndex, distEndIndex, sizeToStr(bucketTotals[bucket])));
+            return;
+        }
+
+        double rangeBoundMean = bucketRatioTotal / weightTotal;
 
         mRangesLow[bucket] = startRatio;
         mRangesHigh[bucket] = endRatio;
@@ -602,7 +613,7 @@ public class SigOptimiser
         {
             double countsTotal = weightTotal * bucketTotals[bucket];
 
-            LOGGER.debug(String.format("grp(%d) bucket(%d %s) score(%.3f) mean(%.3f raw=%.3f) range(%.3f -> %.3f min=%.3f indx=%d -> %d) max(%.3f) total(%.3f %s of %s)",
+            LOGGER.debug(String.format("grp(%d) bucket(%d %s) score(%.3f) mean(%.3f raw=%.3f) range(%.3f -> %.3f min=%.3f indx=%d -> %d) max(%.3f) total(%.3f, %s of %s)",
                     mGroupId, bucket, isCandidate ? "cand" : "init", allocScore, rangeBoundMean, origMeanRatio, startRatio, endRatio, minRange,
                     distStartIndex, distEndIndex, rangeBoundMax, weightTotal, sizeToStr(countsTotal), sizeToStr(bucketTotals[bucket])));
         }

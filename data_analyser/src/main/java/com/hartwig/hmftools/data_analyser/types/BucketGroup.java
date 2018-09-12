@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.doublesEqual;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.initVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
-import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVectors;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +19,7 @@ public class BucketGroup implements Comparable<BucketGroup> {
     // keyed by a bucket pairing
     private int mId;
     private String mTag; // free-form info about the group
+    private String mType;
 
     private List<Integer> mSampleIds;
     private List<Integer> mInitialSampleIds; // those which led to the creation of the group
@@ -44,16 +44,22 @@ public class BucketGroup implements Comparable<BucketGroup> {
     // annotations
     private String mCancerType;
     private String mEffects;
+    private String mGroupLinks;
+    private String mRefSigs;
 
     private double mPurity; // for now a percentage of sample buckets that are elevated
     private double mScoreOverride;
 
-    public static String BG_BACKGROUND_TYPE = "background";
+    public static String BG_TYPE_BACKGROUND = "BGRD";
+    public static String BG_TYPE_MAJOR = "MAJOR";
+    public static String BG_TYPE_MINOR = "MINOR";
+    public static String BG_TYPE_UNIQUE = "UNIQUE";
 
     public BucketGroup(int id)
     {
         mId = id;
         mTag = "";
+        mType = "";
 
         mSampleIds = Lists.newArrayList();
         mInitialSampleIds = Lists.newArrayList();
@@ -76,6 +82,9 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
         mCancerType = "";
         mEffects = "";
+        mGroupLinks = "";
+        mRefSigs = "";
+
     }
 
     private void initialise(final double[] counts)
@@ -94,7 +103,11 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
     public String getTag() { return mTag; }
     public void setTag(final String tag) { mTag = tag; }
-    public boolean isBackground() { return mTag.equals(BG_BACKGROUND_TYPE); }
+
+    public String getGroupType() { return mType; }
+    public void setGroupType(final String type) { mType = type; }
+
+    public boolean isBackground() { return mTag.equals(BG_TYPE_BACKGROUND); }
 
     public int getSize() { return mBucketIds.size() * mSampleIds.size(); }
 
@@ -135,8 +148,28 @@ public class BucketGroup implements Comparable<BucketGroup> {
     public void setCancerType(final String type) { mCancerType = type; }
     public final String getCancerType() { return mCancerType; }
 
-    public void setEffects(final String effects) { mEffects = effects; }
+    public void setEffects(final String value) { mEffects = value; }
     public final String getEffects() { return mEffects; }
+
+    public void addGroupLinks(final String value)
+    {
+        if(!mGroupLinks.isEmpty())
+            mGroupLinks += ";";
+
+        mGroupLinks += value;
+    }
+
+    public final String getGroupLinks() { return mGroupLinks; }
+
+    public void addRefSig(final String value)
+    {
+        if(!mRefSigs .isEmpty())
+            mRefSigs  += ";";
+
+        mRefSigs += value;
+    }
+
+    public final String getRefSigs() { return mRefSigs; }
 
     public int compareTo(final BucketGroup other)
     {

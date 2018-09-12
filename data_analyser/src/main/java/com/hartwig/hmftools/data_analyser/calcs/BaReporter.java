@@ -19,8 +19,8 @@ import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sizeToStr;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVectors;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.vectorMultiply;
-import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.writeMatrixData;
-import static com.hartwig.hmftools.data_analyser.calcs.NmfConfig.NMF_REF_SIG_FILE;
+import static com.hartwig.hmftools.data_analyser.types.BucketGroup.BG_TYPE_MAJOR;
+import static com.hartwig.hmftools.data_analyser.types.BucketGroup.BG_TYPE_MINOR;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -150,11 +150,53 @@ public class BaReporter
         }
     }
 
+    public double getAllocatedCount() { return mAllocatedCount; }
+
     public void loadReferenceSigs(final String filename)
     {
         GenericDataCollection dataCollection = GenericDataLoader.loadFile(filename);
         mReferenceSigs = DataUtils.createMatrixFromListData(dataCollection.getData());
         mReferenceSigs.cacheTranspose();
+    }
+
+    public void logOverallStats()
+    {
+        mAllocatedCount = 0;
+        int fullyAllocated = 0;
+        double noiseAllocated = 0;
+
+        for(final SampleData sample : mSampleData)
+        {
+            mAllocatedCount += sample.getAllocatedCount();
+
+            if(sample.getAllocPercent() >= SAMPLE_ALLOCATED_PERCENT)
+                ++fullyAllocated;
+
+            noiseAllocated += sample.getAllocNoise();
+        }
+
+        mBackgroundCount = 0;
+        for(final BucketGroup bucketGroup : mBackgroundGroups)
+        {
+            mBackgroundCount += bucketGroup.getTotalCount();
+        }
+
+        double elevatedCount = mTotalCount - mBackgroundCount;
+
+        LOGGER.debug(String.format("overall: samples(%d alloc=%d) groups(%d) counts: total(%s) background(%s perc=%.3f) elevated(%s perc=%.3f) alloc(%s perc=%.3f) noise(%s perc=%.3f)",
+                mSampleCount, fullyAllocated, mFinalBucketGroups.size(), sizeToStr(mTotalCount), sizeToStr(mBackgroundCount), mBackgroundCount/mTotalCount,
+                sizeToStr(elevatedCount), elevatedCount/mTotalCount, sizeToStr(mAllocatedCount), mAllocatedCount/mElevatedCount,
+                sizeToStr(noiseAllocated), noiseAllocated/mElevatedCount));
+    }
+
+    public void postRunAnalysis()
+    {
+        tagMajorGroups();
+        logBucketGroups(true);
+        logSampleResults();
+        logWorstAllocatedSamples();
+        logSimilarSampleContribs();
+        logSigReconstructions();
     }
 
     public void logSampleResults()
@@ -240,36 +282,6 @@ public class BaReporter
         logOverallStats();
     }
 
-    public void logOverallStats()
-    {
-        mAllocatedCount = 0;
-        int fullyAllocated = 0;
-        double noiseAllocated = 0;
-
-        for(final SampleData sample : mSampleData)
-        {
-            mAllocatedCount += sample.getAllocatedCount();
-
-            if(sample.getAllocPercent() >= SAMPLE_ALLOCATED_PERCENT)
-                ++fullyAllocated;
-
-            noiseAllocated += sample.getAllocNoise();
-        }
-
-        mBackgroundCount = 0;
-        for(final BucketGroup bucketGroup : mBackgroundGroups)
-        {
-            mBackgroundCount += bucketGroup.getTotalCount();
-        }
-
-        double elevatedCount = mTotalCount - mBackgroundCount;
-
-        LOGGER.debug(String.format("overall: samples(%d alloc=%d) groups(%d) counts: total(%s) background(%s perc=%.3f) elevated(%s perc=%.3f) alloc(%s perc=%.3f) noise(%s perc=%.3f)",
-                mSampleCount, fullyAllocated, mFinalBucketGroups.size(), sizeToStr(mTotalCount), sizeToStr(mBackgroundCount), mBackgroundCount/mTotalCount,
-                sizeToStr(elevatedCount), elevatedCount/mTotalCount, sizeToStr(mAllocatedCount), mAllocatedCount/mElevatedCount,
-                sizeToStr(noiseAllocated), noiseAllocated/mElevatedCount));
-    }
-
     public void logBucketGroups(boolean verbose)
     {
         List<BucketGroup> bgList = mFinalBucketGroups;
@@ -279,7 +291,6 @@ public class BaReporter
 
         // log top groups
         int maxToLog = verbose ? bgList.size() : min(bgList.size(), 40);
-        int minScore = verbose ? 0 : 10; // 4 samples x 5 buckets, or 2 x 10, and adjusted for purity
 
         if(verbose)
         {
@@ -296,8 +307,14 @@ public class BaReporter
         {
             BucketGroup bucketGroup = bgList.get(i);
 
-            if (bucketGroup.calcScore() < minScore)
-                break;
+            double allocPercTotal = 0;
+            for(int sampleId : bucketGroup.getSampleIds())
+            {
+                double allocPerc = bucketGroup.getSampleCount(sampleId) / mSampleTotals[sampleId];
+                allocPercTotal += allocPerc;
+            }
+
+            double avgAllocPerc = allocPercTotal / bucketGroup.getSampleIds().size();
 
             if (verbose)
             {
@@ -335,9 +352,9 @@ public class BaReporter
                     linkData += String.format("tag=%s ", bucketGroup.getTag());
                 }
 
-                LOGGER.debug(String.format("rank %d: bg(%d) %scancer(%s) samples(%d) variants(avg=%s total=%s perc=%.3f) buckets(%d: %s) effects(%s)",
+                LOGGER.debug(String.format("rank %d: bg(%d) %scancer(%s) samples(%d) variants(avg=%s avgAllocPerc=%.3f total=%s perc=%.3f) buckets(%d: %s) effects(%s)",
                         i, bucketGroup.getId(), linkData, bucketGroup.getCancerType(), bucketGroup.getSampleIds().size(),
-                        sizeToStr(bucketGroup.getAvgCount()), sizeToStr(bucketGroup.getTotalCount()), groupPerc,
+                        sizeToStr(bucketGroup.getAvgCount()), avgAllocPerc, sizeToStr(bucketGroup.getTotalCount()), groupPerc,
                         bucketGroup.getBucketIds().size(), bucketIdsStr, bucketGroup.getEffects()));
             }
             else
@@ -470,7 +487,7 @@ public class BaReporter
             }
         }
 
-        // exclude samples with onl
+        // exclude samples with too few samples
         for(int sample = 0; sample < mSampleCount; ++sample)
         {
             if(sampleSigCount[sample] < 2)
@@ -546,6 +563,33 @@ public class BaReporter
                     continue;
 
                 LOGGER.debug("bgGroups({}) repeated {} times", entry.getKey(), entry.getValue());
+            }
+        }
+    }
+
+    private static double MAJOR_GROUP_ALLOC_PERC = 0.02;
+    private static double MAJOR_GROUP_SAMPLE_PERC = 0.05;
+
+    public void tagMajorGroups()
+    {
+        double reqSampleCount = mTotalCount * MAJOR_GROUP_ALLOC_PERC;
+        double reqSamples = mSampleCount * MAJOR_GROUP_SAMPLE_PERC;
+
+        for (final BucketGroup bucketGroup : mFinalBucketGroups)
+        {
+            if(bucketGroup.isBackground())
+                continue;
+
+            if(!bucketGroup.getGroupType().isEmpty())
+                continue;
+
+            if(bucketGroup.getTotalCount() >= reqSampleCount && bucketGroup.getSampleIds().size() >= reqSamples)
+            {
+                bucketGroup.setGroupType(BG_TYPE_MAJOR);
+            }
+            else
+            {
+                bucketGroup.setGroupType(BG_TYPE_MINOR);
             }
         }
     }
@@ -641,22 +685,29 @@ public class BaReporter
             final double[] sigContribs = sigOptim.getContribs();
             for (int sig = 0; sig < ratiosCollection.size(); ++sig)
             {
-                LOGGER.debug(String.format("bg(%d) from sigId(%d: %d) contrib(%.3f) percent", testGroup.getId(), sig, sigIds.get(sig),
-                        sigContribs[sig] / 100));
+                if(sigContribs[sig] == 0)
+                    continue;
+
+                LOGGER.debug(String.format("bg(%d) from sigId(%d: %d) contrib(%.3f) percent", testGroup.getId(), sig, sigIds.get(sig), sigContribs[sig] / 100));
+                testGroup.addGroupLinks(String.format("recon_%d_%.2f", sigIds.get(sig), sigContribs[sig] / 100));
             }
         }
 
         // additionally check for any sig whose buckets are wholly contained within another sig and has a large overlap in samples
-        for (final BucketGroup testGroup : mFinalBucketGroups)
+        for (int bgIndex1 = 0; bgIndex1 < mFinalBucketGroups.size(); ++bgIndex1)
         {
+            final BucketGroup testGroup = mFinalBucketGroups.get(bgIndex1);
+
             if (testGroup.isBackground())
                 continue;
 
             final List<Integer> bucketIds = testGroup.getBucketIds();
             final List<Integer> sampleIds = testGroup.getSampleIds();
 
-            for (final BucketGroup otherGroup : mFinalBucketGroups)
+            for (int bgIndex2 = bgIndex1 + 1; bgIndex2 < mFinalBucketGroups.size(); ++bgIndex2)
             {
+                final BucketGroup otherGroup = mFinalBucketGroups.get(bgIndex2);
+
                 if(otherGroup.isBackground() || otherGroup == testGroup)
                     continue;
 
@@ -676,6 +727,8 @@ public class BaReporter
                     LOGGER.debug(String.format("bg(%d) has possible correction bg(%d) buckets(bg1=%d bg2=%d) sample(bg1=%d bg2=%d match=%d)",
                             testGroup.getId(), otherGroup.getId(), bucketIds.size(), otherBucketIds.size(),
                             sampleIds.size(), otherSampleIds.size(), commonSamples.size()));
+
+                    otherGroup.addGroupLinks(String.format("corr_bg_%d", testGroup.getId()));
                 }
             }
         }
@@ -683,7 +736,7 @@ public class BaReporter
 
     public void compareSignatures()
     {
-        double sigCompareCss = 0.95;
+        double sigCompareCss = 0.90;
 
         if(mProposedSigs != null)
         {
@@ -698,6 +751,7 @@ public class BaReporter
             {
                 for (final double[] result : cssResults)
                 {
+                    double css = result[CSSR_VAL];
                     int sigId1 = (int)result[CSSR_I1];
                     int sigId2 = (int)result[CSSR_I2];
                     final BucketGroup bg1 = mFinalBucketGroups.get(mSigToBgMapping.get(sigId1));
@@ -709,7 +763,10 @@ public class BaReporter
 
                     LOGGER.debug(String.format("proposed sig(%s bg=%d: ct=%s eff=%s samples=%d) matches sig(%d bg=%d: ct=%s eff=%s samples=%d) with css(%.4f)",
                             sigId1, bg1.getId(), bg1.getCancerType(), bg1.getEffects(), bg1.getSampleIds().size(),
-                            sigId2, bg2.getId(), bg2.getCancerType(), bg2.getEffects(), bg2.getSampleIds().size(), result[CSSR_VAL]));
+                            sigId2, bg2.getId(), bg2.getCancerType(), bg2.getEffects(), bg2.getSampleIds().size(), css));
+
+                    bg1.addGroupLinks(String.format("css_bg_%d_%.4f", bg2.getId(), css));
+                    bg2.addGroupLinks(String.format("css_bg_%d_%.4f", bg1.getId(), css));
                 }
             }
         }
@@ -727,13 +784,16 @@ public class BaReporter
         {
             for (final double[] result : cssResults)
             {
+                double css = result[CSSR_VAL];
                 int externalSigId = (int)result[CSSR_I1] + 1; // bumped up to correspond to convention of starting with 1
                 int proposedSigId = (int)result[CSSR_I2];
                 final BucketGroup bucketGroup = mFinalBucketGroups.get(mSigToBgMapping.get(proposedSigId));
 
                 LOGGER.debug(String.format("external ref sig(%d) matches bg(%d: ct=%s eff=%s samples=%d purity=%.2f) with css(%.4f)",
                         externalSigId, bucketGroup.getId(), bucketGroup.getCancerType(), bucketGroup.getEffects(),
-                        bucketGroup.getSampleIds().size(), bucketGroup.getPurity(), result[CSSR_VAL]));
+                        bucketGroup.getSampleIds().size(), bucketGroup.getPurity(), css));
+
+                bucketGroup.addRefSig(String.format("sig_%d_css=%.4f", externalSigId, css));
             }
         }
     }
