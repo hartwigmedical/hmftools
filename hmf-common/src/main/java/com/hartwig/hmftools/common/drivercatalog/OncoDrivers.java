@@ -29,42 +29,57 @@ public class OncoDrivers {
                 variants.stream().filter(x -> !x.isFiltered()).collect(Collectors.groupingBy(SomaticVariant::type, Collectors.counting()));
         long sampleSNVCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0L);
 
-        final Map<String, List<EnrichedSomaticVariant>> missenseVariantsByGene = variants.stream()
+        final Map<String, List<EnrichedSomaticVariant>> variantsByGene = variants.stream()
                 .filter(x -> likelihoodsByGene.keySet().contains(x.gene()))
-                .filter(x -> x.canonicalCodingEffect().equals(CodingEffect.MISSENSE))
                 .collect(Collectors.groupingBy(SomaticVariant::gene));
 
-        for (String gene : missenseVariantsByGene.keySet()) {
-            final ImmutableDriverCatalog.Builder builder =
-                    ImmutableDriverCatalog.builder().gene(gene).category(DriverCategory.ONCO).likelihood(1);
+        for (String gene : variantsByGene.keySet()) {
 
-            final DndsDriverLikelihood likelihood = likelihoodsByGene.get(gene);
+            final DndsDriverLikelihood geneLikelihood = likelihoodsByGene.get(gene);
+            final List<EnrichedSomaticVariant> geneVariants = variantsByGene.get(gene);
 
-            final List<EnrichedSomaticVariant> geneVariants = missenseVariantsByGene.get(gene);
-            if (geneVariants.stream().anyMatch(SomaticVariant::hotspot)) {
-                driverCatalog.add(builder.driver(DriverType.HOTSPOT).build());
-            }
-
-            final List<EnrichedSomaticVariant> inframe = geneVariants.stream()
-                    .filter(x -> x.type() == VariantType.INDEL && x.repeatCount() <= MAX_REPEAT_COUNT)
-                    .collect(Collectors.toList());
-            if (!inframe.isEmpty()) {
-                driverCatalog.add(builder.driver(DriverType.INFRAME).build());
-            }
-
-            final List<EnrichedSomaticVariant> pointMutations =
-                    geneVariants.stream().filter(x -> x.type() != VariantType.INDEL).collect(Collectors.toList());
-
-            if (Doubles.greaterThan(likelihood.missenseUnadjustedDriverLikelihood(), 0) && pointMutations.stream()
-                    .anyMatch(x -> !x.hotspot())) {
-                final double missenseDriverLikelihood = missenseProbabilityDriverVariant(sampleSNVCount, likelihood);
-                driverCatalog.add(builder.driver(geneVariants.size() > 1 ? DriverType.MULTI_HIT : DriverType.SINGLE_HIT)
-                        .likelihood(missenseDriverLikelihood)
-                        .build());
-            }
+            driverCatalog.add(geneDriver(sampleSNVCount, geneLikelihood, geneVariants));
         }
 
         return driverCatalog;
+    }
+
+    @NotNull
+    private static DriverCatalog geneDriver(long sampleSNVCount, @NotNull final DndsDriverLikelihood likelihood,
+            @NotNull final List<EnrichedSomaticVariant> geneVariants) {
+
+        final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
+                .gene(likelihood.gene())
+                .category(DriverCategory.ONCO)
+                .driverLikelihood(1)
+                .dndsLikelihood(likelihood.missenseUnadjustedDriverLikelihood())
+                .driver(geneVariants.size() > 1 ? DriverType.MULTI_HIT : DriverType.SINGLE_HIT);
+
+        if (geneVariants.stream().anyMatch(SomaticVariant::hotspot)) {
+            return builder.driver(DriverType.HOTSPOT).build();
+        }
+
+        // TODO: Add NEAR_HOTSPOT HERE
+
+        if (geneVariants.stream().anyMatch(OncoDrivers::isInframeIndel)) {
+            return builder.driver(DriverType.INFRAME).build();
+        }
+
+        final boolean anyMissenseVariants = geneVariants.stream().anyMatch(OncoDrivers::isMissense);
+        final double driverLikelihood = Doubles.positive(likelihood.missenseUnadjustedDriverLikelihood()) && anyMissenseVariants
+                ? missenseProbabilityDriverVariant(sampleSNVCount, likelihood)
+                : 0;
+
+        return builder.driverLikelihood(driverLikelihood).build();
+    }
+
+    private static boolean isInframeIndel(@NotNull final EnrichedSomaticVariant variant) {
+        return variant.type() == VariantType.INDEL && variant.canonicalCodingEffect() == CodingEffect.MISSENSE
+                && variant.repeatCount() <= MAX_REPEAT_COUNT;
+    }
+
+    private static boolean isMissense(@NotNull final EnrichedSomaticVariant variant) {
+        return variant.type() != VariantType.INDEL && variant.canonicalCodingEffect() == CodingEffect.MISSENSE;
     }
 
     public static double missenseProbabilityDriverVariant(long sampleSNVCount, @NotNull final DndsDriverLikelihood likelihood) {

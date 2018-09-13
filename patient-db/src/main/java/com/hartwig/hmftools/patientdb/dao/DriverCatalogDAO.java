@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep6;
+import org.jooq.InsertValuesStep7;
 
 class DriverCatalogDAO {
 
@@ -29,11 +30,12 @@ class DriverCatalogDAO {
         deleteForSample(sample);
 
         for (List<DriverCatalog> splitRegions : Iterables.partition(driverCatalog, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep6 inserter = context.insertInto(DRIVERCATALOG,
+            InsertValuesStep7 inserter = context.insertInto(DRIVERCATALOG,
                     DRIVERCATALOG.SAMPLEID,
                     DRIVERCATALOG.GENE,
                     DRIVERCATALOG.CATEGORY,
                     DRIVERCATALOG.DRIVER,
+                    DRIVERCATALOG.DNDSLIKELIHOOD,
                     DRIVERCATALOG.DRIVERLIKELIHOOD,
                     SOMATICVARIANT.MODIFIED);
             splitRegions.forEach(x -> addRecord(timestamp, inserter, sample, x));
@@ -41,9 +43,9 @@ class DriverCatalogDAO {
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep6 inserter, @NotNull String sample,
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep7 inserter, @NotNull String sample,
             @NotNull DriverCatalog entry) {
-        inserter.values(sample, entry.gene(), entry.category(), entry.driver(), DatabaseUtil.decimal(entry.likelihood()), timestamp);
+        inserter.values(sample, entry.gene(), entry.category(), entry.driver(), DatabaseUtil.decimal(entry.dndsLikelihood()),  DatabaseUtil.decimal(entry.driverLikelihood()), timestamp);
     }
 
     void deleteForSample(@NotNull String sample) {
