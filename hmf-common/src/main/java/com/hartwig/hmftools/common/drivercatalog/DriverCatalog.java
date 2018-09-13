@@ -12,6 +12,9 @@ public interface DriverCatalog {
     String gene();
 
     @NotNull
+    DriverCategory category();
+
+    @NotNull
     DriverType driver();
 
     double likelihood();

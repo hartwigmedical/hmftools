@@ -10,10 +10,10 @@ public abstract class DndsDriverLikelihood {
 
     public abstract String gene();
 
-    public abstract double missenseDndsDriverLikelihood();
+    public abstract double missenseUnadjustedDriverLikelihood();
 
     public abstract double missenseProbabilityDriver();
 
-    public abstract long missenseProbabilityVariantNonDriverFactor();
+    public abstract double missenseProbabilityVariantNonDriverFactor();
     
 }

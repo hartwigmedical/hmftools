@@ -13,13 +13,13 @@ public class DndsDriverLikelihoodSupplier {
 
     @NotNull
     @VisibleForTesting
-    static Map<String, DndsDriverLikelihood> tsgLikelihood() throws IOException {
+    public static Map<String, DndsDriverLikelihood> tsgLikelihood() throws IOException {
         return DndsDriverLikelihoodFile.fromLines(Resources.readLines(Resources.getResource("dnds/DndsDriverLikelihoodTsg.tsv"), Charset.defaultCharset()));
     }
 
     @NotNull
     @VisibleForTesting
-    static Map<String, DndsDriverLikelihood> oncoLikelihood() throws IOException {
+    public static Map<String, DndsDriverLikelihood> oncoLikelihood() throws IOException {
         return DndsDriverLikelihoodFile.fromLines(Resources.readLines(Resources.getResource("dnds/DndsDriverLikelihoodOnco.tsv"), Charset.defaultCharset()));
     }
 }

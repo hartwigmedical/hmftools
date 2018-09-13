@@ -14,7 +14,7 @@ public class DndsDriverLikelihoodSupplierTest {
 
     @Test
     public void testReadFromResource() throws IOException {
-//        final Map<String, DndsDriverLikelihood> dndsLiklihoods = DndsDriverLikelihoodSupplier.tsgLikelihood();
+        final Map<String, DndsDriverLikelihood> dndsLiklihoods = DndsDriverLikelihoodSupplier.oncoLikelihood();
 //        assertEquals(1, dndsLiklihoods.get("TP53").indel(), PRECISION);
 //        assertEquals(0.87, dndsLiklihoods.get("TP53").missense(), PRECISION);
 //        assertEquals(0.98, dndsLiklihoods.get("TP53").nonsense(), PRECISION);

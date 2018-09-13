@@ -14,7 +14,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 class DndsDriverLikelihoodFile {
-    private static final Logger LOGGER = LogManager.getLogger(AmberBAFFile.class);
+    private static final Logger LOGGER = LogManager.getLogger(DndsDriverLikelihoodFile.class);
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "gene";
 
@@ -48,9 +48,9 @@ class DndsDriverLikelihoodFile {
         String[] values = line.split(DELIMITER);
         final ImmutableDndsDriverLikelihood.Builder builder = ImmutableDndsDriverLikelihood.builder()
                 .gene(values[0])
-                .missenseDndsDriverLikelihood(Double.valueOf(values[1]))
+                .missenseUnadjustedDriverLikelihood(Double.valueOf(values[1]))
                 .missenseProbabilityDriver(Double.valueOf(values[2]))
-                .missenseProbabilityVariantNonDriverFactor(Long.valueOf(values[3]));
+                .missenseProbabilityVariantNonDriverFactor(Double.valueOf(values[3]));
 
         return builder.build();
     }
