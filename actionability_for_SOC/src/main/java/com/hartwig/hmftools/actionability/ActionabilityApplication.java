@@ -5,14 +5,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.io.File;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.actionability.variants.ActionabilityVariantsAnalyzer;
-import com.hartwig.hmftools.actionability.variants.ActionabilityVariantsSOC;
-import com.hartwig.hmftools.actionability.variants.ImmutableActionabilityVariantsSOC;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
@@ -62,13 +59,19 @@ public abstract class ActionabilityApplication {
         LOGGER.info("Start processing actionability variants");
 
         String fileActionabilityVariants = "/data/common/dbs/knowledgebases/output/actionableVariants.tsv";
-        if (Files.exists(new File(fileActionabilityVariants).toPath())) {
-            ActionabilityVariantsAnalyzer analyzer = ActionabilityVariantsAnalyzer.loadFromFile(fileActionabilityVariants);
+        String fileActionabilityRanges = "/data/common/dbs/knowledgebases/output/actionableRanges.tsv";
+
+        if (Files.exists(new File(fileActionabilityVariants).toPath()) && Files.exists(new File(fileActionabilityRanges).toPath())) {
+            ActionabilityVariantsAnalyzer analyzer = ActionabilityVariantsAnalyzer.loadFromFileVariantsAndFileRanges(fileActionabilityVariants, fileActionabilityRanges);
             for (int i = 0; i < variants.size(); i ++) {
-                LOGGER.info("Is actionable: " + analyzer.actionable(variants.get(i), patientTumorLocation.primaryTumorLocation(), variants.size()));
+                LOGGER.info("Is actionable variant: " + analyzer.actionableVariants(variants.get(i), patientTumorLocation.primaryTumorLocation(), variants.size()));
+                LOGGER.info("Is actionable ranges: " + analyzer.actionableRange(variants.get(i), patientTumorLocation.primaryTumorLocation(), variants.size()));
+
             }
-        } else {
+        } else if (!Files.exists(new File(fileActionabilityVariants).toPath())){
             LOGGER.warn("File does not exist: " + fileActionabilityVariants);
+        } else if(!Files.exists(new File(fileActionabilityRanges).toPath())){
+            LOGGER.warn("File does not exist: " + fileActionabilityRanges);
         }
 
 
@@ -87,8 +90,6 @@ public abstract class ActionabilityApplication {
 
 
 
-   //     String fileActionabilityRanges = "/data/common/dbs/knowledgebases/output/actionableRanges.tsv";
-
         LOGGER.info("");
         LOGGER.info("Start processing actionability fusions");
      //   String fileActionabilityFusionPairs = "/data/common/dbs/knowledgebases/output/actionableFusionPairs.tsv";
@@ -105,7 +106,7 @@ public abstract class ActionabilityApplication {
         LOGGER.info("Writing output data to file");
 
         LOGGER.info("");
-        LOGGER.info("Finish orocessing actionability variants");
+        LOGGER.info("Finish processing actionability variants");
     }
 
     @NotNull

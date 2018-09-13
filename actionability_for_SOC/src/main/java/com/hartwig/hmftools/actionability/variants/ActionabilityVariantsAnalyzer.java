@@ -18,14 +18,24 @@ public class ActionabilityVariantsAnalyzer {
 
     @NotNull
     private final List<ActionabilityVariantsSOC> variants;
+    private final List<ActionabilityRanges> variantsRanges;
 
-    public ActionabilityVariantsAnalyzer(@NotNull final List<ActionabilityVariantsSOC> variants) {
+    public ActionabilityVariantsAnalyzer(@NotNull final List<ActionabilityVariantsSOC> variants, @NotNull List<ActionabilityRanges> variantsRanges) {
         this.variants = variants;
+        this.variantsRanges = variantsRanges;
     }
 
-    public boolean actionable(@NotNull SomaticVariant variant, @NotNull String primaryTumorLocation, @NotNull int sizeVariants) {
+
+    public boolean actionableVariants(@NotNull SomaticVariant variant, @NotNull String primaryTumorLocation, @NotNull int sizeVariants){
         Boolean booleanValue = true;
-        for (int i=1; i < sizeVariants; i ++) {
+        LOGGER.info(sizeVariants);
+        for (int i = 0; i < sizeVariants; i ++){
+            LOGGER.info(primaryTumorLocation.contains(variants.get(i).cancerType()));
+            LOGGER.info(variant.gene().equals(variants.get(i).gene()));
+            LOGGER.info(variant.chromosome().equals(variants.get(i).chromosome()));
+            LOGGER.info(Long.toString(variant.position()).equals(variants.get(i).position()));
+            LOGGER.info(variant.ref().equals(variants.get(i).ref()));
+            LOGGER.info(variant.alt().equals(variants.get(i).alt()));
             if (primaryTumorLocation.contains(variants.get(i).cancerType()) &&
                     variant.gene().equals(variants.get(i).gene()) &&
                     variant.chromosome().equals(variants.get(i).chromosome()) &&
@@ -41,16 +51,30 @@ public class ActionabilityVariantsAnalyzer {
         return booleanValue;
     }
 
+    public boolean actionableRange(@NotNull SomaticVariant variant, @NotNull String primaryTumorLocation, @NotNull int sizeVariants) {
+        return true;
+    }
+
     @NotNull
-    public static ActionabilityVariantsAnalyzer loadFromFile(String file) throws IOException {
-        final List<ActionabilityVariantsSOC> VariantsFile = new ArrayList<>();
-        final List<String> line =  Files.readAllLines(new File(file).toPath());
-        for (int i = 1; i< line.size(); i++) {
-            fromLineVariants(line.get(i));
-            VariantsFile.add(fromLineVariants(line.get(i)));
-            LOGGER.info(fromLineVariants(line.get(i)));
+    public static ActionabilityVariantsAnalyzer loadFromFileVariantsAndFileRanges(String fileVariants, String fileRanges) throws IOException {
+        final List<ActionabilityVariantsSOC> variants = new ArrayList<>();
+        final List<ActionabilityRanges> ranges = new ArrayList<>();
+        final List<String> lineVariants =  Files.readAllLines(new File(fileVariants).toPath());
+        final List<String> lineRanges =  Files.readAllLines(new File(fileRanges).toPath());
+
+
+        for (int i = 1; i< lineVariants.size(); i++) {
+            fromLineVariants(lineVariants.get(i));
+            variants.add(fromLineVariants(lineVariants.get(i)));
+            LOGGER.info(fromLineVariants(lineVariants.get(i)));
         }
-        return new ActionabilityVariantsAnalyzer(VariantsFile);
+
+        for (int i = 1; i< lineRanges.size(); i++) {
+            fromLineVariants(lineRanges.get(i));
+            ranges.add(fromLineRanges(lineRanges.get(i)));
+            LOGGER.info(fromLineVariants(lineRanges.get(i)));
+        }
+        return new ActionabilityVariantsAnalyzer(variants, ranges);
     }
 
     @NotNull

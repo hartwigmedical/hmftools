@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.actionability.variants;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
@@ -34,7 +35,26 @@ public class ActionabilityVariantsAnalyzerTest {
                 .hmfResponse("Responsive")
                 .build();
 
-        ActionabilityVariantsAnalyzer var = new ActionabilityVariantsAnalyzer(Lists.newArrayList(variantsSOC));
+        ActionabilityRanges variantsRanges = ImmutableActionabilityRanges.builder()
+                .gene("BRAF")
+                .mutationTranscript("ENST00000357654")
+                .chromosome("17")
+                .start("10")
+                .stop("1500")
+                .geneTranscript("ENST00000256078")
+                .source("oncoKB")
+                .reference("NRAS Oncogenic Mutations")
+                .drugsName("Cetuximab")
+                .drugsType("EGFR mAb inhibitor")
+                .cancerType("Skin Melanoma")
+                .levelSource("1")
+                .hmfLevel("A")
+                .evidenceType("Predictive")
+                .significanceSource("Resistant")
+                .hmfResponse("Resistant")
+                .build();
+
+        ActionabilityVariantsAnalyzer var = new ActionabilityVariantsAnalyzer(Lists.newArrayList(variantsSOC), Lists.newArrayList(variantsRanges));
 
         SomaticVariant variant = ImmutableSomaticVariantImpl.builder()
                 .chromosome("7")
@@ -56,6 +76,6 @@ public class ActionabilityVariantsAnalyzerTest {
                 .mappability(0D)
                 .build();
 
-        assertTrue(var.actionable(variant, "Skin Melanoma", 1));
+        assertTrue(var.actionableVariants(variant, "Skin Melanoma", 1));
     }
 }
