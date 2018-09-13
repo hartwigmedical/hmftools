@@ -2,11 +2,9 @@ package com.hartwig.hmftools.common.drivercatalog;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.dnds.DndsDriverLikelihood;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -20,19 +18,19 @@ import org.jetbrains.annotations.NotNull;
 public class OncoDrivers {
 
     @NotNull
-    public static List<DriverCatalog> doSTuff(@NotNull final Map<String, DndsDriverLikelihood> likelihoodsByGene,
+    public static List<DriverCatalog> oncoDrivers(@NotNull final Map<String, DndsDriverLikelihood> likelihoodsByGene,
             @NotNull final List<EnrichedSomaticVariant> variants) {
 
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
+
+        final Map<VariantType, Long> variantTypeCounts =
+                variants.stream().filter(x -> !x.isFiltered()).collect(Collectors.groupingBy(SomaticVariant::type, Collectors.counting()));
+        long sampleSNVCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0L);
 
         final Map<String, List<EnrichedSomaticVariant>> missenseVariantsByGene = variants.stream()
                 .filter(x -> likelihoodsByGene.keySet().contains(x.gene()))
                 .filter(x -> x.canonicalCodingEffect().equals(CodingEffect.MISSENSE))
                 .collect(Collectors.groupingBy(SomaticVariant::gene));
-
-        final Map<VariantType, Long> variantTypeCounts =
-                variants.stream().collect(Collectors.groupingBy(SomaticVariant::type, Collectors.counting()));
-        long sampleSNVCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0L);
 
         for (String gene : missenseVariantsByGene.keySet()) {
             final ImmutableDriverCatalog.Builder builder =
@@ -68,7 +66,7 @@ public class OncoDrivers {
 
     public static double missenseProbabilityDriverVariant(long sampleSNVCount, @NotNull final DndsDriverLikelihood likelihood) {
 
-        double lambda = sampleSNVCount / likelihood.missenseProbabilityVariantNonDriverFactor();
+        double lambda = sampleSNVCount * likelihood.missenseProbabilityVariantNonDriverFactor();
         PoissonDistribution poissonDistribution = new PoissonDistribution(lambda);
 
         double pDriver = likelihood.missenseProbabilityDriver();
