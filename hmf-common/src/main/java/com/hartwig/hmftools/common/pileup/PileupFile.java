@@ -38,10 +38,12 @@ public final class PileupFile {
                     case '+':
                         insertions++;
                         i += indelStringSize(i + 1, readBases);
+                        referenceCount--;
                         break;
                     case '-':
                         deletions++;
                         i += indelStringSize(i + 1, readBases);
+                        referenceCount--;
                         break;
                     case '^':
                         i++;

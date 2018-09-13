@@ -95,4 +95,9 @@ public class PurityAdjuster {
         return (normalObservations + tumorObservations) / totalObservations;
     }
 
+    public double purityAdjustedVAFWithHetrozygousNormal(@NotNull final String chromosome, final double copyNumber, final double observedFrequency) {
+        int typicalCopyNumber = typicalCopyNumber(chromosome);
+        return purityAdjustedFrequency(typicalCopyNumber,1, copyNumber, observedFrequency);
+    }
+
 }

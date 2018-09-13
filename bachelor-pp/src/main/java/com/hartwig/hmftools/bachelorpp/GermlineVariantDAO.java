@@ -86,7 +86,7 @@ public class GermlineVariantDAO {
                     bachRecord.getAltCount(),
                     bachRecord.getAltCount() + bachRecord.getRefCount(),
                     DatabaseUtil.decimal(region.adjustedCopyNumber()),
-                    DatabaseUtil.decimal(region.adjustedVAF()),
+                    DatabaseUtil.decimal(bachRecord.getAdjustedVaf()), // region.adjustedVAF()
                     region.highConfidenceRegion(),
                     region.trinucleotideContext(),
                     region.microhomology(),

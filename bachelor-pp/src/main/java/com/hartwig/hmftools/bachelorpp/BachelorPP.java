@@ -274,6 +274,20 @@ public class BachelorPP {
 
         final double clonalPloidy = ClonalityCutoffKernel.clonalCutoff(purityAdjustedVariants);
 
+        for(PurityAdjustedSomaticVariant var : purityAdjustedVariants)
+        {
+            double adjVaf = purityAdjustedVafAtHetrozygousNormal(purityAdjuster, var);
+
+            for (BachelorGermlineVariant bachRecord : bachRecords)
+            {
+                if (bachRecord.chromosome().equals(var.chromosome()) && bachRecord.position() == var.position())
+                {
+                    bachRecord.setAdjustedVaf(adjVaf);
+                    break;
+                }
+            }
+        }
+
         LOGGER.debug("enriching variants");
         final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(highConfidenceRegions,
                 indexedFastaSequenceFile,
@@ -282,9 +296,13 @@ public class BachelorPP {
 
         final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(purityAdjustedVariants);
 
-        for (BachelorGermlineVariant bachRecord : bachRecords) {
+
+        for (BachelorGermlineVariant bachRecord : bachRecords)
+        {
             boolean matched = false;
-            for (final EnrichedSomaticVariant var : enrichedVariants) {
+
+            for (final EnrichedSomaticVariant var : enrichedVariants)
+            {
                 if (bachRecord.chromosome().equals(var.chromosome()) && bachRecord.position() == var.position()) {
                     bachRecord.setEnrichedVariant(var);
                     matched = true;
@@ -296,6 +314,11 @@ public class BachelorPP {
                 LOGGER.error("enriched variant not found for {}", bachRecord.variantId());
             }
         }
+    }
+
+    private static double purityAdjustedVafAtHetrozygousNormal(@NotNull final PurityAdjuster purityAdjuster, @NotNull final PurityAdjustedSomaticVariant variant)
+    {
+        return purityAdjuster.purityAdjustedVAFWithHetrozygousNormal(variant.chromosome(), variant.adjustedCopyNumber(), variant.alleleFrequency());
     }
 
     private static void writeToDatabase(final String sampleId, final List<BachelorGermlineVariant> bachRecords,

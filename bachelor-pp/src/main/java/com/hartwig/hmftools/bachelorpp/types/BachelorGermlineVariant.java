@@ -23,6 +23,8 @@ public class BachelorGermlineVariant {
     private int mRefCount;
     private int mAltCount;
 
+    private double mAdjustedVaf;
+
     private SomaticVariant mSomaticVariant;
     private VariantContext mVariantContext;
     private EnrichedSomaticVariant mEnrichedVariant;
@@ -49,6 +51,7 @@ public class BachelorGermlineVariant {
         mEffects = effects;
         mRefCount = 0;
         mAltCount = 0;
+        mAdjustedVaf = 0;
 
         mSomaticVariant = null;
         mVariantContext = null;
@@ -71,6 +74,9 @@ public class BachelorGermlineVariant {
     public int getAltCount() { return mAltCount; }
     public void setRefCount(int count) { mRefCount = count; }
     public void setAltCount(int count) { mAltCount = count; }
+
+    public void setAdjustedVaf(double vaf) { mAdjustedVaf = vaf; }
+    public double getAdjustedVaf() { return mAdjustedVaf; }
 
     public boolean isValid()
     {

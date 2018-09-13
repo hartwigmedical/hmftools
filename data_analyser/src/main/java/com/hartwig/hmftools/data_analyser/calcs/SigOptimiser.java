@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.calcLinearLeastSquares;
@@ -50,6 +51,7 @@ public class SigOptimiser
     private NmfMatrix mBucketRatioWeights; // weighted frequencies of bucket ratios
     private NmfMatrix mBucketRatioFrequencies; // sample frequencies of bucket ratios
     private double mRefMaxRatio;
+    private double[] mRatioSegments;
 
     private double mCountsTotal; // total of the counts including any applied noise
 
@@ -81,6 +83,7 @@ public class SigOptimiser
     private static double SMALL_RATIO_PERC_CUTOFF = 0.01; // so for a max bucket ratio of 0.36, a minor bucket ratio of 0.0036 would be ignored
     private static double BUCKET_RATIO_RANGE_PERCENTILE = 0.8;
     private static double BUCKET_RANGE_SCORE_THRESHOLD = 0.05; // 0.5 allocation of samples and >= 10% of max ratio
+    private static double BUCKET_RANGE_MAX_PERCENT = 0.25; // max that a range can be as a percentage of its ratio
 
     private static final Logger LOGGER = LogManager.getLogger(SigOptimiser.class);
 
@@ -277,6 +280,8 @@ public class SigOptimiser
     {
         mBucketRatioWeights = new NmfMatrix(mBucketCount, BUCKET_RATIO_SEGMENT_COUNT);
         mBucketRatioFrequencies = new NmfMatrix(mBucketCount, BUCKET_RATIO_SEGMENT_COUNT);
+        NmfMatrix sampleBucketRatios = new NmfMatrix(mBucketCount, mSampleCount);
+        mRatioSegments = new double[BUCKET_RATIO_SEGMENT_COUNT];
 
         mRangesLow = new double[mBucketCount];
         mRangesHigh = new double[mBucketCount];
@@ -301,22 +306,22 @@ public class SigOptimiser
 
         removeLowCandidateBuckets(bucketIds, unallocBucketTotals);
 
-        double[] ratioIncrements = new double[mBucketCount];
-        initVector(ratioIncrements, 1 / (double) BUCKET_RATIO_SEGMENT_COUNT);
+        // double[] ratioIncrements = new double[mBucketCount];
+        // initVector(ratioIncrements, 1 / (double) BUCKET_RATIO_SEGMENT_COUNT);
 
-        assignBucketRatioFrequencies(bucketIds, ratioIncrements, unallocBucketTotals, false);
+        populateRatioSegments(mRatioSegments);
+
+        assignBucketRatioFrequencies(bucketIds, sampleBucketRatios, unallocBucketTotals, false);
 
         // calculate a cache a mean and max for each bucket from the weighted sample count ratios
         double[] meanBucketRatios = new double[mBucketCount];
         double[] maxBucketRatios = new double[mBucketCount];
 
-        calcBucketDistributionStats(bucketIds, ratioIncrements, meanBucketRatios, maxBucketRatios);
+        calcBucketDistributionStats(bucketIds, meanBucketRatios, maxBucketRatios);
 
-        setRatioIncrements(bucketIds, ratioIncrements, meanBucketRatios, maxBucketRatios);
-
-        assignBucketRatioFrequencies(bucketIds, ratioIncrements, unallocBucketTotals, false);
-
-        calcBucketDistributionStats(bucketIds, ratioIncrements, meanBucketRatios, maxBucketRatios);
+        //setRatioIncrements(bucketIds, ratioIncrements, meanBucketRatios, maxBucketRatios);
+        //assignBucketRatioFrequencies(bucketIds, ratioIncrements, unallocBucketTotals, false);
+        //calcBucketDistributionStats(bucketIds, ratioIncrements, meanBucketRatios, maxBucketRatios);
 
         // assess the results
         double maxMeanBucketRatio = 0;
@@ -329,7 +334,7 @@ public class SigOptimiser
 
         for (Integer b : bucketIds)
         {
-            examineBucketDistribution(b, meanBucketRatios[b], ratioIncrements[b], unallocBucketTotals);
+            examineBucketDistribution(b, meanBucketRatios[b], sampleBucketRatios.getRow(b), unallocBucketTotals);
         }
 
         // finally update the final ratios
@@ -347,6 +352,9 @@ public class SigOptimiser
             {
                 // to prevent negatives on the min ratio side
                 mCalcRanges[b] = min(mCurrentRatios[b], 0.001);
+
+                // cap the range proportionally to the ratio
+                mCalcRanges[b] = min(mCalcRanges[b], mCurrentRatios[b] * BUCKET_RANGE_MAX_PERCENT);
             }
         }
     }
@@ -368,26 +376,25 @@ public class SigOptimiser
             newSegment = scaleRoundRatio(newSegment, 2);
 
             ratioIncrements[b] = newSegment;
-
-            /*
-            if (refRatio >= 0.5)
-                ratioIncrements[b] = 1 / (double) BUCKET_RATIO_SEGMENT_COUNT;
-            else if (refRatio >= 0.25)
-                ratioIncrements[b] = 0.5 / BUCKET_RATIO_SEGMENT_COUNT;
-            else if (refRatio >= 0.1)
-                ratioIncrements[b] = 0.2 / BUCKET_RATIO_SEGMENT_COUNT;
-            else if (refRatio >= 0.05)
-                ratioIncrements[b] = 0.1 / BUCKET_RATIO_SEGMENT_COUNT;
-            else
-                ratioIncrements[b] = 0.05 / BUCKET_RATIO_SEGMENT_COUNT;
-           */
         }
     }
 
-    private void assignBucketRatioFrequencies(final List<Integer> bucketIds, final double[] ratioIncrements, final double[] bucketTotals, boolean isInit)
+    public static void populateRatioSegments(double[] ratioSegments)
+    {
+        double reductionFactor = 0.9;
+
+        for (int i = 0; i < BUCKET_RATIO_SEGMENT_COUNT; ++i)
+        {
+            int index = BUCKET_RATIO_SEGMENT_COUNT - i - 1; // insert in reverse
+            ratioSegments[index] = pow(reductionFactor, i);
+        }
+    }
+
+    private void assignBucketRatioFrequencies(final List<Integer> bucketIds, NmfMatrix sampleBucketRatios, final double[] bucketTotals, boolean isInit)
     {
         double[][] brwData = mBucketRatioWeights.getData();
         double[][] brfData = mBucketRatioFrequencies.getData();
+        double[][] smrData = sampleBucketRatios.getData();
 
         if(!isInit)
         {
@@ -402,19 +409,20 @@ public class SigOptimiser
             }
         }
 
-        for(final SampleData sample : mSamples)
+        for(int samIndex = 0; samIndex < mSamples.size(); ++samIndex)
         {
+            final SampleData sample = mSamples.get(samIndex);
             final double[] counts = sample.getUnallocBucketCounts();
-            final double[] noise = sample.getCountRanges();
-            final double[] allocNoise = sample.getAllocNoiseCounts();
+            // final double[] noise = sample.getCountRanges();
+            // final double[] allocNoise = sample.getAllocNoiseCounts();
 
             double sampleBgTotal = 0; // total count across all buckets just in this sig
             for(Integer b : bucketIds)
             {
                 double sbCount = counts[b];
 
-                if(sbCount == 0)
-                    sbCount = max(noise[b] - allocNoise[b], 0);
+                // if(sbCount == 0)
+                //     sbCount = max(noise[b] - allocNoise[b], 0);
 
                 sampleBgTotal += sbCount;
             }
@@ -422,11 +430,14 @@ public class SigOptimiser
             for(Integer b : bucketIds)
             {
                 double sbCount = counts[b];
-
-                if(sbCount == 0)
-                    sbCount = max(noise[b] - allocNoise[b], 0);
-
                 double rawBucketRatio = sbCount / sampleBgTotal;
+                double sampleWeight = sbCount / bucketTotals[b];
+
+                // store in order
+
+                smrData[b][samIndex] = rawBucketRatio;
+
+                /*
                 int ratioIndex = (int)round(rawBucketRatio / ratioIncrements[b]);
 
                 if(ratioIndex < 0 || ratioIndex >= BUCKET_RATIO_SEGMENT_COUNT)
@@ -437,6 +448,45 @@ public class SigOptimiser
                 }
 
                 double sampleWeight = sbCount / bucketTotals[b];
+                brwData[b][ratioIndex] += sampleWeight;
+                brfData[b][ratioIndex] += 1;
+                */
+
+                int ratioIndex = 0;
+                while(ratioIndex < mRatioSegments.length - 1)
+                {
+                    if(rawBucketRatio < mRatioSegments[ratioIndex])
+                        break;
+
+                    double distToNext = mRatioSegments[ratioIndex+1] - rawBucketRatio;
+
+                    if(rawBucketRatio < mRatioSegments[ratioIndex] || rawBucketRatio > mRatioSegments[ratioIndex] && distToNext > 0)
+                    {
+                        if(rawBucketRatio - mRatioSegments[ratioIndex] > distToNext)
+                        {
+                            ++ratioIndex;
+                        }
+
+                        break;
+                    }
+
+                    ++ratioIndex;
+                }
+
+                if(ratioIndex >= BUCKET_RATIO_SEGMENT_COUNT)
+                {
+                    // LOGGER.debug(String.format("sample(%d) bucket(%d) skipping ratioIndex(%d) outside range from sbCount(%s) sampleTotal(%s) rawRatio(%.4f)",
+                    //        sample.Id, b, ratioIndex, sizeToStr(sbCount), sizeToStr(sample.getTotalCount()), rawBucketRatio));
+                    continue;
+
+                }
+
+                if(ratioIndex == BUCKET_RATIO_SEGMENT_COUNT - 1)
+                {
+                     LOGGER.debug(String.format("sample(%d) bucket(%d) last ratioIndex(%d) from sbCount(%s) sampleTotal(%s) rawRatio(%.4f)",
+                            sample.Id, b, ratioIndex, sizeToStr(sbCount), sizeToStr(sample.getTotalCount()), rawBucketRatio));
+                }
+
                 brwData[b][ratioIndex] += sampleWeight;
                 brfData[b][ratioIndex] += 1;
             }
@@ -477,7 +527,7 @@ public class SigOptimiser
         }
     }
 
-    private void calcBucketDistributionStats(final List<Integer> bucketIds, final double[] ratioIncrements, double[] meanBucketRatios, double[] maxBucketRatios)
+    private void calcBucketDistributionStats(final List<Integer> bucketIds, double[] meanBucketRatios, double[] maxBucketRatios)
     {
         double[][] brwData = mBucketRatioWeights.getData();
 
@@ -490,7 +540,8 @@ public class SigOptimiser
             for(int i = 0; i < BUCKET_RATIO_SEGMENT_COUNT; ++i)
             {
                 double sampleWeight = brwData[b][i];
-                double bucketRatio = i * ratioIncrements[b];
+                // double bucketRatio = i * ratioIncrements[b];
+                double bucketRatio = mRatioSegments[i];
                 bucketRatioTotal += bucketRatio * sampleWeight;
                 weightTotal += sampleWeight;
 
@@ -513,10 +564,8 @@ public class SigOptimiser
         }
     }
 
-    private void examineBucketDistribution(int bucket, double origMeanRatio, double ratioIncrement, double[] bucketTotals)
+    private void examineBucketDistribution(int bucket, double origMeanRatio, double[] rawBucketRatios, double[] bucketTotals)
     {
-        double lastSampleWeight = 0;
-
         double[][] brwData = mBucketRatioWeights.getData();
         double[][] brfData = mBucketRatioFrequencies.getData();
 
@@ -525,8 +574,9 @@ public class SigOptimiser
         double freqTotal = sumVector(mBucketRatioFrequencies.getRow(bucket)); // should be number of samples
 
         double startPercentile = (1 - BUCKET_RATIO_RANGE_PERCENTILE) * 0.5;
+        double endPercentile = 1 - startPercentile;
         double startFreqTotal = startPercentile * freqTotal;
-        double endFreqTotal = (1 - startPercentile) * freqTotal;
+        double endFreqTotal = endPercentile * freqTotal;
 
         // now search for a peak and determine a range around it
         int distStartIndex = -1;
@@ -560,14 +610,13 @@ public class SigOptimiser
 
         double bucketRatioTotal = 0;
         double weightTotal = 0;
-        // double invalidChangeTotal = 0;
         double rangeBoundMax = 0;
         double maxWeight = 0;
-        // int maxWeightIndex = 0;
+
         for(int i = distStartIndex; i <= distEndIndex; ++i)
         {
             double sampleWeight = brwData[bucket][i];
-            double bucketRatio = i * ratioIncrement;
+            double bucketRatio = mRatioSegments[i];
             bucketRatioTotal += bucketRatio * sampleWeight;
             weightTotal += sampleWeight;
 
@@ -576,51 +625,71 @@ public class SigOptimiser
                 maxWeight = sampleWeight;
                 rangeBoundMax = bucketRatio;
             }
-
-            /*
-            if(i == 0)
-            {
-                lastSampleWeight = sampleWeight;
-                continue;
-            }
-
-            if(lastSampleWeight == 0 && sampleWeight == 0)
-                continue;
-
-            double swChange = sampleWeight - lastSampleWeight;
-            boolean isSignificantWeight = sampleWeight > 0.25 * maxBucketWeight;
-
-            if(swChange > 0 && i > maxWeightIndex && isSignificantWeight && distEndIndex == -1)
-            {
-                // heading up after the peak within percentile range, may point to additional peaks
-                invalidChangeTotal += swChange;
-            }
-            else if(swChange < 0 && i < maxWeightIndex && isSignificantWeight && distStartIndex >= 0)
-            {
-                // heading down before the peak within percentile range, may point to additional peaks
-                invalidChangeTotal += abs(swChange);
-            }
-
-            lastSampleWeight = sampleWeight;
-            */
         }
 
-        double startRatio = distStartIndex >= 0 ? distStartIndex * ratioIncrement : 0;
-        double endRatio = distEndIndex >= 0 ? distEndIndex * ratioIncrement : 0;
+        double startRatio = distStartIndex >= 0 ? mRatioSegments[distStartIndex] : 0;
+        double endRatio = distEndIndex >= 0 ? mRatioSegments[distEndIndex] : 0;
 
-        if(weightTotal == 0)
+        // repeat again but this time using the raw bucket ratios for accuracy
+        List<Integer> ratioSortedIndices = getSortedVectorIndices(rawBucketRatios, true);
+
+        double cumulativeWeight = 0;
+        double rangeMinRatio = 0;
+        double rangeMaxRatio = 0;
+        double rangeWeightTotal = 0;
+        double rangeRatioWeightTotal = 0;
+        double medianRatio = 0;
+
+        for(Integer samIndex : ratioSortedIndices)
         {
-            LOGGER.error(String.format("grp(%d) bucket(%d) rawMean(%.3f) range(%.3f -> %.3f indx=%d -> %d) total%s)",
-                    mGroupId, bucket, origMeanRatio, startRatio, endRatio, distStartIndex, distEndIndex, sizeToStr(bucketTotals[bucket])));
+            final SampleData sample = mSamples.get(samIndex);
+            double sbCount = sample.getUnallocBucketCounts()[bucket];
+            double sbWeight = sbCount/bucketTotals[bucket];
+            double sampleBucketRatio = rawBucketRatios[samIndex];
+            double sbRatioWeight = sampleBucketRatio * sbWeight;
+
+            cumulativeWeight += sbWeight;
+
+            if(cumulativeWeight < startPercentile)
+                continue;
+
+            if (rangeMinRatio == 0 && cumulativeWeight >= startPercentile)
+            {
+                rangeMinRatio = sampleBucketRatio;
+            }
+
+            if(medianRatio == 0 && cumulativeWeight >= 0.5)
+                medianRatio = sampleBucketRatio;
+
+            if(cumulativeWeight < endPercentile)
+            {
+                rangeWeightTotal += sbWeight;
+                rangeRatioWeightTotal += sbRatioWeight;
+            }
+            else
+            {
+                if(rangeMaxRatio == 0)
+                    rangeMaxRatio = sampleBucketRatio;
+            }
+        }
+
+        if(rangeWeightTotal == 0)
+        {
+            LOGGER.error(String.format("grp(%d) bucket(%d) couldn't calc mean: range(%.3f -> %.3f indx=%d -> %d) total(%s)",
+                    mGroupId, bucket, rangeMinRatio, rangeMaxRatio, distStartIndex, distEndIndex, sizeToStr(bucketTotals[bucket])));
             return;
         }
 
-        double rangeBoundMean = bucketRatioTotal / weightTotal;
+        // double rangeBoundMean = bucketRatioTotal / weightTotal;
+        double rangeBoundMean = rangeRatioWeightTotal / rangeWeightTotal;
 
-        mRangesLow[bucket] = startRatio;
-        mRangesHigh[bucket] = endRatio;
+        mRangesLow[bucket] = rangeMinRatio;
+        mRangesHigh[bucket] = rangeMaxRatio;
+        // mRangesLow[bucket] = startRatio;
+        // mRangesHigh[bucket] = endRatio;
 
-        double minRange = min(rangeBoundMean - startRatio, endRatio - rangeBoundMean);
+        double minRange = min(rangeBoundMean - rangeMinRatio, rangeMaxRatio - rangeBoundMean);
+        // double minRange = min(rangeBoundMean - startRatio, endRatio - rangeBoundMean);
 
         double allocScore = (rangeBoundMean / mRefMaxRatio) * weightTotal;
         boolean isCandidate = mCandidateNewBuckets.contains(bucket);
@@ -629,9 +698,9 @@ public class SigOptimiser
 
         if(mLogVerbose)
         {
-            LOGGER.debug(String.format("grp(%d) bucket(%d %s) score(%.3f) origRatio(%.3f) mean(%.3f raw=%.3f) range(%.3f -> %.3f min=%.3f indx=%d -> %d) max(%.3f) total(%.3f, %s of %s)",
-                    mGroupId, bucket, isCandidate ? "cand" : "init", allocScore, mStartRatios[bucket], rangeBoundMean, origMeanRatio, startRatio, endRatio, minRange,
-                    distStartIndex, distEndIndex, rangeBoundMax, weightTotal, sizeToStr(countsTotal), sizeToStr(bucketTotals[bucket])));
+            LOGGER.debug(String.format("grp(%d) bucket(%d %s) score(%.3f) origRatio(%.3f) calc(avg=%.3f med=%.3f range%.3f -> %.3f min=%.3f) slots(%.3f -> %.3f indx=%d -> %d) total(%.3f, %s of %s)",
+                    mGroupId, bucket, isCandidate ? "cand" : "init", allocScore, mStartRatios[bucket], rangeBoundMean, medianRatio, rangeMinRatio, rangeMaxRatio, minRange,
+                    startRatio, endRatio, distStartIndex, distEndIndex, weightTotal, sizeToStr(countsTotal), sizeToStr(bucketTotals[bucket])));
         }
 
         if(mCacheBucketInfo)
@@ -643,9 +712,8 @@ public class SigOptimiser
             bucketDataStr = String.format("%s,%.0f,%.0f", isCandidate ? "cand" : "init", bucketTotals[bucket], countsTotal);
 
             // various stats
-            bucketDataStr += String.format(",%.4f,%.4f,%.4f,%.4f,%.4f,%d,%d,%.4f",
-                    mStartRatios[bucket], rangeBoundMean, startRatio, endRatio, minRange,
-                    distStartIndex, distEndIndex, ratioIncrement);
+            bucketDataStr += String.format(",%.4f,%.4f,%.4f,%.4f,%.4f",
+                    mStartRatios[bucket], rangeBoundMean, rangeMinRatio, rangeMaxRatio, minRange);
 
             // log the actual frequencies for both counts and weights
             for(int i = 0; i < BUCKET_RATIO_SEGMENT_COUNT; ++i)
@@ -708,16 +776,21 @@ public class SigOptimiser
 
     public static final String getBucketInfoHeader()
     {
-        String headers = "Type,Total,Alloc,SigRatio,MeanRatio,MinRatio,MaxRatio,Range,MinIndex,MaxIndex,SegIncrement";
+        String headers = "Type,Total,Alloc,SigRatio,MeanRatio,MinRatio,MaxRatio,Range";
+
+        double[] ratioSegments = new double[BUCKET_RATIO_SEGMENT_COUNT];
+        populateRatioSegments(ratioSegments);
 
         for(int i = 0; i < BUCKET_RATIO_SEGMENT_COUNT; ++i)
         {
-            headers += String.format(",%d", i);
+            // headers += String.format(",%d", i);
+            headers += String.format(",%.3f", ratioSegments[i]);
         }
 
         for(int i = 0; i < BUCKET_RATIO_SEGMENT_COUNT; ++i)
         {
-            headers += String.format(",%d", i);
+            // headers += String.format(",%d", i);
+            headers += String.format(",%.3f", ratioSegments[i]);
         }
 
         return headers;
