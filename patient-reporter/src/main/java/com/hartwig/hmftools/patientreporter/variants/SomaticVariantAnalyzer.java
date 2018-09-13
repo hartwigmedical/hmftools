@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class },
              allParameters = true)
-public abstract class VariantAnalyzer {
+public abstract class SomaticVariantAnalyzer {
 
     @NotNull
     abstract ConsequenceDeterminer determiner();
@@ -23,24 +23,24 @@ public abstract class VariantAnalyzer {
     abstract MicrosatelliteAnalyzer microsatelliteAnalyzer();
 
     @NotNull
-    public static VariantAnalyzer of(@NotNull HmfReporterData reporterData) {
+    public static SomaticVariantAnalyzer of(@NotNull HmfReporterData reporterData) {
         final Set<String> transcriptsToInclude = reporterData.panelGeneModel().transcriptMap().keySet();
         return of(transcriptsToInclude, ImmutableMicrosatelliteAnalyzer.of(reporterData.refGenomeFastaFile()));
     }
 
     @VisibleForTesting
     @NotNull
-    public static VariantAnalyzer of(@NotNull Set<String> transcripts, @NotNull MicrosatelliteAnalyzer microsatelliteAnalyzer) {
-        return ImmutableVariantAnalyzer.of(new ConsequenceDeterminer(transcripts), microsatelliteAnalyzer);
+    public static SomaticVariantAnalyzer of(@NotNull Set<String> transcripts, @NotNull MicrosatelliteAnalyzer microsatelliteAnalyzer) {
+        return ImmutableSomaticVariantAnalyzer.of(new ConsequenceDeterminer(transcripts), microsatelliteAnalyzer);
     }
 
     @NotNull
-    public VariantAnalysis run(@NotNull final List<EnrichedSomaticVariant> variants) {
+    public SomaticVariantAnalysis run(@NotNull final List<EnrichedSomaticVariant> variants) {
         final double indelsPerMb = microsatelliteAnalyzer().analyzeVariants(variants);
         final int mutationalLoad = MutationalLoadAnalyzer.analyzeVariants(variants);
 
         final List<VariantReport> variantReports = determiner().run(variants);
 
-        return ImmutableVariantAnalysis.of(variants, variantReports, indelsPerMb, mutationalLoad);
+        return ImmutableSomaticVariantAnalysis.of(variants, variantReports, indelsPerMb, mutationalLoad);
     }
 }

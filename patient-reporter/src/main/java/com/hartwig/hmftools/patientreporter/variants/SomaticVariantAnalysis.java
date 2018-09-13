@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class VariantAnalysis {
+public abstract class SomaticVariantAnalysis {
 
     @NotNull
     public abstract List<SomaticVariant> passedVariants();

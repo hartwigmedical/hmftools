@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class VariantAnalyzerTest {
+public class SomaticVariantAnalyzerTest {
 
     private static final String PASS_FILTER = "PASS";
 
@@ -29,7 +29,7 @@ public class VariantAnalyzerTest {
 
     @Test
     public void realCaseWorks() {
-        final VariantAnalyzer analyzer = VariantAnalyzer.of(Sets.newHashSet(RIGHT_TRANSCRIPT), testMicrosatelliteAnalyzer());
+        final SomaticVariantAnalyzer analyzer = SomaticVariantAnalyzer.of(Sets.newHashSet(RIGHT_TRANSCRIPT), testMicrosatelliteAnalyzer());
 
         final SnpEffAnnotation rightAnnotation =
                 createVariantAnnotationBuilder(VariantConsequence.MISSENSE_VARIANT).featureType(RIGHT_FEATURE_TYPE).
@@ -54,7 +54,7 @@ public class VariantAnalyzerTest {
                         builder().snpEffAnnotations(Lists.newArrayList(wrongFeatureType)).build(),
                         builder().snpEffAnnotations(Lists.newArrayList(rightAnnotation)).build());
 
-        final VariantAnalysis analysis = analyzer.run(variants);
+        final SomaticVariantAnalysis analysis = analyzer.run(variants);
 
         assertEquals(5, analysis.passedVariants().size());
         assertEquals(0, analysis.mutationalLoad());

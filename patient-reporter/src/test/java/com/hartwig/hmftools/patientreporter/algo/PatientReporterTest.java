@@ -13,11 +13,11 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.gene.GeneModel;
-import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.patientreporter.BaseReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
-import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
+import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalyzer;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
@@ -37,11 +37,11 @@ public class PatientReporterTest {
         final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfPanelGeneList());
         final BaseReporterData baseReporterData = testBaseReporterData();
         final HmfReporterData reporterData = testHmfReporterData();
-        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.of(reporterData);
+        final SomaticVariantAnalyzer somaticVariantAnalyzer = SomaticVariantAnalyzer.of(reporterData);
         final StructuralVariantAnalyzer svAnalyzer =
                 new StructuralVariantAnalyzer(new TestAnnotator(), geneModel.regions(), testKnownFusionModel());
         final PatientReporter algo =
-                ImmutablePatientReporter.of(baseReporterData, reporterData, variantAnalyzer, svAnalyzer);
+                ImmutablePatientReporter.of(baseReporterData, reporterData, somaticVariantAnalyzer, svAnalyzer);
         assertNotNull(algo.run(RUN_DIRECTORY, null));
     }
 

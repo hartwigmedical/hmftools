@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
 import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
-import com.hartwig.hmftools.patientreporter.variants.VariantAnalysis;
+import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalysis;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
 
 import org.immutables.value.Value;
@@ -16,7 +16,7 @@ abstract class GenomeAnalysis {
     abstract String sample();
 
     @NotNull
-    abstract VariantAnalysis variantAnalysis();
+    abstract SomaticVariantAnalysis variantAnalysis();
 
     @NotNull
     abstract PurpleAnalysis purpleAnalysis();
