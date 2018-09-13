@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
@@ -29,6 +30,7 @@ import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
@@ -43,7 +45,6 @@ import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalyzer;
-import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
@@ -93,29 +94,27 @@ public abstract class PatientReporter {
                 .sorted(fusionComparator())
                 .map(GeneFusionData::from)
                 .collect(Collectors.toList());
+
         final List<GeneDisruptionData> reportableDisruptions = structuralVariantAnalysis.reportableDisruptions()
                 .stream()
                 .sorted(disruptionComparator(reporterData().panelGeneModel().transcriptMap()))
                 .map(GeneDisruptionData::from)
                 .collect(Collectors.toList());
 
-        final int reportedVariantCount = somaticVariantAnalysis.variantReports().size();
-        final PatientTumorLocation patientTumorLocation =
-                PatientReporterHelper.extractPatientTumorLocation(baseReporterData().patientTumorLocations(), tumorSample);
-
         LOGGER.info("Printing analysis results:");
-        LOGGER.info(" Number of variants to report : " + Integer.toString(reportedVariantCount));
-        LOGGER.info("Determined copy number stats for " + Integer.toString(purpleAnalysis.genePanelSize()) + " genes which led to "
-                + Integer.toString(purpleAnalysis.reportableGeneCopyNumbers().size()) + " copy numbers.");
+        LOGGER.info(" Number of variants to report : " + Integer.toString(somaticVariantAnalysis.variantsToReport().size()));
+        LOGGER.info("Determined copy number stats for " + Integer.toString(purpleAnalysis.panelGeneCopyNumbers().size())
+                + " genes which led to " + Integer.toString(purpleAnalysis.reportableGeneCopyNumbers().size()) + " copy numbers.");
         LOGGER.info(" Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
         LOGGER.info(" Number of gene disruptions to report : " + Integer.toString(reportableDisruptions.size()));
         LOGGER.info(" Microsatellite analysis results: " + Double.toString(somaticVariantAnalysis.indelsPerMb()) + " indels per MB");
         LOGGER.info(" Mutational load results: " + Integer.toString(somaticVariantAnalysis.mutationalLoad()));
 
+        final PatientTumorLocation patientTumorLocation =
+                PatientReporterHelper.extractPatientTumorLocation(baseReporterData().patientTumorLocations(), tumorSample);
+
         final Lims lims = baseReporterData().limsModel();
         final Double pathologyTumorPercentage = lims.tumorPercentageForSample(tumorSample);
-        // TODO (KODU): This enrichment can be done inside variant analyser already
-        final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrichSomaticVariants(somaticVariantAnalysis.variantReports());
         final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(tumorSample);
 
         final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample,
@@ -127,7 +126,7 @@ public abstract class PatientReporter {
                 sampleRecipient);
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
-                purpleEnrichedVariants,
+                somaticVariantAnalysis.variantsToReport(),
                 somaticVariantAnalysis.mutationalLoad(),
                 somaticVariantAnalysis.indelsPerMb(),
                 purpleAnalysis.reportableGeneCopyNumbers(),
@@ -150,7 +149,8 @@ public abstract class PatientReporter {
                 reporterData().highConfidenceRegions(),
                 reporterData().refGenomeFastaFile());
 
-        final StructuralVariantAnalysis structuralVariantAnalysis = analyzeStructuralVariants(run, purpleAnalysis, structuralVariantAnalyzer());
+        final StructuralVariantAnalysis structuralVariantAnalysis =
+                analyzeStructuralVariants(run, purpleAnalysis, structuralVariantAnalyzer());
 
         return ImmutableGenomeAnalysis.of(purpleAnalysis, somaticVariantAnalysis, structuralVariantAnalysis);
     }
@@ -224,7 +224,12 @@ public abstract class PatientReporter {
         final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(structuralVariantVCF.toString(), true);
 
         LOGGER.info("Enriching structural variants with purple data.");
-        final List<EnrichedStructuralVariant> enrichedStructuralVariants = purpleAnalysis.enrichStructuralVariants(structuralVariants);
+        final PurityAdjuster purityAdjuster = new PurityAdjuster(purpleAnalysis.gender(), purpleAnalysis.fittedPurity());
+        final Multimap<String, PurpleCopyNumber> copyNumberMap =
+                Multimaps.index(purpleAnalysis.copyNumbers(), PurpleCopyNumber::chromosome);
+
+        final List<EnrichedStructuralVariant> enrichedStructuralVariants =
+                EnrichedStructuralVariantFactory.enrich(structuralVariants, purityAdjuster, copyNumberMap);
 
         LOGGER.info("Analysing structural variants...");
         return structuralVariantAnalyzer.run(enrichedStructuralVariants);

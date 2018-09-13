@@ -5,16 +5,15 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 import java.util.List;
 
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
+import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
-import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-import net.sf.dynamicreports.report.base.expression.AbstractSimpleExpression;
 import net.sf.dynamicreports.report.builder.FieldBuilder;
 import net.sf.dynamicreports.report.datasource.DRDataSource;
-import net.sf.dynamicreports.report.definition.ReportParameters;
 import net.sf.jasperreports.engine.JRDataSource;
 
 public class VariantDataSource {
@@ -33,7 +32,7 @@ public class VariantDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromVariants(@NotNull FittedPurityStatus fitStatus, @NotNull final List<VariantReport> variantReports,
+    public static JRDataSource fromVariants(@NotNull FittedPurityStatus fitStatus, @NotNull final List<EnrichedSomaticVariant> variants,
             @NotNull DrupFilter drupFilter) {
         final DRDataSource variantDataSource = new DRDataSource(GENE_FIELD.getName(),
                 VARIANT_DETAILS_FIELD.getName(),
@@ -45,22 +44,51 @@ public class VariantDataSource {
                 DRIVER_PROBABILITY_FIELD.getName(),
                 ACTIONABILITY_LEVEL_FIELD.getName());
 
-        for (final VariantReport variantReport : variantReports) {
-            final String displayGene = drupFilter.test(variantReport) ? variantReport.gene() + " *" : variantReport.gene();
+        for (final EnrichedSomaticVariant variant : variants) {
+            final String displayGene = drupFilter.test(variant) ? variant.gene() + " *" : variant.gene();
+
+            // TODO (KODU) Implement variant details, and mapping.
+            //builder.variantDetails(snpEffAnnotation.hgvsCoding() + " (" + snpEffAnnotation.hgvsProtein() + ")");
             variantDataSource.add(displayGene,
-                    variantReport.variantDetails(),
-                    variantReport.readDepth(),
-                    variantReport.isHotspotField(),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, variantReport.ploidyVaf()),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus,
-                            PatientReportFormat.formatPercentWithDefaultCutoffs(variantReport.clonalProbability())),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, variantReport.wildTypeStatus()),
-                    PatientReportFormat.formatPercentWithDefaultCutoffs(variantReport.driverProbability()),
-                    variantReport.actionabilityLevel());
+                    Strings.EMPTY,
+                    Strings.EMPTY,
+                    variant.hotspot() ? "Yes" : "No",
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, Strings.EMPTY),
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, PatientReportFormat.formatPercentWithDefaultCutoffs(0D)),
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, Strings.EMPTY),
+                    PatientReportFormat.formatPercentWithDefaultCutoffs(0D),
+                    Strings.EMPTY);
         }
 
         return variantDataSource;
     }
+
+//    @NotNull
+//    public List<VariantReport> enrichSomaticVariants(@NotNull final List<VariantReport> variants) {
+//        final List<VariantReport> result = Lists.newArrayList();
+//        final PurityAdjuster purityAdjuster = new PurityAdjuster(gender(), fittedPurity());
+//        final GenomeRegionSelector<PurpleCopyNumber> copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers());
+//
+//        for (final VariantReport variantReport : variants) {
+//            final Optional<PurpleCopyNumber> optionalCopyNumber = copyNumberSelector.select(variantReport.variant());
+//            if (optionalCopyNumber.isPresent()) {
+//                final PurpleCopyNumber copyNumber = optionalCopyNumber.get();
+//                double adjustedVAF = Math.min(1,
+//                        purityAdjuster.purityAdjustedVAF(copyNumber.chromosome(),
+//                                copyNumber.averageTumorCopyNumber(),
+//                                variantReport.alleleFrequency()));
+//                result.add(ImmutableVariantReport.builder()
+//                        .from(variantReport)
+//                        .ploidy(copyNumber.descriptiveBAF())
+//                        .purityAdjustedVAF(adjustedVAF)
+//                        .build());
+//            } else {
+//                result.add(variantReport);
+//            }
+//        }
+//
+//        return result;
+//    }
 
     @NotNull
     public static FieldBuilder<?>[] variantFields() {
@@ -68,13 +96,13 @@ public class VariantDataSource {
                 CLONAL_PERCENTAGE_FIELD, WILDTYPE_STATUS_FIELD, DRIVER_PROBABILITY_FIELD, ACTIONABILITY_LEVEL_FIELD };
     }
 
-//    @NotNull
-//    public static AbstractSimpleExpression<String> cosmicHyperlink() {
-//        return new AbstractSimpleExpression<String>() {
-//            @Override
-//            public String evaluate(@NotNull final ReportParameters data) {
-//                return data.getValue(COSMIC_URL_FIELD.getName());
-//            }
-//        };
-//    }
+    //    @NotNull
+    //    public static AbstractSimpleExpression<String> cosmicHyperlink() {
+    //        return new AbstractSimpleExpression<String>() {
+    //            @Override
+    //            public String evaluate(@NotNull final ReportParameters data) {
+    //                return data.getValue(COSMIC_URL_FIELD.getName());
+    //            }
+    //        };
+    //    }
 }
