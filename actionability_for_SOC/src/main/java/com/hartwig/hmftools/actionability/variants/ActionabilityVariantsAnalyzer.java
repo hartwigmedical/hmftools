@@ -66,13 +66,11 @@ public class ActionabilityVariantsAnalyzer {
         for (int i = 1; i< lineVariants.size(); i++) {
             fromLineVariants(lineVariants.get(i));
             variants.add(fromLineVariants(lineVariants.get(i)));
-            LOGGER.info(fromLineVariants(lineVariants.get(i)));
         }
 
         for (int i = 1; i< lineRanges.size(); i++) {
             fromLineVariants(lineRanges.get(i));
             ranges.add(fromLineRanges(lineRanges.get(i)));
-            LOGGER.info(fromLineVariants(lineRanges.get(i)));
         }
         return new ActionabilityVariantsAnalyzer(variants, ranges);
     }

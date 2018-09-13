@@ -15,7 +15,7 @@ import org.junit.Test;
 public class ActionabilityVariantsAnalyzerTest {
 
     @Test
-    public void actionabilityWorks() {
+    public void actionabilityWorksVariants() {
 
         ActionabilityVariantsSOC variantsSOC = ImmutableActionabilityVariantsSOC.builder()
                 .gene("BRAF")
