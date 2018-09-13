@@ -9,7 +9,6 @@ import java.util.List;
 import java.io.File;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.actionability.CNVs.ActionabilityCNVsAnalyzer;
 import com.hartwig.hmftools.actionability.fusions.ActionabilityFusionAnalyzer;
 import com.hartwig.hmftools.actionability.variants.ActionabilityVariantsAnalyzer;

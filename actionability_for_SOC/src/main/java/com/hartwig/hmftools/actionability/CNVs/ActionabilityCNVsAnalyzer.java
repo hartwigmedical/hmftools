@@ -41,7 +41,7 @@ public class ActionabilityCNVsAnalyzer {
     }
 
     @NotNull
-    static ActionabilityCNVs fromLineCNVs(@NotNull String line){
+    private static ActionabilityCNVs fromLineCNVs(@NotNull String line){
         final String[] values = line.split(DELIMITER);
         return ImmutableActionabilityCNVs.builder()
                 .gene(values[0])

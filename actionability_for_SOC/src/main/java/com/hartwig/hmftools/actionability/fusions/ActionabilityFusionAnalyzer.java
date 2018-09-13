@@ -21,7 +21,7 @@ public class ActionabilityFusionAnalyzer {
     @NotNull
     private final List<ActionabilityFusionPairs> fusionPairs;
 
-    public ActionabilityFusionAnalyzer(@NotNull final List<ActionabilityFusionPairs> fusionPairs,
+    private ActionabilityFusionAnalyzer(@NotNull final List<ActionabilityFusionPairs> fusionPairs,
             final List<ActionabilityPromiscuosThree> promiscuousThree, final List<ActionabilityPromiscuousFive> promiscuousFive) {
         this.fusionPairs = fusionPairs;
         this.promiscuousThree = promiscuousThree;
@@ -65,7 +65,7 @@ public class ActionabilityFusionAnalyzer {
     }
 
     @NotNull
-    static ActionabilityPromiscuosThree fromLinePromiscuousThree(@NotNull String line) {
+    private static ActionabilityPromiscuosThree fromLinePromiscuousThree(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
         return ImmutableActionabilityPromiscuosThree.builder()
                 .gene(values[0])
@@ -83,7 +83,7 @@ public class ActionabilityFusionAnalyzer {
     }
 
     @NotNull
-    static ActionabilityPromiscuousFive fromLinePromiscuousFive(@NotNull String line) {
+    private static ActionabilityPromiscuousFive fromLinePromiscuousFive(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
         return ImmutableActionabilityPromiscuousFive.builder()
                 .gene(values[0])
@@ -101,7 +101,7 @@ public class ActionabilityFusionAnalyzer {
     }
 
     @NotNull
-    static ActionabilityFusionPairs fromLineFusionPairs(@NotNull String line){
+    private static ActionabilityFusionPairs fromLineFusionPairs(@NotNull String line){
         final String[] values = line.split(DELIMITER);
         return ImmutableActionabilityFusionPairs.builder()
                 .fiveGene(values[0])
@@ -109,7 +109,7 @@ public class ActionabilityFusionAnalyzer {
                 .source(values[2])
                 .reference(values[3])
                 .drugsName(values[4])
-                .drugsName(values[5])
+                .drugsType(values[5])
                 .cancerType(values[6])
                 .levelSource(values[7])
                 .hmfLevel(values[8])

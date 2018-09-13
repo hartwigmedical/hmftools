@@ -98,24 +98,25 @@ public class ActionabilityVariantsAnalyzer {
     }
 
     @NotNull
-    static ActionabilityRanges fromLineRanges(@NotNull String line) {
+    private static ActionabilityRanges fromLineRanges(@NotNull String line) {
         final String [] values = line.split(DELIMITER);
         return ImmutableActionabilityRanges.builder()
-                .mutationTranscript(values[0])
-                .chromosome(values[1])
-                .start(values[2])
-                .stop(values[3])
-                .geneTranscript(values[4])
-                .source(values[5])
-                .reference(values[6])
-                .drugsName(values[7])
-                .drugsType(values[8])
-                .cancerType(values[9])
-                .levelSource(values[10])
-                .hmfLevel(values[11])
-                .evidenceType(values[12])
-                .significanceSource(values[13])
-                .hmfResponse(values[14])
+                .gene(values[0])
+                .mutationTranscript(values[1])
+                .chromosome(values[2])
+                .start(values[3])
+                .stop(values[4])
+                .geneTranscript(values[5])
+                .source(values[6])
+                .reference(values[7])
+                .drugsName(values[8])
+                .drugsType(values[9])
+                .cancerType(values[10])
+                .levelSource(values[11])
+                .hmfLevel(values[12])
+                .evidenceType(values[13])
+                .significanceSource(values[14])
+                .hmfResponse(values[15])
                 .build();
     }
 }
