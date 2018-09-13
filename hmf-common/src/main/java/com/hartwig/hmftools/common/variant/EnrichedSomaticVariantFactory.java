@@ -38,16 +38,12 @@ public class EnrichedSomaticVariantFactory {
     private final IndexedFastaSequenceFile reference;
     @NotNull
     private final ClonalityFactory clonalityFactory;
-    @NotNull
-    private final TranscriptAnnotationSelector transcriptAnnotationSelector;
 
     public EnrichedSomaticVariantFactory(@NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
-            @NotNull final IndexedFastaSequenceFile reference, @NotNull final ClonalityFactory clonalityFactory,
-            @NotNull final List<CanonicalTranscript> canonicalTranscripts) {
+            @NotNull final IndexedFastaSequenceFile reference, @NotNull final ClonalityFactory clonalityFactory) {
         this.highConfidenceSelector = GenomeRegionSelectorFactory.create(highConfidenceRegions);
         this.reference = reference;
         this.clonalityFactory = clonalityFactory;
-        this.transcriptAnnotationSelector = new TranscriptAnnotationSelector(canonicalTranscripts);
     }
 
     @NotNull
@@ -68,7 +64,6 @@ public class EnrichedSomaticVariantFactory {
         highConfidenceSelector.select(variant).ifPresent(x -> inHighConfidenceRegion(builder));
         addTrinucleotideContext(builder, variant, reference);
         addGenomeContext(builder, variant, reference);
-        addCanonicalCosmicID(builder, variant, transcriptAnnotationSelector);
         builder.clonality(clonalityFactory.fromSample(variant));
 
         return builder.build();
@@ -83,20 +78,6 @@ public class EnrichedSomaticVariantFactory {
                 .repeatSequence(Strings.EMPTY)
                 .highConfidenceRegion(false)
                 .clonality(Clonality.UNKNOWN);
-    }
-
-
-    @VisibleForTesting
-    static void addCanonicalCosmicID(@NotNull final Builder builder, @NotNull final SomaticVariant variant,
-            @NotNull TranscriptAnnotationSelector selector) {
-        final Optional<CosmicAnnotation> canonicalCosmicAnnotation = selector.canonical(variant.gene(), variant.cosmicAnnotations());
-        if (canonicalCosmicAnnotation.isPresent()) {
-            final CosmicAnnotation annotation = canonicalCosmicAnnotation.get();
-            builder.canonicalCosmicID(annotation.id());
-        } // KODU: Fallback to standard COSMIC ID if there are no COSMIC annotations. Can be removed once all runs are on pipeline v4.
-        else if (variant.isCOSMIC()) {
-            builder.canonicalCosmicID(variant.cosmicIDs().get(0));
-        }
     }
 
     private static void addGenomeContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant,

@@ -15,6 +15,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.common.gene.TranscriptRegion;
+import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotationFactory;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
@@ -37,6 +38,8 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public class SomaticVariantFactory {
 
+    static final String PASS_FILTER = "PASS";
+
     @NotNull
     public static SomaticVariantFactory unfilteredInstance() {
         return filteredInstance();
@@ -56,6 +59,7 @@ public class SomaticVariantFactory {
     }
 
     private static final HotspotFilter HOTSPOT_FILTER = new HotspotFilter();
+
     private static final String DBSNP_IDENTIFIER = "rs";
     private static final String COSMIC_IDENTIFIER = "COSM";
     private static final String ID_SEPARATOR = ";";
@@ -110,20 +114,46 @@ public class SomaticVariantFactory {
                             .alt(alt(context))
                             .alleleReadCount(frequencyData.alleleReadCount())
                             .totalReadCount(frequencyData.totalReadCount())
-                            .totalReadCount(frequencyData.totalReadCount())
                             .hotspot(HOTSPOT_FILTER.test(context))
-                            .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0))
-                            .cosmicAnnotations(CosmicAnnotationFactory.fromContext(context));
+                            .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0));
 
+                    attachIDAndCosmicAnnotations(builder, context);
                     attachSnpEffAnnotations(builder, context);
                     attachFilter(builder, context);
-                    attachID(builder, context);
                     attachType(builder, context);
                     return Optional.of(builder.build());
                 }
             }
         }
         return Optional.empty();
+    }
+
+    private void attachIDAndCosmicAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
+        final String ID = context.getID();
+        final List<String> cosmicIDs = Lists.newArrayList();
+        if (!ID.isEmpty()) {
+            final String[] ids = ID.split(ID_SEPARATOR);
+            for (final String id : ids) {
+                if (id.contains(DBSNP_IDENTIFIER)) {
+                    builder.dbsnpID(id);
+                } else if (id.contains(COSMIC_IDENTIFIER)) {
+                    cosmicIDs.add(id);
+                }
+            }
+        }
+        builder.cosmicIDs(cosmicIDs);
+
+        final List<CosmicAnnotation> cosmicAnnotations = CosmicAnnotationFactory.fromContext(context);
+        builder.cosmicAnnotations(cosmicAnnotations);
+
+        final Optional<CosmicAnnotation> canonicalCosmicAnnotation =
+                cosmicAnnotations.stream().filter(x -> transcriptIdToGeneMap.keySet().contains(x.transcript())).findFirst();
+
+        if (canonicalCosmicAnnotation.isPresent()) {
+            builder.canonicalCosmicID(canonicalCosmicAnnotation.get().id());
+        } else if (!cosmicIDs.isEmpty()) {
+            builder.canonicalCosmicID(cosmicIDs.get(0));
+        }
     }
 
     private void attachSnpEffAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
@@ -138,9 +168,9 @@ public class SomaticVariantFactory {
             builder.worstCodingEffect(CodingEffect.effect(snpEffAnnotation.gene(), snpEffAnnotation.consequences()));
             builder.worstEffectTranscript(snpEffAnnotation.transcript());
         } else {
-            builder.worstEffect("");
+            builder.worstEffect(Strings.EMPTY);
             builder.worstCodingEffect(CodingEffect.UNDEFINED);
-            builder.worstEffectTranscript("");
+            builder.worstEffectTranscript(Strings.EMPTY);
         }
 
         final Optional<SnpEffAnnotation> canonicalAnnotation =
@@ -154,7 +184,7 @@ public class SomaticVariantFactory {
             builder.canonicalCodingEffect(CodingEffect.UNDEFINED);
         }
 
-        final String firstGene = transcriptAnnotations.isEmpty() ? "" : transcriptAnnotations.get(0).gene();
+        final String firstGene = transcriptAnnotations.isEmpty() ? Strings.EMPTY : transcriptAnnotations.get(0).gene();
         final String gene = canonicalAnnotation.map(SnpEffAnnotation::gene).orElse(firstGene);
         builder.gene(gene);
 
@@ -171,7 +201,7 @@ public class SomaticVariantFactory {
             context.getFilters().forEach(joiner::add);
             builder.filter(joiner.toString());
         } else {
-            builder.filter("PASS");
+            builder.filter(PASS_FILTER);
         }
     }
 
@@ -190,22 +220,6 @@ public class SomaticVariantFactory {
 
     private static void attachType(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
         builder.type(type(context));
-    }
-
-    private static void attachID(@NotNull ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
-        final String ID = context.getID();
-        final List<String> cosmicIDs = Lists.newArrayList();
-        if (!ID.isEmpty()) {
-            final String[] ids = ID.split(ID_SEPARATOR);
-            for (final String id : ids) {
-                if (id.contains(DBSNP_IDENTIFIER)) {
-                    builder.dbsnpID(id);
-                } else if (id.contains(COSMIC_IDENTIFIER)) {
-                    cosmicIDs.add(id);
-                }
-            }
-        }
-        builder.cosmicIDs(cosmicIDs);
     }
 
     private static boolean sampleInFile(@NotNull final String sample, @NotNull final VCFHeader header) {

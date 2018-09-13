@@ -144,6 +144,27 @@ public class SomaticVariantFactoryTest {
         assertEquals(CodingEffect.SYNONYMOUS, variant.canonicalCodingEffect());
     }
 
+    @Test
+    public void revertToNormalCosmicIDIfCanonicalIsNoMatch() {
+        final String sample = "sample";
+
+        final String canonicalCosmicID =
+                "14\t105246551\trs121434592;COSM33765\tC\tT\t.\tPASS\tCOSM2ENST=COSM33766|AKT1_ENST00000554581|c.49G>A|p.E17K|519\tGT:AD:DP\t0/1:120,71:204";
+
+        final SomaticVariant canonicalCosmicIDVariant = assertedGet(SomaticVariantFactory.passOnlyInstance()
+                .createVariant(sample, VariantContextFromString.decode(sample, canonicalCosmicID)));
+
+        assertEquals("COSM33766", canonicalCosmicIDVariant.canonicalCosmicID());
+
+        final String noCanonicalCosmicID =
+                "14\t105246551\trs121434592;COSM33765\tC\tT\t.\tPASS\tCOSM2ENST=COSM33766|AKT1_ENST00000349310|c.49G>A|p.E17K|519\tGT:AD:DP\t0/1:120,71:204";
+
+        final SomaticVariant noCanonicalCosmicIDVariant = assertedGet(SomaticVariantFactory.passOnlyInstance()
+                .createVariant(sample, VariantContextFromString.decode(sample, noCanonicalCosmicID)));
+
+        assertEquals("COSM33765", noCanonicalCosmicIDVariant.canonicalCosmicID());
+    }
+
     @NotNull
     private static SomaticVariant assertedGet(@NotNull Optional<SomaticVariant> variant) {
         assert variant.isPresent();

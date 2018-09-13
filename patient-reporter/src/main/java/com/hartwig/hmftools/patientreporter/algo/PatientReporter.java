@@ -83,21 +83,21 @@ public abstract class PatientReporter {
         final GenomeAnalysis genomeAnalysis = analyseGenomeData(run.tumorSample(), runDirectory);
         assert run.isSomaticRun() && run.tumorSample().equals(genomeAnalysis.sample());
 
-//        LOGGER.info("Determining actionability variants.");
-//        String file = "/data/common/dbs/knowledgebases/output/actionableVariants.tsv";
-//        if (Files.exists(new File(file).toPath())) {
-//            ActionabilityAnalyzer analyzer = ActionabilityAnalyzer.loadFromFile(file);
-//            LOGGER.info("analyzer: " + analyzer);
-//            // TODO (LISC) try out actionability
-//            for (SomaticVariant variant : genomeAnalysis.variantAnalysis().passedVariants()) {
-//                LOGGER.info("variant: " + variant);
-//                if (analyzer.isActionable(variant)) {
-//                    LOGGER.info("YESSS! " + variant);
-//                }
-//             }
-//        } else {
-//            LOGGER.warn("File does not exist: " + file);
-//        }
+        //        LOGGER.info("Determining actionability variants.");
+        //        String file = "/data/common/dbs/knowledgebases/output/actionableVariants.tsv";
+        //        if (Files.exists(new File(file).toPath())) {
+        //            ActionabilityAnalyzer analyzer = ActionabilityAnalyzer.loadFromFile(file);
+        //            LOGGER.info("analyzer: " + analyzer);
+        //            // TODO (LISC) try out actionability
+        //            for (SomaticVariant variant : genomeAnalysis.variantAnalysis().passedVariants()) {
+        //                LOGGER.info("variant: " + variant);
+        //                if (analyzer.isActionable(variant)) {
+        //                    LOGGER.info("YESSS! " + variant);
+        //                }
+        //             }
+        //        } else {
+        //            LOGGER.warn("File does not exist: " + file);
+        //        }
 
         final String tumorSample = genomeAnalysis.sample();
         final VariantAnalysis variantAnalysis = genomeAnalysis.variantAnalysis();
@@ -216,8 +216,7 @@ public abstract class PatientReporter {
         final EnrichedSomaticVariantFactory enrichedSomaticFactory =
                 new EnrichedSomaticVariantFactory(reporterData().highConfidenceRegions(),
                         reporterData().refGenomeFastaFile(),
-                        clonalityFactory,
-                        CanonicalTranscriptFactory.create(HmfGenePanelSupplier.allGeneList()));
+                        clonalityFactory);
 
         return enrichedSomaticFactory.enrich(purityAdjustedSomaticVariants);
     }
