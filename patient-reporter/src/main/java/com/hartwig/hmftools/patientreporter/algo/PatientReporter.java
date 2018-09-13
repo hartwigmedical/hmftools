@@ -79,13 +79,15 @@ public abstract class PatientReporter {
     @NotNull
     public AnalysedPatientReport run(@NotNull final String runDirectory, @Nullable final String comments) throws IOException {
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
-        final GenomeAnalysis genomeAnalysis = analyseGenomeData(run);
-        assert run.isSomaticRun() && run.tumorSample().equals(genomeAnalysis.sample());
+        assert run.isSomaticRun();
 
-        final String tumorSample = genomeAnalysis.sample();
-        final SomaticVariantAnalysis somaticVariantAnalysis = genomeAnalysis.variantAnalysis();
+        final GenomeAnalysis genomeAnalysis = analyseGenomeData(run);
+        final String tumorSample = run.tumorSample();
+
+        final SomaticVariantAnalysis somaticVariantAnalysis = genomeAnalysis.somaticVariantAnalysis();
         final PurpleAnalysis purpleAnalysis = genomeAnalysis.purpleAnalysis();
         final StructuralVariantAnalysis structuralVariantAnalysis = genomeAnalysis.structuralVariantAnalysis();
+
         final List<GeneFusionData> reportableFusions = structuralVariantAnalysis.reportableFusions()
                 .stream()
                 .sorted(fusionComparator())
@@ -97,14 +99,12 @@ public abstract class PatientReporter {
                 .map(GeneDisruptionData::from)
                 .collect(Collectors.toList());
 
-        final int passedVariantCount = somaticVariantAnalysis.passedVariants().size();
         final int reportedVariantCount = somaticVariantAnalysis.variantReports().size();
         final int structuralVariantCount = structuralVariantAnalysis.annotations().size();
         final PatientTumorLocation patientTumorLocation =
                 PatientReporterHelper.extractPatientTumorLocation(baseReporterData().patientTumorLocations(), tumorSample);
 
         LOGGER.info("Printing analysis results:");
-        LOGGER.info(" Number of passed variants : " + Integer.toString(passedVariantCount));
         LOGGER.info(" Number of variants to report : " + Integer.toString(reportedVariantCount));
         LOGGER.info("Determined copy number stats for " + Integer.toString(purpleAnalysis.genePanelSize()) + " genes which led to "
                 + Integer.toString(purpleAnalysis.reportableGeneCopyNumbers().size()) + " copy numbers.");
@@ -154,7 +154,7 @@ public abstract class PatientReporter {
 
         final StructuralVariantAnalysis structuralVariantAnalysis = analyzeStructuralVariants(run, purpleAnalysis, structuralVariantAnalyzer());
 
-        return ImmutableGenomeAnalysis.of(run.tumorSample(), somaticVariantAnalysis, purpleAnalysis, structuralVariantAnalysis);
+        return ImmutableGenomeAnalysis.of(purpleAnalysis, somaticVariantAnalysis, structuralVariantAnalysis);
     }
 
     @NotNull

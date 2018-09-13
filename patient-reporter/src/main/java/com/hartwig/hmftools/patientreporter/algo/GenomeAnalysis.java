@@ -12,14 +12,12 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class },
              allParameters = true)
 abstract class GenomeAnalysis {
-    @NotNull
-    abstract String sample();
-
-    @NotNull
-    abstract SomaticVariantAnalysis variantAnalysis();
 
     @NotNull
     abstract PurpleAnalysis purpleAnalysis();
+
+    @NotNull
+    abstract SomaticVariantAnalysis somaticVariantAnalysis();
 
     @NotNull
     abstract StructuralVariantAnalysis structuralVariantAnalysis();
