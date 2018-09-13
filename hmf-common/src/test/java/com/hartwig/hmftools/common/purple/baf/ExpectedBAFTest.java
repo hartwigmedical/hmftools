@@ -15,5 +15,4 @@ public class ExpectedBAFTest {
         assertEquals(0.53681747, ExpectedBAF.expectedBAF(90, 0.75), EPSILON);
         assertEquals(0.53193270, ExpectedBAF.expectedBAF(120, 0.75), EPSILON);
     }
-
 }

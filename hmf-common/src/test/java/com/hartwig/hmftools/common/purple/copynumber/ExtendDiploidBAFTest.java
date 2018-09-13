@@ -43,7 +43,7 @@ public class ExtendDiploidBAFTest {
         assertBAF(3/5d, 5, 2/3d, 6);
     }
 
-    private void assertBAF(double expectedBAF, double regionCopyNumber, double neighbourBAF, double neighbourCopyNumber) {
+    private static void assertBAF(double expectedBAF, double regionCopyNumber, double neighbourBAF, double neighbourCopyNumber) {
         assertEquals(expectedBAF, ExtendDiploidBAF.estimateBAF(regionCopyNumber, neighbourBAF, neighbourCopyNumber), EPSILON);
     }
 }

@@ -44,5 +44,4 @@ public class FittedPurityRangeFileTest {
         }
         return result;
     }
-
 }

@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.ImmutableAllelicDepthImpl;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class SomaticDeviationTest {
@@ -24,9 +25,8 @@ public class SomaticDeviationTest {
         assertEquals(0.65, deviationFromMax, 0.01);
     }
 
-    private AllelicDepth depth(int alleleReadCount, int totalReadCount) {
+    @NotNull
+    private static AllelicDepth depth(int alleleReadCount, int totalReadCount) {
         return ImmutableAllelicDepthImpl.builder().alleleReadCount(alleleReadCount).totalReadCount(totalReadCount).build();
     }
-
-
 }
