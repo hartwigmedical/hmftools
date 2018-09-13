@@ -17,6 +17,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class OncoDrivers {
 
+    private static final int MAX_REPEAT_COUNT = 7;
+
     @NotNull
     public static List<DriverCatalog> oncoDrivers(@NotNull final Map<String, DndsDriverLikelihood> likelihoodsByGene,
             @NotNull final List<EnrichedSomaticVariant> variants) {
@@ -43,8 +45,9 @@ public class OncoDrivers {
                 driverCatalog.add(builder.driver(DriverType.HOTSPOT).build());
             }
 
-            final List<EnrichedSomaticVariant> inframe =
-                    geneVariants.stream().filter(x -> x.type() == VariantType.INDEL && x.repeatCount() < 8).collect(Collectors.toList());
+            final List<EnrichedSomaticVariant> inframe = geneVariants.stream()
+                    .filter(x -> x.type() == VariantType.INDEL && x.repeatCount() <= MAX_REPEAT_COUNT)
+                    .collect(Collectors.toList());
             if (!inframe.isEmpty()) {
                 driverCatalog.add(builder.driver(DriverType.INFRAME).build());
             }
