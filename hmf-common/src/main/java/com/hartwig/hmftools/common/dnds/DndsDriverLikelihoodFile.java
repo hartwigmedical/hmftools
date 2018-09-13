@@ -48,10 +48,9 @@ class DndsDriverLikelihoodFile {
         String[] values = line.split(DELIMITER);
         final ImmutableDndsDriverLikelihood.Builder builder = ImmutableDndsDriverLikelihood.builder()
                 .gene(values[0])
-                .indel(Double.valueOf(values[1]))
-                .missense(Double.valueOf(values[2]))
-                .nonsense(Double.valueOf(values[3]))
-                .splice(Double.valueOf(values[4]));
+                .missenseDndsDriverLikelihood(Double.valueOf(values[1]))
+                .missenseProbabilityDriver(Double.valueOf(values[2]))
+                .missenseProbabilityVariantNonDriverFactor(Long.valueOf(values[3]));
 
         return builder.build();
     }
