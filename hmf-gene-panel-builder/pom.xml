@@ -8,9 +8,9 @@
         <version>1</version>
     </parent>
 
-    <artifactId>hmf-gene-panel</artifactId>
+    <artifactId>hmf-gene-panel-builder</artifactId>
     <packaging>jar</packaging>
-    <name>HMF Tools - HMF Gene Panel</name>
+    <name>HMF Tools - HMF Gene Panel Builder</name>
 
     <dependencies>
         <dependency>
