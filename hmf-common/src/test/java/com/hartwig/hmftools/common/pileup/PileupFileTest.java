@@ -20,7 +20,7 @@ public class PileupFileTest {
         final Pileup pileup = PileupFile.fromString(line);
         assertEquals("A", pileup.referenceBase());
         assertEquals(11, pileup.readCount());
-        assertEquals(9, pileup.referenceCount());
+        assertEquals(6, pileup.referenceCount());
         assertEquals(2, pileup.gMismatchCount());
         assertEquals(0, pileup.aMismatchCount());
         assertEquals(0, pileup.tMismatchCount());
@@ -37,7 +37,7 @@ public class PileupFileTest {
         assertEquals(156, pileup.position());
         assertEquals("A", pileup.referenceBase());
         assertEquals(11, pileup.readCount());
-        assertEquals(9, pileup.referenceCount());
+        assertEquals(6, pileup.referenceCount());
         assertEquals(2, pileup.gMismatchCount());
         assertEquals(0, pileup.aMismatchCount());
         assertEquals(0, pileup.tMismatchCount());
@@ -54,7 +54,7 @@ public class PileupFileTest {
         assertEquals(200, pileup.position());
         assertEquals("A", pileup.referenceBase());
         assertEquals(20, pileup.readCount());
-        assertEquals(20, pileup.referenceCount());
+        assertEquals(18, pileup.referenceCount());
         assertEquals(0, pileup.gMismatchCount());
         assertEquals(0, pileup.aMismatchCount());
         assertEquals(0, pileup.tMismatchCount());
@@ -71,7 +71,7 @@ public class PileupFileTest {
         assertEquals(200, pileup.position());
         assertEquals("A", pileup.referenceBase());
         assertEquals(20, pileup.readCount());
-        assertEquals(19, pileup.referenceCount());
+        assertEquals(17, pileup.referenceCount());
         assertEquals(0, pileup.gMismatchCount());
         assertEquals(0, pileup.aMismatchCount());
         assertEquals(0, pileup.tMismatchCount());
