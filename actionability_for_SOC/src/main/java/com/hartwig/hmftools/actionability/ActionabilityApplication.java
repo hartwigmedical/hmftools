@@ -40,8 +40,6 @@ public abstract class ActionabilityApplication {
     private static final String SOMATIC_VCF_EXTENSION_V3 = "_post_processed_v2.2.vcf.gz";
     private static final String SOMATIC_VCF_EXTENSION_V4 = "_post_processed.vcf.gz";
 
-    private static final String DELIMITER = "\t";
-
     public static void main(final String... args) throws ParseException, IOException, SQLException {
         LOGGER.info("Determining actionability variants.");
         final Options options = createOptions();
@@ -57,23 +55,37 @@ public abstract class ActionabilityApplication {
 
         final List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(cmd.getOptionValue(TUMOR_LOCATION_CSV));
         final PatientTumorLocation patientTumorLocation = extractPatientTumorLocation(patientTumorLocations, run.tumorSample());
-        LOGGER.info("Tumor location from patient: " + patientTumorLocation);
+        LOGGER.info("Tumor location from patient: " + patientTumorLocation.primaryTumorLocation());
+        LOGGER.info("Cancer subtype from patient: " + patientTumorLocation.cancerSubtype());
 
         LOGGER.info("");
         LOGGER.info("Start processing actionability variants");
 
         String fileActionabilityVariants = "/data/common/dbs/knowledgebases/output/actionableVariants.tsv";
-
         if (Files.exists(new File(fileActionabilityVariants).toPath())) {
-            ActionabilityVariantsAnalyzer analyzer = loadFromFile(fileActionabilityVariants);
+            ActionabilityVariantsAnalyzer analyzer = ActionabilityVariantsAnalyzer.loadFromFile(fileActionabilityVariants);
             for (int i = 0; i < variants.size(); i ++) {
-                LOGGER.info("variants: " + variants.get(i).gene() + " " + variants.get(i).chromosome() + " " +
-                        variants.get(i).chromosomePosition() + " " + variants.get(i).ref() + " " + variants.get(i).alt());
-                LOGGER.info("Is actionable: " + analyzer.actionable(variants.get(i)));
+                LOGGER.info("Is actionable: " + analyzer.actionable(variants.get(i), patientTumorLocation.primaryTumorLocation(), variants.size()));
             }
         } else {
             LOGGER.warn("File does not exist: " + fileActionabilityVariants);
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
    //     String fileActionabilityRanges = "/data/common/dbs/knowledgebases/output/actionableRanges.tsv";
 
@@ -94,6 +106,32 @@ public abstract class ActionabilityApplication {
 
         LOGGER.info("");
         LOGGER.info("Finish orocessing actionability variants");
+    }
+
+    @NotNull
+    private static Options createOptions() {
+        final Options options = new Options();
+        options.addOption(RUN_DIRECTORY, true, "Complete path towards a single run dir where patient reporter will run on.");
+        options.addOption(TUMOR_LOCATION_CSV, true, "Complete path towards the (curated) tumor location csv.");
+        return options;
+    }
+
+    @NotNull
+    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException {
+        final CommandLineParser parser = new DefaultParser();
+        return parser.parse(options, args);
+    }
+
+    @NotNull
+    private static List<SomaticVariant> loadPassedSomaticVariants(@NotNull final String sample, @NotNull final String path) throws IOException {
+        // TODO (KODU): Clean up once pipeline v3 no longer exists
+        Path vcfPath;
+        try {
+            vcfPath = PathExtensionFinder.build().findPath(path, SOMATIC_VCF_EXTENSION_V3);
+        } catch (FileNotFoundException exception) {
+            vcfPath = PathExtensionFinder.build().findPath(path, SOMATIC_VCF_EXTENSION_V4);
+        }
+        return SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, vcfPath.toString());
     }
 
     @Nullable
@@ -125,64 +163,4 @@ public abstract class ActionabilityApplication {
         return sample;
     }
 
-
-    @NotNull
-    private static Options createOptions() {
-        final Options options = new Options();
-        options.addOption(RUN_DIRECTORY, true, "Complete path towards a single run dir where patient reporter will run on.");
-        options.addOption(TUMOR_LOCATION_CSV, true, "Complete path towards the (curated) tumor location csv.");
-        return options;
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
-    @NotNull
-    public static ActionabilityVariantsAnalyzer loadFromFile(String file) throws IOException {
-        final List<ActionabilityVariantsSOC> VariantsFile = new ArrayList<>();
-        final List<String> line =  Files.readAllLines(new File(file).toPath());
-        for (int i = 1; i< line.size(); i++) {
-            fromLineVariants(line.get(i));
-            VariantsFile.add(fromLineVariants(line.get(i)));
-            LOGGER.info(fromLineVariants(line.get(i)));
-        }
-        return new ActionabilityVariantsAnalyzer(VariantsFile);
-    }
-
-    @NotNull
-    static ActionabilityVariantsSOC fromLineVariants(@NotNull String line) {
-        final String[] values = line.split(DELIMITER);
-        return ImmutableActionabilityVariantsSOC.builder()
-                .gene(values[0])
-                .chromosome(values[1])
-                .position(values[2])
-                .ref(values[3])
-                .alt(values[4])
-                .source(values[5])
-                .reference(values[6])
-                .drug(values[7])
-                .drugsType(values[8])
-                .cancerType(values[9])
-                .levelSource(values[10])
-                .levelHmf(values[11])
-                .evidenceType(values[12])
-                .significanceSource(values[13])
-                .hmfResponse(values[14])
-                .build();
-    }
-
-    @NotNull
-    public static List<SomaticVariant> loadPassedSomaticVariants(@NotNull final String sample, @NotNull final String path) throws IOException {
-        // TODO (KODU): Clean up once pipeline v3 no longer exists
-        Path vcfPath;
-        try {
-            vcfPath = PathExtensionFinder.build().findPath(path, SOMATIC_VCF_EXTENSION_V3);
-        } catch (FileNotFoundException exception) {
-            vcfPath = PathExtensionFinder.build().findPath(path, SOMATIC_VCF_EXTENSION_V4);
-        }
-        return SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, vcfPath.toString());
-    }
 }

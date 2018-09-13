@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.actionability.variants;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
@@ -55,10 +54,6 @@ public class ActionabilityVariantsAnalyzerTest {
                 .mappability(0D)
                 .build();
 
-        assertTrue(var.actionable(variant));
-
-
-
-
+        assertTrue(var.actionable(variant, "Skin Melanoma", 1));
     }
 }
