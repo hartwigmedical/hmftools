@@ -25,15 +25,13 @@ public class SomaticVariantAnalyzerTest {
 
     @Test
     public void realCaseWorks() {
-        final SomaticVariantAnalyzer analyzer = SomaticVariantAnalyzer.of(Sets.newHashSet(RIGHT_GENE));
-
         final List<EnrichedSomaticVariant> variants =
                 Lists.newArrayList(builder().gene(RIGHT_GENE).canonicalCodingEffect(RIGHT_EFFECT).worstCodingEffect(RIGHT_EFFECT).build(),
                         builder().gene(RIGHT_GENE).canonicalCodingEffect(WRONG_EFFECT).worstCodingEffect(WRONG_EFFECT).build(),
                         builder().gene(WRONG_GENE).canonicalCodingEffect(RIGHT_EFFECT).worstCodingEffect(RIGHT_EFFECT).build(),
                         builder().gene(WRONG_GENE).canonicalCodingEffect(WRONG_EFFECT).worstCodingEffect(WRONG_EFFECT).build());
 
-        final SomaticVariantAnalysis analysis = analyzer.run(variants);
+        final SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants, Sets.newHashSet(RIGHT_GENE));
 
         assertEquals(2, analysis.mutationalLoad());
         assertEquals(1, analysis.variantsToReport().size());
