@@ -76,6 +76,6 @@ public class ActionabilityVariantsAnalyzerTest {
                 .mappability(0D)
                 .build();
 
-        assertTrue(var.actionableVariants(variant, "Skin Melanoma", 1));
+        assertTrue(var.actionableVariants(variant, "Skin Melanoma", 0));
     }
 }

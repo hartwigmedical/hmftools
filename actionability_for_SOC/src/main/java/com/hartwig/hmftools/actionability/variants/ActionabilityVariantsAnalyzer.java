@@ -26,28 +26,42 @@ public class ActionabilityVariantsAnalyzer {
     }
 
 
-    public boolean actionableVariants(@NotNull SomaticVariant variant, @NotNull String primaryTumorLocation, @NotNull int sizeVariants){
-        Boolean booleanValue = true;
-        LOGGER.info(sizeVariants);
-        for (int i = 0; i < sizeVariants; i ++){
-            LOGGER.info(primaryTumorLocation.contains(variants.get(i).cancerType()));
-            LOGGER.info(variant.gene().equals(variants.get(i).gene()));
-            LOGGER.info(variant.chromosome().equals(variants.get(i).chromosome()));
-            LOGGER.info(Long.toString(variant.position()).equals(variants.get(i).position()));
-            LOGGER.info(variant.ref().equals(variants.get(i).ref()));
-            LOGGER.info(variant.alt().equals(variants.get(i).alt()));
-            if (primaryTumorLocation.contains(variants.get(i).cancerType()) &&
-                    variant.gene().equals(variants.get(i).gene()) &&
-                    variant.chromosome().equals(variants.get(i).chromosome()) &&
-                    Long.toString(variant.position()).equals(variants.get(i).position()) &&
-                    variant.ref().equals(variants.get(i).ref()) &&
-                    variant.alt().equals(variants.get(i).alt())) {
-                booleanValue =  true;
-                LOGGER.info(variants);
-            } else {
-                booleanValue =  false;
-            }
+    public boolean actionableVariants(@NotNull SomaticVariant variant, @NotNull String primaryTumorLocation, @NotNull int number){
+        Boolean booleanValue;
+        LOGGER.info(number);
+
+        LOGGER.info("values");
+        LOGGER.info(primaryTumorLocation);
+        LOGGER.info(variants.get(number).cancerType());
+        LOGGER.info(variant.gene());
+        LOGGER.info(variants.get(number).gene());
+        LOGGER.info(variant.chromosome());
+        LOGGER.info(variants.get(number).chromosome());
+        LOGGER.info(Long.toString(variant.position()));
+        LOGGER.info(variants.get(number).position());
+        LOGGER.info(variant.ref());
+        LOGGER.info(variants.get(number).ref());
+        LOGGER.info(variant.alt());
+        LOGGER.info(variants.get(number).alt());
+        LOGGER.info("Check if");
+        LOGGER.info(variants.get(number).cancerType().contains(primaryTumorLocation));
+        LOGGER.info(variant.gene().equals(variants.get(number).gene()));
+        LOGGER.info(variant.chromosome().equals(variants.get(number).chromosome()));
+        LOGGER.info(Long.toString(variant.position()).equals(variants.get(number).position()));
+        LOGGER.info(variant.ref().equals(variants.get(number).ref()));
+        LOGGER.info(variant.alt().equals(variants.get(number).alt()));
+        if (variants.get(number).cancerType().contains(primaryTumorLocation) &&
+                variant.gene().equals(variants.get(number).gene()) &&
+                variant.chromosome().equals(variants.get(number).chromosome()) &&
+                Long.toString(variant.position()).equals(variants.get(number).position()) &&
+                variant.ref().equals(variants.get(number).ref()) &&
+                variant.alt().equals(variants.get(number).alt())) {
+            booleanValue =  true;
+            LOGGER.info(variants);
+        } else {
+            booleanValue =  false;
         }
+
         return booleanValue;
     }
 
