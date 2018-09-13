@@ -37,6 +37,7 @@ public enum CodingEffect {
 
     @NotNull
     private static CodingEffect effect(@NotNull final String gene, @NotNull final VariantConsequence consequence) {
+        // KODU: Below exception exists because TP53 has some known pathogenic variants in splice regions.
         if (gene.equals("TP53") && consequence.equals(VariantConsequence.SPLICE_REGION_VARIANT)) {
             return SPLICE;
         }
