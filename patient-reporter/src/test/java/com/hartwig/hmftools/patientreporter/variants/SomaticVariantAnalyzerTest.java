@@ -56,7 +56,6 @@ public class SomaticVariantAnalyzerTest {
 
         final SomaticVariantAnalysis analysis = analyzer.run(variants);
 
-        assertEquals(5, analysis.passedVariants().size());
         assertEquals(0, analysis.mutationalLoad());
         assertEquals(2, analysis.variantReports().size());
     }

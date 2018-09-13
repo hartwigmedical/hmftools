@@ -13,19 +13,20 @@ public final class MutationalLoadAnalyzer {
     private MutationalLoadAnalyzer() {
     }
 
-    static int analyzeVariants(@NotNull final List<EnrichedSomaticVariant> variants) {
-        int mutationalLoadSize = 0;
+    static int determineMutationalLoad(@NotNull final List<EnrichedSomaticVariant> variants) {
+        int variantsWhichCountToMutationalLoad = 0;
         for (final SomaticVariant variant : variants) {
-            if (mutationalLoadCheck(variant)) {
-                mutationalLoadSize++;
+            // KODU: Patient reporting should already filter on passed only.
+            assert !variant.isFiltered();
+
+            if (countsTowardsMutationalLoad(variant)) {
+                variantsWhichCountToMutationalLoad++;
             }
         }
-        return mutationalLoadSize;
+        return variantsWhichCountToMutationalLoad;
     }
 
-    private static boolean mutationalLoadCheck(@NotNull final SomaticVariant variant) {
-        // KODU: Patient reporting should already filter on passed only.
-        assert !variant.isFiltered();
+    private static boolean countsTowardsMutationalLoad(@NotNull final SomaticVariant variant) {
         return variant.worstCodingEffect() == CodingEffect.MISSENSE;
     }
 }

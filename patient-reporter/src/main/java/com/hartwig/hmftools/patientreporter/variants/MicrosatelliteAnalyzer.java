@@ -29,6 +29,9 @@ public abstract class MicrosatelliteAnalyzer {
     public double analyzeVariants(@NotNull final List<EnrichedSomaticVariant> variants) {
         double indelCount = 0;
         for (final SomaticVariant variant : variants) {
+            // KODU: Patient reporting should already filter on passed only.
+            assert !variant.isFiltered();
+
             if (isPassIndel(variant)) {
                 final Pair<Integer, String> relativePositionAndRef = relativePositionAndRef(variant, reference());
                 if (getRepeatContext(variant, relativePositionAndRef.getFirst(), relativePositionAndRef.getSecond()).filter(
@@ -40,9 +43,7 @@ public abstract class MicrosatelliteAnalyzer {
         return indelCount / 3095;
     }
 
-    private boolean isPassIndel(@NotNull final SomaticVariant variant) {
-        // KODU: Patient reporting should already filter on passed only.
-        assert !variant.isFiltered();
+    private static boolean isPassIndel(@NotNull final SomaticVariant variant) {
         return variant.type() == VariantType.INDEL && variant.ref().length() < 50 && variant.alt().length() < 50;
     }
 

@@ -37,10 +37,10 @@ public abstract class SomaticVariantAnalyzer {
     @NotNull
     public SomaticVariantAnalysis run(@NotNull final List<EnrichedSomaticVariant> variants) {
         final double indelsPerMb = microsatelliteAnalyzer().analyzeVariants(variants);
-        final int mutationalLoad = MutationalLoadAnalyzer.analyzeVariants(variants);
+        final int mutationalLoad = MutationalLoadAnalyzer.determineMutationalLoad(variants);
 
         final List<VariantReport> variantReports = determiner().run(variants);
 
-        return ImmutableSomaticVariantAnalysis.of(variants, variantReports, indelsPerMb, mutationalLoad);
+        return ImmutableSomaticVariantAnalysis.of(variantReports, indelsPerMb, mutationalLoad);
     }
 }
