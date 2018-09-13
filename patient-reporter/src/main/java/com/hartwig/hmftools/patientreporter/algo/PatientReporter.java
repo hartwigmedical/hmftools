@@ -100,7 +100,6 @@ public abstract class PatientReporter {
                 .collect(Collectors.toList());
 
         final int reportedVariantCount = somaticVariantAnalysis.variantReports().size();
-        final int structuralVariantCount = structuralVariantAnalysis.annotations().size();
         final PatientTumorLocation patientTumorLocation =
                 PatientReporterHelper.extractPatientTumorLocation(baseReporterData().patientTumorLocations(), tumorSample);
 
@@ -108,7 +107,6 @@ public abstract class PatientReporter {
         LOGGER.info(" Number of variants to report : " + Integer.toString(reportedVariantCount));
         LOGGER.info("Determined copy number stats for " + Integer.toString(purpleAnalysis.genePanelSize()) + " genes which led to "
                 + Integer.toString(purpleAnalysis.reportableGeneCopyNumbers().size()) + " copy numbers.");
-        LOGGER.info(" Number of structural variants : " + Integer.toString(structuralVariantCount));
         LOGGER.info(" Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
         LOGGER.info(" Number of gene disruptions to report : " + Integer.toString(reportableDisruptions.size()));
         LOGGER.info(" Microsatellite analysis results: " + Double.toString(somaticVariantAnalysis.indelsPerMb()) + " indels per MB");
