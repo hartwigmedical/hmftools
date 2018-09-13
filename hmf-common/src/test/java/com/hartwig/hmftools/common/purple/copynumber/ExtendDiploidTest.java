@@ -160,7 +160,7 @@ public class ExtendDiploidTest {
         assertRegion(10001, 20000, 4, result.get(1));
     }
 
-    private void assertRegion(long start, long end, double tumorCopyNumber, @NotNull final CombinedRegion victim) {
+    private static void assertRegion(long start, long end, double tumorCopyNumber, @NotNull final CombinedRegion victim) {
         assertEquals(start, victim.start());
         assertEquals(end, victim.end());
         assertEquals(tumorCopyNumber, victim.tumorCopyNumber(), EPSILON);
@@ -207,7 +207,6 @@ public class ExtendDiploidTest {
                 .depthWindowCount(ratioCount)
                 .build();
     }
-
 
     @NotNull
     private static FittedRegion createFittedRegion(long start, long end, double tumorCopyNumber, double observedNormalRatio,

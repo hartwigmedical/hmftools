@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.knowledgebaseimporter
 
 import com.hartwig.hmftools.apiclients.iclusion.api.IclusionApiWrapper
+import com.hartwig.hmftools.apiclients.iclusion.data.IclusionStudyDetails
 import com.hartwig.hmftools.extensions.cli.createCommandLine
 import com.hartwig.hmftools.extensions.cli.options.HmfOptions
 import com.hartwig.hmftools.extensions.cli.options.commands.RequiredCommandOption
@@ -30,13 +31,22 @@ private val logger = LogManager.getLogger("KnowledgebaseImporterApplication")
 fun main(args: Array<String>) {
     logger.info("Running Knowledgebase importer application")
     val cmd = createOptions().createCommandLine("knowledgebase-importer", args)
-    val outputDir = cmd.getOptionValue(OUTPUT_DIRECTORY)
-    val diseaseOntology = DiseaseOntology(cmd.getOptionValue(DOID_OWL_LOCATION))
+
+    val doidOwlLocation = cmd.getOptionValue(DOID_OWL_LOCATION)
+    logger.info("Loading disease ontology from $doidOwlLocation")
+    val diseaseOntology = DiseaseOntology(doidOwlLocation)
+
+    logger.info("Reading knowledgebases...")
     val knowledgebases = readKnowledgebases(cmd, diseaseOntology)
+
+    logger.info("Reading cancer type DOIDs from knowledgebases...")
     val cancerTypesDoids = knowledgebaseCancerDoids(knowledgebases, diseaseOntology)
-    logger.info("Writing output files to: $outputDir")
+
+    val outputDir = cmd.getOptionValue(OUTPUT_DIRECTORY)
+    logger.info("Generating output files and writing to $outputDir")
     writeOutput(outputDir, knowledgebases, cancerTypesDoids)
-    logger.info("Done.")
+
+    logger.info("Done")
 }
 
 private fun createOptions(): HmfOptions {
@@ -82,10 +92,27 @@ private fun readKnowledgebases(cmd: CommandLine, diseaseOntology: DiseaseOntolog
     val civic = Civic(cmd.getOptionValue(CIVIC_VARIANTS_LOCATION), cmd.getOptionValue(CIVIC_EVIDENCE_LOCATION), diseaseOntology,
             recordAnalyzer, treatmentTypeMap)
     val cosmic = Cosmic(cmd.getOptionValue(COSMIC_FUSIONS_LOCATION))
-    val iclusionApi = IclusionApiWrapper(cmd.getOptionValue(ICLUSION_ENDPOINT), cmd.getOptionValue(ICLUSION_CLIENT_ID),
+    val iclusion = Iclusion(readIclusionStudies(cmd), diseaseOntology, recordAnalyzer, ensemblGeneDAO)
+
+    return listOf(iclusion)
+//    return listOf(oncoKb, cgi, civic, cosmic, iclusion)
+}
+
+private fun readIclusionStudies(cmd : CommandLine): List<IclusionStudyDetails> {
+    val iclusionEndpoint = cmd.getOptionValue(ICLUSION_ENDPOINT)
+    logger.info("Connecting with iclusion API on $iclusionEndpoint")
+    val iclusionApi = IclusionApiWrapper(iclusionEndpoint, cmd.getOptionValue(ICLUSION_CLIENT_ID),
             cmd.getOptionValue(ICLUSION_CLIENT_SECRET), cmd.getOptionValue(ICLUSION_USER), cmd.getOptionValue(ICLUSION_PASSWORD))
-    val iclusion = Iclusion(iclusionApi, diseaseOntology, recordAnalyzer, ensemblGeneDAO)
-    return listOf(oncoKb, cgi, civic, cosmic, iclusion)
+    logger.info("Reading iclusion study details...")
+    val iclusionStudies = iclusionApi.studyDetails()
+    iclusionApi.close()
+
+    iclusionStudies.forEach {
+        logger.info("iclusion study: $it");
+    }
+    logger.info("Queried and filtered ${iclusionStudies.size} studies from iclusion API")
+
+    return iclusionStudies
 }
 
 private fun writeOutput(outputDir: String, knowledgebases: List<Knowledgebase>, cancerTypesDoids: List<CancerTypeDoidOutput>) {
@@ -119,6 +146,6 @@ private fun readExtraCancerTypeDoids(): Map<String, Set<Doid>> {
 
 private fun writeKnownVariants(knowledgebase: Knowledgebase, outputDirectory: String) {
     val dir = File(outputDirectory)
-    if(!dir.exists()) dir.mkdirs()
+    if (!dir.exists()) dir.mkdirs()
     CsvWriter.writeTSV(knowledgebase.knownVariants.distinct(), "$outputDirectory${File.separator}${knowledgebase.source}KnownVariants.tsv")
 }

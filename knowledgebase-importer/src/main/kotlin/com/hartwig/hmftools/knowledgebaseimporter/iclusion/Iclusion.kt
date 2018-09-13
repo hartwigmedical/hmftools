@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.knowledgebaseimporter.iclusion
 
-import com.hartwig.hmftools.apiclients.iclusion.api.IclusionApiWrapper
+import com.hartwig.hmftools.apiclients.iclusion.data.IclusionStudyDetails
 import com.hartwig.hmftools.knowledgebaseimporter.Knowledgebase
 import com.hartwig.hmftools.knowledgebaseimporter.dao.GeneDAO
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
@@ -9,11 +9,10 @@ import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.KnowledgebaseSo
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
 
-class Iclusion(iclusionApiWrapper: IclusionApiWrapper, diseaseOntology: DiseaseOntology, recordAnalyzer: RecordAnalyzer, geneDAO: GeneDAO) :
+class Iclusion(iclusionStudies: List<IclusionStudyDetails>, diseaseOntology: DiseaseOntology, recordAnalyzer: RecordAnalyzer, geneDAO: GeneDAO) :
         Knowledgebase, KnowledgebaseSource<IclusionRecord, ActionableRecord> {
     override val source: String = "iclusion"
 
-    private val iclusionStudies = iclusionApiWrapper.studyDetails()
     private val canonicalTranscripts = iclusionStudies.flatMap { it.mutations.map { it.geneName } }.distinct().map {
         Pair(it, geneDAO.hmfCanonicalTranscript(it).getOrNull(0))
     }.toMap()

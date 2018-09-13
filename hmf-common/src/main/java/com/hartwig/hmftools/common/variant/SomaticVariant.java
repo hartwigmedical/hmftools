@@ -29,6 +29,9 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
     @NotNull
     List<String> cosmicIDs();
 
+    @Nullable
+    String canonicalCosmicID();
+
     @NotNull
     List<SnpEffAnnotation> snpEffAnnotations();
 
@@ -49,6 +52,12 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
     @NotNull
     CodingEffect worstCodingEffect();
 
+    @NotNull
+    String canonicalEffect();
+
+    @NotNull
+    CodingEffect canonicalCodingEffect();
+
     boolean hotspot();
 
     double mappability();
@@ -61,5 +70,5 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
         return !cosmicIDs().isEmpty();
     }
 
-    default boolean isFiltered() {return !filter().equals("PASS");}
+    default boolean isFiltered() {return !filter().equals(SomaticVariantFactory.PASS_FILTER);}
 }

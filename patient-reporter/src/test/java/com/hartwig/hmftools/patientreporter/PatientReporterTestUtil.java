@@ -15,12 +15,10 @@ import com.hartwig.hmftools.common.cosmic.CosmicGenes;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.gene.GeneModel;
+import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
-import com.hartwig.hmftools.patientreporter.variants.MicrosatelliteAnalyzer;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -60,23 +58,6 @@ public final class PatientReporterTestUtil {
         return KnownFusionsModel.fromInputStreams(new FileInputStream(FUSION_PAIRS_CSV),
                 new FileInputStream(PROMISCUOUS_FIVE_CSV),
                 new FileInputStream(PROMISCUOUS_THREE_CSV));
-    }
-
-    @NotNull
-    public static MicrosatelliteAnalyzer testMicrosatelliteAnalyzer() {
-        return new MicrosatelliteAnalyzer() {
-            @SuppressWarnings("ConstantConditions")
-            @Override
-            @NotNull
-            public IndexedFastaSequenceFile reference() {
-                return null;
-            }
-
-            @Override
-            public double analyzeVariants(@NotNull final List<EnrichedSomaticVariant> variants) {
-                return 0.91;
-            }
-        };
     }
 
     @NotNull

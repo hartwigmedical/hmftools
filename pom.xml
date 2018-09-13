@@ -19,7 +19,7 @@
         <module>amber</module>
         <module>count-bam-lines</module>
         <module>purity-ploidy-estimator</module>
-        <module>hmf-gene-panel</module>
+        <module>hmf-gene-panel-builder</module>
         <module>strelka-post-process</module>
         <module>api-clients</module>
         <module>ensembl-db</module>
@@ -33,7 +33,7 @@
         <module>knowledgebase-importer</module>
         <module>actionability-analyzer</module>
         <module>data_analyser</module>
-        <module>purity-pathology</module>
+        <module>actionability_for_SOC</module>
     </modules>
 
     <properties>

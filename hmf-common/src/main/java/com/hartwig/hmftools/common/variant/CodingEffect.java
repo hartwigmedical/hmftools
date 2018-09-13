@@ -14,18 +14,18 @@ public enum CodingEffect {
     UNDEFINED;
 
     @NotNull
-    public static CodingEffect effect(@NotNull final List<VariantConsequence> consequences) {
-        final List<CodingEffect> simplifiedEffects = consequences.stream().map(CodingEffect::effect).collect(Collectors.toList());
+    public static CodingEffect effect(@NotNull final String gene, @NotNull final List<VariantConsequence> consequences) {
+        final List<CodingEffect> simplifiedEffects = consequences.stream().map(x -> effect(gene, x)).collect(Collectors.toList());
         if (simplifiedEffects.stream().anyMatch(x -> x.equals(NONSENSE_OR_FRAMESHIFT))) {
             return NONSENSE_OR_FRAMESHIFT;
         }
 
-        if (simplifiedEffects.stream().anyMatch(x -> x.equals(SPLICE))) {
-            return SPLICE;
-        }
-
         if (simplifiedEffects.stream().anyMatch(x -> x.equals(MISSENSE))) {
             return MISSENSE;
+        }
+
+        if (simplifiedEffects.stream().anyMatch(x -> x.equals(SPLICE))) {
+            return SPLICE;
         }
 
         if (simplifiedEffects.stream().anyMatch(x -> x.equals(SYNONYMOUS))) {
@@ -36,7 +36,12 @@ public enum CodingEffect {
     }
 
     @NotNull
-    private static CodingEffect effect(@NotNull final VariantConsequence consequence) {
+    private static CodingEffect effect(@NotNull final String gene, @NotNull final VariantConsequence consequence) {
+        // KODU: Below exception exists because TP53 has some known pathogenic variants in splice regions.
+        if (gene.equals("TP53") && consequence.equals(VariantConsequence.SPLICE_REGION_VARIANT)) {
+            return SPLICE;
+        }
+
         switch (consequence) {
             case FRAMESHIFT_VARIANT:
             case STOP_GAINED:

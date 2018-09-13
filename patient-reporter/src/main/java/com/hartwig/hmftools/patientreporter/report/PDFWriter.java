@@ -46,9 +46,6 @@ public class PDFWriter {
             throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generatePatientReport(report, reporterData);
         writeReport(fileName(report.sampleReport().sampleId()), reportBuilder);
-        // TODO (KODU) Final cleanup once we switched to proper actionability
-        //        final JasperReportBuilder evidenceReportBuilder = EvidenceReport.generate(report);
-        //        writeReport(fileName(report.sampleReport().sampleId(), "_evidence_items.pdf"), evidenceReportBuilder);
     }
 
     public void writeNonSequenceableReport(@NotNull final NotAnalysedPatientReport report) throws IOException, DRException {

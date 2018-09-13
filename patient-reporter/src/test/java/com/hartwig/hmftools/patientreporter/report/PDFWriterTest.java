@@ -26,6 +26,8 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
@@ -43,10 +45,7 @@ import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
 import com.hartwig.hmftools.patientreporter.report.data.ImmutableGeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.ImmutableGeneFusionData;
-import com.hartwig.hmftools.patientreporter.variants.ImmutableVariantReport;
-import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -73,7 +72,7 @@ public class PDFWriterTest {
         final BaseReporterData baseReporterData = testBaseReporterData();
         final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity);
 
-        final List<VariantReport> variants = createTestVariants(new PurityAdjuster(Gender.MALE, fittedPurity));
+        final List<EnrichedSomaticVariant> variants = createTestVariants(new PurityAdjuster(Gender.MALE, fittedPurity));
         final List<GeneCopyNumber> copyNumbers = createTestCopyNumbers();
         final List<GeneDisruptionData> disruptions = createTestDisruptions();
         final List<GeneFusionData> fusions = createTestFusions();
@@ -118,49 +117,47 @@ public class PDFWriterTest {
     }
 
     @NotNull
-    private static List<VariantReport> createTestVariants(@NotNull final PurityAdjuster purityAdjuster) {
-        final VariantReport variant1 = ImmutableVariantReport.builder()
+    private static List<EnrichedSomaticVariant> createTestVariants(@NotNull final PurityAdjuster purityAdjuster) {
+        final EnrichedSomaticVariant variant1 = variantBuilder()
                 .gene("BRAF")
-                .variant(createTestVariant("7", 140453136, "A", "T", true))
+                .chromosome("7")
+                .position(140453136)
+                .ref("A")
+                .alt("T")
+                .hotspot(true)
                 .alleleReadCount(18)
                 .totalReadCount(99)
-                .variantDetails("c.1799T>A (p.Val600Glu)")
-                .ploidy("AAAB")
-                .purityAdjustedVAF(purityAdjuster.purityAdjustedVAF("7", 4, 0.18 / 0.99))
-                .clonalProbability(0.8)
-                .wildTypeStatus("Present")
-                .driverProbability(1)
-                .actionabilityLevel("A")
+                .adjustedVAF(purityAdjuster.purityAdjustedVAF("7", 4, 0.18 / 0.99))
                 .build();
 
-        final VariantReport variant2 = ImmutableVariantReport.builder()
+        final EnrichedSomaticVariant variant2 = variantBuilder()
                 .gene("MYC")
-                .variant(createTestVariant("8", 128748854, "GG", "CA", false))
+                .chromosome("8")
+                .position(128748854)
+                .ref("GG")
+                .alt("CA")
                 .alleleReadCount(20)
                 .totalReadCount(88)
-                .variantDetails("c.15_16delinsCA (p.Val6Ile)")
-                .ploidy("AB")
-                .purityAdjustedVAF(purityAdjuster.purityAdjustedVAF("8", 2, 0.2 / 0.88))
-                .clonalProbability(0.3)
-                .wildTypeStatus("Present")
-                .driverProbability(0.4)
-                .actionabilityLevel(Strings.EMPTY)
+                .adjustedVAF(purityAdjuster.purityAdjustedVAF("8", 2, 0.2 / 0.88))
                 .build();
 
-        final VariantReport variant3 = ImmutableVariantReport.builder()
+        final EnrichedSomaticVariant variant3 = variantBuilder()
                 .gene("TP53")
-                .variant(createTestVariant("17", 7577111, "GCACAAA", "G", false))
+                .chromosome("17")
+                .position(7577111)
+                .ref("GCACAAA")
+                .alt("G")
                 .alleleReadCount(20)
                 .totalReadCount(87)
-                .variantDetails("c.821_826delTTTGTG (p.Val274_Cys275del)")
-                .ploidy("AAA")
-                .purityAdjustedVAF(purityAdjuster.purityAdjustedVAF("17", 3, 0.20 / 0.87))
-                .clonalProbability(0.98)
-                .wildTypeStatus("Present")
-                .driverProbability(0.71)
-                .actionabilityLevel(Strings.EMPTY)
+                .adjustedVAF(purityAdjuster.purityAdjustedVAF("17", 3, 0.20 / 0.87))
                 .build();
+
         return Lists.newArrayList(variant1, variant2, variant3);
+    }
+
+    @NotNull
+    private static ImmutableEnrichedSomaticVariant.Builder variantBuilder() {
+        return SomaticVariantTestBuilderFactory.createEnriched().filter("PASS");
     }
 
     @NotNull

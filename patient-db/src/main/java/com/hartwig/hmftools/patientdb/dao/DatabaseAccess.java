@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.gene.CanonicalTranscript;
@@ -45,11 +46,19 @@ public class DatabaseAccess {
     private static final String DEV_CATALOG = "hmfpatients";
 
     @NotNull
+    private final EcrfDAO ecrfDAO;
+    @NotNull
     private final DSLContext context;
     @NotNull
     private final PurityDAO purityDAO;
     @NotNull
+    private final MetricDAO metricDAO;
+    @NotNull
+    private final ClinicalDAO clinicalDAO;
+    @NotNull
     private final CopyNumberDAO copyNumberDAO;
+    @NotNull
+    private final DriverCatalogDAO driverCatalogDAO;
     @NotNull
     private final GeneCopyNumberDAO geneCopyNumberDAO;
     @NotNull
@@ -57,15 +66,9 @@ public class DatabaseAccess {
     @NotNull
     private final StructuralVariantDAO structuralVariantDAO;
     @NotNull
-    private final EcrfDAO ecrfDAO;
-    @NotNull
-    private final ClinicalDAO clinicalDAO;
-    @NotNull
     private final ValidationFindingDAO validationFindingsDAO;
     @NotNull
     private final CanonicalTranscriptDAO canonicalTranscriptDAO;
-    @NotNull
-    private final MetricDAO metricDAO;
     @NotNull
     private final PotentiallyActionableItemsDAO potentiallyActionableItemsDAO;
 
@@ -88,6 +91,7 @@ public class DatabaseAccess {
         canonicalTranscriptDAO = new CanonicalTranscriptDAO(context);
         metricDAO = new MetricDAO(context);
         potentiallyActionableItemsDAO = new PotentiallyActionableItemsDAO(context);
+        driverCatalogDAO = new DriverCatalogDAO(context);
     }
 
     @NotNull
@@ -197,6 +201,10 @@ public class DatabaseAccess {
 
     public void writeGeneCopynumberRegions(@NotNull final String sample, @NotNull List<GeneCopyNumber> geneCopyNumbers) {
         geneCopyNumberDAO.writeCopyNumber(sample, geneCopyNumbers);
+    }
+
+    public void writeDriverCatalog(@NotNull final String sample, @NotNull List<DriverCatalog> driverCatalog) {
+        driverCatalogDAO.write(sample, driverCatalog);
     }
 
     @NotNull

@@ -291,8 +291,7 @@ public class BachelorPP {
         LOGGER.debug("enriching variants");
         final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(highConfidenceRegions,
                 indexedFastaSequenceFile,
-                new ClonalityFactory(purityAdjuster, clonalPloidy),
-                CanonicalTranscriptFactory.create(HmfGenePanelSupplier.allGeneList()));
+                new ClonalityFactory(purityAdjuster, clonalPloidy));
 
         final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(purityAdjustedVariants);
 

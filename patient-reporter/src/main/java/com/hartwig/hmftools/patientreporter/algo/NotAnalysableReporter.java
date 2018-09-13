@@ -26,17 +26,21 @@ public abstract class NotAnalysableReporter {
             @Nullable final String comments) {
         final NotAnalysableStudy study = NotAnalysableStudy.fromSample(sample);
         assert study != null;
+
         final PatientTumorLocation patientTumorLocation =
                 PatientReporterHelper.extractPatientTumorLocation(baseReporterData().patientTumorLocations(), sample);
         final Lims lims = baseReporterData().limsModel();
         final Double tumorPercentage = lims.tumorPercentageForSample(sample);
         final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(sample);
-        final SampleReport sampleReport = ImmutableSampleReport.of(sample, patientTumorLocation,
+
+        final SampleReport sampleReport = ImmutableSampleReport.of(sample,
+                patientTumorLocation,
                 tumorPercentage,
                 lims.arrivalDateForSample(sample),
                 null,
                 lims.labProceduresForSample(sample),
                 sampleRecipient);
+
         return ImmutableNotAnalysedPatientReport.of(sampleReport,
                 reason,
                 study,

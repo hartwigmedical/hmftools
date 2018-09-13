@@ -8,11 +8,11 @@ import java.util.function.Predicate;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.io.reader.LineReader;
-import com.hartwig.hmftools.patientreporter.variants.VariantReport;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class DrupFilter implements Predicate<VariantReport> {
+public class DrupFilter implements Predicate<SomaticVariant> {
 
     @NotNull
     private final Set<String> includedGenes;
@@ -24,7 +24,7 @@ public class DrupFilter implements Predicate<VariantReport> {
     }
 
     @Override
-    public boolean test(final VariantReport variantReport) {
-        return includedGenes.contains(variantReport.gene());
+    public boolean test(@NotNull SomaticVariant variant) {
+        return includedGenes.contains(variant.gene());
     }
 }

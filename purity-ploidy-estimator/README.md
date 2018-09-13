@@ -83,6 +83,7 @@ Jointly fit tumor purity and CNV ratio normalisation factor (Norm Factor) accord
 * Segments are weighted by the count of BAF observations which is treated as a proxy for segment length and confidence of BAF and ratio inputs.
 * Segments with lower observed BAFs have more degenerate fits and are weighted less in the fit
 
+An excel model of the model used to score each segment is available [here](https://nc.hartwigmedicalfoundation.nl/index.php/s/xH7rSMTsgDmqzMB). 
 
 ### Absolute Copy Number Per Segment
 

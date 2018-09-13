@@ -8,24 +8,19 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class EnrichedSomaticVariant implements PurityAdjustedSomaticVariant {
 
+    @NotNull
     public abstract String trinucleotideContext();
 
     public abstract boolean highConfidenceRegion();
 
+    @NotNull
     public abstract String microhomology();
 
+    @NotNull
     public abstract String repeatSequence();
 
     public abstract int repeatCount();
 
+    @NotNull
     public abstract Clonality clonality();
-
-    @NotNull
-    public abstract String canonicalEffect();
-
-    @NotNull
-    public abstract CodingEffect canonicalCodingEffect();
-
-    @Nullable
-    public abstract String canonicalCosmicID();
 }
