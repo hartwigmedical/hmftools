@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class OncoDrivers {
 
-    private static final int MAX_REPEAT_COUNT = 7;
+    static final int MAX_REPEAT_COUNT = 7;
 
     @NotNull
     public static List<DriverCatalog> oncoDrivers(@NotNull final Map<String, DndsDriverLikelihood> likelihoodsByGene,
@@ -31,6 +31,7 @@ public class OncoDrivers {
 
         final Map<String, List<EnrichedSomaticVariant>> variantsByGene = variants.stream()
                 .filter(x -> likelihoodsByGene.keySet().contains(x.gene()))
+                .filter(x -> x.canonicalCodingEffect() != CodingEffect.SYNONYMOUS && x.canonicalCodingEffect() != CodingEffect.NONE)
                 .collect(Collectors.groupingBy(SomaticVariant::gene));
 
         for (String gene : variantsByGene.keySet()) {
@@ -45,15 +46,17 @@ public class OncoDrivers {
     }
 
     @NotNull
-    private static DriverCatalog geneDriver(long sampleSNVCount, @NotNull final DndsDriverLikelihood likelihood,
+    static DriverCatalog geneDriver(long sampleSNVCount, @NotNull final DndsDriverLikelihood likelihood,
             @NotNull final List<EnrichedSomaticVariant> geneVariants) {
+
+        long missenseVariants = geneVariants.stream().filter(OncoDrivers::isMissense).count();
 
         final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
                 .gene(likelihood.gene())
                 .category(DriverCategory.ONCO)
                 .driverLikelihood(1)
-                .dndsLikelihood(likelihood.missenseUnadjustedDriverLikelihood())
-                .driver(geneVariants.size() > 1 ? DriverType.MULTI_HIT : DriverType.SINGLE_HIT);
+                .dndsLikelihood(missenseVariants > 0 ? likelihood.missenseUnadjustedDriverLikelihood() : 0)
+                .driver(missenseVariants > 1 ? DriverType.MULTI_HIT : DriverType.SINGLE_HIT);
 
         if (geneVariants.stream().anyMatch(SomaticVariant::hotspot)) {
             return builder.driver(DriverType.HOTSPOT).build();
@@ -65,8 +68,7 @@ public class OncoDrivers {
             return builder.driver(DriverType.INFRAME).build();
         }
 
-        final boolean anyMissenseVariants = geneVariants.stream().anyMatch(OncoDrivers::isMissense);
-        final double driverLikelihood = Doubles.positive(likelihood.missenseUnadjustedDriverLikelihood()) && anyMissenseVariants
+        final double driverLikelihood = Doubles.positive(likelihood.missenseUnadjustedDriverLikelihood()) && missenseVariants > 0
                 ? missenseProbabilityDriverVariant(sampleSNVCount, likelihood)
                 : 0;
 
