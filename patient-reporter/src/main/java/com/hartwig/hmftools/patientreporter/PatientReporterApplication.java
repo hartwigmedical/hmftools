@@ -78,6 +78,7 @@ public class PatientReporterApplication {
         if (!validInputForReportWriter(cmd) || !validInputForBaseReporterData(cmd)) {
             printUsageAndExit(options);
         }
+
         LOGGER.info("Running patient reporter v" + VERSION);
         final PDFWriter pdfWriter = new PDFWriter(cmd.getOptionValue(REPORT_DIRECTORY));
 
