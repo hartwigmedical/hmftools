@@ -6,11 +6,13 @@ import com.hartwig.hmftools.svannotation.annotations.Transcript;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public enum PatientReportFormat {
-    ;
+public final class PatientReportFormat {
 
     private static final double DEFAULT_MIN_PERCENTAGE_CUTOFF = 0.05;
     private static final double DEFAULT_MAX_PERCENTAGE_CUTOFF = 0.95;
+
+    private PatientReportFormat() {
+    }
 
     @NotNull
     public static String formatNullablePercent(final @Nullable Double percentage) {

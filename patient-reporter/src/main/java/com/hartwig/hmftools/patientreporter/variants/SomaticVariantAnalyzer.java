@@ -27,24 +27,20 @@ public abstract class SomaticVariantAnalyzer {
     abstract Set<String> genePanel();
 
     @NotNull
-    abstract MicrosatelliteAnalyzer microsatelliteAnalyzer();
-
-    @NotNull
     public static SomaticVariantAnalyzer of(@NotNull HmfReporterData reporterData) {
-        final Set<String> transcriptsToInclude = reporterData.panelGeneModel().panel();
-        return of(transcriptsToInclude, ImmutableMicrosatelliteAnalyzer.of(reporterData.refGenomeFastaFile()));
+        return of(reporterData.panelGeneModel().panel());
     }
 
     @VisibleForTesting
     @NotNull
-    static SomaticVariantAnalyzer of(@NotNull Set<String> genePanel, @NotNull MicrosatelliteAnalyzer microsatelliteAnalyzer) {
-        return ImmutableSomaticVariantAnalyzer.of(genePanel, microsatelliteAnalyzer);
+    static SomaticVariantAnalyzer of(@NotNull Set<String> genePanel) {
+        return ImmutableSomaticVariantAnalyzer.of(genePanel);
     }
 
     @NotNull
     public SomaticVariantAnalysis run(@NotNull final List<EnrichedSomaticVariant> variants) {
         final List<EnrichedSomaticVariant> variantsToReport = variants.stream().filter(variantFilter()).collect(Collectors.toList());
-        final double indelsPerMb = microsatelliteAnalyzer().analyzeVariants(variants);
+        final double indelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndels(variants);
         final int mutationalLoad = MutationalLoadAnalyzer.determineMutationalLoad(variants);
 
         return ImmutableSomaticVariantAnalysis.of(variantsToReport, indelsPerMb, mutationalLoad);

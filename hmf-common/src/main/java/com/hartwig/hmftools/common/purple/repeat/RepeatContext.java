@@ -10,5 +10,6 @@ public abstract class RepeatContext {
 
     public abstract int count();
 
+    @NotNull
     public abstract String sequence();
 }

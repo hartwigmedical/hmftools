@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testMicrosatelliteAnalyzer;
-
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -27,7 +25,7 @@ public class SomaticVariantAnalyzerTest {
 
     @Test
     public void realCaseWorks() {
-        final SomaticVariantAnalyzer analyzer = SomaticVariantAnalyzer.of(Sets.newHashSet(RIGHT_GENE), testMicrosatelliteAnalyzer());
+        final SomaticVariantAnalyzer analyzer = SomaticVariantAnalyzer.of(Sets.newHashSet(RIGHT_GENE));
 
         final List<EnrichedSomaticVariant> variants =
                 Lists.newArrayList(builder().gene(RIGHT_GENE).canonicalCodingEffect(RIGHT_EFFECT).worstCodingEffect(RIGHT_EFFECT).build(),
