@@ -230,10 +230,8 @@ public class BucketAnalyser {
 
         mSampleWatchList = Lists.newArrayList();
 
-        mSampleWatchList.add(443);
-        mSampleWatchList.add(706);
-        // mSampleWatchList.add(2024);
-//        mSampleWatchList.add(2617);
+       //  mSampleWatchList.add(206);
+        // mSampleWatchList.add(917);
 
         // mSpecificSampleId = 305;
 
@@ -428,9 +426,6 @@ public class BucketAnalyser {
         if(mFinalFitOnly)
             mRunCount = 0;
 
-        // TEMP:
-        boolean throttleDiscovery = true;
-
         boolean onFinalRun = false;
         boolean runDiscovery = true;
 
@@ -453,16 +448,14 @@ public class BucketAnalyser {
                     mReassessSamples.clear();
                     mBucketGroups.clear();
                 }
-
-                mLastRunGroupCount = mBucketGroups.size();
             }
             else
             {
                 // keep the same groups, but clear recently allocated samples so they'll be reassessed
-                mReassessSamples.clear();
-                mLastRunGroupCount = 0;
                 clearBucketGroups(true);
             }
+
+            mLastRunGroupCount = mBucketGroups.size();
 
             LOGGER.debug("starting run({}) to find next top bucket group", mRunId);
 
@@ -1560,7 +1553,7 @@ public class BucketAnalyser {
             sigOptim.setLogVerbose(false);
             // sigOptim.setUseRatioMethod(mUseRatioRanges);
 
-            boolean isValid = sigOptim.optimiseBucketRatios(false);
+            boolean isValid = sigOptim.optimiseBucketRatios(true, false);
 
             if(isValid)
             {
@@ -1587,7 +1580,7 @@ public class BucketAnalyser {
     {
         mTopAllocBucketGroups.clear();
 
-        LOGGER.debug("finding top potential bucket group from count({} new={})", mBucketGroups.size(), mBucketGroups.size() - mLastRunGroupCount);
+        LOGGER.debug("finding top potential bucket group from count({} new={})", mBucketGroups.size(), max(mBucketGroups.size() - mLastRunGroupCount, 0));
 
         int maxCandidateGroups = MAX_CANDIDATE_GROUPS;
 
@@ -1642,6 +1635,11 @@ public class BucketAnalyser {
                     // LOGGER.debug("spec sample");
                 }
 
+                if(mSampleWatchList.contains(sampleId) && mSampleWatchList.contains(bucketGroup.getId()))
+                {
+                    LOGGER.debug("spec sample");
+                }
+
                 double reqAllocPercent = minAllocPercent(sample, false);
                 boolean exceedsMinAllocPerc = false;
                 double[] allocCounts = null;
@@ -1673,6 +1671,13 @@ public class BucketAnalyser {
                         ++skippedRetry;
                         continue;
                     }
+                }
+
+                if(bucketGroup.hasSample(sampleId))
+                {
+                    // if this sample was previously in the group and then reassessed and about to be added again,
+                    // need to first of all remove its existing allocation
+                    bucketGroup.removeSampleAllocation(sample, -1, true);
                 }
 
                 // skip if already largely allocated, even though reshuffling could potentially lead to an alloc above the min %
@@ -1721,8 +1726,8 @@ public class BucketAnalyser {
 
                     for (final BucketGroup samGroup : sample.getElevBucketGroups())
                     {
-                        if(ratiosCollection.isEmpty() && samGroup == sample.getBackgroundGroup())
-                            bgGroupIndex = 0;
+                        if(samGroup == sample.getBackgroundGroup())
+                            bgGroupIndex = ratiosCollection.size();
 
                         ratiosCollection.add(samGroup.getBucketRatios());
                     }
@@ -1778,8 +1783,6 @@ public class BucketAnalyser {
         LOGGER.debug(String.format("sig-optim stats: instances(%d) avgIters(%.1f) avgImprovePerc(%.3f)",
                 sigOptim.getInstances(), sigOptim.getAvgIterations(), sigOptim.getAvgImprovePerc()));
 
-        removeSkippedAllocations(mBucketGroups);
-
         // now that all samples have been tested and allocated, force a recalc of the ratios
         // and then check for overlap with existing bucket groups
         int bgIndex = 0;
@@ -1789,17 +1792,25 @@ public class BucketAnalyser {
             BucketGroup bucketGroup = mBucketGroups.get(bgIndex);
             bucketGroup.recalcBucketRatios();
 
+            boolean isMatched = false;
             for(final BucketGroup finalGroup : mFinalBucketGroups)
             {
                 double css = calcCSS(bucketGroup.getBucketRatios(), finalGroup.getBucketRatios());
 
                 if (css >= SIG_SIMILAR_CSS)
                 {
-                    mBucketGroups.remove(bgIndex);
-                    ++removedGroups;
+                    isMatched = true;
                     break;
                 }
+            }
 
+            if(isMatched)
+            {
+                mBucketGroups.remove(bgIndex);
+                ++removedGroups;
+            }
+            else
+            {
                 ++bgIndex;
             }
         }
@@ -1808,6 +1819,8 @@ public class BucketAnalyser {
         {
             LOGGER.debug("removed {} bucket groups similar to existing selected groups", removedGroups);
         }
+
+        removeSkippedAllocations(mBucketGroups);
 
         // sort into order
         for(BucketGroup bucketGroup : mBucketGroups)
@@ -1899,6 +1912,8 @@ public class BucketAnalyser {
         List<Integer> skippedSamples = Lists.newArrayList();
 
         double skippedAllocTotal = 0;
+        double missedAllocTotal = 0;
+        int missedCount = 0;
 
         for(int samIndex = 0; samIndex < topSampleIds.size(); ++samIndex)
         {
@@ -1980,6 +1995,13 @@ public class BucketAnalyser {
 
                 sampleGroupList.add(topBucketGroup);
 
+                /*
+                if(mSampleWatchList.contains(sampleId) && mSampleWatchList.contains(topBucketGroup.getId()))
+                {
+                    LOGGER.debug("spec");
+                }
+                */
+
                 sample.clearAllocations();
                 boolean fitAllocated = fitSampleWithGroups(sigOptim, sample, sampleGroupList, prevAllocPerc, reqAllocPercent, false);
 
@@ -1988,9 +2010,17 @@ public class BucketAnalyser {
                     LOGGER.warn("sample({}) fit failed", sample.Id);
                     mHasErrors = true;
                 }
+                else if(!sample.getElevBucketGroups().contains(topBucketGroup))
+                {
+                    LOGGER.debug(String.format("sample(%d) missed bg(%d) proposed fit alloc(%s)", sample.Id, topBucketGroup.getId(), sizeToStr(newAllocTotal)));
+
+                    missedAllocTotal += newAllocTotal;
+                    ++missedCount;
+                }
                 else
                 {
                     String allocResult = "unch";
+
                     if(sample.getAllocPercent() <= prevAllocPerc - 0.01)
                         allocResult = "worse";
                     else if(sample.getAllocPercent() >= prevAllocPerc + 0.01)
@@ -2002,8 +2032,9 @@ public class BucketAnalyser {
             }
         }
 
-        LOGGER.debug(String.format("new top bg(%d) added %d samples, totalAllocatedCount(%s) skipped(%s)",
-                topBucketGroup.getId(), topBucketGroup.getSampleIds().size(), sizeToStr(topBucketGroup.getTotalCount()), sizeToStr(skippedAllocTotal)));
+        LOGGER.debug(String.format("new top bg(%d) added %d samples, totalAllocatedCount(%s) missed(%d: %s) skipped(%d: %s)",
+                topBucketGroup.getId(), topBucketGroup.getSampleIds().size(), sizeToStr(topBucketGroup.getTotalCount()),
+                missedCount, sizeToStr(missedAllocTotal), skippedSamples.size(), sizeToStr(skippedAllocTotal)));
 
         // recheck any sample previously skipped against the fixed groups so see if they can now be allocated
         checkSkippedSamples(skippedSamples, topBucketGroup.getSampleIds());
@@ -2030,10 +2061,9 @@ public class BucketAnalyser {
     {
         // walk down list, recalculating the ratios, expanding their range and comparing to groups further down
         final double[] topBucketRatios = topBucketGroup.getBucketRatios();
-        double[] avgBucketRatios = new double[mBucketCount];
-        copyVector(topBucketRatios, avgBucketRatios);
+        double[] newBucketRatios = new double[mBucketCount];
+        copyVector(topBucketRatios, newBucketRatios);
 
-        // int maxComparisons = 100;
         double topPotentialAlloc = topBucketGroup.getPotentialAllocation();
         List<Integer> candidateNewBuckets = Lists.newArrayList();
         List<BucketGroup> similarGroups = Lists.newArrayList();
@@ -2068,14 +2098,6 @@ public class BucketAnalyser {
             {
                 similarGroups.add(bucketGroup);
                 continue;
-            }
-
-            double groupToTopRatio = bucketGroup.getPotentialAllocation() / topPotentialAlloc;
-            vectorMultiply(bucketRatios, groupToTopRatio);
-
-            for (Integer bucket : topBucketGroup.getBucketIds())
-            {
-                avgBucketRatios[bucket] += bucketRatios[bucket];
             }
 
             List<Integer> extraBuckets = getDiffList(bucketGroup.getBucketIds(), topBucketGroup.getBucketIds());
@@ -2123,9 +2145,6 @@ public class BucketAnalyser {
             LOGGER.debug("top bg({}) removed {} similar groups", topBucketGroup.getId(), similarGroups.size());
         }
 
-        // convert back to percentages
-        convertToPercentages(avgBucketRatios);
-
         List<SampleData> samples = Lists.newArrayList();
         List<double[]> proposedAllocs = Lists.newArrayList();
         for(int samIndex = 0; samIndex < topSampleIds.size(); ++samIndex)
@@ -2135,16 +2154,15 @@ public class BucketAnalyser {
             proposedAllocs.add(sampleCounts.get(samIndex));
         }
 
-        SigOptimiser sigOptim = new SigOptimiser(topBucketGroup.getId(), samples, proposedAllocs, avgBucketRatios, candidateNewBuckets);
+        SigOptimiser sigOptim = new SigOptimiser(topBucketGroup.getId(), samples, proposedAllocs, newBucketRatios, candidateNewBuckets);
         sigOptim.setLogVerbose(true);
         sigOptim.setCacheBucketInfo(true);
-        // sigOptim.setUseRatioMethod(mUseRatioRanges);
 
-        boolean validCalc = sigOptim.optimiseBucketRatios(true);
+        boolean validCalc = sigOptim.optimiseBucketRatios(false, true);
 
         if(validCalc && sigOptim.hasChanged())
         {
-            copyVector(sigOptim.getFittedRatios(), avgBucketRatios);
+            copyVector(sigOptim.getFittedRatios(), newBucketRatios);
             topBucketGroup.setBucketRatioRanges(sigOptim.getRatioRanges());
 
             final List<Integer> newBuckets = sigOptim.getNewBuckets();
@@ -2163,7 +2181,7 @@ public class BucketAnalyser {
             writeBucketGroupRatioRangeData(topBucketGroup, sigOptim);
         }
 
-        topBucketGroup.setBucketRatios(avgBucketRatios);
+        topBucketGroup.setBucketRatios(newBucketRatios);
     }
 
     private void assessCandidateBucketGroups()

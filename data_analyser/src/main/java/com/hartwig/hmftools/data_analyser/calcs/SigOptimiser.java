@@ -235,7 +235,7 @@ public class SigOptimiser
 
     public final String getBucketInfo(int bucketId) { return mBucketInfo.get(bucketId); }
 
-    public boolean optimiseBucketRatios(boolean calcRangeDistributions)
+    public boolean optimiseBucketRatios(boolean calcOptimalRatios, boolean calcRangeDistributions)
     {
         if (!mIsValid)
             return false;
@@ -247,17 +247,20 @@ public class SigOptimiser
         logStats(false);
         logRatios();
 
-        calcBucketRatioRanges();
+        if(calcOptimalRatios)
+        {
+            calcBucketRatioRanges();
 
-        testCandidateExtraBuckets();
+            testCandidateExtraBuckets();
 
-        if (!mIsValid)
-            return false;
+            if (!mIsValid)
+                return false;
 
-        if (!mIsValid)
-            return false;
+            if (!mIsValid)
+                return false;
 
-        calcOptimalRatios();
+            calcOptimalRatios();
+        }
 
         if(calcRangeDistributions)
         {
@@ -698,7 +701,7 @@ public class SigOptimiser
 
         if(mLogVerbose)
         {
-            LOGGER.debug(String.format("grp(%d) bucket(%d %s) score(%.3f) origRatio(%.3f) calc(avg=%.3f med=%.3f range%.3f -> %.3f min=%.3f) slots(%.3f -> %.3f indx=%d -> %d) total(%.3f, %s of %s)",
+            LOGGER.debug(String.format("grp(%d) bucket(%d %s) score(%.3f) origRatio(%.3f) calc(avg=%.3f med=%.3f) span(%.3f -> %.3f act=%.3f) slots(%.3f -> %.3f indx=%d -> %d) total(%.3f, %s of %s)",
                     mGroupId, bucket, isCandidate ? "cand" : "init", allocScore, mStartRatios[bucket], rangeBoundMean, medianRatio, rangeMinRatio, rangeMaxRatio, minRange,
                     startRatio, endRatio, distStartIndex, distEndIndex, weightTotal, sizeToStr(countsTotal), sizeToStr(bucketTotals[bucket])));
         }
