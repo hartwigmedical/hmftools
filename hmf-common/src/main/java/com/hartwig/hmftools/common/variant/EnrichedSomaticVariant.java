@@ -20,12 +20,6 @@ public abstract class EnrichedSomaticVariant implements PurityAdjustedSomaticVar
 
     public abstract Clonality clonality();
 
-    @NotNull
-    public abstract String canonicalEffect();
-
-    @NotNull
-    public abstract CodingEffect canonicalCodingEffect();
-
     @Nullable
     public abstract String canonicalCosmicID();
 }

@@ -37,26 +37,6 @@ public class EnrichedSomaticVariantFactoryTest {
         assertEquals("COSM33765", enrichedSomaticVariant.canonicalCosmicID());
     }
 
-    @Test
-    public void testCanonicalCodingEffectUsesTranscriptAnnotation() {
-        final String line =
-                "11\t133715264\t.\tC\tT\t.\tPASS\tAC=0;AF=0;AN=0;MAPPABILITY=1.000000;NT=ref;QSS=40;QSS_NT=40;SGT=CC->CT;SOMATIC;TQSS=1;TQSS_NT=1;set=snvs;ANN=T|sequence_feature|MODERATE|SPATA19|ENSG00000166118|modified-residue:Phosphoserine|ENST00000299140|protein_coding|1/7|c.78G>A||||||,T|splice_region_variant&synonymous_variant|LOW|SPATA19|ENSG00000166118|transcript|ENST00000299140|protein_coding|1/7|c.78G>A|p.Ser26Ser|133/861|78/504|26/167||,T|splice_region_variant&synonymous_variant|LOW|SPATA19|ENSG00000166118|transcript|ENST00000532889|protein_coding|1/7|c.78G>A|p.Ser26Ser|170/653|78/504|26/167||\tGT:AD:DP\t0/1:57,49:108";
-        final String sample = "sample";
-        final VariantContext context = VariantContextFromString.decode(sample, line);
-        final Optional<SomaticVariant> optVariant = SomaticVariantFactory.passOnlyInstance().createVariant(sample, context);
-        assert optVariant.isPresent();
-        final SomaticVariant variant = optVariant.get();
 
-        final ImmutableEnrichedSomaticVariant.Builder builder = SomaticVariantTestBuilderFactory.createEnriched();
-        final Map<String, String> geneToTranscriptMap = Maps.newHashMap();
-        geneToTranscriptMap.put("SPATA19", "ENST00000299140");
-
-        final TranscriptAnnotationSelector selector = new TranscriptAnnotationSelector(geneToTranscriptMap);
-        EnrichedSomaticVariantFactory.addCanonicalEffect(builder, variant, selector);
-
-        final EnrichedSomaticVariant enrichedSomaticVariant = builder.build();
-
-        assertEquals(CodingEffect.SYNONYMOUS, enrichedSomaticVariant.canonicalCodingEffect());
-    }
 
 }

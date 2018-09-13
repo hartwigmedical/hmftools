@@ -26,6 +26,8 @@ public final class SomaticVariantTestBuilderFactory {
                 .worstCodingEffect(CodingEffect.NONE)
                 .totalReadCount(0)
                 .alleleReadCount(0)
+                .canonicalEffect(Strings.EMPTY)
+                .canonicalCodingEffect(CodingEffect.UNDEFINED)
                 .hotspot(false)
                 .mappability(0D);
     }
@@ -39,8 +41,6 @@ public final class SomaticVariantTestBuilderFactory {
                 .repeatSequence(Strings.EMPTY)
                 .repeatCount(0)
                 .clonality(Clonality.UNKNOWN)
-                .canonicalEffect(Strings.EMPTY)
-                .canonicalCodingEffect(CodingEffect.UNDEFINED)
                 .adjustedCopyNumber(0D)
                 .adjustedVAF(0D)
                 .ploidy(0D)

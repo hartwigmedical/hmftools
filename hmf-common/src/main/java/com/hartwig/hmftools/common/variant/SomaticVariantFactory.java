@@ -5,15 +5,14 @@ import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.gene.CanonicalTranscript;
 import com.hartwig.hmftools.common.gene.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.common.gene.TranscriptRegion;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotationFactory;
@@ -22,6 +21,7 @@ import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -64,13 +64,13 @@ public class SomaticVariantFactory {
     @NotNull
     private final VariantContextFilter filter;
     @NotNull
-    private final List<CanonicalTranscript> canonicalTranscripts;
-    private final Set<String> canonicalGenes;
+    private final Map<String, String> transcriptIdToGeneMap;
 
     private SomaticVariantFactory(@NotNull final VariantContextFilter filter) {
         this.filter = filter;
-        this.canonicalTranscripts = CanonicalTranscriptFactory.create();
-        this.canonicalGenes = canonicalTranscripts.stream().map(TranscriptRegion::gene).collect(Collectors.toSet());
+        this.transcriptIdToGeneMap = CanonicalTranscriptFactory.create()
+                .stream()
+                .collect(Collectors.toMap(TranscriptRegion::transcriptID, TranscriptRegion::gene));
     }
 
     @NotNull
@@ -132,21 +132,31 @@ public class SomaticVariantFactory {
 
         final List<SnpEffAnnotation> transcriptAnnotations =
                 allAnnotations.stream().filter(SnpEffAnnotation::isTranscriptFeature).collect(Collectors.toList());
-
-        final String firstGene = transcriptAnnotations.stream().map(SnpEffAnnotation::gene).findFirst().orElse("");
-        final String gene = transcriptAnnotations.stream().map(SnpEffAnnotation::gene).filter(canonicalGenes::contains).findFirst().orElse(firstGene);
-        builder.gene(gene);
-
         if (!transcriptAnnotations.isEmpty()) {
             final SnpEffAnnotation snpEffAnnotation = transcriptAnnotations.get(0);
             builder.worstEffect(snpEffAnnotation.consequenceString());
-            builder.worstCodingEffect(CodingEffect.effect(gene, snpEffAnnotation.consequences()));
+            builder.worstCodingEffect(CodingEffect.effect(snpEffAnnotation.gene(), snpEffAnnotation.consequences()));
             builder.worstEffectTranscript(snpEffAnnotation.transcript());
         } else {
             builder.worstEffect("");
             builder.worstCodingEffect(CodingEffect.UNDEFINED);
             builder.worstEffectTranscript("");
         }
+
+        final Optional<SnpEffAnnotation> canonicalAnnotation =
+                transcriptAnnotations.stream().filter(x -> transcriptIdToGeneMap.keySet().contains(x.transcript())).findFirst();
+        if (canonicalAnnotation.isPresent()) {
+            final SnpEffAnnotation annotation = canonicalAnnotation.get();
+            builder.canonicalEffect(annotation.consequenceString());
+            builder.canonicalCodingEffect(CodingEffect.effect(annotation.gene(), annotation.consequences()));
+        } else {
+            builder.canonicalEffect(Strings.EMPTY);
+            builder.canonicalCodingEffect(CodingEffect.UNDEFINED);
+        }
+
+        final String firstGene = transcriptAnnotations.isEmpty() ? "" : transcriptAnnotations.get(0).gene();
+        final String gene = canonicalAnnotation.map(SnpEffAnnotation::gene).orElse(firstGene);
+        builder.gene(gene);
 
         builder.genesEffected((int) transcriptAnnotations.stream()
                 .map(SnpEffAnnotation::gene)

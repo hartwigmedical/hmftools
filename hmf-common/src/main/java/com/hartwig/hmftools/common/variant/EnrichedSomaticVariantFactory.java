@@ -68,7 +68,6 @@ public class EnrichedSomaticVariantFactory {
         highConfidenceSelector.select(variant).ifPresent(x -> inHighConfidenceRegion(builder));
         addTrinucleotideContext(builder, variant, reference);
         addGenomeContext(builder, variant, reference);
-        addCanonicalEffect(builder, variant, transcriptAnnotationSelector);
         addCanonicalCosmicID(builder, variant, transcriptAnnotationSelector);
         builder.clonality(clonalityFactory.fromSample(variant));
 
@@ -86,21 +85,6 @@ public class EnrichedSomaticVariantFactory {
                 .clonality(Clonality.UNKNOWN);
     }
 
-    @VisibleForTesting
-    static void addCanonicalEffect(@NotNull final Builder builder, @NotNull final SomaticVariant variant,
-            @NotNull TranscriptAnnotationSelector selector) {
-        final List<SnpEffAnnotation> transcriptAnnotations =
-                variant.snpEffAnnotations().stream().filter(SnpEffAnnotation::isTranscriptFeature).collect(Collectors.toList());
-        final Optional<SnpEffAnnotation> canonicalSnpEffAnnotation = selector.canonical(variant.gene(), transcriptAnnotations);
-        if (canonicalSnpEffAnnotation.isPresent()) {
-            final SnpEffAnnotation annotation = canonicalSnpEffAnnotation.get();
-            builder.canonicalEffect(annotation.consequenceString());
-            builder.canonicalCodingEffect(CodingEffect.effect(variant.gene(), annotation.consequences()));
-        } else {
-            builder.canonicalEffect(Strings.EMPTY);
-            builder.canonicalCodingEffect(CodingEffect.UNDEFINED);
-        }
-    }
 
     @VisibleForTesting
     static void addCanonicalCosmicID(@NotNull final Builder builder, @NotNull final SomaticVariant variant,

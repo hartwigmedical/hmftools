@@ -50,6 +50,8 @@ public class ActionabilityVariantsAnalyzerTest {
                 .worstCodingEffect(CodingEffect.NONE)
                 .totalReadCount(0)
                 .alleleReadCount(0)
+                .canonicalEffect(Strings.EMPTY)
+                .canonicalCodingEffect(CodingEffect.UNDEFINED)
                 .hotspot(false)
                 .mappability(0D)
                 .build();
