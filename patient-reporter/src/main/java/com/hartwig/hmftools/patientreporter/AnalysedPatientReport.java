@@ -5,9 +5,9 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
+import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
-import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +22,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract SampleReport sampleReport();
 
     @NotNull
-    public abstract List<VariantReport> variants();
+    public abstract List<EnrichedSomaticVariant> variants();
 
     public abstract int mutationalLoad();
 
