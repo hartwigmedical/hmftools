@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.io.File;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.actionability.variants.ActionabilityVariantsAnalyzer;
 import com.hartwig.hmftools.actionability.variants.ActionabilityVariantsSOC;
@@ -34,7 +35,7 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ActionabilityApplication {
     private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(ActionabilityApplication.class);
-   // private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
+    private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
     private static final String RUN_DIRECTORY = "run_dir";
     private static final String SOMATIC_VCF_EXTENSION_V3 = "_post_processed_v2.2.vcf.gz";
     private static final String SOMATIC_VCF_EXTENSION_V4 = "_post_processed.vcf.gz";
@@ -46,11 +47,17 @@ public abstract class ActionabilityApplication {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
         final String runDir = cmd.getOptionValue(RUN_DIRECTORY);
-      //  final List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(cmd.getOptionValue(TUMOR_LOCATION_CSV));
-     //   final String tumorLocationFromSample = patientTumorLocations.get(1).patientIdentifier();
+
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDir);
         final List<SomaticVariant> variants = loadPassedSomaticVariants(run.tumorSample(), runDir);
+
+        final String patientIdentifier = toPatientIdentifier(run.tumorSample());
         LOGGER.info("Tumor sample: " + run.tumorSample());
+        LOGGER.info("patientId: " + patientIdentifier);
+
+        final List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(cmd.getOptionValue(TUMOR_LOCATION_CSV));
+        final PatientTumorLocation patientTumorLocation = extractPatientTumorLocation(patientTumorLocations, run.tumorSample());
+        LOGGER.info("Tumor location from patient: " + patientTumorLocation);
 
         LOGGER.info("");
         LOGGER.info("Start processing actionability variants");
@@ -60,7 +67,7 @@ public abstract class ActionabilityApplication {
         if (Files.exists(new File(fileActionabilityVariants).toPath())) {
             ActionabilityVariantsAnalyzer analyzer = loadFromFile(fileActionabilityVariants);
             for (int i = 0; i < variants.size(); i ++) {
-                LOGGER.info("varaints: " + variants.get(i).gene() + " " + variants.get(i).chromosome() + " " +
+                LOGGER.info("variants: " + variants.get(i).gene() + " " + variants.get(i).chromosome() + " " +
                         variants.get(i).chromosomePosition() + " " + variants.get(i).ref() + " " + variants.get(i).alt());
                 LOGGER.info("Is actionable: " + analyzer.actionable(variants.get(i)));
             }
@@ -89,11 +96,41 @@ public abstract class ActionabilityApplication {
         LOGGER.info("Finish orocessing actionability variants");
     }
 
+    @Nullable
+    private static PatientTumorLocation extractPatientTumorLocation(@NotNull final List<PatientTumorLocation> patientTumorLocations,
+            @NotNull final String sample) {
+        final String patientIdentifier = toPatientIdentifier(sample);
+
+        final List<PatientTumorLocation> matchingIdTumorLocations = patientTumorLocations.stream()
+                .filter(patientTumorLocation -> patientTumorLocation.patientIdentifier().equals(patientIdentifier))
+                .collect(Collectors.toList());
+
+        // KODU: We should never have more than one curated tumor location for a single patient.
+        assert matchingIdTumorLocations.size() < 2;
+
+        if (matchingIdTumorLocations.size() == 1) {
+            return matchingIdTumorLocations.get(0);
+        } else {
+            LOGGER.warn("Could not find patient " + patientIdentifier + " in clinical data!");
+            return null;
+        }
+    }
+
+    @NotNull
+    private static String toPatientIdentifier(@NotNull final String sample) {
+        if (sample.length() >= 12 && (sample.startsWith("CPCT") || sample.startsWith("DRUP"))) {
+            return sample.substring(0, 12);
+        }
+        // KODU: If we want to generate a report for non-CPCT/non-DRUP we assume patient and sample are identical.
+        return sample;
+    }
+
+
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
         options.addOption(RUN_DIRECTORY, true, "Complete path towards a single run dir where patient reporter will run on.");
-      //  options.addOption(TUMOR_LOCATION_CSV, true, "Complete path towards the (curated) tumor location csv.");
+        options.addOption(TUMOR_LOCATION_CSV, true, "Complete path towards the (curated) tumor location csv.");
         return options;
     }
 
