@@ -72,9 +72,6 @@ public abstract class PatientReporter {
     public abstract HmfReporterData reporterData();
 
     @NotNull
-    public abstract SomaticVariantAnalyzer variantAnalyzer();
-
-    @NotNull
     public abstract StructuralVariantAnalyzer structuralVariantAnalyzer();
 
     @NotNull
@@ -145,7 +142,7 @@ public abstract class PatientReporter {
 
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run,
                 purpleAnalysis,
-                variantAnalyzer(),
+                reporterData().panelGeneModel().panel(),
                 reporterData().highConfidenceRegions(),
                 reporterData().refGenomeFastaFile());
 
@@ -182,7 +179,7 @@ public abstract class PatientReporter {
 
     @NotNull
     private static SomaticVariantAnalysis analyzeSomaticVariants(@NotNull RunContext run, @NotNull PurpleAnalysis purpleAnalysis,
-            @NotNull SomaticVariantAnalyzer somaticVariantAnalyzer, @NotNull Multimap<String, GenomeRegion> highConfidenceRegions,
+            @NotNull Set<String> genePanel, @NotNull Multimap<String, GenomeRegion> highConfidenceRegions,
             @NotNull IndexedFastaSequenceFile refGenomeFastaFile) throws IOException {
         final String runDirectory = run.runDirectory();
         final String sample = run.tumorSample();
@@ -196,7 +193,7 @@ public abstract class PatientReporter {
                 enrich(variants, purpleAnalysis, highConfidenceRegions, refGenomeFastaFile);
 
         LOGGER.info("Analyzing somatic variants....");
-        return somaticVariantAnalyzer.run(enrichedSomaticVariants);
+        return SomaticVariantAnalyzer.run(enrichedSomaticVariants, genePanel);
     }
 
     @NotNull

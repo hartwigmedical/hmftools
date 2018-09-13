@@ -17,7 +17,6 @@ import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.patientreporter.BaseReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
-import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalyzer;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
@@ -37,11 +36,9 @@ public class PatientReporterTest {
         final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfPanelGeneList());
         final BaseReporterData baseReporterData = testBaseReporterData();
         final HmfReporterData reporterData = testHmfReporterData();
-        final SomaticVariantAnalyzer somaticVariantAnalyzer = SomaticVariantAnalyzer.of(reporterData);
         final StructuralVariantAnalyzer svAnalyzer =
                 new StructuralVariantAnalyzer(new TestAnnotator(), geneModel.regions(), testKnownFusionModel());
-        final PatientReporter algo =
-                ImmutablePatientReporter.of(baseReporterData, reporterData, somaticVariantAnalyzer, svAnalyzer);
+        final PatientReporter algo = ImmutablePatientReporter.of(baseReporterData, reporterData, svAnalyzer);
         assertNotNull(algo.run(RUN_DIRECTORY, null));
     }
 

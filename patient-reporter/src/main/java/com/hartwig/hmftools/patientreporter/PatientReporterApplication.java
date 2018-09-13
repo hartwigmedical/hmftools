@@ -19,7 +19,6 @@ import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReporter;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.algo.PatientReporter;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
-import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalyzer;
 import com.hartwig.hmftools.svannotation.MySQLAnnotator;
 import com.hartwig.hmftools.svannotation.NullAnnotator;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
@@ -128,8 +127,6 @@ public class PatientReporterApplication {
     @NotNull
     private static PatientReporter buildReporter(@NotNull final CommandLine cmd, @NotNull final HmfReporterData reporterData)
             throws IOException, SQLException {
-        final SomaticVariantAnalyzer somaticVariantAnalyzer = SomaticVariantAnalyzer.of(reporterData);
-
         final VariantAnnotator annotator;
         if (cmd.hasOption(ENSEMBL_DB)) {
             if (cmd.hasOption(ENSEMBL_DB_LOCAL)) {
@@ -150,7 +147,7 @@ public class PatientReporterApplication {
         final StructuralVariantAnalyzer svAnalyzer =
                 new StructuralVariantAnalyzer(annotator, reporterData.panelGeneModel().regions(), reporterData.knownFusionsModel());
 
-        return ImmutablePatientReporter.of(buildBaseReporterData(cmd), reporterData, somaticVariantAnalyzer, svAnalyzer);
+        return ImmutablePatientReporter.of(buildBaseReporterData(cmd), reporterData, svAnalyzer);
     }
 
     private static boolean validInputForPatientReporter(@NotNull final CommandLine cmd) {
