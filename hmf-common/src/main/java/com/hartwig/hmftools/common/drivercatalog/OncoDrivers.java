@@ -5,14 +5,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.dnds.DndsDriverLikelihood;
+import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihood;
+import com.hartwig.hmftools.common.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
-import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.jetbrains.annotations.NotNull;
 
 public class OncoDrivers {
@@ -20,7 +20,7 @@ public class OncoDrivers {
     static final int MAX_REPEAT_COUNT = 7;
 
     @NotNull
-    public static List<DriverCatalog> oncoDrivers(@NotNull final Map<String, DndsDriverLikelihood> likelihoodsByGene,
+    public static List<DriverCatalog> oncoDrivers(@NotNull final Map<String, DndsDriverGeneLikelihood> likelihoodsByGene,
             @NotNull final List<EnrichedSomaticVariant> variants) {
 
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
@@ -29,48 +29,47 @@ public class OncoDrivers {
                 variants.stream().filter(x -> !x.isFiltered()).collect(Collectors.groupingBy(SomaticVariant::type, Collectors.counting()));
         long sampleSNVCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0L);
 
-        final Map<String, List<EnrichedSomaticVariant>> variantsByGene = variants.stream()
-                .filter(x -> likelihoodsByGene.keySet().contains(x.gene()))
-                .filter(x -> x.canonicalCodingEffect() != CodingEffect.SYNONYMOUS && x.canonicalCodingEffect() != CodingEffect.NONE)
-                .collect(Collectors.groupingBy(SomaticVariant::gene));
+        final Map<String, List<EnrichedSomaticVariant>> codingVariants =
+                DriverCatalogFactory.codingVariantsByGene(likelihoodsByGene.keySet(), variants);
 
-        for (String gene : variantsByGene.keySet()) {
+        for (String gene : codingVariants.keySet()) {
 
-            final DndsDriverLikelihood geneLikelihood = likelihoodsByGene.get(gene);
-            final List<EnrichedSomaticVariant> geneVariants = variantsByGene.get(gene);
+            final DndsDriverImpactLikelihood geneMissenseLikelihood = likelihoodsByGene.get(gene).missense();
+            final List<EnrichedSomaticVariant> geneVariants = codingVariants.get(gene);
 
-            driverCatalog.add(geneDriver(sampleSNVCount, geneLikelihood, geneVariants));
+            driverCatalog.add(geneDriver(sampleSNVCount, gene, geneMissenseLikelihood, geneVariants));
         }
 
         return driverCatalog;
     }
 
     @NotNull
-    static DriverCatalog geneDriver(long sampleSNVCount, @NotNull final DndsDriverLikelihood likelihood,
-            @NotNull final List<EnrichedSomaticVariant> geneVariants) {
+    static DriverCatalog geneDriver(long sampleSNVCount, @NotNull final String gene,
+            @NotNull final DndsDriverImpactLikelihood missenseLikelihood, @NotNull final List<EnrichedSomaticVariant> codingVariants) {
 
-        long missenseVariants = geneVariants.stream().filter(OncoDrivers::isMissense).count();
+        long missenseVariants = codingVariants.stream().filter(OncoDrivers::isMissense).count();
 
         final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
-                .gene(likelihood.gene())
+                .gene(gene)
                 .category(DriverCategory.ONCO)
                 .driverLikelihood(1)
-                .dndsLikelihood(missenseVariants > 0 ? likelihood.missenseUnadjustedDriverLikelihood() : 0)
+                .dndsLikelihood(missenseVariants > 0 ? missenseLikelihood.dndsLikelihood() : 0)
                 .driver(missenseVariants > 1 ? DriverType.MULTI_HIT : DriverType.SINGLE_HIT);
 
-        if (geneVariants.stream().anyMatch(SomaticVariant::hotspot)) {
+        if (codingVariants.stream().anyMatch(SomaticVariant::hotspot)) {
             return builder.driver(DriverType.HOTSPOT).build();
         }
 
         // TODO: Add NEAR_HOTSPOT HERE
 
-        if (geneVariants.stream().anyMatch(OncoDrivers::isInframeIndel)) {
+        if (codingVariants.stream().anyMatch(OncoDrivers::isInframeIndel)) {
             return builder.driver(DriverType.INFRAME).build();
         }
 
-        final double driverLikelihood = Doubles.positive(likelihood.missenseUnadjustedDriverLikelihood()) && missenseVariants > 0
-                ? missenseProbabilityDriverVariant(sampleSNVCount, likelihood)
-                : 0;
+        final double driverLikelihood =
+                Doubles.positive(missenseLikelihood.dndsLikelihood()) && missenseVariants > 0 ? missenseProbabilityDriverVariant(
+                        sampleSNVCount,
+                        missenseLikelihood) : 0;
 
         return builder.driverLikelihood(driverLikelihood).build();
     }
@@ -84,15 +83,8 @@ public class OncoDrivers {
         return variant.type() != VariantType.INDEL && variant.canonicalCodingEffect() == CodingEffect.MISSENSE;
     }
 
-    public static double missenseProbabilityDriverVariant(long sampleSNVCount, @NotNull final DndsDriverLikelihood likelihood) {
-
-        double lambda = sampleSNVCount * likelihood.missenseProbabilityVariantNonDriverFactor();
-        PoissonDistribution poissonDistribution = new PoissonDistribution(lambda);
-
-        double pDriver = likelihood.missenseProbabilityDriver();
-        double pVariantNonDriver = 1 - poissonDistribution.cumulativeProbability(0);
-
-        return pDriver / (pDriver + pVariantNonDriver * (1 - pDriver));
+    public static double missenseProbabilityDriverVariant(long sampleSNVCount, @NotNull final DndsDriverImpactLikelihood likelihood) {
+        return DriverCatalogFactory.probabilityDriverVariant(false, sampleSNVCount, likelihood);
     }
 
 }

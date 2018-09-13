@@ -6,9 +6,10 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.dnds.DndsDriverLikelihood;
-import com.hartwig.hmftools.common.dnds.DndsDriverLikelihoodSupplier;
-import com.hartwig.hmftools.common.dnds.ImmutableDndsDriverLikelihood;
+import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihood;
+import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
+import com.hartwig.hmftools.common.dnds.DndsDriverImpactLikelihood;
+import com.hartwig.hmftools.common.dnds.ImmutableDndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
@@ -31,7 +32,7 @@ public class OncoDriversTest {
     private EnrichedSomaticVariant frameshift;
     private EnrichedSomaticVariant missense;
 
-    private DndsDriverLikelihood likelihood;
+    private DndsDriverImpactLikelihood likelihood;
 
     @Before
     public void setup() {
@@ -46,21 +47,22 @@ public class OncoDriversTest {
 
     @Test
     public void testHIST2H3D() throws IOException {
-        final Map<String, DndsDriverLikelihood> dnds = DndsDriverLikelihoodSupplier.oncoLikelihood();
-        double value = OncoDrivers.missenseProbabilityDriverVariant(27742, dnds.get("HIST2H3D"));
+        final Map<String, DndsDriverGeneLikelihood> dnds = DndsDriverGeneLikelihoodSupplier.oncoLikelihood();
+        double value = OncoDrivers.missenseProbabilityDriverVariant(27742, dnds.get("HIST2H3D").missense());
         assertEquals(0.7042, value, EPSILON);
     }
 
     @Test
     public void testABL1() throws IOException {
-        final Map<String, DndsDriverLikelihood> dnds = DndsDriverLikelihoodSupplier.oncoLikelihood();
-        double value = OncoDrivers.missenseProbabilityDriverVariant(996698, dnds.get("ABL1"));
+        final Map<String, DndsDriverGeneLikelihood> dnds = DndsDriverGeneLikelihoodSupplier.oncoLikelihood();
+        double value = OncoDrivers.missenseProbabilityDriverVariant(996698, dnds.get("ABL1").missense());
         assertEquals(0.0057, value, EPSILON);
     }
 
     @Test
     public void favourHotspot() {
-        final DriverCatalog victim = OncoDrivers.geneDriver(10000, likelihood, Lists.newArrayList(frameshiftHotspot, inframe, missense));
+        final DriverCatalog victim =
+                OncoDrivers.geneDriver(10000, "Gene", likelihood, Lists.newArrayList(frameshiftHotspot, inframe, missense));
         assertEquals(DriverType.HOTSPOT, victim.driver());
         assertEquals(1, victim.driverLikelihood(), 0.01);
         assertEquals(UNADJUSTED_LIKELIHOOD, victim.dndsLikelihood(), 0.01);
@@ -68,7 +70,7 @@ public class OncoDriversTest {
 
     @Test
     public void favourValidInframe() {
-        final DriverCatalog victim = OncoDrivers.geneDriver(10000, likelihood, Lists.newArrayList(inframe, missense));
+        final DriverCatalog victim = OncoDrivers.geneDriver(10000, "Gene", likelihood, Lists.newArrayList(inframe, missense));
         assertEquals(DriverType.INFRAME, victim.driver());
         assertEquals(1, victim.driverLikelihood(), 0.01);
         assertEquals(UNADJUSTED_LIKELIHOOD, victim.dndsLikelihood(), 0.01);
@@ -76,7 +78,7 @@ public class OncoDriversTest {
 
     @Test
     public void ignoreFrameshiftAndInvalidInframe() {
-        final DriverCatalog victim = OncoDrivers.geneDriver(10000, likelihood, Lists.newArrayList(invalidInframe, frameshift));
+        final DriverCatalog victim = OncoDrivers.geneDriver(10000, "Gene", likelihood, Lists.newArrayList(invalidInframe, frameshift));
         assertEquals(DriverType.SINGLE_HIT, victim.driver());
         assertEquals(0, victim.driverLikelihood(), 0.01);
         assertEquals(0, victim.dndsLikelihood(), 0.01);
@@ -84,7 +86,7 @@ public class OncoDriversTest {
 
     @Test
     public void singleMissense() {
-        final DriverCatalog victim = OncoDrivers.geneDriver(10000, likelihood, Lists.newArrayList(missense));
+        final DriverCatalog victim = OncoDrivers.geneDriver(10000, "Gene", likelihood, Lists.newArrayList(missense));
         assertEquals(DriverType.SINGLE_HIT, victim.driver());
         assertEquals(0.68, victim.driverLikelihood(), 0.01);
         assertEquals(0.5, victim.dndsLikelihood(), 0.01);
@@ -92,19 +94,18 @@ public class OncoDriversTest {
 
     @Test
     public void multiMissense() {
-        final DriverCatalog victim = OncoDrivers.geneDriver(10000, likelihood, Lists.newArrayList(missense, missense));
+        final DriverCatalog victim = OncoDrivers.geneDriver(10000, "Gene", likelihood, Lists.newArrayList(missense, missense));
         assertEquals(DriverType.MULTI_HIT, victim.driver());
         assertEquals(0.68, victim.driverLikelihood(), 0.01);
         assertEquals(0.5, victim.dndsLikelihood(), 0.01);
     }
 
     @NotNull
-    private DndsDriverLikelihood createLikelihood() {
-        return ImmutableDndsDriverLikelihood.builder()
-                .gene("GENE")
-                .missenseUnadjustedDriverLikelihood(UNADJUSTED_LIKELIHOOD)
-                .missenseProbabilityDriver(0.002)
-                .missenseProbabilityVariantNonDriverFactor(9.26e-08)
+    private DndsDriverImpactLikelihood createLikelihood() {
+        return ImmutableDndsDriverImpactLikelihood.builder()
+                .dndsLikelihood(UNADJUSTED_LIKELIHOOD)
+                .pDriver(0.002)
+                .pVariantNonDriverFactor(9.26e-08)
                 .build();
     }
 
