@@ -88,12 +88,12 @@ public class SomaticVariantDataSource {
         int minorAlleleCount = (int) Math.max(0, Math.round(minorAllelePloidy));
         int majorAlleleCount = Math.max(0, totalAlleleCount - minorAlleleCount);
 
-        return formatBafField("A", Math.max(minorAlleleCount, majorAlleleCount)) + formatBafField("B",
+        return formatBAFField("A", Math.max(minorAlleleCount, majorAlleleCount)) + formatBAFField("B",
                 Math.min(minorAlleleCount, majorAlleleCount));
     }
 
     @NotNull
-    private static String formatBafField(@NotNull final String allele, final int count) {
+    private static String formatBAFField(@NotNull String allele, int count) {
         return count < 10 ? repeat(allele, count) : allele + "[" + count + "x]";
     }
 
