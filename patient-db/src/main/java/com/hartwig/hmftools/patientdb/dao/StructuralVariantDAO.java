@@ -79,7 +79,6 @@ class StructuralVariantDAO {
                     .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
                     .filter(record.getValue(STRUCTURALVARIANT.FILTER))
                     .imprecise(byteToBoolean(record.getValue(STRUCTURALVARIANT.IMPRECISE)))
-                    .somaticScore(getValueNotNull(record.getValue(STRUCTURALVARIANT.SOMATICSCORE)))
                     .qualityScore(record.getValue(STRUCTURALVARIANT.QUALSCORE))
                     .event(record.getValue(STRUCTURALVARIANT.EVENT))
                     .startTumourVariantFragmentCount(record.getValue(STRUCTURALVARIANT.STARTTUMOURVARIANTFRAGMENTCOUNT))
@@ -183,7 +182,6 @@ class StructuralVariantDAO {
                     // TODO: what's the correct approach here?
                     // jooq type conversion or just manual mapping?
                     .imprecise(byteToBoolean(record.getValue(STRUCTURALVARIANT.IMPRECISE)))
-                    .somaticScore(record.getValue(STRUCTURALVARIANT.SOMATICSCORE))
                     .qualityScore(record.getValue(STRUCTURALVARIANT.QUALSCORE))
                     .event(record.getValue(STRUCTURALVARIANT.EVENT))
                     .startLinkedBy(record.getValue(STRUCTURALVARIANT.STARTLINKEDBY))
@@ -228,7 +226,6 @@ class StructuralVariantDAO {
                     STRUCTURALVARIANT.PLOIDY,
                     STRUCTURALVARIANT.FILTER,
                     STRUCTURALVARIANT.IMPRECISE,
-                    STRUCTURALVARIANT.SOMATICSCORE,
                     STRUCTURALVARIANT.QUALSCORE,
                     STRUCTURALVARIANT.EVENT,
                     STRUCTURALVARIANT.STARTTUMOURVARIANTFRAGMENTCOUNT,
@@ -279,7 +276,6 @@ class StructuralVariantDAO {
                 variant.ploidy(),
                 variant.filter(),
                 variant.imprecise(),
-                variant.somaticScore(),
                 variant.qualityScore(),
                 variant.event(),
                 variant.start().tumourVariantFragmentCount(),

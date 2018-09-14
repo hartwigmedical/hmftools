@@ -293,7 +293,7 @@ public class SvSampleAnalyser {
                     writer.write(",ChrEnd,PosEnd,OrientEnd,ArmEnd,AdjAFEnd,AdjCNEnd,AdjCNChgEnd");
 
                     // SV info
-                    writer.write(",Homology,InsertSeq,Imprecise,SomaticScore");
+                    writer.write(",Homology,InsertSeq,Imprecise");
 
                     // location attributes
                     writer.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd");
@@ -336,10 +336,10 @@ public class SvSampleAnalyser {
                                     var.getSvData().adjustedEndAF(), var.getSvData().adjustedEndCopyNumber(), var.getSvData().adjustedEndCopyNumberChange()));
 
                     writer.write(
-                            String.format(",%s,%s,%s,%d",
+                            String.format(",%s,%s,%s",
                                     var.getSvData().insertSequence().isEmpty() && var.type() != StructuralVariantType.INS ? var.getSvData().homology() : "",
                                     var.type() == StructuralVariantType.INS ? var.getSvData().insertSequence() : "",
-                                    var.getSvData().imprecise(), var.getSvData().somaticScore()));
+                                    var.getSvData().imprecise()));
 
                     writer.write(
                             String.format(",%s,%s,%s,%s,%s,%s,%s",

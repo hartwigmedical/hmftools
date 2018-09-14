@@ -246,7 +246,7 @@ public class FilteredSVWriter {
 
                 mMantaFileWriter = Files.newBufferedWriter(outputFile);
 
-                mMantaFileWriter.write("SampleId,SvId,Type,ChrStart,PosStart,OrientStart,ChrEnd,PosEnd,OrientEnd,IsImprecise,SomaticScore\n");
+                mMantaFileWriter.write("SampleId,SvId,Type,ChrStart,PosStart,OrientStart,ChrEnd,PosEnd,OrientEnd,IsImprecise\n");
             }
 
             for(final StructuralVariant var : variants)
@@ -263,7 +263,7 @@ public class FilteredSVWriter {
                                 sampleId, var.id(), var.type(),
                                 var.chromosome(true), var.position(true), var.orientation(true),
                                 var.chromosome(false), var.position(false), var.orientation(false),
-                                var.imprecise(), var.somaticScore()));
+                                var.imprecise()));
 
                 mMantaFileWriter.newLine();
             }

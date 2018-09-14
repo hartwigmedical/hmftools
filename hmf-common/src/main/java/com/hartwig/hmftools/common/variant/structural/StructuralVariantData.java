@@ -33,7 +33,6 @@ public abstract class StructuralVariantData {
     public abstract String filter();
     public abstract String insertSequence();
     public abstract boolean imprecise();
-    public abstract Integer somaticScore();
     public abstract Double qualityScore();
     public abstract Integer startIntervalOffsetStart();
     public abstract Integer startIntervalOffsetEnd();

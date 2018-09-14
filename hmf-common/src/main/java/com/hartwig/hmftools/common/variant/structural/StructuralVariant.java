@@ -45,9 +45,6 @@ public interface StructuralVariant {
     Boolean imprecise();
 
     @Nullable
-    Integer somaticScore();
-
-    @Nullable
     Double qualityScore();
 
     @Nullable

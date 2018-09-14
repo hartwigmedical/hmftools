@@ -151,8 +151,7 @@ public class PurpleDatamodelTest {
                 .type(type)
                 .start(createStartLeg(startChromosome, startPosition, type).alleleFrequency(startVaf).build())
                 .end(createEndLeg(endChromosome, endPosition, type).alleleFrequency(endVaf).build())
-                .imprecise(true)
-                .somaticScore(0);
+                .imprecise(true);
     }
 
     @NotNull
@@ -166,8 +165,7 @@ public class PurpleDatamodelTest {
                 .type(type)
                 .start(createStartLeg(startChromosome, startPosition, type).build())
                 .end(createEndLeg(endChromosome, endPosition, type).build())
-                .imprecise(true)
-                .somaticScore(0);
+                .imprecise(true);
     }
     @NotNull
     public static ImmutableStructuralVariantImpl.Builder createStructuralVariantSingleBreakend(@NotNull final String startChromosome,
@@ -177,8 +175,7 @@ public class PurpleDatamodelTest {
                 .insertSequence("")
                 .type(StructuralVariantType.BND)
                 .start(createStartLeg(startChromosome, startPosition, StructuralVariantType.BND).alleleFrequency(startVaf).build())
-                .imprecise(false)
-                .somaticScore(0);
+                .imprecise(false);
     }
 
     @NotNull
