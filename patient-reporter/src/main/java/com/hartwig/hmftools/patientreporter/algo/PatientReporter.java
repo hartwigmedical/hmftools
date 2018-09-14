@@ -148,15 +148,15 @@ public abstract class PatientReporter {
         final String runDirectory = run.runDirectory();
         final String sample = run.tumorSample();
 
-        LOGGER.info("Loading somatic somatic variants...");
+        LOGGER.info("Loading somatic variants...");
         final List<SomaticVariant> variants = PatientReporterHelper.loadPassedSomaticVariants(sample, runDirectory);
-        LOGGER.info(" " + variants.size() + " PASS somatic somatic variants loaded for sample " + sample);
+        LOGGER.info(" " + variants.size() + " PASS somatic variants loaded for sample " + sample);
 
-        LOGGER.info("Enriching somatic somatic variants");
+        LOGGER.info("Enriching somatic variants");
         final List<EnrichedSomaticVariant> enrichedSomaticVariants =
                 enrich(variants, purpleAnalysis, highConfidenceRegions, refGenomeFastaFile);
 
-        LOGGER.info("Analyzing somatic somatic variants....");
+        LOGGER.info("Analyzing somatic variants....");
         return SomaticVariantAnalyzer.run(enrichedSomaticVariants, genePanel);
     }
 
@@ -181,10 +181,10 @@ public abstract class PatientReporter {
     private static StructuralVariantAnalysis analyzeStructuralVariants(@NotNull RunContext run, @NotNull PurpleAnalysis purpleAnalysis,
             @NotNull StructuralVariantAnalyzer structuralVariantAnalyzer) throws IOException {
         final Path structuralVariantVCF = PatientReporterHelper.findStructuralVariantVCF(run.runDirectory());
-        LOGGER.info("Loading structural somatic variants...");
+        LOGGER.info("Loading structural variants...");
         final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(structuralVariantVCF.toString(), true);
 
-        LOGGER.info("Enriching structural somatic variants with purple data.");
+        LOGGER.info("Enriching structural variants with purple data.");
         final PurityAdjuster purityAdjuster = new PurityAdjuster(purpleAnalysis.gender(), purpleAnalysis.fittedPurity());
         final Multimap<String, PurpleCopyNumber> copyNumberMap =
                 Multimaps.index(purpleAnalysis.copyNumbers(), PurpleCopyNumber::chromosome);
@@ -192,7 +192,7 @@ public abstract class PatientReporter {
         final List<EnrichedStructuralVariant> enrichedStructuralVariants =
                 EnrichedStructuralVariantFactory.enrich(structuralVariants, purityAdjuster, copyNumberMap);
 
-        LOGGER.info("Analysing structural somatic variants...");
+        LOGGER.info("Analysing structural variants...");
         return structuralVariantAnalyzer.run(enrichedStructuralVariants);
     }
 }
