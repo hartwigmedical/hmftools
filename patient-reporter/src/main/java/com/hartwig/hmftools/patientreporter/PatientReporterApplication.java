@@ -253,7 +253,7 @@ public class PatientReporterApplication {
         options.addOption(PROMISCUOUS_FIVE_CSV, true, "Path towards a CSV containing white-listed promiscuous 5' genes.");
         options.addOption(PROMISCUOUS_THREE_CSV, true, "Path towards a CSV containing white-listed promiscuous 3' genes.");
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
-        options.addOption(ENSEMBL_DB, true, "Annotate structural variants using this Ensembl DB URI");
+        options.addOption(ENSEMBL_DB, true, "Annotate structural somaticVariants using this Ensembl DB URI");
         options.addOption(ENSEMBL_DB_LOCAL, false, "Flag indicating to connect to local Ensembl DB");
         options.addOption(DB_USER, true, "Database user name to connect to local mysql instance.");
         options.addOption(DB_PASS, true, "Database password to connect to local mysql instance.");

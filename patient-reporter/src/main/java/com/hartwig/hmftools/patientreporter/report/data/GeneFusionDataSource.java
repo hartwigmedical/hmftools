@@ -7,10 +7,14 @@ import static com.hartwig.hmftools.common.fusions.KnownFusionsModel.ONCOKB;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
-import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
+import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
+import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
+import com.hartwig.hmftools.svannotation.annotations.Transcript;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -34,7 +38,7 @@ public final class GeneFusionDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromGeneFusions(@NotNull FittedPurityStatus fitStatus, @NotNull List<GeneFusionData> fusions) {
+    public static JRDataSource fromGeneFusions(@NotNull FittedPurityStatus fitStatus, @NotNull List<GeneFusion> fusions) {
         final DRDataSource dataSource = new DRDataSource(FUSION_FIELD.getName(),
                 START_TRANSCRIPT_FIELD.getName(),
                 END_TRANSCRIPT_FIELD.getName(),
@@ -43,7 +47,10 @@ public final class GeneFusionDataSource {
                 COPIES_FIELD.getName(),
                 SOURCE_FIELD.getName());
 
-        fusions.forEach(fusion -> dataSource.add(name(fusion),
+        final List<GeneFusionData> fusionsData =
+                fusions.stream().sorted(fusionComparator()).map(GeneFusionData::from).collect(Collectors.toList());
+
+        fusionsData.forEach(fusion -> dataSource.add(name(fusion),
                 fusion.geneStartTranscript(),
                 fusion.geneEndTranscript(),
                 fusion.geneContextStart(),
@@ -84,11 +91,23 @@ public final class GeneFusionDataSource {
                     case CGI:
                         return "https://www.cancergenomeinterpreter.org/biomarkers";
                     case CIVIC:
-                        return "https://civicdb.org/browse/variants";
+                        return "https://civicdb.org/browse/somaticVariants";
                     default:
                         return "";
                 }
             }
         };
+    }
+
+    @NotNull
+    private static Comparator<GeneFusion> fusionComparator() {
+        return Comparator.comparing(GeneFusion::upstreamLinkedAnnotation, transcriptComparator())
+                .thenComparing(GeneFusion::downstreamLinkedAnnotation, transcriptComparator());
+    }
+
+    @NotNull
+    private static Comparator<Transcript> transcriptComparator() {
+        return Comparator.comparing((Transcript transcript) -> transcript.parent().variant().start())
+                .thenComparing((Transcript transcript) -> transcript.parent().variant().end());
     }
 }

@@ -7,7 +7,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.copynumber.CopyNumberAlteration;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
-import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
+import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.jetbrains.annotations.NotNull;
 

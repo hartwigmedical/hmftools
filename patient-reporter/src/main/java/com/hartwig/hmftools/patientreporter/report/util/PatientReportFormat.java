@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.util;
+package com.hartwig.hmftools.patientreporter.report.util;
 
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.svannotation.annotations.Transcript;

@@ -1,16 +1,13 @@
 package com.hartwig.hmftools.actionability;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.util.List;
-import java.io.File;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.actionability.CNVs.ActionabilityCNVsAnalyzer;
-import com.hartwig.hmftools.actionability.fusions.ActionabilityFusionAnalyzer;
 import com.hartwig.hmftools.actionability.variants.ActionabilityVariantsAnalyzer;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
@@ -42,8 +39,8 @@ public abstract class ActionabilityApplication {
     private static final String SOMATIC_VCF_EXTENSION_V3 = "_post_processed_v2.2.vcf.gz";
     private static final String SOMATIC_VCF_EXTENSION_V4 = "_post_processed.vcf.gz";
 
-    public static void main(final String... args) throws ParseException, IOException, SQLException {
-        LOGGER.info("Determining actionability variants.");
+    public static void main(final String... args) throws ParseException, IOException {
+        LOGGER.info("Determining actionability somaticVariants.");
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
         final String runDir = cmd.getOptionValue(RUN_DIRECTORY);
@@ -62,7 +59,7 @@ public abstract class ActionabilityApplication {
         LOGGER.info("Cancer subtype from patient: " + patientTumorLocation.cancerSubtype());
 
         LOGGER.info("");
-        LOGGER.info("Start processing actionability variants");
+        LOGGER.info("Start processing actionability somaticVariants");
 
         String fileActionabilityVariants = "/data/common/dbs/knowledgebases/output/actionableVariants.tsv";
         String fileActionabilityRanges = "/data/common/dbs/knowledgebases/output/actionableRanges.tsv";
@@ -71,7 +68,7 @@ public abstract class ActionabilityApplication {
             ActionabilityVariantsAnalyzer analyzer = ActionabilityVariantsAnalyzer.loadFromFileVariantsAndFileRanges(fileActionabilityVariants, fileActionabilityRanges);
             for (int i = 0; i < variants.size(); i ++) {
                 LOGGER.info("Is actionable variant: " + analyzer.actionableVariants(variants.get(i), patientTumorLocation.primaryTumorLocation(), i));
-              //  LOGGER.info("Is actionable ranges: " + analyzer.actionableRange(variants.get(i), patientTumorLocation.primaryTumorLocation(), variants.size()));
+              //  LOGGER.info("Is actionable ranges: " + analyzer.actionableRange(somaticVariants.get(i), patientTumorLocation.primaryTumorLocation(), somaticVariants.size()));
 
             }
         } else if (!Files.exists(new File(fileActionabilityVariants).toPath())){
@@ -86,9 +83,9 @@ public abstract class ActionabilityApplication {
 
 //        if (Files.exists(new File(fileActionabilityCNVs).toPath())) {
 //            ActionabilityCNVsAnalyzer analyzerCNVs = ActionabilityCNVsAnalyzer.loadFromFileCNVs(fileActionabilityCNVs);
-//            for (int i = 0; i < variants.size(); i ++) {
-//                // change variants to gene copy number
-//                LOGGER.info("Is actionable CNVs: " + analyzerCNVs.actionableCNVs(variants.get(i), patientTumorLocation.primaryTumorLocation(), variants.size()));
+//            for (int i = 0; i < somaticVariants.size(); i ++) {
+//                // change somaticVariants to gene copy number
+//                LOGGER.info("Is actionable CNVs: " + analyzerCNVs.actionableCNVs(somaticVariants.get(i), patientTumorLocation.primaryTumorLocation(), somaticVariants.size()));
 //            }
 //        } else {
 //            LOGGER.warn("File does not exist: " + fileActionabilityCNVs);
@@ -104,9 +101,9 @@ public abstract class ActionabilityApplication {
 //        && Files.exists(new File(fileActionabilityPromiscuousThree).toPath())){
 //            ActionabilityFusionAnalyzer analyzerFusions = ActionabilityFusionAnalyzer.loadFromFileFusions(fileActionabilityFusionPairs,
 //                    fileActionabilityPromiscuousFive, fileActionabilityPromiscuousThree);
-//            for (int i = 0; i < variants.size(); i ++) {
-//                // change variants to structuralvariant, five_breakend, three_breakend, structuralvariantfusion
-//                LOGGER.info("Is actionable fusion: " + analyzerFusions.actionableFusions(variants.get(i), patientTumorLocation.primaryTumorLocation(), variants.size()));
+//            for (int i = 0; i < somaticVariants.size(); i ++) {
+//                // change somaticVariants to structuralvariant, five_breakend, three_breakend, structuralvariantfusion
+//                LOGGER.info("Is actionable fusion: " + analyzerFusions.actionableFusions(somaticVariants.get(i), patientTumorLocation.primaryTumorLocation(), somaticVariants.size()));
 //            }
 //        } else if (!Files.exists(new File(fileActionabilityFusionPairs).toPath())){
 //            LOGGER.warn("File does not exist: " + fileActionabilityFusionPairs);
@@ -120,7 +117,7 @@ public abstract class ActionabilityApplication {
         LOGGER.info("Writing output data to file");
 
         LOGGER.info("");
-        LOGGER.info("Finish processing actionability variants");
+        LOGGER.info("Finish processing actionability somaticVariants");
     }
 
     @NotNull

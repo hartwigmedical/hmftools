@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientreporter.report.data;
 
-import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.exonDescription;
-import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.ploidyToCopiesString;
+import static com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat.exonDescription;
+import static com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat.ploidyToCopiesString;
 
 import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
 import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;

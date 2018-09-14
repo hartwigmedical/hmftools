@@ -7,7 +7,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
-import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
+import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -64,12 +64,12 @@ public class VariantDataSource {
     }
 
 //    @NotNull
-//    public List<VariantReport> enrichSomaticVariants(@NotNull final List<VariantReport> variants) {
+//    public List<VariantReport> enrichSomaticVariants(@NotNull final List<VariantReport> somaticVariants) {
 //        final List<VariantReport> result = Lists.newArrayList();
 //        final PurityAdjuster purityAdjuster = new PurityAdjuster(gender(), fittedPurity());
 //        final GenomeRegionSelector<PurpleCopyNumber> copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers());
 //
-//        for (final VariantReport variantReport : variants) {
+//        for (final VariantReport variantReport : somaticVariants) {
 //            final Optional<PurpleCopyNumber> optionalCopyNumber = copyNumberSelector.select(variantReport.variant());
 //            if (optionalCopyNumber.isPresent()) {
 //                final PurpleCopyNumber copyNumber = optionalCopyNumber.get();

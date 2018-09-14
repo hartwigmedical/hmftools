@@ -22,7 +22,7 @@ import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.VariantDataSource;
-import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
+import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -77,7 +77,7 @@ public abstract class FindingsPage {
                 + "this sample, but only on a gene-level.";
 
         final ComponentBuilder<?, ?> table =
-                !report.variants().isEmpty()
+                !report.somaticVariants().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(VariantDataSource.variantFields())
                         .columns(col.column("Gene", VariantDataSource.GENE_FIELD),
                                 col.column("Variant", VariantDataSource.VARIANT_DETAILS_FIELD).setFixedWidth(160),
@@ -88,7 +88,7 @@ public abstract class FindingsPage {
                                 col.column("Wildtype Status", VariantDataSource.WILDTYPE_STATUS_FIELD),
                                 col.column("Driver Probability", VariantDataSource.DRIVER_PROBABILITY_FIELD),
                                 col.column("Actionability Level", VariantDataSource.ACTIONABILITY_LEVEL_FIELD)))
-                        .setDataSource(VariantDataSource.fromVariants(report.fitStatus(), report.variants(), drupFilter))
+                        .setDataSource(VariantDataSource.fromVariants(report.fitStatus(), report.somaticVariants(), drupFilter))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
@@ -158,7 +158,7 @@ public abstract class FindingsPage {
 
     @NotNull
     private static ComponentBuilder<?, ?> microsatelliteReport(@NotNull AnalysedPatientReport report) {
-        return MicrosatelliteSection.build(report.microsatelliteIndicator(), report.fitStatus());
+        return MicrosatelliteSection.build(report.microsatelliteIndelsPerMb(), report.fitStatus());
     }
 
     @NotNull

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter.report.components;
 import java.awt.Color;
 
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
-import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
+import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -54,7 +54,7 @@ public final class MutationalLoadSection {
 
     @NotNull
     private static String description() {
-        return "The tumor mutational load represents the total number of somatic missense variants across"
+        return "The tumor mutational load represents the total number of somatic missense somaticVariants across"
                 + " the whole genome of the tumor. Patients with a mutational load over " + DRUP_THRESHOLD
                 + " could be eligible for immunotherapy within the DRUP study. ";
     }

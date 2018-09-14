@@ -51,8 +51,8 @@ public abstract class CircosPage {
         return toList("Details on CIRCOS plot",
                 Lists.newArrayList("The outer first circle shows the chromosomes. The darker shaded areas represent large "
                                 + "gaps in the human reference genome:  i.e. regions of centromeres, heterochromatin & missing short arms.",
-                        "The second circle shows the somatic variants (incl. exon, intron and intergenic regions). "
-                                + "Somatic variants are further divided into an outer ring of single nucleotide polymorphism (SNP) allele "
+                        "The second circle shows the somatic somaticVariants (incl. exon, intron and intergenic regions). "
+                                + "Somatic somaticVariants are further divided into an outer ring of single nucleotide polymorphism (SNP) allele "
                                 + "frequencies and an inner ring of short insertion/deletion (INDEL) locations. "
                                 + "SNP allele frequencies have been corrected for tumor purity and scale from 0 to 100%. Each dot represents a single somatic variant. "
                                 + "SNPs are colored according to the type of base change (e.g. C>T/G>A in red) and are in concordance "
@@ -68,7 +68,7 @@ public abstract class CircosPage {
                                 + "and anything below 1 is shown as a loss (orange) and represents a LOH event. "
                                 + "Minor allele copy numbers above 1 (blue) indicate amplification events of both A and B alleles "
                                 + "at the indicated locations.",
-                        "The innermost circle displays the observed structural variants within or between the chromosomes. "
+                        "The innermost circle displays the observed structural somaticVariants within or between the chromosomes. "
                                 + "Translocations are indicated in blue, deletions in red, insertions in yellow, tandem duplications in "
                                 + "green and inversions in black."));
     }
