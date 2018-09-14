@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.patientreporter.report.data;
 
+import static com.google.common.base.Strings.repeat;
+
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
@@ -74,61 +77,29 @@ public class VariantDataSource {
 
     @NotNull
     private static String ploidyVafField(@NotNull EnrichedSomaticVariant variant) {
-        int totalAlleleCount = (int) Math.max(0, Math.round(variant.adjustedCopyNumber()));
-        int minorAlleleCount = (int) Math.round(variant.minorAllelePloidy());
-        int majorAlleleCount = totalAlleleCount - minorAlleleCount;
+        return descriptiveBAF(variant.adjustedCopyNumber(), variant.minorAllelePloidy()) + " ("
+                + PatientReportFormat.formatPercent(variant.adjustedVAF()) + ")";
+    }
 
-        String descriptivePloidy = formatBafField("A", Math.max(minorAlleleCount, majorAlleleCount)) + formatBafField("B",
+    @NotNull
+    @VisibleForTesting
+    static String descriptiveBAF(double adjustedCopyNumber, double minorAllelePloidy) {
+        int totalAlleleCount = (int) Math.max(0, Math.round(adjustedCopyNumber));
+        int minorAlleleCount = (int) Math.max(0, Math.round(minorAllelePloidy));
+        int majorAlleleCount = Math.max(0, totalAlleleCount - minorAlleleCount);
+
+        return formatBafField("A", Math.max(minorAlleleCount, majorAlleleCount)) + formatBafField("B",
                 Math.min(minorAlleleCount, majorAlleleCount));
-
-        return descriptivePloidy + " (" + PatientReportFormat.formatPercent(variant.adjustedVAF()) + ")";
     }
 
     @NotNull
     private static String formatBafField(@NotNull final String allele, final int count) {
-        return count < 10 ? com.google.common.base.Strings.repeat(allele, count) : allele + "[" + count + "x]";
+        return count < 10 ? repeat(allele, count) : allele + "[" + count + "x]";
     }
-
-    //    @NotNull
-    //    public List<VariantReport> enrichSomaticVariants(@NotNull final List<VariantReport> somaticVariants) {
-    //        final List<VariantReport> result = Lists.newArrayList();
-    //        final PurityAdjuster purityAdjuster = new PurityAdjuster(gender(), fittedPurity());
-    //        final GenomeRegionSelector<PurpleCopyNumber> copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers());
-    //
-    //        for (final VariantReport variantReport : somaticVariants) {
-    //            final Optional<PurpleCopyNumber> optionalCopyNumber = copyNumberSelector.select(variantReport.variant());
-    //            if (optionalCopyNumber.isPresent()) {
-    //                final PurpleCopyNumber copyNumber = optionalCopyNumber.get();
-    //                double adjustedVAF = Math.min(1,
-    //                        purityAdjuster.purityAdjustedVAF(copyNumber.chromosome(),
-    //                                copyNumber.averageTumorCopyNumber(),
-    //                                variantReport.alleleFrequency()));
-    //                result.add(ImmutableVariantReport.builder()
-    //                        .from(variantReport)
-    //                        .ploidy(copyNumber.descriptiveBAF())
-    //                        .purityAdjustedVAF(adjustedVAF)
-    //                        .build());
-    //            } else {
-    //                result.add(variantReport);
-    //            }
-    //        }
-    //
-    //        return result;
-    //    }
 
     @NotNull
     public static FieldBuilder<?>[] variantFields() {
         return new FieldBuilder<?>[] { GENE_FIELD, VARIANT_DETAILS_FIELD, READ_DEPTH_FIELD, IS_HOTSPOT_FIELD, PLOIDY_VAF_FIELD,
                 CLONAL_PERCENTAGE_FIELD, WILDTYPE_STATUS_FIELD, DRIVER_PROBABILITY_FIELD, ACTIONABILITY_LEVEL_FIELD };
     }
-
-    //    @NotNull
-    //    public static AbstractSimpleExpression<String> cosmicHyperlink() {
-    //        return new AbstractSimpleExpression<String>() {
-    //            @Override
-    //            public String evaluate(@NotNull final ReportParameters data) {
-    //                return data.getValue(COSMIC_URL_FIELD.getName());
-    //            }
-    //        };
-    //    }
 }
