@@ -8,8 +8,8 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
+import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
 import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
-import com.hartwig.hmftools.svannotation.annotations.Transcript;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -58,16 +58,36 @@ public final class GeneDisruptionDataSource {
 
     @NotNull
     private static Comparator<GeneDisruption> disruptionComparator() {
-        return Comparator.comparing(GeneDisruption::linkedAnnotation, Comparator.comparing((Transcript transcript) -> {
-            final long startPosition = transcript.parent().variant().start().position();
-            // TODO (KODU) : Review if this leads to proper sorting. Idea is that disruptions are sorted by chromosome/band.
-            Long codingStart = transcript.codingStart();
-            Long codingEnd = transcript.codingEnd();
-            if (codingStart != null && codingEnd != null && startPosition >= codingStart && startPosition <= codingEnd) {
-                return transcript.parent().variant().start();
+        return (disruption1, disruption2) -> {
+            String location1 = chromosomalLocation(disruption1);
+            String location2 = chromosomalLocation(disruption2);
+
+            if (location1.equals(location2)) {
+                return disruption1.linkedAnnotation().exonUpstream() - disruption2.linkedAnnotation().exonUpstream();
             } else {
-                return transcript.parent().variant().end();
+                return location1.compareTo(location2);
             }
-        }));
+        };
+    }
+
+    @NotNull
+    private static String chromosomalLocation(@NotNull GeneDisruption disruption) {
+        GeneAnnotation gene = disruption.linkedAnnotation().parent();
+        String chromosome = zeroPrefixed(gene.variant().chromosome(gene.isStart()));
+        return chromosome + ":" + disruption.linkedAnnotation().parent().karyotypeBand() + ":" + gene.geneName();
+    }
+
+    @NotNull
+    private static String zeroPrefixed(@NotNull String chromosome) {
+        try {
+            int chromosomeIndex = Integer.valueOf(chromosome);
+            if (chromosomeIndex < 10) {
+                return "0" + chromosome;
+            } else {
+                return chromosome;
+            }
+        } catch (NumberFormatException exception) {
+            return chromosome;
+        }
     }
 }

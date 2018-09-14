@@ -167,83 +167,42 @@ public class PDFWriterTest {
     @NotNull
     private static List<GeneFusion> createTestFusions() {
         return Lists.newArrayList();
-//        return Lists.newArrayList(ImmutableGeneFusionData.builder()
-//                        .geneStart("TMPRSS2")
-//                        .geneStartTranscript("ENST00000398585.7")
-//                        .geneStartEntrezIds(Lists.newArrayList(7113))
-//                        .geneContextStart("Intron 4")
-//                        .geneEnd("PNPLA7")
-//                        .geneEndTranscript("ENST00000406427.5")
-//                        .geneEndEntrezIds(Lists.newArrayList(375775))
-//                        .geneContextEnd("Intron 2")
-//                        .copies("0.4")
-//                        .source("CIViC")
-//                        .build(),
-//                ImmutableGeneFusionData.builder()
-//                        .geneStart("CLCN6")
-//                        .geneStartTranscript("ENST00000346436.10")
-//                        .geneStartEntrezIds(Lists.newArrayList(1185))
-//                        .geneContextStart("Intron 1")
-//                        .geneEnd("BRAF")
-//                        .geneEndTranscript("ENST00000288602.10")
-//                        .geneEndEntrezIds(Lists.newArrayList(673))
-//                        .geneContextEnd("Intron 8")
-//                        .copies("1.0")
-//                        .source("OncoKB")
-//                        .build());
+        //        return Lists.newArrayList(ImmutableGeneFusionData.builder()
+        //                        .geneStart("TMPRSS2")
+        //                        .geneStartTranscript("ENST00000398585.7")
+        //                        .geneStartEntrezIds(Lists.newArrayList(7113))
+        //                        .geneContextStart("Intron 4")
+        //                        .geneEnd("PNPLA7")
+        //                        .geneEndTranscript("ENST00000406427.5")
+        //                        .geneEndEntrezIds(Lists.newArrayList(375775))
+        //                        .geneContextEnd("Intron 2")
+        //                        .copies("0.4")
+        //                        .source("CIViC")
+        //                        .build(),
+        //                ImmutableGeneFusionData.builder()
+        //                        .geneStart("CLCN6")
+        //                        .geneStartTranscript("ENST00000346436.10")
+        //                        .geneStartEntrezIds(Lists.newArrayList(1185))
+        //                        .geneContextStart("Intron 1")
+        //                        .geneEnd("BRAF")
+        //                        .geneEndTranscript("ENST00000288602.10")
+        //                        .geneEndEntrezIds(Lists.newArrayList(673))
+        //                        .geneContextEnd("Intron 8")
+        //                        .copies("1.0")
+        //                        .source("OncoKB")
+        //                        .build());
     }
 
     @NotNull
     private static List<GeneDisruption> createTestDisruptions() {
-        final GeneDisruption disruption1 = createDisruption(StructuralVariantType.INV, "2", "q34", "ERBB4", 3, 4, 1);
+        GeneDisruption disruption1 = createDisruption(StructuralVariantType.DUP, "8", "p12", "NRG1", 1, 2, 0.3);
+        GeneDisruption disruption2 = createDisruption(StructuralVariantType.INV, "2", "q34", "ERBB4", 4, 5, 1D);
+        GeneDisruption disruption3 = createDisruption(StructuralVariantType.INS, "3", "q22.3", "PIK3CB", 1, 2, 3D);
+        GeneDisruption disruption4 = createDisruption(StructuralVariantType.DEL, "8", "p12", "NRG1", 1, 2, 0.2);
+        GeneDisruption disruption5 = createDisruption(StructuralVariantType.BND, "17", "q12", "CDK12", 12, 13, 1D);
+        GeneDisruption disruption6 = createDisruption(StructuralVariantType.INV, "2", "q34", "ERBB4", 20, 21, 1D);
 
-        //        final GeneDisruptionData disruption2 = ImmutableGeneDisruptionData.builder()
-        //                .chromosome("2")
-        //                .gene("ERBB4")
-        //                .geneContext("Intron 20")
-        //                .type("INV")
-        //                .copies("1.0")
-        //                .chromosomeBand("q34")
-        //                .build();
-        //
-        //        final GeneDisruptionData disruption3 = ImmutableGeneDisruptionData.builder()
-        //                .chromosome("3")
-        //                .gene("PIK3CB")
-        //                .geneContext("Intron 1")
-        //                .type("INS")
-        //                .copies("3.0")
-        //                .chromosomeBand("q22.3")
-        //                .build();
-        //
-        //        final GeneDisruptionData disruption4 = ImmutableGeneDisruptionData.builder()
-        //                .chromosome("8")
-        //                .gene("NRG1")
-        //                .geneContext("Intron 1")
-        //                .type("DUP")
-        //                .copies("0.3")
-        //                .chromosomeBand("p12")
-        //                .build();
-        //
-        //        final GeneDisruptionData disruption5 = ImmutableGeneDisruptionData.builder()
-        //                .chromosome("8")
-        //                .gene("NRG1")
-        //                .geneContext("Intron 1")
-        //                .type("DEL")
-        //                .copies("0.2")
-        //                .chromosomeBand("p12")
-        //                .build();
-        //
-        //        final GeneDisruptionData disruption6 = ImmutableGeneDisruptionData.builder()
-        //                .chromosome("17")
-        //                .gene("CDK12")
-        //                .geneContext("Intron 12")
-        //                .type("BND")
-        //                .copies("1.0")
-        //                .chromosomeBand("q12")
-        //                .build();
-
-        //        return Lists.newArrayList(disruption1, disruption2, disruption3, disruption4, disruption5, disruption6);
-        return Lists.newArrayList(disruption1);
+        return Lists.newArrayList(disruption1, disruption2, disruption3, disruption4, disruption5, disruption6);
     }
 
     @NotNull
