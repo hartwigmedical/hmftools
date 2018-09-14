@@ -30,16 +30,14 @@ public abstract class NotAnalysableReporter {
         final PatientTumorLocation patientTumorLocation =
                 PatientReporterHelper.extractPatientTumorLocation(baseReportData().patientTumorLocations(), sample);
         final Lims lims = baseReportData().limsModel();
-        final Double tumorPercentage = lims.tumorPercentageForSample(sample);
-        final String sampleRecipient = baseReportData().centerModel().getAddresseeStringForSample(sample);
 
         final SampleReport sampleReport = ImmutableSampleReport.of(sample,
                 patientTumorLocation,
-                tumorPercentage,
+                lims.tumorPercentageForSample(sample),
                 lims.arrivalDateForSample(sample),
                 null,
                 lims.labProceduresForSample(sample),
-                sampleRecipient);
+                baseReportData().centerModel().getAddresseeStringForSample(sample));
 
         return ImmutableNotAnalysedPatientReport.of(sampleReport,
                 reason,
