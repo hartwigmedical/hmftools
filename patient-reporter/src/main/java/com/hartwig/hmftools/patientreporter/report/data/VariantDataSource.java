@@ -47,13 +47,11 @@ public class VariantDataSource {
         for (final EnrichedSomaticVariant variant : variants) {
             final String displayGene = drupFilter.test(variant) ? variant.gene() + " *" : variant.gene();
 
-            // TODO (KODU) Implement variant details, and mapping.
-            //builder.variantDetails(snpEffAnnotation.hgvsCoding() + " (" + snpEffAnnotation.hgvsProtein() + ")");
             variantDataSource.add(displayGene,
-                    Strings.EMPTY,
-                    Strings.EMPTY,
+                    variantDetailsField(variant),
+                    readDepthField(variant),
                     variant.hotspot() ? "Yes" : "No",
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, Strings.EMPTY),
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyVafField(variant)),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, PatientReportFormat.formatPercentWithDefaultCutoffs(0D)),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, Strings.EMPTY),
                     PatientReportFormat.formatPercentWithDefaultCutoffs(0D),
@@ -63,32 +61,60 @@ public class VariantDataSource {
         return variantDataSource;
     }
 
-//    @NotNull
-//    public List<VariantReport> enrichSomaticVariants(@NotNull final List<VariantReport> somaticVariants) {
-//        final List<VariantReport> result = Lists.newArrayList();
-//        final PurityAdjuster purityAdjuster = new PurityAdjuster(gender(), fittedPurity());
-//        final GenomeRegionSelector<PurpleCopyNumber> copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers());
-//
-//        for (final VariantReport variantReport : somaticVariants) {
-//            final Optional<PurpleCopyNumber> optionalCopyNumber = copyNumberSelector.select(variantReport.variant());
-//            if (optionalCopyNumber.isPresent()) {
-//                final PurpleCopyNumber copyNumber = optionalCopyNumber.get();
-//                double adjustedVAF = Math.min(1,
-//                        purityAdjuster.purityAdjustedVAF(copyNumber.chromosome(),
-//                                copyNumber.averageTumorCopyNumber(),
-//                                variantReport.alleleFrequency()));
-//                result.add(ImmutableVariantReport.builder()
-//                        .from(variantReport)
-//                        .ploidy(copyNumber.descriptiveBAF())
-//                        .purityAdjustedVAF(adjustedVAF)
-//                        .build());
-//            } else {
-//                result.add(variantReport);
-//            }
-//        }
-//
-//        return result;
-//    }
+    @NotNull
+    private static String variantDetailsField(@NotNull EnrichedSomaticVariant variant) {
+        return variant.canonicalHgvsCodingImpact() + " (" + variant.canonicalHgvsProteinImpact() + ")";
+    }
+
+    @NotNull
+    private static String readDepthField(@NotNull EnrichedSomaticVariant variant) {
+        return variant.alleleReadCount() + " / " + variant.totalReadCount() + " ("
+                + PatientReportFormat.formatPercent(variant.alleleFrequency()) + ")";
+    }
+
+    @NotNull
+    private static String ploidyVafField(@NotNull EnrichedSomaticVariant variant) {
+        int totalAlleleCount = (int) Math.max(0, Math.round(variant.adjustedCopyNumber()));
+        int minorAlleleCount = (int) Math.round(variant.minorAllelePloidy());
+        int majorAlleleCount = totalAlleleCount - minorAlleleCount;
+
+        String descriptivePloidy = formatBafField("A", Math.max(minorAlleleCount, majorAlleleCount)) + formatBafField("B",
+                Math.min(minorAlleleCount, majorAlleleCount));
+
+        return descriptivePloidy + " (" + PatientReportFormat.formatPercent(variant.adjustedVAF()) + ")";
+    }
+
+    @NotNull
+    private static String formatBafField(@NotNull final String allele, final int count) {
+        return count < 10 ? com.google.common.base.Strings.repeat(allele, count) : allele + "[" + count + "x]";
+    }
+
+    //    @NotNull
+    //    public List<VariantReport> enrichSomaticVariants(@NotNull final List<VariantReport> somaticVariants) {
+    //        final List<VariantReport> result = Lists.newArrayList();
+    //        final PurityAdjuster purityAdjuster = new PurityAdjuster(gender(), fittedPurity());
+    //        final GenomeRegionSelector<PurpleCopyNumber> copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers());
+    //
+    //        for (final VariantReport variantReport : somaticVariants) {
+    //            final Optional<PurpleCopyNumber> optionalCopyNumber = copyNumberSelector.select(variantReport.variant());
+    //            if (optionalCopyNumber.isPresent()) {
+    //                final PurpleCopyNumber copyNumber = optionalCopyNumber.get();
+    //                double adjustedVAF = Math.min(1,
+    //                        purityAdjuster.purityAdjustedVAF(copyNumber.chromosome(),
+    //                                copyNumber.averageTumorCopyNumber(),
+    //                                variantReport.alleleFrequency()));
+    //                result.add(ImmutableVariantReport.builder()
+    //                        .from(variantReport)
+    //                        .ploidy(copyNumber.descriptiveBAF())
+    //                        .purityAdjustedVAF(adjustedVAF)
+    //                        .build());
+    //            } else {
+    //                result.add(variantReport);
+    //            }
+    //        }
+    //
+    //        return result;
+    //    }
 
     @NotNull
     public static FieldBuilder<?>[] variantFields() {

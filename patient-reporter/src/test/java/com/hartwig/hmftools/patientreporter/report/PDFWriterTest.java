@@ -127,8 +127,12 @@ public class PDFWriterTest {
                 .ref("A")
                 .alt("T")
                 .hotspot(true)
+                .canonicalHgvsCodingImpact("c.1799T>A")
+                .canonicalHgvsProteinImpact("p.Val600Glu")
                 .alleleReadCount(18)
                 .totalReadCount(99)
+                .adjustedCopyNumber(4)
+                .minorAllelePloidy(1)
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("7", 4, 0.18 / 0.99))
                 .build();
 
@@ -137,8 +141,12 @@ public class PDFWriterTest {
                 .position(128748854)
                 .ref("GG")
                 .alt("CA")
+                .canonicalHgvsCodingImpact("c.15_16delinsCA")
+                .canonicalHgvsProteinImpact("p.Val6Ile")
                 .alleleReadCount(20)
                 .totalReadCount(88)
+                .adjustedCopyNumber(2)
+                .minorAllelePloidy(1)
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("8", 2, 0.2 / 0.88))
                 .build();
 
@@ -147,8 +155,12 @@ public class PDFWriterTest {
                 .position(7577111)
                 .ref("GCACAAA")
                 .alt("G")
+                .canonicalHgvsCodingImpact("c.821_826delTTTGTG")
+                .canonicalHgvsProteinImpact("p.Val274_Cus275del")
                 .alleleReadCount(20)
                 .totalReadCount(87)
+                .adjustedCopyNumber(3)
+                .minorAllelePloidy(0)
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("17", 3, 0.20 / 0.87))
                 .build();
 
