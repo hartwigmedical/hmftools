@@ -17,6 +17,7 @@ import java.util.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
+import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -49,6 +50,7 @@ import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
 import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
 import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 import com.hartwig.hmftools.svannotation.annotations.ImmutableGeneDisruption;
+import com.hartwig.hmftools.svannotation.annotations.ImmutableGeneFusion;
 import com.hartwig.hmftools.svannotation.annotations.Transcript;
 
 import org.apache.logging.log4j.util.Strings;
@@ -79,8 +81,8 @@ public class PDFWriterTest {
 
         final List<EnrichedSomaticVariant> variants = createTestVariants(new PurityAdjuster(Gender.MALE, fittedPurity));
         final List<GeneCopyNumber> copyNumbers = createTestCopyNumbers();
-        final List<GeneDisruption> disruptions = createTestDisruptions();
         final List<GeneFusion> fusions = createTestFusions();
+        final List<GeneDisruption> disruptions = createTestDisruptions();
 
         final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
 
@@ -166,31 +168,39 @@ public class PDFWriterTest {
 
     @NotNull
     private static List<GeneFusion> createTestFusions() {
-        return Lists.newArrayList();
-        //        return Lists.newArrayList(ImmutableGeneFusionData.builder()
-        //                        .geneStart("TMPRSS2")
-        //                        .geneStartTranscript("ENST00000398585.7")
-        //                        .geneStartEntrezIds(Lists.newArrayList(7113))
-        //                        .geneContextStart("Intron 4")
-        //                        .geneEnd("PNPLA7")
-        //                        .geneEndTranscript("ENST00000406427.5")
-        //                        .geneEndEntrezIds(Lists.newArrayList(375775))
-        //                        .geneContextEnd("Intron 2")
-        //                        .copies("0.4")
-        //                        .source("CIViC")
-        //                        .build(),
-        //                ImmutableGeneFusionData.builder()
-        //                        .geneStart("CLCN6")
-        //                        .geneStartTranscript("ENST00000346436.10")
-        //                        .geneStartEntrezIds(Lists.newArrayList(1185))
-        //                        .geneContextStart("Intron 1")
-        //                        .geneEnd("BRAF")
-        //                        .geneEndTranscript("ENST00000288602.10")
-        //                        .geneEndEntrezIds(Lists.newArrayList(673))
-        //                        .geneContextEnd("Intron 8")
-        //                        .copies("1.0")
-        //                        .source("OncoKB")
-        //                        .build());
+        GeneFusion fusion1 =
+                createFusion("TMPRSS2", "ENST00000398585.7", 4, 5, "PNPLA7", "ENST00000406427.5", 2, 3, KnownFusionsModel.CIVIC, 0.4);
+        GeneFusion fusion2 =
+                createFusion("CLCN6", "ENST00000346436.10", 1, 2, "BRAF", "ENST00000288602.10", 8, 9, KnownFusionsModel.ONCOKB, 1D);
+
+        return Lists.newArrayList(fusion1, fusion2);
+    }
+
+    @NotNull
+    private static GeneFusion createFusion(@NotNull String startGene, @NotNull String startTranscript, int startExonUpstream,
+            int startExonDownstream, @NotNull String endGene, @NotNull String endTranscript, int endExonUpstream, int endExonDownstream,
+            @NotNull String source, double ploidy) {
+        Transcript upstreamTranscript = createFusionLeg(true, startGene, startTranscript, startExonUpstream, startExonDownstream, ploidy);
+        Transcript downstreamTranscript = createFusionLeg(false, endGene, endTranscript, endExonUpstream, endExonDownstream, ploidy);
+
+        return ImmutableGeneFusion.builder()
+                .reportable(true)
+                .primarySource(source)
+                .upstreamLinkedAnnotation(upstreamTranscript)
+                .downstreamLinkedAnnotation(downstreamTranscript)
+                .build();
+    }
+
+    @NotNull
+    private static Transcript createFusionLeg(boolean isUpstream, @NotNull String gene, @NotNull String transcript, int exonUpstream,
+            int exonDownstream, double ploidy) {
+        EnrichedStructuralVariant variant = createEnrichedStructuralVariantBuilder().type(StructuralVariantType.BND)
+                .start(createEnrichedStructuralVariantLegBuilder().chromosome("any").build())
+                .ploidy(ploidy)
+                .build();
+        GeneAnnotation upstreamGene =
+                new GeneAnnotation(variant, isUpstream, gene, Strings.EMPTY, 1, Lists.newArrayList(), Lists.newArrayList(), Strings.EMPTY);
+        return new Transcript(upstreamGene, transcript, exonUpstream, -1, exonDownstream, -1, 10, true, null, null);
     }
 
     @NotNull

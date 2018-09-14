@@ -20,9 +20,9 @@ import net.sf.jasperreports.engine.JRDataSource;
 public final class GeneDisruptionDataSource {
 
     public static final FieldBuilder<?> CHROMOSOME_FIELD = field("chromosome", String.class);
-    public static final FieldBuilder<?> CHROMOSOME_BAND_FIELD = field("chromosome band", String.class);
+    public static final FieldBuilder<?> CHROMOSOME_BAND_FIELD = field("chromosome_band", String.class);
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
-    public static final FieldBuilder<?> GENE_CONTEXT_FIELD = field("gene context", String.class);
+    public static final FieldBuilder<?> GENE_CONTEXT_FIELD = field("gene_context", String.class);
     public static final FieldBuilder<?> TYPE_FIELD = field("type", String.class);
     public static final FieldBuilder<?> COPIES_FIELD = field("copies", String.class);
 

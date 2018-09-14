@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
-import com.hartwig.hmftools.svannotation.annotations.Transcript;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -26,7 +25,7 @@ import net.sf.jasperreports.engine.JRDataSource;
 
 public final class GeneFusionDataSource {
 
-    public static final FieldBuilder<?> FUSION_FIELD = field("field", String.class);
+    public static final FieldBuilder<?> FUSION_FIELD = field("fusion", String.class);
     public static final FieldBuilder<?> START_TRANSCRIPT_FIELD = field("five_transcript", String.class);
     public static final FieldBuilder<?> END_TRANSCRIPT_FIELD = field("three_transcript", String.class);
     public static final FieldBuilder<?> START_CONTEXT_FIELD = field("five_gene_context", String.class);
@@ -101,13 +100,6 @@ public final class GeneFusionDataSource {
 
     @NotNull
     private static Comparator<GeneFusion> fusionComparator() {
-        return Comparator.comparing(GeneFusion::upstreamLinkedAnnotation, transcriptComparator())
-                .thenComparing(GeneFusion::downstreamLinkedAnnotation, transcriptComparator());
-    }
-
-    @NotNull
-    private static Comparator<Transcript> transcriptComparator() {
-        return Comparator.comparing((Transcript transcript) -> transcript.parent().variant().start())
-                .thenComparing((Transcript transcript) -> transcript.parent().variant().end());
+        return Comparator.comparing(fusion -> fusion.upstreamLinkedAnnotation().geneName());
     }
 }
