@@ -21,6 +21,7 @@ public class CosmicAnnotationFactoryTest {
         List<CosmicAnnotation> cosmicAnnotations = CosmicAnnotationFactory.fromContext(context);
 
         assertEquals(2, cosmicAnnotations.size());
+
         CosmicAnnotation annotation1 = cosmicAnnotations.get(0);
         assertEquals("GENE", annotation1.gene());
         assertEquals("TRANS1", annotation1.transcript());

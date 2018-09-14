@@ -31,6 +31,4 @@ public final class VariantContextFromString {
         codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2);
         return codec;
     }
-
-
 }
