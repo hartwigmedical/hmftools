@@ -120,6 +120,7 @@ public abstract class PatientReporter {
         final String runDirectory = run.runDirectory();
         final String sample = run.tumorSample();
 
+        LOGGER.info("Loading purple data for sample " + sample);
         final PurityContext purityContext = PatientReporterHelper.loadPurity(runDirectory, sample);
 
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
