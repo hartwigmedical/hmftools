@@ -181,9 +181,9 @@ public class PDFWriterTest {
     @NotNull
     private static List<GeneFusion> createTestFusions() {
         GeneFusion fusion1 =
-                createFusion("TMPRSS2", "ENST00000398585.7", 4, 5, "PNPLA7", "ENST00000406427.5", 2, 3, KnownFusionsModel.CIVIC, 0.4);
+                createFusion("TMPRSS2", "ENST00000398585", 4, 5, "PNPLA7", "ENST00000406427", 2, 3, KnownFusionsModel.CIVIC, 0.4);
         GeneFusion fusion2 =
-                createFusion("CLCN6", "ENST00000346436.10", 1, 2, "BRAF", "ENST00000288602.10", 8, 9, KnownFusionsModel.ONCOKB, 1D);
+                createFusion("CLCN6", "ENST00000346436", 1, 2, "BRAF", "ENST00000288602", 8, 9, KnownFusionsModel.ONCOKB, 1D);
 
         return Lists.newArrayList(fusion1, fusion2);
     }
