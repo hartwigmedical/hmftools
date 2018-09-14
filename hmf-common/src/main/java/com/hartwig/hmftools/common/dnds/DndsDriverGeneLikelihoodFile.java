@@ -51,9 +51,24 @@ class DndsDriverGeneLikelihoodFile {
                 .pVariantNonDriverFactor(Double.valueOf(values[3]))
                 .build();
 
-        final DndsDriverImpactLikelihood nonsense = missense;
-        final DndsDriverImpactLikelihood splice = missense;
-        final DndsDriverImpactLikelihood indel = missense;
+        final DndsDriverImpactLikelihood nonsense = ImmutableDndsDriverImpactLikelihood.builder()
+                .dndsLikelihood(Double.valueOf(values[4]))
+                .pDriver(Double.valueOf(values[5]))
+                .pVariantNonDriverFactor(Double.valueOf(values[6]))
+                .build();
+
+
+        final DndsDriverImpactLikelihood splice = ImmutableDndsDriverImpactLikelihood.builder()
+                .dndsLikelihood(Double.valueOf(values[7]))
+                .pDriver(Double.valueOf(values[8]))
+                .pVariantNonDriverFactor(Double.valueOf(values[9]))
+                .build();
+
+        final DndsDriverImpactLikelihood indel = ImmutableDndsDriverImpactLikelihood.builder()
+                .dndsLikelihood(Double.valueOf(values[10]))
+                .pDriver(Double.valueOf(values[11]))
+                .pVariantNonDriverFactor(Double.valueOf(values[12]))
+                .build();
 
         final ImmutableDndsDriverGeneLikelihood.Builder builder = ImmutableDndsDriverGeneLikelihood.builder()
                 .gene(values[0])

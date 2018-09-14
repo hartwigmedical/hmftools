@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.drivercatalog;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,18 +18,46 @@ public class DriverCatalogFactory {
     public static <T extends SomaticVariant> Map<String, List<T>> codingVariantsByGene(@NotNull final Set<String> genes,
             @NotNull final List<T> variants) {
 
+        EnumSet<CodingEffect> suitableCodingEffects =
+                EnumSet.of(CodingEffect.MISSENSE, CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.SPLICE);
+
         return variants.stream()
                 .filter(x -> genes.contains(x.gene()))
-                .filter(x -> x.canonicalCodingEffect() != CodingEffect.SYNONYMOUS && x.canonicalCodingEffect() != CodingEffect.NONE)
+                .filter(x -> suitableCodingEffects.contains(x.canonicalCodingEffect()))
                 .collect(Collectors.groupingBy(SomaticVariant::gene));
     }
 
-    static double probabilityDriverVariant(boolean multiHit, long sampleSNVCount, @NotNull final DndsDriverImpactLikelihood likelihood) {
+    public static <T extends SomaticVariant> Map<DriverImpact, Long> driverImpactCount(@NotNull final List<T> variants) {
+        return variants.stream().collect(Collectors.groupingBy(DriverImpact::select, Collectors.counting()));
+    }
+
+    static double probabilityDriverVariant(long sampleSNVCount, @NotNull final DndsDriverImpactLikelihood likelihood) {
         double lambda = sampleSNVCount * likelihood.pVariantNonDriverFactor();
         PoissonDistribution poissonDistribution = new PoissonDistribution(lambda);
 
-        double pVariantNonDriver = 1 - poissonDistribution.cumulativeProbability(multiHit ? 1 : 0);
+        double pVariantNonDriver = 1 - poissonDistribution.cumulativeProbability(0);
         return likelihood.pDriver() / (likelihood.pDriver() + pVariantNonDriver * (1 - likelihood.pDriver()));
+    }
+
+    static double probabilityDriverVariant(long sampleSNVCount, @NotNull final DndsDriverImpactLikelihood firstLikelihood,
+            @NotNull final DndsDriverImpactLikelihood secondLikelihood) {
+
+        final double pDriver = Math.max(firstLikelihood.pDriver(), secondLikelihood.pDriver());
+
+        final double pVariantNonDriver;
+        if (firstLikelihood.equals(secondLikelihood)) {
+            double lambda = sampleSNVCount * firstLikelihood.pVariantNonDriverFactor();
+            PoissonDistribution poissonDistribution = new PoissonDistribution(lambda);
+            pVariantNonDriver = 1 - poissonDistribution.cumulativeProbability(1);
+        } else {
+            double pVariantNonDriver1 =
+                    1 - new PoissonDistribution(sampleSNVCount * firstLikelihood.pVariantNonDriverFactor()).cumulativeProbability(0);
+            double pVariantNonDriver2 =
+                    1 - new PoissonDistribution(sampleSNVCount * secondLikelihood.pVariantNonDriverFactor()).cumulativeProbability(0);
+            pVariantNonDriver = pVariantNonDriver1 * pVariantNonDriver2;
+        }
+
+        return pDriver / (pDriver + pVariantNonDriver * (1 - pDriver));
     }
 
 }

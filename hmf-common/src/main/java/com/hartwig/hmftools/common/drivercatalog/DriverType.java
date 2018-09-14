@@ -5,6 +5,8 @@ public enum DriverType {
     HOTSPOT,
     NEAR_HOTSPOT,
     INFRAME,
+    DNDS,
+    NONE,
     MULTI_HIT,
     SINGLE_HIT;
 }

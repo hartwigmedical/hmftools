@@ -79,7 +79,7 @@ public class OncoDriversTest {
     @Test
     public void ignoreFrameshiftAndInvalidInframe() {
         final DriverCatalog victim = OncoDrivers.geneDriver(10000, "Gene", likelihood, Lists.newArrayList(invalidInframe, frameshift));
-        assertEquals(DriverType.SINGLE_HIT, victim.driver());
+        assertEquals(DriverType.NONE, victim.driver());
         assertEquals(0, victim.driverLikelihood(), 0.01);
         assertEquals(0, victim.dndsLikelihood(), 0.01);
     }
@@ -87,7 +87,7 @@ public class OncoDriversTest {
     @Test
     public void singleMissense() {
         final DriverCatalog victim = OncoDrivers.geneDriver(10000, "Gene", likelihood, Lists.newArrayList(missense));
-        assertEquals(DriverType.SINGLE_HIT, victim.driver());
+        assertEquals(DriverType.DNDS, victim.driver());
         assertEquals(0.68, victim.driverLikelihood(), 0.01);
         assertEquals(0.5, victim.dndsLikelihood(), 0.01);
     }
@@ -95,7 +95,7 @@ public class OncoDriversTest {
     @Test
     public void multiMissense() {
         final DriverCatalog victim = OncoDrivers.geneDriver(10000, "Gene", likelihood, Lists.newArrayList(missense, missense));
-        assertEquals(DriverType.MULTI_HIT, victim.driver());
+        assertEquals(DriverType.DNDS, victim.driver());
         assertEquals(0.68, victim.driverLikelihood(), 0.01);
         assertEquals(0.5, victim.dndsLikelihood(), 0.01);
     }

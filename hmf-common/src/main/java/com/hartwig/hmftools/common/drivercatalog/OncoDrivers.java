@@ -47,14 +47,24 @@ public class OncoDrivers {
     static DriverCatalog geneDriver(long sampleSNVCount, @NotNull final String gene,
             @NotNull final DndsDriverImpactLikelihood missenseLikelihood, @NotNull final List<EnrichedSomaticVariant> codingVariants) {
 
-        long missenseVariants = codingVariants.stream().filter(OncoDrivers::isMissense).count();
+        final Map<DriverImpact, Long> variantCounts = DriverCatalogFactory.driverImpactCount(codingVariants);
+        long missenseVariants = variantCounts.getOrDefault(DriverImpact.MISSENSE, 0L);
+        long nonsenseVariants = variantCounts.getOrDefault(DriverImpact.NONSENSE, 0L);
+        long spliceVariants = variantCounts.getOrDefault(DriverImpact.SPLICE, 0L);
+        long inframeVariants = variantCounts.getOrDefault(DriverImpact.INFRAME, 0L);
+        long frameshiftVariants = variantCounts.getOrDefault(DriverImpact.FRAMESHIFT, 0L);
 
         final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
                 .gene(gene)
                 .category(DriverCategory.ONCO)
                 .driverLikelihood(1)
                 .dndsLikelihood(missenseVariants > 0 ? missenseLikelihood.dndsLikelihood() : 0)
-                .driver(missenseVariants > 1 ? DriverType.MULTI_HIT : DriverType.SINGLE_HIT);
+                .missense(missenseVariants)
+                .nonsense(nonsenseVariants)
+                .splice(spliceVariants)
+                .inframe(inframeVariants)
+                .frameshift(frameshiftVariants)
+                .driver(missenseVariants > 0 ? DriverType.DNDS : DriverType.NONE);
 
         if (codingVariants.stream().anyMatch(SomaticVariant::hotspot)) {
             return builder.driver(DriverType.HOTSPOT).build();
@@ -79,12 +89,8 @@ public class OncoDrivers {
                 && variant.repeatCount() <= MAX_REPEAT_COUNT;
     }
 
-    private static boolean isMissense(@NotNull final EnrichedSomaticVariant variant) {
-        return variant.type() != VariantType.INDEL && variant.canonicalCodingEffect() == CodingEffect.MISSENSE;
-    }
-
     public static double missenseProbabilityDriverVariant(long sampleSNVCount, @NotNull final DndsDriverImpactLikelihood likelihood) {
-        return DriverCatalogFactory.probabilityDriverVariant(false, sampleSNVCount, likelihood);
+        return DriverCatalogFactory.probabilityDriverVariant(sampleSNVCount, likelihood);
     }
 
 }

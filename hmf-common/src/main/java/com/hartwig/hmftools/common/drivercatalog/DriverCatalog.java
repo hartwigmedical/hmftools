@@ -20,4 +20,15 @@ public interface DriverCatalog {
     double driverLikelihood();
 
     double dndsLikelihood();
+
+    long missense();
+
+    long nonsense();
+
+    long splice();
+
+    long inframe();
+
+    long frameshift();
+
 }
