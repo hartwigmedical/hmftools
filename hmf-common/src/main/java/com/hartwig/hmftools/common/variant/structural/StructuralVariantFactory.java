@@ -293,6 +293,9 @@ public class StructuralVariantFactory {
 static ImmutableStructuralVariantLegImpl.Builder setLegCommon(@NotNull ImmutableStructuralVariantLegImpl.Builder builder, @NotNull VariantContext context, boolean ignoreRefpair) {
         builder.chromosome(context.getContig());
         builder.position(context.getStart());
+
+        builder.startOffset(0);
+        builder.endOffset(0);
         if (context.hasAttribute(CIPOS)) {
             final List<Integer> cipos = context.getAttributeAsIntList(CIPOS, 0);
             if (cipos.size() == 2) {
@@ -300,6 +303,8 @@ static ImmutableStructuralVariantLegImpl.Builder setLegCommon(@NotNull Immutable
                 builder.endOffset(cipos.get(1));
             }
         }
+        builder.inexactHomologyOffsetStart(0);
+        builder.inexactHomologyOffsetEnd(0);
         if (context.hasAttribute(IHOMPOS)) {
             final List<Integer> ihompos = context.getAttributeAsIntList(IHOMPOS, 0);
             if (ihompos.size() == 2) {
