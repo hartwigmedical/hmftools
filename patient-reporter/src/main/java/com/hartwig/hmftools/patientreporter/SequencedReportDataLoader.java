@@ -8,21 +8,21 @@ import com.hartwig.hmftools.common.cosmic.CosmicGeneModel;
 import com.hartwig.hmftools.common.cosmic.CosmicGenes;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.gene.GeneModel;
-import com.hartwig.hmftools.common.region.bed.BEDFileLoader;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.region.bed.BEDFileLoader;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-final class HmfReporterDataLoader {
+final class SequencedReportDataLoader {
 
-    private HmfReporterDataLoader() {
+    private SequencedReportDataLoader() {
     }
 
     @NotNull
-    static HmfReporterData buildFromFiles(@NotNull String cosmicGeneFile, @NotNull String fusionPairsLocation,
+    static SequencedReportData buildFromFiles(@NotNull String cosmicGeneFile, @NotNull String fusionPairsLocation,
             @NotNull String promiscuousFiveLocation, @NotNull String promiscuousThreeLocation, @NotNull String drupFilterFile,
             @NotNull String fastaFileLocation, @NotNull String highConfidenceBed) throws IOException {
         final GeneModel panelGeneModel = new GeneModel(HmfGenePanelSupplier.hmfPanelGeneList());
@@ -32,7 +32,7 @@ final class HmfReporterDataLoader {
                 new FileInputStream(promiscuousThreeLocation));
         final DrupFilter drupFilter = new DrupFilter(drupFilterFile);
 
-        return ImmutableHmfReporterData.of(panelGeneModel,
+        return ImmutableSequencedReportData.of(panelGeneModel,
                 cosmicGeneModel,
                 knownFusionsModel,
                 drupFilter,

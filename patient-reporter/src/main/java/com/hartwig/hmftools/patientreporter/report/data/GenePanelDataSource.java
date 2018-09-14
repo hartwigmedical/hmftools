@@ -7,7 +7,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
-import com.hartwig.hmftools.patientreporter.HmfReporterData;
+import com.hartwig.hmftools.patientreporter.SequencedReportData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -26,13 +26,13 @@ public final class GenePanelDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromHmfReporterData(@NotNull final HmfReporterData reporterData) {
+    public static JRDataSource fromSequencedReportData(@NotNull final SequencedReportData sequencedReportData) {
         final DRDataSource genePanelDataSource = new DRDataSource(GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(), TYPE_FIELD.getName());
-        final List<HmfGenomeRegion> regions = Lists.newArrayList(reporterData.panelGeneModel().regions());
+        final List<HmfGenomeRegion> regions = Lists.newArrayList(sequencedReportData.panelGeneModel().regions());
         regions.sort(Comparator.comparing(HmfGenomeRegion::gene));
 
         for (final HmfGenomeRegion region : regions) {
-            final String role = reporterData.cosmicGeneModel().getRoleForGene(region.gene());
+            final String role = sequencedReportData.cosmicGeneModel().getRoleForGene(region.gene());
             genePanelDataSource.add(region.gene(), region.transcript(), role);
         }
         return genePanelDataSource;

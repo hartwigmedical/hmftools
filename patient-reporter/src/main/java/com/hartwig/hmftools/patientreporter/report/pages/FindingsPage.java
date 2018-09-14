@@ -12,7 +12,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.HmfReporterData;
+import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 import com.hartwig.hmftools.patientreporter.report.Commons;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
@@ -41,7 +41,7 @@ public abstract class FindingsPage {
     abstract AnalysedPatientReport report();
 
     @NotNull
-    abstract HmfReporterData reporterData();
+    abstract SequencedReportData reporterData();
 
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {

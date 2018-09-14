@@ -13,7 +13,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.patientreporter.HmfReporterData;
+import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.report.Commons;
 import com.hartwig.hmftools.patientreporter.report.data.GenePanelDataSource;
 
@@ -29,7 +29,7 @@ import net.sf.dynamicreports.report.builder.component.VerticalListBuilder;
 public abstract class GenePanelPage {
 
     @NotNull
-    abstract HmfReporterData reporterData();
+    abstract SequencedReportData reporterData();
 
     public ComponentBuilder<?, ?> reportComponent() {
         return cmp.verticalList(cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -39,7 +39,7 @@ public abstract class GenePanelPage {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> build(@NotNull final HmfReporterData reporterData) {
+    private static ComponentBuilder<?, ?> build(@NotNull final SequencedReportData reporterData) {
         final long coverage = Math.round(reporterData.panelGeneModel().numberOfBases() / 1E6);
         final VerticalListBuilder section = toList("Details on the reported gene panel",
                 Lists.newArrayList("Findings are reported for the " + Integer.toString(reporterData.panelGeneModel().numberOfRegions())
@@ -49,7 +49,7 @@ public abstract class GenePanelPage {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> genePanelTable(@NotNull final HmfReporterData reporterData) {
+    private static ComponentBuilder<?, ?> genePanelTable(@NotNull final SequencedReportData reporterData) {
         // KODU: Overwrite default font size to make the panel fit on one page.
         final int fontSize = 6;
         return cmp.subreport(baseTable().setColumnStyle(dataStyle().setFontSize(fontSize))
@@ -60,6 +60,6 @@ public abstract class GenePanelPage {
                                 .setHyperLink(hyperLink(GenePanelDataSource.transcriptUrl()))
                                 .setStyle(linkStyle().setFontSize(fontSize)),
                         col.column("Type", GenePanelDataSource.TYPE_FIELD),
-                        col.emptyColumn().setFixedWidth(20))).setDataSource(GenePanelDataSource.fromHmfReporterData(reporterData));
+                        col.emptyColumn().setFixedWidth(20))).setDataSource(GenePanelDataSource.fromSequencedReportData(reporterData));
     }
 }

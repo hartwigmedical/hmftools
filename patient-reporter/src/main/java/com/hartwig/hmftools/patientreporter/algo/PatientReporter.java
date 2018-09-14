@@ -29,11 +29,11 @@ import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantF
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.BaseReporterData;
-import com.hartwig.hmftools.patientreporter.HmfReporterData;
+import com.hartwig.hmftools.patientreporter.BaseReportData;
 import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
+import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutablePurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalysis;
@@ -58,10 +58,10 @@ public abstract class PatientReporter {
     private static final Logger LOGGER = LogManager.getLogger(PatientReporter.class);
 
     @NotNull
-    public abstract BaseReporterData baseReporterData();
+    public abstract BaseReportData baseReportData();
 
     @NotNull
-    public abstract HmfReporterData reporterData();
+    public abstract SequencedReportData sequencedReportData();
 
     @NotNull
     public abstract StructuralVariantAnalyzer structuralVariantAnalyzer();
@@ -71,13 +71,13 @@ public abstract class PatientReporter {
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
         assert run.isSomaticRun();
 
-        final PurpleAnalysis purpleAnalysis = analyzePurpleCopyNumbers(run, reporterData().panelGeneModel().panel());
+        final PurpleAnalysis purpleAnalysis = analyzePurpleCopyNumbers(run, sequencedReportData().panelGeneModel().panel());
 
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run,
                 purpleAnalysis,
-                reporterData().panelGeneModel().panel(),
-                reporterData().highConfidenceRegions(),
-                reporterData().refGenomeFastaFile());
+                sequencedReportData().panelGeneModel().panel(),
+                sequencedReportData().highConfidenceRegions(),
+                sequencedReportData().refGenomeFastaFile());
 
         final StructuralVariantAnalysis structuralVariantAnalysis =
                 analyzeStructuralVariants(run, purpleAnalysis, structuralVariantAnalyzer());
@@ -94,12 +94,12 @@ public abstract class PatientReporter {
 
         final String tumorSample = run.tumorSample();
         final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample,
-                PatientReporterHelper.extractPatientTumorLocation(baseReporterData().patientTumorLocations(), tumorSample),
-                baseReporterData().limsModel().tumorPercentageForSample(tumorSample),
-                baseReporterData().limsModel().arrivalDateForSample(tumorSample),
-                baseReporterData().limsModel().arrivalDateForSample(run.refSample()),
-                baseReporterData().limsModel().labProceduresForSample(tumorSample),
-                baseReporterData().centerModel().getAddresseeStringForSample(tumorSample));
+                PatientReporterHelper.extractPatientTumorLocation(baseReportData().patientTumorLocations(), tumorSample),
+                baseReportData().limsModel().tumorPercentageForSample(tumorSample),
+                baseReportData().limsModel().arrivalDateForSample(tumorSample),
+                baseReportData().limsModel().arrivalDateForSample(run.refSample()),
+                baseReportData().limsModel().labProceduresForSample(tumorSample),
+                baseReportData().centerModel().getAddresseeStringForSample(tumorSample));
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
                 purpleAnalysis.status(),
@@ -112,7 +112,7 @@ public abstract class PatientReporter {
                 reportableDisruptions,
                 PatientReporterHelper.findCircosPlotPath(runDirectory, tumorSample),
                 Optional.ofNullable(comments),
-                baseReporterData().signaturePath());
+                baseReportData().signaturePath());
     }
 
     @NotNull

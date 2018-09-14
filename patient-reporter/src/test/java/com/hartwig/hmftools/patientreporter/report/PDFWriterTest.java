@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientreporter.report;
 
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReporterData;
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testHmfReporterData;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReportData;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testSequencedReportData;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -36,14 +36,14 @@ import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructura
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.BaseReporterData;
-import com.hartwig.hmftools.patientreporter.HmfReporterData;
+import com.hartwig.hmftools.patientreporter.BaseReportData;
 import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableNotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestUtil;
 import com.hartwig.hmftools.patientreporter.SampleReport;
+import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
 import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
@@ -75,8 +75,8 @@ public class PDFWriterTest {
         final int mutationalLoad = 361;
         final double microsatelliteIndelsPerMb = 2.1;
 
-        final HmfReporterData reporterData = testHmfReporterData();
-        final BaseReporterData baseReporterData = testBaseReporterData();
+        final SequencedReportData reporterData = testSequencedReportData();
+        final BaseReportData baseReportData = testBaseReportData();
         final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity);
 
         final List<EnrichedSomaticVariant> variants = createTestVariants(new PurityAdjuster(Gender.MALE, fittedPurity));
@@ -97,7 +97,7 @@ public class PDFWriterTest {
                 disruptions,
                 Resources.getResource("circos/circos_example.png").getPath(),
                 Optional.of("this is a test report and does not relate to any real CPCT patient"),
-                baseReporterData.signaturePath());
+                baseReportData.signaturePath());
 
         final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport, reporterData);
         assertNotNull(mainReport);
@@ -280,7 +280,7 @@ public class PDFWriterTest {
                 LocalDate.parse("05-Jan-2016", FORMATTER),
                 LocalDate.parse("01-Jan-2016", FORMATTER),
                 "PREP013V23-QC037V20-SEQ008V25",
-                testBaseReporterData().centerModel().getAddresseeStringForSample(sample));
+                testBaseReportData().centerModel().getAddresseeStringForSample(sample));
     }
 
     @NotNull

@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReporterData;
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testHmfReporterData;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReportData;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testKnownFusionModel;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testSequencedReportData;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -15,8 +15,8 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
-import com.hartwig.hmftools.patientreporter.BaseReporterData;
-import com.hartwig.hmftools.patientreporter.HmfReporterData;
+import com.hartwig.hmftools.patientreporter.BaseReportData;
+import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
@@ -34,11 +34,11 @@ public class PatientReporterTest {
     @Test
     public void canRunOnRunDirectory() throws IOException {
         final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfPanelGeneList());
-        final BaseReporterData baseReporterData = testBaseReporterData();
-        final HmfReporterData reporterData = testHmfReporterData();
+        final BaseReportData baseReportData = testBaseReportData();
+        final SequencedReportData reporterData = testSequencedReportData();
         final StructuralVariantAnalyzer svAnalyzer =
                 new StructuralVariantAnalyzer(new TestAnnotator(), geneModel.regions(), testKnownFusionModel());
-        final PatientReporter algo = ImmutablePatientReporter.of(baseReporterData, reporterData, svAnalyzer);
+        final PatientReporter algo = ImmutablePatientReporter.of(baseReportData, reporterData, svAnalyzer);
         assertNotNull(algo.run(RUN_DIRECTORY, null));
     }
 

@@ -16,7 +16,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class HmfReporterData {
+public abstract class SequencedReportData {
 
     @NotNull
     public abstract GeneModel panelGeneModel();
