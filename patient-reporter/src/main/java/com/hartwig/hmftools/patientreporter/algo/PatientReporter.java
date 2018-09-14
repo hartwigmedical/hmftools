@@ -71,13 +71,18 @@ public abstract class PatientReporter {
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
         assert run.isSomaticRun();
 
-        final GenomeAnalysis genomeAnalysis = analyseGenomeData(run);
-        final String tumorSample = run.tumorSample();
+        final PurpleAnalysis purpleAnalysis = analyzePurpleCopyNumbers(run, reporterData().panelGeneModel().panel());
 
-        final PurpleAnalysis purpleAnalysis = genomeAnalysis.purpleAnalysis();
-        final SomaticVariantAnalysis somaticVariantAnalysis = genomeAnalysis.somaticVariantAnalysis();
-        final List<GeneFusion> reportableFusions = genomeAnalysis.structuralVariantAnalysis().reportableFusions();
-        final List<GeneDisruption> reportableDisruptions = genomeAnalysis.structuralVariantAnalysis().reportableDisruptions();
+        final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run,
+                purpleAnalysis,
+                reporterData().panelGeneModel().panel(),
+                reporterData().highConfidenceRegions(),
+                reporterData().refGenomeFastaFile());
+
+        final StructuralVariantAnalysis structuralVariantAnalysis =
+                analyzeStructuralVariants(run, purpleAnalysis, structuralVariantAnalyzer());
+        final List<GeneFusion> reportableFusions = structuralVariantAnalysis.reportableFusions();
+        final List<GeneDisruption> reportableDisruptions = structuralVariantAnalysis.reportableDisruptions();
 
         LOGGER.info("Printing analysis results:");
         LOGGER.info(" Number of somaticVariants to report : " + Integer.toString(somaticVariantAnalysis.variantsToReport().size()));
@@ -87,6 +92,7 @@ public abstract class PatientReporter {
         LOGGER.info(" Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
         LOGGER.info(" Number of gene disruptions to report : " + Integer.toString(reportableDisruptions.size()));
 
+        final String tumorSample = run.tumorSample();
         final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample,
                 PatientReporterHelper.extractPatientTumorLocation(baseReporterData().patientTumorLocations(), tumorSample),
                 baseReporterData().limsModel().tumorPercentageForSample(tumorSample),
@@ -107,22 +113,6 @@ public abstract class PatientReporter {
                 PatientReporterHelper.findCircosPlotPath(runDirectory, tumorSample),
                 Optional.ofNullable(comments),
                 baseReporterData().signaturePath());
-    }
-
-    @NotNull
-    private GenomeAnalysis analyseGenomeData(@NotNull RunContext run) throws IOException {
-        final PurpleAnalysis purpleAnalysis = analyzePurpleCopyNumbers(run, reporterData().panelGeneModel().panel());
-
-        final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run,
-                purpleAnalysis,
-                reporterData().panelGeneModel().panel(),
-                reporterData().highConfidenceRegions(),
-                reporterData().refGenomeFastaFile());
-
-        final StructuralVariantAnalysis structuralVariantAnalysis =
-                analyzeStructuralVariants(run, purpleAnalysis, structuralVariantAnalyzer());
-
-        return ImmutableGenomeAnalysis.of(purpleAnalysis, somaticVariantAnalysis, structuralVariantAnalysis);
     }
 
     @NotNull
