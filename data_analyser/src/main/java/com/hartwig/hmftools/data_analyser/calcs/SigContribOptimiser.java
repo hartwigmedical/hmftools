@@ -602,6 +602,7 @@ public class SigContribOptimiser
         copyVector(mContribs, testContribs);
 
         int applyMultiple = 0;
+        int maxMultiples = 100;
         boolean appliedOk = true;
 
         final double[][] sigData = mSigs.getData();
@@ -659,6 +660,9 @@ public class SigContribOptimiser
                 break;
 
             ++applyMultiple;
+
+            if(applyMultiple >= maxMultiples)
+                break;
         }
 
         return applyMultiple;

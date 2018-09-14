@@ -59,6 +59,7 @@ public class BaReporter
     private NmfMatrix mProposedSigs;
     private List<Integer> mSigToBgMapping;
     private NmfMatrix mReferenceSigs;
+    private boolean mUsingRefSigs;
 
     private List<SampleData> mSampleData;
     private GenericDataCollection mExtSampleData;
@@ -73,19 +74,6 @@ public class BaReporter
     // config
     private String mOutputDir;
     private String mOutputFileId;
-//    private String mSpecificCancer;
-//    private int mSpecificSampleId; // purely for testing
-//    private double mHighCssThreshold; // CSS level for samples or groups to be consider similar
-//    private int mMinBucketCountOverlap; // used for pairings of samples with reduced bucket overlap
-//    private int mMaxProposedSigs;
-//    private int mMutationalLoadCap;
-//    private int mApplyPredefinedSigCount; // how many loaded sigs to apply prior to discovery (optimisation)
-//    private int mRunCount; //  number of iterations searching for potential bucket groups / sigs
-//    private int mRunId; // current run iteration
-//    private boolean mLogVerbose;
-//    private int mMinSampleAllocCount; // hard lower limit to allocate a sample to a group
-//    private int mExcessDiscoveryRunId; // run iteration from which to begin discovery using excess-unalloc method
-//    private boolean mUseRatioRanges;
 
     private static int COL_CANCER_TYPE = 1;
     private static int CATEGORY_COL_COUNT = 3;
@@ -96,7 +84,7 @@ public class BaReporter
 
     public BaReporter()
     {
-
+        mUsingRefSigs = false;
     }
 
     public void setInitialState(
@@ -152,11 +140,14 @@ public class BaReporter
 
     public double getAllocatedCount() { return mAllocatedCount; }
 
-    public void loadReferenceSigs(final String filename)
+    public final NmfMatrix getReferenceSigs() { return mReferenceSigs; }
+
+    public void loadReferenceSigs(final String filename, boolean usingRefSigs)
     {
         GenericDataCollection dataCollection = GenericDataLoader.loadFile(filename);
         mReferenceSigs = DataUtils.createMatrixFromListData(dataCollection.getData());
         mReferenceSigs.cacheTranspose();
+        mUsingRefSigs = usingRefSigs;
     }
 
     public void logOverallStats()
@@ -596,6 +587,9 @@ public class BaReporter
 
     public void logSigReconstructions()
     {
+        if(mUsingRefSigs)
+            return;
+
         LOGGER.debug("testing sig reconstruction");
 
         // test whether any sigs can be reconstructed from the others
@@ -738,7 +732,7 @@ public class BaReporter
     {
         double sigCompareCss = 0.90;
 
-        if(mProposedSigs != null)
+        if(mProposedSigs != null && !mUsingRefSigs)
         {
             // first the internally generated ones
             List<double[]> cssResults = getTopCssPairs(mProposedSigs, mProposedSigs, sigCompareCss, true, true, true, false);

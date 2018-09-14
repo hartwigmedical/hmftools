@@ -83,6 +83,7 @@ public class BucketAnalyser {
     private List<Integer> mSigToBgMapping;
     private NmfMatrix mPredefinedSigs;
     private boolean mFinalFitOnly; // using predefined sigs
+    private boolean mUsingRefSigs; // using reference sigs as predefined sigs
 
     // external sample data for verification and correlation
     private List<SampleData> mSampleData;
@@ -219,6 +220,7 @@ public class BucketAnalyser {
         mLastRunGroupCount = 0;
         mApplyPredefinedSigCount = 0;
         mFinalFitOnly = false;
+        mUsingRefSigs = false;
         mExcessDiscoveryRunId = -1;
         mMinBucketCountOverlap = 3;
 
@@ -288,7 +290,9 @@ public class BucketAnalyser {
 
         if(cmd.hasOption(NMF_REF_SIG_FILE))
         {
-            mReporter.loadReferenceSigs(cmd.getOptionValue(NMF_REF_SIG_FILE));
+            final String refSigFilename = cmd.getOptionValue(NMF_REF_SIG_FILE);
+            mUsingRefSigs = cmd.hasOption(BA_PREDEFINED_SIGS) && cmd.getOptionValue(BA_PREDEFINED_SIGS).equals(refSigFilename);
+            mReporter.loadReferenceSigs(cmd.getOptionValue(NMF_REF_SIG_FILE), mUsingRefSigs);
         }
 
         if(cmd.hasOption(BA_PREDEFINED_SIGS))
@@ -296,7 +300,7 @@ public class BucketAnalyser {
             GenericDataCollection dataCollection = GenericDataLoader.loadFile(cmd.getOptionValue(BA_PREDEFINED_SIGS));
             mPredefinedSigs = DataUtils.createMatrixFromListData(dataCollection.getData());
             mPredefinedSigs.cacheTranspose();
-            mFinalFitOnly = (mApplyPredefinedSigCount >= mPredefinedSigs.Cols);
+            mFinalFitOnly = (mApplyPredefinedSigCount == mPredefinedSigs.Cols && mRunCount == 0);
         }
 
         LOGGER.info("bucketCount({}) sampleCount({})", mBucketCount, mSampleCount);
@@ -422,9 +426,6 @@ public class BucketAnalyser {
             applyPredefinedSigs();
             mReporter.logOverallStats();
         }
-
-        if(mFinalFitOnly)
-            mRunCount = 0;
 
         boolean onFinalRun = false;
         boolean runDiscovery = true;
@@ -2493,15 +2494,37 @@ public class BucketAnalyser {
         // int bgSigCount = mSpecificCancer.isEmpty() || mBackgroundGroups.size() == 1 ? mBackgroundGroups.size() : mCancerSamplesMap.size();
         int bgSigCount = mCancerSamplesMap.size();
 
+        List<Integer> predefefinedToSkip = Lists.newArrayList();
+
+        if(mReporter.getReferenceSigs().equals(mPredefinedSigs))
+        {
+            bgSigCount = 0;
+
+            // keep 0-17 and 32, 39, 40, 41, 43, 44, 45, 48, 60, 61
+            for(int i = 18; i < mPredefinedSigs.Cols; ++i)
+            {
+                if (i != 32 && i != 39 && i != 40 && i != 41 && i != 43 && i != 44 && i != 45 && i != 48 && i != 60 && i != 61)
+                    predefefinedToSkip.add(i);
+            }
+        }
+
         // assume that the first X sigs are background, so start with the first elevated sig
         int sigsApplied = 0;
         for(int sig = bgSigCount; sig < mPredefinedSigs.Cols; ++sig)
         {
-            final double[] bucketRatios = mPredefinedSigs.getCol(sig);
+            if(predefefinedToSkip.contains(sig))
+                continue;
+
+            double[] bucketRatios = mPredefinedSigs.getCol(sig);
+
+            convertToPercentages(bucketRatios); // in case file values are lacking enough precision to add to 1
 
             BucketGroup bucketGroup = new BucketGroup(++mNextBucketId);
             bucketGroup.setTag("predefined");
             bucketGroup.setBucketRatios(bucketRatios);
+
+            if(mUseRatioRanges)
+                bucketGroup.setRatioRangePerc(DEFAULT_SIG_RATIO_RANGE_PERC);
 
             List<Integer> bucketIds = Lists.newArrayList();
 
@@ -2523,17 +2546,16 @@ public class BucketAnalyser {
                 break;
         }
 
+        if(mFinalFitOnly)
+            return;
+
         if(!mFinalBucketGroups.isEmpty())
         {
             // ratio ranges aren't currently loaded so don't try to apply them when sigs are pre-loaded
-            boolean rangeState = mUseRatioRanges;
-            mUseRatioRanges = false;
-
             List<BucketGroup> elevatedGroups = Lists.newArrayList();
             elevatedGroups.addAll(mFinalBucketGroups);
 
             fitAllSamples();
-            mUseRatioRanges = rangeState;
 
             // restore the final BGs so they only include elevated groups
             mFinalBucketGroups.clear();
@@ -2546,7 +2568,7 @@ public class BucketAnalyser {
 
     private void fitAllSamples()
     {
-        LOGGER.debug("applying {} final bucket groups to all samples from scratch", mFinalBucketGroups.size());
+        LOGGER.debug("applying final fit with {} bucket groups to all samples", mFinalBucketGroups.size());
 
         double reqAllocPercent = MIN_GROUP_ALLOC_PERCENT_LOWER;
 
@@ -3159,7 +3181,7 @@ public class BucketAnalyser {
 
     private void createSignatures()
     {
-        if(mMaxProposedSigs == 0 || mFinalFitOnly)
+        if(mMaxProposedSigs == 0 || (mFinalFitOnly && !mUsingRefSigs))
             return;
 
         int proposedSigCount = min(mMaxProposedSigs, mFinalBucketGroups.size());
@@ -3178,7 +3200,7 @@ public class BucketAnalyser {
 
             String sigName = "";
 
-            if(mBackgroundGroups.contains(bucketGroup))
+            if(bucketGroup.isBackground())
             {
                 sigName = "BG_";
 
