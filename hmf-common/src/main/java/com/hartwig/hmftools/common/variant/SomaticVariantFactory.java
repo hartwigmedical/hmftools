@@ -179,9 +179,13 @@ public class SomaticVariantFactory {
             final SnpEffAnnotation annotation = canonicalAnnotation.get();
             builder.canonicalEffect(annotation.consequenceString());
             builder.canonicalCodingEffect(CodingEffect.effect(annotation.gene(), annotation.consequences()));
+            builder.canonicalHgvsCodingImpact(annotation.hgvsCoding());
+            builder.canonicalHgvsProteinImpact(annotation.hgvsProtein());
         } else {
             builder.canonicalEffect(Strings.EMPTY);
             builder.canonicalCodingEffect(CodingEffect.UNDEFINED);
+            builder.canonicalHgvsCodingImpact(Strings.EMPTY);
+            builder.canonicalHgvsProteinImpact(Strings.EMPTY);
         }
 
         final String firstGene = transcriptAnnotations.isEmpty() ? Strings.EMPTY : transcriptAnnotations.get(0).gene();

@@ -58,6 +58,12 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
     @NotNull
     CodingEffect canonicalCodingEffect();
 
+    @NotNull
+    String canonicalHgvsCodingImpact();
+
+    @NotNull
+    String canonicalHgvsProteinImpact();
+
     boolean hotspot();
 
     double mappability();
