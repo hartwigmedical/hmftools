@@ -19,7 +19,7 @@ import net.sf.dynamicreports.report.builder.FieldBuilder;
 import net.sf.dynamicreports.report.datasource.DRDataSource;
 import net.sf.jasperreports.engine.JRDataSource;
 
-public class VariantDataSource {
+public class SomaticVariantDataSource {
 
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
     public static final FieldBuilder<?> VARIANT_DETAILS_FIELD = field("variant_details", String.class);
@@ -31,7 +31,7 @@ public class VariantDataSource {
     public static final FieldBuilder<?> DRIVER_PROBABILITY_FIELD = field("driver_probability", String.class);
     public static final FieldBuilder<?> ACTIONABILITY_LEVEL_FIELD = field("actionability_level", String.class);
 
-    private VariantDataSource() {
+    private SomaticVariantDataSource() {
     }
 
     @NotNull

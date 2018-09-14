@@ -21,7 +21,7 @@ import com.hartwig.hmftools.patientreporter.report.components.MutationalLoadSect
 import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionDataSource;
-import com.hartwig.hmftools.patientreporter.report.data.VariantDataSource;
+import com.hartwig.hmftools.patientreporter.report.data.SomaticVariantDataSource;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.immutables.value.Value;
@@ -78,17 +78,17 @@ public abstract class FindingsPage {
 
         final ComponentBuilder<?, ?> table =
                 !report.somaticVariants().isEmpty()
-                        ? cmp.subreport(monospaceBaseTable().fields(VariantDataSource.variantFields())
-                        .columns(col.column("Gene", VariantDataSource.GENE_FIELD),
-                                col.column("Variant", VariantDataSource.VARIANT_DETAILS_FIELD).setFixedWidth(160),
-                                col.column("Read Depth", VariantDataSource.READ_DEPTH_FIELD).setFixedWidth(60),
-                                col.column("Hotspot ?", VariantDataSource.IS_HOTSPOT_FIELD),
-                                col.column("Ploidy (VAF)", VariantDataSource.PLOIDY_VAF_FIELD),
-                                col.column("Clonal Probability", VariantDataSource.CLONAL_PERCENTAGE_FIELD),
-                                col.column("Wildtype Status", VariantDataSource.WILDTYPE_STATUS_FIELD),
-                                col.column("Driver Probability", VariantDataSource.DRIVER_PROBABILITY_FIELD),
-                                col.column("Actionability Level", VariantDataSource.ACTIONABILITY_LEVEL_FIELD)))
-                        .setDataSource(VariantDataSource.fromVariants(report.fitStatus(), report.somaticVariants(), drupFilter))
+                        ? cmp.subreport(monospaceBaseTable().fields(SomaticVariantDataSource.variantFields())
+                        .columns(col.column("Gene", SomaticVariantDataSource.GENE_FIELD),
+                                col.column("Variant", SomaticVariantDataSource.VARIANT_DETAILS_FIELD).setFixedWidth(160),
+                                col.column("Read Depth", SomaticVariantDataSource.READ_DEPTH_FIELD).setFixedWidth(60),
+                                col.column("Hotspot ?", SomaticVariantDataSource.IS_HOTSPOT_FIELD),
+                                col.column("Ploidy (VAF)", SomaticVariantDataSource.PLOIDY_VAF_FIELD),
+                                col.column("Clonal Probability", SomaticVariantDataSource.CLONAL_PERCENTAGE_FIELD),
+                                col.column("Wildtype Status", SomaticVariantDataSource.WILDTYPE_STATUS_FIELD),
+                                col.column("Driver Probability", SomaticVariantDataSource.DRIVER_PROBABILITY_FIELD),
+                                col.column("Actionability Level", SomaticVariantDataSource.ACTIONABILITY_LEVEL_FIELD)))
+                        .setDataSource(SomaticVariantDataSource.fromVariants(report.fitStatus(), report.somaticVariants(), drupFilter))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
@@ -100,12 +100,12 @@ public abstract class FindingsPage {
                         cmp.text(geneMutationAddition).setStyle(fontStyle().setFontSize(8))));
     }
 
-//    @NotNull
-//    private static ComponentBuilder<?, ?> predictedEffectColumn() {
-//        return cmp.verticalList(cmp.horizontalList(cmp.text(DataExpression.fromField(VariantDataSource.HGVS_CODING_FIELD)),
-//                cmp.text(DataExpression.fromField(VariantDataSource.HGVS_PROTEIN_FIELD))),
-//                cmp.text(DataExpression.fromField(VariantDataSource.CONSEQUENCE_FIELD))).setFixedWidth(170);
-//    }
+    //    @NotNull
+    //    private static ComponentBuilder<?, ?> predictedEffectColumn() {
+    //        return cmp.verticalList(cmp.horizontalList(cmp.text(DataExpression.fromField(SomaticVariantDataSource.HGVS_CODING_FIELD)),
+    //                cmp.text(DataExpression.fromField(SomaticVariantDataSource.HGVS_PROTEIN_FIELD))),
+    //                cmp.text(DataExpression.fromField(SomaticVariantDataSource.CONSEQUENCE_FIELD))).setFixedWidth(170);
+    //    }
 
     @NotNull
     private static ComponentBuilder<?, ?> geneCopyNumberReport(@NotNull final AnalysedPatientReport report) {
