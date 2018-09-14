@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.drivercatalog;
 
+import static com.hartwig.hmftools.common.drivercatalog.DriverCatalogFactory.variantTypeCount;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -25,8 +27,7 @@ public class OncoDrivers {
 
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
-        final Map<VariantType, Long> variantTypeCounts =
-                variants.stream().filter(x -> !x.isFiltered()).collect(Collectors.groupingBy(SomaticVariant::type, Collectors.counting()));
+        final Map<VariantType, Long> variantTypeCounts = variantTypeCount(variants);
         long sampleSNVCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0L);
 
         final Map<String, List<EnrichedSomaticVariant>> codingVariants =

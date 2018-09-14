@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.common.drivercatalog;
 
+import static com.hartwig.hmftools.common.drivercatalog.DriverImpact.isFrameshift;
+import static com.hartwig.hmftools.common.drivercatalog.DriverImpact.isMissense;
+import static com.hartwig.hmftools.common.drivercatalog.DriverImpact.isNonsense;
+import static com.hartwig.hmftools.common.drivercatalog.DriverImpact.isSplice;
+
 import java.util.Comparator;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -44,23 +49,5 @@ public class TsgImpactComparator implements Comparator<SomaticVariant> {
         throw new UnsupportedOperationException();
     }
 
-    static boolean isSplice(SomaticVariant variant) {
-        return variant.canonicalCodingEffect() == CodingEffect.SPLICE;
-    }
-
-    static boolean isFrameshift(SomaticVariant variant) {
-        return variant.type() == VariantType.INDEL && variant.canonicalCodingEffect() == CodingEffect.NONSENSE_OR_FRAMESHIFT;
-    }
-
-    static boolean isNonsense(SomaticVariant variant) {
-        return variant.type() != VariantType.INDEL && variant.canonicalCodingEffect() == CodingEffect.NONSENSE_OR_FRAMESHIFT;
-    }
-
-    static boolean isMissense(SomaticVariant variant) {
-        return variant.type() != VariantType.INDEL && variant.canonicalCodingEffect() == CodingEffect.MISSENSE;
-    }
-    static boolean isInframe(SomaticVariant variant) {
-        return variant.type() == VariantType.INDEL && variant.canonicalCodingEffect() == CodingEffect.MISSENSE;
-    }
 
 }

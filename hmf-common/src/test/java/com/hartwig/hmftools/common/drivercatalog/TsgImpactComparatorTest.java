@@ -1,5 +1,11 @@
 package com.hartwig.hmftools.common.drivercatalog;
 
+import static com.hartwig.hmftools.common.drivercatalog.DriverImpact.isFrameshift;
+import static com.hartwig.hmftools.common.drivercatalog.DriverImpact.isInframe;
+import static com.hartwig.hmftools.common.drivercatalog.DriverImpact.isMissense;
+import static com.hartwig.hmftools.common.drivercatalog.DriverImpact.isNonsense;
+import static com.hartwig.hmftools.common.drivercatalog.DriverImpact.isSplice;
+
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
@@ -36,12 +42,12 @@ public class TsgImpactComparatorTest {
 
     @Test
     public void testSetup() {
-        assertTrue(TsgImpactComparator.isNonsense(nonsense));
-        assertTrue(TsgImpactComparator.isMissense(missense));
-        assertTrue(TsgImpactComparator.isSplice(spliceSNP));
-        assertTrue(TsgImpactComparator.isSplice(spliceIndel));
-        assertTrue(TsgImpactComparator.isFrameshift(frameshift));
-        assertTrue(TsgImpactComparator.isInframe(inframe));
+        assertTrue(isNonsense(nonsense));
+        assertTrue(isMissense(missense));
+        assertTrue(isSplice(spliceSNP));
+        assertTrue(isSplice(spliceIndel));
+        assertTrue(isFrameshift(frameshift));
+        assertTrue(isInframe(inframe));
     }
 
     @Test
@@ -50,12 +56,12 @@ public class TsgImpactComparatorTest {
         Collections.shuffle(list);
 
         list.sort(new TsgImpactComparator());
-        assertTrue(TsgImpactComparator.isFrameshift(list.get(0)));
-        assertTrue(TsgImpactComparator.isNonsense(list.get(1)));
-        assertTrue(TsgImpactComparator.isSplice(list.get(2)));
-        assertTrue(TsgImpactComparator.isSplice(list.get(3)));
-        assertTrue(TsgImpactComparator.isMissense(list.get(4)));
-        assertTrue(TsgImpactComparator.isInframe(list.get(5)));
+        assertTrue(isFrameshift(list.get(0)));
+        assertTrue(isNonsense(list.get(1)));
+        assertTrue(isSplice(list.get(2)));
+        assertTrue(isSplice(list.get(3)));
+        assertTrue(isMissense(list.get(4)));
+        assertTrue(isInframe(list.get(5)));
     }
 
     @NotNull
