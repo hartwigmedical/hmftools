@@ -40,6 +40,7 @@ public class SigContribOptimiser
     private double mTargetAllocPercent; // target total allocation to exit the fit
     private int mTargetSig; // to check if a specific sig remains above the require contribution percent
     private int mRequiredSig; // keep this specific sig even if it falls below the require contribution percent
+    private double mRequiredSigMinContrib;
     private List<Integer> mZeroedSigs; // the signature bucket ratios
     private boolean mApplyRange; // to the bucket ratios
 
@@ -78,6 +79,7 @@ public class SigContribOptimiser
     private static double MIN_COUNT_CHG = 1;
     private static int MAX_TEST_ITERATIONS = 100;
     private static int MAX_NO_IMPROVE_COUNT = 10;
+    private static double REQUIRED_SIG_MIN_PERCENT = 0.001;
 
     private static final Logger LOGGER = LogManager.getLogger(SigContribOptimiser.class);
 
@@ -91,6 +93,7 @@ public class SigContribOptimiser
 
         mTargetSig = -1;
         mRequiredSig = -1;
+        mRequiredSigMinContrib = 0;
         mZeroedSigs = Lists.newArrayList();
         mRatiosCollection = Lists.newArrayList();
         mRecentAllocPercents = Lists.newArrayList();
@@ -125,6 +128,7 @@ public class SigContribOptimiser
 
         mTargetSig = -1;
         mRequiredSig = -1;
+        mRequiredSigMinContrib = 0;
         mZeroedSigs.clear();
 
         sumVectors(mCountsNoise, mCounts);
@@ -212,10 +216,25 @@ public class SigContribOptimiser
     public double getAvgIterations() { return mAvgIterations; }
     public double getAvgImprovePerc() { return mAvgPercImprove; }
     public void setTargetSig(int sig) { mTargetSig = sig; }
-    public void setRequiredSig(int sig) { mRequiredSig = sig; }
+    public void setRequiredSig(int sig)
+    {
+        mRequiredSig = sig;
+        mRequiredSigMinContrib = mVarCount * REQUIRED_SIG_MIN_PERCENT;
+    }
+
     public void setLogVerbose(boolean toggle) { mLogVerbose = toggle; }
     public void setApplyRange(boolean toggle) { mApplyRange = toggle; }
-    public int contributingSigCount() { return mSigCount - mZeroedSigs.size(); }
+    public int contributingSigCount()
+    {
+        int count = 0;
+        for (int s = 0; s < mContribs.length; ++s)
+        {
+            if(mContribs[s] > 0)
+                ++count;
+        }
+
+        return count;
+    }
 
     private void applyInitialContributions()
     {
@@ -238,7 +257,10 @@ public class SigContribOptimiser
                 continue;
 
             if (!aboveMinReqContrib(mInitContribs[s]))
+            {
                 mHasLowContribSigs = true;
+                break;
+            }
         }
 
         logStats();
@@ -369,9 +391,12 @@ public class SigContribOptimiser
         double maxNetGain = 0;
         int maxReducedSig = -1;
 
-        // find the sig with the max net gain from being reduced
+        // find the sig with the max net gain across all other sigs from being reduced
         for (int sig = 0; sig < mSigCount; ++sig)
         {
+            if(mContribs[sig] == 0 || sig == mRequiredSig && mContribs[sig] <= mRequiredSigMinContrib)
+                continue;
+
             double[] otherSigContribGains = new double[mSigCount];
             double reducedSigContribLoss = testSigReduction(sig, exhaustedBuckets, otherSigContribGains);
             double netGain = sumVector(otherSigContribGains) - reducedSigContribLoss;
@@ -447,6 +472,11 @@ public class SigContribOptimiser
                 return 0;
 
             sig1ContribLoss = min(minSig1ContribLoss, mContribs[rs]); // cannot reduce past zero
+
+            if(rs == mRequiredSig && mContribs[rs] - sig1ContribLoss < mRequiredSigMinContrib)
+            {
+                sig1ContribLoss = mContribs[rs] - mRequiredSigMinContrib;
+            }
 
             // remove this sig across the board from a 1-lot contrib to this exhausted bucket
             for (int b = 0; b < mBucketCount; ++b)
@@ -576,6 +606,10 @@ public class SigContribOptimiser
 
             double sigContribsTotal = sumVector(testOtherSigContribs);
 
+            // don't take potential contributions which exclude the required sig
+            if(initialTest && mRequiredSig >= 0 && testOtherSigContribs[mRequiredSig] == 0)
+                continue;
+
             if (sigContribsTotal > maxOtherSigsGain)
             {
                 // take the top allocation combination
@@ -627,6 +661,9 @@ public class SigContribOptimiser
                 break;
 
             if(lessThan(testContribs[rs] - sigContribLoss, 0))
+                break;
+
+            if(rs == mRequiredSig && testContribs[rs] - sigContribLoss < mRequiredSigMinContrib)
                 break;
 
             testContribs[rs] -= sigContribLoss;

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.data_analyser.types;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.data_analyser.calcs.BucketAnalyser.MAX_NOISE_ALLOC_PERC;
+import static com.hartwig.hmftools.data_analyser.calcs.BucketAnalyser.MAX_NOISE_ALLOC_PERCENT;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.capValue;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.greaterThan;
@@ -259,9 +259,9 @@ public class SampleData
 
             double noiseCount = useUnallocated ? max(mCountRanges[bucket] - mAllocNoiseCounts[bucket], 0) : mCountRanges[bucket];
 
-            if(noiseCount + noiseTotal > mVarTotal * MAX_NOISE_ALLOC_PERC)
+            if(noiseCount + noiseTotal > mVarTotal * MAX_NOISE_ALLOC_PERCENT)
             {
-                noiseCount = max(mVarTotal * MAX_NOISE_ALLOC_PERC - noiseTotal, 0);
+                noiseCount = max(mVarTotal * MAX_NOISE_ALLOC_PERCENT - noiseTotal, 0);
             }
 
             double allocCount = potentialAlloc;
@@ -295,9 +295,9 @@ public class SampleData
 
             double unallocNoise = max(mCountRanges[i] - mAllocNoiseCounts[i], 0);
 
-            if(unallocNoise + noiseTotal > mVarTotal * MAX_NOISE_ALLOC_PERC)
+            if(unallocNoise + noiseTotal > mVarTotal * MAX_NOISE_ALLOC_PERCENT)
             {
-                unallocNoise = max(mVarTotal * MAX_NOISE_ALLOC_PERC - noiseTotal, 0);
+                unallocNoise = max(mVarTotal * MAX_NOISE_ALLOC_PERCENT - noiseTotal, 0);
             }
 
             double allocCount = min(mUnallocBucketCounts[i] + unallocNoise, counts[i]);
@@ -353,9 +353,9 @@ public class SampleData
             {
                 double unallocNoise = max(mCountRanges[i] - mAllocNoiseCounts[i], 0);
 
-                if(unallocNoise + noiseTotal > mVarTotal * MAX_NOISE_ALLOC_PERC)
+                if(unallocNoise + noiseTotal > mVarTotal * MAX_NOISE_ALLOC_PERCENT)
                 {
-                    unallocNoise = max(mVarTotal * MAX_NOISE_ALLOC_PERC - noiseTotal, 0);
+                    unallocNoise = max(mVarTotal * MAX_NOISE_ALLOC_PERCENT - noiseTotal, 0);
                 }
 
                 if(mUnallocBucketCounts[i] == 0 && unallocNoise == 0)

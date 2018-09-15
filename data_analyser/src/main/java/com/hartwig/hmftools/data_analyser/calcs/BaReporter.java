@@ -5,8 +5,11 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.data_analyser.calcs.BucketAnalyser.MAJOR_GROUP_ALLOC_PERC;
+import static com.hartwig.hmftools.data_analyser.calcs.BucketAnalyser.MAJOR_GROUP_SAMPLE_PERC;
 import static com.hartwig.hmftools.data_analyser.calcs.BucketAnalyser.MIN_GROUP_ALLOC_PERCENT_LOWER;
 import static com.hartwig.hmftools.data_analyser.calcs.BucketAnalyser.SAMPLE_ALLOCATED_PERCENT;
+import static com.hartwig.hmftools.data_analyser.calcs.BucketAnalyser.isMajorGroup;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_I1;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_I2;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_VAL;
@@ -49,6 +52,7 @@ public class BaReporter
     private double mTotalCount;
     private int mBucketCount;
     private int mSampleCount;
+    private int mActiveSampleCount;
     private NmfMatrix mBackgroundCounts;
     private NmfMatrix mElevatedCounts; // actual - expected, capped at zero
     private double mElevatedCount;
@@ -101,6 +105,7 @@ public class BaReporter
         mTotalCount = mSampleCounts.sum();
         mBucketCount = mSampleCounts.Rows;
         mSampleCount = mSampleCounts.Cols;
+        mActiveSampleCount = mSampleCount;
 
         mAllocatedCount = 0;
 
@@ -113,13 +118,14 @@ public class BaReporter
         mBackgroundGroups = backgroundGroups;
     }
 
-    public void setPreRunState(double[] sampleTotals, final NmfMatrix backgroundCounts, final NmfMatrix elevatedCounts, double totalCount, double elevatedCount)
+    public void setPreRunState(double[] sampleTotals, final NmfMatrix backgroundCounts, final NmfMatrix elevatedCounts, double totalCount, double elevatedCount, int activeSampleCount)
     {
         mSampleTotals = sampleTotals;
         mBackgroundCounts = backgroundCounts;
         mElevatedCounts = elevatedCounts;
         mTotalCount = totalCount;
         mElevatedCount = elevatedCount;
+        mActiveSampleCount = activeSampleCount;
     }
 
     public void setFinalState(final NmfMatrix proposedSigs, final List<Integer> sigToBgMapping)
@@ -175,7 +181,7 @@ public class BaReporter
         double elevatedCount = mTotalCount - mBackgroundCount;
 
         LOGGER.debug(String.format("overall: samples(%d alloc=%d) groups(%d) counts: total(%s) background(%s perc=%.3f) elevated(%s perc=%.3f) alloc(%s perc=%.3f) noise(%s perc=%.3f)",
-                mSampleCount, fullyAllocated, mFinalBucketGroups.size(), sizeToStr(mTotalCount), sizeToStr(mBackgroundCount), mBackgroundCount/mTotalCount,
+                mActiveSampleCount, fullyAllocated, mFinalBucketGroups.size(), sizeToStr(mTotalCount), sizeToStr(mBackgroundCount), mBackgroundCount/mTotalCount,
                 sizeToStr(elevatedCount), elevatedCount/mTotalCount, sizeToStr(mAllocatedCount), mAllocatedCount/mElevatedCount,
                 sizeToStr(noiseAllocated), noiseAllocated/mElevatedCount));
     }
@@ -267,7 +273,7 @@ public class BaReporter
         double percAllocated = countAllocated / mElevatedCount;
 
         LOGGER.debug(String.format("sample summary: total(%d) alloc(%d, %.3f of %s) partial(%d) unalloc(%d)",
-                mSampleCount, fullyAllocCount, percAllocated, sizeToStr(mElevatedCount),
+                mActiveSampleCount, fullyAllocCount, percAllocated, sizeToStr(mElevatedCount),
                 partiallyAllocCount, noMatchCount));
 
         logOverallStats();
@@ -558,14 +564,8 @@ public class BaReporter
         }
     }
 
-    private static double MAJOR_GROUP_ALLOC_PERC = 0.02;
-    private static double MAJOR_GROUP_SAMPLE_PERC = 0.05;
-
     public void tagMajorGroups()
     {
-        double reqSampleCount = mTotalCount * MAJOR_GROUP_ALLOC_PERC;
-        double reqSamples = mSampleCount * MAJOR_GROUP_SAMPLE_PERC;
-
         for (final BucketGroup bucketGroup : mFinalBucketGroups)
         {
             if(bucketGroup.isBackground())
@@ -574,7 +574,7 @@ public class BaReporter
             if(!bucketGroup.getGroupType().isEmpty())
                 continue;
 
-            if(bucketGroup.getTotalCount() >= reqSampleCount && bucketGroup.getSampleIds().size() >= reqSamples)
+            if(isMajorGroup(bucketGroup, mActiveSampleCount, mTotalCount))
             {
                 bucketGroup.setGroupType(BG_TYPE_MAJOR);
             }

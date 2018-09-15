@@ -55,6 +55,15 @@ public class BucketGroup implements Comparable<BucketGroup> {
     private double mPurity; // for now a percentage of sample buckets that are elevated
     private double mScoreOverride;
 
+    private double[] mPotentialRatioIncreasesNew;
+    private int[] mPotentialSamplesNew;
+    private double[] mPotentialAllocsNew;
+
+    private double[] mPotentialRatioIncreasesExist;
+    private int[] mPotentialSamplesExist;
+    private double[] mPotentialAllocsExist;
+
+
     public static String BG_TYPE_BACKGROUND = "BGRD";
     public static String BG_TYPE_MAJOR = "MAJOR";
     public static String BG_TYPE_MINOR = "MINOR";
@@ -95,7 +104,10 @@ public class BucketGroup implements Comparable<BucketGroup> {
     private void initialise(final double[] counts)
     {
         if(mBucketRatios == null)
+        {
             mBucketRatios = new double[counts.length];
+            initialPotentials();
+        }
 
         if(mBucketRatioRanges == null)
             mBucketRatioRanges = new double[counts.length];
@@ -113,7 +125,7 @@ public class BucketGroup implements Comparable<BucketGroup> {
     public String getGroupType() { return mType; }
     public void setGroupType(final String type) { mType = type; }
 
-    public boolean isBackground() { return mTag.equals(BG_TYPE_BACKGROUND); }
+    public boolean isBackground() { return mType.equals(BG_TYPE_BACKGROUND); }
 
     public int getSize() { return mBucketIds.size() * mSampleIds.size(); }
 
@@ -468,4 +480,23 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
     public double getPotentialAdjAllocation() { return mPotentialAdjAllocation; }
     public void addPotentialAdjAllocation(double count) { mPotentialAdjAllocation += count; }
+
+    private void initialPotentials()
+    {
+        mPotentialRatioIncreasesNew = new double[mBucketRatios.length];
+        mPotentialSamplesNew = new int[mBucketRatios.length];
+        mPotentialAllocsNew = new double[mBucketRatios.length];
+
+        mPotentialRatioIncreasesExist = new double[mBucketRatios.length];
+        mPotentialSamplesExist = new int[mBucketRatios.length];
+        mPotentialAllocsExist = new double[mBucketRatios.length];
+    }
+
+    public double[] getPotentialRatioIncreasesNew() { return mPotentialRatioIncreasesNew; }
+    public int[] getPotentialSamplesNew() { return mPotentialSamplesNew; }
+    public double[] getPotentialAllocsNew() { return mPotentialAllocsNew; }
+
+    public double[] getPotentialRatioIncreasesExist() { return mPotentialRatioIncreasesExist; }
+    public int[] getPotentialSamplesExist() { return mPotentialSamplesExist; }
+    public double[] getPotentialAllocsExist() { return mPotentialAllocsExist; }
 }
