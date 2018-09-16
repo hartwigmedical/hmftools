@@ -127,6 +127,17 @@ public class DataUtils {
         }
     }
 
+    public static void addVector(final double[] source, double[] dest)
+    {
+        if(source.length != dest.length)
+            return;
+
+        for(int i = 0; i < source.length; ++i)
+        {
+            dest[i] += source[i];
+        }
+    }
+
     public static double[] listToArray(final List<Double> data)
     {
         if(data.isEmpty())

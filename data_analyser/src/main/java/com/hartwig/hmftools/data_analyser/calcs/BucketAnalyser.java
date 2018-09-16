@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.data_analyser.DataAnalyser.OUTPUT_DIR;
 import static com.hartwig.hmftools.data_analyser.DataAnalyser.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.calcCSS;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.getTopCssPairs;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.addVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.calcBestFitWithinProbability;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.convertToPercentages;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
@@ -19,12 +20,14 @@ import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getDiffList;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getMatchingList;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getNewFile;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.initVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.listToArray;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sizeToStr;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.vectorMultiply;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.writeMatrixData;
 import static com.hartwig.hmftools.data_analyser.calcs.NmfConfig.NMF_REF_SIG_FILE;
+import static com.hartwig.hmftools.data_analyser.calcs.SigOptimiser.BUCKET_RANGE_MAX_PERCENT;
 import static com.hartwig.hmftools.data_analyser.types.BucketGroup.BG_TYPE_BACKGROUND;
 import static com.hartwig.hmftools.data_analyser.types.BucketGroup.BG_TYPE_MAJOR;
 import static com.hartwig.hmftools.data_analyser.types.BucketGroup.BG_TYPE_UNIQUE;
@@ -149,7 +152,7 @@ public class BucketAnalyser {
     private static double MIN_DISCOVERY_SAMPLE_COUNT = 0.0001; // % of cohort to consider a pair of samples similar (5K at 0.01% of 55M)
     private static double PERMITTED_PROB_NOISE = 1e-4;
     private static double MIN_GROUP_ALLOC_PERCENT = 0.10; // only allocate a sample to a group if it takes at this much of the elevated count
-    public static double MIN_GROUP_ALLOC_PERCENT_LOWER = 0.03; // hard lower limit
+    public static double MIN_GROUP_ALLOC_PERCENT_LOWER = 0.10; // hard lower limit
     private static double SKIP_ALLOC_FACTOR = 2.0; // skip adding a sample to a group if another candidate not chosen to allocate X times as much
     private static int MAX_CANDIDATE_GROUPS = 1500; // in place for speed and memory considerations
     private static double MAX_NOISE_TO_SAMPLE_RATIO = 5; // per sample, the total potential noise across all buckets cannot exceeds this multiple of variant total
@@ -157,7 +160,6 @@ public class BucketAnalyser {
     private static double DEFAULT_SIG_RATIO_RANGE_PERCENT = 0.1; // if ratio ranges are used, this percent width can be applied
     private static double UNIQUE_SIG_CSS_THRESHOLD = 0.3;
     private static double UNIQUE_SIG_MIN_ALLOC_PERCENT = 0.3;
-    public static double SAMPLE_PURE_SIG_PERCENT = 0.8; // used to decide whether a sample can aid in optimising sig ratios and ranges
 
     public static double MAJOR_GROUP_ALLOC_PERC = 0.02;
     public static double MAJOR_GROUP_SAMPLE_PERC = 0.05;
@@ -505,7 +507,7 @@ public class BucketAnalyser {
 
             if(mRunId > 0 && mIncludeUniqueGroups && !lastGroupWasMajor)
             {
-                assessCandidateBucketGroups();
+                findUniqueBucketGroups();
 
                 if(!mUniqueBucketGroups.isEmpty())
                 {
@@ -582,6 +584,10 @@ public class BucketAnalyser {
 
         perfCounter.start("FinalFit");
         fitAllSamples();
+
+        assessBucketGroupSampleRanges();
+        checkSampleRefitWithRanges();
+
         perfCounter.stop();
 
         perfCounter.start("AnalyseResults");
@@ -593,10 +599,10 @@ public class BucketAnalyser {
             if(sample.isExcluded())
                 continue;
 
-            analyserSampleUnallocCounts(sample);
+            analyseSampleUnallocCounts(sample);
         }
 
-        logBucketGroupPotentialRatioChanges();
+        assessUnallocatedCounts();
 
         perfCounter.stop();
 
@@ -1852,19 +1858,7 @@ public class BucketAnalyser {
             BucketGroup bucketGroup = mBucketGroups.get(bgIndex);
             bucketGroup.recalcBucketRatios();
 
-            boolean isMatched = false;
-            for(final BucketGroup finalGroup : mFinalBucketGroups)
-            {
-                double css = calcCSS(bucketGroup.getBucketRatios(), finalGroup.getBucketRatios());
-
-                if (css >= SIG_SIMILAR_CSS)
-                {
-                    isMatched = true;
-                    break;
-                }
-            }
-
-            if(isMatched)
+            if (similarToExistingGroup(bucketGroup))
             {
                 mBucketGroups.remove(bgIndex);
                 ++removedGroups;
@@ -1904,6 +1898,44 @@ public class BucketAnalyser {
                 mTopAllocBucketGroups.remove(mTopAllocBucketGroups.size() - 1);
             }
         }
+    }
+
+    private boolean similarToExistingGroup(final BucketGroup bucketGroup)
+    {
+        final List<Integer> bucketIds = bucketGroup.getBucketIds();
+        final double[] bucketRatios = bucketGroup.getBucketRatios();
+
+        for(final BucketGroup finalGroup : mFinalBucketGroups)
+        {
+            double css = calcCSS(bucketGroup.getBucketRatios(), finalGroup.getBucketRatios());
+
+            if (css >= SIG_SIMILAR_CSS)
+                return true;
+
+            final double[] otherRatios = finalGroup.getBucketRatios();
+
+            // also check whether the new ratio ranges are within the bounds of existing group ratios
+            double similarBucketPerc = 0;
+            for(Integer bucket : bucketIds)
+            {
+                if(bucketRatios[bucket] >= otherRatios[bucket] * (1 - BUCKET_RANGE_MAX_PERCENT)
+                && bucketRatios[bucket] <= otherRatios[bucket] * (1 + BUCKET_RANGE_MAX_PERCENT))
+                {
+                    similarBucketPerc += bucketRatios[bucket];
+                }
+                else
+                {
+                    // apply the difference to the similarity total - eg if ref = 0.40 and comparison is 0.25, then add 0.25
+                    double ratioDiff = min(abs(bucketRatios[bucket] - otherRatios[bucket]), bucketRatios[bucket]);
+                    similarBucketPerc += bucketRatios[bucket] - ratioDiff;
+                }
+            }
+
+            if(similarBucketPerc >= SIG_SIMILAR_CSS)
+                return true;
+        }
+
+        return false;
     }
 
     private void removeSkippedAllocations(List<BucketGroup> bucketGroups)
@@ -2125,7 +2157,6 @@ public class BucketAnalyser {
         double[] newBucketRatios = new double[mBucketCount];
         copyVector(topBucketRatios, newBucketRatios);
 
-        double topPotentialAlloc = topBucketGroup.getPotentialAllocation();
         List<Integer> candidateNewBuckets = Lists.newArrayList();
         List<BucketGroup> similarGroups = Lists.newArrayList();
 
@@ -2141,7 +2172,7 @@ public class BucketAnalyser {
             }
 
             double groupCss = calcCSS(topBucketRatios, bucketRatios);
-            if (groupCss < SIG_SIMILAR_CSS) // mHighCssThreshold
+            if (groupCss < SIG_SIMILAR_CSS)
                 continue;
 
             List<Integer> deficientBuckets = getDiffList(topBucketGroup.getBucketIds(), bucketGroup.getBucketIds());
@@ -2245,13 +2276,54 @@ public class BucketAnalyser {
         topBucketGroup.setBucketRatios(newBucketRatios);
     }
 
-    private void assessCandidateBucketGroups()
+    private void findUniqueBucketGroups()
     {
         // looking for very unique groups and groups which overlap existing groups significantly
         if(mFinalBucketGroups.isEmpty())
             return;
 
         mUniqueBucketGroups.clear();
+
+        // also consider extremely unique samples
+        double maxAllocPercent = 0.25;
+
+        for(final SampleData sample : mSampleData)
+        {
+            if(sample.isExcluded())
+                continue;
+
+            if(sample.getAllocPercent() >= maxAllocPercent || sample.getTotalCount() < 10 * mMutationalLoadCap)
+                continue;
+
+            // find buckets largely unaccounted for
+            List<Integer> elevatedBuckets = sample.getElevatedBuckets();
+            List<Integer> bucketIds = Lists.newArrayList();
+            final double[] allCounts = sample.getElevatedBucketCounts();
+            final double[] unallocCounts = sample.getUnallocBucketCounts();
+            double sampleTotal = sample.getUnallocatedCount();
+
+            double[] bucketRatios = new double[mBucketCount];
+
+            for(Integer bucket : elevatedBuckets)
+            {
+                if(unallocCounts[bucket] / allCounts[bucket] > (1 - maxAllocPercent))
+                {
+                    bucketIds.add(bucket);
+                    bucketRatios[bucket] = unallocCounts[bucket] / sampleTotal;
+                }
+            }
+
+            if(bucketIds.size() >= mMinBucketCountOverlap)
+            {
+                BucketGroup bucketGroup = new BucketGroup(++mNextBucketId);
+                bucketGroup.addInitialSample(sample.Id);
+                bucketGroup.addBuckets(bucketIds);
+
+                convertToPercentages(bucketRatios);
+                bucketGroup.setBucketRatios(bucketRatios);
+                mBucketGroups.add(bucketGroup);
+            }
+        }
 
         for(final BucketGroup bucketGroup : mBucketGroups)
         {
@@ -2974,67 +3046,89 @@ public class BucketAnalyser {
         }
 
         return true;
-
     }
 
-    private void testSampleRefitWithRanges()
+    private void checkSampleRefitWithRanges()
     {
-        /*
-        if(sample.getAllocPercent() <= 0.8)
+        double reqAllocPercent = MIN_GROUP_ALLOC_PERCENT_LOWER;
+
+        for(SampleData sample : mSampleData)
         {
-            // check whether any large or larger potential allocs didn't make the cut
-            for (int bgIndex = 0; bgIndex < potentialGroupList.size(); ++bgIndex)
+            double sampleCount = sample.getElevatedCount();
+
+            // tweak each group in turn to allocate the max possible using ratio ranges
+            for(final BucketGroup bucketGroup : sample.getElevBucketGroups())
             {
-                final BucketGroup bucketGroup = potentialGroupList.get(bgIndex);
+                final double[] ratioRanges = bucketGroup.getRatioRanges();
+                final double[] bucketRatios = bucketGroup.getBucketRatios();
 
-                if (sampleGroupList.contains(bucketGroup))
+                int samIndex = bucketGroup.getSampleIds().size() - 1;
+
+                if(bucketGroup.getSampleIds().get(samIndex) != sample.Id)
+                {
+                    samIndex = bucketGroup.getSampleIndex(sample.Id);
+                }
+
+                double[] sampleAllocCounts = bucketGroup.getSampleCounts().get(samIndex);
+                final List<Integer> bucketIds = bucketGroup.getBucketIds();
+
+                double[] newAllocs = SigOptimiser.optimiseSampleFit(sample, bucketGroup.getId(), bucketIds, bucketRatios, ratioRanges, sampleAllocCounts, false);
+
+                if(newAllocs == null) // could do no better
                     continue;
 
-                double potentialAlloc = potentialAllocTotals.get(bgIndex);
-                double potentialAllocPerc = potentialAlloc / sampleCount;
+                sample.allocateBucketCounts(newAllocs, 0);
+                bucketGroup.addSampleCounts(samIndex, newAllocs);
+            }
 
-                if (potentialAllocPerc < 0.2)
+            // and for any signficantly unallocated samples test them one more time against the expand ratio ranges
+            if(sample.getAllocPercent() < 0.8)
+                continue;
+
+            // check whether any large or larger potential allocs didn't make the cut
+            for (BucketGroup bucketGroup : mFinalBucketGroups)
+            {
+                if(bucketGroup.isBackground() || sample.getElevBucketGroups().contains(bucketGroup))
                     continue;
 
-                LOGGER.debug(String.format("sample(%d) bg(%d) potential alloc(%s perc=%.3f) missed",
-                        sample.Id, bucketGroup.getId(), sizeToStr(potentialAlloc), potentialAllocPerc));
+                double[] allocCounts = sample.getPotentialUnallocCounts(bucketGroup.getBucketRatios(), bucketGroup.getBucketIds(), bucketGroup.getRatioRanges());
+                double allocTotal = sumVector(allocCounts);
 
-                // test out this missed group using ranges to see if it can fill a gap
+                if (allocTotal / sampleCount < reqAllocPercent || allocTotal < mMinSampleAllocCount)
+                    continue;
+
                 final double[] ratioRanges = bucketGroup.getRatioRanges();
                 final double[] bucketRatios = bucketGroup.getBucketRatios();
                 final List<Integer> bucketIds = bucketGroup.getBucketIds();
 
-                double[] potentialCounts = potentialAllocCounts.get(bgIndex);
+                double[] newAllocs = SigOptimiser.optimiseSampleFit(sample, bucketGroup.getId(), bucketIds, bucketRatios, ratioRanges, allocCounts, false);
 
-                double[] refitAllocs = SigOptimiser.optimiseSampleFit(sample, bucketGroup.getId(), bucketIds, bucketRatios, ratioRanges, potentialCounts, false);
-
-                if (refitAllocs == null) // could do no better
+                if (newAllocs == null) // could do no better
                     continue;
 
-                double refitTotal = sumVector(refitAllocs);
+                double refitTotal = sumVector(newAllocs);
                 double refitTotalPerc = refitTotal / sampleCount;
 
                 if (refitTotalPerc < reqAllocPercent)
                     continue;
 
-                double actualAlloc = sample.allocateBucketCounts(refitAllocs, reqAllocPercent);
+                double actualAlloc = sample.allocateBucketCounts(newAllocs, reqAllocPercent);
                 double allocPerc = actualAlloc / sample.getElevatedCount();
 
                 if (allocPerc >= reqAllocPercent)
                 {
-                    bucketGroup.addSample(sample.Id, refitAllocs, false);
+                    bucketGroup.addSample(sample.Id, newAllocs, false);
                     sample.addElevBucketGroup(bucketGroup, allocPerc);
 
                     LOGGER.debug(String.format("sample(%d) added to bg(%d) refit(%s act=%s of %s) allocatedPerc(+%.3f -> %.3f) noise(%s %.3f/%.3f) groupCount(%d)",
                             sample.Id, bucketGroup.getId(), sizeToStr(refitTotal), sizeToStr(actualAlloc), sizeToStr(sampleCount), sample.lastAllocPercChange(),
-                            sample.getAllocPercent(), sizeToStr(sample.getAllocNoise()), sample.getNoisePerc(), sample.getNoiseOfTotal(), sampleGroupList.size()));
+                            sample.getAllocPercent(), sizeToStr(sample.getAllocNoise()), sample.getNoisePerc(), sample.getNoiseOfTotal(), sample.getElevBucketGroups().size()));
                 }
             }
         }
-        */
     }
 
-    private void analyserSampleUnallocCounts(final SampleData sample)
+    private void analyseSampleUnallocCounts(final SampleData sample)
     {
         if(sample.getAllocPercent() > SAMPLE_ALLOCATED_PERCENT)
             return;
@@ -3043,14 +3137,13 @@ public class BucketAnalyser {
 
         final double[] unallocCounts = sample.getUnallocBucketCounts();
         double sampleCount = sample.getElevatedCount();
-        double unallocTotal = sample.getUnallocatedCount();
 
         double maxCss = 0;
         double maxPotAlloc = 0;
         BucketGroup maxCssGroup = null;
         BucketGroup maxPotAllocGroup = null;
 
-        for(BucketGroup bucketGroup : mFinalBucketGroups)
+        for(final BucketGroup bucketGroup : mFinalBucketGroups)
         {
             if(bucketGroup.isBackground() || sampleGroupList.contains(bucketGroup))
                 continue;
@@ -3073,101 +3166,80 @@ public class BucketAnalyser {
                 maxCss = css;
                 maxCssGroup = bucketGroup;
             }
-
-            // capture details about all restricting buckets
-            final List<Integer> bucketIds = bucketGroup.getBucketIds();
-
-            for(Integer bucket : bucketIds)
-            {
-                if(unallocCounts[bucket] == 0)
-                    continue;
-
-                double ratio = bucketRatios[bucket] + ratioRange(ratioRanges, bucket, true);
-                double alloc = unallocCounts[bucket] / ratio;
-
-                if(alloc < unallocTotal)
-                {
-                    // take details of this restricting bucket
-                    double impliedRatio = unallocCounts[bucket] / unallocTotal;
-
-                    if(impliedRatio < 0.0005)
-                        continue;
-
-                    bucketGroup.getPotentialRatioIncreasesNew()[bucket] += impliedRatio;
-                    bucketGroup.getPotentialSamplesNew()[bucket] += 1;
-                    bucketGroup.getPotentialAllocsNew()[bucket] += unallocTotal;
-                }
-            }
         }
 
-        if((maxPotAlloc/sampleCount >= MIN_GROUP_ALLOC_PERCENT_LOWER && maxPotAlloc >= mMinSampleAllocCount) || maxCss > 0.8)
+        if((maxPotAlloc/sampleCount >= MIN_GROUP_ALLOC_PERCENT_LOWER && maxPotAlloc >= mMinSampleAllocCount) || maxCss >= 0.9)
         {
             LOGGER.debug(String.format("sample(%d) current alloc(%.3f of %s) maxCss(%.3f) with to bg(%d), maxAlloc(%s %.3f) with bg(%d)",
                     sample.Id, sample.getAllocPercent(), sizeToStr(sampleCount), maxCss, maxCssGroup != null ? maxCssGroup.getId() : -1,
                     sizeToStr(maxPotAlloc), maxPotAlloc / sampleCount, maxPotAllocGroup != null ? maxPotAllocGroup.getId() : -1));
         }
+    }
 
-        // and look at the allocated groups as well
-        for(BucketGroup bucketGroup : sampleGroupList)
+    private void assessBucketGroupSampleRanges()
+    {
+        List<SampleData> groupSamples = Lists.newArrayList();
+        List<double[]> groupAllocCounts = Lists.newArrayList();
+        List<double[]> unallocCounts = Lists.newArrayList();
+
+        for (BucketGroup bucketGroup : mFinalBucketGroups)
         {
-            final double[] bucketRatios = bucketGroup.getBucketRatios();
-            final double[] ratioRanges = bucketGroup.getRatioRanges();
-            final List<Integer> bucketIds = bucketGroup.getBucketIds();
+            final List<double[]> sampleAllocCounts = bucketGroup.getSampleCounts();
 
-            for(Integer bucket : bucketIds)
+            groupSamples.clear();
+            groupAllocCounts.clear();
+
+            for(int samIndex = 0; samIndex < bucketGroup.getSampleIds().size(); ++samIndex)
             {
-                if(unallocCounts[bucket] == 0)
-                    continue;
+                Integer sampleId = bucketGroup.getSampleIds().get(samIndex);
+                final SampleData sample = mSampleData.get(sampleId);
+                groupSamples.add(sample);
 
-                double ratio = bucketRatios[bucket] + ratioRange(ratioRanges, bucket, true);
-                double alloc = unallocCounts[bucket] / ratio;
+                groupAllocCounts.add(sampleAllocCounts.get(samIndex));
+                unallocCounts.add(sample.getUnallocBucketCounts());
+            }
 
-                if(alloc < unallocTotal)
-                {
-                    // take details of this restricting bucket
-                    double impliedRatio = unallocCounts[bucket] / unallocTotal;
+            double[] adjRatioRanges = new double[mBucketCount];
+            double[] adjBucketRatios = new double[mBucketCount];
+            copyVector(bucketGroup.getBucketRatios(), adjBucketRatios);
+            copyVector(bucketGroup.getRatioRanges(), adjRatioRanges);
 
-                    if(impliedRatio < 0.0005)
-                        continue;
+            boolean valuesChanged = SigOptimiser.assessBucketDistribution(
+                    bucketGroup.getId(), groupAllocCounts, unallocCounts,
+                    adjBucketRatios, adjRatioRanges, 0.9);
 
-                    bucketGroup.getPotentialRatioIncreasesExist()[bucket] += impliedRatio;
-                    bucketGroup.getPotentialSamplesExist()[bucket] += 1;
-                    bucketGroup.getPotentialAllocsExist()[bucket] += unallocTotal;
-                }
+            if(valuesChanged)
+            {
+                copyVector(adjRatioRanges, bucketGroup.getRatioRanges());
             }
         }
     }
 
-    private void logBucketGroupPotentialRatioChanges()
+    private void assessUnallocatedCounts()
     {
-        for (BucketGroup bucketGroup : mFinalBucketGroups)
+        List<SampleData> groupSamples = Lists.newArrayList();
+        List<double[]> groupAllocCounts = Lists.newArrayList();
+        List<double[]> unallocCounts = Lists.newArrayList();
+        double[] emptyCounts = new double[mBucketCount];
+
+        for(final SampleData sample : mSampleData)
         {
-            final double[] bucketRatios = bucketGroup.getBucketRatios();
-            final double[] ratioRanges = bucketGroup.getRatioRanges();
-            final List<Integer> bucketIds = bucketGroup.getBucketIds();
+            if(sample.isExcluded())
+                continue;
 
-            final double[] ratioIncreasesNew = bucketGroup.getPotentialRatioIncreasesNew();
-            final int[] potentialSamplesNew = bucketGroup.getPotentialSamplesNew();
-            final double[] potentialAllocNew = bucketGroup.getPotentialAllocsNew();
+            if(sample.getAllocPercent() > 0.95)
+                continue;
 
-            final double[] ratioIncreasesExist = bucketGroup.getPotentialRatioIncreasesExist();
-            final int[] potentialSamplesExist = bucketGroup.getPotentialSamplesExist();
-            final double[] potentialAllocExist = bucketGroup.getPotentialAllocsExist();
-
-            for(Integer bucket : bucketIds)
-            {
-                if(potentialSamplesNew[bucket] == 0 && potentialSamplesExist[bucket] == 0)
-                    continue;
-
-                double avgRatioIncreaseNew = potentialSamplesNew[bucket] > 0 ? ratioIncreasesNew[bucket] / potentialSamplesNew[bucket] : 0;
-                double avgRatioIncreaseExist = potentialSamplesExist[bucket] > 0 ? ratioIncreasesExist[bucket] / potentialSamplesExist[bucket] : 0;
-
-                LOGGER.debug(String.format("bg(%d) bucket(%d) ratio(%.3f range=%.3f) existing samples(%d avgRI=%.3f perc=%.3f alloc=%s) new samples(%d avgRI=%.3f perc=%.3f alloc=%s)",
-                        bucketGroup.getId(), bucket, bucketRatios[bucket], ratioRanges[bucket],
-                        potentialSamplesExist[bucket], avgRatioIncreaseExist, avgRatioIncreaseExist/bucketRatios[bucket], sizeToStr(potentialAllocExist[bucket]),
-                        potentialSamplesNew[bucket], avgRatioIncreaseNew, avgRatioIncreaseNew/bucketRatios[bucket], sizeToStr(potentialAllocNew[bucket])));
-            }
+            groupSamples.add(sample);
+            groupAllocCounts.add(emptyCounts);
+            unallocCounts.add(sample.getUnallocBucketCounts());
         }
+
+        double[] emptyRatios = new double[mBucketCount];
+        double[] emptyRanges = new double[mBucketCount];
+
+        SigOptimiser.assessBucketDistribution(-1, groupAllocCounts, unallocCounts, emptyRatios, emptyRanges,0.9);
+
     }
 
     private double minAllocPercent(final SampleData sample, boolean scaleToLower)
