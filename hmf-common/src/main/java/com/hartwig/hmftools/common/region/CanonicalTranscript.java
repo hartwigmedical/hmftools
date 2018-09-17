@@ -1,7 +1,4 @@
-package com.hartwig.hmftools.common.gene;
-
-import com.hartwig.hmftools.common.region.Strand;
-import com.hartwig.hmftools.common.region.TranscriptRegion;
+package com.hartwig.hmftools.common.region;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

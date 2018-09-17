@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.gene;
+package com.hartwig.hmftools.common.region;
 
 import java.util.Collection;
 import java.util.List;
@@ -6,8 +6,7 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.region.HmfExonRegion;
-import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.purple.gene.ImmutableCanonicalTranscript;
 
 import org.jetbrains.annotations.NotNull;
 

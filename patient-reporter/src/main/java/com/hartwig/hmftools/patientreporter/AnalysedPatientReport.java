@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter;
 import java.util.List;
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;

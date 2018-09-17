@@ -9,7 +9,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Iterables;
-import com.hartwig.hmftools.common.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;

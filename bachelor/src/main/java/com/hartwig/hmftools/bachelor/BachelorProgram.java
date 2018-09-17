@@ -3,7 +3,7 @@ package com.hartwig.hmftools.bachelor;
 import java.util.List;
 import java.util.function.Predicate;
 
-import com.hartwig.hmftools.common.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 
 public class BachelorProgram {

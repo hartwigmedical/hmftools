@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.gene;
+package com.hartwig.hmftools.common.purple.gene;
 
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;

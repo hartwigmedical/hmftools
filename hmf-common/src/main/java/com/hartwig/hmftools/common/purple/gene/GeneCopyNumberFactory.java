@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.gene;
+package com.hartwig.hmftools.common.purple.gene;
 
 import java.util.Collections;
 import java.util.List;
@@ -14,7 +14,10 @@ import com.hartwig.hmftools.common.zipper.RegionZipper;
 
 import org.jetbrains.annotations.NotNull;
 
-public class GeneCopyNumberFactory {
+public final class GeneCopyNumberFactory {
+
+    private GeneCopyNumberFactory() {
+    }
 
     @NotNull
     public static List<GeneCopyNumber> geneCopyNumbers(@NotNull final List<HmfTranscriptRegion> genes,

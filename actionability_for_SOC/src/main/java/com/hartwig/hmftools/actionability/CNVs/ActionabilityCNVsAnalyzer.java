@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.apache.logging.log4j.LogManager;
@@ -20,7 +19,7 @@ public class ActionabilityCNVsAnalyzer {
         this.CNVs = CNVs;
     }
 
-    public boolean actionableCNVs(@NotNull SomaticVariant geneCopyNumber, @NotNull String primaryTumorLocation, @NotNull int sizeVariants){
+    public boolean actionableCNVs(@NotNull SomaticVariant geneCopyNumber, @NotNull String primaryTumorLocation, int sizeVariants){
         return true;
     }
 

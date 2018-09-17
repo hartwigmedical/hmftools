@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.gene;
+package com.hartwig.hmftools.common.purple.gene;
 
 import static java.util.stream.Collectors.toList;
 
@@ -16,13 +16,15 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 
-public class GeneCopyNumberFile {
-    ;
+public final class GeneCopyNumberFile {
 
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "Chr";
     private static final String EXTENSION = ".purple.gene.cnv";
+
+    private GeneCopyNumberFile() {
+    }
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
