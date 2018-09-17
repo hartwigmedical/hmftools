@@ -22,7 +22,7 @@ public final class CanonicalTranscriptFactory {
     }
 
     @NotNull
-    public static List<CanonicalTranscript> create(@NotNull final Collection<HmfGenomeRegion> regions) {
+    private static List<CanonicalTranscript> create(@NotNull Collection<HmfGenomeRegion> regions) {
         final List<CanonicalTranscript> transcripts = Lists.newArrayList();
         for (final HmfGenomeRegion region : regions) {
             final CanonicalTranscript transcript = create(region);
@@ -35,7 +35,7 @@ public final class CanonicalTranscriptFactory {
 
     @VisibleForTesting
     @NotNull
-    static CanonicalTranscript create(@NotNull final HmfGenomeRegion region) {
+    static CanonicalTranscript create(@NotNull HmfGenomeRegion region) {
         long codingStart = region.codingStart();
         long codingEnd = region.codingEnd();
         long exonStart = 0;
