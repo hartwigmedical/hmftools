@@ -117,6 +117,7 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
         return when (mutation) {
             is GeneMutations -> listOf(gene.start()..gene.end())
             is ExonMutations -> listOf(gene.exome()[mutation.exonNumber].start()..gene.exome()[mutation.exonNumber].end())
+            // TODO (KODU): Reimplement in HmfTranscriptRegion.
             is CodonRangeMutations -> listOf()
             is CodonMutations -> listOf()
             is GenericRangeMutations -> listOf()
