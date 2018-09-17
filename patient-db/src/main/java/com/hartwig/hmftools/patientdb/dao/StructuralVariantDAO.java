@@ -38,6 +38,7 @@ class StructuralVariantDAO {
 
     private Double getValueNotNull(Double value) { return value != null ? value : 0; }
     private Integer getValueNotNull(Integer value) { return value != null ? value : 0; }
+    private Byte getValueNotNull(Byte value) { return value != null ? value : 0; }
     private String getValueNotNull(String value) { return value != null ? value : ""; }
 
     @NotNull
@@ -48,23 +49,19 @@ class StructuralVariantDAO {
 
         for (Record record : result) {
 
-            // for now, ignore single-breakend SVs
-            if(record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME) == null
-            || record.getValue(STRUCTURALVARIANT.ENDPOSITION) == null
-            || record.getValue(STRUCTURALVARIANT.ENDORIENTATION) == null)
-            {
-                continue;
-            }
+            boolean isSingleBreakend = record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME) == null
+                    && record.getValue(STRUCTURALVARIANT.ENDPOSITION) == null
+                    && record.getValue(STRUCTURALVARIANT.ENDORIENTATION) == null;
 
             structuralVariants.add(ImmutableStructuralVariantData.builder()
                     .id(String.valueOf(record.getValue(STRUCTURALVARIANT.ID)))
                     .vcfId(String.valueOf(record.getValue(STRUCTURALVARIANT.VCFID)))
                     .startChromosome(record.getValue(STRUCTURALVARIANT.STARTCHROMOSOME))
-                    .endChromosome(record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME))
+                    .endChromosome(isSingleBreakend ? "0" : record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME))
                     .startPosition(record.getValue(STRUCTURALVARIANT.STARTPOSITION))
-                    .endPosition(record.getValue(STRUCTURALVARIANT.ENDPOSITION))
+                    .endPosition(isSingleBreakend ? -1 : record.getValue(STRUCTURALVARIANT.ENDPOSITION))
                     .startOrientation(record.getValue(STRUCTURALVARIANT.STARTORIENTATION))
-                    .endOrientation(record.getValue(STRUCTURALVARIANT.ENDORIENTATION))
+                    .endOrientation(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDORIENTATION)))
                     .startAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTAF)))
                     .adjustedStartAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTAF)))
                     .adjustedStartCopyNumber(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBER)))
@@ -79,17 +76,16 @@ class StructuralVariantDAO {
                     .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
                     .filter(record.getValue(STRUCTURALVARIANT.FILTER))
                     .imprecise(byteToBoolean(record.getValue(STRUCTURALVARIANT.IMPRECISE)))
-                    .somaticScore(getValueNotNull(record.getValue(STRUCTURALVARIANT.SOMATICSCORE)))
                     .qualityScore(record.getValue(STRUCTURALVARIANT.QUALSCORE))
                     .event(record.getValue(STRUCTURALVARIANT.EVENT))
                     .startTumourVariantFragmentCount(record.getValue(STRUCTURALVARIANT.STARTTUMOURVARIANTFRAGMENTCOUNT))
                     .startTumourReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.STARTTUMOURREFERENCEFRAGMENTCOUNT))
                     .startNormalVariantFragmentCount(record.getValue(STRUCTURALVARIANT.STARTNORMALVARIANTFRAGMENTCOUNT))
                     .startNormalReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.STARTNORMALREFERENCEFRAGMENTCOUNT))
-                    .endTumourVariantFragmentCount(record.getValue(STRUCTURALVARIANT.ENDTUMOURVARIANTFRAGMENTCOUNT))
-                    .endTumourReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.ENDTUMOURREFERENCEFRAGMENTCOUNT))
-                    .endNormalVariantFragmentCount(record.getValue(STRUCTURALVARIANT.ENDNORMALVARIANTFRAGMENTCOUNT))
-                    .endNormalReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.ENDNORMALREFERENCEFRAGMENTCOUNT))
+                    .endTumourVariantFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDTUMOURVARIANTFRAGMENTCOUNT)))
+                    .endTumourReferenceFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDTUMOURREFERENCEFRAGMENTCOUNT)))
+                    .endNormalVariantFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDNORMALVARIANTFRAGMENTCOUNT)))
+                    .endNormalReferenceFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDNORMALREFERENCEFRAGMENTCOUNT)))
                     .startIntervalOffsetStart(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTINTERVALOFFSETSTART)))
                     .startIntervalOffsetEnd(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTINTERVALOFFSETEND)))
                     .endIntervalOffsetStart(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETSTART)))
@@ -183,7 +179,6 @@ class StructuralVariantDAO {
                     // TODO: what's the correct approach here?
                     // jooq type conversion or just manual mapping?
                     .imprecise(byteToBoolean(record.getValue(STRUCTURALVARIANT.IMPRECISE)))
-                    .somaticScore(record.getValue(STRUCTURALVARIANT.SOMATICSCORE))
                     .qualityScore(record.getValue(STRUCTURALVARIANT.QUALSCORE))
                     .event(record.getValue(STRUCTURALVARIANT.EVENT))
                     .startLinkedBy(record.getValue(STRUCTURALVARIANT.STARTLINKEDBY))
@@ -228,7 +223,6 @@ class StructuralVariantDAO {
                     STRUCTURALVARIANT.PLOIDY,
                     STRUCTURALVARIANT.FILTER,
                     STRUCTURALVARIANT.IMPRECISE,
-                    STRUCTURALVARIANT.SOMATICSCORE,
                     STRUCTURALVARIANT.QUALSCORE,
                     STRUCTURALVARIANT.EVENT,
                     STRUCTURALVARIANT.STARTTUMOURVARIANTFRAGMENTCOUNT,
@@ -279,7 +273,6 @@ class StructuralVariantDAO {
                 variant.ploidy(),
                 variant.filter(),
                 variant.imprecise(),
-                variant.somaticScore(),
                 variant.qualityScore(),
                 variant.event(),
                 variant.start().tumourVariantFragmentCount(),

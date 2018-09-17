@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_ASMB_ONLY;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_NONE;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
@@ -219,7 +223,13 @@ public class SvSampleAnalyser {
             }
 
             String startArm = mClusteringUtils.getChromosomalArm(var.chromosome(true), var.position(true));
-            String endArm = mClusteringUtils.getChromosomalArm(var.chromosome(false), var.position(false));
+
+            String endArm = "";
+            if(!var.isNullBreakend())
+                endArm = mClusteringUtils.getChromosomalArm(var.chromosome(false), var.position(false));
+            else
+                endArm = CHROMOSOME_ARM_P;
+
             var.setChromosomalArms(startArm, endArm);
 
             ++currentIndex;
@@ -293,7 +303,7 @@ public class SvSampleAnalyser {
                     writer.write(",ChrEnd,PosEnd,OrientEnd,ArmEnd,AdjAFEnd,AdjCNEnd,AdjCNChgEnd");
 
                     // SV info
-                    writer.write(",Homology,InsertSeq,Imprecise,SomaticScore");
+                    writer.write(",Homology,InsertSeq,Imprecise");
 
                     // location attributes
                     writer.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd");
@@ -303,6 +313,9 @@ public class SvSampleAnalyser {
 
                     // linked pair info
                     writer.write(",LnkSvStart,LnkTypeStart,LnkLenStart,LnkSvEnd,LnkTypeEnd,LnkLenEnd");
+
+                    // GRIDDS caller info
+                    writer.write(",AsmbStart,AsmbEnd,AsmbMatchStart,AsmbMatchEnd");
 
                     // chain info
                     writer.write(",ChainId,ChainCount,ChainTICount,ChainDBCount,ChainIndex");
@@ -322,10 +335,12 @@ public class SvSampleAnalyser {
                 int duplicateBECount = cluster.getDuplicateBECount();
                 int duplicateBESiteCount = cluster.getDuplicateBESiteCount();
 
-                for (final SvClusterData var : cluster.getSVs()) {
+                for (final SvClusterData var : cluster.getSVs())
+                {
+                    String typeStr = var.isNullBreakend() ? "SGL" : var.type().toString();
                     writer.write(
                             String.format("%s,%d,%d,%s,%s,%.2f,%d,%d",
-                                    mSampleId, cluster.getId(), cluster.getCount(), var.id(), var.type(),
+                                    mSampleId, cluster.getId(), cluster.getCount(), var.id(), typeStr,
                                     var.getSvData().ploidy(), var.getPonCount(), var.getPonRegionCount()));
 
                     writer.write(
@@ -336,10 +351,9 @@ public class SvSampleAnalyser {
                                     var.getSvData().adjustedEndAF(), var.getSvData().adjustedEndCopyNumber(), var.getSvData().adjustedEndCopyNumberChange()));
 
                     writer.write(
-                            String.format(",%s,%s,%s,%d",
+                            String.format(",%s,%s,%s",
                                     var.getSvData().insertSequence().isEmpty() && var.type() != StructuralVariantType.INS ? var.getSvData().homology() : "",
-                                    var.type() == StructuralVariantType.INS ? var.getSvData().insertSequence() : "",
-                                    var.getSvData().imprecise(), var.getSvData().somaticScore()));
+                                    var.getSvData().insertSequence(), var.getSvData().imprecise()));
 
                     writer.write(
                             String.format(",%s,%s,%s,%s,%s,%s,%s",
@@ -356,29 +370,42 @@ public class SvSampleAnalyser {
 
                     // linked pair info
                     final SvLinkedPair startLP = cluster.findLinkedPair(var, true);
+                    String startLinkStr = "0,,-1";
+                    String assemblyMatchStart = !var.getAssemblyStart().isEmpty() ? ASSEMBLY_MATCH_ASMB_ONLY : ASSEMBLY_MATCH_NONE;
                     if(startLP != null)
-                        writer.write(String.format(",%s,%s,%d",
-                                startLP.first().equals(var) ? startLP.second().id() : startLP.first().id(),
-                                startLP.linkType(), startLP.length()));
-                    else
-                        writer.write(",0,,-1");
+                    {
+                        startLinkStr = String.format("%s,%s,%d",
+                                startLP.first().equals(var) ? startLP.second().id() : startLP.first().id(), startLP.linkType(), startLP.length());
+
+                        assemblyMatchStart = startLP.getAssemblyMatchType(var);
+                    }
 
                     final SvLinkedPair endLP = cluster.findLinkedPair(var, false);
+                    String endLinkStr = "0,,-1";
+                    String assemblyMatchEnd = !var.getAssemblyEnd().isEmpty() ? ASSEMBLY_MATCH_ASMB_ONLY : ASSEMBLY_MATCH_NONE;
                     if(endLP != null)
-                        writer.write(String.format(",%s,%s,%d",
-                                endLP.first().equals(var) ? endLP.second().id() : endLP.first().id(),
-                                endLP.linkType(), endLP.length()));
-                    else
-                        writer.write(",0,,-1");
+                    {
+                        endLinkStr = String.format("%s,%s,%d",
+                                endLP.first().equals(var) ? endLP.second().id() : endLP.first().id(), endLP.linkType(), endLP.length());
 
-                    // chain info
+                        assemblyMatchEnd = endLP.getAssemblyMatchType(var);
+                    }
+
+                    // assembly info
+                    writer.write(String.format(",%s,%s,%s,%s,%s,%s",
+                            startLinkStr, endLinkStr, var.getAssemblyStart(), var.getAssemblyEnd(), assemblyMatchStart, assemblyMatchEnd));
+
+                            // chain info
                     final SvChain chain = cluster.findChain(var);
+                    String chainStr = ",0,0,0,0,0";
 
                     if(chain != null)
-                        writer.write(String.format(",%d,%d,%d,%d,%d",
-                                chain.getId(), chain.getLinkCount(), chain.getTICount(), chain.getDBCount(), chain.getSvIndex(var)));
-                    else
-                        writer.write(",0,0,0,0,0");
+                    {
+                        chainStr = String.format(",%d,%d,%d,%d,%d",
+                                chain.getId(), chain.getLinkCount(), chain.getTICount(), chain.getDBCount(), chain.getSvIndex(var));
+                    }
+
+                    writer.write(chainStr);
 
                     writer.write(String.format(",%s,%d,%s", var.getTransType(), var.getTransLength(), var.getTransSvLinks()));
 

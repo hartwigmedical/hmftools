@@ -259,11 +259,11 @@ public class FilteredSVWriter {
                 }
 
                 mMantaFileWriter.write(
-                        String.format("%s,%s,%s,%s,%d,%d,%s,%d,%d,%s,%d",
+                        String.format("%s,%s,%s,%s,%d,%d,%s,%d,%d,%s",
                                 sampleId, var.id(), var.type(),
                                 var.chromosome(true), var.position(true), var.orientation(true),
                                 var.chromosome(false), var.position(false), var.orientation(false),
-                                var.imprecise(), var.somaticScore()));
+                                var.imprecise()));
 
                 mMantaFileWriter.newLine();
             }

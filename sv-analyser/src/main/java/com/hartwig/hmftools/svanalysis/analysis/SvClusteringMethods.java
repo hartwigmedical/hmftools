@@ -233,156 +233,6 @@ public class SvClusteringMethods {
 
     }
 
-    public void setClosestSVData(List<SvClusterData> allVariants, List<SvCluster> clusters) {
-
-        for (SvCluster cluster : clusters) {
-
-            // logically the closest SV will already be in the same cluster, otherwise use the full set
-            boolean useClusterSVs = cluster.getSVs().size() > 1;
-
-            List<SvClusterData> variants = useClusterSVs ? cluster.getSVs() : allVariants;
-
-            for (int index1 = 0 ; index1 < variants.size(); ++index1) {
-
-                SvClusterData var1 = variants.get(index1);
-
-                int shortestLength = var1.getNearestSVLength(); // use a starting value if set from a previous linked variant
-                String shortestLinkageType = var1.getNearestSVLinkType();
-
-                // start at the next variant to avoid rechecking pairs
-                for (int index2 = index1+1 ; index2 < variants.size(); ++index2) {
-
-                    SvClusterData var2 = variants.get(index2);
-
-                    int proximity = mUtils.getShortestProximity(var1, var2);
-
-                    if(proximity < 0)
-                        continue;
-
-                    String linkageType = "";
-
-                    // apply some specific tests
-                    if (mUtils.isWithin(var1, var2)) {
-                        linkageType = SV_GROUP_ENCLOSING;
-                    } else if (mUtils.isWithin(var2, var1)) {
-                        linkageType = SV_GROUP_ENCLOSED;
-                    } else if (mUtils.isOverlapping(var1, var2)) {
-                        linkageType = SV_GROUP_OVERLAP;
-                    } else {
-                        linkageType = SV_GROUP_NEIGHBOURS;
-                    }
-
-                    // some validity checks
-                    // NOTE: this may then lead to an inconsistency with clustering by base distance alone
-                    if(mUtils.areTypePair(var1, var2, StructuralVariantType.DEL, StructuralVariantType.DEL)
-                    && linkageType != SV_GROUP_NEIGHBOURS)
-                    {
-                        continue;
-                    }
-
-                    if (shortestLength == -1 || proximity < shortestLength) {
-                        // record this shortest linkage info
-                        shortestLength = proximity;
-                        shortestLinkageType = linkageType;
-                    }
-
-                    // update the second variant if it's also now nearer
-                    if(var2.getNearestSVLength() == -1 || proximity < var2.getNearestSVLength())
-                    {
-                        var2.setNearestSVLength(proximity);
-
-                        if(shortestLinkageType == SV_GROUP_ENCLOSING)
-                            var2.setNearestSVLinkType(SV_GROUP_ENCLOSED);
-                        else if(shortestLinkageType == SV_GROUP_ENCLOSED)
-                            var2.setNearestSVLinkType(SV_GROUP_ENCLOSING);
-                        else
-                            var2.setNearestSVLinkType(shortestLinkageType);
-                    }
-                }
-
-                var1.setNearestSVLength(shortestLength);
-                var1.setNearestSVLinkType(shortestLinkageType);
-
-                LOGGER.debug("var({}) shortestLength({}) and type({})", var1.id(), shortestLength, shortestLinkageType);
-            }
-        }
-    }
-
-    public void setClosestLinkedSVData(List<SvClusterData> allVariants) {
-
-        for (int index1 = 0 ; index1 < allVariants.size(); ++index1) {
-
-            SvClusterData var1 = allVariants.get(index1);
-
-            int shortestTILength = var1.getNearestTILength(); // use a starting value if set from a previous linked variant
-            int shortestDBLength = var1.getNearestDBLength();
-
-            for (int index2 = index1+1 ; index2 < allVariants.size(); ++index2) {
-
-                SvClusterData var2 = allVariants.get(index2);
-
-                int pairTILength = -1;
-                int pairDBLength = -1;
-
-                // compare each BE for this pair
-                for(int i = 0; i < 2; ++i) {
-
-                    boolean v1Start = (i == 0);
-
-                    for (int j = 0; j < 2; ++j) {
-
-                        boolean v2Start = (j == 0);
-
-                        if (mUtils.areLinkedSection(var1, var2, v1Start, v2Start)) {
-
-                            // test for templated insertion
-                            int tiLength = mUtils.getProximity(var1, var2, v1Start, v2Start);
-
-                            if (tiLength >= 0 && (pairTILength < 0 || tiLength < pairTILength)) {
-                                // new shortest TI
-                                pairTILength = tiLength;
-                            }
-                        }
-
-                        if(mUtils.areSectionBreak(var1, var2, v1Start, v2Start))
-                        {
-                            // then for a deletion bridge
-                            int dbLength = mUtils.getProximity(var1, var2, v1Start, v2Start);
-
-                            if (dbLength >= 0 && (pairDBLength < 0 || dbLength < pairDBLength)) {
-                                pairDBLength = dbLength;
-                            }
-                        }
-                    }
-                }
-
-                if (pairTILength >= 0 && (shortestTILength < 0 || pairTILength < shortestTILength)) {
-                    shortestTILength = pairTILength;
-                }
-
-                if (pairDBLength >= 0 && (shortestDBLength < 0 || pairDBLength < shortestDBLength)) {
-                    shortestDBLength = pairDBLength;
-                }
-
-                // update the second variant if it's also now nearer (this is an optimisation)
-                if(pairTILength >= 0 && (var2.getNearestTILength() == -1 || pairTILength < var2.getNearestTILength()))
-                {
-                    var2.setNearestTILength(pairTILength);
-                }
-
-                if(pairDBLength >= 0 && (var2.getNearestDBLength() == -1 || pairDBLength < var2.getNearestDBLength()))
-                {
-                    var2.setNearestDBLength(pairDBLength);
-                }
-            }
-
-            var1.setNearestTILength(shortestTILength);
-            var1.setNearestDBLength(shortestDBLength);
-
-            LOGGER.debug("var({}) shortestTILength({}) shortestDBLength({})", var1.id(), shortestTILength, shortestDBLength);
-        }
-    }
-
     public void setChromosomalArmStats(final List<SvClusterData> allVariants)
     {
         mChrArmSvCount.clear();
@@ -401,17 +251,22 @@ public class SvClusteringMethods {
                 mChrArmSvCount.put(chrArmStart, 0);
             }
 
-            if (!chrArmStart.equals(chrArmEnd) && !mChrArmSvCount.containsKey(chrArmEnd)) {
-                mChrArmSvCount.put(chrArmEnd, 0);
-            }
-
             // exclude LINE elements from back-ground rates
             if(var.isStartLineElement().equals(NO_LINE_ELEMENT)) {
                 mChrArmSvCount.replace(chrArmStart, mChrArmSvCount.get(chrArmStart) + 1);
             }
 
-            if(var.isEndLineElement().equals(NO_LINE_ELEMENT)) {
-                mChrArmSvCount.replace(chrArmEnd, mChrArmSvCount.get(chrArmEnd) + 1);
+            if(!var.isNullBreakend())
+            {
+                if (!chrArmStart.equals(chrArmEnd) && !mChrArmSvCount.containsKey(chrArmEnd))
+                {
+                    mChrArmSvCount.put(chrArmEnd, 0);
+                }
+
+                if (var.isEndLineElement().equals(NO_LINE_ELEMENT))
+                {
+                    mChrArmSvCount.replace(chrArmEnd, mChrArmSvCount.get(chrArmEnd) + 1);
+                }
             }
         }
 
@@ -465,12 +320,14 @@ public class SvClusteringMethods {
     public String getChrArmData(final SvClusterData var)
     {
         String chrArmStart = mUtils.getVariantChrArm(var,true);
-        String chrArmEnd = mUtils.getVariantChrArm(var,false);
+
+        boolean hasEnd = !var.isNullBreakend();
+        String chrArmEnd = hasEnd ? mUtils.getVariantChrArm(var,false) : "";
 
         // report Start SV count : Expected SV Count : End SV Count : Expected SV Count
         return String.format("%d,%.2f,%d,%.2f",
                 mChrArmSvCount.get(chrArmStart), mChrArmSvExpected.get(chrArmStart),
-                mChrArmSvCount.get(chrArmEnd), mChrArmSvExpected.get(chrArmEnd));
+                hasEnd ? mChrArmSvCount.get(chrArmEnd) : 0, hasEnd ? mChrArmSvExpected.get(chrArmEnd) : 0.0);
     }
 
     private static Map<String, Double> sortByValue(Map<String, Double> unsortMap, final boolean order)

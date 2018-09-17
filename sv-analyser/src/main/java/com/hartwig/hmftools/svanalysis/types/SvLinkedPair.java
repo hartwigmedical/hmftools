@@ -16,7 +16,6 @@ public class SvLinkedPair {
 
     public static final String LINK_TYPE_TI = "TI";
     public static final String LINK_TYPE_DB = "DB";
-    public static final String LINK_TYPE_DUP_BE = "DBE";
 
     public SvLinkedPair(SvClusterData first, SvClusterData second, final String linkType, boolean firstLinkOnStart, boolean secondLinkOnStart)
     {
@@ -61,5 +60,41 @@ public class SvLinkedPair {
     public final SvClusterData getSpanningSV() { return mSpanningSV; }
     public void setSpanningSV(SvClusterData var) { mSpanningSV = var; }
 
+    public static String ASSEMBLY_MATCH_MATCHED = "MATCH";
+    public static String ASSEMBLY_MATCH_DIFF = "DIFF";
+    public static String ASSEMBLY_MATCH_ASMB_ONLY = "ASMB_ONLY";
+    public static String ASSEMBLY_MATCH_LINK_ONLY = "LINK_ONLY";
+    public static String ASSEMBLY_MATCH_NONE = "NONE";
+
+    public String getAssemblyMatchType(final SvClusterData var)
+    {
+        final String firstAssembly = mFirstLinkOnStart ? mFirst.getAssemblyStart() : mFirst.getAssemblyEnd();
+        final String secondAssembly = mSecondLinkOnStart ? mSecond.getAssemblyStart() : mSecond.getAssemblyEnd();
+
+        if((var == mFirst && firstAssembly.isEmpty()) || (var == mSecond && secondAssembly.isEmpty()))
+        {
+            return ASSEMBLY_MATCH_LINK_ONLY;
+        }
+
+        if(firstAssembly.equals(secondAssembly))
+        {
+            return ASSEMBLY_MATCH_MATCHED;
+        }
+
+        String[] firstAssemblyList = firstAssembly.split(";");
+        String[] secondAssemblyList = secondAssembly.split(";");
+
+        for(int i = 0; i < firstAssemblyList.length; ++i)
+        {
+            for(int j = 0; j < secondAssemblyList.length; ++j)
+            {
+                if(firstAssemblyList[i].equals(secondAssemblyList[j]))
+                    return ASSEMBLY_MATCH_MATCHED;
+            }
+        }
+
+
+        return ASSEMBLY_MATCH_DIFF;
+    }
 
 }

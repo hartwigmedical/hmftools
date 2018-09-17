@@ -470,7 +470,6 @@ CREATE TABLE structuralVariant
     insertSequence varchar(2048) not null,
     type varchar(255) NOT NULL,
     filter varchar(255) NOT NULL,
-    somaticScore int,
     imprecise BOOLEAN NOT NULL,
     qualScore DOUBLE PRECISION,
     event varchar(255),

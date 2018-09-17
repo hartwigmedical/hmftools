@@ -71,7 +71,7 @@ public class ClusterAnalyser {
 
             SvClusterData var1 = cluster.getSVs().get(i);
 
-            if(var1.type() == StructuralVariantType.INS)
+            if(var1.type() == StructuralVariantType.INS || var1.isNullBreakend())
                 continue;
 
             // make note of SVs which line up exactly with other SVs
@@ -90,7 +90,7 @@ public class ClusterAnalyser {
 
                     SvClusterData var2 = cluster.getSVs().get(j);
 
-                    if(var2.type() == StructuralVariantType.INS)
+                    if(var2.type() == StructuralVariantType.INS || var2.isNullBreakend())
                         continue;
 
                     if(var2.isDupBEStart() && var2.isDupBEEnd())
@@ -208,13 +208,15 @@ public class ClusterAnalyser {
         if(linkedPairs.isEmpty() && spanningSVs.isEmpty())
             return;
 
-        LOGGER.info("sample({}) cluster({}: {} count={}) has {} mutually exclusive linked pairs:",
-                sampleId, cluster.getId(), cluster.getDesc(), cluster.getCount(), linkedPairs.size());
-
-        for(final SvLinkedPair pair : linkedPairs)
+        if(!linkedPairs.isEmpty())
         {
-            LOGGER.info("linked {} pair length({}) variants({})",
-                    pair.linkType(), pair.length(), pair.toString());
+            LOGGER.info("sample({}) cluster({}: {} count={}) has {} mutually exclusive linked pairs:",
+                    sampleId, cluster.getId(), cluster.getDesc(), cluster.getCount(), linkedPairs.size());
+
+            for (final SvLinkedPair pair : linkedPairs)
+            {
+                LOGGER.info("linked {} pair length({}) variants({})", pair.linkType(), pair.length(), pair.toString());
+            }
         }
 
         cluster.setLinkedPairs(linkedPairs);

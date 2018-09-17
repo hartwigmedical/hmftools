@@ -287,7 +287,7 @@ public class StructuralVariantFactory {
                 .startLinkedBy(context.getAttributeAsStringList(LOCAL_LINKED_BY, "").stream().filter(s -> !Strings.isNullOrEmpty(s)).collect(Collectors.joining( ",")))
                 .endLinkedBy(context.getAttributeAsStringList(REMOTE_LINKED_BY, "").stream().filter(s -> !Strings.isNullOrEmpty(s)).collect(Collectors.joining( ",")))
                 .imprecise(imprecise(context))
-                .somaticScore(context.hasAttribute(SOMATIC_SCORE) ? context.getAttributeAsInt(SOMATIC_SCORE, 0) : null)
+                // .somaticScore(context.hasAttribute(SOMATIC_SCORE) ? context.getAttributeAsInt(SOMATIC_SCORE, 0) : null)
                 .qualityScore(context.getPhredScaledQual());
     }
 static ImmutableStructuralVariantLegImpl.Builder setLegCommon(@NotNull ImmutableStructuralVariantLegImpl.Builder builder, @NotNull VariantContext context, boolean ignoreRefpair) {

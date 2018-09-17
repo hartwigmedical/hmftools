@@ -40,7 +40,7 @@ public class SvUtilities {
     public static String SV_GROUP_OVERLAP = "OVLP";
     public static String SV_GROUP_NEIGHBOURS = "NHRB";
 
-    public static int PERMITED_DUP_BE_DISTANCE = 50;
+    public static int PERMITED_DUP_BE_DISTANCE = 1;
 
     public SvUtilities(int baseDistance)
     {
@@ -103,6 +103,9 @@ public class SvUtilities {
         if(v1.id().equals(v2.id()))
             return false;
 
+        if(v1.position(v1UseStart) < 0 || v2.position(v2UseStart) < 0) // for single breakends
+            return false;
+
         if(!v1.chromosome(v1UseStart).equals(v2.chromosome(v2UseStart)))
             return false;
 
@@ -136,6 +139,9 @@ public class SvUtilities {
 
     public boolean isWithinRange(long pos1, long pos2)
     {
+        if(pos1 < 0 || pos2 < 0)
+            return false;
+
         return abs(pos1 - pos2) <= mClusterBaseDistance;
     }
 
@@ -146,6 +152,9 @@ public class SvUtilities {
             return false;
 
         if(!outer.chromosome(true).equals(inner.chromosome(true)))
+            return false;
+
+        if(inner.position(false) < 0 || outer.position(false) < 0)
             return false;
 
         if(inner.position(true) < outer.position(true))
@@ -222,19 +231,19 @@ public class SvUtilities {
             minLength = (minLength >= 0) ? Math.min(minLength, length) : length;
         }
 
-        if(v1.chromosome(true).equals(v2.chromosome(false)))
+        if(v1.chromosome(true).equals(v2.chromosome(false)) && !v2.isNullBreakend())
         {
             int length = Math.abs((int)v1.position(true) - (int)v2.position(false));
             minLength = (minLength >= 0) ? Math.min(minLength, length) : length;
         }
 
-        if(v1.chromosome(false).equals( v2.chromosome(true)))
+        if(v1.chromosome(false).equals( v2.chromosome(true)) && !v1.isNullBreakend())
         {
             int length = Math.abs((int)v1.position(false) - (int)v2.position(true));
             minLength = (minLength >= 0) ? Math.min(minLength, length) : length;
         }
 
-        if(v1.chromosome(false).equals(v2.chromosome(false)))
+        if(v1.chromosome(false).equals(v2.chromosome(false)) && !v1.isNullBreakend() && !v2.isNullBreakend())
         {
             int length = Math.abs((int)v1.position(false) - (int)v2.position(false));
             minLength = (minLength >= 0) ? Math.min(minLength, length) : length;
@@ -248,6 +257,9 @@ public class SvUtilities {
         // warning: no check for chromosome or arm
 //        if(!v1.chromosome(v1Start).equals(v2.chromosome(v2Start)))
 //            return -1;
+
+        if(v1.position(v1Start) < 0 || v2.position(v1Start) < 0)
+            return 0;
 
         return Math.abs((int)v1.position(v1Start) - (int)v2.position(v2Start));
     }
@@ -272,7 +284,11 @@ public class SvUtilities {
         return (var.orientation(false) == -1) == (var.getStartArm() == CHROMOSOME_ARM_Q);
     }
 
-    public boolean sameChrArm(final SvClusterData v1, final SvClusterData v2, boolean v1Start, boolean v2Start) {
+    public boolean sameChrArm(final SvClusterData v1, final SvClusterData v2, boolean v1Start, boolean v2Start)
+    {
+        if(v1.position(v1Start) < 0 || v2.position(v1Start) < 0)
+            return false;
+
         return v1.chromosome(v1Start).equals(v2.chromosome(v2Start)) && v1.arm(v1Start) == v2.arm(v2Start);
     }
 
@@ -320,6 +336,9 @@ public class SvUtilities {
 
     public boolean breakendsMatch(final SvClusterData var1, final SvClusterData var2, boolean v1Start, boolean v2Start, int permittedDist)
     {
+        if(var1.position(v1Start) < 0 || var2.position(v2Start)< 0)
+            return false;
+
         return var1.chromosome(v1Start).equals(var2.chromosome(v2Start))
                 && abs(var1.position(v1Start) - var2.position(v2Start)) <= permittedDist
                 && var1.orientation(v1Start) == var2.orientation(v2Start);

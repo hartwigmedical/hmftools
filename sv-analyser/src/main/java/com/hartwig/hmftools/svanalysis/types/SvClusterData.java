@@ -32,6 +32,9 @@ public class SvClusterData
     private int mNearestTILength; // templated insertion if exists
     private int mNearestDBLength; // deletion-bridge link if exists
 
+    private String mAssemblyStartData;
+    private String mAssemblyEndData;
+
     private boolean mDupBEStart;
     private boolean mDupBEEnd;
 
@@ -54,6 +57,24 @@ public class SvClusterData
         mEndFragileSite = NO_FS;
         mStartLineElement = NO_LINE_ELEMENT;
         mEndLineElement = NO_LINE_ELEMENT;
+
+        if(!mSVData.startLinkedBy().isEmpty() && !mSVData.startLinkedBy().equals("."))
+        {
+            mAssemblyStartData = mSVData.startLinkedBy().replaceAll(",", ";");
+        }
+        else
+        {
+            mAssemblyStartData = "";
+        }
+
+        if(!mSVData.endLinkedBy().isEmpty() && !mSVData.endLinkedBy().equals("."))
+        {
+            mAssemblyEndData = mSVData.endLinkedBy().replaceAll(",", ";");
+        }
+        else
+        {
+            mAssemblyEndData = "";
+        }
 
         mNearestSVLength = -1;
         mNearestSVLinkType = "NONE";
@@ -109,6 +130,8 @@ public class SvClusterData
     public final byte orientation(boolean isStart){ return isStart ? mSVData.startOrientation() : mSVData.endOrientation(); }
     public final StructuralVariantType type() { return mSVData.type(); }
 
+    public boolean isNullBreakend() { return mSVData.endChromosome().equals("0") && mSVData.endPosition() < 0; }
+
     public final String posId()
     {
         return String.format("id(%s) position(%s:%d:%d -> %s:%d:%d)",
@@ -137,6 +160,9 @@ public class SvClusterData
         mStartArm = start;
         mEndArm = end;
     }
+
+    public String getAssemblyStart() { return mAssemblyStartData; }
+    public String getAssemblyEnd() { return mAssemblyEndData; }
 
     public void setPonCount(int count) { mPonCount = count; }
     public int getPonCount() { return mPonCount; }
