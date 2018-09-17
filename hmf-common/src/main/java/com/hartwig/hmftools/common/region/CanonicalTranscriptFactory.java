@@ -6,7 +6,6 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.purple.gene.ImmutableCanonicalTranscript;
 
 import org.jetbrains.annotations.NotNull;
 
