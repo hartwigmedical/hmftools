@@ -93,8 +93,9 @@ public final class HmfGenomeFileLoader {
             @NotNull final String gene, @NotNull final String[] values) {
         final String entrezIdString = values[ENTREZ_ID_COLUMN];
 
-        final List<Integer> entrezIds = entrezIdString.isEmpty() ? Lists.newArrayList() :
-                Arrays.stream(entrezIdString.split(",")).map(Integer::parseInt).collect(Collectors.toList());
+        final List<Integer> entrezIds = entrezIdString.isEmpty()
+                ? Lists.newArrayList()
+                : Arrays.stream(entrezIdString.split(",")).map(Integer::parseInt).collect(Collectors.toList());
 
         long codingStart = 0;
         long codingEnd = 0;
@@ -102,7 +103,7 @@ public final class HmfGenomeFileLoader {
             codingStart = Long.valueOf(values[CODING_START_COLUMN]);
             codingEnd = Long.valueOf(values[CODING_END_COLUMN]);
         }
-
+        // TODO (KODU): Remove dependency on modifiable transcript region.
         return ModifiableHmfTranscriptRegion.create()
                 .setChromosome(chromosome)
                 .setStart(transcriptStart)
