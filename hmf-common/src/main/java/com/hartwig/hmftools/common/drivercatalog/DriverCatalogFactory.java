@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.dnds.DndsDriverImpactLikelihood;
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -38,6 +39,10 @@ public class DriverCatalogFactory {
 
     static double probabilityDriverVariant(long sampleSNVCount, @NotNull final DndsDriverImpactLikelihood likelihood) {
         double lambda = sampleSNVCount * likelihood.pVariantNonDriverFactor();
+        if (Doubles.isZero(lambda)) {
+            return likelihood.dndsLikelihood();
+        }
+
         PoissonDistribution poissonDistribution = new PoissonDistribution(lambda);
 
         double pVariantNonDriver = 1 - poissonDistribution.cumulativeProbability(0);

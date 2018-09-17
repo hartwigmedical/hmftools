@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverCatalogFactory.var
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihood;
@@ -53,11 +52,17 @@ public class TsgDrivers {
         long inframeVariants = variantCounts.getOrDefault(DriverImpact.INFRAME, 0L);
         long frameshiftVariants = variantCounts.getOrDefault(DriverImpact.FRAMESHIFT, 0L);
 
+        final double maxDndsLikelihood = codingVariants.stream()
+                .map(x -> impactLikelihood(likelihood, x))
+                .mapToDouble(DndsDriverImpactLikelihood::dndsLikelihood)
+                .max()
+                .orElse(0);
+
         final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
                 .gene(likelihood.gene())
                 .category(DriverCategory.TSG)
                 .driverLikelihood(1)
-                .dndsLikelihood(0)
+                .dndsLikelihood(maxDndsLikelihood)
                 .missense(missenseVariants)
                 .nonsense(nonsenseVariants)
                 .splice(spliceVariants)
