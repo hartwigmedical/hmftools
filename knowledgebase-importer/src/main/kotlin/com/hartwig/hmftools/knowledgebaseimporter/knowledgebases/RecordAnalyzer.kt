@@ -1,18 +1,16 @@
 package com.hartwig.hmftools.knowledgebaseimporter.knowledgebases
 
-import com.hartwig.hmftools.knowledgebaseimporter.dao.Gene
-import com.hartwig.hmftools.knowledgebaseimporter.dao.GeneDAO
+import com.hartwig.hmftools.common.region.HmfTranscriptRegion
+import com.hartwig.hmftools.knowledgebaseimporter.gene.GeneDAO
 import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.GenomicRangeEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.KnownVariantOutput
 import com.hartwig.hmftools.knowledgebaseimporter.output.SomaticVariantEvent
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.*
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
-import org.apache.logging.log4j.LogManager
 
 class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFastaSequenceFile, private val geneDAO: GeneDAO) {
     companion object {
-        private val logger = LogManager.getLogger("RecordAnalyzer")
         private val blacklistedDrugs = setOf("chemotherapy", "aspirin", "steroid")
     }
 
@@ -77,8 +75,8 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
                 val base = reference.getSubsequenceAt(variant.chromosome, position - 1, position - 1).baseString
                 SomaticVariantEvent(variant.gene, variant.chromosome, (position - 1).toString(), base + variant.ref, base)
             }
-            else                        -> SomaticVariantEvent(variant.gene, variant.chromosome, position.toString(), variant.ref!!,
-                                                               variant.alt!!)
+            else -> SomaticVariantEvent(variant.gene, variant.chromosome, position.toString(), variant.ref!!,
+                    variant.alt!!)
         }
     }
 
@@ -104,33 +102,32 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
         val genericMutationRecords = records.collectEvents<GenericMutation, R>()
         val geneModel = createGeneModel(genericMutationRecords.map { it.second })
         return genericMutationRecords.flatMap { (record, mutation) ->
-            val gene = geneModel[mutation.transcript] ?: geneModel[mutation.gene]
+            val gene = geneModel[mutation.gene]
             mutationCodingRange(mutation, gene).map {
-                Pair(record, GenomicRangeEvent(mutation.gene, mutation.transcript.orEmpty(), gene!!.chromosome, it.start.toString(),
-                                               it.endInclusive.toString(), gene.transcript))
+                Pair(record, GenomicRangeEvent(mutation.gene, mutation.transcript.orEmpty(), gene!!.chromosome(), it.start.toString(),
+                        it.endInclusive.toString(), gene.transcriptID()))
             }
         }
     }
 
-    private fun mutationCodingRange(mutation: GenericMutation, gene: Gene?): List<ClosedRange<Long>> {
+    private fun mutationCodingRange(mutation: GenericMutation, gene: HmfTranscriptRegion?): List<ClosedRange<Long>> {
         if (gene == null) {
-            logger.warn("Gene model for gene ${mutation.gene}, transcript: ${mutation.transcript} is null")
             return emptyList()
         }
         return when (mutation) {
-            is GeneMutations         -> listOf(gene.range())
-            is ExonMutations         -> gene.exonCodingRanges(mutation.exonNumber)
-            is CodonRangeMutations   -> gene.codonCodingRanges(mutation.startCodon, mutation.endCodon)
-            is CodonMutations        -> gene.codonCodingRanges(mutation.codonNumber)
-            is GenericRangeMutations -> gene.codingRangesBetween(mutation.startPosition, mutation.endPosition)
+            is GeneMutations -> listOf(gene.start()..gene.end())
+            is ExonMutations -> listOf(gene.exome()[mutation.exonNumber].start()..gene.exome()[mutation.exonNumber].end())
+            is CodonRangeMutations -> listOf()
+            is CodonMutations -> listOf()
+            is GenericRangeMutations -> listOf()
+//            is CodonRangeMutations -> gene.codonCodingRanges(mutation.startCodon, mutation.endCodon)
+//            is CodonMutations -> gene.codonCodingRanges(mutation.codonNumber)
+//            is GenericRangeMutations -> gene.codingRangesBetween(mutation.startPosition, mutation.endPosition)
         }
     }
 
-    private fun createGeneModel(genericMutations: List<GenericMutation>): Map<String, Gene?> {
-        val transcriptSet = genericMutations.mapNotNull { it.transcript }.toSet()
-        val geneSet = genericMutations.filter { it.transcript == null }.map { it.gene }.toSet()
-        val transcriptGeneModel = transcriptSet.associateBy({ it }, { geneDAO.transcriptGeneModel(it) })
-        val canonicalGeneModel = geneSet.associateBy({ it }, { geneDAO.canonicalGeneModel(it) })
-        return transcriptGeneModel + canonicalGeneModel
+    private fun createGeneModel(genericMutations: List<GenericMutation>): Map<String, HmfTranscriptRegion?> {
+        val hmfTranscriptRegions = genericMutations.map { geneDAO.hmfTranscriptRegionForGenericMutation(it) }
+        return hmfTranscriptRegions.filterNotNull().associateBy({ it.gene() }, { it })
     }
 }

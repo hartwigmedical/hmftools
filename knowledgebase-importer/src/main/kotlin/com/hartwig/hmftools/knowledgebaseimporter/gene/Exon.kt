@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.knowledgebaseimporter.dao
+package com.hartwig.hmftools.knowledgebaseimporter.gene
 
 data class Exon(val chromosome: String, val start: Long, val end: Long, val phase: Int, val endPhase: Int) {
     // MIVO: offset of the first codon completely contained in this exon:

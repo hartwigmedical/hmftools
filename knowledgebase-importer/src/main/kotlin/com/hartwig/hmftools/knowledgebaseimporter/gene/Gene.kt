@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.knowledgebaseimporter.dao
+package com.hartwig.hmftools.knowledgebaseimporter.gene
 
 import kotlin.math.abs
 import kotlin.math.max

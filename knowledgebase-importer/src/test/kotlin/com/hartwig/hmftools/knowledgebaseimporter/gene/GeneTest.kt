@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.knowledgebaseimporter.dao
+package com.hartwig.hmftools.knowledgebaseimporter.gene
 
 import io.kotlintest.matchers.shouldBe
 import io.kotlintest.specs.StringSpec

@@ -22,8 +22,8 @@ data class IclusionRecord(private val metadata: RecordMetadata, override val eve
         private val reader = KnowledgebaseEventReader("iclusion", IclusionTransvarReader, IclusionFusionReader, IclusionCnvReader,
                                                       IclusionGeneMutationReader, IclusionExonMutationReader, IclusionCodonReader)
 
-        operator fun invoke(studyDetails: IclusionStudyDetails, geneTranscript: Map<String, String?>): List<IclusionRecord> {
-            val events = studyDetails.mutations.map { IclusionEvent(it, geneTranscript[it.geneName].orEmpty()) }
+        operator fun invoke(studyDetails: IclusionStudyDetails, geneToTranscript: Map<String, String?>): List<IclusionRecord> {
+            val events = studyDetails.mutations.map { IclusionEvent(it, geneToTranscript[it.geneName].orEmpty()) }
             val actionability = readActionability(studyDetails)
             val doids = studyDetails.indications.map { Pair(it.indication_name_full, it.doidSet.map { Doid(it) }.toSet()) }
                     .toMap().filterValues { it.isNotEmpty() }

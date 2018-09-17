@@ -13,9 +13,9 @@ import com.hartwig.hmftools.extensions.csv.CsvWriter
 import com.hartwig.hmftools.knowledgebaseimporter.cgi.Cgi
 import com.hartwig.hmftools.knowledgebaseimporter.civic.Civic
 import com.hartwig.hmftools.knowledgebaseimporter.cosmic.Cosmic
-import com.hartwig.hmftools.knowledgebaseimporter.dao.GeneDAO
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.Doid
+import com.hartwig.hmftools.knowledgebaseimporter.gene.GeneDAO
 import com.hartwig.hmftools.knowledgebaseimporter.iclusion.Iclusion
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.OncoKb
@@ -108,7 +108,7 @@ private fun readIclusionStudies(cmd : CommandLine): List<IclusionStudyDetails> {
     iclusionApi.close()
 
     iclusionStudies.forEach {
-        logger.info("iclusion study: $it");
+        logger.info("iclusion study: $it")
     }
     logger.info("Queried and filtered ${iclusionStudies.size} studies from iclusion API")
 
