@@ -57,7 +57,7 @@ import com.hartwig.hmftools.common.purple.segment.Cluster;
 import com.hartwig.hmftools.common.purple.segment.ClusterFactory;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactory;
-import com.hartwig.hmftools.common.region.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -131,7 +131,7 @@ public class PurityPloidyEstimateApplication {
             final String tumorSample = config.tumorSample();
 
             // JOBA: Read Gene Panel
-            final List<HmfGenomeRegion> genePanel = HmfGenePanelSupplier.allGeneList();
+            final List<HmfTranscriptRegion> genePanel = HmfGenePanelSupplier.allGeneList();
 
             // JOBA: Load BAFs from AMBER
             final String amberFile = configSupplier.bafConfig().bafFile().toString();

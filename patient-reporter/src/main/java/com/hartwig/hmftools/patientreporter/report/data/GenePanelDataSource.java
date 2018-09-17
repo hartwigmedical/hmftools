@@ -6,7 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.region.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
 
 import org.jetbrains.annotations.NotNull;
@@ -28,10 +28,10 @@ public final class GenePanelDataSource {
     @NotNull
     public static JRDataSource fromSequencedReportData(@NotNull final SequencedReportData sequencedReportData) {
         final DRDataSource genePanelDataSource = new DRDataSource(GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(), TYPE_FIELD.getName());
-        final List<HmfGenomeRegion> regions = Lists.newArrayList(sequencedReportData.panelGeneModel().regions());
-        regions.sort(Comparator.comparing(HmfGenomeRegion::gene));
+        final List<HmfTranscriptRegion> regions = Lists.newArrayList(sequencedReportData.panelGeneModel().regions());
+        regions.sort(Comparator.comparing(HmfTranscriptRegion::gene));
 
-        for (final HmfGenomeRegion region : regions) {
+        for (final HmfTranscriptRegion region : regions) {
             final String role = sequencedReportData.cosmicGeneModel().getRoleForGene(region.gene());
             genePanelDataSource.add(region.gene(), region.transcript(), role);
         }

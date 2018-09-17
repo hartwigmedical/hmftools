@@ -7,8 +7,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
+@Value.Modifiable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class HmfGenomeRegion implements TranscriptRegion {
+public abstract class HmfTranscriptRegion implements TranscriptRegion {
 
     @NotNull
     public abstract String geneID();

@@ -5,7 +5,7 @@ import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.HmfExonRegion;
-import com.hartwig.hmftools.common.region.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.zipper.RegionZipperHandler;
@@ -49,7 +49,7 @@ class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumber, Hmf
     private int missenseNonBiallelicCount;
     private double missenseNonBiallelicPloidy;
 
-    GeneCopyNumberBuilder(@NotNull final HmfGenomeRegion gene) {
+    GeneCopyNumberBuilder(@NotNull final HmfTranscriptRegion gene) {
         this.gene = gene.gene();
         builder = ImmutableGeneCopyNumber.builder()
                 .from(gene)

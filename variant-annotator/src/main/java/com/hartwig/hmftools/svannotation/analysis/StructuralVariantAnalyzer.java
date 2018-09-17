@@ -10,7 +10,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
-import com.hartwig.hmftools.common.region.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
@@ -34,14 +34,14 @@ public class StructuralVariantAnalyzer {
     @NotNull
     private final VariantAnnotator annotator;
     @NotNull
-    private final Collection<HmfGenomeRegion> hmfGenePanelRegions;
+    private final Collection<HmfTranscriptRegion> hmfGenePanelRegions;
     @NotNull
     private final KnownFusionsModel knownFusionsModel;
 
     private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnalyzer.class);
 
     public StructuralVariantAnalyzer(@NotNull final VariantAnnotator annotator,
-            @NotNull final Collection<HmfGenomeRegion> hmfGenePanelRegions, @NotNull final KnownFusionsModel knownFusionsModel) {
+            @NotNull final Collection<HmfTranscriptRegion> hmfGenePanelRegions, @NotNull final KnownFusionsModel knownFusionsModel) {
         this.annotator = annotator;
         this.hmfGenePanelRegions = hmfGenePanelRegions;
         this.knownFusionsModel = knownFusionsModel;

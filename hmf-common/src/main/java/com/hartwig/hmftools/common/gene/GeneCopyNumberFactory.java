@@ -7,7 +7,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.region.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.zipper.RegionZipper;
@@ -17,14 +17,14 @@ import org.jetbrains.annotations.NotNull;
 public class GeneCopyNumberFactory {
 
     @NotNull
-    public static List<GeneCopyNumber> geneCopyNumbers(@NotNull final List<HmfGenomeRegion> genes,
+    public static List<GeneCopyNumber> geneCopyNumbers(@NotNull final List<HmfTranscriptRegion> genes,
             @NotNull final List<PurpleCopyNumber> somaticCopyNumbers, @NotNull final List<PurpleCopyNumber> germlineDeletions,
             @NotNull final List<PurityAdjustedSomaticVariant> enrichedSomatics) {
 
         final ListMultimap<String, PurityAdjustedSomaticVariant> variantMap = Multimaps.index(enrichedSomatics, SomaticVariant::gene);
 
         final List<GeneCopyNumber> result = Lists.newArrayList();
-        for (HmfGenomeRegion gene : genes) {
+        for (HmfTranscriptRegion gene : genes) {
             final List<PurityAdjustedSomaticVariant> variants =
                     variantMap.containsKey(gene.gene()) ? variantMap.get(gene.gene()) : Collections.EMPTY_LIST;
 

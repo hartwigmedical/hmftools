@@ -26,7 +26,7 @@ import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.HmfExonRegion;
-import com.hartwig.hmftools.common.region.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
@@ -51,24 +51,24 @@ class BachelorEligibility {
     private static final double MAX_COPY_NUMBER_FOR_LOSS = 0.5;
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorEligibility.class);
-    private static final SortedSetMultimap<String, HmfGenomeRegion> allGenesByChromosomeMap = HmfGenePanelSupplier.allGeneMap();
-    private static final Map<String, HmfGenomeRegion> allGenesMap = makeGeneNameMap();
-    private static final Map<String, HmfGenomeRegion> allTranscriptsMap = makeTranscriptMap();
+    private static final SortedSetMultimap<String, HmfTranscriptRegion> allGenesByChromosomeMap = HmfGenePanelSupplier.allGeneMap();
+    private static final Map<String, HmfTranscriptRegion> allGenesMap = makeGeneNameMap();
+    private static final Map<String, HmfTranscriptRegion> allTranscriptsMap = makeTranscriptMap();
 
     private final List<BachelorProgram> programs = Lists.newArrayList();
-    private final Set<HmfGenomeRegion> variantLocationsToQuery = Sets.newHashSet();
+    private final Set<HmfTranscriptRegion> variantLocationsToQuery = Sets.newHashSet();
 
-    private static Map<String, HmfGenomeRegion> makeGeneNameMap() {
-        final Map<String, HmfGenomeRegion> result = Maps.newHashMap();
-        for (final HmfGenomeRegion region : allGenesByChromosomeMap.values()) {
+    private static Map<String, HmfTranscriptRegion> makeGeneNameMap() {
+        final Map<String, HmfTranscriptRegion> result = Maps.newHashMap();
+        for (final HmfTranscriptRegion region : allGenesByChromosomeMap.values()) {
             result.put(region.gene(), region);
         }
         return result;
     }
 
-    private static Map<String, HmfGenomeRegion> makeTranscriptMap() {
-        final Map<String, HmfGenomeRegion> result = Maps.newHashMap();
-        for (final HmfGenomeRegion region : allGenesByChromosomeMap.values()) {
+    private static Map<String, HmfTranscriptRegion> makeTranscriptMap() {
+        final Map<String, HmfTranscriptRegion> result = Maps.newHashMap();
+        for (final HmfTranscriptRegion region : allGenesByChromosomeMap.values()) {
             result.put(region.transcriptID(), region);
         }
         return result;
@@ -106,13 +106,13 @@ class BachelorEligibility {
             }
 
             // process structural variant disruptions
-            final List<Predicate<HmfGenomeRegion>> disruptionPredicates = Lists.newArrayList();
+            final List<Predicate<HmfTranscriptRegion>> disruptionPredicates = Lists.newArrayList();
             for (final ProgramPanel panel : program.getPanel()) {
 
                 final List<GeneIdentifier> genes = panel.getGene();
 
                 if (panel.getEffect().contains(OtherEffect.GENE_DISRUPTION)) {
-                    final Predicate<HmfGenomeRegion> disruptionPredicate =
+                    final Predicate<HmfTranscriptRegion> disruptionPredicate =
                             sv -> genes.stream().anyMatch(g -> g.getEnsembl().equals(sv.transcriptID()));
                     // TODO: we are matching on transcript ID here but we only have canonical transcripts in our panel file
                     disruptionPredicates.add(disruptionPredicate);
@@ -144,9 +144,9 @@ class BachelorEligibility {
 
                 // update query targets
                 for (final GeneIdentifier g : genes) {
-                    final HmfGenomeRegion region = allTranscriptsMap.get(g.getEnsembl());
+                    final HmfTranscriptRegion region = allTranscriptsMap.get(g.getEnsembl());
                     if (region == null) {
-                        final HmfGenomeRegion namedRegion = allGenesMap.get(g.getName());
+                        final HmfTranscriptRegion namedRegion = allGenesMap.get(g.getName());
                         if (namedRegion == null) {
 
                             LOGGER.warn("Program {} gene {} non-canonical transcript {} couldn't find region, transcript will be skipped",
@@ -172,7 +172,7 @@ class BachelorEligibility {
 
             final Predicate<GeneCopyNumber> copyNumberPredicate =
                     cnv -> cnvPredicates.stream().anyMatch(p -> p.test(cnv)) && cnv.minCopyNumber() < MAX_COPY_NUMBER_FOR_LOSS;
-            final Predicate<HmfGenomeRegion> disruptionPredicate =
+            final Predicate<HmfTranscriptRegion> disruptionPredicate =
                     disruption -> disruptionPredicates.stream().anyMatch(p -> p.test(disruption));
 
             BachelorProgram bachelorProgram = new BachelorProgram(
@@ -304,7 +304,7 @@ class BachelorEligibility {
 
         final List<EligibilityReport> results = Lists.newArrayList();
 
-        for (final HmfGenomeRegion region : variantLocationsToQuery) {
+        for (final HmfTranscriptRegion region : variantLocationsToQuery) {
 
             // LOGGER.debug("chromosome({} start={} end={})", region.chromosome(), (int) region.geneStart(), (int) region.geneEnd());
 
@@ -370,7 +370,7 @@ class BachelorEligibility {
         final List<EligibilityReport> results = Lists.newArrayList();
 
         // TODO: can we do better than this performance wise? new map?
-        for (final HmfGenomeRegion region : allGenesByChromosomeMap.get(position.chromosome())) {
+        for (final HmfTranscriptRegion region : allGenesByChromosomeMap.get(position.chromosome())) {
 
             if (!region.contains(position)) {
                 continue;

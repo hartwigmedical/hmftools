@@ -7,7 +7,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.region.HmfExonRegion;
-import com.hartwig.hmftools.common.region.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,9 +22,9 @@ public final class CanonicalTranscriptFactory {
     }
 
     @NotNull
-    private static List<CanonicalTranscript> create(@NotNull Collection<HmfGenomeRegion> regions) {
+    private static List<CanonicalTranscript> create(@NotNull Collection<HmfTranscriptRegion> regions) {
         final List<CanonicalTranscript> transcripts = Lists.newArrayList();
-        for (final HmfGenomeRegion region : regions) {
+        for (final HmfTranscriptRegion region : regions) {
             final CanonicalTranscript transcript = create(region);
 
             transcripts.add(transcript);
@@ -35,7 +35,7 @@ public final class CanonicalTranscriptFactory {
 
     @VisibleForTesting
     @NotNull
-    static CanonicalTranscript create(@NotNull HmfGenomeRegion region) {
+    static CanonicalTranscript create(@NotNull HmfTranscriptRegion region) {
         long codingStart = region.codingStart();
         long codingEnd = region.codingEnd();
         long exonStart = 0;

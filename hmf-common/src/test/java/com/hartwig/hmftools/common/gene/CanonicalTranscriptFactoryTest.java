@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.InputStream;
 
 import com.hartwig.hmftools.common.genepanel.HmfGenomeFileLoader;
-import com.hartwig.hmftools.common.region.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -14,7 +14,7 @@ public class CanonicalTranscriptFactoryTest {
 
     @Test
     public void testKRAS() {
-        final HmfGenomeRegion kras = select("KRAS.tsv");
+        final HmfTranscriptRegion kras = select("KRAS.tsv");
         final CanonicalTranscript transcript = CanonicalTranscriptFactory.create(kras);
         assertTranscript(transcript, 6, 4, 1119, 189);
         assertEquals(25368375, transcript.codingStart());
@@ -23,14 +23,14 @@ public class CanonicalTranscriptFactoryTest {
 
     @Test
     public void testPTEN() {
-        final HmfGenomeRegion region = select("PTEN.tsv");
+        final HmfTranscriptRegion region = select("PTEN.tsv");
         final CanonicalTranscript transcript = CanonicalTranscriptFactory.create(region);
         assertTranscript(transcript, 9, 9, 9027, 403);
     }
 
     @Test
     public void testWASH7P() {
-        final HmfGenomeRegion region = select("WASH7P.tsv");
+        final HmfTranscriptRegion region = select("WASH7P.tsv");
         final CanonicalTranscript transcript = CanonicalTranscriptFactory.create(region);
         assertTranscript(transcript, 12, 0, 1783, 0);
     }
@@ -44,7 +44,7 @@ public class CanonicalTranscriptFactoryTest {
     }
 
     @NotNull
-    private static HmfGenomeRegion select(@NotNull final String file) {
+    private static HmfTranscriptRegion select(@NotNull final String file) {
         final InputStream inputStream = CanonicalTranscriptFactoryTest.class.getResourceAsStream("/gene/" + file);
         return HmfGenomeFileLoader.fromInputStream(inputStream).iterator().next();
     }

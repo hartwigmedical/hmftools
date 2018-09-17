@@ -7,10 +7,10 @@ import java.util.Collections;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.region.HmfExonRegion;
-import com.hartwig.hmftools.common.region.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.region.ImmutableHmfExonRegion;
+import com.hartwig.hmftools.common.region.ImmutableHmfTranscriptRegion;
 import com.hartwig.hmftools.common.region.Strand;
-import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfExonRegion;
-import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfGenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
@@ -25,7 +25,7 @@ public class GeneCopyNumberBuilderTest {
 
     @Before
     public void setup() {
-        HmfGenomeRegion gene = create(1001, 10000);
+        HmfTranscriptRegion gene = create(1001, 10000);
         victim = new GeneCopyNumberBuilder(gene);
     }
 
@@ -113,8 +113,8 @@ public class GeneCopyNumberBuilderTest {
     }
 
     @NotNull
-    private static HmfGenomeRegion create(long start, long end) {
-        return ImmutableHmfGenomeRegion.builder()
+    private static HmfTranscriptRegion create(long start, long end) {
+        return ImmutableHmfTranscriptRegion.builder()
                 .chromosome(CHROMOSOME)
                 .start(start)
                 .end(end)

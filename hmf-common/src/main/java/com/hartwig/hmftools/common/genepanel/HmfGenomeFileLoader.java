@@ -12,10 +12,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.HmfExonRegion;
-import com.hartwig.hmftools.common.region.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.region.ImmutableHmfExonRegion;
+import com.hartwig.hmftools.common.region.ModifiableHmfTranscriptRegion;
 import com.hartwig.hmftools.common.region.Strand;
-import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfExonRegion;
-import com.hartwig.hmftools.common.region.hmfslicer.ModifiableHmfGenomeRegion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,18 +48,18 @@ public final class HmfGenomeFileLoader {
     }
 
     @NotNull
-    public static List<HmfGenomeRegion> fromInputStream(@NotNull final InputStream genomeInputStream) {
+    public static List<HmfTranscriptRegion> fromInputStream(@NotNull final InputStream genomeInputStream) {
         return fromLines(new BufferedReader(new InputStreamReader(genomeInputStream)).lines().collect(Collectors.toList()));
     }
 
     @NotNull
-    private static List<HmfGenomeRegion> fromLines(@NotNull final List<String> lines) {
-        final Map<String, ModifiableHmfGenomeRegion> geneMap = Maps.newLinkedHashMap();
+    private static List<HmfTranscriptRegion> fromLines(@NotNull final List<String> lines) {
+        final Map<String, HmfTranscriptRegion> geneMap = Maps.newLinkedHashMap();
         for (final String line : lines) {
             final String[] values = line.split(FIELD_SEPARATOR);
             final String chromosome = values[CHROMOSOME_COLUMN].trim();
             if (!HumanChromosome.contains(chromosome)) {
-                LOGGER.warn("skipping line due to unknown chromosome: {}", line);
+                LOGGER.warn("Skipping line due to unknown chromosome: {}", line);
                 continue;
             }
 
@@ -71,10 +71,8 @@ public final class HmfGenomeFileLoader {
                 LOGGER.warn("Invalid transcript region found on chromosome " + chromosome + ": start=" + transcriptStart + ", end="
                         + transcriptEnd);
             } else {
-                final ModifiableHmfGenomeRegion geneRegion = geneMap.computeIfAbsent(gene,
+                final HmfTranscriptRegion geneRegion = geneMap.computeIfAbsent(gene,
                         geneName -> createRegion(chromosome, transcriptStart, transcriptEnd, geneName, values));
-                assert(geneRegion.transcriptID().equals(values[TRANSCRIPT_ID_COLUMN])) :
-                        geneRegion.transcriptID();
 
                 final HmfExonRegion exonRegion = ImmutableHmfExonRegion.builder()
                         .chromosome(chromosome)
@@ -83,7 +81,7 @@ public final class HmfGenomeFileLoader {
                         .end(Long.valueOf(values[EXON_END_COLUMN]))
                         .build();
 
-                geneRegion.addExome(exonRegion);
+                geneRegion.exome().add(exonRegion);
             }
         }
 
@@ -91,7 +89,7 @@ public final class HmfGenomeFileLoader {
     }
 
     @NotNull
-    private static ModifiableHmfGenomeRegion createRegion(final String chromosome, final long transcriptStart, final long transcriptEnd,
+    private static HmfTranscriptRegion createRegion(final String chromosome, final long transcriptStart, final long transcriptEnd,
             @NotNull final String gene, @NotNull final String[] values) {
         final String entrezIdString = values[ENTREZ_ID_COLUMN];
 
@@ -105,8 +103,7 @@ public final class HmfGenomeFileLoader {
             codingEnd = Long.valueOf(values[CODING_END_COLUMN]);
         }
 
-
-        return ModifiableHmfGenomeRegion.create()
+        return ModifiableHmfTranscriptRegion.create()
                 .setChromosome(chromosome)
                 .setStart(transcriptStart)
                 .setEnd(transcriptEnd)
