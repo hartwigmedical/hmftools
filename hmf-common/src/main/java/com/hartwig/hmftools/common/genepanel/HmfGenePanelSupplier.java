@@ -46,8 +46,8 @@ public enum HmfGenePanelSupplier {
     @NotNull
     private static SortedSetMultimap<String, HmfGenomeRegion> toSortedMap(@NotNull final List<HmfGenomeRegion> regions) {
         final SortedSetMultimap<String, HmfGenomeRegion> regionMap = TreeMultimap.create();
-        for (HmfGenomeRegion geneRegion : regions) {
-            regionMap.put(geneRegion.chromosome(), geneRegion);
+        for (HmfGenomeRegion region : regions) {
+            regionMap.put(region.chromosome(), region);
         }
 
         return regionMap;
