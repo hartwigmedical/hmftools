@@ -82,7 +82,7 @@ public class SigOptimiser
     private static int MIN_PURE_SAMPLE_COUNT = 5;
     private static double SMALL_RATIO_PERC_CUTOFF = 0.01; // so for a max bucket ratio of 0.36, a minor bucket ratio of 0.0036 would be ignored
     private static double BUCKET_RATIO_RANGE_PERCENTILE = 0.6;
-    public static double BUCKET_RANGE_MAX_PERCENT = 0.2; // max that a range can be as a percentage of its ratio, works up and down
+    public static double BUCKET_RANGE_MAX_PERCENT = 0.20; // max that a range can be as a percentage of its ratio, works up and down
     public static double SAMPLE_PURE_SIG_PERCENT = 0.8; // used to decide whether a sample can aid in optimising sig ratios and ranges
 
     private static final Logger LOGGER = LogManager.getLogger(SigOptimiser.class);
@@ -707,7 +707,7 @@ public class SigOptimiser
             return;
 
         mNewBuckets.add(bucket);
-        mActiveBuckets.add(bucket);
+        // mActiveBuckets.add(bucket); // for now candidates are not actually added
         mHasChanged = true;
 
         // now add this bucket's sample counts to the totals
@@ -1167,11 +1167,11 @@ public class SigOptimiser
         double totalCount = sumVector(sampleTotals);
         double allocTotal = 0;
 
-        boolean checkAllBuckets = sumVector(adjRatios) == 0;
+        boolean noStartRatios = sumVector(adjRatios) == 0;
 
         for(int bucket = 0; bucket < bucketCount; ++bucket)
         {
-            if(adjRatios[bucket] == 0 && !checkAllBuckets)
+            if(adjRatios[bucket] == 0 && !noStartRatios)
                 continue;
 
             double bucketUnallocTotal = 0;
@@ -1262,11 +1262,22 @@ public class SigOptimiser
 
             double countsTotal = rangeWeightTotal * bucketTotal;
 
-            boolean acceptNewRange = (rangePerc <= BUCKET_RANGE_MAX_PERCENT * 2) && (adjRanges[bucket] < rangePerc);
+            boolean acceptNewRange = !noStartRatios && (rangePerc <= BUCKET_RANGE_MAX_PERCENT * 2) && (adjRanges[bucket] < rangePerc);
 
-            LOGGER.debug(String.format("grp(%d) bucket(%d) sigRatio(%.4f range=%.4f) calc(avg=%.4f med=%.4f) span(%.4f -> %.4f act=%.4f perc=%.3f) acceptChg(%s) total(%.3f, %s of %s)",
-                    groupId, bucket, adjRatios[bucket], adjRanges[bucket], rangeBoundMean, medianRatio, rangeMinRatio, rangeMaxRatio, minRange, rangePerc,
-                    acceptNewRange, rangeWeightTotal, sizeToStr(countsTotal), sizeToStr(bucketTotal)));
+            if(noStartRatios)
+            {
+                LOGGER.debug(String.format("grp(%d) bucket(%d) calc(avg=%.4f med=%.4f) span(%.4f -> %.4f act=%.4f perc=%.3f) total(%.3f, %s of %s)",
+                        groupId, bucket, rangeBoundMean, medianRatio, rangeMinRatio, rangeMaxRatio, minRange, rangePerc,
+                        rangeWeightTotal, sizeToStr(countsTotal), sizeToStr(bucketTotal)));
+
+            }
+            else
+            {
+                LOGGER.debug(String.format("grp(%d) bucket(%d) sigRatio(%.4f range=%.4f) calc(avg=%.4f med=%.4f) span(%.4f -> %.4f act=%.4f perc=%.3f) acceptChg(%s) total(%.3f, %s of %s)",
+                        groupId, bucket, adjRatios[bucket], adjRanges[bucket], rangeBoundMean, medianRatio, rangeMinRatio, rangeMaxRatio, minRange, rangePerc,
+                        acceptNewRange, rangeWeightTotal, sizeToStr(countsTotal), sizeToStr(bucketTotal)));
+
+            }
 
             if(acceptNewRange)
             {

@@ -668,8 +668,12 @@ public class BaReporter
 
             if (sigOptim.getAllocPerc() < 0.8)
             {
-                LOGGER.debug(String.format("bg(%d) achieved low reconstruction from %d sigs to %.3f percent",
-                        testGroup.getId(), sigOptim.contributingSigCount(), sigOptim.getAllocPerc()));
+                if(sigOptim.getAllocPerc() >= 0.5)
+                {
+                    LOGGER.debug(String.format("bg(%d) achieved low reconstruction from %d sigs to %.3f percent",
+                            testGroup.getId(), sigOptim.contributingSigCount(), sigOptim.getAllocPerc()));
+                }
+
                 continue;
             }
 
