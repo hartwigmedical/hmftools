@@ -4,10 +4,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
@@ -16,8 +18,10 @@ import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum HmfGenePanelSupplier {
-    ;
+public final class HmfGenePanelSupplier {
+
+    private HmfGenePanelSupplier() {
+    }
 
     @NotNull
     public static List<HmfTranscriptRegion> hmfPanelGeneList() throws IOException {
@@ -32,7 +36,7 @@ public enum HmfGenePanelSupplier {
     }
 
     @NotNull
-    public static SortedSetMultimap<String, HmfTranscriptRegion> allGeneMap() {
+    public static SortedSetMultimap<String, HmfTranscriptRegion> allGenesPerChromosomeMap() {
         return toSortedMap(allGeneList());
     }
 
@@ -40,6 +44,17 @@ public enum HmfGenePanelSupplier {
     public static List<HmfTranscriptRegion> allGeneList() {
         final InputStream inputStream = HmfGenePanelSupplier.class.getResourceAsStream("/genepanel/all_genes.tsv");
         return HmfGenomeFileLoader.fromInputStream(inputStream);
+    }
+
+    @NotNull
+    public static Map<String, HmfTranscriptRegion> allGenesMap() {
+        List<HmfTranscriptRegion> genes = allGeneList();
+        Map<String, HmfTranscriptRegion> geneMap = Maps.newHashMap();
+        for (HmfTranscriptRegion gene : genes) {
+            geneMap.put(gene.gene(), gene);
+        }
+
+        return geneMap;
     }
 
     @NotNull

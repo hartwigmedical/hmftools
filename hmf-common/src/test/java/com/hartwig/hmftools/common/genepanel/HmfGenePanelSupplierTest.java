@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -25,7 +26,7 @@ public class HmfGenePanelSupplierTest {
 
     @Test
     public void allRegionsAreSortedCorrectly() {
-        final SortedSetMultimap<String, HmfTranscriptRegion> geneRegions = HmfGenePanelSupplier.allGeneMap();
+        final SortedSetMultimap<String, HmfTranscriptRegion> geneRegions = HmfGenePanelSupplier.allGenesPerChromosomeMap();
         for (final String chromosome : geneRegions.keySet()) {
             long start = 0;
             for (final HmfTranscriptRegion hmfTranscriptRegion : geneRegions.get(chromosome)) {
@@ -33,6 +34,14 @@ public class HmfGenePanelSupplierTest {
                 start = hmfTranscriptRegion.start();
             }
         }
+    }
+
+    @Test
+    public void allGenesAreUnique() {
+        List<HmfTranscriptRegion> regionList = HmfGenePanelSupplier.allGeneList();
+        Map<String, HmfTranscriptRegion> regionsByGene = HmfGenePanelSupplier.allGenesMap();
+
+        assertEquals(regionList.size(), regionsByGene.values().size());
     }
 
     @Test

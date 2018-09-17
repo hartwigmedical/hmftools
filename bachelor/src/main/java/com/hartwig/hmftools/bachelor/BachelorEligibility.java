@@ -51,24 +51,27 @@ class BachelorEligibility {
     private static final double MAX_COPY_NUMBER_FOR_LOSS = 0.5;
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorEligibility.class);
-    private static final SortedSetMultimap<String, HmfTranscriptRegion> allGenesByChromosomeMap = HmfGenePanelSupplier.allGeneMap();
-    private static final Map<String, HmfTranscriptRegion> allGenesMap = makeGeneNameMap();
-    private static final Map<String, HmfTranscriptRegion> allTranscriptsMap = makeTranscriptMap();
+    private static final SortedSetMultimap<String, HmfTranscriptRegion> ALL_GENES_BY_CHROMOSOME =
+            HmfGenePanelSupplier.allGenesPerChromosomeMap();
+    private static final Map<String, HmfTranscriptRegion> ALL_GENES = makeGeneNameMap();
+    private static final Map<String, HmfTranscriptRegion> ALL_TRANSCRIPT_IDS = makeTranscriptMap();
 
     private final List<BachelorProgram> programs = Lists.newArrayList();
     private final Set<HmfTranscriptRegion> variantLocationsToQuery = Sets.newHashSet();
 
+    @NotNull
     private static Map<String, HmfTranscriptRegion> makeGeneNameMap() {
         final Map<String, HmfTranscriptRegion> result = Maps.newHashMap();
-        for (final HmfTranscriptRegion region : allGenesByChromosomeMap.values()) {
+        for (final HmfTranscriptRegion region : ALL_GENES_BY_CHROMOSOME.values()) {
             result.put(region.gene(), region);
         }
         return result;
     }
 
+    @NotNull
     private static Map<String, HmfTranscriptRegion> makeTranscriptMap() {
         final Map<String, HmfTranscriptRegion> result = Maps.newHashMap();
-        for (final HmfTranscriptRegion region : allGenesByChromosomeMap.values()) {
+        for (final HmfTranscriptRegion region : ALL_GENES_BY_CHROMOSOME.values()) {
             result.put(region.transcriptID(), region);
         }
         return result;
@@ -77,7 +80,8 @@ class BachelorEligibility {
     private BachelorEligibility() {
     }
 
-    static BachelorEligibility fromMap(final Map<String, Program> input) {
+    @NotNull
+    static BachelorEligibility fromMap(@NotNull Map<String, Program> input) {
         final BachelorEligibility result = new BachelorEligibility();
 
         for (final Program program : input.values()) {
@@ -138,15 +142,16 @@ class BachelorEligibility {
                 final Predicate<VariantModel> panelPredicate = v -> genes.stream()
                         .anyMatch(p -> v.sampleAnnotations()
                                 .stream()
-                                .anyMatch(a -> a.transcript().equals(p.getEnsembl()) && effects.stream().anyMatch(x -> a.effects().contains(x))));
+                                .anyMatch(a -> a.transcript().equals(p.getEnsembl()) && effects.stream()
+                                        .anyMatch(x -> a.effects().contains(x))));
 
                 panelPredicates.add(panelPredicate);
 
                 // update query targets
                 for (final GeneIdentifier g : genes) {
-                    final HmfTranscriptRegion region = allTranscriptsMap.get(g.getEnsembl());
+                    final HmfTranscriptRegion region = ALL_TRANSCRIPT_IDS.get(g.getEnsembl());
                     if (region == null) {
-                        final HmfTranscriptRegion namedRegion = allGenesMap.get(g.getName());
+                        final HmfTranscriptRegion namedRegion = ALL_GENES.get(g.getName());
                         if (namedRegion == null) {
 
                             LOGGER.warn("Program {} gene {} non-canonical transcript {} couldn't find region, transcript will be skipped",
@@ -175,8 +180,7 @@ class BachelorEligibility {
             final Predicate<HmfTranscriptRegion> disruptionPredicate =
                     disruption -> disruptionPredicates.stream().anyMatch(p -> p.test(disruption));
 
-            BachelorProgram bachelorProgram = new BachelorProgram(
-                    program.getName(),
+            BachelorProgram bachelorProgram = new BachelorProgram(program.getName(),
                     snvPredicate,
                     inWhitelist,
                     copyNumberPredicate,
@@ -193,7 +197,6 @@ class BachelorEligibility {
     @NotNull
     private Collection<EligibilityReport> processVariant(final VariantContext variant, final String patient, final String sample,
             final EligibilityReport.ReportType type) {
-
         if (variant.isFiltered()) {
             return Collections.emptyList();
         }
@@ -254,12 +257,10 @@ class BachelorEligibility {
 
                 if (!found && !program.whitelist().test(sampleVariant)) {
 
-                    if(program.whitelist().test(sampleVariant))
-                    {
+                    if (program.whitelist().test(sampleVariant)) {
                         // allow this whitelist through
                         LOGGER.debug("unlisted effecta({}) but whitelisted variant", snpEff.effects());
-                    }
-                    else {
+                    } else {
                         LOGGER.debug("uninteresting effects({})", snpEff.effects());
                         continue;
                     }
@@ -364,13 +365,33 @@ class BachelorEligibility {
         return -1;
     }
 
+    @NotNull
+    Collection<EligibilityReport> processStructuralVariants(final String patient, final List<StructuralVariant> structuralVariants) {
+        return structuralVariants.stream().flatMap(sv -> processStructuralVariant(patient, sv)).collect(Collectors.toList());
+    }
+
+    @NotNull
+    private Stream<EligibilityReport> processStructuralVariant(final String patient, final StructuralVariant structuralVariant) {
+        if (structuralVariant.end() != null) {
+            final GenomePosition start = GenomePositions.create(structuralVariant.chromosome(true), structuralVariant.position(true));
+            final GenomePosition end = GenomePositions.create(structuralVariant.chromosome(false), structuralVariant.position(false));
+
+            final List<EligibilityReport> results = Lists.newArrayList();
+            results.addAll(processStructuralVariant(patient, start, end, structuralVariant.type()));
+            results.addAll(processStructuralVariant(patient, end, start, structuralVariant.type()));
+            return results.stream();
+        } else {
+            return Stream.empty();
+        }
+    }
+
+    @NotNull
     private Collection<EligibilityReport> processStructuralVariant(final String patient, final GenomePosition position,
             final GenomePosition other, final StructuralVariantType svType) {
-
         final List<EligibilityReport> results = Lists.newArrayList();
 
         // TODO: can we do better than this performance wise? new map?
-        for (final HmfTranscriptRegion region : allGenesByChromosomeMap.get(position.chromosome())) {
+        for (final HmfTranscriptRegion region : ALL_GENES_BY_CHROMOSOME.get(position.chromosome())) {
 
             if (!region.contains(position)) {
                 continue;
@@ -407,24 +428,5 @@ class BachelorEligibility {
         }
 
         return results;
-    }
-
-    private Stream<EligibilityReport> processStructuralVariant(final String patient, final StructuralVariant structuralVariant) {
-        if (structuralVariant.end() != null) {
-            final GenomePosition start = GenomePositions.create(structuralVariant.chromosome(true), structuralVariant.position(true));
-            final GenomePosition end = GenomePositions.create(structuralVariant.chromosome(false), structuralVariant.position(false));
-
-            final List<EligibilityReport> results = Lists.newArrayList();
-            results.addAll(processStructuralVariant(patient, start, end, structuralVariant.type()));
-            results.addAll(processStructuralVariant(patient, end, start, structuralVariant.type()));
-            return results.stream();
-        } else {
-            return Stream.empty();
-        }
-    }
-
-    @NotNull
-    Collection<EligibilityReport> processStructuralVariants(final String patient, final List<StructuralVariant> structuralVariants) {
-        return structuralVariants.stream().flatMap(sv -> processStructuralVariant(patient, sv)).collect(Collectors.toList());
     }
 }
