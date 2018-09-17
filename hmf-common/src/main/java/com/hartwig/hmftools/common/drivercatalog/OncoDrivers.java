@@ -2,15 +2,18 @@ package com.hartwig.hmftools.common.drivercatalog;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCatalogFactory.variantTypeCount;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -21,9 +24,16 @@ import org.jetbrains.annotations.NotNull;
 public class OncoDrivers {
 
     static final int MAX_REPEAT_COUNT = 7;
+    static final int HOTSPOT_DISTANCE = 5;
+
+    private final NearHotspot nearHotspot;
+
+    public OncoDrivers(@NotNull final Multimap<String, GenomePosition> hotspots) {
+        nearHotspot = new NearHotspot(HOTSPOT_DISTANCE, hotspots);
+    }
 
     @NotNull
-    public static List<DriverCatalog> oncoDrivers(@NotNull final Map<String, DndsDriverGeneLikelihood> likelihoodsByGene,
+    public List<DriverCatalog> oncoDrivers(@NotNull final Map<String, DndsDriverGeneLikelihood> likelihoodsByGene,
             @NotNull final List<EnrichedSomaticVariant> variants) {
 
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
@@ -55,7 +65,7 @@ public class OncoDrivers {
     }
 
     @NotNull
-    static DriverCatalog geneDriver(long sampleSNVCount, @NotNull final String gene,
+    DriverCatalog geneDriver(long sampleSNVCount, @NotNull final String gene,
             @NotNull final DndsDriverImpactLikelihood missenseLikelihood, @NotNull final List<EnrichedSomaticVariant> codingVariants) {
 
         final Map<DriverImpact, Long> variantCounts = DriverCatalogFactory.driverImpactCount(codingVariants);
@@ -81,7 +91,9 @@ public class OncoDrivers {
             return builder.driver(DriverType.HOTSPOT).build();
         }
 
-        // TODO: Add NEAR_HOTSPOT HERE
+        if (codingVariants.stream().anyMatch(nearHotspot::isNearHotspot)) {
+            return builder.driver(DriverType.NEAR_HOTSPOT).build();
+        }
 
         if (codingVariants.stream().anyMatch(OncoDrivers::isInframeIndel)) {
             return builder.driver(DriverType.INFRAME).build();
