@@ -48,10 +48,11 @@ public final class HmfGenePanelSupplier {
 
     @NotNull
     public static Map<String, HmfTranscriptRegion> allGenesMap() {
-        List<HmfTranscriptRegion> genes = allGeneList();
+        List<HmfTranscriptRegion> regions = allGeneList();
         Map<String, HmfTranscriptRegion> geneMap = Maps.newHashMap();
-        for (HmfTranscriptRegion gene : genes) {
-            geneMap.put(gene.gene(), gene);
+        for (HmfTranscriptRegion region : regions) {
+            assert !geneMap.containsKey(region.gene());
+            geneMap.put(region.gene(), region);
         }
 
         return geneMap;
