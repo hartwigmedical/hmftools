@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverCatalogFactory.var
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -30,8 +31,7 @@ public class OncoDrivers {
         final Map<VariantType, Long> variantTypeCounts = variantTypeCount(variants);
         long sampleSNVCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0L);
 
-        final Map<String, List<EnrichedSomaticVariant>> codingVariants =
-                DriverCatalogFactory.codingVariantsByGene(likelihoodsByGene.keySet(), variants);
+        final Map<String, List<EnrichedSomaticVariant>> codingVariants = oncogenicVariantsByGene(likelihoodsByGene.keySet(), variants);
 
         for (String gene : codingVariants.keySet()) {
 
@@ -42,6 +42,16 @@ public class OncoDrivers {
         }
 
         return driverCatalog;
+    }
+
+    @NotNull
+    private static Map<String, List<EnrichedSomaticVariant>> oncogenicVariantsByGene(@NotNull final Set<String> genes,
+            @NotNull final List<EnrichedSomaticVariant> variants) {
+
+        return variants.stream()
+                .filter(x -> genes.contains(x.gene()))
+                .filter(x -> isMissense(x) || isInframeIndel(x))
+                .collect(Collectors.groupingBy(SomaticVariant::gene));
     }
 
     @NotNull
@@ -83,6 +93,10 @@ public class OncoDrivers {
                         missenseLikelihood) : 0;
 
         return builder.driverLikelihood(driverLikelihood).build();
+    }
+
+    private static boolean isMissense(@NotNull final EnrichedSomaticVariant variant) {
+        return variant.type() != VariantType.INDEL && variant.canonicalCodingEffect() == CodingEffect.MISSENSE;
     }
 
     private static boolean isInframeIndel(@NotNull final EnrichedSomaticVariant variant) {

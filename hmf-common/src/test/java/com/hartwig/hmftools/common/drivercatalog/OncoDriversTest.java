@@ -25,13 +25,10 @@ public class OncoDriversTest {
     private static final double UNADJUSTED_LIKELIHOOD = 0.5;
 
     private EnrichedSomaticVariant frameshiftHotspot;
-
     private EnrichedSomaticVariant inframe;
     private EnrichedSomaticVariant invalidInframe;
-
     private EnrichedSomaticVariant frameshift;
     private EnrichedSomaticVariant missense;
-
     private DndsDriverImpactLikelihood likelihood;
 
     @Before

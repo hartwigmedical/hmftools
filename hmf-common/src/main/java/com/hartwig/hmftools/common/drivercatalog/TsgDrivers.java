@@ -2,8 +2,11 @@ package com.hartwig.hmftools.common.drivercatalog;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCatalogFactory.variantTypeCount;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihood;
@@ -29,8 +32,7 @@ public class TsgDrivers {
         long sampleSNVCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0L);
         long sampleIndelCount = variantTypeCounts.getOrDefault(VariantType.INDEL, 0L);
 
-        final Map<String, List<EnrichedSomaticVariant>> codingVariants =
-                DriverCatalogFactory.codingVariantsByGene(likelihoodsByGene.keySet(), variants);
+        final Map<String, List<EnrichedSomaticVariant>> codingVariants = codingVariantsByGene(likelihoodsByGene.keySet(), variants);
 
         for (String gene : codingVariants.keySet()) {
             final List<EnrichedSomaticVariant> geneVariants = codingVariants.get(gene);
@@ -38,6 +40,19 @@ public class TsgDrivers {
         }
 
         return driverCatalog;
+    }
+
+    @NotNull
+    static <T extends SomaticVariant> Map<String, List<T>> codingVariantsByGene(@NotNull final Set<String> genes,
+            @NotNull final List<T> variants) {
+
+        EnumSet<CodingEffect> suitableCodingEffects =
+                EnumSet.of(CodingEffect.MISSENSE, CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.SPLICE);
+
+        return variants.stream()
+                .filter(x -> genes.contains(x.gene()))
+                .filter(x -> suitableCodingEffects.contains(x.canonicalCodingEffect()))
+                .collect(Collectors.groupingBy(SomaticVariant::gene));
     }
 
     @NotNull
