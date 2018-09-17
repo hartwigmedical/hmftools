@@ -14,9 +14,4 @@ public interface TranscriptRegion extends GenomeRegion {
 
     @NotNull
     String chromosomeBand();
-
-    @NotNull
-    default String transcript() {
-        return transcriptID() + "." + transcriptVersion();
-    }
 }
