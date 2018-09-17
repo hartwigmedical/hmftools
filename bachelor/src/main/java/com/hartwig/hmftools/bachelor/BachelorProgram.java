@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.HmfGenomeRegion;
 
 public class BachelorProgram {
     private final String mName;

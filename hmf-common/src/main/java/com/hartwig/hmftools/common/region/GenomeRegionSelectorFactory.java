@@ -11,7 +11,10 @@ import com.hartwig.hmftools.common.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;
 
-public class GenomeRegionSelectorFactory {
+public final class GenomeRegionSelectorFactory {
+
+    private GenomeRegionSelectorFactory() {
+    }
 
     @NotNull
     public static <R extends GenomeRegion> GenomeRegionSelector<R> create(@NotNull final Collection<R> regions) {
@@ -20,7 +23,6 @@ public class GenomeRegionSelectorFactory {
 
     @NotNull
     public static <R extends GenomeRegion> GenomeRegionSelector<R> create(@NotNull final Multimap<String, R> regions) {
-
         final GenomeRegionSelector<R> nullSelector = new NullGenomeRegionSelector<>();
 
         final Map<String, GenomeRegionSelector<R>> chromosomeSelectors = Maps.newHashMap();
@@ -38,7 +40,6 @@ public class GenomeRegionSelectorFactory {
             @Override
             public void select(@NotNull final GenomeRegion region, @NotNull final Consumer<R> handler) {
                 chromosomeSelectors.getOrDefault(region.chromosome(), nullSelector).select(region, handler);
-
             }
         };
     }

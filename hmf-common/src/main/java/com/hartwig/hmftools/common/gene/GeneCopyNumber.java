@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.gene;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.region.TranscriptRegion;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

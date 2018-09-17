@@ -1,6 +1,4 @@
-package com.hartwig.hmftools.common.gene;
-
-import com.hartwig.hmftools.common.region.GenomeRegion;
+package com.hartwig.hmftools.common.region;
 
 import org.jetbrains.annotations.NotNull;
 

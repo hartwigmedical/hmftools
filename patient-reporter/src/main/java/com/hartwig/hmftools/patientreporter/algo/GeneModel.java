@@ -1,11 +1,12 @@
-package com.hartwig.hmftools.common.gene;
+package com.hartwig.hmftools.patientreporter.algo;
 
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.TranscriptRegion;
 
 import org.jetbrains.annotations.NotNull;
 

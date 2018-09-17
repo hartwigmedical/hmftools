@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.region.hmfslicer;
+package com.hartwig.hmftools.common.region;
 
 import org.jetbrains.annotations.NotNull;
 

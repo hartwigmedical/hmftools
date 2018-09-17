@@ -4,8 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.InputStream;
 
-import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeFileLoader;
-import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.common.genepanel.HmfGenomeFileLoader;
+import com.hartwig.hmftools.common.region.HmfGenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

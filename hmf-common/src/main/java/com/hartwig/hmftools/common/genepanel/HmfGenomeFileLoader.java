@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.region.hmfslicer;
+package com.hartwig.hmftools.common.genepanel;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -11,6 +11,11 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.region.HmfExonRegion;
+import com.hartwig.hmftools.common.region.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.Strand;
+import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfExonRegion;
+import com.hartwig.hmftools.common.region.hmfslicer.ModifiableHmfGenomeRegion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

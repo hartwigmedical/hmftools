@@ -7,9 +7,9 @@ import java.io.IOException;
 import com.hartwig.hmftools.common.cosmic.CosmicGeneModel;
 import com.hartwig.hmftools.common.cosmic.CosmicGenes;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
-import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.region.bed.BEDFileLoader;
+import com.hartwig.hmftools.common.region.BEDFileLoader;
+import com.hartwig.hmftools.patientreporter.algo.GeneModel;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 
 import org.jetbrains.annotations.NotNull;

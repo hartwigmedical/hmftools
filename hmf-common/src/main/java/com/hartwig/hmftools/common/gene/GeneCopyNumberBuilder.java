@@ -4,8 +4,8 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
-import com.hartwig.hmftools.common.region.hmfslicer.HmfExonRegion;
-import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.HmfExonRegion;
+import com.hartwig.hmftools.common.region.HmfGenomeRegion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.zipper.RegionZipperHandler;
@@ -83,21 +83,21 @@ class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumber, Hmf
 
     public void somatic(@NotNull final PurityAdjustedSomaticVariant variant) {
         if (variant.gene().equals(gene)) {
-            if (variant.worstCodingEffect().equals(CodingEffect.NONSENSE_OR_FRAMESHIFT.toString())) {
+            if (variant.worstCodingEffect().equals(CodingEffect.NONSENSE_OR_FRAMESHIFT)) {
                 if (variant.biallelic()) {
                     nonsenseBiallelicCount++;
                 } else {
                     nonsenseNonBiallelicCount++;
                     nonsenseNonBiallelicPloidy += variant.ploidy();
                 }
-            } else if (variant.worstCodingEffect().equals(CodingEffect.SPLICE.toString())) {
+            } else if (variant.worstCodingEffect().equals(CodingEffect.SPLICE)) {
                 if (variant.biallelic()) {
                     spliceBiallelicCount++;
                 } else {
                     spliceNonBiallelicCount++;
                     spliceNonBiallelicPloidy += variant.ploidy();
                 }
-            } else if (variant.worstCodingEffect().equals(CodingEffect.MISSENSE.toString())) {
+            } else if (variant.worstCodingEffect().equals(CodingEffect.MISSENSE)) {
                 if (variant.biallelic()) {
                     missenseBiallelicCount++;
                 } else {
@@ -105,7 +105,6 @@ class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumber, Hmf
                     missenseNonBiallelicPloidy += variant.ploidy();
                 }
             }
-
         }
     }
 

@@ -9,9 +9,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.SortedSetMultimap;
-import com.hartwig.hmftools.common.gene.TranscriptRegion;
-import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.TranscriptRegion;
 
 import org.junit.Test;
 

@@ -12,8 +12,7 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeFileLoader;
-import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.HmfGenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 

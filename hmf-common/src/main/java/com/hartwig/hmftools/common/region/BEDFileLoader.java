@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.region.bed;
+package com.hartwig.hmftools.common.region;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -6,8 +6,6 @@ import java.io.IOException;
 
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,10 +16,12 @@ import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
 import htsjdk.tribble.readers.LineIterator;
 
-public enum BEDFileLoader {
+public final class BEDFileLoader {
 
-    ;
     private static final Logger LOGGER = LogManager.getLogger(BEDFileLoader.class);
+
+    private BEDFileLoader() {
+    }
 
     @NotNull
     public static SortedSetMultimap<String, GenomeRegion> fromBedFile(@NotNull String bedFile) throws IOException {
@@ -29,7 +29,6 @@ public enum BEDFileLoader {
 
         String prevChromosome = null;
         GenomeRegion prevRegion = null;
-        long numberOfBases = 0;
         try (final AbstractFeatureReader<BEDFeature, LineIterator> reader = getFeatureReader(bedFile, new BEDCodec(), false)) {
             for (final BEDFeature bedFeature : reader.iterator()) {
                 final String chromosome = bedFeature.getContig();
@@ -46,13 +45,11 @@ public enum BEDFileLoader {
                         regionMap.put(chromosome, region);
                         prevChromosome = chromosome;
                         prevRegion = region;
-                        numberOfBases += region.bases();
                     }
                 }
             }
         }
 
-        LOGGER.debug("Created slicer from " + bedFile + ": " + regionMap.size() + " regions covering " + numberOfBases + " bases");
         return regionMap;
     }
 }

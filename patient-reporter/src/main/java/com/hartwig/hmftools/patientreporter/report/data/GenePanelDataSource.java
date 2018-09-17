@@ -6,7 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.HmfGenomeRegion;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
 
 import org.jetbrains.annotations.NotNull;
