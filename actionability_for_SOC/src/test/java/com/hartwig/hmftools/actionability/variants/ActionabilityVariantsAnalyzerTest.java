@@ -37,8 +37,8 @@ public class ActionabilityVariantsAnalyzerTest {
                 .gene("BRAF")
                 .mutationTranscript("ENST00000357654")
                 .chromosome("17")
-                .start("10")
-                .stop("1500")
+                .start(Integer.toString(10))
+                .stop(Integer.toString(1500))
                 .geneTranscript("ENST00000256078")
                 .source("oncoKB")
                 .reference("NRAS Oncogenic Mutations")
@@ -77,5 +77,6 @@ public class ActionabilityVariantsAnalyzerTest {
                 .build();
 
         assertTrue(var.actionableVariants(variant, "Skin Melanoma"));
+ //       assertTrue(var.actionableRange(variant, "Skin Melanoma"));
     }
 }

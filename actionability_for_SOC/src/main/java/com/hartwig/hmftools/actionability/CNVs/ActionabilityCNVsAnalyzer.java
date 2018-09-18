@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
@@ -16,16 +15,27 @@ public class ActionabilityCNVsAnalyzer {
     private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(ActionabilityCNVsAnalyzer.class);
     static final String DELIMITER = "\t";
 
+    @NotNull
+    private final List<ActionabilityCNVs> CNVs;
+
     public ActionabilityCNVsAnalyzer(@NotNull final List<ActionabilityCNVs> CNVs) {
         this.CNVs = CNVs;
     }
 
     public boolean actionableCNVs(@NotNull GeneCopyNumber geneCopyNumber, @NotNull String primaryTumorLocation){
-        return true;
+        Boolean booleanValue = true;
+        for (int i=0; i< CNVs.size();i++) {
+            if (CNVs.get(i).cancerType().contains(primaryTumorLocation) &&
+                    CNVs.get(i).gene().equals(geneCopyNumber.gene()) &&
+                    CNVs.get(i).cnvType().equals(geneCopyNumber.minRegionStartSupport())) {
+                booleanValue = true;
+                LOGGER.info(CNVs.get(i));
+            } else {
+                booleanValue = false;
+            }
+        }
+        return booleanValue;
     }
-
-    @NotNull
-    private final List<ActionabilityCNVs> CNVs;
 
     @NotNull
     public static ActionabilityCNVsAnalyzer loadFromFileCNVs(String fileCNVs) throws
