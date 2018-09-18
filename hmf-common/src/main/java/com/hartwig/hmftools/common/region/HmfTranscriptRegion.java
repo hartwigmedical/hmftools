@@ -37,7 +37,6 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
     @Value.Derived
     @Nullable
     public HmfExonRegion exonByIndex(int index) {
-        // TODO (KODU): Do anything with UTR regions here!?
         int effectiveIndex = index - 1;
         List<HmfExonRegion> strandSortedExome = strandSortedExome();
 
@@ -57,10 +56,13 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
     @Value.Derived
     @Nullable
     public List<GenomeRegion> codonRangeByIndex(int startCodon, int endCodon) {
-        // TODO (KODU): Do anything with UTR regions here!?
-
-        // KODU: Enforce 1-based codons.
         if (startCodon < 1 || endCodon < 1) {
+            // KODU: Enforce 1-based codons.
+            return null;
+        }
+
+        if (codingStart() == 0 || codingEnd() == 0) {
+            // KODU: Only coding transcripts have codons.
             return null;
         }
 
@@ -72,30 +74,36 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
         Long startPosition = null;
         Long endPosition = null;
         for (HmfExonRegion exon : strandSortedExome()) {
+            long exonCodingStart = Math.max(exon.start(), codingStart());
+            long exonCodingEnd = Math.min(exon.end(), codingEnd());
+            if (exonCodingStart > exonCodingEnd) {
+                continue;
+            }
+
             if (basesCovered + exon.bases() >= effectiveStartBase && startPosition == null) {
                 startPosition = strand() == Strand.FORWARD
-                        ? exon.start() + effectiveStartBase - basesCovered - 1
-                        : exon.end() - effectiveStartBase + basesCovered + 1;
+                        ? exonCodingStart + effectiveStartBase - basesCovered - 1
+                        : exonCodingEnd - effectiveStartBase + basesCovered + 1;
             }
 
             if (basesCovered + exon.bases() >= effectiveEndBase && endPosition == null) {
                 endPosition = strand() == Strand.FORWARD
-                        ? exon.start() + effectiveEndBase - basesCovered - 1
-                        : exon.end() - effectiveEndBase + basesCovered + 1;
+                        ? exonCodingStart + effectiveEndBase - basesCovered - 1
+                        : exonCodingEnd - effectiveEndBase + basesCovered + 1;
             }
 
             if (startPosition != null) {
                 if (endPosition == null) {
                     codonRegions.add(ImmutableGenomeRegionImpl.builder()
                             .chromosome(chromosome())
-                            .start(strand() == Strand.FORWARD ? startPosition : exon.start())
-                            .end(strand() == Strand.FORWARD ? exon.end() : startPosition)
+                            .start(strand() == Strand.FORWARD ? startPosition : exonCodingStart)
+                            .end(strand() == Strand.FORWARD ? exonCodingEnd : startPosition)
                             .build());
                 } else if (codonRegions.size() == 1) {
                     codonRegions.add(ImmutableGenomeRegionImpl.builder()
                             .chromosome(chromosome())
-                            .start(strand() == Strand.FORWARD ? exon.start() : endPosition)
-                            .end(strand() == Strand.FORWARD ? endPosition : exon.end())
+                            .start(strand() == Strand.FORWARD ? exonCodingStart : endPosition)
+                            .end(strand() == Strand.FORWARD ? endPosition : exonCodingEnd)
                             .build());
                     Collections.sort(codonRegions);
                     return codonRegions;
@@ -109,7 +117,7 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
                 }
             }
 
-            basesCovered += exon.bases();
+            basesCovered += (1 + exonCodingEnd - exonCodingStart);
         }
 
         return null;
