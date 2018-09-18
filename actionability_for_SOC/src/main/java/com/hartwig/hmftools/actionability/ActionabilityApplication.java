@@ -67,8 +67,9 @@ public abstract class ActionabilityApplication {
         if (Files.exists(new File(fileActionabilityVariants).toPath()) && Files.exists(new File(fileActionabilityRanges).toPath())) {
             ActionabilityVariantsAnalyzer analyzer = ActionabilityVariantsAnalyzer.loadFromFileVariantsAndFileRanges(fileActionabilityVariants, fileActionabilityRanges);
             for (int i = 0; i < variants.size(); i ++) {
-                LOGGER.info("Is actionable variant: " + analyzer.actionableVariants(variants.get(i), patientTumorLocation.primaryTumorLocation(), i));
-              //  LOGGER.info("Is actionable ranges: " + analyzer.actionableRange(somaticVariants.get(i), patientTumorLocation.primaryTumorLocation(), somaticVariants.size()));
+                LOGGER.info("Variant number: " + i);
+                LOGGER.info("Is actionable variant: " + analyzer.actionableVariants(variants.get(i), patientTumorLocation.primaryTumorLocation()));
+                LOGGER.info("Is actionable ranges: " + analyzer.actionableRange(variants.get(i), patientTumorLocation.primaryTumorLocation()));
 
             }
         } else if (!Files.exists(new File(fileActionabilityVariants).toPath())){

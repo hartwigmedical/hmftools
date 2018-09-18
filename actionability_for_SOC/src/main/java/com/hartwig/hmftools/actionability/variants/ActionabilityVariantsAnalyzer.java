@@ -26,7 +26,7 @@ public class ActionabilityVariantsAnalyzer {
     }
 
 
-    public boolean actionableVariants(@NotNull SomaticVariant variant, @NotNull String primaryTumorLocation, @NotNull int number){
+    public boolean actionableVariants(@NotNull SomaticVariant variant, @NotNull String primaryTumorLocation){
         Boolean booleanValue = true;
         for (int i=0; i< variants.size();i++) {
             if (variants.get(i).cancerType().contains(primaryTumorLocation) &&
@@ -36,7 +36,7 @@ public class ActionabilityVariantsAnalyzer {
                     variant.ref().equals(variants.get(i).ref()) &&
                     variant.alt().equals(variants.get(i).alt())) {
                 booleanValue =  true;
-                LOGGER.info(variants);
+                LOGGER.info(variants.get(i));
             } else {
                 booleanValue =  false;
             }
@@ -44,8 +44,21 @@ public class ActionabilityVariantsAnalyzer {
         return booleanValue;
     }
 
-    public boolean actionableRange(@NotNull SomaticVariant variant, @NotNull String primaryTumorLocation, @NotNull int sizeVariants) {
-        return true;
+    public boolean actionableRange(@NotNull SomaticVariant variant, @NotNull String primaryTumorLocation) {
+        Boolean booleanValue = true;
+        for (int i=0; i< variantsRanges.size();i++) {
+            if (variantsRanges.get(i).cancerType().contains(primaryTumorLocation) &&
+                    variant.gene().equals(variantsRanges.get(i).gene()) &&
+                    variant.chromosome().equals(variantsRanges.get(i).chromosome()) &&
+                    Long.toString(variant.position()).startsWith(variantsRanges.get(i).start()) &&
+                    Long.toString(variant.position()).endsWith(variantsRanges.get(i).stop())) {
+                booleanValue =  true;
+                LOGGER.info(variantsRanges.get(i));
+            } else {
+                booleanValue =  false;
+            }
+        }
+        return booleanValue;
     }
 
     @NotNull
