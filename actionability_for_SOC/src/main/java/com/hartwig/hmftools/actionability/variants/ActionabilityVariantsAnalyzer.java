@@ -50,8 +50,8 @@ public class ActionabilityVariantsAnalyzer {
             if (variantsRanges.get(i).cancerType().contains(primaryTumorLocation) &&
                     variant.gene().equals(variantsRanges.get(i).gene()) &&
                     variant.chromosome().equals(variantsRanges.get(i).chromosome()) &&
-                    Long.toString(variant.position()).startsWith(variantsRanges.get(i).start()) &&
-                    Long.toString(variant.position()).endsWith(variantsRanges.get(i).stop())) {
+                    Integer.parseInt(Long.toString(variant.position())) >= Integer.parseInt(variantsRanges.get(i).start()) &&
+                    Integer.parseInt(Long.toString(variant.position())) <= Integer.parseInt(variantsRanges.get(i).stop())) {
                 booleanValue =  true;
                 LOGGER.info(variantsRanges.get(i));
             } else {
