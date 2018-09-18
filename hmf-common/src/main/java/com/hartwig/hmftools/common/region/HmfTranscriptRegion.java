@@ -76,17 +76,19 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
         for (HmfExonRegion exon : strandSortedExome()) {
             long exonCodingStart = Math.max(exon.start(), codingStart());
             long exonCodingEnd = Math.min(exon.end(), codingEnd());
-            if (exonCodingStart > exonCodingEnd) {
+            long exonBaseLength = exonCodingEnd - exonCodingStart + 1;
+
+            if (exonBaseLength <= 0) {
                 continue;
             }
 
-            if (basesCovered + exon.bases() >= effectiveStartBase && startPosition == null) {
+            if (basesCovered + exonBaseLength >= effectiveStartBase && startPosition == null) {
                 startPosition = strand() == Strand.FORWARD
                         ? exonCodingStart + effectiveStartBase - basesCovered - 1
                         : exonCodingEnd - effectiveStartBase + basesCovered + 1;
             }
 
-            if (basesCovered + exon.bases() >= effectiveEndBase && endPosition == null) {
+            if (basesCovered + exonBaseLength >= effectiveEndBase && endPosition == null) {
                 endPosition = strand() == Strand.FORWARD
                         ? exonCodingStart + effectiveEndBase - basesCovered - 1
                         : exonCodingEnd - effectiveEndBase + basesCovered + 1;
@@ -117,7 +119,7 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
                 }
             }
 
-            basesCovered += (1 + exonCodingEnd - exonCodingStart);
+            basesCovered += exonBaseLength;
         }
 
         return null;
