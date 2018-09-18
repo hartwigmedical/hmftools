@@ -124,43 +124,53 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
                         : exonCodingEnd - effectiveEndBase + basesCovered + 1;
             }
 
-            if (startPosition != null) {
-                if (endPosition == null) {
-                    // KODU: Check to see if we need to include the entire exon we are considering.
-                    if (codonRegions.size() > 0) {
-                        codonRegions.add(ImmutableGenomeRegionImpl.builder()
-                                .chromosome(chromosome())
-                                .start(exonCodingStart)
-                                .end(exonCodingEnd)
-                                .build());
-                    } else {
-                        codonRegions.add(ImmutableGenomeRegionImpl.builder()
-                                .chromosome(chromosome())
-                                .start(strand() == Strand.FORWARD ? startPosition : exonCodingStart)
-                                .end(strand() == Strand.FORWARD ? exonCodingEnd : startPosition)
-                                .build());
-                    }
-                } else if (codonRegions.size() > 0) {
-                    codonRegions.add(ImmutableGenomeRegionImpl.builder()
-                            .chromosome(chromosome())
-                            .start(strand() == Strand.FORWARD ? exonCodingStart : endPosition)
-                            .end(strand() == Strand.FORWARD ? endPosition : exonCodingEnd)
-                            .build());
-                    Collections.sort(codonRegions);
-                    return codonRegions;
-                } else {
-                    codonRegions.add(ImmutableGenomeRegionImpl.builder()
-                            .chromosome(chromosome())
-                            .start(strand() == Strand.FORWARD ? startPosition : endPosition)
-                            .end(strand() == Strand.FORWARD ? endPosition : startPosition)
-                            .build());
-                    return codonRegions;
-                }
+            basesCovered += exonBaseLength;
+
+            GenomeRegion region =
+                    buildGenomeRegionForRange(startPosition, endPosition, exonCodingStart, exonCodingEnd, codonRegions.size() > 0);
+
+            if (region != null) {
+                codonRegions.add(region);
             }
 
-            basesCovered += exonBaseLength;
+            if (startPosition != null && endPosition != null) {
+                Collections.sort(codonRegions);
+                return codonRegions;
+            }
         }
 
+        return null;
+    }
+
+    @Nullable
+    private GenomeRegion buildGenomeRegionForRange(@Nullable Long startPosition, @Nullable Long endPosition, long exonCodingStart,
+            long exonCodingEnd, boolean hasCodingRegions) {
+        if (startPosition != null) {
+            if (endPosition == null) {
+                // KODU: Check to see if we need to include the entire exon we are considering.
+                if (hasCodingRegions) {
+                    return ImmutableGenomeRegionImpl.builder().chromosome(chromosome()).start(exonCodingStart).end(exonCodingEnd).build();
+                } else {
+                    return ImmutableGenomeRegionImpl.builder()
+                            .chromosome(chromosome())
+                            .start(strand() == Strand.FORWARD ? startPosition : exonCodingStart)
+                            .end(strand() == Strand.FORWARD ? exonCodingEnd : startPosition)
+                            .build();
+                }
+            } else if (hasCodingRegions) {
+                return ImmutableGenomeRegionImpl.builder()
+                        .chromosome(chromosome())
+                        .start(strand() == Strand.FORWARD ? exonCodingStart : endPosition)
+                        .end(strand() == Strand.FORWARD ? endPosition : exonCodingEnd)
+                        .build();
+            } else {
+                return ImmutableGenomeRegionImpl.builder()
+                        .chromosome(chromosome())
+                        .start(strand() == Strand.FORWARD ? startPosition : endPosition)
+                        .end(strand() == Strand.FORWARD ? endPosition : startPosition)
+                        .build();
+            }
+        }
         return null;
     }
 
