@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.knowledgebaseimporter.knowledgebases
 
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion
-import com.hartwig.hmftools.knowledgebaseimporter.gene.GeneDAO
+import com.hartwig.hmftools.knowledgebaseimporter.gene.GeneModel
 import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.GenomicRangeEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.KnownVariantOutput
@@ -9,7 +9,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.output.SomaticVariantEvent
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.*
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 
-class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFastaSequenceFile, private val geneDAO: GeneDAO) {
+class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFastaSequenceFile, private val geneModel: GeneModel) {
     companion object {
         private val blacklistedDrugs = setOf("chemotherapy", "aspirin", "steroid")
     }
@@ -126,7 +126,7 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
     }
 
     private fun createGeneModel(genericMutations: List<GenericMutation>): Map<String, HmfTranscriptRegion?> {
-        val hmfTranscriptRegions = genericMutations.map { geneDAO.hmfTranscriptRegionForGenericMutation(it) }
+        val hmfTranscriptRegions = genericMutations.map { geneModel.hmfTranscriptRegionForGenericMutation(it) }
         return hmfTranscriptRegions.filterNotNull().associateBy({ it.gene() }, { it })
     }
 }

@@ -14,7 +14,7 @@ import java.sql.DriverManager
 typealias ExonRecord = Record6<String, UInteger, UInteger, Byte, Byte, Byte>
 typealias TranslationRecord = Record2<Int, Int>
 
-class GeneDAO(ensemblDbUrl: String, hmfpatientsDbUrl: String, user: String, password: String) {
+class GeneModel(ensemblDbUrl: String, hmfpatientsDbUrl: String, user: String, password: String) {
     companion object {
         private val hmfGenePanel by lazy { HmfGenePanelSupplier.allGenesMap() }
         private val logger = LogManager.getLogger("GeneModel")

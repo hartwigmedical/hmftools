@@ -15,7 +15,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.civic.Civic
 import com.hartwig.hmftools.knowledgebaseimporter.cosmic.Cosmic
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.Doid
-import com.hartwig.hmftools.knowledgebaseimporter.gene.GeneDAO
+import com.hartwig.hmftools.knowledgebaseimporter.gene.GeneModel
 import com.hartwig.hmftools.knowledgebaseimporter.iclusion.Iclusion
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.OncoKb
@@ -79,7 +79,7 @@ private fun readKnowledgebases(cmd: CommandLine, diseaseOntology: DiseaseOntolog
     val reference = IndexedFastaSequenceFile(File(cmd.getOptionValue(REFERENCE)))
     val ensemblJdbcUrl = "jdbc:${cmd.getOptionValue(ENSEMBL_DB)}"
     val hmfpatientsJdbcUrl = "jdbc:${cmd.getOptionValue(HMFPATIENTS_DB)}"
-    val ensemblGeneDAO = GeneDAO(ensemblJdbcUrl, hmfpatientsJdbcUrl, cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASSWORD))
+    val ensemblGeneDAO = GeneModel(ensemblJdbcUrl, hmfpatientsJdbcUrl, cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASSWORD))
     val transvar = cmd.getOptionValue(TRANSVAR_LOCATION)
     val recordAnalyzer = RecordAnalyzer(transvar, reference, ensemblGeneDAO)
     val treatmentTypeMap = CsvReader.readTSV<HmfDrug>(cmd.getOptionValue(TREATMENT_TYPE_MAPPING_LOCATION))
