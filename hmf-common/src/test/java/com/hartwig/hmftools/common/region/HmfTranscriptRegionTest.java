@@ -189,7 +189,6 @@ public class HmfTranscriptRegionTest {
         assertNull(transcript.codonRangeByIndex(0, 6));
     }
 
-
     @NotNull
     private static GenomeRegion assertedCodonGet(@NotNull HmfTranscriptRegion transcript, int codonIndex) {
         return assertedCodonGet(transcript, codonIndex, 0);
