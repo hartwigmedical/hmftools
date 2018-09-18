@@ -87,7 +87,7 @@ public abstract class ActionabilityApplication {
        if (Files.exists(new File(fileActionabilityCNVs).toPath())) {
             ActionabilityCNVsAnalyzer analyzerCNVs = ActionabilityCNVsAnalyzer.loadFromFileCNVs(fileActionabilityCNVs);
             for (int i = 0; i < geneCopyNumbers.size(); i ++) {
-                LOGGER.info("Is actionable CNVs: " + analyzerCNVs.actionableCNVs(geneCopyNumbers.get(i), patientTumorLocation.primaryTumorLocation()));
+                analyzerCNVs.actionableCNVs(geneCopyNumbers.get(i), patientTumorLocation.primaryTumorLocation());
            }
         } else {
             LOGGER.warn("File does not exist: " + fileActionabilityCNVs);
