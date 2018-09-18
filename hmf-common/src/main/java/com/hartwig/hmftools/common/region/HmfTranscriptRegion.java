@@ -124,15 +124,22 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
                         : exonCodingEnd - effectiveEndBase + basesCovered + 1;
             }
 
-            // TODO (KODU) Does not work when range covers an entire exon in the middle.
             if (startPosition != null) {
                 if (endPosition == null) {
-                    codonRegions.add(ImmutableGenomeRegionImpl.builder()
-                            .chromosome(chromosome())
-                            .start(strand() == Strand.FORWARD ? startPosition : exonCodingStart)
-                            .end(strand() == Strand.FORWARD ? exonCodingEnd : startPosition)
-                            .build());
-                } else if (codonRegions.size() == 1) {
+                    if (codonRegions.size() > 0) {
+                        codonRegions.add(ImmutableGenomeRegionImpl.builder()
+                                .chromosome(chromosome())
+                                .start(exonCodingStart)
+                                .end(exonCodingEnd)
+                                .build());
+                    } else {
+                        codonRegions.add(ImmutableGenomeRegionImpl.builder()
+                                .chromosome(chromosome())
+                                .start(strand() == Strand.FORWARD ? startPosition : exonCodingStart)
+                                .end(strand() == Strand.FORWARD ? exonCodingEnd : startPosition)
+                                .build());
+                    }
+                } else if (codonRegions.size() > 0) {
                     codonRegions.add(ImmutableGenomeRegionImpl.builder()
                             .chromosome(chromosome())
                             .start(strand() == Strand.FORWARD ? exonCodingStart : endPosition)
