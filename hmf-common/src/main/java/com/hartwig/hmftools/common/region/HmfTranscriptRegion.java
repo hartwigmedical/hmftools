@@ -55,6 +55,36 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
 
     @Value.Derived
     @Nullable
+    public List<GenomeRegion> codingRangeByGenomicCoordinates(long genomicStartPosition, long genomicEndPosition) {
+        if (genomicStartPosition < 1 || genomicEndPosition < 1) {
+            // KODU: Only allow a range to return if start and end are 1-based.
+            return null;
+        }
+
+        if (codingStart() == 0 || codingEnd() == 0) {
+            // KODU: Only coding transcripts have coding ranges.
+            return null;
+        }
+
+        long effectiveStartPosition = Math.max(codingStart(), genomicStartPosition);
+        long effectiveEndPosition = Math.min(codingEnd(), genomicEndPosition);
+
+        List<GenomeRegion> codingRegions = Lists.newArrayList();
+        for (HmfExonRegion exon : exome()) {
+            if (exon.start() <= effectiveEndPosition && exon.end() >= effectiveStartPosition) {
+                codingRegions.add(ImmutableGenomeRegionImpl.builder()
+                        .chromosome(chromosome())
+                        .start(Math.max(exon.start(), effectiveStartPosition))
+                        .end(Math.min(exon.end(), effectiveEndPosition))
+                        .build());
+            }
+        }
+
+        return !codingRegions.isEmpty() ? codingRegions : null;
+    }
+
+    @Value.Derived
+    @Nullable
     public List<GenomeRegion> codonRangeByIndex(int startCodon, int endCodon) {
         if (startCodon < 1 || endCodon < 1) {
             // KODU: Enforce 1-based codons.
@@ -94,6 +124,7 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
                         : exonCodingEnd - effectiveEndBase + basesCovered + 1;
             }
 
+            // TODO (KODU) Does not work when range covers an entire exon in the middle.
             if (startPosition != null) {
                 if (endPosition == null) {
                     codonRegions.add(ImmutableGenomeRegionImpl.builder()
@@ -112,7 +143,7 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
                 } else {
                     codonRegions.add(ImmutableGenomeRegionImpl.builder()
                             .chromosome(chromosome())
-                            .start(strand() == Strand.FORWARD ? startPosition :endPosition)
+                            .start(strand() == Strand.FORWARD ? startPosition : endPosition)
                             .end(strand() == Strand.FORWARD ? endPosition : startPosition)
                             .build());
                     return codonRegions;

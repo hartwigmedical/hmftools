@@ -181,6 +181,33 @@ public class HmfTranscriptRegionTest {
     }
 
     @Test
+    public void canRetrieveCodingRangeByGenomicCoordinatesOnForwardGene() {
+        runCodingRangeByGenomicCoordinatesTest(create(Strand.FORWARD));
+    }
+
+    @Test
+    public void canRetrieveCodingRangeByGenomicCoordinatesOnReverseGene() {
+        runCodingRangeByGenomicCoordinatesTest(create(Strand.REVERSE));
+    }
+
+    private static void runCodingRangeByGenomicCoordinatesTest(@NotNull HmfTranscriptRegion transcript) {
+        assertNull(transcript.codingRangeByGenomicCoordinates(-1, 1));
+        assertNull(transcript.codingRangeByGenomicCoordinates(0, 0));
+
+        List<GenomeRegion> codingRangePartial = transcript.codingRangeByGenomicCoordinates(1, 12);
+        assertNotNull(codingRangePartial);
+        GenomeRegion codingRangePartial1 = codingRangePartial.get(0);
+        assertEquals(2, codingRangePartial1.start());
+        assertEquals(5, codingRangePartial1.end());
+
+        GenomeRegion codingRangePartial2 = codingRangePartial.get(1);
+        assertEquals(7, codingRangePartial2.start());
+        assertEquals(12, codingRangePartial2.end());
+
+        assertNull(transcript.codingRangeByGenomicCoordinates(0, 5));
+    }
+
+    @Test
     public void worksForRealBRAFCodon600() {
         HmfTranscriptRegion braf = HmfGenePanelSupplier.allGenesMap().get("BRAF");
 
