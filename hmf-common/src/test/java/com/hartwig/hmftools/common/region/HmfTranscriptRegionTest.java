@@ -17,7 +17,7 @@ public class HmfTranscriptRegionTest {
     //MIVO:     both forward and reverse cases use the following scenario (* = UTR):
     //exons:        |--------------------|   |------------------------------------------------|
     //positions:    --1*---2---3---4---5---x---7---8---9---10---11---12---13---14---15*---16*--
-    //codons:       |____________|_______________|____________|______________|________________|
+    //codons:            |___________|_______________|_____________|______________|
 
     @Test
     public void canRetrieveExonByIndexOnForwardGene() {
@@ -62,35 +62,30 @@ public class HmfTranscriptRegionTest {
 
         GenomeRegion codon1 = assertedCodonGet(transcript, 1);
         assertNotNull(codon1);
-        assertEquals(1, codon1.start());
-        assertEquals(3, codon1.end());
+        assertEquals(2, codon1.start());
+        assertEquals(4, codon1.end());
 
         GenomeRegion codon2Part1 = assertedCodonGet(transcript, 2, 0);
         assertNotNull(codon2Part1);
-        assertEquals(4, codon2Part1.start());
+        assertEquals(5, codon2Part1.start());
         assertEquals(5, codon2Part1.end());
 
         GenomeRegion codon2Part2 = assertedCodonGet(transcript, 2, 1);
         assertNotNull(codon2Part2);
         assertEquals(7, codon2Part2.start());
-        assertEquals(7, codon2Part2.end());
+        assertEquals(8, codon2Part2.end());
 
         GenomeRegion codon3 = assertedCodonGet(transcript, 3);
         assertNotNull(codon3);
-        assertEquals(8, codon3.start());
-        assertEquals(10, codon3.end());
+        assertEquals(9, codon3.start());
+        assertEquals(11, codon3.end());
 
         GenomeRegion codon4 = assertedCodonGet(transcript, 4);
         assertNotNull(codon4);
-        assertEquals(11, codon4.start());
-        assertEquals(13, codon4.end());
+        assertEquals(12, codon4.start());
+        assertEquals(14, codon4.end());
 
-        GenomeRegion codon5 = assertedCodonGet(transcript, 5);
-        assertNotNull(codon5);
-        assertEquals(14, codon5.start());
-        assertEquals(16, codon5.end());
-
-        assertNull(transcript.codonByIndex(6));
+        assertNull(transcript.codonByIndex(5));
     }
 
     @Test
@@ -102,35 +97,30 @@ public class HmfTranscriptRegionTest {
 
         GenomeRegion codon1 = assertedCodonGet(transcript, 1);
         assertNotNull(codon1);
-        assertEquals(14, codon1.start());
-        assertEquals(16, codon1.end());
+        assertEquals(12, codon1.start());
+        assertEquals(14, codon1.end());
 
         GenomeRegion codon2 = assertedCodonGet(transcript, 2);
         assertNotNull(codon2);
-        assertEquals(11, codon2.start());
-        assertEquals(13, codon2.end());
+        assertEquals(9, codon2.start());
+        assertEquals(11, codon2.end());
 
-        GenomeRegion codon3 = assertedCodonGet(transcript, 3);
-        assertNotNull(codon3);
-        assertEquals(8, codon3.start());
-        assertEquals(10, codon3.end());
+        GenomeRegion codon3Part1 = assertedCodonGet(transcript, 3, 0);
+        assertNotNull(codon3Part1);
+        assertEquals(5, codon3Part1.start());
+        assertEquals(5, codon3Part1.end());
 
-        GenomeRegion codon4Part1 = assertedCodonGet(transcript, 4, 0);
-        assertNotNull(codon4Part1);
-        assertEquals(4, codon4Part1.start());
-        assertEquals(5, codon4Part1.end());
+        GenomeRegion codon3Part2 = assertedCodonGet(transcript, 3, 1);
+        assertNotNull(codon3Part2);
+        assertEquals(7, codon3Part2.start());
+        assertEquals(8, codon3Part2.end());
 
-        GenomeRegion codon4Part2 = assertedCodonGet(transcript, 4, 1);
-        assertNotNull(codon4Part2);
-        assertEquals(7, codon4Part2.start());
-        assertEquals(7, codon4Part2.end());
+        GenomeRegion codon4 = assertedCodonGet(transcript, 4);
+        assertNotNull(codon4);
+        assertEquals(2, codon4.start());
+        assertEquals(4, codon4.end());
 
-        GenomeRegion codon5 = assertedCodonGet(transcript, 5);
-        assertNotNull(codon5);
-        assertEquals(1, codon5.start());
-        assertEquals(3, codon5.end());
-
-        assertNull(transcript.codonByIndex(6));
+        assertNull(transcript.codonByIndex(5));
     }
 
     @Test
@@ -143,24 +133,24 @@ public class HmfTranscriptRegionTest {
         List<GenomeRegion> codonsOneAndTwo = transcript.codonRangeByIndex(1, 2);
         assertNotNull(codonsOneAndTwo);
         GenomeRegion codonsOneAndTwoPart1 = codonsOneAndTwo.get(0);
-        assertEquals(1, codonsOneAndTwoPart1.start());
+        assertEquals(2, codonsOneAndTwoPart1.start());
         assertEquals(5, codonsOneAndTwoPart1.end());
 
         GenomeRegion codonsOneAndTwoPart2 = codonsOneAndTwo.get(1);
         assertEquals(7, codonsOneAndTwoPart2.start());
-        assertEquals(7, codonsOneAndTwoPart2.end());
+        assertEquals(8, codonsOneAndTwoPart2.end());
 
-        List<GenomeRegion> allCodons = transcript.codonRangeByIndex(1, 5);
+        List<GenomeRegion> allCodons = transcript.codonRangeByIndex(1, 4);
         assertNotNull(allCodons);
         GenomeRegion allCodonsPart1 = allCodons.get(0);
-        assertEquals(1, allCodonsPart1.start());
+        assertEquals(2, allCodonsPart1.start());
         assertEquals(5, allCodonsPart1.end());
 
         GenomeRegion allCodonsPart2 = allCodons.get(1);
         assertEquals(7, allCodonsPart2.start());
-        assertEquals(16, allCodonsPart2.end());
+        assertEquals(14, allCodonsPart2.end());
 
-        assertNull(transcript.codonRangeByIndex(0, 6));
+        assertNull(transcript.codonRangeByIndex(0, 5));
     }
 
     @Test
@@ -174,20 +164,20 @@ public class HmfTranscriptRegionTest {
         assertNotNull(codonsOneAndTwo);
         assertEquals(1, codonsOneAndTwo.size());
         GenomeRegion codonsOneAndTwoPart1 = codonsOneAndTwo.get(0);
-        assertEquals(11, codonsOneAndTwoPart1.start());
-        assertEquals(16, codonsOneAndTwoPart1.end());
+        assertEquals(9, codonsOneAndTwoPart1.start());
+        assertEquals(14, codonsOneAndTwoPart1.end());
 
-        List<GenomeRegion> allCodons = transcript.codonRangeByIndex(1, 5);
+        List<GenomeRegion> allCodons = transcript.codonRangeByIndex(1, 4);
         assertNotNull(allCodons);
         GenomeRegion allCodonsPart1 = allCodons.get(0);
-        assertEquals(1, allCodonsPart1.start());
+        assertEquals(2, allCodonsPart1.start());
         assertEquals(5, allCodonsPart1.end());
 
         GenomeRegion allCodonsPart2 = allCodons.get(1);
         assertEquals(7, allCodonsPart2.start());
-        assertEquals(16, allCodonsPart2.end());
+        assertEquals(14, allCodonsPart2.end());
 
-        assertNull(transcript.codonRangeByIndex(0, 6));
+        assertNull(transcript.codonRangeByIndex(0, 5));
     }
 
     @Test
@@ -229,9 +219,9 @@ public class HmfTranscriptRegionTest {
                 .geneStart(1)
                 .geneEnd(16)
                 .exome(exome)
-                .codingStart(2)
                 .start(1)
                 .end(16)
+                .codingStart(2)
                 .codingEnd(14)
                 .strand(strand)
                 .build();
