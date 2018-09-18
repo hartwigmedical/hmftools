@@ -126,6 +126,7 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
 
             if (startPosition != null) {
                 if (endPosition == null) {
+                    // KODU: Check to see if we need to include the entire exon we are considering.
                     if (codonRegions.size() > 0) {
                         codonRegions.add(ImmutableGenomeRegionImpl.builder()
                                 .chromosome(chromosome())
