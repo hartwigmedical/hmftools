@@ -21,15 +21,16 @@ public class ActionabilityCNVsAnalyzer {
     @NotNull
     private final List<ActionabilityCNVs> CNVs;
 
-    public ActionabilityCNVsAnalyzer(@NotNull final List<ActionabilityCNVs> CNVs) {
+    private ActionabilityCNVsAnalyzer(@NotNull final List<ActionabilityCNVs> CNVs) {
         this.CNVs = CNVs;
     }
 
     public boolean actionableCNVs(@NotNull GeneCopyNumber geneCopyNumber, @NotNull String primaryTumorLocation){
+        Integer minCopyValue = (int) Math.max(0, Math.round(geneCopyNumber.minCopyNumber()));
         Boolean booleanValue = true;
         for (int i=0; i< CNVs.size();i++) {
             if (CNVs.get(i).cancerType().contains(primaryTumorLocation) &&
-                    checkCNVType(geneCopyNumber.minCopyNumber()).equals(CNVs.get(i).cnvType())) {
+                    checkCNVType(minCopyValue).equals(CNVs.get(i).cnvType())) {
                 booleanValue = true;
                 LOGGER.info(CNVs.get(i));
             } else {
@@ -39,7 +40,7 @@ public class ActionabilityCNVsAnalyzer {
         return booleanValue;
     }
 
-    public String checkCNVType(final double copyNumber) {
+    private String checkCNVType(final double copyNumber) {
         double relativeCopyNumber = copyNumber / 8.0;
         if (Doubles.lessOrEqual(copyNumber, ABS_LOSS)) {
             return "Deletion";
