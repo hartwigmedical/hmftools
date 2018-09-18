@@ -55,7 +55,8 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
 
     @Value.Derived
     @Nullable
-    public List<GenomeRegion> codingRangeByGenomicCoordinates(long genomicStartPosition, long genomicEndPosition) {
+    // TODO (KODU): Convert to using long.
+    public List<GenomeRegion> codingRangeByGenomicCoordinates(int genomicStartPosition, int genomicEndPosition) {
         if (genomicStartPosition < 1 || genomicEndPosition < 1) {
             // KODU: Only allow a range to return if start and end are 1-based.
             return null;
@@ -109,6 +110,7 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
             long exonBaseLength = exonCodingEnd - exonCodingStart + 1;
 
             if (exonBaseLength <= 0) {
+                // KODU: Exon is entirely non-coding so can be skipped.
                 continue;
             }
 
@@ -127,7 +129,7 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
             basesCovered += exonBaseLength;
 
             GenomeRegion region =
-                    buildGenomeRegionForRange(startPosition, endPosition, exonCodingStart, exonCodingEnd, codonRegions.size() > 0);
+                    decideOnRangeToIncludeForExon(startPosition, endPosition, exonCodingStart, exonCodingEnd, codonRegions.size() > 0);
 
             if (region != null) {
                 codonRegions.add(region);
@@ -143,12 +145,12 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
     }
 
     @Nullable
-    private GenomeRegion buildGenomeRegionForRange(@Nullable Long startPosition, @Nullable Long endPosition, long exonCodingStart,
-            long exonCodingEnd, boolean hasCodingRegions) {
+    private GenomeRegion decideOnRangeToIncludeForExon(@Nullable Long startPosition, @Nullable Long endPosition, long exonCodingStart,
+            long exonCodingEnd, boolean hasCodingRegionsDefinedAlready) {
         if (startPosition != null) {
             if (endPosition == null) {
                 // KODU: Check to see if we need to include the entire exon we are considering.
-                if (hasCodingRegions) {
+                if (hasCodingRegionsDefinedAlready) {
                     return ImmutableGenomeRegionImpl.builder().chromosome(chromosome()).start(exonCodingStart).end(exonCodingEnd).build();
                 } else {
                     return ImmutableGenomeRegionImpl.builder()
@@ -157,7 +159,7 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
                             .end(strand() == Strand.FORWARD ? exonCodingEnd : startPosition)
                             .build();
                 }
-            } else if (hasCodingRegions) {
+            } else if (hasCodingRegionsDefinedAlready) {
                 return ImmutableGenomeRegionImpl.builder()
                         .chromosome(chromosome())
                         .start(strand() == Strand.FORWARD ? exonCodingStart : endPosition)
@@ -174,9 +176,8 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
         return null;
     }
 
-    @Value.Derived
     @NotNull
-    public List<HmfExonRegion> strandSortedExome() {
+    private List<HmfExonRegion> strandSortedExome() {
         return strand() == Strand.FORWARD ? exome() : Lists.reverse(exome());
     }
 }
