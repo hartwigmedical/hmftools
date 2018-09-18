@@ -21,7 +21,7 @@ public class ActionabilityCNVsAnalyzer {
     @NotNull
     private final List<ActionabilityCNVs> CNVs;
 
-    private ActionabilityCNVsAnalyzer(@NotNull final List<ActionabilityCNVs> CNVs) {
+    public ActionabilityCNVsAnalyzer(@NotNull final List<ActionabilityCNVs> CNVs) {
         this.CNVs = CNVs;
     }
 
