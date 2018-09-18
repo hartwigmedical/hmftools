@@ -20,7 +20,7 @@ data class IclusionRecord(private val metadata: RecordMetadata, override val eve
 
     companion object {
         private val reader = KnowledgebaseEventReader("iclusion", IclusionTransvarReader, IclusionFusionReader, IclusionCnvReader,
-                                                      IclusionGeneMutationReader, IclusionExonMutationReader, IclusionCodonReader)
+                IclusionGeneMutationReader, IclusionExonMutationReader, IclusionCodonReader)
 
         operator fun invoke(studyDetails: IclusionStudyDetails, geneToTranscript: Map<String, String?>): List<IclusionRecord> {
             val events = studyDetails.mutations.map { IclusionEvent(it, geneToTranscript[it.geneName].orEmpty()) }
@@ -37,9 +37,11 @@ data class IclusionRecord(private val metadata: RecordMetadata, override val eve
         private fun readActionability(studyDetails: IclusionStudyDetails): List<Actionability> {
             val study = studyDetails.study
             val cancerTypes = studyDetails.indications.map { it.indication_name_full }
-            val drugs = listOf(HmfDrug("Study", "Study"))
-            return Actionability("iclusion", study.title, cancerTypes, drugs, "study_level", "study_significance",
-                                 "Predictive", HmfLevel.UNKNOWN, HmfResponse.OTHER)
+            val drugs = listOf(HmfDrug(study.acronym, "Trial"))
+            val evidenceLevel = "IclusionTrial"
+
+            return Actionability("iclusion", "EXT" + study.id + " (" + study.ccmo + ")", cancerTypes, drugs, evidenceLevel, "UNKNOWN",
+                    "Predictive", HmfLevel(evidenceLevel), HmfResponse.OTHER)
         }
     }
 }
