@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.common.region;
 
+import java.util.Collections;
 import java.util.List;
+
+import com.google.common.collect.Lists;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -34,16 +37,81 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
     @Value.Derived
     @Nullable
     public HmfExonRegion exonByIndex(int index) {
+        // TODO (KODU): Do anything with UTR regions here!?
         int effectiveIndex = index - 1;
-        if (strand() == Strand.REVERSE) {
-            // KODU: Assume the exome is sorted on genomic coordinates.
-            effectiveIndex = exome().size() - index;
-        }
+        List<HmfExonRegion> strandSortedExome = strandSortedExome();
 
-        if (effectiveIndex >= 0 && effectiveIndex < exome().size()) {
-            return exome().get(effectiveIndex);
+        if (effectiveIndex >= 0 && effectiveIndex < strandSortedExome.size()) {
+            return strandSortedExome.get(effectiveIndex);
         }
 
         return null;
+    }
+
+    @Value.Derived
+    @Nullable
+    public List<GenomeRegion> codonByIndex(int index) {
+        // TODO (KODU): Do anything with UTR regions here!?
+
+        // KODU: Enforce 1-based codons.
+        if (index < 1) {
+            return null;
+        }
+
+        List<GenomeRegion> codonRegions = Lists.newArrayList();
+        int effectiveStartBase = 1 + (index - 1) * 3;
+        int effectiveEndBase = 3 + (index - 1) * 3;
+
+        int basesCovered = 0;
+        Long startPosition = null;
+        Long endPosition = null;
+        for (HmfExonRegion exon : strandSortedExome()) {
+            if (basesCovered + exon.bases() >= effectiveStartBase && startPosition == null) {
+                startPosition = strand() == Strand.FORWARD
+                        ? exon.start() + effectiveStartBase - basesCovered - 1
+                        : exon.end() - effectiveStartBase + basesCovered + 1;
+            }
+
+            if (basesCovered + exon.bases() >= effectiveEndBase && endPosition == null) {
+                endPosition = strand() == Strand.FORWARD
+                        ? exon.start() + effectiveEndBase - basesCovered - 1
+                        : exon.end() - effectiveEndBase + basesCovered + 1;
+            }
+
+            if (startPosition != null) {
+                if (endPosition == null) {
+                    codonRegions.add(ImmutableGenomeRegionImpl.builder()
+                            .chromosome(chromosome())
+                            .start(strand() == Strand.FORWARD ? startPosition : exon.start())
+                            .end(strand() == Strand.FORWARD ? exon.end() : startPosition)
+                            .build());
+                } else if (codonRegions.size() == 1) {
+                    codonRegions.add(ImmutableGenomeRegionImpl.builder()
+                            .chromosome(chromosome())
+                            .start(strand() == Strand.FORWARD ? exon.start() : endPosition)
+                            .end(strand() == Strand.FORWARD ? endPosition : exon.end())
+                            .build());
+                    Collections.sort(codonRegions);
+                    return codonRegions;
+                } else {
+                    codonRegions.add(ImmutableGenomeRegionImpl.builder()
+                            .chromosome(chromosome())
+                            .start(strand() == Strand.FORWARD ? startPosition :endPosition)
+                            .end(strand() == Strand.FORWARD ? endPosition : startPosition)
+                            .build());
+                    return codonRegions;
+                }
+            }
+
+            basesCovered += exon.bases();
+        }
+
+        return null;
+    }
+
+    @Value.Derived
+    @NotNull
+    public List<HmfExonRegion> strandSortedExome() {
+        return strand() == Strand.FORWARD ? exome() : Lists.reverse(exome());
     }
 }

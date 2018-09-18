@@ -16,39 +16,132 @@ public class HmfTranscriptRegionTest {
     //MIVO:     both forward and reverse cases use the following scenario (* = UTR):
     //exons:        |--------------------|   |------------------------------------------------|
     //positions:    --1*---2---3---4---5---x---7---8---9---10---11---12---13---14---15*---16*--
-    //codons:            |___________|_______________|_____________|______________|
+    //codons:       |____________|_______________|____________|______________|________________|
 
     @Test
-    public void canRetrieveExonByIndex() {
-        HmfTranscriptRegion forwardStrandGene = create(Strand.FORWARD);
-        HmfExonRegion exon0 = forwardStrandGene.exonByIndex(0);
-        assertNull(exon0);
+    public void canRetrieveExonByIndexOnForwardGene() {
+        HmfTranscriptRegion transcript = create(Strand.FORWARD);
 
-        HmfExonRegion exon1 = forwardStrandGene.exonByIndex(1);
+        assertNull(transcript.exonByIndex(0));
+
+        HmfExonRegion exon1 = transcript.exonByIndex(1);
         assertNotNull(exon1);
         assertEquals("1", exon1.exonID());
 
-        HmfExonRegion exon2 = forwardStrandGene.exonByIndex(2);
+        HmfExonRegion exon2 = transcript.exonByIndex(2);
         assertNotNull(exon2);
         assertEquals("2", exon2.exonID());
 
-        HmfExonRegion exon3 = forwardStrandGene.exonByIndex(3);
-        assertNull(exon3);
+        assertNull(transcript.exonByIndex(3));
+    }
 
-        HmfTranscriptRegion reverseStrandGene = create(Strand.REVERSE);
-        exon0 = reverseStrandGene.exonByIndex(0);
-        assertNull(exon0);
+    @Test
+    public void canRetrieveExonByIndexOnReverseGene() {
+        HmfTranscriptRegion transcript = create(Strand.REVERSE);
 
-        exon1 = reverseStrandGene.exonByIndex(1);
+        assertNull(transcript.exonByIndex(0));
+
+        HmfExonRegion exon1 = transcript.exonByIndex(1);
         assertNotNull(exon1);
         assertEquals("2", exon1.exonID());
 
-        exon2 = reverseStrandGene.exonByIndex(2);
+        HmfExonRegion exon2 = transcript.exonByIndex(2);
         assertNotNull(exon2);
         assertEquals("1", exon2.exonID());
 
-        exon3 = reverseStrandGene.exonByIndex(3);
-        assertNull(exon3);
+        assertNull(transcript.exonByIndex(3));
+    }
+
+    @Test
+    public void canRetrieveCodonByIndexOnForwardGene() {
+        HmfTranscriptRegion transcript = create(Strand.FORWARD);
+
+        assertNull(transcript.codonByIndex(-1));
+        assertNull(transcript.codonByIndex(0));
+
+        GenomeRegion codon1 = assertedCodonGet(transcript, 1);
+        assertNotNull(codon1);
+        assertEquals(1, codon1.start());
+        assertEquals(3, codon1.end());
+
+        GenomeRegion codon2Part1 = assertedCodonGet(transcript, 2, 0);
+        assertNotNull(codon2Part1);
+        assertEquals(4, codon2Part1.start());
+        assertEquals(5, codon2Part1.end());
+
+        GenomeRegion codon2Part2 = assertedCodonGet(transcript, 2, 1);
+        assertNotNull(codon2Part2);
+        assertEquals(7, codon2Part2.start());
+        assertEquals(7, codon2Part2.end());
+
+        GenomeRegion codon3 = assertedCodonGet(transcript, 3);
+        assertNotNull(codon3);
+        assertEquals(8, codon3.start());
+        assertEquals(10, codon3.end());
+
+        GenomeRegion codon4 = assertedCodonGet(transcript, 4);
+        assertNotNull(codon4);
+        assertEquals(11, codon4.start());
+        assertEquals(13, codon4.end());
+
+        GenomeRegion codon5 = assertedCodonGet(transcript, 5);
+        assertNotNull(codon5);
+        assertEquals(14, codon5.start());
+        assertEquals(16, codon5.end());
+
+        assertNull(transcript.codonByIndex(6));
+    }
+
+    @Test
+    public void canRetrieveCodonByIndexOnReverseGene() {
+        HmfTranscriptRegion transcript = create(Strand.REVERSE);
+
+        assertNull(transcript.codonByIndex(-1));
+        assertNull(transcript.codonByIndex(0));
+
+        GenomeRegion codon1 = assertedCodonGet(transcript, 1);
+        assertNotNull(codon1);
+        assertEquals(14, codon1.start());
+        assertEquals(16, codon1.end());
+
+        GenomeRegion codon2 = assertedCodonGet(transcript, 2);
+        assertNotNull(codon2);
+        assertEquals(11, codon2.start());
+        assertEquals(13, codon2.end());
+
+        GenomeRegion codon3 = assertedCodonGet(transcript, 3);
+        assertNotNull(codon3);
+        assertEquals(8, codon3.start());
+        assertEquals(10, codon3.end());
+
+        GenomeRegion codon4Part1 = assertedCodonGet(transcript, 4, 0);
+        assertNotNull(codon4Part1);
+        assertEquals(4, codon4Part1.start());
+        assertEquals(5, codon4Part1.end());
+
+        GenomeRegion codon4Part2 = assertedCodonGet(transcript, 4, 1);
+        assertNotNull(codon4Part2);
+        assertEquals(7, codon4Part2.start());
+        assertEquals(7, codon4Part2.end());
+
+        GenomeRegion codon5 = assertedCodonGet(transcript, 5);
+        assertNotNull(codon5);
+        assertEquals(1, codon5.start());
+        assertEquals(3, codon5.end());
+
+        assertNull(transcript.codonByIndex(6));
+    }
+
+    @NotNull
+    private static GenomeRegion assertedCodonGet(@NotNull HmfTranscriptRegion transcript, int codonIndex) {
+        return assertedCodonGet(transcript, codonIndex, 0);
+    }
+
+    @NotNull
+    private static GenomeRegion assertedCodonGet(@NotNull HmfTranscriptRegion transcript, int codonIndex, int regionIndex) {
+        List<GenomeRegion> regions = transcript.codonByIndex(codonIndex);
+        assertNotNull(regions);
+        return regions.get(regionIndex);
     }
 
     @NotNull
@@ -74,5 +167,4 @@ public class HmfTranscriptRegionTest {
                 .build();
 
     }
-
 }
