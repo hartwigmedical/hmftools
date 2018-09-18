@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
 import org.apache.logging.log4j.LogManager;
@@ -13,7 +14,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class ActionabilityCNVsAnalyzer {
     private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(ActionabilityCNVsAnalyzer.class);
-    static final String DELIMITER = "\t";
+    private static final String DELIMITER = "\t";
+    private static final double REL_GAIN = 3;
+    private static final double ABS_LOSS = 0.5;
 
     @NotNull
     private final List<ActionabilityCNVs> CNVs;
@@ -26,8 +29,7 @@ public class ActionabilityCNVsAnalyzer {
         Boolean booleanValue = true;
         for (int i=0; i< CNVs.size();i++) {
             if (CNVs.get(i).cancerType().contains(primaryTumorLocation) &&
-                    CNVs.get(i).gene().equals(geneCopyNumber.gene()) &&
-                    CNVs.get(i).cnvType().equals(geneCopyNumber.minRegionStartSupport())) {
+                    checkCNVType(geneCopyNumber.minCopyNumber()).equals(CNVs.get(i).cnvType())) {
                 booleanValue = true;
                 LOGGER.info(CNVs.get(i));
             } else {
@@ -35,6 +37,16 @@ public class ActionabilityCNVsAnalyzer {
             }
         }
         return booleanValue;
+    }
+
+    public String checkCNVType(final double copyNumber) {
+        double relativeCopyNumber = copyNumber / 8.0;
+        if (Doubles.lessOrEqual(copyNumber, ABS_LOSS)) {
+            return "Deletion";
+        } else if (Doubles.greaterOrEqual(relativeCopyNumber, REL_GAIN)) {
+            return "Amplification";
+        }
+        return "";
     }
 
     @NotNull
@@ -67,6 +79,5 @@ public class ActionabilityCNVsAnalyzer {
                 .significanceSource(values[10])
                 .hmfResponse(values[11])
                 .build();
-
     }
 }
