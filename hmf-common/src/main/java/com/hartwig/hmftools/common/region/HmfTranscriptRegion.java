@@ -51,16 +51,22 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
     @Value.Derived
     @Nullable
     public List<GenomeRegion> codonByIndex(int index) {
+        return codonRangeByIndex(index, index);
+    }
+
+    @Value.Derived
+    @Nullable
+    public List<GenomeRegion> codonRangeByIndex(int startCodon, int endCodon) {
         // TODO (KODU): Do anything with UTR regions here!?
 
         // KODU: Enforce 1-based codons.
-        if (index < 1) {
+        if (startCodon < 1 || endCodon < 1) {
             return null;
         }
 
         List<GenomeRegion> codonRegions = Lists.newArrayList();
-        int effectiveStartBase = 1 + (index - 1) * 3;
-        int effectiveEndBase = 3 + (index - 1) * 3;
+        int effectiveStartBase = 1 + (startCodon - 1) * 3;
+        int effectiveEndBase = 3 + (endCodon - 1) * 3;
 
         int basesCovered = 0;
         Long startPosition = null;
