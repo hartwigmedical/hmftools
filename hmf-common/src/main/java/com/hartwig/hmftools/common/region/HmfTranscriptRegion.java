@@ -30,4 +30,20 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
 
     @NotNull
     public abstract List<HmfExonRegion> exome();
+
+    @Value.Derived
+    @Nullable
+    public HmfExonRegion exonByIndex(int index) {
+        int effectiveIndex = index - 1;
+        if (strand() == Strand.REVERSE) {
+            // KODU: Assume the exome is sorted on genomic coordinates.
+            effectiveIndex = exome().size() - index;
+        }
+
+        if (effectiveIndex >= 0 && effectiveIndex < exome().size()) {
+            return exome().get(effectiveIndex);
+        }
+
+        return null;
+    }
 }
