@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.data_analyser.types;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
 
+import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.capValue;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.doublesEqual;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.greaterThan;
@@ -182,8 +184,10 @@ public class BucketGroup implements Comparable<BucketGroup> {
     }
 
     public final List<Integer> getSampleIds() { return mSampleIds; }
+    public final int getSampleCount() { return mSampleIds.size(); }
     public final List<Integer> getInitialSampleIds() { return mInitialSampleIds; }
     public final List<Integer> getBucketIds() { return mBucketIds; }
+    public final int getBucketCount() { return mBucketIds.size(); }
     public final List<Integer> getInitialBucketIds() { return mInitialBucketIds; }
     public final List<Integer> getExtraBucketIds() { return mExtraBucketIds; }
 
@@ -468,4 +472,48 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
     public double getPotentialAdjAllocation() { return mPotentialAdjAllocation; }
     public void addPotentialAdjAllocation(double count) { mPotentialAdjAllocation += count; }
+
+    public double calcSampleFitScore(final SampleData sample)
+    {
+        int samIndex = getSampleIndex(sample.Id);
+
+        if(samIndex < 0)
+            return 0;
+
+        final double[] sampleCounts = mSampleCounts.get(samIndex);
+        double sampleAlloc = mSampleCountTotals.get(samIndex);
+
+        return calcSampleFitScore(sampleCounts, sampleAlloc);
+    }
+
+    public double calcSampleFitScore(final double[] allocCounts, double allocTotal)
+    {
+        // the score is the ratio-weighted difference around the true ratio, with the range being the boundaries (1, -1
+        double fitScore = 0;
+
+        if(!doublesEqual(sumVector(allocCounts), allocTotal))
+            return 0;
+
+        for(Integer bucket : mBucketIds)
+        {
+            double bucketWeight = allocCounts[bucket] / allocTotal;
+            double impliedRatio = bucketWeight;
+
+            double ratioDiff = impliedRatio - mBucketRatios[bucket];
+            double ratioRange = mBucketRatioRanges[bucket];
+
+            if(ratioRange == 0)
+            {
+                continue;
+            }
+
+            double fitPerc = ratioDiff / ratioRange;
+            fitPerc = capValue(fitPerc, -1, 1);
+            fitScore += fitPerc * bucketWeight;
+        }
+
+        fitScore = capValue(fitScore, -1, 1);
+
+        return fitScore;
+    }
 }
