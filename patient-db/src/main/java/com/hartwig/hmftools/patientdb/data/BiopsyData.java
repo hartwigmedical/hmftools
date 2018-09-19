@@ -72,7 +72,7 @@ public abstract class BiopsyData implements Comparable<BiopsyData>  {
 
     @Override
     public String toString() {
-        return site() + " - " + location() + " (" + date() + ")";
+        return site() + " - " + location() + " (" + date() + " - evaluable=" + isPotentiallyEvaluable() + ")";
     }
 
     @Override
