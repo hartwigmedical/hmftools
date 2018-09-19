@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 public class ActionabilityCNVsAnalyzer {
     private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(ActionabilityCNVsAnalyzer.class);
     private static final String DELIMITER = "\t";
-    private static final double REL_GAIN = 3;
+    private static final double REL_GAIN = 3.0;
     private static final double ABS_LOSS = 0.5;
 
     @NotNull
@@ -26,28 +26,29 @@ public class ActionabilityCNVsAnalyzer {
     }
 
     public boolean actionableCNVs(@NotNull GeneCopyNumber geneCopyNumber, @NotNull String primaryTumorLocation){
-        Integer minCopyValue = (int) Math.max(0, Math.round(geneCopyNumber.minCopyNumber()));
-        Boolean booleanValue = true;
+        Double minCopyValue = (double)Math.max(0, Math.round(geneCopyNumber.minCopyNumber()));
+        Boolean booleanValueCNV = true;
         for (int i=0; i< CNVs.size();i++) {
             if (CNVs.get(i).cancerType().contains(primaryTumorLocation) &&
                     checkCNVType(minCopyValue).equals(CNVs.get(i).cnvType())) {
-                booleanValue = true;
+                booleanValueCNV = true;
                 LOGGER.info(CNVs.get(i));
             } else {
-                booleanValue = false;
+                booleanValueCNV = false;
             }
         }
-        return booleanValue;
+        return booleanValueCNV;
     }
 
     private String checkCNVType(final double copyNumber) {
-        double relativeCopyNumber = copyNumber / 8.0;
+        Double relativeCopyNumber = copyNumber / 8.0;
+        String CNVType = "";
         if (Doubles.lessOrEqual(copyNumber, ABS_LOSS)) {
-            return "Deletion";
+            CNVType =  "Deletion";
         } else if (Doubles.greaterOrEqual(relativeCopyNumber, REL_GAIN)) {
-            return "Amplification";
+            CNVType =  "Amplification";
         }
-        return "";
+        return CNVType;
     }
 
     @NotNull

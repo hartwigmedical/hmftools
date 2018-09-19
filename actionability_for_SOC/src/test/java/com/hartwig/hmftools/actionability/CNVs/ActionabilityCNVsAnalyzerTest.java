@@ -10,13 +10,12 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ActionabilityCNVsAnalyzerTest {
 
 
-    @Ignore
+    @Test
     public void ActionabilityWorksCNVs() {
         ActionabilityCNVs actionanilityCNV = ImmutableActionabilityCNVs.builder()
                 .gene("ERBB2")
@@ -37,8 +36,8 @@ public class ActionabilityCNVsAnalyzerTest {
 
         GeneCopyNumber geneCopyNumber = ImmutableGeneCopyNumber.builder()
                 .gene("ERBB2")
-                .maxCopyNumber(10)
-                .minCopyNumber(1)
+                .maxCopyNumber(45)
+                .minCopyNumber(30.001)
                 .somaticRegions(1)
                 .germlineHet2HomRegions(0)
                 .germlineHomRegions(0)
@@ -66,6 +65,7 @@ public class ActionabilityCNVsAnalyzerTest {
                 .missenseNonBiallelicCount(0)
                 .build();
 
-        assertTrue(cnvAnalyzer.actionableCNVs(geneCopyNumber, "Breast Cancer"));
+        assertTrue(cnvAnalyzer.actionableCNVs(geneCopyNumber, "Breast"));
+        assertFalse(cnvAnalyzer.actionableCNVs(geneCopyNumber, "Skin"));
     }
 }

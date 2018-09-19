@@ -84,7 +84,8 @@ public abstract class ActionabilityApplication {
         LOGGER.info("Start processing actionability cnvs");
         String fileActionabilityCNVs = "/data/common/dbs/knowledgebases/output/actionableCNVs.tsv";
 
-       if (Files.exists(new File(fileActionabilityCNVs).toPath())) {
+       LOGGER.info("CNVs: " + geneCopyNumbers.size());
+        if (Files.exists(new File(fileActionabilityCNVs).toPath())) {
             ActionabilityCNVsAnalyzer analyzerCNVs = ActionabilityCNVsAnalyzer.loadFromFileCNVs(fileActionabilityCNVs);
             for (int i = 0; i < geneCopyNumbers.size(); i ++) {
                 analyzerCNVs.actionableCNVs(geneCopyNumbers.get(i), patientTumorLocation.primaryTumorLocation());

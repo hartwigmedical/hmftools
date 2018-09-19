@@ -26,8 +26,8 @@ public class ActionabilityVariantsAnalyzer {
     }
 
 
-    public boolean actionableVariants(@NotNull SomaticVariant variant, @NotNull String primaryTumorLocation){
-        Boolean booleanValue = true;
+    public boolean actionableVariants(@NotNull SomaticVariant variant, @NotNull String primaryTumorLocation) {
+        Boolean booleanValueVariants = true;
         for (int i=0; i< variants.size();i++) {
             if (variants.get(i).cancerType().contains(primaryTumorLocation) &&
                     variant.gene().equals(variants.get(i).gene()) &&
@@ -35,30 +35,30 @@ public class ActionabilityVariantsAnalyzer {
                     Long.toString(variant.position()).equals(variants.get(i).position()) &&
                     variant.ref().equals(variants.get(i).ref()) &&
                     variant.alt().equals(variants.get(i).alt())) {
-                booleanValue =  true;
+                booleanValueVariants =  true;
                 LOGGER.info(variants.get(i));
             } else {
-                booleanValue =  false;
+                booleanValueVariants =  false;
             }
         }
-        return booleanValue;
+        return booleanValueVariants;
     }
 
     public boolean actionableRange(@NotNull SomaticVariant variant, @NotNull String primaryTumorLocation) {
-        Boolean booleanValue = true;
+        Boolean booleanValueRange = true;
         for (int i=0; i< variantsRanges.size();i++) {
             if (variantsRanges.get(i).cancerType().contains(primaryTumorLocation) &&
                     variant.gene().equals(variantsRanges.get(i).gene()) &&
                     variant.chromosome().equals(variantsRanges.get(i).chromosome()) &&
                     Integer.parseInt(Long.toString(variant.position())) >= Integer.parseInt(variantsRanges.get(i).start()) &&
                     Integer.parseInt(Long.toString(variant.position())) <= Integer.parseInt(variantsRanges.get(i).stop())) {
-                booleanValue =  true;
+                booleanValueRange =  true;
                 LOGGER.info(variantsRanges.get(i));
             } else {
-                booleanValue =  false;
+                booleanValueRange =  false;
             }
         }
-        return booleanValue;
+        return booleanValueRange;
     }
 
     @NotNull
