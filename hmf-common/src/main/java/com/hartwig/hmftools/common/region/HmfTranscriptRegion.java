@@ -49,12 +49,6 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
 
     @Value.Derived
     @Nullable
-    public List<GenomeRegion> codonByIndex(int index) {
-        return codonRangeByIndex(index, index);
-    }
-
-    @Value.Derived
-    @Nullable
     // TODO (KODU): Convert to using long.
     public List<GenomeRegion> codingRangeByGenomicCoordinates(int genomicStartPosition, int genomicEndPosition) {
         if (genomicStartPosition < 1 || genomicEndPosition < 1) {
@@ -82,6 +76,12 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
         }
 
         return !codingRegions.isEmpty() ? codingRegions : null;
+    }
+
+    @Value.Derived
+    @Nullable
+    public List<GenomeRegion> codonByIndex(int index) {
+        return codonRangeByIndex(index, index);
     }
 
     @Value.Derived
