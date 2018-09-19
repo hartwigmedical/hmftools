@@ -19,7 +19,6 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
-import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -98,6 +97,13 @@ public abstract class ActionabilityApplication {
         LOGGER.info("Finish processing actionability somaticVariants");
 
         LOGGER.info("Process compare results");
+        String fileRegionsBedFile = "/data/common/dbs/knowledgebases/SOC_files/PATHv2D_GRCh37.bed.txt";
+        if (Files.exists(new File(fileRegionsBedFile).toPath())) {
+            AnalyzerSOC analyzerSOC = AnalyzerSOC.loadFileBedFile(fileRegionsBedFile);
+            LOGGER.info("analyzerSOC: " + analyzerSOC);
+        } else {
+            LOGGER.warn("File does not exist: " + fileRegionsBedFile);
+        }
     }
 
     @NotNull

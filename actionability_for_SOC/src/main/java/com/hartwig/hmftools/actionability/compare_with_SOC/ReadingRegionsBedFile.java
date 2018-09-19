@@ -14,10 +14,10 @@ public abstract class ReadingRegionsBedFile {
     abstract String chromosome();
 
     @NotNull
-    abstract Integer startPosition();
+    abstract String startPosition();
 
     @NotNull
-    abstract Integer endposition();
+    abstract String endposition();
 
     @NotNull
     abstract String gene();
