@@ -2,8 +2,6 @@ package com.hartwig.hmftools.idgenerator
 
 import com.hartwig.hmftools.extensions.cli.createCommandLine
 import com.hartwig.hmftools.extensions.cli.createRunModeCommandLine
-import com.hartwig.hmftools.idgenerator.extensions.readCurrentIds
-import com.hartwig.hmftools.idgenerator.extensions.writeHmfIds
 import org.apache.commons.cli.CommandLine
 import org.apache.commons.cli.Option
 import org.apache.commons.cli.OptionGroup
@@ -20,15 +18,15 @@ fun main(args: Array<String>) {
             val singleHashCmd = singleHashModeOptions().createCommandLine("hmf-id", args)
             runHmfIdSingleHash(singleHashCmd)
         }
-        cmd.hasOption(CREATE_IDS_MODE) -> {
+        cmd.hasOption(CREATE_IDS_MODE)         -> {
             val createIdsCmd = createIdsModeOptions().createCommandLine("hmf-id", args)
             runHmfIdCreateIds(createIdsCmd)
         }
-        cmd.hasOption(UPDATE_IDS_MODE) -> {
+        cmd.hasOption(UPDATE_IDS_MODE)         -> {
             val updateIdsCmd = updateIdsModeOptions().createCommandLine("hmf-id", args)
             runHmfIdUpdateIds(updateIdsCmd)
         }
-        cmd.hasOption(ANONYMISE_IDS_MODE) -> {
+        cmd.hasOption(ANONYMISE_IDS_MODE)      -> {
             val anonymiseIdsCmd = anonymiseIdsModeOptions().createCommandLine("hmf-id", args)
             runHmfIdAnonymiseIds(anonymiseIdsCmd)
         }
@@ -83,41 +81,41 @@ private fun anonymiseIdsModeOptions(): Options {
 }
 
 private fun runHmfIdSingleHash(cmd: CommandLine) {
-    val generator = IdGenerator(cmd.getOptionValue(PASSWORD))
-    val patientId = cmd.getOptionValue(PATIENT_ID)
-    val hash = generator.hash(patientId)
-    logger.info("Generated hash id for $patientId: $hash ")
+    //    val generator = IdGenerator(cmd.getOptionValue(PASSWORD))
+    //    val patientId = cmd.getOptionValue(PATIENT_ID)
+    //    val hash = generator.hash(patientId)
+    //    logger.info("Generated hash id for $patientId: $hash ")
 }
 
 private fun runHmfIdCreateIds(cmd: CommandLine) {
-    val generator = IdGenerator(cmd.getOptionValue(PASSWORD))
-    val patientIds = readPatientIdsFile(cmd.getOptionValue(PATIENT_IDS_FILE))
-    val idMapping = generator.generateIds(patientIds)
-    File(cmd.getOptionValue(OUTPUT_FILE)).writeHmfIds(idMapping.values)
-    logger.info("Created hmf ids for ${idMapping.size} patients")
+    //    val generator = IdGenerator(cmd.getOptionValue(PASSWORD))
+    //    val patientIds = readPatientIdsFile(cmd.getOptionValue(PATIENT_IDS_FILE))
+    //    val idMapping = generator.generateIds(patientIds)
+    //    File(cmd.getOptionValue(OUTPUT_FILE)).writeHmfPatientIds(idMapping.values)
+    //    logger.info("Created hmf ids for ${idMapping.size} patients")
 }
 
 private fun runHmfIdUpdateIds(cmd: CommandLine) {
-    val password = cmd.getOptionValue(PASSWORD)
-    val generator = IdGenerator(password)
-    val patientIds = readPatientIdsFile(cmd.getOptionValue(PATIENT_IDS_FILE))
-    val currentIds = IdGenerator::class.java.getResource(CURRENT_IDS_FILE).openStream().readCurrentIds()
-    val newIdMapping = generator.updateIds(cmd.getOptionValue(OLD_PASSWORD, password), patientIds, currentIds)
-    File(cmd.getOptionValue(OUTPUT_FILE)).writeHmfIds(newIdMapping.values)
-    logger.info("Updated hmf ids for ${newIdMapping.size} patients")
+    //    val password = cmd.getOptionValue(PASSWORD)
+    //    val generator = IdGenerator(password)
+    //    val patientIds = readPatientIdsFile(cmd.getOptionValue(PATIENT_IDS_FILE))
+    //    val currentIds = IdGenerator::class.java.getResource(CURRENT_IDS_FILE).openStream().readCurrentIds()
+    //    val newIdMapping = generator.updateIds(cmd.getOptionValue(OLD_PASSWORD, password), patientIds, currentIds)
+    //    File(cmd.getOptionValue(OUTPUT_FILE)).writeHmfPatientIds(newIdMapping.values)
+    //    logger.info("Updated hmf ids for ${newIdMapping.size} patients")
 }
 
 private fun runHmfIdAnonymiseIds(cmd: CommandLine) {
-    val currentIds = IdGenerator::class.java.getResource(CURRENT_IDS_FILE).openStream().readCurrentIds()
-    val generator = IdGenerator(cmd.getOptionValue(PASSWORD))
+    //    val currentIds = IdGenerator::class.java.getResource(CURRENT_IDS_FILE).openStream().readCurrentIds()
+    //    val generator = IdGenerator(cmd.getOptionValue(PASSWORD))
     val patientIds = readPatientIdsFile(cmd.getOptionValue(PATIENT_IDS_FILE))
 
     println("OriginalId,AnonymousId")
-    patientIds.forEach { patient ->
-        val hash = generator.hash(patient)
-        val hmfId: HmfId? = currentIds.find { it.hash == hash }
-        println(patient + "," + (hmfId?.patientId ?: "Unknown"))
-    }
+    //    patientIds.forEach { patient ->
+    //        val hash = generator.hash(patient)
+    //        val hmfId: HmfId? = currentIds.find { it.hash == hash }
+    //        println(patient + "," + (hmfId?.patientId ?: "Unknown"))
+    //    }
 }
 
 private fun readPatientIdsFile(patientIdsFile: String): List<String> {
