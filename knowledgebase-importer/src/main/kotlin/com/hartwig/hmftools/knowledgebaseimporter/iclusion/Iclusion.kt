@@ -31,6 +31,6 @@ class Iclusion(iclusionStudies: List<IclusionStudyDetails>, diseaseOntology: Dis
 
     override val knownKbRecords: List<IclusionRecord> by lazy { iclusionStudies.flatMap { IclusionRecord(it, geneToTranscriptMap) } }
 
-    override val actionableKbRecords = knownKbRecords
+    override val actionableKbRecords by lazy { knownKbRecords }
     private val actionableKbItems by lazy { recordAnalyzer.actionableItems(listOf(this)).distinct() }
 }
