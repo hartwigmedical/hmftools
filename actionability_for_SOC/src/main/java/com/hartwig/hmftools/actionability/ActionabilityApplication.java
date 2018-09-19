@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.sun.xml.internal.bind.v2.TODO;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -56,6 +57,9 @@ public abstract class ActionabilityApplication {
         final String patientIdentifier = toPatientIdentifier(run.tumorSample());
         LOGGER.info("Tumor sample: " + run.tumorSample());
         LOGGER.info("patientId: " + patientIdentifier);
+
+        // TODO: LISC
+        // compare primary tumor locations with doid
 
         final List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(cmd.getOptionValue(TUMOR_LOCATION_CSV));
         final PatientTumorLocation patientTumorLocation = extractPatientTumorLocation(patientTumorLocations, run.tumorSample());
@@ -96,13 +100,18 @@ public abstract class ActionabilityApplication {
         }
         LOGGER.info("Finish processing actionability somaticVariants");
 
-        LOGGER.info("Process compare results");
-        String fileRegionsBedFile = "/data/common/dbs/knowledgebases/SOC_files/PATHv2D_GRCh37.bed.txt";
-        if (Files.exists(new File(fileRegionsBedFile).toPath())) {
-            AnalyzerSOC analyzerSOC = AnalyzerSOC.loadFileBedFile(fileRegionsBedFile);
-        } else {
-            LOGGER.warn("File does not exist: " + fileRegionsBedFile);
-        }
+        // TODO: LISC
+        // create tabel of variants which are onlabel/offlabel
+
+        // compare results
+
+//        LOGGER.info("Process compare results");
+//        String fileRegionsBedFile = "/data/common/dbs/knowledgebases/SOC_files/PATHv2D_GRCh37.bed.txt";
+//        if (Files.exists(new File(fileRegionsBedFile).toPath())) {
+//            AnalyzerSOC analyzerSOC = AnalyzerSOC.loadFileBedFile(fileRegionsBedFile);
+//        } else {
+//            LOGGER.warn("File does not exist: " + fileRegionsBedFile);
+//        }
     }
 
     @NotNull
