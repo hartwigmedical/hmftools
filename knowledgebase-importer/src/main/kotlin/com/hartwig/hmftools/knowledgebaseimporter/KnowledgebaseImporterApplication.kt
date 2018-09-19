@@ -116,6 +116,9 @@ private fun readIclusionStudies(cmd : CommandLine): List<IclusionStudyDetails> {
 }
 
 private fun writeOutput(outputDir: String, knowledgebases: List<Knowledgebase>, cancerTypesDoids: List<CancerTypeDoidOutput>) {
+    val dir = File(outputDir)
+    if (!dir.exists()) dir.mkdirs()
+
     knowledgebases.filterNot { it.knownVariants.isEmpty() }.map { writeKnownVariants(it, outputDir) }
     CsvWriter.writeCSV(knownFusionPairs(knowledgebases), "$outputDir${File.separator}knownFusionPairs.csv")
     CsvWriter.writeCSV(knownPromiscuousFive(knowledgebases), "$outputDir${File.separator}knownPromiscuousFive.csv")
@@ -145,7 +148,5 @@ private fun readExtraCancerTypeDoids(): Map<String, Set<Doid>> {
 }
 
 private fun writeKnownVariants(knowledgebase: Knowledgebase, outputDirectory: String) {
-    val dir = File(outputDirectory)
-    if (!dir.exists()) dir.mkdirs()
     CsvWriter.writeTSV(knowledgebase.knownVariants.distinct(), "$outputDirectory${File.separator}${knowledgebase.source}KnownVariants.tsv")
 }
