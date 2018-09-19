@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.actionability.CNVs.ActionabilityCNVsAnalyzer;
+import com.hartwig.hmftools.actionability.compare_with_SOC.AnalyzerSOC;
 import com.hartwig.hmftools.actionability.variants.ActionabilityVariantsAnalyzer;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
@@ -18,6 +19,7 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -93,34 +95,9 @@ public abstract class ActionabilityApplication {
         } else {
             LOGGER.warn("File does not exist: " + fileActionabilityCNVs);
         }
-
-//        LOGGER.info("");
-//        LOGGER.info("Start processing actionability fusions");
-//        String fileActionabilityFusionPairs = "/data/common/dbs/knowledgebases/output/actionableFusionPairs.tsv";
-//        String fileActionabilityPromiscuousFive = "/data/common/dbs/knowledgebases/output/actionablePromiscuousFive.tsv";
-//        String fileActionabilityPromiscuousThree = "/data/common/dbs/knowledgebases/output/actionablePromiscuousThree.tsv";
-//
-//        if (Files.exists(new File(fileActionabilityFusionPairs).toPath()) && Files.exists(new File(fileActionabilityPromiscuousFive).toPath())
-//        && Files.exists(new File(fileActionabilityPromiscuousThree).toPath())){
-//            ActionabilityFusionAnalyzer analyzerFusions = ActionabilityFusionAnalyzer.loadFromFileFusions(fileActionabilityFusionPairs,
-//                    fileActionabilityPromiscuousFive, fileActionabilityPromiscuousThree);
-// //           for (int i = 0; i < somaticVariants.size(); i ++) {
-//                // change somaticVariants to structuralvariant, five_breakend, three_breakend, structuralvariantfusion
-////                LOGGER.info("Is actionable fusion: " + analyzerFusions.actionableFusions(somaticVariants.get(i), patientTumorLocation.primaryTumorLocation(), somaticVariants.size()));
-////            }
-//        } else if (!Files.exists(new File(fileActionabilityFusionPairs).toPath())){
-//            LOGGER.warn("File does not exist: " + fileActionabilityFusionPairs);
-//        } else if(!Files.exists(new File(fileActionabilityPromiscuousFive).toPath())){
-//            LOGGER.warn("File does not exist: " + fileActionabilityPromiscuousFive);
-//        } else if(!Files.exists(new File(fileActionabilityPromiscuousThree).toPath())){
-//            LOGGER.warn("File does not exist: " + fileActionabilityPromiscuousThree);
-//        }
-
-        LOGGER.info("");
-        LOGGER.info("Writing output data to file");
-
-        LOGGER.info("");
         LOGGER.info("Finish processing actionability somaticVariants");
+
+        LOGGER.info("Process compare results");
     }
 
     @NotNull
