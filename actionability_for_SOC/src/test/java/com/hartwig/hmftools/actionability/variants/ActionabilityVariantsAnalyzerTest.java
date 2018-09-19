@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.actionability.variants;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
@@ -36,7 +37,7 @@ public class ActionabilityVariantsAnalyzerTest {
         ActionabilityRanges variantsRanges = ImmutableActionabilityRanges.builder()
                 .gene("BRAF")
                 .mutationTranscript("ENST00000357654")
-                .chromosome("17")
+                .chromosome("7")
                 .start(Integer.toString(10))
                 .stop(Integer.toString(1500))
                 .geneTranscript("ENST00000256078")
@@ -76,7 +77,9 @@ public class ActionabilityVariantsAnalyzerTest {
                 .mappability(0D)
                 .build();
 
-        assertTrue(var.actionableVariants(variant, "Skin Melanoma"));
- //       assertTrue(var.actionableRange(variant, "Skin Melanoma"));
+        assertTrue(var.actionableVariants(variant, "Skin"));
+        assertTrue(var.actionableRange(variant, "Skin"));
+        assertFalse(var.actionableVariants(variant, "Stomach"));
+        assertFalse(var.actionableRange(variant, "Lung"));
     }
 }
