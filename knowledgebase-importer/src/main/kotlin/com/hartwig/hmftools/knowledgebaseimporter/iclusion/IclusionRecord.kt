@@ -14,8 +14,8 @@ import com.hartwig.hmftools.knowledgebaseimporter.output.HmfLevel
 import com.hartwig.hmftools.knowledgebaseimporter.output.HmfResponse
 
 data class IclusionRecord(private val metadata: RecordMetadata, override val events: List<SomaticEvent>,
-                          override val actionability: List<Actionability>, override val additionalInfo: String,
-                          val iclusionEvents: List<IclusionEvent>, val doids: Map<String, Set<Doid>>) :
+                          override val actionability: List<Actionability>, override val reference: String,
+                          override val annotation: String, val iclusionEvents: List<IclusionEvent>, val doids: Map<String, Set<Doid>>) :
         RecordMetadata by metadata, KnownRecord, ActionableRecord {
 
     companion object {
@@ -30,7 +30,7 @@ data class IclusionRecord(private val metadata: RecordMetadata, override val eve
             // MIVO: for now, interpret each iclusion study mutation as separate record. Effectively treats the mutations as an OR predicate
             //      e.g. patient will match if ANY of the specified mutations match
             return events.map {
-                IclusionRecord(IclusionMetadata(it.gene, it.transcript), reader.read(it), actionability, "", listOf(it), doids)
+                IclusionRecord(IclusionMetadata(it.gene, it.transcript), reader.read(it), actionability, "", "", listOf(it), doids)
             }
         }
 

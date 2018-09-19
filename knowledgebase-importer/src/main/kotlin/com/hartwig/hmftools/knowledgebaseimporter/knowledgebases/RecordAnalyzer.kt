@@ -23,7 +23,7 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
         val knownSomaticVariants = somaticVariantRecords.filter { it.second is SomaticVariantEvent }
                 .map { Pair(it.first, it.second as SomaticVariantEvent) }
         return knownSomaticVariants.map { (record, variant) ->
-            KnownVariantOutput(record.transcript, record.additionalInfo, variant)
+            KnownVariantOutput(record.transcript, record.reference, record.annotation, variant)
         }
     }
 
