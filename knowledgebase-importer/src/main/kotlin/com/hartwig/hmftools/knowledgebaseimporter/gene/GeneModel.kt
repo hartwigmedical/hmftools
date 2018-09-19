@@ -71,6 +71,7 @@ class GeneModel(ensemblDbUrl: String, hmfpatientsDbUrl: String, user: String, pa
     private val context = DSL.using(DriverManager.getConnection(ensemblDbUrl, user, password), SQLDialect.MYSQL)
 
     fun hmfTranscriptForGene(gene: String): String? {
+        // TODO (KODU): Map MLL2 gene to KMT2B
         val transcriptRegion = hmfGenePanel[gene]
         if (transcriptRegion == null) {
             logger.warn("Gene $gene not found in HMF gene panel!")
@@ -80,6 +81,7 @@ class GeneModel(ensemblDbUrl: String, hmfpatientsDbUrl: String, user: String, pa
     }
 
     fun hmfTranscriptRegionForGenericMutation(mutation: GenericMutation): HmfTranscriptRegion? {
+        // TODO (KODU): Map MLL2 gene to KMT2B
         val transcriptRegion = hmfGenePanel[mutation.gene]
         if (transcriptRegion == null) {
             logger.warn("Gene ${mutation.gene} not found in HMF gene panel!")
