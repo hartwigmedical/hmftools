@@ -29,6 +29,7 @@ public class AnalyzerSOC {
             fromLine(line.get(i));
             dataFile.add(fromLine(line.get(i)));
         }
+        LOGGER.info(dataFile);
         return new AnalyzerSOC(dataFile);
     }
 

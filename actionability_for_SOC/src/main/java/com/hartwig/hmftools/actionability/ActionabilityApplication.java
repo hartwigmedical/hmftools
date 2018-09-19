@@ -100,7 +100,6 @@ public abstract class ActionabilityApplication {
         String fileRegionsBedFile = "/data/common/dbs/knowledgebases/SOC_files/PATHv2D_GRCh37.bed.txt";
         if (Files.exists(new File(fileRegionsBedFile).toPath())) {
             AnalyzerSOC analyzerSOC = AnalyzerSOC.loadFileBedFile(fileRegionsBedFile);
-            LOGGER.info("analyzerSOC: " + analyzerSOC);
         } else {
             LOGGER.warn("File does not exist: " + fileRegionsBedFile);
         }
