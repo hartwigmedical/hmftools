@@ -6,10 +6,13 @@ import org.apache.logging.log4j.LogManager
 
 private val logger = LogManager.getLogger("SamplesInput")
 
-data class SamplesInput(val samples: List<SampleId>, val renamedPatients: Map<PatientId, PatientId>) {
+data class SamplesInput(val samples: List<SampleId>, val patientsMap: Map<PatientId, PatientId> = emptyMap()) {
     init {
-        validateRenames()
+        validatePatientsMap()
     }
+
+    val canonicalPatients: Set<PatientId> = (samples.map { canonicalId(it.patientId) } + patientsMap.values).toSet()
+    val nonCanonicalPatients: Set<PatientId> = patientsMap.keys
 
     /**
      * returns all samples for this patient, accounting for potential renames
@@ -22,21 +25,21 @@ data class SamplesInput(val samples: List<SampleId>, val renamedPatients: Map<Pa
      * returns all ids for this patient, accounting for potential renames
      */
     fun patientIds(patient: PatientId): Set<PatientId> {
-        val alternateIds = renamedPatients.filterValues { it == canonicalId(patient) }.flatMap { it.toPair().toList() }
+        val alternateIds = patientsMap.filterValues { it == canonicalId(patient) }.flatMap { it.toPair().toList() }
         return (alternateIds + patient).toSet()
     }
 
-    fun canonicalId(patient: PatientId) = renamedPatients[patient] ?: patient
+    fun canonicalId(patient: PatientId) = patientsMap[patient] ?: patient
 
-    private fun validateRenames() {
-        val chainedRenames = renamedPatients.count { (patientId, canonicalId) ->
-            val canonicalIsRenamed = renamedPatients.containsKey(canonicalId)
+    private fun validatePatientsMap() {
+        val chainedCanonicalMappings = patientsMap.count { (patientId, canonicalId) ->
+            val canonicalIsRenamed = patientsMap.containsKey(canonicalId)
             if (canonicalIsRenamed) {
-                logger.error("Canonical id ${canonicalId.id} for ${patientId.id} is also renamed to ${renamedPatients[canonicalId]!!.id}")
+                logger.error("Canonical id ${canonicalId.id} for ${patientId.id} is also renamed to ${patientsMap[canonicalId]!!.id}")
             }
             canonicalIsRenamed
         }
-        if (chainedRenames > 0) {
+        if (chainedCanonicalMappings > 0) {
             error("Renames of canonical patientIds are not allowed")
         }
     }
