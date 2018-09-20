@@ -4,9 +4,17 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.HotspotFile;
+import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
+import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
+import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
@@ -43,6 +51,7 @@ public class LoadSomaticVariants {
     private static final Logger LOGGER = LogManager.getLogger(LoadSomaticVariants.class);
 
     private static final String SAMPLE = "sample";
+    private static final String HOTSPOT = "hotspot";
     private static final String VCF_FILE = "vcf_file";
     private static final String REF_GENOME = "ref_genome";
     private static final String PASS_FILTER = "pass_filter";
@@ -111,6 +120,20 @@ public class LoadSomaticVariants {
         LOGGER.info("Persisting variants to database");
         dbAccess.writeSomaticVariants(sample, enrichedVariants);
 
+        LOGGER.info("Generating driver catalog");
+        final Multimap<String, GenomePosition> hotspots =
+                cmd.hasOption(HOTSPOT) ? HotspotFile.read(cmd.getOptionValue(HOTSPOT)) : ArrayListMultimap.create();
+
+        final List<EnrichedSomaticVariant> passingVariants =
+                enrichedVariants.stream().filter(x -> !x.isFiltered()).collect(Collectors.toList());
+        final List<DriverCatalog> driverCatalog =
+                new OncoDrivers(hotspots).oncoDrivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), passingVariants);
+        final List<DriverCatalog> tsgCatalog = TsgDrivers.tsgDrivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), passingVariants);
+        driverCatalog.addAll(tsgCatalog);
+
+        LOGGER.info("Persisting driver catalog");
+        dbAccess.writeDriverCatalog(sample, driverCatalog);
+
         LOGGER.info("Complete");
     }
 
@@ -126,6 +149,7 @@ public class LoadSomaticVariants {
         options.addOption(SAMPLE, true, "Tumor sample.");
         options.addOption(PASS_FILTER, false, "Only load unfiltered variants");
         options.addOption(SOMATIC_FILTER, false, "Only load variants flagged SOMATIC");
+        options.addOption(HOTSPOT, true, "Location of hotspot file");
 
         return options;
     }
