@@ -50,8 +50,7 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
     private fun <R : KnowledgebaseRecord> extractGdnaVariants(
             recordEventPairs: List<Pair<R, GDnaVariant>>): List<Pair<R, ActionableEvent>> {
         return recordEventPairs.flatMap { (record, gdnaVariant) ->
-            listOfNotNull(extractVariant(record.gene, record.transcript, gdnaVariant.gDnaImpact, reference))
-                    .map { Pair(record, it) }
+            listOfNotNull(extractVariant(record, gdnaVariant.gDnaImpact, reference)).map { Pair(record, it) }
         }
     }
 
@@ -94,7 +93,7 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
             : List<Pair<R, ActionableEvent>> where T : HgvsAnnotation, R : KnowledgebaseRecord {
         val transvarOutput = analyzer.analyze(recordEventPairs.map { it.second })
         return recordEventPairs.map { it.first }.zip(transvarOutput).flatMap { (record, output) ->
-            extractVariants(record.gene, record.transcript, output, reference).map { Pair(record, it) }
+            extractVariants(record, output, reference).map { Pair(record, it) }
         }
     }
 
