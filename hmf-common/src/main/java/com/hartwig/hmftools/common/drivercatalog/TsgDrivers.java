@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 public class TsgDrivers {
 
     @NotNull
-    public static List<DriverCatalog> tsgDrivers(@NotNull final Map<String, DndsDriverGeneLikelihood> likelihoodsByGene,
+    public static List<DriverCatalog> drivers(@NotNull final Map<String, DndsDriverGeneLikelihood> likelihoodsByGene,
             @NotNull final List<EnrichedSomaticVariant> variants) {
 
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
@@ -85,7 +85,7 @@ public class TsgDrivers {
                 .frameshift(frameshiftVariants)
                 .driver(DriverType.DNDS);
 
-        if (codingVariants.stream().anyMatch(SomaticVariant::hotspot)) {
+        if (codingVariants.stream().anyMatch(SomaticVariant::isHotspot)) {
             return builder.driver(DriverType.HOTSPOT).build();
         }
 

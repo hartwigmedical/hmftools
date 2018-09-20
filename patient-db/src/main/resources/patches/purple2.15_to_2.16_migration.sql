@@ -17,3 +17,6 @@ CREATE TABLE driverCatalog
     INDEX(sampleId),
     INDEX(gene)
 );
+
+ALTER TABLE somaticVariant
+    CHANGE hotspot hotspot varchar(455) NOT NULL;

@@ -30,7 +30,7 @@ public final class SomaticVariantTestBuilderFactory {
                 .canonicalCodingEffect(CodingEffect.UNDEFINED)
                 .canonicalHgvsCodingImpact(Strings.EMPTY)
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
-                .hotspot(false)
+                .hotspot(Hotspot.NON_HOTSPOT)
                 .mappability(0D);
     }
 

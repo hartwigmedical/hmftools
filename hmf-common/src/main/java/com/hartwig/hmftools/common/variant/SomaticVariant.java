@@ -64,7 +64,16 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
     @NotNull
     String canonicalHgvsProteinImpact();
 
-    boolean hotspot();
+    @NotNull
+    Hotspot hotspot();
+
+    default boolean isHotspot() {
+        return hotspot() == Hotspot.HOTSPOT;
+    }
+
+    default boolean isNearHotspot() {
+        return hotspot() == Hotspot.NEAR_HOTSPOT;
+    }
 
     double mappability();
 

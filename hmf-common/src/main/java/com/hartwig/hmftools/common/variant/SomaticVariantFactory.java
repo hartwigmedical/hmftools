@@ -123,7 +123,7 @@ public class SomaticVariantFactory {
                             .alt(alt(context))
                             .alleleReadCount(frequencyData.alleleReadCount())
                             .totalReadCount(frequencyData.totalReadCount())
-                            .hotspot(HOTSPOT_FILTER.test(context))
+                            .hotspot(HOTSPOT_FILTER.test(context) ? Hotspot.HOTSPOT : Hotspot.NON_HOTSPOT)
                             .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0));
 
                     attachIDAndCosmicAnnotations(builder, context);

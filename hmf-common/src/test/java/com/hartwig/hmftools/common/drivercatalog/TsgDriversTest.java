@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.dnds.ImmutableDndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.dnds.ImmutableDndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 
@@ -117,7 +118,7 @@ public class TsgDriversTest {
         return SomaticVariantTestBuilderFactory.createEnriched()
                 .type(type)
                 .canonicalCodingEffect(codingEffect)
-                .hotspot(hotspot)
+                .hotspot(hotspot ? Hotspot.HOTSPOT : Hotspot.NON_HOTSPOT)
                 .biallelic(biallelic)
                 .build();
     }

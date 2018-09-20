@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.stream.Collectors;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -13,9 +15,21 @@ public class VariantHotspotFile {
     private static final String DELIMITER = "\t";
 
     @NotNull
-    public static List<VariantHotspot> read(@NotNull final String fileName) throws IOException {
-        return Files.readAllLines(new File(fileName).toPath()).stream().map(VariantHotspotFile::fromString).collect(Collectors.toList());
+    public static Multimap<String, VariantHotspot> read(@NotNull final String fileName) throws IOException {
+        return fromLines(Files.readAllLines(new File(fileName).toPath()));
     }
+
+    @NotNull
+    private static Multimap<String, VariantHotspot> fromLines(@NotNull List<String> lines) {
+        Multimap<String, VariantHotspot> result = ArrayListMultimap.create();
+        for (String line : lines) {
+            VariantHotspot position = fromString(line);
+            result.put(position.chromosome(), position);
+        }
+
+        return result;
+    }
+
 
     @NotNull
     private static VariantHotspot fromString(@NotNull final String line) {

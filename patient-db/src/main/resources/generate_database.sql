@@ -282,7 +282,7 @@ CREATE TABLE somaticVariant
     trinucleotideContext varchar(3) NOT NULL,
     clonality varchar(455) NOT NULL,
     biallelic BOOLEAN NOT NULL,
-    hotspot BOOLEAN NOT NULL,
+    hotspot varchar(455) NOT NULL,
     mappability DOUBLE PRECISION NOT NULL,
     germlineStatus varchar(255) NOT NULL,
     minorAllelePloidy DOUBLE PRECISION NOT NULL,

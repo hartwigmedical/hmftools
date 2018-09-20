@@ -53,7 +53,7 @@ public class SomaticVariantDataSource {
             variantDataSource.add(displayGene,
                     variantDetailsField(variant),
                     readDepthField(variant),
-                    variant.hotspot() ? "Yes" : "No",
+                    variant.isHotspot() ? "Yes" : "No",
                     PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyVafField(variant)),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, PatientReportFormat.formatPercentWithDefaultCutoffs(0D)),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, Strings.EMPTY),
