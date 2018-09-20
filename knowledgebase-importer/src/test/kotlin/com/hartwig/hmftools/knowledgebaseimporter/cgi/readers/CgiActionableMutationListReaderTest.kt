@@ -2,7 +2,7 @@ package com.hartwig.hmftools.knowledgebaseimporter.cgi.readers
 
 import com.hartwig.hmftools.knowledgebaseimporter.cgi.input.CgiActionableInput
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.*
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.SequenceVariantType
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.HgvsVariantType
 import io.kotlintest.matchers.shouldBe
 import io.kotlintest.specs.StringSpec
 
@@ -18,11 +18,11 @@ class CgiActionableMutationListReaderTest : StringSpec() {
         "can read multiple mutations form alteration field" {
             CgiActionableMutationListReader.read(actionableInput) shouldBe listOf(
                     GeneMutations("ESR1", "ENST00000"),
-                    ProteinAnnotation("ENST00000", "E380Q", SequenceVariantType.SUBSTITUTION),
+                    ProteinAnnotation("ENST00000", "E380Q", HgvsVariantType.SUBSTITUTION),
                     CodonMutations("ESR1", "ENST00000", 537),
                     CodonMutations("ESR1", "ENST00000", 538),
                     CodonMutations("ESR1", "ENST00000", 536),
-                    ProteinAnnotation("ENST00000", "P535H", SequenceVariantType.SUBSTITUTION),
+                    ProteinAnnotation("ENST00000", "P535H", HgvsVariantType.SUBSTITUTION),
                     CodonRangeMutations("ESR1", "ENST00000", 500, 600))
         }
 

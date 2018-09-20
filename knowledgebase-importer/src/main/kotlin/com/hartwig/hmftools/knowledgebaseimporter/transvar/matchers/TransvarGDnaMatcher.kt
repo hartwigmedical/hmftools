@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.knowledgebaseimporter.transvar.matchers
 
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.SequenceVariantType
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.HgvsVariantType
 
 //MIVO: rules based on:
 // https://github.com/zwdzwd/transvar/blob/v2.4.0.20180701/transvar/mutation.py
@@ -29,11 +29,11 @@ object TransvarGDnaMatcher : Matcher {
     }
 
     fun type(input: String) = when {
-        matchesSubstitution(input) -> SequenceVariantType.SUBSTITUTION
-        matchesDeletion(input)     -> SequenceVariantType.DELETION
-        matchesDuplication(input)  -> SequenceVariantType.DUPLICATION
-        matchesInsertion(input)    -> SequenceVariantType.INSERTION
-        matchesDelIns(input)       -> SequenceVariantType.DELINS
-        else                       -> SequenceVariantType.OTHER
+        matchesSubstitution(input) -> HgvsVariantType.SUBSTITUTION
+        matchesDeletion(input)     -> HgvsVariantType.DELETION
+        matchesDuplication(input)  -> HgvsVariantType.DUPLICATION
+        matchesInsertion(input)    -> HgvsVariantType.INSERTION
+        matchesDelIns(input)       -> HgvsVariantType.DELINS
+        else                       -> HgvsVariantType.OTHER
     }
 }

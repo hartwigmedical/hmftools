@@ -3,7 +3,7 @@ package com.hartwig.hmftools.knowledgebaseimporter.cgi.readers
 import com.hartwig.hmftools.knowledgebaseimporter.cgi.input.CgiActionableInput
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.ProteinAnnotation
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.SomaticEvent
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.SequenceVariantType
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.HgvsVariantType
 import io.kotlintest.matchers.shouldBe
 import io.kotlintest.specs.StringSpec
 
@@ -16,12 +16,12 @@ class CgiActionableProteinAnnotationReaderTest : StringSpec() {
     init {
         "can read protein annotation from actionable input" {
             CgiActionableProteinAnnotationReader.read(actionableInput) shouldBe
-                    listOf(ProteinAnnotation("ENST00000318560", "T315I", SequenceVariantType.SUBSTITUTION))
+                    listOf(ProteinAnnotation("ENST00000318560", "T315I", HgvsVariantType.SUBSTITUTION))
         }
 
         "can read protein annotation from actionable with empty alteration input" {
             CgiActionableProteinAnnotationReader.read(actionableInput.copy(Alteration = "")) shouldBe
-                    listOf(ProteinAnnotation("ENST00000318560", "T315I", SequenceVariantType.SUBSTITUTION))
+                    listOf(ProteinAnnotation("ENST00000318560", "T315I", HgvsVariantType.SUBSTITUTION))
         }
 
         "does not read from FUS input" {
