@@ -84,11 +84,11 @@ public class LoadSomaticVariants {
         final CompoundEnrichment compoundEnrichment = new CompoundEnrichment();
         if (cmd.hasOption(SOMATIC_PON)) {
             LOGGER.info("Enabling indel near somatic pon enrichment");
-            compoundEnrichment.add(new NearIndelPonEnrichment(cmd.getOptionValue(SOMATIC_PON)));
+            compoundEnrichment.add(NearIndelPonEnrichment.somaticPon(cmd.getOptionValue(SOMATIC_PON)));
         }
         if (cmd.hasOption(GERMLINE_PON)) {
             LOGGER.info("Enabling indel near germline pon enrichment");
-            compoundEnrichment.add(new NearIndelPonEnrichment(cmd.getOptionValue(GERMLINE_PON)));
+            compoundEnrichment.add(NearIndelPonEnrichment.germlinePon(cmd.getOptionValue(GERMLINE_PON)));
         }
         if (cmd.hasOption(HOTSPOT)) {
             LOGGER.info("Enabling near hotspot enrichment");
