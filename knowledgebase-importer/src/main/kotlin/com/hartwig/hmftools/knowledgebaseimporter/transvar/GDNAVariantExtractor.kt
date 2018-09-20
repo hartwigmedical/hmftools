@@ -26,7 +26,7 @@ private const val gDnaDelimiter = "g."
 fun extractVariants(record: KnowledgebaseRecord, transvarOutput: TransvarOutput, reference: IndexedFastaSequenceFile):
         List<ActionableEvent> {
     return if (transvarOutput.info == "no_valid_transcript_found") {
-        logger.warn("Transvar could not resolve genomic coordinates for $record")
+        logger.warn("Transvar could not resolve genomic coordinates for gene ${record.gene} with events ${record.events}" )
         emptyList()
     } else {
         val chromosome = extractChromosome(transvarOutput.coordinates)
@@ -88,12 +88,13 @@ private fun extractVariant(record: KnowledgebaseRecord, chromosome: String, vari
             variantGDna.contains("del") -> extractDelete(gene, chromosome, variantGDna, reference)
             variantGDna.matches("[0-9]+_[0-9]+".toRegex()) -> extractRange(gene, transcript, chromosome, variantGDna)
             else -> {
-                logger.warn("Record $record could not be mapped to any known type based on $variantGDna")
+                logger.warn("Gene ${record.gene} with events ${record.events} " +
+                        "could not be mapped to any known type based on variant gDNA $variantGDna")
                 null
             }
         }
     } catch (t: Throwable) {
-        logger.warn("Could not create variant from $chromosome: $variantGDna; error: $t")
+        logger.warn("Could not create variant on ${record.gene} on position $chromosome:$variantGDna; error: $t")
         null
     }
 }
@@ -168,7 +169,7 @@ private fun extractDelete(gene: String, chromosome: String, variantGDna: String,
         Pair(ref, alt)
     } else {
         if (deletedBasesCount > 20) {
-            logger.warn("Skipping deletion of more than 20 bases for variant $chromosome: $variantGDna")
+            logger.warn("Skipping deletion of more than 20 bases for variant on $gene on position $chromosome:$variantGDna")
             return null
         }
         val ref = reference.getSubsequenceAt(chromosome, position, position + deletedBasesCount).baseString

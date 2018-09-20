@@ -21,7 +21,7 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
 
     fun knownVariants(knowledgebases: List<KnowledgebaseSource<*, *>>): List<KnownVariantOutput> {
         val records = knowledgebases.flatMap { it.knownKbRecords }
-        logger.info("Record analyzer is extracting somatic variants for known variants for ${records.size} records.")
+        logger.info("Record analyzer is generating known records for ${records.size} records.")
         val somaticVariantRecords = extractSomaticVariants(records) + extractOtherSomaticVariants(records)
         val knownSomaticVariants = somaticVariantRecords.filter { it.second is SomaticVariantEvent }
                 .map { Pair(it.first, it.second as SomaticVariantEvent) }
@@ -32,7 +32,7 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
 
     fun actionableItems(knowledgebases: List<KnowledgebaseSource<*, *>>): List<ActionableItem<*>> {
         val records = knowledgebases.flatMap { it.actionableKbRecords }
-        logger.info("Record analyzer is extracting somatic variants for actionability for ${records.size} records.")
+        logger.info("Record analyzer is generating actionability items for ${records.size} records.")
         val genomicRangeEvents = analyzeGenomicRanges(records)
         val somaticVariants = extractSomaticVariants(records)
         val actionableEvents = records.collectEvents<ActionableEvent, ActionableRecord>()
