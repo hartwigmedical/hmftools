@@ -17,12 +17,17 @@ import htsjdk.variant.vcf.VCFCodec;
 
 public class NearIndelPonEnrichment implements SomaticEnrichment {
 
+    private static final String GERMLINE_FLAG = "GERMLINE_PON_COUNT";
+    private static final String SOMATIC_FLAG = "SOMATIC_PON_COUNT";
+    private static final int MIN_GERMLINE = 5;
+    private static final int MIN_SOMATIC = 3;
+
     public static NearIndelPonEnrichment germlinePon(@NotNull final String vcfFile) {
-        return new NearIndelPonEnrichment(5, "GERMLINE_PON_COUNT", vcfFile);
+        return new NearIndelPonEnrichment(MIN_GERMLINE, GERMLINE_FLAG, vcfFile);
     }
 
     public static NearIndelPonEnrichment somaticPon(@NotNull final String vcfFile) {
-        return new NearIndelPonEnrichment(3, "SOMATIC_PON_COUNT", vcfFile);
+        return new NearIndelPonEnrichment(MIN_SOMATIC, SOMATIC_FLAG, vcfFile);
     }
 
     private static final int DISTANCE = 10;
