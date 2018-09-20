@@ -21,7 +21,7 @@ data class OncoActionableRecord(private val metadata: RecordMetadata, override v
         operator fun invoke(input: OncoActionableInput, treatmentTypeMap: Map<String, String>): OncoActionableRecord {
             val drugs = readDrugEntries(input, treatmentTypeMap)
             val actionability = Actionability("oncoKb", input.reference, listOf(input.`Cancer Type`), drugs, input.level,
-                                              input.significance.name, "Predictive", input.hmfLevel, input.significance)
+                                              input.hmfResponse.name, "Predictive", input.hmfLevel, input.hmfResponse)
             val metadata = OncoMetadata(input.gene, input.transcript)
             val events = reader.read(input)
             return OncoActionableRecord(metadata, events, actionability)
