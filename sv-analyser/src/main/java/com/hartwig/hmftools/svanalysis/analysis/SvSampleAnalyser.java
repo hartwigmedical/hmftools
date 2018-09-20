@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.annotators.ExternalSVAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator;
@@ -287,47 +288,42 @@ public class SvSampleAnalyser {
 
                 Path outputFile = Paths.get(outputFileName);
 
-                boolean fileExists = Files.exists(outputFile);
-
-                writer = Files.newBufferedWriter(outputFile, fileExists ? StandardOpenOption.APPEND : StandardOpenOption.CREATE_NEW);
+                writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
                 mFileWriter = writer;
 
-                if(!fileExists) {
+                // definitional fields
+                writer.write("SampleId,ClusterId,ClusterCount,Id,Type,Ploidy,PONCount,PONRegionCount");
 
-                    // definitional fields
-                    writer.write("SampleId,ClusterId,ClusterCount,Id,Type,Ploidy,PONCount,PONRegionCount");
+                // position and copy number
+                writer.write(",ChrStart,PosStart,OrientStart,ArmStart,AdjAFStart,AdjCNStart,AdjCNChgStart");
 
-                    // position and copy number
-                    writer.write(",ChrStart,PosStart,OrientStart,ArmStart,AdjAFStart,AdjCNStart,AdjCNChgStart");
+                writer.write(",ChrEnd,PosEnd,OrientEnd,ArmEnd,AdjAFEnd,AdjCNEnd,AdjCNChgEnd");
 
-                    writer.write(",ChrEnd,PosEnd,OrientEnd,ArmEnd,AdjAFEnd,AdjCNEnd,AdjCNChgEnd");
+                // SV info
+                writer.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise");
 
-                    // SV info
-                    writer.write(",Homology,InsertSeq,Imprecise");
+                // location attributes
+                writer.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd");
 
-                    // location attributes
-                    writer.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd");
+                // cluster-level info
+                writer.write(",ClusterDesc,Consistency,ArmCount,DupBECount,DupBESiteCount");
 
-                    // cluster-level info
-                    writer.write(",ClusterDesc,Consistency,ArmCount,DupBECount,DupBESiteCount");
+                // linked pair info
+                writer.write(",LnkSvStart,LnkTypeStart,LnkLenStart,LnkSvEnd,LnkTypeEnd,LnkLenEnd");
 
-                    // linked pair info
-                    writer.write(",LnkSvStart,LnkTypeStart,LnkLenStart,LnkSvEnd,LnkTypeEnd,LnkLenEnd");
+                // GRIDDS caller info
+                writer.write(",AsmbStart,AsmbEnd,AsmbMatchStart,AsmbMatchEnd");
 
-                    // GRIDDS caller info
-                    writer.write(",AsmbStart,AsmbEnd,AsmbMatchStart,AsmbMatchEnd");
+                // chain info
+                writer.write(",ChainId,ChainCount,ChainTICount,ChainDBCount,ChainIndex");
 
-                    // chain info
-                    writer.write(",ChainId,ChainCount,ChainTICount,ChainDBCount,ChainIndex");
+                // transitive info
+                writer.write(",TransType,TransLen,TransSvLinks");
 
-                    // transitive info
-                    writer.write(",TransType,TransLen,TransSvLinks");
+                // gene info
+                // writer.write(",GeneStart,GeneDriverStart,GeneTypeStart,GeneEnd,GeneDriverEnd,GeneTypeEnd");
 
-                    // gene info
-                    // writer.write(",GeneStart,GeneDriverStart,GeneTypeStart,GeneEnd,GeneDriverEnd,GeneTypeEnd");
-
-                    writer.newLine();
-                }
+                writer.newLine();
             }
 
             for(final SvCluster cluster : mClusters)
@@ -337,27 +333,29 @@ public class SvSampleAnalyser {
 
                 for (final SvClusterData var : cluster.getSVs())
                 {
+                    final StructuralVariantData dbData = var.getSvData();
+
                     String typeStr = var.isNullBreakend() ? "SGL" : var.type().toString();
                     writer.write(
                             String.format("%s,%d,%d,%s,%s,%.2f,%d,%d",
                                     mSampleId, cluster.getId(), cluster.getCount(), var.id(), typeStr,
-                                    var.getSvData().ploidy(), var.getPonCount(), var.getPonRegionCount()));
+                                    dbData.ploidy(), var.getPonCount(), var.getPonRegionCount()));
 
                     writer.write(
                             String.format(",%s,%d,%d,%s,%.2f,%.2f,%.2f,%s,%d,%d,%s,%.2f,%.2f,%.2f",
                                     var.chromosome(true), var.position(true), var.orientation(true), var.getStartArm(),
-                                    var.getSvData().adjustedStartAF(), var.getSvData().adjustedStartCopyNumber(), var.getSvData().adjustedStartCopyNumberChange(),
+                                    dbData.adjustedStartAF(), dbData.adjustedStartCopyNumber(), dbData.adjustedStartCopyNumberChange(),
                                     var.chromosome(false), var.position(false), var.orientation(false), var.getEndArm(),
-                                    var.getSvData().adjustedEndAF(), var.getSvData().adjustedEndCopyNumber(), var.getSvData().adjustedEndCopyNumberChange()));
+                                    dbData.adjustedEndAF(), dbData.adjustedEndCopyNumber(), dbData.adjustedEndCopyNumberChange()));
 
                     writer.write(
-                            String.format(",%s,%s,%s",
-                                    var.getSvData().insertSequence().isEmpty() && var.type() != StructuralVariantType.INS ? var.getSvData().homology() : "",
-                                    var.getSvData().insertSequence(), var.getSvData().imprecise()));
+                            String.format(",%s,%d,%d,%s,%s",
+                                    dbData.insertSequence().isEmpty() && var.type() != StructuralVariantType.INS ? dbData.homology() : "",
+                                    dbData.inexactHomologyOffsetStart(), dbData.inexactHomologyOffsetEnd(),
+                                    dbData.insertSequence(), dbData.imprecise()));
 
                     writer.write(
                             String.format(",%s,%s,%s,%s,%s,%s,%s",
-                                    // var.getNearestSVLength(), var.getNearestSVLinkType(), var.getNearestTILength(), var.getNearestDBLength(),
                                     var.isStartFragileSite(), var.isEndFragileSite(),
                                     var.isStartLineElement(), var.isEndLineElement(),
                                     var.isDupBEStart(), var.isDupBEEnd(),
@@ -434,8 +432,9 @@ public class SvSampleAnalyser {
             }
 
         }
-        catch (final IOException e) {
-            LOGGER.error("error writing to outputFile");
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing to outputFile: {}", e.toString());
         }
     }
 
@@ -448,7 +447,8 @@ public class SvSampleAnalyser {
         {
             mFileWriter.close();
         }
-        catch (final IOException e) {
+        catch (final IOException e)
+        {
         }
 
         // log perf stats
