@@ -12,7 +12,7 @@ data class OncoActionableInput(private val Isoform: String?, @get:JvmName("getGe
     val level = if (Level.startsWith("R")) Level.drop(1) else Level
     val hmfLevel = HmfLevel(Level)
     val hmfResponse = if (Level.startsWith("R")) HmfResponse.Resistant else HmfResponse.Responsive
-    val reference = "$Gene $Alteration"
+    val reference = Alteration
     override val transcript = Isoform.orEmpty()
     override val gene: String = Gene
     override val variant: String = Alteration
