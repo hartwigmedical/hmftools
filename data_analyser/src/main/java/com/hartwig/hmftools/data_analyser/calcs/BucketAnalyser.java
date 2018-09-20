@@ -274,6 +274,7 @@ public class BucketAnalyser {
         options.addOption(BA_EXCESS_GRP_RUN_INDEX, true, "Run id for excess-unalloc group logic to kick in");
         options.addOption(BA_MIN_BUCKET_COUNT_OVERLAP, true, "Min buckets for candidate group discovery");
         options.addOption(BA_USE_RATIO_RANGES, false, "Allow a computed range around sig ratios");
+        options.addOption(BA_MSI_FILTER, true, "Use 'Include' to only look at MSI samples, or 'Exclude' to exclude them");
     }
 
     public boolean initialise(GenericDataCollection collection, final CommandLine cmd)
@@ -377,7 +378,7 @@ public class BucketAnalyser {
             }
             else if(!mMsiFilter.isEmpty())
             {
-                boolean sampleHasMsi = false;
+                boolean sampleHasMsi = sampleHasFeature(sample, "MSI");
 
                 if(mMsiFilter.equals("Include") && !sampleHasMsi)
                 {
@@ -623,6 +624,8 @@ public class BucketAnalyser {
             createSignatures();
             writeSampleContributions();
         }
+
+        mReporter.logOverallStats();
 
         writeFinalBucketGroups();
         writeSampleData();
@@ -1120,12 +1123,10 @@ public class BucketAnalyser {
             int sampleId = sampleIds.get(index);
             SampleData sample = mSampleData.get(sampleId);
 
-            sample.setBackgroundGroup(bucketGroup);
+            if(sample.isExcluded())
+                continue;
 
-            if(mSampleWatchList.contains(sampleId))
-            {
-                // LOGGER.debug("spec sample");
-            }
+            sample.setBackgroundGroup(bucketGroup);
 
             double[] sampleCounts = null;
 
@@ -3142,6 +3143,12 @@ public class BucketAnalyser {
                 if(bucketGroup.getSampleIds().get(samIndex) != sample.Id)
                 {
                     samIndex = bucketGroup.getSampleIndex(sample.Id);
+
+                    if(samIndex == -1)
+                    {
+                        LOGGER.error("sample({}) not found in bg({})", sample.Id, bucketGroup.getId());
+                        continue;
+                    }
                 }
 
                 double[] sampleAllocCounts = bucketGroup.getSampleCounts().get(samIndex);
@@ -3836,6 +3843,24 @@ public class BucketAnalyser {
         }
 
         return categoryCounts;
+    }
+
+    private boolean sampleHasFeature(final SampleData sample, final String categoryName)
+    {
+        final List<String> fieldNames = mExtSampleData.getFieldNames();
+        final List<String> categoryData = sample.getCategoryData();
+        for(int i = 0; i < fieldNames.size(); ++i)
+        {
+            if(fieldNames.get(i).equals(categoryName))
+            {
+                if(i >= categoryData.size())
+                    return false;
+
+                return !categoryData.get(i).isEmpty();
+            }
+        }
+
+        return false;
     }
 
     private String CATEGORY_DELIM = "-";
