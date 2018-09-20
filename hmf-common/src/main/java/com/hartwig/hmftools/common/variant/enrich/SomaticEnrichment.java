@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.variant.enrich;
 
+import java.io.IOException;
+
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 
 import org.jetbrains.annotations.NotNull;
@@ -10,8 +12,7 @@ public interface SomaticEnrichment {
 
     @NotNull
     default ImmutableSomaticVariantImpl.Builder enrich(@NotNull final ImmutableSomaticVariantImpl.Builder builder,
-            @NotNull VariantContext context) {
+            @NotNull VariantContext context) throws IOException {
         return builder;
     }
-
 }

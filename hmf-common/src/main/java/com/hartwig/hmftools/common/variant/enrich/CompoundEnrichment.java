@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.variant.enrich;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
@@ -12,7 +13,7 @@ public class CompoundEnrichment extends ArrayList<SomaticEnrichment> implements 
     @NotNull
     @Override
     public ImmutableSomaticVariantImpl.Builder enrich(@NotNull final ImmutableSomaticVariantImpl.Builder builder,
-            @NotNull final VariantContext context) {
+            @NotNull final VariantContext context) throws IOException {
         for (SomaticEnrichment enrichment : this) {
             enrichment.enrich(builder, context);
         }

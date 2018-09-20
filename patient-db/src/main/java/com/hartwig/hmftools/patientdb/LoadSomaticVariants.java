@@ -30,6 +30,8 @@ import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
+import com.hartwig.hmftools.common.variant.enrich.NearIndelPonEnrichment;
 import com.hartwig.hmftools.common.variant.filter.SomaticFilter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -55,6 +57,8 @@ public class LoadSomaticVariants {
     private static final String VCF_FILE = "vcf_file";
     private static final String REF_GENOME = "ref_genome";
     private static final String PASS_FILTER = "pass_filter";
+    private static final String SOMATIC_PON = "somatic_pon";
+    private static final String GERMLINE_PON = "germline_pon";
     private static final String SOMATIC_FILTER = "somatic_filter";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
 
@@ -78,8 +82,18 @@ public class LoadSomaticVariants {
             filter.add(new SomaticFilter());
         }
 
+        final CompoundEnrichment compoundEnrichment = new CompoundEnrichment();
+        if (cmd.hasOption(SOMATIC_PON)) {
+            LOGGER.info("Enabling somatic pon VCF");
+            compoundEnrichment.add(new NearIndelPonEnrichment(cmd.getOptionValue(SOMATIC_PON)));
+        }
+        if (cmd.hasOption(GERMLINE_PON)) {
+            LOGGER.info("Enabling germline pon VCF");
+            compoundEnrichment.add(new NearIndelPonEnrichment(cmd.getOptionValue(GERMLINE_PON)));
+        }
+
         LOGGER.info("Reading somatic VCF File");
-        final List<SomaticVariant> variants = SomaticVariantFactory.filteredInstance(filter).fromVCFFile(sample, vcfFileLocation);
+        final List<SomaticVariant> variants = new SomaticVariantFactory(filter, compoundEnrichment).fromVCFFile(sample, vcfFileLocation);
 
         LOGGER.info("Reading high confidence bed file");
         final Multimap<String, GenomeRegion> highConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
@@ -150,6 +164,8 @@ public class LoadSomaticVariants {
         options.addOption(PASS_FILTER, false, "Only load unfiltered variants");
         options.addOption(SOMATIC_FILTER, false, "Only load variants flagged SOMATIC");
         options.addOption(HOTSPOT, true, "Location of hotspot file");
+        options.addOption(SOMATIC_PON, true, "Location of somatic pon file to filter indels near somatic PON locations");
+        options.addOption(GERMLINE_PON, true, "Location of germline pon file to filter indels near germline PON locations");
 
         return options;
     }
