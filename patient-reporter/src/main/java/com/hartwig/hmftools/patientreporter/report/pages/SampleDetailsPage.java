@@ -14,6 +14,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.report.Commons;
+import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -72,11 +73,11 @@ public abstract class SampleDetailsPage {
 
         recipient = recipient != null ? recipient : "?";
 
-        final List<String> lines = Lists.newArrayList(
-                "The samples have been sequenced at " + Commons.HARTWIG_ADDRESS,
+        final List<String> lines = Lists.newArrayList("The samples have been sequenced at " + Commons.HARTWIG_ADDRESS,
                 "The samples have been analyzed by Next Generation Sequencing",
                 "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate()),
-                "The pathology tumor percentage for this sample is " + sampleReport().pathologyTumorPercentageString(),
+                "The pathology tumor percentage for this sample is "
+                        + PatientReportFormat.formatNullablePercent(sampleReport().pathologyTumorPercentage()),
                 "This experiment is performed on the blood sample which arrived on " + formattedDate(sampleReport().bloodArrivalDate()),
                 "This experiment is performed according to lab procedures: " + sampleReport().labProcedures(),
                 "This report is generated and verified by: " + user(),

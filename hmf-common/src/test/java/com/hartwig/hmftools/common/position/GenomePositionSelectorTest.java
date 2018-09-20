@@ -53,20 +53,20 @@ public class GenomePositionSelectorTest {
     public void testExpectedBehaviour() {
         final ListConsumer region1Consumer = new ListConsumer();
         standardSelector.select(region1, region1Consumer);
-        assertEquals(inRegion1a, region1Consumer.getPositions().get(0));
-        assertEquals(inRegion1b, region1Consumer.getPositions().get(1));
-        assertEquals(inRegion1c, region1Consumer.getPositions().get(2));
+        assertEquals(inRegion1a, region1Consumer.positions().get(0));
+        assertEquals(inRegion1b, region1Consumer.positions().get(1));
+        assertEquals(inRegion1c, region1Consumer.positions().get(2));
 
         final ListConsumer region2Consumer = new ListConsumer();
         standardSelector.select(region2, region2Consumer);
-        assertEquals(inRegion2, region2Consumer.getPositions().get(0));
+        assertEquals(inRegion2, region2Consumer.positions().get(0));
 
         final ListConsumer region3Consumer = new ListConsumer();
         standardSelector.select(region3, region3Consumer);
-        assertEquals(inRegion3, region3Consumer.getPositions().get(0));
+        assertEquals(inRegion3, region3Consumer.positions().get(0));
     }
 
-    private GenomePosition createPosition(final String chromosome, final long position) {
+    private static GenomePosition createPosition(final String chromosome, final long position) {
         return new GenomePosition() {
             @NotNull
             @Override
@@ -81,11 +81,11 @@ public class GenomePositionSelectorTest {
         };
     }
 
-    class ListConsumer implements Consumer<GenomePosition> {
+    private static class ListConsumer implements Consumer<GenomePosition> {
 
         private final List<GenomePosition> positions = Lists.newArrayList();
 
-        List<GenomePosition> getPositions() {
+        List<GenomePosition> positions() {
             return positions;
         }
 

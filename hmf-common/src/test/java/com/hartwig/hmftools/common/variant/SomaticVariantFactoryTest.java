@@ -7,10 +7,8 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 
@@ -18,7 +16,6 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 
-import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderVersion;
@@ -136,12 +133,14 @@ public class SomaticVariantFactoryTest {
     }
 
     @Test
-    public void testCanonicalCodingEffectUsesTranscriptAnnotation() {
+    public void canonicalFieldsUseTranscriptAnnotation() {
         final String line =
                 "11\t133715264\t.\tC\tT\t.\tPASS\tAC=0;AF=0;AN=0;MAPPABILITY=1.000000;NT=ref;QSS=40;QSS_NT=40;SGT=CC->CT;SOMATIC;TQSS=1;TQSS_NT=1;set=snvs;ANN=T|sequence_feature|MODERATE|SPATA19|ENSG00000166118|modified-residue:Phosphoserine|ENST00000299140|protein_coding|1/7|c.78G>A||||||,T|splice_region_variant&synonymous_variant|LOW|SPATA19|ENSG00000166118|transcript|ENST00000299140|protein_coding|1/7|c.78G>A|p.Ser26Ser|133/861|78/504|26/167||,T|splice_region_variant&synonymous_variant|LOW|SPATA19|ENSG00000166118|transcript|ENST00000532889|protein_coding|1/7|c.78G>A|p.Ser26Ser|170/653|78/504|26/167||\tGT:AD:DP\t0/1:57,49:108";
         final SomaticVariant variant = assertedGet(victim.createVariant(SAMPLE, codec.decode(line)));
         assertEquals("SPATA19", variant.gene());
         assertEquals(CodingEffect.SYNONYMOUS, variant.canonicalCodingEffect());
+        assertEquals("c.78G>A", variant.canonicalHgvsCodingImpact());
+        assertEquals("p.Ser26Ser", variant.canonicalHgvsProteinImpact());
     }
 
     @Test

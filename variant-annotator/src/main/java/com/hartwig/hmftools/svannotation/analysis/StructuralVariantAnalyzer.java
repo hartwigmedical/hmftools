@@ -10,7 +10,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
-import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
@@ -34,14 +34,14 @@ public class StructuralVariantAnalyzer {
     @NotNull
     private final VariantAnnotator annotator;
     @NotNull
-    private final Collection<HmfGenomeRegion> hmfGenePanelRegions;
+    private final Collection<HmfTranscriptRegion> hmfGenePanelRegions;
     @NotNull
     private final KnownFusionsModel knownFusionsModel;
 
     private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnalyzer.class);
 
     public StructuralVariantAnalyzer(@NotNull final VariantAnnotator annotator,
-            @NotNull final Collection<HmfGenomeRegion> hmfGenePanelRegions, @NotNull final KnownFusionsModel knownFusionsModel) {
+            @NotNull final Collection<HmfTranscriptRegion> hmfGenePanelRegions, @NotNull final KnownFusionsModel knownFusionsModel) {
         this.annotator = annotator;
         this.hmfGenePanelRegions = hmfGenePanelRegions;
         this.knownFusionsModel = knownFusionsModel;
@@ -125,9 +125,12 @@ public class StructuralVariantAnalyzer {
                 final Transcript upstream = fusion.getLeft();
                 final Transcript downstream = fusion.getRight();
                 final boolean matchesKnownFusion = transcriptsMatchKnownFusion(knownFusionsModel, upstream, downstream);
+
+                Boolean isPostCodingUpstream = postCoding(upstream);
+                Boolean isPostCodingDownstream = postCoding(downstream);
                 final boolean reportable = reportableFusion.isPresent() && reportableFusion.get() == fusion && matchesKnownFusion && (
-                        (postCoding(downstream) != null && !postCoding(downstream)) && (postCoding(upstream) == null
-                                || !postCoding(upstream)) && !(intragenic(upstream, downstream) && upstream.exonUpstreamPhase() == -1));
+                        (isPostCodingDownstream != null && !isPostCodingDownstream) && (isPostCodingUpstream == null
+                                || !isPostCodingUpstream) && !(intragenic(upstream, downstream) && upstream.exonUpstreamPhase() == -1));
                 final GeneFusion geneFusion = ImmutableGeneFusion.builder()
                         .reportable(reportable)
                         .upstreamLinkedAnnotation(upstream)
@@ -234,20 +237,17 @@ public class StructuralVariantAnalyzer {
         return transcripts.stream().filter(Transcript::isIntronic).collect(Collectors.toList());
     }
 
-    private static boolean preCoding(@NotNull final Transcript transcript) {
-        final int strand = transcript.parent().strand();
-        final long position = transcript.parent().variant().position(transcript.parent().isStart());
-        return (strand == 1 && position < transcript.codingStart()) || (strand == -1 && position > transcript.codingEnd());
-    }
-
     @Nullable
     private static Boolean postCoding(@NotNull final Transcript transcript) {
-        if (transcript.codingEnd() == null || transcript.codingStart() == null) {
+        Long codingStart = transcript.codingStart();
+        Long codingEnd = transcript.codingEnd();
+
+        if (codingStart == null || codingEnd == null) {
             return null;
         }
         final int strand = transcript.parent().strand();
         final long position = transcript.parent().variant().position(transcript.parent().isStart());
-        return (strand == 1 && position > transcript.codingEnd()) || (strand == -1 && position < transcript.codingStart());
+        return (strand == 1 && position > codingEnd) || (strand == -1 && position < codingStart);
     }
 
     private static boolean intragenic(@NotNull final Transcript upstream, @NotNull final Transcript downstream) {

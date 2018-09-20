@@ -16,8 +16,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
 
 import nl.hartwigmedicalfoundation.bachelor.Program;
@@ -136,11 +136,9 @@ public class BachelorApplication {
         return eligibility.processStructuralVariants(patient, factory.results());
     }
 
-    private static void process(
-            final BachelorEligibility eligibility, final RunDirectory run, final String sampleId,
+    private static void process(final BachelorEligibility eligibility, final RunDirectory run, final String sampleId,
             final boolean germline, final boolean somatic, final boolean copyNumber, final boolean structuralVariants,
-            final BufferedWriter allDataWriter, final BufferedWriter bedFileWriter)
-    {
+            final BufferedWriter allDataWriter, final BufferedWriter bedFileWriter) {
         final String patient = run.getPatientID();
         final boolean doGermline = run.germline() != null && germline;
         final boolean doSomatic = run.somatic() != null && somatic;
@@ -167,31 +165,50 @@ public class BachelorApplication {
             for (final EligibilityReport r : result) {
 
                 allDataWriter.write(String.format("%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s",
-                        sampleId, r.source().toString(), r.program(),  r.id(),
-                        r.genes(), r.transcriptId(), r.chrom(), r.pos(), r.ref(), r.alts(), r.effects(), r.annotations(), r.hgvsProtein()));
+                        sampleId,
+                        r.source().toString(),
+                        r.program(),
+                        r.id(),
+                        r.genes(),
+                        r.transcriptId(),
+                        r.chrom(),
+                        r.pos(),
+                        r.ref(),
+                        r.alts(),
+                        r.effects(),
+                        r.annotations(),
+                        r.hgvsProtein()));
                 allDataWriter.newLine();
 
-                bedFileWriter.write(String.format("%s\t%s\t%d\t%d",
-                        sampleId, r.chrom(), r.pos() - 1, r.pos()));
+                bedFileWriter.write(String.format("%s\t%s\t%d\t%d", sampleId, r.chrom(), r.pos() - 1, r.pos()));
                 bedFileWriter.newLine();
             }
-        }
-        catch (final IOException e) {
+        } catch (final IOException e) {
             LOGGER.error("error writing output");
-            return;
         }
     }
 
     private static String fileHeader() {
         return String.join(",",
-                Arrays.asList("SAMPLEID", "SOURCE", "PROGRAM", "ID", "GENE", "TRANSCRIPT_ID", "CHROM", "POS", "REF", "ALTS", "EFFECTS", "ANNOTATIONS", "HGVS_PROTEIN"));
+                Arrays.asList("SAMPLEID",
+                        "SOURCE",
+                        "PROGRAM",
+                        "ID",
+                        "GENE",
+                        "TRANSCRIPT_ID",
+                        "CHROM",
+                        "POS",
+                        "REF",
+                        "ALTS",
+                        "EFFECTS",
+                        "ANNOTATIONS",
+                        "HGVS_PROTEIN"));
     }
 
     public static void main(final String... args) {
         final Options options = createOptions();
 
-        try
-        {
+        try {
             final CommandLine cmd = createCommandLine(options, args);
 
             if (cmd.hasOption(LOG_DEBUG)) {
@@ -224,14 +241,11 @@ public class BachelorApplication {
             boolean isSingleRun = cmd.hasOption(RUN_DIRECTORY);
             final String sampleId = cmd.getOptionValue(SAMPLE);
 
-            if (!isBatchRun && !isSingleRun)
-            {
+            if (!isBatchRun && !isSingleRun) {
                 LOGGER.error("requires either a batch or single run directory");
                 System.exit(1);
                 return;
-            }
-            else if(isSingleRun && (sampleId == null || sampleId.isEmpty()))
-            {
+            } else if (isSingleRun && (sampleId == null || sampleId.isEmpty())) {
                 LOGGER.error("single run requires sample to be specified");
                 System.exit(1);
                 return;
@@ -239,10 +253,11 @@ public class BachelorApplication {
 
             final BachelorEligibility eligibility = BachelorEligibility.fromMap(map);
 
-            if(isBatchRun)
+            if (isBatchRun) {
                 LOGGER.info("beginning batch run");
-            else
+            } else {
                 LOGGER.info("beginning single sample run: {}", sampleId);
+            }
 
             final boolean germline = cmd.hasOption(GERMLINE);
             final boolean somatic = cmd.hasOption(SOMATIC);
@@ -254,8 +269,9 @@ public class BachelorApplication {
 
                 String outputDir = cmd.getOptionValue(OUTPUT_DIR);
 
-                if(!outputDir.endsWith("/"))
+                if (!outputDir.endsWith("/")) {
                     outputDir += "/";
+                }
 
                 String mainFileName = outputDir + "bachelor_output.csv";
                 String bedFileName = outputDir + "bachelor_bed.csv";
@@ -266,57 +282,53 @@ public class BachelorApplication {
 
                 final BufferedWriter bedFileWriter = Files.newBufferedWriter(Paths.get(bedFileName));
 
-                if (cmd.hasOption(BATCH_DIRECTORY))
-                {
+                if (cmd.hasOption(BATCH_DIRECTORY)) {
                     final Path root = Paths.get(cmd.getOptionValue(BATCH_DIRECTORY));
 
-                    try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS).parallel())
-                    {
-                        final List<RunDirectory> runDirectories = stream
-                                .filter(p -> p.toFile().isDirectory())
+                    try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS).parallel()) {
+                        final List<RunDirectory> runDirectories = stream.filter(p -> p.toFile().isDirectory())
                                 .filter(p -> !p.equals(root))
                                 .map(RunDirectory::new)
                                 .collect(Collectors.toList());
 
                         LOGGER.info("found {} batch directories", runDirectories.size());
 
-                            // add the filtered and passed SV entries for each file
-                            for (final RunDirectory runDir: runDirectories)
-                            {
-                                process(eligibility, runDir, runDir.getPatientID(),
-                                        germline || doAll,
-                                        somatic || doAll,
-                                        copyNumber || doAll,
-                                        structuralVariants || doAll,
-                                        mainDataWriter, bedFileWriter);
-                            }
-                    }
-                    catch (Exception e)
-                    {
+                        // add the filtered and passed SV entries for each file
+                        for (final RunDirectory runDir : runDirectories) {
+                            process(eligibility,
+                                    runDir,
+                                    runDir.getPatientID(),
+                                    germline || doAll,
+                                    somatic || doAll,
+                                    copyNumber || doAll,
+                                    structuralVariants || doAll,
+                                    mainDataWriter,
+                                    bedFileWriter);
+                        }
+                    } catch (Exception e) {
                         LOGGER.error("failed walking batch directories");
                     }
-                }
-                else if (cmd.hasOption(RUN_DIRECTORY))
-                {
+                } else if (cmd.hasOption(RUN_DIRECTORY)) {
                     final Path path = Paths.get(cmd.getOptionValue(RUN_DIRECTORY));
                     if (!Files.exists(path)) {
                         LOGGER.error("-runDirectory path does not exist");
                         System.exit(1);
                         return;
                     }
-                    process(eligibility, new RunDirectory(path), sampleId,
+                    process(eligibility,
+                            new RunDirectory(path),
+                            sampleId,
                             germline || doAll,
                             somatic || doAll,
                             copyNumber || doAll,
                             structuralVariants || doAll,
-                            mainDataWriter, bedFileWriter);
+                            mainDataWriter,
+                            bedFileWriter);
                 }
 
                 mainDataWriter.close();
                 bedFileWriter.close();
-            }
-            catch(IOException e)
-            {
+            } catch (IOException e) {
                 LOGGER.error("failed writing output");
             }
 

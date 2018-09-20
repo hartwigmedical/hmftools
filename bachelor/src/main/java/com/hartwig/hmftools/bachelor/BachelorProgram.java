@@ -3,15 +3,15 @@ package com.hartwig.hmftools.bachelor;
 import java.util.List;
 import java.util.function.Predicate;
 
-import com.hartwig.hmftools.common.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 
 public class BachelorProgram {
     private final String mName;
     private final Predicate<VariantModel> mVcfProcessor;
     private final Predicate<VariantModel> mWhiteList;
     private final Predicate<GeneCopyNumber> mCopyNumberProcessor;
-    private final Predicate<HmfGenomeRegion> mDisruptionProcessor;
+    private final Predicate<HmfTranscriptRegion> mDisruptionProcessor;
 
     private final List<String> RequiredEffects;
     private final List<String> PanelTranscripts;
@@ -19,7 +19,7 @@ public class BachelorProgram {
     // add white and blacklist criteria for this program
 
     BachelorProgram(final String name, final Predicate<VariantModel> vcfProcessor, Predicate<VariantModel> whitelist,
-            final Predicate<GeneCopyNumber> copyNumberProcessor, final Predicate<HmfGenomeRegion> disruptionProcessor,
+            final Predicate<GeneCopyNumber> copyNumberProcessor, final Predicate<HmfTranscriptRegion> disruptionProcessor,
             final List<String> requiredEffects, final List<String> panelTranscripts) {
 
         mName = name;
@@ -42,7 +42,7 @@ public class BachelorProgram {
         return mCopyNumberProcessor;
     }
 
-    public Predicate<HmfGenomeRegion> disruptionProcessor() {
+    public Predicate<HmfTranscriptRegion> disruptionProcessor() {
         return mDisruptionProcessor;
     }
 

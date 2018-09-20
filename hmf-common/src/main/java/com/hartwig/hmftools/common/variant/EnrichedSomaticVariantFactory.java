@@ -5,19 +5,14 @@ import static com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVarian
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.gene.CanonicalTranscript;
 import com.hartwig.hmftools.common.purple.repeat.RepeatContext;
 import com.hartwig.hmftools.common.purple.repeat.RepeatContextFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
-import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.apache.commons.math3.util.Pair;
 import org.apache.logging.log4j.LogManager;

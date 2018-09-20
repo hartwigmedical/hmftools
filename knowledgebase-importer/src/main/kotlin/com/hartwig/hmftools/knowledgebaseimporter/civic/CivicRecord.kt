@@ -10,23 +10,24 @@ import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.SomaticEvent
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.readers.KnowledgebaseEventReader
 import com.hartwig.hmftools.knowledgebaseimporter.output.Actionability
 
-data class CivicRecord(private val metadata: RecordMetadata, override val additionalInfo: String,
-                       override val events: List<SomaticEvent>, override val actionability: List<Actionability>,
-                       val cancerDoids: Map<String, Doid>) : RecordMetadata by metadata, KnownRecord, ActionableRecord {
+data class CivicRecord(private val metadata: RecordMetadata, override val reference: String,
+                       override val annotation: String, override val events: List<SomaticEvent>,
+                       override val actionability: List<Actionability>, val cancerDoids: Map<String, Doid>) :
+        RecordMetadata by metadata, KnownRecord, ActionableRecord {
     companion object {
         private val reader = KnowledgebaseEventReader("civic", CivicVariantReader, CivicCnvReader, CivicFusionReader,
-                                                      CivicRangeMutationReader, CivicMultipleEventsReader)
+                CivicRangeMutationReader, CivicMultipleEventsReader)
 
         operator fun invoke(input: CivicVariantInput, evidence: Collection<CivicEvidence>): CivicRecord {
             val metadata = CivicMetadata(input.gene, input.transcript)
-            val additionalInfo = additionalInfo(evidence)
+            val annotation = annotation(evidence)
             val actionability = evidence.filter { it.direction == "Supports" }.flatMap { it.actionabilityItems }
             val doids = evidence.associateBy({ it.disease }, { Doid(it.doid) })
             val somaticEvents = reader.read(input)
-            return CivicRecord(metadata, additionalInfo, somaticEvents, actionability, doids)
+            return CivicRecord(metadata, "", annotation, somaticEvents, actionability, doids)
         }
 
-        private fun additionalInfo(evidence: Collection<CivicEvidence>): String {
+        private fun annotation(evidence: Collection<CivicEvidence>): String {
             val highestEvidenceLevel = evidence.map { it.level }.sorted().firstOrNull() ?: "N"
             return (highestEvidenceLevel == "A" || highestEvidenceLevel == "B" || highestEvidenceLevel == "C").toString()
         }

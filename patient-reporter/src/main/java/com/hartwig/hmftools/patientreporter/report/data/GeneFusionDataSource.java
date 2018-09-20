@@ -7,10 +7,13 @@ import static com.hartwig.hmftools.common.fusions.KnownFusionsModel.ONCOKB;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
-import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
+import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
+import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,7 +25,7 @@ import net.sf.jasperreports.engine.JRDataSource;
 
 public final class GeneFusionDataSource {
 
-    public static final FieldBuilder<?> FUSION_FIELD = field("field", String.class);
+    public static final FieldBuilder<?> FUSION_FIELD = field("fusion", String.class);
     public static final FieldBuilder<?> START_TRANSCRIPT_FIELD = field("five_transcript", String.class);
     public static final FieldBuilder<?> END_TRANSCRIPT_FIELD = field("three_transcript", String.class);
     public static final FieldBuilder<?> START_CONTEXT_FIELD = field("five_gene_context", String.class);
@@ -34,7 +37,7 @@ public final class GeneFusionDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromGeneFusions(@NotNull FittedPurityStatus fitStatus, @NotNull List<GeneFusionData> fusions) {
+    public static JRDataSource fromGeneFusions(@NotNull FittedPurityStatus fitStatus, @NotNull List<GeneFusion> fusions) {
         final DRDataSource dataSource = new DRDataSource(FUSION_FIELD.getName(),
                 START_TRANSCRIPT_FIELD.getName(),
                 END_TRANSCRIPT_FIELD.getName(),
@@ -43,7 +46,10 @@ public final class GeneFusionDataSource {
                 COPIES_FIELD.getName(),
                 SOURCE_FIELD.getName());
 
-        fusions.forEach(fusion -> dataSource.add(name(fusion),
+        final List<GeneFusionData> fusionsData =
+                fusions.stream().sorted(fusionComparator()).map(GeneFusionData::from).collect(Collectors.toList());
+
+        fusionsData.forEach(fusion -> dataSource.add(name(fusion),
                 fusion.geneStartTranscript(),
                 fusion.geneEndTranscript(),
                 fusion.geneContextStart(),
@@ -84,11 +90,16 @@ public final class GeneFusionDataSource {
                     case CGI:
                         return "https://www.cancergenomeinterpreter.org/biomarkers";
                     case CIVIC:
-                        return "https://civicdb.org/browse/variants";
+                        return "https://civicdb.org/browse/somaticVariants";
                     default:
                         return "";
                 }
             }
         };
+    }
+
+    @NotNull
+    private static Comparator<GeneFusion> fusionComparator() {
+        return Comparator.comparing(fusion -> fusion.upstreamLinkedAnnotation().geneName());
     }
 }

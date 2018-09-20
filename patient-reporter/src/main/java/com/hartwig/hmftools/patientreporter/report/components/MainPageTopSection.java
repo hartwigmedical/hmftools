@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.patientreporter.report.Commons.tableHeaderSty
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 
 import com.hartwig.hmftools.patientreporter.SampleReport;
+import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,7 +29,7 @@ public final class MainPageTopSection {
                 report.primaryTumorLocationString(),
                 report.cancerSubTypeString(),
                 "Pathology Tumor Percentage",
-                report.pathologyTumorPercentageString());
+                PatientReportFormat.formatNullablePercent(report.pathologyTumorPercentage()));
     }
 
     @NotNull

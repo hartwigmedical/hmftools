@@ -25,9 +25,7 @@ import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.gc.GCProfile;
 import com.hartwig.hmftools.common.gc.GCProfileFactory;
-import com.hartwig.hmftools.common.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.gene.GeneCopyNumberFactory;
-import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
+import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.pcf.PCFPosition;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -36,6 +34,9 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFactory;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.BestFitFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFactory;
@@ -56,7 +57,7 @@ import com.hartwig.hmftools.common.purple.segment.Cluster;
 import com.hartwig.hmftools.common.purple.segment.ClusterFactory;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactory;
-import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -67,7 +68,6 @@ import com.hartwig.hmftools.common.variant.filter.SGTFilter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.version.VersionInfo;
-import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.config.CircosConfig;
 import com.hartwig.hmftools.purple.config.CommonConfig;
@@ -131,7 +131,7 @@ public class PurityPloidyEstimateApplication {
             final String tumorSample = config.tumorSample();
 
             // JOBA: Read Gene Panel
-            final List<HmfGenomeRegion> genePanel = HmfGenePanelSupplier.allGeneList();
+            final List<HmfTranscriptRegion> genePanel = HmfGenePanelSupplier.allGeneList();
 
             // JOBA: Load BAFs from AMBER
             final String amberFile = configSupplier.bafConfig().bafFile().toString();

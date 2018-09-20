@@ -74,7 +74,7 @@ public class PatientReporterApplication {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
-        if (!validInputForReportWriter(cmd) || !validInputForBaseReporterData(cmd)) {
+        if (!validInputForReportWriter(cmd) || !validInputForBaseReportData(cmd)) {
             printUsageAndExit(options);
         }
 
@@ -85,13 +85,13 @@ public class PatientReporterApplication {
             final String sample = cmd.getOptionValue(NOT_ANALYSED_SAMPLE);
             LOGGER.info("Generating non-sequenceable report for {}", sample);
             final NotAnalysableReason reason = NotAnalysableReason.fromIdentifier(cmd.getOptionValue(NOT_ANALYSABLE_REASON));
-            final NotAnalysableReporter reporter = ImmutableNotAnalysableReporter.of(buildBaseReporterData(cmd));
+            final NotAnalysableReporter reporter = ImmutableNotAnalysableReporter.of(buildBaseReportData(cmd));
 
             final NotAnalysedPatientReport report = reporter.run(sample, reason, cmd.getOptionValue(COMMENTS));
             pdfWriter.writeNonSequenceableReport(report);
         } else if (validInputForPatientReporter(cmd)) {
             LOGGER.info("Generating sequence report...");
-            final HmfReporterData reporterData = buildReporterData(cmd);
+            final SequencedReportData reporterData = buildReporterData(cmd);
             final PatientReporter reporter = buildReporter(cmd, reporterData);
 
             final AnalysedPatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY), cmd.getOptionValue(COMMENTS));
@@ -102,7 +102,7 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static BaseReporterData buildBaseReporterData(@NotNull final CommandLine cmd) throws IOException {
+    private static BaseReportData buildBaseReportData(@NotNull final CommandLine cmd) throws IOException {
         LOGGER.info("Loading ECRF CSV dump...");
         final List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(cmd.getOptionValue(TUMOR_LOCATION_CSV));
         LOGGER.info(" Loaded data for {} patients.", patientTumorLocations.size());
@@ -110,12 +110,12 @@ public class PatientReporterApplication {
         final Lims lims = LimsFactory.fromLimsJson(cmd.getOptionValue(LIMS_JSON));
         LOGGER.info(" Loaded data for {} samples.", lims.sampleCount());
         final CenterModel centerModel = Center.readFromCSV(cmd.getOptionValue(CENTER_CSV));
-        return ImmutableBaseReporterData.of(patientTumorLocations, lims, centerModel, cmd.getOptionValue(SIGNATURE));
+        return ImmutableBaseReportData.of(patientTumorLocations, lims, centerModel, cmd.getOptionValue(SIGNATURE));
     }
 
     @NotNull
-    private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd) throws IOException {
-        return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(COSMIC_GENE_CSV),
+    private static SequencedReportData buildReporterData(@NotNull final CommandLine cmd) throws IOException {
+        return SequencedReportDataLoader.buildFromFiles(cmd.getOptionValue(COSMIC_GENE_CSV),
                 cmd.getOptionValue(FUSION_PAIRS_CSV),
                 cmd.getOptionValue(PROMISCUOUS_FIVE_CSV),
                 cmd.getOptionValue(PROMISCUOUS_THREE_CSV),
@@ -125,7 +125,7 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static PatientReporter buildReporter(@NotNull final CommandLine cmd, @NotNull final HmfReporterData reporterData)
+    private static PatientReporter buildReporter(@NotNull final CommandLine cmd, @NotNull final SequencedReportData sequencedReportData)
             throws IOException, SQLException {
         final VariantAnnotator annotator;
         if (cmd.hasOption(ENSEMBL_DB)) {
@@ -144,10 +144,11 @@ public class PatientReporterApplication {
             annotator = NullAnnotator.make();
         }
 
-        final StructuralVariantAnalyzer svAnalyzer =
-                new StructuralVariantAnalyzer(annotator, reporterData.panelGeneModel().regions(), reporterData.knownFusionsModel());
+        final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(annotator,
+                sequencedReportData.panelGeneModel().regions(),
+                sequencedReportData.knownFusionsModel());
 
-        return ImmutablePatientReporter.of(buildBaseReporterData(cmd), reporterData, svAnalyzer);
+        return ImmutablePatientReporter.of(buildBaseReportData(cmd), sequencedReportData, svAnalyzer);
     }
 
     private static boolean validInputForPatientReporter(@NotNull final CommandLine cmd) {
@@ -210,7 +211,7 @@ public class PatientReporterApplication {
         return false;
     }
 
-    private static boolean validInputForBaseReporterData(@NotNull final CommandLine cmd) {
+    private static boolean validInputForBaseReportData(@NotNull final CommandLine cmd) {
         final String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
         final String limsJson = cmd.getOptionValue(LIMS_JSON);
         final String centerCsv = cmd.getOptionValue(CENTER_CSV);
@@ -253,7 +254,7 @@ public class PatientReporterApplication {
         options.addOption(PROMISCUOUS_FIVE_CSV, true, "Path towards a CSV containing white-listed promiscuous 5' genes.");
         options.addOption(PROMISCUOUS_THREE_CSV, true, "Path towards a CSV containing white-listed promiscuous 3' genes.");
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
-        options.addOption(ENSEMBL_DB, true, "Annotate structural variants using this Ensembl DB URI");
+        options.addOption(ENSEMBL_DB, true, "Annotate structural somaticVariants using this Ensembl DB URI");
         options.addOption(ENSEMBL_DB_LOCAL, false, "Flag indicating to connect to local Ensembl DB");
         options.addOption(DB_USER, true, "Database user name to connect to local mysql instance.");
         options.addOption(DB_PASS, true, "Database password to connect to local mysql instance.");

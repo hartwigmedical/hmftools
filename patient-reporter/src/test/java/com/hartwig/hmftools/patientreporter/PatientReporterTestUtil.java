@@ -14,10 +14,10 @@ import com.hartwig.hmftools.common.cosmic.CosmicGeneModel;
 import com.hartwig.hmftools.common.cosmic.CosmicGenes;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
-import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
+import com.hartwig.hmftools.patientreporter.algo.GeneModel;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 
 import org.jetbrains.annotations.NotNull;
@@ -38,14 +38,14 @@ public final class PatientReporterTestUtil {
     }
 
     @NotNull
-    public static HmfReporterData testHmfReporterData() throws IOException {
+    public static SequencedReportData testSequencedReportData() throws IOException {
         final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
         final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
         final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfPanelGeneList());
         final CosmicGeneModel cosmicGeneModel = CosmicGenes.readFromCSV(cosmicPath);
         final DrupFilter drupFilter = new DrupFilter(drupFilterPath);
 
-        return ImmutableHmfReporterData.of(geneModel,
+        return ImmutableSequencedReportData.of(geneModel,
                 cosmicGeneModel,
                 testKnownFusionModel(),
                 drupFilter,
@@ -61,11 +61,11 @@ public final class PatientReporterTestUtil {
     }
 
     @NotNull
-    public static BaseReporterData testBaseReporterData() throws IOException {
+    public static BaseReportData testBaseReportData() throws IOException {
         final String centerPath = Resources.getResource("center").getPath() + File.separator + "centers.csv";
         final List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
         final Lims lims = LimsFactory.empty();
         final CenterModel centerModel = Center.readFromCSV(centerPath);
-        return ImmutableBaseReporterData.of(patientTumorLocations, lims, centerModel, SIGNATURE_PATH);
+        return ImmutableBaseReportData.of(patientTumorLocations, lims, centerModel, SIGNATURE_PATH);
     }
 }

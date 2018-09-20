@@ -12,8 +12,8 @@ import java.nio.file.Files;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableCircosPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableExplanationPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableFindingsPage;
@@ -42,7 +42,7 @@ public class PDFWriter {
         this.reportDirectory = reportDirectory;
     }
 
-    public void writeSequenceReport(@NotNull final AnalysedPatientReport report, @NotNull final HmfReporterData reporterData)
+    public void writeSequenceReport(@NotNull final AnalysedPatientReport report, @NotNull final SequencedReportData reporterData)
             throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generatePatientReport(report, reporterData);
         writeReport(fileName(report.sampleReport().sampleId()), reportBuilder);
@@ -86,7 +86,7 @@ public class PDFWriter {
     @VisibleForTesting
     @NotNull
     static JasperReportBuilder generatePatientReport(@NotNull final AnalysedPatientReport report,
-            @NotNull final HmfReporterData reporterData) {
+            @NotNull final SequencedReportData reporterData) {
         final ComponentBuilder<?, ?> totalReport = cmp.multiPageList()
                 .add(ImmutableFindingsPage.of(report, reporterData).reportComponent())
                 .newPage()

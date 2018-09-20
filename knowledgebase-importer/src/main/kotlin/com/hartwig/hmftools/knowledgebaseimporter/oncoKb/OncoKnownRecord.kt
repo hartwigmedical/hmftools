@@ -9,8 +9,8 @@ import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.input.OncoKnownInput
 import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.readers.*
 import com.hartwig.hmftools.knowledgebaseimporter.output.FusionEvent
 
-data class OncoKnownRecord(private val metadata: RecordMetadata, override val additionalInfo: String,
-                           override val events: List<SomaticEvent>) : KnownRecord,
+data class OncoKnownRecord(private val metadata: RecordMetadata, override val reference: String,
+                           override val annotation: String, override val events: List<SomaticEvent>) : KnownRecord,
         RecordMetadata by metadata {
     companion object {
         private val multiSnvReader = OncoAnyKnownEventReader(KnowledgebaseEventReader("oncoKb", ProteinAnnotationReader))
@@ -20,7 +20,7 @@ data class OncoKnownRecord(private val metadata: RecordMetadata, override val ad
         operator fun invoke(input: OncoKnownInput): OncoKnownRecord {
             val metadata = OncoMetadata(input.gene, input.transcript!!)
             val events = readEvents(input)
-            return OncoKnownRecord(metadata, input.Oncogenicity, events)
+            return OncoKnownRecord(metadata, input.Alteration, input.Oncogenicity, events)
         }
 
         private fun readEvents(input: OncoKnownInput): List<SomaticEvent> {

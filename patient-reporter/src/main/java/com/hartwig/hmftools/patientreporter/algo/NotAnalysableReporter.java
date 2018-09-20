@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.patientreporter.BaseReporterData;
+import com.hartwig.hmftools.patientreporter.BaseReportData;
 import com.hartwig.hmftools.patientreporter.ImmutableNotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
@@ -20,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class NotAnalysableReporter {
 
     @NotNull
-    abstract BaseReporterData baseReporterData();
+    abstract BaseReportData baseReportData();
 
     public NotAnalysedPatientReport run(@NotNull final String sample, @NotNull final NotAnalysableReason reason,
             @Nullable final String comments) {
@@ -28,23 +28,21 @@ public abstract class NotAnalysableReporter {
         assert study != null;
 
         final PatientTumorLocation patientTumorLocation =
-                PatientReporterHelper.extractPatientTumorLocation(baseReporterData().patientTumorLocations(), sample);
-        final Lims lims = baseReporterData().limsModel();
-        final Double tumorPercentage = lims.tumorPercentageForSample(sample);
-        final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(sample);
+                PatientReporterHelper.extractPatientTumorLocation(baseReportData().patientTumorLocations(), sample);
+        final Lims lims = baseReportData().limsModel();
 
         final SampleReport sampleReport = ImmutableSampleReport.of(sample,
                 patientTumorLocation,
-                tumorPercentage,
+                lims.tumorPercentageForSample(sample),
                 lims.arrivalDateForSample(sample),
                 null,
                 lims.labProceduresForSample(sample),
-                sampleRecipient);
+                baseReportData().centerModel().getAddresseeStringForSample(sample));
 
         return ImmutableNotAnalysedPatientReport.of(sampleReport,
                 reason,
                 study,
                 Optional.ofNullable(comments),
-                baseReporterData().signaturePath());
+                baseReportData().signaturePath());
     }
 }

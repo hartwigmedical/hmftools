@@ -13,10 +13,11 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.gene.CanonicalTranscriptFactory;
-import com.hartwig.hmftools.common.gene.TranscriptRegion;
+import com.hartwig.hmftools.common.region.CanonicalTranscriptFactory;
+import com.hartwig.hmftools.common.region.TranscriptRegion;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotationFactory;
+import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
@@ -53,9 +54,9 @@ public class SomaticVariantFactory {
     @NotNull
     public static SomaticVariantFactory filteredInstance(@NotNull VariantContextFilter... filters) {
         final CompoundFilter filter = new CompoundFilter(true);
-        filter.add(new ChromosomeFilter());
         filter.addAll(Arrays.asList(filters));
-        return new SomaticVariantFactory(filter);
+        return new SomaticVariantFactory(filter, new SomaticEnrichment() {
+        });
     }
 
     private static final HotspotFilter HOTSPOT_FILTER = new HotspotFilter();
@@ -66,12 +67,18 @@ public class SomaticVariantFactory {
     private static final String MAPPABILITY_TAG = "MAPPABILITY";
 
     @NotNull
-    private final VariantContextFilter filter;
+    private final CompoundFilter filter;
+    @NotNull
+    private final SomaticEnrichment enrichment;
     @NotNull
     private final Map<String, String> transcriptIdToGeneMap;
 
-    private SomaticVariantFactory(@NotNull final VariantContextFilter filter) {
-        this.filter = filter;
+    public SomaticVariantFactory(@NotNull final VariantContextFilter filter, @NotNull final SomaticEnrichment enrichment) {
+        this.filter = new CompoundFilter(true);
+        this.filter.add(new ChromosomeFilter());
+        this.filter.add(filter);
+
+        this.enrichment = enrichment;
         this.transcriptIdToGeneMap = CanonicalTranscriptFactory.create()
                 .stream()
                 .collect(Collectors.toMap(TranscriptRegion::transcriptID, TranscriptRegion::gene));
@@ -92,16 +99,18 @@ public class SomaticVariantFactory {
             }
 
             for (final VariantContext context : reader.iterator()) {
-                createVariant(sample, context).ifPresent(variants::add);
+                Optional<ImmutableSomaticVariantImpl.Builder> builder = createVariantBuilder(sample, context);
+                if (builder.isPresent()) {
+                    variants.add(enrichment.enrich(builder.get(), context).build());
+                }
             }
         }
 
         return variants;
     }
 
-    @VisibleForTesting
     @NotNull
-    public Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context) {
+    private Optional<ImmutableSomaticVariantImpl.Builder> createVariantBuilder(@NotNull final String sample, @NotNull final VariantContext context) {
         if (filter.test(context)) {
             final Genotype genotype = context.getGenotype(sample);
             if (genotype.hasAD() && genotype.getAD().length > 1) {
@@ -114,18 +123,24 @@ public class SomaticVariantFactory {
                             .alt(alt(context))
                             .alleleReadCount(frequencyData.alleleReadCount())
                             .totalReadCount(frequencyData.totalReadCount())
-                            .hotspot(HOTSPOT_FILTER.test(context))
+                            .hotspot(HOTSPOT_FILTER.test(context) ? Hotspot.HOTSPOT : Hotspot.NON_HOTSPOT)
                             .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0));
 
                     attachIDAndCosmicAnnotations(builder, context);
                     attachSnpEffAnnotations(builder, context);
                     attachFilter(builder, context);
                     attachType(builder, context);
-                    return Optional.of(builder.build());
+                    return Optional.of(builder);
                 }
             }
         }
         return Optional.empty();
+    }
+
+    @VisibleForTesting
+    @NotNull
+    public Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context) {
+        return createVariantBuilder(sample, context).map(ImmutableSomaticVariantImpl.Builder::build);
     }
 
     private void attachIDAndCosmicAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
@@ -179,9 +194,13 @@ public class SomaticVariantFactory {
             final SnpEffAnnotation annotation = canonicalAnnotation.get();
             builder.canonicalEffect(annotation.consequenceString());
             builder.canonicalCodingEffect(CodingEffect.effect(annotation.gene(), annotation.consequences()));
+            builder.canonicalHgvsCodingImpact(annotation.hgvsCoding());
+            builder.canonicalHgvsProteinImpact(annotation.hgvsProtein());
         } else {
             builder.canonicalEffect(Strings.EMPTY);
             builder.canonicalCodingEffect(CodingEffect.UNDEFINED);
+            builder.canonicalHgvsCodingImpact(Strings.EMPTY);
+            builder.canonicalHgvsProteinImpact(Strings.EMPTY);
         }
 
         final String firstGene = transcriptAnnotations.isEmpty() ? Strings.EMPTY : transcriptAnnotations.get(0).gene();

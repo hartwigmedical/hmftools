@@ -40,16 +40,16 @@ public abstract class ExplanationPage {
         return toList("Details on the report in general",
                 Lists.newArrayList("The analysis is based on reference genome version GRCh37.",
                         "Somatic (tumor derived) variation is reported. "
-                                + "Potential variants in the tumor that also exist in germline findings are not included in this report.",
+                                + "Potential somaticVariants in the tumor that also exist in germline findings are not included in this report.",
                         "Variant detection in samples with lower tumor content is less sensitive. "
-                                + "In case of a low tumor purity (below 20%) likelihood of failing to detect potential variants increases.",
+                                + "In case of a low tumor purity (below 20%) likelihood of failing to detect potential somaticVariants increases.",
                         "The implied tumor purity is the percentage of tumor cells in the biopsy based on analysis of "
                                 + "whole genome data."));
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> snvIndelExplanationSection() {
-        return toList("Details on reported somatic variants",
+        return toList("Details on reported somatic somaticVariants",
                 Lists.newArrayList(
                         "The 'Position' refers to the chromosome and start base of the variant with " + "respect to this reference genome.",
                         "The 'Variant' displays what was expected as reference base and what " + "was found instead ('ref' > 'alt').",

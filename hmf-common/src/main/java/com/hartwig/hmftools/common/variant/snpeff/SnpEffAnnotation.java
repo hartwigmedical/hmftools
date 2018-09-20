@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class SnpEffAnnotation implements TranscriptAnnotation {
 
-    public static final String FEATURE_TYPE_TRANSCRIPT = "transcript";
+    private static final String FEATURE_TYPE_TRANSCRIPT = "transcript";
 
     @NotNull
     public abstract String allele();

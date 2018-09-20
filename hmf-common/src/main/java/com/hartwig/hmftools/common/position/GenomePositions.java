@@ -12,8 +12,10 @@ import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum GenomePositions {
-    ;
+public final class GenomePositions {
+
+    private GenomePositions() {
+    }
 
     @NotNull
     public static GenomePosition create(@NotNull final String chromosome, final long position) {

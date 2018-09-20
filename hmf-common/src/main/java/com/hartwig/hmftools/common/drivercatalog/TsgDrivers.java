@@ -1,106 +1,134 @@
 package com.hartwig.hmftools.common.drivercatalog;
 
+import static com.hartwig.hmftools.common.drivercatalog.DriverCatalogFactory.variantTypeCount;
+
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.dnds.DndsDriverLikelihood;
+import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihood;
+import com.hartwig.hmftools.common.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
-import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.jetbrains.annotations.NotNull;
 
 public class TsgDrivers {
 
-    private static final int MAX_REPEAT_COUNT = 7;
-
     @NotNull
-    public static List<DriverCatalog> tsgDrivers(@NotNull final Map<String, DndsDriverLikelihood> likelihoodsByGene,
+    public static List<DriverCatalog> drivers(@NotNull final Map<String, DndsDriverGeneLikelihood> likelihoodsByGene,
             @NotNull final List<EnrichedSomaticVariant> variants) {
 
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
-        final Map<VariantType, Long> variantTypeCounts =
-                variants.stream().filter(x -> !x.isFiltered()).collect(Collectors.groupingBy(SomaticVariant::type, Collectors.counting()));
+        final Map<VariantType, Long> variantTypeCounts = variantTypeCount(variants);
         long sampleSNVCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0L);
+        long sampleIndelCount = variantTypeCounts.getOrDefault(VariantType.INDEL, 0L);
 
-        final Map<String, List<EnrichedSomaticVariant>> missenseVariantsByGene = variants.stream()
-                .filter(x -> likelihoodsByGene.keySet().contains(x.gene()))
-                .filter(x -> x.canonicalCodingEffect().equals(CodingEffect.MISSENSE))
-                .collect(Collectors.groupingBy(SomaticVariant::gene));
+        final Map<String, List<EnrichedSomaticVariant>> codingVariants = codingVariantsByGene(likelihoodsByGene.keySet(), variants);
 
-        for (String gene : missenseVariantsByGene.keySet()) {
-            final DndsDriverLikelihood likelihood = likelihoodsByGene.get(gene);
-            final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
-                    .gene(gene)
-                    .category(DriverCategory.TSG)
-                    .driverLikelihood(1)
-                    .dndsLikelihood(likelihood.missenseUnadjustedDriverLikelihood());
-
-            final List<EnrichedSomaticVariant> geneVariants = missenseVariantsByGene.get(gene);
-
-            boolean isHotspot = geneVariants.stream().anyMatch(SomaticVariant::hotspot);
-            boolean isBiallelic = geneVariants.stream().anyMatch(EnrichedSomaticVariant::biallelic);
-            boolean isNonHotspotNorBiallelic = geneVariants.stream().anyMatch(x -> !x.hotspot() && !x.biallelic());
-
-            if (isHotspot) {
-                driverCatalog.add(builder.driver(DriverType.HOTSPOT).build());
-            }
-
-            if (isBiallelic) {
-                driverCatalog.add(builder.driver(DriverType.BIALLELIC).build());
-            }
-
-            if (isNonHotspotNorBiallelic) {
-
-                if (geneVariants.size() == 1) {
-                    // SingleHit
-
-                } else {
-                    // MultiHit so sort and look at worst two.
-
-                }
-
-            }
-
-            /// RUBBISH UNDER HERE
-
-            final List<EnrichedSomaticVariant> inframe = geneVariants.stream()
-                    .filter(x -> x.type() == VariantType.INDEL && x.repeatCount() <= MAX_REPEAT_COUNT)
-                    .collect(Collectors.toList());
-            if (!inframe.isEmpty()) {
-                driverCatalog.add(builder.driver(DriverType.INFRAME).build());
-            }
-
-            final List<EnrichedSomaticVariant> pointMutations =
-                    geneVariants.stream().filter(x -> x.type() != VariantType.INDEL).collect(Collectors.toList());
-
-            if (Doubles.greaterThan(likelihood.missenseUnadjustedDriverLikelihood(), 0) && pointMutations.stream()
-                    .anyMatch(x -> !x.hotspot())) {
-                final double missenseDriverLikelihood = missenseProbabilityDriverVariant(sampleSNVCount, likelihood);
-                driverCatalog.add(builder.driver(geneVariants.size() > 1 ? DriverType.MULTI_HIT : DriverType.SINGLE_HIT)
-                        .driverLikelihood(missenseDriverLikelihood)
-                        .build());
-            }
+        for (String gene : codingVariants.keySet()) {
+            final List<EnrichedSomaticVariant> geneVariants = codingVariants.get(gene);
+            driverCatalog.add(geneDriver(sampleSNVCount, sampleIndelCount, likelihoodsByGene.get(gene), geneVariants));
         }
 
         return driverCatalog;
     }
 
-    public static double missenseProbabilityDriverVariant(long sampleSNVCount, @NotNull final DndsDriverLikelihood likelihood) {
+    @NotNull
+    static <T extends SomaticVariant> Map<String, List<T>> codingVariantsByGene(@NotNull final Set<String> genes,
+            @NotNull final List<T> variants) {
 
-        double lambda = sampleSNVCount * likelihood.missenseProbabilityVariantNonDriverFactor();
-        PoissonDistribution poissonDistribution = new PoissonDistribution(lambda);
+        EnumSet<CodingEffect> suitableCodingEffects =
+                EnumSet.of(CodingEffect.MISSENSE, CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.SPLICE);
 
-        double pDriver = likelihood.missenseProbabilityDriver();
-        double pVariantNonDriver = 1 - poissonDistribution.cumulativeProbability(0);
-
-        return pDriver / (pDriver + pVariantNonDriver * (1 - pDriver));
+        return variants.stream()
+                .filter(x -> genes.contains(x.gene()))
+                .filter(x -> suitableCodingEffects.contains(x.canonicalCodingEffect()))
+                .collect(Collectors.groupingBy(SomaticVariant::gene));
     }
 
+    @NotNull
+    static DriverCatalog geneDriver(long sampleSNVCount, long sampleIndelCount, @NotNull final DndsDriverGeneLikelihood likelihood,
+            @NotNull final List<EnrichedSomaticVariant> codingVariants) {
+        codingVariants.sort(new TsgImpactComparator());
+
+        final Map<DriverImpact, Long> variantCounts = DriverCatalogFactory.driverImpactCount(codingVariants);
+        long missenseVariants = variantCounts.getOrDefault(DriverImpact.MISSENSE, 0L);
+        long nonsenseVariants = variantCounts.getOrDefault(DriverImpact.NONSENSE, 0L);
+        long spliceVariants = variantCounts.getOrDefault(DriverImpact.SPLICE, 0L);
+        long inframeVariants = variantCounts.getOrDefault(DriverImpact.INFRAME, 0L);
+        long frameshiftVariants = variantCounts.getOrDefault(DriverImpact.FRAMESHIFT, 0L);
+
+        final double maxDndsLikelihood = codingVariants.stream()
+                .map(x -> impactLikelihood(likelihood, x))
+                .mapToDouble(DndsDriverImpactLikelihood::dndsLikelihood)
+                .max()
+                .orElse(0);
+
+        final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
+                .gene(likelihood.gene())
+                .category(DriverCategory.TSG)
+                .driverLikelihood(1)
+                .dndsLikelihood(maxDndsLikelihood)
+                .missense(missenseVariants)
+                .nonsense(nonsenseVariants)
+                .splice(spliceVariants)
+                .inframe(inframeVariants)
+                .frameshift(frameshiftVariants)
+                .driver(DriverType.DNDS);
+
+        if (codingVariants.stream().anyMatch(SomaticVariant::isHotspot)) {
+            return builder.driver(DriverType.HOTSPOT).build();
+        }
+
+        if (codingVariants.stream().anyMatch(PurityAdjustedSomaticVariant::biallelic)) {
+            return builder.driver(DriverType.BIALLELIC).build();
+        }
+
+        final DndsDriverImpactLikelihood firstImpactLikelihood = impactLikelihood(likelihood, codingVariants.get(0));
+        final long firstVariantTypeCount = codingVariants.get(0).type() == VariantType.INDEL ? sampleIndelCount : sampleSNVCount;
+
+        if (codingVariants.size() == 1) {
+            return builder.dndsLikelihood(firstImpactLikelihood.dndsLikelihood())
+                    .driverLikelihood(singleHit(firstVariantTypeCount, firstImpactLikelihood))
+                    .build();
+        }
+
+        // MultiHit
+        final DndsDriverImpactLikelihood secondImpactLikelihood = impactLikelihood(likelihood, codingVariants.get(1));
+        final long secondVariantTypeCount = codingVariants.get(1).type() == VariantType.INDEL ? sampleIndelCount : sampleSNVCount;
+
+        return builder.dndsLikelihood(Math.max(firstImpactLikelihood.dndsLikelihood(), secondImpactLikelihood.dndsLikelihood()))
+                .driverLikelihood(DriverCatalogFactory.probabilityDriverVariant(firstVariantTypeCount,
+                        secondVariantTypeCount,
+                        firstImpactLikelihood,
+                        secondImpactLikelihood))
+                .build();
+    }
+
+    private static DndsDriverImpactLikelihood impactLikelihood(@NotNull final DndsDriverGeneLikelihood dndsLikelihood,
+            @NotNull final SomaticVariant variant) {
+
+        if (variant.type() == VariantType.INDEL) {
+            return dndsLikelihood.indel();
+        } else if (variant.canonicalCodingEffect() == CodingEffect.MISSENSE) {
+            return dndsLikelihood.missense();
+        } else if (variant.canonicalCodingEffect() == CodingEffect.NONSENSE_OR_FRAMESHIFT) {
+            return dndsLikelihood.nonsense();
+        }
+        return dndsLikelihood.splice();
+    }
+
+    private static double singleHit(long sampleCount, @NotNull final DndsDriverImpactLikelihood likelihood) {
+
+        return Doubles.positive(likelihood.dndsLikelihood()) ? DriverCatalogFactory.probabilityDriverVariant(sampleCount, likelihood) : 0;
+    }
 }

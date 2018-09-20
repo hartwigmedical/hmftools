@@ -6,8 +6,9 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
-import com.hartwig.hmftools.patientreporter.HmfReporterData;
+import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.region.TranscriptRegion;
+import com.hartwig.hmftools.patientreporter.SequencedReportData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -26,14 +27,14 @@ public final class GenePanelDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromHmfReporterData(@NotNull final HmfReporterData reporterData) {
+    public static JRDataSource fromSequencedReportData(@NotNull final SequencedReportData sequencedReportData) {
         final DRDataSource genePanelDataSource = new DRDataSource(GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(), TYPE_FIELD.getName());
-        final List<HmfGenomeRegion> regions = Lists.newArrayList(reporterData.panelGeneModel().regions());
-        regions.sort(Comparator.comparing(HmfGenomeRegion::gene));
+        final List<HmfTranscriptRegion> regions = Lists.newArrayList(sequencedReportData.panelGeneModel().regions());
+        regions.sort(Comparator.comparing(TranscriptRegion::gene));
 
-        for (final HmfGenomeRegion region : regions) {
-            final String role = reporterData.cosmicGeneModel().getRoleForGene(region.gene());
-            genePanelDataSource.add(region.gene(), region.transcript(), role);
+        for (final HmfTranscriptRegion region : regions) {
+            final String role = sequencedReportData.cosmicGeneModel().getRoleForGene(region.gene());
+            genePanelDataSource.add(region.gene(), transcriptString(region), role);
         }
         return genePanelDataSource;
     }
@@ -41,5 +42,10 @@ public final class GenePanelDataSource {
     @NotNull
     public static AbstractSimpleExpression<String> transcriptUrl() {
         return new TranscriptExpression(TRANSCRIPT_FIELD);
+    }
+
+    @NotNull
+    private static String transcriptString(@NotNull HmfTranscriptRegion transcript) {
+        return transcript.transcriptID() + "." + transcript.transcriptVersion();
     }
 }

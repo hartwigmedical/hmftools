@@ -23,7 +23,7 @@ public final class SomaticVariantAnalyzer {
     public static SomaticVariantAnalysis run(@NotNull final List<EnrichedSomaticVariant> variants, @NotNull Set<String> genePanel) {
         final List<EnrichedSomaticVariant> variantsToReport =
                 variants.stream().filter(variantFilter(genePanel)).collect(Collectors.toList());
-        final double indelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndels(variants);
+        final double indelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
         final int mutationalLoad = MutationalLoadAnalyzer.determineMutationalLoad(variants);
 
         return ImmutableSomaticVariantAnalysis.of(variantsToReport, indelsPerMb, mutationalLoad);

@@ -37,7 +37,6 @@ public class StructuralVariantFactory {
     private final static String BPI_AF = "BPI_AF";
     private final static String ALT = "ALT";
     private final static String IMPRECISE = "IMPRECISE";
-    private final static String SOMATIC_SCORE = "SOMATICSCORE";
     private final static String IHOMPOS = "IHOMPOS";
     private final static String CIPOS = "CIPOS";
     private final static String VARIANT_FRAGMENT_BREAKEND_COVERAGE = "VF";
@@ -133,8 +132,6 @@ public class StructuralVariantFactory {
                 endOrientation = 1;
                 break;
         }
-
-        final int somaticScore = context.getAttributeAsInt(SOMATIC_SCORE, 0);
 
         String insertedSequence = "";
 
@@ -287,12 +284,14 @@ public class StructuralVariantFactory {
                 .startLinkedBy(context.getAttributeAsStringList(LOCAL_LINKED_BY, "").stream().filter(s -> !Strings.isNullOrEmpty(s)).collect(Collectors.joining( ",")))
                 .endLinkedBy(context.getAttributeAsStringList(REMOTE_LINKED_BY, "").stream().filter(s -> !Strings.isNullOrEmpty(s)).collect(Collectors.joining( ",")))
                 .imprecise(imprecise(context))
-                // .somaticScore(context.hasAttribute(SOMATIC_SCORE) ? context.getAttributeAsInt(SOMATIC_SCORE, 0) : null)
                 .qualityScore(context.getPhredScaledQual());
     }
 static ImmutableStructuralVariantLegImpl.Builder setLegCommon(@NotNull ImmutableStructuralVariantLegImpl.Builder builder, @NotNull VariantContext context, boolean ignoreRefpair) {
         builder.chromosome(context.getContig());
         builder.position(context.getStart());
+
+        builder.startOffset(0);
+        builder.endOffset(0);
         if (context.hasAttribute(CIPOS)) {
             final List<Integer> cipos = context.getAttributeAsIntList(CIPOS, 0);
             if (cipos.size() == 2) {
@@ -300,6 +299,8 @@ static ImmutableStructuralVariantLegImpl.Builder setLegCommon(@NotNull Immutable
                 builder.endOffset(cipos.get(1));
             }
         }
+        builder.inexactHomologyOffsetStart(0);
+        builder.inexactHomologyOffsetEnd(0);
         if (context.hasAttribute(IHOMPOS)) {
             final List<Integer> ihompos = context.getAttributeAsIntList(IHOMPOS, 0);
             if (ihompos.size() == 2) {

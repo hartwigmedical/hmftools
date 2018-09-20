@@ -94,7 +94,7 @@ public class GermlineVariantDAO {
                     region.repeatCount(),
                     region.clonality(),
                     region.biallelic(),
-                    region.hotspot(),
+                    region.isHotspot(),
                     DatabaseUtil.decimal(region.mappability()),
                     region.germlineStatus(),
                     DatabaseUtil.decimal(region.minorAllelePloidy()),

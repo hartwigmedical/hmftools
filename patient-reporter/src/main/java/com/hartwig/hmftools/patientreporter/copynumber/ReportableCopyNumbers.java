@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
 import org.jetbrains.annotations.NotNull;
 

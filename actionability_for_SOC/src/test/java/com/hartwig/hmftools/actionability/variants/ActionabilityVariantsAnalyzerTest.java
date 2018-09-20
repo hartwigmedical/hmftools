@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -16,7 +17,6 @@ public class ActionabilityVariantsAnalyzerTest {
 
     @Test
     public void actionabilityWorksVariants() {
-
         ActionabilityVariantsSOC variantsSOC = ImmutableActionabilityVariantsSOC.builder()
                 .gene("BRAF")
                 .chromosome("7")
@@ -38,9 +38,9 @@ public class ActionabilityVariantsAnalyzerTest {
         ActionabilityRanges variantsRanges = ImmutableActionabilityRanges.builder()
                 .gene("BRAF")
                 .mutationTranscript("ENST00000357654")
-                .chromosome("17")
-                .start("10")
-                .stop("1500")
+                .chromosome("7")
+                .start(Integer.toString(10))
+                .stop(Integer.toString(1500))
                 .geneTranscript("ENST00000256078")
                 .source("oncoKB")
                 .reference("NRAS Oncogenic Mutations")
@@ -72,10 +72,15 @@ public class ActionabilityVariantsAnalyzerTest {
                 .alleleReadCount(0)
                 .canonicalEffect(Strings.EMPTY)
                 .canonicalCodingEffect(CodingEffect.UNDEFINED)
-                .hotspot(false)
+                .canonicalHgvsCodingImpact(Strings.EMPTY)
+                .canonicalHgvsProteinImpact(Strings.EMPTY)
+                .hotspot(Hotspot.NON_HOTSPOT)
                 .mappability(0D)
                 .build();
 
-        assertTrue(var.actionableVariants(variant, "Skin Melanoma", 0));
+        assertTrue(var.actionableVariants(variant, "Skin"));
+        assertTrue(var.actionableRange(variant, "Skin"));
+        assertFalse(var.actionableVariants(variant, "Stomach"));
+        assertFalse(var.actionableRange(variant, "Lung"));
     }
 }

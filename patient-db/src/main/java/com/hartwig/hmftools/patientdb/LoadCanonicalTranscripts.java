@@ -3,9 +3,8 @@ package com.hartwig.hmftools.patientdb;
 import java.sql.SQLException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.gene.CanonicalTranscript;
-import com.hartwig.hmftools.common.gene.CanonicalTranscriptFactory;
-import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.region.CanonicalTranscript;
+import com.hartwig.hmftools.common.region.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -31,7 +30,7 @@ public class LoadCanonicalTranscripts {
         final DatabaseAccess dbAccess = databaseAccess(cmd);
 
         LOGGER.info("Reading gene panel");
-        final List<CanonicalTranscript> transcripts = CanonicalTranscriptFactory.create(HmfGenePanelSupplier.allGeneList());
+        final List<CanonicalTranscript> transcripts = CanonicalTranscriptFactory.create();
 
         LOGGER.info("Persisting transcripts to database");
         dbAccess.writeCanonicalTranscripts(transcripts);

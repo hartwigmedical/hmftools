@@ -13,9 +13,9 @@ import com.hartwig.hmftools.extensions.csv.CsvWriter
 import com.hartwig.hmftools.knowledgebaseimporter.cgi.Cgi
 import com.hartwig.hmftools.knowledgebaseimporter.civic.Civic
 import com.hartwig.hmftools.knowledgebaseimporter.cosmic.Cosmic
-import com.hartwig.hmftools.knowledgebaseimporter.dao.GeneDAO
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.Doid
+import com.hartwig.hmftools.knowledgebaseimporter.gene.GeneModel
 import com.hartwig.hmftools.knowledgebaseimporter.iclusion.Iclusion
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.OncoKb
@@ -79,7 +79,7 @@ private fun readKnowledgebases(cmd: CommandLine, diseaseOntology: DiseaseOntolog
     val reference = IndexedFastaSequenceFile(File(cmd.getOptionValue(REFERENCE)))
     val ensemblJdbcUrl = "jdbc:${cmd.getOptionValue(ENSEMBL_DB)}"
     val hmfpatientsJdbcUrl = "jdbc:${cmd.getOptionValue(HMFPATIENTS_DB)}"
-    val ensemblGeneDAO = GeneDAO(ensemblJdbcUrl, hmfpatientsJdbcUrl, cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASSWORD))
+    val ensemblGeneDAO = GeneModel(ensemblJdbcUrl, hmfpatientsJdbcUrl, cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASSWORD))
     val transvar = cmd.getOptionValue(TRANSVAR_LOCATION)
     val recordAnalyzer = RecordAnalyzer(transvar, reference, ensemblGeneDAO)
     val treatmentTypeMap = CsvReader.readTSV<HmfDrug>(cmd.getOptionValue(TREATMENT_TYPE_MAPPING_LOCATION))
@@ -94,7 +94,7 @@ private fun readKnowledgebases(cmd: CommandLine, diseaseOntology: DiseaseOntolog
     val cosmic = Cosmic(cmd.getOptionValue(COSMIC_FUSIONS_LOCATION))
     val iclusion = Iclusion(readIclusionStudies(cmd), diseaseOntology, recordAnalyzer, ensemblGeneDAO)
 
-    return listOf(iclusion)
+    return listOf(oncoKb)
 //    return listOf(oncoKb, cgi, civic, cosmic, iclusion)
 }
 
@@ -108,7 +108,7 @@ private fun readIclusionStudies(cmd : CommandLine): List<IclusionStudyDetails> {
     iclusionApi.close()
 
     iclusionStudies.forEach {
-        logger.info("iclusion study: $it");
+        logger.info("iclusion study: $it")
     }
     logger.info("Queried and filtered ${iclusionStudies.size} studies from iclusion API")
 
@@ -116,6 +116,9 @@ private fun readIclusionStudies(cmd : CommandLine): List<IclusionStudyDetails> {
 }
 
 private fun writeOutput(outputDir: String, knowledgebases: List<Knowledgebase>, cancerTypesDoids: List<CancerTypeDoidOutput>) {
+    val dir = File(outputDir)
+    if (!dir.exists()) dir.mkdirs()
+
     knowledgebases.filterNot { it.knownVariants.isEmpty() }.map { writeKnownVariants(it, outputDir) }
     CsvWriter.writeCSV(knownFusionPairs(knowledgebases), "$outputDir${File.separator}knownFusionPairs.csv")
     CsvWriter.writeCSV(knownPromiscuousFive(knowledgebases), "$outputDir${File.separator}knownPromiscuousFive.csv")
@@ -145,7 +148,5 @@ private fun readExtraCancerTypeDoids(): Map<String, Set<Doid>> {
 }
 
 private fun writeKnownVariants(knowledgebase: Knowledgebase, outputDirectory: String) {
-    val dir = File(outputDirectory)
-    if (!dir.exists()) dir.mkdirs()
     CsvWriter.writeTSV(knowledgebase.knownVariants.distinct(), "$outputDirectory${File.separator}${knowledgebase.source}KnownVariants.tsv")
 }

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter;
 import java.time.LocalDate;
 
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
-import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 
 import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
@@ -36,12 +35,6 @@ public abstract class SampleReport {
     public String cancerSubTypeString() {
         PatientTumorLocation type = patientTumorLocation();
         return type != null ? type.cancerSubtype() : Strings.EMPTY;
-    }
-
-    @NotNull
-    @Value.Derived
-    public String pathologyTumorPercentageString() {
-        return PatientReportFormat.formatNullablePercent(pathologyTumorPercentage());
     }
 
     @Nullable

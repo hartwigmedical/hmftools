@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.patientreporter.report;
 
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testHmfReporterData;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testSequencedReportData;
 
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.patientreporter.HmfReporterData;
+import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.report.data.GenePanelDataSource;
 
 import org.junit.Test;
@@ -17,8 +17,8 @@ public class GenePanelDataSourceTest {
 
     @Test
     public void canCreateGenePanelFor3Genes() throws IOException {
-        final HmfReporterData reporterData = testHmfReporterData();
-        final JRDataSource dataSource = GenePanelDataSource.fromHmfReporterData(reporterData);
+        final SequencedReportData reporterData = testSequencedReportData();
+        final JRDataSource dataSource = GenePanelDataSource.fromSequencedReportData(reporterData);
         assertNotNull(dataSource);
     }
 }

@@ -246,7 +246,7 @@ public class FilteredSVWriter {
 
                 mMantaFileWriter = Files.newBufferedWriter(outputFile);
 
-                mMantaFileWriter.write("SampleId,SvId,Type,ChrStart,PosStart,OrientStart,ChrEnd,PosEnd,OrientEnd,IsImprecise,SomaticScore\n");
+                mMantaFileWriter.write("SampleId,SvId,Type,ChrStart,PosStart,OrientStart,ChrEnd,PosEnd,OrientEnd,IsImprecise\n");
             }
 
             for(final StructuralVariant var : variants)

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.slicing;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.common.region.bed.BEDFileLoader;
+import com.hartwig.hmftools.common.region.BEDFileLoader;
 
 import org.jetbrains.annotations.NotNull;
 

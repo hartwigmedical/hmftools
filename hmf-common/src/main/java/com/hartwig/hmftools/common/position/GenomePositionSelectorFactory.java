@@ -13,6 +13,9 @@ import org.jetbrains.annotations.NotNull;
 
 public final class GenomePositionSelectorFactory {
 
+    private GenomePositionSelectorFactory() {
+    }
+
     @NotNull
     public static <P extends GenomePosition> GenomePositionSelector<P> create(@NotNull final Collection<P> positions) {
         return new GenomePositionSelectorImpl<>(positions);
