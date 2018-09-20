@@ -169,7 +169,7 @@ private fun extractDelete(gene: String, chromosome: String, variantGDna: String,
         Pair(ref, alt)
     } else {
         if (deletedBasesCount > 20) {
-            logger.warn("Skipping deletion of more than 20 bases for variant on $gene on position $chromosome:$variantGDna")
+            logger.info("Skipping deletion of more than 20 bases for variant on $gene on position $chromosome:$variantGDna")
             return null
         }
         val ref = reference.getSubsequenceAt(chromosome, position, position + deletedBasesCount).baseString
