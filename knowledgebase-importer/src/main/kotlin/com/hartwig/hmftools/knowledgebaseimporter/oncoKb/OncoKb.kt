@@ -19,7 +19,7 @@ class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: Stri
 
     override val source = "oncoKb"
     override val knownVariants by lazy {
-        logger.info("Extracting oncoKb known variants.")
+        logger.info("Analyzing oncoKb known variants.")
         recordAnalyzer.knownVariants(listOf(this)).distinct()
     }
 
