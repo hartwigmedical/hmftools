@@ -131,7 +131,7 @@ private fun writeOutput(outputDir: String, knowledgebases: List<Knowledgebase>, 
     CsvWriter.writeCSV(knownPromiscuousFive(knowledgebases), promiscuousFiveGeneLocation)
 
     val promiscuousThreeGeneLocation = "$outputDir${File.separator}knownPromiscuousThree.csv"
-    logger.info("Writing known promiscuous 5' genes to $promiscuousThreeGeneLocation")
+    logger.info("Writing known promiscuous 3' genes to $promiscuousThreeGeneLocation")
     CsvWriter.writeCSV(knownPromiscuousThree(knowledgebases), promiscuousThreeGeneLocation)
 
     logger.info("Writing actionability files to $outputDir")

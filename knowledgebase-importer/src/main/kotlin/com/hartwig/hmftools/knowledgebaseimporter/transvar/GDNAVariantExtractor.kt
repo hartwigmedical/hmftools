@@ -25,13 +25,18 @@ private const val gDnaDelimiter = "g."
 
 fun extractVariants(record: KnowledgebaseRecord, transvarOutput: TransvarOutput, reference: IndexedFastaSequenceFile):
         List<ActionableEvent> {
-    val chromosome = extractChromosome(transvarOutput.coordinates)
-    return if (chromosome.isEmpty()) {
-        logger.warn("Could not extract chromosome for $record from transvar output: $transvarOutput. Skipping")
+    return if (transvarOutput.info == "no_valid_transcript_found") {
+        logger.warn("Transvar could not resolve genomic coordinates for $record")
         emptyList()
     } else {
-        listOfNotNull(parseOptimalCandidate(record, chromosome, transvarOutput, reference)) +
-                parseInfo(record, chromosome, transvarOutput.info, reference)
+        val chromosome = extractChromosome(transvarOutput.coordinates)
+        return if (chromosome.isEmpty()) {
+            logger.warn("Could not extract chromosome for $record from transvar output: $transvarOutput. Skipping")
+            emptyList()
+        } else {
+            listOfNotNull(parseOptimalCandidate(record, chromosome, transvarOutput, reference)) +
+                    parseInfo(record, chromosome, transvarOutput.info, reference)
+        }
     }
 }
 
