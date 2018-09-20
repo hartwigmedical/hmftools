@@ -64,6 +64,7 @@ public class ClusterAnalyser {
             return;
 
         List<SvLinkedPair> linkedPairs = Lists.newArrayList();
+        List<SvLinkedPair> allLinkedPairs = Lists.newArrayList();
 
         List<SvClusterData> spanningSVs = Lists.newArrayList();
 
@@ -76,8 +77,8 @@ public class ClusterAnalyser {
 
             // make note of SVs which line up exactly with other SVs
             // these will be used to eliminate transitive SVs later on
-            if(var1.isDupBEStart() && var1.isDupBEEnd()) {
-
+            if(var1.isDupBEStart() && var1.isDupBEEnd())
+            {
                 spanningSVs.add(var1);
                 continue;
             }
@@ -86,8 +87,8 @@ public class ClusterAnalyser {
 
                 boolean v1Start = (a == 0);
 
-                for (int j = i+1; j < cluster.getCount(); ++j) {
-
+                for (int j = i+1; j < cluster.getCount(); ++j)
+                {
                     SvClusterData var2 = cluster.getSVs().get(j);
 
                     if(var2.type() == StructuralVariantType.INS || var2.isNullBreakend())
@@ -96,20 +97,19 @@ public class ClusterAnalyser {
                     if(var2.isDupBEStart() && var2.isDupBEEnd())
                         continue;
 
-                    for (int b = 0; b < 2; ++b) {
-
+                    for (int b = 0; b < 2; ++b)
+                    {
                         boolean v2Start = (b == 0);
 
                         SvLinkedPair newPair = null;
-                        int linkLength = 0;
 
-                        if (mUtils.areLinkedSection(var1, var2, v1Start, v2Start)) {
-
+                        if (mUtils.areLinkedSection(var1, var2, v1Start, v2Start))
+                        {
                             // form a new TI from these 2 BEs
                             newPair = new SvLinkedPair(var1, var2, SvLinkedPair.LINK_TYPE_TI, v1Start, v2Start);
                         }
-                        else if (mUtils.areSectionBreak(var1, var2, v1Start, v2Start)) {
-
+                        else if (mUtils.areSectionBreak(var1, var2, v1Start, v2Start))
+                        {
                             // form a new DB from these 2 BEs
                             newPair = new SvLinkedPair(var1, var2, SvLinkedPair.LINK_TYPE_DB, v1Start, v2Start);
                         }
@@ -121,15 +121,17 @@ public class ClusterAnalyser {
                         // insert in order
                         int index = 0;
                         boolean skipNewPair = false;
-                        for (; index < linkedPairs.size(); ++index) {
+                        for (; index < linkedPairs.size(); ++index)
+                        {
                             SvLinkedPair pair = linkedPairs.get(index);
 
                             // check for a matching BE on a pair that is much shorter, and if so skip creating this new linked pair
-                            if(newPair.length() > mUtils.getBaseDistance()) {
-
+                            if(newPair.length() > mUtils.getBaseDistance())
+                            {
                                 if (pair.first().equals(newPair.first()) || pair.first().equals(newPair.second()) || pair.second().equals(newPair.first()) || pair.second().equals(newPair.second())) {
 
-                                    if (newPair.length() > 2 * pair.length()) {
+                                    if (newPair.length() > 2 * pair.length())
+                                    {
                                         skipNewPair = true;
                                         break;
                                     }
@@ -151,8 +153,8 @@ public class ClusterAnalyser {
                         if(linkedPairs.size() > maxClusterSize * 3)
                             linkedPairs.remove(linkedPairs.size()-1);
 
-                        if(newPair.length() < mUtils.getBaseDistance()) {
-
+                        if(newPair.length() < mUtils.getBaseDistance())
+                        {
                             // to avoid logging unlikely long TIs
                             LOGGER.debug("sample({}) cluster({}) adding linked {} pair({} and {}) length({}) at index({})",
                                     sampleId, cluster.getId(), newPair.linkType(), newPair.first().posId(),
@@ -168,6 +170,9 @@ public class ClusterAnalyser {
 
         LOGGER.debug("sample({}) cluster({}) has {} linked pairs and {} possible spanning SVs",
                 sampleId, cluster.getId(), linkedPairs.size(), spanningSVs.size());
+
+        allLinkedPairs.addAll(linkedPairs);
+        cluster.setAllLinkedPairs(allLinkedPairs);
 
         // now remove mutually exclusive linked sections by using the shortest first
         for(int i = 0; i < linkedPairs.size(); ++i)
@@ -277,7 +282,7 @@ public class ClusterAnalyser {
 
     public void findSvChains(final String sampleId, SvCluster cluster)
     {
-        if(cluster.getLinkedPairs().isEmpty())
+        if(cluster.getLinkedPairs().isEmpty() || cluster.getLinkedPairs().size() < 2)
             return;
 
         List<SvLinkedPair> linkedPairs = Lists.newArrayList();
@@ -285,8 +290,8 @@ public class ClusterAnalyser {
 
         LOGGER.debug("cluster({}) attempting to find chained SVs from {} linked pairs", cluster.getId(), linkedPairs.size());
 
-        while(linkedPairs.size() >= 2) {
-
+        while(linkedPairs.size() >= 2)
+        {
             // start with a single linked pair
             // for each of its ends (where the first BE is labelled 'first', and the second labelled 'last'),
             // search for the closest possible linking BE from another linked pair

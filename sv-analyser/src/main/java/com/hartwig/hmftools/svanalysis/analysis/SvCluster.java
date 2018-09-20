@@ -40,6 +40,7 @@ public class SvCluster
     private List<SvBreakend> mUniqueBreakends; // for duplicate BE searches
     private List<SvChain> mChains; // pairs of SVs linked into chains
     private List<SvLinkedPair> mLinkedPairs; // forming a TI or DB
+    private List<SvLinkedPair> mAllLinkedPairs; // all possible combination prior to selection
     private List<SvClusterData> mSpanningSVs; // having 2 duplicate (matching) BEs
     private List<SvFootprint> mFootprints; // localised SVs within the cluster
 
@@ -62,6 +63,7 @@ public class SvCluster
 
         // chain data
         mLinkedPairs = Lists.newArrayList();
+        mAllLinkedPairs = Lists.newArrayList();
         mSpanningSVs = Lists.newArrayList();
         mChains = Lists.newArrayList();
     }
@@ -88,8 +90,10 @@ public class SvCluster
     }
 
     public final List<SvLinkedPair> getLinkedPairs() { return mLinkedPairs; }
+    public final List<SvLinkedPair> getAllLinkedPairs() { return mAllLinkedPairs; }
     public final List<SvClusterData> getSpanningSVs() { return mSpanningSVs; }
     public void setLinkedPairs(final List<SvLinkedPair> pairs) { mLinkedPairs = pairs; }
+    public void setAllLinkedPairs(final List<SvLinkedPair> pairs) { mAllLinkedPairs = pairs; }
     public void setSpanningSVs(final List<SvClusterData> svList) { mSpanningSVs = svList; }
 
     public final List<SvFootprint> getFootprints() { return mFootprints; }

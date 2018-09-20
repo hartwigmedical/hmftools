@@ -63,26 +63,26 @@ public class SvSampleAnalyser {
     public SvSampleAnalyser(final SvClusteringConfig config)
     {
         mConfig = config;
-        mClusteringUtils = new SvUtilities(mConfig.getClusterBaseDistance());
+        mClusteringUtils = new SvUtilities(mConfig.ClusterBaseDistance);
         mFileWriter = null;
         mAnalyser = new ClusterAnalyser(config, mClusteringUtils);
 
         mClusteringMethods = new SvClusteringMethods(mClusteringUtils);
 
         mSvPONAnnotator = new SvPONAnnotator();
-        mSvPONAnnotator.loadPonFile(mConfig.getSvPONFile());
+        mSvPONAnnotator.loadPonFile(mConfig.SvPONFile);
 
         mFragileSiteAnnotator = new FragileSiteAnnotator();
-        mFragileSiteAnnotator.loadFragileSitesFile(mConfig.getFragileSiteFile());
+        mFragileSiteAnnotator.loadFragileSitesFile(mConfig.FragileSiteFile);
 
         mLineElementAnnotator = new LineElementAnnotator();
-        mLineElementAnnotator.loadLineElementsFile(mConfig.getLineElementFile());
+        mLineElementAnnotator.loadLineElementsFile(mConfig.LineElementFile);
 
         mExternalAnnotator = new ExternalSVAnnotator();
-        mExternalAnnotator.loadFile(mConfig.getExternalAnnotationsFile());
+        mExternalAnnotator.loadFile(mConfig.ExternalAnnotationsFile);
 
         mGeneAnnotator = new GeneAnnotator();
-        mGeneAnnotator.loadGeneDriverFile(mConfig.getGeneDataFile());
+        mGeneAnnotator.loadGeneDriverFile(mConfig.GeneDataFile);
 
         mPerfCounter = new PerformanceCounter("Total");
 
@@ -185,7 +185,7 @@ public class SvSampleAnalyser {
 
         mPc5.start();
 
-        if(mConfig.getOutputCsvPath() != "")
+        if(!mConfig.OutputCsvPath.isEmpty())
             writeClusterDataOutput();
 
         mPc5.stop();
@@ -269,19 +269,19 @@ public class SvSampleAnalyser {
 
             BufferedWriter writer = null;
 
-            if(mConfig.getUseCombinedOutputFile() && mFileWriter != null)
+            if(mConfig.UseCombinedOutputFile && mFileWriter != null)
             {
                 // check if can continue appending to an existing file
                 writer = mFileWriter;
             }
             else
             {
-                String outputFileName = mConfig.getOutputCsvPath();
+                String outputFileName = mConfig.OutputCsvPath;
 
                 if(!outputFileName.endsWith("/"))
                     outputFileName += "/";
 
-                if(mConfig.getUseCombinedOutputFile())
+                if(mConfig.UseCombinedOutputFile)
                     outputFileName += "CLUSTER.csv";
                 else
                     outputFileName += mSampleId + ".csv";
@@ -387,6 +387,33 @@ public class SvSampleAnalyser {
                                 endLP.first().equals(var) ? endLP.second().id() : endLP.first().id(), endLP.linkType(), endLP.length());
 
                         assemblyMatchEnd = endLP.getAssemblyMatchType(var);
+                    }
+
+                    // if no match was found with the chosen linked pair for this variant, search
+                    // amongst the full set of possible linked pairs for a match or difference
+                    if(assemblyMatchStart.equals(ASSEMBLY_MATCH_ASMB_ONLY))
+                    {
+                        // search amongst the full set of possible linked pairs for a match
+                        for(final SvLinkedPair lp : cluster.getAllLinkedPairs())
+                        {
+                            if((lp.first() == var && lp.firstLinkOnStart()) || (lp.second() == var && lp.secondLinkOnStart()))
+                            {
+                                assemblyMatchStart = lp.getAssemblyMatchType(var);
+                                break;
+                            }
+                        }
+                    }
+
+                    if(assemblyMatchEnd.equals(ASSEMBLY_MATCH_ASMB_ONLY))
+                    {
+                        for(final SvLinkedPair lp : cluster.getAllLinkedPairs())
+                        {
+                            if((lp.first() == var && !lp.firstLinkOnStart()) || (lp.second() == var && !lp.secondLinkOnStart()))
+                            {
+                                assemblyMatchEnd = lp.getAssemblyMatchType(var);
+                                break;
+                            }
+                        }
                     }
 
                     // assembly info

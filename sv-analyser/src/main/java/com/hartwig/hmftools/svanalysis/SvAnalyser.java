@@ -36,26 +36,22 @@ public class SvAnalyser {
     private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
     private static final String CLUSTER_SVS = "cluster_svs";
-    private static final String CLUSTER_BASE_DISTANCE = "cluster_bases";
     private static final String DATA_OUTPUT_PATH = "data_output_path";
     private static final String LOG_DEBUG = "log_debug";
     private static final String WRITE_FILTERED_SVS = "write_pon_filters";
     private static final String LOG_VCF_INSERTS = "log_vcf_inserts";
     private static final String LOG_VCF_MANTA_DATA = "log_vcf_manta_data";
-    private static final String SV_PON_FILE = "sv_pon_file";
-    private static final String FRAGILE_SITE_FILE = "fragile_site_file";
     private static final String LINE_ELEMENT_FILE = "line_element_file";
-    private static final String EXTERNAL_SV_DATA_FILE = "ext_sv_data_file";
     private static final String COPY_NUMBER_ANALYSIS = "copy_number_analysis";
     private static final String COPY_NUMBER_FILE = "cn_file";
     private static final String EXTERNAL_DATA_LINK_FILE = "ext_data_link_file";
-    private static final String DRIVER_GENES_FILE = "driver_gene_file";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    public static void main(@NotNull final String[] args) throws ParseException, SQLException {
+    public static void main(@NotNull final String[] args) throws ParseException, SQLException
+    {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
@@ -100,36 +96,34 @@ public class SvAnalyser {
 
         ExtDataLinker extDataLinker = null;
 
-        if (cmd.hasOption(EXTERNAL_DATA_LINK_FILE)) {
-
+        if (cmd.hasOption(EXTERNAL_DATA_LINK_FILE))
+        {
             extDataLinker = new ExtDataLinker();
             extDataLinker.loadFile(cmd.getOptionValue(EXTERNAL_DATA_LINK_FILE));
         }
 
-        SvClusteringConfig clusteringConfig = new SvClusteringConfig();
-        clusteringConfig.setOutputCsvPath(cmd.getOptionValue(DATA_OUTPUT_PATH));
-        clusteringConfig.setBaseDistance(Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE, "0")));
-        clusteringConfig.setUseCombinedOutputFile(tumorSample.isEmpty() || tumorSample.equals("*"));
-        clusteringConfig.setSvPONFile(cmd.getOptionValue(SV_PON_FILE, ""));
-        clusteringConfig.setFragileSiteFile(cmd.getOptionValue(FRAGILE_SITE_FILE, ""));
-        clusteringConfig.setLineElementFile(cmd.getOptionValue(LINE_ELEMENT_FILE, ""));
-        clusteringConfig.setExternalAnnotationsFile(cmd.getOptionValue(EXTERNAL_SV_DATA_FILE, ""));
-        clusteringConfig.setGeneDataFile(cmd.getOptionValue(DRIVER_GENES_FILE, ""));
+        SvClusteringConfig clusteringConfig = new SvClusteringConfig(cmd, tumorSample);
         SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(clusteringConfig);
 
         List<String> samplesList = Lists.newArrayList();
 
-        if (tumorSample.isEmpty()) {
+        if (tumorSample.isEmpty())
+        {
             samplesList = getStructuralVariantSamplesList(dbAccess);
-        } else if (tumorSample.contains(",")) {
+        }
+        else if (tumorSample.contains(","))
+        {
             String[] tumorList = tumorSample.split(",");
             samplesList = Arrays.stream(tumorList).collect(Collectors.toList());
-        } else {
+        }
+        else
+        {
             samplesList.add(tumorSample);
         }
 
         int count = 0;
-        for (final String sample : samplesList) {
+        for (final String sample : samplesList)
+        {
             ++count;
             List<SvClusterData> svClusterData = queryStructuralVariantData(dbAccess, sample);
 
@@ -141,8 +135,8 @@ public class SvAnalyser {
             {
                 extDataLinker.setSVData(sample, svClusterData);
             }
-            else {
-
+            else
+            {
                 sampleAnalyser.analyse();
             }
         }
@@ -152,9 +146,8 @@ public class SvAnalyser {
         LOGGER.info("run complete");
     }
 
-
-    @NotNull
-    private static List<SvClusterData> queryStructuralVariantData(@NotNull DatabaseAccess dbAccess, @NotNull String sampleId) {
+    private static List<SvClusterData> queryStructuralVariantData(@NotNull DatabaseAccess dbAccess, @NotNull String sampleId)
+    {
         List<SvClusterData> svClusterDataItems = Lists.newArrayList();
 
         List<StructuralVariantData> svRecords = dbAccess.readStructuralVariantData(sampleId);
@@ -173,13 +166,13 @@ public class SvAnalyser {
         return svClusterDataItems;
     }
 
-    @NotNull
-    private static List<String> getStructuralVariantSamplesList(@NotNull DatabaseAccess dbAccess) {
+    private static List<String> getStructuralVariantSamplesList(@NotNull DatabaseAccess dbAccess)
+    {
         return dbAccess.structuralVariantSampleList("");
     }
 
-    @NotNull
-    private static Options createBasicOptions() {
+    private static Options createBasicOptions()
+    {
         final Options options = new Options();
         options.addOption(VCF_FILE, true, "Path to the vcf file.");
         options.addOption(SAMPLE, true, "Tumor sample.");
@@ -188,19 +181,15 @@ public class SvAnalyser {
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(CLUSTER_SVS, false, "Whether to run clustering logic");
         options.addOption(DATA_OUTPUT_PATH, true, "CSV output directory");
-        options.addOption(CLUSTER_BASE_DISTANCE, true, "Clustering base distance, defaults to 1000");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         options.addOption(WRITE_FILTERED_SVS, false, "Includes filtered SVs and writes all to file for PON creation");
-        options.addOption(SV_PON_FILE, true, "PON file for SVs");
         options.addOption(LOG_VCF_INSERTS, false, "Read INS from VCF files, write to CSV");
         options.addOption(LOG_VCF_MANTA_DATA, false, "Read extra manta data from VCF files, write to CSV");
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file for SVs");
-        options.addOption(FRAGILE_SITE_FILE, true, "Fragile Site file for SVs");
-        options.addOption(EXTERNAL_SV_DATA_FILE, true, "External file with per-SV annotations");
         options.addOption(COPY_NUMBER_ANALYSIS, false, "Run copy number analysis");
         options.addOption(COPY_NUMBER_FILE, true, "Copy number CSV file");
-        options.addOption(EXTERNAL_DATA_LINK_FILE, true, "External SV data file, mapped by position info");
-        options.addOption(DRIVER_GENES_FILE, true, "Gene data file");
+
+        SvClusteringConfig.addCmdLineArgs(options);
 
         return options;
     }
