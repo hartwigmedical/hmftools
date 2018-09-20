@@ -30,7 +30,7 @@ public class NearIndelPonEnrichment implements SomaticEnrichment {
     @Override
     public ImmutableSomaticVariantImpl.Builder enrich(@NotNull final ImmutableSomaticVariantImpl.Builder builder,
             @NotNull final VariantContext context) throws IOException {
-        if (context.getType() == VariantContext.Type.INDEL && context.isNotFiltered()) {
+        if (context.isIndel() && context.isNotFiltered()) {
 
             int variantStart = context.getStart();
             int variantEnd = context.getStart() + context.getReference().length() - 1 + DISTANCE;
@@ -39,7 +39,7 @@ public class NearIndelPonEnrichment implements SomaticEnrichment {
                     Math.max(0, variantStart - 5 * DISTANCE),
                     variantEnd)) {
                 for (VariantContext pon : iterator) {
-                    if (overlaps(pon, context)) {
+                    if (  overlapsPonIndel(pon, context)) {
                         builder.filter(FILTER);
                         return builder;
                     }
@@ -51,7 +51,11 @@ public class NearIndelPonEnrichment implements SomaticEnrichment {
     }
 
     @VisibleForTesting
-    static boolean overlaps(@NotNull final VariantContext pon, @NotNull final VariantContext variant) {
+    static boolean overlapsPonIndel(@NotNull final VariantContext pon, @NotNull final VariantContext variant) {
+        if (!pon.isIndel() || !variant.isIndel()) {
+            return false;
+        }
+
         int variantStart = variant.getStart();
         int variantEnd = variant.getStart() + variant.getReference().length() - 1 + DISTANCE;
 

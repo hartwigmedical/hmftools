@@ -12,7 +12,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class NearIndelPonEnrichmentTest {
 
     @Test
-    public void testOverlap() {
+    public void testOverlapIndel() {
         final String ponRef = "GATTACA";
         final String variantRef = "TAT";
 
@@ -35,9 +35,36 @@ public class NearIndelPonEnrichmentTest {
         assertOverlap(false, pon, 118, variantRef);
     }
 
+    @Test
+    public void testNormal() {
+        final String ponRef = "TAT";
+        final String variantRef = "TAT";
+
+        final VariantContext pon = create(100, ponRef);
+        assertOverlap(true, pon, 100, variantRef);
+    }
+
+    @Test
+    public void testPonIsSNP() {
+        final String ponRef = "T";
+        final String variantRef = "TAT";
+
+        final VariantContext pon = create(100, ponRef);
+        assertOverlap(false, pon, 100, variantRef);
+    }
+
+    @Test
+    public void testVariantIsSNP() {
+        final String ponRef = "TAT";
+        final String variantRef = "T";
+
+        final VariantContext pon = create(100, ponRef);
+        assertOverlap(false, pon, 100, variantRef);
+    }
+
     private void assertOverlap(boolean expected, @NotNull VariantContext pon, int variantStart, @NotNull final String variantRef) {
         final VariantContext variant = create(variantStart, variantRef);
-        assertEquals(expected, NearIndelPonEnrichment.overlaps(pon, variant));
+        assertEquals(expected, NearIndelPonEnrichment.overlapsPonIndel(pon, variant));
     }
 
     @NotNull
