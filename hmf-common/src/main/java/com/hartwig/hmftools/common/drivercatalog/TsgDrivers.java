@@ -115,6 +115,7 @@ public final class TsgDrivers {
                 .build();
     }
 
+    @NotNull
     private static DndsDriverImpactLikelihood impactLikelihood(@NotNull final DndsDriverGeneLikelihood dndsLikelihood,
             @NotNull final SomaticVariant variant) {
         if (variant.type() == VariantType.INDEL) {
