@@ -39,7 +39,7 @@ interface TransvarAnalyzer<in T : HgvsAnnotation> {
 
     private fun readErrorStreamAsync(process: Process) = async {
         InputStreamReader(process.errorStream).buffered().lineSequence().filterNot { it.isBlank() }
-                .forEach { logger.error("Transvar error stream produced: $it") }
+                .forEach { logger.warn(" Transvar error stream produced: $it") }
     }
 
     private fun readOutputStreamAsync(process: Process) = async {

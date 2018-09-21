@@ -5,7 +5,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.CDnaAnnotation
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.GDnaVariant
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.ProteinAnnotation
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.SomaticEvent
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.SequenceVariantType
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.HgvsVariantType
 import io.kotlintest.matchers.shouldBe
 import io.kotlintest.specs.StringSpec
 
@@ -23,16 +23,16 @@ class CgiActionableVariantReaderTest : StringSpec() {
     init {
         "can read all events from input" {
             CgiActionableVariantReader.read(actionableInput).toSet() shouldBe setOf(
-                    ProteinAnnotation("ENST00000275493", "T790M", SequenceVariantType.SUBSTITUTION),
-                    CDnaAnnotation("ENST00000275493", "c.2369C>T", SequenceVariantType.SUBSTITUTION),
+                    ProteinAnnotation("ENST00000275493", "T790M", HgvsVariantType.SUBSTITUTION),
+                    CDnaAnnotation("ENST00000275493", "c.2369C>T", HgvsVariantType.SUBSTITUTION),
                     GDnaVariant("chr7:g.55249071C>T"))
         }
 
         "can read all events from input with multiple alterations" {
             CgiActionableVariantReader.read(actionableInputMultipleAlterations).toSet() shouldBe setOf(
-                    ProteinAnnotation("ENST00000275493", "T790M", SequenceVariantType.SUBSTITUTION),
-                    ProteinAnnotation("ENST00000275493", "V600E", SequenceVariantType.SUBSTITUTION),
-                    CDnaAnnotation("ENST00000275493", "c.2369C>T", SequenceVariantType.SUBSTITUTION),
+                    ProteinAnnotation("ENST00000275493", "T790M", HgvsVariantType.SUBSTITUTION),
+                    ProteinAnnotation("ENST00000275493", "V600E", HgvsVariantType.SUBSTITUTION),
+                    CDnaAnnotation("ENST00000275493", "c.2369C>T", HgvsVariantType.SUBSTITUTION),
                     GDnaVariant("chr7:g.55249071C>T"))
         }
 

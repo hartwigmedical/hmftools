@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.knowledgebaseimporter.transvar
 
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.KnowledgebaseRecord
 import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.GenomicRangeEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.SomaticVariantEvent
@@ -22,70 +23,78 @@ private const val chrIdentifier = "chr"
 private const val chrDelimiter = ":"
 private const val gDnaDelimiter = "g."
 
-fun extractVariants(gene: String, transcript: String, transvarOutput: TransvarOutput,
-                    reference: IndexedFastaSequenceFile): List<ActionableEvent> {
-    val chromosome = extractChromosome(transvarOutput.coordinates)
-    return if (chromosome.isEmpty()) {
-        logger.warn("could not extract chromosome from line: $transvarOutput. Skipping")
+fun extractVariants(record: KnowledgebaseRecord, transvarOutput: TransvarOutput, reference: IndexedFastaSequenceFile):
+        List<ActionableEvent> {
+    return if (transvarOutput.info == "no_valid_transcript_found") {
+        logger.warn("Transvar could not resolve genomic coordinates for gene ${record.gene} with events ${record.events}" )
         emptyList()
     } else {
-        listOfNotNull(parseOptimalCandidate(gene, transcript, chromosome, transvarOutput, reference)) +
-                parseInfo(gene, transcript, chromosome, transvarOutput.info, reference)
+        val chromosome = extractChromosome(transvarOutput.coordinates)
+        return if (chromosome.isEmpty()) {
+            logger.warn("Could not extract chromosome for $record from transvar output: $transvarOutput. Skipping")
+            emptyList()
+        } else {
+            listOfNotNull(parseOptimalCandidate(record, chromosome, transvarOutput, reference)) +
+                    parseInfo(record, chromosome, transvarOutput.info, reference)
+        }
     }
 }
 
-private fun parseInfo(gene: String, transcript: String, chromosome: String, info: String,
+private fun parseInfo(record: KnowledgebaseRecord, chromosome: String, info: String,
                       reference: IndexedFastaSequenceFile): List<ActionableEvent> {
     val snvsGDna = infoVariantsAfter(info, candidateSnvString)
     val mnvsGDna = infoVariantsAfter(info, candidateMnvString)
     val indelsGDna = infoVariantsAfter(info, candidatesString).map { it.split("/")[2] }
     val mergedVariants = snvsGDna + mnvsGDna + indelsGDna
-    return extractVariants(gene, transcript, chromosome, mergedVariants, reference)
+    return extractVariants(record, chromosome, mergedVariants, reference)
 }
 
 private fun infoVariantsAfter(info: String, startDelimiter: String): List<String> {
     return info.substringAfter(startDelimiter, "").substringBefore(infoDelimiter).split(variantDelimiter).filterNot { it.isEmpty() }
 }
 
-private fun parseOptimalCandidate(gene: String, transcript: String, chromosome: String, transvarOutput: TransvarOutput,
+private fun parseOptimalCandidate(record: KnowledgebaseRecord, chromosome: String, transvarOutput: TransvarOutput,
                                   reference: IndexedFastaSequenceFile): ActionableEvent? {
     val variantGDna = if (transvarOutput.info.contains(leftAlignedGDnaString)) {
         transvarOutput.info.substringAfter(leftAlignedGDnaString).substringAfter(gDnaDelimiter, "").substringBefore(";")
     } else {
         transvarOutput.coordinates.substringAfter(gDnaDelimiter, "").substringBefore("/")
     }
-    return extractVariant(gene, transcript, chromosome, variantGDna, reference)
+    return extractVariant(record, chromosome, variantGDna, reference)
 }
 
-private fun extractVariants(gene: String, transcript: String, chromosome: String, gDnaVariants: List<String>,
+private fun extractVariants(record: KnowledgebaseRecord, chromosome: String, gDnaVariants: List<String>,
                             reference: IndexedFastaSequenceFile): List<ActionableEvent> {
     return gDnaVariants.map { it.substringAfter(gDnaDelimiter) }.mapNotNull {
-        extractVariant(gene, transcript, chromosome, it, reference)
+        extractVariant(record, chromosome, it, reference)
     }
 }
 
-fun extractVariant(gene: String, transcript: String, gDnaVariant: String, reference: IndexedFastaSequenceFile): ActionableEvent? {
+fun extractVariant(record: KnowledgebaseRecord, gDnaVariant: String, reference: IndexedFastaSequenceFile): ActionableEvent? {
     val chromosome = extractChromosome(gDnaVariant)
-    return extractVariant(gene, transcript, chromosome, gDnaVariant.substringAfter(gDnaDelimiter), reference)
+    return extractVariant(record, chromosome, gDnaVariant.substringAfter(gDnaDelimiter), reference)
 }
 
-private fun extractVariant(gene: String, transcript: String, chromosome: String, variantGDna: String,
+private fun extractVariant(record: KnowledgebaseRecord, chromosome: String, variantGDna: String,
                            reference: IndexedFastaSequenceFile): ActionableEvent? {
     return try {
+        val gene = record.gene
+        val transcript = record.transcript
         when {
-            variantGDna.contains(">")                                  -> extractSnv(gene, chromosome, variantGDna)
+            variantGDna.contains(">") -> extractSnv(gene, chromosome, variantGDna)
             variantGDna.contains("del") && variantGDna.contains("ins") -> extractMnv(gene, chromosome, variantGDna, reference)
-            variantGDna.contains("ins")                                -> extractInsert(gene, chromosome, variantGDna, reference)
-            variantGDna.contains("dup")                                -> extractDup(gene, chromosome, variantGDna, reference)
-            variantGDna.contains("del")                                -> extractDelete(gene, chromosome, variantGDna, reference)
-            variantGDna.matches("[0-9]+_[0-9]+".toRegex())             -> extractRange(gene, transcript, chromosome, variantGDna)
-            else                                                       -> {
-                logger.warn("variant $chromosome: $variantGDna could not be mapped to any known type")
+            variantGDna.contains("ins") -> extractInsert(gene, chromosome, variantGDna, reference)
+            variantGDna.contains("dup") -> extractDup(gene, chromosome, variantGDna, reference)
+            variantGDna.contains("del") -> extractDelete(gene, chromosome, variantGDna, reference)
+            variantGDna.matches("[0-9]+_[0-9]+".toRegex()) -> extractRange(gene, transcript, chromosome, variantGDna)
+            else -> {
+                logger.warn("Gene ${record.gene} with events ${record.events} " +
+                        "could not be mapped to any known type based on variant gDNA $variantGDna")
                 null
             }
         }
     } catch (t: Throwable) {
-        logger.warn("Could not create variant from $chromosome: $variantGDna; error: $t")
+        logger.warn("Could not create variant on ${record.gene} on position $chromosome:$variantGDna; error: $t")
         null
     }
 }
@@ -160,7 +169,7 @@ private fun extractDelete(gene: String, chromosome: String, variantGDna: String,
         Pair(ref, alt)
     } else {
         if (deletedBasesCount > 20) {
-            logger.warn("Skipping deletion of more than 20 bases for variant $chromosome: $variantGDna")
+            logger.info("Skipping deletion of more than 20 bases for variant on $gene on position $chromosome:$variantGDna")
             return null
         }
         val ref = reference.getSubsequenceAt(chromosome, position, position + deletedBasesCount).baseString

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.knowledgebaseimporter.knowledgebases
 
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.SequenceVariantType
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.HgvsVariantType
 
 interface SomaticEvent
 
@@ -31,11 +31,11 @@ data class GeneMutations(override val gene: String, override val transcript: Str
 sealed class HgvsAnnotation : SomaticEvent {
     abstract val transcript: String
     abstract val alteration: String
-    abstract val type: SequenceVariantType
+    abstract val type: HgvsVariantType
 }
 
-data class CDnaAnnotation(override val transcript: String, override val alteration: String, override val type: SequenceVariantType) :
+data class CDnaAnnotation(override val transcript: String, override val alteration: String, override val type: HgvsVariantType) :
         HgvsAnnotation()
 
-data class ProteinAnnotation(override val transcript: String, override val alteration: String, override val type: SequenceVariantType) :
+data class ProteinAnnotation(override val transcript: String, override val alteration: String, override val type: HgvsVariantType) :
         HgvsAnnotation()

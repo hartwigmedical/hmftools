@@ -5,7 +5,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.CDnaAnnotation
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.KnowledgebaseVariant
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.OtherEvents
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.SomaticEvent
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.SequenceVariantType
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.HgvsVariantType
 import com.hartwig.hmftools.knowledgebaseimporter.output.FusionPair
 import io.kotlintest.matchers.shouldBe
 import io.kotlintest.specs.StringSpec
@@ -30,7 +30,7 @@ class CivicMultipleEventsReaderTest : StringSpec() {
         "can read complex variant with fusion pair + variant" {
             CivicMultipleEventsReader.read(fusionAndVariant) shouldBe listOf(
                     OtherEvents(listOf(alkPair, KnowledgebaseVariant("ALK", "2", 29443631, "G", "T"))),
-                    OtherEvents(listOf(alkPair, CDnaAnnotation("ENST00000389048.3", "c.3586C>A", SequenceVariantType.SUBSTITUTION))))
+                    OtherEvents(listOf(alkPair, CDnaAnnotation("ENST00000389048.3", "c.3586C>A", HgvsVariantType.SUBSTITUTION))))
         }
 
         "can't read complex variant with 2 variants" {

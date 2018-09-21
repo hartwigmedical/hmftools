@@ -94,11 +94,11 @@ private fun readKnowledgebases(cmd: CommandLine, diseaseOntology: DiseaseOntolog
     val cosmic = Cosmic(cmd.getOptionValue(COSMIC_FUSIONS_LOCATION))
     val iclusion = Iclusion(readIclusionStudies(cmd), diseaseOntology, recordAnalyzer, ensemblGeneDAO)
 
-    return listOf(oncoKb)
-//    return listOf(oncoKb, cgi, civic, cosmic, iclusion)
+//    return listOf(oncoKb)
+    return listOf(oncoKb, cgi, civic, cosmic, iclusion)
 }
 
-private fun readIclusionStudies(cmd : CommandLine): List<IclusionStudyDetails> {
+private fun readIclusionStudies(cmd: CommandLine): List<IclusionStudyDetails> {
     val iclusionEndpoint = cmd.getOptionValue(ICLUSION_ENDPOINT)
     logger.info("Connecting with iclusion API on $iclusionEndpoint")
     val iclusionApi = IclusionApiWrapper(iclusionEndpoint, cmd.getOptionValue(ICLUSION_CLIENT_ID),
@@ -119,18 +119,32 @@ private fun writeOutput(outputDir: String, knowledgebases: List<Knowledgebase>, 
     val dir = File(outputDir)
     if (!dir.exists()) dir.mkdirs()
 
+    logger.info("Writing known variants to $outputDir")
     knowledgebases.filterNot { it.knownVariants.isEmpty() }.map { writeKnownVariants(it, outputDir) }
-    CsvWriter.writeCSV(knownFusionPairs(knowledgebases), "$outputDir${File.separator}knownFusionPairs.csv")
-    CsvWriter.writeCSV(knownPromiscuousFive(knowledgebases), "$outputDir${File.separator}knownPromiscuousFive.csv")
-    CsvWriter.writeCSV(knownPromiscuousThree(knowledgebases), "$outputDir${File.separator}knownPromiscuousThree.csv")
 
+    val fusionPairLocation = "$outputDir${File.separator}knownFusionPairs.csv"
+    logger.info("Writing known fusion genes to $fusionPairLocation")
+    CsvWriter.writeCSV(knownFusionPairs(knowledgebases), fusionPairLocation)
+
+    val promiscuousFiveGeneLocation = "$outputDir${File.separator}knownPromiscuousFive.csv"
+    logger.info("Writing known promiscuous 5' genes to $promiscuousFiveGeneLocation")
+    CsvWriter.writeCSV(knownPromiscuousFive(knowledgebases), promiscuousFiveGeneLocation)
+
+    val promiscuousThreeGeneLocation = "$outputDir${File.separator}knownPromiscuousThree.csv"
+    logger.info("Writing known promiscuous 3' genes to $promiscuousThreeGeneLocation")
+    CsvWriter.writeCSV(knownPromiscuousThree(knowledgebases), promiscuousThreeGeneLocation)
+
+    logger.info("Writing actionability files to $outputDir")
     CsvWriter.writeTSV(knowledgebases.flatMap { it.actionableVariants }, "$outputDir${File.separator}actionableVariants.tsv")
     CsvWriter.writeTSV(actionableFusionPairs(knowledgebases), "$outputDir${File.separator}actionableFusionPairs.tsv")
     CsvWriter.writeTSV(actionablePromiscuousFive(knowledgebases), "$outputDir${File.separator}actionablePromiscuousFive.tsv")
     CsvWriter.writeTSV(actionablePromiscuousThree(knowledgebases), "$outputDir${File.separator}actionablePromiscuousThree.tsv")
     CsvWriter.writeTSV(knowledgebases.flatMap { it.actionableCNVs }, "$outputDir${File.separator}actionableCNVs.tsv")
     CsvWriter.writeTSV(knowledgebases.flatMap { it.actionableRanges }, "$outputDir${File.separator}actionableRanges.tsv")
-    CsvWriter.writeTSV(cancerTypesDoids, "$outputDir${File.separator}knowledgebaseCancerTypes.tsv")
+
+    val cancerTypeDOIDMappingLocation = "$outputDir${File.separator}knowledgebaseCancerTypes.tsv"
+    logger.info("Writing cancer type DOID mapping to $cancerTypeDOIDMappingLocation")
+    CsvWriter.writeTSV(cancerTypesDoids, cancerTypeDOIDMappingLocation)
 }
 
 private fun knowledgebaseCancerDoids(knowledgebases: List<Knowledgebase>, ontology: DiseaseOntology): List<CancerTypeDoidOutput> {

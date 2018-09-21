@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.knowledgebaseimporter.transvar.matchers
 
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.SequenceVariantType
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.HgvsVariantType
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.matchers.DnaMutations.DNA_DELETION
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.matchers.DnaMutations.DNA_DELINS
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.matchers.DnaMutations.DNA_DUPLICATION
@@ -32,12 +32,12 @@ object TransvarCDnaMatcher : Matcher {
     private fun matchesDelIns(input: String) = input.matchesPattern("$INTERVAL$DNA_DELINS")
 
     fun type(input: String) = when {
-        matchesSubstitution(input) -> SequenceVariantType.SUBSTITUTION
-        matchesDeletion(input)     -> SequenceVariantType.DELETION
-        matchesDuplication(input)  -> SequenceVariantType.DUPLICATION
-        matchesInsertion(input)    -> SequenceVariantType.INSERTION
-        matchesDelIns(input)       -> SequenceVariantType.DELINS
-        else                       -> SequenceVariantType.OTHER
+        matchesSubstitution(input) -> HgvsVariantType.SUBSTITUTION
+        matchesDeletion(input)     -> HgvsVariantType.DELETION
+        matchesDuplication(input)  -> HgvsVariantType.DUPLICATION
+        matchesInsertion(input)    -> HgvsVariantType.INSERTION
+        matchesDelIns(input)       -> HgvsVariantType.DELINS
+        else                       -> HgvsVariantType.OTHER
     }
 
     private fun String.matchesPattern(pattern: String): Boolean {

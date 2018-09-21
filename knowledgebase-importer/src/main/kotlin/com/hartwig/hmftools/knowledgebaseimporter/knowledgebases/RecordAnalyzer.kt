@@ -8,10 +8,12 @@ import com.hartwig.hmftools.knowledgebaseimporter.output.KnownVariantOutput
 import com.hartwig.hmftools.knowledgebaseimporter.output.SomaticVariantEvent
 import com.hartwig.hmftools.knowledgebaseimporter.transvar.*
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
+import org.apache.logging.log4j.LogManager
 
 class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFastaSequenceFile, private val geneModel: GeneModel) {
     companion object {
         private val blacklistedDrugs = setOf("chemotherapy", "aspirin", "steroid")
+        private val logger = LogManager.getLogger("RecordAnalyzer")
     }
 
     private val cdnaAnalyzer = TransvarCdnaAnalyzer(transvarLocation)
@@ -19,16 +21,18 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
 
     fun knownVariants(knowledgebases: List<KnowledgebaseSource<*, *>>): List<KnownVariantOutput> {
         val records = knowledgebases.flatMap { it.knownKbRecords }
+        logger.info("Record analyzer is generating known records for ${records.size} records.")
         val somaticVariantRecords = extractSomaticVariants(records) + extractOtherSomaticVariants(records)
         val knownSomaticVariants = somaticVariantRecords.filter { it.second is SomaticVariantEvent }
                 .map { Pair(it.first, it.second as SomaticVariantEvent) }
         return knownSomaticVariants.map { (record, variant) ->
-            KnownVariantOutput(record.transcript, record.reference, record.annotation, variant)
+            KnownVariantOutput(record.transcript, variant, record.reference, record.annotation)
         }
     }
 
     fun actionableItems(knowledgebases: List<KnowledgebaseSource<*, *>>): List<ActionableItem<*>> {
         val records = knowledgebases.flatMap { it.actionableKbRecords }
+        logger.info("Record analyzer is generating actionability items for ${records.size} records.")
         val genomicRangeEvents = analyzeGenomicRanges(records)
         val somaticVariants = extractSomaticVariants(records)
         val actionableEvents = records.collectEvents<ActionableEvent, ActionableRecord>()
@@ -50,8 +54,7 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
     private fun <R : KnowledgebaseRecord> extractGdnaVariants(
             recordEventPairs: List<Pair<R, GDnaVariant>>): List<Pair<R, ActionableEvent>> {
         return recordEventPairs.flatMap { (record, gdnaVariant) ->
-            listOfNotNull(extractVariant(record.gene, record.transcript, gdnaVariant.gDnaImpact, reference))
-                    .map { Pair(record, it) }
+            listOfNotNull(extractVariant(record, gdnaVariant.gDnaImpact, reference)).map { Pair(record, it) }
         }
     }
 
@@ -94,7 +97,7 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
             : List<Pair<R, ActionableEvent>> where T : HgvsAnnotation, R : KnowledgebaseRecord {
         val transvarOutput = analyzer.analyze(recordEventPairs.map { it.second })
         return recordEventPairs.map { it.first }.zip(transvarOutput).flatMap { (record, output) ->
-            extractVariants(record.gene, record.transcript, output, reference).map { Pair(record, it) }
+            extractVariants(record, output, reference).map { Pair(record, it) }
         }
     }
 

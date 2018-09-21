@@ -3,7 +3,7 @@ package com.hartwig.hmftools.knowledgebaseimporter.cgi.readers
 import com.hartwig.hmftools.knowledgebaseimporter.cgi.input.CgiActionableInput
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.CDnaAnnotation
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.SomaticEvent
-import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.SequenceVariantType
+import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.HgvsVariantType
 import io.kotlintest.matchers.shouldBe
 import io.kotlintest.specs.StringSpec
 
@@ -16,7 +16,7 @@ class CgiActionableCDnaAnnotationReaderTest : StringSpec() {
     init {
         "can read cdna annotation from actionable input" {
             CgiActionableCDnaAnnotationReader.read(actionableInput) shouldBe
-                    listOf(CDnaAnnotation("ENST00000318560", "c.944C>T", SequenceVariantType.SUBSTITUTION))
+                    listOf(CDnaAnnotation("ENST00000318560", "c.944C>T", HgvsVariantType.SUBSTITUTION))
         }
 
         "does not read from FUS input" {
