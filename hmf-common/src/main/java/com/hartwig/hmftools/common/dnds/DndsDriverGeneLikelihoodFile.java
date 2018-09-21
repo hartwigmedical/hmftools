@@ -32,7 +32,7 @@ class DndsDriverGeneLikelihoodFile {
     }
 
     @NotNull
-    static Map<String, DndsDriverGeneLikelihood> fromLines(@NotNull List<String> lines) {
+    private static Map<String, DndsDriverGeneLikelihood> fromLines(@NotNull List<String> lines) {
         Map<String, DndsDriverGeneLikelihood> result = Maps.newHashMap();
         int i = 0;
         for (String line : lines) {
@@ -87,5 +87,4 @@ class DndsDriverGeneLikelihoodFile {
 
         return builder.build();
     }
-
 }
