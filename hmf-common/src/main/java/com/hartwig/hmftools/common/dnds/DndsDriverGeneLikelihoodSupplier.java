@@ -7,7 +7,10 @@ import com.google.common.annotations.VisibleForTesting;
 
 import org.jetbrains.annotations.NotNull;
 
-public class DndsDriverGeneLikelihoodSupplier {
+public final class DndsDriverGeneLikelihoodSupplier {
+
+    private DndsDriverGeneLikelihoodSupplier() {
+    }
 
     @NotNull
     @VisibleForTesting

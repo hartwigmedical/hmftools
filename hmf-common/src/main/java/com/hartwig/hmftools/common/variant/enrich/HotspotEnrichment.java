@@ -27,7 +27,6 @@ public class HotspotEnrichment implements SomaticEnrichment {
     @Override
     public ImmutableSomaticVariantImpl.Builder enrich(@NotNull final ImmutableSomaticVariantImpl.Builder builder,
             @NotNull final VariantContext context) {
-
         if (context.hasAttribute(HOTSPOT_TAG)) {
             builder.hotspot(Hotspot.HOTSPOT);
         } else if (hotspots.containsKey(context.getContig()) && overlaps(context, hotspots.get(context.getContig()))) {
@@ -39,17 +38,17 @@ public class HotspotEnrichment implements SomaticEnrichment {
         return builder;
     }
 
-    private boolean overlaps(@NotNull final VariantContext variant, Collection<VariantHotspot> hotspots) {
+    private static boolean overlaps(@NotNull final VariantContext variant, Collection<VariantHotspot> hotspots) {
         return hotspots.stream().anyMatch(x -> overlaps(x, variant));
     }
 
     @VisibleForTesting
-    static boolean overlaps(@NotNull final VariantHotspot pon, @NotNull final VariantContext variant) {
+    static boolean overlaps(@NotNull final VariantHotspot hotspot, @NotNull final VariantContext variant) {
         int variantStart = variant.getStart();
         int variantEnd = variant.getStart() + variant.getReference().length() - 1 + DISTANCE;
 
-        long ponStart = pon.position();
-        long ponEnd = pon.position() + pon.ref().length() - 1 + DISTANCE;
+        long ponStart = hotspot.position();
+        long ponEnd = hotspot.position() + hotspot.ref().length() - 1 + DISTANCE;
 
         return variantStart <= ponEnd && variantEnd >= ponStart;
     }

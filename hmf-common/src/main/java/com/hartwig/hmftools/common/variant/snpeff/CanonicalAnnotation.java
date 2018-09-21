@@ -36,27 +36,26 @@ public class CanonicalAnnotation {
 
     @NotNull
     public Optional<SnpEffAnnotation> canonicalSnpEffAnnotation(@NotNull final List<SnpEffAnnotation> allAnnotations) {
-
         final List<SnpEffAnnotation> canonicalTranscriptAnnotations = allAnnotations.stream()
                 .filter(SnpEffAnnotation::isTranscriptFeature)
                 .filter(x -> canonicalTranscriptGeneMap.keySet().contains(x.transcript()))
                 .collect(Collectors.toList());
 
         if (!canonicalTranscriptAnnotations.isEmpty()) {
-            final SnpEffAnnotation firstCanonical = canonicalTranscriptAnnotations.get(0);
-            final Optional<SnpEffAnnotation> result =
+            final Optional<SnpEffAnnotation> canonicalOnDriverGene =
                     canonicalTranscriptAnnotations.stream().filter(x -> driverCatalogGenes.contains(x.gene())).findFirst();
-            if (result.isPresent()) {
-                return result;
+            if (canonicalOnDriverGene.isPresent()) {
+                return canonicalOnDriverGene;
             }
 
-            return Optional.of(firstCanonical);
+            return Optional.of(canonicalTranscriptAnnotations.get(0));
         }
 
         return Optional.empty();
     }
 
-    private Set<String> asSet(Map<String, DndsDriverGeneLikelihood> dndsLikelihoods) {
+    @NotNull
+    private static Set<String> asSet(Map<String, DndsDriverGeneLikelihood> dndsLikelihoods) {
         return dndsLikelihoods.values().stream().map(DndsDriverGeneLikelihood::gene).collect(Collectors.toSet());
     }
 }

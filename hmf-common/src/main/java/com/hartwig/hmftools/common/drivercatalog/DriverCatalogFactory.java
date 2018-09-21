@@ -12,13 +12,18 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.jetbrains.annotations.NotNull;
 
-public class DriverCatalogFactory {
+public final class DriverCatalogFactory {
 
+    private DriverCatalogFactory() {
+    }
+
+    @NotNull
     public static <T extends SomaticVariant> Map<DriverImpact, Long> driverImpactCount(@NotNull final List<T> variants) {
         return variants.stream().collect(Collectors.groupingBy(DriverImpact::select, Collectors.counting()));
     }
 
-    public static <T extends SomaticVariant> Map<VariantType, Long> variantTypeCount(@NotNull final List<T> variants) {
+    @NotNull
+    static <T extends SomaticVariant> Map<VariantType, Long> variantTypeCount(@NotNull final List<T> variants) {
         return variants.stream().collect(Collectors.groupingBy(SomaticVariant::type, Collectors.counting()));
     }
 
@@ -36,7 +41,6 @@ public class DriverCatalogFactory {
 
     static double probabilityDriverVariant(long firstVariantTypeCount, long secondVariantTypeCount,
             @NotNull final DndsDriverImpactLikelihood firstLikelihood, @NotNull final DndsDriverImpactLikelihood secondLikelihood) {
-
         final double pDriver = Math.max(firstLikelihood.pDriver(), secondLikelihood.pDriver());
 
         final double pVariantNonDriver;
@@ -54,5 +58,4 @@ public class DriverCatalogFactory {
 
         return pDriver / (pDriver + pVariantNonDriver * (1 - pDriver));
     }
-
 }

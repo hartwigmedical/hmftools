@@ -7,9 +7,7 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverImpact.isSplice;
 
 import java.util.Comparator;
 
-import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.VariantType;
 
 public class TsgImpactComparator implements Comparator<SomaticVariant> {
 
@@ -48,6 +46,4 @@ public class TsgImpactComparator implements Comparator<SomaticVariant> {
 
         throw new UnsupportedOperationException();
     }
-
-
 }

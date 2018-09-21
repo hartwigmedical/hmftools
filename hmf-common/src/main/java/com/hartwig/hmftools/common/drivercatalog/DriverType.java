@@ -6,5 +6,5 @@ public enum DriverType {
     NEAR_HOTSPOT,
     INFRAME,
     DNDS,
-    NONE;
+    NONE
 }

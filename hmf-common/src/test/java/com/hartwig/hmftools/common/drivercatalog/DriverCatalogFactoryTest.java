@@ -13,7 +13,6 @@ public class DriverCatalogFactoryTest {
 
     private static final double EPSILON = 0.0001;
 
-
     @Test
     public void testHIST2H3DMissense() {
         final Map<String, DndsDriverGeneLikelihood> dnds = DndsDriverGeneLikelihoodSupplier.oncoLikelihood();
@@ -34,6 +33,4 @@ public class DriverCatalogFactoryTest {
         double value = DriverCatalogFactory.probabilityDriverVariant(587, dnds.get("GATA3").indel());
         assertEquals(0.9952, value, EPSILON);
     }
-
-
 }

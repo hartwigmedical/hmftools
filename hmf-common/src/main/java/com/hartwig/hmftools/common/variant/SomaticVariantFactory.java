@@ -250,8 +250,8 @@ public class SomaticVariantFactory {
         Preconditions.checkArgument(genotype.hasAD());
 
         int[] adFields = genotype.getAD();
-        int totalReadCount = 0;
         final int alleleReadCount = adFields[1];
+        int totalReadCount = 0;
         for (final int afField : adFields) {
             totalReadCount += afField;
         }

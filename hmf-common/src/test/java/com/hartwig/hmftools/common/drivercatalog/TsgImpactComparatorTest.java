@@ -65,8 +65,7 @@ public class TsgImpactComparatorTest {
     }
 
     @NotNull
-    private EnrichedSomaticVariant create(@NotNull final VariantType type, @NotNull final CodingEffect codingEffect) {
+    private static EnrichedSomaticVariant create(@NotNull final VariantType type, @NotNull final CodingEffect codingEffect) {
         return SomaticVariantTestBuilderFactory.createEnriched().type(type).canonicalCodingEffect(codingEffect).build();
     }
-
 }

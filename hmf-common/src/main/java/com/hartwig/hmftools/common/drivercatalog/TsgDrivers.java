@@ -20,12 +20,14 @@ import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
 
-public class TsgDrivers {
+public final class TsgDrivers {
+
+    private TsgDrivers() {
+    }
 
     @NotNull
     public static List<DriverCatalog> drivers(@NotNull final Map<String, DndsDriverGeneLikelihood> likelihoodsByGene,
             @NotNull final List<EnrichedSomaticVariant> variants) {
-
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
         final Map<VariantType, Long> variantTypeCounts = variantTypeCount(variants);
@@ -43,9 +45,8 @@ public class TsgDrivers {
     }
 
     @NotNull
-    static <T extends SomaticVariant> Map<String, List<T>> codingVariantsByGene(@NotNull final Set<String> genes,
+    private static <T extends SomaticVariant> Map<String, List<T>> codingVariantsByGene(@NotNull final Set<String> genes,
             @NotNull final List<T> variants) {
-
         EnumSet<CodingEffect> suitableCodingEffects =
                 EnumSet.of(CodingEffect.MISSENSE, CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.SPLICE);
 
@@ -102,7 +103,7 @@ public class TsgDrivers {
                     .build();
         }
 
-        // MultiHit
+        // JOBA: MultiHit
         final DndsDriverImpactLikelihood secondImpactLikelihood = impactLikelihood(likelihood, codingVariants.get(1));
         final long secondVariantTypeCount = codingVariants.get(1).type() == VariantType.INDEL ? sampleIndelCount : sampleSNVCount;
 
@@ -116,7 +117,6 @@ public class TsgDrivers {
 
     private static DndsDriverImpactLikelihood impactLikelihood(@NotNull final DndsDriverGeneLikelihood dndsLikelihood,
             @NotNull final SomaticVariant variant) {
-
         if (variant.type() == VariantType.INDEL) {
             return dndsLikelihood.indel();
         } else if (variant.canonicalCodingEffect() == CodingEffect.MISSENSE) {
@@ -128,7 +128,6 @@ public class TsgDrivers {
     }
 
     private static double singleHit(long sampleCount, @NotNull final DndsDriverImpactLikelihood likelihood) {
-
         return Doubles.positive(likelihood.dndsLikelihood()) ? DriverCatalogFactory.probabilityDriverVariant(sampleCount, likelihood) : 0;
     }
 }
