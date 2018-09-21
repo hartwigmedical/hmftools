@@ -55,8 +55,8 @@ public final class OncoDrivers {
     }
 
     @NotNull
-    static DriverCatalog geneDriver(long sampleSNVCount, @NotNull final String gene, @NotNull final DndsDriverImpactLikelihood missenseLikelihood,
-            @NotNull final List<EnrichedSomaticVariant> codingVariants) {
+    static DriverCatalog geneDriver(long sampleSNVCount, @NotNull final String gene,
+            @NotNull final DndsDriverImpactLikelihood missenseLikelihood, @NotNull final List<EnrichedSomaticVariant> codingVariants) {
         final Map<DriverImpact, Long> variantCounts = DriverCatalogFactory.driverImpactCount(codingVariants);
         long missenseVariants = variantCounts.getOrDefault(DriverImpact.MISSENSE, 0L);
         long nonsenseVariants = variantCounts.getOrDefault(DriverImpact.NONSENSE, 0L);
