@@ -57,6 +57,35 @@ class SampleAnonymizerTest : StringSpec() {
             second.hmfPatientId shouldBe first.hmfPatientId
         }
 
+        "removing one already anonymized sample does not change the output" {
+            val twoSamplesInput = SamplesInput(listOf(sample1A, sample1B))
+            val oneSampleInput = SamplesInput(listOf(sample1A))
+            val output = anonymizer.updateSampleIds(PASSWORD1, twoSamplesInput, emptyList())
+            val updatedOutput = anonymizer.updateSampleIds(PASSWORD1, oneSampleInput, output)
+            updatedOutput.sampleIds shouldBe output.sampleIds
+        }
+
+        "changing password and removing sample for same patient updates patient hash but not sample hash for removed sample" {
+            val twoSamplesInput = SamplesInput(listOf(sample1A, sample1B))
+            val oneSampleInput = SamplesInput(listOf(sample1A))
+            val output = anonymizer.updateSampleIds(PASSWORD1, twoSamplesInput, emptyList())
+            val updatedOutput = anonymizer.updateSampleIds(PASSWORD2, oneSampleInput, output)
+            updatedOutput.sampleIds.size shouldBe output.sampleIds.size
+            collisions(updatedOutput, output) shouldBe 1
+            updatedOutput.map { it.id } shouldBe output.map { it.id }
+            updatedOutput.map { it.hmfPatientId.id }.toSet() shouldBe output.map { it.hmfPatientId.id }.toSet()
+            updatedOutput.map { it.hmfPatientId.hash }.toSet() shouldNotBe output.map { it.hmfPatientId.hash }.toSet()
+        }
+
+        "replacing an already anonymized sample adds entry to the output" {
+            val twoSamplesInput = SamplesInput(listOf(sample1A, sample1B))
+            val replacedSampleInput = SamplesInput(listOf(sample1A, sample2A))
+            val output = anonymizer.updateSampleIds(PASSWORD1, twoSamplesInput, emptyList())
+            val updatedOutput = anonymizer.updateSampleIds(PASSWORD1, replacedSampleInput, output)
+            updatedOutput.sampleIds.size shouldBe output.sampleIds.size + 1
+            collisions(updatedOutput, output) shouldBe 2
+        }
+
         "samples for patients mapped from start generate single hmfPatientId" {
             val patientMap = mapOf(patient1 to patient2)
             val samplesInput = SamplesInput(listOf(sample1A, sample2A), patientMap)
