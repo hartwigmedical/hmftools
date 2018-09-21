@@ -6,6 +6,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 
@@ -65,8 +66,9 @@ public final class SnpEffAnnotationFactory {
         return false;
     }
 
+    @VisibleForTesting
     @NotNull
-    private static SnpEffAnnotation fromParts(@NotNull final String[] parts) {
+    static SnpEffAnnotation fromParts(@NotNull final String[] parts) {
         return ImmutableSnpEffAnnotation.builder()
                 .allele(parts[0])
                 .effects(parts[1])
