@@ -13,6 +13,7 @@ public class SvLinkedPair {
     private String mLinkType;
     private int mLinkLength;
     private SvClusterData mSpanningSV;
+    private boolean mIsInferred;
 
     public static final String LINK_TYPE_TI = "TI";
     public static final String LINK_TYPE_DB = "DB";
@@ -25,6 +26,7 @@ public class SvLinkedPair {
         mSecondLinkOnStart = secondLinkOnStart;
         mLinkType = linkType;
         mSpanningSV = null;
+        mIsInferred = true;
 
         int length = (int)(first.position(firstLinkOnStart) - second.position(secondLinkOnStart));
         mLinkLength = abs(length);
@@ -43,6 +45,9 @@ public class SvLinkedPair {
     public boolean secondLinkOnStart() { return mSecondLinkOnStart; }
     public final String linkType() { return mLinkType; }
     public final int length() { return mLinkLength; }
+
+    public void setIsInferred(boolean toggle) { mIsInferred = toggle; }
+    public boolean isInferred() { return mIsInferred; }
 
     public boolean hasVariantBE(final SvClusterData var, boolean useStart)
     {

@@ -1,6 +1,12 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
+import static com.hartwig.hmftools.svanalysis.analysis.SvCluster.findLinkedPair;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
+import static com.hartwig.hmftools.svanalysis.types.SvClusterData.haveLinkedAssemblies;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_DIFF;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_LINK_ONLY;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -54,22 +60,151 @@ public class ClusterAnalyser {
         if(cluster.getCount() < 2)
             return;
 
+        List<SvLinkedPair> assemblyLinkedPairs = createAssemblyLinkedPairs(sampleId, cluster);
+
+        List<SvLinkedPair> inferredLinkedPairs = createInferredLinkedPairs(sampleId, cluster, assemblyLinkedPairs);
+
+        if(assemblyLinkedPairs.isEmpty() && inferredLinkedPairs.isEmpty())
+            return;
+
+        List<SvLinkedPair> linkedPairs = Lists.newArrayList();
+        linkedPairs.addAll(assemblyLinkedPairs);
+        linkedPairs.addAll(inferredLinkedPairs);
+
+        if(!linkedPairs.isEmpty())
+        {
+            LOGGER.info("sample({}) cluster({}: {} count={}) has {} mutually exclusive linked pairs:",
+                    sampleId, cluster.getId(), cluster.getDesc(), cluster.getCount(), linkedPairs.size());
+
+            for (final SvLinkedPair pair : linkedPairs)
+            {
+                LOGGER.info("linked {} {} pair length({}) variants({})",
+                        pair.isInferred() ? "inferred" : "assembly", pair.linkType(), pair.length(), pair.toString());
+            }
+        }
+
+        cluster.setLinkedPairs(linkedPairs);
+    }
+
+    public List<SvLinkedPair> createAssemblyLinkedPairs(final String sampleId, SvCluster cluster)
+    {
+        List<SvLinkedPair> linkedPairs = Lists.newArrayList();
+
+        // find 2 breakends with matching assemnbly info and form them into a linked pair
+        // if have have multiple assembly info and it doesn't match, don't link them
+        if(cluster.getCount() < 2)
+            return linkedPairs;
+
+        for (int i = 0; i < cluster.getCount(); ++i) {
+
+            SvClusterData var1 = cluster.getSVs().get(i);
+
+            // TODO: link single breakends?
+            if(var1.type() == StructuralVariantType.INS || var1.isNullBreakend())
+                continue;
+
+            // make note of SVs which line up exactly with other SVs
+            // these will be used to eliminate transitive SVs later on
+            if(var1.isDupBEStart() && var1.isDupBEEnd())
+            {
+                continue;
+            }
+
+            for (int a = 0; a < 2; ++a)
+            {
+               boolean v1Start = (a == 0);
+
+                for (int j = i+1; j < cluster.getCount(); ++j)
+                {
+                    SvClusterData var2 = cluster.getSVs().get(j);
+
+                    if(var2.type() == StructuralVariantType.INS || var2.isNullBreakend())
+                        continue;
+
+                    if(var2.isDupBEStart() && var2.isDupBEEnd())
+                        continue;
+
+                    for (int b = 0; b < 2; ++b)
+                    {
+                        boolean v2Start = (b == 0);
+
+                        if (!haveLinkedAssemblies(var1, var2, v1Start, v2Start))
+                            continue;
+
+                        // check wasn't already created
+                        boolean v1Linked = findLinkedPair(linkedPairs, var1, v1Start) != null;
+                        boolean v2Linked = findLinkedPair(linkedPairs, var2, v2Start) != null;
+
+                        if(v1Linked || v2Linked)
+                        {
+                            if (v1Linked && v2Linked)
+                            {
+                                // both linked but to other variants
+                            }
+                            else if (v1Linked)
+                            {
+                                var2.setAssemblyMatchType(ASSEMBLY_MATCH_DIFF, v2Start);
+                            }
+                            else if (v2Linked)
+                            {
+                                var1.setAssemblyMatchType(ASSEMBLY_MATCH_DIFF, v1Start);
+                            }
+
+                            continue;
+                        }
+
+                        // form a new TI from these 2 BEs
+                        SvLinkedPair newPair = new SvLinkedPair(var1, var2, SvLinkedPair.LINK_TYPE_TI, v1Start, v2Start);
+                        newPair.setIsInferred(false);
+                        var1.setAssemblyMatchType(ASSEMBLY_MATCH_MATCHED, v1Start);
+                        var2.setAssemblyMatchType(ASSEMBLY_MATCH_MATCHED, v2Start);
+
+                        linkedPairs.add(newPair);
+
+                        // to avoid logging unlikely long TIs
+                        LOGGER.debug("sample({}) cluster({}) adding assembly linked {} pair({} and {}) length({})",
+                                sampleId, cluster.getId(), newPair.linkType(), newPair.first().posId(),
+                                newPair.second().posId(), newPair.length());
+                    }
+                }
+            }
+        }
+
+        return linkedPairs;
+    }
+
+    public List<SvLinkedPair> createInferredLinkedPairs(final String sampleId, SvCluster cluster, final List<SvLinkedPair> assemblyLinkedPairs)
+    {
+        List<SvLinkedPair> linkedPairs = Lists.newArrayList();
+
         // exclude large clusters for now due to processing times until the algo is better refined
         int maxClusterSize = 100;
 
         if(cluster.getCount() >= maxClusterSize)
-            return;
+            return linkedPairs;
 
         if(cluster.getLineElementCount() > 0)
-            return;
+            return linkedPairs;
 
-        List<SvLinkedPair> linkedPairs = Lists.newArrayList();
         List<SvLinkedPair> allLinkedPairs = Lists.newArrayList();
-
         List<SvClusterData> spanningSVs = Lists.newArrayList();
 
-        for (int i = 0; i < cluster.getCount(); ++i) {
+        // cache whether an SV breakend is alread linked as an optimisation
+        boolean[] varStartLinked = new boolean[cluster.getCount()];
+        boolean[] varEndLinked = new boolean[cluster.getCount()];
 
+        if(!assemblyLinkedPairs.isEmpty())
+        {
+            for (int i = 0; i < cluster.getCount(); ++i)
+            {
+                SvClusterData var = cluster.getSVs().get(i);
+                varStartLinked[i] = findLinkedPair(assemblyLinkedPairs, var, true) != null;
+                varEndLinked[i] = findLinkedPair(assemblyLinkedPairs, var, false) != null;
+            }
+        }
+
+        for (int i = 0; i < cluster.getCount(); ++i)
+        {
             SvClusterData var1 = cluster.getSVs().get(i);
 
             if(var1.type() == StructuralVariantType.INS || var1.isNullBreakend())
@@ -87,6 +222,10 @@ public class ClusterAnalyser {
 
                 boolean v1Start = (a == 0);
 
+                // if an assembly linked pair has already been created for this breakend, look no further
+                if(v1Start && varStartLinked[i] || !v1Start && varEndLinked[i])
+                    continue;
+
                 for (int j = i+1; j < cluster.getCount(); ++j)
                 {
                     SvClusterData var2 = cluster.getSVs().get(j);
@@ -100,6 +239,9 @@ public class ClusterAnalyser {
                     for (int b = 0; b < 2; ++b)
                     {
                         boolean v2Start = (b == 0);
+
+                        if(v2Start && varStartLinked[j] || !v2Start && varEndLinked[j])
+                            continue;
 
                         SvLinkedPair newPair = null;
 
@@ -117,6 +259,9 @@ public class ClusterAnalyser {
                         {
                             continue;
                         }
+
+                        var1.setAssemblyMatchType(ASSEMBLY_MATCH_LINK_ONLY, v1Start);
+                        var2.setAssemblyMatchType(ASSEMBLY_MATCH_LINK_ONLY, v2Start);
 
                         // insert in order
                         int index = 0;
@@ -156,7 +301,7 @@ public class ClusterAnalyser {
                         if(newPair.length() < mUtils.getBaseDistance())
                         {
                             // to avoid logging unlikely long TIs
-                            LOGGER.debug("sample({}) cluster({}) adding linked {} pair({} and {}) length({}) at index({})",
+                            LOGGER.debug("sample({}) cluster({}) adding inferred linked {} pair({} and {}) length({}) at index({})",
                                     sampleId, cluster.getId(), newPair.linkType(), newPair.first().posId(),
                                     newPair.second().posId(), newPair.length(), index);
                         }
@@ -168,7 +313,7 @@ public class ClusterAnalyser {
         // prior to consolidating linked pairs, check for duplicate BE in the spanning SVs
         matchDuplicateBEToLinkedPairs(linkedPairs, spanningSVs);
 
-        LOGGER.debug("sample({}) cluster({}) has {} linked pairs and {} possible spanning SVs",
+        LOGGER.debug("sample({}) cluster({}) has {} inferred linked pairs and {} possible spanning SVs",
                 sampleId, cluster.getId(), linkedPairs.size(), spanningSVs.size());
 
         allLinkedPairs.addAll(linkedPairs);
@@ -210,22 +355,9 @@ public class ClusterAnalyser {
             }
         }
 
-        if(linkedPairs.isEmpty() && spanningSVs.isEmpty())
-            return;
-
-        if(!linkedPairs.isEmpty())
-        {
-            LOGGER.info("sample({}) cluster({}: {} count={}) has {} mutually exclusive linked pairs:",
-                    sampleId, cluster.getId(), cluster.getDesc(), cluster.getCount(), linkedPairs.size());
-
-            for (final SvLinkedPair pair : linkedPairs)
-            {
-                LOGGER.info("linked {} pair length({}) variants({})", pair.linkType(), pair.length(), pair.toString());
-            }
-        }
-
-        cluster.setLinkedPairs(linkedPairs);
         cluster.setSpanningSVs(spanningSVs);
+
+        return linkedPairs;
     }
 
     private void matchDuplicateBEToLinkedPairs(final List<SvLinkedPair> linkedPairs, final List<SvClusterData> spanningSVs)

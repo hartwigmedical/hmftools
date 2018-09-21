@@ -174,9 +174,11 @@ public class SvCluster
         return clusterTypeStr;
     }
 
-    public int getLineElementCount() {
+    public int getLineElementCount()
+    {
         int count = 0;
-        for (final SvClusterData var : mClusteredSVs) {
+        for (final SvClusterData var : mClusteredSVs)
+        {
             if(!var.isStartLineElement().equals(NO_LINE_ELEMENT) || !var.isEndLineElement().equals(NO_LINE_ELEMENT))
                 ++count;
         }
@@ -187,7 +189,8 @@ public class SvCluster
     public void setUniqueBreakends()
     {
         // group any matching BEs (same position and orientation)
-        for (final SvClusterData var : mClusteredSVs) {
+        for (final SvClusterData var : mClusteredSVs)
+        {
             if(var.type() == StructuralVariantType.INS)
                 continue;
 
@@ -195,7 +198,8 @@ public class SvCluster
         }
 
         // cache this against the SV
-        for (SvClusterData var : mClusteredSVs) {
+        for (SvClusterData var : mClusteredSVs)
+        {
 
             if(var.type() == StructuralVariantType.INS)
                 continue;
@@ -282,7 +286,12 @@ public class SvCluster
 
     public final SvLinkedPair findLinkedPair(final SvClusterData var, boolean useStart)
     {
-        for(final SvLinkedPair pair : mLinkedPairs)
+        return findLinkedPair(mLinkedPairs, var, useStart);
+    }
+
+    public static final SvLinkedPair findLinkedPair(final List<SvLinkedPair> linkedPairs, final SvClusterData var, boolean useStart)
+    {
+        for(final SvLinkedPair pair : linkedPairs)
         {
             if(var.equals(pair.first()) && useStart == pair.firstLinkOnStart())
                 return pair;

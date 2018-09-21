@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svanalysis.types;
 
 import static com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator.NO_FS;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_NONE;
 
 import java.util.List;
 
@@ -27,11 +28,6 @@ public class SvClusterData
     private String mStartLineElement;
     private String mEndLineElement;
 
-    private int mNearestSVLength;
-    private String mNearestSVLinkType;
-    private int mNearestTILength; // templated insertion if exists
-    private int mNearestDBLength; // deletion-bridge link if exists
-
     private String mAssemblyStartData;
     private String mAssemblyEndData;
 
@@ -44,6 +40,19 @@ public class SvClusterData
 
     private SvGeneData mStartGeneData;
     private SvGeneData mEndGeneData;
+
+    private List<String> mStartTempInsertionAssemblies;
+    private List<String> mStartDsbAssemblies;
+    private List<String> mStartOtherAssemblies;
+    private List<String> mEndTempInsertionAssemblies;
+    private List<String> mEndDsbAssemblies;
+    private List<String> mEndOtherAssemblies;
+    private String mStartAssemblyMatchType;
+    private String mEndAssemblyMatchType;
+
+    public static String ASSEMBLY_TYPE_DSB = "dsb";
+    public static String ASSEMBLY_TYPE_TI = "asm";
+    public static String ASSEMBLY_TYPE_OTHER = "bpb";
 
     public SvClusterData(final StructuralVariantData svData)
     {
@@ -58,28 +67,7 @@ public class SvClusterData
         mStartLineElement = NO_LINE_ELEMENT;
         mEndLineElement = NO_LINE_ELEMENT;
 
-        if(!mSVData.startLinkedBy().isEmpty() && !mSVData.startLinkedBy().equals("."))
-        {
-            mAssemblyStartData = mSVData.startLinkedBy().replaceAll(",", ";");
-        }
-        else
-        {
-            mAssemblyStartData = "";
-        }
-
-        if(!mSVData.endLinkedBy().isEmpty() && !mSVData.endLinkedBy().equals("."))
-        {
-            mAssemblyEndData = mSVData.endLinkedBy().replaceAll(",", ";");
-        }
-        else
-        {
-            mAssemblyEndData = "";
-        }
-
-        mNearestSVLength = -1;
-        mNearestSVLinkType = "NONE";
-        mNearestTILength = -1;
-        mNearestDBLength = -1;
+        setAssemblyData(mSVData.startLinkedBy(), mSVData.endLinkedBy());
 
         mDupBEStart = false;
         mDupBEEnd = false;
@@ -90,7 +78,6 @@ public class SvClusterData
 
         mStartGeneData = null;
         mEndGeneData = null;
-
     }
 
     public static SvClusterData from(final EnrichedStructuralVariant enrichedSV)
@@ -161,9 +148,6 @@ public class SvClusterData
         mEndArm = end;
     }
 
-    public String getAssemblyStart() { return mAssemblyStartData; }
-    public String getAssemblyEnd() { return mAssemblyEndData; }
-
     public void setPonCount(int count) { mPonCount = count; }
     public int getPonCount() { return mPonCount; }
 
@@ -177,18 +161,6 @@ public class SvClusterData
     public void setLineElements(String typeStart, String typeEnd) { mStartLineElement = typeStart; mEndLineElement = typeEnd; }
     public String isStartLineElement() { return mStartLineElement; }
     public String isEndLineElement() { return mEndLineElement; }
-
-    public int getNearestSVLength() { return mNearestSVLength; }
-    public void setNearestSVLength(int length) { mNearestSVLength = length; }
-
-    public final String getNearestSVLinkType() { return mNearestSVLinkType; }
-    public void setNearestSVLinkType(String type) { mNearestSVLinkType = type; }
-
-    public int getNearestTILength() { return mNearestTILength; }
-    public void setNearestTILength(int length) { mNearestTILength = length; }
-
-    public int getNearestDBLength() { return mNearestDBLength; }
-    public void setNearestDBLength(int length) { mNearestDBLength = length; }
 
     public boolean isDupBEStart() { return mDupBEStart; }
     public boolean isDupBEEnd() { return mDupBEEnd; }
@@ -233,6 +205,81 @@ public class SvClusterData
         mTransType = transType;
         mTransLength = transLength;
         mTransSvLinks = transSvLinks;
+    }
+
+    public String getAssemblyStart() { return mAssemblyStartData; }
+    public String getAssemblyEnd() { return mAssemblyEndData; }
+
+    public List<String> getTempInsertionAssemblies(boolean useStart) { return useStart ? mStartTempInsertionAssemblies : mEndTempInsertionAssemblies; }
+    public List<String> getDsbAssemblies(boolean useStart) { return useStart ? mStartDsbAssemblies : mEndDsbAssemblies; }
+    public List<String> getOtherAssemblies(boolean useStart) { return useStart ? mStartOtherAssemblies : mEndOtherAssemblies; }
+
+    public final String getAssemblyMatchType(boolean useStart) { return useStart ? mStartAssemblyMatchType : mEndAssemblyMatchType; }
+
+    public void setAssemblyMatchType(String type, boolean useStart)
+    {
+        if(useStart)
+            mStartAssemblyMatchType = type;
+        else
+            mEndAssemblyMatchType = type;
+    }
+
+    private void setAssemblyData(final String assemblyStart, final String assemblyEnd)
+    {
+        mStartTempInsertionAssemblies = Lists.newArrayList();
+        mStartDsbAssemblies = Lists.newArrayList();
+        mStartOtherAssemblies = Lists.newArrayList();
+        mEndTempInsertionAssemblies = Lists.newArrayList();
+        mEndDsbAssemblies = Lists.newArrayList();
+        mEndOtherAssemblies = Lists.newArrayList();
+        mAssemblyStartData = "";
+        mAssemblyEndData = "";
+        mStartAssemblyMatchType = ASSEMBLY_MATCH_NONE;
+        mEndAssemblyMatchType = ASSEMBLY_MATCH_NONE;
+
+        if(!mSVData.startLinkedBy().isEmpty() && !mSVData.startLinkedBy().equals("."))
+        {
+            mAssemblyStartData = mSVData.startLinkedBy().replaceAll(",", ";");
+
+            String[] assemblyList = mAssemblyStartData.split(";");
+
+            for(int i = 0; i < assemblyList.length; ++i)
+            {
+                if(assemblyList[i].contains(ASSEMBLY_TYPE_TI))
+                    mStartTempInsertionAssemblies.add(assemblyList[i]);
+                else if(assemblyList[i].contains(ASSEMBLY_TYPE_DSB))
+                    mStartDsbAssemblies.add(assemblyList[i]);
+                else
+                    mStartOtherAssemblies.add(assemblyList[i]);
+            }
+        }
+
+        if(!mSVData.endLinkedBy().isEmpty() && !mSVData.endLinkedBy().equals("."))
+        {
+            mAssemblyEndData = mSVData.endLinkedBy().replaceAll(",", ";");
+
+            String[] assemblyList = mAssemblyEndData.split(";");
+            for(int i = 0; i < assemblyList.length; ++i)
+            {
+                if(assemblyList[i].contains(ASSEMBLY_TYPE_TI))
+                    mEndTempInsertionAssemblies.add(assemblyList[i]);
+                else if(assemblyList[i].contains(ASSEMBLY_TYPE_DSB))
+                    mEndDsbAssemblies.add(assemblyList[i]);
+                else
+                    mEndOtherAssemblies.add(assemblyList[i]);
+            }
+        }
+    }
+
+    public static boolean haveLinkedAssemblies(final SvClusterData var1, final SvClusterData var2, boolean v1Start, boolean v2Start)
+    {
+        for(String assemb1 : var1.getTempInsertionAssemblies(v1Start))
+        {
+            if(var2.getTempInsertionAssemblies(v1Start).contains(assemb1))
+                return true;
+        }
+
+        return false;
     }
 
 }

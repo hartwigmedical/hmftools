@@ -369,26 +369,29 @@ public class SvSampleAnalyser {
                     // linked pair info
                     final SvLinkedPair startLP = cluster.findLinkedPair(var, true);
                     String startLinkStr = "0,,-1";
-                    String assemblyMatchStart = !var.getAssemblyStart().isEmpty() ? ASSEMBLY_MATCH_ASMB_ONLY : ASSEMBLY_MATCH_NONE;
+                    String assemblyMatchStart = var.getAssemblyMatchType(true);
+                    // String assemblyMatchStart = !var.getTempInsertionAssemblies(true).isEmpty() ? ASSEMBLY_MATCH_ASMB_ONLY : ASSEMBLY_MATCH_NONE;
                     if(startLP != null)
                     {
                         startLinkStr = String.format("%s,%s,%d",
                                 startLP.first().equals(var) ? startLP.second().id() : startLP.first().id(), startLP.linkType(), startLP.length());
 
-                        assemblyMatchStart = startLP.getAssemblyMatchType(var);
+                        // assemblyMatchStart = startLP.getAssemblyMatchType(var);
                     }
 
                     final SvLinkedPair endLP = cluster.findLinkedPair(var, false);
                     String endLinkStr = "0,,-1";
-                    String assemblyMatchEnd = !var.getAssemblyEnd().isEmpty() ? ASSEMBLY_MATCH_ASMB_ONLY : ASSEMBLY_MATCH_NONE;
+                    String assemblyMatchEnd = var.getAssemblyMatchType(false);
+                    // String assemblyMatchEnd = !var.getTempInsertionAssemblies(false).isEmpty() ? ASSEMBLY_MATCH_ASMB_ONLY : ASSEMBLY_MATCH_NONE;
                     if(endLP != null)
                     {
                         endLinkStr = String.format("%s,%s,%d",
                                 endLP.first().equals(var) ? endLP.second().id() : endLP.first().id(), endLP.linkType(), endLP.length());
 
-                        assemblyMatchEnd = endLP.getAssemblyMatchType(var);
+                        // assemblyMatchEnd = endLP.getAssemblyMatchType(var);
                     }
 
+                    /*
                     // if no match was found with the chosen linked pair for this variant, search
                     // amongst the full set of possible linked pairs for a match or difference
                     if(assemblyMatchStart.equals(ASSEMBLY_MATCH_ASMB_ONLY))
@@ -414,13 +417,25 @@ public class SvSampleAnalyser {
                                 break;
                             }
                         }
+
+                        if(assemblyMatchStart.equals(ASSEMBLY_MATCH_ASMB_ONLY))
+                        {
+                            // search for any link and report it if present
+
+                        }
+                    }
+                    */
+
+                    if(assemblyMatchStart.equals(ASSEMBLY_MATCH_ASMB_ONLY) || assemblyMatchEnd.equals(ASSEMBLY_MATCH_ASMB_ONLY))
+                    {
+                        LOGGER.debug("sample({}) var({}) has unlinked assembly TIs", mSampleId, var.posId());
                     }
 
                     // assembly info
                     writer.write(String.format(",%s,%s,%s,%s,%s,%s",
                             startLinkStr, endLinkStr, var.getAssemblyStart(), var.getAssemblyEnd(), assemblyMatchStart, assemblyMatchEnd));
 
-                            // chain info
+                    // chain info
                     final SvChain chain = cluster.findChain(var);
                     String chainStr = ",0,0,0,0,0";
 
