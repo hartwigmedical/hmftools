@@ -2,7 +2,7 @@ package com.hartwig.hmftools.idgenerator
 
 import com.hartwig.hmftools.idgenerator.anonymizedIds.HashId
 import com.hartwig.hmftools.idgenerator.anonymizedIds.HmfSampleId
-import com.hartwig.hmftools.idgenerator.ids.PatientId
+import com.hartwig.hmftools.idgenerator.ids.CanonicalPatientId
 import com.hartwig.hmftools.idgenerator.ids.SampleId
 
 class SampleAnonymizer(val password: String) {
@@ -22,8 +22,8 @@ class SampleAnonymizer(val password: String) {
     private fun updatedCanonicalSamples(newPassword: String, samplesInput: SamplesInput, anonymizedSamples: AnonymizedSamples,
                                         updatedPatients: AnonymizedPatients): List<HmfSampleId> {
         return samplesInput.canonicalPatients
-                .associateBy({ it }, { updateCanonicalSamples(newPassword, it, samplesInput, anonymizedSamples) })
-                .mapKeys { updatedPatients[it.key]!! }
+                .associateBy({ it }, { updateCanonicalPatientSamples(newPassword, it, samplesInput, anonymizedSamples) })
+                .mapKeys { updatedPatients[it.key.patientId]!! }
                 .mapValues { (hmfPatientId, hashedSamples) -> hashedSamples.map { HmfSampleId(it, hmfPatientId) } }
                 .values.flatten()
     }
@@ -39,19 +39,20 @@ class SampleAnonymizer(val password: String) {
         return hmfSampleId.updateSampleHash(newSampleHash).updatePatientHash(newPatientHash)
     }
 
-    private fun updateCanonicalSamples(newPassword: String, patient: PatientId, samplesInput: SamplesInput,
-                                       anonymizedSamples: AnonymizedSamples): Collection<HashId> {
-        val previouslyAnonymizedSamples = anonymizedSamples[samplesInput.canonicalId(patient)]
-        val patientSamples = relevantPatientSamples(patient, samplesInput, previouslyAnonymizedSamples)
-        return generator.update(newPassword, patientSamples.map { it.id },
-                                previouslyAnonymizedSamples.map { it.hashId })
+    private fun updateCanonicalPatientSamples(newPassword: String, patient: CanonicalPatientId, samplesInput: SamplesInput,
+                                              anonymizedSamples: AnonymizedSamples): Collection<HashId> {
+        val patientSamples = relevantPatientSamples(patient, samplesInput, anonymizedSamples)
+        val previouslyAnonymizedSamples = anonymizedSamples[patient]
+        return generator.update(newPassword, patientSamples.map { it.id }, previouslyAnonymizedSamples.map { it.hashId })
     }
 
     //MIVO: find all sampleIds from input that are relevant for this patient
-    private fun relevantPatientSamples(patient: PatientId, samplesInput: SamplesInput,
-                                       anonymizedSamples: List<HmfSampleId>): Collection<SampleId> {
-        val patientSamples = samplesInput.sampleIds(patient)
-        val hashes = anonymizedSamples.map { it.hash }.toSet()
+    // - all sampleIds from input, accounting for renames
+    // - all previously anonymized samples that match this patientId (can be different from above when entries are deleted from the patientMapping
+    private fun relevantPatientSamples(patient: CanonicalPatientId, samplesInput: SamplesInput,
+                                       anonymizedSamples: AnonymizedSamples): Collection<SampleId> {
+        val patientSamples = samplesInput.sampleIds(patient.patientId)
+        val hashes = anonymizedSamples[patient].map { it.hash }.toSet()
         return samplesInput.samples.filter { hashes.contains(generator.hash(it.id)) } + patientSamples
     }
 

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.idgenerator
 
+import com.hartwig.hmftools.idgenerator.ids.CanonicalPatientId
 import com.hartwig.hmftools.idgenerator.ids.PatientId
 import com.hartwig.hmftools.idgenerator.ids.SampleId
 import org.apache.logging.log4j.LogManager
@@ -11,7 +12,8 @@ data class SamplesInput(val samples: List<SampleId>, val patientsMap: Map<Patien
         validatePatientsMap()
     }
 
-    val canonicalPatients: Set<PatientId> = (samples.map { canonicalId(it.patientId) } + patientsMap.values).toSet()
+    val canonicalPatients: Set<CanonicalPatientId> =
+            (samples.map { canonicalId(it.patientId) } + patientsMap.values.map { CanonicalPatientId(it) }).toSet()
     val nonCanonicalPatients: Set<PatientId> = patientsMap.keys
 
     /**
@@ -25,11 +27,11 @@ data class SamplesInput(val samples: List<SampleId>, val patientsMap: Map<Patien
      * returns all ids for this patient, accounting for potential renames
      */
     fun patientIds(patient: PatientId): Set<PatientId> {
-        val alternateIds = patientsMap.filterValues { it == canonicalId(patient) }.flatMap { it.toPair().toList() }
+        val alternateIds = patientsMap.filterValues { it == canonicalId(patient).patientId }.flatMap { it.toPair().toList() }
         return (alternateIds + patient).toSet()
     }
 
-    fun canonicalId(patient: PatientId) = patientsMap[patient] ?: patient
+    fun canonicalId(patient: PatientId) = CanonicalPatientId(patientsMap[patient] ?: patient)
 
     fun hashMapping(generator: IdGenerator, newGenerator: IdGenerator): Map<Hash, Hash> {
         val samplePlaintexts = samples.map { it.id }
