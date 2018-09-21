@@ -132,8 +132,8 @@ public class ClusterAnalyser {
                             continue;
 
                         // check wasn't already created
-                        boolean v1Linked = findLinkedPair(linkedPairs, var1, v1Start) != null;
-                        boolean v2Linked = findLinkedPair(linkedPairs, var2, v2Start) != null;
+                        boolean v1Linked = var1.isAssemblyMatched(v1Start); // findLinkedPair(linkedPairs, var1, v1Start) != null;
+                        boolean v2Linked = var2.isAssemblyMatched(v2Start); // findLinkedPair(linkedPairs, var2, v2Start) != null;
 
                         if(v1Linked || v2Linked)
                         {
@@ -189,20 +189,6 @@ public class ClusterAnalyser {
         List<SvLinkedPair> allLinkedPairs = Lists.newArrayList();
         List<SvClusterData> spanningSVs = Lists.newArrayList();
 
-        // cache whether an SV breakend is alread linked as an optimisation
-        boolean[] varStartLinked = new boolean[cluster.getCount()];
-        boolean[] varEndLinked = new boolean[cluster.getCount()];
-
-        if(!assemblyLinkedPairs.isEmpty())
-        {
-            for (int i = 0; i < cluster.getCount(); ++i)
-            {
-                SvClusterData var = cluster.getSVs().get(i);
-                varStartLinked[i] = findLinkedPair(assemblyLinkedPairs, var, true) != null;
-                varEndLinked[i] = findLinkedPair(assemblyLinkedPairs, var, false) != null;
-            }
-        }
-
         for (int i = 0; i < cluster.getCount(); ++i)
         {
             SvClusterData var1 = cluster.getSVs().get(i);
@@ -223,7 +209,7 @@ public class ClusterAnalyser {
                 boolean v1Start = (a == 0);
 
                 // if an assembly linked pair has already been created for this breakend, look no further
-                if(v1Start && varStartLinked[i] || !v1Start && varEndLinked[i])
+                if(var1.isAssemblyMatched(v1Start))
                     continue;
 
                 for (int j = i+1; j < cluster.getCount(); ++j)
@@ -240,7 +226,7 @@ public class ClusterAnalyser {
                     {
                         boolean v2Start = (b == 0);
 
-                        if(v2Start && varStartLinked[j] || !v2Start && varEndLinked[j])
+                        if(var2.isAssemblyMatched(v2Start))
                             continue;
 
                         SvLinkedPair newPair = null;

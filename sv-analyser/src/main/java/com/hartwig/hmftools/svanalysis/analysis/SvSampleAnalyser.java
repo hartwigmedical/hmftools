@@ -370,61 +370,20 @@ public class SvSampleAnalyser {
                     final SvLinkedPair startLP = cluster.findLinkedPair(var, true);
                     String startLinkStr = "0,,-1";
                     String assemblyMatchStart = var.getAssemblyMatchType(true);
-                    // String assemblyMatchStart = !var.getTempInsertionAssemblies(true).isEmpty() ? ASSEMBLY_MATCH_ASMB_ONLY : ASSEMBLY_MATCH_NONE;
                     if(startLP != null)
                     {
                         startLinkStr = String.format("%s,%s,%d",
                                 startLP.first().equals(var) ? startLP.second().id() : startLP.first().id(), startLP.linkType(), startLP.length());
-
-                        // assemblyMatchStart = startLP.getAssemblyMatchType(var);
                     }
 
                     final SvLinkedPair endLP = cluster.findLinkedPair(var, false);
                     String endLinkStr = "0,,-1";
                     String assemblyMatchEnd = var.getAssemblyMatchType(false);
-                    // String assemblyMatchEnd = !var.getTempInsertionAssemblies(false).isEmpty() ? ASSEMBLY_MATCH_ASMB_ONLY : ASSEMBLY_MATCH_NONE;
                     if(endLP != null)
                     {
                         endLinkStr = String.format("%s,%s,%d",
                                 endLP.first().equals(var) ? endLP.second().id() : endLP.first().id(), endLP.linkType(), endLP.length());
-
-                        // assemblyMatchEnd = endLP.getAssemblyMatchType(var);
                     }
-
-                    /*
-                    // if no match was found with the chosen linked pair for this variant, search
-                    // amongst the full set of possible linked pairs for a match or difference
-                    if(assemblyMatchStart.equals(ASSEMBLY_MATCH_ASMB_ONLY))
-                    {
-                        // search amongst the full set of possible linked pairs for a match
-                        for(final SvLinkedPair lp : cluster.getAllLinkedPairs())
-                        {
-                            if((lp.first() == var && lp.firstLinkOnStart()) || (lp.second() == var && lp.secondLinkOnStart()))
-                            {
-                                assemblyMatchStart = lp.getAssemblyMatchType(var);
-                                break;
-                            }
-                        }
-                    }
-
-                    if(assemblyMatchEnd.equals(ASSEMBLY_MATCH_ASMB_ONLY))
-                    {
-                        for(final SvLinkedPair lp : cluster.getAllLinkedPairs())
-                        {
-                            if((lp.first() == var && !lp.firstLinkOnStart()) || (lp.second() == var && !lp.secondLinkOnStart()))
-                            {
-                                assemblyMatchEnd = lp.getAssemblyMatchType(var);
-                                break;
-                            }
-                        }
-
-                        if(assemblyMatchStart.equals(ASSEMBLY_MATCH_ASMB_ONLY))
-                        {
-                            // search for any link and report it if present
-
-                        }
-                    }
-                    */
 
                     if(assemblyMatchStart.equals(ASSEMBLY_MATCH_ASMB_ONLY) || assemblyMatchEnd.equals(ASSEMBLY_MATCH_ASMB_ONLY))
                     {

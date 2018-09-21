@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svanalysis.types;
 
 import static com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator.NO_FS;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_NONE;
 
 import java.util.List;
@@ -215,6 +216,7 @@ public class SvClusterData
     public List<String> getOtherAssemblies(boolean useStart) { return useStart ? mStartOtherAssemblies : mEndOtherAssemblies; }
 
     public final String getAssemblyMatchType(boolean useStart) { return useStart ? mStartAssemblyMatchType : mEndAssemblyMatchType; }
+    public boolean isAssemblyMatched(boolean useStart) { return getAssemblyMatchType(useStart).equals(ASSEMBLY_MATCH_MATCHED); }
 
     public void setAssemblyMatchType(String type, boolean useStart)
     {
