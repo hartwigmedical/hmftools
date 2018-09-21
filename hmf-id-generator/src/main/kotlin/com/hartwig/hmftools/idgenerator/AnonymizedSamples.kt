@@ -7,6 +7,7 @@ import com.hartwig.hmftools.idgenerator.ids.SampleId
 class AnonymizedSamples(val password: String, private val hmfSampleIds: Collection<HmfSampleId>, private val samplesInput: SamplesInput) :
         Collection<HmfSampleId> by hmfSampleIds {
     private val generator = IdGenerator(password)
+    val sampleIds = hmfSampleIds.toSet().sorted()
     private val hmfSampleIdPerHash = hmfSampleIds.groupBy { it.hash }
     private val hmfSampleIdPerPatientHash = hmfSampleIds.groupBy { it.hmfPatientId.hash }
 
