@@ -53,6 +53,8 @@ public class BucketGroup implements Comparable<BucketGroup> {
     private String mEffects;
     private String mGroupLinks;
     private String mRefSigs;
+    private double mMaxSimiliarScore;
+    private BucketGroup mMaxSimiliarGroup;
 
     private double mPurity; // for now a percentage of sample buckets that are elevated
     private double mScoreOverride;
@@ -92,6 +94,8 @@ public class BucketGroup implements Comparable<BucketGroup> {
         mEffects = "";
         mGroupLinks = "";
         mRefSigs = "";
+        mMaxSimiliarScore = 0;
+        mMaxSimiliarGroup = null;
     }
 
     private void initialise(final double[] counts)
@@ -473,7 +477,7 @@ public class BucketGroup implements Comparable<BucketGroup> {
     public double getPotentialAdjAllocation() { return mPotentialAdjAllocation; }
     public void addPotentialAdjAllocation(double count) { mPotentialAdjAllocation += count; }
 
-    public double calcSampleFitScore(final SampleData sample)
+    public double calcSampleFitScore(final SampleData sample, boolean useGross)
     {
         int samIndex = getSampleIndex(sample.Id);
 
@@ -483,37 +487,52 @@ public class BucketGroup implements Comparable<BucketGroup> {
         final double[] sampleCounts = mSampleCounts.get(samIndex);
         double sampleAlloc = mSampleCountTotals.get(samIndex);
 
-        return calcSampleFitScore(sampleCounts, sampleAlloc);
+        return calcSampleFitScore(sampleCounts, sampleAlloc, useGross);
     }
 
-    public double calcSampleFitScore(final double[] allocCounts, double allocTotal)
+    public double calcSampleFitScore(final double[] allocCounts, double allocTotal, boolean useGross)
     {
         // the score is the ratio-weighted difference around the true ratio, with the range being the boundaries (1, -1
+        // the final score is averaged by the bucket weight and so remains a score out of 1, with 0 being a perfect alignment with the ratios
+        // if calculating a net score it can be negative, so between -1 and 1
         double fitScore = 0;
 
         if(!doublesEqual(sumVector(allocCounts), allocTotal))
             return 0;
 
+        double weightTotal = 0;
+
         for(Integer bucket : mBucketIds)
         {
             double bucketWeight = allocCounts[bucket] / allocTotal;
+            weightTotal += bucketWeight;
+
             double impliedRatio = bucketWeight;
 
             double ratioDiff = impliedRatio - mBucketRatios[bucket];
             double ratioRange = mBucketRatioRanges[bucket];
 
             if(ratioRange == 0)
-            {
                 continue;
-            }
 
             double fitPerc = ratioDiff / ratioRange;
             fitPerc = capValue(fitPerc, -1, 1);
+
+            if(useGross)
+                fitScore += abs(fitPerc) * bucketWeight;
+            else
             fitScore += fitPerc * bucketWeight;
         }
 
         fitScore = capValue(fitScore, -1, 1);
+        fitScore /= weightTotal;
 
         return fitScore;
     }
+
+    public void setMaxSimiliarScore(double value) { mMaxSimiliarScore = value; }
+    public double getMaxSimiliarScore() { return mMaxSimiliarScore; }
+    public final BucketGroup getMaxSimiliarGroup() { return mMaxSimiliarGroup; }
+    public void setMaxSimiliarGroup(final BucketGroup group ) { mMaxSimiliarGroup = group; }
+
 }

@@ -134,6 +134,7 @@ public class BucketAnalyser {
     private boolean mNoBackgroundCounts; // whether to make a distinction between background and elevated counts
     private boolean mApplyNoise; // whether to factor Poisson noise into the sample counts and fits
     private boolean mThrottleDiscovery; // whether to allow discovery after each run
+    private double mGroupMergeScoreThreshold; // after discovery is complete, attempt to merge similar sigs if score exceeds this
 
     private static String BA_CSS_HIGH_THRESHOLD = "ba_css_high";
     private static String BA_MAX_PROPOSED_SIGS = "ba_max_proposed_sigs";
@@ -148,10 +149,11 @@ public class BucketAnalyser {
     private static String BA_EXCESS_GRP_RUN_INDEX = "ba_excess_grp_run_index";
     private static String BA_MIN_BUCKET_COUNT_OVERLAP = "ba_min_bc_overlap";
     private static String BA_USE_RATIO_RANGES = "ba_use_ratio_ranges";
+    private static String BA_MERGE_SIG_SCORE = "ba_merge_sig_score";
 
     // constraint constants - consider moving any allocation-related ones to config to make them visible
     public static double SAMPLE_ALLOCATED_PERCENT = 0.995;
-    public static double SIG_SIMILAR_CSS = 0.85; // for sig and bucket group similarity
+    public static double SIG_SIMILAR_CSS = 0.90; // for sig and bucket group similarity
     public static double DOMINANT_CATEGORY_PERCENT = 0.7; // mark a group with a category if X% of samples in it have this attribute (eg cancer type, UV)
     private static double MAX_ELEVATED_PROB = 1e-12;
     private static double MIN_DISCOVERY_SAMPLE_COUNT = 0.0001; // % of cohort to consider a pair of samples similar (5K at 0.01% of 55M)
@@ -275,6 +277,7 @@ public class BucketAnalyser {
         options.addOption(BA_MIN_BUCKET_COUNT_OVERLAP, true, "Min buckets for candidate group discovery");
         options.addOption(BA_USE_RATIO_RANGES, false, "Allow a computed range around sig ratios");
         options.addOption(BA_MSI_FILTER, true, "Use 'Include' to only look at MSI samples, or 'Exclude' to exclude them");
+        options.addOption(BA_MERGE_SIG_SCORE, true, "After discovery, merge similar sigs before final fit");
     }
 
     public boolean initialise(GenericDataCollection collection, final CommandLine cmd)
@@ -295,6 +298,7 @@ public class BucketAnalyser {
         mExcessDiscoveryRunId = Integer.parseInt(cmd.getOptionValue(BA_EXCESS_GRP_RUN_INDEX, "-1"));
         mMinBucketCountOverlap = Integer.parseInt(cmd.getOptionValue(BA_MIN_BUCKET_COUNT_OVERLAP, "3"));
         mUseRatioRanges = cmd.hasOption(BA_USE_RATIO_RANGES);
+        mGroupMergeScoreThreshold = Double.parseDouble(cmd.getOptionValue(BA_MERGE_SIG_SCORE, "0"));
 
         mExcessDiscoveryRunId = Integer.parseInt(cmd.getOptionValue(BA_EXCESS_GRP_RUN_INDEX, "-1"));
         mIncludeUniqueGroups = true;
@@ -557,6 +561,7 @@ public class BucketAnalyser {
 
                 mReporter.logOverallStats();
                 mFinalBucketGroups.add(nextBestGroup);
+                updateGroupSimiliarityData();
 
                 lastGroupWasMajor = isMajorGroup(nextBestGroup);
 
@@ -604,6 +609,8 @@ public class BucketAnalyser {
 
         perfCounter.start("FinalFit");
 
+        mergeSimilarGroups();
+
         // clear out all allocations and do again from scratch
         fitAllSamples();
 
@@ -623,6 +630,8 @@ public class BucketAnalyser {
         {
             createSignatures();
             writeSampleContributions();
+            writeSampleSigBucketCounts();
+            writeSampleSigAllocations();
         }
 
         mReporter.logOverallStats();
@@ -1916,21 +1925,46 @@ public class BucketAnalyser {
         }
     }
 
-    private boolean similarToExistingGroup(final BucketGroup bucketGroup)
+    private boolean similarToExistingGroup(BucketGroup bucketGroup)
     {
+        setGroupSimiliarityData(bucketGroup);
+        return bucketGroup.getMaxSimiliarScore() >= SIG_SIMILAR_CSS;
+    }
+
+    private void updateGroupSimiliarityData()
+    {
+        for(final BucketGroup bucketGroup : mFinalBucketGroups)
+        {
+            setGroupSimiliarityData(bucketGroup);
+        }
+    }
+
+    private void setGroupSimiliarityData(BucketGroup bucketGroup)
+    {
+        // find the maximum similarity for a given group
         final List<Integer> bucketIds = bucketGroup.getBucketIds();
         final double[] bucketRatios = bucketGroup.getBucketRatios();
 
-        for(final BucketGroup finalGroup : mFinalBucketGroups)
+        double maxSimilarity = 0;
+        BucketGroup maxSimilarGroup = null;
+
+        for(final BucketGroup otherGroup : mFinalBucketGroups)
         {
-            double css = calcCSS(bucketGroup.getBucketRatios(), finalGroup.getBucketRatios());
+            if(bucketGroup == otherGroup)
+                continue;
 
-            if (css >= SIG_SIMILAR_CSS)
-                return true;
+            double css = calcCSS(bucketGroup.getBucketRatios(), otherGroup.getBucketRatios());
 
-            final double[] otherRatios = finalGroup.getBucketRatios();
+            if(css > maxSimilarity)
+            {
+                maxSimilarGroup = otherGroup;
+                maxSimilarity = css;
+            }
+
+            final double[] otherRatios = otherGroup.getBucketRatios();
 
             // also check whether the new ratio ranges are within the bounds of existing group ratios
+            // eg if all are, the similarity score will be 1 (ie 100% similar)
             double similarBucketPerc = 0;
             for(Integer bucket : bucketIds)
             {
@@ -1942,16 +1976,21 @@ public class BucketAnalyser {
                 else
                 {
                     // apply the difference to the similarity total - eg if ref = 0.40 and comparison is 0.25, then add 0.25
+                    // if the difference is beyond the value being compared, counts this for zero
                     double ratioDiff = min(abs(bucketRatios[bucket] - otherRatios[bucket]), bucketRatios[bucket]);
                     similarBucketPerc += bucketRatios[bucket] - ratioDiff;
                 }
             }
 
-            if(similarBucketPerc >= SIG_SIMILAR_CSS)
-                return true;
+            if(similarBucketPerc > maxSimilarity)
+            {
+                maxSimilarGroup = otherGroup;
+                maxSimilarity = similarBucketPerc;
+            }
         }
 
-        return false;
+        bucketGroup.setMaxSimiliarGroup(maxSimilarGroup);
+        bucketGroup.setMaxSimiliarScore(maxSimilarity);
     }
 
     private void removeSkippedAllocations(List<BucketGroup> bucketGroups)
@@ -2782,6 +2821,25 @@ public class BucketAnalyser {
         }
     }
 
+    private void mergeSimilarGroups()
+    {
+        if(mGroupMergeScoreThreshold == 0)
+            return;
+
+        // criteria for merging groups:
+        // similar score above the specified threshold
+        // merge the small group into the larger group
+        // what to do about bucket mismatches??
+        /*
+        int bgIndex = 0;
+        while(bgIndex < mFinalBucketGroups.size())
+        {
+            final BucketGroup bucketGroup = mFinalBucketGroups.get()
+        }
+
+        */
+    }
+
     private void fitAllSamples()
     {
         LOGGER.debug("applying final fit with {} bucket groups to all samples", mFinalBucketGroups.size());
@@ -2914,7 +2972,7 @@ public class BucketAnalyser {
                 sample.addElevBucketGroup(bucketGroup, allocPerc);
 
                 LOGGER.debug(String.format("sample(%d) added to single bg(%d) fit(%s of %s, sc=%.2f) allocatedPerc(+%.3f -> %.3f) noise(%s %.3f/%.3f)",
-                        sample.Id, bucketGroup.getId(), sizeToStr(actualAlloc), sizeToStr(sampleCount), bucketGroup.calcSampleFitScore(sample), sample.lastAllocPercChange(),
+                        sample.Id, bucketGroup.getId(), sizeToStr(actualAlloc), sizeToStr(sampleCount), bucketGroup.calcSampleFitScore(sample, true), sample.lastAllocPercChange(),
                         sample.getAllocPercent(), sizeToStr(sample.getAllocNoise()), sample.getNoisePerc(), sample.getNoiseOfTotal()));
             }
 
@@ -3083,7 +3141,7 @@ public class BucketAnalyser {
                     sample.addElevBucketGroup(bucketGroup, allocPerc);
 
                     LOGGER.debug(String.format("sample(%d) added to bg(%d) fit(%s act=%s of %s sc=%.2f) allocatedPerc(+%.3f -> %.3f) noise(%s %.3f/%.3f)",
-                            sample.Id, bucketGroup.getId(), sizeToStr(fitAlloc), sizeToStr(actualAlloc), sizeToStr(sampleCount), bucketGroup.calcSampleFitScore(sample),
+                            sample.Id, bucketGroup.getId(), sizeToStr(fitAlloc), sizeToStr(actualAlloc), sizeToStr(sampleCount), bucketGroup.calcSampleFitScore(sample, true),
                             sample.lastAllocPercChange(), sample.getAllocPercent(), sizeToStr(sample.getAllocNoise()), sample.getNoisePerc(), sample.getNoiseOfTotal()));
 
                     addedGroups.add(bucketGroup);
@@ -3125,6 +3183,9 @@ public class BucketAnalyser {
 
         for(SampleData sample : mSampleData)
         {
+            if(sample.isExcluded())
+                continue;
+
             double sampleCount = sample.getElevatedCount();
 
             if(mSampleWatchList.contains(sample.Id))
@@ -3266,12 +3327,6 @@ public class BucketAnalyser {
             sigOptim.setRatioRangePercentile(0.9);
             sigOptim.setLogVerbose(true);
             sigOptim.calcBucketDistributions();
-
-            //double[] adjRatioRanges = new double[mBucketCount];
-            //double[] adjBucketRatios = new double[mBucketCount];
-            //copyVector(bucketGroup.getBucketRatios(), adjBucketRatios);
-            //copyVector(bucketGroup.getRatioRanges(), adjRatioRanges);
-            // boolean valuesChanged = SigOptimiser.assessBucketDistribution(bucketGroup.getId(), groupAllocCounts, unallocCounts, adjBucketRatios, adjRatioRanges, 0.9);
 
             if(sigOptim.hasChanged())
             {
@@ -3544,7 +3599,7 @@ public class BucketAnalyser {
         {
             BufferedWriter writer = getNewFile(mOutputDir, mOutputFileId + "_ba_group_data.csv");
 
-            writer.write("Rank,BgId,Type,Discovery,CancerType,Effects,SampleCount,BucketCount,MutLoad,PotentialAlloc,RefSigs,GrpLinks,ParentId");
+            writer.write("Rank,BgId,Type,Discovery,CancerType,Effects,SampleCount,BucketCount,MutLoad,PotentialAlloc,RefSigs,GrpLinks,ParentId,SimGrp,SimGrpScore");
 
             // bucket ratios follow
             for(int i = 0; i < mBucketCount; ++i)
@@ -3580,7 +3635,9 @@ public class BucketAnalyser {
                         bucketGroup.getSampleCount(), bucketGroup.getBucketCount(),
                         sumVector(bucketGroup.getBucketCounts()), bucketGroup.getPotentialAllocation()));
 
-                writer.write(String.format(",%s,%s,%s", bucketGroup.getRefSigs(), bucketGroup.getGroupLinks(), parentId >= 0 ? String.valueOf(parentId) : ""));
+                writer.write(String.format(",%s,%s,%s,%d,%.4f",
+                        bucketGroup.getRefSigs(), bucketGroup.getGroupLinks(), parentId >= 0 ? String.valueOf(parentId) : "",
+                        bucketGroup.getMaxSimiliarGroup() != null ? bucketGroup.getMaxSimiliarGroup().getId() : -1, bucketGroup.getMaxSimiliarScore()));
 
                 double[] bucketRatios = bucketGroup.getBucketRatios();
 
@@ -3991,7 +4048,7 @@ public class BucketAnalyser {
         {
             BufferedWriter writer = getNewFile(mOutputDir,mOutputFileId + "_ba_sample_grp_data.csv");
 
-            writer.write("SampleIndex,SampleId,CancerType,MutLoad,AllocPerc,BgId,Type,Potential,PotentialPerc,PotentialScore,Actual,ActualPerc,AllocScore");
+            writer.write("SampleIndex,SampleId,CancerType,MutLoad,AllocPerc,BgId,Type,Potential,PotPerc,PotGrossScore,PotNetScore,Actual,ActPerc,ActGrossScore,ActNetScore");
             writer.newLine();
 
             for(final SampleData sample : mSampleData)
@@ -4008,29 +4065,33 @@ public class BucketAnalyser {
                     int samIndex = bucketGroup.getSampleIndex(sample.Id);
                     double actualTotal = bucketGroup.getSampleCountTotals().get(samIndex);
                     double[] actualAllocs = bucketGroup.getSampleCounts().get(samIndex);
-                    double actualScore = bucketGroup.calcSampleFitScore(actualAllocs, actualTotal);
+                    double actualGrossScore = bucketGroup.calcSampleFitScore(actualAllocs, actualTotal, true);
+                    double actualNetScore = bucketGroup.calcSampleFitScore(actualAllocs, actualTotal, false);
 
                     final double[] potentialAllocs = sample.getPotentialElevCounts(bucketGroup.getBucketRatios(), bucketGroup.getBucketIds(), bucketGroup.getRatioRanges());
                     double potentialTotal = sumVector(potentialAllocs);
 
-                    double potentialScore = 0;
+                    double potentialGrossScore = 0;
+                    double potentialNetScore = 0;
 
                     if(potentialTotal > actualTotal)
                     {
-                        potentialScore = potentialTotal > 0 ? bucketGroup.calcSampleFitScore(potentialAllocs, potentialTotal) : 0;
+                        potentialGrossScore = potentialTotal > 0 ? bucketGroup.calcSampleFitScore(potentialAllocs, potentialTotal, true) : 0;
+                        potentialNetScore = potentialTotal > 0 ? bucketGroup.calcSampleFitScore(potentialAllocs, potentialTotal, false) : 0;
                     }
                     else
                     {
-                        potentialScore = actualScore;
+                        potentialGrossScore = actualGrossScore;
+                        potentialNetScore = actualNetScore;
                         potentialTotal = actualTotal;
                     }
 
                     writer.write(String.format("%d,%s,%s,%.0f,%.3f,%d,Assigned",
                             sample.Id, sample.getSampleName(), sample.getCancerType(), sampleTotal, allocPerc, bucketGroup.getId()));
 
-                    writer.write(String.format(",%.0f,%.3f,%.3f,%.0f,%.3f,%.3f",
-                            potentialTotal, potentialTotal/sampleTotal, potentialScore,
-                            actualTotal, actualTotal/sampleTotal, actualScore));
+                    writer.write(String.format(",%.0f,%.3f,%.3f,%.3f,%.0f,%.3f,%.3f,%.3f",
+                            potentialTotal, potentialTotal/sampleTotal, potentialGrossScore, potentialNetScore,
+                            actualTotal, actualTotal/sampleTotal, actualGrossScore, actualNetScore));
 
                     writer.newLine();
                 }
@@ -4049,8 +4110,9 @@ public class BucketAnalyser {
                     writer.write(String.format("%d,%s,%s,%.0f,%.3f,%d,Unassigned",
                             sample.Id, sample.getSampleName(), sample.getCancerType(), sampleTotal, allocPerc, bucketGroup.getId()));
 
-                    writer.write(String.format(",%.0f,%.3f,%.3f,0,0,0",
-                            potentialTotal, potentialTotal / sampleTotal, bucketGroup.calcSampleFitScore(potentialAllocs, potentialTotal)));
+                    writer.write(String.format(",%.0f,%.3f,%.3f,%.3f,0,0,0,0",
+                            potentialTotal, potentialTotal / sampleTotal, bucketGroup.calcSampleFitScore(potentialAllocs, potentialTotal, true),
+                            bucketGroup.calcSampleFitScore(potentialAllocs, potentialTotal, false)));
 
                     writer.newLine();
                 }
@@ -4127,26 +4189,6 @@ public class BucketAnalyser {
 
         contribMatrix.cacheTranspose();
 
-        // scale so the contribs do not exceed the actual sample count totals
-        /*
-        for(int s = 0; s < mSampleCount; ++s)
-        {
-            double adjRatio = 0;
-            double sampleTotal = mSampleTotals[s];
-            double contribTotal = sumVector(contribMatrix.getCol(s));
-
-            if(contribTotal > sampleTotal)
-            {
-                adjRatio = sampleTotal / contribTotal;
-
-                for(int sig = 0; sig < sigCount; ++sig)
-                {
-                    contribData[sig][s] *= adjRatio;
-                }
-            }
-        }
-        */
-
         try
         {
             BufferedWriter writer = getNewFile(mOutputDir, mOutputFileId + "_ba_contribs.csv");
@@ -4169,6 +4211,109 @@ public class BucketAnalyser {
         catch (final IOException e)
         {
             LOGGER.error("error writing sample contrib file");
+        }
+    }
+
+    public void writeSampleSigBucketCounts()
+    {
+        // write out the actual sample bucket allocations for each of a sample's sigs
+        try
+        {
+            BufferedWriter writer = getNewFile(mOutputDir, mOutputFileId + "_ba_sample_sig_bucket_counts.csv");
+
+            writer.write("SigId,SampleId");
+
+            for(int b = 0; b < mBucketCount; ++b)
+            {
+                writer.write(String.format(",%d", b));
+            }
+
+            writer.newLine();
+
+            for(int bgIndex = 0; bgIndex < mFinalBucketGroups.size(); ++bgIndex)
+            {
+                final BucketGroup bucketGroup = mFinalBucketGroups.get(bgIndex);
+                final List<Integer> sampleIds = bucketGroup.getSampleIds();
+                final List<double[]> sampleCountsList = bucketGroup.getSampleCounts();
+
+                for(int samIndex = 0; samIndex < sampleIds.size(); ++samIndex)
+                {
+                    final SampleData sample = mSampleData.get(sampleIds.get(samIndex));
+
+                    writer.write(String.format("%d,%s", bgIndex, sample.getSampleName()));
+
+                    final double[] sampleCounts = sampleCountsList.get(samIndex);
+
+                    for(int b = 0; b < mBucketCount; ++b)
+                    {
+                        writer.write(String.format(",%.1f", sampleCounts[b]));
+                    }
+
+                    writer.newLine();
+                }
+            }
+
+            writer.close();
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing sig sample counts file");
+        }
+    }
+
+    public void writeSampleSigAllocations()
+    {
+        // write out the sample bucket group allocations plus excess (from overfitting with ratio ranges) and under allocations
+        try
+        {
+            BufferedWriter writer = getNewFile(mOutputDir, mOutputFileId + "_ba_sample_sig_allocs.csv");
+
+            writer.write("Signature,BgId,SampleId,AllocTotal,AllocPerc");
+
+            writer.newLine();
+
+            // first write out bucket group allocations
+            for(int bgIndex = 0; bgIndex < mFinalBucketGroups.size(); ++bgIndex)
+            {
+                final BucketGroup bucketGroup = mFinalBucketGroups.get(bgIndex);
+                final List<Integer> sampleIds = bucketGroup.getSampleIds();
+                final List<Double> sampleAllocTotals = bucketGroup.getSampleCountTotals();
+
+                for (int samIndex = 0; samIndex < sampleIds.size(); ++samIndex)
+                {
+                    final SampleData sample = mSampleData.get(sampleIds.get(samIndex));
+                    double sampleAllocTotal = sampleAllocTotals.get(samIndex);
+
+                    writer.write(String.format("%d,%s,%s,%.1f,%.3f",
+                            bgIndex + 1, bucketGroup.getId(), sample.getSampleName(), sampleAllocTotal, sampleAllocTotal/sample.getElevatedCount()));
+
+                    writer.newLine();
+                }
+            }
+
+            // then write out unallocated and excess counts
+            int unallocatedId = mFinalBucketGroups.size() + 1;
+            int excessId = unallocatedId + 1;
+
+            for(final SampleData sample : mSampleData)
+            {
+                if(sample.isExcluded())
+                    continue;
+
+                writer.write(String.format("%d,%s,%s,%.1f,%.3f",
+                        unallocatedId, "Unalloc", sample.getSampleName(), sample.getUnallocatedCount(), sample.getUnallocPercent()));
+                writer.newLine();
+
+                writer.write(String.format("%d,%s,%s,%.1f,%.3f",
+                        excessId, "Excess", sample.getSampleName(), sample.getAllocNoise(), sample.getNoiseOfTotal()));
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing sig sample counts file");
         }
     }
 
