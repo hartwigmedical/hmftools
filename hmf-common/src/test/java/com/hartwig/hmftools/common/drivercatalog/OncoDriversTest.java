@@ -22,7 +22,6 @@ import org.junit.Test;
 
 public class OncoDriversTest {
 
-    private static final double EPSILON = 0.0001;
     private static final double UNADJUSTED_LIKELIHOOD = 0.5;
 
     private EnrichedSomaticVariant frameshiftHotspot;
@@ -47,20 +46,6 @@ public class OncoDriversTest {
         invalidInframe = create(VariantType.INDEL, CodingEffect.MISSENSE, OncoDrivers.MAX_REPEAT_COUNT + 1, Hotspot.NON_HOTSPOT);
         frameshift = create(VariantType.INDEL, CodingEffect.NONSENSE_OR_FRAMESHIFT, 3, Hotspot.NON_HOTSPOT);
         missense = create(VariantType.SNP, CodingEffect.MISSENSE, 0, Hotspot.NON_HOTSPOT);
-    }
-
-    @Test
-    public void testHIST2H3D() throws IOException {
-        final Map<String, DndsDriverGeneLikelihood> dnds = DndsDriverGeneLikelihoodSupplier.oncoLikelihood();
-        double value = OncoDrivers.missenseProbabilityDriverVariant(27742, dnds.get("HIST2H3D").missense());
-        assertEquals(0.7042, value, EPSILON);
-    }
-
-    @Test
-    public void testABL1() throws IOException {
-        final Map<String, DndsDriverGeneLikelihood> dnds = DndsDriverGeneLikelihoodSupplier.oncoLikelihood();
-        double value = OncoDrivers.missenseProbabilityDriverVariant(996698, dnds.get("ABL1").missense());
-        assertEquals(0.0057, value, EPSILON);
     }
 
     @Test

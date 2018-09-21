@@ -26,7 +26,11 @@ public class DndsDriverGeneLikelihoodSupplierTest {
     public void testReadTSGGenes() {
         final Map<String, DndsDriverGeneLikelihood> dndsLiklihoods = DndsDriverGeneLikelihoodSupplier.tsgLikelihood();
 
-        //ACVR1B	0.169657430054376	0.00148141622916503	2.93196959039058e-07	0.813987487614234	0.00169228167903167	1.56384975335264e-08	0.867133919724453	0.00108166393312822	6.70221322865416e-09	0.0923460717793221	7.67950700867543e-05	1.89129931736336e-07
+        //ACVR1B
+        // 0.169657430054376	0.00148141622916503	2.93196959039058e-07
+        // 0.813987487614234	0.00169228167903167	1.56384975335264e-08
+        // 0.867133919724453	0.00108166393312822	6.70221322865416e-09
+        // 0.0923460717793221	7.67950700867543e-05	1.89129931736336e-07
         final DndsDriverGeneLikelihood gene = dndsLiklihoods.get("ACVR1B");
         final DndsDriverImpactLikelihood missense = gene.missense();
 
