@@ -31,6 +31,13 @@ data class SamplesInput(val samples: List<SampleId>, val patientsMap: Map<Patien
 
     fun canonicalId(patient: PatientId) = patientsMap[patient] ?: patient
 
+    fun hashMapping(generator: IdGenerator, newGenerator: IdGenerator): Map<Hash, Hash> {
+        val samplePlaintexts = samples.map { it.id }
+        val patientPlaintexts = samples.map { it.patientId.id } + patientsMap.flatMap { it.toPair().toList() }.map { it.id }
+        val allPlaintexts = samplePlaintexts + patientPlaintexts
+        return allPlaintexts.associateBy({ generator.hash(it) }, { newGenerator.hash(it) })
+    }
+
     private fun validatePatientsMap() {
         val chainedCanonicalMappings = patientsMap.count { (patientId, canonicalId) ->
             val canonicalIsRenamed = patientsMap.containsKey(canonicalId)
