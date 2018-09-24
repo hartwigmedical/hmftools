@@ -16,4 +16,6 @@ public interface SomaticConfig {
     int minTotalVariants();
 
     int minPeakVariants();
+
+    double minSomaticPurity();
 }

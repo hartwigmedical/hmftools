@@ -212,6 +212,7 @@ public class PurityPloidyEstimateApplication {
             final BestFitFactory bestFitFactory = new BestFitFactory(somaticConfig.minTotalVariants(),
                     somaticConfig.minPeakVariants(),
                     highlyDiploidPercentage,
+                    somaticConfig.minSomaticPurity(),
                     bestFitPerPurity,
                     snps);
             final FittedPurity bestFit = bestFitFactory.bestFit();

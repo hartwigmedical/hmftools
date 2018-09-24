@@ -34,6 +34,9 @@ public class ConfigSupplier {
 
     private static final String STRUCTURAL_VARIANTS = "structural_vcf";
     private static final String SOMATIC_VARIANTS = "somatic_vcf";
+
+    private static final String SOMATIC_MIN_PURITY = "somatic_min_purity";
+    private static final double SOMATIC_MIN_PURITY_DEFAULT = 0.16;
     private static final String SOMATIC_MIN_PEAK = "somatic_min_peak";
     private static final int SOMATIC_MIN_PEAK_DEFAULT = 50;
     private static final String SOMATIC_MIN_TOTAL = "somatic_min_total";
@@ -66,6 +69,7 @@ public class ConfigSupplier {
         options.addOption(GC_PROFILE, true, "Location of GC Profile.");
         options.addOption(SOMATIC_MIN_PEAK, true, "Minimum number of somatic variants to consider a peak.");
         options.addOption(SOMATIC_MIN_TOTAL, true, "Minimum number of somatic variants required to assist highly diploid fits.");
+        options.addOption(SOMATIC_MIN_PURITY, true, "Somatic purities below this minimum will not be used.");
 
 
         options.addOption(MIN_DIPLOID_TUMOR_RATIO_COUNT, true,
@@ -220,6 +224,7 @@ public class ConfigSupplier {
                 .file(file)
                 .minTotalVariants(defaultIntValue(cmd, SOMATIC_MIN_TOTAL, SOMATIC_MIN_TOTAL_DEFAULT))
                 .minPeakVariants(defaultIntValue(cmd, SOMATIC_MIN_PEAK, SOMATIC_MIN_PEAK_DEFAULT))
+                .minSomaticPurity(defaultValue(cmd, SOMATIC_MIN_PURITY, SOMATIC_MIN_PURITY_DEFAULT))
                 .build();
     }
 
