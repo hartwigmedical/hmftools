@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotationFactory;
 import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
+import com.hartwig.hmftools.common.variant.filter.NearIndelPonFilter;
 import com.hartwig.hmftools.common.variant.snpeff.CanonicalAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
@@ -36,8 +37,6 @@ import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class SomaticVariantFactory {
-
-    static final String PASS_FILTER = "PASS";
 
     @NotNull
     public static SomaticVariantFactory unfilteredInstance() {
@@ -63,6 +62,9 @@ public class SomaticVariantFactory {
     private static final String COSMIC_IDENTIFIER = "COSM";
     private static final String ID_SEPARATOR = ";";
     private static final String MAPPABILITY_TAG = "MAPPABILITY";
+
+    static final String PASS_FILTER = "PASS";
+    private static final String NEAR_INDEL_PON_FILTER = "NEAR_INDEL_PON";
 
     @NotNull
     private final CompoundFilter filter;
@@ -94,11 +96,20 @@ public class SomaticVariantFactory {
                 throw new IllegalArgumentException("Allelic depths is a required format field in vcf file " + vcfFile);
             }
 
-            for (final VariantContext context : reader.iterator()) {
-                Optional<ImmutableSomaticVariantImpl.Builder> builder = createVariantBuilder(sample, context);
-                if (builder.isPresent()) {
-                    variants.add(enrichment.enrich(builder.get(), context).build());
+            final List<VariantContext> allVariantContexts = reader.iterator().toList();
+            for (int i = 0; i < allVariantContexts.size(); i++) {
+                final VariantContext context = allVariantContexts.get(i);
+                final Optional<ImmutableSomaticVariantImpl.Builder> optionalBuilder = createVariantBuilder(sample, context);
+                if (optionalBuilder.isPresent()) {
+                    ImmutableSomaticVariantImpl.Builder builder = optionalBuilder.get();
+
+                    if (NearIndelPonFilter.isIndelNearPon(i, allVariantContexts)) {
+                        builder.filter(NEAR_INDEL_PON_FILTER);
+                    }
+
+                    variants.add(enrichment.enrich(builder, context).build());
                 }
+
             }
         }
 
@@ -106,7 +117,9 @@ public class SomaticVariantFactory {
     }
 
     @NotNull
-    private Optional<ImmutableSomaticVariantImpl.Builder> createVariantBuilder(@NotNull final String sample, @NotNull final VariantContext context) {
+    private Optional<ImmutableSomaticVariantImpl.Builder> createVariantBuilder(@NotNull final String sample,
+            @NotNull final VariantContext context) {
+
         if (filter.test(context)) {
             final Genotype genotype = context.getGenotype(sample);
             if (genotype.hasAD() && genotype.getAD().length > 1) {
