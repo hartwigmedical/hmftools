@@ -19,9 +19,23 @@ class AnonymizedSamples private constructor(val password: String, val sampleIds:
     private val hmfSampleIdPerHash = sampleIds.groupBy { it.hash }
     private val hmfSampleIdPerPatientHash = sampleIds.groupBy { it.hmfPatientId.hash }
 
-    operator fun get(sampleId: SampleId): HmfSampleId? = hmfSampleIdPerHash[generator.hash(sampleId.id)]
-            ?.find { it.hmfPatientId.hash == generator.hash(samplesInput.canonicalId(sampleId.patientId).patientId.id) }
+    operator fun get(sampleId: SampleId): HmfSampleId? {
+        val hmfSampleIdsForHash = hmfSampleIdPerHash[generator.hash(sampleId.id)]
+        hmfSampleIdsForHash ?: return null
+        return if (hmfSampleIdsForHash.size == 1) hmfSampleIdsForHash.first()
+        else hmfSampleIdsForHash.find { it.hmfPatientId.hash == generator.hash(samplesInput.canonicalId(sampleId.patientId).patientId.id) }
+    }
 
     operator fun get(patientId: CanonicalPatientId): List<HmfSampleId> =
             hmfSampleIdPerPatientHash[generator.hash(patientId.patientId.id)] ?: emptyList()
+
+    fun anonymizedSamplesMap(): Map<HmfSampleId, HmfSampleId> {
+        val anonymizedPatients = AnonymizedPatients(password, sampleIds.map { it.hmfPatientId }.distinct(), samplesInput)
+        return anonymizedPatients.anonymizedPatientMap().flatMap { (patientId, canonicalId) ->
+            val patientIdSamples = hmfSampleIdPerPatientHash[patientId.hash] ?: emptyList()
+            val canonicalIdSamples = hmfSampleIdPerPatientHash[canonicalId.hash]?.associateBy { it.hash } ?: emptyMap()
+            patientIdSamples.map { Pair(it, canonicalIdSamples[it.hash]!!) }
+        }.toMap()
+
+    }
 }

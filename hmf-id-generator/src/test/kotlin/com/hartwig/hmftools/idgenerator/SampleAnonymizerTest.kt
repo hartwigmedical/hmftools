@@ -63,6 +63,7 @@ class SampleAnonymizerTest : StringSpec() {
             val output = anonymizer.updateSampleIds(PASSWORD1, twoSamplesInput, emptyList())
             val updatedOutput = anonymizer.updateSampleIds(PASSWORD1, oneSampleInput, output)
             updatedOutput.sampleIds shouldBe output.sampleIds
+            updatedOutput[sample1B]!!.id shouldBe 2
         }
 
         "changing password and removing sample for same patient updates patient hash but not sample hash for removed sample" {
@@ -94,6 +95,7 @@ class SampleAnonymizerTest : StringSpec() {
             output[sample1A]!!.id shouldBe 1
             output[sample2A]!!.id shouldBe 2
             output[sample1A]!!.hmfPatientId shouldBe output[sample2A]!!.hmfPatientId
+            output.anonymizedSamplesMap().size shouldBe 0
         }
 
         "samples for patients mapped from start generate single hmfPatientId after password change" {
@@ -109,6 +111,7 @@ class SampleAnonymizerTest : StringSpec() {
             updatedOutput[sample1A]!!.hmfPatientId.id shouldBe output[sample1A]!!.hmfPatientId.id
             updatedOutput[sample1A]!!.hmfPatientId.hash shouldNotBe output[sample1A]!!.hmfPatientId.hash
             collisions(updatedOutput, output) shouldBe 0
+            output.anonymizedSamplesMap().size shouldBe 0
         }
 
         "samples for patients mapped later add an extra item to output" {
@@ -126,6 +129,8 @@ class SampleAnonymizerTest : StringSpec() {
             updatedOutput[sample1A]!!.hash shouldBe output[sample1A]!!.hash
             updatedOutput[sample2A]!!.hash shouldBe output[sample2A]!!.hash
             updatedOutput[sample1A]!!.hmfPatientId shouldNotBe output[sample1A]!!.hmfPatientId
+            updatedOutput.anonymizedSamplesMap().size shouldBe 1
+            updatedOutput.anonymizedSamplesMap().map { it.key.plaintext to it.value.plaintext }.toMap() shouldBe mapOf("HMF000001A" to "HMF000002B")
         }
 
         "samples for patients mapped later correctly update hashes on password change" {
@@ -145,6 +150,8 @@ class SampleAnonymizerTest : StringSpec() {
             updatedOutput[sample1A]!!.hmfPatientId shouldNotBe output[sample1A]!!.hmfPatientId
             updatedOutput.map { it.hmfPatientId.hash }.none { output.map { it.hmfPatientId.hash }.contains(it) } shouldBe true
             collisions(updatedOutput, output) shouldBe 0
+            updatedOutput.anonymizedSamplesMap().size shouldBe 1
+            updatedOutput.anonymizedSamplesMap().map { it.key.plaintext to it.value.plaintext }.toMap() shouldBe mapOf("HMF000001A" to "HMF000002B")
         }
 
         "samples added for patients mapped later are only added with the canonical hmfPatientId" {
@@ -162,6 +169,8 @@ class SampleAnonymizerTest : StringSpec() {
             updatedOutput[sample1A]!!.hmfPatientId shouldBe updatedOutput[sample2A]!!.hmfPatientId
             updatedOutput[sample1B]!!.hmfPatientId shouldBe updatedOutput[sample2A]!!.hmfPatientId
             updatedOutput[sample1A]!!.hmfPatientId shouldNotBe output[sample1A]!!.hmfPatientId
+            updatedOutput.anonymizedSamplesMap().size shouldBe 1
+            updatedOutput.anonymizedSamplesMap().map { it.key.plaintext to it.value.plaintext }.toMap() shouldBe mapOf("HMF000001A" to "HMF000002B")
         }
 
         "samples added for patients mapped later that are then unmapped continue where they left off" {
@@ -177,6 +186,7 @@ class SampleAnonymizerTest : StringSpec() {
             output3.size shouldBe 5
             output3[sample1B]!!.id shouldBe 2
             output3[sample1B]!!.hmfPatientId shouldBe output[sample1A]!!.hmfPatientId
+            output3.anonymizedSamplesMap().size shouldBe 0
         }
 
         "samples added for patients mapped later that are then unmapped continue where they left off with password changes" {
@@ -196,6 +206,38 @@ class SampleAnonymizerTest : StringSpec() {
             collisions(output2, output) shouldBe 0
             collisions(output3, output2) shouldBe 0
             collisions(output3, output) shouldBe 0
+            output3.anonymizedSamplesMap().size shouldBe 0
+        }
+
+        "samples for patients mapped later that are then removed do not end up in anonymized samples map" {
+            val patientMap = mapOf(patient1 to patient2)
+            val initialInput = SamplesInput(listOf(sample1A, sample2A))
+            val mappedInput = SamplesInput(listOf(sample1A, sample2A, sample1B), patientMap)
+            val mappedInputWithRemovedSample = SamplesInput(listOf(sample1A, sample2A), patientMap)
+            val output = anonymizer.updateSampleIds(PASSWORD1, initialInput, emptyList())
+            output.size shouldBe 2
+            val output2 = anonymizer.updateSampleIds(PASSWORD1, mappedInput, output)
+            output2.size shouldBe 4
+            val output3 = anonymizer.updateSampleIds(PASSWORD1, mappedInputWithRemovedSample, output2)
+            output3.size shouldBe 4
+            output3[sample1B]!!.id shouldBe 3
+            output3[sample1B]!!.hmfPatientId shouldBe output[sample2A]!!.hmfPatientId
+            output3.anonymizedSamplesMap().size shouldBe 1
+        }
+
+        "samples for patients mapped later that are then unmapped and samples removed do not end up in anonymized samples map" {
+            val patientMap = mapOf(patient1 to patient2)
+            val initialInput = SamplesInput(listOf(sample1A, sample2A))
+            val mappedInput = SamplesInput(listOf(sample1A, sample2A, sample1B), patientMap)
+            val unmappedInputWithRemovedSample = SamplesInput(listOf(sample1A, sample2A))
+            val output = anonymizer.updateSampleIds(PASSWORD1, initialInput, emptyList())
+            output.size shouldBe 2
+            val output2 = anonymizer.updateSampleIds(PASSWORD1, mappedInput, output)
+            output2.size shouldBe 4
+            val output3 = anonymizer.updateSampleIds(PASSWORD1, unmappedInputWithRemovedSample, output2)
+            output3.size shouldBe 4
+            output3[sample1B]!!.plaintext shouldBe "HMF000002C"
+            output3.anonymizedSamplesMap().size shouldBe 0
         }
     }
 
