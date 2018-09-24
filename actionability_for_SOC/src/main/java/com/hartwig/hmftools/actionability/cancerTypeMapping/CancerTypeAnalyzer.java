@@ -1,0 +1,44 @@
+package com.hartwig.hmftools.actionability.cancerTypeMapping;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.jetbrains.annotations.NotNull;
+
+public class CancerTypeAnalyzer {
+    private static final org.apache.logging.log4j.Logger LOGGER = org.apache.logging.log4j.LogManager.getLogger(CancerTypeAnalyzer.class);
+    private static final String DELIMITER = "\t";
+
+    @NotNull
+    private final List<CancerTypeReading> cancerTypeDoids;
+
+    public CancerTypeAnalyzer(@NotNull final List<CancerTypeReading> cancerTypeDoids) {
+        this.cancerTypeDoids = cancerTypeDoids;
+    }
+
+
+    @NotNull
+    public static CancerTypeAnalyzer loadFromFile(String fileCancerType) throws IOException {
+        final List<CancerTypeReading> cancerTypeWithDOID = new ArrayList<>();
+        final List<String> lineCancerType = Files.readAllLines(new File(fileCancerType).toPath());
+
+        for (int i = 1; i < lineCancerType.size(); i++) {
+            fromLine(lineCancerType.get(i));
+            cancerTypeWithDOID.add(fromLine(lineCancerType.get(i)));
+        }
+        return new CancerTypeAnalyzer(cancerTypeWithDOID);
+    }
+
+
+    @NotNull
+    private static CancerTypeReading fromLine(@NotNull String line) {
+        final String[] values = line.split(DELIMITER);
+        return  ImmutableCancerTypeReading.builder()
+                .cancerType(values[0])
+                .doidSet(values[1]).build();
+    }
+
+}

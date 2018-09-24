@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.actionability.CNVs.ActionabilityCNVsAnalyzer;
+import com.hartwig.hmftools.actionability.cancerTypeMapping.CancerTypeAnalyzer;
 import com.hartwig.hmftools.actionability.variants.ActionabilityVariantsAnalyzer;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
@@ -63,6 +64,15 @@ public abstract class ActionabilityApplication {
         final PatientTumorLocation patientTumorLocation = extractPatientTumorLocation(patientTumorLocations, run.tumorSample());
         LOGGER.info("Tumor location from patient: " + patientTumorLocation.primaryTumorLocation());
         LOGGER.info("Cancer subtype from patient: " + patientTumorLocation.cancerSubtype());
+
+
+       String fileCancerTupeWithDOID = "/data/common/dbs/knowledgebases/output/knowledgebaseCancerTypes.tsv";
+        if (Files.exists(new File(fileCancerTupeWithDOID).toPath()) && Files.exists(new File(fileCancerTupeWithDOID).toPath())) {
+            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTupeWithDOID);
+            LOGGER.info(cancerTypeAnalyzer);
+        }
+
+
 
         LOGGER.info("");
         LOGGER.info("Start processing actionability somaticVariants");
