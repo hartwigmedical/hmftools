@@ -24,15 +24,15 @@ class SampleAnonymizerTest : StringSpec() {
     init {
         "generates sample id" {
             val samplesInput = SamplesInput(listOf(sample1A))
-            val output = anonymizer.updateSampleIds(PASSWORD1, samplesInput, emptyList())
+            val output = anonymizer.anonymize(PASSWORD1, samplesInput, emptyList())
             output.size shouldBe 1
             output[sample1A]!!.id shouldBe 1
         }
 
         "updates sample and patient hash on password change" {
             val samplesInput = SamplesInput(listOf(sample1A))
-            val output = anonymizer.updateSampleIds(PASSWORD1, samplesInput, emptyList())
-            val updatedOutput = anonymizer.updateSampleIds(PASSWORD2, samplesInput, output)
+            val output = anonymizer.anonymize(PASSWORD1, samplesInput, emptyList())
+            val updatedOutput = anonymizer.anonymize(PASSWORD2, samplesInput, output)
             updatedOutput.size shouldBe output.size
 
             val sampleId = output[sample1A]!!
@@ -46,8 +46,8 @@ class SampleAnonymizerTest : StringSpec() {
         "multiple samples for same patient have different anonymized ids but same anonymized patientId" {
             val oneSampleInput = SamplesInput(listOf(sample1A))
             val twoSamplesInput = SamplesInput(listOf(sample1A, sample1B))
-            val output = anonymizer.updateSampleIds(PASSWORD1, oneSampleInput, emptyList())
-            val updatedOutput = anonymizer.updateSampleIds(PASSWORD1, twoSamplesInput, output)
+            val output = anonymizer.anonymize(PASSWORD1, oneSampleInput, emptyList())
+            val updatedOutput = anonymizer.anonymize(PASSWORD1, twoSamplesInput, output)
             updatedOutput.size shouldBe output.size + 1
 
             val first = output[sample1A]!!
@@ -60,8 +60,8 @@ class SampleAnonymizerTest : StringSpec() {
         "removing one already anonymized sample does not change the output" {
             val twoSamplesInput = SamplesInput(listOf(sample1A, sample1B))
             val oneSampleInput = SamplesInput(listOf(sample1A))
-            val output = anonymizer.updateSampleIds(PASSWORD1, twoSamplesInput, emptyList())
-            val updatedOutput = anonymizer.updateSampleIds(PASSWORD1, oneSampleInput, output)
+            val output = anonymizer.anonymize(PASSWORD1, twoSamplesInput, emptyList())
+            val updatedOutput = anonymizer.anonymize(PASSWORD1, oneSampleInput, output)
             updatedOutput.sampleIds shouldBe output.sampleIds
             updatedOutput[sample1B]!!.id shouldBe 2
         }
@@ -69,8 +69,8 @@ class SampleAnonymizerTest : StringSpec() {
         "changing password and removing sample for same patient updates patient hash but not sample hash for removed sample" {
             val twoSamplesInput = SamplesInput(listOf(sample1A, sample1B))
             val oneSampleInput = SamplesInput(listOf(sample1A))
-            val output = anonymizer.updateSampleIds(PASSWORD1, twoSamplesInput, emptyList())
-            val updatedOutput = anonymizer.updateSampleIds(PASSWORD2, oneSampleInput, output)
+            val output = anonymizer.anonymize(PASSWORD1, twoSamplesInput, emptyList())
+            val updatedOutput = anonymizer.anonymize(PASSWORD2, oneSampleInput, output)
             updatedOutput.sampleIds.size shouldBe output.sampleIds.size
             collisions(updatedOutput, output) shouldBe 1
             updatedOutput.map { it.id } shouldBe output.map { it.id }
@@ -81,8 +81,8 @@ class SampleAnonymizerTest : StringSpec() {
         "replacing an already anonymized sample adds entry to the output" {
             val twoSamplesInput = SamplesInput(listOf(sample1A, sample1B))
             val replacedSampleInput = SamplesInput(listOf(sample1A, sample2A))
-            val output = anonymizer.updateSampleIds(PASSWORD1, twoSamplesInput, emptyList())
-            val updatedOutput = anonymizer.updateSampleIds(PASSWORD1, replacedSampleInput, output)
+            val output = anonymizer.anonymize(PASSWORD1, twoSamplesInput, emptyList())
+            val updatedOutput = anonymizer.anonymize(PASSWORD1, replacedSampleInput, output)
             updatedOutput.sampleIds.size shouldBe output.sampleIds.size + 1
             collisions(updatedOutput, output) shouldBe 2
         }
@@ -90,7 +90,7 @@ class SampleAnonymizerTest : StringSpec() {
         "samples for patients mapped from start generate single hmfPatientId" {
             val patientMap = mapOf(patient1 to patient2)
             val samplesInput = SamplesInput(listOf(sample1A, sample2A), patientMap)
-            val output = anonymizer.updateSampleIds(PASSWORD1, samplesInput, emptyList())
+            val output = anonymizer.anonymize(PASSWORD1, samplesInput, emptyList())
             output.size shouldBe 2
             output[sample1A]!!.id shouldBe 1
             output[sample2A]!!.id shouldBe 2
@@ -101,8 +101,8 @@ class SampleAnonymizerTest : StringSpec() {
         "samples for patients mapped from start generate single hmfPatientId after password change" {
             val patientMap = mapOf(patient1 to patient2)
             val samplesInput = SamplesInput(listOf(sample1A, sample2A), patientMap)
-            val output = anonymizer.updateSampleIds(PASSWORD1, samplesInput, emptyList())
-            val updatedOutput = anonymizer.updateSampleIds(PASSWORD2, samplesInput, output)
+            val output = anonymizer.anonymize(PASSWORD1, samplesInput, emptyList())
+            val updatedOutput = anonymizer.anonymize(PASSWORD2, samplesInput, output)
 
             updatedOutput.size shouldBe 2
             updatedOutput[sample1A]!!.id shouldBe 1
@@ -118,10 +118,10 @@ class SampleAnonymizerTest : StringSpec() {
             val patientMap = mapOf(patient1 to patient2)
             val initialInput = SamplesInput(listOf(sample1A, sample2A))
             val mappedInput = SamplesInput(listOf(sample1A, sample2A), patientMap)
-            val output = anonymizer.updateSampleIds(PASSWORD1, initialInput, emptyList())
+            val output = anonymizer.anonymize(PASSWORD1, initialInput, emptyList())
             output.size shouldBe 2
 
-            val updatedOutput = anonymizer.updateSampleIds(PASSWORD1, mappedInput, output)
+            val updatedOutput = anonymizer.anonymize(PASSWORD1, mappedInput, output)
             updatedOutput.size shouldBe 3
             updatedOutput[sample1A]!!.id shouldBe 2
             updatedOutput[sample2A]!!.id shouldBe 1
@@ -137,10 +137,10 @@ class SampleAnonymizerTest : StringSpec() {
             val patientMap = mapOf(patient1 to patient2)
             val initialInput = SamplesInput(listOf(sample1A, sample2A))
             val mappedInput = SamplesInput(listOf(sample1A, sample2A), patientMap)
-            val output = anonymizer.updateSampleIds(PASSWORD1, initialInput, emptyList())
+            val output = anonymizer.anonymize(PASSWORD1, initialInput, emptyList())
             output.size shouldBe 2
 
-            val updatedOutput = anonymizer.updateSampleIds(PASSWORD2, mappedInput, output)
+            val updatedOutput = anonymizer.anonymize(PASSWORD2, mappedInput, output)
             updatedOutput.size shouldBe 3
             updatedOutput[sample1A]!!.id shouldBe 2
             updatedOutput[sample2A]!!.id shouldBe 1
@@ -158,10 +158,10 @@ class SampleAnonymizerTest : StringSpec() {
             val patientMap = mapOf(patient1 to patient2)
             val initialInput = SamplesInput(listOf(sample1A, sample2A))
             val mappedInput = SamplesInput(listOf(sample1A, sample2A, sample1B), patientMap)
-            val output = anonymizer.updateSampleIds(PASSWORD1, initialInput, emptyList())
+            val output = anonymizer.anonymize(PASSWORD1, initialInput, emptyList())
             output.size shouldBe 2
 
-            val updatedOutput = anonymizer.updateSampleIds(PASSWORD1, mappedInput, output)
+            val updatedOutput = anonymizer.anonymize(PASSWORD1, mappedInput, output)
             updatedOutput.size shouldBe 4
             updatedOutput[sample1A]!!.id shouldBe 2
             updatedOutput[sample1B]!!.id shouldBe 3
@@ -178,11 +178,11 @@ class SampleAnonymizerTest : StringSpec() {
             val initialInput = SamplesInput(listOf(sample1A, sample2A))
             val mappedInput = SamplesInput(listOf(sample1A, sample2A, sample1B), patientMap)
             val unmappedInput = SamplesInput(listOf(sample1A, sample2A, sample1B))
-            val output = anonymizer.updateSampleIds(PASSWORD1, initialInput, emptyList())
+            val output = anonymizer.anonymize(PASSWORD1, initialInput, emptyList())
             output.size shouldBe 2
-            val output2 = anonymizer.updateSampleIds(PASSWORD1, mappedInput, output)
+            val output2 = anonymizer.anonymize(PASSWORD1, mappedInput, output)
             output2.size shouldBe 4
-            val output3 = anonymizer.updateSampleIds(PASSWORD1, unmappedInput, output2)
+            val output3 = anonymizer.anonymize(PASSWORD1, unmappedInput, output2)
             output3.size shouldBe 5
             output3[sample1B]!!.id shouldBe 2
             output3[sample1B]!!.hmfPatientId shouldBe output[sample1A]!!.hmfPatientId
@@ -194,12 +194,12 @@ class SampleAnonymizerTest : StringSpec() {
             val initialInput = SamplesInput(listOf(sample1A, sample2A))
             val mappedInput = SamplesInput(listOf(sample1A, sample2A, sample1B), patientMap)
             val unmappedInput = SamplesInput(listOf(sample1A, sample2A, sample1B))
-            val output = anonymizer.updateSampleIds(PASSWORD1, initialInput, emptyList())
+            val output = anonymizer.anonymize(PASSWORD1, initialInput, emptyList())
             output.size shouldBe 2
-            val output2 = anonymizer.updateSampleIds(PASSWORD2, mappedInput, output)
+            val output2 = anonymizer.anonymize(PASSWORD2, mappedInput, output)
             output2.size shouldBe 4
             val newAnonymizer = SampleAnonymizer(PASSWORD2)
-            val output3 = newAnonymizer.updateSampleIds("pass3", unmappedInput, output2)
+            val output3 = newAnonymizer.anonymize("pass3", unmappedInput, output2)
             output3.size shouldBe 5
             output3[sample1B]!!.id shouldBe 2
             output3[sample1B]!!.hmfPatientId.id shouldBe output[sample1A]!!.hmfPatientId.id
@@ -214,11 +214,11 @@ class SampleAnonymizerTest : StringSpec() {
             val initialInput = SamplesInput(listOf(sample1A, sample2A))
             val mappedInput = SamplesInput(listOf(sample1A, sample2A, sample1B), patientMap)
             val mappedInputWithRemovedSample = SamplesInput(listOf(sample1A, sample2A), patientMap)
-            val output = anonymizer.updateSampleIds(PASSWORD1, initialInput, emptyList())
+            val output = anonymizer.anonymize(PASSWORD1, initialInput, emptyList())
             output.size shouldBe 2
-            val output2 = anonymizer.updateSampleIds(PASSWORD1, mappedInput, output)
+            val output2 = anonymizer.anonymize(PASSWORD1, mappedInput, output)
             output2.size shouldBe 4
-            val output3 = anonymizer.updateSampleIds(PASSWORD1, mappedInputWithRemovedSample, output2)
+            val output3 = anonymizer.anonymize(PASSWORD1, mappedInputWithRemovedSample, output2)
             output3.size shouldBe 4
             output3[sample1B]!!.id shouldBe 3
             output3[sample1B]!!.hmfPatientId shouldBe output[sample2A]!!.hmfPatientId
@@ -230,11 +230,11 @@ class SampleAnonymizerTest : StringSpec() {
             val initialInput = SamplesInput(listOf(sample1A, sample2A))
             val mappedInput = SamplesInput(listOf(sample1A, sample2A, sample1B), patientMap)
             val unmappedInputWithRemovedSample = SamplesInput(listOf(sample1A, sample2A))
-            val output = anonymizer.updateSampleIds(PASSWORD1, initialInput, emptyList())
+            val output = anonymizer.anonymize(PASSWORD1, initialInput, emptyList())
             output.size shouldBe 2
-            val output2 = anonymizer.updateSampleIds(PASSWORD1, mappedInput, output)
+            val output2 = anonymizer.anonymize(PASSWORD1, mappedInput, output)
             output2.size shouldBe 4
-            val output3 = anonymizer.updateSampleIds(PASSWORD1, unmappedInputWithRemovedSample, output2)
+            val output3 = anonymizer.anonymize(PASSWORD1, unmappedInputWithRemovedSample, output2)
             output3.size shouldBe 4
             output3[sample1B]!!.plaintext shouldBe "HMF000002C"
             output3.anonymizedSamplesMap().size shouldBe 0

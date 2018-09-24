@@ -9,8 +9,8 @@ class SampleAnonymizer(val password: String) {
     private val generator = IdGenerator(password)
     private val patientAnonymizer = PatientAnonymizer(password)
 
-    fun updateSampleIds(newPassword: String, samplesInput: SamplesInput,
-                        previouslyAnonymizedSamples: Collection<HmfSampleId>): AnonymizedSamples {
+    fun anonymize(newPassword: String, samplesInput: SamplesInput,
+                  previouslyAnonymizedSamples: Collection<HmfSampleId>): AnonymizedSamples {
         val anonymizedSamples = AnonymizedSamples(password, previouslyAnonymizedSamples, samplesInput)
         val updatedPatients = patientAnonymizer.anonymize(newPassword, samplesInput, anonymizedPatients(anonymizedSamples))
         val updatedCanonicalSamples = updatedCanonicalSamples(newPassword, samplesInput, anonymizedSamples, updatedPatients)
