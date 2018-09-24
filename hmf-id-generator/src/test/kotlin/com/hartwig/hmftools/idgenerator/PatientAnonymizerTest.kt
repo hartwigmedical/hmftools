@@ -110,6 +110,7 @@ class PatientAnonymizerTest : StringSpec() {
             output[patient1]!!.id shouldBe 1
             output[patient2]!!.id shouldBe 1
             output[patient1]!!.hash shouldBe generator1.hash(patient2.id)
+            output.anonymizedPatientMap() shouldBe emptyMap<HmfPatientId, HmfPatientId>()
         }
 
         "adding new sample for patients mapped from start keeps single id" {
@@ -123,6 +124,7 @@ class PatientAnonymizerTest : StringSpec() {
             updatedOutput[patient1]!!.id shouldBe 1
             updatedOutput[patient2]!!.id shouldBe 1
             updatedOutput[patient1]!!.hash shouldBe generator1.hash(patient2.id)
+            updatedOutput.anonymizedPatientMap() shouldBe emptyMap<HmfPatientId, HmfPatientId>()
         }
 
         "patients mapped from start generate single id after password change" {
@@ -136,6 +138,7 @@ class PatientAnonymizerTest : StringSpec() {
             updatedOutput[patient2]!!.id shouldBe 1
             updatedOutput[patient1]!!.hash shouldBe generator2.hash(patient2.id)
             collisions(updatedOutput, output) shouldBe 0
+            updatedOutput.anonymizedPatientMap() shouldBe emptyMap<HmfPatientId, HmfPatientId>()
         }
 
         "anonymized patients mapped later do not get deleted from output" {
@@ -152,6 +155,8 @@ class PatientAnonymizerTest : StringSpec() {
             updatedOutput.toSet() shouldBe output.toSet()
             updatedOutput[patient1]!!.id shouldBe 2
             updatedOutput[patient2]!!.id shouldBe 2
+            updatedOutput.anonymizedPatientMap().size shouldBe 1
+            updatedOutput.anonymizedPatientMap().map { it.key.id to it.value.id }.toMap() shouldBe mapOf(1 to 2)
         }
 
         "updates patient hash on password change for patients mapped later" {
@@ -169,6 +174,8 @@ class PatientAnonymizerTest : StringSpec() {
             collisions(updatedOutput, output) shouldBe 0
             updatedOutput[patient1]!!.id shouldBe 2
             updatedOutput[patient2]!!.id shouldBe 2
+            updatedOutput.anonymizedPatientMap().size shouldBe 1
+            updatedOutput.anonymizedPatientMap().map { it.key.id to it.value.id }.toMap() shouldBe mapOf(1 to 2)
         }
     }
 
