@@ -119,7 +119,6 @@ public class SomaticVariantFactory {
     @NotNull
     private Optional<ImmutableSomaticVariantImpl.Builder> createVariantBuilder(@NotNull final String sample,
             @NotNull final VariantContext context) {
-
         if (filter.test(context)) {
             final Genotype genotype = context.getGenotype(sample);
             if (genotype.hasAD() && genotype.getAD().length > 1) {

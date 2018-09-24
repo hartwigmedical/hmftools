@@ -20,8 +20,8 @@ public class CNADrivers {
 
     private final Set<String> oncoGenes;
     private final Set<String> tsGenes;
-    private final Set<String> deletionTargets;
     private final Set<String> amplificationTargets;
+    private final Set<String> deletionTargets;
 
     public CNADrivers() {
         this.amplificationTargets = amplificationTargets();
@@ -85,5 +85,4 @@ public class CNADrivers {
         final InputStream inputStream = DndsDriverGeneLikelihoodSupplier.class.getResourceAsStream("/cna/DeletionTargets.tsv");
         return new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toSet());
     }
-
 }

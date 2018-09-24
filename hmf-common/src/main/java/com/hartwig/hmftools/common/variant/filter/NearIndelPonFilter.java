@@ -7,11 +7,14 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class NearIndelPonFilter {
+public final class NearIndelPonFilter {
 
     private static final int DISTANCE = 10;
     private static final String SOMATIC_FLAG = "SOMATIC_PON";
     private static final String GERMLINE_FLAG = "GERMLINE_PON";
+
+    private NearIndelPonFilter() {
+    }
 
     public static boolean isIndelNearPon(final int index, @NotNull final List<VariantContext> contexts) {
         final VariantContext subject = contexts.get(index);
@@ -19,7 +22,7 @@ public class NearIndelPonFilter {
             return false;
         }
 
-        // Look backwards
+        // JOBA: Look backwards
         for (int i = index - 1; i >= 0; i--) {
             final VariantContext query = contexts.get(i);
             int queryEnd = query.getStart() + query.getReference().length() - 1 + DISTANCE;
@@ -32,7 +35,7 @@ public class NearIndelPonFilter {
             }
         }
 
-        // Look forwards
+        // JOBA: Look forwards
         int subjectEnd = subject.getStart() + subject.getReference().length() - 1 + DISTANCE;
         for (int i = index + 1; i < contexts.size(); i++) {
             final VariantContext query = contexts.get(i);

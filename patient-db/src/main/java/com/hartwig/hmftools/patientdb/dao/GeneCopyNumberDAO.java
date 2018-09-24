@@ -37,7 +37,6 @@ class GeneCopyNumberDAO {
         final Result<Record> result = context.select().from(GENECOPYNUMBER).where(GENECOPYNUMBER.SAMPLEID.eq(sample)).fetch();
 
         for (Record record : result) {
-
             geneCopyNumbers.add(ImmutableGeneCopyNumber.builder()
                     .chromosome(String.valueOf(record.getValue(GENECOPYNUMBER.CHROMOSOME)))
                     .start(record.getValue(GENECOPYNUMBER.START))
@@ -68,7 +67,6 @@ class GeneCopyNumberDAO {
                     .missenseNonBiallelicPloidy(record.getValue(GENECOPYNUMBER.MISSENSENONBIALLELICPLOIDY))
                     .minMinorAllelePloidy(record.getValue(GENECOPYNUMBER.MINMINORALLELEPLOIDY))
                     .build());
-
         }
         return geneCopyNumbers;
     }

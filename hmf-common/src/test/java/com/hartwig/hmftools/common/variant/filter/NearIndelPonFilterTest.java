@@ -17,14 +17,11 @@ public class NearIndelPonFilterTest {
 
     @Test
     public void testFindPonForwards() {
-
-        final List<VariantContext> victims = Lists.newArrayList(
-                create(87, "TAG", "A"),
+        final List<VariantContext> victims = Lists.newArrayList(create(87, "TAG", "A"),
                 create(87, "TAGG", "A"),
                 create(88, "TAG", "A"),
                 create(100, "TAG", "A"),
-                createPonFiltered(100, "TAG", "A")
-                );
+                createPonFiltered(100, "TAG", "A"));
 
         assertFalse(NearIndelPonFilter.isIndelNearPon(0, victims));
         assertTrue(NearIndelPonFilter.isIndelNearPon(1, victims));
@@ -35,14 +32,11 @@ public class NearIndelPonFilterTest {
 
     @Test
     public void testFindPonBackwards() {
-
-        final List<VariantContext> victims = Lists.newArrayList(
-                createPonFiltered(100, "TAG", "A"),
+        final List<VariantContext> victims = Lists.newArrayList(createPonFiltered(100, "TAG", "A"),
                 create(100, "TAG", "A"),
                 create(112, "TAG", "A"),
                 create(113, "TAG", "A"),
-                create(113, "TAGGG", "A")
-        );
+                create(113, "TAGGG", "A"));
 
         assertFalse(NearIndelPonFilter.isIndelNearPon(0, victims));
         assertTrue(NearIndelPonFilter.isIndelNearPon(1, victims));
@@ -53,11 +47,8 @@ public class NearIndelPonFilterTest {
 
     @Test
     public void testIgnoreSNP() {
-        final List<VariantContext> victims = Lists.newArrayList(
-                create(99, "TT", "A"),
-                create(100, "T", "A"),
-                createPonFiltered(100, "TAG", "A")
-        );
+        final List<VariantContext> victims =
+                Lists.newArrayList(create(99, "TT", "A"), create(100, "T", "A"), createPonFiltered(100, "TAG", "A"));
 
         assertTrue(NearIndelPonFilter.isIndelNearPon(0, victims));
         assertFalse(NearIndelPonFilter.isIndelNearPon(1, victims));
@@ -65,27 +56,22 @@ public class NearIndelPonFilterTest {
 
     @Test
     public void testNoPon() {
-        final List<VariantContext> victims = Lists.newArrayList(
-                create(99, "TT", "A"),
-                create(100, "TAG", "A")
-        );
+        final List<VariantContext> victims = Lists.newArrayList(create(99, "TT", "A"), create(100, "TAG", "A"));
 
         assertFalse(NearIndelPonFilter.isIndelNearPon(0, victims));
         assertFalse(NearIndelPonFilter.isIndelNearPon(1, victims));
     }
 
     @NotNull
-    final VariantContext create(int start, @NotNull final String ref, @NotNull final String alt) {
-
+    private static VariantContext create(int start, @NotNull final String ref, @NotNull final String alt) {
         final String line = "1\t" + start + "\tCOSM123;COSM456\t" + ref
                 + "\tC\t.\tPASS\tCOSM2ENST=COSM123|GENE_TRANS1|c.1A>G|p.E1E|1,COSM456|GENE_TRANS2|c.2A>G|p.E2E|1\tGT:AD:DP\t0/1:73,17:91";
         return VariantContextFromString.decode(line);
     }
 
     @NotNull
-    final VariantContext createPonFiltered(int start, @NotNull final String ref, @NotNull final String alt) {
+    private static VariantContext createPonFiltered(int start, @NotNull final String ref, @NotNull final String alt) {
         final String line = "1\t" + start + "\t.\t" + ref + "\t" + alt + "\t.\tGERMLINE_PON\t;SOMATIC_PON_HET=34;SOMATIC_PON_HOM=0\t";
         return VariantContextFromString.decode(line);
     }
-
 }

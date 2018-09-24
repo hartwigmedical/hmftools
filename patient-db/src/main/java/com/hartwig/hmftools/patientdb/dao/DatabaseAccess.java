@@ -286,7 +286,6 @@ public class DatabaseAccess {
         structuralVariantDAO.deleteStructuralVariantsForSample(sample);
 
         LOGGER.info("All data for sample: " + sample + " is deleted");
-
     }
 }
 
