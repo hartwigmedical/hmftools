@@ -9,12 +9,14 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
+import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
 import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.region.BEDFileLoader;
@@ -94,6 +96,7 @@ public class LoadSomaticVariants {
         IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
 
         LOGGER.info("Querying purple database");
+        final List<GeneCopyNumber> geneCopyNumbers = dbAccess.readGeneCopynumbers(sample);
         final PurityContext purityContext = dbAccess.readPurityContext(sample);
 
         if (purityContext == null) {
@@ -127,11 +130,16 @@ public class LoadSomaticVariants {
         dbAccess.writeSomaticVariants(sample, enrichedVariants);
 
         LOGGER.info("Generating driver catalog");
+        final CNADrivers cnaDrivers = new CNADrivers();
         final List<EnrichedSomaticVariant> passingVariants =
                 enrichedVariants.stream().filter(x -> !x.isFiltered()).collect(Collectors.toList());
         final List<DriverCatalog> driverCatalog = OncoDrivers.drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), passingVariants);
         final List<DriverCatalog> tsgCatalog = TsgDrivers.drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), passingVariants);
         driverCatalog.addAll(tsgCatalog);
+        if (purityContext != null) {
+            driverCatalog.addAll(cnaDrivers.amplifications(purityContext.bestFit().ploidy(), geneCopyNumbers));
+            driverCatalog.addAll(cnaDrivers.deletions(geneCopyNumbers));
+        }
 
         LOGGER.info("Persisting driver catalog");
         dbAccess.writeDriverCatalog(sample, driverCatalog);
