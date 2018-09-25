@@ -19,7 +19,6 @@ public class CancerTypeAnalyzer {
         this.cancerTypeDoids = cancerTypeDoids;
     }
 
-
     @NotNull
     public static CancerTypeAnalyzer loadFromFile(String fileCancerType) throws IOException {
         final List<CancerTypeReading> cancerTypeWithDOID = new ArrayList<>();
@@ -49,11 +48,12 @@ public class CancerTypeAnalyzer {
             return " ";
         }
     }
+
     @NotNull
-    public void foundTumorLocation (@NotNull String tumorLocation) {
-        if (tumorLocation != "") {
-            LOGGER.info("tumorLocation: " + tumorLocation);
-            LOGGER.info(cancerTypeDoids.contains(tumorLocation));
+    public void foundTumorLocation (@NotNull String tumorLocationKnowledgebase) {
+        if (tumorLocationKnowledgebase != "") {
+            LOGGER.info("tumorLocation: " + tumorLocationKnowledgebase);
+            LOGGER.info(cancerTypeDoids.contains(tumorLocationKnowledgebase));
         }
     }
 
