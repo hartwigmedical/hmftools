@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.actionability.cancerTypeMapping.CancerTypeAnalyzer;
 import com.hartwig.hmftools.actionability.cancerTypeMapping.CancerTypeMappingReading;
+import com.hartwig.hmftools.actionability.variants.ActionabilityVariantsAnalyzer;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
@@ -68,32 +69,31 @@ public abstract class ActionabilityApplication {
         String doids = cancerTypeMappingReading.doidsForPrimaryTumorLocation(patientTumorLocation.primaryTumorLocation());
         LOGGER.info("DOID: " + doids);
 
-        String fileCancerTupeWithDOID = "/data/common/dbs/knowledgebases/output/knowledgebaseCancerTypes.tsv";
-        if (Files.exists(new File(fileCancerTupeWithDOID).toPath()) && Files.exists(new File(fileCancerTupeWithDOID).toPath())) {
-            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTupeWithDOID);
+        String fileCancerTumorsWithDOID = "/data/common/dbs/knowledgebases/output/knowledgebaseCancerTypes.tsv";
+
+        LOGGER.info("");
+        LOGGER.info("Start processing actionability somaticVariants");
+
+        String fileActionabilityVariants = "/data/common/dbs/knowledgebases/output/actionableVariants.tsv";
+        String fileActionabilityRanges = "/data/common/dbs/knowledgebases/output/actionableRanges.tsv";
+
+        LOGGER.info("Variants: " + variants.size());
+        if (Files.exists(new File(fileActionabilityVariants).toPath()) && Files.exists(new File(fileActionabilityRanges).toPath()) && Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
+            ActionabilityVariantsAnalyzer analyzer = ActionabilityVariantsAnalyzer.loadFromFileVariantsAndFileRanges(fileActionabilityVariants, fileActionabilityRanges);
+            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
+            for (int i = 0; i < variants.size(); i ++) {
+                analyzer.actionableVariants(variants.get(i), patientTumorLocation.primaryTumorLocation());
+                analyzer.actionableRange(variants.get(i), patientTumorLocation.primaryTumorLocation());
+            }
             LOGGER.info("isActionable: " + cancerTypeAnalyzer.isActionableByTumorType(doids));
+
+        } else if (!Files.exists(new File(fileActionabilityVariants).toPath())){
+            LOGGER.warn("File does not exist: " + fileActionabilityVariants);
+        } else if(!Files.exists(new File(fileActionabilityRanges).toPath())){
+            LOGGER.warn("File does not exist: " + fileActionabilityRanges);
+        } else if (!Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
+            LOGGER.warn("File does not exist: " + fileCancerTumorsWithDOID);
         }
-
-
-
-//        LOGGER.info("");
-//        LOGGER.info("Start processing actionability somaticVariants");
-//
-//        String fileActionabilityVariants = "/data/common/dbs/knowledgebases/output/actionableVariants.tsv";
-//        String fileActionabilityRanges = "/data/common/dbs/knowledgebases/output/actionableRanges.tsv";
-//
-//        LOGGER.info("Variants: " + variants.size());
-//        if (Files.exists(new File(fileActionabilityVariants).toPath()) && Files.exists(new File(fileActionabilityRanges).toPath())) {
-//            ActionabilityVariantsAnalyzer analyzer = ActionabilityVariantsAnalyzer.loadFromFileVariantsAndFileRanges(fileActionabilityVariants, fileActionabilityRanges);
-//            for (int i = 0; i < variants.size(); i ++) {
-//                analyzer.actionableVariants(variants.get(i), patientTumorLocation.primaryTumorLocation());
-//                analyzer.actionableRange(variants.get(i), patientTumorLocation.primaryTumorLocation());
-//            }
-//        } else if (!Files.exists(new File(fileActionabilityVariants).toPath())){
-//            LOGGER.warn("File does not exist: " + fileActionabilityVariants);
-//        } else if(!Files.exists(new File(fileActionabilityRanges).toPath())){
-//            LOGGER.warn("File does not exist: " + fileActionabilityRanges);
-//        }
 //
 //        LOGGER.info("");
 //        LOGGER.info("Start processing actionability cnvs");
