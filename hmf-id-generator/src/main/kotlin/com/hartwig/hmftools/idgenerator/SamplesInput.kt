@@ -5,9 +5,9 @@ import com.hartwig.hmftools.idgenerator.ids.PatientId
 import com.hartwig.hmftools.idgenerator.ids.SampleId
 import org.apache.logging.log4j.LogManager
 
-private val logger = LogManager.getLogger("SamplesInput")
-
 data class SamplesInput(val samples: List<SampleId>, val patientsMap: Map<PatientId, PatientId> = emptyMap()) {
+    private val logger = LogManager.getLogger(this.javaClass)
+
     init {
         validatePatientsMap()
     }

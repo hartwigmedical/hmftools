@@ -2,7 +2,7 @@ package com.hartwig.hmftools.idgenerator.extensions
 
 import com.hartwig.hmftools.idgenerator.HASH
 import com.hartwig.hmftools.idgenerator.HMF_ID
-import com.hartwig.hmftools.idgenerator.PATIENT_ID
+import com.hartwig.hmftools.idgenerator.SAMPLE_ID
 import com.hartwig.hmftools.idgenerator.anonymizedIds.HashId
 import com.hartwig.hmftools.idgenerator.anonymizedIds.HmfPatientId
 import org.apache.commons.csv.CSVFormat
@@ -17,7 +17,7 @@ fun File.readOldIds(): Set<HashId> {
 
 fun File.writeHmfPatientIds(ids: Collection<HmfPatientId>) {
     this.bufferedWriter().use { out ->
-        out.write("$HMF_ID,$HASH,$PATIENT_ID")
+        out.write("$HMF_ID,$HASH,$SAMPLE_ID")
         out.newLine()
         ids.sortedBy { it.id }.forEach {
             out.write("${it.id},${it.hash},${it.plaintext}")
