@@ -35,7 +35,6 @@ public class CancerTypeAnalyzer {
     private static CancerTypeReading fromLine(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
         String doidSetValue = EmptyDoidSet(values);
-        LOGGER.info("doidSetValue: " + doidSetValue);
         return  ImmutableCancerTypeReading.builder()
                 .cancerType(values[0])
                 .doidSet(doidSetValue).build();
@@ -46,7 +45,7 @@ public class CancerTypeAnalyzer {
         try {
             return value[1];
         } catch (ArrayIndexOutOfBoundsException e) {
-            System.err.println("IndexOutOfBoundsException: " + e.getMessage());
+            LOGGER.warn("IndexOutOfBoundsException: " + e.getMessage());
             return " ";
         }
     }
