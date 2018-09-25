@@ -34,11 +34,11 @@ fun main(args: Array<String>) {
         }
         cmd.hasOption(UPDATE_IDS_MODE)         -> {
             val updateIdsCmd = updateIdsModeOptions().createCommandLine("hmf-id", args)
-            runHmfIdUpdateIds(updateIdsCmd)
+            runUpdateIds(updateIdsCmd)
         }
-        cmd.hasOption(ANONYMISE_IDS_MODE)      -> {
-            val anonymiseIdsCmd = anonymiseIdsModeOptions().createCommandLine("hmf-id", args)
-            runHmfIdAnonymiseIds(anonymiseIdsCmd)
+        cmd.hasOption(ANONYMIZE_IDS_MODE)      -> {
+            val anonymizeIdsCmd = anonymizeIdsModeOptions().createCommandLine("hmf-id", args)
+            runAnonymizeIds(anonymizeIdsCmd)
         }
     }
 }
@@ -49,7 +49,7 @@ private fun createOptions(): Options {
     inputModeOptionGroup.addOption(Option.builder(CREATE_SINGLE_HASH_MODE).required().desc("create single hash").build())
     inputModeOptionGroup.addOption(Option.builder(CREATE_IDS_MODE).required().desc("create hmf ids").build())
     inputModeOptionGroup.addOption(Option.builder(UPDATE_IDS_MODE).required().desc("update hmf ids").build())
-    inputModeOptionGroup.addOption(Option.builder(ANONYMISE_IDS_MODE).required().desc("anonymise ids").build())
+    inputModeOptionGroup.addOption(Option.builder(ANONYMIZE_IDS_MODE).required().desc("anonymize ids").build())
     inputModeOptionGroup.isRequired = true
     options.addOptionGroup(inputModeOptionGroup)
     return options
@@ -86,12 +86,13 @@ private fun updateIdsModeOptions(): Options {
     return hmfOptions.options
 }
 
-private fun anonymiseIdsModeOptions(): Options {
-    val options = Options()
-    options.addOption(Option.builder(ANONYMISE_IDS_MODE).required().desc("create hmf ids").build())
-    options.addOption(Option.builder(PASSWORD).required().hasArg().desc("password").build())
-    options.addOption(Option.builder(SAMPLE_IDS_FILE).required().hasArg().desc("file containing a list of patients per line").build())
-    return options
+private fun anonymizeIdsModeOptions(): Options {
+    val hmfOptions = HmfOptions()
+    hmfOptions.add(RequiredFlagOption(ANONYMIZE_IDS_MODE, "anonymize ids"))
+    hmfOptions.add(RequiredInputOption(PASSWORD, "password"))
+    hmfOptions.add(RequiredInputFileOption(SAMPLE_IDS_FILE, "file containing a list of samples, one per line"))
+    hmfOptions.add(RequiredInputFileOption(PATIENT_MAPPING_FILE, "csv containing the patient mapping, a patient pair per line"))
+    return hmfOptions.options
 }
 
 private fun runSingleHash(cmd: CommandLine) {
@@ -115,7 +116,7 @@ private fun runCreateIds(cmd: CommandLine) {
     logger.info("Created hmf sample ids for ${anonymizedSamples.size} samples")
 }
 
-private fun runHmfIdUpdateIds(cmd: CommandLine) {
+private fun runUpdateIds(cmd: CommandLine) {
     logger.info("Running id-generator (update)")
     val password = cmd.getOptionValue(PASSWORD)
     val newPassword = cmd.getOptionValue(NEW_PASSWORD, password)
@@ -132,17 +133,17 @@ private fun runHmfIdUpdateIds(cmd: CommandLine) {
     logger.info("Created hmf sample ids for ${anonymizedSamples.size} samples")
 }
 
-private fun runHmfIdAnonymiseIds(cmd: CommandLine) {
-    //    val currentIds = IdGenerator::class.java.getResource(CURRENT_IDS_FILE).openStream().readCurrentIds()
-    //    val generator = IdGenerator(cmd.getOptionValue(PASSWORD))
-    //    val patientIds = readSampleIdsFile(cmd.getOptionValue(SAMPLE_IDS_FILE))
-
+private fun runAnonymizeIds(cmd: CommandLine) {
+    logger.info("Running id-generator (anonymize ids)")
+    val currentIds = CsvReader.readCSVByName<HmfSampleIdRecord>(IdGenerator::class.java.getResource(CURRENT_IDS_FILE).openStream())
+            .map { it.toHmfSampleId() }
+    val samplesInput = readSamplesInput(cmd.getOptionValue(SAMPLE_IDS_FILE), cmd.getOptionValue(PATIENT_MAPPING_FILE))
+    val anonymizedSamples = AnonymizedSamples(cmd.getOptionValue(PASSWORD), currentIds, samplesInput)
     println("OriginalId,AnonymousId")
-    //    patientIds.forEach { patient ->
-    //        val hash = generator.hash(patient)
-    //        val hmfId: HmfId? = currentIds.find { it.hash == hash }
-    //        println(patient + "," + (hmfId?.patientId ?: "Unknown"))
-    //    }
+    samplesInput.samples.forEach { sample ->
+        anonymizedSamples[sample]
+        println("${sample.id},${anonymizedSamples[sample]?.plaintext ?: "Unknown"}")
+    }
 }
 
 private fun readSamplesInput(sampleIdsFile: String, patientMappingFile: String): SamplesInput {
