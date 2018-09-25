@@ -12,10 +12,13 @@ import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.ActionableRecor
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.KnowledgebaseSource
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
+import org.apache.logging.log4j.LogManager
 
 class Civic(variantsLocation: String, evidenceLocation: String, diseaseOntology: DiseaseOntology,
             private val recordAnalyzer: RecordAnalyzer, treatmentTypeMap: Map<String, String>) :
         Knowledgebase, KnowledgebaseSource<CivicRecord, ActionableRecord> {
+
+    private val logger = LogManager.getLogger("Civic")
 
     // KODU: This is a TP53 B-level evidence item that is dubious, so is filtered out.
     // KODU: See also https://civicdb.org/events/genes/45/summary/variants/222/summary/evidence/1481/summary#evidence
@@ -49,6 +52,7 @@ class Civic(variantsLocation: String, evidenceLocation: String, diseaseOntology:
 
     private fun readEvidenceMap(evidenceLocation: String, treatmentTypeMap: Map<String, String>): Multimap<String, CivicEvidence> {
         val civicApi = CivicApiWrapper()
+        logger.info("Requesting drug interaction map via civic API")
         val drugInteractionMap = civicApi.drugInteractionMap
         val evidenceMap = ArrayListMultimap.create<String, CivicEvidence>()
         CsvReader.readTSVByName<CivicEvidenceInput>(evidenceLocation).mapNotNull { it.corrected() }.map {
