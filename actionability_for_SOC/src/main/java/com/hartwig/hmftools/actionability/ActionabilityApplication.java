@@ -3,10 +3,12 @@ package com.hartwig.hmftools.actionability;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.actionability.cancerTypeMapping.CancerTypeAnalyzer;
 import com.hartwig.hmftools.actionability.cancerTypeMapping.CancerTypeMappingReading;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
@@ -64,12 +66,13 @@ public abstract class ActionabilityApplication {
 
         CancerTypeMappingReading cancerTypeMappingReading = CancerTypeMappingReading.readingFile();
         String doids = cancerTypeMappingReading.doidsForPrimaryTumorLocation(patientTumorLocation.primaryTumorLocation());
+        LOGGER.info("DOID: " + doids);
 
-       String fileCancerTupeWithDOID = "/data/common/dbs/knowledgebases/output/knowledgebaseCancerTypes.tsv";
-//        if (Files.exists(new File(fileCancerTupeWithDOID).toPath()) && Files.exists(new File(fileCancerTupeWithDOID).toPath())) {
-//            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTupeWithDOID);
-//            LOGGER.info(cancerTypeAnalyzer);
-//        }
+        String fileCancerTupeWithDOID = "/data/common/dbs/knowledgebases/output/knowledgebaseCancerTypes.tsv";
+        if (Files.exists(new File(fileCancerTupeWithDOID).toPath()) && Files.exists(new File(fileCancerTupeWithDOID).toPath())) {
+            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTupeWithDOID);
+            LOGGER.info("isActionable: " + cancerTypeAnalyzer.isActionableByTumorType(doids));
+        }
 
 
 

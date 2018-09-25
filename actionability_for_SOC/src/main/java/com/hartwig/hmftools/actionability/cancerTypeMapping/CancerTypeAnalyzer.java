@@ -26,19 +26,34 @@ public class CancerTypeAnalyzer {
         final List<String> lineCancerType = Files.readAllLines(new File(fileCancerType).toPath());
 
         for (int i = 1; i < lineCancerType.size(); i++) {
-            fromLine(lineCancerType.get(i));
             cancerTypeWithDOID.add(fromLine(lineCancerType.get(i)));
         }
         return new CancerTypeAnalyzer(cancerTypeWithDOID);
     }
 
-
     @NotNull
     private static CancerTypeReading fromLine(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
+        String doidSetValue = EmptyDoidSet(values);
+        LOGGER.info("doidSetValue: " + doidSetValue);
         return  ImmutableCancerTypeReading.builder()
                 .cancerType(values[0])
-                .doidSet(values[1]).build();
+                .doidSet(doidSetValue).build();
+    }
+
+    @NotNull
+    private static String EmptyDoidSet(@NotNull String[] value) {
+        try {
+            return value[1];
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.err.println("IndexOutOfBoundsException: " + e.getMessage());
+            return " ";
+        }
+    }
+
+    @NotNull
+    public boolean isActionableByTumorType(@NotNull String doids) {
+        return true;
     }
 
 }
