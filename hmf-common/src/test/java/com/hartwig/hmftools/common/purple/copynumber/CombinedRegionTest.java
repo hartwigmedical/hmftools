@@ -34,7 +34,7 @@ public class CombinedRegionTest {
                 .depthWindowCount(2)
                 .status(GermlineStatus.DIPLOID)
                 .build();
-        final CombinedRegion region = new CombinedRegion(true, somaticRegion);
+        final CombinedRegion region = new CombinedRegion(somaticRegion);
         assertEquals(2, region.region().depthWindowCount());
 
         final FittedRegion amplificationRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 1, 1000)
@@ -65,7 +65,7 @@ public class CombinedRegionTest {
     @Test
     public void doNotIncludeZeroCopyNumber() {
         final FittedRegion startRegion = create(1, 100, 200, 0.5, 0);
-        CombinedRegion builder = new CombinedRegion(true, startRegion);
+        CombinedRegion builder = new CombinedRegion(startRegion);
         assertAverages(builder, 0.5, 0);
 
         builder.extendWithBAFWeightedAverage(create(201, 300, 200, 1, 2));
@@ -83,7 +83,7 @@ public class CombinedRegionTest {
 
     @NotNull
     private static CombinedRegion createCombinedFittedRegion(long start, long end, double copyNumber) {
-        return new CombinedRegion(true, create(start, end, copyNumber));
+        return new CombinedRegion(create(start, end, copyNumber));
     }
 
     @NotNull

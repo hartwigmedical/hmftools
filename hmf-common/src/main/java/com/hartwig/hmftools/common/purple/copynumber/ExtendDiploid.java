@@ -54,7 +54,7 @@ class ExtendDiploid {
         final List<CombinedRegion> regions = Lists.newLinkedList();
 
         for (FittedRegion fittedRegion : fittedRegions) {
-            regions.add(new CombinedRegion(bafWeighted, fittedRegion));
+            regions.add(new CombinedRegion(fittedRegion));
         }
 
         int highestConfidenceIndex = nextIndex(regions);

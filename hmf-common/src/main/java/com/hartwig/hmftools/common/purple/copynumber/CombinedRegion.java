@@ -14,7 +14,6 @@ import org.jetbrains.annotations.NotNull;
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 class CombinedRegion implements GenomeRegion {
 
-    private final boolean bafWeighted;
     private final ModifiableFittedRegion combined;
 
     private CopyNumberMethod copyNumberMethod = CopyNumberMethod.UNKNOWN;
@@ -22,18 +21,13 @@ class CombinedRegion implements GenomeRegion {
     private final List<FittedRegion> regions = Lists.newArrayList();
     private int unweightedCount = 1;
 
-    CombinedRegion(final boolean bafWeighted, final FittedRegion region) {
-        this.bafWeighted = bafWeighted;
+    CombinedRegion(final FittedRegion region) {
         this.combined = ModifiableFittedRegion.create().from(region);
 
         if (region.status() != GermlineStatus.DIPLOID) {
             clearBAFValues();
         }
         regions.add(region);
-    }
-
-    boolean isBafWeighted() {
-        return bafWeighted;
     }
 
     @NotNull
@@ -117,7 +111,7 @@ class CombinedRegion implements GenomeRegion {
 
         final long currentWeight;
         final long newWeight;
-        if (bafWeighted && (combined.bafCount() > 0 || region.bafCount() > 0)) {
+        if ((combined.bafCount() > 0 || region.bafCount() > 0)) {
             currentWeight = combined.bafCount();
             newWeight = region.bafCount();
         } else {
