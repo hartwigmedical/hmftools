@@ -14,9 +14,5 @@ const val PATIENT_MAPPING_FILE = "patient_mapping_file"
 const val OUTPUT_FILE = "out"
 const val SAMPLE_MAPPING_OUTPUT_FILE = "mapping_out"
 
-// MIVO: CSV header fields
-const val HMF_ID = "hmf_id"
-const val HASH = "hash"
-
 // JOBA: Resource locations
 const val CURRENT_IDS_FILE = "/sample_hashes.csv"
