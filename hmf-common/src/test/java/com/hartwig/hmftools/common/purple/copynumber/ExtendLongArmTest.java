@@ -6,6 +6,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
+import com.hartwig.hmftools.common.purple.copynumber.combine.CombinedRegion;
+import com.hartwig.hmftools.common.purple.copynumber.combine.BafWeightedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
@@ -100,6 +102,6 @@ public class ExtendLongArmTest {
                 .support(support)
                 .build();
 
-        return new CombinedRegion(region);
+        return new BafWeightedRegion(region);
     }
 }

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.purple.copynumber;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.purple.copynumber.combine.CombinedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;

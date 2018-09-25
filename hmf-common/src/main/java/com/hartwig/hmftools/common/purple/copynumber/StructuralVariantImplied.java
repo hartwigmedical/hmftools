@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.copynumber.combine.CombinedRegion;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;

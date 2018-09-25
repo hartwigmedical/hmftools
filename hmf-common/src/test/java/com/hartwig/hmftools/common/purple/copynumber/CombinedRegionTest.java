@@ -3,6 +3,8 @@ package com.hartwig.hmftools.common.purple.copynumber;
 import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
+import com.hartwig.hmftools.common.purple.copynumber.combine.CombinedRegion;
+import com.hartwig.hmftools.common.purple.copynumber.combine.BafWeightedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 
@@ -34,7 +36,7 @@ public class CombinedRegionTest {
                 .depthWindowCount(2)
                 .status(GermlineStatus.DIPLOID)
                 .build();
-        final CombinedRegion region = new CombinedRegion(somaticRegion);
+        final CombinedRegion region = new BafWeightedRegion(somaticRegion);
         assertEquals(2, region.region().depthWindowCount());
 
         final FittedRegion amplificationRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 1, 1000)
@@ -65,7 +67,7 @@ public class CombinedRegionTest {
     @Test
     public void doNotIncludeZeroCopyNumber() {
         final FittedRegion startRegion = create(1, 100, 200, 0.5, 0);
-        CombinedRegion builder = new CombinedRegion(startRegion);
+        CombinedRegion builder = new BafWeightedRegion(startRegion);
         assertAverages(builder, 0.5, 0);
 
         builder.extendWithBAFWeightedAverage(create(201, 300, 200, 1, 2));
@@ -83,7 +85,7 @@ public class CombinedRegionTest {
 
     @NotNull
     private static CombinedRegion createCombinedFittedRegion(long start, long end, double copyNumber) {
-        return new CombinedRegion(create(start, end, copyNumber));
+        return new BafWeightedRegion(create(start, end, copyNumber));
     }
 
     @NotNull

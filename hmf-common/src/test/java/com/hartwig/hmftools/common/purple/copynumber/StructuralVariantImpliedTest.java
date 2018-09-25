@@ -12,6 +12,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
+import com.hartwig.hmftools.common.purple.copynumber.combine.CombinedRegion;
+import com.hartwig.hmftools.common.purple.copynumber.combine.BafWeightedRegion;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
@@ -104,7 +106,7 @@ public class StructuralVariantImpliedTest {
                 .support(support)
                 .build();
 
-        final CombinedRegion result = new CombinedRegion(region);
+        final CombinedRegion result = new BafWeightedRegion(region);
         if (Doubles.positive(copyNumber)) {
             result.setCopyNumberMethod(CopyNumberMethod.BAF_WEIGHTED);
         }

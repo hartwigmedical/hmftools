@@ -7,6 +7,8 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.purple.copynumber.combine.CombinedRegion;
+import com.hartwig.hmftools.common.purple.copynumber.combine.BafWeightedRegion;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
@@ -112,7 +114,7 @@ class ExtendGermline {
 
     @NotNull
     private static CombinedRegion createChild(@NotNull final FittedRegion child, double newCopyNumber, double newBaf) {
-        final CombinedRegion result = new CombinedRegion(child);
+        final CombinedRegion result = new BafWeightedRegion(child);
         result.setTumorCopyNumber(method(child), newCopyNumber);
         result.setInferredTumorBAF(newBaf);
         return result;
@@ -205,7 +207,7 @@ class ExtendGermline {
                 .setBafCount(bafCount)
                 .setDepthWindowCount(depthWindowCount);
 
-        CombinedRegion result = new CombinedRegion(smallerRegion);
+        CombinedRegion result = new BafWeightedRegion(smallerRegion);
         result.setCopyNumberMethod(parent.copyNumberMethod());
 
         for (FittedRegion fittedRegion : parent.regions()) {

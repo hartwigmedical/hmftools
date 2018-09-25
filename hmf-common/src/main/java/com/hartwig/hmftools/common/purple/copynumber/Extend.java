@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
+import com.hartwig.hmftools.common.purple.copynumber.combine.CombinedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 

@@ -7,6 +7,8 @@ import java.util.function.IntUnaryOperator;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.copynumber.combine.CombinedRegion;
+import com.hartwig.hmftools.common.purple.copynumber.combine.BafWeightedRegion;
 import com.hartwig.hmftools.common.purple.copynumber.tolerance.CopyNumberTolerance;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
@@ -54,7 +56,7 @@ class ExtendDiploid {
         final List<CombinedRegion> regions = Lists.newLinkedList();
 
         for (FittedRegion fittedRegion : fittedRegions) {
-            regions.add(new CombinedRegion(fittedRegion));
+            regions.add(new BafWeightedRegion(bafWeighted, fittedRegion));
         }
 
         int highestConfidenceIndex = nextIndex(regions);

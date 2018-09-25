@@ -1,18 +1,17 @@
-package com.hartwig.hmftools.common.purple.copynumber;
+package com.hartwig.hmftools.common.purple.copynumber.combine;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.region.ModifiableFittedRegion;
-import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-class CombinedRegion implements GenomeRegion {
+public class BafWeightedRegion implements CombinedRegion {
 
     private final ModifiableFittedRegion combined;
 
@@ -20,9 +19,15 @@ class CombinedRegion implements GenomeRegion {
     private boolean inferredBAF;
     private final List<FittedRegion> regions = Lists.newArrayList();
     private int unweightedCount = 1;
+    private final boolean isBafWeighted;
 
-    CombinedRegion(final FittedRegion region) {
+    public BafWeightedRegion( final FittedRegion region) {
+        this(true, region);
+    }
+
+    public BafWeightedRegion(boolean isBafWeighed, final FittedRegion region) {
         this.combined = ModifiableFittedRegion.create().from(region);
+        this.isBafWeighted = isBafWeighed;
 
         if (region.status() != GermlineStatus.DIPLOID) {
             clearBAFValues();
@@ -46,7 +51,7 @@ class CombinedRegion implements GenomeRegion {
         return combined.end();
     }
 
-    boolean isInferredBAF() {
+    public boolean isInferredBAF() {
         return inferredBAF;
     }
 
@@ -66,23 +71,23 @@ class CombinedRegion implements GenomeRegion {
         return region().bafCount();
     }
 
-    CopyNumberMethod copyNumberMethod() {
+    public CopyNumberMethod copyNumberMethod() {
         return copyNumberMethod;
     }
 
-    boolean isProcessed() {
+    public boolean isProcessed() {
         return copyNumberMethod != CopyNumberMethod.UNKNOWN;
     }
 
-    void setCopyNumberMethod(CopyNumberMethod copyNumberMethod) {
+    public void setCopyNumberMethod(CopyNumberMethod copyNumberMethod) {
         this.copyNumberMethod = copyNumberMethod;
     }
 
-    FittedRegion region() {
+    public FittedRegion region() {
         return combined;
     }
 
-    void extend(final FittedRegion region) {
+    public void extend(final FittedRegion region) {
         combined.setStart(Math.min(combined.start(), region.start()));
         combined.setEnd(Math.max(combined.end(), region.end()));
 
@@ -95,13 +100,13 @@ class CombinedRegion implements GenomeRegion {
         }
     }
 
-    void extendWithUnweightedAverage(final FittedRegion region) {
+    public void extendWithUnweightedAverage(final FittedRegion region) {
         extend(region);
         applyWeightedAverage(region, unweightedCount, 1);
         unweightedCount++;
     }
 
-    void extendWithBAFWeightedAverage(final FittedRegion region) {
+    public void extendWithBAFWeightedAverage(final FittedRegion region) {
         long currentBases = combined.bases();
 
         extend(region);
@@ -111,7 +116,7 @@ class CombinedRegion implements GenomeRegion {
 
         final long currentWeight;
         final long newWeight;
-        if ((combined.bafCount() > 0 || region.bafCount() > 0)) {
+        if (isBafWeighted && (combined.bafCount() > 0 || region.bafCount() > 0)) {
             currentWeight = combined.bafCount();
             newWeight = region.bafCount();
         } else {
@@ -145,12 +150,12 @@ class CombinedRegion implements GenomeRegion {
         combined.setBafCount(combined.bafCount() + region.bafCount());
     }
 
-    void setTumorCopyNumber(@NotNull final CopyNumberMethod method, double copyNumber) {
+    public void setTumorCopyNumber(@NotNull final CopyNumberMethod method, double copyNumber) {
         setCopyNumberMethod(method);
         combined.setTumorCopyNumber(copyNumber);
     }
 
-    void setInferredTumorBAF(double baf) {
+    public void setInferredTumorBAF(double baf) {
         inferredBAF = true;
         combined.setTumorBAF(baf);
         combined.setBafCount(0);
@@ -169,4 +174,5 @@ class CombinedRegion implements GenomeRegion {
     private void clearBAFValues() {
         combined.setBafCount(0);
     }
+
 }
