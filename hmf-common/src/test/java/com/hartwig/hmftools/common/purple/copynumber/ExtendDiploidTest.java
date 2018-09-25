@@ -7,6 +7,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
+import com.hartwig.hmftools.common.purple.copynumber.tolerance.CopyNumberTolerance;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
@@ -22,11 +23,12 @@ public class ExtendDiploidTest {
     private final static String CHROMOSOME = "1";
     private final static double EPSILON = 1e-10;
     private final static PurityAdjuster PURE = new PurityAdjuster(Gender.FEMALE, 1d, 1d);
-    private final static ExtendDiploid PURE_VICTIM = new ExtendDiploid(PURE, MIN_TUMOR_COUNT, MIN_TUMOR_COUNT_AT_CENTROMERE);
+    private final static ExtendDiploid PURE_VICTIM =
+            new ExtendDiploid(CopyNumberTolerance.create(false, PURE), MIN_TUMOR_COUNT, MIN_TUMOR_COUNT_AT_CENTROMERE);
 
     @Test
     public void testFavourTumorRatioCountOverLength() {
-        final FittedRegion dubious1 = createDubiousRegion(1, 50000, 2, 10,0);
+        final FittedRegion dubious1 = createDubiousRegion(1, 50000, 2, 10, 0);
         final FittedRegion dubious2 = createDubiousRegion(50001, 60000, 3, 20, 0);
 
         final List<CombinedRegion> result = PURE_VICTIM.extendDiploid(Lists.newArrayList(dubious1, dubious2));
@@ -87,7 +89,8 @@ public class ExtendDiploidTest {
         final FittedRegion dubious3 = createDubiousRegion(12001, 20000, 2.0, 20);
         final FittedRegion somaticRight = createValidSomatic(20001, 30000, 3.0, 40, SegmentSupport.NONE);
 
-        final List<CombinedRegion> result = PURE_VICTIM.extendDiploid(Lists.newArrayList(somaticLeft, dubious1, dubious2, dubious3, somaticRight));
+        final List<CombinedRegion> result =
+                PURE_VICTIM.extendDiploid(Lists.newArrayList(somaticLeft, dubious1, dubious2, dubious3, somaticRight));
         assertEquals(1, result.size());
         assertRegion(1, 30000, 3, result.get(0));
     }
@@ -100,7 +103,8 @@ public class ExtendDiploidTest {
         final FittedRegion dubious3 = createDubiousRegion(12001, 20000, 2.0, 20);
         final FittedRegion somaticRight = createValidSomatic(20001, 30000, 3.0, 40, SegmentSupport.NONE);
 
-        final List<CombinedRegion> result = PURE_VICTIM.extendDiploid(Lists.newArrayList(somaticLeft, dubious1, dubious2, dubious3, somaticRight));
+        final List<CombinedRegion> result =
+                PURE_VICTIM.extendDiploid(Lists.newArrayList(somaticLeft, dubious1, dubious2, dubious3, somaticRight));
         assertEquals(3, result.size());
         assertRegion(1, 10000, 3, result.get(0));
         assertRegion(10001, 20000, 2, result.get(1));
@@ -115,7 +119,8 @@ public class ExtendDiploidTest {
         final FittedRegion dubious3 = createDubiousRegion(12001, 20000, 2.0, 11);
         final FittedRegion somaticRight = createValidSomatic(20001, 30000, 3.0, 40, SegmentSupport.CENTROMERE);
 
-        final List<CombinedRegion> result = PURE_VICTIM.extendDiploid(Lists.newArrayList(somaticLeft, dubious1, dubious2, dubious3, somaticRight));
+        final List<CombinedRegion> result =
+                PURE_VICTIM.extendDiploid(Lists.newArrayList(somaticLeft, dubious1, dubious2, dubious3, somaticRight));
         assertEquals(2, result.size());
         assertRegion(1, 20000, 3, result.get(0));
         assertRegion(20001, 30000, 3, result.get(1));
@@ -129,7 +134,8 @@ public class ExtendDiploidTest {
         final FittedRegion dubious3 = createDubiousRegion(12001, 20000, 2.0, 21);
         final FittedRegion somaticRight = createValidSomatic(20001, 30000, 3.0, 40, SegmentSupport.CENTROMERE);
 
-        final List<CombinedRegion> result = PURE_VICTIM.extendDiploid(Lists.newArrayList(somaticLeft, dubious1, dubious2, dubious3, somaticRight));
+        final List<CombinedRegion> result =
+                PURE_VICTIM.extendDiploid(Lists.newArrayList(somaticLeft, dubious1, dubious2, dubious3, somaticRight));
         assertEquals(3, result.size());
         assertRegion(1, 10000, 3, result.get(0));
         assertRegion(10001, 20000, 2, result.get(1));
@@ -150,8 +156,7 @@ public class ExtendDiploidTest {
     @Test
     public void testInvalidGermlineIsKeptWithSVSupport() {
         final FittedRegion somatic = createFittedRegion(1, 10000, 3.0, GermlineStatus.DIPLOID, SegmentSupport.BND);
-        final FittedRegion germline =
-                createFittedRegion(10001, 20000, 4.0, GermlineStatus.AMPLIFICATION, SegmentSupport.BND);
+        final FittedRegion germline = createFittedRegion(10001, 20000, 4.0, GermlineStatus.AMPLIFICATION, SegmentSupport.BND);
         final List<FittedRegion> regions = Lists.newArrayList(somatic, germline);
 
         final List<CombinedRegion> result = PURE_VICTIM.extendDiploid(regions);
@@ -196,7 +201,8 @@ public class ExtendDiploidTest {
     }
 
     @NotNull
-    private static FittedRegion createRegion(long start, long end, double copyNumber, int ratioCount, int bafCount, SegmentSupport support) {
+    private static FittedRegion createRegion(long start, long end, double copyNumber, int ratioCount, int bafCount,
+            SegmentSupport support) {
         return PurpleDatamodelTest.createDefaultFittedRegion(CHROMOSOME, start, end)
                 .status(GermlineStatus.DIPLOID)
                 .tumorCopyNumber(copyNumber)

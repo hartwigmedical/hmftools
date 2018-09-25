@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.copynumber;
+package com.hartwig.hmftools.common.purple.copynumber.tolerance;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.numeric.Doubles;
@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 
-final class CopyNumberDeviation {
+public final class CopyNumberDeviation {
 
     @VisibleForTesting
     static final double MIN_COPY_NUMBER_TOLERANCE = 0.3;
@@ -24,11 +24,11 @@ final class CopyNumberDeviation {
     @NotNull
     private final PurityAdjuster purityAdjuster;
 
-    CopyNumberDeviation(@NotNull final PurityAdjuster purityAdjuster) {
+    public CopyNumberDeviation(@NotNull final PurityAdjuster purityAdjuster) {
         this.purityAdjuster = purityAdjuster;
     }
 
-    boolean inTolerance(@NotNull final FittedRegion first, @NotNull final FittedRegion second) {
+    public boolean inTolerance(@NotNull final FittedRegion first, @NotNull final FittedRegion second) {
         double tumorCopyNumberDeviation = Math.abs(first.tumorCopyNumber() - second.tumorCopyNumber());
         double refNormalisedCopyNumberDeviation = Math.abs(first.refNormalisedCopyNumber() - second.refNormalisedCopyNumber());
         double copyNumberDeviation = Math.min(tumorCopyNumberDeviation, refNormalisedCopyNumberDeviation);

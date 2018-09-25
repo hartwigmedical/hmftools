@@ -1,13 +1,13 @@
-package com.hartwig.hmftools.common.purple.copynumber;
+package com.hartwig.hmftools.common.purple.copynumber.tolerance;
 
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-class BAFDeviation {
+public class BAFDeviation {
 
-    boolean inTolerance(@NotNull final FittedRegion left, @NotNull final FittedRegion right) {
+    public static boolean inTolerance(@NotNull final FittedRegion left, @NotNull final FittedRegion right) {
         int minBafCount = Math.min(left.bafCount(), right.bafCount());
 
         if (left.bafCount() > 0 && right.bafCount() > 0) {

@@ -222,7 +222,8 @@ public class PurityPloidyEstimateApplication {
             final PurityAdjuster purityAdjuster = new PurityAdjuster(cobaltGender, bestFit.purity(), bestFit.normFactor());
 
             final SmoothingConfig smoothingConfig = configSupplier.smoothingConfig();
-            final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(smoothingConfig.minDiploidTumorRatioCount(),
+            final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(cmd.hasOption(EXPERIMENTAL),
+                    smoothingConfig.minDiploidTumorRatioCount(),
                     smoothingConfig.minDiploidTumorRatioCountAtCentromere(),
                     cobaltGender,
                     purityAdjuster,

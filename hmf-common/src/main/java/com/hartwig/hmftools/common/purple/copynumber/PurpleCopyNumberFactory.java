@@ -10,6 +10,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.copynumber.tolerance.CopyNumberTolerance;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
@@ -25,14 +26,16 @@ public class PurpleCopyNumberFactory {
     @NotNull
     private final List<PurpleCopyNumber> germlineDeletions;
 
-    public PurpleCopyNumberFactory(int minTumorRatioCount, int minTumorRatioCountAtCentromere, @NotNull final Gender gender,
-            @NotNull final PurityAdjuster purityAdjuster, final List<FittedRegion> fittedRegions,
+    public PurpleCopyNumberFactory(boolean experimental, int minTumorRatioCount, int minTumorRatioCountAtCentromere,
+            @NotNull final Gender gender, @NotNull final PurityAdjuster purityAdjuster, final List<FittedRegion> fittedRegions,
             final List<StructuralVariant> structuralVariants) {
         somatics = Lists.newArrayList();
         germlineDeletions = Lists.newArrayList();
 
         final ExtendGermline extendGermline = new ExtendGermline(gender);
-        final ExtendDiploid extendDiploid = new ExtendDiploid(purityAdjuster, minTumorRatioCount, minTumorRatioCountAtCentromere);
+        final ExtendDiploid extendDiploid = new ExtendDiploid(CopyNumberTolerance.create(experimental, purityAdjuster),
+                minTumorRatioCount,
+                minTumorRatioCountAtCentromere);
         final PopulateUnknown populateUnknownFactory = new PopulateUnknown(gender);
 
         final ListMultimap<String, CombinedRegion> diploidExtension = ArrayListMultimap.create();
@@ -73,7 +76,6 @@ public class PurpleCopyNumberFactory {
     public List<PurpleCopyNumber> germlineDeletions() {
         return germlineDeletions;
     }
-
 
     @NotNull
     private List<PurpleCopyNumber> toCopyNumber(@NotNull final List<CombinedRegion> regions) {

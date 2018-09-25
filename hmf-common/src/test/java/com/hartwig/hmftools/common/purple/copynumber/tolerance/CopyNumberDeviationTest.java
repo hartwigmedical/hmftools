@@ -1,11 +1,12 @@
-package com.hartwig.hmftools.common.purple.copynumber;
+package com.hartwig.hmftools.common.purple.copynumber.tolerance;
 
-import static com.hartwig.hmftools.common.purple.copynumber.CopyNumberDeviation.HC_MAX_COPY_NUMBER_TOLERANCE;
-import static com.hartwig.hmftools.common.purple.copynumber.CopyNumberDeviation.LC_MAX_COPY_NUMBER_TOLERANCE;
+import static com.hartwig.hmftools.common.purple.copynumber.tolerance.CopyNumberDeviation.HC_MAX_COPY_NUMBER_TOLERANCE;
+import static com.hartwig.hmftools.common.purple.copynumber.tolerance.CopyNumberDeviation.LC_MAX_COPY_NUMBER_TOLERANCE;
 
 import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
+import com.hartwig.hmftools.common.purple.copynumber.tolerance.CopyNumberDeviation;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
