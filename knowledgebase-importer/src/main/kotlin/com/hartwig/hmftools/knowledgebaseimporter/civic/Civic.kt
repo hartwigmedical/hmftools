@@ -52,8 +52,9 @@ class Civic(variantsLocation: String, evidenceLocation: String, diseaseOntology:
 
     private fun readEvidenceMap(evidenceLocation: String, treatmentTypeMap: Map<String, String>): Multimap<String, CivicEvidence> {
         val civicApi = CivicApiWrapper()
-        logger.info("Requesting drug interaction map via civic API")
+        logger.info("Requesting drug interaction map via CiViC API")
         val drugInteractionMap = civicApi.drugInteractionMap
+        logger.info("Retrieved ${drugInteractionMap.size} drug interactions from CiViC API")
         val evidenceMap = ArrayListMultimap.create<String, CivicEvidence>()
         CsvReader.readTSVByName<CivicEvidenceInput>(evidenceLocation).mapNotNull { it.corrected() }.map {
             if (!blacklistedEvidenceIds.contains(it.evidence_id)) {
