@@ -4,6 +4,7 @@ import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.commons.csv.CSVRecord
 import java.io.File
+import java.io.InputStream
 import java.nio.charset.Charset
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubtypeOf
@@ -35,20 +36,26 @@ object CsvReader {
      * Reads CsvData records from a file. Builds CsvData objects selecting only the CSV columns that match the primary constructor parameters by name
      *
      * @param clazz the class of the records to be read. Needs to be a data class and must not contain nested CsvData fields.
-     * @param fileLocation input file location
+     * @param inputStream input stream
      * @param format CSV format
      */
 
-    fun <T : CsvData> readByName(clazz: KClass<T>, fileLocation: String, format: CSVFormat): List<T> {
-        val parser = CSVParser.parse(File(fileLocation), Charset.defaultCharset(), format)
+    fun <T : CsvData> readByName(clazz: KClass<T>, inputStream: InputStream, format: CSVFormat): List<T> {
+        val parser = CSVParser.parse(inputStream, Charset.defaultCharset(), format)
         return parser.asSequence().map { clazz.read(it.toMap()) }.toList()
     }
 
     inline fun <reified T : CsvData> readTSVByName(fileLocation: String, nullString: String? = DEFAULT_NULL_STRING): List<T> =
-            readByName(T::class, fileLocation, DEFAULT_TSV_FORMAT.withNullString(nullString).withFirstRecordAsHeader())
+            readTSVByName(File(fileLocation).inputStream(), nullString)
+
+    inline fun <reified T : CsvData> readTSVByName(inputStream: InputStream, nullString: String? = DEFAULT_NULL_STRING): List<T> =
+            readByName(T::class, inputStream, DEFAULT_TSV_FORMAT.withNullString(nullString).withFirstRecordAsHeader())
 
     inline fun <reified T : CsvData> readCSVByName(fileLocation: String, nullString: String? = DEFAULT_NULL_STRING): List<T> =
-            readByName(T::class, fileLocation, DEFAULT_CSV_FORMAT.withNullString(nullString).withFirstRecordAsHeader())
+            readCSVByName(File(fileLocation).inputStream(), nullString)
+
+    inline fun <reified T : CsvData> readCSVByName(inputStream: InputStream, nullString: String? = DEFAULT_NULL_STRING): List<T> =
+            readByName(T::class, inputStream, DEFAULT_CSV_FORMAT.withNullString(nullString).withFirstRecordAsHeader())
 
     fun <T> readRecords(fileLocation: String, format: CSVFormat, recordParser: (CSVRecord) -> T): List<T> {
         val parser = CSVParser.parse(File(fileLocation), Charset.defaultCharset(), format)
