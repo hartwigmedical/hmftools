@@ -18,6 +18,7 @@ import org.apache.commons.cli.OptionGroup
 import org.apache.commons.cli.Options
 import org.apache.logging.log4j.LogManager
 import java.io.File
+import java.util.*
 
 private val logger = LogManager.getLogger("HmfIdApplication")
 
@@ -140,7 +141,7 @@ private fun runAnonymizeIds(cmd: CommandLine) {
     val samplesInput = readSamplesInput(cmd.getOptionValue(SAMPLE_IDS_FILE), cmd.getOptionValue(PATIENT_MAPPING_FILE))
     val anonymizedSamples = AnonymizedSamples(cmd.getOptionValue(PASSWORD), currentIds, samplesInput)
     println("OriginalId,AnonymousId")
-    samplesInput.samples.forEach { sample ->
+    samplesInput.samples.sortedWith(Comparator.comparing<SampleId, String> { it.id }).forEach { sample ->
         anonymizedSamples[sample]
         println("${sample.id},${anonymizedSamples[sample]?.plaintext ?: "Unknown"}")
     }
