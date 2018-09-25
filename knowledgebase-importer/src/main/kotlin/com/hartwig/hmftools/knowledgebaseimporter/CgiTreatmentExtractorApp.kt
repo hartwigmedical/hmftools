@@ -18,7 +18,7 @@ fun main(args: Array<String>) {
     val cmd = createOptions().createCommandLine("cgi-treatment-extractor", args)
     val outputFile = File(cmd.getOptionValue(OUTPUT_FILE))
     if (!outputFile.parentFile.exists() && !outputFile.parentFile.mkdirs()) {
-        logger.error("Could not create parent directories for ")
+        logger.error("Could not create parent directories for $outputFile")
     }
     val cgiActionableRecords = CsvReader.readTSVByName<CgiActionableInput>(cmd.getOptionValue(CGI_BIOMARKERS_LOCATION))
             .mapNotNull { it.corrected() }.map { CgiActionableRecord(it, mapOf()) }
