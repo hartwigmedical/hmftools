@@ -55,13 +55,15 @@ class Civic(variantsLocation: String, evidenceLocation: String, diseaseOntology:
         logger.info("Requesting drug interaction map via CiViC API")
         val drugInteractionMap = civicApi.drugInteractionMap
         logger.info("Retrieved ${drugInteractionMap.size} drug interactions from CiViC API")
+        civicApi.releaseResources()
+
         val evidenceMap = ArrayListMultimap.create<String, CivicEvidence>()
         CsvReader.readTSVByName<CivicEvidenceInput>(evidenceLocation).mapNotNull { it.corrected() }.map {
             if (!blacklistedEvidenceIds.contains(it.evidence_id)) {
                 evidenceMap.put(it.variant_id, CivicEvidence(it, drugInteractionMap, treatmentTypeMap))
             }
         }
-        civicApi.releaseResources()
+
         return evidenceMap
     }
 }
