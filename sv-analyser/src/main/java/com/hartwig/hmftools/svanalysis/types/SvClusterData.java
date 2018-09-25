@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svanalysis.types;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator.NO_FS;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
@@ -149,6 +151,14 @@ public class SvClusterData
         mEndArm = end;
     }
 
+    public final long length()
+    {
+        if(type() == StructuralVariantType.BND || position(false) < 0)
+            return 0;
+
+        return abs(position(false) - position(true));
+    }
+
     public void setPonCount(int count) { mPonCount = count; }
     public int getPonCount() { return mPonCount; }
 
@@ -277,7 +287,7 @@ public class SvClusterData
     {
         for(String assemb1 : var1.getTempInsertionAssemblies(v1Start))
         {
-            if(var2.getTempInsertionAssemblies(v1Start).contains(assemb1))
+            if(var2.getTempInsertionAssemblies(v2Start).contains(assemb1))
                 return true;
         }
 

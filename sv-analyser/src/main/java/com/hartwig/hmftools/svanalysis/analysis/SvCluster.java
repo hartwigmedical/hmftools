@@ -84,17 +84,15 @@ public class SvCluster
 
     public List<SvChain> getChains() { return mChains; }
 
-    public void addChain(SvChain chain)
-    {
-        mChains.add(chain);
-    }
+    public void addChain(SvChain chain) { mChains.add(chain); }
 
     public final List<SvLinkedPair> getLinkedPairs() { return mLinkedPairs; }
-    public final List<SvLinkedPair> getAllLinkedPairs() { return mAllLinkedPairs; }
     public final List<SvClusterData> getSpanningSVs() { return mSpanningSVs; }
     public void setLinkedPairs(final List<SvLinkedPair> pairs) { mLinkedPairs = pairs; }
-    public void setAllLinkedPairs(final List<SvLinkedPair> pairs) { mAllLinkedPairs = pairs; }
     public void setSpanningSVs(final List<SvClusterData> svList) { mSpanningSVs = svList; }
+
+    // public void setAllLinkedPairs(final List<SvLinkedPair> pairs) { mAllLinkedPairs = pairs; }
+    // public final List<SvLinkedPair> getAllLinkedPairs() { return mAllLinkedPairs; }
 
     public final List<SvFootprint> getFootprints() { return mFootprints; }
 
@@ -200,7 +198,6 @@ public class SvCluster
         // cache this against the SV
         for (SvClusterData var : mClusteredSVs)
         {
-
             if(var.type() == StructuralVariantType.INS)
                 continue;
 
@@ -236,8 +233,13 @@ public class SvCluster
                     continue;
             }
 
+            // ignore the null breakends
+            if(var.isNullBreakend() && !useStart)
+                continue;
+
             boolean found = false;
-            for(SvBreakend breakend : mUniqueBreakends) {
+            for(SvBreakend breakend : mUniqueBreakends)
+            {
                 if (variantMatchesBreakend(var, breakend, useStart, PERMITED_DUP_BE_DISTANCE))
                 {
                     breakend.addToCount(1);
@@ -246,7 +248,8 @@ public class SvCluster
                 }
             }
 
-            if(!found) {
+            if(!found)
+            {
                 // add a new entry
                 mUniqueBreakends.add(new SvBreakend(var.chromosome(useStart), var.position(useStart), var.orientation(useStart)));
             }

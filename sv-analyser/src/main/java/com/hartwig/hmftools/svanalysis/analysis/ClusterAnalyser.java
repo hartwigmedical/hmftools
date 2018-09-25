@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
+import static com.hartwig.hmftools.svanalysis.analysis.ChainFinder.assessClusterChaining;
 import static com.hartwig.hmftools.svanalysis.analysis.SvCluster.findLinkedPair;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.types.SvClusterData.haveLinkedAssemblies;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_DIFF;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_LINK_ONLY;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.hasCompleteLinkedPairsList;
 
 import java.util.List;
 
@@ -66,6 +68,47 @@ public class ClusterAnalyser {
 
         if(assemblyLinkedPairs.isEmpty() && inferredLinkedPairs.isEmpty())
             return;
+
+        // test out the inferred linked pairs to see which ones best explain the cluster
+        boolean fullChainFound = false;
+
+        if(cluster.isConsistent() && !assemblyLinkedPairs.isEmpty())
+        {
+            fullChainFound = assessClusterChaining(sampleId, cluster, assemblyLinkedPairs, inferredLinkedPairs);
+
+            if(fullChainFound)
+            {
+                final SvChain fullChain = cluster.getChains().get(0);
+
+                // remove an inferred links which weren't used
+                int lpIndex = 0;
+                while(lpIndex < inferredLinkedPairs.size())
+                {
+                    SvLinkedPair pair = inferredLinkedPairs.get(lpIndex);
+
+                    if (!fullChain.getLinkedPairs().contains(pair))
+                    {
+                        inferredLinkedPairs.remove(lpIndex);
+                        continue;
+                    }
+
+                    ++lpIndex;
+                }
+            }
+        }
+
+        if(!fullChainFound)
+        {
+            // now remove mutually exclusive linked sections by using the shortest first
+            reduceInferredToShortestLinks(inferredLinkedPairs);
+        }
+
+        // mark the resultant set of inferred links
+        for(SvLinkedPair pair : inferredLinkedPairs)
+        {
+            pair.first().setAssemblyMatchType(ASSEMBLY_MATCH_LINK_ONLY, pair.firstLinkOnStart());
+            pair.second().setAssemblyMatchType(ASSEMBLY_MATCH_LINK_ONLY, pair.secondLinkOnStart());
+        }
 
         List<SvLinkedPair> linkedPairs = Lists.newArrayList();
         linkedPairs.addAll(assemblyLinkedPairs);
@@ -162,9 +205,8 @@ public class ClusterAnalyser {
                         linkedPairs.add(newPair);
 
                         // to avoid logging unlikely long TIs
-                        LOGGER.debug("sample({}) cluster({}) adding assembly linked {} pair({} and {}) length({})",
-                                sampleId, cluster.getId(), newPair.linkType(), newPair.first().posId(),
-                                newPair.second().posId(), newPair.length());
+                        LOGGER.debug("sample({}) cluster({}) adding assembly linked {} pair({}) length({})",
+                                sampleId, cluster.getId(), newPair.linkType(), newPair.toString(), newPair.length());
                     }
                 }
             }
@@ -186,7 +228,6 @@ public class ClusterAnalyser {
         if(cluster.getLineElementCount() > 0)
             return linkedPairs;
 
-        List<SvLinkedPair> allLinkedPairs = Lists.newArrayList();
         List<SvClusterData> spanningSVs = Lists.newArrayList();
 
         for (int i = 0; i < cluster.getCount(); ++i)
@@ -246,9 +287,6 @@ public class ClusterAnalyser {
                             continue;
                         }
 
-                        var1.setAssemblyMatchType(ASSEMBLY_MATCH_LINK_ONLY, v1Start);
-                        var2.setAssemblyMatchType(ASSEMBLY_MATCH_LINK_ONLY, v2Start);
-
                         // insert in order
                         int index = 0;
                         boolean skipNewPair = false;
@@ -287,9 +325,8 @@ public class ClusterAnalyser {
                         if(newPair.length() < mUtils.getBaseDistance())
                         {
                             // to avoid logging unlikely long TIs
-                            LOGGER.debug("sample({}) cluster({}) adding inferred linked {} pair({} and {}) length({}) at index({})",
-                                    sampleId, cluster.getId(), newPair.linkType(), newPair.first().posId(),
-                                    newPair.second().posId(), newPair.length(), index);
+                            LOGGER.debug("sample({}) cluster({}) adding inferred linked {} pair({}) length({}) at index({})",
+                                    sampleId, cluster.getId(), newPair.linkType(), newPair.toString(), newPair.length(), index);
                         }
                     }
                 }
@@ -302,9 +339,16 @@ public class ClusterAnalyser {
         LOGGER.debug("sample({}) cluster({}) has {} inferred linked pairs and {} possible spanning SVs",
                 sampleId, cluster.getId(), linkedPairs.size(), spanningSVs.size());
 
-        allLinkedPairs.addAll(linkedPairs);
-        cluster.setAllLinkedPairs(allLinkedPairs);
+        // allLinkedPairs.addAll(linkedPairs);
+        // cluster.setAllLinkedPairs(allLinkedPairs);
 
+        cluster.setSpanningSVs(spanningSVs);
+
+        return linkedPairs;
+    }
+
+    private void reduceInferredToShortestLinks(List<SvLinkedPair> linkedPairs)
+    {
         // now remove mutually exclusive linked sections by using the shortest first
         for(int i = 0; i < linkedPairs.size(); ++i)
         {
@@ -315,9 +359,9 @@ public class ClusterAnalyser {
                 final SvLinkedPair pair2 = linkedPairs.get(j);
 
                 if((pair.first().equals(pair2.first()) && pair.firstLinkOnStart() == pair2.firstLinkOnStart())
-                || (pair.first().equals(pair2.second()) && pair.firstLinkOnStart() == pair2.secondLinkOnStart())
-                || (pair.second().equals(pair2.first()) && pair.secondLinkOnStart() == pair2.firstLinkOnStart())
-                || (pair.second().equals(pair2.second()) && pair.secondLinkOnStart() == pair2.secondLinkOnStart()))
+                        || (pair.first().equals(pair2.second()) && pair.firstLinkOnStart() == pair2.secondLinkOnStart())
+                        || (pair.second().equals(pair2.first()) && pair.secondLinkOnStart() == pair2.firstLinkOnStart())
+                        || (pair.second().equals(pair2.second()) && pair.secondLinkOnStart() == pair2.secondLinkOnStart()))
                 {
                     if(pair.length() < mUtils.getBaseDistance()) {
                         // to avoid logging unlikely long TIs
@@ -340,10 +384,6 @@ public class ClusterAnalyser {
                 }
             }
         }
-
-        cluster.setSpanningSVs(spanningSVs);
-
-        return linkedPairs;
     }
 
     private void matchDuplicateBEToLinkedPairs(final List<SvLinkedPair> linkedPairs, final List<SvClusterData> spanningSVs)
@@ -400,39 +440,47 @@ public class ClusterAnalyser {
 
     public void findSvChains(final String sampleId, SvCluster cluster)
     {
-        if(cluster.getLinkedPairs().isEmpty() || cluster.getLinkedPairs().size() < 2)
+        if(!cluster.getChains().isEmpty())
             return;
 
-        List<SvLinkedPair> linkedPairs = Lists.newArrayList();
-        linkedPairs.addAll(cluster.getLinkedPairs());
+        // findSvChains(sampleId, cluster, cluster.getLinkedPairs(), cluster.getChains());
+    }
 
-        LOGGER.debug("cluster({}) attempting to find chained SVs from {} linked pairs", cluster.getId(), linkedPairs.size());
+    public void findSvChains(final String sampleId, SvCluster cluster, List<SvLinkedPair> linkedPairs, List<SvChain> chainsList)
+    {
+        if(linkedPairs.isEmpty() || linkedPairs.size() < 2)
+            return;
 
-        while(linkedPairs.size() >= 2)
+        List<SvLinkedPair> workingLinkedPairs = Lists.newArrayList();
+        workingLinkedPairs.addAll(linkedPairs);
+
+        LOGGER.debug("cluster({}) attempting to find chained SVs from {} linked pairs", cluster.getId(), workingLinkedPairs.size());
+
+        while(workingLinkedPairs.size() >= 2)
         {
             // start with a single linked pair
             // for each of its ends (where the first BE is labelled 'first', and the second labelled 'last'),
             // search for the closest possible linking BE from another linked pair
             // for BEs to link they must be facing (like a TI)
 
-            SvLinkedPair linkedPair = linkedPairs.get(0);
-            linkedPairs.remove(0);
+            SvLinkedPair linkedPair = workingLinkedPairs.get(0);
+            workingLinkedPairs.remove(0);
 
-            int chainId = cluster.getChains().size()+1;
+            int chainId = chainsList.size()+1;
             SvChain currentChain = new SvChain(chainId);
 
             LOGGER.debug("sample({}) cluster({}) starting chain({}) with linked pair({})",
                     sampleId, cluster.getId(), chainId, linkedPair.toString());
 
-            currentChain.addLinkedPair(linkedPair, true);
+            currentChain.addLink(linkedPair, true);
 
-            while(!linkedPairs.isEmpty())
+            while(!workingLinkedPairs.isEmpty())
             {
                 // now search the remaining SVs for links at either end of the current chain
                 SvClusterData beFirst = currentChain.getFirstSV();
-                boolean chainFirstUnlinkedOnStart = currentChain.firstUnlinkedOnStart();
+                boolean chainFirstUnlinkedOnStart = currentChain.firstLinkOpenOnStart();
                 SvClusterData beLast = currentChain.getLastSV();
-                boolean chainLastUnlinkedOnStart = currentChain.lastUnlinkedOnStart();
+                boolean chainLastUnlinkedOnStart = currentChain.lastLinkOpenOnStart();
 
                 SvLinkedPair closestStartPair = null;
                 int closestStartLen = -1;
@@ -440,7 +488,7 @@ public class ClusterAnalyser {
                 SvLinkedPair closestLastPair = null;
                 int closestLastLen = -1;
 
-                for(SvLinkedPair pair : linkedPairs) {
+                for(SvLinkedPair pair : workingLinkedPairs) {
 
                     // first check for a linked pair which has the same variant (but the other BE) to the unlinked on
                     if((beFirst.equals(pair.first()) && chainFirstUnlinkedOnStart == pair.firstLinkOnStart())
@@ -469,8 +517,8 @@ public class ClusterAnalyser {
                             closestStartPair.toString(), beFirst.posId(chainFirstUnlinkedOnStart), closestStartLen);
 
                     // add this to the chain at the start
-                    currentChain.addLinkedPair(closestStartPair, true);
-                    linkedPairs.remove(closestStartPair);
+                    currentChain.addLink(closestStartPair, true);
+                    workingLinkedPairs.remove(closestStartPair);
                 }
 
                 if(closestLastPair != null & closestLastPair != closestStartPair)
@@ -479,22 +527,22 @@ public class ClusterAnalyser {
                             closestLastPair.toString(), beLast.posId(chainLastUnlinkedOnStart), closestLastLen);
 
                     // add this to the chain at the start
-                    currentChain.addLinkedPair(closestLastPair, false);
-                    linkedPairs.remove(closestLastPair);
+                    currentChain.addLink(closestLastPair, false);
+                    workingLinkedPairs.remove(closestLastPair);
                 }
             }
 
             if(currentChain.getLinkCount() > 1)
             {
-                LOGGER.info("sample({}) cluster({}) adding chain({}) with {} linked pairs:",
+                LOGGER.debug("sample({}) cluster({}) adding chain({}) with {} linked pairs:",
                         sampleId, cluster.getId(), currentChain.getId(), currentChain.getLinkCount());
 
-                cluster.addChain(currentChain);
+                chainsList.add(currentChain);
 
                 for(int i = 0; i < currentChain.getLinkCount(); ++i)
                 {
                     final SvLinkedPair pair = currentChain.getLinkedPairs().get(i);
-                    LOGGER.info("sample({}) cluster({}) chain({}) {}: pair({}) {} len={}",
+                    LOGGER.debug("sample({}) cluster({}) chain({}) {}: pair({}) {} len={}",
                             sampleId, cluster.getId(), currentChain.getId(), i, pair.toString(), pair.linkType(), pair.length());
                 }
             }

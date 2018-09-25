@@ -4,6 +4,10 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.MIN_TEMPLATED_INSERTION_LENGTH;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+
 public class SvLinkedPair {
 
     private SvClusterData mFirst;
@@ -43,6 +47,10 @@ public class SvLinkedPair {
     public final SvClusterData second() { return mSecond; }
     public boolean firstLinkOnStart() { return mFirstLinkOnStart; }
     public boolean secondLinkOnStart() { return mSecondLinkOnStart; }
+    public boolean firstUnlinkedOnStart() { return !mFirstLinkOnStart; }
+    public boolean secondUnlinkedOnStart() { return !mSecondLinkOnStart; }
+
+
     public final String linkType() { return mLinkType; }
     public final int length() { return mLinkLength; }
 
@@ -52,6 +60,55 @@ public class SvLinkedPair {
     public boolean hasVariantBE(final SvClusterData var, boolean useStart)
     {
         return (var.equals(mFirst) && mFirstLinkOnStart == useStart || var.equals(mSecond) && mSecondLinkOnStart == useStart);
+    }
+
+    public boolean hasLinkClash(final SvLinkedPair otherPair)
+    {
+        return (hasVariantBE(otherPair.first(), otherPair.firstLinkOnStart())
+            || hasVariantBE(otherPair.second(), otherPair.secondLinkOnStart()));
+    }
+
+    public static boolean hasCompleteLinkedPairsList(final List<SvClusterData> varList, final List<SvLinkedPair> linkedPairs)
+    {
+        int spareBreakends = 0;
+
+        for(final SvClusterData var : varList)
+        {
+            boolean startLinked = false;
+            boolean endLinked = false;
+
+            for(final SvLinkedPair linkedPair : linkedPairs)
+            {
+                if(linkedPair.first() == var)
+                {
+                    if(linkedPair.firstLinkOnStart())
+                        startLinked = true;
+                    else
+                        endLinked = true;
+                }
+                else if(linkedPair.second() == var)
+                {
+                    if(linkedPair.secondLinkOnStart())
+                        startLinked = true;
+                    else
+                        endLinked = true;
+                }
+
+                if(startLinked && endLinked)
+                    break;
+            }
+
+            if(!startLinked && !endLinked)
+                return false;
+
+            if(!startLinked || !endLinked)
+                ++spareBreakends;
+
+            if(spareBreakends > 2)
+                return false;
+        }
+
+        return true;
     }
 
     public final String toString()

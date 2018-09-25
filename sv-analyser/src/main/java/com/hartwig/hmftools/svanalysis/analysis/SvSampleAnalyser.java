@@ -292,7 +292,7 @@ public class SvSampleAnalyser {
                 mFileWriter = writer;
 
                 // definitional fields
-                writer.write("SampleId,ClusterId,ClusterCount,Id,Type,Ploidy,PONCount,PONRegionCount");
+                writer.write("SampleId,ClusterId,ClusterCount,Id,Type,Ploidy");
 
                 // position and copy number
                 writer.write(",ChrStart,PosStart,OrientStart,ArmStart,AdjAFStart,AdjCNStart,AdjCNChgStart");
@@ -300,7 +300,7 @@ public class SvSampleAnalyser {
                 writer.write(",ChrEnd,PosEnd,OrientEnd,ArmEnd,AdjAFEnd,AdjCNEnd,AdjCNChgEnd");
 
                 // SV info
-                writer.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise");
+                writer.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,PONCount");
 
                 // location attributes
                 writer.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd");
@@ -337,9 +337,8 @@ public class SvSampleAnalyser {
 
                     String typeStr = var.isNullBreakend() ? "SGL" : var.type().toString();
                     writer.write(
-                            String.format("%s,%d,%d,%s,%s,%.2f,%d,%d",
-                                    mSampleId, cluster.getId(), cluster.getCount(), var.id(), typeStr,
-                                    dbData.ploidy(), var.getPonCount(), var.getPonRegionCount()));
+                            String.format("%s,%d,%d,%s,%s,%.2f",
+                                    mSampleId, cluster.getId(), cluster.getCount(), var.id(), typeStr, dbData.ploidy()));
 
                     writer.write(
                             String.format(",%s,%d,%d,%s,%.2f,%.2f,%.2f,%s,%d,%d,%s,%.2f,%.2f,%.2f",
@@ -349,10 +348,10 @@ public class SvSampleAnalyser {
                                     dbData.adjustedEndAF(), dbData.adjustedEndCopyNumber(), dbData.adjustedEndCopyNumberChange()));
 
                     writer.write(
-                            String.format(",%s,%d,%d,%s,%s",
+                            String.format(",%s,%d,%d,%s,%s,%d",
                                     dbData.insertSequence().isEmpty() && var.type() != StructuralVariantType.INS ? dbData.homology() : "",
                                     dbData.inexactHomologyOffsetStart(), dbData.inexactHomologyOffsetEnd(),
-                                    dbData.insertSequence(), dbData.imprecise()));
+                                    dbData.insertSequence(), dbData.imprecise(), var.getPonCount()));
 
                     writer.write(
                             String.format(",%s,%s,%s,%s,%s,%s,%s",
