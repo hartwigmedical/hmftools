@@ -82,11 +82,10 @@ public abstract class ActionabilityApplication {
             ActionabilityVariantsAnalyzer analyzer = ActionabilityVariantsAnalyzer.loadFromFileVariantsAndFileRanges(fileActionabilityVariants, fileActionabilityRanges);
             CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
             for (int i = 0; i < variants.size(); i ++) {
-                analyzer.actionableVariants(variants.get(i), patientTumorLocation.primaryTumorLocation());
-                analyzer.actionableRange(variants.get(i), patientTumorLocation.primaryTumorLocation());
+                String tumorLocationKnowledgebase = analyzer.actionableVariants(variants.get(i), patientTumorLocation.primaryTumorLocation());
+                cancerTypeAnalyzer.foundTumorLocation(tumorLocationKnowledgebase);
+               // analyzer.actionableRange(variants.get(i), patientTumorLocation.primaryTumorLocation());
             }
-            LOGGER.info("isActionable: " + cancerTypeAnalyzer.isActionableByTumorType(doids));
-
         } else if (!Files.exists(new File(fileActionabilityVariants).toPath())){
             LOGGER.warn("File does not exist: " + fileActionabilityVariants);
         } else if(!Files.exists(new File(fileActionabilityRanges).toPath())){

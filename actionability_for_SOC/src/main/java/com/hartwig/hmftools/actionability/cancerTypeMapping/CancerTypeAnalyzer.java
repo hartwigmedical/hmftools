@@ -49,10 +49,12 @@ public class CancerTypeAnalyzer {
             return " ";
         }
     }
-
     @NotNull
-    public boolean isActionableByTumorType(@NotNull String doids) {
-        return true;
+    public void foundTumorLocation (@NotNull String tumorLocation) {
+        if (tumorLocation != "") {
+            LOGGER.info("tumorLocation: " + tumorLocation);
+            LOGGER.info(cancerTypeDoids.contains(tumorLocation));
+        }
     }
 
 }
