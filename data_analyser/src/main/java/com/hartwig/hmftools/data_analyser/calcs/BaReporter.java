@@ -853,10 +853,10 @@ public class BaReporter
 
                     // skip these annotation if already known
                     if(bg1.getMaxSimiliarGroup() != bg2)
-                        bg1.addGroupLinks(String.format("css_bg_%d_%.4f", bg2.getId(), css));
+                        bg1.addGroupLinks(String.format("css_bg_%d_%.2f", bg2.getId(), css));
 
                     if(bg2.getMaxSimiliarGroup() != bg1)
-                        bg2.addGroupLinks(String.format("css_bg_%d_%.4f", bg1.getId(), css));
+                        bg2.addGroupLinks(String.format("css_bg_%d_%.2f", bg1.getId(), css));
                 }
             }
         }
