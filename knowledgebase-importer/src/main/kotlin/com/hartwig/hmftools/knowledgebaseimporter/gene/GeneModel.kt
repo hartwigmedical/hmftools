@@ -87,7 +87,7 @@ class GeneModel(ensemblDbUrl: String, hmfpatientsDbUrl: String, user: String, pa
             logger.warn("Gene ${mutation.gene} not found in HMF gene panel!")
         } else if (mutation.transcript != null) {
             if (transcriptRegion.transcriptID() != mutation.transcript) {
-                logger.warn("Non-canonical transcript ${mutation.transcript} requested for gene ${mutation.gene}")
+                logger.warn("Non-canonical transcript ${mutation.transcript} used in knowledgebase for gene ${mutation.gene}")
                 return null
             }
         }

@@ -113,17 +113,17 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
         }
     }
 
-    private fun mutationCodingRange(mutation: GenericMutation, gene: HmfTranscriptRegion?): List<ClosedRange<Long>> {
-        if (gene == null) {
+    private fun mutationCodingRange(mutation: GenericMutation, transcript: HmfTranscriptRegion?): List<ClosedRange<Long>> {
+        if (transcript == null) {
             return emptyList()
         }
         return when (mutation) {
-            is GeneMutations -> listOf(gene.start()..gene.end())
-            is ExonMutations -> listOf(gene.exome()[mutation.exonNumber].start()..gene.exome()[mutation.exonNumber].end())
-            is CodonRangeMutations -> gene.codonRangeByIndex(mutation.startCodon, mutation.endCodon)?.map { it -> it.start()..it.end() }
+            is GeneMutations -> listOf(transcript.start()..transcript.end())
+            is ExonMutations -> listOf(transcript.exome()[mutation.exonNumber].start()..transcript.exome()[mutation.exonNumber].end())
+            is CodonRangeMutations -> transcript.codonRangeByIndex(mutation.startCodon, mutation.endCodon)?.map { it -> it.start()..it.end() }
                     ?: emptyList()
-            is CodonMutations -> gene.codonByIndex(mutation.codonNumber)?.map { it -> it.start()..it.end() } ?: emptyList()
-            is GenericRangeMutations -> gene.codingRangeByGenomicCoordinates(mutation.startPosition, mutation.endPosition)
+            is CodonMutations -> transcript.codonByIndex(mutation.codonNumber)?.map { it -> it.start()..it.end() } ?: emptyList()
+            is GenericRangeMutations -> transcript.codingRangeByGenomicCoordinates(mutation.startPosition, mutation.endPosition)
                     ?.map { it -> it.start()..it.end() } ?: emptyList()
         }
     }
