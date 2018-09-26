@@ -51,9 +51,11 @@ public class CancerTypeAnalyzer {
 
     @NotNull
     public void foundTumorLocation (@NotNull String tumorLocationKnowledgebase) {
-        if (tumorLocationKnowledgebase != "") {
-            LOGGER.info("tumorLocation: " + tumorLocationKnowledgebase);
-            LOGGER.info(cancerTypeDoids.contains(tumorLocationKnowledgebase));
+        for (int i = 1; i < cancerTypeDoids.size(); i ++) {
+            if(cancerTypeDoids.get(i).cancerType().contains(tumorLocationKnowledgebase)){
+                LOGGER.info(cancerTypeDoids.get(i).cancerType());
+                LOGGER.info(cancerTypeDoids.get(i).doidSet());
+            }
         }
     }
 

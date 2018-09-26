@@ -39,9 +39,6 @@ public class ActionabilityVariantsAnalyzer {
                 booleanValueVariants =  true;
                 LOGGER.info(variants.get(i));
                 tumorLocation = variants.get(i).cancerType();
-            } else {
-                tumorLocation ="";
-                booleanValueVariants =  false;
             }
         }
         return tumorLocation;
