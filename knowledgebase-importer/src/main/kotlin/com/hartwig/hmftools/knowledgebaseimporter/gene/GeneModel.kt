@@ -81,7 +81,7 @@ class GeneModel(ensemblDbUrl: String, hmfpatientsDbUrl: String, user: String, pa
     }
 
     fun hmfTranscriptRegionForGenericMutation(mutation: GenericMutation): HmfTranscriptRegion? {
-        // TODO (KODU): Map MLL2 gene to KMT2B
+        // TODO (KODU): Deal with MLL (Can maybe map to KMT2B, KMT2A or something else)
         val transcriptRegion = hmfGenePanel[mutation.gene]
         if (transcriptRegion == null) {
             logger.warn("Gene ${mutation.gene} not found in HMF gene panel!")
