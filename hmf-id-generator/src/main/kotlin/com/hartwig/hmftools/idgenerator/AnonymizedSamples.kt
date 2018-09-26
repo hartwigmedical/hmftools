@@ -37,7 +37,10 @@ class AnonymizedSamples private constructor(val password: String, val sampleIds:
         return anonymizedPatients.anonymizedPatientMap().flatMap { (patientId, canonicalId) ->
             val patientIdSamples = hmfSampleIdPerPatientHash.getValue(patientId.hash)
             val canonicalIdSamples = hmfSampleIdPerPatientHash.getValue(canonicalId.hash).associateBy { it.hash }
-            patientIdSamples.map { Pair(it, canonicalIdSamples[it.hash]!!) }
+            patientIdSamples.mapNotNull {
+                canonicalIdSamples[it.hash] ?: return@mapNotNull null
+                Pair(it, canonicalIdSamples[it.hash]!!)
+            }
         }.toMap()
     }
 }
