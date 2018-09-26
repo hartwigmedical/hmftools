@@ -5,6 +5,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.actionability.cancerTypeMapping.CancerTypeAnalyzer;
+import com.hartwig.hmftools.actionability.cancerTypeMapping.CancerTypeReading;
+import com.hartwig.hmftools.actionability.cancerTypeMapping.ImmutableCancerTypeReading;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
@@ -55,7 +58,14 @@ public class ActionabilityVariantsAnalyzerTest {
                 .hmfResponse("Resistant")
                 .build();
 
+        CancerTypeReading reading = ImmutableCancerTypeReading.builder()
+                .doidSet("4159")
+                .cancerType("Skin")
+                .build();
+
         ActionabilityVariantsAnalyzer var = new ActionabilityVariantsAnalyzer(Lists.newArrayList(variantsSOC), Lists.newArrayList(variantsRanges));
+
+        CancerTypeAnalyzer cancerType = new CancerTypeAnalyzer(Lists.newArrayList(reading));
 
         SomaticVariant variant = ImmutableSomaticVariantImpl.builder()
                 .chromosome("7")
@@ -79,9 +89,10 @@ public class ActionabilityVariantsAnalyzerTest {
                 .mappability(0D)
                 .build();
 
-        assertNotNull(var.actionableVariants(variant, "Skin"));
+
+        assertTrue(var.actionableVariants(variant, cancerType, "4159", "Skin"));
         assertTrue(var.actionableRange(variant, "Skin"));
-        assertNotNull(var.actionableVariants(variant, "Stomach"));
+      //  assertTrue(var.actionableVariants(variant, cancerType, "4159", "Stomach"));
         assertFalse(var.actionableRange(variant, "Lung"));
     }
 }

@@ -7,10 +7,12 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hartwig.hmftools.actionability.cancerTypeMapping.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ActionabilityVariantsAnalyzer {
     private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(ActionabilityVariantsAnalyzer.class);
@@ -26,35 +28,30 @@ public class ActionabilityVariantsAnalyzer {
         this.variantsRanges = variantsRanges;
     }
 
-
-    public String [] actionableVariants(@NotNull SomaticVariant variant, @NotNull String primaryTumorLocation) {
-        String tumorLocation = "";
-        int variantPosition = 0;
+    public boolean actionableVariants(@NotNull SomaticVariant variant, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
+            @Nullable String doids, @NotNull String primaryTumorLocation) {
         for (int i = 0; i < variants.size(); i++) {
             if (variants.get(i).cancerType().contains(primaryTumorLocation) && variant.gene().equals(variants.get(i).gene()) && variant.chromosome().equals(variants.get(i).chromosome()) && Long.toString(variant.position())
                     .equals(variants.get(i).position()) && variant.ref().equals(variants.get(i).ref()) && variant.alt()
                     .equals(variants.get(i).alt())) {
-                LOGGER.info(variants.get(i));
-                tumorLocation = variants.get(i).cancerType();
-                variantPosition = i;
+                if(variants.get(i).cancerType() != "") {
+                    if (cancerTypeAnalyzer.foundTumorLocation(variants.get(i).cancerType(), doids)){
+                        printTable(i, "yes");
+                    } else {
+                        printTable(i, "no");
+                    }
+                }
             }
         }
-        String returnValues[] = new String[2];
-        returnValues[0] = tumorLocation;
-        returnValues[1] = Integer.toString(variantPosition);
-        return returnValues;
+        return true;
     }
 
-    public void printTable(@NotNull String digitRow) {
-        int digit = Integer.parseInt(digitRow);
-        LOGGER.info("Gene" + "\t" + "chromosome" + "\t" + "position" + "\t" + "ref" + "\t" + "alt" + "\t" + "drug" + "\t"
-                + "drugsType" + "\t" + "cancerType" + "\t" + "levelHmf" + "\t" + "evidenceType" + "\t" + "significanceSource" + "\t"
-                + "hmfResponse");
+    private void printTable(@NotNull int digit, @NotNull String isActionable) {
         LOGGER.info(variants.get(digit).gene() + "\t" + variants.get(digit).chromosome() + "\t" + variants.get(digit).position()
                 + variants.get(digit).ref() + "\t" + variants.get(digit).alt() + "\t" + variants.get(digit).drug()
                 + "\t" + variants.get(digit).drugsType() + "\t" + variants.get(digit).cancerType()
                 + "\t" + variants.get(digit).levelHmf() + "\t" + variants.get(digit).evidenceType() +
-                "\t" + variants.get(digit).significanceSource() + "\t" + variants.get(digit).hmfResponse());
+                "\t" + variants.get(digit).significanceSource() + "\t" + variants.get(digit).hmfResponse() + "\t" + isActionable);
     }
 
     public boolean actionableRange(@NotNull SomaticVariant variant, @NotNull String primaryTumorLocation) {
