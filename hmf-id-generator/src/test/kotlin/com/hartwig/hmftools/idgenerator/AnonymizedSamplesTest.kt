@@ -16,11 +16,14 @@ class AnonymizedSamplesTest : StringSpec() {
     private val patient2Hash = Hash("c866a877e8bd5fe1b6a078953211369a190fdcd28a98934578beeb603f0d0125")
     private val sample1A = SampleId("${patient1.id}T")!!
     private val sample1B = SampleId("${patient1.id}TII")!!
+    private val sample2A = SampleId("${patient2.id}T")!!
     private val sample1AHash = Hash("2b838ee06b69f3880bca9d9675d0760aba8dede61e82492d1677e37fbcf20811")
     private val sample1BHash = Hash("453295f4e826bd4376f434a6f3d1fc151b30c5d8282af42f758f549fc962bb05")
+    private val sample2AHash = Hash("1a954ad6615e00eaee1e7bf3d75dc3b1d81433114b4b7f7c65412120ac6f4dbc")
 
     private val anonSample1A = HmfSampleId(HashId(sample1AHash, 1), HmfPatientId(HashId(patient1Hash, 1)))
     private val anonSample1B = HmfSampleId(HashId(sample1BHash, 2), HmfPatientId(HashId(patient1Hash, 1)))
+    private val anonSample2A = HmfSampleId(HashId(sample2AHash, 1), HmfPatientId(HashId(patient2Hash, 2)))
 
     private val mappedAnonSample1A = HmfSampleId(HashId(sample1AHash, 1), HmfPatientId(HashId(patient2Hash, 1)))
     private val mappedAnonSample1B = HmfSampleId(HashId(sample1BHash, 2), HmfPatientId(HashId(patient2Hash, 1)))
@@ -101,6 +104,14 @@ class AnonymizedSamplesTest : StringSpec() {
             val anonymizedSamples = AnonymizedSamples(password, listOf(anonSample1A, mappedAnonSample1A), samplesInput)
             anonymizedSamples[sample1A] shouldBe anonSample1A
             anonymizedSamples[samplesInput.canonicalId(patient1)] shouldBe setOf(anonSample1A)
+            anonymizedSamples.sampleMapping.size shouldBe 0
+        }
+
+        "can build anonymizedSamples from previously anonymized (non-mapped) ids and new patient mapping" {
+            val samplesInput = SamplesInput(listOf(sample1A, sample2A), mapOf(patient1 to patient2))
+            val anonymizedSamples = AnonymizedSamples(password, listOf(anonSample1A, anonSample2A), samplesInput)
+            anonymizedSamples[sample1A] shouldBe anonSample1A
+            anonymizedSamples[sample2A] shouldBe anonSample2A
             anonymizedSamples.sampleMapping.size shouldBe 0
         }
     }
