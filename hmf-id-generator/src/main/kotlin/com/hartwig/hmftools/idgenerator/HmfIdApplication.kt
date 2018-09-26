@@ -111,7 +111,7 @@ private fun runCreateIds(cmd: CommandLine) {
     val anonymizer = SampleAnonymizer(password)
     val samplesInput = readSamplesInput(cmd.getOptionValue(SAMPLE_IDS_FILE), cmd.getOptionValue(PATIENT_MAPPING_FILE))
     val anonymizedSamples = anonymizer.anonymize(password, samplesInput, emptyList())
-    val sampleMappingRecords = anonymizedSamples.anonymizedSamplesMap().map { HmfSampleMappingRecord(it.key, it.value) }
+    val sampleMappingRecords = anonymizedSamples.sampleMapping.map { HmfSampleMappingRecord(it.key, it.value) }
     CsvWriter.writeCSV(anonymizedSamples.map { HmfSampleIdRecord(it) }, cmd.getOptionValue(OUTPUT_FILE))
     CsvWriter.writeCSV(sampleMappingRecords, cmd.getOptionValue(SAMPLE_MAPPING_OUTPUT_FILE))
     logger.info("Created hmf sample ids for ${anonymizedSamples.size} samples")
@@ -128,7 +128,7 @@ private fun runUpdateIds(cmd: CommandLine) {
     logger.info("Read ${currentIds.size} anonymized samples")
 
     val anonymizedSamples = anonymizer.anonymize(newPassword, samplesInput, currentIds)
-    val sampleMappingRecords = anonymizedSamples.anonymizedSamplesMap().map { HmfSampleMappingRecord(it.key, it.value) }
+    val sampleMappingRecords = anonymizedSamples.sampleMapping.map { HmfSampleMappingRecord(it.key, it.value) }
     CsvWriter.writeCSV(anonymizedSamples.map { HmfSampleIdRecord(it) }, cmd.getOptionValue(OUTPUT_FILE))
     CsvWriter.writeCSV(sampleMappingRecords, cmd.getOptionValue(SAMPLE_MAPPING_OUTPUT_FILE))
     logger.info("Created hmf sample ids for ${anonymizedSamples.size} samples")

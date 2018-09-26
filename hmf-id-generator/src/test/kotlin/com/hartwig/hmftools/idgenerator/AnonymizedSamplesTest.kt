@@ -30,23 +30,23 @@ class AnonymizedSamplesTest : StringSpec() {
             val samplesInput = SamplesInput(listOf(sample1A))
             val anonymizedSamples = AnonymizedSamples(password, listOf(anonSample1A), samplesInput)
             anonymizedSamples[sample1A] shouldBe anonSample1A
-            anonymizedSamples[samplesInput.canonicalId(patient1)] shouldBe listOf(anonSample1A)
-            anonymizedSamples.anonymizedSamplesMap().size shouldBe 0
+            anonymizedSamples[samplesInput.canonicalId(patient1)] shouldBe setOf(anonSample1A)
+            anonymizedSamples.sampleMapping.size shouldBe 0
         }
 
         "finds all anonymized samples for patient" {
             val samplesInput = SamplesInput(listOf(sample1A, sample1B))
             val anonymizedSamples = AnonymizedSamples(password, listOf(anonSample1A, anonSample1B), samplesInput)
-            anonymizedSamples[samplesInput.canonicalId(patient1)] shouldBe listOf(anonSample1A, anonSample1B)
-            anonymizedSamples.anonymizedSamplesMap().size shouldBe 0
+            anonymizedSamples[samplesInput.canonicalId(patient1)] shouldBe setOf(anonSample1A, anonSample1B)
+            anonymizedSamples.sampleMapping.size shouldBe 0
         }
 
         "resolves single mapped anonymized sample" {
             val samplesInput = SamplesInput(listOf(sample1A), mapOf(patient1 to patient2))
             val anonymizedSamples = AnonymizedSamples(password, listOf(mappedAnonSample1A), samplesInput)
             anonymizedSamples[sample1A] shouldBe mappedAnonSample1A
-            anonymizedSamples[samplesInput.canonicalId(patient1)] shouldBe listOf(mappedAnonSample1A)
-            anonymizedSamples.anonymizedSamplesMap().size shouldBe 0
+            anonymizedSamples[samplesInput.canonicalId(patient1)] shouldBe setOf(mappedAnonSample1A)
+            anonymizedSamples.sampleMapping.size shouldBe 0
         }
 
         "resolves all anonymized samples for mapped patient" {
@@ -54,16 +54,16 @@ class AnonymizedSamplesTest : StringSpec() {
             val anonymizedSamples = AnonymizedSamples(password, listOf(mappedAnonSample1A, mappedAnonSample1B), samplesInput)
             anonymizedSamples[sample1A] shouldBe mappedAnonSample1A
             anonymizedSamples[sample1B] shouldBe mappedAnonSample1B
-            anonymizedSamples[samplesInput.canonicalId(patient1)] shouldBe listOf(mappedAnonSample1A, mappedAnonSample1B)
-            anonymizedSamples.anonymizedSamplesMap().size shouldBe 0
+            anonymizedSamples[samplesInput.canonicalId(patient1)] shouldBe setOf(mappedAnonSample1A, mappedAnonSample1B)
+            anonymizedSamples.sampleMapping.size shouldBe 0
         }
 
         "resolves previously generatedId for removed sample" {
             val samplesInput = SamplesInput(listOf())
             val anonymizedSamples = AnonymizedSamples(password, listOf(anonSample1A), samplesInput)
             anonymizedSamples[sample1A] shouldBe anonSample1A
-            anonymizedSamples[samplesInput.canonicalId(patient1)] shouldBe listOf(anonSample1A)
-            anonymizedSamples.anonymizedSamplesMap().size shouldBe 0
+            anonymizedSamples[samplesInput.canonicalId(patient1)] shouldBe setOf(anonSample1A)
+            anonymizedSamples.sampleMapping.size shouldBe 0
         }
 
         "resolves correct sampleId for sample anonymized and mapped later" {
@@ -71,8 +71,8 @@ class AnonymizedSamplesTest : StringSpec() {
             val samplesInput = SamplesInput(listOf(sample1A), mapOf(patient1 to patient2))
             val anonymizedSamples = AnonymizedSamples(password, listOf(anonSample1A, mappedAnonSample1A), samplesInput)
             anonymizedSamples[sample1A] shouldBe mappedAnonSample1A
-            anonymizedSamples[samplesInput.canonicalId(patient1)] shouldBe listOf(mappedAnonSample1A)
-            anonymizedSamples.anonymizedSamplesMap().size shouldBe 1
+            anonymizedSamples[samplesInput.canonicalId(patient1)] shouldBe setOf(mappedAnonSample1A)
+            anonymizedSamples.sampleMapping.size shouldBe 1
         }
 
         "resolves correct sampleId for patient anonymized, mapped and then deleted" {
@@ -82,8 +82,8 @@ class AnonymizedSamplesTest : StringSpec() {
             val anonymizedSamples = AnonymizedSamples(password, listOf(anonSample1A, mappedAnonSample1A, mappedAnonSample1B), samplesInput)
             anonymizedSamples[sample1A] shouldBe mappedAnonSample1A
             anonymizedSamples[sample1B] shouldBe mappedAnonSample1B
-            anonymizedSamples[samplesInput.canonicalId(patient1)] shouldBe listOf(mappedAnonSample1A, mappedAnonSample1B)
-            anonymizedSamples.anonymizedSamplesMap().size shouldBe 1
+            anonymizedSamples[samplesInput.canonicalId(patient1)] shouldBe setOf(mappedAnonSample1A, mappedAnonSample1B)
+            anonymizedSamples.sampleMapping.size shouldBe 1
         }
 
         "resolves original sampleId for patient anonymized, mapped and then unmapped" {
@@ -91,8 +91,8 @@ class AnonymizedSamplesTest : StringSpec() {
             val samplesInput = SamplesInput(listOf(sample1A))
             val anonymizedSamples = AnonymizedSamples(password, listOf(anonSample1A, mappedAnonSample1A), samplesInput)
             anonymizedSamples[sample1A] shouldBe anonSample1A
-            anonymizedSamples[samplesInput.canonicalId(patient1)] shouldBe listOf(anonSample1A)
-            anonymizedSamples.anonymizedSamplesMap().size shouldBe 0
+            anonymizedSamples[samplesInput.canonicalId(patient1)] shouldBe setOf(anonSample1A)
+            anonymizedSamples.sampleMapping.size shouldBe 0
         }
 
         "resolves original sampleId for patient anonymized, mapped, unmapped and then deleted" {
@@ -100,8 +100,8 @@ class AnonymizedSamplesTest : StringSpec() {
             val samplesInput = SamplesInput(listOf())
             val anonymizedSamples = AnonymizedSamples(password, listOf(anonSample1A, mappedAnonSample1A), samplesInput)
             anonymizedSamples[sample1A] shouldBe anonSample1A
-            anonymizedSamples[samplesInput.canonicalId(patient1)] shouldBe listOf(anonSample1A)
-            anonymizedSamples.anonymizedSamplesMap().size shouldBe 0
+            anonymizedSamples[samplesInput.canonicalId(patient1)] shouldBe setOf(anonSample1A)
+            anonymizedSamples.sampleMapping.size shouldBe 0
         }
     }
 }

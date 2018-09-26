@@ -17,7 +17,9 @@ class AnonymizedSamples private constructor(val password: String, val sampleIds:
 
     private val generator = IdGenerator(password)
     private val hmfSampleIdPerHash = sampleIds.groupBy { it.hash }
-    private val hmfSampleIdPerPatientHash = sampleIds.groupBy { it.hmfPatientId.hash }
+    private val hmfSampleIdPerPatientHash = sampleIds.groupBy { it.hmfPatientId.hash }.mapValues { it.value.toSet() }.withDefault { emptySet() }
+    private val hmfSampleHashesPerPatientHash = hmfSampleIdPerPatientHash.mapValues { it.value.map { it.hash }.toSet() }.withDefault { emptySet() }
+    val sampleMapping = anonymizedSamplesMap()
 
     operator fun get(sampleId: SampleId): HmfSampleId? {
         val hmfSampleIdsForHash = hmfSampleIdPerHash[generator.hash(sampleId.id)]
@@ -26,16 +28,16 @@ class AnonymizedSamples private constructor(val password: String, val sampleIds:
         else hmfSampleIdsForHash.find { it.hmfPatientId.hash == generator.hash(samplesInput.canonicalId(sampleId.patientId).id) }
     }
 
-    operator fun get(patientId: CanonicalPatientId): List<HmfSampleId> =
-            hmfSampleIdPerPatientHash[generator.hash(patientId.id)] ?: emptyList()
+    operator fun get(patientId: CanonicalPatientId): Set<HmfSampleId> = hmfSampleIdPerPatientHash.getValue(generator.hash(patientId.id))
 
-    fun anonymizedSamplesMap(): Map<HmfSampleId, HmfSampleId> {
+    fun sampleHashes(patientId: CanonicalPatientId) = hmfSampleHashesPerPatientHash.getValue(generator.hash(patientId.id))
+
+    private fun anonymizedSamplesMap(): Map<HmfSampleId, HmfSampleId> {
         val anonymizedPatients = AnonymizedPatients(password, sampleIds.map { it.hmfPatientId }.distinct(), samplesInput)
         return anonymizedPatients.anonymizedPatientMap().flatMap { (patientId, canonicalId) ->
-            val patientIdSamples = hmfSampleIdPerPatientHash[patientId.hash] ?: emptyList()
-            val canonicalIdSamples = hmfSampleIdPerPatientHash[canonicalId.hash]?.associateBy { it.hash } ?: emptyMap()
+            val patientIdSamples = hmfSampleIdPerPatientHash.getValue(patientId.hash)
+            val canonicalIdSamples = hmfSampleIdPerPatientHash.getValue(canonicalId.hash).associateBy { it.hash }
             patientIdSamples.map { Pair(it, canonicalIdSamples[it.hash]!!) }
         }.toMap()
-
     }
 }
