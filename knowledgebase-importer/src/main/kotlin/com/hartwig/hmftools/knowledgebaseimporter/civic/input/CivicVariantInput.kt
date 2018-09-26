@@ -20,6 +20,7 @@ data class CivicVariantInput(override val gene: String, private val representati
     override fun correct(): CivicVariantInput? = when {
         variant.contains(Regex("MLL-MLLT3")) && gene == "KMT2A" -> copy(variant = variant.replace("MLL-MLLT3", "KMT2A-MLLT3"))
         variant == "BRAF-CUL1"                                  -> null
+        transcript == "ENST0000023170.2"                        -> copy(representative_transcript = "ENST00000231790.2")
         else                                                    -> this
     }
 }
