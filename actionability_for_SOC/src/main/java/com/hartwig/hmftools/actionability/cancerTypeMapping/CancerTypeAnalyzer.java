@@ -55,8 +55,6 @@ public class CancerTypeAnalyzer {
         Boolean booleanValueRange = false;
         for (int i = 1; i < cancerTypeDoids.size(); i ++) {
             if(cancerTypeDoids.get(i).cancerType().contains(tumorLocationKnowledgebase)){
-                LOGGER.info(cancerTypeDoids.get(i).cancerType());
-                LOGGER.info(cancerTypeDoids.get(i).doidSet());
                 if(cancerTypeDoids.get(i).doidSet().contains(doid)){
                     booleanValueRange = true;
                 }

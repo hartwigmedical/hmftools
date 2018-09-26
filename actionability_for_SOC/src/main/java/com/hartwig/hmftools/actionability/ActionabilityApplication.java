@@ -81,15 +81,13 @@ public abstract class ActionabilityApplication {
         if (Files.exists(new File(fileActionabilityVariants).toPath()) && Files.exists(new File(fileActionabilityRanges).toPath()) && Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
             ActionabilityVariantsAnalyzer analyzer = ActionabilityVariantsAnalyzer.loadFromFileVariantsAndFileRanges(fileActionabilityVariants, fileActionabilityRanges);
             CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
+            LOGGER.info("Gene" + "\t" + "chromosome" + "\t" + "position" + "\t" + "ref" + "\t" + "alt" + "\t" + "drug" + "\t"
+                    + "drugsType" + "\t" + "cancerType" + "\t" + "levelHmf" + "\t" + "evidenceType" + "\t" + "significanceSource" + "\t"
+                    + "hmfResponse" + "\t" + "Actionable variant");
             for (int i = 0; i < variants.size(); i ++) {
-                String tumorLocationKnowledgebaseVariant = analyzer.actionableVariants(variants.get(i), patientTumorLocation.primaryTumorLocation())[0];
-                if (tumorLocationKnowledgebaseVariant != "") {
-                    LOGGER.info(cancerTypeAnalyzer.foundTumorLocation(tumorLocationKnowledgebaseVariant, doids));
-                    if (cancerTypeAnalyzer.foundTumorLocation(tumorLocationKnowledgebaseVariant, doids)) {
-                        analyzer.printTable(analyzer.actionableVariants(variants.get(i), patientTumorLocation.primaryTumorLocation())[1]);
-                    }
+                analyzer.actionableVariants(variants.get(i), cancerTypeAnalyzer, doids, patientTumorLocation.primaryTumorLocation());
 
-                }
+
                // analyzer.actionableRange(variants.get(i), patientTumorLocation.primaryTumorLocation());
             }
         } else if (!Files.exists(new File(fileActionabilityVariants).toPath())){
