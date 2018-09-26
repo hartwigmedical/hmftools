@@ -27,6 +27,18 @@ class SamplesInputTest : StringSpec() {
             input.patientIds(patient1) shouldBe setOf(patient1)
         }
 
+        "returns passed arg for patient not in samples input"{
+            val renames = emptyMap<PatientId, PatientId>()
+            val input = SamplesInput(listOf(sample1A, sample2A), renames)
+            input.patientIds(patient3) shouldBe setOf(patient3)
+        }
+
+        "returns empty samples set for patient not in samples input"{
+            val renames = emptyMap<PatientId, PatientId>()
+            val input = SamplesInput(listOf(sample1A, sample2A), renames)
+            input.sampleIds(patient3) shouldBe emptySet<SampleId>()
+        }
+
         "returns correct ids for a patient with 2 ids"{
             val renames = mapOf(patient1 to patient2)
             val input = SamplesInput(listOf(sample1A, sample2A, sample3A), renames)
