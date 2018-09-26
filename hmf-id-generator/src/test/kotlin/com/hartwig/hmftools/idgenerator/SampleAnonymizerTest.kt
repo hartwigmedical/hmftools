@@ -239,6 +239,22 @@ class SampleAnonymizerTest : StringSpec() {
             output3[sample1B]!!.plaintext shouldBe "HMF000002C"
             output3.anonymizedSamplesMap().size shouldBe 0
         }
+
+        "samples for patient mapped later and then unmapped resolve to the original id" {
+            val patientMap = mapOf(patient1 to patient2)
+            val initialInput = SamplesInput(listOf(sample1A, sample2A))
+            val mappedInput = SamplesInput(listOf(sample1A, sample2A), patientMap)
+            val unmappedInput = SamplesInput(listOf(sample1A, sample2A))
+            val output = anonymizer.anonymize(PASSWORD1, initialInput, emptyList())
+            output.size shouldBe 2
+            output[sample1A]!!.plaintext shouldBe "HMF000001A"
+            val output2 = anonymizer.anonymize(PASSWORD1, mappedInput, output)
+            output2.size shouldBe 3
+            output2[sample1A]!!.plaintext shouldBe "HMF000002B"
+            val output3 = anonymizer.anonymize(PASSWORD1, unmappedInput, output2)
+            output3.size shouldBe 3
+            output3[sample1A]!!.plaintext shouldBe "HMF000001A"
+        }
     }
 
     private fun collisions(samples: Collection<HmfSampleId>, otherSamples: Collection<HmfSampleId>): Int {
