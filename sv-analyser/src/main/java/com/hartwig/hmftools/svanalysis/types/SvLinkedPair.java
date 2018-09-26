@@ -16,7 +16,6 @@ public class SvLinkedPair {
     private boolean mSecondLinkOnStart;
     private String mLinkType;
     private int mLinkLength;
-    private SvClusterData mSpanningSV;
     private boolean mIsInferred;
 
     public static final String LINK_TYPE_TI = "TI";
@@ -29,7 +28,6 @@ public class SvLinkedPair {
         mFirstLinkOnStart = firstLinkOnStart;
         mSecondLinkOnStart = secondLinkOnStart;
         mLinkType = linkType;
-        mSpanningSV = null;
         mIsInferred = true;
 
         int length = (int)(first.position(firstLinkOnStart) - second.position(secondLinkOnStart));
@@ -68,59 +66,12 @@ public class SvLinkedPair {
             || hasVariantBE(otherPair.second(), otherPair.secondLinkOnStart()));
     }
 
-    public static boolean hasCompleteLinkedPairsList(final List<SvClusterData> varList, final List<SvLinkedPair> linkedPairs)
-    {
-        int spareBreakends = 0;
-
-        for(final SvClusterData var : varList)
-        {
-            boolean startLinked = false;
-            boolean endLinked = false;
-
-            for(final SvLinkedPair linkedPair : linkedPairs)
-            {
-                if(linkedPair.first() == var)
-                {
-                    if(linkedPair.firstLinkOnStart())
-                        startLinked = true;
-                    else
-                        endLinked = true;
-                }
-                else if(linkedPair.second() == var)
-                {
-                    if(linkedPair.secondLinkOnStart())
-                        startLinked = true;
-                    else
-                        endLinked = true;
-                }
-
-                if(startLinked && endLinked)
-                    break;
-            }
-
-            if(!startLinked && !endLinked)
-                return false;
-
-            if(!startLinked || !endLinked)
-                ++spareBreakends;
-
-            if(spareBreakends > 2)
-                return false;
-        }
-
-        return true;
-    }
-
     public final String toString()
     {
         return String.format("%s %s:%d:%s & %s %s:%d:%s",
                 first().id(), first().chromosome(mFirstLinkOnStart), first().position(mFirstLinkOnStart), mFirstLinkOnStart ? "start":"end",
                 second().id(), second().chromosome(mSecondLinkOnStart), second().position(mSecondLinkOnStart), mSecondLinkOnStart ? "start":"end");
     }
-
-    public boolean hasSpanningSV() { return mSpanningSV != null; }
-    public final SvClusterData getSpanningSV() { return mSpanningSV; }
-    public void setSpanningSV(SvClusterData var) { mSpanningSV = var; }
 
     public static String ASSEMBLY_MATCH_MATCHED = "MATCH";
     public static String ASSEMBLY_MATCH_DIFF = "DIFF";

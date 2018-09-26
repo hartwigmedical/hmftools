@@ -5,9 +5,12 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_ENCL
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_NEIGHBOURS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_OVERLAP;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
+import static com.hartwig.hmftools.svanalysis.types.SvClusterData.RELATION_TYPE_NEIGHBOUR;
+import static com.hartwig.hmftools.svanalysis.types.SvClusterData.RELATION_TYPE_OVERLAP;
 
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -16,6 +19,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 import com.hartwig.hmftools.svanalysis.types.SvFootprint;
 
@@ -32,6 +36,9 @@ public class SvClusteringMethods {
     private Map<String, Double> mChrArmSvExpected;
     private Map<String, Double> mChrArmSvRate;
     private double mMedianChrArmRate;
+    private int mNextClusterId;
+
+    private Map<String, List<SvBreakend>> mChrBreakendMap;
 
     private static final double REF_BASE_LENGTH = 10000000D;
     private static int MIN_FOOTPRINT_COUNT = 4;
@@ -43,13 +50,47 @@ public class SvClusteringMethods {
         mChrArmSvExpected = Maps.newHashMap();
         mChrArmSvRate = Maps.newHashMap();
         mMedianChrArmRate = 0;
+        mNextClusterId = 0;
+
+        mChrBreakendMap = new HashMap();
     }
 
-    public void findLinkedSVsByDistance(SvCluster cluster, List<SvClusterData> unassignedVariants) {
+    public void clusterByBaseDistance(List<SvClusterData> allVariants, List<SvCluster> clusters)
+    {
+        mNextClusterId = 0;
+
+        List<SvClusterData> unassignedVariants = Lists.newArrayList(allVariants);
+
+        // assign each variant once to a cluster using proximity as a test
+        int currentIndex = 0;
+
+        while(currentIndex < unassignedVariants.size())
+        {
+            SvClusterData currentVar = unassignedVariants.get(currentIndex);
+
+            // make a new cluster
+            SvCluster newCluster = new SvCluster(getNextClusterId(), mUtils);
+
+            // first remove the current SV from consideration
+            newCluster.addVariant(currentVar);
+            unassignedVariants.remove(currentIndex); // index will remain the same and so point to the next item
+
+            // and then search for all other linked ones
+            findLinkedSVsByDistance(newCluster, unassignedVariants);
+
+            clusters.add(newCluster);
+        }
+    }
+
+    private int getNextClusterId() { return mNextClusterId++; }
+
+    public void findLinkedSVsByDistance(SvCluster cluster, List<SvClusterData> unassignedVariants)
+    {
         // look for any other SVs which form part of this cluster based on proximity
         int currentIndex = 0;
 
-        while (currentIndex < unassignedVariants.size()) {
+        while (currentIndex < unassignedVariants.size())
+        {
             SvClusterData currentVar = unassignedVariants.get(currentIndex);
 
             // compare with all other SVs in this cluster
@@ -84,6 +125,220 @@ public class SvClusteringMethods {
         }
     }
 
+    public void populateChromosomeBreakendMap(List<SvClusterData> allVariants)
+    {
+        // add each SV's breakends to a map keyed by chromosome, with the breakends in order of position lowest to highest
+        for(final SvClusterData var : allVariants)
+        {
+            // add each breakend in turn
+            for(int i = 0; i < 2 ; ++i)
+            {
+                boolean useStart = (i == 0);
+
+                if(!useStart && var.isNullBreakend())
+                    continue;
+
+                final String chr = var.chromosome(useStart);
+                long position = var.position(useStart);
+
+                if(!mChrBreakendMap.containsKey(chr))
+                {
+                    List<SvBreakend> breakendList = Lists.newArrayList();
+                    breakendList.add(new SvBreakend(var, useStart));
+                    mChrBreakendMap.put(chr, breakendList);
+                    continue;
+                }
+
+                // otherwise add the variant in order by ascending position
+                List<SvBreakend> breakendList = mChrBreakendMap.get(chr);
+
+                int index = 0;
+                for(;index < breakendList.size(); ++index)
+                {
+                    final SvBreakend breakend = breakendList.get(index);
+
+                    if(position < breakend.position())
+                        break;
+                }
+
+                breakendList.add(index, new SvBreakend(var, useStart));
+            }
+        }
+    }
+
+    public void annotateNearestSvData()
+    {
+        // mark each SV's nearest other SV and its relationship - neighbouring or overlapping
+        for(Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
+        {
+            List<SvBreakend> breakendList = entry.getValue();
+
+            int breakendCount = breakendList.size();
+
+            for(int i = 0; i < breakendList.size(); ++i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+                SvClusterData var = breakend.getSV();
+
+                SvBreakend prevBreakend = (i > 0) ? breakendList.get(i - 1) : null;
+                SvBreakend nextBreakend = (i < breakendCount-1) ? breakendList.get(i + 1) : null;
+
+                long closestDistance = -1;
+                if(prevBreakend != null && prevBreakend.getSV() != var)
+                {
+                    long distance = breakend.position() - prevBreakend.position();
+                    closestDistance = distance;
+                }
+
+                if(nextBreakend != null && nextBreakend.getSV() != var)
+                {
+                    long distance = nextBreakend.position() - breakend.position();
+                    if(closestDistance < 0 || distance < closestDistance)
+                        closestDistance = distance;
+                }
+
+                if(closestDistance >= 0 && (var.getNearestSvDistance() == -1 || closestDistance < var.getNearestSvDistance()))
+                    var.setNearestSvDistance(closestDistance);
+
+                String relationType = "";
+                if((prevBreakend != null && prevBreakend.getSV() == var) || (nextBreakend != null && nextBreakend.getSV() == var))
+                    relationType = RELATION_TYPE_NEIGHBOUR;
+                else
+                    relationType = RELATION_TYPE_OVERLAP;
+
+                var.setNearestSvRelation(relationType);
+            }
+        }
+    }
+
+    public void setChromosomalArmStats(final List<SvClusterData> allVariants)
+    {
+        mChrArmSvCount.clear();
+        mChrArmSvExpected.clear();
+        mChrArmSvRate.clear();
+        mMedianChrArmRate = 0;
+
+        // form a map of unique arm to SV count
+        for(final SvClusterData var : allVariants)
+        {
+            String chrArmStart = mUtils.getVariantChrArm(var,true);
+            String chrArmEnd = mUtils.getVariantChrArm(var,false);
+
+            // ensure an entry exists
+            if (!mChrArmSvCount.containsKey(chrArmStart)) {
+                mChrArmSvCount.put(chrArmStart, 0);
+            }
+
+            // exclude LINE elements from back-ground rates
+            if(var.isStartLineElement().equals(NO_LINE_ELEMENT)) {
+                mChrArmSvCount.replace(chrArmStart, mChrArmSvCount.get(chrArmStart) + 1);
+            }
+
+            if(!var.isNullBreakend())
+            {
+                if (!chrArmStart.equals(chrArmEnd) && !mChrArmSvCount.containsKey(chrArmEnd))
+                {
+                    mChrArmSvCount.put(chrArmEnd, 0);
+                }
+
+                if (var.isEndLineElement().equals(NO_LINE_ELEMENT))
+                {
+                    mChrArmSvCount.replace(chrArmEnd, mChrArmSvCount.get(chrArmEnd) + 1);
+                }
+            }
+        }
+
+        // now determine the background rate by taking the median value from amongst the arms
+        // factoring in the arms which have no Q (14-16, 21-22) and excluding the X & Ys
+        for(Map.Entry<String, Integer> entry : mChrArmSvCount.entrySet()) {
+
+            final String chrArm = entry.getKey();
+            final String chromosome = mUtils.getChrFromChrArm(chrArm);
+            final String arm = mUtils.getArmFromChrArm(chrArm);
+
+            long chrArmLength = mUtils.getChromosomalArmLength(chromosome, arm);
+            int svCount = entry.getValue();
+            double ratePerLength = svCount / (chrArmLength / REF_BASE_LENGTH); // the factor isn't important
+
+            mChrArmSvRate.put(chrArm, ratePerLength);
+            // LOGGER.debug("chrArm({}) ratePerMill({}) from count({}) length({})", chrArm, ratePerLength, svCount, chrArmLength);
+        }
+
+        mChrArmSvRate = sortByValue(mChrArmSvRate, false);
+
+        mMedianChrArmRate = 0;
+        int chrArmIndex = 0;
+        for(Map.Entry<String, Double> entry : mChrArmSvRate.entrySet())
+        {
+            // LOGGER.debug("chrArm({}: {}) svRate({})", chrArmIndex, entry.getKey(), entry.getValue());
+
+            if(chrArmIndex == 20)
+                mMedianChrArmRate = entry.getValue();
+
+           ++chrArmIndex;
+        }
+
+        LOGGER.debug(String.format("median SV rate(%.2f)", mMedianChrArmRate));
+
+        // now create another map of expected SV count per arm using the median rate
+        for(Map.Entry<String, Double> entry : mChrArmSvRate.entrySet()) {
+
+            final String chrArm = entry.getKey();
+            final String chromosome = mUtils.getChrFromChrArm(chrArm);
+            final String arm = mUtils.getArmFromChrArm(chrArm);
+
+            long chrArmLength = mUtils.getChromosomalArmLength(chromosome, arm);
+            double expectedSvCount = (int)Math.round((chrArmLength / REF_BASE_LENGTH) * mMedianChrArmRate);
+            LOGGER.debug("chrArm({}) expectedSvCount({}) vs actual({})", chrArm, expectedSvCount, mChrArmSvCount.get(chrArm));
+
+            mChrArmSvExpected.put(chrArm, expectedSvCount);
+        }
+    }
+
+    public String getChrArmData(final SvClusterData var)
+    {
+        String chrArmStart = mUtils.getVariantChrArm(var,true);
+
+        boolean hasEnd = !var.isNullBreakend();
+        String chrArmEnd = hasEnd ? mUtils.getVariantChrArm(var,false) : "";
+
+        // report Start SV count : Expected SV Count : End SV Count : Expected SV Count
+        return String.format("%d,%.2f,%d,%.2f",
+                mChrArmSvCount.get(chrArmStart), mChrArmSvExpected.get(chrArmStart),
+                hasEnd ? mChrArmSvCount.get(chrArmEnd) : 0, hasEnd ? mChrArmSvExpected.get(chrArmEnd) : 0.0);
+    }
+
+    private static Map<String, Double> sortByValue(Map<String, Double> unsortMap, final boolean order)
+    {
+        List<Map.Entry<String, Double>> list = new LinkedList<Map.Entry<String, Double>>(unsortMap.entrySet());
+
+        Collections.sort(list, new Comparator<Map.Entry<String, Double>>()
+        {
+            public int compare(Map.Entry<String, Double> o1,
+                    Map.Entry<String, Double> o2)
+            {
+                if (order)
+                {
+                    return o1.getValue().compareTo(o2.getValue());
+                }
+                else
+                {
+                    return o2.getValue().compareTo(o1.getValue());
+
+                }
+            }
+        });
+
+        // Maintaining insertion order with the help of LinkedList
+        Map<String, Double> sortedMap = new LinkedHashMap<String, Double>();
+        for (Map.Entry<String, Double> entry : list)
+        {
+            sortedMap.put(entry.getKey(), entry.getValue());
+        }
+
+        return sortedMap;
+    }
+
     public void findFootprints(final String sampleId, SvCluster cluster)
     {
         if(cluster.getCount() < MIN_FOOTPRINT_COUNT * 2)
@@ -98,7 +353,7 @@ public class SvClusteringMethods {
         {
             // put to one side cross-chr, cross-arm and long-spanning SVs
             if(var.type() == StructuralVariantType.BND || !var.isLocal()
-            || var.position(false) - var.position(true) > mUtils.getBaseDistance() * 10)
+                    || var.position(false) - var.position(true) > mUtils.getBaseDistance() * 10)
             {
                 crossArmSvs.add(var);
                 continue;
@@ -231,134 +486,6 @@ public class SvClusteringMethods {
             }
         }
 
-    }
-
-    public void setChromosomalArmStats(final List<SvClusterData> allVariants)
-    {
-        mChrArmSvCount.clear();
-        mChrArmSvExpected.clear();
-        mChrArmSvRate.clear();
-        mMedianChrArmRate = 0;
-
-        // form a map of unique arm to SV count
-        for(final SvClusterData var : allVariants)
-        {
-            String chrArmStart = mUtils.getVariantChrArm(var,true);
-            String chrArmEnd = mUtils.getVariantChrArm(var,false);
-
-            // ensure an entry exists
-            if (!mChrArmSvCount.containsKey(chrArmStart)) {
-                mChrArmSvCount.put(chrArmStart, 0);
-            }
-
-            // exclude LINE elements from back-ground rates
-            if(var.isStartLineElement().equals(NO_LINE_ELEMENT)) {
-                mChrArmSvCount.replace(chrArmStart, mChrArmSvCount.get(chrArmStart) + 1);
-            }
-
-            if(!var.isNullBreakend())
-            {
-                if (!chrArmStart.equals(chrArmEnd) && !mChrArmSvCount.containsKey(chrArmEnd))
-                {
-                    mChrArmSvCount.put(chrArmEnd, 0);
-                }
-
-                if (var.isEndLineElement().equals(NO_LINE_ELEMENT))
-                {
-                    mChrArmSvCount.replace(chrArmEnd, mChrArmSvCount.get(chrArmEnd) + 1);
-                }
-            }
-        }
-
-        // now determine the background rate by taking the median value from amongst the arms
-        // factoring in the arms which have no Q (14-16, 21-22) and excluding the X & Ys
-        for(Map.Entry<String, Integer> entry : mChrArmSvCount.entrySet()) {
-
-            final String chrArm = entry.getKey();
-            final String chromosome = mUtils.getChrFromChrArm(chrArm);
-            final String arm = mUtils.getArmFromChrArm(chrArm);
-
-            long chrArmLength = mUtils.getChromosomalArmLength(chromosome, arm);
-            int svCount = entry.getValue();
-            double ratePerLength = svCount / (chrArmLength / REF_BASE_LENGTH); // the factor isn't important
-
-            mChrArmSvRate.put(chrArm, ratePerLength);
-            // LOGGER.debug("chrArm({}) ratePerMill({}) from count({}) length({})", chrArm, ratePerLength, svCount, chrArmLength);
-        }
-
-        mChrArmSvRate = sortByValue(mChrArmSvRate, false);
-
-        mMedianChrArmRate = 0;
-        int chrArmIndex = 0;
-        for(Map.Entry<String, Double> entry : mChrArmSvRate.entrySet())
-        {
-            // LOGGER.debug("chrArm({}: {}) svRate({})", chrArmIndex, entry.getKey(), entry.getValue());
-
-            if(chrArmIndex == 20)
-                mMedianChrArmRate = entry.getValue();
-
-           ++chrArmIndex;
-        }
-
-        LOGGER.debug("median SV rate({})", mMedianChrArmRate);
-
-        // now create another map of expected SV count per arm using the median rate
-        for(Map.Entry<String, Double> entry : mChrArmSvRate.entrySet()) {
-
-            final String chrArm = entry.getKey();
-            final String chromosome = mUtils.getChrFromChrArm(chrArm);
-            final String arm = mUtils.getArmFromChrArm(chrArm);
-
-            long chrArmLength = mUtils.getChromosomalArmLength(chromosome, arm);
-            double expectedSvCount = (int)Math.round((chrArmLength / REF_BASE_LENGTH) * mMedianChrArmRate);
-            LOGGER.debug("chrArm({}) expectedSvCount({}) vs actual({})", chrArm, expectedSvCount, mChrArmSvCount.get(chrArm));
-
-            mChrArmSvExpected.put(chrArm, expectedSvCount);
-        }
-    }
-
-    public String getChrArmData(final SvClusterData var)
-    {
-        String chrArmStart = mUtils.getVariantChrArm(var,true);
-
-        boolean hasEnd = !var.isNullBreakend();
-        String chrArmEnd = hasEnd ? mUtils.getVariantChrArm(var,false) : "";
-
-        // report Start SV count : Expected SV Count : End SV Count : Expected SV Count
-        return String.format("%d,%.2f,%d,%.2f",
-                mChrArmSvCount.get(chrArmStart), mChrArmSvExpected.get(chrArmStart),
-                hasEnd ? mChrArmSvCount.get(chrArmEnd) : 0, hasEnd ? mChrArmSvExpected.get(chrArmEnd) : 0.0);
-    }
-
-    private static Map<String, Double> sortByValue(Map<String, Double> unsortMap, final boolean order)
-    {
-        List<Map.Entry<String, Double>> list = new LinkedList<Map.Entry<String, Double>>(unsortMap.entrySet());
-
-        Collections.sort(list, new Comparator<Map.Entry<String, Double>>()
-        {
-            public int compare(Map.Entry<String, Double> o1,
-                    Map.Entry<String, Double> o2)
-            {
-                if (order)
-                {
-                    return o1.getValue().compareTo(o2.getValue());
-                }
-                else
-                {
-                    return o2.getValue().compareTo(o1.getValue());
-
-                }
-            }
-        });
-
-        // Maintaining insertion order with the help of LinkedList
-        Map<String, Double> sortedMap = new LinkedHashMap<String, Double>();
-        for (Map.Entry<String, Double> entry : list)
-        {
-            sortedMap.put(entry.getKey(), entry.getValue());
-        }
-
-        return sortedMap;
     }
 
 }

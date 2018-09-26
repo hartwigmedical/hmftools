@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.svanalysis.types.SvClusterData.haveLinkedAsse
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_DIFF;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_LINK_ONLY;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
-import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.hasCompleteLinkedPairsList;
 
 import java.util.List;
 
@@ -57,7 +56,7 @@ public class ClusterAnalyser {
         }
     }
 
-    public void findLinkedPairs(final String sampleId, SvCluster cluster)
+    public void findLinksAndChains(final String sampleId, SvCluster cluster)
     {
         if(cluster.getCount() < 2)
             return;
@@ -74,10 +73,11 @@ public class ClusterAnalyser {
 
         if(cluster.isConsistent() && !assemblyLinkedPairs.isEmpty())
         {
-            fullChainFound = assessClusterChaining(sampleId, cluster, assemblyLinkedPairs, inferredLinkedPairs);
+            boolean hasFullChain = assessClusterChaining(sampleId, cluster, assemblyLinkedPairs, inferredLinkedPairs);
 
-            if(fullChainFound)
+            if(hasFullChain)
             {
+                // remove any inferred link which isn't in the full chain
                 final SvChain fullChain = cluster.getChains().get(0);
 
                 // remove an inferred links which weren't used
@@ -347,7 +347,7 @@ public class ClusterAnalyser {
         return linkedPairs;
     }
 
-    private void reduceInferredToShortestLinks(List<SvLinkedPair> linkedPairs)
+    public static void reduceInferredToShortestLinks(List<SvLinkedPair> linkedPairs)
     {
         // now remove mutually exclusive linked sections by using the shortest first
         for(int i = 0; i < linkedPairs.size(); ++i)
@@ -359,15 +359,13 @@ public class ClusterAnalyser {
                 final SvLinkedPair pair2 = linkedPairs.get(j);
 
                 if((pair.first().equals(pair2.first()) && pair.firstLinkOnStart() == pair2.firstLinkOnStart())
-                        || (pair.first().equals(pair2.second()) && pair.firstLinkOnStart() == pair2.secondLinkOnStart())
-                        || (pair.second().equals(pair2.first()) && pair.secondLinkOnStart() == pair2.firstLinkOnStart())
-                        || (pair.second().equals(pair2.second()) && pair.secondLinkOnStart() == pair2.secondLinkOnStart()))
+                || (pair.first().equals(pair2.second()) && pair.firstLinkOnStart() == pair2.secondLinkOnStart())
+                || (pair.second().equals(pair2.first()) && pair.secondLinkOnStart() == pair2.firstLinkOnStart())
+                || (pair.second().equals(pair2.second()) && pair.secondLinkOnStart() == pair2.secondLinkOnStart()))
                 {
-                    if(pair.length() < mUtils.getBaseDistance()) {
-                        // to avoid logging unlikely long TIs
-                        LOGGER.debug("removing duplicate linked pair({} len={}) vs shorter({} len={})",
-                                pair2.toString(), pair2.length(), pair.toString(), pair.length());
-                    }
+                    // to avoid logging unlikely long TIs
+                    LOGGER.debug("removing duplicate linked pair({} len={}) vs shorter({} len={})",
+                            pair2.toString(), pair2.length(), pair.toString(), pair.length());
 
                     if(pair.first().getTransType() == TRANS_TYPE_TRANS && pair.second().getTransType() == TRANS_TYPE_TRANS)
                     {
@@ -434,117 +432,6 @@ public class ClusterAnalyser {
                 spanningSV.setTransData(TRANS_TYPE_SPAN, pair.length(), svLinkData);
 
                 break;
-            }
-        }
-    }
-
-    public void findSvChains(final String sampleId, SvCluster cluster)
-    {
-        if(!cluster.getChains().isEmpty())
-            return;
-
-        // findSvChains(sampleId, cluster, cluster.getLinkedPairs(), cluster.getChains());
-    }
-
-    public void findSvChains(final String sampleId, SvCluster cluster, List<SvLinkedPair> linkedPairs, List<SvChain> chainsList)
-    {
-        if(linkedPairs.isEmpty() || linkedPairs.size() < 2)
-            return;
-
-        List<SvLinkedPair> workingLinkedPairs = Lists.newArrayList();
-        workingLinkedPairs.addAll(linkedPairs);
-
-        LOGGER.debug("cluster({}) attempting to find chained SVs from {} linked pairs", cluster.getId(), workingLinkedPairs.size());
-
-        while(workingLinkedPairs.size() >= 2)
-        {
-            // start with a single linked pair
-            // for each of its ends (where the first BE is labelled 'first', and the second labelled 'last'),
-            // search for the closest possible linking BE from another linked pair
-            // for BEs to link they must be facing (like a TI)
-
-            SvLinkedPair linkedPair = workingLinkedPairs.get(0);
-            workingLinkedPairs.remove(0);
-
-            int chainId = chainsList.size()+1;
-            SvChain currentChain = new SvChain(chainId);
-
-            LOGGER.debug("sample({}) cluster({}) starting chain({}) with linked pair({})",
-                    sampleId, cluster.getId(), chainId, linkedPair.toString());
-
-            currentChain.addLink(linkedPair, true);
-
-            while(!workingLinkedPairs.isEmpty())
-            {
-                // now search the remaining SVs for links at either end of the current chain
-                SvClusterData beFirst = currentChain.getFirstSV();
-                boolean chainFirstUnlinkedOnStart = currentChain.firstLinkOpenOnStart();
-                SvClusterData beLast = currentChain.getLastSV();
-                boolean chainLastUnlinkedOnStart = currentChain.lastLinkOpenOnStart();
-
-                SvLinkedPair closestStartPair = null;
-                int closestStartLen = -1;
-
-                SvLinkedPair closestLastPair = null;
-                int closestLastLen = -1;
-
-                for(SvLinkedPair pair : workingLinkedPairs) {
-
-                    // first check for a linked pair which has the same variant (but the other BE) to the unlinked on
-                    if((beFirst.equals(pair.first()) && chainFirstUnlinkedOnStart == pair.firstLinkOnStart())
-                    || (beFirst.equals(pair.second()) && chainFirstUnlinkedOnStart == pair.secondLinkOnStart()))
-                    {
-                        closestStartPair = pair;
-                        closestStartLen = 0; // to prevent another match
-                    }
-
-                    if((beLast.equals(pair.first()) && chainLastUnlinkedOnStart == pair.firstLinkOnStart())
-                    || (beLast.equals(pair.second()) && chainLastUnlinkedOnStart == pair.secondLinkOnStart()))
-                    {
-                        closestLastPair = pair;
-                        closestLastLen = 0; // to prevent another match
-                    }
-                }
-
-                if(closestStartPair == null && closestLastPair == null)
-                {
-                    break;
-                }
-
-                if(closestStartPair != null)
-                {
-                    LOGGER.debug("adding linked pair({}) on chain start({}) with length({})",
-                            closestStartPair.toString(), beFirst.posId(chainFirstUnlinkedOnStart), closestStartLen);
-
-                    // add this to the chain at the start
-                    currentChain.addLink(closestStartPair, true);
-                    workingLinkedPairs.remove(closestStartPair);
-                }
-
-                if(closestLastPair != null & closestLastPair != closestStartPair)
-                {
-                    LOGGER.debug("adding linked pair({}) on chain end({}) with length({})",
-                            closestLastPair.toString(), beLast.posId(chainLastUnlinkedOnStart), closestLastLen);
-
-                    // add this to the chain at the start
-                    currentChain.addLink(closestLastPair, false);
-                    workingLinkedPairs.remove(closestLastPair);
-                }
-            }
-
-            if(currentChain.getLinkCount() > 1)
-            {
-                LOGGER.debug("sample({}) cluster({}) adding chain({}) with {} linked pairs:",
-                        sampleId, cluster.getId(), currentChain.getId(), currentChain.getLinkCount());
-
-                chainsList.add(currentChain);
-
-                for(int i = 0; i < currentChain.getLinkCount(); ++i)
-                {
-                    final SvLinkedPair pair = currentChain.getLinkedPairs().get(i);
-                    LOGGER.debug("sample({}) cluster({}) chain({}) {}: pair({}) {} len={}",
-                            sampleId, cluster.getId(), currentChain.getId(), i, pair.toString(), pair.linkType(), pair.length());
-                }
             }
         }
     }

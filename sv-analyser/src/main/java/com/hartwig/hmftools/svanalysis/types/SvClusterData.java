@@ -41,6 +41,9 @@ public class SvClusterData
     private int mTransLength;
     private String mTransSvLinks;
 
+    private long mNearestSvDistance;
+    private String mNearestSvRelation;
+
     private SvGeneData mStartGeneData;
     private SvGeneData mEndGeneData;
 
@@ -57,6 +60,9 @@ public class SvClusterData
     public static String ASSEMBLY_TYPE_TI = "asm";
     public static String ASSEMBLY_TYPE_OTHER = "bpb";
 
+    public static String RELATION_TYPE_NEIGHBOUR = "NHBR";
+    public static String RELATION_TYPE_OVERLAP = "OVRL";
+
     public SvClusterData(final StructuralVariantData svData)
     {
         mId = svData.id();
@@ -69,6 +75,9 @@ public class SvClusterData
         mEndFragileSite = NO_FS;
         mStartLineElement = NO_LINE_ELEMENT;
         mEndLineElement = NO_LINE_ELEMENT;
+
+        mNearestSvDistance = -1;
+        mNearestSvRelation = "";
 
         setAssemblyData(mSVData.startLinkedBy(), mSVData.endLinkedBy());
 
@@ -158,6 +167,11 @@ public class SvClusterData
 
         return abs(position(false) - position(true));
     }
+
+    public long getNearestSvDistance() { return mNearestSvDistance; }
+    public void setNearestSvDistance(long distance) { mNearestSvDistance = distance; }
+    public String getNearestSvRelation() { return mNearestSvRelation; }
+    public void setNearestSvRelation(final String rel) { mNearestSvRelation = rel; }
 
     public void setPonCount(int count) { mPonCount = count; }
     public int getPonCount() { return mPonCount; }

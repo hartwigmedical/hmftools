@@ -14,6 +14,7 @@ import com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.GeneAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator;
+import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 import com.hartwig.hmftools.svanalysis.types.SvGeneData;
@@ -28,7 +29,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SvSampleAnalyser {
 
@@ -39,7 +42,6 @@ public class SvSampleAnalyser {
     // data per run (ie sample)
     private String mSampleId;
     private List<SvClusterData> mAllVariants; // the original list to analyse
-    private int mNextClusterId;
 
     private List<SvCluster> mClusters;
 
@@ -92,13 +94,14 @@ public class SvSampleAnalyser {
         mPc4 = new PerformanceCounter("ArmStats");
         mPc5 = new PerformanceCounter("WriteCSV");
 
+        mPerfCounter.start();
+
         clearState();
     }
 
     private void clearState()
     {
         mSampleId = "";
-        mNextClusterId = 0;
         mAllVariants = Lists.newArrayList();
         mClusters = Lists.newArrayList();
     }
@@ -143,7 +146,9 @@ public class SvSampleAnalyser {
         LOGGER.debug("sample({}) clustering {} variants", mSampleId, mAllVariants.size());
 
         mPc2.start();
-        clusterByBaseDistance();
+        mClusteringMethods.clusterByBaseDistance(mAllVariants, mClusters);
+        mClusteringMethods.populateChromosomeBreakendMap(mAllVariants);
+        mClusteringMethods.annotateNearestSvData();
         mPc2.stop();
 
         mPc3.start();
@@ -154,17 +159,11 @@ public class SvSampleAnalyser {
 
             cluster.setUniqueBreakends();
 
-            mAnalyser.findLinkedPairs(mSampleId, cluster);
-            mAnalyser.findSvChains(mSampleId, cluster);
+            mAnalyser.findLinksAndChains(mSampleId, cluster);
             mAnalyser.resolveTransitiveSVs(mSampleId, cluster);
-
-            // mClusteringMethods.findFootprints(mSampleId, cluster);
         }
 
         mPc3.stop();
-
-        // mClusteringMethods.setClosestSVData(mAllVariants, mClusters);
-        // mClusteringMethods.setClosestLinkedSVData(mAllVariants);
 
         mPc4.start();
         mClusteringMethods.setChromosomalArmStats(mAllVariants);
@@ -172,15 +171,11 @@ public class SvSampleAnalyser {
 
         if(mGeneAnnotator.hasData()) {
 
-            // mPerfCounter.start("GeneData");
-
             for (SvClusterData var : mAllVariants) {
                 mGeneAnnotator.addGeneData(mSampleId, var);
             }
 
             mGeneAnnotator.reportGeneMatchData(mSampleId);
-
-            // mPerfCounter.stop();
         }
 
         mPc5.start();
@@ -199,12 +194,6 @@ public class SvSampleAnalyser {
 
             SvClusterData var = mAllVariants.get(currentIndex);
 
-//            // for now exclude Inserts
-//            if (var.type() == StructuralVariantType.INS) {
-//                mAllVariants.remove(currentIndex);
-//                continue;
-//            }
-
             if(mExternalAnnotator.hasData())
             {
                 mExternalAnnotator.setSVData(mSampleId, var);
@@ -217,7 +206,8 @@ public class SvSampleAnalyser {
             }
 
             // exclude PON
-            if (var.getPonCount() >= 2) {
+            if (var.getPonCount() >= 2)
+            {
                 LOGGER.info("filtering sv({}) with PonCount({})", var.id(), var.getPonCount());
                 mAllVariants.remove(currentIndex);
                 continue;
@@ -237,36 +227,10 @@ public class SvSampleAnalyser {
         }
     }
 
-    public void clusterByBaseDistance()
-    {
-        List<SvClusterData> unassignedVariants = Lists.newArrayList(mAllVariants);
-
-        // assign each variant once to a cluster using proximity as a test
-        int currentIndex = 0;
-
-        while(currentIndex < unassignedVariants.size()) {
-            SvClusterData currentVar = unassignedVariants.get(currentIndex);
-
-            // make a new cluster
-            SvCluster newCluster = new SvCluster(getNextClusterId(), mClusteringUtils);
-
-            // first remove the current SV from consideration
-            newCluster.addVariant(currentVar);
-            unassignedVariants.remove(currentIndex); // index will remain the same and so point to the next item
-
-            // and then search for all other linked ones
-            mClusteringMethods.findLinkedSVsByDistance(newCluster, unassignedVariants);
-
-            mClusters.add(newCluster);
-        }
-    }
-
-    private int getNextClusterId() { return mNextClusterId++; }
-
     private void writeClusterDataOutput()
     {
-        try {
-
+        try
+        {
             BufferedWriter writer = null;
 
             if(mConfig.UseCombinedOutputFile && mFileWriter != null)
@@ -316,6 +280,9 @@ public class SvSampleAnalyser {
 
                 // chain info
                 writer.write(",ChainId,ChainCount,ChainTICount,ChainDBCount,ChainIndex");
+
+                // proximity info
+                writer.write(",NearestLen,NearestType");
 
                 // transitive info
                 writer.write(",TransType,TransLen,TransSvLinks");
@@ -405,27 +372,31 @@ public class SvSampleAnalyser {
 
                     writer.write(chainStr);
 
+                    writer.write(String.format(",%d,%s", var.getNearestSvDistance(), var.getNearestSvRelation()));
+
                     writer.write(String.format(",%s,%d,%s", var.getTransType(), var.getTransLength(), var.getTransSvLinks()));
 
-//                    final SvGeneData geneStart = var.getStartGeneData();
-//                    if(geneStart != null)
-//                    {
-//                        writer.write(String.format(",%s,%s,%s", geneStart.gene(), geneStart.driver(), geneStart.driverType()));
-//                    }
-//                    else
-//                    {
-//                        writer.write(String.format(",,,"));
-//                    }
+                    /*
+                    final SvGeneData geneStart = var.getStartGeneData();
+                    if(geneStart != null)
+                    {
+                        writer.write(String.format(",%s,%s,%s", geneStart.gene(), geneStart.driver(), geneStart.driverType()));
+                    }
+                    else
+                    {
+                        writer.write(String.format(",,,"));
+                    }
 
-//                    final SvGeneData geneEnd = var.getEndGeneData();
-//                    if(geneEnd != null)
-//                    {
-//                        writer.write(String.format(",%s,%s,%s", geneEnd.gene(), geneEnd.driver(), geneEnd.driverType()));
-//                    }
-//                    else
-//                    {
-//                        writer.write(String.format(",,,"));
-//                    }
+                    final SvGeneData geneEnd = var.getEndGeneData();
+                    if(geneEnd != null)
+                    {
+                        writer.write(String.format(",%s,%s,%s", geneEnd.gene(), geneEnd.driver(), geneEnd.driverType()));
+                    }
+                    else
+                    {
+                        writer.write(String.format(",,,"));
+                    }
+                    */
 
                     writer.newLine();
                 }
@@ -452,6 +423,7 @@ public class SvSampleAnalyser {
         }
 
         // log perf stats
+        mPerfCounter.stop();
         mPerfCounter.logStats(false);
         mPc1.logStats(false);
         mPc2.logStats(false);
