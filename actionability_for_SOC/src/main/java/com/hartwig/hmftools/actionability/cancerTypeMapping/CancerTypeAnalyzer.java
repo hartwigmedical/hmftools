@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class CancerTypeAnalyzer {
     private static final org.apache.logging.log4j.Logger LOGGER = org.apache.logging.log4j.LogManager.getLogger(CancerTypeAnalyzer.class);
@@ -50,13 +51,17 @@ public class CancerTypeAnalyzer {
     }
 
     @NotNull
-    public void foundTumorLocation (@NotNull String tumorLocationKnowledgebase) {
+    public boolean foundTumorLocation (@NotNull String tumorLocationKnowledgebase, @Nullable String doid) {
+        Boolean booleanValueRange = false;
         for (int i = 1; i < cancerTypeDoids.size(); i ++) {
             if(cancerTypeDoids.get(i).cancerType().contains(tumorLocationKnowledgebase)){
                 LOGGER.info(cancerTypeDoids.get(i).cancerType());
                 LOGGER.info(cancerTypeDoids.get(i).doidSet());
+                if(cancerTypeDoids.get(i).doidSet().contains(doid)){
+                    booleanValueRange = true;
+                }
             }
         }
+        return booleanValueRange;
     }
-
 }
