@@ -129,7 +129,7 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
     }
 
     private fun createGeneModel(genericMutations: List<GenericMutation>): Map<String, HmfTranscriptRegion?> {
-        val hmfTranscriptRegions = genericMutations.map { geneModel.hmfTranscriptRegionForGenericMutation(it) }
-        return hmfTranscriptRegions.filterNotNull().associateBy({ it.gene() }, { it })
+        val hmfTranscriptRegions = genericMutations.mapNotNull { geneModel.hmfTranscriptRegionForGenericMutation(it) }
+        return hmfTranscriptRegions.associateBy({ it.gene() }, { it })
     }
 }
