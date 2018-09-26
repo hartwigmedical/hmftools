@@ -18,14 +18,16 @@ import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
 
-public class OncoDrivers {
+public final class OncoDrivers {
 
     static final int MAX_REPEAT_COUNT = 7;
+
+    private OncoDrivers() {
+    }
 
     @NotNull
     static public List<DriverCatalog> drivers(@NotNull final Map<String, DndsDriverGeneLikelihood> likelihoodsByGene,
             @NotNull final List<EnrichedSomaticVariant> variants) {
-
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
         final Map<VariantType, Long> variantTypeCounts = variantTypeCount(variants);
@@ -34,7 +36,6 @@ public class OncoDrivers {
         final Map<String, List<EnrichedSomaticVariant>> codingVariants = oncogenicVariantsByGene(likelihoodsByGene.keySet(), variants);
 
         for (String gene : codingVariants.keySet()) {
-
             final DndsDriverImpactLikelihood geneMissenseLikelihood = likelihoodsByGene.get(gene).missense();
             final List<EnrichedSomaticVariant> geneVariants = codingVariants.get(gene);
 
@@ -47,7 +48,6 @@ public class OncoDrivers {
     @NotNull
     private static Map<String, List<EnrichedSomaticVariant>> oncogenicVariantsByGene(@NotNull final Set<String> genes,
             @NotNull final List<EnrichedSomaticVariant> variants) {
-
         return variants.stream()
                 .filter(x -> genes.contains(x.gene()))
                 .filter(x -> isMissense(x) || isInframeIndel(x))
@@ -55,9 +55,8 @@ public class OncoDrivers {
     }
 
     @NotNull
-    static DriverCatalog geneDriver(long sampleSNVCount, @NotNull final String gene, @NotNull final DndsDriverImpactLikelihood missenseLikelihood,
-            @NotNull final List<EnrichedSomaticVariant> codingVariants) {
-
+    static DriverCatalog geneDriver(long sampleSNVCount, @NotNull final String gene,
+            @NotNull final DndsDriverImpactLikelihood missenseLikelihood, @NotNull final List<EnrichedSomaticVariant> codingVariants) {
         final Map<DriverImpact, Long> variantCounts = DriverCatalogFactory.driverImpactCount(codingVariants);
         long missenseVariants = variantCounts.getOrDefault(DriverImpact.MISSENSE, 0L);
         long nonsenseVariants = variantCounts.getOrDefault(DriverImpact.NONSENSE, 0L);
@@ -106,8 +105,7 @@ public class OncoDrivers {
                 && variant.repeatCount() <= MAX_REPEAT_COUNT;
     }
 
-    public static double missenseProbabilityDriverVariant(long sampleSNVCount, @NotNull final DndsDriverImpactLikelihood likelihood) {
+    private static double missenseProbabilityDriverVariant(long sampleSNVCount, @NotNull final DndsDriverImpactLikelihood likelihood) {
         return DriverCatalogFactory.probabilityDriverVariant(sampleSNVCount, likelihood);
     }
-
 }

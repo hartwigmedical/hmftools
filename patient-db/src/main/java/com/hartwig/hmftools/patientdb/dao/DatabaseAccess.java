@@ -199,6 +199,11 @@ public class DatabaseAccess {
         return copyNumberDAO.readCopyNumberRegions(sample);
     }
 
+    @NotNull
+    public List<GeneCopyNumber> readGeneCopynumbers(@NotNull final String sample) {
+        return geneCopyNumberDAO.read(sample);
+    }
+
     public void writeGeneCopynumberRegions(@NotNull final String sample, @NotNull List<GeneCopyNumber> geneCopyNumbers) {
         geneCopyNumberDAO.writeCopyNumber(sample, geneCopyNumbers);
     }
@@ -281,7 +286,6 @@ public class DatabaseAccess {
         structuralVariantDAO.deleteStructuralVariantsForSample(sample);
 
         LOGGER.info("All data for sample: " + sample + " is deleted");
-
     }
 }
 

@@ -9,11 +9,17 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStepN;
+import org.jooq.Record;
+import org.jooq.Result;
 
 class GeneCopyNumberDAO {
 
@@ -22,6 +28,47 @@ class GeneCopyNumberDAO {
 
     GeneCopyNumberDAO(@NotNull final DSLContext context) {
         this.context = context;
+    }
+
+    @NotNull
+    public final List<GeneCopyNumber> read(@NotNull final String sample) {
+        List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
+
+        final Result<Record> result = context.select().from(GENECOPYNUMBER).where(GENECOPYNUMBER.SAMPLEID.eq(sample)).fetch();
+
+        for (Record record : result) {
+            geneCopyNumbers.add(ImmutableGeneCopyNumber.builder()
+                    .chromosome(String.valueOf(record.getValue(GENECOPYNUMBER.CHROMOSOME)))
+                    .start(record.getValue(GENECOPYNUMBER.START))
+                    .end(record.getValue(GENECOPYNUMBER.END))
+                    .gene(record.getValue(GENECOPYNUMBER.GENE))
+                    .minCopyNumber(record.getValue(GENECOPYNUMBER.MINCOPYNUMBER))
+                    .maxCopyNumber(record.getValue(GENECOPYNUMBER.MAXCOPYNUMBER))
+                    .somaticRegions(record.getValue(GENECOPYNUMBER.SOMATICREGIONS))
+                    .germlineHomRegions(record.getValue(GENECOPYNUMBER.GERMLINEHOMREGIONS))
+                    .germlineHet2HomRegions(record.getValue(GENECOPYNUMBER.GERMLINEHETREGIONS))
+                    .transcriptID(record.getValue(GENECOPYNUMBER.TRANSCRIPTID))
+                    .transcriptVersion(record.getValue(GENECOPYNUMBER.TRANSCRIPTVERSION))
+                    .chromosomeBand(record.getValue(GENECOPYNUMBER.CHROMOSOMEBAND))
+                    .minRegions(record.getValue(GENECOPYNUMBER.MINREGIONS))
+                    .minRegionStart(record.getValue(GENECOPYNUMBER.MINREGIONSTART))
+                    .minRegionEnd(record.getValue(GENECOPYNUMBER.MINREGIONEND))
+                    .minRegionStartSupport(SegmentSupport.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONSTARTSUPPORT)))
+                    .minRegionEndSupport(SegmentSupport.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONENDSUPPORT)))
+                    .minRegionMethod(CopyNumberMethod.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONMETHOD)))
+                    .nonsenseBiallelicCount(record.getValue(GENECOPYNUMBER.NONSENSEBIALLELICVARIANTS))
+                    .nonsenseNonBiallelicCount(record.getValue(GENECOPYNUMBER.NONSENSENONBIALLELICVARIANTS))
+                    .nonsenseNonBiallelicPloidy(record.getValue(GENECOPYNUMBER.NONSENSENONBIALLELICPLOIDY))
+                    .spliceBiallelicCount(record.getValue(GENECOPYNUMBER.SPLICEBIALLELICVARIANTS))
+                    .spliceNonBiallelicCount(record.getValue(GENECOPYNUMBER.SPLICENONBIALLELICVARIANTS))
+                    .spliceNonBiallelicPloidy(record.getValue(GENECOPYNUMBER.SPLICENONBIALLELICPLOIDY))
+                    .missenseBiallelicCount(record.getValue(GENECOPYNUMBER.MISSENSEBIALLELICVARIANTS))
+                    .missenseNonBiallelicCount(record.getValue(GENECOPYNUMBER.MISSENSENONBIALLELICVARIANTS))
+                    .missenseNonBiallelicPloidy(record.getValue(GENECOPYNUMBER.MISSENSENONBIALLELICPLOIDY))
+                    .minMinorAllelePloidy(record.getValue(GENECOPYNUMBER.MINMINORALLELEPLOIDY))
+                    .build());
+        }
+        return geneCopyNumbers;
     }
 
     void writeCopyNumber(@NotNull final String sample, @NotNull List<GeneCopyNumber> copyNumbers) {

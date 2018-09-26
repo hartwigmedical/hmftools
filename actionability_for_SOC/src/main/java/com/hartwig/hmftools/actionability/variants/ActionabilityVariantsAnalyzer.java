@@ -26,8 +26,9 @@ public class ActionabilityVariantsAnalyzer {
     }
 
 
-    public boolean actionableVariants(@NotNull SomaticVariant variant, @NotNull String primaryTumorLocation) {
+    public String actionableVariants(@NotNull SomaticVariant variant, @NotNull String primaryTumorLocation) {
         Boolean booleanValueVariants = true;
+        String tumorLocation = "";
         for (int i=0; i< variants.size();i++) {
             if (variants.get(i).cancerType().contains(primaryTumorLocation) &&
                     variant.gene().equals(variants.get(i).gene()) &&
@@ -37,11 +38,13 @@ public class ActionabilityVariantsAnalyzer {
                     variant.alt().equals(variants.get(i).alt())) {
                 booleanValueVariants =  true;
                 LOGGER.info(variants.get(i));
+                tumorLocation = variants.get(i).cancerType();
             } else {
+                tumorLocation ="";
                 booleanValueVariants =  false;
             }
         }
-        return booleanValueVariants;
+        return tumorLocation;
     }
 
     public boolean actionableRange(@NotNull SomaticVariant variant, @NotNull String primaryTumorLocation) {

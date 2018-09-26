@@ -9,12 +9,14 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
+import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
 import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.region.BEDFileLoader;
@@ -29,7 +31,6 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
-import com.hartwig.hmftools.common.variant.enrich.NearIndelPonEnrichment;
 import com.hartwig.hmftools.common.variant.filter.SomaticFilter;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -56,8 +57,6 @@ public class LoadSomaticVariants {
     private static final String VCF_FILE = "vcf_file";
     private static final String REF_GENOME = "ref_genome";
     private static final String PASS_FILTER = "pass_filter";
-    private static final String SOMATIC_PON = "somatic_pon";
-    private static final String GERMLINE_PON = "germline_pon";
     private static final String SOMATIC_FILTER = "somatic_filter";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
 
@@ -82,14 +81,6 @@ public class LoadSomaticVariants {
         }
 
         final CompoundEnrichment compoundEnrichment = new CompoundEnrichment();
-        if (cmd.hasOption(SOMATIC_PON)) {
-            LOGGER.info("Enabling indel near somatic pon enrichment");
-            compoundEnrichment.add(NearIndelPonEnrichment.somaticPon(cmd.getOptionValue(SOMATIC_PON)));
-        }
-        if (cmd.hasOption(GERMLINE_PON)) {
-            LOGGER.info("Enabling indel near germline pon enrichment");
-            compoundEnrichment.add(NearIndelPonEnrichment.germlinePon(cmd.getOptionValue(GERMLINE_PON)));
-        }
         if (cmd.hasOption(HOTSPOT)) {
             LOGGER.info("Enabling near hotspot enrichment");
             compoundEnrichment.add(new HotspotEnrichment(VariantHotspotFile.read(cmd.getOptionValue(HOTSPOT))));
@@ -105,6 +96,7 @@ public class LoadSomaticVariants {
         IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
 
         LOGGER.info("Querying purple database");
+        final List<GeneCopyNumber> geneCopyNumbers = dbAccess.readGeneCopynumbers(sample);
         final PurityContext purityContext = dbAccess.readPurityContext(sample);
 
         if (purityContext == null) {
@@ -138,11 +130,16 @@ public class LoadSomaticVariants {
         dbAccess.writeSomaticVariants(sample, enrichedVariants);
 
         LOGGER.info("Generating driver catalog");
+        final CNADrivers cnaDrivers = new CNADrivers();
         final List<EnrichedSomaticVariant> passingVariants =
                 enrichedVariants.stream().filter(x -> !x.isFiltered()).collect(Collectors.toList());
         final List<DriverCatalog> driverCatalog = OncoDrivers.drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), passingVariants);
         final List<DriverCatalog> tsgCatalog = TsgDrivers.drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), passingVariants);
         driverCatalog.addAll(tsgCatalog);
+        if (purityContext != null) {
+            driverCatalog.addAll(cnaDrivers.amplifications(purityContext.bestFit().ploidy(), geneCopyNumbers));
+            driverCatalog.addAll(cnaDrivers.deletions(geneCopyNumbers));
+        }
 
         LOGGER.info("Persisting driver catalog");
         dbAccess.writeDriverCatalog(sample, driverCatalog);
@@ -163,8 +160,6 @@ public class LoadSomaticVariants {
         options.addOption(PASS_FILTER, false, "Only load unfiltered variants");
         options.addOption(SOMATIC_FILTER, false, "Only load variants flagged SOMATIC");
         options.addOption(HOTSPOT, true, "Location of hotspot file");
-        options.addOption(SOMATIC_PON, true, "Location of somatic pon file to filter indels near somatic PON locations");
-        options.addOption(GERMLINE_PON, true, "Location of germline pon file to filter indels near germline PON locations");
 
         return options;
     }

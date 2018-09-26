@@ -1,10 +1,14 @@
 package com.hartwig.hmftools.common.dnds;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 
@@ -23,7 +27,12 @@ class DndsDriverGeneLikelihoodFile {
     }
 
     @NotNull
-    static Map<String, DndsDriverGeneLikelihood> fromLines(@NotNull List<String> lines) {
+    public static Map<String, DndsDriverGeneLikelihood> fromInputStream(@NotNull final InputStream genomeInputStream) {
+        return fromLines(new BufferedReader(new InputStreamReader(genomeInputStream)).lines().collect(Collectors.toList()));
+    }
+
+    @NotNull
+    private static Map<String, DndsDriverGeneLikelihood> fromLines(@NotNull List<String> lines) {
         Map<String, DndsDriverGeneLikelihood> result = Maps.newHashMap();
         int i = 0;
         for (String line : lines) {
@@ -57,7 +66,6 @@ class DndsDriverGeneLikelihoodFile {
                 .pVariantNonDriverFactor(Double.valueOf(values[6]))
                 .build();
 
-
         final DndsDriverImpactLikelihood splice = ImmutableDndsDriverImpactLikelihood.builder()
                 .dndsLikelihood(Double.valueOf(values[7]))
                 .pDriver(Double.valueOf(values[8]))
@@ -79,5 +87,4 @@ class DndsDriverGeneLikelihoodFile {
 
         return builder.build();
     }
-
 }

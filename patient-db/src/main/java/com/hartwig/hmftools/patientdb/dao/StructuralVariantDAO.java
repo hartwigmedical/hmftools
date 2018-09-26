@@ -36,10 +36,21 @@ class StructuralVariantDAO {
         this.context = context;
     }
 
-    private Double getValueNotNull(Double value) { return value != null ? value : 0; }
-    private Integer getValueNotNull(Integer value) { return value != null ? value : 0; }
-    private Byte getValueNotNull(Byte value) { return value != null ? value : 0; }
-    private String getValueNotNull(String value) { return value != null ? value : ""; }
+    private Double getValueNotNull(Double value) {
+        return value != null ? value : 0;
+    }
+
+    private Integer getValueNotNull(Integer value) {
+        return value != null ? value : 0;
+    }
+
+    private Byte getValueNotNull(Byte value) {
+        return value != null ? value : 0;
+    }
+
+    private String getValueNotNull(String value) {
+        return value != null ? value : "";
+    }
 
     @NotNull
     public final List<StructuralVariantData> read(@NotNull final String sample) {
@@ -49,9 +60,9 @@ class StructuralVariantDAO {
 
         for (Record record : result) {
 
-            boolean isSingleBreakend = record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME) == null
-                    && record.getValue(STRUCTURALVARIANT.ENDPOSITION) == null
-                    && record.getValue(STRUCTURALVARIANT.ENDORIENTATION) == null;
+            boolean isSingleBreakend =
+                    record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME) == null && record.getValue(STRUCTURALVARIANT.ENDPOSITION) == null
+                            && record.getValue(STRUCTURALVARIANT.ENDORIENTATION) == null;
 
             structuralVariants.add(ImmutableStructuralVariantData.builder()
                     .id(String.valueOf(record.getValue(STRUCTURALVARIANT.ID)))
@@ -189,8 +200,11 @@ class StructuralVariantDAO {
         }
         return regions;
     }
+
     private static Boolean byteToBoolean(Byte b) {
-        if (b == null) return null;
+        if (b == null) {
+            return null;
+        }
         return b != 0;
     }
 
@@ -296,14 +310,19 @@ class StructuralVariantDAO {
     }
 
     void deleteStructuralVariantsForSample(@NotNull String sample) {
-        context.delete(STRUCTURALVARIANTDISRUPTION).where(STRUCTURALVARIANTDISRUPTION.BREAKENDID.in(deleteBreakends(sample))).execute();
-        context.delete(STRUCTURALVARIANTFUSION).where(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID.in(deleteBreakends(sample))).execute();
-        context.delete(STRUCTURALVARIANTBREAKEND).where(STRUCTURALVARIANTBREAKEND.ID.in(deleteBreakends(sample))).execute();
+        context.delete(STRUCTURALVARIANTDISRUPTION)
+                .where(STRUCTURALVARIANTDISRUPTION.BREAKENDID.in(selectBreakendsForSample(sample)))
+                .execute();
+        context.delete(STRUCTURALVARIANTFUSION)
+                .where(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID.in(selectBreakendsForSample(sample)))
+                .execute();
+        context.delete(STRUCTURALVARIANTBREAKEND).where(STRUCTURALVARIANTBREAKEND.ID.in(selectBreakendsForSample(sample))).execute();
 
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
     }
 
-    private List<Record1<UInteger>> deleteBreakends(@NotNull String sample) {
+    @NotNull
+    private List<Record1<UInteger>> selectBreakendsForSample(@NotNull String sample) {
         return context.select(STRUCTURALVARIANTBREAKEND.ID)
                 .from(STRUCTURALVARIANTBREAKEND)
                 .innerJoin(STRUCTURALVARIANT)

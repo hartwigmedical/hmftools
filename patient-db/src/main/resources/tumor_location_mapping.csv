@@ -47,6 +47,7 @@ searchTerm,primaryTumorLocation,subType
 "Endometrial cancer",Uterus,"Endometrial"
 "endometrial stromacel carcinoma",Uterus,"Endometrial"
 "ER-positive / HER2 unknown",Breast,"ER-positive/HER2 unknown"
+"Esophagael cardia tumur",Esophagus,"Esophagus-Gastric junction"
 "Esophageal cancer",Esophagus,""
 "esophageal cardia tumor",Esophagus,"Esophagus-Gastric junction"
 "esophageal or stomach cancer, differentiation not possible",Esophagus,"Esophagus-Gastric junction"

@@ -20,6 +20,7 @@ class PatientAnonymizerTest : StringSpec() {
     private val sample1A = SampleId("${patient1.id}T")!!
     private val sample1B = SampleId("${patient1.id}TII")!!
     private val sample2A = SampleId("${patient2.id}T")!!
+    private val sample3A = SampleId("${patient3.id}T")!!
 
     init {
         "generates patient id" {
@@ -39,6 +40,45 @@ class PatientAnonymizerTest : StringSpec() {
             updatedOutput.size shouldBe 2
             updatedOutput[patient1]!!.id shouldBe output[patient1]!!.id
             updatedOutput[patient2]!!.id shouldBe 2
+        }
+
+        "removing an already anonymized patient does not delete it from output" {
+            val samplesInput = SamplesInput(listOf(sample1A, sample2A))
+            val updatedSamplesInput = SamplesInput(listOf(sample1A))
+            val output = anonymizer.anonymize(PASSWORD1, samplesInput, emptyList())
+            output.size shouldBe 2
+
+            val updatedOutput = anonymizer.anonymize(PASSWORD1, updatedSamplesInput, output)
+            updatedOutput.size shouldBe 2
+            updatedOutput[patient1]!!.id shouldBe output[patient1]!!.id
+            updatedOutput[patient2]!!.id shouldBe 2
+        }
+
+        "replacing an already anonymized patient adds one entry to output" {
+            val samplesInput = SamplesInput(listOf(sample1A, sample2A))
+            val updatedSamplesInput = SamplesInput(listOf(sample1A, sample3A))
+            val output = anonymizer.anonymize(PASSWORD1, samplesInput, emptyList())
+            output.size shouldBe 2
+
+            val updatedOutput = anonymizer.anonymize(PASSWORD1, updatedSamplesInput, output)
+            updatedOutput.size shouldBe 3
+            updatedOutput[patient1]!!.id shouldBe output[patient1]!!.id
+            updatedOutput[patient2]!!.id shouldBe 2
+            updatedOutput[patient3]!!.id shouldBe 3
+        }
+
+        "correctly replaces an already anonymized patient while changing password" {
+            val samplesInput = SamplesInput(listOf(sample1A, sample2A))
+            val updatedSamplesInput = SamplesInput(listOf(sample1A, sample3A))
+            val output = anonymizer.anonymize(PASSWORD1, samplesInput, emptyList())
+            output.size shouldBe 2
+
+            val updatedOutput = anonymizer.anonymize(PASSWORD2, updatedSamplesInput, output)
+            updatedOutput.size shouldBe 3
+            updatedOutput[patient1]!!.id shouldBe output[patient1]!!.id
+            updatedOutput[patient2]?.id shouldBe null
+            updatedOutput[patient3]!!.id shouldBe 3
+            collisions(updatedOutput, output) shouldBe 1
         }
 
         "adding new sample for same patient does not add patients to output" {
@@ -61,21 +101,22 @@ class PatientAnonymizerTest : StringSpec() {
             collisions(updatedOutput, output) shouldBe 0
         }
 
-        "patients renamed from start generate single id" {
-            val renames = mapOf(patient1 to patient2)
-            val samplesInput = SamplesInput(listOf(sample1A, sample2A), renames)
+        "patients mapped from start generate single id" {
+            val patientMap = mapOf(patient1 to patient2)
+            val samplesInput = SamplesInput(listOf(sample1A, sample2A), patientMap)
 
             val output = anonymizer.anonymize(PASSWORD1, samplesInput, emptyList())
             output.size shouldBe 1
             output[patient1]!!.id shouldBe 1
             output[patient2]!!.id shouldBe 1
             output[patient1]!!.hash shouldBe generator1.hash(patient2.id)
+            output.anonymizedPatientMap() shouldBe emptyMap<HmfPatientId, HmfPatientId>()
         }
 
-        "adding new sample for patients renamed from start keeps single id" {
-            val renames = mapOf(patient1 to patient2)
-            val samplesInput = SamplesInput(listOf(sample1A, sample2A), renames)
-            val updatedSamplesInput = SamplesInput(listOf(sample1A, sample2A, sample1B), renames)
+        "adding new sample for patients mapped from start keeps single id" {
+            val patientMap = mapOf(patient1 to patient2)
+            val samplesInput = SamplesInput(listOf(sample1A, sample2A), patientMap)
+            val updatedSamplesInput = SamplesInput(listOf(sample1A, sample2A, sample1B), patientMap)
             val output = anonymizer.anonymize(PASSWORD1, samplesInput, emptyList())
 
             val updatedOutput = anonymizer.anonymize(PASSWORD1, updatedSamplesInput, output)
@@ -83,11 +124,12 @@ class PatientAnonymizerTest : StringSpec() {
             updatedOutput[patient1]!!.id shouldBe 1
             updatedOutput[patient2]!!.id shouldBe 1
             updatedOutput[patient1]!!.hash shouldBe generator1.hash(patient2.id)
+            updatedOutput.anonymizedPatientMap() shouldBe emptyMap<HmfPatientId, HmfPatientId>()
         }
 
-        "patients renamed from start generate single id after password change" {
-            val renames = mapOf(patient1 to patient2)
-            val samplesInput = SamplesInput(listOf(sample1A, sample2A), renames)
+        "patients mapped from start generate single id after password change" {
+            val patientMap = mapOf(patient1 to patient2)
+            val samplesInput = SamplesInput(listOf(sample1A, sample2A), patientMap)
             val output = anonymizer.anonymize(PASSWORD1, samplesInput, emptyList())
 
             val updatedOutput = anonymizer.anonymize(PASSWORD2, samplesInput, output)
@@ -96,39 +138,44 @@ class PatientAnonymizerTest : StringSpec() {
             updatedOutput[patient2]!!.id shouldBe 1
             updatedOutput[patient1]!!.hash shouldBe generator2.hash(patient2.id)
             collisions(updatedOutput, output) shouldBe 0
+            updatedOutput.anonymizedPatientMap() shouldBe emptyMap<HmfPatientId, HmfPatientId>()
         }
 
-        "anonymized patients renamed later do not get deleted from output" {
-            val renames = mapOf(patient1 to patient2)
-            val inputWithoutRenames = SamplesInput(listOf(sample1A, sample2A), emptyMap())
-            val inputWithRenames = SamplesInput(listOf(sample1A, sample2A), renames)
+        "anonymized patients mapped later do not get deleted from output" {
+            val patientMap = mapOf(patient1 to patient2)
+            val inputWithoutMapping = SamplesInput(listOf(sample1A, sample2A), emptyMap())
+            val inputWithMapping = SamplesInput(listOf(sample1A, sample2A), patientMap)
 
-            val output = anonymizer.anonymize(PASSWORD1, inputWithoutRenames, emptyList())
+            val output = anonymizer.anonymize(PASSWORD1, inputWithoutMapping, emptyList())
             output.toSet().size shouldBe 2
             output[patient1]!!.id shouldBe 1
             output[patient2]!!.id shouldBe 2
 
-            val updatedOutput = anonymizer.anonymize(PASSWORD1, inputWithRenames, output)
+            val updatedOutput = anonymizer.anonymize(PASSWORD1, inputWithMapping, output)
             updatedOutput.toSet() shouldBe output.toSet()
             updatedOutput[patient1]!!.id shouldBe 2
             updatedOutput[patient2]!!.id shouldBe 2
+            updatedOutput.anonymizedPatientMap().size shouldBe 1
+            updatedOutput.anonymizedPatientMap().map { it.key.id to it.value.id }.toMap() shouldBe mapOf(1 to 2)
         }
 
-        "updates patient hash on password change for patients renamed later" {
-            val renames = mapOf(patient1 to patient2)
-            val inputWithoutRenames = SamplesInput(listOf(sample1A, sample2A), emptyMap())
-            val inputWithRenames = SamplesInput(listOf(sample1A, sample2A), renames)
+        "updates patient hash on password change for patients mapped later" {
+            val patientMap = mapOf(patient1 to patient2)
+            val inputWithoutMapping = SamplesInput(listOf(sample1A, sample2A), emptyMap())
+            val inputWithMapping = SamplesInput(listOf(sample1A, sample2A), patientMap)
 
-            val output = anonymizer.anonymize(PASSWORD1, inputWithoutRenames, emptyList())
+            val output = anonymizer.anonymize(PASSWORD1, inputWithoutMapping, emptyList())
             output.toSet().size shouldBe 2
             output[patient1]!!.id shouldBe 1
             output[patient2]!!.id shouldBe 2
 
-            val updatedOutput = anonymizer.anonymize(PASSWORD2, inputWithRenames, output)
+            val updatedOutput = anonymizer.anonymize(PASSWORD2, inputWithMapping, output)
             updatedOutput.map { it.id }.toSet() shouldBe output.map { it.id }.toSet()
             collisions(updatedOutput, output) shouldBe 0
             updatedOutput[patient1]!!.id shouldBe 2
             updatedOutput[patient2]!!.id shouldBe 2
+            updatedOutput.anonymizedPatientMap().size shouldBe 1
+            updatedOutput.anonymizedPatientMap().map { it.key.id to it.value.id }.toMap() shouldBe mapOf(1 to 2)
         }
     }
 

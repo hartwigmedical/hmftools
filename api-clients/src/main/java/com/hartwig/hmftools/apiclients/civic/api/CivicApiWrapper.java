@@ -66,17 +66,6 @@ public class CivicApiWrapper {
     }
 
     @NotNull
-    private <T> Observable<T> getAllFromPaginatedEndpoint(@NotNull final BiFunction<Long, Long, Observable<CivicIndexResult<T>>> endpoint) {
-        return endpoint.apply(1L, CIVIC_BATCH_COUNT).flatMap(indexResult -> {
-            final CivicApiMetadata metadata = indexResult.meta();
-            final Observable<T> firstPageResults = Observable.fromIterable(indexResult.records());
-            final Observable<T> nextPagesResults = Observable.range(2, metadata.totalPages() - 1)
-                    .flatMap(page -> endpoint.apply((long) page, CIVIC_BATCH_COUNT).flatMapIterable(CivicIndexResult::records));
-            return firstPageResults.mergeWith(nextPagesResults);
-        });
-    }
-
-    @NotNull
     public Map<Integer, String> getDrugInteractionMap() {
         return getAllFromPaginatedEndpoint(api::getEvidenceItems).toMap(CivicEvidenceItem::id,
                 evidenceItem -> evidenceItem.drugInteractionType() == null ? Strings.EMPTY : evidenceItem.drugInteractionType())
@@ -85,5 +74,16 @@ public class CivicApiWrapper {
 
     public void releaseResources() {
         httpClient.dispatcher().executorService().shutdown();
+    }
+
+    @NotNull
+    private <T> Observable<T> getAllFromPaginatedEndpoint(@NotNull final BiFunction<Long, Long, Observable<CivicIndexResult<T>>> endpoint) {
+        return endpoint.apply(1L, CIVIC_BATCH_COUNT).flatMap(indexResult -> {
+            final CivicApiMetadata metadata = indexResult.meta();
+            final Observable<T> firstPageResults = Observable.fromIterable(indexResult.records());
+            final Observable<T> nextPagesResults = Observable.range(2, metadata.totalPages() - 1)
+                    .flatMap(page -> endpoint.apply((long) page, CIVIC_BATCH_COUNT).flatMapIterable(CivicIndexResult::records));
+            return firstPageResults.mergeWith(nextPagesResults);
+        });
     }
 }

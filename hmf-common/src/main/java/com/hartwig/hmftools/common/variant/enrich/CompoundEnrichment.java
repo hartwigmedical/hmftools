@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class CompoundEnrichment extends ArrayList<SomaticEnrichment> implements SomaticEnrichment {
+
     @NotNull
     @Override
     public ImmutableSomaticVariantImpl.Builder enrich(@NotNull final ImmutableSomaticVariantImpl.Builder builder,

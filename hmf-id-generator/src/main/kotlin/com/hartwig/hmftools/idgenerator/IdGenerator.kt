@@ -51,7 +51,7 @@ class IdGenerator(private val password: String, private val defaultSeed: Int = 0
         val hashes = input.map { hash(it) }.toSet()
         val existingHashes = existingIds.map { it.hash }.toSet()
         if (hashes.isNotEmpty() && hashes.any { !existingHashes.contains(it) }) {
-            error("$OLD_PASSWORD does not match")
+            error("$NEW_PASSWORD does not match")
         }
     }
 
@@ -71,8 +71,8 @@ class IdGenerator(private val password: String, private val defaultSeed: Int = 0
         val existingHashes = existingIds.map { it.hash }.toSet()
         val numMatches = hashes.count { existingHashes.contains(it) }
         if (hashes.isNotEmpty() && existingHashes.isNotEmpty() && numMatches < 1) {
-            error("Could not reproduce any of the existing hashes using the provided $OLD_PASSWORD and $PATIENT_IDS_FILE. " +
-                          "Most likely $OLD_PASSWORD was wrong. ")
+            error("Could not reproduce any of the existing hashes using the provided $NEW_PASSWORD and $SAMPLE_IDS_FILE. " +
+                          "Most likely $NEW_PASSWORD was wrong. ")
         }
     }
 }

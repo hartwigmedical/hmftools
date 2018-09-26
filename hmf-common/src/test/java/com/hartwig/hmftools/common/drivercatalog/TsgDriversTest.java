@@ -104,7 +104,7 @@ public class TsgDriversTest {
     }
 
     @NotNull
-    static DndsDriverImpactLikelihood createLikelihood(double dndsLikelihood, double pDriver, double pVariantNonDriver) {
+    private static DndsDriverImpactLikelihood createLikelihood(double dndsLikelihood, double pDriver, double pVariantNonDriver) {
         return ImmutableDndsDriverImpactLikelihood.builder()
                 .dndsLikelihood(dndsLikelihood)
                 .pDriver(pDriver)
@@ -113,7 +113,7 @@ public class TsgDriversTest {
     }
 
     @NotNull
-    private EnrichedSomaticVariant create(@NotNull final VariantType type, @NotNull final CodingEffect codingEffect, boolean hotspot,
+    private static EnrichedSomaticVariant create(@NotNull final VariantType type, @NotNull final CodingEffect codingEffect, boolean hotspot,
             boolean biallelic) {
         return SomaticVariantTestBuilderFactory.createEnriched()
                 .type(type)
@@ -122,5 +122,4 @@ public class TsgDriversTest {
                 .biallelic(biallelic)
                 .build();
     }
-
 }

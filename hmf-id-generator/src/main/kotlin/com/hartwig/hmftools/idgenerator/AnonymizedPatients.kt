@@ -12,4 +12,13 @@ class AnonymizedPatients(password: String, private val hmfPatientIds: Collection
 
     private fun canonicalPatientId(patientId: PatientId) = samplesInput.patientsMap[patientId] ?: patientId
     private fun canonicalHash(patientId: PatientId) = generator.hash(canonicalPatientId(patientId).id)
+
+    fun anonymizedPatientMap(): Map<HmfPatientId, HmfPatientId> {
+        return samplesInput.patientsMap.mapNotNull { (patientId, canonicalId) ->
+            val hmfPatientId = hmfPatientIdPerHash[generator.hash(patientId.id)]
+            val canonicalHmfPatientId = hmfPatientIdPerHash[generator.hash(canonicalId.id)]
+            return@mapNotNull if (hmfPatientId == null || canonicalHmfPatientId == null) null
+            else Pair(hmfPatientId, canonicalHmfPatientId)
+        }.toMap()
+    }
 }

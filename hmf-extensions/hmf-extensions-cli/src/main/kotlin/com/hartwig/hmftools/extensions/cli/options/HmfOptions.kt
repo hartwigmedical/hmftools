@@ -10,6 +10,9 @@ class HmfOptions {
     private val optionsMap = mutableMapOf<Option, HmfOption>()
 
     fun add(hmfOption: HmfOption) {
+        if (optionsMap.keys.map { it.opt }.contains(hmfOption.name)) {
+            println("Warning: Overriding previously set option ${hmfOption.name}")
+        }
         optionsMap[hmfOption.option] = hmfOption
         options.addOption(hmfOption.option)
     }

@@ -25,7 +25,7 @@ private const val gDnaDelimiter = "g."
 
 fun extractVariants(record: KnowledgebaseRecord, transvarOutput: TransvarOutput, reference: IndexedFastaSequenceFile):
         List<ActionableEvent> {
-    return if (transvarOutput.info == "no_valid_transcript_found") {
+    return if (transvarOutput.info == "no_valid_transcript_found" || transvarOutput.info.contains("Error_")) {
         logger.warn("Transvar could not resolve genomic coordinates for gene ${record.gene} with events ${record.events}" )
         emptyList()
     } else {

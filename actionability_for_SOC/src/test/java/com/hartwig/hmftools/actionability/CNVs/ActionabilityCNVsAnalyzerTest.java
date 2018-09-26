@@ -10,12 +10,14 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
+import org.immutables.value.internal.$processor$.meta.$GsonMirrors;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class ActionabilityCNVsAnalyzerTest {
 
 
-    @Test
+    @Ignore
     public void ActionabilityWorksCNVs() {
         ActionabilityCNVs actionanilityCNV = ImmutableActionabilityCNVs.builder()
                 .gene("ERBB2")

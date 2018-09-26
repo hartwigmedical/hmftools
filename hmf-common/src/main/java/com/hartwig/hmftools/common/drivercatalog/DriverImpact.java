@@ -13,22 +13,17 @@ public enum DriverImpact {
     INFRAME,
     FRAMESHIFT;
 
+    @NotNull
     public static DriverImpact select(@NotNull SomaticVariant variant) {
         if (isFrameshift(variant)) {
             return FRAMESHIFT;
-        }
-        if (isNonsense(variant)) {
+        } else if (isNonsense(variant)) {
             return NONSENSE;
-        }
-        if (isMissense(variant)) {
+        } else if (isMissense(variant)) {
             return MISSENSE;
-        }
-
-        if (isSplice(variant)) {
+        } else if (isSplice(variant)) {
             return SPLICE;
-        }
-
-        if (isInframe(variant)) {
+        } else if (isInframe(variant)) {
             return INFRAME;
         }
 
