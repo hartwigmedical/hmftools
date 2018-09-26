@@ -23,11 +23,11 @@ class AnonymizedSamples private constructor(val password: String, val sampleIds:
         val hmfSampleIdsForHash = hmfSampleIdPerHash[generator.hash(sampleId.id)]
         hmfSampleIdsForHash ?: return null
         return if (hmfSampleIdsForHash.size == 1) hmfSampleIdsForHash.first()
-        else hmfSampleIdsForHash.find { it.hmfPatientId.hash == generator.hash(samplesInput.canonicalId(sampleId.patientId).patientId.id) }
+        else hmfSampleIdsForHash.find { it.hmfPatientId.hash == generator.hash(samplesInput.canonicalId(sampleId.patientId).id) }
     }
 
     operator fun get(patientId: CanonicalPatientId): List<HmfSampleId> =
-            hmfSampleIdPerPatientHash[generator.hash(patientId.patientId.id)] ?: emptyList()
+            hmfSampleIdPerPatientHash[generator.hash(patientId.id)] ?: emptyList()
 
     fun anonymizedSamplesMap(): Map<HmfSampleId, HmfSampleId> {
         val anonymizedPatients = AnonymizedPatients(password, sampleIds.map { it.hmfPatientId }.distinct(), samplesInput)
