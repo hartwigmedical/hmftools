@@ -5,7 +5,6 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.purple.copynumber.combine.CombinedRegion;
 
 import org.jetbrains.annotations.NotNull;
 

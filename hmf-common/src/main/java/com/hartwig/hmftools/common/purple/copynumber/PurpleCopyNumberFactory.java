@@ -10,7 +10,6 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
-import com.hartwig.hmftools.common.purple.copynumber.combine.CombinedRegion;
 import com.hartwig.hmftools.common.purple.copynumber.tolerance.CopyNumberTolerance;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;

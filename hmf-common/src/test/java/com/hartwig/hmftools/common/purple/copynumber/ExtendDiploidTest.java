@@ -7,7 +7,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
-import com.hartwig.hmftools.common.purple.copynumber.combine.CombinedRegion;
 import com.hartwig.hmftools.common.purple.copynumber.tolerance.CopyNumberTolerance;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;

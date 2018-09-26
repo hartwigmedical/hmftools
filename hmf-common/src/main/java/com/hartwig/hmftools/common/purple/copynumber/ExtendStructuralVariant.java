@@ -2,8 +2,6 @@ package com.hartwig.hmftools.common.purple.copynumber;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.purple.copynumber.combine.CombinedRegion;
-
 import org.jetbrains.annotations.NotNull;
 
 class ExtendStructuralVariant {

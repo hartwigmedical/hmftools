@@ -1,10 +1,9 @@
-package com.hartwig.hmftools.common.purple.copynumber.combine;
+package com.hartwig.hmftools.common.purple.copynumber;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.region.ModifiableFittedRegion;
@@ -21,7 +20,7 @@ public class BafWeightedRegion implements CombinedRegion {
     private int unweightedCount = 1;
     private final boolean isBafWeighted;
 
-    public BafWeightedRegion( final FittedRegion region) {
+    public BafWeightedRegion(final FittedRegion region) {
         this(true, region);
     }
 
@@ -102,32 +101,29 @@ public class BafWeightedRegion implements CombinedRegion {
 
     public void extendWithUnweightedAverage(final FittedRegion region) {
         extend(region);
-        applyWeightedAverage(region, unweightedCount, 1);
+        applyCopyNumberWeights(region, unweightedCount, 1);
+        applyBafWeights(region, unweightedCount, 1);
         unweightedCount++;
     }
 
     public void extendWithBAFWeightedAverage(final FittedRegion region) {
-        long currentBases = combined.bases();
-
-        extend(region);
-
         combined.setStatus(GermlineStatus.DIPLOID); //TODO Remove this
-        combined.setDepthWindowCount(combined.depthWindowCount() + region.depthWindowCount());
 
-        final long currentWeight;
-        final long newWeight;
+        int currentWeight = region().depthWindowCount();
+        int newWeight = region.depthWindowCount();
+
+        applyCopyNumberWeights(region, currentWeight, newWeight);
+
         if (isBafWeighted && (combined.bafCount() > 0 || region.bafCount() > 0)) {
             currentWeight = combined.bafCount();
             newWeight = region.bafCount();
-        } else {
-            currentWeight = currentBases;
-            newWeight = region.bases();
         }
+        applyBafWeights(region, currentWeight, newWeight);
 
-        applyWeightedAverage(region, currentWeight, newWeight);
+        extend(region);
     }
 
-    private void applyWeightedAverage(final FittedRegion region, long currentWeight, long newWeight) {
+    void applyBafWeights(final FittedRegion region, long currentWeight, long newWeight) {
         if (!Doubles.isZero(region.observedBAF())) {
             combined.setObservedBAF(weightedAverage(currentWeight, combined.observedBAF(), newWeight, region.observedBAF()));
         }
@@ -135,6 +131,11 @@ public class BafWeightedRegion implements CombinedRegion {
         if (!Doubles.isZero(region.tumorBAF())) {
             combined.setTumorBAF(weightedAverage(currentWeight, combined.tumorBAF(), newWeight, region.tumorBAF()));
         }
+
+        combined.setBafCount(combined.bafCount() + region.bafCount());
+    }
+
+    void applyCopyNumberWeights(final FittedRegion region, long currentWeight, long newWeight) {
 
         if (!Doubles.isZero(region.tumorCopyNumber())) {
             combined.setTumorCopyNumber(weightedAverage(currentWeight, combined.tumorCopyNumber(), newWeight, region.tumorCopyNumber()));
@@ -147,7 +148,7 @@ public class BafWeightedRegion implements CombinedRegion {
                     region.refNormalisedCopyNumber()));
         }
 
-        combined.setBafCount(combined.bafCount() + region.bafCount());
+        combined.setDepthWindowCount(combined.depthWindowCount() + region.depthWindowCount());
     }
 
     public void setTumorCopyNumber(@NotNull final CopyNumberMethod method, double copyNumber) {

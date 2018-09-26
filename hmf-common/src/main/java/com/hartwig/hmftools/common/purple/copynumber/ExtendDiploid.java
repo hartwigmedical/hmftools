@@ -7,8 +7,6 @@ import java.util.function.IntUnaryOperator;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.copynumber.combine.CombinedRegion;
-import com.hartwig.hmftools.common.purple.copynumber.combine.BafWeightedRegion;
 import com.hartwig.hmftools.common.purple.copynumber.tolerance.CopyNumberTolerance;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
@@ -210,8 +208,7 @@ class ExtendDiploid {
         int indexOfTumorRatioCount = -1;
 
         int largestBAFCount = 0;
-        long largestBases = 0;
-        long largestTumorRatioCount = 0;
+        long largestDepthWindowCount = 0;
 
         for (int i = 0; i < regions.size(); i++) {
             final CombinedRegion combined = regions.get(i);
@@ -223,14 +220,9 @@ class ExtendDiploid {
                     indexOfLargestBaf = i;
                 }
 
-                if (region.depthWindowCount() > largestTumorRatioCount) {
-                    largestTumorRatioCount = region.depthWindowCount();
+                if (region.depthWindowCount() > largestDepthWindowCount) {
+                    largestDepthWindowCount = region.depthWindowCount();
                     indexOfTumorRatioCount = i;
-                }
-
-                if (region.bases() > largestBases) {
-                    largestBases = region.bases();
-                    indexOfLargestLength = i;
                 }
             }
         }

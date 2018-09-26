@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.copynumber.combine;
+package com.hartwig.hmftools.common.purple.copynumber;
 
 import java.util.List;
 
