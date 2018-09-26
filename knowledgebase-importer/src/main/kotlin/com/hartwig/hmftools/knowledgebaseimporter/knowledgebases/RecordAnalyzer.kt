@@ -105,10 +105,10 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
         val genericMutationRecords = records.collectEvents<GenericMutation, R>()
         val geneModel = createGeneModel(genericMutationRecords.map { it.second })
         return genericMutationRecords.flatMap { (record, mutation) ->
-            val gene = geneModel[mutation.gene]
-            mutationCodingRange(mutation, gene).map {
-                Pair(record, GenomicRangeEvent(mutation.gene, mutation.transcript.orEmpty(), gene!!.chromosome(), it.start.toString(),
-                        it.endInclusive.toString(), gene.transcriptID()))
+            val transcript = geneModel[mutation.gene]
+            mutationCodingRange(mutation, transcript).map {
+                Pair(record, GenomicRangeEvent(mutation.gene, mutation.transcript.orEmpty(), transcript!!.chromosome(), it.start.toString(),
+                        it.endInclusive.toString(), transcript.transcriptID()))
             }
         }
     }
