@@ -107,6 +107,14 @@ class AnonymizedSamplesTest : StringSpec() {
             anonymizedSamples.sampleMapping.size shouldBe 0
         }
 
+        "finds sampleId for patient mapped from start and then deleted" {
+            val samplesInput = SamplesInput(listOf(), mapOf(patient1 to patient2))
+            val anonymizedSamples = AnonymizedSamples(password, listOf(mappedAnonSample1A), samplesInput)
+            anonymizedSamples[sample1A] shouldBe mappedAnonSample1A
+            anonymizedSamples[samplesInput.canonicalId(patient1)] shouldBe setOf(mappedAnonSample1A)
+            anonymizedSamples.sampleMapping.size shouldBe 0
+        }
+
         "can build anonymizedSamples from previously anonymized (non-mapped) ids and new patient mapping" {
             val samplesInput = SamplesInput(listOf(sample1A, sample2A), mapOf(patient1 to patient2))
             val anonymizedSamples = AnonymizedSamples(password, listOf(anonSample1A, anonSample2A), samplesInput)
