@@ -132,7 +132,7 @@ public class SvUtilities {
             || isWithinRange(end1, start2) || isWithinRange(start1, end2);
     }
 
-    public boolean areTypePair(final SvClusterData v1, final SvClusterData v2, StructuralVariantType type1, StructuralVariantType type2)
+    public static boolean areTypePair(final SvClusterData v1, final SvClusterData v2, StructuralVariantType type1, StructuralVariantType type2)
     {
         return (v1.type() == type1 && v2.type() == type2) || (v1.type() == type2 && v2.type() == type1);
     }
@@ -145,7 +145,7 @@ public class SvUtilities {
         return abs(pos1 - pos2) <= mClusterBaseDistance;
     }
 
-    public boolean isWithin(final SvClusterData outer, final SvClusterData inner)
+    public static boolean isWithin(final SvClusterData outer, final SvClusterData inner)
     {
         // tests if the inner variant is wholly contained within the outer variant
         if(!outer.isLocal() || !inner.isLocal())
@@ -166,7 +166,7 @@ public class SvUtilities {
         return true;
     }
 
-    public boolean isWithin(final SvClusterData variant, final String chromosome, final long position)
+    public static boolean isWithin(final SvClusterData variant, final String chromosome, final long position)
     {
         if(!variant.chromosome(true).equals(chromosome) || !variant.chromosome(false).equals(chromosome))
             return false;
@@ -177,7 +177,7 @@ public class SvUtilities {
         return true;
     }
 
-    public boolean isLocalOverlap(final SvClusterData v1, final SvClusterData v2)
+    public static boolean isLocalOverlap(final SvClusterData v1, final SvClusterData v2)
     {
         // tests if the inner variant is wholy contained within the outer variant
         if(!v1.isLocal() || !v2.isLocal())
@@ -203,7 +203,7 @@ public class SvUtilities {
         return false;
     }
 
-    public boolean isOverlapping(final SvClusterData v1, final SvClusterData v2)
+    public static boolean isOverlapping(final SvClusterData v1, final SvClusterData v2)
     {
         // tests if either variant has an end within the other variant
         if(isWithin(v2, v1.chromosome(true), v1.position(true))
@@ -221,7 +221,7 @@ public class SvUtilities {
         return false;
     }
 
-    public int getShortestProximity(final SvClusterData v1, final SvClusterData v2)
+    public static int getShortestProximity(final SvClusterData v1, final SvClusterData v2)
     {
         int minLength = -1;
 
@@ -252,7 +252,7 @@ public class SvUtilities {
         return minLength;
     }
 
-    public int getProximity(final SvClusterData v1, final SvClusterData v2, boolean v1Start, boolean v2Start)
+    public static int getProximity(final SvClusterData v1, final SvClusterData v2, boolean v1Start, boolean v2Start)
     {
         // warning: no check for chromosome or arm
 //        if(!v1.chromosome(v1Start).equals(v2.chromosome(v2Start)))
@@ -264,27 +264,27 @@ public class SvUtilities {
         return Math.abs((int)v1.position(v1Start) - (int)v2.position(v2Start));
     }
 
-    public boolean isFromCentromere(final SvClusterData var)
+    public static boolean isFromCentromere(final SvClusterData var)
     {
         return (var.orientation(true) == 1) == (var.getStartArm() == CHROMOSOME_ARM_Q);
     }
 
-    public boolean isFromTelomere(final SvClusterData var)
+    public static boolean isFromTelomere(final SvClusterData var)
     {
         return (var.orientation(true) == 1) == (var.getStartArm() == CHROMOSOME_ARM_P);
     }
 
-    public boolean isToCentromere(final SvClusterData var)
+    public static boolean isToCentromere(final SvClusterData var)
     {
         return (var.orientation(false) == -1) == (var.getStartArm() == CHROMOSOME_ARM_P);
     }
 
-    public boolean isToTelomere(final SvClusterData var)
+    public static boolean isToTelomere(final SvClusterData var)
     {
         return (var.orientation(false) == -1) == (var.getStartArm() == CHROMOSOME_ARM_Q);
     }
 
-    public boolean sameChrArm(final SvClusterData v1, final SvClusterData v2, boolean v1Start, boolean v2Start)
+    public static boolean sameChrArm(final SvClusterData v1, final SvClusterData v2, boolean v1Start, boolean v2Start)
     {
         if(v1.position(v1Start) < 0 || v2.position(v1Start) < 0)
             return false;
@@ -292,7 +292,7 @@ public class SvUtilities {
         return v1.chromosome(v1Start).equals(v2.chromosome(v2Start)) && v1.arm(v1Start) == v2.arm(v2Start);
     }
 
-    public boolean areLinkedSection(final SvClusterData v1, final SvClusterData v2, boolean v1Start, boolean v2Start)
+    public static boolean areLinkedSection(final SvClusterData v1, final SvClusterData v2, boolean v1Start, boolean v2Start)
     {
         // must be same chromosomal arm to be considered facing
         if(!sameChrArm(v1, v2, v1Start, v2Start))
@@ -313,7 +313,7 @@ public class SvUtilities {
         return false;
     }
 
-    public boolean areSectionBreak(final SvClusterData v1, final SvClusterData v2, boolean v1Start, boolean v2Start)
+    public static boolean areSectionBreak(final SvClusterData v1, final SvClusterData v2, boolean v1Start, boolean v2Start)
     {
         // only relevant if on same chromosomal arm
         if(!sameChrArm(v1, v2, v1Start, v2Start))
@@ -334,7 +334,14 @@ public class SvUtilities {
         return false;
     }
 
-    public boolean breakendsMatch(final SvClusterData var1, final SvClusterData var2, boolean v1Start, boolean v2Start, int permittedDist)
+    public static boolean variantMatchesBreakend(final SvClusterData var, final SvBreakend breakend, boolean useStart, int permittedDist)
+    {
+        return breakend.chromosome().equals(var.chromosome(useStart))
+                && abs(breakend.position() - var.position(useStart)) <= permittedDist
+                && breakend.orientation() == var.orientation(useStart);
+    }
+
+    public static boolean breakendsMatch(final SvClusterData var1, final SvClusterData var2, boolean v1Start, boolean v2Start, int permittedDist)
     {
         if(var1.position(v1Start) < 0 || var2.position(v2Start)< 0)
             return false;
@@ -344,7 +351,7 @@ public class SvUtilities {
                 && var1.orientation(v1Start) == var2.orientation(v2Start);
     }
 
-    public int calcConsistency(final List<SvClusterData> svList)
+    public static int calcConsistency(final List<SvClusterData> svList)
     {
         int consistencyCount = 0;
 
@@ -357,17 +364,17 @@ public class SvUtilities {
         return consistencyCount;
     }
 
-    public final String getVariantChrArm(final SvClusterData var, boolean isStart)
+    public static final String getVariantChrArm(final SvClusterData var, boolean isStart)
     {
         return var.chromosome(isStart) + "_" + var.arm(isStart);
     }
 
-    public final String getChrFromChrArm(final String chrArm)
+    public static final String getChrFromChrArm(final String chrArm)
     {
         return chrArm.split("_")[0];
     }
 
-    public final String getArmFromChrArm(final String chrArm)
+    public static final String getArmFromChrArm(final String chrArm)
     {
         return chrArm.split("_")[1];
     }

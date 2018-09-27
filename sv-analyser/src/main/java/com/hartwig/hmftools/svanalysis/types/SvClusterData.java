@@ -63,6 +63,10 @@ public class SvClusterData
     public static String RELATION_TYPE_NEIGHBOUR = "NHBR";
     public static String RELATION_TYPE_OVERLAP = "OVRL";
 
+    // iterators for start and end data
+    public static int SVI_START = 0;
+    public static int SVI_END = 1;
+
     public SvClusterData(final StructuralVariantData svData)
     {
         mId = svData.id();
@@ -127,6 +131,8 @@ public class SvClusterData
     public final String chromosome(boolean isStart) { return isStart ? mSVData.startChromosome() : mSVData.endChromosome(); }
     public final long position(boolean isStart) { return isStart ? mSVData.startPosition() : mSVData.endPosition(); }
     public final byte orientation(boolean isStart){ return isStart ? mSVData.startOrientation() : mSVData.endOrientation(); }
+    public final double copyNumber(boolean isStart){ return isStart ? mSVData.adjustedStartCopyNumber() : mSVData.adjustedEndCopyNumber(); }
+    public final double copyNumberChange(boolean isStart){ return isStart ? mSVData.adjustedStartCopyNumberChange() : mSVData.adjustedEndCopyNumberChange(); }
     public final StructuralVariantType type() { return mSVData.type(); }
 
     public boolean isNullBreakend() { return mSVData.endChromosome().equals("0") && mSVData.endPosition() < 0; }
@@ -220,6 +226,8 @@ public class SvClusterData
         // means that both ends are within the same chromosomal arm
         return chromosome(true).equals(chromosome(false)) && mStartArm.equals(mEndArm);
     }
+
+    public static boolean isStart(int svIter) { return svIter == SVI_START; }
 
     public String getTransType() { return mTransType; }
     public int getTransLength() { return mTransLength; }

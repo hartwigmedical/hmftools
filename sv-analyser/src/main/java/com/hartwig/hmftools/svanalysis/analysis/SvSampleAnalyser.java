@@ -89,9 +89,9 @@ public class SvSampleAnalyser {
         mPerfCounter = new PerformanceCounter("Total");
 
         mPc1 = new PerformanceCounter("Annotate&Filter");
-        mPc2 = new PerformanceCounter("BaseDist");
-        mPc3 = new PerformanceCounter("Analyse");
-        mPc4 = new PerformanceCounter("ArmStats");
+        mPc2 = new PerformanceCounter("ArmsStats");
+        mPc3 = new PerformanceCounter("Clusters");
+        mPc4 = new PerformanceCounter("Analyse");
         mPc5 = new PerformanceCounter("WriteCSV");
 
         mPerfCounter.start();
@@ -146,32 +146,33 @@ public class SvSampleAnalyser {
         LOGGER.debug("sample({}) clustering {} variants", mSampleId, mAllVariants.size());
 
         mPc2.start();
-        mClusteringMethods.clusterByBaseDistance(mAllVariants, mClusters);
+        mClusteringMethods.setChromosomalArmStats(mAllVariants);
         mClusteringMethods.populateChromosomeBreakendMap(mAllVariants);
         mClusteringMethods.annotateNearestSvData();
         mPc2.stop();
 
         mPc3.start();
+        mClusteringMethods.clusterByBaseDistance(mAllVariants, mClusters);
+        mClusteringMethods.mergeClusters(mClusters);
+        mPc3.stop();
+
+        mPc4.start();
 
         for(SvCluster cluster : mClusters)
         {
             mAnalyser.setClusterStats(cluster);
-
             cluster.setUniqueBreakends();
 
             mAnalyser.findLinksAndChains(mSampleId, cluster);
             mAnalyser.resolveTransitiveSVs(mSampleId, cluster);
         }
 
-        mPc3.stop();
-
-        mPc4.start();
-        mClusteringMethods.setChromosomalArmStats(mAllVariants);
         mPc4.stop();
 
-        if(mGeneAnnotator.hasData()) {
-
-            for (SvClusterData var : mAllVariants) {
+        if(mGeneAnnotator.hasData())
+        {
+            for (SvClusterData var : mAllVariants)
+            {
                 mGeneAnnotator.addGeneData(mSampleId, var);
             }
 
@@ -293,6 +294,9 @@ public class SvSampleAnalyser {
                 writer.newLine();
             }
 
+            int lineCount = 0;
+            int svCount = 0;
+
             for(final SvCluster cluster : mClusters)
             {
                 int duplicateBECount = cluster.getDuplicateBECount();
@@ -301,6 +305,8 @@ public class SvSampleAnalyser {
                 for (final SvClusterData var : cluster.getSVs())
                 {
                     final StructuralVariantData dbData = var.getSvData();
+
+                    ++svCount;
 
                     String typeStr = var.isNullBreakend() ? "SGL" : var.type().toString();
                     writer.write(
@@ -398,7 +404,13 @@ public class SvSampleAnalyser {
                     }
                     */
 
+                    ++lineCount;
                     writer.newLine();
+
+                    if(svCount != lineCount)
+                    {
+                        LOGGER.error("inconsistent output");
+                    }
                 }
             }
 

@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_ENCLOSED;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_ENCLOSING;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_NEIGHBOURS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_OVERLAP;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.isOverlapping;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.svanalysis.types.SvClusterData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.svanalysis.types.SvClusterData.RELATION_TYPE_OVERLAP;
@@ -19,6 +22,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 import com.hartwig.hmftools.svanalysis.types.SvFootprint;
@@ -55,6 +59,8 @@ public class SvClusteringMethods {
         mChrBreakendMap = new HashMap();
     }
 
+    public double getMedianChrArmRate() { return mMedianChrArmRate; }
+
     public void clusterByBaseDistance(List<SvClusterData> allVariants, List<SvCluster> clusters)
     {
         mNextClusterId = 0;
@@ -84,7 +90,7 @@ public class SvClusteringMethods {
 
     private int getNextClusterId() { return mNextClusterId++; }
 
-    public void findLinkedSVsByDistance(SvCluster cluster, List<SvClusterData> unassignedVariants)
+    private void findLinkedSVsByDistance(SvCluster cluster, List<SvClusterData> unassignedVariants)
     {
         // look for any other SVs which form part of this cluster based on proximity
         int currentIndex = 0;
@@ -123,6 +129,165 @@ public class SvClusteringMethods {
                 ++currentIndex;
             }
         }
+    }
+
+    public void mergeClusters(List<SvCluster> clusters)
+    {
+        int initClusterCount = clusters.size();
+        int iterations = 0;
+
+        // the merge must be run a few times since as clusters grow, more single SVs and other clusters
+        // will then fall within the bounds of the new larger clusters
+        while(tryMergeClusters(clusters) && iterations < 5)
+        {
+            ++iterations;
+        }
+
+        if(clusters.size() < initClusterCount)
+        {
+            LOGGER.info("reduced cluster count({} -> {}) iterations({})", initClusterCount, clusters.size(), iterations);
+        }
+    }
+
+    private boolean tryMergeClusters(List<SvCluster> clusters)
+    {
+        // merge any overlapping complex clusters and return true if merges were found
+        int initClusterCount = clusters.size();
+
+        int index1 = 0;
+        while(index1 < clusters.size())
+        {
+            SvCluster cluster1 = clusters.get(index1);
+
+            List<SvArmGroup> armGroups1 = cluster1.getArmGroups();
+
+            int index2 = index1 + 1;
+            while(index2 < clusters.size())
+            {
+                SvCluster cluster2 = clusters.get(index2);
+                List<SvArmGroup> armGroups2 = cluster2.getArmGroups();
+
+                boolean canMergeArms = false;
+
+                for(SvArmGroup armGroup1 : armGroups1)
+                {
+                    for(SvArmGroup armGroup2 : armGroups2)
+                    {
+                        if (canMergeArmGroups(armGroup1, armGroup2))
+                        {
+                            LOGGER.debug("arm({} svs={}) overlaps with arm({} svs={})",
+                                    armGroup1.posId(), armGroup1.getCount(), armGroup2.posId(), armGroup2.getCount());
+
+                            canMergeArms = true;
+                            break;
+                        }
+                    }
+
+                    if(canMergeArms)
+                        break;
+                }
+
+                if(!canMergeArms)
+                {
+                    ++index2;
+                    continue;
+                }
+
+                LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={})",
+                        cluster1.getId(), cluster1.getCount(), cluster2.getId(), cluster2.getCount());
+
+                // merge the second cluster into the first
+                for(final SvClusterData var : cluster2.getSVs())
+                {
+                    cluster1.addVariant(var);
+                }
+
+                clusters.remove(index2);
+            }
+
+            ++index1;
+        }
+
+        return clusters.size() < initClusterCount;
+    }
+
+    private static int COMPLEX_CLUSTER_COUNT = 4;
+
+    private boolean canMergeArmGroups(final SvArmGroup group1, final SvArmGroup group2)
+    {
+        if(!group1.chromosome().equals(group2.chromosome()) || !group1.arm().equals(group2.arm()))
+            return false;
+
+        // don't merge single-variant clusters which have no overlap with the other cluster
+        final List<SvClusterData> list1 = group1.getSVs();
+        final List<SvClusterData> list2 = group2.getSVs();
+        int count1 = list1.size();
+        int count2 = list2.size();
+
+        final SvClusterData var1 = count1 == 1 ? list1.get(0) : null;
+        final SvClusterData var2 = count2 == 1 ? list2.get(0) : null;
+
+        boolean logDetails = false;
+        // if(group1.chromosome().equals("15") && group1.arm().equals("Q") && (var1 != null || var2 != null))
+        if(group1.chromosome().equals("15") && group1.arm().equals("Q")
+        && ((var1 != null && var1.id().equals("14437")) || (var2 != null && var2.id().equals("14437"))))
+        {
+            logDetails = true;
+        }
+
+        if(var1 != null && var1.getNearestSvRelation() == RELATION_TYPE_NEIGHBOUR)
+            return false;
+        else if(var2 != null && var2.getNearestSvRelation() == RELATION_TYPE_NEIGHBOUR)
+            return false;
+
+        // don't merge simple DUPs and DELs
+        if(var1 != null && var2 != null)
+        {
+            if((var1.type() == DUP || var1.type() == DEL) && (var2.type() == DUP || var2.type() == DEL))
+            {
+                if(logDetails)
+                    LOGGER.debug("vars({} and {}) are simple SVs", var1.posId(), var2.posId());
+
+                return false;
+            }
+        }
+
+        // check for overlapping SVs based on the outer start and end positions
+        if(group1.posEnd() < group2.posStart() || group1.posStart() > group2.posEnd())
+        {
+            if(logDetails)
+                LOGGER.debug("groups({} and {}) outside range", group1.posId(), group2.posId());
+
+            return false;
+        }
+
+        // there is either overlap for full enclosure for these 2 groups
+
+        if(count1 >= COMPLEX_CLUSTER_COUNT || count2 >= COMPLEX_CLUSTER_COUNT)
+            return true;
+
+        // if no Svs in a small cluster overlap with any of the SVs in the other cluster, don't merge
+        if(hasOverlappingSVs(list1, list2))
+            return true;
+
+        if(logDetails)
+            LOGGER.debug("no overlapping vars for groups({} and {}) outside range", group1.posId(), group2.posId());
+
+        return false;
+    }
+
+    private boolean hasOverlappingSVs(final List<SvClusterData> list1, final List<SvClusterData> list2)
+    {
+        for(final SvClusterData var1 : list1)
+        {
+            for(final SvClusterData var2 : list2)
+            {
+                if(isOverlapping(var1, var2))
+                    return true;
+            }
+        }
+
+        return false;
     }
 
     public void populateChromosomeBreakendMap(List<SvClusterData> allVariants)
@@ -225,12 +390,14 @@ public class SvClusteringMethods {
             String chrArmEnd = mUtils.getVariantChrArm(var,false);
 
             // ensure an entry exists
-            if (!mChrArmSvCount.containsKey(chrArmStart)) {
+            if (!mChrArmSvCount.containsKey(chrArmStart))
+            {
                 mChrArmSvCount.put(chrArmStart, 0);
             }
 
             // exclude LINE elements from back-ground rates
-            if(var.isStartLineElement().equals(NO_LINE_ELEMENT)) {
+            if(var.isStartLineElement().equals(NO_LINE_ELEMENT))
+            {
                 mChrArmSvCount.replace(chrArmStart, mChrArmSvCount.get(chrArmStart) + 1);
             }
 
@@ -250,8 +417,8 @@ public class SvClusteringMethods {
 
         // now determine the background rate by taking the median value from amongst the arms
         // factoring in the arms which have no Q (14-16, 21-22) and excluding the X & Ys
-        for(Map.Entry<String, Integer> entry : mChrArmSvCount.entrySet()) {
-
+        for(Map.Entry<String, Integer> entry : mChrArmSvCount.entrySet())
+        {
             final String chrArm = entry.getKey();
             final String chromosome = mUtils.getChrFromChrArm(chrArm);
             final String arm = mUtils.getArmFromChrArm(chrArm);
@@ -281,8 +448,8 @@ public class SvClusteringMethods {
         LOGGER.debug(String.format("median SV rate(%.2f)", mMedianChrArmRate));
 
         // now create another map of expected SV count per arm using the median rate
-        for(Map.Entry<String, Double> entry : mChrArmSvRate.entrySet()) {
-
+        for(Map.Entry<String, Double> entry : mChrArmSvRate.entrySet())
+        {
             final String chrArm = entry.getKey();
             final String chromosome = mUtils.getChrFromChrArm(chrArm);
             final String arm = mUtils.getArmFromChrArm(chrArm);

@@ -48,7 +48,6 @@ public class SvLinkedPair {
     public boolean firstUnlinkedOnStart() { return !mFirstLinkOnStart; }
     public boolean secondUnlinkedOnStart() { return !mSecondLinkOnStart; }
 
-
     public final String linkType() { return mLinkType; }
     public final int length() { return mLinkLength; }
 

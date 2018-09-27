@@ -292,8 +292,8 @@ public class SvChain {
         {
             final SvLinkedPair pair = mLinkedPairs.get(i);
 
-            LOGGER.debug("chain({}) {}: pair({}) {} len={}",
-                    mId, i, pair.toString(), pair.linkType(), pair.length());
+            LOGGER.debug("chain({}) {}: pair({}) {} len={} {}",
+                    mId, i, pair.toString(), pair.linkType(), pair.isInferred() ? "inferred" : "assembly", pair.length());
         }
     }
 

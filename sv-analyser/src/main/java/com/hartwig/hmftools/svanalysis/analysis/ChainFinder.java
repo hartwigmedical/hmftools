@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.MAX_COPY_NUMBER_DIFF;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.reduceInferredToShortestLinks;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 
 import java.util.List;
 
@@ -20,35 +23,87 @@ public class ChainFinder
 
     private static final Logger LOGGER = LogManager.getLogger(ChainFinder.class);
 
-    public static boolean assessClusterChaining(final String sampleId, SvCluster cluster, List<SvLinkedPair> assemblyLinkedPairs, List<SvLinkedPair> inferredLinkedPairs)
+    public static boolean assessClusterChaining(final String sampleId, SvCluster cluster, List<SvLinkedPair> assemblyLinkedPairs,
+            List<SvLinkedPair> inferredLinkedPairs)
     {
         // take the assembly links as a given and then try out the inferred links to see if a single chain can be formed from all the breakends
 
+        // for now only factor in templated insertions to form chains, even if they also exhibit DBs
+        List<SvLinkedPair> inferredTIs = Lists.newArrayList();
+        for (SvLinkedPair pair : inferredLinkedPairs)
+        {
+            if (pair.linkType() != LINK_TYPE_TI)
+                continue;
+
+            // check for similarity of copy number change
+            double cnc1 = pair.first().copyNumberChange(pair.firstLinkOnStart());
+            double cnc2 = pair.second().copyNumberChange(pair.secondLinkOnStart());
+            double copyNumberChangeDiff = abs(cnc1 - cnc2);
+
+            if(copyNumberChangeDiff > MAX_COPY_NUMBER_DIFF)
+                continue;
+
+            inferredTIs.add(pair);
+        }
+
+        List<SvClusterData> svList = Lists.newArrayList();
+        svList.addAll(cluster.getSVs());
+
+        if(!cluster.isConsistent())
+        {
+            // remove any non-applicable or suspect SVs
+            int index = 0;
+            while(index < svList.size())
+            {
+                final SvClusterData var = svList.get(index);
+                if(var.isNullBreakend())
+                {
+                    svList.remove(index);
+                    continue;
+                }
+
+                if(var.getSvData().ploidy() < 0.05)
+                {
+                    svList.remove(index);
+                    continue;
+                }
+
+                ++index;
+            }
+        }
+
         // check whether there are enough potential links to form full or near-to-full chains
-        if(!checkLinksPotential(cluster, assemblyLinkedPairs, inferredLinkedPairs))
+        if (!checkLinksPotential(svList, assemblyLinkedPairs, inferredTIs))
             return false;
 
-        int reqInferredLinks = cluster.getCount() - assemblyLinkedPairs.size();
+        int reqInferredLinks = svList.size() - assemblyLinkedPairs.size();
 
-        // for now if there are too many potential inferred links, cull the the list first
-        if(reqInferredLinks > 10 && inferredLinkedPairs.size() > 10)
+        // for now if there are too many potential inferred links, cull the list first
+        if (reqInferredLinks > 10 && inferredTIs.size() > 10)
         {
-            reduceInferredToShortestLinks(inferredLinkedPairs);
+            reduceInferredToShortestLinks(inferredTIs);
 
-            if(!checkLinksPotential(cluster, assemblyLinkedPairs, inferredLinkedPairs))
+            if (!checkLinksPotential(svList, assemblyLinkedPairs, inferredTIs))
                 return false;
         }
 
-        boolean hasChains = formChains(sampleId, cluster, assemblyLinkedPairs, inferredLinkedPairs);
+        if (!assemblyLinkedPairs.isEmpty() && cluster.getCount() > 4)
+        {
+            LOGGER.debug("sample({}) cluster({}) assemblyLinks({}) inferredLinks({} of total={}) svCount({}))",
+                    sampleId, cluster.getId(), assemblyLinkedPairs.size(), inferredTIs.size(), inferredLinkedPairs.size(), cluster.getCount());
+        }
+
+        boolean hasChains = formChains(sampleId, cluster, svList, assemblyLinkedPairs, inferredTIs);
 
         return hasChains;
     }
 
-    private static boolean checkLinksPotential(SvCluster cluster, List<SvLinkedPair> assemblyLinkedPairs, List<SvLinkedPair> inferredLinkedPairs)
+    private static boolean checkLinksPotential(List<SvClusterData> svList, List<SvLinkedPair> assemblyLinkedPairs,
+            List<SvLinkedPair> inferredLinkedPairs)
     {
-        int minRequiredLinks = (int)round((cluster.getCount() - 1) * MIN_CHAIN_PERCENT);
+        int minRequiredLinks = (int) round((svList.size() - 1) * MIN_CHAIN_PERCENT);
 
-        if(assemblyLinkedPairs.size() + inferredLinkedPairs.size() < minRequiredLinks)
+        if (assemblyLinkedPairs.size() + inferredLinkedPairs.size() < minRequiredLinks)
             return false;
 
         // count up unique linked-pair breakends to see whether there is the potential to form sufficiently long chains
@@ -57,19 +112,19 @@ public class ChainFinder
         allLinks.addAll(assemblyLinkedPairs);
         allLinks.addAll(inferredLinkedPairs);
 
-        for(final SvClusterData var : cluster.getSVs())
+        for (final SvClusterData var : svList)
         {
             boolean startMatched = false;
             boolean endMatched = false;
 
             for (final SvLinkedPair linkedPair : allLinks)
             {
-                if(linkedPair.hasVariantBE(var, true))
+                if (linkedPair.hasVariantBE(var, true))
                     startMatched = true;
-                else if(linkedPair.hasVariantBE(var, false))
+                else if (linkedPair.hasVariantBE(var, false))
                     endMatched = true;
 
-                if(startMatched && endMatched)
+                if (startMatched && endMatched)
                 {
                     ++matchedVarCount;
                     break;
@@ -80,7 +135,8 @@ public class ChainFinder
         return matchedVarCount >= minRequiredLinks;
     }
 
-    private static boolean formChains(final String sampleId, SvCluster cluster, List<SvLinkedPair> assemblyLinkedPairs, List<SvLinkedPair> inferredLinkedPairs)
+    private static boolean formChains(final String sampleId, SvCluster cluster, List<SvClusterData> svList, List<SvLinkedPair> assemblyLinkedPairs,
+            List<SvLinkedPair> inferredLinkedPairs)
     {
         // find all the combinations of linked pairs where every breakend end except at most 2 are covered by a linked pair
         List<SvLinkedPair> trialLinkedPairs = Lists.newArrayList();
@@ -90,22 +146,16 @@ public class ChainFinder
         List<SvChain> partialChains = Lists.newArrayList();
 
         // first form any partial chains out of the assembly linked pairs
-        for(SvLinkedPair linkedPair : assemblyLinkedPairs)
+        for (SvLinkedPair linkedPair : assemblyLinkedPairs)
         {
             addLinkToChains(linkedPair, partialChains);
         }
 
-        int clusterSvCount = cluster.getCount();
-
-        if(!assemblyLinkedPairs.isEmpty() && cluster.getCount() > 4)
-        {
-            LOGGER.debug("sample({}) cluster({}) assemblyLinks({}) inferredLinks({}) svCount({}))",
-                    sampleId, cluster.getId(), assemblyLinkedPairs.size(), inferredLinkedPairs.size(), clusterSvCount);
-        }
+        int clusterSvCount = svList.size();
 
         findCompletedLinks(clusterSvCount, assemblyLinkedPairs, assemblyLinkedPairs, partialChains, inferredLinkedPairs, 0, completeChains);
 
-        if(completeChains.isEmpty())
+        if (completeChains.isEmpty())
             return false;
 
         List<SvClusterData> chainedSVs = Lists.newArrayList();
@@ -113,25 +163,25 @@ public class ChainFinder
         // first check for any complete chains, and if found, add the shortest one
         int shortestLength = -1;
         SvChain shortestFullChain = null;
-        for(SvChain chain : completeChains)
+        for (SvChain chain : completeChains)
         {
-            if(chain.getLinkCount() < 2 || chain.getSvCount() != clusterSvCount)
-                continue; // only consider reciprocal chains if this short
-
             chain.recalcLength();
 
-            if(shortestFullChain == null || chain.getLength() < shortestLength)
+            if (chain.getLinkCount() < 2 || chain.getSvCount() != clusterSvCount)
+                continue; // only consider reciprocal chains if this short
+
+            if (shortestFullChain == null || chain.getLength() < shortestLength)
             {
                 shortestFullChain = chain;
                 shortestLength = chain.getLength();
             }
         }
 
-        if(shortestFullChain != null)
+        if (shortestFullChain != null)
         {
             shortestFullChain.setId(cluster.getChains().size());
 
-            LOGGER.info("sample({}) cluster({}) adding complete chain({}) length({}) with {} linked pairs:",
+            LOGGER.info("sample({}) cluster({}) adding complete chain({}) length({}) with {} linked pairs",
                     sampleId, cluster.getId(), shortestFullChain.getId(), shortestFullChain.getLength(), shortestFullChain.getLinkCount());
 
             shortestFullChain.logLinks();
@@ -142,7 +192,7 @@ public class ChainFinder
         }
 
         // otherwise add the longest mutually exclusive chains
-        while(!completeChains.isEmpty())
+        while (!completeChains.isEmpty())
         {
             int maxSvLength = -1;
             SvChain maxLengthChain = null;
@@ -152,7 +202,7 @@ public class ChainFinder
                 // cannot contain existing chained SV
                 boolean hasExistingSVs = false;
 
-                if(!chainedSVs.isEmpty())
+                if (!chainedSVs.isEmpty())
                 {
                     for (final SvClusterData var : chain.getSvList())
                     {
@@ -164,17 +214,17 @@ public class ChainFinder
                     }
                 }
 
-                if(hasExistingSVs)
+                if (hasExistingSVs)
                     continue;
 
-                if(chain.getSvCount() > maxSvLength)
+                if (chain.getSvCount() > maxSvLength)
                 {
                     maxSvLength = chain.getSvCount();
                     maxLengthChain = chain;
                 }
             }
 
-            if(maxLengthChain == null)
+            if (maxLengthChain == null)
                 break;
 
             maxLengthChain.setId(cluster.getChains().size());
@@ -196,29 +246,29 @@ public class ChainFinder
             int maxSvCount, final List<SvLinkedPair> requiredLinks, final List<SvLinkedPair> existingLinks,
             final List<SvChain> partialChains, List<SvLinkedPair> testLinks, int currentIndex, List<SvChain> completeChains)
     {
-        if(currentIndex >= testLinks.size())
+        if (currentIndex >= testLinks.size())
             return false;
 
-        LOGGER.debug("testLinkIndex({}) existingLinks({}) completedChains({}) partialChains({}) maxSVCount({})",
-                currentIndex, existingLinks.size(), completeChains.size(), partialChains.size(), maxSvCount);
+        LOGGER.debug("currentIndex({}) links(existing={} test={}) completedChains({}) partialChains({}) maxSVCount({})",
+                currentIndex, existingLinks.size(), testLinks.size(), completeChains.size(), partialChains.size(), maxSvCount);
 
         boolean linksAdded = false;
 
         // try adding each of the remaining links recursively to get a set of completely-links breakends
         // and if so, add this collection of potential chains
-        for(int i = currentIndex; i < testLinks.size(); ++i)
+        for (int i = currentIndex; i < testLinks.size(); ++i)
         {
             final SvLinkedPair testLink = testLinks.get(i);
 
             // check this ne test link against both the existing links and the existing chains
-            if(!canAddLinkedPair(existingLinks, partialChains, testLink, maxSvCount))
+            if (!canAddLinkedPair(existingLinks, partialChains, testLink, maxSvCount))
                 continue;
 
             linksAdded = true;
 
             // must be a deep copy to avoid changing the set of partial chains at this level of the search
             List<SvChain> workingChains = Lists.newArrayList();
-            for(final SvChain chain : partialChains)
+            for (final SvChain chain : partialChains)
             {
                 workingChains.add(new SvChain(chain));
             }
@@ -232,13 +282,13 @@ public class ChainFinder
             workingLinks.add(testLink);
 
             // reconcile chains together if possible
-            if(workingChains.size() > 1)
+            if (workingChains.size() > 1)
             {
                 for (int firstIndex = 0; firstIndex < workingChains.size(); ++firstIndex)
                 {
                     final SvChain firstChain = workingChains.get(firstIndex);
 
-                    if(firstChain.getSvCount() == maxSvCount || firstChain.isClosedLoop())
+                    if (firstChain.getSvCount() == maxSvCount || firstChain.isClosedLoop())
                         continue;
 
                     int nextIndex = firstIndex + 1;
@@ -246,7 +296,7 @@ public class ChainFinder
                     {
                         final SvChain nextChain = workingChains.get(nextIndex);
 
-                        if(nextChain.getSvCount() == maxSvCount || nextChain.isClosedLoop())
+                        if (nextChain.getSvCount() == maxSvCount || nextChain.isClosedLoop())
                         {
                             ++nextIndex;
                             continue;
@@ -266,20 +316,20 @@ public class ChainFinder
 
             // and check whether any chains are complete
             int chainIndex = 0;
-            while(chainIndex < workingChains.size())
+            while (chainIndex < workingChains.size())
             {
                 final SvChain chain = workingChains.get(chainIndex);
 
-                if(chain.getSvCount() < maxSvCount)
+                if (chain.getSvCount() < maxSvCount)
                 {
                     ++chainIndex;
                     continue;
                 }
 
                 boolean isDuplicate = false;
-                for(final SvChain completeChain : completeChains)
+                for (final SvChain completeChain : completeChains)
                 {
-                    if(completeChain.isIdentical(chain))
+                    if (completeChain.isIdentical(chain))
                     {
                         isDuplicate = true;
 
@@ -291,13 +341,14 @@ public class ChainFinder
 
                 boolean hasRequiredLinks = chain.hasLinks(requiredLinks);
 
-                if(!isDuplicate && hasRequiredLinks)
+                if (!isDuplicate && hasRequiredLinks)
                 {
                     chain.setId(completeChains.size());
                     completeChains.add(chain);
 
-                    LOGGER.debug("iters({} of {}) testLinkIndex({}) existingLinks({}) completedChains({}) workingChains({}) - adding complete chain({} len={}):",
-                            i, testLinks.size(), currentIndex, existingLinks.size(), completeChains.size(), workingChains.size(), chain.getId(), chain.getSvCount());
+                    LOGGER.debug("iters({} of {} current={}) existingLinks({}) completedChains({}) workingChains({}) - found complete chain({} svs={}):",
+                            i, testLinks.size(), currentIndex, existingLinks.size(), completeChains.size(), workingChains.size(), chain.getId(), chain
+                                    .getSvCount());
 
                     // LOGGER.debug("added complete potential chain:");
                     chain.logLinks();
@@ -306,38 +357,51 @@ public class ChainFinder
                 workingChains.remove(chainIndex);
             }
 
-            if(workingChains.isEmpty())
+            if (workingChains.isEmpty())
             {
                 // this search path is done so no need to keep searching for more links to add
                 break;
             }
 
-            LOGGER.debug("iters({} of {}) testLinkIndex({}) existingLinks({}) completedChains({}) workingChains({}) - continuing search",
+            LOGGER.debug("iters({} of {} current={}) existingLinks({}) completedChains({}) workingChains({}) - continuing search",
                     i, testLinks.size(), currentIndex, existingLinks.size(), completeChains.size(), workingChains.size());
 
             // continue the search, moving on to try adding the next test link
             boolean hasMoreTestLinks = findCompletedLinks(maxSvCount, requiredLinks, workingLinks, workingChains, testLinks, i + 1, completeChains);
+            boolean hasCompleteChains = hasCompleteChains(completeChains, maxSvCount);
 
-            if(!hasMoreTestLinks)
+            if (!hasMoreTestLinks && !hasCompleteChains)
             {
                 // add any sufficiently long chains since this search path has been exhausted
-                for(final SvChain chain : workingChains)
+                for (final SvChain chain : workingChains)
                 {
-                    double lengthPerc = chain.getSvCount() / (double)maxSvCount;
+                    double lengthPerc = chain.getSvCount() / (double) maxSvCount;
 
-                    if(lengthPerc >= MIN_CHAIN_PERCENT)
+                    if (lengthPerc >= MIN_CHAIN_PERCENT)
                     {
                         chain.setId(completeChains.size());
                         completeChains.add(chain);
 
-                        LOGGER.debug("iters({} of {}) testLinkIndex({}) existingLinks({}) completedChains({}) workingChains({}) - adding incomplete chain({} len={})",
-                                i, testLinks.size(), currentIndex, existingLinks.size(), completeChains.size(), workingChains.size(), chain.getId(), chain.getSvCount());
+                        LOGGER.debug("iters({} of {} current={}) existingLinks({}) completedChains({}) workingChains({}) - found incomplete chain({} svs={})",
+                                i, testLinks.size(), currentIndex, existingLinks.size(), completeChains.size(), workingChains.size(), chain.getId(), chain
+                                        .getSvCount());
                     }
                 }
             }
         }
 
         return linksAdded;
+    }
+
+    private static boolean hasCompleteChains(final List<SvChain> chains, int reqSvCount)
+    {
+        for (final SvChain chain : chains)
+        {
+            if (chain.getSvCount() == reqSvCount)
+                return true;
+        }
+
+        return false;
     }
 
     private static void addLinkToChains(SvLinkedPair linkedPair, List<SvChain> chains)

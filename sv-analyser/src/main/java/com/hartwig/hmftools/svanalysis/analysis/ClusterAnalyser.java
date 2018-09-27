@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.svanalysis.analysis.ChainFinder.assessClusterChaining;
 import static com.hartwig.hmftools.svanalysis.analysis.SvCluster.findLinkedPair;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.variantMatchesBreakend;
 import static com.hartwig.hmftools.svanalysis.types.SvClusterData.haveLinkedAssemblies;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_DIFF;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_LINK_ONLY;
@@ -27,6 +30,7 @@ public class ClusterAnalyser {
 
     public static int MIN_TEMPLATED_INSERTION_LENGTH = 30;
     private static int MAX_TEMPLATED_INSERTION_LENGTH = 500;
+    public static double MAX_COPY_NUMBER_DIFF = 0.25;
 
     public static String TRANS_TYPE_TRANS = "TRANS";
     public static String TRANS_TYPE_SPAN = "SPAN";
@@ -47,9 +51,8 @@ public class ClusterAnalyser {
         String clusterTypes = cluster.getClusterTypesAsString();
         cluster.setDesc(clusterTypes);
 
-        cluster.setChromosomalArmCount();
-
-        if(cluster.getCount() > 1) {
+        if(cluster.getCount() > 1)
+        {
             LOGGER.debug("cluster({}) svCount({}) desc({}) armCount({}) consistent({} count={})",
                     cluster.getId(), cluster.getCount(), cluster.getDesc(),
                     cluster.getChromosomalArmCount(), cluster.isConsistent(), cluster.getConsistencyCount());
@@ -71,7 +74,10 @@ public class ClusterAnalyser {
         // test out the inferred linked pairs to see which ones best explain the cluster
         boolean fullChainFound = false;
 
-        if(cluster.isConsistent() && !assemblyLinkedPairs.isEmpty())
+        // look at consistent or mostly consistent clusters (ie those with >= 90% consistency score)
+        boolean consistencyOk = cluster.isConsistent() || cluster.getConsistencyScore() <= 0.1;
+
+        if(consistencyOk && !assemblyLinkedPairs.isEmpty())
         {
             boolean hasFullChain = assessClusterChaining(sampleId, cluster, assemblyLinkedPairs, inferredLinkedPairs);
 
@@ -436,8 +442,8 @@ public class ClusterAnalyser {
         }
     }
 
-    public void resolveTransitiveSVs(final String sampleId, SvCluster cluster) {
-
+    public void resolveTransitiveSVs(final String sampleId, SvCluster cluster)
+    {
         if (cluster.getLinkedPairs().isEmpty() || cluster.getSpanningSVs().isEmpty())
             return;
 
@@ -638,72 +644,4 @@ public class ClusterAnalyser {
         }
     }
 
-
-    public void checkDuplicateBEProximity(final SvCluster cluster)
-    {
-        if(cluster.getCount() < 2 || cluster.getCount() > 4)
-        {
-            return;
-        }
-
-        if(cluster.getLineElementCount() > 0) {
-            return;
-        }
-
-        if(cluster.getDuplicateBECount() > 0) {
-            return;
-        }
-
-        List<Integer> permittedLens = Lists.newArrayList();
-        permittedLens.add(5);
-        permittedLens.add(10);
-        permittedLens.add(25);
-        permittedLens.add(50);
-        permittedLens.add(100);
-
-        for (int i = 0; i < cluster.getCount(); ++i) {
-
-            final SvClusterData var1 = cluster.getSVs().get(i);
-            SvBreakend be1 = new SvBreakend(var1.chromosome(true), var1.position(true), var1.orientation(true));
-            SvBreakend be2 = new SvBreakend(var1.chromosome(false), var1.position(false), var1.orientation(false));
-
-            for (int j = i+1; j < cluster.getCount(); ++j) {
-
-                final SvClusterData var2 = cluster.getSVs().get(j);
-
-                int matchCount = 0;
-
-                for (Integer permittedDist : permittedLens) {
-
-                    if (matchCount < 2 && cluster.variantMatchesBreakend(var2, be1, true, permittedDist)) {
-
-                        ++matchCount;
-                        LOGGER.info("clusterId({}) size({}) variants({} and {}) SS match on {}",
-                                cluster.getId(), cluster.getCount(), var1.id(), var2.id(), permittedDist);
-                    }
-                    if (matchCount < 2 && cluster.variantMatchesBreakend(var2, be1, false, permittedDist)) {
-
-                        ++matchCount;
-                        LOGGER.info("clusterId({}) size({}) variants({} and {}) SE match on {}",
-                                cluster.getId(), cluster.getCount(), var1.id(), var2.id(), permittedDist);
-                    }
-                    if (matchCount < 2 && cluster.variantMatchesBreakend(var2, be2, true, permittedDist)) {
-
-                        ++matchCount;
-                        LOGGER.info("clusterId({}) size({}) variants({} and {}) ES match on {}",
-                                cluster.getId(), cluster.getCount(), var1.id(), var2.id(), permittedDist);
-                    }
-                    if (matchCount < 2 && cluster.variantMatchesBreakend(var2, be2, false, permittedDist)) {
-
-                        ++matchCount;
-                        LOGGER.info("clusterId({}) size({}) variants({} and {}) EE match on {}",
-                                cluster.getId(), cluster.getCount(), var1.id(), var2.id(), permittedDist);
-                    }
-
-                    if(matchCount >= 2)
-                        break;
-                }
-            }
-        }
-    }
 }

@@ -23,7 +23,8 @@ public class PerformanceCounter {
 
     private static final double NANOS_IN_SECOND = 1000000000;
 
-    public PerformanceCounter(final String name) {
+    public PerformanceCounter(final String name)
+    {
         mName = name;
         mIsRunning = false;
         mStartTime = 0;
@@ -37,21 +38,23 @@ public class PerformanceCounter {
         return mName;
     }
 
-    public void start() {
+    public void start()
+    {
         mIsRunning = true;
         mStartTime = System.nanoTime();
     }
 
-    public void start(final String intervalName) {
+    public void start(final String intervalName)
+    {
         mIsRunning = true;
         mStartTime = System.nanoTime();
         mTimeNames.add(intervalName);
     }
 
-    public void stop() {
-        if (!mIsRunning) {
+    public void stop()
+    {
+        if (!mIsRunning)
             return;
-        }
 
         mIsRunning = false;
 
@@ -93,7 +96,10 @@ public class PerformanceCounter {
         logStats(true);
     }
 
-    public void logStats(boolean logIntervals) {
+    public void logStats(boolean logIntervals)
+    {
+        if(mTimes.isEmpty())
+            return;
 
         if(mTimes.size() > 1)
         {
@@ -113,16 +119,13 @@ public class PerformanceCounter {
             {
                 if(mTimes.size() == mTimeNames.size())
                 {
-                    LOGGER.info(String.format("PerfStats: interval(%s) time(%.3f)",
-                            mTimeNames.get(i), mTimes.get(i)));
+                    LOGGER.info(String.format("PerfStats: interval(%s) time(%.3f)", mTimeNames.get(i), mTimes.get(i)));
                 }
                 else
                 {
-                    LOGGER.info(String.format("PerfStats: interval %d: time(%.3f)",
-                            i, mTimes.get(i)));
+                    LOGGER.info(String.format("PerfStats: interval %d: time(%.3f)", i, mTimes.get(i)));
                 }
             }
         }
     }
-
 }
