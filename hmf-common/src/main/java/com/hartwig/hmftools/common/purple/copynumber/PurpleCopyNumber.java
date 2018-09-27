@@ -32,6 +32,10 @@ public abstract class PurpleCopyNumber implements CopyNumber {
         return Doubles.lessThan(averageActualBAF(), 0.50) ? 0 : Math.max(0, (1 - averageActualBAF()) * averageTumorCopyNumber());
     }
 
+    public long length() {
+        return end() - start();
+    }
+
     @Override
     public int value() {
         return (int) Math.max(0, Math.round(averageTumorCopyNumber()));
