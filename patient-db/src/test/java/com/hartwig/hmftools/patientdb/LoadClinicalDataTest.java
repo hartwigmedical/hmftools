@@ -49,7 +49,7 @@ public class LoadClinicalDataTest {
 
         EcrfModel cpctEcrfModel = EcrfModel.loadFromXMLNoFormStates(TEST_ECRF);
         assertEquals(1, cpctEcrfModel.patientCount());
-        assertEquals(1264, Lists.newArrayList(cpctEcrfModel.fields()).size());
+        assertEquals(1298, Lists.newArrayList(cpctEcrfModel.fields()).size());
 
         PatientReader cpctPatientReader = new CpctPatientReader(tumorLocationCurator,
                 CpctUtil.extractHospitalMap(cpctEcrfModel),
@@ -68,16 +68,16 @@ public class LoadClinicalDataTest {
 
     private static void assertPatient(@Nullable Patient patient) {
         assertNotNull(patient);
-        assertEquals("CPCT02000010", patient.patientIdentifier());
+        assertEquals("CPCT02000015", patient.patientIdentifier());
         assertEquals(0, patient.sequencedBiopsies().size());
 
         BaselineData baselineData = patient.baselineData();
         assertNotNull(baselineData);
-        assertEquals(new Integer(1999), baselineData.birthYear());
+        assertEquals(new Integer(1984), baselineData.birthYear());
         assertEquals("Gastrointestinal Stromal Tumors (GIST)", baselineData.curatedTumorLocation().searchTerm());
         assertEquals("female", baselineData.gender());
-        assertEquals(LocalDate.parse("2016-01-01", DATE_FORMATTER), baselineData.informedConsentDate());
-        assertEquals(LocalDate.parse("2017-09-27", DATE_FORMATTER), baselineData.registrationDate());
+        assertEquals(LocalDate.parse("2018-06-02", DATE_FORMATTER), baselineData.informedConsentDate());
+        assertEquals(LocalDate.parse("2018-12-10", DATE_FORMATTER), baselineData.registrationDate());
         assertNull(baselineData.deathDate());
         assertNull(baselineData.hospital());
 
@@ -95,7 +95,7 @@ public class LoadClinicalDataTest {
         assertEquals(1, biopsies.size());
         assertNull(biopsies.get(0).biopsyEvaluable());
         assertEquals("Yes", biopsies.get(0).biopsyTaken());
-        assertEquals(LocalDate.parse("2015-09-24", DATE_FORMATTER), biopsies.get(0).date());
+        assertEquals(LocalDate.parse("2017-07-14", DATE_FORMATTER), biopsies.get(0).date());
         assertEquals("abdomen", biopsies.get(0).site());
         assertEquals("left mesenterial", biopsies.get(0).location());
 
@@ -104,16 +104,16 @@ public class LoadClinicalDataTest {
         assertEquals("Yes", treatments.get(0).treatmentGiven());
         assertEquals("No", treatments.get(0).radiotherapyGiven());
         assertEquals(1, treatments.get(0).drugs().size());
-        assertEquals(LocalDate.parse("2017-04-10", DATE_FORMATTER), treatments.get(0).drugs().get(0).startDate());
+        assertEquals(LocalDate.parse("2014-11-16", DATE_FORMATTER), treatments.get(0).drugs().get(0).startDate());
         assertNull(treatments.get(0).drugs().get(0).endDate());
         assertEquals("Imatinib", treatments.get(0).drugs().get(0).name());
 
         List<BiopsyTreatmentResponseData> responses = patient.treatmentResponses();
-        assertEquals(4, responses.size());
+        assertEquals(7, responses.size());
         assertEquals("Yes", responses.get(0).measurementDone());
         assertNull(responses.get(0).boneOnlyDisease());
-        assertEquals(LocalDate.parse("2015-07-22", DATE_FORMATTER), responses.get(0).responseDate());
-        assertEquals(LocalDate.parse("2015-05-22", DATE_FORMATTER), responses.get(0).assessmentDate());
-        assertEquals("NE", responses.get(0).response());
+        assertEquals(LocalDate.parse("2012-05-21", DATE_FORMATTER), responses.get(0).responseDate());
+        assertEquals(LocalDate.parse("2015-08-30", DATE_FORMATTER), responses.get(1).assessmentDate());
+        assertEquals("SD", responses.get(0).response());
     }
 }

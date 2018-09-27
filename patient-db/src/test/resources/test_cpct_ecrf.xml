@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ODM FileType="Snapshot" FileOID="1.0" AsOfDateTime="2018-05-14T15:06:29+01:00"
-     CreationDateTime="2018-05-14T15:06:29+01:00"
+<ODM FileType="Snapshot" FileOID="1.0" AsOfDateTime="2018-09-25T15:24:34+01:00"
+     CreationDateTime="2018-09-25T15:24:34+01:00"
      SourceSystem="ALEAODMProcessor"
      ODMVersion="1.3.1">
     <Study OID="CPCT2">
@@ -10,7 +10,7 @@
             <ProtocolName>CPCT2</ProtocolName>
         </GlobalVariables>
         <BasicDefinitions/>
-        <MetaDataVersion OID="80" Name="80.0">
+        <MetaDataVersion OID="97" Name="97.0">
             <Protocol>
                 <StudyEventRef StudyEventOID="SE.BASELINE" OrderNumber="1" Mandatory="No"/>
                 <StudyEventRef StudyEventOID="SE.TREATMENT" OrderNumber="2" Mandatory="No"/>
@@ -43,9 +43,7 @@
             <StudyEventDef OID="SE.ANICOAGULANTS" Name="Anti Coagulants" Repeating="No" Type="Common">
                 <FormRef FormOID="FRM.ANTICOAGULANTS" OrderNumber="14" Mandatory="No"/>
             </StudyEventDef>
-            <StudyEventDef OID="SE.ENDSTUDY" Name="Neoadjuvant treatment, recurrence and survival"
-                           Repeating="No"
-                           Type="Common">
+            <StudyEventDef OID="SE.ENDSTUDY" Name="Survival" Repeating="No" Type="Common">
                 <FormRef FormOID="FRM.DEATH" OrderNumber="15" Mandatory="No"/>
                 <FormRef FormOID="FRM.ENDSTUDY" OrderNumber="18" Mandatory="No"/>
                 <FormRef FormOID="FRM.NEOADTRT" OrderNumber="25" Mandatory="No"/>
@@ -371,6 +369,29 @@
                 <ItemRef ItemOID="FLD.INFORMEDCONSENT.TSTAM83" Mandatory="No"/>
                 <ItemRef ItemOID="FLD.INFORMEDCONSENT.TSTAM88" Mandatory="No"/>
                 <ItemRef ItemOID="FLD.INFORMEDCONSENT.TSTAM89" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.TAMD101" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.TAMD102" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.TAMD103" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.TAMD104" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.TAMD105" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.TAMD106" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.TAMD107" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.TAMD108" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.ICBIOPYN" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.ICBIOPZH" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.ICBPSKZK" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.ICBPSKK" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.CHECKIC" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.CHECKIC2" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.TAMD111" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.TAMD112" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.TAMD113" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.TAMD114" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.TAMD115" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.TAMD116" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.TAMD117" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.TAMD118" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.INFORMEDCONSENT.TAMD119" Mandatory="No"/>
             </ItemGroupDef>
             <ItemGroupDef OID="GRP.DEMOGRAPHY.AuditTrailEntries" Name="AuditTrailEntries" Repeating="Yes"
                           SASDatasetName="AUDITTR1">
@@ -505,6 +526,7 @@
                 <ItemRef ItemOID="FLD.CARCINOMA.group6" Mandatory="No"/>
                 <ItemRef ItemOID="FLD.CARCINOMA.group7" Mandatory="No"/>
                 <ItemRef ItemOID="FLD.CARCINOMA.PTUMLOCS" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.CARCINOMA.CPTCHCK" Mandatory="No"/>
             </ItemGroupDef>
             <ItemGroupDef OID="GRP.CARCINOMA.CPCTNON" Name="CPCTNON" Repeating="Yes"
                           SASDatasetName="CPCTNON">
@@ -750,6 +772,9 @@
                 <ItemRef ItemOID="FLD.SELCRIT.NICDTCES" Mandatory="No"/>
                 <ItemRef ItemOID="FLD.SELCRIT.NHOSPITAL" Mandatory="No"/>
                 <ItemRef ItemOID="FLD.SELCRIT.NPATSTNR" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.SELCRIT.field1" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.SELCRIT.SELPTM" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.SELCRIT.SELPTMOS" Mandatory="No"/>
                 <ItemRef ItemOID="FLD.SELCRIT.NELIG" Mandatory="No"/>
                 <ItemRef ItemOID="FLD.SELCRIT.NREGDTC" Mandatory="No"/>
                 <ItemRef ItemOID="FLD.SELCRIT.NINC24" Mandatory="No"/>
@@ -760,6 +785,11 @@
                 <ItemRef ItemOID="FLD.SELCRIT.NINC2" Mandatory="No"/>
                 <ItemRef ItemOID="FLD.SELCRIT.NINC3" Mandatory="No"/>
                 <ItemRef ItemOID="FLD.SELCRIT.NINC4" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.SELCRIT.NINCO" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.SELCRIT.NINC1N" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.SELCRIT.NINC1NE" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.SELCRIT.NINC1N1" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.SELCRIT.NINC1NE1" Mandatory="No"/>
                 <ItemRef ItemOID="FLD.SELCRIT.NPAGECONTROL" Mandatory="No"/>
                 <ItemRef ItemOID="FLD.SELCRIT.NCPCT2" Mandatory="No"/>
                 <ItemRef ItemOID="FLD.SELCRIT.NCPCT5" Mandatory="No"/>
@@ -1169,6 +1199,8 @@
                 <ItemRef ItemOID="FLD.TRTAFTER.CPCTPATNUM" Mandatory="No"/>
                 <ItemRef ItemOID="FLD.TRTAFTER.OTHPATNUM" Mandatory="No"/>
                 <ItemRef ItemOID="FLD.TRTAFTER.BASELINEDTCCHECK" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.TRTAFTER.A12RNST" Mandatory="No"/>
+                <ItemRef ItemOID="FLD.TRTAFTER.A12RNSTS" Mandatory="No"/>
             </ItemGroupDef>
             <ItemGroupDef OID="GRP.TRTAFTER.SYSPOSTBIO" Name="SYSPOSTBIO" Repeating="Yes"
                           SASDatasetName="SYSPOSTB">
@@ -1638,7 +1670,7 @@
                      SASFieldName="BASELINE"/>
             <ItemDef OID="FLD.INFORMEDCONSENT.ICDTC" Name="Date of written informed consent"
                      DataType="date"
-                     Length="200"
+                     Length="10"
                      SASFieldName="ICDTC"/>
             <ItemDef OID="FLD.INFORMEDCONSENT.ADCONSENT" Name="Additional Consents given?"
                      DataType="integer"
@@ -1779,6 +1811,158 @@
                      Length="10"
                      SASFieldName="TSTAM89">
                 <CodeListRef CodeListOID="C.INFORMEDCONSENT.C_TSTAM89"/>
+            </ItemDef>
+            <ItemDef OID="FLD.INFORMEDCONSENT.TAMD101"
+                     Name="Ik wil van alle toevalsbevindingen op de hoogte gebracht worden, ook als deze kunnen leiden tot aandoeningen die mogelijk niet voorkomen of behandeld kunnen worden (bijv. Alzheimer)"
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="TAMD101">
+                <CodeListRef CodeListOID="C.INFORMEDCONSENT.C_TAMD101"/>
+            </ItemDef>
+            <ItemDef OID="FLD.INFORMEDCONSENT.TAMD102"
+                     Name="Ik wil alleen op de hoogte gebracht worden van toevalsbevindingen die kunnen leiden tot aandoeningen die mogelijk voorkomen of behandeld kunnen worden (bijv. BRCA mutatie)."
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="TAMD102">
+                <CodeListRef CodeListOID="C.INFORMEDCONSENT.C_TAMD102"/>
+            </ItemDef>
+            <ItemDef OID="FLD.INFORMEDCONSENT.TAMD103"
+                     Name="Ik wil zelf niet van toevalsbevindingen op de hoogte gebracht worden, maar sta mijn familie wel toe om deze informatie na mijn overlijden op te vragen (familie wordt niet automatisch ingelicht, alleen na actief opvragen)."
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="TAMD103">
+                <CodeListRef CodeListOID="C.INFORMEDCONSENT.C_TAMD103"/>
+            </ItemDef>
+            <ItemDef OID="FLD.INFORMEDCONSENT.TAMD104"
+                     Name="Ik wil zelf niet van toevalsbevindingen op de hoogte gebracht worden, en wil ook niet dat mijn familie deze informatie na mijn overlijden opvraagt"
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="TAMD104">
+                <CodeListRef CodeListOID="C.INFORMEDCONSENT.C_TAMD104"/>
+            </ItemDef>
+            <ItemDef OID="FLD.INFORMEDCONSENT.TAMD105"
+                     Name="Ik geef wel / geen / n.v.t. toestemming voor het afnemen en  gebruik  van kwaliteit van leven-vragenlijsten voor wetenschappelijke doeleinden gerelateerd aan de algemene doelstelling van het CPCT-02 bioptenprotocol (optionele TANGO studie voor alle patiën"
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="TAMD105">
+                <CodeListRef CodeListOID="C.INFORMEDCONSENT.C_TAMD105"/>
+            </ItemDef>
+            <ItemDef OID="FLD.INFORMEDCONSENT.TAMD106"
+                     Name="Ik geef wel / geen / n.v.t. toestemming om extra bloed af te nemen voor tumor DNA-analyse (optionele CT-DNA studie bij patiënten met prostaatkanker of borstkanker)"
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="TAMD106">
+                <CodeListRef CodeListOID="C.INFORMEDCONSENT.C_TAMD106"/>
+            </ItemDef>
+            <ItemDef OID="FLD.INFORMEDCONSENT.TAMD107"
+                     Name="Ik geef wel / geen toestemming voor (het mij opnieuw benaderen voor het nemen van) tumorbiopten tijdens en na staken van de behandeling (van toepassing voor alle patiënten. Voor patiënten met een hersentumor: enkel indien een operatie vanuit standaardzorg"
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="TAMD107">
+                <CodeListRef CodeListOID="C.INFORMEDCONSENT.C_TAMD107"/>
+            </ItemDef>
+            <ItemDef OID="FLD.INFORMEDCONSENT.TAMD108"
+                     Name="Ik geef wel / geen toestemming om mijn lichaamsmateriaal voor onbepaalde tijd na afloop van dit onderzoek te bewaren, zodat dit in de toekomst misschien gebruikt kan worden voor nieuw onderzoek (van toepassing op alle patiënten)"
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="TAMD108">
+                <CodeListRef CodeListOID="C.INFORMEDCONSENT.C_TAMD108"/>
+            </ItemDef>
+            <ItemDef OID="FLD.INFORMEDCONSENT.ICBIOPYN"
+                     Name="Did the patient participate in the CPCT-02 study before, in another hospital?"
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="ICBIOPYN">
+                <CodeListRef CodeListOID="C.INFORMEDCONSENT.C_ICBIOPYN"/>
+            </ItemDef>
+            <ItemDef OID="FLD.INFORMEDCONSENT.ICBIOPZH" Name="If yes, in which hospital?"
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="ICBIOPZH">
+                <CodeListRef CodeListOID="C.INFORMEDCONSENT.C_ICBIOPZH"/>
+            </ItemDef>
+            <ItemDef OID="FLD.INFORMEDCONSENT.ICBPSKZK"
+                     Name="What was the patients subjectkey in this previous hospital? Hospital code"
+                     DataType="text"
+                     Length="10"
+                     SASFieldName="ICBPSKZK"/>
+            <ItemDef OID="FLD.INFORMEDCONSENT.ICBPSKK"
+                     Name="What was the patients subjectkey in this previous hospital? subject key"
+                     DataType="text"
+                     Length="10"
+                     SASFieldName="ICBPSKK"/>
+            <ItemDef OID="FLD.INFORMEDCONSENT.CHECKIC"
+                     Name="Please select only one option at amendment 11"
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="CHECKIC"/>
+            <ItemDef OID="FLD.INFORMEDCONSENT.CHECKIC2"
+                     Name="Please select only one option at amendment 12"
+                     DataType="text"
+                     Length="10"
+                     SASFieldName="CHECKIC2"/>
+            <ItemDef OID="FLD.INFORMEDCONSENT.TAMD111"
+                     Name="Ik wil van alle toevalsbevindingen op de hoogte gebracht worden, ook als deze kunnen leiden tot aandoeningen die mogelijk niet voorkomen of behandeld kunnen worden (bijv. Alzheimer)"
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="TAMD111">
+                <CodeListRef CodeListOID="C.INFORMEDCONSENT.C_TAMD111"/>
+            </ItemDef>
+            <ItemDef OID="FLD.INFORMEDCONSENT.TAMD112"
+                     Name="Ik wil alleen op de hoogte gebracht worden van toevalsbevindingen die kunnen leiden tot aandoeningen die mogelijk voorkomen of behandeld kunnen worden (bijv. BRCA mutatie)."
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="TAMD112">
+                <CodeListRef CodeListOID="C.INFORMEDCONSENT.C_TAMD112"/>
+            </ItemDef>
+            <ItemDef OID="FLD.INFORMEDCONSENT.TAMD113"
+                     Name="Ik wil zelf niet van toevalsbevindingen op de hoogte gebracht worden, maar sta mijn familie wel toe om deze informatie na mijn overlijden op te vragen (familie wordt niet automatisch ingelicht, alleen na actief opvragen)."
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="TAMD113">
+                <CodeListRef CodeListOID="C.INFORMEDCONSENT.C_TAMD113"/>
+            </ItemDef>
+            <ItemDef OID="FLD.INFORMEDCONSENT.TAMD114"
+                     Name="Ik wil zelf niet van toevalsbevindingen op de hoogte gebracht worden, en wil ook niet dat mijn familie deze informatie na mijn overlijden opvraagt"
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="TAMD114">
+                <CodeListRef CodeListOID="C.INFORMEDCONSENT.C_TAMD114"/>
+            </ItemDef>
+            <ItemDef OID="FLD.INFORMEDCONSENT.TAMD115"
+                     Name="Ik geef wel / geen / n.v.t. toestemming voor het afnemen en  gebruik  van kwaliteit van leven-vragenlijsten voor wetenschappelijke doeleinden gerelateerd aan de algemene doelstelling van het CPCT-02 bioptenprotocol (optionele TANGO studie voor alle patiën"
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="TAMD115">
+                <CodeListRef CodeListOID="C.INFORMEDCONSENT.C_TAMD115"/>
+            </ItemDef>
+            <ItemDef OID="FLD.INFORMEDCONSENT.TAMD116"
+                     Name="Ik geef wel / geen / n.v.t. toestemming om extra bloed af te nemen voor tumor DNA-analyse (optionele CT-DNA studie bij patiënten met prostaatkanker of borstkanker)"
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="TAMD116">
+                <CodeListRef CodeListOID="C.INFORMEDCONSENT.C_TAMD116"/>
+            </ItemDef>
+            <ItemDef OID="FLD.INFORMEDCONSENT.TAMD117"
+                     Name="Ik geef wel / geen toestemming voor (het mij opnieuw benaderen voor het nemen van) tumorbiopten tijdens en na staken van de behandeling (van toepassing voor alle patiënten. Voor patiënten met een hersentumor: enkel indien een operatie vanuit standaardzorg"
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="TAMD117">
+                <CodeListRef CodeListOID="C.INFORMEDCONSENT.C_TAMD117"/>
+            </ItemDef>
+            <ItemDef OID="FLD.INFORMEDCONSENT.TAMD118"
+                     Name="Ik geef wel / geen toestemming om mijn lichaamsmateriaal voor onbepaalde tijd na afloop van dit onderzoek te bewaren, zodat dit in de toekomst misschien gebruikt kan worden voor nieuw onderzoek (van toepassing op alle patiënten)"
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="TAMD118">
+                <CodeListRef CodeListOID="C.INFORMEDCONSENT.C_TAMD118"/>
+            </ItemDef>
+            <ItemDef OID="FLD.INFORMEDCONSENT.TAMD119"
+                     Name="Ik geef wel / geen toestemming om via mijn behandelaar te benaderen indien er geneermiddelenstudies zijn die speciaal voor mensen met mijn DNA profiel geschikt zijn"
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="TAMD119">
+                <CodeListRef CodeListOID="C.INFORMEDCONSENT.C_TAMD119"/>
             </ItemDef>
             <ItemDef OID="FLD.DEMOGRAPHY.FieldModified" Name="FieldModified" DataType="text"
                      Length="80"
@@ -2009,7 +2193,6 @@
                      Length="10"
                      SASFieldName="HNONCPCT">
                 <CodeListRef CodeListOID="C.CARCINOMA.C_NONCPCT"/>
-                <CodeListRef CodeListOID="C.CARCINOMA.C_NONCPCT"/>
             </ItemDef>
             <ItemDef OID="FLD.CARCINOMA.PLATFORM" Name="Plattform" DataType="integer" Length="10"
                      SASFieldName="PLATFORM">
@@ -2025,10 +2208,8 @@
                      SASFieldName="ENTRYSTA">
                 <CodeListRef CodeListOID="C.CARCINOMA.C_ENTRYSTAGE"/>
             </ItemDef>
-            <ItemDef OID="FLD.CARCINOMA.ENTRYSTAGESP"
-                     Name="Stage of cancer at time of study entry, specify if other or unknown"
-                     DataType="text"
-                     Length="200"
+            <ItemDef OID="FLD.CARCINOMA.ENTRYSTAGESP" Name="ENTRYSTAGESP" DataType="text"
+                     Length="80"
                      SASFieldName="ENTRYST0"/>
             <ItemDef OID="FLD.CARCINOMA.BASELDTCCHECK" Name="BASELDTCCHECK" DataType="text"
                      Length="80"
@@ -2056,6 +2237,8 @@
                      DataType="text"
                      Length="10"
                      SASFieldName="PTUMLOCS"/>
+            <ItemDef OID="FLD.CARCINOMA.CPTCHCK" Name="CPTCHCK" DataType="text" Length="80"
+                     SASFieldName="CPTCHCK"/>
             <ItemDef OID="FLD.CARCINOMA.NONCPCTLNR" Name="Line number" DataType="integer"
                      Length="10"
                      SASFieldName="NONCPCTL"/>
@@ -2303,7 +2486,6 @@
                      DataType="integer"
                      Length="10"
                      SASFieldName="LBBIOBA2">
-                <CodeListRef CodeListOID="C.BIOBANKBLOOD.C_BIOBANKAMOUNT"/>
                 <CodeListRef CodeListOID="C.BIOBANKBLOOD.C_BIOBANKAMOUNT"/>
             </ItemDef>
             <ItemDef OID="FLD.BIOBANKBLOOD.DTINFC" Name="DTINFC" DataType="text" Length="80"
@@ -2701,6 +2883,19 @@
             </ItemDef>
             <ItemDef OID="FLD.SELCRIT.NPATSTNR" Name="NPATSTNR" DataType="text" Length="80"
                      SASFieldName="NPATSTNR"/>
+            <ItemDef OID="FLD.SELCRIT.field1" Name="field1" DataType="text" Length="80"
+                     SASFieldName="FIELD1"/>
+            <ItemDef OID="FLD.SELCRIT.SELPTM"
+                     Name="Primary tumor localization (according to Disease Site Codes)"
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="SELPTM">
+                <CodeListRef CodeListOID="C.SELCRIT.C_SELPTM"/>
+            </ItemDef>
+            <ItemDef OID="FLD.SELCRIT.SELPTMOS" Name="Specify other primary tumor localization"
+                     DataType="text"
+                     Length="10"
+                     SASFieldName="SELPTMOS"/>
             <ItemDef OID="FLD.SELCRIT.NELIG" Name="Is patient eligible?" DataType="integer"
                      Length="10"
                      SASFieldName="NELIG">
@@ -2728,7 +2923,7 @@
                 <CodeListRef CodeListOID="C.SELCRIT.C_NINC1"/>
             </ItemDef>
             <ItemDef OID="FLD.SELCRIT.NINC2"
-                     Name="Measurable metastatic or locally advanced lesion(s), according to RECIST 1.1 criteria. For breast and prostate cancer patients with bone only disease, no measurable lesions need to be present. patients need to have evaluable disease, bone metastases that"
+                     Name="Measurable metastatic or locally advanced lesion(s), according to RECIST 1.1 criteria (or RANO criteria if applicable).. For breast and prostate cancer patients with bone only disease, no measurable lesions need to be present. patients need to have evalua"
                      DataType="integer"
                      Length="10"
                      SASFieldName="NINC2">
@@ -2747,6 +2942,34 @@
                      Length="10"
                      SASFieldName="NINC4">
                 <CodeListRef CodeListOID="C.SELCRIT.C_NINC4"/>
+            </ItemDef>
+            <ItemDef OID="FLD.SELCRIT.NINCO" Name="NINCO" DataType="text" Length="80"
+                     SASFieldName="NINCO"/>
+            <ItemDef OID="FLD.SELCRIT.NINC1N"
+                     Name="Patients with the following locally advanced or metastatic cancer for whom a new line of therapy is inidicated below  within 3 months after biopsy (see also table 2):"
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="NINC1N">
+                <CodeListRef CodeListOID="C.SELCRIT.C_NINC1N"/>
+            </ItemDef>
+            <ItemDef OID="FLD.SELCRIT.NINC1NE" Name="Which criteria applies for this patient:"
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="NINC1NE">
+                <CodeListRef CodeListOID="C.SELCRIT.C_NINC1NE"/>
+            </ItemDef>
+            <ItemDef OID="FLD.SELCRIT.NINC1N1"
+                     Name="Patients with the following locally advanced or metastatic cancer for whom a new line of therapy is inidicated below within 3 months after biopsy (see also table 2):"
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="NINC1N1">
+                <CodeListRef CodeListOID="C.SELCRIT.C_NINC1N1"/>
+            </ItemDef>
+            <ItemDef OID="FLD.SELCRIT.NINC1NE1" Name="Which criteria applies for this patient"
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="NINC1NE1">
+                <CodeListRef CodeListOID="C.SELCRIT.C_NINC1NE1"/>
             </ItemDef>
             <ItemDef OID="FLD.SELCRIT.NPAGECONTROL" Name="NPAGECONTROL" DataType="text" Length="80"
                      SASFieldName="NPAGECON"/>
@@ -3343,7 +3566,6 @@
             <ItemDef OID="FLD.ADVERSEEVENT.ASAE" Name="SAE?" DataType="integer" Length="10"
                      SASFieldName="ASAE">
                 <CodeListRef CodeListOID="C.ADVERSEEVENT.C_SAE"/>
-                <CodeListRef CodeListOID="C.ADVERSEEVENT.C_SAE"/>
             </ItemDef>
             <ItemDef OID="FLD.ADVERSEEVENT.ADVERSEEVENTTEST" Name="Estimated  Start Date"
                      DataType="text"
@@ -3681,6 +3903,18 @@
             <ItemDef OID="FLD.TRTAFTER.BASELINEDTCCHECK" Name="BASELINEDTCCHECK" DataType="text"
                      Length="80"
                      SASFieldName="BASELIN0"/>
+            <ItemDef OID="FLD.TRTAFTER.A12RNST"
+                     Name="Reason that no systemic treatment is started after biopsy is taken"
+                     DataType="integer"
+                     Length="10"
+                     SASFieldName="A12RNST">
+                <CodeListRef CodeListOID="C.TRTAFTER.C_A12RNST"/>
+            </ItemDef>
+            <ItemDef OID="FLD.TRTAFTER.A12RNSTS"
+                     Name="Other reason that no systemic treatment is started after biopsy is taken"
+                     DataType="text"
+                     Length="10"
+                     SASFieldName="A12RNSTS"/>
             <ItemDef OID="FLD.TRTAFTER.SYSREGPOST" Name="Drugs name, other" DataType="text"
                      Length="200"
                      SASFieldName="SYSREGPO"/>
@@ -3695,11 +3929,9 @@
             <ItemDef OID="FLD.TRTAFTER.SYSTYPEOTHPOST" Name="SYSTYPEOTHPOST" DataType="text"
                      Length="80"
                      SASFieldName="SYSTYPEO"/>
-            <ItemDef OID="FLD.TRTAFTER.SYSCCYCLPOST" Name="Number of cycles" DataType="integer"
-                     Length="10"
+            <ItemDef OID="FLD.TRTAFTER.SYSCCYCLPOST" Name="SYSCCYCLPOST" DataType="text" Length="80"
                      SASFieldName="SYSCCYCL"/>
-            <ItemDef OID="FLD.TRTAFTER.CUMDOSE" Name="Cumulative Dose" DataType="integer"
-                     Length="10"
+            <ItemDef OID="FLD.TRTAFTER.CUMDOSE" Name="CUMDOSE" DataType="text" Length="80"
                      SASFieldName="CUMDOSE"/>
             <ItemDef OID="FLD.TRTAFTER.SYSSTDT" Name="Start date" DataType="date" Length="200"
                      SASFieldName="SYSSTDT"/>
@@ -3724,12 +3956,9 @@
                      DataType="text"
                      Length="200"
                      SASFieldName="ENDOTHRE"/>
-            <ItemDef OID="FLD.TRTAFTER.UNKNOWNST" Name="Select if UNKNOWN/NA" DataType="integer"
-                     Length="10"
-                     SASFieldName="UNKNOWNS">
-                <CodeListRef CodeListOID="C.TRTAFTER.C_UNKNOWNST"/>
-            </ItemDef>
-            <ItemDef OID="FLD.TRTAFTER.DAIDOSE" Name="Daily dose" DataType="integer" Length="10"
+            <ItemDef OID="FLD.TRTAFTER.UNKNOWNST" Name="UNKNOWNST" DataType="text" Length="80"
+                     SASFieldName="UNKNOWNS"/>
+            <ItemDef OID="FLD.TRTAFTER.DAIDOSE" Name="DAIDOSE" DataType="text" Length="80"
                      SASFieldName="DAIDOSE"/>
             <ItemDef OID="FLD.TRTAFTER.DAIUNITS" Name="Daily dosis units" DataType="text"
                      Length="200"
@@ -3739,11 +3968,8 @@
                      SASFieldName="PLANNEDT">
                 <CodeListRef CodeListOID="C.TRTAFTER.C_PLANNEDTRT"/>
             </ItemDef>
-            <ItemDef OID="FLD.TRTAFTER.TRTATI" Name="Treatment intent" DataType="integer"
-                     Length="10"
-                     SASFieldName="TRTATI">
-                <CodeListRef CodeListOID="C.TRTAFTER.C_TRTATI"/>
-            </ItemDef>
+            <ItemDef OID="FLD.TRTAFTER.TRTATI" Name="TRTATI" DataType="text" Length="80"
+                     SASFieldName="TRTATI"/>
             <ItemDef OID="FLD.TRTAFTER.RADIOSITE" Name="Radiotherapy, Site" DataType="text"
                      Length="200"
                      SASFieldName="RADIOSIT"/>
@@ -4041,7 +4267,6 @@
                      Length="10"
                      SASFieldName="LBBIOAMT">
                 <CodeListRef CodeListOID="C.BOIBANKDNA.C_BIOBANKAMOUNT"/>
-                <CodeListRef CodeListOID="C.BOIBANKDNA.C_BIOBANKAMOUNT"/>
             </ItemDef>
             <ItemDef OID="FLD.BOIBANKDNA.group1" Name="group1" DataType="text" Length="80"
                      SASFieldName="GROUP116"/>
@@ -4229,7 +4454,6 @@
                      Length="10"
                      SASFieldName="FSAE">
                 <CodeListRef CodeListOID="C.FOLLOWUP.C_SAE"/>
-                <CodeListRef CodeListOID="C.FOLLOWUP.C_SAE"/>
             </ItemDef>
             <ItemDef OID="FLD.FOLLOWUP.group1" Name="group1" DataType="text" Length="80"
                      SASFieldName="GROUP118"/>
@@ -4291,7 +4515,6 @@
                      DataType="integer"
                      Length="10"
                      SASFieldName="NONCPCT">
-                <CodeListRef CodeListOID="C.BIOPS.C_NONCPCT"/>
                 <CodeListRef CodeListOID="C.BIOPS.C_NONCPCT"/>
             </ItemDef>
             <ItemDef OID="FLD.BIOPS.ALLSITES" Name="ALLSITES" DataType="text" Length="80"
@@ -4448,11 +4671,6 @@
                         <TranslatedText xml:lang="en">1=Yes</TranslatedText>
                     </Decode>
                 </CodeListItem>
-                <CodeListItem CodedValue="7">
-                    <Decode>
-                        <TranslatedText xml:lang="en">7=NA</TranslatedText>
-                    </Decode>
-                </CodeListItem>
             </CodeList>
             <CodeList OID="C.INFORMEDCONSENT.C_ADGEN" Name="C_ADGEN" DataType="integer"
                       SASFormatName="C_ADGEN">
@@ -4464,11 +4682,6 @@
                 <CodeListItem CodedValue="1">
                     <Decode>
                         <TranslatedText xml:lang="en">1=Yes</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="7">
-                    <Decode>
-                        <TranslatedText xml:lang="en">7=NA</TranslatedText>
                     </Decode>
                 </CodeListItem>
             </CodeList>
@@ -4484,11 +4697,6 @@
                         <TranslatedText xml:lang="en">1=Yes</TranslatedText>
                     </Decode>
                 </CodeListItem>
-                <CodeListItem CodedValue="7">
-                    <Decode>
-                        <TranslatedText xml:lang="en">7=NA</TranslatedText>
-                    </Decode>
-                </CodeListItem>
             </CodeList>
             <CodeList OID="C.INFORMEDCONSENT.C_ADDNA" Name="C_ADDNA" DataType="integer"
                       SASFormatName="C_ADDNA">
@@ -4500,11 +4708,6 @@
                 <CodeListItem CodedValue="1">
                     <Decode>
                         <TranslatedText xml:lang="en">1=Yes</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="7">
-                    <Decode>
-                        <TranslatedText xml:lang="en">7=NA</TranslatedText>
                     </Decode>
                 </CodeListItem>
             </CodeList>
@@ -4520,11 +4723,6 @@
                         <TranslatedText xml:lang="en">1=Yes</TranslatedText>
                     </Decode>
                 </CodeListItem>
-                <CodeListItem CodedValue="7">
-                    <Decode>
-                        <TranslatedText xml:lang="en">7=NA</TranslatedText>
-                    </Decode>
-                </CodeListItem>
             </CodeList>
             <CodeList OID="C.INFORMEDCONSENT.C_ADTUM" Name="C_ADTUM" DataType="integer"
                       SASFormatName="C_ADTUM">
@@ -4536,11 +4734,6 @@
                 <CodeListItem CodedValue="1">
                     <Decode>
                         <TranslatedText xml:lang="en">1=Yes</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="7">
-                    <Decode>
-                        <TranslatedText xml:lang="en">7=NA</TranslatedText>
                     </Decode>
                 </CodeListItem>
             </CodeList>
@@ -4556,19 +4749,9 @@
                         <TranslatedText xml:lang="en">1=Yes</TranslatedText>
                     </Decode>
                 </CodeListItem>
-                <CodeListItem CodedValue="7">
-                    <Decode>
-                        <TranslatedText xml:lang="en">7=NA</TranslatedText>
-                    </Decode>
-                </CodeListItem>
             </CodeList>
             <CodeList OID="C.INFORMEDCONSENT.C_AMCONS" Name="C_AMCONS" DataType="integer"
                       SASFormatName="C_AMCONS">
-                <CodeListItem CodedValue="0">
-                    <Decode>
-                        <TranslatedText xml:lang="en">0=amendment 7</TranslatedText>
-                    </Decode>
-                </CodeListItem>
                 <CodeListItem CodedValue="1">
                     <Decode>
                         <TranslatedText xml:lang="en">1=pre amendment 8</TranslatedText>
@@ -4577,6 +4760,16 @@
                 <CodeListItem CodedValue="2">
                     <Decode>
                         <TranslatedText xml:lang="en">2=amendment 8</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="3">
+                    <Decode>
+                        <TranslatedText xml:lang="en">3=amendment 11</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="4">
+                    <Decode>
+                        <TranslatedText xml:lang="en">4=amendement 12</TranslatedText>
                     </Decode>
                 </CodeListItem>
             </CodeList>
@@ -4722,6 +4915,548 @@
                     </Decode>
                 </CodeListItem>
             </CodeList>
+            <CodeList OID="C.INFORMEDCONSENT.C_TAMD101" Name="C_TAMD101" DataType="integer"
+                      SASFormatName="C_TAMD_A">
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Yes</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="0">
+                    <Decode>
+                        <TranslatedText xml:lang="en">No</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.INFORMEDCONSENT.C_TAMD102" Name="C_TAMD102" DataType="integer"
+                      SASFormatName="C_TAMD_B">
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Yes</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="0">
+                    <Decode>
+                        <TranslatedText xml:lang="en">No</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.INFORMEDCONSENT.C_TAMD103" Name="C_TAMD103" DataType="integer"
+                      SASFormatName="C_TAMD_C">
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Yes</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="0">
+                    <Decode>
+                        <TranslatedText xml:lang="en">No</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.INFORMEDCONSENT.C_TAMD104" Name="C_TAMD104" DataType="integer"
+                      SASFormatName="C_TAMD_D">
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Yes</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="0">
+                    <Decode>
+                        <TranslatedText xml:lang="en">No</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.INFORMEDCONSENT.C_TAMD105" Name="C_TAMD105" DataType="integer"
+                      SASFormatName="C_TAMD_E">
+                <CodeListItem CodedValue="0">
+                    <Decode>
+                        <TranslatedText xml:lang="en">0=geen</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">1=wel</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="2">
+                    <Decode>
+                        <TranslatedText xml:lang="en">2=n.v.t.</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="3">
+                    <Decode>
+                        <TranslatedText xml:lang="en">3=not completed</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.INFORMEDCONSENT.C_TAMD106" Name="C_TAMD106" DataType="integer"
+                      SASFormatName="C_TAMD_F">
+                <CodeListItem CodedValue="0">
+                    <Decode>
+                        <TranslatedText xml:lang="en">0=geen</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">1=wel</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="2">
+                    <Decode>
+                        <TranslatedText xml:lang="en">2=n.v.t.</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="3">
+                    <Decode>
+                        <TranslatedText xml:lang="en">3=not completed</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.INFORMEDCONSENT.C_TAMD107" Name="C_TAMD107" DataType="integer"
+                      SASFormatName="C_TAMD_G">
+                <CodeListItem CodedValue="0">
+                    <Decode>
+                        <TranslatedText xml:lang="en">0=geen</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">1=wel</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="3">
+                    <Decode>
+                        <TranslatedText xml:lang="en">3=not completed</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.INFORMEDCONSENT.C_TAMD108" Name="C_TAMD108" DataType="integer"
+                      SASFormatName="C_TAMD_H">
+                <CodeListItem CodedValue="0">
+                    <Decode>
+                        <TranslatedText xml:lang="en">0=geen</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">1=wel</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.INFORMEDCONSENT.C_ICBIOPYN" Name="C_ICBIOPYN" DataType="integer"
+                      SASFormatName="C_ICBIOP">
+                <CodeListItem CodedValue="0">
+                    <Decode>
+                        <TranslatedText xml:lang="en">0=no</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">1=yes</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="95">
+                    <Decode>
+                        <TranslatedText xml:lang="en">95=unknown</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.INFORMEDCONSENT.C_ICBIOPZH" Name="C_ICBIOPZH" DataType="integer"
+                      SASFormatName="C_ICBI_A">
+                <CodeListItem CodedValue="01">
+                    <Decode>
+                        <TranslatedText xml:lang="en">01=NKI-AVL, Amsterdam</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="02">
+                    <Decode>
+                        <TranslatedText xml:lang="en">02=EMC, Rotterdam</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="03">
+                    <Decode>
+                        <TranslatedText xml:lang="en">03=UMC, Utrecht</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="04">
+                    <Decode>
+                        <TranslatedText xml:lang="en">04=Meander Medisch Centrum</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="05">
+                    <Decode>
+                        <TranslatedText xml:lang="en">05=VU Medisch Centrum</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="06">
+                    <Decode>
+                        <TranslatedText xml:lang="en">06=Universitair Medisch Centrum Groningen</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="07">
+                    <Decode>
+                        <TranslatedText xml:lang="en">07=UMCN, ST. RADBOUD</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="08">
+                    <Decode>
+                        <TranslatedText xml:lang="en">08=Academisch Ziekenhuis Maastricht</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="09">
+                    <Decode>
+                        <TranslatedText xml:lang="en">09=LUMC</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="10">
+                    <Decode>
+                        <TranslatedText xml:lang="en">10=ELISABETH TWEESTEDEN ZIEKENHUIS</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="11">
+                    <Decode>
+                        <TranslatedText xml:lang="en">11=OLVG</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="12">
+                    <Decode>
+                        <TranslatedText xml:lang="en">12=Amphia zkh</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="13">
+                    <Decode>
+                        <TranslatedText xml:lang="en">13=AMC</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="14">
+                    <Decode>
+                        <TranslatedText xml:lang="en">14=Sint Franciscus Gasthuis</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="15">
+                    <Decode>
+                        <TranslatedText xml:lang="en">15=Maasstad Ziekenhuis</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="16">
+                    <Decode>
+                        <TranslatedText xml:lang="en">16=VieCuri Medisch Centrum</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="17">
+                    <Decode>
+                        <TranslatedText xml:lang="en">17=Maxima Medisch Centrum</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="18">
+                    <Decode>
+                        <TranslatedText xml:lang="en">18=Spaarne Gasthuis</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="19">
+                    <Decode>
+                        <TranslatedText xml:lang="en">19=Rijnstate</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="20">
+                    <Decode>
+                        <TranslatedText xml:lang="en">20=Medisch Spectrum Twente</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="21">
+                    <Decode>
+                        <TranslatedText xml:lang="en">21=Reinier de Graaf Gasthuis</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="22">
+                    <Decode>
+                        <TranslatedText xml:lang="en">22=Zuyderland Medisch Centrum</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="23">
+                    <Decode>
+                        <TranslatedText xml:lang="en">23=Martini Ziekenhuis</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="24">
+                    <Decode>
+                        <TranslatedText xml:lang="en">24=MC Slotervaart, Amsterdam</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="25">
+                    <Decode>
+                        <TranslatedText xml:lang="en">25=Bernhoven Uden</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="26">
+                    <Decode>
+                        <TranslatedText xml:lang="en">26=HagaZiekenhuis</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="27">
+                    <Decode>
+                        <TranslatedText xml:lang="en">27=Deventer Ziekenhuis</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="28">
+                    <Decode>
+                        <TranslatedText xml:lang="en">28=Tergooi Hilversum</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="29">
+                    <Decode>
+                        <TranslatedText xml:lang="en">29=Medisch Centrum Leeuwarden</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="30">
+                    <Decode>
+                        <TranslatedText xml:lang="en">30=Ziekenhuis Gelderse Vallei</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="31">
+                    <Decode>
+                        <TranslatedText xml:lang="en">31=Ziekenhuis Nij Smellinghe Drachten</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="32">
+                    <Decode>
+                        <TranslatedText xml:lang="en">32=Ziekenhuis St Jansdal Harderwijk</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="33">
+                    <Decode>
+                        <TranslatedText xml:lang="en">33=Noordwest Ziekenhuisgroep</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="34">
+                    <Decode>
+                        <TranslatedText xml:lang="en">34=Isala</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="35">
+                    <Decode>
+                        <TranslatedText xml:lang="en">35=St Antonius Ziekenhuis Nieuwegein</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="36">
+                    <Decode>
+                        <TranslatedText xml:lang="en">36=Bravis ziekenhuis Roosendaal</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="37">
+                    <Decode>
+                        <TranslatedText xml:lang="en">37=Treant Zorgroep Emmen/Hoogeveen/Stadskanaal</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="38">
+                    <Decode>
+                        <TranslatedText xml:lang="en">38=ZGT</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="39">
+                    <Decode>
+                        <TranslatedText xml:lang="en">39=Gelre Ziekenhuizen Apeldoorn/Zutphen</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="40">
+                    <Decode>
+                        <TranslatedText xml:lang="en">40=Rode Kruis ziekenhuis Beverwijk</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="41">
+                    <Decode>
+                        <TranslatedText xml:lang="en">41=Rivas Zorggroep Gorinchem</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="42">
+                    <Decode>
+                        <TranslatedText xml:lang="en">42=Groene Hart Ziekenhuis Gouda</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="43">
+                    <Decode>
+                        <TranslatedText xml:lang="en">43=Catharina Ziekenhuis</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="44">
+                    <Decode>
+                        <TranslatedText xml:lang="en">44=Haaglanden MC</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="45">
+                    <Decode>
+                        <TranslatedText xml:lang="en">45=Wilhelmina ziekenhuis</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="46">
+                    <Decode>
+                        <TranslatedText xml:lang="en">46=Elkerliek ziekenhuis</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="47">
+                    <Decode>
+                        <TranslatedText xml:lang="en">47=Ziekenhuis Tjongerschans</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="48">
+                    <Decode>
+                        <TranslatedText xml:lang="en">48=Flevoziekenhuis</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="49">
+                    <Decode>
+                        <TranslatedText xml:lang="en">49=Admiraal de Ruyterziekenhuis</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="95">
+                    <Decode>
+                        <TranslatedText xml:lang="en">95=Unknown</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.INFORMEDCONSENT.C_TAMD111" Name="C_TAMD111" DataType="integer"
+                      SASFormatName="C_TAMD_I">
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Yes</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="0">
+                    <Decode>
+                        <TranslatedText xml:lang="en">No</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.INFORMEDCONSENT.C_TAMD112" Name="C_TAMD112" DataType="integer"
+                      SASFormatName="C_TAMD_J">
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Yes</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="0">
+                    <Decode>
+                        <TranslatedText xml:lang="en">No</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.INFORMEDCONSENT.C_TAMD113" Name="C_TAMD113" DataType="integer"
+                      SASFormatName="C_TAMD_K">
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Yes</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="0">
+                    <Decode>
+                        <TranslatedText xml:lang="en">No</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.INFORMEDCONSENT.C_TAMD114" Name="C_TAMD114" DataType="integer"
+                      SASFormatName="C_TAMD_L">
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Yes</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="0">
+                    <Decode>
+                        <TranslatedText xml:lang="en">No</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.INFORMEDCONSENT.C_TAMD115" Name="C_TAMD115" DataType="integer"
+                      SASFormatName="C_TAMD_M">
+                <CodeListItem CodedValue="0">
+                    <Decode>
+                        <TranslatedText xml:lang="en">0=geen</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">1=wel</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="2">
+                    <Decode>
+                        <TranslatedText xml:lang="en">2=n.v.t.</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="3">
+                    <Decode>
+                        <TranslatedText xml:lang="en">3=not completed</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.INFORMEDCONSENT.C_TAMD116" Name="C_TAMD116" DataType="integer"
+                      SASFormatName="C_TAMD_N">
+                <CodeListItem CodedValue="0">
+                    <Decode>
+                        <TranslatedText xml:lang="en">0=geen</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">1=wel</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="2">
+                    <Decode>
+                        <TranslatedText xml:lang="en">2=n.v.t.</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="3">
+                    <Decode>
+                        <TranslatedText xml:lang="en">3=not completed</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.INFORMEDCONSENT.C_TAMD117" Name="C_TAMD117" DataType="integer"
+                      SASFormatName="C_TAMD_O">
+                <CodeListItem CodedValue="0">
+                    <Decode>
+                        <TranslatedText xml:lang="en">0=geen</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">1=wel</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="3">
+                    <Decode>
+                        <TranslatedText xml:lang="en">3=not completed</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.INFORMEDCONSENT.C_TAMD118" Name="C_TAMD118" DataType="integer"
+                      SASFormatName="C_TAMD_P">
+                <CodeListItem CodedValue="0">
+                    <Decode>
+                        <TranslatedText xml:lang="en">0=geen</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">1=wel</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.INFORMEDCONSENT.C_TAMD119" Name="C_TAMD119" DataType="integer"
+                      SASFormatName="C_TAMD_Q">
+                <CodeListItem CodedValue="0">
+                    <Decode>
+                        <TranslatedText xml:lang="en">0=geen</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">1=wel</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
             <CodeList OID="C.DEMOGRAPHY.C_SEX" Name="C_SEX" DataType="integer" SASFormatName="C_SEX">
                 <CodeListItem CodedValue="1">
                     <Decode>
@@ -4809,11 +5544,6 @@
             </CodeList>
             <CodeList OID="C.CARCINOMA.C_PTUMLOC" Name="C_PTUMLOC" DataType="integer"
                       SASFormatName="C_PTUMLO">
-                <CodeListItem CodedValue="0">
-                    <Decode>
-                        <TranslatedText xml:lang="en">0=Adrenocortical cancer</TranslatedText>
-                    </Decode>
-                </CodeListItem>
                 <CodeListItem CodedValue="103">
                     <Decode>
                         <TranslatedText xml:lang="en">Anal cancer</TranslatedText>
@@ -4824,34 +5554,9 @@
                         <TranslatedText xml:lang="en">Bladder cancer</TranslatedText>
                     </Decode>
                 </CodeListItem>
-                <CodeListItem CodedValue="4">
-                    <Decode>
-                        <TranslatedText xml:lang="en">4=Bone cancer</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="6">
-                    <Decode>
-                        <TranslatedText xml:lang="en">6=Brain tumor</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="7">
-                    <Decode>
-                        <TranslatedText xml:lang="en">7=Breast cancer</TranslatedText>
-                    </Decode>
-                </CodeListItem>
                 <CodeListItem CodedValue="9">
                     <Decode>
                         <TranslatedText xml:lang="en">Cervical cancer</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="64">
-                    <Decode>
-                        <TranslatedText xml:lang="en">64=Colon and Rectal cancer</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="10">
-                    <Decode>
-                        <TranslatedText xml:lang="en">10=Ear cancer</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="11">
@@ -4864,59 +5569,14 @@
                         <TranslatedText xml:lang="en">Esophageal cancer</TranslatedText>
                     </Decode>
                 </CodeListItem>
-                <CodeListItem CodedValue="13">
-                    <Decode>
-                        <TranslatedText xml:lang="en">13=Eye cancer</TranslatedText>
-                    </Decode>
-                </CodeListItem>
                 <CodeListItem CodedValue="14">
                     <Decode>
                         <TranslatedText xml:lang="en">Gallbladder cancer</TranslatedText>
                     </Decode>
                 </CodeListItem>
-                <CodeListItem CodedValue="15">
-                    <Decode>
-                        <TranslatedText xml:lang="en">15=Gastrointestinal tract cancer</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="17">
-                    <Decode>
-                        <TranslatedText xml:lang="en">17=Genital system, female</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="19">
-                    <Decode>
-                        <TranslatedText xml:lang="en">19=Genital system, male</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="21">
-                    <Decode>
-                        <TranslatedText xml:lang="en">21=Head and Neck cancer</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="8">
-                    <Decode>
-                        <TranslatedText xml:lang="en">8=Heart cancer</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="46">
-                    <Decode>
-                        <TranslatedText xml:lang="en">46=Kaposis sarcoma</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="25">
-                    <Decode>
-                        <TranslatedText xml:lang="en">25=Kidney cancer</TranslatedText>
-                    </Decode>
-                </CodeListItem>
                 <CodeListItem CodedValue="26">
                     <Decode>
                         <TranslatedText xml:lang="en">Head and Neck Cancer: Laryngeal cancer</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="23">
-                    <Decode>
-                        <TranslatedText xml:lang="en">23=Liver cancer</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="281">
@@ -4934,11 +5594,6 @@
                         <TranslatedText xml:lang="en">Mesothelioma, Malignant</TranslatedText>
                     </Decode>
                 </CodeListItem>
-                <CodeListItem CodedValue="283">
-                    <Decode>
-                        <TranslatedText xml:lang="en">28d=Lung cancer, Other</TranslatedText>
-                    </Decode>
-                </CodeListItem>
                 <CodeListItem CodedValue="29">
                     <Decode>
                         <TranslatedText xml:lang="en">Melanoma</TranslatedText>
@@ -4947,16 +5602,6 @@
                 <CodeListItem CodedValue="31">
                     <Decode>
                         <TranslatedText xml:lang="en">Head and Neck Cancer: Nasal cavity and paranasal sinuses cancer</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="33">
-                    <Decode>
-                        <TranslatedText xml:lang="en">33=Nervous system</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="32">
-                    <Decode>
-                        <TranslatedText xml:lang="en">32=Respiratory system</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="36">
@@ -4974,24 +5619,9 @@
                         <TranslatedText xml:lang="en">Pancreatic cancer</TranslatedText>
                     </Decode>
                 </CodeListItem>
-                <CodeListItem CodedValue="38">
-                    <Decode>
-                        <TranslatedText xml:lang="en">38=Parathyroid cancer</TranslatedText>
-                    </Decode>
-                </CodeListItem>
                 <CodeListItem CodedValue="39">
                     <Decode>
                         <TranslatedText xml:lang="en">Penile cancer</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="61">
-                    <Decode>
-                        <TranslatedText xml:lang="en">61=Pharyngeal cancer</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="40">
-                    <Decode>
-                        <TranslatedText xml:lang="en">40=Pitutary cancer</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="102">
@@ -5004,34 +5634,9 @@
                         <TranslatedText xml:lang="en">Prostate cancer</TranslatedText>
                     </Decode>
                 </CodeListItem>
-                <CodeListItem CodedValue="45">
-                    <Decode>
-                        <TranslatedText xml:lang="en">45=Retinoblastoma</TranslatedText>
-                    </Decode>
-                </CodeListItem>
                 <CodeListItem CodedValue="63">
                     <Decode>
                         <TranslatedText xml:lang="en">Head and Neck Cancer: Salivary Gland Cancer</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="105">
-                    <Decode>
-                        <TranslatedText xml:lang="en">105=Sarcoma</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="48">
-                    <Decode>
-                        <TranslatedText xml:lang="en">48=Sarcoma, soft tissue</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="49">
-                    <Decode>
-                        <TranslatedText xml:lang="en">49=Skin cancer</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="50">
-                    <Decode>
-                        <TranslatedText xml:lang="en">50=Small intestine cancer</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="51">
@@ -5054,29 +5659,9 @@
                         <TranslatedText xml:lang="en">Thyroid Cancer</TranslatedText>
                     </Decode>
                 </CodeListItem>
-                <CodeListItem CodedValue="55">
-                    <Decode>
-                        <TranslatedText xml:lang="en">55=Urinary system</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="57">
-                    <Decode>
-                        <TranslatedText xml:lang="en">57=Vaginal cancer</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="58">
-                    <Decode>
-                        <TranslatedText xml:lang="en">58=Vascular system</TranslatedText>
-                    </Decode>
-                </CodeListItem>
                 <CodeListItem CodedValue="101">
                     <Decode>
                         <TranslatedText xml:lang="en">Vulva cancer</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="60">
-                    <Decode>
-                        <TranslatedText xml:lang="en">60=Wilms tumor</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="302">
@@ -5171,12 +5756,12 @@
                 </CodeListItem>
                 <CodeListItem CodedValue="320">
                     <Decode>
-                        <TranslatedText xml:lang="en">Hodgkin lymphoma</TranslatedText>
+                        <TranslatedText xml:lang="en">Lymphoma: Hodgkin</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="321">
                     <Decode>
-                        <TranslatedText xml:lang="en">Non-Hodgkin lymphoma</TranslatedText>
+                        <TranslatedText xml:lang="en">Lymphoma: Non Hodgkin</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="322">
@@ -5186,17 +5771,17 @@
                 </CodeListItem>
                 <CodeListItem CodedValue="323">
                     <Decode>
-                        <TranslatedText xml:lang="en">Pancreatic NET</TranslatedText>
+                        <TranslatedText xml:lang="en">NET: Pancreatic</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="324">
                     <Decode>
-                        <TranslatedText xml:lang="en">Small intestinal NET</TranslatedText>
+                        <TranslatedText xml:lang="en">NET: Small Intestinal</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="325">
                     <Decode>
-                        <TranslatedText xml:lang="en">Lung NET</TranslatedText>
+                        <TranslatedText xml:lang="en">NET: Lung</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="326">
@@ -5206,37 +5791,37 @@
                 </CodeListItem>
                 <CodeListItem CodedValue="327">
                     <Decode>
-                        <TranslatedText xml:lang="en">Ewing sarcoma</TranslatedText>
+                        <TranslatedText xml:lang="en">Sarcoma: Ewing sarcoma</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="328">
                     <Decode>
-                        <TranslatedText xml:lang="en">Leiomyosarcoma</TranslatedText>
+                        <TranslatedText xml:lang="en">Sarcoma: Leiomyosarcoma</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="329">
                     <Decode>
-                        <TranslatedText xml:lang="en">Liposarcoma</TranslatedText>
+                        <TranslatedText xml:lang="en">Sarcoma: Liposarcoma</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="330">
                     <Decode>
-                        <TranslatedText xml:lang="en">Osteosarcoma (Bone Cancer)</TranslatedText>
+                        <TranslatedText xml:lang="en">Sarcoma: Osteosarcoma (bone cancer)</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="331">
                     <Decode>
-                        <TranslatedText xml:lang="en">Rhabdomyosarcoma</TranslatedText>
+                        <TranslatedText xml:lang="en">Sarcoma: Rhabdomyosarcoma</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="332">
                     <Decode>
-                        <TranslatedText xml:lang="en">Undifferentiated sarcoma</TranslatedText>
+                        <TranslatedText xml:lang="en">Sarcoma: Undifferentiated</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="333">
                     <Decode>
-                        <TranslatedText xml:lang="en">Sarcoma: other</TranslatedText>
+                        <TranslatedText xml:lang="en">Sarcoma: Other</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="334">
@@ -5387,11 +5972,6 @@
             </CodeList>
             <CodeList OID="C.CARCINOMA.C_ENTRYSTAGE" Name="C_ENTRYSTAGE" DataType="integer"
                       SASFormatName="C_ENTRYS">
-                <CodeListItem CodedValue="1">
-                    <Decode>
-                        <TranslatedText xml:lang="en">1= Local</TranslatedText>
-                    </Decode>
-                </CodeListItem>
                 <CodeListItem CodedValue="2">
                     <Decode>
                         <TranslatedText xml:lang="en">Locally advanced</TranslatedText>
@@ -5400,16 +5980,6 @@
                 <CodeListItem CodedValue="3">
                     <Decode>
                         <TranslatedText xml:lang="en">Metastatic</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="8">
-                    <Decode>
-                        <TranslatedText xml:lang="en">8=Other</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="9">
-                    <Decode>
-                        <TranslatedText xml:lang="en">9=Unknown</TranslatedText>
                     </Decode>
                 </CodeListItem>
             </CodeList>
@@ -5443,11 +6013,6 @@
                 <CodeListItem CodedValue="8">
                     <Decode>
                         <TranslatedText xml:lang="en">8=other</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="9">
-                    <Decode>
-                        <TranslatedText xml:lang="en">9=Unknown</TranslatedText>
                     </Decode>
                 </CodeListItem>
             </CodeList>
@@ -6406,7 +6971,7 @@
                 </CodeListItem>
                 <CodeListItem CodedValue="63">
                     <Decode>
-                        <TranslatedText xml:lang="en">Gemcitabine                            </TranslatedText>
+                        <TranslatedText xml:lang="en">Gemcitabine                            </TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="64">
@@ -6436,7 +7001,7 @@
                 </CodeListItem>
                 <CodeListItem CodedValue="69">
                     <Decode>
-                        <TranslatedText xml:lang="en">Oxaliplatin                            </TranslatedText>
+                        <TranslatedText xml:lang="en">Oxaliplatin                            </TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="70">
@@ -6451,17 +7016,17 @@
                 </CodeListItem>
                 <CodeListItem CodedValue="72">
                     <Decode>
-                        <TranslatedText xml:lang="en">Rituximab                              </TranslatedText>
+                        <TranslatedText xml:lang="en">Rituximab                              </TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="73">
                     <Decode>
-                        <TranslatedText xml:lang="en">Temozolamide                           </TranslatedText>
+                        <TranslatedText xml:lang="en">Temozolamide                           </TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="74">
                     <Decode>
-                        <TranslatedText xml:lang="en">Topotecan                              </TranslatedText>
+                        <TranslatedText xml:lang="en">Topotecan                              </TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="75">
@@ -6712,6 +7277,329 @@
                         <TranslatedText xml:lang="en">13=AMC</TranslatedText>
                     </Decode>
                 </CodeListItem>
+                <CodeListItem CodedValue="47">
+                    <Decode>
+                        <TranslatedText xml:lang="en">47=Ziekenhuis de Tjongerschans</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.SELCRIT.C_SELPTM" Name="C_SELPTM" DataType="integer"
+                      SASFormatName="C_SELPTM">
+                <CodeListItem CodedValue="103">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Anal cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="301">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Basal Cell Carcinoma</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="3">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Bladder cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="302">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Breast Cancer: ER-positive/HER2-negative</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="303">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Breast Cancer: ER-negative/HER2-positive</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="304">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Breast Cancer: ER-positive/HER2-positive</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="305">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Breast Cancer: triple negative</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="306">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Breast Cancer: subtype unknown</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="102">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Carcinoma of unknown primary</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="9">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Cervical cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="307">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Cholangiocarcinoma</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="308">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Colorectal Cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="11">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Endometrial cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="12">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Esophageal cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="14">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Gallbladder cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="309">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Gastrointestinal Stromal Tumors (GIST)</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="310">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Glioma: low-grade astrocytoma</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="311">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Glioma: low-grade oligodendroglioma</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="312">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Glioma: anaplastic astrocytoma-like</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="313">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Glioma: anaplastic oligodendroglioma-like</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="314">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Glioma: Glioblastoma Multiforme</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="315">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Glioma: other</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="316">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Head and Neck Cancer: Hypopharyngeal Cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="26">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Head and Neck Cancer: Laryngeal cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="36">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Head and Neck Cancer: Lip and Oral Cavity Cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="31">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Head and Neck Cancer: Nasal cavity and paranasal sinuses cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="317">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Head and Neck Cancer: Nasopharyngeal Cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="318">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Head and Neck Cancer: Oropharyngeal Cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="63">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Head and Neck Cancer: Salivary Gland Cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="319">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Hepatocellular Cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="281">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Lung Cancer: Non-Small Cell</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="282">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Lung Cancer: Small Cell</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="320">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Lymphoma: Hodgkin</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="321">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Lymphoma: Non Hodgkin</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="322">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Lymphoma: other</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="29">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Melanoma</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="28">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Mesothelioma, Malignant</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="323">
+                    <Decode>
+                        <TranslatedText xml:lang="en">NET: Pancreatic</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="325">
+                    <Decode>
+                        <TranslatedText xml:lang="en">NET: Lung</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="324">
+                    <Decode>
+                        <TranslatedText xml:lang="en">NET: Small Intestinal</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="66">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Ovarian cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="37">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Pancreatic cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="39">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Penile cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="42">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Prostate cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="326">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Renal Cell Cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="327">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Sarcoma: Ewing sarcoma</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="328">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Sarcoma: Leiomyosarcoma</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="329">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Sarcoma: Liposarcoma</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="330">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Sarcoma: Osteosarcoma (bone cancer)</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="333">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Sarcoma: Other</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="331">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Sarcoma: Rhabdomyosarcoma</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="332">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Sarcoma: Undifferentiated</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="334">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Squamous cell carcinoma of the skin</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="51">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Stomach cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="52">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Testicular cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="53">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Thymoma and Thymic Carcinoma</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="54">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Thyroid Cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="335">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Urothelial cell cancer of the bladder</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="336">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Urothelial cell cancer of the pyelum</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="337">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Urothelial cell cancer of the urethra</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="338">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Urothelial cell cancer: other</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="101">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Vulva cancer</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="339">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Other</TranslatedText>
+                    </Decode>
+                </CodeListItem>
             </CodeList>
             <CodeList OID="C.SELCRIT.C_NELIG" Name="C_NELIG" DataType="integer"
                       SASFormatName="C_NELIG">
@@ -6775,6 +7663,78 @@
                 <CodeListItem CodedValue="1">
                     <Decode>
                         <TranslatedText xml:lang="en">1=Yes</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.SELCRIT.C_NINC1N" Name="C_NINC1N" DataType="integer"
+                      SASFormatName="C_NINC1N">
+                <CodeListItem CodedValue="0">
+                    <Decode>
+                        <TranslatedText xml:lang="en">0=No</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">1=Yes</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.SELCRIT.C_NINC1NE" Name="C_NINC1NE" DataType="integer"
+                      SASFormatName="C_NINC_E">
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">1=All types of cancer: Immunotherapy (Anti-PD1/PDL1, Anti-CTLA4)</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="2">
+                    <Decode>
+                        <TranslatedText xml:lang="en">2=Metastatic Castration-Resistant Prostate Cancer (mCRPC): Hormonal th</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="3">
+                    <Decode>
+                        <TranslatedText xml:lang="en">3=ER positive Breast Cancer: Hormonal therapy (All HT include combinat</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="4">
+                    <Decode>
+                        <TranslatedText xml:lang="en">4=Renal Cell Cancer (RCC): Targeted therapy (VEGF targeted TKIs: Soraf</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="5">
+                    <Decode>
+                        <TranslatedText xml:lang="en">5=Hepatocellulair Cancer (HCC)/ Sarcoma/ Thyroid: Targeted therapy (VE</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.SELCRIT.C_NINC1N1" Name="C_NINC1N1" DataType="integer"
+                      SASFormatName="C_NINC_F">
+                <CodeListItem CodedValue="0">
+                    <Decode>
+                        <TranslatedText xml:lang="en">0=No</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">1=Yes</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.SELCRIT.C_NINC1NE1" Name="C_NINC1NE1" DataType="integer"
+                      SASFormatName="C_NINC_G">
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">1 =All types of malignancies:  Immunotherapy (anti-PD(L1) and/or anti-</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="2">
+                    <Decode>
+                        <TranslatedText xml:lang="en">2 = Metastatic Prostate Cancer: second generation anti hormonal therap</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="3">
+                    <Decode>
+                        <TranslatedText xml:lang="en">3 = Metastatic ER positive Breast Cancer: anti hormonal therapy (all a</TranslatedText>
                     </Decode>
                 </CodeListItem>
             </CodeList>
@@ -6988,7 +7948,7 @@
                 </CodeListItem>
                 <CodeListItem CodedValue="63">
                     <Decode>
-                        <TranslatedText xml:lang="en">Gemcitabine                            </TranslatedText>
+                        <TranslatedText xml:lang="en">Gemcitabine                            </TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="17">
@@ -7053,7 +8013,7 @@
                 </CodeListItem>
                 <CodeListItem CodedValue="69">
                     <Decode>
-                        <TranslatedText xml:lang="en">Oxaliplatin                            </TranslatedText>
+                        <TranslatedText xml:lang="en">Oxaliplatin                            </TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="40">
@@ -7098,7 +8058,7 @@
                 </CodeListItem>
                 <CodeListItem CodedValue="72">
                     <Decode>
-                        <TranslatedText xml:lang="en">Rituximab                              </TranslatedText>
+                        <TranslatedText xml:lang="en">Rituximab                              </TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="24">
@@ -7123,7 +8083,7 @@
                 </CodeListItem>
                 <CodeListItem CodedValue="73">
                     <Decode>
-                        <TranslatedText xml:lang="en">Temozolamide                           </TranslatedText>
+                        <TranslatedText xml:lang="en">Temozolamide                           </TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="43">
@@ -7133,7 +8093,7 @@
                 </CodeListItem>
                 <CodeListItem CodedValue="74">
                     <Decode>
-                        <TranslatedText xml:lang="en">Topotecan                              </TranslatedText>
+                        <TranslatedText xml:lang="en">Topotecan                              </TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="45">
@@ -8405,29 +9365,9 @@
             </CodeList>
             <CodeList OID="C.TRTAFTER.C_CPCTTRIALNR" Name="C_CPCTTRIALNR" DataType="integer"
                       SASFormatName="C_CPCTTR">
-                <CodeListItem CodedValue="1">
-                    <Decode>
-                        <TranslatedText xml:lang="en">CPCT 1</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="2">
-                    <Decode>
-                        <TranslatedText xml:lang="en">CPCT 2</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="3">
-                    <Decode>
-                        <TranslatedText xml:lang="en">CPCT 3</TranslatedText>
-                    </Decode>
-                </CodeListItem>
                 <CodeListItem CodedValue="4">
                     <Decode>
                         <TranslatedText xml:lang="en">CPCT 4</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="5">
-                    <Decode>
-                        <TranslatedText xml:lang="en">CPCT 5</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="6">
@@ -8453,6 +9393,34 @@
                 <CodeListItem CodedValue="10">
                     <Decode>
                         <TranslatedText xml:lang="en">CPCT 10</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="2">
+                    <Decode>
+                        <TranslatedText xml:lang="en">CPCT 2</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+            </CodeList>
+            <CodeList OID="C.TRTAFTER.C_A12RNST" Name="C_A12RNST" DataType="integer"
+                      SASFormatName="C_A12RNS">
+                <CodeListItem CodedValue="1">
+                    <Decode>
+                        <TranslatedText xml:lang="en">1 = clinical deterioration</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="2">
+                    <Decode>
+                        <TranslatedText xml:lang="en">2 = patient without PDL-1 expression after diagnostic biopsy</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="3">
+                    <Decode>
+                        <TranslatedText xml:lang="en">3 = on patients request</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="98">
+                    <Decode>
+                        <TranslatedText xml:lang="en">98 = other</TranslatedText>
                     </Decode>
                 </CodeListItem>
             </CodeList>
@@ -8544,11 +9512,6 @@
                         <TranslatedText xml:lang="en">Toxicity</TranslatedText>
                     </Decode>
                 </CodeListItem>
-                <CodeListItem CodedValue="2">
-                    <Decode>
-                        <TranslatedText xml:lang="en">2=adverse events</TranslatedText>
-                    </Decode>
-                </CodeListItem>
                 <CodeListItem CodedValue="3">
                     <Decode>
                         <TranslatedText xml:lang="en">death, complete death section</TranslatedText>
@@ -8580,19 +9543,6 @@
                     </Decode>
                 </CodeListItem>
             </CodeList>
-            <CodeList OID="C.TRTAFTER.C_UNKNOWNST" Name="C_UNKNOWNST" DataType="integer"
-                      SASFormatName="C_UNKN_A">
-                <CodeListItem CodedValue="1">
-                    <Decode>
-                        <TranslatedText xml:lang="en">1=UNK</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="2">
-                    <Decode>
-                        <TranslatedText xml:lang="en">2=NA</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-            </CodeList>
             <CodeList OID="C.TRTAFTER.C_PLANNEDTRT" Name="C_PLANNEDTRT" DataType="integer"
                       SASFormatName="C_PLANNE">
                 <CodeListItem CodedValue="1">
@@ -8603,16 +9553,6 @@
                 <CodeListItem CodedValue="2">
                     <Decode>
                         <TranslatedText xml:lang="en">Abiraterone</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="3">
-                    <Decode>
-                        <TranslatedText xml:lang="en">anti-PD1</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="4">
-                    <Decode>
-                        <TranslatedText xml:lang="en">anti-PD1 L antibodies</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="5">
@@ -8632,7 +9572,7 @@
                 </CodeListItem>
                 <CodeListItem CodedValue="8">
                     <Decode>
-                        <TranslatedText xml:lang="en">Dabrafetinib</TranslatedText>
+                        <TranslatedText xml:lang="en">Dabrafenib</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="9">
@@ -8660,11 +9600,6 @@
                         <TranslatedText xml:lang="en">Fulvestrant</TranslatedText>
                     </Decode>
                 </CodeListItem>
-                <CodeListItem CodedValue="14">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Gefitinib</TranslatedText>
-                    </Decode>
-                </CodeListItem>
                 <CodeListItem CodedValue="15">
                     <Decode>
                         <TranslatedText xml:lang="en">Imatinib</TranslatedText>
@@ -8678,16 +9613,6 @@
                 <CodeListItem CodedValue="17">
                     <Decode>
                         <TranslatedText xml:lang="en">Letrozole</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="18">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Lgx818</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="19">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Mek162</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="20">
@@ -8710,29 +9635,14 @@
                         <TranslatedText xml:lang="en">Sorafenib</TranslatedText>
                     </Decode>
                 </CodeListItem>
-                <CodeListItem CodedValue="24">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Regorafenib</TranslatedText>
-                    </Decode>
-                </CodeListItem>
                 <CodeListItem CodedValue="25">
                     <Decode>
                         <TranslatedText xml:lang="en">Tamoxifen</TranslatedText>
                     </Decode>
                 </CodeListItem>
-                <CodeListItem CodedValue="26">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Trametinib</TranslatedText>
-                    </Decode>
-                </CodeListItem>
                 <CodeListItem CodedValue="27">
                     <Decode>
                         <TranslatedText xml:lang="en">Vemurafenib</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="28">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Vemurafenib and cobimetinib</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="100">
@@ -8745,26 +9655,6 @@
                         <TranslatedText xml:lang="en">Afatinib</TranslatedText>
                     </Decode>
                 </CodeListItem>
-                <CodeListItem CodedValue="30">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Alectinib</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="31">
-                    <Decode>
-                        <TranslatedText xml:lang="en">AZD9291</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="32">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Cabozatinib</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="34">
-                    <Decode>
-                        <TranslatedText xml:lang="en">CO-1686 (rocelitinib)</TranslatedText>
-                    </Decode>
-                </CodeListItem>
                 <CodeListItem CodedValue="33">
                     <Decode>
                         <TranslatedText xml:lang="en">Ceritinib</TranslatedText>
@@ -8773,11 +9663,6 @@
                 <CodeListItem CodedValue="35">
                     <Decode>
                         <TranslatedText xml:lang="en">Crizotinib</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="36">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Lapatinib</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="37">
@@ -8818,176 +9703,6 @@
                 <CodeListItem CodedValue="45">
                     <Decode>
                         <TranslatedText xml:lang="en">Trastuzumab</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="46">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Vandetanib</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="44">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Temsirolimus</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="47">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Trastuzumab/pertuzumab</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="48">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Vandetanib</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="50">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Adriamycine</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="51">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Bevacizumab</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="52">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Bleomycin</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="53">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Capecitabine</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="54">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Carboplatin</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="55">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Casodex</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="56">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Cisplatin</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="57">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Cyclofosfamide</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="58">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Dacarbazine</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="59">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Docetaxel</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="60">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Epirubicine</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="61">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Etoposide</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="62">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Fluorouracil</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="63">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Gemcitabine                            </TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="64">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Ifosfamide</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="65">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Irinotecan</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="66">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Melfalan</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="67">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Methotrexaat</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="68">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Mitomycine C</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="69">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Oxaliplatin                            </TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="70">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Paclitaxel</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="71">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Pemetrexed</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="72">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Rituximab                              </TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="73">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Temozolamide                           </TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="74">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Topotecan                              </TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="75">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Vinblastine</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="76">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Vincristine</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="77">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Vinorelbine</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="78">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Zoladex</TranslatedText>
-                    </Decode>
-                </CodeListItem>
-                <CodeListItem CodedValue="98">
-                    <Decode>
-                        <TranslatedText xml:lang="en">Other</TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="101">
@@ -9087,7 +9802,7 @@
                 </CodeListItem>
                 <CodeListItem CodedValue="120">
                     <Decode>
-                        <TranslatedText xml:lang="en">Oxaliplatin                           </TranslatedText>
+                        <TranslatedText xml:lang="en">Oxaliplatin                         </TranslatedText>
                     </Decode>
                 </CodeListItem>
                 <CodeListItem CodedValue="121">
@@ -9130,17 +9845,44 @@
                         <TranslatedText xml:lang="en">Vinorelbine</TranslatedText>
                     </Decode>
                 </CodeListItem>
-            </CodeList>
-            <CodeList OID="C.TRTAFTER.C_TRTATI" Name="C_TRTATI" DataType="integer"
-                      SASFormatName="C_TRTATI">
-                <CodeListItem CodedValue="1">
+                <CodeListItem CodedValue="201">
                     <Decode>
-                        <TranslatedText xml:lang="en">1=neoadjuvant</TranslatedText>
+                        <TranslatedText xml:lang="en">Abemaciclib</TranslatedText>
                     </Decode>
                 </CodeListItem>
-                <CodeListItem CodedValue="2">
+                <CodeListItem CodedValue="202">
                     <Decode>
-                        <TranslatedText xml:lang="en">2=palliative</TranslatedText>
+                        <TranslatedText xml:lang="en">Apalutamide</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="203">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Atezolizumab</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="204">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Avelumab</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="205">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Durvalumab</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="206">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Goserelin (Zoladex)</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="207">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Levatinib</TranslatedText>
+                    </Decode>
+                </CodeListItem>
+                <CodeListItem CodedValue="208">
+                    <Decode>
+                        <TranslatedText xml:lang="en">Ribociclib</TranslatedText>
                     </Decode>
                 </CodeListItem>
             </CodeList>
@@ -9855,8 +10597,8 @@
             </CodeList>
         </MetaDataVersion>
     </Study>
-    <ClinicalData StudyOID="CPCT2" MetaDataVersionOID="80">
-        <SubjectData SubjectKey="CPCT-02-00-0010">
+    <ClinicalData StudyOID="CPCT2" MetaDataVersionOID="97">
+        <SubjectData SubjectKey="CPCT-02-00-0015">
             <StudyEventData StudyEventOID="SE.BASELINE" StudyEventRepeatKey="0">
                 <FormData FormOID="FRM.DNA" FormRepeatKey="0">
                     <ItemGroupData ItemGroupOID="GRP.DNA.AuditTrailEntries" ItemGroupRepeatKey="1">
@@ -9909,18 +10651,18 @@
                         <ItemData ItemOID="FLD.DNA.audit_comments" Value=""/>
                     </ItemGroupData>
                     <ItemGroupData ItemGroupOID="GRP.MetaData" ItemGroupRepeatKey="0">
-                        <ItemData ItemOID="FLD.studyId" Value="1145"/>
+                        <ItemData ItemOID="FLD.studyId" Value="1430"/>
                         <ItemData ItemOID="FLD.formId" Value="2"/>
                         <ItemData ItemOID="FLD.ODMProcessorBaseURL" Value="0"/>
                         <ItemData ItemOID="FLD.eventCode" Value="BASELINE"/>
                         <ItemData ItemOID="FLD.eventRepeatKey" Value="0"/>
                         <ItemData ItemOID="FLD.formCode" Value=""/>
                         <ItemData ItemOID="FLD.formRepeatKey" Value="0"/>
-                        <ItemData ItemOID="FLD.patientId" Value="12345"/>
-                        <ItemData ItemOID="FLD.clinicianId" Value="145689034"/>
+                        <ItemData ItemOID="FLD.patientId" Value="1638"/>
+                        <ItemData ItemOID="FLD.clinicianId" Value="786539821476"/>
                         <ItemData ItemOID="FLD.subStudyID" Value=""/>
-                        <ItemData ItemOID="FLD.instituteId" Value="817814473"/>
-                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0010"/>
+                        <ItemData ItemOID="FLD.instituteId" Value="674531937"/>
+                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0015"/>
                         <ItemData ItemOID="FLD.registrationDate" Value=""/>
                         <ItemData ItemOID="FLD.ODMResultMessage" Value=""/>
                     </ItemGroupData>
@@ -9988,24 +10730,24 @@
                     </ItemGroupData>
                     <ItemGroupData ItemGroupOID="GRP.AuditData" ItemGroupRepeatKey="0"/>
                     <ItemGroupData ItemGroupOID="GRP.MetaData" ItemGroupRepeatKey="0">
-                        <ItemData ItemOID="FLD.studyId" Value="1145"/>
+                        <ItemData ItemOID="FLD.studyId" Value="1430"/>
                         <ItemData ItemOID="FLD.formId" Value="4"/>
                         <ItemData ItemOID="FLD.ODMProcessorBaseURL" Value="0"/>
                         <ItemData ItemOID="FLD.eventCode" Value="BASELINE"/>
                         <ItemData ItemOID="FLD.eventRepeatKey" Value="0"/>
                         <ItemData ItemOID="FLD.formCode" Value=""/>
                         <ItemData ItemOID="FLD.formRepeatKey" Value="0"/>
-                        <ItemData ItemOID="FLD.patientId" Value="12345"/>
-                        <ItemData ItemOID="FLD.clinicianId" Value="145689034"/>
+                        <ItemData ItemOID="FLD.patientId" Value="1638"/>
+                        <ItemData ItemOID="FLD.clinicianId" Value="786539821476"/>
                         <ItemData ItemOID="FLD.subStudyID" Value=""/>
-                        <ItemData ItemOID="FLD.instituteId" Value="817814473"/>
-                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0010"/>
+                        <ItemData ItemOID="FLD.instituteId" Value="674531937"/>
+                        <ItemData ItemOID="FLD.subjectKey" Value="CCPCT-02-00-0015"/>
                         <ItemData ItemOID="FLD.registrationDate" Value=""/>
                         <ItemData ItemOID="FLD.ODMResultMessage" Value=""/>
                     </ItemGroupData>
                     <ItemGroupData ItemGroupOID="GRP.INFORMEDCONSENT.INFORMEDCONSENT" ItemGroupRepeatKey="0">
-                        <ItemData ItemOID="FLD.INFORMEDCONSENT.BASELINEDTC" Value="2016-01-02"/>
-                        <ItemData ItemOID="FLD.INFORMEDCONSENT.ICDTC" Value="2016-01-01"/>
+                        <ItemData ItemOID="FLD.INFORMEDCONSENT.BASELINEDTC" Value="2018-05-04"/>
+                        <ItemData ItemOID="FLD.INFORMEDCONSENT.ICDTC" Value="2018-06-02"/>
                         <ItemData ItemOID="FLD.INFORMEDCONSENT.ADCONSENT" Value="1"/>
                         <ItemData ItemOID="FLD.INFORMEDCONSENT.ADBIOPSY" Value="1"/>
                         <ItemData ItemOID="FLD.INFORMEDCONSENT.ADGEN" Value=""/>
@@ -10073,18 +10815,18 @@
                     </ItemGroupData>
                     <ItemGroupData ItemGroupOID="GRP.AuditData" ItemGroupRepeatKey="0"/>
                     <ItemGroupData ItemGroupOID="GRP.MetaData" ItemGroupRepeatKey="0">
-                        <ItemData ItemOID="FLD.studyId" Value="1145"/>
+                        <ItemData ItemOID="FLD.studyId" Value="1430"/>
                         <ItemData ItemOID="FLD.formId" Value="5"/>
                         <ItemData ItemOID="FLD.ODMProcessorBaseURL" Value="0"/>
                         <ItemData ItemOID="FLD.eventCode" Value="BASELINE"/>
                         <ItemData ItemOID="FLD.eventRepeatKey" Value="0"/>
                         <ItemData ItemOID="FLD.formCode" Value=""/>
                         <ItemData ItemOID="FLD.formRepeatKey" Value="0"/>
-                        <ItemData ItemOID="FLD.patientId" Value="12345"/>
-                        <ItemData ItemOID="FLD.clinicianId" Value="145689034"/>
+                        <ItemData ItemOID="FLD.patientId" Value="1638"/>
+                        <ItemData ItemOID="FLD.clinicianId" Value="786539821476"/>
                         <ItemData ItemOID="FLD.subStudyID" Value=""/>
-                        <ItemData ItemOID="FLD.instituteId" Value="817814473"/>
-                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0010"/>
+                        <ItemData ItemOID="FLD.instituteId" Value="674531937"/>
+                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0015"/>
                         <ItemData ItemOID="FLD.registrationDate" Value=""/>
                         <ItemData ItemOID="FLD.ODMResultMessage" Value=""/>
                     </ItemGroupData>
@@ -10150,30 +10892,30 @@
                     </ItemGroupData>
                     <ItemGroupData ItemGroupOID="GRP.AuditData" ItemGroupRepeatKey="0"/>
                     <ItemGroupData ItemGroupOID="GRP.MetaData" ItemGroupRepeatKey="0">
-                        <ItemData ItemOID="FLD.studyId" Value="1145"/>
+                        <ItemData ItemOID="FLD.studyId" Value="1430"/>
                         <ItemData ItemOID="FLD.formId" Value="6"/>
                         <ItemData ItemOID="FLD.ODMProcessorBaseURL" Value="0"/>
                         <ItemData ItemOID="FLD.eventCode" Value="BASELINE"/>
                         <ItemData ItemOID="FLD.eventRepeatKey" Value="0"/>
                         <ItemData ItemOID="FLD.formCode" Value=""/>
                         <ItemData ItemOID="FLD.formRepeatKey" Value="0"/>
-                        <ItemData ItemOID="FLD.patientId" Value="12345"/>
-                        <ItemData ItemOID="FLD.clinicianId" Value="145689034"/>
+                        <ItemData ItemOID="FLD.patientId" Value="1638"/>
+                        <ItemData ItemOID="FLD.clinicianId" Value="786539821476"/>
                         <ItemData ItemOID="FLD.subStudyID" Value=""/>
-                        <ItemData ItemOID="FLD.instituteId" Value="817814473"/>
-                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0010"/>
+                        <ItemData ItemOID="FLD.instituteId" Value="674531937"/>
+                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0015"/>
                         <ItemData ItemOID="FLD.registrationDate" Value=""/>
                         <ItemData ItemOID="FLD.ODMResultMessage" Value=""/>
                     </ItemGroupData>
                     <ItemGroupData ItemGroupOID="GRP.VITALSIGN.VITALSIGN" ItemGroupRepeatKey="0">
-                        <ItemData ItemOID="FLD.VITALSIGN.ASSESSMDTC" Value="2016-03-03"/>
-                        <ItemData ItemOID="FLD.VITALSIGN.HEIGHT" Value=""/>
-                        <ItemData ItemOID="FLD.VITALSIGN.WEIGHT" Value=""/>
+                        <ItemData ItemOID="FLD.VITALSIGN.ASSESSMDTC" Value="2017-10-12"/>
+                        <ItemData ItemOID="FLD.VITALSIGN.HEIGHT" Value="162"/>
+                        <ItemData ItemOID="FLD.VITALSIGN.WEIGHT" Value="64.3"/>
                         <ItemData ItemOID="FLD.VITALSIGN.WHO" Value="0"/>
                         <ItemData ItemOID="FLD.VITALSIGN.CTCAE" Value="0"/>
                         <ItemData ItemOID="FLD.VITALSIGN.HEARTRATE" Value="95"/>
-                        <ItemData ItemOID="FLD.VITALSIGN.SISTOLIC" Value=""/>
-                        <ItemData ItemOID="FLD.VITALSIGN.DIASTOLIC" Value=""/>
+                        <ItemData ItemOID="FLD.VITALSIGN.SISTOLIC" Value="157"/>
+                        <ItemData ItemOID="FLD.VITALSIGN.DIASTOLIC" Value="83"/>
                         <ItemData ItemOID="FLD.VITALSIGN.TEMPERATURE" Value=""/>
                         <ItemData ItemOID="FLD.VITALSIGN.REGDTCHK" Value=""/>
                         <ItemData ItemOID="FLD.VITALSIGN.group1" Value=""/>
@@ -10230,24 +10972,24 @@
                     </ItemGroupData>
                     <ItemGroupData ItemGroupOID="GRP.AuditData" ItemGroupRepeatKey="0"/>
                     <ItemGroupData ItemGroupOID="GRP.MetaData" ItemGroupRepeatKey="0">
-                        <ItemData ItemOID="FLD.studyId" Value="1145"/>
+                        <ItemData ItemOID="FLD.studyId" Value="1430"/>
                         <ItemData ItemOID="FLD.formId" Value="7"/>
                         <ItemData ItemOID="FLD.ODMProcessorBaseURL" Value="0"/>
                         <ItemData ItemOID="FLD.eventCode" Value="BASELINE"/>
                         <ItemData ItemOID="FLD.eventRepeatKey" Value="0"/>
                         <ItemData ItemOID="FLD.formCode" Value=""/>
                         <ItemData ItemOID="FLD.formRepeatKey" Value="0"/>
-                        <ItemData ItemOID="FLD.patientId" Value="12345"/>
-                        <ItemData ItemOID="FLD.clinicianId" Value="145689034"/>
+                        <ItemData ItemOID="FLD.patientId" Value="1638"/>
+                        <ItemData ItemOID="FLD.clinicianId" Value="786539821476"/>
                         <ItemData ItemOID="FLD.subStudyID" Value=""/>
-                        <ItemData ItemOID="FLD.instituteId" Value="817814473"/>
-                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0010"/>
+                        <ItemData ItemOID="FLD.instituteId" Value="674531937"/>
+                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0015"/>
                         <ItemData ItemOID="FLD.registrationDate" Value=""/>
                         <ItemData ItemOID="FLD.ODMResultMessage" Value=""/>
                     </ItemGroupData>
                     <ItemGroupData ItemGroupOID="GRP.CARCINOMA.CARCINOMA" ItemGroupRepeatKey="0">
                         <ItemData ItemOID="FLD.CARCINOMA.PTUMLOC" Value="309"/>
-                        <ItemData ItemOID="FLD.CARCINOMA.HISTDTC" Value="2015-01-01"/>
+                        <ItemData ItemOID="FLD.CARCINOMA.HISTDTC" Value="2012-06-20"/>
                         <ItemData ItemOID="FLD.CARCINOMA.NSCLC" Value="8"/>
                         <ItemData ItemOID="FLD.CARCINOMA.NSCLSSP" Value="Gastrointestinal stromal tumor"/>
                         <ItemData ItemOID="FLD.CARCINOMA.DIFFERENT" Value="9"/>
@@ -10328,18 +11070,18 @@
                     </ItemGroupData>
                     <ItemGroupData ItemGroupOID="GRP.AuditData" ItemGroupRepeatKey="0"/>
                     <ItemGroupData ItemGroupOID="GRP.MetaData" ItemGroupRepeatKey="0">
-                        <ItemData ItemOID="FLD.studyId" Value="1145"/>
+                        <ItemData ItemOID="FLD.studyId" Value="1430"/>
                         <ItemData ItemOID="FLD.formId" Value="8"/>
                         <ItemData ItemOID="FLD.ODMProcessorBaseURL" Value="0"/>
                         <ItemData ItemOID="FLD.eventCode" Value="BASELINE"/>
                         <ItemData ItemOID="FLD.eventRepeatKey" Value="0"/>
                         <ItemData ItemOID="FLD.formCode" Value=""/>
                         <ItemData ItemOID="FLD.formRepeatKey" Value="0"/>
-                        <ItemData ItemOID="FLD.patientId" Value="12345"/>
-                        <ItemData ItemOID="FLD.clinicianId" Value="145689034"/>
+                        <ItemData ItemOID="FLD.patientId" Value="1638"/>
+                        <ItemData ItemOID="FLD.clinicianId" Value="786539821476"/>
                         <ItemData ItemOID="FLD.subStudyID" Value=""/>
-                        <ItemData ItemOID="FLD.instituteId" Value="817814473"/>
-                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0010"/>
+                        <ItemData ItemOID="FLD.instituteId" Value="674531937"/>
+                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0015"/>
                         <ItemData ItemOID="FLD.registrationDate" Value=""/>
                         <ItemData ItemOID="FLD.ODMResultMessage" Value=""/>
                     </ItemGroupData>
@@ -10359,8 +11101,8 @@
                         <ItemData ItemOID="FLD.PRETHERAPY.SYSTEMICESTMDTC" Value="1"/>
                         <ItemData ItemOID="FLD.PRETHERAPY.SYSTEMICREG" Value="Imatinib"/>
                         <ItemData ItemOID="FLD.PRETHERAPY.SYSTEMICTYPESP" Value=""/>
-                        <ItemData ItemOID="FLD.PRETHERAPY.SYSTEMICSTDTC" Value="2014-11-09"/>
-                        <ItemData ItemOID="FLD.PRETHERAPY.SYSTEMICENDTC" Value="2017-04-08"/>
+                        <ItemData ItemOID="FLD.PRETHERAPY.SYSTEMICSTDTC" Value="2014-02-22"/>
+                        <ItemData ItemOID="FLD.PRETHERAPY.SYSTEMICENDTC" Value="2016-05-09"/>
                         <ItemData ItemOID="FLD.PRETHERAPY.SYSTEMICRESP" Value="5"/>
                         <ItemData ItemOID="FLD.PRETHERAPY.SYSTEMICONGO" Value="1"/>
                         <ItemData ItemOID="FLD.PRETHERAPY.ONGOING" Value=""/>
@@ -10429,18 +11171,18 @@
                     </ItemGroupData>
                     <ItemGroupData ItemGroupOID="GRP.AuditData" ItemGroupRepeatKey="0"/>
                     <ItemGroupData ItemGroupOID="GRP.MetaData" ItemGroupRepeatKey="0">
-                        <ItemData ItemOID="FLD.studyId" Value="1145"/>
+                        <ItemData ItemOID="FLD.studyId" Value="1430"/>
                         <ItemData ItemOID="FLD.formId" Value="16"/>
                         <ItemData ItemOID="FLD.ODMProcessorBaseURL" Value="0"/>
                         <ItemData ItemOID="FLD.eventCode" Value="BASELINE"/>
                         <ItemData ItemOID="FLD.eventRepeatKey" Value="0"/>
                         <ItemData ItemOID="FLD.formCode" Value=""/>
                         <ItemData ItemOID="FLD.formRepeatKey" Value="0"/>
-                        <ItemData ItemOID="FLD.patientId" Value="12345"/>
-                        <ItemData ItemOID="FLD.clinicianId" Value="145689034"/>
+                        <ItemData ItemOID="FLD.patientId" Value="1638"/>
+                        <ItemData ItemOID="FLD.clinicianId" Value="786539821476"/>
                         <ItemData ItemOID="FLD.subStudyID" Value=""/>
-                        <ItemData ItemOID="FLD.instituteId" Value="817814473"/>
-                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0010"/>
+                        <ItemData ItemOID="FLD.instituteId" Value="674531937"/>
+                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0015"/>
                         <ItemData ItemOID="FLD.registrationDate" Value=""/>
                         <ItemData ItemOID="FLD.ODMResultMessage" Value=""/>
                     </ItemGroupData>
@@ -10449,7 +11191,7 @@
                         <ItemData ItemOID="FLD.ELIGIBILITY.CALLER" Value=""/>
                         <ItemData ItemOID="FLD.ELIGIBILITY.HOSPITALSP" Value=""/>
                         <ItemData ItemOID="FLD.ELIGIBILITY.BIRTHDTCES" Value=""/>
-                        <ItemData ItemOID="FLD.ELIGIBILITY.ICDTCES" Value="2016-10-28"/>
+                        <ItemData ItemOID="FLD.ELIGIBILITY.ICDTCES" Value="2017-11-14"/>
                         <ItemData ItemOID="FLD.ELIGIBILITY.INC01" Value="1"/>
                         <ItemData ItemOID="FLD.ELIGIBILITY.INC02" Value="1"/>
                         <ItemData ItemOID="FLD.ELIGIBILITY.INC03" Value="1"/>
@@ -10473,7 +11215,7 @@
                         <ItemData ItemOID="FLD.ELIGIBILITY.INC19" Value=""/>
                         <ItemData ItemOID="FLD.ELIGIBILITY.INC20" Value="1"/>
                         <ItemData ItemOID="FLD.ELIGIBILITY.ELIG" Value="1"/>
-                        <ItemData ItemOID="FLD.ELIGIBILITY.REGDTC" Value="2017-09-27"/>
+                        <ItemData ItemOID="FLD.ELIGIBILITY.REGDTC" Value="2018-12-10"/>
                         <ItemData ItemOID="FLD.ELIGIBILITY.INC21" Value="1"/>
                         <ItemData ItemOID="FLD.ELIGIBILITY.INC22" Value="1"/>
                         <ItemData ItemOID="FLD.ELIGIBILITY.INC23" Value="1"/>
@@ -10502,10 +11244,10 @@
                         <ItemData ItemOID="FLD.ELIGIBILITY.group2" Value=""/>
                         <ItemData ItemOID="FLD.ELIGIBILITY.group3" Value=""/>
                         <ItemData ItemOID="FLD.ELIGIBILITY.PLTRTOTH" Value=""/>
-                        <ItemData ItemOID="FLD.ELIGIBILITY.BIRTHYEAR" Value="1999"/>
+                        <ItemData ItemOID="FLD.ELIGIBILITY.BIRTHYEAR" Value="1984"/>
                         <ItemData ItemOID="FLD.ELIGIBILITY.group5" Value=""/>
                         <ItemData ItemOID="FLD.ELIGIBILITY.group6" Value=""/>
-                        <ItemData ItemOID="FLD.ELIGIBILITY.YEARDUM" Value=""/>
+                        <ItemData ItemOID="FLD.ELIGIBILITY.YEARDUM" Value="66"/>
                     </ItemGroupData>
                 </FormData>
             </StudyEventData>
@@ -10521,18 +11263,18 @@
                         <ItemData ItemOID="FLD.FormStatus" Value="1"/>
                     </ItemGroupData>
                     <ItemGroupData ItemGroupOID="GRP.MetaData" ItemGroupRepeatKey="0">
-                        <ItemData ItemOID="FLD.studyId" Value="1145"/>
+                        <ItemData ItemOID="FLD.studyId" Value="1430"/>
                         <ItemData ItemOID="FLD.formId" Value="3"/>
                         <ItemData ItemOID="FLD.ODMProcessorBaseURL" Value="0"/>
                         <ItemData ItemOID="FLD.eventCode" Value="TREATMENT"/>
                         <ItemData ItemOID="FLD.eventRepeatKey" Value="0"/>
                         <ItemData ItemOID="FLD.formCode" Value=""/>
                         <ItemData ItemOID="FLD.formRepeatKey" Value="1"/>
-                        <ItemData ItemOID="FLD.patientId" Value="12345"/>
-                        <ItemData ItemOID="FLD.clinicianId" Value="145689034"/>
+                        <ItemData ItemOID="FLD.patientId" Value="1638"/>
+                        <ItemData ItemOID="FLD.clinicianId" Value="786539821476"/>
                         <ItemData ItemOID="FLD.subStudyID" Value=""/>
-                        <ItemData ItemOID="FLD.instituteId" Value="817814473"/>
-                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0010"/>
+                        <ItemData ItemOID="FLD.instituteId" Value="674531937"/>
+                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0015"/>
                         <ItemData ItemOID="FLD.registrationDate" Value=""/>
                         <ItemData ItemOID="FLD.ODMResultMessage" Value=""/>
                     </ItemGroupData>
@@ -10546,7 +11288,7 @@
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.NONTARESPON" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.NOTARESPONSP" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.BESTRESPON" Value="5"/>
-                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.RESPONSEDTC" Value="2015-07-22"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.RESPONSEDTC" Value="2014-07-24"/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LBHEMDTCCHECK" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LBCHEMDTCCHECK" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.ASSDTCCHECK" Value=""/>
@@ -10558,7 +11300,7 @@
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONSITE" Value="12"/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESSITESP" Value="soft tissue"/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONLOCSP" Value="mesenterial"/>
-                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.ASSDTC" Value="2015-05-22"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.ASSDTC" Value="2015-08-30"/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.METHOD" Value="3"/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.METHODSP" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONTYPE" Value="1"/>
@@ -10572,7 +11314,7 @@
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONSITE" Value="3"/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESSITESP" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONLOCSP" Value="right upper lobe"/>
-                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.ASSDTC" Value="2015-02-15"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.ASSDTC" Value="2018-10-20"/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.METHOD" Value="3"/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.METHODSP" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONTYPE" Value="1"/>
@@ -10593,18 +11335,18 @@
                         <ItemData ItemOID="FLD.FormStatus" Value="1"/>
                     </ItemGroupData>
                     <ItemGroupData ItemGroupOID="GRP.MetaData" ItemGroupRepeatKey="0">
-                        <ItemData ItemOID="FLD.studyId" Value="1145"/>
+                        <ItemData ItemOID="FLD.studyId" Value="1430"/>
                         <ItemData ItemOID="FLD.formId" Value="3"/>
                         <ItemData ItemOID="FLD.ODMProcessorBaseURL" Value="0"/>
                         <ItemData ItemOID="FLD.eventCode" Value="TREATMENT"/>
                         <ItemData ItemOID="FLD.eventRepeatKey" Value="0"/>
                         <ItemData ItemOID="FLD.formCode" Value=""/>
                         <ItemData ItemOID="FLD.formRepeatKey" Value="2"/>
-                        <ItemData ItemOID="FLD.patientId" Value="12345"/>
-                        <ItemData ItemOID="FLD.clinicianId" Value="145689034"/>
+                        <ItemData ItemOID="FLD.patientId" Value="1638"/>
+                        <ItemData ItemOID="FLD.clinicianId" Value="786539821476"/>
                         <ItemData ItemOID="FLD.subStudyID" Value=""/>
-                        <ItemData ItemOID="FLD.instituteId" Value="817814473"/>
-                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0010"/>
+                        <ItemData ItemOID="FLD.instituteId" Value="674531937"/>
+                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0015"/>
                         <ItemData ItemOID="FLD.registrationDate" Value=""/>
                         <ItemData ItemOID="FLD.ODMResultMessage" Value=""/>
                     </ItemGroupData>
@@ -10618,7 +11360,7 @@
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.NONTARESPON" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.NOTARESPONSP" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.BESTRESPON" Value="3"/>
-                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.RESPONSEDTC" Value="2016-07-06"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.RESPONSEDTC" Value="2017-01-18"/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LBHEMDTCCHECK" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LBCHEMDTCCHECK" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.ASSDTCCHECK" Value=""/>
@@ -10630,7 +11372,7 @@
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONSITE" Value="12"/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESSITESP" Value="soft tissue"/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONLOCSP" Value="mesenterial"/>
-                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.ASSDTC" Value="2017-08-14"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.ASSDTC" Value="2017-03-15"/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.METHOD" Value="3"/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.METHODSP" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONTYPE" Value="1"/>
@@ -10644,7 +11386,7 @@
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONSITE" Value="3"/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESSITESP" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONLOCSP" Value="right upper lobe"/>
-                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.ASSDTC" Value="2017-09-20"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.ASSDTC" Value="2013-08-27"/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.METHOD" Value="3"/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.METHODSP" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONTYPE" Value="1"/>
@@ -10665,18 +11407,18 @@
                         <ItemData ItemOID="FLD.FormStatus" Value="1"/>
                     </ItemGroupData>
                     <ItemGroupData ItemGroupOID="GRP.MetaData" ItemGroupRepeatKey="0">
-                        <ItemData ItemOID="FLD.studyId" Value="1145"/>
+                        <ItemData ItemOID="FLD.studyId" Value="1430"/>
                         <ItemData ItemOID="FLD.formId" Value="3"/>
                         <ItemData ItemOID="FLD.ODMProcessorBaseURL" Value="0"/>
                         <ItemData ItemOID="FLD.eventCode" Value="TREATMENT"/>
                         <ItemData ItemOID="FLD.eventRepeatKey" Value="0"/>
                         <ItemData ItemOID="FLD.formCode" Value=""/>
                         <ItemData ItemOID="FLD.formRepeatKey" Value="3"/>
-                        <ItemData ItemOID="FLD.patientId" Value="12345"/>
-                        <ItemData ItemOID="FLD.clinicianId" Value="145689034"/>
+                        <ItemData ItemOID="FLD.patientId" Value="1638"/>
+                        <ItemData ItemOID="FLD.clinicianId" Value="786539821476"/>
                         <ItemData ItemOID="FLD.subStudyID" Value=""/>
-                        <ItemData ItemOID="FLD.instituteId" Value="817814473"/>
-                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0010"/>
+                        <ItemData ItemOID="FLD.instituteId" Value="674531937"/>
+                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0015"/>
                         <ItemData ItemOID="FLD.registrationDate" Value=""/>
                         <ItemData ItemOID="FLD.ODMResultMessage" Value=""/>
                     </ItemGroupData>
@@ -10690,7 +11432,7 @@
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.NONTARESPON" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.NOTARESPONSP" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.BESTRESPON" Value="3"/>
-                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.RESPONSEDTC" Value="2017-01-25"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.RESPONSEDTC" Value="2012-05-21"/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LBHEMDTCCHECK" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LBCHEMDTCCHECK" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.ASSDTCCHECK" Value=""/>
@@ -10709,18 +11451,18 @@
                         <ItemData ItemOID="FLD.FormStatus" Value="1"/>
                     </ItemGroupData>
                     <ItemGroupData ItemGroupOID="GRP.MetaData" ItemGroupRepeatKey="0">
-                        <ItemData ItemOID="FLD.studyId" Value="1145"/>
+                        <ItemData ItemOID="FLD.studyId" Value="1430"/>
                         <ItemData ItemOID="FLD.formId" Value="3"/>
                         <ItemData ItemOID="FLD.ODMProcessorBaseURL" Value="0"/>
                         <ItemData ItemOID="FLD.eventCode" Value="TREATMENT"/>
                         <ItemData ItemOID="FLD.eventRepeatKey" Value="0"/>
                         <ItemData ItemOID="FLD.formCode" Value=""/>
                         <ItemData ItemOID="FLD.formRepeatKey" Value="4"/>
-                        <ItemData ItemOID="FLD.patientId" Value="12345"/>
-                        <ItemData ItemOID="FLD.clinicianId" Value="145689034"/>
+                        <ItemData ItemOID="FLD.patientId" Value="1638"/>
+                        <ItemData ItemOID="FLD.clinicianId" Value="786539821476"/>
                         <ItemData ItemOID="FLD.subStudyID" Value=""/>
-                        <ItemData ItemOID="FLD.instituteId" Value="817814473"/>
-                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0010"/>
+                        <ItemData ItemOID="FLD.instituteId" Value="674531937"/>
+                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0015"/>
                         <ItemData ItemOID="FLD.registrationDate" Value=""/>
                         <ItemData ItemOID="FLD.ODMResultMessage" Value=""/>
                     </ItemGroupData>
@@ -10734,12 +11476,186 @@
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.NONTARESPON" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.NOTARESPONSP" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.BESTRESPON" Value="3"/>
-                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.RESPONSEDTC" Value="2018-02-20"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.RESPONSEDTC" Value="2018-09-09"/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LBHEMDTCCHECK" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.LBCHEMDTCCHECK" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.ASSDTCCHECK" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.group5" Value=""/>
                         <ItemData ItemOID="FLD.TUMORMEASUREMENT.group6" Value=""/>
+                    </ItemGroupData>
+                </FormData>
+                <FormData FormOID="FRM.TUMORMEASUREMENT" FormRepeatKey="5">
+                    <ItemGroupData ItemGroupOID="GRP.TUMORMEASUREMENT.Query" ItemGroupRepeatKey="1">
+                        <ItemData ItemOID="FLD.FormStatus" Value="2"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.QueryValue" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.QueryText" Value=""/>
+                        <ItemData ItemOID="FLD.FormStatus" Value="2"/>
+                        <ItemData ItemOID="FLD.FormStatus" Value="2"/>
+                        <ItemData ItemOID="FLD.FormStatus" Value="2"/>
+                        <ItemData ItemOID="FLD.FormStatus" Value="2"/>
+                    </ItemGroupData>
+                    <ItemGroupData ItemGroupOID="GRP.MetaData" ItemGroupRepeatKey="0">
+                        <ItemData ItemOID="FLD.studyId" Value="1430"/>
+                        <ItemData ItemOID="FLD.formId" Value="3"/>
+                        <ItemData ItemOID="FLD.ODMProcessorBaseURL" Value="0"/>
+                        <ItemData ItemOID="FLD.eventCode" Value="TREATMENT"/>
+                        <ItemData ItemOID="FLD.eventRepeatKey" Value="0"/>
+                        <ItemData ItemOID="FLD.formCode" Value=""/>
+                        <ItemData ItemOID="FLD.formRepeatKey" Value="5"/>
+                        <ItemData ItemOID="FLD.patientId" Value="1638"/>
+                        <ItemData ItemOID="FLD.clinicianId" Value="786539821476"/>
+                        <ItemData ItemOID="FLD.subStudyID" Value=""/>
+                        <ItemData ItemOID="FLD.instituteId" Value="674531937"/>
+                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0015"/>
+                        <ItemData ItemOID="FLD.registrationDate" Value=""/>
+                        <ItemData ItemOID="FLD.ODMResultMessage" Value=""/>
+                    </ItemGroupData>
+                    <ItemGroupData ItemGroupOID="GRP.TUMORMEASUREMENT.TUMORMEASUREMENT" ItemGroupRepeatKey="0">
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.WEEKS" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.TMYN" Value="1"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.SUMDIAMETER" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.BONEYN" Value="0"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.TARGRESPON" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.TARGRESPONSP" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.NONTARESPON" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.NOTARESPONSP" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.BESTRESPON" Value="3"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.RESPONSEDTC" Value="2017-03-04"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.LBHEMDTCCHECK" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.LBCHEMDTCCHECK" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.ASSDTCCHECK" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.group5" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.group6" Value=""/>
+                    </ItemGroupData>
+                    <ItemGroupData ItemGroupOID="GRP.TUMORMEASUREMENT.MEASUREMENT" ItemGroupRepeatKey="1">
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONID" Value="1"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONSITE" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESSITESP" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONLOCSP" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.ASSDTC" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.METHOD" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.METHODSP" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONTYPE" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.VOLUME" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.TLDIAMETERBAS" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.CTSLICE" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.SLICNR" Value=""/>
+                    </ItemGroupData>
+                </FormData>
+                <FormData FormOID="FRM.TUMORMEASUREMENT" FormRepeatKey="6">
+                    <ItemGroupData ItemGroupOID="GRP.TUMORMEASUREMENT.Query" ItemGroupRepeatKey="1">
+                        <ItemData ItemOID="FLD.FormStatus" Value="2"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.QueryValue" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.QueryText" Value=""/>
+                        <ItemData ItemOID="FLD.FormStatus" Value="2"/>
+                        <ItemData ItemOID="FLD.FormStatus" Value="2"/>
+                        <ItemData ItemOID="FLD.FormStatus" Value="2"/>
+                        <ItemData ItemOID="FLD.FormStatus" Value="2"/>
+                    </ItemGroupData>
+                    <ItemGroupData ItemGroupOID="GRP.MetaData" ItemGroupRepeatKey="0">
+                        <ItemData ItemOID="FLD.studyId" Value="1430"/>
+                        <ItemData ItemOID="FLD.formId" Value="3"/>
+                        <ItemData ItemOID="FLD.ODMProcessorBaseURL" Value="0"/>
+                        <ItemData ItemOID="FLD.eventCode" Value="TREATMENT"/>
+                        <ItemData ItemOID="FLD.eventRepeatKey" Value="0"/>
+                        <ItemData ItemOID="FLD.formCode" Value=""/>
+                        <ItemData ItemOID="FLD.formRepeatKey" Value="6"/>
+                        <ItemData ItemOID="FLD.patientId" Value="1638"/>
+                        <ItemData ItemOID="FLD.clinicianId" Value="786539821476"/>
+                        <ItemData ItemOID="FLD.subStudyID" Value=""/>
+                        <ItemData ItemOID="FLD.instituteId" Value="674531937"/>
+                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0015"/>
+                        <ItemData ItemOID="FLD.registrationDate" Value=""/>
+                        <ItemData ItemOID="FLD.ODMResultMessage" Value=""/>
+                    </ItemGroupData>
+                    <ItemGroupData ItemGroupOID="GRP.TUMORMEASUREMENT.TUMORMEASUREMENT" ItemGroupRepeatKey="0">
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.WEEKS" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.TMYN" Value="1"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.SUMDIAMETER" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.BONEYN" Value="0"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.TARGRESPON" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.TARGRESPONSP" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.NONTARESPON" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.NOTARESPONSP" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.BESTRESPON" Value="3"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.RESPONSEDTC" Value="2017-10-29"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.LBHEMDTCCHECK" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.LBCHEMDTCCHECK" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.ASSDTCCHECK" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.group5" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.group6" Value=""/>
+                    </ItemGroupData>
+                    <ItemGroupData ItemGroupOID="GRP.TUMORMEASUREMENT.MEASUREMENT" ItemGroupRepeatKey="1">
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONID" Value="1"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONSITE" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESSITESP" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONLOCSP" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.ASSDTC" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.METHOD" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.METHODSP" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONTYPE" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.VOLUME" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.TLDIAMETERBAS" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.CTSLICE" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.SLICNR" Value=""/>
+                    </ItemGroupData>
+                </FormData>
+                <FormData FormOID="FRM.TUMORMEASUREMENT" FormRepeatKey="7">
+                    <ItemGroupData ItemGroupOID="GRP.TUMORMEASUREMENT.Query" ItemGroupRepeatKey="1">
+                        <ItemData ItemOID="FLD.FormStatus" Value="2"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.QueryValue" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.QueryText" Value=""/>
+                        <ItemData ItemOID="FLD.FormStatus" Value="2"/>
+                        <ItemData ItemOID="FLD.FormStatus" Value="2"/>
+                        <ItemData ItemOID="FLD.FormStatus" Value="2"/>
+                        <ItemData ItemOID="FLD.FormStatus" Value="2"/>
+                    </ItemGroupData>
+                    <ItemGroupData ItemGroupOID="GRP.MetaData" ItemGroupRepeatKey="0">
+                        <ItemData ItemOID="FLD.studyId" Value="1430"/>
+                        <ItemData ItemOID="FLD.formId" Value="3"/>
+                        <ItemData ItemOID="FLD.ODMProcessorBaseURL" Value="0"/>
+                        <ItemData ItemOID="FLD.eventCode" Value="TREATMENT"/>
+                        <ItemData ItemOID="FLD.eventRepeatKey" Value="0"/>
+                        <ItemData ItemOID="FLD.formCode" Value=""/>
+                        <ItemData ItemOID="FLD.formRepeatKey" Value="7"/>
+                        <ItemData ItemOID="FLD.patientId" Value="1638"/>
+                        <ItemData ItemOID="FLD.clinicianId" Value="786539821476"/>
+                        <ItemData ItemOID="FLD.subStudyID" Value=""/>
+                        <ItemData ItemOID="FLD.instituteId" Value="674531937"/>
+                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0015"/>
+                        <ItemData ItemOID="FLD.registrationDate" Value=""/>
+                        <ItemData ItemOID="FLD.ODMResultMessage" Value=""/>
+                    </ItemGroupData>
+                    <ItemGroupData ItemGroupOID="GRP.TUMORMEASUREMENT.TUMORMEASUREMENT" ItemGroupRepeatKey="0">
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.WEEKS" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.TMYN" Value="1"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.SUMDIAMETER" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.BONEYN" Value="0"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.TARGRESPON" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.TARGRESPONSP" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.NONTARESPON" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.NOTARESPONSP" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.BESTRESPON" Value="3"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.RESPONSEDTC" Value="2016-04-19"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.LBHEMDTCCHECK" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.LBCHEMDTCCHECK" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.ASSDTCCHECK" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.group5" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.group6" Value=""/>
+                    </ItemGroupData>
+                    <ItemGroupData ItemGroupOID="GRP.TUMORMEASUREMENT.MEASUREMENT" ItemGroupRepeatKey="1">
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONID" Value="1"/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONSITE" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESSITESP" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONLOCSP" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.ASSDTC" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.METHOD" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.METHODSP" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.LESIONTYPE" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.VOLUME" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.TLDIAMETERBAS" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.CTSLICE" Value=""/>
+                        <ItemData ItemOID="FLD.TUMORMEASUREMENT.SLICNR" Value=""/>
                     </ItemGroupData>
                 </FormData>
             </StudyEventData>
@@ -10793,18 +11709,18 @@
                     </ItemGroupData>
                     <ItemGroupData ItemGroupOID="GRP.AuditData" ItemGroupRepeatKey="0"/>
                     <ItemGroupData ItemGroupOID="GRP.MetaData" ItemGroupRepeatKey="0">
-                        <ItemData ItemOID="FLD.studyId" Value="1145"/>
+                        <ItemData ItemOID="FLD.studyId" Value="1430"/>
                         <ItemData ItemOID="FLD.formId" Value="17"/>
                         <ItemData ItemOID="FLD.ODMProcessorBaseURL" Value="0"/>
                         <ItemData ItemOID="FLD.eventCode" Value="AFTERBIOPT"/>
                         <ItemData ItemOID="FLD.eventRepeatKey" Value="0"/>
                         <ItemData ItemOID="FLD.formCode" Value=""/>
                         <ItemData ItemOID="FLD.formRepeatKey" Value="1"/>
-                        <ItemData ItemOID="FLD.patientId" Value="12345"/>
-                        <ItemData ItemOID="FLD.clinicianId" Value="145689034"/>
+                        <ItemData ItemOID="FLD.patientId" Value="1638"/>
+                        <ItemData ItemOID="FLD.clinicianId" Value="786539821476"/>
                         <ItemData ItemOID="FLD.subStudyID" Value=""/>
-                        <ItemData ItemOID="FLD.instituteId" Value="817814473"/>
-                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0010"/>
+                        <ItemData ItemOID="FLD.instituteId" Value="674531937"/>
+                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0015"/>
                         <ItemData ItemOID="FLD.registrationDate" Value=""/>
                         <ItemData ItemOID="FLD.ODMResultMessage" Value=""/>
                     </ItemGroupData>
@@ -10830,7 +11746,7 @@
                         <ItemData ItemOID="FLD.TRTAFTER.SYSTYPEOTHPOST" Value=""/>
                         <ItemData ItemOID="FLD.TRTAFTER.SYSCCYCLPOST" Value=""/>
                         <ItemData ItemOID="FLD.TRTAFTER.CUMDOSE" Value=""/>
-                        <ItemData ItemOID="FLD.TRTAFTER.SYSSTDT" Value="2017-04-10"/>
+                        <ItemData ItemOID="FLD.TRTAFTER.SYSSTDT" Value="2014-11-16"/>
                         <ItemData ItemOID="FLD.TRTAFTER.SYSENDT" Value=""/>
                         <ItemData ItemOID="FLD.TRTAFTER.RSTESTBIO" Value="9"/>
                         <ItemData ItemOID="FLD.TRTAFTER.ONGOINGST" Value="1"/>
@@ -10905,18 +11821,18 @@
                     </ItemGroupData>
                     <ItemGroupData ItemGroupOID="GRP.AuditData" ItemGroupRepeatKey="0"/>
                     <ItemGroupData ItemGroupOID="GRP.MetaData" ItemGroupRepeatKey="0">
-                        <ItemData ItemOID="FLD.studyId" Value="1145"/>
+                        <ItemData ItemOID="FLD.studyId" Value="1430"/>
                         <ItemData ItemOID="FLD.formId" Value="10"/>
                         <ItemData ItemOID="FLD.ODMProcessorBaseURL" Value="0"/>
                         <ItemData ItemOID="FLD.eventCode" Value="BIOPSY"/>
                         <ItemData ItemOID="FLD.eventRepeatKey" Value="1"/>
                         <ItemData ItemOID="FLD.formCode" Value=""/>
                         <ItemData ItemOID="FLD.formRepeatKey" Value="0"/>
-                        <ItemData ItemOID="FLD.patientId" Value="12345"/>
-                        <ItemData ItemOID="FLD.clinicianId" Value="145689034"/>
+                        <ItemData ItemOID="FLD.patientId" Value="1638"/>
+                        <ItemData ItemOID="FLD.clinicianId" Value="786539821476"/>
                         <ItemData ItemOID="FLD.subStudyID" Value=""/>
-                        <ItemData ItemOID="FLD.instituteId" Value="817814473"/>
-                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0010"/>
+                        <ItemData ItemOID="FLD.instituteId" Value="674531937"/>
+                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0015"/>
                         <ItemData ItemOID="FLD.registrationDate" Value=""/>
                         <ItemData ItemOID="FLD.ODMResultMessage" Value=""/>
                     </ItemGroupData>
@@ -10983,23 +11899,23 @@
                     </ItemGroupData>
                     <ItemGroupData ItemGroupOID="GRP.AuditData" ItemGroupRepeatKey="0"/>
                     <ItemGroupData ItemGroupOID="GRP.MetaData" ItemGroupRepeatKey="0">
-                        <ItemData ItemOID="FLD.studyId" Value="1145"/>
+                        <ItemData ItemOID="FLD.studyId" Value="1430"/>
                         <ItemData ItemOID="FLD.formId" Value="11"/>
                         <ItemData ItemOID="FLD.ODMProcessorBaseURL" Value="0"/>
                         <ItemData ItemOID="FLD.eventCode" Value="BIOPSY"/>
                         <ItemData ItemOID="FLD.eventRepeatKey" Value="1"/>
                         <ItemData ItemOID="FLD.formCode" Value=""/>
                         <ItemData ItemOID="FLD.formRepeatKey" Value="0"/>
-                        <ItemData ItemOID="FLD.patientId" Value="12345"/>
-                        <ItemData ItemOID="FLD.clinicianId" Value="145689034"/>
+                        <ItemData ItemOID="FLD.patientId" Value="1638"/>
+                        <ItemData ItemOID="FLD.clinicianId" Value="786539821476"/>
                         <ItemData ItemOID="FLD.subStudyID" Value=""/>
-                        <ItemData ItemOID="FLD.instituteId" Value="817814473"/>
-                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0010"/>
+                        <ItemData ItemOID="FLD.instituteId" Value="674531937"/>
+                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0015"/>
                         <ItemData ItemOID="FLD.registrationDate" Value=""/>
                         <ItemData ItemOID="FLD.ODMResultMessage" Value=""/>
                     </ItemGroupData>
                     <ItemGroupData ItemGroupOID="GRP.BIOBIOPSIES.BIOBIOPSIES" ItemGroupRepeatKey="0">
-                        <ItemData ItemOID="FLD.BIOBIOPSIES.BIOPSYARDTC" Value="2017-03-12"/>
+                        <ItemData ItemOID="FLD.BIOBIOPSIES.BIOPSYARDTC" Value="2015-08-23"/>
                         <ItemData ItemOID="FLD.BIOBIOPSIES.BIOPSYNR" Value=""/>
                         <ItemData ItemOID="FLD.BIOBIOPSIES.PATASSESDTC" Value=""/>
                         <ItemData ItemOID="FLD.BIOBIOPSIES.BIOBANKCON" Value=""/>
@@ -11035,18 +11951,18 @@
                         <ItemData ItemOID="FLD.BIOPS.QueryText" Value=""/>
                     </ItemGroupData>
                     <ItemGroupData ItemGroupOID="GRP.MetaData" ItemGroupRepeatKey="0">
-                        <ItemData ItemOID="FLD.studyId" Value="1145"/>
+                        <ItemData ItemOID="FLD.studyId" Value="1430"/>
                         <ItemData ItemOID="FLD.formId" Value="23"/>
                         <ItemData ItemOID="FLD.ODMProcessorBaseURL" Value="0"/>
                         <ItemData ItemOID="FLD.eventCode" Value="BIOPSY"/>
                         <ItemData ItemOID="FLD.eventRepeatKey" Value="1"/>
                         <ItemData ItemOID="FLD.formCode" Value=""/>
                         <ItemData ItemOID="FLD.formRepeatKey" Value="0"/>
-                        <ItemData ItemOID="FLD.patientId" Value="12345"/>
-                        <ItemData ItemOID="FLD.clinicianId" Value="145689034"/>
+                        <ItemData ItemOID="FLD.patientId" Value="1638"/>
+                        <ItemData ItemOID="FLD.clinicianId" Value="786539821476"/>
                         <ItemData ItemOID="FLD.subStudyID" Value=""/>
-                        <ItemData ItemOID="FLD.instituteId" Value="817814473"/>
-                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0010"/>
+                        <ItemData ItemOID="FLD.instituteId" Value="674531937"/>
+                        <ItemData ItemOID="FLD.subjectKey" Value="CPCT-02-00-0015"/>
                         <ItemData ItemOID="FLD.registrationDate" Value=""/>
                         <ItemData ItemOID="FLD.ODMResultMessage" Value=""/>
                     </ItemGroupData>
@@ -11089,7 +12005,7 @@
                         <ItemData ItemOID="FLD.BIOPS.BILESSITE" Value="12"/>
                         <ItemData ItemOID="FLD.BIOPS.BIOTHLESSITE" Value="abdomen"/>
                         <ItemData ItemOID="FLD.BIOPS.BILESLOC" Value="left mesenterial"/>
-                        <ItemData ItemOID="FLD.BIOPS.BIOPTDT" Value="2015-09-24"/>
+                        <ItemData ItemOID="FLD.BIOPS.BIOPTDT" Value="2017-07-14"/>
                         <ItemData ItemOID="FLD.BIOPS.BIIMAGE" Value="5"/>
                         <ItemData ItemOID="FLD.BIOPS.BIOTHIMAGE" Value=""/>
                         <ItemData ItemOID="FLD.BIOPS.BILESTYPE" Value="9"/>
