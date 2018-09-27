@@ -230,7 +230,7 @@ public class SvClusteringMethods {
         boolean logDetails = false;
         // if(group1.chromosome().equals("15") && group1.arm().equals("Q") && (var1 != null || var2 != null))
         if(group1.chromosome().equals("15") && group1.arm().equals("Q")
-        && ((var1 != null && var1.id().equals("14437")) || (var2 != null && var2.id().equals("14437"))))
+        && ((var1 != null && var1.id().equals("14232")) || (var2 != null && var2.id().equals("14232"))))
         {
             logDetails = true;
         }
@@ -253,7 +253,7 @@ public class SvClusteringMethods {
         }
 
         // check for overlapping SVs based on the outer start and end positions
-        if(group1.posEnd() < group2.posStart() || group1.posStart() > group2.posEnd())
+        if((group1.hasEndSet() && group1.posEnd() < group2.posStart()) || (group2.hasEndSet() && group1.posStart() > group2.posEnd()))
         {
             if(logDetails)
                 LOGGER.debug("groups({} and {}) outside range", group1.posId(), group2.posId());
@@ -292,6 +292,8 @@ public class SvClusteringMethods {
 
     public void populateChromosomeBreakendMap(List<SvClusterData> allVariants)
     {
+        mChrBreakendMap.clear();
+
         // add each SV's breakends to a map keyed by chromosome, with the breakends in order of position lowest to highest
         for(final SvClusterData var : allVariants)
         {
@@ -344,6 +346,11 @@ public class SvClusteringMethods {
             {
                 final SvBreakend breakend = breakendList.get(i);
                 SvClusterData var = breakend.getSV();
+
+                if(var.id().equals("52520"))
+                {
+                    LOGGER.debug("s");
+                }
 
                 SvBreakend prevBreakend = (i > 0) ? breakendList.get(i - 1) : null;
                 SvBreakend nextBreakend = (i < breakendCount-1) ? breakendList.get(i + 1) : null;

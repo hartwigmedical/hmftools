@@ -18,7 +18,7 @@ public class SvArmGroup {
     private final String mArm;
     private long mStartPos;
     private long mEndPos;
-
+    private boolean mHasEndSet; // for arms with only a BND or SGL
 
     public SvArmGroup(final SvCluster cluster, final String chr, final String arm)
     {
@@ -26,8 +26,9 @@ public class SvArmGroup {
 
         mChromosome = chr;
         mArm = arm;
-        mStartPos = 0;
-        mEndPos = 0;
+        mStartPos = -1;
+        mEndPos = -1;
+        mHasEndSet = false;
         mSVs = Lists.newArrayList();
     }
 
@@ -39,6 +40,7 @@ public class SvArmGroup {
     public final String arm() { return mArm; }
     public long posStart() { return mStartPos; }
     public long posEnd() { return mEndPos; }
+    public boolean hasEndSet() { return mHasEndSet; }
 
     public List<SvClusterData> getSVs() { return mSVs; }
     public int getCount() { return mSVs.size(); }
