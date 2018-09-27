@@ -47,7 +47,7 @@ public class ActionabilityVariantsAnalyzer {
     }
 
     private void printTable(@NotNull int digit, @NotNull String isActionable) {
-        LOGGER.info(variants.get(digit).gene() + "\t" + variants.get(digit).chromosome() + "\t" + variants.get(digit).position()
+        LOGGER.info(variants.get(digit).gene() + "\t" + variants.get(digit).chromosome() + "\t" + variants.get(digit).position() + "\t"
                 + variants.get(digit).ref() + "\t" + variants.get(digit).alt() + "\t" + variants.get(digit).drug()
                 + "\t" + variants.get(digit).drugsType() + "\t" + variants.get(digit).cancerType()
                 + "\t" + variants.get(digit).levelHmf() + "\t" + variants.get(digit).evidenceType() +
