@@ -65,6 +65,9 @@ import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.filter.SGTFilter;
+import com.hartwig.hmftools.common.variant.recovery.RecoveredVariant;
+import com.hartwig.hmftools.common.variant.recovery.RecoveredVariantFile;
+import com.hartwig.hmftools.common.variant.recovery.StructuralVariantRecovery;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.version.VersionInfo;
@@ -104,6 +107,7 @@ public class PurityPloidyEstimateApplication {
     private static final String SOMATIC_DEVIATION_WEIGHT = "somatic_deviation_weight";
     private static final String HIGHLY_DIPLOID_PERCENTAGE = "highly_diploid_percentage";
     private static final String VERSION = "version";
+    private static final String SV_RECOVERY_VCF = "sv_recovery_vcf";
 
     public static void main(final String... args)
             throws ParseException, IOException, SQLException, ExecutionException, InterruptedException {
@@ -230,6 +234,13 @@ public class PurityPloidyEstimateApplication {
                     fittedRegions,
                     structuralVariants);
             final List<PurpleCopyNumber> copyNumbers = copyNumberFactory.copyNumbers();
+
+            if (cmd.hasOption(SV_RECOVERY_VCF)) {
+                final StructuralVariantRecovery recovery = new StructuralVariantRecovery(cmd.getOptionValue(SV_RECOVERY_VCF));
+                final List<RecoveredVariant> recovered = recovery.doStuff(copyNumbers);
+                RecoveredVariantFile.write(config.outputDirectory() +  "/" + tumorSample + ".recovery.tsv", recovered);
+            }
+
             final List<PurpleCopyNumber> germlineDeletions = copyNumberFactory.germlineDeletions();
 
             final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, copyNumbers);
@@ -350,6 +361,8 @@ public class PurityPloidyEstimateApplication {
 
         options.addOption(SOMATIC_DEVIATION_WEIGHT, true, "SOMATIC_DEVIATION_WEIGHT");
         options.addOption(HIGHLY_DIPLOID_PERCENTAGE, true, "HIGHLY_DIPLOID_PERCENTAGE");
+
+        options.addOption(SV_RECOVERY_VCF, true, "SV_RECOVERY_VCF");
 
         return options;
     }
