@@ -16,3 +16,7 @@ const val SAMPLE_MAPPING_OUTPUT_FILE = "mapping_out"
 
 // JOBA: Resource locations
 const val CURRENT_IDS_FILE = "/sample_hashes.csv"
+
+object Version {
+    override fun toString(): String = this::class.java.getPackage().implementationVersion
+}
