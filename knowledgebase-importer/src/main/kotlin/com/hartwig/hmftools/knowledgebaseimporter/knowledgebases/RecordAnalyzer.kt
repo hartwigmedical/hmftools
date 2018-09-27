@@ -10,7 +10,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.transvar.*
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import org.apache.logging.log4j.LogManager
 
-class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFastaSequenceFile, private val geneModel: GeneModel) {
+class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFastaSequenceFile) {
     companion object {
         private val blacklistedDrugs = setOf("chemotherapy", "aspirin", "steroid")
         private val logger = LogManager.getLogger("RecordAnalyzer")
@@ -18,6 +18,7 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
 
     private val cdnaAnalyzer = TransvarCdnaAnalyzer(transvarLocation)
     private val proteinAnalyzer = TransvarProteinAnalyzer(transvarLocation)
+    private val geneModel = GeneModel()
 
     fun knownVariants(knowledgebases: List<KnowledgebaseSource<*, *>>): List<KnownVariantOutput> {
         val records = knowledgebases.flatMap { it.knownKbRecords }

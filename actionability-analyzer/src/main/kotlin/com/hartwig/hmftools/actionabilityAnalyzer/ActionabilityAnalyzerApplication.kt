@@ -4,9 +4,6 @@ import com.hartwig.hmftools.extensions.cli.createCommandLine
 import com.hartwig.hmftools.extensions.cli.options.HmfOptions
 import com.hartwig.hmftools.extensions.cli.options.strings.RequiredInputOption
 import com.hartwig.hmftools.extensions.csv.CsvWriter
-import com.hartwig.hmftools.knowledgebaseimporter.DB_PASSWORD
-import com.hartwig.hmftools.knowledgebaseimporter.DB_USER
-import com.hartwig.hmftools.knowledgebaseimporter.HMFPATIENTS_DB
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess
 import com.hartwig.hmftools.patientdb.data.PotentialActionableCNV
 import com.hartwig.hmftools.patientdb.data.PotentialActionableFusion
@@ -21,6 +18,9 @@ private val logger = LogManager.getLogger("ActionabilityAnalyzerApplication")
 const val SAMPLE_ID = "sample_ID"
 const val OUTPUT_DIRECTORY = "output_dir"
 const val KNOWLEDGEBASE = "knowledgebase"
+const val HMFPATIENTS_DB = "hmfpatients_db"
+const val DB_USER = "db_user"
+const val DB_PASSWORD = "db_password"
 
 fun main(args: Array<String>) {
     logger.info("Start processing actionability")
