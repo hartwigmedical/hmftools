@@ -24,7 +24,7 @@ data class CivicRecord(private val metadata: RecordMetadata, override val refere
             val actionability = evidence.filter { it.direction == "Supports" }.flatMap { it.actionabilityItems }
             val doids = evidence.associateBy({ it.disease }, { Doid(it.doid) })
             val somaticEvents = reader.read(input)
-            return CivicRecord(metadata, "", annotation, somaticEvents, actionability, doids)
+            return CivicRecord(metadata, input.variant_id, annotation, somaticEvents, actionability, doids)
         }
 
         private fun annotation(evidence: Collection<CivicEvidence>): String {

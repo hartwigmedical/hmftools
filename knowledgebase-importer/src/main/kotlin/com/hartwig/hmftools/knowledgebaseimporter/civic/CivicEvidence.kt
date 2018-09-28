@@ -13,7 +13,7 @@ data class CivicEvidence(private val input: CivicEvidenceInput, private val drug
     val type: String = input.evidence_type
     val direction: String = input.evidence_direction
     val level: String = input.evidence_level
-    val actionabilityItems = Actionability("civic", input.evidence_id, listOf(disease),
+    val actionabilityItems = Actionability("civic", "variant:" + input.variant_id, listOf(disease),
                                            getDrugs(input, drugInteractionMap, treatmentTypeMap), level, input.clinical_significance, type,
                                            HmfLevel(level), HmfResponse(input.clinical_significance))
 
