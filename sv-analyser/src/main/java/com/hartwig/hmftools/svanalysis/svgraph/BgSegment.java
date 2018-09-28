@@ -1,12 +1,11 @@
 package com.hartwig.hmftools.svanalysis.svgraph;
 
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
 import com.hartwig.hmftools.common.position.GenomeInterval;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,9 +13,9 @@ import org.jetbrains.annotations.Nullable;
  * Segment of DNA
  */
 public class BgSegment implements GenomeInterval {
-    private PurpleCopyNumber cn;
-    public BgSegment(PurpleCopyNumber cn) {
-        this.cn = cn;
+    private PurpleCopyNumber _cn;
+    public BgSegment(PurpleCopyNumber _cn) {
+        this._cn = _cn;
     }
     public static BgSegment createUnplacedSegment() {
         return new BgSegment(ImmutablePurpleCopyNumber.builder()
@@ -27,12 +26,14 @@ public class BgSegment implements GenomeInterval {
                 .start(1)
                 .end(1)
                 .averageTumorCopyNumber(0)
+                .bafCount(0)
                 .averageActualBAF(0)
                 .averageObservedBAF(0)
+                .depthWindowCount(0)
                 .build());
     }
     public double ploidy() {
-        return cn.averageTumorCopyNumber();
+        return _cn.averageTumorCopyNumber();
     }
     @Nullable
     @Override
@@ -43,32 +44,41 @@ public class BgSegment implements GenomeInterval {
     @Nullable
     @Override
     public Integer endOffset() {
-        return (int)(cn.end() - cn.start());
+        return (int)(_cn.end() - _cn.start());
     }
 
     @NotNull
     @Override
     public String chromosome() {
-        return cn.chromosome();
+        return _cn.chromosome();
     }
 
     @Override
     public long position() {
-        return cn.start();
+        return _cn.start();
     }
     private static boolean canMerge(BgSegment left, BgSegment right) {
-        return left.cn.end() == right.cn.start() - 1 && left.cn.chromosome().equals(right.cn.chromosome());
+        return left._cn.end() == right._cn.start() - 1 && left._cn.chromosome().equals(right._cn.chromosome());
     }
     public static BgSegment merge(BgSegment left, BgSegment right) {
         if (!canMerge(left, right)) {
             throw new IllegalArgumentException("Cannot merge segments");
         }
-        if (left.cn.segmentEndSupport() == SegmentSupport.CENTROMERE ||  right.cn.segmentStartSupport() == SegmentSupport.CENTROMERE) {
+        if (left._cn.segmentEndSupport() == SegmentSupport.CENTROMERE ||  right._cn.segmentStartSupport() == SegmentSupport.CENTROMERE) {
             throw new IllegalArgumentException("Merging across centromere");
         }
-        BgSegment merged = new BgSegment(merge(left.cn, right.cn));
+        BgSegment merged = new BgSegment(merge(left._cn, right._cn));
         return merged;
     }
+    public PurpleCopyNumber cn() {
+        return _cn;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s:%d-%d CN:%f", chromosome(), startPosition(), endPosition(), ploidy());
+    }
+
     private static PurpleCopyNumber merge(PurpleCopyNumber left, PurpleCopyNumber right) {
         long length = left.length() + right.length();
         int bafCount = left.bafCount() + right.bafCount();
