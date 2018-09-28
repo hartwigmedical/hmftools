@@ -86,7 +86,6 @@ private fun readKnowledgebases(cmd: CommandLine, diseaseOntology: DiseaseOntolog
     val cosmic = Cosmic(cmd.getOptionValue(COSMIC_FUSIONS_LOCATION))
     val iclusion = Iclusion(readIclusionStudies(cmd), diseaseOntology, recordAnalyzer)
 
-//    return listOf(cgi)
     return listOf(oncoKb, cgi, civic, cosmic, iclusion)
 }
 
