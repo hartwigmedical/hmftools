@@ -2,12 +2,16 @@ package com.hartwig.hmftools.svanalysis.analysis;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getVariantChrArm;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.variantMatchesBreakend;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvClusterData.isStart;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.findLinkedPair;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
@@ -39,9 +43,14 @@ public class SvCluster
     private List<SvClusterData> mSVs; // SVs within close promximity of each other
     private List<SvBreakend> mUniqueBreakends; // for duplicate BE searches
     private List<SvChain> mChains; // pairs of SVs linked into chains
-    private List<SvLinkedPair> mLinkedPairs; // forming a TI or DB
+    private List<SvLinkedPair> mLinkedPairs; // final set after chaining and linking
+    private List<SvLinkedPair> mInferredLinkedPairs; // forming a TI or DB
+    private List<SvLinkedPair> mAssemblyLinkedPairs; // TIs found during assembly
     private List<SvClusterData> mSpanningSVs; // having 2 duplicate (matching) BEs
     private List<SvArmGroup> mArmGroups;
+    private boolean mIsFullyChained;
+
+    private List<SvCluster> mSubClusters;
 
     private static final Logger LOGGER = LogManager.getLogger(SvCluster.class);
 
@@ -61,8 +70,13 @@ public class SvCluster
 
         // chain data
         mLinkedPairs = Lists.newArrayList();
+        mAssemblyLinkedPairs= Lists.newArrayList();
+        mInferredLinkedPairs = Lists.newArrayList();
         mSpanningSVs = Lists.newArrayList();
         mChains = Lists.newArrayList();
+        mIsFullyChained = false;
+
+        mSubClusters = Lists.newArrayList();
     }
 
     public int getId() { return mClusterId; }
@@ -123,13 +137,101 @@ public class SvCluster
         return null;
     }
 
+    public boolean isSingleArm() { return mArmGroups.size() == 1; }
+
+    public final String linkingChromosome(boolean useStart)
+    {
+        if(mSVs.size() == 1)
+        {
+            if(mSVs.get(0).isNullBreakend() && !useStart)
+                return "";
+
+            return mSVs.get(0).chromosome(useStart);
+        }
+        else if(isFullyChained())
+        {
+            return mChains.get(0).openChromosome(useStart);
+        }
+        else if(!mSubClusters.isEmpty())
+        {
+            return mSubClusters.get(0).linkingChromosome(useStart);
+        }
+        else
+        {
+            return "";
+        }
+    }
+
+    public final String linkingArm(boolean useStart)
+    {
+        if(mSVs.size() == 1)
+        {
+            if(mSVs.get(0).isNullBreakend() && !useStart)
+                return "";
+
+            return mSVs.get(0).arm(useStart);
+        }
+        else if(isFullyChained())
+        {
+            return mChains.get(0).openArm(useStart);
+        }
+        else if(!mSubClusters.isEmpty())
+        {
+            return mSubClusters.get(0).linkingArm(useStart);
+        }
+        else
+        {
+            return "";
+        }
+    }
+
     public List<SvChain> getChains() { return mChains; }
     public void addChain(SvChain chain) { mChains.add(chain); }
+    public void setIsFullyChained(boolean toggle) { mIsFullyChained = toggle; }
+    public boolean isFullyChained() { return mIsFullyChained; }
 
     public final List<SvLinkedPair> getLinkedPairs() { return mLinkedPairs; }
+    public final List<SvLinkedPair> getInferredLinkedPairs() { return mInferredLinkedPairs; }
+    public final List<SvLinkedPair> getAssemblyLinkedPairs() { return mAssemblyLinkedPairs; }
     public final List<SvClusterData> getSpanningSVs() { return mSpanningSVs; }
     public void setLinkedPairs(final List<SvLinkedPair> pairs) { mLinkedPairs = pairs; }
+    public void setInferredLinkedPairs(final List<SvLinkedPair> pairs) { mInferredLinkedPairs = pairs; }
+    public void setAssemblyLinkedPairs(final List<SvLinkedPair> pairs) { mAssemblyLinkedPairs = pairs; }
     public void setSpanningSVs(final List<SvClusterData> svList) { mSpanningSVs = svList; }
+
+    public void addSubCluster(SvCluster cluster)
+    {
+        if(mSubClusters.contains(cluster))
+            return;
+
+        if(cluster.hasSubClusters())
+        {
+            for(SvCluster subCluster : cluster.getSubClusters())
+            {
+                addSubCluster(subCluster);
+            }
+
+            return;
+        }
+        else
+        {
+            mSubClusters.add(cluster);
+        }
+
+        // merge the second cluster into the first
+        for(final SvClusterData var : cluster.getSVs())
+        {
+            addVariant(var);
+        }
+
+        mAssemblyLinkedPairs.addAll(cluster.getAssemblyLinkedPairs());
+        mInferredLinkedPairs.addAll(cluster.getInferredLinkedPairs());
+        mChains.addAll(cluster.getChains());
+        setConsistencyCount();
+    }
+
+    public List<SvCluster> getSubClusters() { return mSubClusters; }
+    public boolean hasSubClusters() { return !mSubClusters.isEmpty(); }
 
     public boolean isConsistent() { return mIsConsistent; }
 
@@ -296,23 +398,9 @@ public class SvCluster
         return count;
     }
 
-    public final SvLinkedPair findLinkedPair(final SvClusterData var, boolean useStart)
+    public final SvLinkedPair getLinkedPair(final SvClusterData var, boolean useStart)
     {
         return findLinkedPair(mLinkedPairs, var, useStart);
-    }
-
-    public static final SvLinkedPair findLinkedPair(final List<SvLinkedPair> linkedPairs, final SvClusterData var, boolean useStart)
-    {
-        for(final SvLinkedPair pair : linkedPairs)
-        {
-            if(var.equals(pair.first()) && useStart == pair.firstLinkOnStart())
-                return pair;
-
-            if(var.equals(pair.second()) && useStart == pair.secondLinkOnStart())
-                return pair;
-        }
-
-        return null;
     }
 
     public final SvChain findChain(final SvClusterData var)

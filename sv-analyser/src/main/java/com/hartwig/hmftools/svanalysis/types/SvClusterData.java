@@ -2,6 +2,9 @@ package com.hartwig.hmftools.svanalysis.types;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator.NO_FS;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
@@ -55,6 +58,8 @@ public class SvClusterData
     private List<String> mEndOtherAssemblies;
     private String mStartAssemblyMatchType;
     private String mEndAssemblyMatchType;
+    private boolean mStartIsReplicatedLink;
+    private boolean mEndIsReplicatedLink;
 
     public static String ASSEMBLY_TYPE_DSB = "dsb";
     public static String ASSEMBLY_TYPE_TI = "asm";
@@ -227,6 +232,11 @@ public class SvClusterData
         return chromosome(true).equals(chromosome(false)) && mStartArm.equals(mEndArm);
     }
 
+    public final boolean isSimpleType()
+    {
+        return (type() == DEL || type() == DUP || type() == INS);
+    }
+
     public static boolean isStart(int svIter) { return svIter == SVI_START; }
 
     public String getTransType() { return mTransType; }
@@ -270,6 +280,8 @@ public class SvClusterData
         mAssemblyEndData = "";
         mStartAssemblyMatchType = ASSEMBLY_MATCH_NONE;
         mEndAssemblyMatchType = ASSEMBLY_MATCH_NONE;
+        mStartIsReplicatedLink = false;
+        mEndIsReplicatedLink = false;
 
         if(!mSVData.startLinkedBy().isEmpty() && !mSVData.startLinkedBy().equals("."))
         {
@@ -303,6 +315,16 @@ public class SvClusterData
                     mEndOtherAssemblies.add(assemblyList[i]);
             }
         }
+    }
+
+    public boolean hasReplicatedLink() { return mStartIsReplicatedLink || mEndIsReplicatedLink; }
+    public boolean isReplicatedLink(boolean useStart) { return useStart ? mStartIsReplicatedLink : mEndIsReplicatedLink; }
+    public void setIsReplicatedLink(boolean useStart, boolean toggle)
+    {
+        if(useStart)
+            mStartIsReplicatedLink = toggle;
+        else
+            mEndIsReplicatedLink = toggle;
     }
 
     public static boolean haveLinkedAssemblies(final SvClusterData var1, final SvClusterData var2, boolean v1Start, boolean v2Start)

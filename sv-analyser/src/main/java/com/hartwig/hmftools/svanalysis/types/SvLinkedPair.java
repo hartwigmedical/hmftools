@@ -20,6 +20,7 @@ public class SvLinkedPair {
 
     public static final String LINK_TYPE_TI = "TI";
     public static final String LINK_TYPE_DB = "DB";
+    public static final String LINK_TYPE_SGL = "SGL";
 
     public SvLinkedPair(SvClusterData first, SvClusterData second, final String linkType, boolean firstLinkOnStart, boolean secondLinkOnStart)
     {
@@ -30,14 +31,21 @@ public class SvLinkedPair {
         mLinkType = linkType;
         mIsInferred = true;
 
-        int length = (int)(first.position(firstLinkOnStart) - second.position(secondLinkOnStart));
-        mLinkLength = abs(length);
-
-        if(mLinkType == LINK_TYPE_TI && mLinkLength < MIN_TEMPLATED_INSERTION_LENGTH)
+        if(mLinkType == LINK_TYPE_SGL)
         {
-            // re-label this as a DB
-            mLinkType = LINK_TYPE_DB;
-            mLinkLength = -mLinkLength;
+            mLinkLength = (int)abs(first.position(true) - second.position(true));
+        }
+        else
+        {
+            int length = (int) (first.position(firstLinkOnStart) - second.position(secondLinkOnStart));
+            mLinkLength = abs(length);
+
+            if (mLinkType == LINK_TYPE_TI && mLinkLength < MIN_TEMPLATED_INSERTION_LENGTH)
+            {
+                // re-label this as a DB
+                mLinkType = LINK_TYPE_DB;
+                mLinkLength = -mLinkLength;
+            }
         }
     }
 
@@ -67,9 +75,27 @@ public class SvLinkedPair {
 
     public final String toString()
     {
+        boolean firstLinkBE = mLinkType == LINK_TYPE_SGL ? !mFirstLinkOnStart : mFirstLinkOnStart;
+        boolean secondLinkBE = mLinkType == LINK_TYPE_SGL ? !mSecondLinkOnStart : mSecondLinkOnStart;
+
         return String.format("%s %s:%d:%s & %s %s:%d:%s",
-                first().id(), first().chromosome(mFirstLinkOnStart), first().position(mFirstLinkOnStart), mFirstLinkOnStart ? "start":"end",
-                second().id(), second().chromosome(mSecondLinkOnStart), second().position(mSecondLinkOnStart), mSecondLinkOnStart ? "start":"end");
+                first().id(), first().chromosome(mFirstLinkOnStart), first().position(firstLinkBE), firstLinkBE ? "start":"end",
+                second().id(), second().chromosome(mSecondLinkOnStart), second().position(secondLinkBE), secondLinkBE ? "start":"end");
+
+    }
+
+    public static final SvLinkedPair findLinkedPair(final List<SvLinkedPair> linkedPairs, final SvClusterData var, boolean useStart)
+    {
+        for(final SvLinkedPair pair : linkedPairs)
+        {
+            if(var.equals(pair.first()) && useStart == pair.firstLinkOnStart())
+                return pair;
+
+            if(var.equals(pair.second()) && useStart == pair.secondLinkOnStart())
+                return pair;
+        }
+
+        return null;
     }
 
     public static String ASSEMBLY_MATCH_MATCHED = "MATCH";

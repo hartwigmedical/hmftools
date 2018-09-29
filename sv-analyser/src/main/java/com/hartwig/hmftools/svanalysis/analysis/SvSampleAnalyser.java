@@ -162,10 +162,9 @@ public class SvSampleAnalyser {
         {
             mAnalyser.setClusterStats(cluster);
             cluster.setUniqueBreakends();
-
-            mAnalyser.findLinksAndChains(mSampleId, cluster);
-            mAnalyser.resolveTransitiveSVs(mSampleId, cluster);
         }
+
+        mAnalyser.findLinksAndChains(mSampleId, mClusters);
 
         mPc4.stop();
 
@@ -271,7 +270,7 @@ public class SvSampleAnalyser {
                 writer.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd");
 
                 // cluster-level info
-                writer.write(",ClusterDesc,Consistency,ArmCount,DupBECount,DupBESiteCount");
+                writer.write(",ClusterDesc,Consistency,ArmCount");
 
                 // linked pair info
                 writer.write(",LnkSvStart,LnkTypeStart,LnkLenStart,LnkSvEnd,LnkTypeEnd,LnkLenEnd");
@@ -334,12 +333,11 @@ public class SvSampleAnalyser {
                                     mClusteringMethods.getChrArmData(var)));
 
                     writer.write(
-                            String.format(",%s,%d,%d,%d,%d",
-                                    cluster.getDesc(), cluster.getConsistencyCount(), cluster.getChromosomalArmCount(),
-                                    duplicateBECount, duplicateBESiteCount));
+                            String.format(",%s,%d,%d",
+                                    cluster.getDesc(), cluster.getConsistencyCount(), cluster.getChromosomalArmCount()));
 
                     // linked pair info
-                    final SvLinkedPair startLP = cluster.findLinkedPair(var, true);
+                    final SvLinkedPair startLP = cluster.getLinkedPair(var, true);
                     String startLinkStr = "0,,-1";
                     String assemblyMatchStart = var.getAssemblyMatchType(true);
                     if(startLP != null)
@@ -348,7 +346,7 @@ public class SvSampleAnalyser {
                                 startLP.first().equals(var) ? startLP.second().id() : startLP.first().id(), startLP.linkType(), startLP.length());
                     }
 
-                    final SvLinkedPair endLP = cluster.findLinkedPair(var, false);
+                    final SvLinkedPair endLP = cluster.getLinkedPair(var, false);
                     String endLinkStr = "0,,-1";
                     String assemblyMatchEnd = var.getAssemblyMatchType(false);
                     if(endLP != null)

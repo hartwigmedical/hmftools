@@ -12,6 +12,9 @@ import java.util.Map;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SVI_END;
+import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvClusterData.isStart;
 
 // common utility methods for clustering logic
 
@@ -357,8 +360,12 @@ public class SvUtilities {
 
         for(final SvClusterData var : svList)
         {
-            consistencyCount += (var.getStartArm() == CHROMOSOME_ARM_P ? 1 : -1) * var.orientation(true);
-            consistencyCount += (var.getEndArm() == CHROMOSOME_ARM_P ? 1 : -1) * var.orientation(false);
+            for(int be = SVI_START; be <= SVI_END; ++be)
+            {
+                boolean useStart = isStart(be);
+                int replication = var.isReplicatedLink(useStart) ? 2 : 1;
+                consistencyCount += (var.arm(useStart) == CHROMOSOME_ARM_P ? 1 : -1) * var.orientation(useStart) * replication;
+            }
         }
 
         return consistencyCount;
@@ -366,8 +373,10 @@ public class SvUtilities {
 
     public static final String getVariantChrArm(final SvClusterData var, boolean isStart)
     {
-        return var.chromosome(isStart) + "_" + var.arm(isStart);
+        return makeChrArmStr(var.chromosome(isStart), var.arm(isStart));
     }
+
+    public static final String makeChrArmStr(final String chr, final String arm) { return chr + "_" + arm; }
 
     public static final String getChrFromChrArm(final String chrArm)
     {

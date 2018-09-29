@@ -45,7 +45,6 @@ public class SvClusteringMethods {
     private Map<String, List<SvBreakend>> mChrBreakendMap;
 
     private static final double REF_BASE_LENGTH = 10000000D;
-    private static int MIN_FOOTPRINT_COUNT = 4;
 
     public SvClusteringMethods(final SvUtilities clusteringUtils)
     {
@@ -59,7 +58,7 @@ public class SvClusteringMethods {
         mChrBreakendMap = new HashMap();
     }
 
-    public double getMedianChrArmRate() { return mMedianChrArmRate; }
+    public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
 
     public void clusterByBaseDistance(List<SvClusterData> allVariants, List<SvCluster> clusters)
     {
@@ -138,7 +137,7 @@ public class SvClusteringMethods {
 
         // the merge must be run a few times since as clusters grow, more single SVs and other clusters
         // will then fall within the bounds of the new larger clusters
-        while(tryMergeClusters(clusters) && iterations < 5)
+        while(mergeOnOverlaps(clusters) && iterations < 5)
         {
             ++iterations;
         }
@@ -149,7 +148,7 @@ public class SvClusteringMethods {
         }
     }
 
-    private boolean tryMergeClusters(List<SvCluster> clusters)
+    private boolean mergeOnOverlaps(List<SvCluster> clusters)
     {
         // merge any overlapping complex clusters and return true if merges were found
         int initClusterCount = clusters.size();
@@ -228,12 +227,15 @@ public class SvClusteringMethods {
         final SvClusterData var2 = count2 == 1 ? list2.get(0) : null;
 
         boolean logDetails = false;
+
+        /*
         // if(group1.chromosome().equals("15") && group1.arm().equals("Q") && (var1 != null || var2 != null))
         if(group1.chromosome().equals("15") && group1.arm().equals("Q")
         && ((var1 != null && var1.id().equals("14232")) || (var2 != null && var2.id().equals("14232"))))
         {
             logDetails = true;
         }
+        */
 
         if(var1 != null && var1.getNearestSvRelation() == RELATION_TYPE_NEIGHBOUR)
             return false;
@@ -511,155 +513,6 @@ public class SvClusteringMethods {
         }
 
         return sortedMap;
-    }
-
-    public void findFootprints(final String sampleId, SvCluster cluster)
-    {
-        if(cluster.getCount() < MIN_FOOTPRINT_COUNT * 2)
-            return;
-
-        List<SvClusterData> crossArmSvs = Lists.newArrayList();
-        List<SvFootprint> footprints = Lists.newArrayList();
-
-        int nextFootprintId = 1;
-
-        for(SvClusterData var : cluster.getSVs())
-        {
-            // put to one side cross-chr, cross-arm and long-spanning SVs
-            if(var.type() == StructuralVariantType.BND || !var.isLocal()
-                    || var.position(false) - var.position(true) > mUtils.getBaseDistance() * 10)
-            {
-                crossArmSvs.add(var);
-                continue;
-            }
-
-            // attempt to find a footprint within proximity of this SV, otherwise make new one
-            boolean found = false;
-
-            for(SvFootprint footprint : footprints)
-            {
-                if (!mUtils.areAnyWithinRange(var.position(true), var.position(false), footprint.posStart(), footprint.posEnd(), mUtils.getBaseDistance())) {
-                    continue;
-                }
-
-                found = true;
-                footprint.addVariant(var, false);
-                break;
-            }
-
-            if(!found)
-            {
-                SvFootprint footprint = new SvFootprint(nextFootprintId++, var.chromosome(true), var.getStartArm());
-                footprint.addVariant(var, false);
-                footprints.add(footprint);
-            }
-        }
-
-        // now merge any footprints which are close to each other
-        for(int i = 0; i < footprints.size(); ++i) {
-
-            SvFootprint fp1 = footprints.get(i);
-
-            for (int j = i + 1; j < footprints.size(); ) {
-                SvFootprint fp2 = footprints.get(j);
-
-                if (!mUtils.areAnyWithinRange(fp1.posStart(), fp1.posEnd(), fp2.posStart(), fp2.posEnd(), mUtils.getBaseDistance())) {
-                    ++j;
-                    continue;
-                }
-
-                LOGGER.debug("merge footprints {} and {}", fp1.posId(), fp2.posId());
-
-                for (SvClusterData var : fp2.getSVs()) {
-                    fp1.addVariant(var, false);
-                }
-
-                footprints.remove(j); // and keep index the same
-            }
-        }
-
-        // remove any small footprints
-        for(int i = 0; i < footprints.size();) {
-
-            SvFootprint footprint = footprints.get(i);
-
-            if (footprint.getCount(false) < MIN_FOOTPRINT_COUNT) {
-                footprints.remove(i);
-                continue;
-            }
-
-            ++i;
-        }
-
-        // finally assign spanning SVs and use these to bridge footprints if possible
-        for(SvClusterData var : crossArmSvs)
-        {
-            SvFootprint startFootprint = null;
-            SvFootprint endFootprint = null;
-
-            for(SvFootprint footprint : footprints)
-            {
-                for(int a = 0; a < 2; ++a)
-                {
-                    boolean useStart = (a == 0);
-
-                    if (!mUtils.areAnyWithinRange(var.position(useStart), var.position(useStart), footprint.posStart(), footprint.posEnd(), mUtils.getBaseDistance()))
-                    {
-                        continue;
-                    }
-
-                    if(useStart)
-                        startFootprint = footprint;
-                    else
-                        endFootprint = footprint;
-
-                    footprint.addVariant(var, true);
-                }
-
-                if(startFootprint != null && endFootprint != null)
-                {
-                    if(startFootprint == endFootprint) {
-                        LOGGER.error("footprint{} matched both ends of spanningSV({})", startFootprint.posId(), var.posId());
-                        continue;
-                    }
-
-                    // skip if already linked
-                    if(startFootprint.getLinkedFootprints().contains(endFootprint))
-                        continue;
-
-                    LOGGER.debug("footprints {} and {} linked by spanningSV({})", startFootprint.posId(), endFootprint.posId(), var.posId());
-
-                    // create links between these footprints
-                    startFootprint.addLinkedFootprint(endFootprint);
-                    endFootprint.addLinkedFootprint(startFootprint);
-                }
-            }
-        }
-
-        // log the final collection of FPs
-        // log the remaining ones
-        for(final SvFootprint footprint : footprints) {
-
-            LOGGER.info("sample({}) cluster({}) footprint({}) has SVs({}) spanSVs({}) linkedFPs({})",
-                    sampleId, cluster.getId(), footprint.posId(), footprint.getCount(false),
-                    footprint.getSpanningSVs().size(), footprint.getLinkedFootprints().size());
-
-            for (SvClusterData var : footprint.getSVs()) {
-
-                LOGGER.info("footprint({}) has sv({})", footprint.posId(), var.posId());
-            }
-
-            for (SvClusterData var : footprint.getSpanningSVs()) {
-
-                LOGGER.info("footprint({}) has spanningSV({})", footprint.posId(), var.posId());
-            }
-
-            for (SvFootprint lnkFP : footprint.getLinkedFootprints()) {
-
-                LOGGER.info("footprint({}) linked to other fp({})", footprint.posId(), lnkFP.posId());
-            }
-        }
-
     }
 
 }

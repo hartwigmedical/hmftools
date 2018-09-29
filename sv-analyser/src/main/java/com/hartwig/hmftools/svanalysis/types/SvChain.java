@@ -14,15 +14,17 @@ public class SvChain {
     private int mId;
     private List<SvClusterData> mSvList;
 
-    // a matching list indicating which end of the SV links to the preceding SV / link
+    // has an entry for each SV, indicating which end of the SV links to the preceding SV / link
     private List<Boolean> mSvStartIsStartLink;
 
     private List<SvLinkedPair> mLinkedPairs;
     private int mLength;
     private boolean mIsClosedLoop;
     private boolean mIsValid;
+    private boolean mHasReplicatedLink;
 
-    private List<Integer> mTILengths;
+    private String mStartFinishChromosome;
+    private String mStartFinishArm;
 
     private static final Logger LOGGER = LogManager.getLogger(SvChain.class);
 
@@ -34,8 +36,10 @@ public class SvChain {
         mSvStartIsStartLink = Lists.newArrayList();
         mLength = 0;
         mIsClosedLoop = false;
+        mHasReplicatedLink = false;
         mIsValid = true;
-        mTILengths = Lists.newArrayList();
+        mStartFinishChromosome = "";
+        mStartFinishArm = "";
     }
 
     public SvChain(final SvChain other)
@@ -46,8 +50,8 @@ public class SvChain {
         mSvStartIsStartLink = Lists.newArrayList();
         mLength = 0;
         mIsClosedLoop = false;
+        mHasReplicatedLink = false;
         mIsValid = true;
-        mTILengths = Lists.newArrayList();
 
         for(final SvLinkedPair pair : other.getLinkedPairs())
         {
@@ -87,6 +91,7 @@ public class SvChain {
             mSvStartIsStartLink.add(!pair.firstLinkOnStart());
             mSvList.add(second);
             mSvStartIsStartLink.add(pair.secondLinkOnStart());
+            setStartFinishStatus();
             return;
         }
 
@@ -101,42 +106,52 @@ public class SvChain {
                 return;
             }
 
-            // no need to add an SV twice (ie to both start and end)
-            mIsClosedLoop = true;
-            return;
-        }
-
-        if(addToStart)
-        {
-            if(mSvList.get(0) == first)
+            if(mLinkedPairs.get(0).hasLinkClash(pair) && (first.hasReplicatedLink() || second.hasReplicatedLink()))
             {
-                // second SV is the new one here
-                mSvList.add(0, second);
-
-                // whichever end is not linked in this pair is the one exposed at the start of the chain
-                mSvStartIsStartLink.add(0, !pair.secondLinkOnStart());
+                // a special case where there is a replicate BND linking to both ends of the rest of the chain (which may be a single other SV)
+                mHasReplicatedLink = true;
             }
             else
             {
-                mSvList.add(0, first);
-                mSvStartIsStartLink.add(0, !pair.firstLinkOnStart());
+                // no need to add an SV twice (ie to both start and end)
+                mIsClosedLoop = true;
             }
         }
         else
         {
-            if(mSvList.get(lastIndex) == first)
+            if (addToStart)
             {
-                mSvList.add(second);
-                mSvStartIsStartLink.add(pair.secondLinkOnStart());
+                if (mSvList.get(0) == first)
+                {
+                    // second SV is the new one here
+                    mSvList.add(0, second);
+
+                    // whichever end is not linked in this pair is the one exposed at the start of the chain
+                    mSvStartIsStartLink.add(0, !pair.secondLinkOnStart());
+                }
+                else
+                {
+                    mSvList.add(0, first);
+                    mSvStartIsStartLink.add(0, !pair.firstLinkOnStart());
+                }
             }
             else
             {
-                mSvList.add(first);
-                mSvStartIsStartLink.add(pair.firstLinkOnStart());
+                if (mSvList.get(lastIndex) == first)
+                {
+                    mSvList.add(second);
+                    mSvStartIsStartLink.add(pair.secondLinkOnStart());
+                }
+                else
+                {
+                    mSvList.add(first);
+                    mSvStartIsStartLink.add(pair.firstLinkOnStart());
+                }
             }
         }
 
         setIsValid();
+        setStartFinishStatus();
     }
 
     public SvClusterData getFirstSV() { return mSvList.isEmpty() ? null : mSvList.get(0); }
@@ -158,6 +173,35 @@ public class SvChain {
     }
 
     public boolean isClosedLoop() { return mIsClosedLoop; }
+    public boolean hasReplicatedLink() { return mHasReplicatedLink; }
+
+    private void setStartFinishStatus()
+    {
+        final String startArm = getFirstSV().arm(firstLinkOpenOnStart());
+        final String startChr = getFirstSV().chromosome(firstLinkOpenOnStart());
+
+        if(mHasReplicatedLink)
+        {
+            mStartFinishArm = startArm;
+            mStartFinishChromosome = startChr;
+        }
+        else if(getLastSV().arm(lastLinkOpenOnStart()).equals(startArm) && getLastSV().chromosome(lastLinkOpenOnStart()).equals(startChr))
+        {
+            mStartFinishArm = startArm;
+            mStartFinishChromosome = startChr;
+        }
+        else
+        {
+            mStartFinishArm = "";
+            mStartFinishChromosome = "";
+        }
+    }
+
+    public String startFinishChromosome() { return mStartFinishChromosome; }
+    public String startFinishArm() { return mStartFinishArm; }
+    public boolean openOnSameArm() { return !mStartFinishArm.isEmpty() && !mStartFinishChromosome.isEmpty(); }
+    public String openChromosome(boolean useStart) { return useStart ? getFirstSV().chromosome(firstLinkOpenOnStart()) : getLastSV().chromosome(lastLinkOpenOnStart()); }
+    public String openArm(boolean useStart) { return useStart ? getFirstSV().arm(firstLinkOpenOnStart()) : getLastSV().arm(lastLinkOpenOnStart()); }
 
     public boolean canAddLinkedPairToStart(final SvLinkedPair pair)
     {
@@ -193,33 +237,6 @@ public class SvChain {
     public boolean linkWouldCloseChain(final SvLinkedPair pair)
     {
         return canAddLinkedPairToStart(pair) && canAddLinkedPairToEnd(pair);
-
-        /*
-        if(pair.first() == getFirstSV() && pair.second() == getLastSV())
-        {
-            // if link open on end but first chain entry open on start BE, won't link
-            if(pair.firstUnlinkedOnStart() != firstLinkOpenOnStart())
-                return false;
-
-            // if link open on end but last chain entry open on start BE, won't link
-            if(pair.secondUnlinkedOnStart() != lastLinkOpenOnStart())
-                return false;
-
-            return true;
-        }
-        else if(pair.second() == getFirstSV() && pair.first() == getLastSV())
-        {
-            if(pair.secondUnlinkedOnStart() != firstLinkOpenOnStart())
-                return false;
-
-            if(pair.firstUnlinkedOnStart() != lastLinkOpenOnStart())
-                return false;
-
-            return true;
-        }
-
-        return false;
-        */
     }
 
     public boolean isIdentical(final SvChain other)
@@ -277,8 +294,11 @@ public class SvChain {
 
                 if(lp1.hasLinkClash(lp2))
                 {
+                    if(mHasReplicatedLink && i == 0)
+                        continue;
+
                     mIsValid = false;
-                    break;
+                    return;
                 }
             }
         }
