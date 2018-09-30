@@ -340,14 +340,14 @@ public class SvCluster
 
     private void addVariantToUniqueBreakends(final SvClusterData var)
     {
-        for(int i = 0; i < 2; ++i)
+        for(int be = SVI_START; be <= SVI_END; ++be)
         {
-            boolean useStart = (i == 0);
+            boolean useStart = isStart(be);
 
             if(var.type() == StructuralVariantType.INV && var.position(false) - var.position(true) <= PERMITED_DUP_BE_DISTANCE)
             {
                 // avoid setting both end of an INV as duplicate if they match
-                if(i == 1)
+                if(!useStart)
                     continue;
             }
 

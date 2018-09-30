@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.svanalysis.annotators;
 
+import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SVI_END;
+import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvClusterData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvGeneData.DRIVER_DEL;
 import static com.hartwig.hmftools.svanalysis.types.SvGeneData.DRIVER_TYPE_TSG;
 
@@ -95,9 +98,9 @@ public class GeneAnnotator {
                 continue;
 
             // check each breakend if the orientations face away from the deleted region
-            for(int i = 0; i < 2; ++i)
+            for(int be = SVI_START; be <= SVI_END; ++be)
             {
-                boolean useStart = (i == 0);
+                boolean useStart = isStart(be);
 
                 if(!geneData.chromosome().equals(var.chromosome(useStart)))
                     continue;

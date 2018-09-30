@@ -68,18 +68,19 @@ public class ClusterAnalyser {
             if(cluster.getCount() < 2)
                 continue;
 
+            // first establish links between SVs (eg TIs and DBs)
             findLinkedPairs(sampleId, cluster);
 
+            // then look for fully-linked clusters, ie chains involving all SVs
             findCompleteChains(sampleId, cluster);
         }
 
-        // now look at merging and resolving across clusters as required
+        // now look at merging unresolved & inconsistent clusters where they share the same chromosomal arms
         mergeInconsistentClusters(clusters);
-
-        // findIncompleteChains(sampleId);
 
         for(SvCluster cluster : clusters)
         {
+            findIncompleteChains(sampleId, cluster);
             resolveTransitiveSVs(sampleId, cluster);
             cacheFinalLinkedPairs(sampleId, cluster);
         }
@@ -264,7 +265,7 @@ public class ClusterAnalyser {
 
     private void findIncompleteChains(final String sampleId, SvCluster cluster)
     {
-        if(cluster.getCount() < 2)
+        if(cluster.getCount() < 2 || cluster.isFullyChained())
             return;
 
         mChainFinder.initialise(sampleId, cluster);
