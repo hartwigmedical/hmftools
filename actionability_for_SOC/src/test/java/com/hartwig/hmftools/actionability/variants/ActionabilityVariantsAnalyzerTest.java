@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.actionability.variants;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -89,8 +90,11 @@ public class ActionabilityVariantsAnalyzerTest {
                 .mappability(0D)
                 .build();
 
-        assertTrue(var.actionableVariants(variant, cancerType, "4159", "Skin"));
+        assertEquals(true, var.actionableVariants(variant, cancerType, "4159", "Skin"));
+        assertEquals(false, var.actionableVariants(variant, cancerType, "4159", "Breast"));
+        assertEquals(true, var.actionableRange(variant, cancerType, "4159", "Skin"));
+        assertEquals(false, var.actionableRange(variant, cancerType, "4159", "Kidney"));
 
-        assertTrue(var.actionableRange(variant, cancerType, "4159", "Skin"));
+
     }
 }
