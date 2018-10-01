@@ -91,8 +91,9 @@ public class ActionabilityVariantsAnalyzerTest {
 
 
         assertTrue(var.actionableVariants(variant, cancerType, "4159", "Skin"));
+      //  assertFalse(var.actionableVariants(variant, cancerType, "4159", "Stomach"));
+
         assertTrue(var.actionableRange(variant, cancerType, "4159", "Skin"));
-      //  assertTrue(var.actionableVariants(variant, cancerType, "4159", "Stomach"));
-      //  assertFalse(var.actionableRange(variant, "Lung"));
+    //   assertFalse(var.actionableRange(variant, cancerType, "4159", "Stomach"));
     }
 }
