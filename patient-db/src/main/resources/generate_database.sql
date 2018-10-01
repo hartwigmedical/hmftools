@@ -350,6 +350,7 @@ CREATE TABLE copyNumber
     actualBaf DOUBLE PRECISION not null,
     copyNumber DOUBLE PRECISION not null,
     copyNumberMethod varchar(255) NOT NULL,
+    gcContent DOUBLE PRECISION not null,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );
@@ -370,6 +371,7 @@ CREATE TABLE copyNumberGermline
     actualBaf DOUBLE PRECISION not null,
     copyNumber DOUBLE PRECISION not null,
     copyNumberMethod varchar(255) NOT NULL,
+    gcContent DOUBLE PRECISION not null,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );

@@ -20,3 +20,11 @@ CREATE TABLE driverCatalog
 
 ALTER TABLE somaticVariant
     CHANGE hotspot hotspot varchar(455) NOT NULL;
+
+
+ALTER TABLE copyNumber
+    ADD gcContent DOUBLE PRECISION not null AFTER copyNumberMethod;
+
+
+ALTER TABLE copyNumberGermline
+    ADD gcContent DOUBLE PRECISION not null AFTER copyNumberMethod;

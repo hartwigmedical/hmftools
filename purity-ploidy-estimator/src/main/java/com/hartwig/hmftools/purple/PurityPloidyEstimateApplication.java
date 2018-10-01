@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -33,6 +34,8 @@ import com.hartwig.hmftools.common.purple.baf.ExpectedBAF;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
+import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
+import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFactory;
@@ -238,7 +241,18 @@ public class PurityPloidyEstimateApplication {
             if (cmd.hasOption(SV_RECOVERY_VCF)) {
                 final StructuralVariantRecovery recovery = new StructuralVariantRecovery(cmd.getOptionValue(SV_RECOVERY_VCF));
                 final List<RecoveredVariant> recovered = recovery.doStuff(copyNumbers);
-                RecoveredVariantFile.write(config.outputDirectory() +  "/" + tumorSample + ".recovery.tsv", recovered);
+                RecoveredVariantFile.write(config.outputDirectory() + "/" + tumorSample + ".recovery.tsv", recovered);
+
+                final Multimap<String, PurpleCopyNumber> copyNumberMap = ArrayListMultimap.create();
+                for (PurpleCopyNumber copyNumber : copyNumbers) {
+                    copyNumberMap.put(copyNumber.chromosome(), copyNumber);
+                }
+
+//                final StructuralVariantLegPloidyFactory<PurpleCopyNumber> svPloidyFactory =
+//                        new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
+//                final List<StructuralVariantLegPloidy> svPloidies = svPloidyFactory.create(structuralVariants, copyNumberMap);
+//                recovery.doStuff2(svPloidies);
+
             }
 
             final List<PurpleCopyNumber> germlineDeletions = copyNumberFactory.germlineDeletions();

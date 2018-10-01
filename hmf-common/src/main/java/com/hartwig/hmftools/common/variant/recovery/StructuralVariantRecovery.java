@@ -7,8 +7,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
@@ -26,6 +29,25 @@ public class StructuralVariantRecovery {
 
     public StructuralVariantRecovery(@NotNull final String vcfFile) {
         this.reader = getFeatureReader(vcfFile, new VCFCodec(), true);
+    }
+
+    public void doStuff2(List<StructuralVariantLegPloidy> svPloidies) throws IOException {
+        for (StructuralVariantLegPloidy svPloidy : svPloidies) {
+            if (Doubles.greaterThan(svPloidy.averageImpliedPloidy(), 0.5) && adjustedCopyNumberChange(svPloidy) > 0.15) {
+
+                System.out.println();
+
+                System.out.println("MADE IT!!");
+            }
+        }
+    }
+
+    @VisibleForTesting
+    static double adjustedCopyNumberChange(@NotNull final StructuralVariantLegPloidy ploidy) {
+        double leftCopyNumber = ploidy.leftCopyNumber().orElse(0D);
+        double rightCopyNumber = ploidy.rightCopyNumber().orElse(0D);
+
+        return ploidy.orientation() == 1 ? leftCopyNumber - rightCopyNumber : rightCopyNumber - leftCopyNumber;
     }
 
     public List<RecoveredVariant> doStuff(@NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException {
@@ -56,6 +78,9 @@ public class StructuralVariantRecovery {
         ImmutableRecoveredVariant.Builder builder = ImmutableRecoveredVariant.builder()
                 .from(current)
                 .copyNumber(current.averageTumorCopyNumber())
+                .support(current.segmentStartSupport())
+                .next(current.segmentEndSupport())
+                .previous(prev.segmentStartSupport())
                 .baf(current.averageActualBAF())
                 .depthWindowCount(current.depthWindowCount())
                 .prevLength(prev.end() - prev.start()  + 1)

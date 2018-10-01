@@ -29,6 +29,7 @@ public class BgSegment implements GenomeInterval {
                 .averageActualBAF(0)
                 .averageObservedBAF(0)
                 .depthWindowCount(0)
+                .gcContent(0)
                 .build());
     }
     public double ploidy() {

@@ -107,6 +107,7 @@ public class PurpleCopyNumberFactory {
                 .segmentEndSupport(trailingSupport)
                 .method(region.copyNumberMethod())
                 .depthWindowCount(region.region().depthWindowCount())
+                .gcContent(region.region().gcContent())
                 .build();
     }
 

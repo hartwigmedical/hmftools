@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.variant.recovery;
 
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.immutables.value.Value;
@@ -23,6 +24,13 @@ public interface RecoveredVariant extends GenomeRegion {
     long prevLength();
 
     int prevDepthWindowCount();
+
+    SegmentSupport previous();
+
+    SegmentSupport support();
+
+    SegmentSupport next();
+
 
     @Nullable
     String variant();

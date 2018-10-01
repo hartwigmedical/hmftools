@@ -33,6 +33,7 @@ public class BreakpointGraphTest {
                 .depthWindowCount(1)
                 .segmentStartSupport(SegmentSupport.UNKNOWN)
                 .segmentEndSupport(SegmentSupport.UNKNOWN)
+                .gcContent(0)
                 .build();
     }
 
