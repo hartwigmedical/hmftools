@@ -290,7 +290,7 @@ public class BreakpointGraph {
     }
     public BgSegment merge(BgSegment left, BgSegment right) {
         if (left == unplacedSegment || right == unplacedSegment) {
-            throw new IllegalArgumentException("Cannot merge placeholder unplaced DNA segment");
+            throw new IllegalArgumentException("Cannot merge placeholder unplaced DNA segment.");
         }
         List<BgAdjacency> leftStart = startEdges.get(left);
         List<BgAdjacency> rightStart = startEdges.get(right);
@@ -298,30 +298,28 @@ public class BreakpointGraph {
         List<BgAdjacency> rightEnd = endEdges.get(right);
 
         if (svCount(leftEnd) > 0 || svCount(rightStart) > 0) {
-            throw new IllegalArgumentException("Cannot merge DNA segments separated by a SV");
+            throw new IllegalArgumentException("Cannot merge DNA segments separated by a SV.");
+        }
+        if (leftEnd.size() != 1 || rightStart.size() != 1 ||
+                leftEnd.get(0).toSegment() != right ||
+                rightStart.get(0).toSegment() != left) {
+            throw new IllegalArgumentException("Cannot merge DNA segments that are not adjacent in the reference.");
         }
         // Create new segment
         BgSegment merged = BgSegment.merge(left, right);
         // update adjacency from segments
-        startEdges.put(merged, leftStart.stream()
-            .map(adj -> ImmutableBgAdjacencyImpl.builder()
-                .from(adj)
-                .fromSegment(merged)
-                .build())
-            .collect(Collectors.toList()));
-        endEdges.put(merged, rightEnd.stream()
-            .map(adj -> ImmutableBgAdjacencyImpl.builder()
-                    .from(adj)
-                    .fromSegment(merged)
-                    .build())
-            .collect(Collectors.toList()));
-        // update adjacency to segments
+        List<BgAdjacency> newStart = leftStart.stream()
+                .map(adj -> replaceSegments(adj, left, right, merged))
+                .collect(Collectors.toList());
+        List<BgAdjacency> newEnd = rightEnd.stream()
+                .map(adj -> replaceSegments(adj, left, right, merged))
+                .collect(Collectors.toList());
+        startEdges.put(merged, newStart);
+        endEdges.put(merged, newEnd);
+        // Update the other side of the adjacencies
         for (BgAdjacency adj: Iterables.concat(leftStart, rightEnd)) {
             BgAdjacency partner = getPartner(adj);
-            BgAdjacency newPartner = ImmutableBgAdjacencyImpl.builder()
-                    .from(partner)
-                    .toSegment(merged)
-                    .build();
+            BgAdjacency newPartner = replaceSegments(partner, left, right, merged);
             getOutgoing(adj.toSegment(), adj.toOrientation()).set(getOutgoing(adj.toSegment(), adj.toOrientation()).indexOf(partner), newPartner);
         }
         // remove old segments from the graph
@@ -335,6 +333,23 @@ public class BreakpointGraph {
                 merged.chromosome(), merged.startPosition(), merged.endPosition(), merged.ploidy());
         sanityCheck();
         return merged;
+    }
+    private static BgAdjacency replaceSegments(BgAdjacency adj, BgSegment left, BgSegment right, BgSegment merged) {
+        ImmutableBgAdjacencyImpl.Builder builder = ImmutableBgAdjacencyImpl.builder()
+                .from(adj);
+        if (adj.fromSegment() == left) {
+            builder.fromSegment(merged);
+        }
+        if (adj.toSegment() == left) {
+            builder.toSegment(merged);
+        }
+        if (adj.fromSegment() == right) {
+            builder.fromSegment(merged);
+        }
+        if (adj.toSegment() == right) {
+            builder.toSegment(merged);
+        }
+        return builder.build();
     }
     private BgAdjacency getPartner(BgAdjacency adj) {
         for (BgAdjacency remoteAdj : getOutgoing(adj.toSegment(), adj.toOrientation())) {
