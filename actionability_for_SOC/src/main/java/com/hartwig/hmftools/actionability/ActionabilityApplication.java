@@ -101,8 +101,8 @@ public abstract class ActionabilityApplication {
         LOGGER.info("Start processing actionability cnvs");
         String fileActionabilityCNVs = "/data/common/dbs/knowledgebases/output/actionableCNVs.tsv";
 
-       LOGGER.info("CNVs: " + geneCopyNumbers.size());
-        if (Files.exists(new File(fileActionabilityCNVs).toPath())) {
+        LOGGER.info("CNVs: " + geneCopyNumbers.size());
+        if (Files.exists(new File(fileActionabilityCNVs).toPath()) && Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
             ActionabilityCNVsAnalyzer analyzerCNVs = ActionabilityCNVsAnalyzer.loadFromFileCNVs(fileActionabilityCNVs);
             CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
             LOGGER.info("Gene" + "\t" + "cnvType" + "\t" + "reference" + "\t" + "drug" + "\t" + "drugType" + "\t" + "cancerType" +
@@ -110,23 +110,12 @@ public abstract class ActionabilityApplication {
             for (int i = 0; i < geneCopyNumbers.size(); i ++) {
                 analyzerCNVs.actionableCNVs(geneCopyNumbers.get(i), cancerTypeAnalyzer, doids, patientTumorLocation.primaryTumorLocation());
            }
-        } else {
+        } else if (!Files.exists(new File(fileActionabilityCNVs).toPath())){
             LOGGER.warn("File does not exist: " + fileActionabilityCNVs);
+        } else if (!Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
+            LOGGER.warn("File does not exist: " + fileCancerTumorsWithDOID);
         }
         LOGGER.info("Finish processing actionability somaticVariants");
-
-        // TODO: LISC
-        // create tabel of variants which are onlabel/offlabel
-
-        // compare results
-
-//        LOGGER.info("Process compare results");
-//        String fileRegionsBedFile = "/data/common/dbs/knowledgebases/SOC_files/PATHv2D_GRCh37.bed.txt";
-//        if (Files.exists(new File(fileRegionsBedFile).toPath())) {
-//            AnalyzerSOC analyzerSOC = AnalyzerSOC.loadFileBedFile(fileRegionsBedFile);
-//        } else {
-//            LOGGER.warn("File does not exist: " + fileRegionsBedFile);
-//        }
     }
 
     @NotNull

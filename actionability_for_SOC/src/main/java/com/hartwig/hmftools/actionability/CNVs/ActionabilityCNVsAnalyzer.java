@@ -33,7 +33,6 @@ public class ActionabilityCNVsAnalyzer {
         for (int i=0; i< CNVs.size();i++) {
             if (CNVs.get(i).cancerType().contains(primaryTumorLocation) &&
                     checkCNVType(minCopyValue).equals(CNVs.get(i).cnvType())) {
-                LOGGER.info(CNVs.get(i));
                 if (CNVs.get(i).cancerType() != "") {
                     if (cancerTypeAnalyzer.foundTumorLocation(CNVs.get(i).cancerType(), doids)) {
                         printTable(i, "yes");
