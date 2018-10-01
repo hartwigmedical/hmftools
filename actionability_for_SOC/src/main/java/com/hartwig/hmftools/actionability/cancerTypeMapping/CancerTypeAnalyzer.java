@@ -50,16 +50,19 @@ public class CancerTypeAnalyzer {
         }
     }
 
-    @NotNull
     public boolean foundTumorLocation (@NotNull String tumorLocationKnowledgebase, @Nullable String doid) {
         Boolean booleanValueRange = false;
-        for (int i = 1; i < cancerTypeDoids.size(); i ++) {
-            if(cancerTypeDoids.get(i).cancerType().contains(tumorLocationKnowledgebase)){
+        LOGGER.info(cancerTypeDoids);
+        LOGGER.info(doid);
+        LOGGER.info(tumorLocationKnowledgebase);
+        for (int i = 0; i < cancerTypeDoids.size(); i ++) {
+            if(tumorLocationKnowledgebase.contains(cancerTypeDoids.get(0).cancerType())){
                 if(cancerTypeDoids.get(i).doidSet().contains(doid)){
                     booleanValueRange = true;
                 }
             }
         }
+        LOGGER.info(booleanValueRange);
         return booleanValueRange;
     }
 }
