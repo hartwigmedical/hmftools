@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.actionability.CNVs.ActionabilityCNVsAnalyzer;
 import com.hartwig.hmftools.actionability.cancerTypeMapping.CancerTypeAnalyzer;
 import com.hartwig.hmftools.actionability.cancerTypeMapping.CancerTypeMappingReading;
 import com.hartwig.hmftools.actionability.variants.ActionabilityVariantsAnalyzer;
@@ -86,9 +87,7 @@ public abstract class ActionabilityApplication {
                     + "hmfResponse" + "\t" + "Actionable variant");
             for (int i = 0; i < variants.size(); i ++) {
                 analyzer.actionableVariants(variants.get(i), cancerTypeAnalyzer, doids, patientTumorLocation.primaryTumorLocation());
-
-
-               // analyzer.actionableRange(variants.get(i), patientTumorLocation.primaryTumorLocation());
+                analyzer.actionableRange(variants.get(i), cancerTypeAnalyzer, doids, patientTumorLocation.primaryTumorLocation());
             }
         } else if (!Files.exists(new File(fileActionabilityVariants).toPath())){
             LOGGER.warn("File does not exist: " + fileActionabilityVariants);
@@ -97,21 +96,24 @@ public abstract class ActionabilityApplication {
         } else if (!Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
             LOGGER.warn("File does not exist: " + fileCancerTumorsWithDOID);
         }
-//
-//        LOGGER.info("");
-//        LOGGER.info("Start processing actionability cnvs");
-//        String fileActionabilityCNVs = "/data/common/dbs/knowledgebases/output/actionableCNVs.tsv";
-//
-//       LOGGER.info("CNVs: " + geneCopyNumbers.size());
-//        if (Files.exists(new File(fileActionabilityCNVs).toPath())) {
-//            ActionabilityCNVsAnalyzer analyzerCNVs = ActionabilityCNVsAnalyzer.loadFromFileCNVs(fileActionabilityCNVs);
-//            for (int i = 0; i < geneCopyNumbers.size(); i ++) {
-//                analyzerCNVs.actionableCNVs(geneCopyNumbers.get(i), patientTumorLocation.primaryTumorLocation());
-//           }
-//        } else {
-//            LOGGER.warn("File does not exist: " + fileActionabilityCNVs);
-//        }
-//        LOGGER.info("Finish processing actionability somaticVariants");
+
+        LOGGER.info("");
+        LOGGER.info("Start processing actionability cnvs");
+        String fileActionabilityCNVs = "/data/common/dbs/knowledgebases/output/actionableCNVs.tsv";
+
+       LOGGER.info("CNVs: " + geneCopyNumbers.size());
+        if (Files.exists(new File(fileActionabilityCNVs).toPath())) {
+            ActionabilityCNVsAnalyzer analyzerCNVs = ActionabilityCNVsAnalyzer.loadFromFileCNVs(fileActionabilityCNVs);
+            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
+            LOGGER.info("Gene" + "\t" + "cnvType" + "\t" + "reference" + "\t" + "drug" + "\t" + "drugType" + "\t" + "cancerType" +
+                    "\t" + "levelHmf" + "\t" + "evidenceType" + "\t" + "significance" + "\t" + "hmfResponse" + "\t" + "Actionable variant");
+            for (int i = 0; i < geneCopyNumbers.size(); i ++) {
+                analyzerCNVs.actionableCNVs(geneCopyNumbers.get(i), cancerTypeAnalyzer, doids, patientTumorLocation.primaryTumorLocation());
+           }
+        } else {
+            LOGGER.warn("File does not exist: " + fileActionabilityCNVs);
+        }
+        LOGGER.info("Finish processing actionability somaticVariants");
 
         // TODO: LISC
         // create tabel of variants which are onlabel/offlabel

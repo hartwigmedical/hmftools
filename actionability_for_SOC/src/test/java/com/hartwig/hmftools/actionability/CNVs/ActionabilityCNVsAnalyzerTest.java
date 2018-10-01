@@ -5,6 +5,9 @@ import static org.junit.Assert.*;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.actionability.cancerTypeMapping.CancerTypeAnalyzer;
+import com.hartwig.hmftools.actionability.cancerTypeMapping.CancerTypeReading;
+import com.hartwig.hmftools.actionability.cancerTypeMapping.ImmutableCancerTypeReading;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
@@ -17,7 +20,7 @@ import org.junit.Test;
 public class ActionabilityCNVsAnalyzerTest {
 
 
-    @Ignore
+    @Test
     public void ActionabilityWorksCNVs() {
         ActionabilityCNVs actionanilityCNV = ImmutableActionabilityCNVs.builder()
                 .gene("ERBB2")
@@ -34,7 +37,13 @@ public class ActionabilityCNVsAnalyzerTest {
                 .hmfResponse("Responsive")
                 .build();
 
+        CancerTypeReading reading = ImmutableCancerTypeReading.builder()
+                .doidSet("1612")
+                .cancerType("Breast")
+                .build();
+
         ActionabilityCNVsAnalyzer cnvAnalyzer = new ActionabilityCNVsAnalyzer(Lists.newArrayList(actionanilityCNV));
+        CancerTypeAnalyzer cancerType = new CancerTypeAnalyzer(Lists.newArrayList(reading));
 
         GeneCopyNumber geneCopyNumber = ImmutableGeneCopyNumber.builder()
                 .gene("ERBB2")
@@ -67,7 +76,7 @@ public class ActionabilityCNVsAnalyzerTest {
                 .missenseNonBiallelicCount(0)
                 .build();
 
-        assertTrue(cnvAnalyzer.actionableCNVs(geneCopyNumber, "Breast"));
-        assertFalse(cnvAnalyzer.actionableCNVs(geneCopyNumber, "Skin"));
+        assertTrue(cnvAnalyzer.actionableCNVs(geneCopyNumber, cancerType, "1612", "Breast"));
+       // assertFalse(cnvAnalyzer.actionableCNVs(geneCopyNumber, "Skin"));
     }
 }

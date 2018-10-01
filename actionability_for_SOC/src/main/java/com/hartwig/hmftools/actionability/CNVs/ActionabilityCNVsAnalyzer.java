@@ -6,11 +6,13 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hartwig.hmftools.actionability.cancerTypeMapping.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
 import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ActionabilityCNVsAnalyzer {
     private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(ActionabilityCNVsAnalyzer.class);
@@ -25,19 +27,30 @@ public class ActionabilityCNVsAnalyzer {
         this.CNVs = CNVs;
     }
 
-    public boolean actionableCNVs(@NotNull GeneCopyNumber geneCopyNumber, @NotNull String primaryTumorLocation){
+    public boolean actionableCNVs(@NotNull GeneCopyNumber geneCopyNumber, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
+            @Nullable String doids, @NotNull String primaryTumorLocation){
         Double minCopyValue = (double)Math.max(0, Math.round(geneCopyNumber.minCopyNumber()));
-        Boolean booleanValueCNV = true;
         for (int i=0; i< CNVs.size();i++) {
             if (CNVs.get(i).cancerType().contains(primaryTumorLocation) &&
                     checkCNVType(minCopyValue).equals(CNVs.get(i).cnvType())) {
-                booleanValueCNV = true;
                 LOGGER.info(CNVs.get(i));
-            } else {
-                booleanValueCNV = false;
+                if (CNVs.get(i).cancerType() != "") {
+                    if (cancerTypeAnalyzer.foundTumorLocation(CNVs.get(i).cancerType(), doids)) {
+                        printTable(i, "yes");
+                    } else {
+                        printTable(i, "no");
+                    }
+                }
             }
         }
-        return booleanValueCNV;
+        return true;
+    }
+
+    private void printTable(@NotNull int digit, @NotNull String isActionable) {
+        LOGGER.info(CNVs.get(digit).gene() + "\t" + CNVs.get(digit).cnvType() + "\t" + CNVs.get(digit).reference() + "\t" +
+                CNVs.get(digit).drugsName() + "\t" + CNVs.get(digit).drugsType() + "\t" + CNVs.get(digit).cancerType() + "\t" +
+                CNVs.get(digit).hmfLevel() + "\t" + CNVs.get(digit).evidenceType() + "\t" + CNVs.get(digit).significanceSource() + "\t" +
+                CNVs.get(digit).hmfResponse() + "\t" + isActionable);
     }
 
     private String checkCNVType(final double copyNumber) {

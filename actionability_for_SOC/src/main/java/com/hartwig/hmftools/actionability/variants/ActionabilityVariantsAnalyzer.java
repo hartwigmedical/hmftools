@@ -54,21 +54,24 @@ public class ActionabilityVariantsAnalyzer {
                 "\t" + variants.get(digit).significanceSource() + "\t" + variants.get(digit).hmfResponse() + "\t" + isActionable);
     }
 
-    public boolean actionableRange(@NotNull SomaticVariant variant, @NotNull String primaryTumorLocation) {
-        Boolean booleanValueRange = true;
+    public boolean actionableRange(@NotNull SomaticVariant variant, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
+            @Nullable String doids, @NotNull String primaryTumorLocation) {
         for (int i=0; i< variantsRanges.size();i++) {
             if (variantsRanges.get(i).cancerType().contains(primaryTumorLocation) &&
                     variant.gene().equals(variantsRanges.get(i).gene()) &&
                     variant.chromosome().equals(variantsRanges.get(i).chromosome()) &&
                     Integer.parseInt(Long.toString(variant.position())) >= Integer.parseInt(variantsRanges.get(i).start()) &&
                     Integer.parseInt(Long.toString(variant.position())) <= Integer.parseInt(variantsRanges.get(i).stop())) {
-                booleanValueRange =  true;
-                LOGGER.info(variantsRanges.get(i));
-            } else {
-                booleanValueRange =  false;
+                if (variantsRanges.get(i).cancerType() != "") {
+                    if (cancerTypeAnalyzer.foundTumorLocation(variantsRanges.get(i).cancerType(), doids)) {
+                        printTable(i, "yes");
+                    } else {
+                        printTable(i, "no");
+                    }
+                }
             }
         }
-        return booleanValueRange;
+        return true;
     }
 
     @NotNull
