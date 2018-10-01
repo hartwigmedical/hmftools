@@ -6,6 +6,7 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.Streams;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.structural.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -78,17 +79,17 @@ public class BreakpointGraph {
         BgSegment startSegment = containingSegment(sv.start(), segmentLookup);
         BgSegment endSegment  = containingSegment(sv.end(), segmentLookup);
         // sanity checks
-        if (sv.start().orientation() == 1) {
-            assert(startSegment.endPosition() == sv.start().position());
-        } else {
-            assert(startSegment.startPosition() == sv.start().position());
-        }
-        if (sv.end() != null) {
-            if (sv.end().orientation() == 1) {
-                assert(endSegment.endPosition() == sv.end().position());
-            } else {
-                assert(endSegment.startPosition() == sv.end().position());
-            }
+        if ((sv.start() != null && startSegment == null) ||
+                (sv.end() != null && endSegment == null) ||
+                (sv.start().orientation() == 1 && startSegment.endPosition() != sv.start().position()) ||
+                (sv.start().orientation() == -1 && startSegment.startPosition() != sv.start().position()) ||
+                (sv.end() != null && sv.end().orientation() == 1 && endSegment.endPosition() != sv.end().position()) ||
+                (sv.end() != null && sv.end().orientation() == -1 && endSegment.startPosition() != sv.end().position())) {
+            LOGGER.info("Discarding SV {}:{}{} to {}:{}{} as bounds do not match CN segments {} and {}.",
+                    sv.start().chromosome(), sv.start().position(), sv.start().orientation() == 1 ? "+" : "-",
+                    sv.end() == null ? "" : sv.end().chromosome(), sv.end() == null ? "" : sv.end().position(), sv.end() == null ? "" : (sv.end().orientation() == 1 ? "+" : "-"),
+                    startSegment, endSegment);
+            return;
         }
         addEdge(startSegment, startSegment == unplacedSegment ? -1 :  sv.start().orientation(),
                 endSegment, endSegment == unplacedSegment ? -1 : sv.end().orientation(),
@@ -141,27 +142,36 @@ public class BreakpointGraph {
                 throw new IllegalArgumentException("Invalid orientation");
         }
     }
-    public List<StructuralVariant> simplify() {
-        List<StructuralVariant> simplified = new ArrayList<>();
-        StructuralVariant var = simplifySimpleDuplications();
+    public List<EnrichedStructuralVariant> simplify() {
+        List<EnrichedStructuralVariant> simplified = new ArrayList<>();
+        EnrichedStructuralVariant var = simplifyEvent();
         while (var != null) {
             simplified.add(var);
-            mergeReferenceSegments();
-            var = simplifySimpleDuplications();
+            mergeReferenceSegments(false);
+            var = simplifyEvent();
         }
         return simplified;
     }
-    public int mergeReferenceSegments() {
+    public EnrichedStructuralVariant simplifyEvent() {
+        EnrichedStructuralVariant var = simplifySimpleDuplications();
+        if (var == null) {
+            var = simplifySimpleDeletion();
+        }
+        return var;
+    }
+    public int mergeReferenceSegments(boolean mergeAcrossCentromere) {
         for (BgSegment segment : endEdges.keySet()) {
             BgSegment nextSegment = nextReferenceSegment(segment);
-            if (nextSegment != null && svCount(getOutgoing(segment, 1)) == 0 && svCount(getOutgoing(segment, -1)) == 0) {
-                merge(segment, nextSegment);
-                return 1 + mergeReferenceSegments();
+            if (nextSegment != null && svCount(getOutgoing(segment, 1)) == 0 && svCount(getOutgoing(nextSegment, -1)) == 0) {
+                if (mergeAcrossCentromere || (nextSegment.cn().segmentStartSupport() != SegmentSupport.CENTROMERE && segment.cn().segmentEndSupport() != SegmentSupport.CENTROMERE)) {
+                    merge(segment, nextSegment);
+                    return 1 + mergeReferenceSegments(mergeAcrossCentromere);
+                }
             }
         }
         return 0;
     }
-    public StructuralVariant simplifySimpleDeletion() {
+    public EnrichedStructuralVariant simplifySimpleDeletion() {
         for (BgSegment segment : startEdges.keySet()) {
             BgSegment prevSegment = prevReferenceSegment(segment);
             BgSegment nextSegment = nextReferenceSegment(segment);
@@ -176,11 +186,8 @@ public class BreakpointGraph {
                     // we have a deletion
                     if (shouldCollapseDeletion(prevSegment, segment, nextSegment, leftSv.edge())) {
                         LOGGER.debug("Simplifying simple deletion of {}", segment);
+                        segment.adjustPloidy(leftSv.edge().ploidy());
                         removeAdjacency(leftSv, rightSv);
-                        // TODO: adjust CN of merged segment by the ploidy of the deletion
-                        // we don't actually want a straight merge
-                        segment = merge(prevSegment, segment);
-                        segment = merge(segment, nextSegment);
                         return leftSv.edge().sv();
                     }
                 }
@@ -209,8 +216,8 @@ public class BreakpointGraph {
                 if (prevSv.edge() == nextSv.edge()) {
                     if (shouldCollapseDuplication(prevReferenceSegment(segment), segment, nextReferenceSegment(segment), prevSv.edge())) {
                         LOGGER.debug("Simplifying simple tandem duplication of {}", segment);
+                        segment.adjustPloidy(-prevSv.edge().ploidy());
                         removeAdjacency(prevSv, nextSv);
-                        // TODO: adjust CN of segment by the ploidy of the duplication
                         return prevSv.edge().sv();
                     }
                 }

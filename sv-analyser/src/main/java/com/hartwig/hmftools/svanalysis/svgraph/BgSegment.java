@@ -5,7 +5,6 @@ import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -101,5 +100,15 @@ public class BgSegment implements GenomeInterval {
                         right.averageObservedBAF() * right.bafCount() / (double) bafCount)
                 .build();
         return merged;
+    }
+
+    /**
+     * Adjusts the ploidy of the given segment by the given amount
+     * @param ploidy
+     */
+    public void adjustPloidy(Double ploidy) {
+        this._cn = ImmutablePurpleCopyNumber.builder().from(_cn)
+                .averageTumorCopyNumber(_cn.averageTumorCopyNumber() + ploidy)
+                .build();
     }
 }

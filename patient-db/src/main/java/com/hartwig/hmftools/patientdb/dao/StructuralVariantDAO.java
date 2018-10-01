@@ -160,7 +160,7 @@ class StructuralVariantDAO {
 
             EnrichedStructuralVariantLeg end = null;
             if (record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME) != null) {
-                ImmutableEnrichedStructuralVariantLeg.builder()
+                end = ImmutableEnrichedStructuralVariantLeg.builder()
                         .chromosome(record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME))
                         .position(record.getValue(STRUCTURALVARIANT.ENDPOSITION))
                         .orientation(record.getValue(STRUCTURALVARIANT.ENDORIENTATION))
