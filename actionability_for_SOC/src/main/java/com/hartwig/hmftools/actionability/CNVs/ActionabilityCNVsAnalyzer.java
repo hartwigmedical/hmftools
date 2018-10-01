@@ -30,6 +30,7 @@ public class ActionabilityCNVsAnalyzer {
     public boolean actionableCNVs(@NotNull GeneCopyNumber geneCopyNumber, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
             @Nullable String doids, @NotNull String primaryTumorLocation){
         Double minCopyValue = (double)Math.max(0, Math.round(geneCopyNumber.minCopyNumber()));
+        boolean booleanValue = false;
         for (int i=0; i< CNVs.size();i++) {
             if (CNVs.get(i).cancerType().contains(primaryTumorLocation) &&
                     checkCNVType(minCopyValue).equals(CNVs.get(i).cnvType())) {
@@ -40,9 +41,12 @@ public class ActionabilityCNVsAnalyzer {
                         printTable(i, "no");
                     }
                 }
+                booleanValue = true;
+            } else {
+                booleanValue = false;
             }
         }
-        return true;
+        return booleanValue;
     }
 
     private void printTable(@NotNull int digit, @NotNull String isActionable) {

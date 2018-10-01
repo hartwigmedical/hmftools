@@ -89,11 +89,8 @@ public class ActionabilityVariantsAnalyzerTest {
                 .mappability(0D)
                 .build();
 
-
         assertTrue(var.actionableVariants(variant, cancerType, "4159", "Skin"));
-      //  assertFalse(var.actionableVariants(variant, cancerType, "4159", "Stomach"));
 
         assertTrue(var.actionableRange(variant, cancerType, "4159", "Skin"));
-    //   assertFalse(var.actionableRange(variant, cancerType, "4159", "Stomach"));
     }
 }

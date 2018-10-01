@@ -77,6 +77,6 @@ public class ActionabilityCNVsAnalyzerTest {
                 .build();
 
         assertTrue(cnvAnalyzer.actionableCNVs(geneCopyNumber, cancerType, "1612", "Breast"));
-       // assertFalse(cnvAnalyzer.actionableCNVs(geneCopyNumber, "Skin"));
+        // Add False
     }
 }
