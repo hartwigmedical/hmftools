@@ -52,9 +52,6 @@ public class CancerTypeAnalyzer {
 
     public boolean foundTumorLocation (@NotNull String tumorLocationKnowledgebase, @Nullable String doid) {
         Boolean booleanValueRange = false;
-        LOGGER.info(cancerTypeDoids);
-        LOGGER.info(doid);
-        LOGGER.info(tumorLocationKnowledgebase);
         for (int i = 0; i < cancerTypeDoids.size(); i ++) {
             if(tumorLocationKnowledgebase.contains(cancerTypeDoids.get(0).cancerType())){
                 if(cancerTypeDoids.get(i).doidSet().contains(doid)){
@@ -62,7 +59,6 @@ public class CancerTypeAnalyzer {
                 }
             }
         }
-        LOGGER.info(booleanValueRange);
         return booleanValueRange;
     }
 }
