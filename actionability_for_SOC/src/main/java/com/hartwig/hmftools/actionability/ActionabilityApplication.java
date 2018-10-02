@@ -27,17 +27,14 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
-import org.immutables.value.Value;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@Value.Immutable
-@Value.Style(allParameters = true,
-             passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ActionabilityApplication {
+public class ActionabilityApplication {
 
-
-    private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(ActionabilityApplication.class);
+    private static final Logger LOGGER = LogManager.getLogger(ActionabilityApplication.class);
     private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
     private static final String RUN_DIRECTORY = "run_dir";
     private static final String SOMATIC_VCF_EXTENSION_V3 = "_post_processed_v2.2.vcf.gz";
@@ -63,11 +60,13 @@ public abstract class ActionabilityApplication {
         LOGGER.info("DOIDs of tumor location");
         final List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(cmd.getOptionValue(TUMOR_LOCATION_CSV));
         final PatientTumorLocation patientTumorLocation = extractPatientTumorLocation(patientTumorLocations, run.tumorSample());
-        LOGGER.info("Tumor location from patient: " + patientTumorLocation.primaryTumorLocation());
-        LOGGER.info("Cancer subtype from patient: " + patientTumorLocation.cancerSubtype());
+        final String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : Strings.EMPTY;
+        final String cancerSubtype = patientTumorLocation != null ? patientTumorLocation.cancerSubtype() : Strings.EMPTY;
+        LOGGER.info("Tumor location from patient: " + primaryTumorLocation);
+        LOGGER.info("Cancer subtype from patient: " + cancerSubtype);
 
         CancerTypeMappingReading cancerTypeMappingReading = CancerTypeMappingReading.readingFile();
-        String doids = cancerTypeMappingReading.doidsForPrimaryTumorLocation(patientTumorLocation.primaryTumorLocation());
+        String doids = cancerTypeMappingReading.doidsForPrimaryTumorLocation(primaryTumorLocation);
         LOGGER.info("DOID: " + doids);
 
         String fileCancerTumorsWithDOID = "/data/common/dbs/knowledgebases/output/knowledgebaseCancerTypes.tsv";
@@ -79,24 +78,27 @@ public abstract class ActionabilityApplication {
         String fileActionabilityRanges = "/data/common/dbs/knowledgebases/output/actionableRanges.tsv";
 
         LOGGER.info("Variants: " + variants.size());
-        if (Files.exists(new File(fileActionabilityVariants).toPath()) && Files.exists(new File(fileActionabilityRanges).toPath()) && Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
-            ActionabilityVariantsAnalyzer analyzer = ActionabilityVariantsAnalyzer.loadFromFileVariantsAndFileRanges(fileActionabilityVariants, fileActionabilityRanges);
+        if (Files.exists(new File(fileActionabilityVariants).toPath()) && Files.exists(new File(fileActionabilityRanges).toPath())
+                && Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
+            ActionabilityVariantsAnalyzer analyzer =
+                    ActionabilityVariantsAnalyzer.loadFromFileVariantsAndFileRanges(fileActionabilityVariants, fileActionabilityRanges);
             CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
-            LOGGER.info("Gene" + "\t" + "chromosome" + "\t" + "position" + "\t" + "ref" + "\t" + "alt" + "\t" + "drug" + "\t"
-                    + "drugsType" + "\t" + "cancerType" + "\t" + "levelHmf" + "\t" + "evidenceType" + "\t" + "significanceSource" + "\t"
-                    + "hmfResponse" + "\t" + "Actionable variant");
-            for (int i = 0; i < variants.size(); i ++) {
-                analyzer.actionableVariants(variants.get(i), cancerTypeAnalyzer, doids, patientTumorLocation.primaryTumorLocation());
-                analyzer.actionableRange(variants.get(i), cancerTypeAnalyzer, doids, patientTumorLocation.primaryTumorLocation());
+            LOGGER.info("Gene" + "\t" + "chromosome" + "\t" + "position" + "\t" + "ref" + "\t" + "alt" + "\t" + "drug" + "\t" + "drugsType"
+                    + "\t" + "cancerType" + "\t" + "levelHmf" + "\t" + "evidenceType" + "\t" + "significanceSource" + "\t" + "hmfResponse"
+                    + "\t" + "Actionable variant");
+            for (SomaticVariant variant : variants) {
+                analyzer.actionableVariants(variant, cancerTypeAnalyzer, doids, primaryTumorLocation);
+                analyzer.actionableRange(variant, cancerTypeAnalyzer, doids, primaryTumorLocation);
             }
-        } else if (!Files.exists(new File(fileActionabilityVariants).toPath())){
+        } else if (!Files.exists(new File(fileActionabilityVariants).toPath())) {
             LOGGER.warn("File does not exist: " + fileActionabilityVariants);
-        } else if(!Files.exists(new File(fileActionabilityRanges).toPath())){
+        } else if (!Files.exists(new File(fileActionabilityRanges).toPath())) {
             LOGGER.warn("File does not exist: " + fileActionabilityRanges);
         } else if (!Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
             LOGGER.warn("File does not exist: " + fileCancerTumorsWithDOID);
         }
 
+        LOGGER.info("Finish processing actionability somaticVariants");
         LOGGER.info("");
         LOGGER.info("Start processing actionability cnvs");
         String fileActionabilityCNVs = "/data/common/dbs/knowledgebases/output/actionableCNVs.tsv";
@@ -105,17 +107,17 @@ public abstract class ActionabilityApplication {
         if (Files.exists(new File(fileActionabilityCNVs).toPath()) && Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
             ActionabilityCNVsAnalyzer analyzerCNVs = ActionabilityCNVsAnalyzer.loadFromFileCNVs(fileActionabilityCNVs);
             CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
-            LOGGER.info("Gene" + "\t" + "cnvType" + "\t" + "reference" + "\t" + "drug" + "\t" + "drugType" + "\t" + "cancerType" +
-                    "\t" + "levelHmf" + "\t" + "evidenceType" + "\t" + "significance" + "\t" + "hmfResponse" + "\t" + "Actionable variant");
-            for (int i = 0; i < geneCopyNumbers.size(); i ++) {
-                analyzerCNVs.actionableCNVs(geneCopyNumbers.get(i), cancerTypeAnalyzer, doids, patientTumorLocation.primaryTumorLocation());
-           }
-        } else if (!Files.exists(new File(fileActionabilityCNVs).toPath())){
+            LOGGER.info("Gene" + "\t" + "cnvType" + "\t" + "reference" + "\t" + "drug" + "\t" + "drugType" + "\t" + "cancerType" + "\t"
+                    + "levelHmf" + "\t" + "evidenceType" + "\t" + "significance" + "\t" + "hmfResponse" + "\t" + "Actionable variant");
+            for (GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
+                analyzerCNVs.actionableCNVs(geneCopyNumber, cancerTypeAnalyzer, doids, primaryTumorLocation);
+            }
+        } else if (!Files.exists(new File(fileActionabilityCNVs).toPath())) {
             LOGGER.warn("File does not exist: " + fileActionabilityCNVs);
         } else if (!Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
             LOGGER.warn("File does not exist: " + fileCancerTumorsWithDOID);
         }
-        LOGGER.info("Finish processing actionability somaticVariants");
+        LOGGER.info("Finished processing actionability cnvs");
     }
 
     @NotNull
@@ -141,7 +143,8 @@ public abstract class ActionabilityApplication {
     }
 
     @NotNull
-    private static List<SomaticVariant> loadPassedSomaticVariants(@NotNull final String sample, @NotNull final String path) throws IOException {
+    private static List<SomaticVariant> loadPassedSomaticVariants(@NotNull final String sample, @NotNull final String path)
+            throws IOException {
         // TODO (KODU): Clean up once pipeline v3 no longer exists
         Path vcfPath;
         try {
@@ -180,5 +183,4 @@ public abstract class ActionabilityApplication {
         // KODU: If we want to generate a report for non-CPCT/non-DRUP we assume patient and sample are identical.
         return sample;
     }
-
 }
