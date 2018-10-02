@@ -17,6 +17,8 @@ public interface RecoveredVariant extends GenomeRegion {
 
     int depthWindowCount();
 
+    double gcContent();
+
     double prevBaf();
 
     double prevCopyNumber();
@@ -25,12 +27,15 @@ public interface RecoveredVariant extends GenomeRegion {
 
     int prevDepthWindowCount();
 
+    double prevGCContent();
+
     SegmentSupport previous();
 
     SegmentSupport support();
 
     SegmentSupport next();
 
+    double nextGCContent();
 
     @Nullable
     String variant();

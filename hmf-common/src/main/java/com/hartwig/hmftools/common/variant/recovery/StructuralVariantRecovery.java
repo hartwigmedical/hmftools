@@ -62,7 +62,7 @@ public class StructuralVariantRecovery {
             if (current.segmentStartSupport() == SegmentSupport.NONE) {
                 long minPosition = Math.max(prev.end() + 1, current.start() - 1000);
                 long maxPosition = Math.min(next.start() - 1, current.start() + 1000);
-                result.addAll(recover(minPosition, maxPosition, current, prev));
+                result.addAll(recover(minPosition, maxPosition, current, prev, next));
 
             }
         }
@@ -71,7 +71,7 @@ public class StructuralVariantRecovery {
     }
 
     @NotNull
-    public List<RecoveredVariant> recover(long min, long max, @NotNull final PurpleCopyNumber current, @NotNull final PurpleCopyNumber prev)
+    public List<RecoveredVariant> recover(long min, long max, @NotNull final PurpleCopyNumber current, @NotNull final PurpleCopyNumber prev, @NotNull final PurpleCopyNumber next)
             throws IOException {
         List<RecoveredVariant> result = Lists.newArrayList();
 
@@ -83,6 +83,9 @@ public class StructuralVariantRecovery {
                 .previous(prev.segmentStartSupport())
                 .baf(current.averageActualBAF())
                 .depthWindowCount(current.depthWindowCount())
+                .gcContent(current.gcContent())
+                .prevGCContent(prev.gcContent())
+                .nextGCContent(next.gcContent())
                 .prevLength(prev.end() - prev.start()  + 1)
                 .prevCopyNumber(prev.averageTumorCopyNumber())
                 .prevBaf(prev.averageActualBAF())
