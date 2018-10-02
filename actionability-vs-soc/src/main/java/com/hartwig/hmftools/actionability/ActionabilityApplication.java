@@ -116,7 +116,7 @@ public class ActionabilityApplication {
         if (Files.exists(new File(fileActionabilityCNVs).toPath()) && Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
             ActionabilityCNVsAnalyzer analyzerCNVs = ActionabilityCNVsAnalyzer.loadFromFileCNVs(fileActionabilityCNVs);
             CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
-            LOGGER.info("Gene" + "\t" + "cnvType" + "\t" + "reference" + "\t" + "drug" + "\t" + "drugType" + "\t" + "cancerType" + "\t"
+            LOGGER.info("Gene" + "\t" + "cnvType" + "\t" + "drug" + "\t" + "drugType" + "\t" + "cancerType" + "\t"
                     + "level" + "\t" + "response" + "\t" + "Actionable variant");
             for (GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
                 analyzerCNVs.actionableCNVs(geneCopyNumber, cancerTypeAnalyzer, doids, primaryTumorLocation);

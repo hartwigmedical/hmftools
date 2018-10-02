@@ -32,14 +32,13 @@ public class ActionabilityCNVsAnalyzer {
             @Nullable String doids, @NotNull String primaryTumorLocation) {
         Double minCopyValue = (double) Math.max(0, Math.round(geneCopyNumber.minCopyNumber()));
         boolean booleanValue = false;
-        for (int i = 0; i < CNVs.size(); i++) {
-            if (CNVs.get(i).cancerType().contains(primaryTumorLocation) && checkCNVType(minCopyValue).equals(CNVs.get(i).cnvType())) {
-                if (!CNVs.get(i).cancerType().isEmpty()) {
-                    if (cancerTypeAnalyzer.foundTumorLocation(CNVs.get(i).cancerType(), doids)) {
-                        printTable(i, "yes");
-                    } else {
-                        printTable(i, "no");
-                    }
+        for (ActionabilityCNVs actionabilityCNVs : CNVs) {
+            if (actionabilityCNVs.cancerType().contains(primaryTumorLocation) &&
+                    checkCNVType(minCopyValue).equals(actionabilityCNVs.cnvType())) {
+                if (cancerTypeAnalyzer.foundTumorLocation(actionabilityCNVs.cancerType(), doids)) {
+                    printCNVRow(actionabilityCNVs, "yes");
+                } else {
+                    printCNVRow(actionabilityCNVs, "no");
                 }
                 booleanValue = true;
             } else {
@@ -49,11 +48,10 @@ public class ActionabilityCNVsAnalyzer {
         return booleanValue;
     }
 
-    private void printTable(int digit, @NotNull String isActionable) {
-        LOGGER.info(CNVs.get(digit).gene() + "\t" + CNVs.get(digit).cnvType() + "\t" + CNVs.get(digit).reference() + "\t" + CNVs.get(digit)
-                .drugsName() + "\t" + CNVs.get(digit).drugsType() + "\t" + CNVs.get(digit).cancerType() + "\t" + CNVs.get(digit).hmfLevel()
-                + "\t" + CNVs.get(digit).evidenceType() + "\t" + CNVs.get(digit).significanceSource() + "\t" + CNVs.get(digit).hmfResponse()
-                + "\t" + isActionable);
+    private void printCNVRow(@NotNull ActionabilityCNVs actionabilityCNVs, @NotNull String isActionable) {
+        LOGGER.info(actionabilityCNVs.gene() + "\t" + actionabilityCNVs.cnvType() + "\t"  +
+                actionabilityCNVs.drugsName() + "\t" + actionabilityCNVs.drugsType() + "\t" + actionabilityCNVs.cancerType() + "\t"
+                + actionabilityCNVs.hmfLevel() + "\t" + actionabilityCNVs.hmfResponse() + "\t" + isActionable);
     }
 
     private String checkCNVType(final double copyNumber) {
@@ -90,11 +88,9 @@ public class ActionabilityCNVsAnalyzer {
                 .drugsName(values[4])
                 .drugsType(values[5])
                 .cancerType(values[6])
-                .levelSource(values[7])
+                .source(values[7])
                 .hmfLevel(values[8])
-                .evidenceType(values[9])
-                .significanceSource(values[10])
-                .hmfResponse(values[11])
+                .hmfResponse(values[9])
                 .build();
     }
 }

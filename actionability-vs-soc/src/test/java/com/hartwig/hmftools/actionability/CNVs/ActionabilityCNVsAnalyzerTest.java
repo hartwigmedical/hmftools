@@ -26,10 +26,8 @@ public class ActionabilityCNVsAnalyzerTest {
                 .drugsName("Trastuzumab")
                 .drugsType("EGFR inhibitor")
                 .cancerType("Breast Cancer")
-                .levelSource("1")
+                .source("1")
                 .hmfLevel("A")
-                .evidenceType("Predictive")
-                .significanceSource("Responsive")
                 .hmfResponse("Responsive")
                 .build();
 
