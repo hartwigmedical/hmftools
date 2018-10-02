@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ActionabilityVariantsSOC {
+abstract class ActionabilityVariant {
 
     @NotNull
     abstract String gene();
@@ -15,8 +15,7 @@ public abstract class ActionabilityVariantsSOC {
     @NotNull
     abstract String chromosome();
 
-    @NotNull
-    abstract String position();
+    abstract long position();
 
     @NotNull
     abstract String ref();
@@ -40,17 +39,8 @@ public abstract class ActionabilityVariantsSOC {
     abstract String cancerType();
 
     @NotNull
-    abstract String levelSource();
+    abstract String level();
 
     @NotNull
-    abstract String levelHmf();
-
-    @NotNull
-    abstract String evidenceType();
-
-    @NotNull
-    abstract String significanceSource();
-
-    @NotNull
-    abstract String hmfResponse();
+    abstract String response();
 }

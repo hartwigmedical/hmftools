@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.actionability.variants;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.actionability.cancerTypeMapping.CancerTypeAnalyzer;
@@ -22,7 +19,7 @@ public class ActionabilityVariantsAnalyzerTest {
 
     @Test
     public void actionabilityWorksVariants() {
-        ActionabilityVariantsSOC variantsSOC = ImmutableActionabilityVariantsSOC.builder()
+        ActionabilityVariant variantsSOC = ImmutableActionabilityVariant.builder()
                 .gene("BRAF")
                 .chromosome("7")
                 .position("100")
@@ -40,7 +37,7 @@ public class ActionabilityVariantsAnalyzerTest {
                 .hmfResponse("Responsive")
                 .build();
 
-        ActionabilityRanges variantsRanges = ImmutableActionabilityRanges.builder()
+        ActionabilityRange variantsRanges = ImmutableActionabilityRange.builder()
                 .gene("BRAF")
                 .mutationTranscript("ENST00000357654")
                 .chromosome("7")

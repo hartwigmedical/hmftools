@@ -7,25 +7,17 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ActionabilityRanges {
+abstract class ActionabilityRange {
 
     @NotNull
     abstract String gene();
 
     @NotNull
-    abstract String mutationTranscript();
-
-    @NotNull
     abstract String chromosome();
 
-    @NotNull
-    abstract String start();
+    abstract long start();
 
-    @NotNull
-    abstract String stop();
-
-    @NotNull
-    abstract String geneTranscript();
+    abstract long end();
 
     @NotNull
     abstract String source();
@@ -34,7 +26,7 @@ public abstract class ActionabilityRanges {
     abstract String reference();
 
     @NotNull
-    abstract String drugsName();
+    abstract String drug();
 
     @NotNull
     abstract String drugsType();
@@ -43,17 +35,8 @@ public abstract class ActionabilityRanges {
     abstract String cancerType();
 
     @NotNull
-    abstract String levelSource();
+    abstract String level();
 
     @NotNull
-    abstract String hmfLevel();
-
-    @NotNull
-    abstract String evidenceType();
-
-    @NotNull
-    abstract String significanceSource();
-
-    @NotNull
-    abstract String hmfResponse();
+    abstract String response();
 }
