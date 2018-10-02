@@ -10,13 +10,10 @@ import com.google.common.collect.Maps;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class CancerTypeMappingReading {
-    private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(CancerTypeMappingReading.class);
-
 
     private static final InputStream TUMOR_LOCATION_MAPPING_RESOURCE =
             CancerTypeMappingReading.class.getResourceAsStream("/primary_tumor_locations_mapping.csv");

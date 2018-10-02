@@ -6,9 +6,6 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hartwig.hmftools.actionability.variants.ActionabilityRanges;
-import com.hartwig.hmftools.actionability.variants.ActionabilityVariantsAnalyzer;
-import com.hartwig.hmftools.actionability.variants.ActionabilityVariantsSOC;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.apache.logging.log4j.LogManager;
@@ -36,27 +33,27 @@ public class ActionabilityFusionAnalyzer {
     }
 
     @NotNull
-    public static ActionabilityFusionAnalyzer loadFromFileFusions(String fileFusionPairs, String filePromiscuousFive, String filePromiscuousThree) throws
-            IOException {
+    public static ActionabilityFusionAnalyzer loadFromFileFusions(String fileFusionPairs, String filePromiscuousFive,
+            String filePromiscuousThree) throws IOException {
         final List<ActionabilityFusionPairs> fusionPairs = new ArrayList<>();
         final List<ActionabilityPromiscuosThree> promiscuousThree = new ArrayList<>();
         final List<ActionabilityPromiscuousFive> promiscuousFive = new ArrayList<>();
 
-        final List<String> lineFusionPairs =  Files.readAllLines(new File(fileFusionPairs).toPath());
-        final List<String> linePromiscuousFive =  Files.readAllLines(new File(filePromiscuousFive).toPath());
-        final List<String> linePromiscuousThree =  Files.readAllLines(new File(filePromiscuousThree).toPath());
+        final List<String> lineFusionPairs = Files.readAllLines(new File(fileFusionPairs).toPath());
+        final List<String> linePromiscuousFive = Files.readAllLines(new File(filePromiscuousFive).toPath());
+        final List<String> linePromiscuousThree = Files.readAllLines(new File(filePromiscuousThree).toPath());
 
-        for (int i = 1; i< lineFusionPairs.size(); i++) {
+        for (int i = 1; i < lineFusionPairs.size(); i++) {
             fromLineFusionPairs(lineFusionPairs.get(i));
             fusionPairs.add(fromLineFusionPairs(lineFusionPairs.get(i)));
         }
 
-        for (int i = 1; i< linePromiscuousFive.size(); i++) {
+        for (int i = 1; i < linePromiscuousFive.size(); i++) {
             fromLinePromiscuousFive(linePromiscuousFive.get(i));
             promiscuousFive.add(fromLinePromiscuousFive(linePromiscuousFive.get(i)));
         }
 
-        for (int i = 1; i< linePromiscuousThree.size(); i++) {
+        for (int i = 1; i < linePromiscuousThree.size(); i++) {
             fromLinePromiscuousThree(linePromiscuousThree.get(i));
             promiscuousThree.add(fromLinePromiscuousThree(linePromiscuousThree.get(i)));
         }
@@ -101,7 +98,7 @@ public class ActionabilityFusionAnalyzer {
     }
 
     @NotNull
-    private static ActionabilityFusionPairs fromLineFusionPairs(@NotNull String line){
+    private static ActionabilityFusionPairs fromLineFusionPairs(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
         return ImmutableActionabilityFusionPairs.builder()
                 .fiveGene(values[0])

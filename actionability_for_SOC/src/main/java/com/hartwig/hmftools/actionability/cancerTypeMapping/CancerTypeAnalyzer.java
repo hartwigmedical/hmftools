@@ -6,11 +6,14 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class CancerTypeAnalyzer {
-    private static final org.apache.logging.log4j.Logger LOGGER = org.apache.logging.log4j.LogManager.getLogger(CancerTypeAnalyzer.class);
+    private static final Logger LOGGER = LogManager.getLogger(CancerTypeAnalyzer.class);
     private static final String DELIMITER = "\t";
 
     @NotNull
@@ -34,27 +37,25 @@ public class CancerTypeAnalyzer {
     @NotNull
     private static CancerTypeReading fromLine(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
-        String doidSetValue = EmptyDoidSet(values);
-        return  ImmutableCancerTypeReading.builder()
-                .cancerType(values[0])
-                .doidSet(doidSetValue).build();
+        String doidSetValue = emptyDoidSet(values);
+        return ImmutableCancerTypeReading.builder().cancerType(values[0]).doidSet(doidSetValue).build();
     }
 
     @NotNull
-    private static String EmptyDoidSet(@NotNull String[] value) {
+    private static String emptyDoidSet(@NotNull String[] value) {
         try {
             return value[1];
         } catch (ArrayIndexOutOfBoundsException e) {
             LOGGER.warn("IndexOutOfBoundsException: " + e.getMessage());
-            return " ";
+            return Strings.EMPTY;
         }
     }
 
-    public boolean foundTumorLocation (@NotNull String tumorLocationKnowledgebase, @Nullable String doid) {
+    public boolean foundTumorLocation(@NotNull String tumorLocationKnowledgebase, @Nullable String doid) {
         Boolean booleanValueRange = false;
-        for (int i = 0; i < cancerTypeDoids.size(); i ++) {
-            if(tumorLocationKnowledgebase.contains(cancerTypeDoids.get(0).cancerType())){
-                if(cancerTypeDoids.get(i).doidSet().contains(doid)){
+        for (CancerTypeReading cancerTypeDoid : cancerTypeDoids) {
+            if (tumorLocationKnowledgebase.contains(cancerTypeDoids.get(0).cancerType())) {
+                if (cancerTypeDoid.doidSet().contains(doid)) {
                     booleanValueRange = true;
                 }
             }
