@@ -22,8 +22,6 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep12;
-import org.jooq.InsertValuesStep13;
 import org.jooq.InsertValuesStep14;
 import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
@@ -166,6 +164,8 @@ class CopyNumberDAO {
                     COPYNUMBERREGION.FITTEDBAF,
                     COPYNUMBERREGION.FITTEDCOPYNUMBER,
                     COPYNUMBERREGION.DEPTHWINDOWCOUNT,
+                    COPYNUMBERREGION.MINSTART,
+                    COPYNUMBERREGION.MAXSTART,
                     COPYNUMBERREGION.MODIFIED);
             splitRegions.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
@@ -200,6 +200,8 @@ class CopyNumberDAO {
                 DatabaseUtil.decimal(region.fittedBAF()),
                 DatabaseUtil.decimal(region.fittedTumorCopyNumber()),
                 region.depthWindowCount(),
+                region.minStart(),
+                region.maxStart(),
                 timestamp);
     }
 
@@ -236,6 +238,8 @@ class CopyNumberDAO {
                     .fittedTumorCopyNumber(record.getValue(COPYNUMBERREGION.FITTEDCOPYNUMBER))
                     .ploidyPenalty(record.getValue(COPYNUMBERREGION.PLOIDYPENALTY))
                     .depthWindowCount(record.getValue(COPYNUMBERREGION.DEPTHWINDOWCOUNT))
+                    .minStart(record.getValue(COPYNUMBERREGION.MINSTART))
+                    .maxStart(record.getValue(COPYNUMBERREGION.MAXSTART))
                     .build());
         }
 

@@ -405,6 +405,8 @@ CREATE TABLE copyNumberRegion
     ploidyPenalty DOUBLE PRECISION not null,
     fittedBaf DOUBLE PRECISION not null,
     fittedCopyNumber DOUBLE PRECISION not null,
+    minStart int not null,
+    maxStart int not null,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );

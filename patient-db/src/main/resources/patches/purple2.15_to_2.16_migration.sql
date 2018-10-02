@@ -28,3 +28,7 @@ ALTER TABLE copyNumber
 
 ALTER TABLE copyNumberGermline
     ADD gcContent DOUBLE PRECISION not null AFTER copyNumberMethod;
+
+ALTER TABLE copyNumberRegion
+    ADD minStart int not null AFTER fittedCopyNumber,
+    ADD maxStart int not null AFTER minStart;

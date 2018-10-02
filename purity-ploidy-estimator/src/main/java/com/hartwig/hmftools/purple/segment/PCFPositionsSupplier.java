@@ -39,7 +39,7 @@ public final class PCFPositionsSupplier {
         final Multimap<String, PCFPosition> tumorBAF = PCFFile.readPositions(config.windowSize(), PCFSource.TUMOR_BAF, amberFile);
 
         LOGGER.info("Merging reference and tumor ratio break points");
-        return union(union(union(referenceBreakPoint, tumorBreakPoints), tumorBAF), centromeres(config.windowSize()));
+        return union(union(union(tumorBreakPoints, referenceBreakPoint), tumorBAF), centromeres(config.windowSize()));
     }
 
     @NotNull
@@ -58,6 +58,12 @@ public final class PCFPositionsSupplier {
 
     @NotNull
     private static PCFPosition create(@NotNull final String chromosome, long position) {
-        return ImmutablePCFPosition.builder().chromosome(chromosome).position(position).source(PCFSource.REFERENCE_RATIO).build();
+        return ImmutablePCFPosition.builder()
+                .chromosome(chromosome)
+                .position(position)
+                .source(PCFSource.REFERENCE_RATIO)
+                .minPosition(position)
+                .maxPosition(position)
+                .build();
     }
 }

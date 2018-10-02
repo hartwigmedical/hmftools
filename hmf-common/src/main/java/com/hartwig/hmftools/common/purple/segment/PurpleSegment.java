@@ -27,4 +27,8 @@ public abstract class PurpleSegment implements GenomeRegion {
     public abstract SegmentSupport support();
 
     public abstract boolean svCluster();
+
+    public abstract long minStart();
+
+    public abstract long maxStart();
 }

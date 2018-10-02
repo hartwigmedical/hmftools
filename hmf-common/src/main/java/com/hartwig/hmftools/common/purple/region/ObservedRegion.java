@@ -24,4 +24,8 @@ public interface ObservedRegion extends GenomeRegion {
     boolean svCluster();
 
     double gcContent();
+
+    long minStart();
+
+    long maxStart();
 }

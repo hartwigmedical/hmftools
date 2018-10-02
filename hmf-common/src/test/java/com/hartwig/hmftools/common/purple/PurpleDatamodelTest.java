@@ -65,6 +65,8 @@ public class PurpleDatamodelTest {
                 .observedNormalRatio(1)
                 .ratioSupport(true)
                 .svCluster(false)
+                .minStart(0)
+                .maxStart(0)
                 .status(GermlineStatus.DIPLOID)
                 .gcContent(0.93)
                 .support(SegmentSupport.NONE);
@@ -87,6 +89,7 @@ public class PurpleDatamodelTest {
                 .majorAllelePloidyDeviation(0)
                 .refNormalisedCopyNumber(2)
                 .ratioSupport(true)
+
                 .support(SegmentSupport.NONE)
                 .ploidyPenalty(0);
     }

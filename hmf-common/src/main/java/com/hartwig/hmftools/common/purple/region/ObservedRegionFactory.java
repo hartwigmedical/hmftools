@@ -69,6 +69,8 @@ public class ObservedRegionFactory {
                     .gcContent(gc.averageGCContent())
                     .status(statusFactory.status(region, normalRatio, tumorRatio))
                     .svCluster(region.svCluster())
+                    .minStart(region.minStart())
+                    .maxStart(region.maxStart())
                     .build();
 
             result.add(copyNumber);
