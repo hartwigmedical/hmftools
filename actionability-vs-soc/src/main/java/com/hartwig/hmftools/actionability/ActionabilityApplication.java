@@ -84,8 +84,7 @@ public class ActionabilityApplication {
                     ActionabilityVariantsAnalyzer.loadFromFileVariantsAndFileRanges(fileActionabilityVariants, fileActionabilityRanges);
             CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
             LOGGER.info("Gene" + "\t" + "chromosome" + "\t" + "position" + "\t" + "ref" + "\t" + "alt" + "\t" + "drug" + "\t" + "drugsType"
-                    + "\t" + "cancerType" + "\t" + "levelHmf" + "\t" + "evidenceType" + "\t" + "significanceSource" + "\t" + "hmfResponse"
-                    + "\t" + "Actionable variant");
+                    + "\t" + "cancerType" + "\t" + "level" + "\t" + "response" + "\t" + "Actionable variant");
             for (SomaticVariant variant : variants) {
                 analyzer.actionableVariants(variant, cancerTypeAnalyzer, doids, primaryTumorLocation);
                 analyzer.actionableRange(variant, cancerTypeAnalyzer, doids, primaryTumorLocation);
@@ -108,7 +107,7 @@ public class ActionabilityApplication {
             ActionabilityCNVsAnalyzer analyzerCNVs = ActionabilityCNVsAnalyzer.loadFromFileCNVs(fileActionabilityCNVs);
             CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
             LOGGER.info("Gene" + "\t" + "cnvType" + "\t" + "reference" + "\t" + "drug" + "\t" + "drugType" + "\t" + "cancerType" + "\t"
-                    + "levelHmf" + "\t" + "evidenceType" + "\t" + "significance" + "\t" + "hmfResponse" + "\t" + "Actionable variant");
+                    + "level" + "\t" + "response" + "\t" + "Actionable variant");
             for (GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
                 analyzerCNVs.actionableCNVs(geneCopyNumber, cancerTypeAnalyzer, doids, primaryTumorLocation);
             }
