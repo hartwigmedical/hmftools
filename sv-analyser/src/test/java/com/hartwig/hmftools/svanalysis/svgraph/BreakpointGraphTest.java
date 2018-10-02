@@ -51,6 +51,7 @@ public class BreakpointGraphTest {
                         .homology("")
                         .build())
                 .insertSequence("")
+                .ploidy(1d)
                 .build();
     }
     @Test
