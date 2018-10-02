@@ -19,10 +19,10 @@ public class ActionabilityVariantsAnalyzerTest {
 
     @Test
     public void actionabilityWorksVariants() {
-        ActionabilityVariant variantsSOC = ImmutableActionabilityVariant.builder()
+        ActionabilityVariant actionabilityVariant = ImmutableActionabilityVariant.builder()
                 .gene("BRAF")
                 .chromosome("7")
-                .position("100")
+                .position(100)
                 .ref("C")
                 .alt("T")
                 .source("civic")
@@ -30,38 +30,28 @@ public class ActionabilityVariantsAnalyzerTest {
                 .drug("Dabrafenib")
                 .drugsType("BRAF inhibitor")
                 .cancerType("Skin Melanoma")
-                .levelSource("1")
-                .levelHmf("A")
-                .evidenceType("Predictive")
-                .significanceSource("Responsive")
-                .hmfResponse("Responsive")
+                .level("A")
+                .response("Responsive")
                 .build();
 
-        ActionabilityRange variantsRanges = ImmutableActionabilityRange.builder()
+        ActionabilityRange actionabilityRange = ImmutableActionabilityRange.builder()
                 .gene("BRAF")
-                .mutationTranscript("ENST00000357654")
                 .chromosome("7")
-                .start(Integer.toString(10))
-                .stop(Integer.toString(1500))
-                .geneTranscript("ENST00000256078")
+                .start(10)
+                .end(1500)
                 .source("oncoKB")
                 .reference("NRAS Oncogenic Mutations")
-                .drugsName("Cetuximab")
+                .drug("Cetuximab")
                 .drugsType("EGFR mAb inhibitor")
                 .cancerType("Skin Melanoma")
-                .levelSource("1")
-                .hmfLevel("A")
-                .evidenceType("Predictive")
-                .significanceSource("Resistant")
-                .hmfResponse("Resistant")
+                .level("A")
+                .response("Resistant")
                 .build();
 
-        CancerTypeReading reading = ImmutableCancerTypeReading.builder()
-                .doidSet("4159")
-                .cancerType("Skin")
-                .build();
+        CancerTypeReading reading = ImmutableCancerTypeReading.builder().doidSet("4159").cancerType("Skin").build();
 
-        ActionabilityVariantsAnalyzer var = new ActionabilityVariantsAnalyzer(Lists.newArrayList(variantsSOC), Lists.newArrayList(variantsRanges));
+        ActionabilityVariantsAnalyzer analyzer =
+                new ActionabilityVariantsAnalyzer(Lists.newArrayList(actionabilityVariant), Lists.newArrayList(actionabilityRange));
 
         CancerTypeAnalyzer cancerType = new CancerTypeAnalyzer(Lists.newArrayList(reading));
 
@@ -87,11 +77,9 @@ public class ActionabilityVariantsAnalyzerTest {
                 .mappability(0D)
                 .build();
 
-        assertEquals(true, var.actionableVariants(variant, cancerType, "4159", "Skin"));
-        assertEquals(false, var.actionableVariants(variant, cancerType, "4159", "Breast"));
-        assertEquals(true, var.actionableRange(variant, cancerType, "4159", "Skin"));
-        assertEquals(false, var.actionableRange(variant, cancerType, "4159", "Kidney"));
-
-
+        assertEquals(true, analyzer.actionableVariants(variant, cancerType, "4159", "Skin"));
+        assertEquals(false, analyzer.actionableVariants(variant, cancerType, "4159", "Breast"));
+        assertEquals(true, analyzer.actionableRange(variant, cancerType, "4159", "Skin"));
+        assertEquals(false, analyzer.actionableRange(variant, cancerType, "4159", "Kidney"));
     }
 }
