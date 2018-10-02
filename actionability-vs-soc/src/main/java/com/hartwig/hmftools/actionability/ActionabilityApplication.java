@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.actionability.CNVs.ActionabilityCNVsAnalyzer;
@@ -83,12 +84,21 @@ public class ActionabilityApplication {
             ActionabilityVariantsAnalyzer analyzer =
                     ActionabilityVariantsAnalyzer.loadFromFileVariantsAndFileRanges(fileActionabilityVariants, fileActionabilityRanges);
             CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
+
+            Set<String> actionableGenes = analyzer.actionableGenes();
+            LOGGER.info(actionableGenes.size() + " actionable genes found for variants (and ranges)");
+            LOGGER.info("");
+
+            List<SomaticVariant> variantsOnActionableGenes =
+                    variants.stream().filter(variant -> actionableGenes.contains(variant.gene())).collect(Collectors.toList());
+
             LOGGER.info("Gene" + "\t" + "chromosome" + "\t" + "position" + "\t" + "ref" + "\t" + "alt" + "\t" + "drug" + "\t" + "drugsType"
                     + "\t" + "cancerType" + "\t" + "level" + "\t" + "response" + "\t" + "Actionable variant");
-            for (SomaticVariant variant : variants) {
+            for (SomaticVariant variant : variantsOnActionableGenes) {
                 analyzer.actionableVariants(variant, cancerTypeAnalyzer, doids, primaryTumorLocation);
                 analyzer.actionableRange(variant, cancerTypeAnalyzer, doids, primaryTumorLocation);
             }
+
         } else if (!Files.exists(new File(fileActionabilityVariants).toPath())) {
             LOGGER.warn("File does not exist: " + fileActionabilityVariants);
         } else if (!Files.exists(new File(fileActionabilityRanges).toPath())) {

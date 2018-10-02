@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.actionability.cancerTypeMapping.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
@@ -25,6 +27,18 @@ public class ActionabilityVariantsAnalyzer {
     ActionabilityVariantsAnalyzer(@NotNull final List<ActionabilityVariant> variants, @NotNull List<ActionabilityRange> variantsRanges) {
         this.variants = variants;
         this.variantsRanges = variantsRanges;
+    }
+
+    @NotNull
+    public Set<String> actionableGenes() {
+        Set<String> genes = Sets.newHashSet();
+        for (ActionabilityVariant variant : variants) {
+            genes.add(variant.gene());
+        }
+        for (ActionabilityRange range : variantsRanges) {
+            genes.add(range.gene());
+        }
+        return genes;
     }
 
     public boolean actionableVariants(@NotNull SomaticVariant variant, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
