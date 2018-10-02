@@ -60,8 +60,8 @@ public class StructuralVariantRecovery {
             PurpleCopyNumber next = copyNumbers.get(i + 1);
 
             if (current.segmentStartSupport() == SegmentSupport.NONE) {
-                long minPosition = Math.max(prev.end() + 1, current.start() - 1000);
-                long maxPosition = Math.min(next.start() - 1, current.start() + 1000);
+                long minPosition = Math.max(prev.end() + 1, current.minStart() - 1000);
+                long maxPosition = Math.min(next.start() - 1, current.maxStart() + 1000);
                 result.addAll(recover(minPosition, maxPosition, current, prev, next));
 
             }
