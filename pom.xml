@@ -32,7 +32,7 @@
         <module>sv-analyser</module>
         <module>knowledgebase-importer</module>
         <module>data_analyser</module>
-        <module>actionability_for_SOC</module>
+        <module>actionability-vs-soc</module>
     </modules>
 
     <properties>
