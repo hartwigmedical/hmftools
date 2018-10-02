@@ -38,6 +38,10 @@ public abstract class PurpleCopyNumber implements CopyNumber {
         return end() - start();
     }
 
+    public abstract long minStart();
+    
+    public abstract long maxStart();
+
     @Override
     public int value() {
         return (int) Math.max(0, Math.round(averageTumorCopyNumber()));

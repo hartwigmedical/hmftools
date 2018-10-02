@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep14;
+import org.jooq.InsertValuesStep16;
 import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -56,6 +57,8 @@ class CopyNumberDAO {
                     .averageTumorCopyNumber(record.getValue(COPYNUMBER.COPYNUMBER_))
                     .depthWindowCount(record.getValue(COPYNUMBER.DEPTHWINDOWCOUNT))
                     .gcContent(record.getValue(COPYNUMBER.GCCONTENT))
+                    .minStart(record.getValue(COPYNUMBER.MINSTART))
+                    .maxStart(record.getValue(COPYNUMBER.MAXSTART))
                     .build());
         }
 
@@ -68,7 +71,7 @@ class CopyNumberDAO {
         context.delete(COPYNUMBER).where(COPYNUMBER.SAMPLEID.eq(sample)).execute();
 
         for (List<PurpleCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep14 inserter = context.insertInto(COPYNUMBER,
+            InsertValuesStep16 inserter = context.insertInto(COPYNUMBER,
                     COPYNUMBER.SAMPLEID,
                     COPYNUMBER.CHROMOSOME,
                     COPYNUMBER.START,
@@ -82,6 +85,8 @@ class CopyNumberDAO {
                     COPYNUMBER.COPYNUMBER_,
                     COPYNUMBER.DEPTHWINDOWCOUNT,
                     COPYNUMBER.GCCONTENT,
+                    COPYNUMBER.MINSTART,
+                    COPYNUMBER.MAXSTART,
                     COPYNUMBER.MODIFIED);
             splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
@@ -93,7 +98,7 @@ class CopyNumberDAO {
         context.delete(COPYNUMBERGERMLINE).where(COPYNUMBERGERMLINE.SAMPLEID.eq(sample)).execute();
 
         for (List<PurpleCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep14 inserter = context.insertInto(COPYNUMBERGERMLINE,
+            InsertValuesStep16 inserter = context.insertInto(COPYNUMBERGERMLINE,
                     COPYNUMBERGERMLINE.SAMPLEID,
                     COPYNUMBERGERMLINE.CHROMOSOME,
                     COPYNUMBERGERMLINE.START,
@@ -107,13 +112,15 @@ class CopyNumberDAO {
                     COPYNUMBERGERMLINE.COPYNUMBER,
                     COPYNUMBERGERMLINE.DEPTHWINDOWCOUNT,
                     COPYNUMBERGERMLINE.GCCONTENT,
+                    COPYNUMBERGERMLINE.MINSTART,
+                    COPYNUMBERGERMLINE.MAXSTART,
                     COPYNUMBERGERMLINE.MODIFIED);
             splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
 
-    private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep14 inserter, @NotNull String sample,
+    private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep16 inserter, @NotNull String sample,
             @NotNull PurpleCopyNumber region) {
         //noinspection unchecked
         inserter.values(sample,
@@ -129,6 +136,8 @@ class CopyNumberDAO {
                 DatabaseUtil.decimal(region.averageTumorCopyNumber()),
                 region.depthWindowCount(),
                 DatabaseUtil.decimal(region.gcContent()),
+                region.minStart(),
+                region.maxStart(),
                 timestamp);
     }
 

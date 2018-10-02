@@ -34,6 +34,8 @@ public class BreakpointGraphTest {
                 .segmentStartSupport(SegmentSupport.UNKNOWN)
                 .segmentEndSupport(SegmentSupport.UNKNOWN)
                 .gcContent(0)
+                .minStart(start)
+                .maxStart(start)
                 .build();
     }
 

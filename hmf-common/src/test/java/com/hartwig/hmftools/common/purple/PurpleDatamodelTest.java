@@ -48,6 +48,8 @@ public class PurpleDatamodelTest {
                 .bafCount(0)
                 .depthWindowCount(1)
                 .gcContent(0)
+                .minStart(start)
+                .maxStart(start)
                 .averageObservedBAF(0.5)
                 .averageActualBAF(0.5);
     }

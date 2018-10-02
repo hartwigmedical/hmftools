@@ -69,6 +69,8 @@ public enum PurpleCopyNumberFile {
                 .add("method")
                 .add("depthWindowCount")
                 .add("gcContent")
+                .add("minStart")
+                .add("maxStart")
                 .toString();
     }
 
@@ -86,6 +88,8 @@ public enum PurpleCopyNumberFile {
                 .add(String.valueOf(copyNumber.method()))
                 .add(String.valueOf(copyNumber.depthWindowCount()))
                 .add(FORMAT.format(copyNumber.gcContent()))
+                .add(String.valueOf(copyNumber.minStart()))
+                .add(String.valueOf(copyNumber.maxStart()))
                 .toString();
     }
 
@@ -104,12 +108,14 @@ public enum PurpleCopyNumberFile {
                 .segmentEndSupport(SegmentSupport.valueOf(values[8]))
                 .method(CopyNumberMethod.valueOf(values[9]))
                 .depthWindowCount(0)
-                .gcContent(0);
+                .gcContent(0)
+                .minStart(0)
+                .maxStart(0);
         if (values.length > 10) {
             builder.depthWindowCount(Integer.valueOf(values[10]));
         }
         if (values.length > 11) {
-            builder.gcContent(Double.valueOf(values[11]));
+            builder.gcContent(Double.valueOf(values[11])).minStart(Long.valueOf(values[12])).maxStart(Long.valueOf(values[13]));
         }
 
         return builder.build();

@@ -108,6 +108,8 @@ public class PurpleCopyNumberFactory {
                 .method(region.copyNumberMethod())
                 .depthWindowCount(region.region().depthWindowCount())
                 .gcContent(region.region().gcContent())
+                .minStart(region.region().minStart())
+                .maxStart(region.region().maxStart())
                 .build();
     }
 

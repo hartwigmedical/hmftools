@@ -23,11 +23,15 @@ ALTER TABLE somaticVariant
 
 
 ALTER TABLE copyNumber
-    ADD gcContent DOUBLE PRECISION not null AFTER copyNumberMethod;
+    ADD gcContent DOUBLE PRECISION not null AFTER copyNumberMethod,
+    ADD minStart int not null AFTER gcContent,
+    ADD maxStart int not null AFTER minStart;
 
 
 ALTER TABLE copyNumberGermline
-    ADD gcContent DOUBLE PRECISION not null AFTER copyNumberMethod;
+    ADD gcContent DOUBLE PRECISION not null AFTER copyNumberMethod,
+    ADD minStart int not null AFTER gcContent,
+    ADD maxStart int not null AFTER minStart;
 
 ALTER TABLE copyNumberRegion
     ADD minStart int not null AFTER fittedCopyNumber,

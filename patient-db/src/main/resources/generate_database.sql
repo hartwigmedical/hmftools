@@ -351,6 +351,8 @@ CREATE TABLE copyNumber
     copyNumber DOUBLE PRECISION not null,
     copyNumberMethod varchar(255) NOT NULL,
     gcContent DOUBLE PRECISION not null,
+    minStart int not null,
+    maxStart int not null,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );
@@ -372,6 +374,8 @@ CREATE TABLE copyNumberGermline
     copyNumber DOUBLE PRECISION not null,
     copyNumberMethod varchar(255) NOT NULL,
     gcContent DOUBLE PRECISION not null,
+    minStart int not null,
+    maxStart int not null,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );
