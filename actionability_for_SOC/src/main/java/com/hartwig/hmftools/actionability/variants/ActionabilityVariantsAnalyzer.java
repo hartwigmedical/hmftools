@@ -21,7 +21,7 @@ public class ActionabilityVariantsAnalyzer {
     private final List<ActionabilityVariantsSOC> variants;
     private final List<ActionabilityRanges> variantsRanges;
 
-    public ActionabilityVariantsAnalyzer(@NotNull final List<ActionabilityVariantsSOC> variants,
+    ActionabilityVariantsAnalyzer(@NotNull final List<ActionabilityVariantsSOC> variants,
             @NotNull List<ActionabilityRanges> variantsRanges) {
         this.variants = variants;
         this.variantsRanges = variantsRanges;
@@ -35,7 +35,7 @@ public class ActionabilityVariantsAnalyzer {
                     && variant.chromosome().equals(variants.get(i).chromosome()) && Long.toString(variant.position())
                     .equals(variants.get(i).position()) && variant.ref().equals(variants.get(i).ref()) && variant.alt()
                     .equals(variants.get(i).alt())) {
-                if (variants.get(i).cancerType() != "") {
+                if (!variants.get(i).cancerType().isEmpty()) {
                     if (cancerTypeAnalyzer.foundTumorLocation(variants.get(i).cancerType(), doids)) {
                         printTable(i, "yes");
                     } else {
