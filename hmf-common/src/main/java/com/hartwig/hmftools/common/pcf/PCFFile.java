@@ -7,12 +7,14 @@ import java.util.List;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.window.Window;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class PCFFile {
 
@@ -34,30 +36,58 @@ public final class PCFFile {
     @NotNull
     public static ListMultimap<String, PCFPosition> readPositions(int windowSize, @NotNull PCFSource source, @NotNull final String filename)
             throws IOException {
+
         ListMultimap<String, PCFPosition> result = ArrayListMultimap.create();
         final Window window = new Window(windowSize);
-        long prevStart = 0;
+        @Nullable
+        ModifiablePCFPosition builder = null;
+
         String prevChromosome = Strings.EMPTY;
+        long minPosition = 1;
+        List<ModifiablePCFPosition> chromosomeResult = Lists.newArrayList();
 
         for (String line : Files.readAllLines(new File(filename).toPath())) {
             if (!line.startsWith(HEADER_PREFIX)) {
                 String[] values = line.split(DELIMITER);
                 final String chromosome = values[1];
 
-                long current = window.start(Long.valueOf(values[3]));
-                if (current > prevStart || !chromosome.equals(prevChromosome)) {
-                    result.put(chromosome, position(chromosome, current, source));
-                    prevStart = current;
+                if (!chromosome.equals(prevChromosome)) {
+                    if (builder != null) {
+                        chromosomeResult.add(builder);
+                        result.putAll(prevChromosome, PCFMerge.merge(chromosomeResult));
+                    }
+                    chromosomeResult.clear();
+                    builder = null;
+                    minPosition = 1;
                     prevChromosome = chromosome;
                 }
 
-                current = window.start(Long.valueOf(values[4])) + windowSize;
-                if (current > prevStart || !chromosome.equals(prevChromosome)) {
-                    result.put(chromosome, position(chromosome, current, source));
-                    prevStart = current;
-                    prevChromosome = chromosome;
+                long start = window.start(Long.valueOf(values[3]));
+                long end = window.start(Long.valueOf(values[4])) + windowSize;
+                if (builder != null) {
+                    chromosomeResult.add(builder.setMaxPosition(start));
                 }
+
+                chromosomeResult.add(ModifiablePCFPosition.create()
+                        .setChromosome(chromosome)
+                        .setMinPosition(minPosition)
+                        .setPosition(start)
+                        .setSource(source)
+                        .setMaxPosition(start));
+
+                minPosition = end;
+                builder = ModifiablePCFPosition.create()
+                        .setChromosome(chromosome)
+                        .setMinPosition(start)
+                        .setPosition(end)
+                        .setSource(source)
+                        .setMaxPosition(end);
             }
+        }
+
+        if (builder != null) {
+            chromosomeResult.add(builder);
+            result.putAll(prevChromosome, PCFMerge.merge(chromosomeResult));
         }
 
         return result;
@@ -90,8 +120,4 @@ public final class PCFFile {
                 .build();
     }
 
-    @NotNull
-    private static PCFPosition position(@NotNull final String chromosome, long pos, @NotNull final PCFSource source) {
-        return ImmutablePCFPosition.builder().chromosome(chromosome).position(pos).source(source).build();
-    }
 }

@@ -212,6 +212,6 @@ public class ClusterFactoryTest {
 
     @NotNull
     private static PCFPosition ratio(long position) {
-        return ImmutablePCFPosition.builder().chromosome(CHROM).position(position).source(PCFSource.TUMOR_RATIO).build();
+        return ImmutablePCFPosition.builder().chromosome(CHROM).position(position).source(PCFSource.TUMOR_RATIO).minPosition(0).maxPosition(0).build();
     }
 }

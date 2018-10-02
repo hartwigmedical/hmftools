@@ -107,6 +107,8 @@ public class PurpleSegmentFactoryTest {
                     .chromosome(CHROMOSOME_LENGTH.chromosome())
                     .position(position)
                     .source(PCFSource.TUMOR_RATIO)
+                    .minPosition(0)
+                    .maxPosition(0)
                     .build());
         }
 

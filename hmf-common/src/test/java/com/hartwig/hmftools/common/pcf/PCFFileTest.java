@@ -46,14 +46,20 @@ public class PCFFileTest {
                 PCFFile.readPositions(WINDOW, PCFSource.TUMOR_BAF, BASE_PATH + File.separator + "ratio.pcf").get("1");
 
         assertEquals(5, results.size());
-        assertPosition(835001, results.get(0));
-        assertPosition(2583001, results.get(1));
-        assertPosition(2584001, results.get(2));
-        assertPosition(2695001, results.get(3));
-        assertPosition(4363001, results.get(4));
+        assertPosition(835001, 1, 835001, results.get(0));
+        assertPosition(2583001, 2583001, 2583001, results.get(1));
+        assertPosition(2584001, 2583001, 2695001, results.get(2));
+        assertPosition(2695001, 2584001, 2695001, results.get(3));
+        assertPosition(4363001, 2695001, 4363001, results.get(4));
     }
 
-    private static void assertPosition(long position, @NotNull final PCFPosition victim) {
+    private static void assertPosition(long position, long min, long max, @NotNull final PCFPosition victim) {
+        assertEquals(position, victim.position());
+        assertEquals(min, victim.minPosition());
+        assertEquals(max, victim.maxPosition());
+    }
+
+    private static void assertPosition(long position,  @NotNull final PCFPosition victim) {
         assertEquals(position, victim.position());
     }
 }
