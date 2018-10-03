@@ -11,7 +11,7 @@
     <artifactId>actionability-vs-soc</artifactId>
     <packaging>jar</packaging>
     <version>1.0</version>
-    <name>HMF Tools - Actionability versus SOC (standard of care)</name>
+    <name>HMF Tools - Actionability versus SOC</name>
 
     <dependencies>
         <dependency>
