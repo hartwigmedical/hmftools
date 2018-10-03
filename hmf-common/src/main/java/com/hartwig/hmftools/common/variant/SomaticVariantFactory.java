@@ -45,7 +45,7 @@ public class SomaticVariantFactory {
         final VariantContextFilter filter = new AlwaysPassFilter();
         final SomaticEnrichment enrichment = new NoSomaticEnrichment();
 
-        return new SomaticVariantFactory(filter, enrichment, false);
+        return new SomaticVariantFactory(filter, enrichment);
     }
 
     @NotNull
@@ -59,7 +59,7 @@ public class SomaticVariantFactory {
         filter.addAll(Arrays.asList(filters));
         final SomaticEnrichment noEnrichment = new NoSomaticEnrichment();
 
-        return new SomaticVariantFactory(filter, noEnrichment, true);
+        return new SomaticVariantFactory(filter, noEnrichment);
     }
 
     private static final HotspotFilter HOTSPOT_FILTER = new HotspotFilter();
@@ -78,22 +78,19 @@ public class SomaticVariantFactory {
     private final SomaticEnrichment enrichment;
     @NotNull
     private final CanonicalAnnotation canonicalAnnotationFactory;
-    private final boolean postFilterOnPass;
 
-    public SomaticVariantFactory(@NotNull final VariantContextFilter filter, @NotNull final SomaticEnrichment enrichment,
-            boolean postFilterOnPass) {
+    public SomaticVariantFactory(@NotNull final VariantContextFilter filter, @NotNull final SomaticEnrichment enrichment) {
         this.filter = new CompoundFilter(true);
         this.filter.add(new ChromosomeFilter());
         this.filter.add(filter);
 
         this.enrichment = enrichment;
-        this.postFilterOnPass = postFilterOnPass;
         this.canonicalAnnotationFactory = new CanonicalAnnotation();
     }
 
     @NotNull
     public List<SomaticVariant> fromVCFFile(@NotNull final String sample, @NotNull final String vcfFile) throws IOException {
-        final List<SomaticVariant> variants = Lists.newArrayList();
+        final List<VariantContext> variants = Lists.newArrayList();
 
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
             final VCFHeader header = (VCFHeader) reader.getHeader();
@@ -105,22 +102,31 @@ public class SomaticVariantFactory {
                 throw new IllegalArgumentException("Allelic depths is a required format field in vcf file " + vcfFile);
             }
 
-            final List<VariantContext> allVariantContexts = reader.iterator().toList();
-            for (int i = 0; i < allVariantContexts.size(); i++) {
-                final VariantContext context = allVariantContexts.get(i);
-                final Genotype genotype = context.getGenotype(sample);
-                if (filter.test(context) && genotype.hasAD() && genotype.getAD().length > 1) {
-                    final ImmutableSomaticVariantImpl.Builder builder = createVariantBuilder(sample, context, canonicalAnnotationFactory);
-                    if (NearIndelPonFilter.isIndelNearPon(i, allVariantContexts)) {
-                        builder.filter(NEAR_INDEL_PON_FILTER);
-                    }
+            variants.addAll(reader.iterator().toList());
+        }
 
+        return process(sample, variants);
+    }
+
+    @VisibleForTesting
+    List<SomaticVariant> process(@NotNull final String sample, @NotNull final List<VariantContext> allVariantContexts) {
+        final List<SomaticVariant> variants = Lists.newArrayList();
+
+        for (int i = 0; i < allVariantContexts.size(); i++) {
+            final VariantContext context = allVariantContexts.get(i);
+            final Genotype genotype = context.getGenotype(sample);
+            if (filter.test(context) && genotype.hasAD() && genotype.getAD().length > 1) {
+                if (NearIndelPonFilter.isIndelNearPon(i, allVariantContexts)) {
+                    context.getCommonInfo().addFilter(NEAR_INDEL_PON_FILTER);
+                }
+                if (filter.test(context)) {
+                    final ImmutableSomaticVariantImpl.Builder builder = createVariantBuilder(sample, context, canonicalAnnotationFactory);
                     variants.add(enrichment.enrich(builder, context).build());
                 }
             }
         }
 
-        return postFilterOnPass ? variants.stream().filter(variant -> !variant.isFiltered()).collect(Collectors.toList()) : variants;
+        return variants;
     }
 
     @NotNull
