@@ -9,6 +9,7 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.algo.DrupActionabilityModel;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
@@ -53,7 +54,7 @@ public class SomaticVariantDataSource {
             variantDataSource.add(displayGene,
                     variantDetailsField(variant),
                     readDepthField(variant),
-                    variant.isHotspot() ? "Yes" : "No",
+                    hotspotField(variant),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyVafField(variant)),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, PatientReportFormat.formatPercentWithDefaultCutoffs(0D)),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, Strings.EMPTY),
@@ -62,6 +63,16 @@ public class SomaticVariantDataSource {
         }
 
         return variantDataSource;
+    }
+
+    @NotNull
+    private static String hotspotField(@NotNull SomaticVariant variant) {
+        switch (variant.hotspot()) {
+            case HOTSPOT: return "Yes";
+            case NEAR_HOTSPOT: return "Near";
+            case NON_HOTSPOT: return "No";
+            default: return Strings.EMPTY;
+        }
     }
 
     @NotNull
