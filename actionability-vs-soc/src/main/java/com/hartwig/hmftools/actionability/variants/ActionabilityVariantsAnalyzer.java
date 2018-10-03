@@ -45,56 +45,60 @@ public class ActionabilityVariantsAnalyzer {
             @Nullable String doids, @NotNull String primaryTumorLocation) {
         boolean booleanValue = false;
         for (ActionabilityVariant actionabilityVariant : variants) {
-            if (actionabilityVariant.cancerType().contains(primaryTumorLocation) && variant.gene().equals(actionabilityVariant.gene())
+            if (variant.gene().equals(actionabilityVariant.gene())
                     && variant.chromosome().equals(actionabilityVariant.chromosome())
-                    && variant.position() == actionabilityVariant.position() && variant.ref().equals(actionabilityVariant.ref())
+                    && variant.position() == actionabilityVariant.position()
+                    && variant.ref().equals(actionabilityVariant.ref())
                     && variant.alt().equals(actionabilityVariant.alt())) {
-                if (!actionabilityVariant.cancerType().isEmpty()) {
-                    if (cancerTypeAnalyzer.foundTumorLocation(actionabilityVariant.cancerType(), doids)) {
-                        printVariantRow(actionabilityVariant, "yes");
-                    } else {
-                        printVariantRow(actionabilityVariant, "no");
-                    }
-                }
-                booleanValue = true;
-            } else {
-                booleanValue = false;
+                LOGGER.info(actionabilityVariant);
+                LOGGER.info(cancerTypeAnalyzer.foundTumorLocation(actionabilityVariant.cancerType(), doids));
             }
+//                if (!actionabilityVariant.cancerType().isEmpty()) {
+//                    if (cancerTypeAnalyzer.foundTumorLocation(actionabilityVariant.cancerType(), doids)) {
+//                        printVariantRow(actionabilityVariant, "yes");
+//                    } else {
+//                        printVariantRow(actionabilityVariant, "no");
+//                    }
+//                }
+//                booleanValue = true;
+//            } else {
+//                booleanValue = false;
+//            }
         }
         return booleanValue;
     }
 
-    private static void printVariantRow(@NotNull ActionabilityVariant variant, @NotNull String isActionable) {
-        LOGGER.info(variant.gene() + "\t" + variant.chromosome() + "\t" + variant.position() + "\t" + variant.ref() + "\t" + variant.alt()
-                + "\t" + variant.drug() + "\t" + variant.drugsType() + "\t" + variant.cancerType() + "\t" + variant.level() + "\t" + variant
-                .response() + "\t" + isActionable);
-    }
+//    private static void printVariantRow(@NotNull ActionabilityVariant variant, @NotNull String isActionable) {
+//        LOGGER.info(variant.gene() + "\t" + variant.chromosome() + "\t" + variant.position() + "\t" + variant.ref() + "\t" + variant.alt()
+//                + "\t" + variant.drug() + "\t" + variant.drugsType() + "\t" + variant.cancerType() + "\t" + variant.level() + "\t" + variant
+//                .response() + "\t" + isActionable);
+//    }
 
-    public boolean actionableRange(@NotNull SomaticVariant variant, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer, @Nullable String doids,
-            @NotNull String primaryTumorLocation) {
-        boolean booleanValue = false;
-        for (ActionabilityRange range : variantsRanges) {
-            if (range.cancerType().contains(primaryTumorLocation) && variant.gene().equals(range.gene()) && variant.chromosome()
-                    .equals(range.chromosome()) && variant.position() >= range.start() && variant.position() <= range.end()) {
-                if (!range.cancerType().isEmpty()) {
-                    if (cancerTypeAnalyzer.foundTumorLocation(range.cancerType(), doids)) {
-                        printVariantRangeRow(range, "yes");
-                    } else {
-                        printVariantRangeRow(range, "no");
-                    }
-                }
-                booleanValue = true;
-            } else {
-                booleanValue = false;
-            }
-        }
-        return booleanValue;
-    }
-
-    private static void printVariantRangeRow(@NotNull ActionabilityRange range, @NotNull String isActionable) {
-        LOGGER.info(range.gene() + "\t" + range.chromosome() + "\t" + range.start() + "\t" + range.end() + "\t" + range.drug() + "\t"
-                + range.drugsType() + "\t" + range.cancerType() + "\t" + range.level() + "\t" + range.response() + "\t" + isActionable);
-    }
+//    public boolean actionableRange(@NotNull SomaticVariant variant, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer, @Nullable String doids,
+//            @NotNull String primaryTumorLocation) {
+//        boolean booleanValue = false;
+//        for (ActionabilityRange range : variantsRanges) {
+//            if (range.cancerType().contains(primaryTumorLocation) && variant.gene().equals(range.gene()) && variant.chromosome()
+//                    .equals(range.chromosome()) && variant.position() >= range.start() && variant.position() <= range.end()) {
+//                if (!range.cancerType().isEmpty()) {
+//                    if (cancerTypeAnalyzer.foundTumorLocation(range.cancerType(), doids)) {
+//                        printVariantRangeRow(range, "yes");
+//                    } else {
+//                        printVariantRangeRow(range, "no");
+//                    }
+//                }
+//                booleanValue = true;
+//            } else {
+//                booleanValue = false;
+//            }
+//        }
+//        return booleanValue;
+//    }
+//
+//    private static void printVariantRangeRow(@NotNull ActionabilityRange range, @NotNull String isActionable) {
+//        LOGGER.info(range.gene() + "\t" + range.chromosome() + "\t" + range.start() + "\t" + range.end() + "\t" + range.drug() + "\t"
+//                + range.drugsType() + "\t" + range.cancerType() + "\t" + range.level() + "\t" + range.response() + "\t" + isActionable);
+//    }
 
     @NotNull
     public static ActionabilityVariantsAnalyzer loadFromFileVariantsAndFileRanges(String fileVariants, String fileRanges)

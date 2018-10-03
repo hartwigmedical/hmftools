@@ -96,7 +96,7 @@ public class ActionabilityApplication {
                     + "\t" + "cancerType" + "\t" + "level" + "\t" + "response" + "\t" + "Actionable variant");
             for (SomaticVariant variant : variantsOnActionableGenes) {
                 analyzer.actionableVariants(variant, cancerTypeAnalyzer, doids, primaryTumorLocation);
-                analyzer.actionableRange(variant, cancerTypeAnalyzer, doids, primaryTumorLocation);
+              //  analyzer.actionableRange(variant, cancerTypeAnalyzer, doids, primaryTumorLocation);
             }
 
         } else if (!Files.exists(new File(fileActionabilityVariants).toPath())) {
@@ -112,21 +112,21 @@ public class ActionabilityApplication {
         LOGGER.info("Start processing actionability cnvs");
         String fileActionabilityCNVs = "/data/common/dbs/knowledgebases/output/actionableCNVs.tsv";
 
-        LOGGER.info("CNVs: " + geneCopyNumbers.size());
-        if (Files.exists(new File(fileActionabilityCNVs).toPath()) && Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
-            ActionabilityCNVsAnalyzer analyzerCNVs = ActionabilityCNVsAnalyzer.loadFromFileCNVs(fileActionabilityCNVs);
-            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
-            LOGGER.info("Gene" + "\t" + "cnvType" + "\t" + "drug" + "\t" + "drugType" + "\t" + "cancerType" + "\t"
-                    + "level" + "\t" + "response" + "\t" + "Actionable variant");
-            for (GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
-                analyzerCNVs.actionableCNVs(geneCopyNumber, cancerTypeAnalyzer, doids, primaryTumorLocation);
-            }
-        } else if (!Files.exists(new File(fileActionabilityCNVs).toPath())) {
-            LOGGER.warn("File does not exist: " + fileActionabilityCNVs);
-        } else if (!Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
-            LOGGER.warn("File does not exist: " + fileCancerTumorsWithDOID);
-        }
-        LOGGER.info("Finished processing actionability cnvs");
+//        LOGGER.info("CNVs: " + geneCopyNumbers.size());
+//        if (Files.exists(new File(fileActionabilityCNVs).toPath()) && Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
+//            ActionabilityCNVsAnalyzer analyzerCNVs = ActionabilityCNVsAnalyzer.loadFromFileCNVs(fileActionabilityCNVs);
+//            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
+//            LOGGER.info("Gene" + "\t" + "cnvType" + "\t" + "drug" + "\t" + "drugType" + "\t" + "cancerType" + "\t"
+//                    + "level" + "\t" + "response" + "\t" + "Actionable variant");
+//            for (GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
+//                analyzerCNVs.actionableCNVs(geneCopyNumber, cancerTypeAnalyzer, doids, primaryTumorLocation);
+//            }
+//        } else if (!Files.exists(new File(fileActionabilityCNVs).toPath())) {
+//            LOGGER.warn("File does not exist: " + fileActionabilityCNVs);
+//        } else if (!Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
+//            LOGGER.warn("File does not exist: " + fileCancerTumorsWithDOID);
+//        }
+//        LOGGER.info("Finished processing actionability cnvs");
     }
 
     @NotNull

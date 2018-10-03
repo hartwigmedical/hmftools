@@ -15,7 +15,8 @@ abstract class ActionabilityVariant {
     @NotNull
     abstract String chromosome();
 
-    abstract long position();
+    @NotNull
+    abstract Long position();
 
     @NotNull
     abstract String ref();
