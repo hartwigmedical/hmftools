@@ -24,7 +24,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public final class PatientReporterTestUtil {
 
-    public static final String SIGNATURE_PATH = Resources.getResource("signature").getPath() + File.separator + "signature.png";
+    private static final String SIGNATURE_PATH = Resources.getResource("signature").getPath() + File.separator + "signature.png";
 
     private static final String REF_GENOME_PATH = Resources.getResource("refgenome").getPath() + File.separator + "ref.fasta";
 

@@ -42,7 +42,6 @@ import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableNotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.PatientReporterTestUtil;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
@@ -279,7 +278,7 @@ public class PDFWriterTest {
                 reason,
                 NotAnalysableStudy.CPCT,
                 Optional.empty(),
-                PatientReporterTestUtil.SIGNATURE_PATH);
+                testBaseReportData().signaturePath());
 
         return PDFWriter.generateNotAnalysableReport(patientReport);
     }
