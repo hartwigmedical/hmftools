@@ -27,7 +27,7 @@ public class SomaticVariantDataSource {
     public static final FieldBuilder<?> READ_DEPTH_FIELD = field("read_depth", String.class);
     public static final FieldBuilder<?> IS_HOTSPOT_FIELD = field("is_hotspot", String.class);
     public static final FieldBuilder<?> PLOIDY_VAF_FIELD = field("ploidy_vaf", String.class);
-    public static final FieldBuilder<?> CLONAL_PERCENTAGE_FIELD = field("clonal_probability", String.class);
+    public static final FieldBuilder<?> CLONAL_STATUS_FIELD = field("clonal_status", String.class);
     public static final FieldBuilder<?> WILDTYPE_STATUS_FIELD = field("wildtype_status", String.class);
     public static final FieldBuilder<?> DRIVER_PROBABILITY_FIELD = field("driver_probability", String.class);
     public static final FieldBuilder<?> ACTIONABILITY_LEVEL_FIELD = field("actionability_level", String.class);
@@ -43,7 +43,7 @@ public class SomaticVariantDataSource {
                 READ_DEPTH_FIELD.getName(),
                 IS_HOTSPOT_FIELD.getName(),
                 PLOIDY_VAF_FIELD.getName(),
-                CLONAL_PERCENTAGE_FIELD.getName(),
+                CLONAL_STATUS_FIELD.getName(),
                 WILDTYPE_STATUS_FIELD.getName(),
                 DRIVER_PROBABILITY_FIELD.getName(),
                 ACTIONABILITY_LEVEL_FIELD.getName());
@@ -56,7 +56,7 @@ public class SomaticVariantDataSource {
                     readDepthField(variant),
                     hotspotField(variant),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyVafField(variant)),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, PatientReportFormat.formatPercentWithDefaultCutoffs(0D)),
+                    clonalityField(variant),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, Strings.EMPTY),
                     PatientReportFormat.formatPercentWithDefaultCutoffs(0D),
                     Strings.EMPTY);
@@ -68,10 +68,28 @@ public class SomaticVariantDataSource {
     @NotNull
     private static String hotspotField(@NotNull SomaticVariant variant) {
         switch (variant.hotspot()) {
-            case HOTSPOT: return "Yes";
-            case NEAR_HOTSPOT: return "Near";
-            case NON_HOTSPOT: return "No";
-            default: return Strings.EMPTY;
+            case HOTSPOT:
+                return "Yes";
+            case NEAR_HOTSPOT:
+                return "Near";
+            case NON_HOTSPOT:
+                return "No";
+            default:
+                return Strings.EMPTY;
+        }
+    }
+
+    @NotNull
+    private static String clonalityField(@NotNull EnrichedSomaticVariant variant) {
+        switch (variant.clonality()) {
+            case CLONAL:
+                return "Clonal";
+            case SUBCLONAL:
+                return "Subclonal";
+            case INCONSISTENT:
+                return "Inconsistent";
+            default:
+                return Strings.EMPTY;
         }
     }
 
@@ -111,6 +129,6 @@ public class SomaticVariantDataSource {
     @NotNull
     public static FieldBuilder<?>[] variantFields() {
         return new FieldBuilder<?>[] { GENE_FIELD, VARIANT_DETAILS_FIELD, READ_DEPTH_FIELD, IS_HOTSPOT_FIELD, PLOIDY_VAF_FIELD,
-                CLONAL_PERCENTAGE_FIELD, WILDTYPE_STATUS_FIELD, DRIVER_PROBABILITY_FIELD, ACTIONABILITY_LEVEL_FIELD };
+                CLONAL_STATUS_FIELD, WILDTYPE_STATUS_FIELD, DRIVER_PROBABILITY_FIELD, ACTIONABILITY_LEVEL_FIELD };
     }
 }

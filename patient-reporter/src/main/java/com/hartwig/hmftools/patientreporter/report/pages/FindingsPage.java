@@ -82,12 +82,12 @@ public abstract class FindingsPage {
                         .columns(col.column("Gene", SomaticVariantDataSource.GENE_FIELD),
                                 col.column("Variant", SomaticVariantDataSource.VARIANT_DETAILS_FIELD).setFixedWidth(160),
                                 col.column("Read Depth", SomaticVariantDataSource.READ_DEPTH_FIELD).setFixedWidth(60),
-                                col.column("Hotspot ?", SomaticVariantDataSource.IS_HOTSPOT_FIELD),
+                                col.column("Hotspot", SomaticVariantDataSource.IS_HOTSPOT_FIELD),
                                 col.column("Ploidy (VAF)", SomaticVariantDataSource.PLOIDY_VAF_FIELD),
-                                col.column("Clonal Probability", SomaticVariantDataSource.CLONAL_PERCENTAGE_FIELD),
-                                col.column("Wildtype Status", SomaticVariantDataSource.WILDTYPE_STATUS_FIELD),
-                                col.column("Driver Probability", SomaticVariantDataSource.DRIVER_PROBABILITY_FIELD),
-                                col.column("Actionability Level", SomaticVariantDataSource.ACTIONABILITY_LEVEL_FIELD)))
+                                col.column("Clonality", SomaticVariantDataSource.CLONAL_STATUS_FIELD),
+                                col.column("Wildtype", SomaticVariantDataSource.WILDTYPE_STATUS_FIELD),
+                                col.column("Driver Prob", SomaticVariantDataSource.DRIVER_PROBABILITY_FIELD),
+                                col.column("Evidence Lvl", SomaticVariantDataSource.ACTIONABILITY_LEVEL_FIELD)))
                         .setDataSource(SomaticVariantDataSource.fromVariants(report.fitStatus(), report.somaticVariants(),
                                 drupActionabilityModel))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
