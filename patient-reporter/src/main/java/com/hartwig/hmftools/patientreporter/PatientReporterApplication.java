@@ -53,7 +53,6 @@ public class PatientReporterApplication {
     private static final String NOT_ANALYSABLE_REASON = "not_analysable_reason";
     private static final String NOT_ANALYSED_SAMPLE = "not_analysable_sample";
 
-    private static final String COSMIC_GENE_CSV = "cosmic_gene_csv";
     private static final String FUSION_PAIRS_CSV = "fusion_pairs_csv";
     private static final String PROMISCUOUS_FIVE_CSV = "promiscuous_five_csv";
     private static final String PROMISCUOUS_THREE_CSV = "promiscuous_three_csv";
@@ -115,8 +114,7 @@ public class PatientReporterApplication {
 
     @NotNull
     private static SequencedReportData buildReporterData(@NotNull final CommandLine cmd) throws IOException {
-        return SequencedReportDataLoader.buildFromFiles(cmd.getOptionValue(COSMIC_GENE_CSV),
-                cmd.getOptionValue(FUSION_PAIRS_CSV),
+        return SequencedReportDataLoader.buildFromFiles(cmd.getOptionValue(FUSION_PAIRS_CSV),
                 cmd.getOptionValue(PROMISCUOUS_FIVE_CSV),
                 cmd.getOptionValue(PROMISCUOUS_THREE_CSV),
                 cmd.getOptionValue(DRUP_GENES_CSV),
@@ -154,7 +152,6 @@ public class PatientReporterApplication {
     private static boolean validInputForPatientReporter(@NotNull final CommandLine cmd) {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
         final String drupGenesCsv = cmd.getOptionValue(DRUP_GENES_CSV);
-        final String cosmicGeneCsv = cmd.getOptionValue(COSMIC_GENE_CSV);
         final String fusionPairsCsv = cmd.getOptionValue(FUSION_PAIRS_CSV);
         final String promiscuousFiveCsv = cmd.getOptionValue(PROMISCUOUS_FIVE_CSV);
         final String promiscuousThreeCsv = cmd.getOptionValue(PROMISCUOUS_THREE_CSV);
@@ -166,8 +163,6 @@ public class PatientReporterApplication {
             LOGGER.warn(RUN_DIRECTORY + " has to be an existing directory: " + runDirectory);
         } else if (drupGenesCsv == null || !exists(drupGenesCsv)) {
             LOGGER.warn(DRUP_GENES_CSV + " has to be an existing file: " + drupGenesCsv);
-        } else if (cosmicGeneCsv == null || !exists(cosmicGeneCsv)) {
-            LOGGER.warn(COSMIC_GENE_CSV + " has to be an existing file: " + cosmicGeneCsv);
         } else if (fusionPairsCsv == null || !exists(fusionPairsCsv)) {
             LOGGER.warn(FUSION_PAIRS_CSV + " has to be an existing file: " + fusionPairsCsv);
         } else if (promiscuousFiveCsv == null || !exists(promiscuousFiveCsv)) {
@@ -249,7 +244,6 @@ public class PatientReporterApplication {
         options.addOption(NOT_ANALYSABLE, false, "If set, generates a non-sequenceable report.");
         options.addOption(NOT_ANALYSABLE_REASON, true, "Either 'low_tumor_percentage' or 'low_dna_yield'");
         options.addOption(NOT_ANALYSED_SAMPLE, true, "In case of non-sequenceable reports, the name of the sample used.");
-        options.addOption(COSMIC_GENE_CSV, true, "Path towards a CSV containing COSMIC gene data.");
         options.addOption(FUSION_PAIRS_CSV, true, "Path towards a CSV containing white-listed gene fusion pairs.");
         options.addOption(PROMISCUOUS_FIVE_CSV, true, "Path towards a CSV containing white-listed promiscuous 5' genes.");
         options.addOption(PROMISCUOUS_THREE_CSV, true, "Path towards a CSV containing white-listed promiscuous 3' genes.");

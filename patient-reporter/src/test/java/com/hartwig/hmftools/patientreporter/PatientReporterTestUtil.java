@@ -10,8 +10,6 @@ import com.google.common.collect.TreeMultimap;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.center.Center;
 import com.hartwig.hmftools.common.center.CenterModel;
-import com.hartwig.hmftools.common.cosmic.CosmicGeneModel;
-import com.hartwig.hmftools.common.cosmic.CosmicGenes;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
@@ -40,13 +38,10 @@ public final class PatientReporterTestUtil {
     @NotNull
     public static SequencedReportData testSequencedReportData() throws IOException {
         final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
-        final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
         final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfPanelGeneList());
-        final CosmicGeneModel cosmicGeneModel = CosmicGenes.readFromCSV(cosmicPath);
         final DrupFilter drupFilter = new DrupFilter(drupFilterPath);
 
         return ImmutableSequencedReportData.of(geneModel,
-                cosmicGeneModel,
                 testKnownFusionModel(),
                 drupFilter,
                 new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),
