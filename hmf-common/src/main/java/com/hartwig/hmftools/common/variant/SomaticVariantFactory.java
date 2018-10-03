@@ -14,7 +14,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotationFactory;
+import com.hartwig.hmftools.common.variant.enrich.NoSomaticEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
+import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
 import com.hartwig.hmftools.common.variant.filter.NearIndelPonFilter;
@@ -40,7 +42,10 @@ public class SomaticVariantFactory {
 
     @NotNull
     public static SomaticVariantFactory unfilteredInstance() {
-        return filteredInstance();
+        final VariantContextFilter filter = new AlwaysPassFilter();
+        final SomaticEnrichment enrichment = new NoSomaticEnrichment();
+
+        return new SomaticVariantFactory(filter, enrichment, false);
     }
 
     @NotNull
@@ -52,8 +57,9 @@ public class SomaticVariantFactory {
     public static SomaticVariantFactory filteredInstance(@NotNull VariantContextFilter... filters) {
         final CompoundFilter filter = new CompoundFilter(true);
         filter.addAll(Arrays.asList(filters));
-        return new SomaticVariantFactory(filter, new SomaticEnrichment() {
-        });
+        final SomaticEnrichment noEnrichment = new NoSomaticEnrichment();
+
+        return new SomaticVariantFactory(filter, noEnrichment, true);
     }
 
     private static final HotspotFilter HOTSPOT_FILTER = new HotspotFilter();
@@ -72,13 +78,16 @@ public class SomaticVariantFactory {
     private final SomaticEnrichment enrichment;
     @NotNull
     private final CanonicalAnnotation canonicalAnnotationFactory;
+    private final boolean postFilterOnPass;
 
-    public SomaticVariantFactory(@NotNull final VariantContextFilter filter, @NotNull final SomaticEnrichment enrichment) {
+    public SomaticVariantFactory(@NotNull final VariantContextFilter filter, @NotNull final SomaticEnrichment enrichment,
+            boolean postFilterOnPass) {
         this.filter = new CompoundFilter(true);
         this.filter.add(new ChromosomeFilter());
         this.filter.add(filter);
 
         this.enrichment = enrichment;
+        this.postFilterOnPass = postFilterOnPass;
         this.canonicalAnnotationFactory = new CanonicalAnnotation();
     }
 
@@ -113,7 +122,7 @@ public class SomaticVariantFactory {
             }
         }
 
-        return variants;
+        return postFilterOnPass ? variants.stream().filter(variant -> !variant.isFiltered()).collect(Collectors.toList()) : variants;
     }
 
     @NotNull
