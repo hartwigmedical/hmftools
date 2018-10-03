@@ -51,11 +51,11 @@ public class CancerTypeAnalyzer {
         }
     }
 
-    public boolean foundTumorLocation(@NotNull String tumorLocationKnowledgebase, @Nullable String doid) {
+    public boolean foundTumorLocation(@NotNull String tumorLocationKnowledgebase, @Nullable String doidsPrimaryTumorLocation) {
         Boolean booleanValueRange = false;
-        for (CancerTypeReading cancerTypeDoid : cancerTypeDoids) {
-            if (tumorLocationKnowledgebase.contains(cancerTypeDoids.get(0).cancerType())) {
-                if (cancerTypeDoid.doidSet().contains(doid)) {
+        for (CancerTypeReading cancerTypeDoidKnowledgeBase : cancerTypeDoids) {
+            if (tumorLocationKnowledgebase.equals(cancerTypeDoidKnowledgeBase.cancerType())) {
+                if (cancerTypeDoidKnowledgeBase.doidSet().contains(doidsPrimaryTumorLocation)) {
                     booleanValueRange = true;
                 }
             }

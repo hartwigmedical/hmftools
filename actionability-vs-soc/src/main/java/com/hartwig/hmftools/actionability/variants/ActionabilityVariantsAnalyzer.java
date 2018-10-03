@@ -42,37 +42,32 @@ public class ActionabilityVariantsAnalyzer {
     }
 
     public boolean actionableVariants(@NotNull SomaticVariant variant, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
-            @Nullable String doids, @NotNull String primaryTumorLocation) {
+            @Nullable String doidsPrimaryTumorLocation, @NotNull String primaryTumorLocation) {
         boolean booleanValue = false;
         for (ActionabilityVariant actionabilityVariant : variants) {
-            if (variant.gene().equals(actionabilityVariant.gene())
-                    && variant.chromosome().equals(actionabilityVariant.chromosome())
-                    && variant.position() == actionabilityVariant.position()
-                    && variant.ref().equals(actionabilityVariant.ref())
+            if (variant.gene().equals(actionabilityVariant.gene()) && variant.chromosome().equals(actionabilityVariant.chromosome())
+                    && variant.position() == actionabilityVariant.position() && variant.ref().equals(actionabilityVariant.ref())
                     && variant.alt().equals(actionabilityVariant.alt())) {
-                LOGGER.info(actionabilityVariant);
-                LOGGER.info(cancerTypeAnalyzer.foundTumorLocation(actionabilityVariant.cancerType(), doids));
+                LOGGER.info(cancerTypeAnalyzer.foundTumorLocation(actionabilityVariant.cancerType(), doidsPrimaryTumorLocation));
+
+                if (cancerTypeAnalyzer.foundTumorLocation(actionabilityVariant.cancerType(), doidsPrimaryTumorLocation)) {
+                    printVariantRow(actionabilityVariant, "yes");
+                } else {
+                    printVariantRow(actionabilityVariant, "no");
+                }
+                booleanValue = true;
+            } else {
+                booleanValue = false;
             }
-//                if (!actionabilityVariant.cancerType().isEmpty()) {
-//                    if (cancerTypeAnalyzer.foundTumorLocation(actionabilityVariant.cancerType(), doids)) {
-//                        printVariantRow(actionabilityVariant, "yes");
-//                    } else {
-//                        printVariantRow(actionabilityVariant, "no");
-//                    }
-//                }
-//                booleanValue = true;
-//            } else {
-//                booleanValue = false;
-//            }
         }
         return booleanValue;
     }
 
-//    private static void printVariantRow(@NotNull ActionabilityVariant variant, @NotNull String isActionable) {
-//        LOGGER.info(variant.gene() + "\t" + variant.chromosome() + "\t" + variant.position() + "\t" + variant.ref() + "\t" + variant.alt()
-//                + "\t" + variant.drug() + "\t" + variant.drugsType() + "\t" + variant.cancerType() + "\t" + variant.level() + "\t" + variant
-//                .response() + "\t" + isActionable);
-//    }
+    private static void printVariantRow(@NotNull ActionabilityVariant variant, @NotNull String isActionable) {
+        LOGGER.info(variant.gene() + "\t" + variant.chromosome() + "\t" + variant.position() + "\t" + variant.ref() + "\t" + variant.alt()
+                + "\t" + variant.drug() + "\t" + variant.drugsType() + "\t" + variant.cancerType() + "\t" + variant.level() + "\t"
+                + variant.response() + "\t" + isActionable);
+    }
 
 //    public boolean actionableRange(@NotNull SomaticVariant variant, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer, @Nullable String doids,
 //            @NotNull String primaryTumorLocation) {

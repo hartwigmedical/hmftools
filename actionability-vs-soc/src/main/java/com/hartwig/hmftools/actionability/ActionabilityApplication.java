@@ -67,8 +67,8 @@ public class ActionabilityApplication {
         LOGGER.info("Cancer subtype from patient: " + cancerSubtype);
 
         CancerTypeMappingReading cancerTypeMappingReading = CancerTypeMappingReading.readingFile();
-        String doids = cancerTypeMappingReading.doidsForPrimaryTumorLocation(primaryTumorLocation);
-        LOGGER.info("DOID: " + doids);
+        String doidsPrimaryTumorLocation = cancerTypeMappingReading.doidsForPrimaryTumorLocation(primaryTumorLocation);
+        LOGGER.info("DOID: " + doidsPrimaryTumorLocation);
 
         String fileCancerTumorsWithDOID = "/data/common/dbs/knowledgebases/output/knowledgebaseCancerTypes.tsv";
 
@@ -95,7 +95,7 @@ public class ActionabilityApplication {
             LOGGER.info("Gene" + "\t" + "chromosome" + "\t" + "position" + "\t" + "ref" + "\t" + "alt" + "\t" + "drug" + "\t" + "drugsType"
                     + "\t" + "cancerType" + "\t" + "level" + "\t" + "response" + "\t" + "Actionable variant");
             for (SomaticVariant variant : variantsOnActionableGenes) {
-                analyzer.actionableVariants(variant, cancerTypeAnalyzer, doids, primaryTumorLocation);
+                analyzer.actionableVariants(variant, cancerTypeAnalyzer, doidsPrimaryTumorLocation, primaryTumorLocation);
               //  analyzer.actionableRange(variant, cancerTypeAnalyzer, doids, primaryTumorLocation);
             }
 
