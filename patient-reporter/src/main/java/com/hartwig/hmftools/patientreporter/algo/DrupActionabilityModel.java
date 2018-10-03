@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.filters;
+package com.hartwig.hmftools.patientreporter.algo;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,12 +12,12 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class DrupFilter implements Predicate<SomaticVariant> {
+public class DrupActionabilityModel implements Predicate<SomaticVariant> {
 
     @NotNull
     private final Set<String> includedGenes;
 
-    public DrupFilter(@NotNull final String drupGenesCsv) throws IOException {
+    public DrupActionabilityModel(@NotNull final String drupGenesCsv) throws IOException {
         final List<String> geneLines = LineReader.build().readLines(new File(drupGenesCsv).toPath(),
                 line -> line.length() > 0);
         this.includedGenes = Sets.newHashSet(geneLines);

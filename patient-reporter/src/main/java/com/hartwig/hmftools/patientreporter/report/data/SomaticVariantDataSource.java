@@ -9,7 +9,7 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
+import com.hartwig.hmftools.patientreporter.algo.DrupActionabilityModel;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.apache.logging.log4j.util.Strings;
@@ -36,7 +36,7 @@ public class SomaticVariantDataSource {
 
     @NotNull
     public static JRDataSource fromVariants(@NotNull FittedPurityStatus fitStatus, @NotNull final List<EnrichedSomaticVariant> variants,
-            @NotNull DrupFilter drupFilter) {
+            @NotNull DrupActionabilityModel drupActionabilityModel) {
         final DRDataSource variantDataSource = new DRDataSource(GENE_FIELD.getName(),
                 VARIANT_DETAILS_FIELD.getName(),
                 READ_DEPTH_FIELD.getName(),
@@ -48,7 +48,7 @@ public class SomaticVariantDataSource {
                 ACTIONABILITY_LEVEL_FIELD.getName());
 
         for (final EnrichedSomaticVariant variant : variants) {
-            final String displayGene = drupFilter.test(variant) ? variant.gene() + " *" : variant.gene();
+            final String displayGene = drupActionabilityModel.test(variant) ? variant.gene() + " *" : variant.gene();
 
             variantDataSource.add(displayGene,
                     variantDetailsField(variant),

@@ -3,8 +3,8 @@ package com.hartwig.hmftools.patientreporter;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.patientreporter.algo.DrupActionabilityModel;
 import com.hartwig.hmftools.patientreporter.algo.GeneModel;
-import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +24,7 @@ public abstract class SequencedReportData {
     public abstract KnownFusionsModel knownFusionsModel();
 
     @NotNull
-    public abstract DrupFilter drupFilter();
+    public abstract DrupActionabilityModel drupActionabilityModel();
 
     @NotNull
     public abstract IndexedFastaSequenceFile refGenomeFastaFile();

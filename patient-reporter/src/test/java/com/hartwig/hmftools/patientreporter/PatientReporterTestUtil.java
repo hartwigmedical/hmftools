@@ -15,8 +15,8 @@ import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
+import com.hartwig.hmftools.patientreporter.algo.DrupActionabilityModel;
 import com.hartwig.hmftools.patientreporter.algo.GeneModel;
-import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -37,13 +37,14 @@ public final class PatientReporterTestUtil {
 
     @NotNull
     public static SequencedReportData testSequencedReportData() throws IOException {
-        final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
         final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfPanelGeneList());
-        final DrupFilter drupFilter = new DrupFilter(drupFilterPath);
+
+        final String drupGeneCsv = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
+        final DrupActionabilityModel drupActionabilityModel = new DrupActionabilityModel(drupGeneCsv);
 
         return ImmutableSequencedReportData.of(geneModel,
                 testKnownFusionModel(),
-                drupFilter,
+                drupActionabilityModel,
                 new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),
                 TreeMultimap.create());
     }

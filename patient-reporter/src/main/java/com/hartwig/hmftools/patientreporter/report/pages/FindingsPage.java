@@ -13,7 +13,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
-import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
+import com.hartwig.hmftools.patientreporter.algo.DrupActionabilityModel;
 import com.hartwig.hmftools.patientreporter.report.Commons;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSection;
@@ -49,7 +49,7 @@ public abstract class FindingsPage {
                 report().sampleReport(),
                 impliedPurityString(report())),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                somaticVariantReport(report(), reporterData().drupFilter()),
+                somaticVariantReport(report(), reporterData().drupActionabilityModel()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 geneCopyNumberReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -71,7 +71,7 @@ public abstract class FindingsPage {
 
     @NotNull
     private static ComponentBuilder<?, ?> somaticVariantReport(@NotNull final AnalysedPatientReport report,
-            @NotNull final DrupFilter drupFilter) {
+            @NotNull final DrupActionabilityModel drupActionabilityModel) {
         final String geneMutationAddition = "Marked genes (*) are included in the DRUP study and indicate potential "
                 + "eligibility in DRUP. Please note that the marking is NOT based on the specific mutation reported for "
                 + "this sample, but only on a gene-level.";
@@ -88,7 +88,8 @@ public abstract class FindingsPage {
                                 col.column("Wildtype Status", SomaticVariantDataSource.WILDTYPE_STATUS_FIELD),
                                 col.column("Driver Probability", SomaticVariantDataSource.DRIVER_PROBABILITY_FIELD),
                                 col.column("Actionability Level", SomaticVariantDataSource.ACTIONABILITY_LEVEL_FIELD)))
-                        .setDataSource(SomaticVariantDataSource.fromVariants(report.fitStatus(), report.somaticVariants(), drupFilter))
+                        .setDataSource(SomaticVariantDataSource.fromVariants(report.fitStatus(), report.somaticVariants(),
+                                drupActionabilityModel))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
