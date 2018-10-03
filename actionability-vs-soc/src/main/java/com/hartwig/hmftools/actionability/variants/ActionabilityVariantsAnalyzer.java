@@ -108,15 +108,17 @@ public class ActionabilityVariantsAnalyzer {
         final List<String> lineVariants = Files.readAllLines(new File(fileVariants).toPath());
         final List<String> lineRanges = Files.readAllLines(new File(fileRanges).toPath());
 
-        for (int i = 1; i < lineVariants.size(); i++) {
-            fromLineVariants(lineVariants.get(i));
-            variants.add(fromLineVariants(lineVariants.get(i)));
+        for (String line : lineVariants) {
+            if (!line.contains("event") || !line.contains("actionability")) {
+                variants.add(fromLineVariants(line));
+            }
         }
 
-        for (int i = 1; i < lineRanges.size(); i++) {
-            fromLineVariants(lineRanges.get(i));
-            ranges.add(fromLineRanges(lineRanges.get(i)));
-        }
+//        for (String line : lineRanges) {
+//            if (!line.contains("event") || !line.contains("actionability")) {
+//                ranges.add(fromLineRanges(line));
+//            }
+//        }
         return new ActionabilityVariantsAnalyzer(variants, ranges);
     }
 
@@ -134,8 +136,8 @@ public class ActionabilityVariantsAnalyzer {
                 .drug(values[7])
                 .drugsType(values[8])
                 .cancerType(values[9])
-                .level(values[11])
-                .response(values[14])
+                .level(values[10])
+                .response(values[11])
                 .build();
     }
 
@@ -144,16 +146,16 @@ public class ActionabilityVariantsAnalyzer {
         final String[] values = line.split(DELIMITER);
         return ImmutableActionabilityRange.builder()
                 .gene(values[0])
-                .chromosome(values[2])
-                .start(Long.valueOf(values[3]))
-                .end(Long.valueOf(values[4]))
-                .source(values[6])
-                .reference(values[7])
-                .drug(values[8])
-                .drugsType(values[9])
-                .cancerType(values[10])
-                .level(values[12])
-                .response(values[15])
+                .chromosome(values[1])
+                .start(Long.valueOf(values[2]))
+                .end(Long.valueOf(values[3]))
+                .source(values[4])
+                .reference(values[5])
+                .drug(values[6])
+                .drugsType(values[7])
+                .cancerType(values[8])
+                .level(values[9])
+                .response(values[10])
                 .build();
     }
 }
