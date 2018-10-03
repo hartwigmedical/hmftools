@@ -57,6 +57,7 @@ public class PatientReporterApplication {
     private static final String PROMISCUOUS_FIVE_CSV = "promiscuous_five_csv";
     private static final String PROMISCUOUS_THREE_CSV = "promiscuous_three_csv";
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
+    private static final String HOTSPOT_TSV = "hotspot_tsv";
     private static final String ENSEMBL_DB = "ensembl_db";
     private static final String ENSEMBL_DB_LOCAL = "local_ensembl";
     private static final String DB_USER = "db_user";
@@ -64,8 +65,8 @@ public class PatientReporterApplication {
 
     private static final String FASTA_FILE_LOCATION = "fasta_file_location";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
-    private static final String CENTER_CSV = "center_csv";
 
+    private static final String CENTER_CSV = "center_csv";
     private static final String SIGNATURE = "signature";
     private static final String COMMENTS = "comments";
 
@@ -118,6 +119,7 @@ public class PatientReporterApplication {
                 cmd.getOptionValue(PROMISCUOUS_FIVE_CSV),
                 cmd.getOptionValue(PROMISCUOUS_THREE_CSV),
                 cmd.getOptionValue(DRUP_GENES_CSV),
+                cmd.getOptionValue(HOTSPOT_TSV),
                 cmd.getOptionValue(FASTA_FILE_LOCATION),
                 cmd.getOptionValue(HIGH_CONFIDENCE_BED));
     }
@@ -152,6 +154,7 @@ public class PatientReporterApplication {
     private static boolean validInputForPatientReporter(@NotNull final CommandLine cmd) {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
         final String drupGenesCsv = cmd.getOptionValue(DRUP_GENES_CSV);
+        final String hotspotTsv = cmd.getOptionValue(HOTSPOT_TSV);
         final String fusionPairsCsv = cmd.getOptionValue(FUSION_PAIRS_CSV);
         final String promiscuousFiveCsv = cmd.getOptionValue(PROMISCUOUS_FIVE_CSV);
         final String promiscuousThreeCsv = cmd.getOptionValue(PROMISCUOUS_THREE_CSV);
@@ -163,6 +166,8 @@ public class PatientReporterApplication {
             LOGGER.warn(RUN_DIRECTORY + " has to be an existing directory: " + runDirectory);
         } else if (drupGenesCsv == null || !exists(drupGenesCsv)) {
             LOGGER.warn(DRUP_GENES_CSV + " has to be an existing file: " + drupGenesCsv);
+        } else if (hotspotTsv == null || !exists(hotspotTsv)) {
+            LOGGER.warn(HOTSPOT_TSV + " has to be an existing file: " + hotspotTsv);
         } else if (fusionPairsCsv == null || !exists(fusionPairsCsv)) {
             LOGGER.warn(FUSION_PAIRS_CSV + " has to be an existing file: " + fusionPairsCsv);
         } else if (promiscuousFiveCsv == null || !exists(promiscuousFiveCsv)) {
@@ -241,21 +246,22 @@ public class PatientReporterApplication {
         options.addOption(LIMS_JSON, true, "Complete path towards a JSON containing the LIMS data dump.");
         options.addOption(REPORT_DIRECTORY, true, "Complete path to where the PDF reports have to be saved.");
         options.addOption(RUN_DIRECTORY, true, "Complete path towards a single run dir where patient reporter will run on.");
-        options.addOption(NOT_ANALYSABLE, false, "If set, generates a non-sequenceable report.");
-        options.addOption(NOT_ANALYSABLE_REASON, true, "Either 'low_tumor_percentage' or 'low_dna_yield'");
+        options.addOption(NOT_ANALYSABLE, false, "If set, generates a non-analysable report.");
+        options.addOption(NOT_ANALYSABLE_REASON, true, "Either 'low_tumor_percentage', 'low_dna_yield' or 'post_analysis_fail'");
         options.addOption(NOT_ANALYSED_SAMPLE, true, "In case of non-sequenceable reports, the name of the sample used.");
         options.addOption(FUSION_PAIRS_CSV, true, "Path towards a CSV containing white-listed gene fusion pairs.");
         options.addOption(PROMISCUOUS_FIVE_CSV, true, "Path towards a CSV containing white-listed promiscuous 5' genes.");
         options.addOption(PROMISCUOUS_THREE_CSV, true, "Path towards a CSV containing white-listed promiscuous 3' genes.");
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
+        options.addOption(HOTSPOT_TSV, true, "Path towards a TSV containing known hotspot variants.");
         options.addOption(ENSEMBL_DB, true, "Annotate structural somaticVariants using this Ensembl DB URI");
         options.addOption(ENSEMBL_DB_LOCAL, false, "Flag indicating to connect to local Ensembl DB");
         options.addOption(DB_USER, true, "Database user name to connect to local mysql instance.");
         options.addOption(DB_PASS, true, "Database password to connect to local mysql instance.");
-        options.addOption(CENTER_CSV, true, "Path towards a CSV containing center data.");
-        options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
         options.addOption(FASTA_FILE_LOCATION, true, "Path towards the FASTA file containing the ref genome.");
         options.addOption(HIGH_CONFIDENCE_BED, true, "Path towards the high confidence BED file.");
+        options.addOption(CENTER_CSV, true, "Path towards a CSV containing center (hospital) data.");
+        options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
         options.addOption(COMMENTS, true, "Additional comments to be added to the report, if any.");
         return options;
     }

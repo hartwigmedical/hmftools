@@ -15,6 +15,8 @@ import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
+import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
+import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.patientreporter.algo.DrupActionabilityModel;
 import com.hartwig.hmftools.patientreporter.algo.GeneModel;
 
@@ -28,6 +30,8 @@ public final class PatientReporterTestUtil {
 
     private static final String REF_GENOME_PATH = Resources.getResource("refgenome").getPath() + File.separator + "ref.fasta";
 
+    private static final String DRUP_GENES_CSV = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
+    private static final String HOTSPOT_TSV = Resources.getResource("csv").getPath() + File.separator + "hotspots.tsv";
     private static final String FUSION_PAIRS_CSV = Resources.getResource("csv").getPath() + File.separator + "fusion_pairs.csv";
     private static final String PROMISCUOUS_FIVE_CSV = Resources.getResource("csv").getPath() + File.separator + "promiscuous_five.csv";
     private static final String PROMISCUOUS_THREE_CSV = Resources.getResource("csv").getPath() + File.separator + "promiscuous_three.csv";
@@ -38,11 +42,11 @@ public final class PatientReporterTestUtil {
     @NotNull
     public static SequencedReportData testSequencedReportData() throws IOException {
         final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfPanelGeneList());
-
-        final String drupGeneCsv = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
-        final DrupActionabilityModel drupActionabilityModel = new DrupActionabilityModel(drupGeneCsv);
+        CompoundEnrichment compoundEnrichment = new CompoundEnrichment(HotspotEnrichment.fromHotspotsFile(HOTSPOT_TSV));
+        final DrupActionabilityModel drupActionabilityModel = new DrupActionabilityModel(DRUP_GENES_CSV);
 
         return ImmutableSequencedReportData.of(geneModel,
+                compoundEnrichment,
                 testKnownFusionModel(),
                 drupActionabilityModel,
                 new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),

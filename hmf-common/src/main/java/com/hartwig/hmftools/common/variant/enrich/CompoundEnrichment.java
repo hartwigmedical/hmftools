@@ -11,6 +11,15 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class CompoundEnrichment extends ArrayList<SomaticEnrichment> implements SomaticEnrichment {
 
+    public CompoundEnrichment() {
+        super();
+    }
+
+    public CompoundEnrichment(@NotNull SomaticEnrichment initialEnrichment) {
+        super();
+        add(initialEnrichment);
+    }
+
     @NotNull
     @Override
     public ImmutableSomaticVariantImpl.Builder enrich(@NotNull final ImmutableSomaticVariantImpl.Builder builder,

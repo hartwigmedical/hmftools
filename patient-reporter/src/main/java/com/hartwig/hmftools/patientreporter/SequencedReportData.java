@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
 import com.hartwig.hmftools.patientreporter.algo.DrupActionabilityModel;
 import com.hartwig.hmftools.patientreporter.algo.GeneModel;
 
@@ -19,6 +20,9 @@ public abstract class SequencedReportData {
 
     @NotNull
     public abstract GeneModel panelGeneModel();
+
+    @NotNull
+    public abstract CompoundEnrichment somaticVariantEnrichment();
 
     @NotNull
     public abstract KnownFusionsModel knownFusionsModel();
