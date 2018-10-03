@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
@@ -75,6 +76,7 @@ public abstract class PatientReporter {
 
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run,
                 purpleAnalysis,
+                sequencedReportData().somaticVariantEnrichment(),
                 sequencedReportData().panelGeneModel().panel(),
                 sequencedReportData().highConfidenceRegions(),
                 sequencedReportData().refGenomeFastaFile());
@@ -143,13 +145,14 @@ public abstract class PatientReporter {
 
     @NotNull
     private static SomaticVariantAnalysis analyzeSomaticVariants(@NotNull RunContext run, @NotNull PurpleAnalysis purpleAnalysis,
-            @NotNull Set<String> genePanel, @NotNull Multimap<String, GenomeRegion> highConfidenceRegions,
-            @NotNull IndexedFastaSequenceFile refGenomeFastaFile) throws IOException {
+            @NotNull SomaticEnrichment somaticEnrichment, @NotNull Set<String> genePanel,
+            @NotNull Multimap<String, GenomeRegion> highConfidenceRegions, @NotNull IndexedFastaSequenceFile refGenomeFastaFile)
+            throws IOException {
         final String runDirectory = run.runDirectory();
         final String sample = run.tumorSample();
 
         LOGGER.info("Loading somatic variants...");
-        final List<SomaticVariant> variants = PatientReporterHelper.loadPassedSomaticVariants(sample, runDirectory);
+        final List<SomaticVariant> variants = PatientReporterHelper.loadPassedSomaticVariants(sample, runDirectory, somaticEnrichment);
         LOGGER.info(" " + variants.size() + " PASS somatic variants loaded for sample " + sample);
 
         LOGGER.info("Enriching somatic variants");

@@ -20,11 +20,14 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
 final class PatientReporterHelper {
 
@@ -80,7 +83,8 @@ final class PatientReporterHelper {
     }
 
     @NotNull
-    static List<SomaticVariant> loadPassedSomaticVariants(@NotNull final String sample, @NotNull final String path) throws IOException {
+    static List<SomaticVariant> loadPassedSomaticVariants(@NotNull final String sample, @NotNull final String path,
+            @NotNull SomaticEnrichment somaticEnrichment) throws IOException {
         // TODO (KODU): Clean up once pipeline v3 no longer exists
         Path vcfPath;
         try {
@@ -88,7 +92,8 @@ final class PatientReporterHelper {
         } catch (FileNotFoundException exception) {
             vcfPath = PathExtensionFinder.build().findPath(path, SOMATIC_VCF_EXTENSION_V4);
         }
-        return SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, vcfPath.toString());
+
+        return new SomaticVariantFactory(new PassingVariantFilter(), somaticEnrichment, true).fromVCFFile(sample, vcfPath.toString());
     }
 
     @Nullable
