@@ -41,7 +41,7 @@ public final class PatientReportFormat {
     }
 
     @NotNull
-    public static String correctValueForFitStatus(@NotNull final FittedPurityStatus fitStatus, @NotNull final String value) {
+    public static String correctValueForFitStatus(@NotNull FittedPurityStatus fitStatus, @NotNull String value) {
         return fitStatus == FittedPurityStatus.NO_TUMOR ? "N/A" : value;
     }
 

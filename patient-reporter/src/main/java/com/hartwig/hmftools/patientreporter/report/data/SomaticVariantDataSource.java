@@ -51,13 +51,15 @@ public class SomaticVariantDataSource {
         for (final EnrichedSomaticVariant variant : variants) {
             final String displayGene = drupActionabilityModel.test(variant) ? variant.gene() + " *" : variant.gene();
 
+            String wildtypeStatus = variant.biallelic() ? "Lost" : "Present";
+
             variantDataSource.add(displayGene,
                     variantDetailsField(variant),
                     readDepthField(variant),
                     hotspotField(variant),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyVafField(variant)),
-                    clonalityField(variant),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, Strings.EMPTY),
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, clonalityField(variant)),
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, wildtypeStatus),
                     PatientReportFormat.formatPercentWithDefaultCutoffs(0D),
                     Strings.EMPTY);
         }
