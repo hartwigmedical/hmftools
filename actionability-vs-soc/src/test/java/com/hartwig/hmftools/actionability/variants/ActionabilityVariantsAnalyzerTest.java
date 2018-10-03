@@ -22,7 +22,7 @@ public class ActionabilityVariantsAnalyzerTest {
         ActionabilityVariant actionabilityVariant = ImmutableActionabilityVariant.builder()
                 .gene("BRAF")
                 .chromosome("X")
-                .position(Long.valueOf("1234"))
+                .position(1234)
                 .ref("C")
                 .alt("T")
                 .source("civic")
