@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.actionability.cancerTypeMapping.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -28,14 +30,22 @@ public class ActionabilityCNVsAnalyzer {
         this.CNVs = CNVs;
     }
 
+    @NotNull
+    public Set<String> actionableGenes() {
+        Set<String> genes = Sets.newHashSet();
+        for (ActionabilityCNVs cnvs : CNVs) {
+            genes.add(cnvs.gene());
+        }
+        return genes;
+    }
+
     public boolean actionableCNVs(@NotNull GeneCopyNumber geneCopyNumber, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
-            @Nullable String doids, @NotNull String primaryTumorLocation) {
+            @Nullable String doidsPrimaryTumorLocation) {
         Double minCopyValue = (double) Math.max(0, Math.round(geneCopyNumber.minCopyNumber()));
         boolean booleanValue = false;
         for (ActionabilityCNVs actionabilityCNVs : CNVs) {
-            if (actionabilityCNVs.cancerType().contains(primaryTumorLocation) &&
-                    checkCNVType(minCopyValue).equals(actionabilityCNVs.cnvType())) {
-                if (cancerTypeAnalyzer.foundTumorLocation(actionabilityCNVs.cancerType(), doids)) {
+            if (checkCNVType(minCopyValue).equals(actionabilityCNVs.cnvType())) {
+                if (cancerTypeAnalyzer.foundTumorLocation(actionabilityCNVs.cancerType(), doidsPrimaryTumorLocation)) {
                     printCNVRow(actionabilityCNVs, "yes");
                 } else {
                     printCNVRow(actionabilityCNVs, "no");
@@ -70,9 +80,10 @@ public class ActionabilityCNVsAnalyzer {
         final List<ActionabilityCNVs> CNVs = new ArrayList<>();
         final List<String> lineCNVs = Files.readAllLines(new File(fileCNVs).toPath());
 
-        for (int i = 1; i < lineCNVs.size(); i++) {
-            fromLineCNVs(lineCNVs.get(i));
-            CNVs.add(fromLineCNVs(lineCNVs.get(i)));
+        for (String line : lineCNVs) {
+            if (!line.contains("event") || !line.contains("actionability")) {
+                CNVs.add(fromLineCNVs(line));
+            }
         }
         return new ActionabilityCNVsAnalyzer(CNVs);
     }

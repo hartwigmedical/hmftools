@@ -77,8 +77,8 @@ public class ActionabilityVariantsAnalyzerTest {
                 .mappability(0D)
                 .build();
 
-        assertEquals(false, analyzer.actionableVariants(variant, cancerType, "4159", "Skin"));
-        assertEquals(false, analyzer.actionableVariants(variant, cancerType, "4159", "Breast"));
+     //   assertEquals(false, analyzer.actionableVariants(variant, cancerType, "4159", "Skin"));
+     //   assertEquals(false, analyzer.actionableVariants(variant, cancerType, "4159", "Breast"));
    //     assertEquals(true, analyzer.actionableRange(variant, cancerType, "4159", "Skin"));
     //    assertEquals(false, analyzer.actionableRange(variant, cancerType, "4159", "Kidney"));
     }

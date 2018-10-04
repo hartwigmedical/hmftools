@@ -55,7 +55,14 @@ public class CancerTypeAnalyzer {
         Boolean booleanValueRange = false;
         for (CancerTypeReading cancerTypeDoidKnowledgeBase : cancerTypeDoids) {
             if (tumorLocationKnowledgebase.equals(cancerTypeDoidKnowledgeBase.cancerType())) {
-                if (cancerTypeDoidKnowledgeBase.doidSet().contains(doidsPrimaryTumorLocation)) {
+                if (doidsPrimaryTumorLocation.contains(";")) {
+                    String [] multipleDoidsPrimaryTumorLocation = doidsPrimaryTumorLocation.split(";");
+                    if (cancerTypeDoidKnowledgeBase.doidSet().contains(multipleDoidsPrimaryTumorLocation[1]) ||
+                            cancerTypeDoidKnowledgeBase.doidSet().contains(multipleDoidsPrimaryTumorLocation[2])) {
+                        booleanValueRange = true;
+                    }
+
+                } else if (cancerTypeDoidKnowledgeBase.doidSet().contains(doidsPrimaryTumorLocation)) {
                     booleanValueRange = true;
                 }
             }

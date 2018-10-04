@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.apache.logging.log4j.LogManager;
@@ -15,8 +17,6 @@ public class ActionabilityFusionAnalyzer {
     private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(ActionabilityFusionAnalyzer.class);
     static final String DELIMITER = "\t";
 
-    @NotNull
-    private final List<ActionabilityFusionPairs> fusionPairs;
 
     private ActionabilityFusionAnalyzer(@NotNull final List<ActionabilityFusionPairs> fusionPairs,
             final List<ActionabilityPromiscuosThree> promiscuousThree, final List<ActionabilityPromiscuousFive> promiscuousFive) {
@@ -24,7 +24,7 @@ public class ActionabilityFusionAnalyzer {
         this.promiscuousThree = promiscuousThree;
         this.promiscuousFive = promiscuousFive;
     }
-
+    private final List<ActionabilityFusionPairs> fusionPairs;
     private final List<ActionabilityPromiscuosThree> promiscuousThree;
     private final List<ActionabilityPromiscuousFive> promiscuousFive;
 
@@ -42,6 +42,7 @@ public class ActionabilityFusionAnalyzer {
         final List<String> lineFusionPairs = Files.readAllLines(new File(fileFusionPairs).toPath());
         final List<String> linePromiscuousFive = Files.readAllLines(new File(filePromiscuousFive).toPath());
         final List<String> linePromiscuousThree = Files.readAllLines(new File(filePromiscuousThree).toPath());
+
 
         for (int i = 1; i < lineFusionPairs.size(); i++) {
             fromLineFusionPairs(lineFusionPairs.get(i));

@@ -42,7 +42,7 @@ public class ActionabilityVariantsAnalyzer {
     }
 
     public boolean actionableVariants(@NotNull SomaticVariant variant, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
-            @Nullable String doidsPrimaryTumorLocation, @NotNull String primaryTumorLocation) {
+            @Nullable String doidsPrimaryTumorLocation) {
         boolean booleanValue = false;
         for (ActionabilityVariant actionabilityVariant : variants) {
             if (variant.gene().equals(actionabilityVariant.gene()) && variant.chromosome().equals(actionabilityVariant.chromosome())
@@ -69,31 +69,30 @@ public class ActionabilityVariantsAnalyzer {
                 + variant.response() + "\t" + isActionable);
     }
 
-//    public boolean actionableRange(@NotNull SomaticVariant variant, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer, @Nullable String doids,
-//            @NotNull String primaryTumorLocation) {
-//        boolean booleanValue = false;
-//        for (ActionabilityRange range : variantsRanges) {
-//            if (range.cancerType().contains(primaryTumorLocation) && variant.gene().equals(range.gene()) && variant.chromosome()
-//                    .equals(range.chromosome()) && variant.position() >= range.start() && variant.position() <= range.end()) {
-//                if (!range.cancerType().isEmpty()) {
-//                    if (cancerTypeAnalyzer.foundTumorLocation(range.cancerType(), doids)) {
-//                        printVariantRangeRow(range, "yes");
-//                    } else {
-//                        printVariantRangeRow(range, "no");
-//                    }
-//                }
-//                booleanValue = true;
-//            } else {
-//                booleanValue = false;
-//            }
-//        }
-//        return booleanValue;
-//    }
-//
-//    private static void printVariantRangeRow(@NotNull ActionabilityRange range, @NotNull String isActionable) {
-//        LOGGER.info(range.gene() + "\t" + range.chromosome() + "\t" + range.start() + "\t" + range.end() + "\t" + range.drug() + "\t"
-//                + range.drugsType() + "\t" + range.cancerType() + "\t" + range.level() + "\t" + range.response() + "\t" + isActionable);
-//    }
+    public boolean actionableRange(@NotNull SomaticVariant variant, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
+            @Nullable String doidsPrimaryTumorLocation) {
+        boolean booleanValue = false;
+        for (ActionabilityRange range : variantsRanges) {
+            if (variant.gene().equals(range.gene()) && variant.chromosome()
+                    .equals(range.chromosome()) && variant.position() >= range.start() && variant.position() <= range.end()) {
+
+                if (cancerTypeAnalyzer.foundTumorLocation(range.cancerType(), doidsPrimaryTumorLocation)) {
+                    printVariantRangeRow(range, "yes");
+                } else {
+                    printVariantRangeRow(range, "no");
+                }
+                booleanValue = true;
+            } else {
+                booleanValue = false;
+            }
+        }
+        return booleanValue;
+    }
+
+    private static void printVariantRangeRow(@NotNull ActionabilityRange range, @NotNull String isActionable) {
+        LOGGER.info(range.gene() + "\t" + range.chromosome() + "\t" + range.start() + "\t" + range.end() + "\t" + range.drug() + "\t"
+                + range.drugsType() + "\t" + range.cancerType() + "\t" + range.level() + "\t" + range.response() + "\t" + isActionable);
+    }
 
     @NotNull
     public static ActionabilityVariantsAnalyzer loadFromFileVariantsAndFileRanges(String fileVariants, String fileRanges)
@@ -109,11 +108,11 @@ public class ActionabilityVariantsAnalyzer {
             }
         }
 
-//        for (String line : lineRanges) {
-//            if (!line.contains("event") || !line.contains("actionability")) {
-//                ranges.add(fromLineRanges(line));
-//            }
-//        }
+        for (String line : lineRanges) {
+            if (!line.contains("event") || !line.contains("actionability")) {
+                ranges.add(fromLineRanges(line));
+            }
+        }
         return new ActionabilityVariantsAnalyzer(variants, ranges);
     }
 
