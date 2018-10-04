@@ -21,6 +21,9 @@ CREATE TABLE driverCatalog
 ALTER TABLE somaticVariant
     CHANGE hotspot hotspot varchar(455) NOT NULL;
 
+ALTER TABLE somaticVariant
+    ADD canonicalHgvsCodingImpact varchar(255) NOT NULL AFTER canonicalCodingEffect,
+    ADD canonicalHgvsProteinImpact varchar(255) NOT NULL AFTER canonicalHgvsCodingImpact;
 
 ALTER TABLE copyNumber
     ADD gcContent DOUBLE PRECISION not null AFTER copyNumberMethod,

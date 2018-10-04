@@ -11,6 +11,7 @@ import com.google.common.collect.Iterables;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStepN;
@@ -46,6 +47,8 @@ class SomaticVariantDAO {
                     SOMATICVARIANT.WORSTEFFECTTRANSCRIPT,
                     SOMATICVARIANT.CANONICALEFFECT,
                     SOMATICVARIANT.CANONICALCODINGEFFECT,
+                    SOMATICVARIANT.CANONICALHGVSCODINGIMPACT,
+                    SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT,
                     SOMATICVARIANT.ALLELEREADCOUNT,
                     SOMATICVARIANT.TOTALREADCOUNT,
                     SOMATICVARIANT.ADJUSTEDCOPYNUMBER,
@@ -62,7 +65,7 @@ class SomaticVariantDAO {
                     SOMATICVARIANT.GERMLINESTATUS,
                     SOMATICVARIANT.MINORALLELEPLOIDY,
                     SOMATICVARIANT.MODIFIED);
-            splitRegions.forEach(x -> addRecord(timestamp, inserter, sample, x));
+            splitRegions.forEach(variant -> addRecord(timestamp, inserter, sample, variant));
             inserter.execute();
         }
     }
@@ -78,13 +81,15 @@ class SomaticVariantDAO {
                 variant.alt(),
                 variant.gene(),
                 variant.genesEffected(),
-                variant.canonicalCosmicID() == null ? "" : variant.canonicalCosmicID(),
-                variant.dbsnpID() == null ? "" : variant.dbsnpID(),
+                variant.canonicalCosmicID() != null ? variant.canonicalCosmicID() : Strings.EMPTY,
+                variant.dbsnpID() != null ? variant.dbsnpID() : Strings.EMPTY,
                 variant.worstEffect(),
-                variant.worstCodingEffect() == CodingEffect.UNDEFINED ? "" : variant.worstCodingEffect(),
+                variant.worstCodingEffect() != CodingEffect.UNDEFINED ? variant.worstCodingEffect() : Strings.EMPTY,
                 variant.worstEffectTranscript(),
                 variant.canonicalEffect(),
-                variant.canonicalCodingEffect() == CodingEffect.UNDEFINED ? "" : variant.canonicalCodingEffect(),
+                variant.canonicalCodingEffect() != CodingEffect.UNDEFINED ? variant.canonicalCodingEffect() : Strings.EMPTY,
+                variant.canonicalHgvsCodingImpact(),
+                variant.canonicalHgvsProteinImpact(),
                 variant.alleleReadCount(),
                 variant.totalReadCount(),
                 DatabaseUtil.decimal(variant.adjustedCopyNumber()),

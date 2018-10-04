@@ -271,6 +271,8 @@ CREATE TABLE somaticVariant
     worstCodingEffect varchar(255) NOT NULL,
     canonicalEffect varchar(255) NOT NULL,
     canonicalCodingEffect varchar(255) NOT NULL,
+    canonicalHgvsCodingImpact varchar(255) NOT NULL,
+    canonicalHgvsProteinImpact varchar(255) NOT NULL,
     microhomology varchar(255) NOT NULL,
     repeatSequence varchar(255) NOT NULL,
     repeatCount int NOT NULL,
