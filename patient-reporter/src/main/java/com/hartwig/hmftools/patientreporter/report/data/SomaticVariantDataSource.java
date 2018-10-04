@@ -32,8 +32,8 @@ public class SomaticVariantDataSource {
     public static final FieldBuilder<?> ALL_ALLELES_AFFECTED_FIELD = field("all_alleles_affected", String.class);
     public static final FieldBuilder<?> DRIVER_PROBABILITY_FIELD = field("driver_probability", String.class);
 
-    private static final double MIN_PERCENTAGE_CUTOFF_DRIVER_PROB = 0.20;
-    private static final double MAX_PERCENTAGE_CUTOFF_DRIVER_PROB = 0.95;
+    private static final double MIN_PERCENTAGE_CUTOFF_DRIVER_PROB = 0.2;
+    private static final double MAX_PERCENTAGE_CUTOFF_DRIVER_PROB = 0.9;
 
     private SomaticVariantDataSource() {
     }
