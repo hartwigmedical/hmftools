@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
 import com.hartwig.hmftools.common.variant.filter.NearIndelPonFilter;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffHgvsFormatter;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -209,10 +210,10 @@ public class SomaticVariantFactory {
         final List<SnpEffAnnotation> transcriptAnnotations =
                 allAnnotations.stream().filter(SnpEffAnnotation::isTranscriptFeature).collect(Collectors.toList());
         if (!transcriptAnnotations.isEmpty()) {
-            final SnpEffAnnotation snpEffAnnotation = transcriptAnnotations.get(0);
-            builder.worstEffect(snpEffAnnotation.consequenceString());
-            builder.worstCodingEffect(CodingEffect.effect(snpEffAnnotation.gene(), snpEffAnnotation.consequences()));
-            builder.worstEffectTranscript(snpEffAnnotation.transcript());
+            final SnpEffAnnotation worstAnnotation = transcriptAnnotations.get(0);
+            builder.worstEffect(worstAnnotation.consequenceString());
+            builder.worstCodingEffect(CodingEffect.effect(worstAnnotation.gene(), worstAnnotation.consequences()));
+            builder.worstEffectTranscript(worstAnnotation.transcript());
         } else {
             builder.worstEffect(Strings.EMPTY);
             builder.worstCodingEffect(CodingEffect.UNDEFINED);
@@ -224,8 +225,8 @@ public class SomaticVariantFactory {
             final SnpEffAnnotation annotation = canonicalAnnotation.get();
             builder.canonicalEffect(annotation.consequenceString());
             builder.canonicalCodingEffect(CodingEffect.effect(annotation.gene(), annotation.consequences()));
-            builder.canonicalHgvsCodingImpact(annotation.hgvsCoding());
-            builder.canonicalHgvsProteinImpact(annotation.hgvsProtein());
+            builder.canonicalHgvsCodingImpact(SnpEffHgvsFormatter.formattedHgvsCoding(annotation));
+            builder.canonicalHgvsProteinImpact(SnpEffHgvsFormatter.formattedHgvsProtein(annotation));
         } else {
             builder.canonicalEffect(Strings.EMPTY);
             builder.canonicalCodingEffect(CodingEffect.UNDEFINED);

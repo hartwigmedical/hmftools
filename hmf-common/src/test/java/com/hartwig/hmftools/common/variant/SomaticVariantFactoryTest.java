@@ -12,7 +12,6 @@ import java.util.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.variant.filter.NearIndelPonFilterTest;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
@@ -29,10 +28,10 @@ public class SomaticVariantFactoryTest {
     private static final String BASE_PATH = Resources.getResource("variant").getPath();
     private static final String SOMATIC_VARIANT_FILE = "somatics.vcf";
 
+    private static final double EPSILON = 1.0e-10;
+
     private SomaticVariantFactory victim;
     private VCFCodec codec;
-
-    private static final double EPSILON = 1.0e-10;
 
     @Before
     public void setup() {
@@ -136,8 +135,8 @@ public class SomaticVariantFactoryTest {
         final SomaticVariant variant = assertedGet(victim.createVariant(SAMPLE, codec.decode(line)));
         assertEquals("SPATA19", variant.gene());
         assertEquals(CodingEffect.SYNONYMOUS, variant.canonicalCodingEffect());
-        assertEquals("c.78G>A", variant.canonicalHgvsCodingImpact());
-        assertEquals("p.Ser26Ser", variant.canonicalHgvsProteinImpact());
+        assertEquals("78G>A", variant.canonicalHgvsCodingImpact());
+        assertEquals("S26S", variant.canonicalHgvsProteinImpact());
     }
 
     @Test
@@ -160,7 +159,6 @@ public class SomaticVariantFactoryTest {
 
         assertEquals("COSM33765", noCanonicalCosmicIDVariant.canonicalCosmicID());
     }
-
 
     @Test
     public void testFiltersAreReappliedAfterModifyingVariantContext() {
