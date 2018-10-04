@@ -97,20 +97,20 @@ public final class PurpleSegmentFactory {
     @NotNull
     private static ModifiablePurpleSegment create(@NotNull String chromosome, long start, @NotNull final List<PCFPosition> pcfPositions) {
 
-        long earlyStart = pcfPositions.stream()
+        long minStart = pcfPositions.stream()
                 .filter(x -> x.source() == PCFSource.TUMOR_RATIO)
                 .mapToLong(PCFPosition::minPosition)
                 .min()
                 .orElse(start);
-        long lateEnd =
+        long maxStart =
                 pcfPositions.stream().filter(x -> x.source() == PCFSource.TUMOR_RATIO).mapToLong(PCFPosition::maxPosition).max().orElse(start);
 
         return ModifiablePurpleSegment.create()
                 .setChromosome(chromosome)
                 .setRatioSupport(true)
                 .setStart(start)
-                .setMinStart(earlyStart)
-                .setMaxStart(lateEnd)
+                .setMinStart(minStart)
+                .setMaxStart(maxStart)
                 .setEnd(0)
                 .setSvCluster(false)
                 .setSupport(SegmentSupport.NONE);
