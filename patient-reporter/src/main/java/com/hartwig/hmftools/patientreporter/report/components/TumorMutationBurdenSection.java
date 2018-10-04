@@ -14,27 +14,26 @@ public class TumorMutationBurdenSection {
     private static final int BUFFER = 3;
     private static final double START = 1E-2;
     private static final double END = 100;
-    private static final double TMB_THRESHOLD = 5D;
-
+    private static final double TMB_THRESHOLD = 10D;
 
     @NotNull
     public static ComponentBuilder<?, ?> build(final double tumorMutationalBurdenIndicator, @NotNull FittedPurityStatus fitStatus) {
         final int graphValue = computeGraphValue(tumorMutationalBurdenIndicator);
         final int markerValue = computeGraphValue(TMB_THRESHOLD);
 
-
         final GradientBar gradient =
                 ImmutableGradientBar.of(new Color(239, 239, 239), new Color(171, 191, 171), "Low", "High", graphValue, markerValue);
-        final SliderSection sliderSection =
-                ImmutableSliderSection.of("Tumor Mutational Burden Status", interpret(tumorMutationalBurdenIndicator, fitStatus), description(), gradient);
+        final SliderSection sliderSection = ImmutableSliderSection.of("Tumor Mutational Burden",
+                interpret(tumorMutationalBurdenIndicator, fitStatus),
+                description(),
+                gradient);
         return sliderSection.build();
     }
 
     @NotNull
     private static String interpret(final double tumorMutationalBurden, @NotNull FittedPurityStatus fitStatus) {
-
-        final String formattedTumorMutationBurden = PatientReportFormat.correctValueForFitStatus(fitStatus,
-                new DecimalFormat("#.####").format(tumorMutationalBurden));
+        final String formattedTumorMutationBurden =
+                PatientReportFormat.correctValueForFitStatus(fitStatus, new DecimalFormat("#.####").format(tumorMutationalBurden));
         if (tumorMutationalBurden > TMB_THRESHOLD) {
             return "High (" + formattedTumorMutationBurden + ")";
         } else {
@@ -59,7 +58,7 @@ public class TumorMutationBurdenSection {
     @NotNull
     private static String description() {
         return "The tumor mutational burden score represents the number of all somatic variants "
-                + "across the whole genome of the tumor per Mb. Tumors with a score greater than " + TMB_THRESHOLD +
-                " are considered as high tumor mutation burden (TMB).";
+                + "across the whole genome of the tumor per Mb. Tumors with a score greater than " + TMB_THRESHOLD
+                + " are considered as high tumor mutation burden (TMB).";
     }
 }
