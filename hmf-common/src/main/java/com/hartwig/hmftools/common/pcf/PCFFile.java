@@ -70,17 +70,17 @@ public final class PCFFile {
 
                 chromosomeResult.add(ModifiablePCFPosition.create()
                         .setChromosome(chromosome)
-                        .setMinPosition(minPosition)
-                        .setPosition(start)
                         .setSource(source)
+                        .setPosition(start)
+                        .setMinPosition(minPosition)
                         .setMaxPosition(start));
 
                 minPosition = end;
                 builder = ModifiablePCFPosition.create()
                         .setChromosome(chromosome)
-                        .setMinPosition(start)
-                        .setPosition(end)
                         .setSource(source)
+                        .setPosition(end)
+                        .setMinPosition(end)
                         .setMaxPosition(end);
             }
         }
