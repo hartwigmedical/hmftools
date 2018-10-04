@@ -12,7 +12,7 @@ public final class MutationalLoadAnalyzer {
     private MutationalLoadAnalyzer() {
     }
 
-    static int determineMutationalLoad(@NotNull final List<? extends SomaticVariant> variants) {
+    static int determineTumorMutationalLoad(@NotNull final List<? extends SomaticVariant> variants) {
         int variantsWhichCountToMutationalLoad = 0;
         for (final SomaticVariant variant : variants) {
             if (countsTowardsMutationalLoad(variant)) {

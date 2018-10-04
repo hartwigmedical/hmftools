@@ -6,6 +6,7 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.patientreporter.algo.DriverProbabilityModel;
 import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
 import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 
@@ -27,11 +28,14 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract double impliedPurity();
 
     @NotNull
+    public abstract DriverProbabilityModel driverProbabilityModel();
+
+    @NotNull
     public abstract List<EnrichedSomaticVariant> somaticVariants();
 
-    public abstract int mutationalLoad();
-
     public abstract double microsatelliteIndelsPerMb();
+
+    public abstract int tumorMutationalLoad();
 
     public abstract double tumorMutationalBurden();
 

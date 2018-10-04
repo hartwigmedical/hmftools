@@ -93,6 +93,7 @@ public abstract class FindingsPage {
                                 col.column("Driver Prob", SomaticVariantDataSource.DRIVER_PROBABILITY_FIELD)))
                         .setDataSource(SomaticVariantDataSource.fromVariants(report.fitStatus(),
                                 report.somaticVariants(),
+                                report.driverProbabilityModel(),
                                 drupActionabilityModel))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
@@ -151,7 +152,7 @@ public abstract class FindingsPage {
 
     @NotNull
     private static ComponentBuilder<?, ?> mutationalLoadReport(@NotNull AnalysedPatientReport report) {
-        return MutationalLoadSection.build(report.mutationalLoad(), report.fitStatus());
+        return MutationalLoadSection.build(report.tumorMutationalLoad(), report.fitStatus());
     }
 
     @NotNull

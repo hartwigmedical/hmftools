@@ -47,7 +47,7 @@ public final class TsgDrivers {
     @NotNull
     private static <T extends SomaticVariant> Map<String, List<T>> codingVariantsByGene(@NotNull final Set<String> genes,
             @NotNull final List<T> variants) {
-        EnumSet<CodingEffect> suitableCodingEffects =
+        Set<CodingEffect> suitableCodingEffects =
                 EnumSet.of(CodingEffect.MISSENSE, CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.SPLICE);
 
         return variants.stream()
