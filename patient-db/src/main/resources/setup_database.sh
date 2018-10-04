@@ -8,7 +8,7 @@ then
     script_epoch=$(stat -t '%s' ${db_generate_script} | cut -d\" -f4)
 else
     # HEKE: Assume Linux with GNU date syntax
-    script_epoch=$(date -mRank ${db_generate_script} '+%s')
+    script_epoch=$(date -r ${db_generate_script} '+%s')
 fi
 
 db_epoch=$(mysql --defaults-file=~/mysql.login << HERE | sed -n '2p'
