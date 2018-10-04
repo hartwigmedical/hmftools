@@ -102,8 +102,11 @@ public final class PurpleSegmentFactory {
                 .mapToLong(PCFPosition::minPosition)
                 .min()
                 .orElse(start);
-        long maxStart =
-                pcfPositions.stream().filter(x -> x.source() == PCFSource.TUMOR_RATIO).mapToLong(PCFPosition::maxPosition).max().orElse(start);
+        long maxStart = pcfPositions.stream()
+                .filter(x -> x.source() == PCFSource.TUMOR_RATIO)
+                .mapToLong(PCFPosition::maxPosition)
+                .max()
+                .orElse(start);
 
         return ModifiablePurpleSegment.create()
                 .setChromosome(chromosome)
@@ -132,8 +135,6 @@ public final class PurpleSegmentFactory {
 
     private static ModifiablePurpleSegment setEnd(@NotNull ModifiablePurpleSegment segment, long end) {
         segment.setEnd(end);
-
-
 
         final GenomeRegion centromere = CENTROMERES.get(segment.chromosome());
         if (centromere != null && centromere.overlaps(segment)) {
