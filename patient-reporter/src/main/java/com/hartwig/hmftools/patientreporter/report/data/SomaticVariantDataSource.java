@@ -7,6 +7,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -57,6 +58,11 @@ public class SomaticVariantDataSource {
 
             String allAllelesAffected = variant.biallelic() ? "Yes" : "No";
 
+            DriverCatalog driver = driverProbabilityModel.catalogForVariant(variant);
+            String driverProbabilityString = driver != null ? PatientReportFormat.formatPercentWithDefaultCutoffs(driver.driverLikelihood(),
+                    MIN_PERCENTAGE_CUTOFF_DRIVER_PROB,
+                    MAX_PERCENTAGE_CUTOFF_DRIVER_PROB) : "N/A";
+
             variantDataSource.add(displayGene,
                     variant.canonicalHgvsCodingImpact(),
                     variant.canonicalHgvsProteinImpact(),
@@ -65,9 +71,7 @@ public class SomaticVariantDataSource {
                     PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyVafField(variant)),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, clonalityField(variant)),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, allAllelesAffected),
-                    PatientReportFormat.formatPercentWithDefaultCutoffs(0D,
-                            MIN_PERCENTAGE_CUTOFF_DRIVER_PROB,
-                            MAX_PERCENTAGE_CUTOFF_DRIVER_PROB));
+                    driverProbabilityString);
         }
 
         return variantDataSource;
