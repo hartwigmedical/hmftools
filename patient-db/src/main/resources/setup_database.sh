@@ -16,7 +16,7 @@ else
 fi
 
 DB_EPOCH=$(mysql --defaults-file=~/mysql.login << HERE | sed -n '2p'
-SELECT UNIX_TIMESTAMP(MAX(create_time)) db_creation FROM INFORMATION_SCHEMA.TABLES WHERE table_schema = "hmfpatients";
+SELECT UNIX_TIMESTAMP(MAX(create_time)) db_creation FROM INFORMATION_SCHEMA.TABLES WHERE table_schema = "hmfpatients_test";
 HERE
 )
 
