@@ -23,7 +23,8 @@ import net.sf.jasperreports.engine.JRDataSource;
 public class SomaticVariantDataSource {
 
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
-    public static final FieldBuilder<?> VARIANT_DETAILS_FIELD = field("variant_details", String.class);
+    public static final FieldBuilder<?> VARIANT_FIELD = field("variant", String.class);
+    public static final FieldBuilder<?> IMPACT_FIELD = field("impact", String.class);
     public static final FieldBuilder<?> READ_DEPTH_FIELD = field("read_depth", String.class);
     public static final FieldBuilder<?> IS_HOTSPOT_FIELD = field("is_hotspot", String.class);
     public static final FieldBuilder<?> PLOIDY_VAF_FIELD = field("ploidy_vaf", String.class);
@@ -39,7 +40,8 @@ public class SomaticVariantDataSource {
     public static JRDataSource fromVariants(@NotNull FittedPurityStatus fitStatus, @NotNull final List<EnrichedSomaticVariant> variants,
             @NotNull DrupActionabilityModel drupActionabilityModel) {
         final DRDataSource variantDataSource = new DRDataSource(GENE_FIELD.getName(),
-                VARIANT_DETAILS_FIELD.getName(),
+                VARIANT_FIELD.getName(),
+                IMPACT_FIELD.getName(),
                 READ_DEPTH_FIELD.getName(),
                 IS_HOTSPOT_FIELD.getName(),
                 PLOIDY_VAF_FIELD.getName(),
@@ -54,7 +56,8 @@ public class SomaticVariantDataSource {
             String wildtypeStatus = variant.biallelic() ? "Lost" : "Present";
 
             variantDataSource.add(displayGene,
-                    variantDetailsField(variant),
+                    variant.canonicalHgvsCodingImpact(),
+                    variant.canonicalHgvsProteinImpact(),
                     readDepthField(variant),
                     hotspotField(variant),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyVafField(variant)),
@@ -130,7 +133,7 @@ public class SomaticVariantDataSource {
 
     @NotNull
     public static FieldBuilder<?>[] variantFields() {
-        return new FieldBuilder<?>[] { GENE_FIELD, VARIANT_DETAILS_FIELD, READ_DEPTH_FIELD, IS_HOTSPOT_FIELD, PLOIDY_VAF_FIELD,
+        return new FieldBuilder<?>[] { GENE_FIELD, VARIANT_FIELD, READ_DEPTH_FIELD, IS_HOTSPOT_FIELD, PLOIDY_VAF_FIELD,
                 CLONAL_STATUS_FIELD, WILDTYPE_STATUS_FIELD, DRIVER_PROBABILITY_FIELD, ACTIONABILITY_LEVEL_FIELD };
     }
 }
