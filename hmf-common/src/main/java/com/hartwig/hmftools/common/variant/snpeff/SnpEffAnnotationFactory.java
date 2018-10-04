@@ -6,7 +6,6 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 
@@ -46,6 +45,7 @@ public final class SnpEffAnnotationFactory {
     }
 
     @NotNull
+    // TODO (KODU): Doesn't really belong here..
     public static List<String> rawAnnotations(@NotNull final VariantContext context) {
         if (context.hasAttribute(SNPEFF_IDENTIFIER)) {
             return context.getAttributeAsStringList(SNPEFF_IDENTIFIER, "");
@@ -66,9 +66,8 @@ public final class SnpEffAnnotationFactory {
         return false;
     }
 
-    @VisibleForTesting
     @NotNull
-    static SnpEffAnnotation fromParts(@NotNull final String[] parts) {
+    private static SnpEffAnnotation fromParts(@NotNull final String[] parts) {
         return ImmutableSnpEffAnnotation.builder()
                 .allele(parts[0])
                 .effects(parts[1])
