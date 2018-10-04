@@ -29,9 +29,11 @@ public class SomaticVariantDataSource {
     public static final FieldBuilder<?> IS_HOTSPOT_FIELD = field("is_hotspot", String.class);
     public static final FieldBuilder<?> PLOIDY_VAF_FIELD = field("ploidy_vaf", String.class);
     public static final FieldBuilder<?> CLONAL_STATUS_FIELD = field("clonal_status", String.class);
-    public static final FieldBuilder<?> WILDTYPE_STATUS_FIELD = field("wildtype_status", String.class);
+    public static final FieldBuilder<?> ALL_ALLELES_AFFECTED_FIELD = field("all_alleles_affected", String.class);
     public static final FieldBuilder<?> DRIVER_PROBABILITY_FIELD = field("driver_probability", String.class);
-    public static final FieldBuilder<?> ACTIONABILITY_LEVEL_FIELD = field("actionability_level", String.class);
+
+    private static final double MIN_PERCENTAGE_CUTOFF_DRIVER_PROB = 0.20;
+    private static final double MAX_PERCENTAGE_CUTOFF_DRIVER_PROB = 0.95;
 
     private SomaticVariantDataSource() {
     }
@@ -46,14 +48,13 @@ public class SomaticVariantDataSource {
                 IS_HOTSPOT_FIELD.getName(),
                 PLOIDY_VAF_FIELD.getName(),
                 CLONAL_STATUS_FIELD.getName(),
-                WILDTYPE_STATUS_FIELD.getName(),
-                DRIVER_PROBABILITY_FIELD.getName(),
-                ACTIONABILITY_LEVEL_FIELD.getName());
+                ALL_ALLELES_AFFECTED_FIELD.getName(),
+                DRIVER_PROBABILITY_FIELD.getName());
 
         for (final EnrichedSomaticVariant variant : variants) {
             final String displayGene = drupActionabilityModel.test(variant) ? variant.gene() + " *" : variant.gene();
 
-            String wildtypeStatus = variant.biallelic() ? "Lost" : "Present";
+            String allAllelesAffected = variant.biallelic() ? "Yes" : "No";
 
             variantDataSource.add(displayGene,
                     variant.canonicalHgvsCodingImpact(),
@@ -62,9 +63,10 @@ public class SomaticVariantDataSource {
                     hotspotField(variant),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyVafField(variant)),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, clonalityField(variant)),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, wildtypeStatus),
-                    PatientReportFormat.formatPercentWithDefaultCutoffs(0D),
-                    Strings.EMPTY);
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, allAllelesAffected),
+                    PatientReportFormat.formatPercentWithDefaultCutoffs(0D,
+                            MIN_PERCENTAGE_CUTOFF_DRIVER_PROB,
+                            MAX_PERCENTAGE_CUTOFF_DRIVER_PROB));
         }
 
         return variantDataSource;
@@ -99,11 +101,6 @@ public class SomaticVariantDataSource {
     }
 
     @NotNull
-    private static String variantDetailsField(@NotNull EnrichedSomaticVariant variant) {
-        return variant.canonicalHgvsCodingImpact() + " (" + variant.canonicalHgvsProteinImpact() + ")";
-    }
-
-    @NotNull
     private static String readDepthField(@NotNull EnrichedSomaticVariant variant) {
         return variant.alleleReadCount() + " / " + variant.totalReadCount() + " ("
                 + PatientReportFormat.formatPercent(variant.alleleFrequency()) + ")";
@@ -133,7 +130,7 @@ public class SomaticVariantDataSource {
 
     @NotNull
     public static FieldBuilder<?>[] variantFields() {
-        return new FieldBuilder<?>[] { GENE_FIELD, VARIANT_FIELD, READ_DEPTH_FIELD, IS_HOTSPOT_FIELD, PLOIDY_VAF_FIELD,
-                CLONAL_STATUS_FIELD, WILDTYPE_STATUS_FIELD, DRIVER_PROBABILITY_FIELD, ACTIONABILITY_LEVEL_FIELD };
+        return new FieldBuilder<?>[] { GENE_FIELD, VARIANT_FIELD, READ_DEPTH_FIELD, IS_HOTSPOT_FIELD, PLOIDY_VAF_FIELD, CLONAL_STATUS_FIELD,
+                ALL_ALLELES_AFFECTED_FIELD, DRIVER_PROBABILITY_FIELD };
     }
 }
