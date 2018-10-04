@@ -62,6 +62,12 @@ public class SomaticVariantFactory {
         return new SomaticVariantFactory(filter, noEnrichment);
     }
 
+    @NotNull
+    public static SomaticVariantFactory filteredInstanceWithEnrichment(@NotNull VariantContextFilter filter,
+            @NotNull SomaticEnrichment somaticEnrichment) {
+        return new SomaticVariantFactory(filter, somaticEnrichment);
+    }
+
     private static final HotspotFilter HOTSPOT_FILTER = new HotspotFilter();
 
     private static final String DBSNP_IDENTIFIER = "rs";
@@ -79,7 +85,7 @@ public class SomaticVariantFactory {
     @NotNull
     private final CanonicalAnnotation canonicalAnnotationFactory;
 
-    public SomaticVariantFactory(@NotNull final VariantContextFilter filter, @NotNull final SomaticEnrichment enrichment) {
+    private SomaticVariantFactory(@NotNull final VariantContextFilter filter, @NotNull final SomaticEnrichment enrichment) {
         this.filter = new CompoundFilter(true);
         this.filter.add(new ChromosomeFilter());
         this.filter.add(filter);

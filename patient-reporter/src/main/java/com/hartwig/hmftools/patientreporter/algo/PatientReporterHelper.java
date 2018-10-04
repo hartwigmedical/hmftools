@@ -93,7 +93,8 @@ final class PatientReporterHelper {
             vcfPath = PathExtensionFinder.build().findPath(path, SOMATIC_VCF_EXTENSION_V4);
         }
 
-        return new SomaticVariantFactory(new PassingVariantFilter(), somaticEnrichment).fromVCFFile(sample, vcfPath.toString());
+        return SomaticVariantFactory.filteredInstanceWithEnrichment(new PassingVariantFilter(), somaticEnrichment)
+                .fromVCFFile(sample, vcfPath.toString());
     }
 
     @Nullable

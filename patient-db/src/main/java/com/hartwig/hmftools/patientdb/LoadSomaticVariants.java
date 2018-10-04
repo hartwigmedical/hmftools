@@ -87,7 +87,7 @@ public class LoadSomaticVariants {
 
         LOGGER.info("Reading somatic VCF File");
         final List<SomaticVariant> variants =
-                new SomaticVariantFactory(filter, compoundEnrichment).fromVCFFile(sample, vcfFileLocation);
+                SomaticVariantFactory.filteredInstanceWithEnrichment(filter, compoundEnrichment).fromVCFFile(sample, vcfFileLocation);
 
         LOGGER.info("Reading high confidence bed file");
         final Multimap<String, GenomeRegion> highConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
