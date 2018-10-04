@@ -6,12 +6,10 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
-import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.patientreporter.algo.DriverProbabilityModel;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -31,9 +29,7 @@ public final class SomaticVariantAnalyzer {
         final int tumorMutationalLoad = MutationalLoadAnalyzer.determineTumorMutationalLoad(variants);
         final double tumorMutationalBurden = TumorMutationalBurdenAnalyzer.determineTumorMutationalBurden(variants);
 
-        final List<DriverCatalog> driverCatalog = Lists.newArrayList();
-        driverCatalog.addAll(OncoDrivers.drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), variantsToReport));
-        driverCatalog.addAll(TsgDrivers.drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), variantsToReport));
+        final List<DriverCatalog> driverCatalog = DriverProbabilityModel.createDriverCatalogForSomaticVariants(variantsToReport);
 
         return ImmutableSomaticVariantAnalysis.of(variantsToReport,
                 driverCatalog,

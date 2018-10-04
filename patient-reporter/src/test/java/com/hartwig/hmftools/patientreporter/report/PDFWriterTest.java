@@ -16,6 +16,7 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -85,13 +86,14 @@ public class PDFWriterTest {
         final List<GeneCopyNumber> copyNumbers = createTestCopyNumbers();
         final List<GeneFusion> fusions = createTestFusions();
         final List<GeneDisruption> disruptions = createTestDisruptions();
+        final List<DriverCatalog> driverCatalogList = DriverProbabilityModel.createDriverCatalogForSomaticVariants(variants);
 
         final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
 
         final AnalysedPatientReport patientReport = ImmutableAnalysedPatientReport.of(sampleReport,
                 FittedPurityStatus.NORMAL,
                 impliedTumorPurity,
-                new DriverProbabilityModel(Lists.newArrayList()),
+                new DriverProbabilityModel(driverCatalogList),
                 variants,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
