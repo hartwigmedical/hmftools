@@ -19,4 +19,6 @@ public abstract class SomaticVariantAnalysis {
     public abstract double indelsPerMb();
 
     public abstract int mutationalLoad();
+
+    public abstract double tumorMutationalBurden();
 }

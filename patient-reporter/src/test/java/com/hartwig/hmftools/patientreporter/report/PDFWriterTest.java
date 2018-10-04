@@ -73,6 +73,7 @@ public class PDFWriterTest {
         final double pathologyTumorPercentage = 0.6;
         final double impliedTumorPurity = 0.58;
         final int mutationalLoad = 361;
+        final double tumorMutationalBurden = 10;
         final double microsatelliteIndelsPerMb = 2.1;
 
         final SequencedReportData reporterData = testSequencedReportData();
@@ -92,6 +93,7 @@ public class PDFWriterTest {
                 variants,
                 mutationalLoad,
                 microsatelliteIndelsPerMb,
+                tumorMutationalBurden,
                 copyNumbers,
                 fusions,
                 disruptions,

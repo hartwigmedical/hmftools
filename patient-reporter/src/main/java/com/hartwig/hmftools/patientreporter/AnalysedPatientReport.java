@@ -33,6 +33,8 @@ public abstract class AnalysedPatientReport implements PatientReport {
 
     public abstract double microsatelliteIndelsPerMb();
 
+    public abstract double tumorMutationalBurden();
+
     @NotNull
     public abstract List<GeneCopyNumber> geneCopyNumbers();
 

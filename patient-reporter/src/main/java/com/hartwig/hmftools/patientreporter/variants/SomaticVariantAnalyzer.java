@@ -25,8 +25,9 @@ public final class SomaticVariantAnalyzer {
                 variants.stream().filter(variantFilter(genePanel)).collect(Collectors.toList());
         final double indelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
         final int mutationalLoad = MutationalLoadAnalyzer.determineMutationalLoad(variants);
+        final double tumorMutationalBurden = TumorMutationalBurdenAnalyzer.determineTumorMutationalBurden(variants);
 
-        return ImmutableSomaticVariantAnalysis.of(variantsToReport, indelsPerMb, mutationalLoad);
+        return ImmutableSomaticVariantAnalysis.of(variantsToReport, indelsPerMb, mutationalLoad, tumorMutationalBurden);
     }
 
     @NotNull

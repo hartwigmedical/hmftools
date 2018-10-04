@@ -90,6 +90,7 @@ public abstract class PatientReporter {
         LOGGER.info(" Number of somatic variants to report : " + Integer.toString(somaticVariantAnalysis.variantsToReport().size()));
         LOGGER.info(" Microsatellite analysis results: " + Double.toString(somaticVariantAnalysis.indelsPerMb()) + " indels per MB");
         LOGGER.info(" Mutational load results: " + Integer.toString(somaticVariantAnalysis.mutationalLoad()));
+        LOGGER.info(" Tumor mutational burden: " + Double.toString(somaticVariantAnalysis.tumorMutationalBurden()) + " number of mutations per MB");
         LOGGER.info(" Number of copy number events to report: " + Integer.toString(purpleAnalysis.reportableGeneCopyNumbers().size()));
         LOGGER.info(" Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
         LOGGER.info(" Number of gene disruptions to report : " + Integer.toString(reportableDisruptions.size()));
@@ -109,6 +110,7 @@ public abstract class PatientReporter {
                 somaticVariantAnalysis.variantsToReport(),
                 somaticVariantAnalysis.mutationalLoad(),
                 somaticVariantAnalysis.indelsPerMb(),
+                somaticVariantAnalysis.tumorMutationalBurden(),
                 purpleAnalysis.reportableGeneCopyNumbers(),
                 reportableFusions,
                 reportableDisruptions,
