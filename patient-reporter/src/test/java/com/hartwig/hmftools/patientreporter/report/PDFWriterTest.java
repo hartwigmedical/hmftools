@@ -44,6 +44,7 @@ import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
+import com.hartwig.hmftools.patientreporter.algo.DriverProbabilityModel;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
 import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
@@ -72,8 +73,8 @@ public class PDFWriterTest {
     public void canGenerateSequenceReport() throws DRException, IOException {
         final double pathologyTumorPercentage = 0.6;
         final double impliedTumorPurity = 0.58;
-        final int mutationalLoad = 361;
-        final double tumorMutationalBurden = 10;
+        final int tumorMutationalLoad = 361;
+        final double tumorMutationalBurden = 10.1;
         final double microsatelliteIndelsPerMb = 2.1;
 
         final SequencedReportData reporterData = testSequencedReportData();
@@ -90,9 +91,10 @@ public class PDFWriterTest {
         final AnalysedPatientReport patientReport = ImmutableAnalysedPatientReport.of(sampleReport,
                 FittedPurityStatus.NORMAL,
                 impliedTumorPurity,
+                new DriverProbabilityModel(Lists.newArrayList()),
                 variants,
-                mutationalLoad,
                 microsatelliteIndelsPerMb,
+                tumorMutationalLoad,
                 tumorMutationalBurden,
                 copyNumbers,
                 fusions,

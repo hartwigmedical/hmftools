@@ -13,18 +13,17 @@ public final class TumorMutationalBurdenAnalyzer {
     private TumorMutationalBurdenAnalyzer() {
     }
 
-    static double determineTumorMutationalBurden(@NotNull final List<? extends SomaticVariant> variants) {
+    static double determineTumorMutationalBurden(@NotNull List<? extends SomaticVariant> variants) {
         int tumorMutationalBurden = 0;
         for (final SomaticVariant variant : variants) {
             if (countsPassVariants(variant)) {
                 tumorMutationalBurden++;
             }
         }
-        return tumorMutationalBurden/NUMBER_OF_MB_PER_GENOME;
+        return (double) tumorMutationalBurden / NUMBER_OF_MB_PER_GENOME;
     }
 
-    private static boolean countsPassVariants(@NotNull final SomaticVariant variant) {
+    private static boolean countsPassVariants(@NotNull SomaticVariant variant) {
         return !variant.isFiltered();
     }
-
 }
