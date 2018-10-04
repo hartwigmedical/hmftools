@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.snpeff;
+package com.hartwig.hmftools.common.variant;
 
 import java.util.List;
 import java.util.Map;
@@ -11,17 +11,18 @@ import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.region.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.common.region.TranscriptRegion;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CanonicalAnnotation {
+class CanonicalAnnotation {
 
     @NotNull
     private final Set<String> driverCatalogGenes;
     @NotNull
     private final Map<String, String> canonicalTranscriptGeneMap;
 
-    public CanonicalAnnotation() {
+    CanonicalAnnotation() {
         this.driverCatalogGenes = asSet(DndsDriverGeneLikelihoodSupplier.tsgLikelihood());
         this.driverCatalogGenes.addAll(asSet(DndsDriverGeneLikelihoodSupplier.oncoLikelihood()));
         this.canonicalTranscriptGeneMap = CanonicalTranscriptFactory.create()
@@ -31,24 +32,30 @@ public class CanonicalAnnotation {
 
     @NotNull
     public Optional<CosmicAnnotation> canonicalCosmicAnnotation(@NotNull final List<CosmicAnnotation> cosmicAnnotations) {
-        return cosmicAnnotations.stream().filter(x -> canonicalTranscriptGeneMap.keySet().contains(x.transcript())).findFirst();
+        return pickCanonicalFavourDriverGene(cosmicAnnotations);
     }
 
     @NotNull
     public Optional<SnpEffAnnotation> canonicalSnpEffAnnotation(@NotNull final List<SnpEffAnnotation> allAnnotations) {
-        final List<SnpEffAnnotation> canonicalTranscriptAnnotations = allAnnotations.stream()
-                .filter(SnpEffAnnotation::isTranscriptFeature)
-                .filter(x -> canonicalTranscriptGeneMap.keySet().contains(x.transcript()))
+        final List<SnpEffAnnotation> transcriptAnnotations = allAnnotations.stream()
+                .filter(SnpEffAnnotation::isTranscriptFeature).collect(Collectors.toList());
+        return pickCanonicalFavourDriverGene(transcriptAnnotations);
+    }
+
+    @NotNull
+    <T extends TranscriptAnnotation> Optional<T> pickCanonicalFavourDriverGene(@NotNull List<T> annotations) {
+        final List<T> canonicalAnnotations = annotations.stream()
+                .filter(annotation -> canonicalTranscriptGeneMap.keySet().contains(annotation.transcript()))
                 .collect(Collectors.toList());
 
-        if (!canonicalTranscriptAnnotations.isEmpty()) {
-            final Optional<SnpEffAnnotation> canonicalOnDriverGene =
-                    canonicalTranscriptAnnotations.stream().filter(x -> driverCatalogGenes.contains(x.gene())).findFirst();
+        if (!canonicalAnnotations.isEmpty()) {
+            final Optional<T> canonicalOnDriverGene =
+                    canonicalAnnotations.stream().filter(annotation -> driverCatalogGenes.contains(annotation.gene())).findFirst();
             if (canonicalOnDriverGene.isPresent()) {
                 return canonicalOnDriverGene;
             }
 
-            return Optional.of(canonicalTranscriptAnnotations.get(0));
+            return Optional.of(canonicalAnnotations.get(0));
         }
 
         return Optional.empty();

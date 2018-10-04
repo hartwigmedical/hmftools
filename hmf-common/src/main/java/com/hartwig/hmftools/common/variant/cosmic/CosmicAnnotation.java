@@ -13,9 +13,11 @@ public abstract class CosmicAnnotation implements TranscriptAnnotation {
     @NotNull
     public abstract String id();
 
+    @Override
     @NotNull
     public abstract String gene();
 
+    @Override
     @NotNull
     public abstract String transcript();
 
