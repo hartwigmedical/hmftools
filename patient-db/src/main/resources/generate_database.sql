@@ -176,7 +176,7 @@ CREATE TABLE ecrf
     INDEX(form),
     INDEX(itemGroup),
     INDEX(item),
-    INDEX(itemValue),
+    INDEX(itemValue (255)),
     INDEX(status),
     INDEX(locked),
     INDEX(sequenced),
