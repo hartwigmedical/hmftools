@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.region.CanonicalTranscriptFactory;
@@ -42,6 +43,7 @@ class CanonicalAnnotation {
         return pickCanonicalFavourDriverGene(transcriptAnnotations);
     }
 
+    @VisibleForTesting
     @NotNull
     <T extends TranscriptAnnotation> Optional<T> pickCanonicalFavourDriverGene(@NotNull List<T> annotations) {
         final List<T> canonicalAnnotations = annotations.stream()
