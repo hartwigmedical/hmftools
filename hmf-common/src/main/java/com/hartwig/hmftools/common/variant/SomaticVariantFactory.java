@@ -115,7 +115,7 @@ public class SomaticVariantFactory {
         for (int i = 0; i < allVariantContexts.size(); i++) {
             final VariantContext context = allVariantContexts.get(i);
             final Genotype genotype = context.getGenotype(sample);
-            if (filter.test(context) && genotype.hasAD() && genotype.getAD().length > 1) {
+            if (genotype.hasAD() && genotype.getAD().length > 1) {
                 if (NearIndelPonFilter.isIndelNearPon(i, allVariantContexts)) {
                     context.getCommonInfo().addFilter(NEAR_INDEL_PON_FILTER);
                 }
