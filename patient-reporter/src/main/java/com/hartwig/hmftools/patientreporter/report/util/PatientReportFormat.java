@@ -22,7 +22,7 @@ public final class PatientReportFormat {
     }
 
     @NotNull
-    public static String formatPercentWithDefaultCutoffs(double percentage, double minCutoff, double maxCutoff) {
+    public static String formatPercentWithCutoffs(double percentage, double minCutoff, double maxCutoff) {
         if (percentage < minCutoff) {
             return "<" + formatPercent(minCutoff);
         } else if (percentage > maxCutoff) {

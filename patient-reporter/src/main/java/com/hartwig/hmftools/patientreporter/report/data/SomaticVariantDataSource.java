@@ -32,7 +32,7 @@ public class SomaticVariantDataSource {
     public static final FieldBuilder<?> IS_HOTSPOT_FIELD = field("is_hotspot", String.class);
     public static final FieldBuilder<?> PLOIDY_VAF_FIELD = field("ploidy_vaf", String.class);
     public static final FieldBuilder<?> CLONAL_STATUS_FIELD = field("clonal_status", String.class);
-    public static final FieldBuilder<?> ALL_ALLELES_AFFECTED_FIELD = field("all_alleles_affected", String.class);
+    public static final FieldBuilder<?> BIALLELIC_FIELD = field("biallelic", String.class);
     public static final FieldBuilder<?> DRIVER_PROBABILITY_FIELD = field("driver_probability", String.class);
 
     private static final double MIN_PERCENTAGE_CUTOFF_DRIVER_PROB = 0.2;
@@ -51,7 +51,7 @@ public class SomaticVariantDataSource {
                 IS_HOTSPOT_FIELD.getName(),
                 PLOIDY_VAF_FIELD.getName(),
                 CLONAL_STATUS_FIELD.getName(),
-                ALL_ALLELES_AFFECTED_FIELD.getName(),
+                BIALLELIC_FIELD.getName(),
                 DRIVER_PROBABILITY_FIELD.getName());
 
         for (final EnrichedSomaticVariant variant : variants) {
@@ -60,13 +60,13 @@ public class SomaticVariantDataSource {
             final String displayGene =
                     panelGeneModel.drupActionableGenes().contains(variant.gene()) ? variant.gene() + " *" : variant.gene();
 
-            String allAllelesAffected = Strings.EMPTY;
+            String biallelic = Strings.EMPTY;
             if (driverCategory != null && driverCategory == DriverCategory.TSG) {
-                allAllelesAffected = variant.biallelic() ? "Yes" : "No";
+                biallelic = variant.biallelic() ? "Yes" : "No";
             }
 
             DriverCatalog driver = driverProbabilityModel.catalogForVariant(variant);
-            String driverProbabilityString = driver != null ? PatientReportFormat.formatPercentWithDefaultCutoffs(driver.driverLikelihood(),
+            String driverProbabilityString = driver != null ? PatientReportFormat.formatPercentWithCutoffs(driver.driverLikelihood(),
                     MIN_PERCENTAGE_CUTOFF_DRIVER_PROB,
                     MAX_PERCENTAGE_CUTOFF_DRIVER_PROB) : "N/A";
 
@@ -74,10 +74,10 @@ public class SomaticVariantDataSource {
                     variant.canonicalHgvsCodingImpact(),
                     variant.canonicalHgvsProteinImpact(),
                     readDepthField(variant),
-                    hotspotField(variant),
+                    driverCategory != null && driverCategory == DriverCategory.ONCO ? hotspotField(variant) : Strings.EMPTY,
                     PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyVafField(variant)),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, clonalityField(variant)),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, allAllelesAffected),
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, biallelic),
                     driverProbabilityString);
         }
 
@@ -142,6 +142,6 @@ public class SomaticVariantDataSource {
     @NotNull
     public static FieldBuilder<?>[] variantFields() {
         return new FieldBuilder<?>[] { GENE_FIELD, VARIANT_FIELD, READ_DEPTH_FIELD, IS_HOTSPOT_FIELD, PLOIDY_VAF_FIELD, CLONAL_STATUS_FIELD,
-                ALL_ALLELES_AFFECTED_FIELD, DRIVER_PROBABILITY_FIELD };
+                BIALLELIC_FIELD, DRIVER_PROBABILITY_FIELD };
     }
 }

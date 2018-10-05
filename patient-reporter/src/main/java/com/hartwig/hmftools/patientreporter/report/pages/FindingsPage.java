@@ -89,7 +89,7 @@ public abstract class FindingsPage {
                                 col.column("Hotspot", SomaticVariantDataSource.IS_HOTSPOT_FIELD),
                                 col.column("Ploidy (VAF)", SomaticVariantDataSource.PLOIDY_VAF_FIELD),
                                 col.column("Clonality", SomaticVariantDataSource.CLONAL_STATUS_FIELD),
-                                col.column("All Alleles Hit", SomaticVariantDataSource.ALL_ALLELES_AFFECTED_FIELD),
+                                col.column("Biallelic", SomaticVariantDataSource.BIALLELIC_FIELD),
                                 col.column("Driver Prob", SomaticVariantDataSource.DRIVER_PROBABILITY_FIELD)))
                         .setDataSource(SomaticVariantDataSource.fromVariants(report.fitStatus(),
                                 report.somaticVariants(),
