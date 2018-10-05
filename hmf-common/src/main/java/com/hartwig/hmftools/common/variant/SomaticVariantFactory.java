@@ -22,7 +22,6 @@ import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
 import com.hartwig.hmftools.common.variant.filter.NearIndelPonFilter;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffHgvsFormatter;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -225,8 +224,8 @@ public class SomaticVariantFactory {
             final SnpEffAnnotation annotation = canonicalAnnotation.get();
             builder.canonicalEffect(annotation.consequenceString());
             builder.canonicalCodingEffect(CodingEffect.effect(annotation.gene(), annotation.consequences()));
-            builder.canonicalHgvsCodingImpact(SnpEffHgvsFormatter.formattedHgvsCoding(annotation));
-            builder.canonicalHgvsProteinImpact(SnpEffHgvsFormatter.formattedHgvsProtein(annotation));
+            builder.canonicalHgvsCodingImpact(annotation.hgvsCoding());
+            builder.canonicalHgvsProteinImpact(annotation.hgvsProtein());
         } else {
             builder.canonicalEffect(Strings.EMPTY);
             builder.canonicalCodingEffect(CodingEffect.UNDEFINED);
