@@ -100,7 +100,7 @@ public abstract class PatientReporter {
 
         final String tumorSample = run.tumorSample();
         final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample,
-                PatientReporterHelper.extractPatientTumorLocation(baseReportData().patientTumorLocations(), tumorSample),
+                PatientReporterFileLoader.extractPatientTumorLocation(baseReportData().patientTumorLocations(), tumorSample),
                 baseReportData().limsModel().tumorPercentageForSample(tumorSample),
                 baseReportData().limsModel().arrivalDateForSample(tumorSample),
                 baseReportData().limsModel().arrivalDateForSample(run.refSample()),
@@ -118,7 +118,7 @@ public abstract class PatientReporter {
                 purpleAnalysis.reportableGeneCopyNumbers(),
                 reportableFusions,
                 reportableDisruptions,
-                PatientReporterHelper.findCircosPlotPath(runDirectory, tumorSample),
+                PatientReporterFileLoader.findCircosPlotPath(runDirectory, tumorSample),
                 Optional.ofNullable(comments),
                 baseReportData().signaturePath());
     }
@@ -129,13 +129,13 @@ public abstract class PatientReporter {
         final String sample = run.tumorSample();
 
         LOGGER.info("Loading purple data for sample " + sample);
-        final PurityContext purityContext = PatientReporterHelper.loadPurity(runDirectory, sample);
+        final PurityContext purityContext = PatientReporterFileLoader.loadPurity(runDirectory, sample);
 
-        final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
+        final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterFileLoader.loadPurpleCopyNumbers(runDirectory, sample);
         LOGGER.info(" " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
 
         Set<String> cnvGenePanel = panelGeneModel.cnvGenePanel().stream().map(TranscriptRegion::gene).collect(Collectors.toSet());
-        final List<GeneCopyNumber> panelGeneCopyNumbers = PatientReporterHelper.loadPurpleGeneCopyNumbers(runDirectory, sample)
+        final List<GeneCopyNumber> panelGeneCopyNumbers = PatientReporterFileLoader.loadPurpleGeneCopyNumbers(runDirectory, sample)
                 .stream()
                 .filter(geneCopyNumber -> cnvGenePanel.contains(geneCopyNumber.gene()))
                 .collect(Collectors.toList());
@@ -159,7 +159,7 @@ public abstract class PatientReporter {
         final String sample = run.tumorSample();
 
         LOGGER.info("Loading somatic variants...");
-        final List<SomaticVariant> variants = PatientReporterHelper.loadPassedSomaticVariants(sample, runDirectory, somaticEnrichment);
+        final List<SomaticVariant> variants = PatientReporterFileLoader.loadPassedSomaticVariants(sample, runDirectory, somaticEnrichment);
         LOGGER.info(" " + variants.size() + " PASS somatic variants loaded for sample " + sample);
 
         LOGGER.info("Enriching somatic variants");
@@ -191,7 +191,7 @@ public abstract class PatientReporter {
     @NotNull
     private static StructuralVariantAnalysis analyzeStructuralVariants(@NotNull RunContext run, @NotNull PurpleAnalysis purpleAnalysis,
             @NotNull StructuralVariantAnalyzer structuralVariantAnalyzer) throws IOException {
-        final Path structuralVariantVCF = PatientReporterHelper.findStructuralVariantVCF(run.runDirectory());
+        final Path structuralVariantVCF = PatientReporterFileLoader.findStructuralVariantVCF(run.runDirectory());
         LOGGER.info("Loading structural variants...");
         final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(structuralVariantVCF.toString(), true);
 
