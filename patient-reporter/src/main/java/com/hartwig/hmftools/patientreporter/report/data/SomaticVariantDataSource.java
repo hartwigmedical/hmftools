@@ -61,7 +61,7 @@ public class SomaticVariantDataSource {
                     panelGeneModel.drupActionableGenes().contains(variant.gene()) ? variant.gene() + " *" : variant.gene();
 
             String allAllelesAffected = Strings.EMPTY;
-            if (driverCategory != null && driverCategory == DriverCategory.TSG) {
+            if (driverCategory != null && driverCategory != DriverCategory.ONCO) {
                 allAllelesAffected = variant.biallelic() ? "Yes" : "No";
             }
 
