@@ -135,8 +135,8 @@ public class SomaticVariantFactoryTest {
         final SomaticVariant variant = assertedGet(victim.createVariant(SAMPLE, codec.decode(line)));
         assertEquals("SPATA19", variant.gene());
         assertEquals(CodingEffect.SYNONYMOUS, variant.canonicalCodingEffect());
-        assertEquals("78G>A", variant.canonicalHgvsCodingImpact());
-        assertEquals("S26S", variant.canonicalHgvsProteinImpact());
+        assertEquals("c.78G>A", variant.canonicalHgvsCodingImpact());
+        assertEquals("p.Ser26Ser", variant.canonicalHgvsProteinImpact());
     }
 
     @Test
