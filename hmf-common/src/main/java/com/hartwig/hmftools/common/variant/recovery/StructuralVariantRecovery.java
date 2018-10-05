@@ -128,7 +128,7 @@ public class StructuralVariantRecovery {
     }
 
     @Nullable
-    private static String mate(@NotNull final String alt) {
+    static String mate(@NotNull final String alt) {
         final String bracket;
         if (alt.contains("[")) {
             bracket = "\\[";
@@ -158,7 +158,8 @@ public class StructuralVariantRecovery {
         return joiner.toString();
     }
 
-    private static int orientation(@NotNull final String alt) {
+    @VisibleForTesting
+    static int orientation(@NotNull final String alt) {
         if (alt.charAt(0) == '.') {
             return -1;
         }
@@ -171,7 +172,7 @@ public class StructuralVariantRecovery {
             return 1;
         }
 
-        if (alt.contains("\\]")) {
+        if (alt.contains("]")) {
             return -1;
         }
 
