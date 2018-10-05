@@ -34,8 +34,6 @@ import com.hartwig.hmftools.common.purple.baf.ExpectedBAF;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFactory;
@@ -229,8 +227,7 @@ public class PurityPloidyEstimateApplication {
             final PurityAdjuster purityAdjuster = new PurityAdjuster(cobaltGender, bestFit.purity(), bestFit.normFactor());
 
             final SmoothingConfig smoothingConfig = configSupplier.smoothingConfig();
-            final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(cmd.hasOption(EXPERIMENTAL),
-                    smoothingConfig.minDiploidTumorRatioCount(),
+            final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(smoothingConfig.minDiploidTumorRatioCount(),
                     smoothingConfig.minDiploidTumorRatioCountAtCentromere(),
                     cobaltGender,
                     purityAdjuster,
@@ -248,10 +245,10 @@ public class PurityPloidyEstimateApplication {
                     copyNumberMap.put(copyNumber.chromosome(), copyNumber);
                 }
 
-//                final StructuralVariantLegPloidyFactory<PurpleCopyNumber> svPloidyFactory =
-//                        new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
-//                final List<StructuralVariantLegPloidy> svPloidies = svPloidyFactory.create(structuralVariants, copyNumberMap);
-//                recovery.doStuff2(svPloidies);
+                //                final StructuralVariantLegPloidyFactory<PurpleCopyNumber> svPloidyFactory =
+                //                        new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
+                //                final List<StructuralVariantLegPloidy> svPloidies = svPloidyFactory.create(structuralVariants, copyNumberMap);
+                //                recovery.doStuff2(svPloidies);
 
             }
 

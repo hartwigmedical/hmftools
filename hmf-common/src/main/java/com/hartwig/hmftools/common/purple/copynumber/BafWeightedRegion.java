@@ -90,7 +90,7 @@ public class BafWeightedRegion implements CombinedRegion {
         combined.setStart(Math.min(combined.start(), region.start()));
         combined.setEnd(Math.max(combined.end(), region.end()));
         combined.setMinStart(Math.min(region.minStart(), region().minStart()));
-        combined.setMaxStart(Math.max(region.maxStart(), region().maxStart()));
+        combined.setMaxStart(Math.min(region.maxStart(), region().maxStart()));
 
 
         if (region.start() <= combined.start()) {

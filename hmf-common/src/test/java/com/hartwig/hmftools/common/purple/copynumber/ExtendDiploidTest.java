@@ -7,7 +7,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
-import com.hartwig.hmftools.common.purple.copynumber.tolerance.CopyNumberTolerance;
+import com.hartwig.hmftools.common.purple.copynumber.tolerance.AlleleTolerance;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
@@ -24,7 +24,7 @@ public class ExtendDiploidTest {
     private final static double EPSILON = 1e-10;
     private final static PurityAdjuster PURE = new PurityAdjuster(Gender.FEMALE, 1d, 1d);
     private final static ExtendDiploid PURE_VICTIM =
-            new ExtendDiploid(CopyNumberTolerance.create(false, PURE), MIN_TUMOR_COUNT, MIN_TUMOR_COUNT_AT_CENTROMERE);
+            new ExtendDiploid(new AlleleTolerance(PURE), MIN_TUMOR_COUNT, MIN_TUMOR_COUNT_AT_CENTROMERE);
 
     @Test
     public void testFavourTumorRatioCountOverLength() {
@@ -39,9 +39,9 @@ public class ExtendDiploidTest {
     @Test
     public void testCentromereIsDubious() {
         final FittedRegion valid = createValidSomatic(1, 10000, 1, 1, SegmentSupport.TELOMERE);
-        final FittedRegion dubiousCentromere = createRegion(10001, 20000, 2, 2, 0, SegmentSupport.CENTROMERE);
-        final FittedRegion dubious1 = createRegion(20001, 30000, 3, 3, 0, SegmentSupport.NONE);
-        final FittedRegion dubious2 = createRegion(30001, 40000, 4, 4, 0, SegmentSupport.NONE);
+        final FittedRegion dubiousCentromere = createRegion(10001, 20000, 2, 8, 0, SegmentSupport.CENTROMERE);
+        final FittedRegion dubious1 = createRegion(20001, 30000, 3, 9, 0, SegmentSupport.NONE);
+        final FittedRegion dubious2 = createRegion(30001, 40000, 4, 10, 0, SegmentSupport.NONE);
 
         final List<CombinedRegion> result = PURE_VICTIM.extendDiploid(Lists.newArrayList(valid, dubiousCentromere, dubious1, dubious2));
         assertEquals(2, result.size());

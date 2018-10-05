@@ -199,7 +199,7 @@ class ExtendDiploid {
     }
 
     private boolean inTolerance(@NotNull final FittedRegion left, @NotNull final FittedRegion right) {
-        return  tolerance.inTolerance(left, right);
+        return tolerance.inTolerance(left, right);
     }
 
     private static int nextIndex(@NotNull final List<CombinedRegion> regions) {

@@ -71,8 +71,8 @@ public class StructuralVariantRecovery {
     }
 
     @NotNull
-    public List<RecoveredVariant> recover(long min, long max, @NotNull final PurpleCopyNumber current, @NotNull final PurpleCopyNumber prev, @NotNull final PurpleCopyNumber next)
-            throws IOException {
+    public List<RecoveredVariant> recover(long min, long max, @NotNull final PurpleCopyNumber current, @NotNull final PurpleCopyNumber prev,
+            @NotNull final PurpleCopyNumber next) throws IOException {
         List<RecoveredVariant> result = Lists.newArrayList();
 
         ImmutableRecoveredVariant.Builder builder = ImmutableRecoveredVariant.builder()
@@ -86,7 +86,7 @@ public class StructuralVariantRecovery {
                 .gcContent(current.gcContent())
                 .prevGCContent(prev.gcContent())
                 .nextGCContent(next.gcContent())
-                .prevLength(prev.end() - prev.start()  + 1)
+                .prevLength(prev.end() - prev.start() + 1)
                 .prevCopyNumber(prev.averageTumorCopyNumber())
                 .prevBaf(prev.averageActualBAF())
                 .prevDepthWindowCount(prev.depthWindowCount());
