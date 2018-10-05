@@ -120,7 +120,7 @@ public class SomaticVariantDataSource {
     @NotNull
     private static String ploidyVafField(@NotNull EnrichedSomaticVariant variant) {
         return descriptiveBAF(variant.adjustedCopyNumber(), variant.minorAllelePloidy()) + " ("
-                + PatientReportFormat.formatPercent(variant.adjustedVAF()) + ")";
+                + PatientReportFormat.formatPercent(Math.min(1, variant.adjustedVAF())) + ")";
     }
 
     @NotNull
