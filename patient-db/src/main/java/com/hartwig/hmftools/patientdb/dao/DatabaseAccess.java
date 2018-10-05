@@ -43,7 +43,7 @@ import org.jooq.impl.DSL;
 
 public class DatabaseAccess {
     private static final Logger LOGGER = LogManager.getLogger(DatabaseAccess.class);
-    private static final String DEV_CATALOG = "hmfpatients";
+    private static final String DEV_CATALOG = "hmfpatients_test";
 
     @NotNull
     private final EcrfDAO ecrfDAO;
