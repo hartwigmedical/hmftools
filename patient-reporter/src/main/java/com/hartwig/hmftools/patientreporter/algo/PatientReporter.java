@@ -74,6 +74,8 @@ public abstract class PatientReporter {
         assert run.isSomaticRun();
 
         final PurpleAnalysis purpleAnalysis = analyzePurpleCopyNumbers(run, sequencedReportData().panelGeneModel());
+        final List<GeneCopyNumber> reportableGeneCopynumbers =
+                purpleAnalysis.reportableGeneCopyNumbers(sequencedReportData().panelGeneModel());
 
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run,
                 purpleAnalysis,
@@ -94,7 +96,7 @@ public abstract class PatientReporter {
         LOGGER.info(" Mutational load results: " + Integer.toString(somaticVariantAnalysis.tumorMutationalLoad()));
         LOGGER.info(" Tumor mutational burden: " + Double.toString(somaticVariantAnalysis.tumorMutationalBurden())
                 + " number of mutations per MB");
-        LOGGER.info(" Number of copy number events to report: " + Integer.toString(purpleAnalysis.reportableGeneCopyNumbers().size()));
+        LOGGER.info(" Number of copy number events to report: " + Integer.toString(reportableGeneCopynumbers.size()));
         LOGGER.info(" Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
         LOGGER.info(" Number of gene disruptions to report : " + Integer.toString(reportableDisruptions.size()));
 
@@ -115,7 +117,7 @@ public abstract class PatientReporter {
                 somaticVariantAnalysis.microsatelliteIndelsPerMb(),
                 somaticVariantAnalysis.tumorMutationalLoad(),
                 somaticVariantAnalysis.tumorMutationalBurden(),
-                purpleAnalysis.reportableGeneCopyNumbers(),
+                reportableGeneCopynumbers,
                 reportableFusions,
                 reportableDisruptions,
                 PatientReporterFileLoader.findCircosPlotPath(runDirectory, tumorSample),

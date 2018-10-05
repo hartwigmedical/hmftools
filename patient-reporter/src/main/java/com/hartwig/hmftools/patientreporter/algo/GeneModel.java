@@ -27,6 +27,12 @@ public abstract class GeneModel {
     public abstract Set<String> drupActionableGenes();
 
     @Value.Derived
+    @Nullable
+    public DriverCategory geneDriverCategory(@NotNull String gene) {
+        return geneDriverCategoryMap().get(gene);
+    }
+
+    @Value.Derived
     public long somaticVariantsNumberOfBases() {
         return somaticVariantGenePanel().stream().mapToLong(GenomeRegion::bases).sum();
     }
