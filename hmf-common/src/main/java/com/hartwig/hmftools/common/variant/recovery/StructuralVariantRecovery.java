@@ -20,6 +20,7 @@ import org.jetbrains.annotations.Nullable;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.CloseableTribbleIterator;
 import htsjdk.tribble.readers.LineIterator;
+import htsjdk.variant.variantcontext.StructuralVariantType;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
@@ -60,10 +61,9 @@ public class StructuralVariantRecovery {
             PurpleCopyNumber next = copyNumbers.get(i + 1);
 
             if (current.segmentStartSupport() == SegmentSupport.NONE) {
-                long minPosition = Math.max(prev.end() + 1, current.minStart() - 1000);
-                long maxPosition = Math.min(next.start() - 1, current.maxStart() + 1000);
+                long minPosition = current.minStart() - 1000;
+                long maxPosition = current.maxStart() + 1000;
                 result.addAll(recover(minPosition, maxPosition, current, prev, next));
-
             }
         }
 
@@ -94,16 +94,17 @@ public class StructuralVariantRecovery {
         List<VariantContext> recovered = findVariants(current.chromosome(), min, max);
         for (VariantContext potentialVariant : recovered) {
 
-            final String alt = potentialVariant.getAlternateAllele(0).getDisplayString();
-            builder.alt(alt)
-                    .qual(potentialVariant.getPhredScaledQual())
-                    .variant(potentialVariant.getContig() + ":" + potentialVariant.getStart())
-                    .orientation(orientation(alt))
-                    .mate(mate(alt))
-                    .filter(filter(potentialVariant.getFilters()));
+            if (hasPotential(current.chromosome(), min, max, potentialVariant)) {
 
-            result.add(builder.build());
-
+                final String alt = potentialVariant.getAlternateAllele(0).getDisplayString();
+                builder.alt(alt)
+                        .qual(potentialVariant.getPhredScaledQual())
+                        .variant(potentialVariant.getContig() + ":" + potentialVariant.getStart())
+                        .orientation(orientation(alt))
+                        .mate(mate(alt))
+                        .filter(filter(potentialVariant.getFilters()));
+                result.add(builder.build());
+            }
         }
 
         if (result.isEmpty()) {
@@ -111,6 +112,31 @@ public class StructuralVariantRecovery {
         }
 
         return result;
+    }
+
+    private boolean hasPotential(String chromosome, long min, long max, @NotNull VariantContext variant) {
+        final String alt = variant.getAlternateAllele(0).getDisplayString();
+
+        @Nullable
+        StructuralVariantType type = variant.getStructuralVariantType();
+        if (type != null && (type == StructuralVariantType.DEL || type == StructuralVariantType.DUP)) {
+
+            String mate = mate(alt);
+            String mateChromosome = mateChromosome(mate);
+            Long matePosition = matePosition(alt);
+
+            if (mateChromosome != null && matePosition != null && !mateChromosome.equals(chromosome)) {
+                if (Math.abs(matePosition - variant.getStart()) < 1000) {
+                    return false;
+                }
+
+                long variantStart = Math.min(variant.getStart(), matePosition);
+                long variantEnd = Math.max(variant.getStart(), matePosition);
+                return variantStart <= min || variantEnd >= max;
+            }
+        }
+
+        return true;
     }
 
     @NotNull
@@ -145,6 +171,16 @@ public class StructuralVariantRecovery {
             }
         }
         return null;
+    }
+
+    @Nullable
+    static String mateChromosome(@Nullable String mate) {
+        return mate == null || !mate.contains(":") ? null : mate.split(":")[0];
+    }
+
+    @Nullable
+    static Long matePosition(@Nullable String mate) {
+        return mate == null || !mate.contains(":") ? null : Long.valueOf(mate.split(":")[1]);
     }
 
     @NotNull
