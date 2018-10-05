@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class TumorMutationalBurdenAnalyzer {
 
-    private static final double NUMBER_OF_MB_PER_GENOME = 2850D;
+    private static final double NUMBER_OF_MB_PER_GENOME = 2859D;
 
     private TumorMutationalBurdenAnalyzer() {
     }
