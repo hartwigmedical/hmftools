@@ -108,8 +108,7 @@ public class SomaticVariantDataSource {
 
     @NotNull
     private static String readDepthField(@NotNull EnrichedSomaticVariant variant) {
-        return variant.alleleReadCount() + " / " + variant.totalReadCount() + " ("
-                + PatientReportFormat.formatPercent(variant.alleleFrequency()) + ")";
+        return variant.alleleReadCount() + " / " + variant.totalReadCount();
     }
 
     @NotNull
