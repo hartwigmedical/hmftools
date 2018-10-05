@@ -28,10 +28,13 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.variant.Clonality;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariant;
@@ -128,13 +131,12 @@ public class PDFWriterTest {
     @NotNull
     private static List<EnrichedSomaticVariant> createTestVariants(@NotNull final PurityAdjuster purityAdjuster) {
         final EnrichedSomaticVariant variant1 = createSomaticVariantBuilder().gene("BRAF")
-                .chromosome("7")
-                .position(140453136)
-                .ref("A")
-                .alt("T")
-                .hotspot(Hotspot.HOTSPOT)
                 .canonicalHgvsCodingImpact("c.1799T>A")
                 .canonicalHgvsProteinImpact("p.Val600Glu")
+                .canonicalCodingEffect(CodingEffect.MISSENSE)
+                .type(VariantType.SNP)
+                .hotspot(Hotspot.HOTSPOT)
+                .clonality(Clonality.CLONAL)
                 .alleleReadCount(18)
                 .totalReadCount(99)
                 .adjustedCopyNumber(4)
@@ -143,12 +145,11 @@ public class PDFWriterTest {
                 .build();
 
         final EnrichedSomaticVariant variant2 = createSomaticVariantBuilder().gene("MYC")
-                .chromosome("8")
-                .position(128748854)
-                .ref("GG")
-                .alt("CA")
                 .canonicalHgvsCodingImpact("c.15_16delinsCA")
                 .canonicalHgvsProteinImpact("p.Val6Ile")
+                .canonicalCodingEffect(CodingEffect.MISSENSE)
+                .type(VariantType.MNP)
+                .clonality(Clonality.CLONAL)
                 .alleleReadCount(20)
                 .totalReadCount(88)
                 .adjustedCopyNumber(2)
@@ -157,12 +158,11 @@ public class PDFWriterTest {
                 .build();
 
         final EnrichedSomaticVariant variant3 = createSomaticVariantBuilder().gene("TP53")
-                .chromosome("17")
-                .position(7577111)
-                .ref("GCACAAA")
-                .alt("G")
                 .canonicalHgvsCodingImpact("c.821_826delTTTGTG")
                 .canonicalHgvsProteinImpact("p.Val274_Cus275del")
+                .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
+                .type(VariantType.INDEL)
+                .clonality(Clonality.CLONAL)
                 .alleleReadCount(20)
                 .totalReadCount(87)
                 .adjustedCopyNumber(3)
@@ -188,8 +188,7 @@ public class PDFWriterTest {
     private static List<GeneFusion> createTestFusions() {
         GeneFusion fusion1 =
                 createFusion("TMPRSS2", "ENST00000398585", 4, 5, "PNPLA7", "ENST00000406427", 2, 3, KnownFusionsModel.CIVIC, 0.4);
-        GeneFusion fusion2 =
-                createFusion("CLCN6", "ENST00000346436", 1, 2, "BRAF", "ENST00000288602", 8, 9, KnownFusionsModel.ONCOKB, 1D);
+        GeneFusion fusion2 = createFusion("CLCN6", "ENST00000346436", 1, 2, "BRAF", "ENST00000288602", 8, 9, KnownFusionsModel.ONCOKB, 1D);
 
         return Lists.newArrayList(fusion1, fusion2);
     }
