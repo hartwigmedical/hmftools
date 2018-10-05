@@ -144,7 +144,20 @@ public class PDFWriterTest {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("7", 4, 0.18 / 0.99))
                 .build();
 
-        final EnrichedSomaticVariant variant2 = createSomaticVariantBuilder().gene("MYC")
+        final EnrichedSomaticVariant variant2 = createSomaticVariantBuilder().gene("TP53")
+                .canonicalHgvsCodingImpact("c.821_826delTTTGTG")
+                .canonicalHgvsProteinImpact("p.Val274_Cus275del")
+                .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
+                .type(VariantType.INDEL)
+                .clonality(Clonality.CLONAL)
+                .alleleReadCount(20)
+                .totalReadCount(87)
+                .adjustedCopyNumber(3)
+                .minorAllelePloidy(0)
+                .adjustedVAF(purityAdjuster.purityAdjustedVAF("17", 3, 0.20 / 0.87))
+                .build();
+
+        final EnrichedSomaticVariant variant3 = createSomaticVariantBuilder().gene("MYC")
                 .canonicalHgvsCodingImpact("c.15_16delinsCA")
                 .canonicalHgvsProteinImpact("p.Val6Ile")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
@@ -157,18 +170,6 @@ public class PDFWriterTest {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("8", 2, 0.2 / 0.88))
                 .build();
 
-        final EnrichedSomaticVariant variant3 = createSomaticVariantBuilder().gene("TP53")
-                .canonicalHgvsCodingImpact("c.821_826delTTTGTG")
-                .canonicalHgvsProteinImpact("p.Val274_Cus275del")
-                .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
-                .type(VariantType.INDEL)
-                .clonality(Clonality.CLONAL)
-                .alleleReadCount(20)
-                .totalReadCount(87)
-                .adjustedCopyNumber(3)
-                .minorAllelePloidy(0)
-                .adjustedVAF(purityAdjuster.purityAdjustedVAF("17", 3, 0.20 / 0.87))
-                .build();
 
         return Lists.newArrayList(variant1, variant2, variant3);
     }
