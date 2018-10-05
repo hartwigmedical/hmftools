@@ -6,7 +6,9 @@ import com.google.common.collect.Maps;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class SnpEffHgvsFormatter {
+// KODU: Class is no longer used in production but like to keep around nonetheless for having the AA table somewhere.
+// KODU: Do note that according to http://www.hgvs.org/mutnomen/standards.html there are also 2 "dubious" mappings (not included below).
+final class SnpEffHgvsFormatter {
 
     private static final String HGVS_CODING_PREFIX_TO_REMOVE = "c.";
     private static final String HGVS_PROTEIN_PREFIX_TO_REMOVE = "p.";
