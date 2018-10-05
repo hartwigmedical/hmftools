@@ -1,12 +1,16 @@
 package com.hartwig.hmftools.svanalysis.svgraph;
 
+import com.google.common.collect.ImmutableList;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
+
+import java.util.List;
 
 public class BgSv implements BgEdge {
     private final EnrichedStructuralVariant _sv;
 
-    public BgSv(EnrichedStructuralVariant sv) {
+    public BgSv(EnrichedStructuralVariant sv)
+    {
         this._sv = sv;
     }
 
@@ -26,4 +30,5 @@ public class BgSv implements BgEdge {
     }
 
     public EnrichedStructuralVariant sv() { return _sv; }
+
 }

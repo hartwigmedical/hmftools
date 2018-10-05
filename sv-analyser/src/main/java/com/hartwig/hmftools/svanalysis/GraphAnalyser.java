@@ -12,6 +12,9 @@ import com.hartwig.hmftools.svanalysis.analysis.SvClusteringConfig;
 import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.svanalysis.annotators.ExtDataLinker;
 import com.hartwig.hmftools.svanalysis.svgraph.BreakpointGraph;
+import com.hartwig.hmftools.svanalysis.svgraph.SimpleSimplificationStrategy;
+import com.hartwig.hmftools.svanalysis.svgraph.Simplification;
+import com.hartwig.hmftools.svanalysis.svgraph.SimplificationFile;
 import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.Level;
@@ -85,15 +88,17 @@ public class GraphAnalyser {
             LOGGER.info("sample({}) processing {} SVs, {} segments", sample, svRecords.size(), cnRecords.size());
 
             BreakpointGraph graph = new BreakpointGraph(cnRecords, svRecords);
-            List<EnrichedStructuralVariant> reducedVariants = graph.simplify();
+            List<Simplification> simplifications = graph.simplify(new SimpleSimplificationStrategy());
 
             String cnFile = PurpleCopyNumberFile.generateFilename(cmd.getOptionValue(OUTPUT_DIRECTORY), String.format("%s_cn_reduced", sample));
             String remainingFile = EnrichedStructuralVariantFile.generateFilename(cmd.getOptionValue(OUTPUT_DIRECTORY), String.format("%s_sv_remaining.csv", sample));
             String reducedFile = EnrichedStructuralVariantFile.generateFilename(cmd.getOptionValue(OUTPUT_DIRECTORY), String.format("%s_sv_simplified.csv", sample));
+            String simplificationFile = SimplificationFile.generateFilename(cmd.getOptionValue(OUTPUT_DIRECTORY), String.format("%s", sample));
 
             PurpleCopyNumberFile.write(cnFile, graph.getAllSegments().stream().map(s -> s.cn()).collect(Collectors.toList()));
             EnrichedStructuralVariantFile.write(remainingFile, graph.getAllStructuralVariants());
-            EnrichedStructuralVariantFile.write(reducedFile, reducedVariants);
+            EnrichedStructuralVariantFile.write(reducedFile, simplifications.stream().flatMap(s -> s.variants().stream()).collect(Collectors.toList()));
+            SimplificationFile.write(simplificationFile, simplifications);
         }
         LOGGER.info("run complete");
     }

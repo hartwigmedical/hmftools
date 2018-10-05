@@ -3,6 +3,10 @@ package com.hartwig.hmftools.common.variant.structural;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 public interface StructuralVariant {
 
     @Nullable
@@ -55,4 +59,23 @@ public interface StructuralVariant {
 
     @Nullable
     String endLinkedBy();
+
+    default Collection<String> startLinks() {
+        List<String> links = new ArrayList<>();
+        for (String s : startLinkedBy().split(",")) {
+            if (s.length() > 1) {
+                links.add(s);
+            }
+        }
+        return links;
+    }
+    default Collection<String> endLinks() {
+        List<String> links = new ArrayList<>();
+        for (String s : endLinkedBy().split(",")) {
+            if (s.length() > 1) {
+                links.add(s);
+            }
+        }
+        return links;
+    }
 }

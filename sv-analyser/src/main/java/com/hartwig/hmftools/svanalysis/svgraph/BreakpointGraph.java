@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.svanalysis.svgraph;
 
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.Streams;
+import com.google.common.collect.*;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
-import com.hartwig.hmftools.common.variant.structural.*;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantLeg;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -23,8 +21,8 @@ public class BreakpointGraph {
     private final Map<BgSegment, List<BgAdjacency>> endEdges = new HashMap<>();
 
     private BreakpointGraph() {
-        startEdges.put(unplacedSegment, new ArrayList<>());
-        endEdges.put(unplacedSegment, new ArrayList<>());
+        this.startEdges.put(unplacedSegment, new ArrayList<>());
+        this.endEdges.put(unplacedSegment, new ArrayList<>());
     }
     public BreakpointGraph(List<PurpleCopyNumber> cnRecords, List<EnrichedStructuralVariant> svRecords) {
         this();
@@ -112,20 +110,22 @@ public class BreakpointGraph {
         }
         return unplacedSegment;
     }
-    private void addEdge(BgSegment left, int leftOrientation, BgSegment right, int rightOrientation, BgEdge edge) {
+    private void addEdge(BgSegment start, int startOrientation, BgSegment end, int endOrientation, BgEdge edge) {
         BgAdjacency leftAdj = ImmutableBgAdjacencyImpl.builder()
-                .fromSegment(left)
-                .fromOrientation(leftOrientation)
-                .toSegment(right)
-                .toOrientation(rightOrientation)
+                .fromSegment(start)
+                .fromOrientation(startOrientation)
+                .toSegment(end)
+                .toOrientation(endOrientation)
                 .edge(edge)
+                .linkedBy(edge.sv() == null ? ImmutableList.of() : edge.sv().startLinks())
                 .build();
         BgAdjacency rightAdj = ImmutableBgAdjacencyImpl.builder()
-                .fromSegment(right)
-                .fromOrientation(rightOrientation)
-                .toSegment(left)
-                .toOrientation(leftOrientation)
+                .fromSegment(end)
+                .fromOrientation(endOrientation)
+                .toSegment(start)
+                .toOrientation(startOrientation)
                 .edge(edge)
+                .linkedBy(edge.sv() == null ? ImmutableList.of() : edge.sv().endLinks())
                 .build();
         addAdjacency(leftAdj);
         addAdjacency(rightAdj);
@@ -142,23 +142,7 @@ public class BreakpointGraph {
                 throw new IllegalArgumentException("Invalid orientation");
         }
     }
-    public List<EnrichedStructuralVariant> simplify() {
-        List<EnrichedStructuralVariant> simplified = new ArrayList<>();
-        EnrichedStructuralVariant var = simplifyEvent();
-        while (var != null) {
-            simplified.add(var);
-            mergeReferenceSegments(false);
-            var = simplifyEvent();
-        }
-        return simplified;
-    }
-    public EnrichedStructuralVariant simplifyEvent() {
-        EnrichedStructuralVariant var = simplifySimpleDuplications();
-        if (var == null) {
-            var = simplifySimpleDeletion();
-        }
-        return var;
-    }
+
     public int mergeReferenceSegments(boolean mergeAcrossCentromere) {
         for (BgSegment segment : endEdges.keySet()) {
             BgSegment nextSegment = nextReferenceSegment(segment);
@@ -171,59 +155,18 @@ public class BreakpointGraph {
         }
         return 0;
     }
-    public EnrichedStructuralVariant simplifySimpleDeletion() {
-        for (BgSegment segment : startEdges.keySet()) {
-            BgSegment prevSegment = prevReferenceSegment(segment);
-            BgSegment nextSegment = nextReferenceSegment(segment);
-            if (prevSegment != null && nextSegment != null &&
-                    svCount(getOutgoing(segment, -1)) == 0 &&
-                    svCount(getOutgoing(segment, 1)) == 0 &&
-                    svCount(getOutgoing(prevSegment, 1)) == 1 &&
-                    svCount(getOutgoing(nextSegment, -1)) == 1) {
-                BgAdjacency leftSv = firstSv(getOutgoing(prevSegment, 1));
-                BgAdjacency rightSv = firstSv(getOutgoing(nextSegment, -1));
-                if (leftSv.edge() == rightSv.edge()) {
-                    // we have a deletion
-                    if (shouldCollapseDeletion(prevSegment, segment, nextSegment, leftSv.edge())) {
-                        LOGGER.debug("Simplifying simple deletion of {}", segment);
-                        segment.adjustPloidy(leftSv.edge().ploidy());
-                        removeAdjacency(leftSv, rightSv);
-                        return leftSv.edge().sv();
-                    }
-                }
-            }
-        }
-        return null;
-    }
 
-    private boolean shouldCollapseDeletion(BgSegment prevSegment, BgSegment segment, BgSegment nextSegment, BgEdge edge) {
-        // TODO: check for CN consistency
-        return true;
-    }
-    private boolean shouldCollapseDuplication(BgSegment prevSegment, BgSegment segment, BgSegment nextSegment, BgEdge edge) {
-        // TODO: check for CN consistency
-        return true;
-    }
-
-    public EnrichedStructuralVariant simplifySimpleDuplications() {
-        for (BgSegment segment : startEdges.keySet()) {
-            List<BgAdjacency> prev = startEdges.get(segment);
-            List<BgAdjacency> next = endEdges.get(segment);
-            // simple duplication check
-            if (svCount(prev) == 1 && svCount(next) == 1) {
-                BgAdjacency prevSv = firstSv(prev);
-                BgAdjacency nextSv = firstSv(next);
-                if (prevSv.edge() == nextSv.edge()) {
-                    if (shouldCollapseDuplication(prevReferenceSegment(segment), segment, nextReferenceSegment(segment), prevSv.edge())) {
-                        LOGGER.debug("Simplifying simple tandem duplication of {}", segment);
-                        segment.adjustPloidy(-prevSv.edge().ploidy());
-                        removeAdjacency(prevSv, nextSv);
-                        return prevSv.edge().sv();
-                    }
-                }
-            }
-        }
-        return null;
+    private BreakendConsistency getConsistency(final double ploidy, final BgAdjacency sv) {
+        BgSegment referenceSegment = sv.fromOrientation() == 1 ? nextReferenceSegment(sv.fromSegment()) : prevReferenceSegment(sv.fromSegment());
+        List<EnrichedStructuralVariant> alternatePaths = getOutgoing(sv.fromSegment(), sv.fromOrientation()).stream()
+                .filter(adj -> !adj.isReference() && adj != sv)
+                .map(adj -> adj.edge().sv())
+                .collect(Collectors.toList());
+        List<EnrichedStructuralVariant> oppositeOrientationSvs = getOutgoing(referenceSegment, sv.fromOrientation() * -1).stream()
+                .filter(adj -> !adj.isReference())
+                .map(adj -> adj.edge().sv())
+                .collect(Collectors.toList());
+        return new BreakendConsistency(ploidy, sv.fromSegment(), referenceSegment, sv.edge().sv(), alternatePaths, oppositeOrientationSvs);
     }
 
     private void removeAdjacency(@NotNull BgAdjacency leftAdj, @NotNull BgAdjacency rightAdj) {
@@ -359,6 +302,104 @@ public class BreakpointGraph {
         }
         throw new IllegalStateException("Partner adjacency missing from graph");
     }
+    //region Simplifications
+    public List<Simplification> simplify(SimplificationStrategy strategy) {
+        List<Simplification> simplified = new ArrayList<>();
+        Simplification var = simplifyEvent(strategy);
+        while (var != null) {
+            simplified.add(var);
+            mergeReferenceSegments(false);
+            var = simplifyEvent(strategy);
+        }
+        return simplified;
+    }
+    public Simplification simplifyEvent(SimplificationStrategy strategy) {
+        Simplification var = simplifySimpleDuplications(strategy);
+        if (var == null) {
+            var = simplifySimpleDeletion(strategy);
+        }
+        return var;
+    }
+    public Simplification simplifySimpleDuplications(SimplificationStrategy strategy) {
+        for (BgSegment segment : startEdges.keySet()) {
+            List<BgAdjacency> prev = startEdges.get(segment);
+            List<BgAdjacency> next = endEdges.get(segment);
+            // simple duplication check
+            if (svCount(prev) == 1 && svCount(next) == 1) {
+                BgAdjacency prevSv = firstSv(prev);
+                BgAdjacency nextSv = firstSv(next);
+                if (prevSv.edge() == nextSv.edge()) {
+                    BgSegment prevSegment = prevReferenceSegment(segment);
+                    BgSegment nextSegment = nextReferenceSegment(segment);
+                    if (svCount(getOutgoing(prevSegment, 1)) == 0 && svCount(getOutgoing(nextSegment, -1)) == 0) {
+                        EnrichedStructuralVariant sv = prevSv.edge().sv();
+                        double ploidy = segment.ploidy() - (prevSegment.ploidy() + nextSegment.ploidy()) / 2;
+                        Simplification duplication = ImmutableSimplificationImpl.builder()
+                                .type(SimplificationType.SimpleDuplication)
+                                .ploidy(ploidy)
+                                .addVariants(sv)
+                                .consistency(ImmutableList.of(
+                                        getConsistency(ploidy, prevSv),
+                                        getConsistency(ploidy, nextSv)))
+                                .build();
+                        if (strategy.shouldSimplify(duplication)) {
+                            LOGGER.debug("Simplifying simple tandem duplication of {}", segment);
+                            segment.adjustPloidy(duplication.ploidy());
+                            removeAdjacency(prevSv, nextSv);
+                            return duplication;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+    public Simplification simplifySimpleDeletion(SimplificationStrategy strategy) {
+        for (BgSegment segment : startEdges.keySet()) {
+            BgSegment prevSegment = prevReferenceSegment(segment);
+            BgSegment nextSegment = nextReferenceSegment(segment);
+            if (prevSegment != null && nextSegment != null &&
+                    svCount(getOutgoing(segment, -1)) == 0 &&
+                    svCount(getOutgoing(segment, 1)) == 0 &&
+                    svCount(getOutgoing(prevSegment, 1)) == 1 &&
+                    svCount(getOutgoing(nextSegment, -1)) == 1) {
+                BgAdjacency leftSv = firstSv(getOutgoing(prevSegment, 1));
+                BgAdjacency rightSv = firstSv(getOutgoing(nextSegment, -1));
+                if (leftSv.edge() == rightSv.edge()) {
+                    EnrichedStructuralVariant sv = leftSv.edge().sv();
+                    // we have a deletion
+                    double ploidy = (prevSegment.ploidy() + nextSegment.ploidy()) / 2 - segment.ploidy();
+                    Simplification deletion = ImmutableSimplificationImpl.builder()
+                            .type(SimplificationType.SimpleDeletion)
+                            .ploidy(ploidy)
+                            .addVariants(leftSv.edge().sv())
+                            .consistency(ImmutableList.of(
+                                    getConsistency(ploidy, leftSv),
+                                    getConsistency(ploidy, rightSv)))
+                            .build();
+                    if (strategy.shouldSimplify(deletion)) {
+                        LOGGER.debug("Simplifying simple deletion of {}", segment);
+                        segment.adjustPloidy(deletion.ploidy());
+
+                        removeAdjacency(leftSv, rightSv);
+                        return deletion;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+    public Simplification simplifyLinked(SimplificationStrategy strategy) {
+        Map<String, BgAdjacency> linkedBy = new HashMap<>();
+        for (List<BgAdjacency> adjList : Iterables.concat(startEdges.values(), endEdges.values())) {
+            for (BgAdjacency adj : adjList) {
+                if (adj.isReference()) continue;
+                adj.edge().sv().start();
+            }
+        }
+        return null;
+    }
+    //endregion
     private void sanityCheck() {
         assert(startEdges.keySet().containsAll(endEdges.keySet()));
         assert(endEdges.keySet().containsAll(startEdges.keySet()));
