@@ -11,7 +11,7 @@
     <artifactId>knowledgebase-importer</artifactId>
     <packaging>jar</packaging>
     <version>1.0</version>
-    <name>HMF Tools - Knowledgebase importer</name>
+    <name>HMF Tools - Knowledgebase Importer</name>
 
     <dependencies>
         <dependency>
