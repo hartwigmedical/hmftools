@@ -99,9 +99,8 @@ public class ActionabilityCNVsAnalyzer {
                 .drugsName(values[4])
                 .drugsType(values[5])
                 .cancerType(values[6])
-                .source(values[7])
                 .hmfLevel(values[8])
-                .hmfResponse(values[9])
+                .hmfResponse(values[11])
                 .build();
     }
 }
