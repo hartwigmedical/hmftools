@@ -48,8 +48,6 @@ public class ActionabilityVariantsAnalyzer {
             if (variant.gene().equals(actionabilityVariant.gene()) && variant.chromosome().equals(actionabilityVariant.chromosome())
                     && variant.position() == actionabilityVariant.position() && variant.ref().equals(actionabilityVariant.ref())
                     && variant.alt().equals(actionabilityVariant.alt())) {
-                LOGGER.info(cancerTypeAnalyzer.foundTumorLocation(actionabilityVariant.cancerType(), doidsPrimaryTumorLocation));
-
                 if (cancerTypeAnalyzer.foundTumorLocation(actionabilityVariant.cancerType(), doidsPrimaryTumorLocation)) {
                     printVariantRow(actionabilityVariant, "yes");
                 } else {
@@ -102,15 +100,15 @@ public class ActionabilityVariantsAnalyzer {
         final List<String> lineVariants = Files.readAllLines(new File(fileVariants).toPath());
         final List<String> lineRanges = Files.readAllLines(new File(fileRanges).toPath());
 
-        for (String line : lineVariants) {
-            if (!line.contains("event") || !line.contains("actionability")) {
-                variants.add(fromLineVariants(line));
+        for (String lineVariant : lineVariants) {
+            if (!lineVariant.contains("event") || !lineVariant.contains("actionability")) {
+                variants.add(fromLineVariants(lineVariant));
             }
         }
 
-        for (String line : lineRanges) {
-            if (!line.contains("event") || !line.contains("actionability")) {
-                ranges.add(fromLineRanges(line));
+        for (String lineRange : lineRanges) {
+            if (!lineRange.contains("event") || !lineRange.contains("actionability")) {
+                ranges.add(fromLineRanges(lineRange));
             }
         }
         return new ActionabilityVariantsAnalyzer(variants, ranges);

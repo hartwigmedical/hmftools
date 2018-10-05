@@ -112,9 +112,9 @@ public class ActionabilityApplication {
 
             LOGGER.info("Gene" + "\t" + "Chromosome" + "\t" + "Start" + "\t" + "End" + "\t" + "Drug" + "\t" + "DrugType"
                     + "\t" + "CancerType" + "\t" + "Level" + "\t" + "Response" + "\t" + "Actionable_variant");
-            for (SomaticVariant variant : variantsOnActionableGenes) {
-                  analyzer.actionableRange(variant, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
-            }
+//            for (SomaticVariant variant : variantsOnActionableGenes) {
+//                  analyzer.actionableRange(variant, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
+//            }
 
         } else if (!Files.exists(new File(fileActionabilityVariants).toPath())) {
             LOGGER.warn("File does not exist: " + fileActionabilityVariants);
