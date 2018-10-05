@@ -22,7 +22,7 @@ public class TumorMutationBurdenSection {
         final int markerValue = computeGraphValue(TMB_THRESHOLD);
 
         final GradientBar gradient =
-                ImmutableGradientBar.of(new Color(239, 239, 239), new Color(171, 191, 171), "Low", "High", graphValue, markerValue);
+                ImmutableGradientBar.of(new Color(251, 201, 191), new Color(250, 109, 79), "Low", "High", graphValue, markerValue);
         final SliderSection sliderSection = ImmutableSliderSection.of("Tumor Mutational Burden",
                 interpret(tumorMutationalBurdenIndicator, fitStatus),
                 description(),
