@@ -30,7 +30,7 @@ public final class GenePanelDataSource {
     @NotNull
     public static JRDataSource fromSequencedReportData(@NotNull final SequencedReportData sequencedReportData) {
         final DRDataSource genePanelDataSource = new DRDataSource(GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(), TYPE_FIELD.getName());
-        final List<HmfTranscriptRegion> regions = Lists.newArrayList(sequencedReportData.panelGeneModel().regions());
+        final List<HmfTranscriptRegion> regions = Lists.newArrayList(sequencedReportData.panelGeneModel().somaticVariantGenePanel());
         regions.sort(Comparator.comparing(TranscriptRegion::gene));
 
         for (final HmfTranscriptRegion region : regions) {

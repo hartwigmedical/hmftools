@@ -12,7 +12,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.patientreporter.BaseReportData;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
@@ -32,11 +31,11 @@ public class PatientReporterTest {
 
     @Test
     public void canRunOnRunDirectory() throws IOException {
-        final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfPanelGeneList());
         final BaseReportData baseReportData = testBaseReportData();
         final SequencedReportData reporterData = testSequencedReportData();
-        final StructuralVariantAnalyzer svAnalyzer =
-                new StructuralVariantAnalyzer(new TestAnnotator(), geneModel.regions(), testKnownFusionModel());
+        final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(new TestAnnotator(),
+                reporterData.panelGeneModel().somaticVariantGenePanel(),
+                testKnownFusionModel());
         final PatientReporter algo = ImmutablePatientReporter.of(baseReportData, reporterData, svAnalyzer);
         assertNotNull(algo.run(RUN_DIRECTORY, null));
     }

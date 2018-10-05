@@ -23,6 +23,18 @@ public class CNADrivers {
     private final Set<String> amplificationTargets;
     private final Set<String> deletionTargets;
 
+    @NotNull
+    public static Set<String> amplificationTargets() {
+        final InputStream inputStream = DndsDriverGeneLikelihoodSupplier.class.getResourceAsStream("/cna/AmplificationTargets.tsv");
+        return new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toSet());
+    }
+
+    @NotNull
+    public static Set<String> deletionTargets() {
+        final InputStream inputStream = DndsDriverGeneLikelihoodSupplier.class.getResourceAsStream("/cna/DeletionTargets.tsv");
+        return new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toSet());
+    }
+
     public CNADrivers() {
         this.amplificationTargets = amplificationTargets();
         this.oncoGenes = DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet();
@@ -72,17 +84,5 @@ public class CNADrivers {
                         .category(oncoGenes.contains(x) ? DriverCategory.ONCO : DriverCategory.TSG)
                         .build())
                 .collect(Collectors.toList());
-    }
-
-    @NotNull
-    private static Set<String> amplificationTargets() {
-        final InputStream inputStream = DndsDriverGeneLikelihoodSupplier.class.getResourceAsStream("/cna/AmplificationTargets.tsv");
-        return new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toSet());
-    }
-
-    @NotNull
-    private static Set<String> deletionTargets() {
-        final InputStream inputStream = DndsDriverGeneLikelihoodSupplier.class.getResourceAsStream("/cna/DeletionTargets.tsv");
-        return new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toSet());
     }
 }

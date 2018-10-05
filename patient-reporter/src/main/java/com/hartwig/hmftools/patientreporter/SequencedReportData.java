@@ -4,7 +4,6 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
-import com.hartwig.hmftools.patientreporter.algo.DrupActionabilityModel;
 import com.hartwig.hmftools.patientreporter.algo.GeneModel;
 
 import org.immutables.value.Value;
@@ -26,9 +25,6 @@ public abstract class SequencedReportData {
 
     @NotNull
     public abstract KnownFusionsModel knownFusionsModel();
-
-    @NotNull
-    public abstract DrupActionabilityModel drupActionabilityModel();
 
     @NotNull
     public abstract IndexedFastaSequenceFile refGenomeFastaFile();
