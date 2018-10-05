@@ -65,7 +65,7 @@ public final class GeneModelFactory {
     private static HmfTranscriptRegion fetchGeneDefinition(@NotNull String gene, @NotNull Map<String, HmfTranscriptRegion> geneMap) {
         HmfTranscriptRegion geneDefinition = geneMap.get(gene);
         if (geneDefinition == null) {
-            throw new IllegalStateException("Every gene configured for the report should be defined in the gene map!");
+            throw new IllegalStateException("Every gene configured for the report should be defined in the gene map: " + gene);
         }
         return geneDefinition;
     }

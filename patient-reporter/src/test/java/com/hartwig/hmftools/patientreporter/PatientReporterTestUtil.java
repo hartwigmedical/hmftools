@@ -12,13 +12,13 @@ import com.hartwig.hmftools.common.center.Center;
 import com.hartwig.hmftools.common.center.CenterModel;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
-import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.patientreporter.algo.DrupActionabilityModel;
 import com.hartwig.hmftools.patientreporter.algo.GeneModel;
+import com.hartwig.hmftools.patientreporter.algo.GeneModelFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -41,14 +41,13 @@ public final class PatientReporterTestUtil {
 
     @NotNull
     public static SequencedReportData testSequencedReportData() throws IOException {
-        final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfPanelGeneList());
+        DrupActionabilityModel drupActionabilityModel = new DrupActionabilityModel(DRUP_GENES_CSV);
+        GeneModel geneModel = GeneModelFactory.create(drupActionabilityModel);
         CompoundEnrichment compoundEnrichment = new CompoundEnrichment(HotspotEnrichment.fromHotspotsFile(HOTSPOT_TSV));
-        final DrupActionabilityModel drupActionabilityModel = new DrupActionabilityModel(DRUP_GENES_CSV);
 
         return ImmutableSequencedReportData.of(geneModel,
                 compoundEnrichment,
                 testKnownFusionModel(),
-                drupActionabilityModel,
                 new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),
                 TreeMultimap.create());
     }
