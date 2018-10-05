@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -54,10 +55,15 @@ public class SomaticVariantDataSource {
                 DRIVER_PROBABILITY_FIELD.getName());
 
         for (final EnrichedSomaticVariant variant : variants) {
+            final DriverCategory driverCategory = panelGeneModel.geneDriverCategory(variant.gene());
+
             final String displayGene =
                     panelGeneModel.drupActionableGenes().contains(variant.gene()) ? variant.gene() + " *" : variant.gene();
 
-            String allAllelesAffected = variant.biallelic() ? "Yes" : "No";
+            String allAllelesAffected = Strings.EMPTY;
+            if (driverCategory != null && driverCategory == DriverCategory.TSG) {
+                allAllelesAffected = variant.biallelic() ? "Yes" : "No";
+            }
 
             DriverCatalog driver = driverProbabilityModel.catalogForVariant(variant);
             String driverProbabilityString = driver != null ? PatientReportFormat.formatPercentWithDefaultCutoffs(driver.driverLikelihood(),
