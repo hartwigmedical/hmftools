@@ -144,8 +144,9 @@ public class PatientReporterApplication {
             annotator = NullAnnotator.make();
         }
 
+        // TODO (KODU): Filter out ONCO genes from below panel to avoid reporting disruptions on oncogenes.
         final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(annotator,
-                sequencedReportData.panelGeneModel().regions(),
+                sequencedReportData.panelGeneModel().somaticVariantGenePanel(),
                 sequencedReportData.knownFusionsModel());
 
         return ImmutablePatientReporter.of(buildBaseReportData(cmd), sequencedReportData, svAnalyzer);

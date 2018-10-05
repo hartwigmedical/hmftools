@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.algo.DriverProbabilityModel;
-import com.hartwig.hmftools.patientreporter.algo.DrupActionabilityModel;
+import com.hartwig.hmftools.patientreporter.algo.GeneModel;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.apache.logging.log4j.util.Strings;
@@ -42,7 +42,7 @@ public class SomaticVariantDataSource {
 
     @NotNull
     public static JRDataSource fromVariants(@NotNull FittedPurityStatus fitStatus, @NotNull List<EnrichedSomaticVariant> variants,
-            @NotNull DriverProbabilityModel driverProbabilityModel, @NotNull DrupActionabilityModel drupActionabilityModel) {
+            @NotNull DriverProbabilityModel driverProbabilityModel, @NotNull GeneModel panelGeneModel) {
         final DRDataSource variantDataSource = new DRDataSource(GENE_FIELD.getName(),
                 VARIANT_FIELD.getName(),
                 IMPACT_FIELD.getName(),
@@ -54,7 +54,8 @@ public class SomaticVariantDataSource {
                 DRIVER_PROBABILITY_FIELD.getName());
 
         for (final EnrichedSomaticVariant variant : variants) {
-            final String displayGene = drupActionabilityModel.test(variant) ? variant.gene() + " *" : variant.gene();
+            final String displayGene =
+                    panelGeneModel.drupActionableGenes().contains(variant.gene()) ? variant.gene() + " *" : variant.gene();
 
             String allAllelesAffected = variant.biallelic() ? "Yes" : "No";
 

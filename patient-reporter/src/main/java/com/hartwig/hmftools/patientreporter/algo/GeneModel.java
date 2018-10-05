@@ -1,42 +1,38 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
-import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.region.TranscriptRegion;
 
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class GeneModel {
-
-    @NotNull
-    private final Collection<HmfTranscriptRegion> regions;
-    @NotNull
-    private final Set<String> panel;
-
-    public GeneModel(@NotNull Collection<HmfTranscriptRegion> regions) {
-        this.regions = regions;
-        this.panel = regions.stream().map(TranscriptRegion::gene).collect(Collectors.toSet());
-    }
+@Value.Immutable
+@Value.Style(allParameters = true,
+             passAnnotations = { NotNull.class, Nullable.class })
+public abstract class GeneModel {
 
     @NotNull
-    public Collection<HmfTranscriptRegion> regions() {
-        return regions;
-    }
-
-    public long numberOfBases() {
-        return regions.stream().mapToLong(GenomeRegion::bases).sum();
-    }
-
-    public int numberOfRegions() {
-        return regions.size();
-    }
-
+    public abstract List<HmfTranscriptRegion> somaticVariantGenePanel();
     @NotNull
-    public Set<String> panel() {
-        return panel;
+    public abstract List<HmfTranscriptRegion> cnvGenePanel();
+    @NotNull
+    public abstract Map<String, DriverCategory> geneDriverCategoryMap();
+    @NotNull
+    public abstract Set<String> drupActionableGenes();
+
+    @Value.Derived
+    public long somaticVariantsNumberOfBases() {
+        return somaticVariantGenePanel().stream().mapToLong(GenomeRegion::bases).sum();
+    }
+
+    @Value.Derived
+    public int somaticVariantNumberOfRegions() {
+        return somaticVariantGenePanel().size();
     }
 }

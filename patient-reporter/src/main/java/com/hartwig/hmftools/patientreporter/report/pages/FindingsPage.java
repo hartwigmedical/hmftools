@@ -13,7 +13,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
-import com.hartwig.hmftools.patientreporter.algo.DrupActionabilityModel;
+import com.hartwig.hmftools.patientreporter.algo.GeneModel;
 import com.hartwig.hmftools.patientreporter.report.Commons;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSection;
@@ -50,7 +50,7 @@ public abstract class FindingsPage {
                 report().sampleReport(),
                 impliedPurityString(report())),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                somaticVariantReport(report(), reporterData().drupActionabilityModel()),
+                somaticVariantReport(report(), reporterData().panelGeneModel()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 geneCopyNumberReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -74,7 +74,7 @@ public abstract class FindingsPage {
 
     @NotNull
     private static ComponentBuilder<?, ?> somaticVariantReport(@NotNull final AnalysedPatientReport report,
-            @NotNull final DrupActionabilityModel drupActionabilityModel) {
+            @NotNull final GeneModel panelGeneModel) {
         final String geneMutationAddition = "Marked genes (*) are included in the DRUP study and indicate potential "
                 + "eligibility in DRUP. Please note that the marking is NOT based on the specific mutation reported for "
                 + "this sample, but only on a gene-level.";
@@ -94,7 +94,7 @@ public abstract class FindingsPage {
                         .setDataSource(SomaticVariantDataSource.fromVariants(report.fitStatus(),
                                 report.somaticVariants(),
                                 report.driverProbabilityModel(),
-                                drupActionabilityModel))
+                                panelGeneModel))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
