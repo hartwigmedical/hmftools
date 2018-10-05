@@ -18,7 +18,6 @@ public class BestFitFactory {
 
     private static final double PERCENT_RANGE = 0.1;
     private static final double ABS_RANGE = 0.0005;
-    private static final double MIN_PURITY_SPREAD = 0.15;
     private static final double MIN_SOMATIC_UNADJUSTED_VAF = 0.1;
 
     private final FittedPurity bestFit;
@@ -29,8 +28,7 @@ public class BestFitFactory {
     private double minSomaticPurity;
 
     public BestFitFactory(int minVariants, int minPeak, double highlyDiploidPercentage, double minSomaticPurity,
-            @NotNull final List<FittedPurity> fittedPurities,
-            @NotNull final List<SomaticVariant> somatics) {
+            double minSomaticPuritySpread, @NotNull final List<FittedPurity> fittedPurities, @NotNull final List<SomaticVariant> somatics) {
         assert (!fittedPurities.isEmpty());
         this.minVariants = minVariants;
         this.minSomaticPurity = minSomaticPurity;
@@ -43,7 +41,7 @@ public class BestFitFactory {
 
         score = FittedPurityScoreFactory.score(inRangeOfLowest(lowestScore.score(), fittedPurities));
 
-        if (Doubles.greaterOrEqual(score.puritySpread(), MIN_PURITY_SPREAD) && isHighlyDiploid(score)) {
+        if (Doubles.greaterOrEqual(score.puritySpread(), minSomaticPuritySpread) && isHighlyDiploid(score)) {
             final Optional<FittedPurity> somaticFit = new SomaticFitFactory(minPeak).fromSomatics(fittedPurities, somatics);
 
             if (noDetectableTumor(somaticCount)) {
@@ -73,8 +71,8 @@ public class BestFitFactory {
     }
 
     private boolean somaticsWontHelp(int somaticCount, double lowestScoringPurity, @NotNull final Optional<FittedPurity> somaticFit) {
-        return !somaticFit.isPresent() || somaticCount == 0 || (Doubles.lessOrEqual(lowestScoringPurity, minSomaticPurity) && Doubles
-                .lessOrEqual(somaticFit.get().purity(), minSomaticPurity));
+        return !somaticFit.isPresent() || somaticCount == 0 || (Doubles.lessOrEqual(lowestScoringPurity, minSomaticPurity)
+                && Doubles.lessOrEqual(somaticFit.get().purity(), minSomaticPurity));
     }
 
     private boolean isHighlyDiploid(@NotNull final FittedPurityScore score) {

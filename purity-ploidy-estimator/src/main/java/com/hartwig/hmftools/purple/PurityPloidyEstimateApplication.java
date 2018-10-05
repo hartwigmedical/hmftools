@@ -218,6 +218,7 @@ public class PurityPloidyEstimateApplication {
                     somaticConfig.minPeakVariants(),
                     highlyDiploidPercentage,
                     somaticConfig.minSomaticPurity(),
+                    somaticConfig.minSomaticPuritySpread(),
                     bestFitPerPurity,
                     snps);
             final FittedPurity bestFit = bestFitFactory.bestFit();
