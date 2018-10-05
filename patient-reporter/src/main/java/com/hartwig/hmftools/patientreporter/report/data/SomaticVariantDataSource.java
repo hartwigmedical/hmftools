@@ -5,6 +5,7 @@ import static com.google.common.base.Strings.repeat;
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
@@ -54,7 +55,7 @@ public class SomaticVariantDataSource {
                 BIALLELIC_FIELD.getName(),
                 DRIVER_PROBABILITY_FIELD.getName());
 
-        for (final EnrichedSomaticVariant variant : variants) {
+        for (final EnrichedSomaticVariant variant : sort(variants)) {
             final DriverCategory driverCategory = panelGeneModel.geneDriverCategory(variant.gene());
 
             final String displayGene =
@@ -82,6 +83,17 @@ public class SomaticVariantDataSource {
         }
 
         return variantDataSource;
+    }
+
+    @NotNull
+    private static List<EnrichedSomaticVariant> sort(@NotNull List<EnrichedSomaticVariant> variants) {
+        return variants.stream().sorted((variant1, variant2) -> {
+            if (variant1.gene().equals(variant2.gene())) {
+                return variant1.canonicalHgvsCodingImpact().compareTo(variant2.canonicalHgvsCodingImpact());
+            } else {
+                return variant1.gene().compareTo(variant2.gene());
+            }
+        }).collect(Collectors.toList());
     }
 
     @NotNull
