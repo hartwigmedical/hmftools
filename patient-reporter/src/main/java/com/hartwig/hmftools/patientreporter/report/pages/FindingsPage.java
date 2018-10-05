@@ -83,14 +83,14 @@ public abstract class FindingsPage {
                 !report.somaticVariants().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(SomaticVariantDataSource.variantFields())
                         .columns(col.column("Gene", SomaticVariantDataSource.GENE_FIELD),
-                                col.column("Variant", SomaticVariantDataSource.VARIANT_FIELD),
-                                col.column("Impact", SomaticVariantDataSource.IMPACT_FIELD),
-                                col.column("Read Depth", SomaticVariantDataSource.READ_DEPTH_FIELD).setFixedWidth(60),
+                                col.column("Variant", SomaticVariantDataSource.VARIANT_FIELD).setFixedWidth(80),
+                                col.column("Impact", SomaticVariantDataSource.IMPACT_FIELD).setFixedWidth(80),
+                                col.column("Read Depth", SomaticVariantDataSource.READ_DEPTH_FIELD),
                                 col.column("Hotspot", SomaticVariantDataSource.IS_HOTSPOT_FIELD),
-                                col.column("Ploidy (VAF)", SomaticVariantDataSource.PLOIDY_VAF_FIELD),
+                                col.column("Ploidy (VAF)", SomaticVariantDataSource.PLOIDY_VAF_FIELD).setFixedWidth(80),
                                 col.column("Clonality", SomaticVariantDataSource.CLONAL_STATUS_FIELD),
                                 col.column("Biallelic", SomaticVariantDataSource.BIALLELIC_FIELD),
-                                col.column("Driver Prob", SomaticVariantDataSource.DRIVER_PROBABILITY_FIELD)))
+                                col.column("Driver", SomaticVariantDataSource.DRIVER_PROBABILITY_FIELD)))
                         .setDataSource(SomaticVariantDataSource.fromVariants(report.fitStatus(),
                                 report.somaticVariants(),
                                 report.driverProbabilityModel(),
