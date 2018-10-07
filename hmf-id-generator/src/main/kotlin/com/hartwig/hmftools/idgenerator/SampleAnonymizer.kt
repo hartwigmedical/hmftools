@@ -21,8 +21,9 @@ class SampleAnonymizer(val password: String) {
 
     private fun updatedCanonicalSamples(newPassword: String, samplesInput: SamplesInput, anonymizedSamples: AnonymizedSamples,
                                         updatedPatients: AnonymizedPatients): List<HmfSampleId> {
+        val samplesPerHash = samplesInput.samples.associateBy { generator.hash(it.id) }
         return samplesInput.canonicalPatients
-                .associateBy({ it }, { updateCanonicalPatientSamples(newPassword, it, samplesInput, anonymizedSamples) })
+                .associateBy({ it }, { updateCanonicalPatientSamples(newPassword, it, samplesInput, anonymizedSamples, samplesPerHash) })
                 .mapKeys { updatedPatients[it.key.patientId]!! }
                 .mapValues { (hmfPatientId, hashedSamples) -> hashedSamples.map { HmfSampleId(it, hmfPatientId) } }
                 .values.flatten()
@@ -40,8 +41,9 @@ class SampleAnonymizer(val password: String) {
     }
 
     private fun updateCanonicalPatientSamples(newPassword: String, patient: CanonicalPatientId, samplesInput: SamplesInput,
-                                              anonymizedSamples: AnonymizedSamples): Collection<HashId> {
-        val patientSamples = relevantPatientSamples(patient, samplesInput, anonymizedSamples)
+                                              anonymizedSamples: AnonymizedSamples,
+                                              samplesPerHash: Map<Hash, SampleId>): Collection<HashId> {
+        val patientSamples = relevantPatientSamples(patient, samplesInput, anonymizedSamples, samplesPerHash)
         val previouslyAnonymizedSamples = anonymizedSamples[patient]
         return generator.update(newPassword, patientSamples.map { it.id }, previouslyAnonymizedSamples.map { it.hashId })
     }
@@ -50,10 +52,10 @@ class SampleAnonymizer(val password: String) {
     // - all sampleIds from input, accounting for renames
     // - all previously anonymized samples that match this patientId (can be different from above when entries are deleted from the patientMapping
     private fun relevantPatientSamples(patient: CanonicalPatientId, samplesInput: SamplesInput,
-                                       anonymizedSamples: AnonymizedSamples): Collection<SampleId> {
+                                       anonymizedSamples: AnonymizedSamples, samplesPerHash: Map<Hash, SampleId>): Collection<SampleId> {
         val patientSamples = samplesInput.sampleIds(patient.patientId)
-        val hashes = anonymizedSamples[patient].map { it.hash }.toSet()
-        return samplesInput.samples.filter { hashes.contains(generator.hash(it.id)) } + patientSamples
+        val hashes = anonymizedSamples.sampleHashes(patient)
+        return hashes.mapNotNull { samplesPerHash[it] } + patientSamples
     }
 
     private fun anonymizedPatients(anonymizedSamples: Collection<HmfSampleId>) = anonymizedSamples.map { it.hmfPatientId }.toSet()

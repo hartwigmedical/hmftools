@@ -7,7 +7,7 @@ import java.util.function.IntUnaryOperator;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.copynumber.tolerance.CopyNumberTolerance;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
@@ -39,14 +39,12 @@ class ExtendDiploid {
 
     private final int minTumorCount;
     private final int minTumorCountAtCentromere;
-    private final BAFDeviation bafDeviation;
-    private final CopyNumberDeviation copyNumberDeviation;
+    private final CopyNumberTolerance tolerance;
 
-    ExtendDiploid(@NotNull final PurityAdjuster adjuster, final int minTumorCount, final int minTumorCountAtCentromere) {
+    ExtendDiploid(@NotNull final CopyNumberTolerance tolerance, final int minTumorCount, final int minTumorCountAtCentromere) {
         this.minTumorCount = minTumorCount;
         this.minTumorCountAtCentromere = minTumorCountAtCentromere;
-        this.bafDeviation = new BAFDeviation();
-        this.copyNumberDeviation = new CopyNumberDeviation(adjuster);
+        this.tolerance = tolerance;
     }
 
     @NotNull
@@ -56,7 +54,7 @@ class ExtendDiploid {
         final List<CombinedRegion> regions = Lists.newLinkedList();
 
         for (FittedRegion fittedRegion : fittedRegions) {
-            regions.add(new CombinedRegion(bafWeighted, fittedRegion));
+            regions.add(new BafWeightedRegion(bafWeighted, fittedRegion));
         }
 
         int highestConfidenceIndex = nextIndex(regions);
@@ -201,7 +199,7 @@ class ExtendDiploid {
     }
 
     private boolean inTolerance(@NotNull final FittedRegion left, @NotNull final FittedRegion right) {
-        return bafDeviation.inTolerance(left, right) && copyNumberDeviation.inTolerance(left, right);
+        return tolerance.inTolerance(left, right);
     }
 
     private static int nextIndex(@NotNull final List<CombinedRegion> regions) {
@@ -210,8 +208,7 @@ class ExtendDiploid {
         int indexOfTumorRatioCount = -1;
 
         int largestBAFCount = 0;
-        long largestBases = 0;
-        long largestTumorRatioCount = 0;
+        long largestDepthWindowCount = 0;
 
         for (int i = 0; i < regions.size(); i++) {
             final CombinedRegion combined = regions.get(i);
@@ -223,14 +220,9 @@ class ExtendDiploid {
                     indexOfLargestBaf = i;
                 }
 
-                if (region.depthWindowCount() > largestTumorRatioCount) {
-                    largestTumorRatioCount = region.depthWindowCount();
+                if (region.depthWindowCount() > largestDepthWindowCount) {
+                    largestDepthWindowCount = region.depthWindowCount();
                     indexOfTumorRatioCount = i;
-                }
-
-                if (region.bases() > largestBases) {
-                    largestBases = region.bases();
-                    indexOfLargestLength = i;
                 }
             }
         }

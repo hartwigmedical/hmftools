@@ -1,15 +1,17 @@
 Run the following commands as root (admin) on mysql prior to building
 
+NOTE: Below is tested on mysql server 5.7.21
+
 mysql> CREATE USER 'build'@'localhost' IDENTIFIED BY 'build';
 Query OK, 0 rows affected (0.00 sec)
 
-mysql> CREATE DATABASE hmfpatients;
+mysql> CREATE DATABASE hmfpatients_test;
 Query OK, 1 row affected (0.00 sec)
 
-mysql> GRANT ALL on hmfpatients.* TO 'build'@'localhost';
+mysql> GRANT ALL on hmfpatients_test.* TO 'build'@'localhost';
 Query OK, 0 rows affected (0.00 sec)
 
-Maven automatically rebuilds the hmfpatient database based on DDL statements provided 
+Maven automatically rebuilds the hmfpatient_test database based on DDL statements provided
 in file generate_database.sql via this additional Maven build step we are automatically 
 sure the jOOQ generated Java entity code always matches the DDL statements.
 
@@ -20,7 +22,7 @@ Create mysql.login file:
 
 cat ~/mysql.login << HERE
 [client]
-database=hmfpatients
+database=hmfpatients_test
 user=build
 password=build
 HERE

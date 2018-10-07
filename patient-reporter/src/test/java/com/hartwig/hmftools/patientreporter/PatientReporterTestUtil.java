@@ -10,15 +10,15 @@ import com.google.common.collect.TreeMultimap;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.center.Center;
 import com.hartwig.hmftools.common.center.CenterModel;
-import com.hartwig.hmftools.common.cosmic.CosmicGeneModel;
-import com.hartwig.hmftools.common.cosmic.CosmicGenes;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
-import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
+import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
+import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
+import com.hartwig.hmftools.patientreporter.algo.DrupActionabilityModel;
 import com.hartwig.hmftools.patientreporter.algo.GeneModel;
-import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
+import com.hartwig.hmftools.patientreporter.algo.GeneModelFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -26,29 +26,30 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public final class PatientReporterTestUtil {
 
-    public static final String SIGNATURE_PATH = Resources.getResource("signature").getPath() + File.separator + "signature.png";
+    private static final String SIGNATURE_PATH = Resources.getResource("signature/signature.png").getPath();
 
-    private static final String REF_GENOME_PATH = Resources.getResource("refgenome").getPath() + File.separator + "ref.fasta";
+    private static final String REF_GENOME_PATH = Resources.getResource("refgenome/ref.fasta").getPath();
 
-    private static final String FUSION_PAIRS_CSV = Resources.getResource("csv").getPath() + File.separator + "fusion_pairs.csv";
-    private static final String PROMISCUOUS_FIVE_CSV = Resources.getResource("csv").getPath() + File.separator + "promiscuous_five.csv";
-    private static final String PROMISCUOUS_THREE_CSV = Resources.getResource("csv").getPath() + File.separator + "promiscuous_three.csv";
+    private static final String CENTER_CSV = Resources.getResource("center/centers.csv").getPath();
+
+    private static final String DRUP_GENES_CSV = Resources.getResource("csv/drup_genes.csv").getPath();
+    private static final String HOTSPOT_TSV = Resources.getResource("csv/hotspots.tsv").getPath();
+    private static final String FUSION_PAIRS_CSV = Resources.getResource("csv/fusion_pairs.csv").getPath();
+    private static final String PROMISCUOUS_FIVE_CSV = Resources.getResource("csv/promiscuous_five.csv").getPath();
+    private static final String PROMISCUOUS_THREE_CSV = Resources.getResource("csv/promiscuous_three.csv").getPath();
 
     private PatientReporterTestUtil() {
     }
 
     @NotNull
     public static SequencedReportData testSequencedReportData() throws IOException {
-        final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
-        final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
-        final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfPanelGeneList());
-        final CosmicGeneModel cosmicGeneModel = CosmicGenes.readFromCSV(cosmicPath);
-        final DrupFilter drupFilter = new DrupFilter(drupFilterPath);
+        DrupActionabilityModel drupActionabilityModel = new DrupActionabilityModel(DRUP_GENES_CSV);
+        GeneModel geneModel = GeneModelFactory.create(drupActionabilityModel);
+        CompoundEnrichment compoundEnrichment = new CompoundEnrichment(HotspotEnrichment.fromHotspotsFile(HOTSPOT_TSV));
 
         return ImmutableSequencedReportData.of(geneModel,
-                cosmicGeneModel,
+                compoundEnrichment,
                 testKnownFusionModel(),
-                drupFilter,
                 new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),
                 TreeMultimap.create());
     }
@@ -62,10 +63,9 @@ public final class PatientReporterTestUtil {
 
     @NotNull
     public static BaseReportData testBaseReportData() throws IOException {
-        final String centerPath = Resources.getResource("center").getPath() + File.separator + "centers.csv";
         final List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
         final Lims lims = LimsFactory.empty();
-        final CenterModel centerModel = Center.readFromCSV(centerPath);
+        final CenterModel centerModel = Center.readFromCSV(CENTER_CSV);
         return ImmutableBaseReportData.of(patientTumorLocations, lims, centerModel, SIGNATURE_PATH);
     }
 }

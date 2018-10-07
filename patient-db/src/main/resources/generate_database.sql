@@ -176,7 +176,7 @@ CREATE TABLE ecrf
     INDEX(form),
     INDEX(itemGroup),
     INDEX(item),
-    INDEX(itemValue),
+    INDEX(itemValue (255)),
     INDEX(status),
     INDEX(locked),
     INDEX(sequenced),
@@ -271,6 +271,8 @@ CREATE TABLE somaticVariant
     worstCodingEffect varchar(255) NOT NULL,
     canonicalEffect varchar(255) NOT NULL,
     canonicalCodingEffect varchar(255) NOT NULL,
+    canonicalHgvsCodingImpact varchar(255) NOT NULL,
+    canonicalHgvsProteinImpact varchar(255) NOT NULL,
     microhomology varchar(255) NOT NULL,
     repeatSequence varchar(255) NOT NULL,
     repeatCount int NOT NULL,
@@ -350,6 +352,9 @@ CREATE TABLE copyNumber
     actualBaf DOUBLE PRECISION not null,
     copyNumber DOUBLE PRECISION not null,
     copyNumberMethod varchar(255) NOT NULL,
+    gcContent DOUBLE PRECISION not null,
+    minStart int not null,
+    maxStart int not null,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );
@@ -370,6 +375,9 @@ CREATE TABLE copyNumberGermline
     actualBaf DOUBLE PRECISION not null,
     copyNumber DOUBLE PRECISION not null,
     copyNumberMethod varchar(255) NOT NULL,
+    gcContent DOUBLE PRECISION not null,
+    minStart int not null,
+    maxStart int not null,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );
@@ -403,6 +411,8 @@ CREATE TABLE copyNumberRegion
     ploidyPenalty DOUBLE PRECISION not null,
     fittedBaf DOUBLE PRECISION not null,
     fittedCopyNumber DOUBLE PRECISION not null,
+    minStart int not null,
+    maxStart int not null,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );

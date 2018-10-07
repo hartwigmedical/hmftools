@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.centromeres.Centromeres;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.pcf.PCFPosition;
+import com.hartwig.hmftools.common.pcf.PCFSource;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
@@ -58,7 +59,7 @@ public final class PurpleSegmentFactory {
             if (!variants.isEmpty()) {
                 for (final ClusterVariantLeg variant : variants) {
                     if (variant.position() != segment.start()) {
-                        result.add(updatedStatusForCentromere(segment.setEnd(variant.position() - 1)));
+                        result.add(setEnd(segment, (variant.position() - 1)));
                         segment = createFromCluster(cluster, variant, ratioSupport);
                     } else {
                         segment.setSupport(SegmentSupport.MULTIPLE);
@@ -71,12 +72,12 @@ public final class PurpleSegmentFactory {
 
                 // JOBA: DO FIRST
                 final GenomePosition firstRatioBreak = pcfPositions.get(0);
-                result.add(updatedStatusForCentromere(segment.setEnd(firstRatioBreak.position() - 1)));
-                segment = create(firstRatioBreak.chromosome(), firstRatioBreak.position());
+                result.add(setEnd(segment, firstRatioBreak.position() - 1));
+                segment = create(firstRatioBreak.chromosome(), firstRatioBreak.position(), pcfPositions);
             }
         }
 
-        result.add(segment.setEnd(chromosome.length()));
+        result.add(setEnd(segment, chromosome.length()));
         return result;
     }
 
@@ -86,24 +87,55 @@ public final class PurpleSegmentFactory {
                 .setChromosome(chromosome)
                 .setRatioSupport(true)
                 .setStart(start)
+                .setMinStart(start)
+                .setMaxStart(start)
                 .setEnd(0)
                 .setSvCluster(false)
                 .setSupport(SegmentSupport.NONE);
     }
 
     @NotNull
-    private static ModifiablePurpleSegment createFromCluster(@NotNull Cluster cluster, @NotNull ClusterVariantLeg variant, boolean ratioSupport) {
+    private static ModifiablePurpleSegment create(@NotNull String chromosome, long start, @NotNull final List<PCFPosition> pcfPositions) {
+
+        long minStart = pcfPositions.stream()
+                .filter(x -> x.source() == PCFSource.TUMOR_RATIO)
+                .mapToLong(PCFPosition::minPosition)
+                .min()
+                .orElse(start);
+        long maxStart = pcfPositions.stream()
+                .filter(x -> x.source() == PCFSource.TUMOR_RATIO)
+                .mapToLong(PCFPosition::maxPosition)
+                .max()
+                .orElse(start);
+
+        return ModifiablePurpleSegment.create()
+                .setChromosome(chromosome)
+                .setRatioSupport(true)
+                .setStart(start)
+                .setMinStart(minStart)
+                .setMaxStart(maxStart)
+                .setEnd(0)
+                .setSvCluster(false)
+                .setSupport(SegmentSupport.NONE);
+    }
+
+    @NotNull
+    private static ModifiablePurpleSegment createFromCluster(@NotNull Cluster cluster, @NotNull ClusterVariantLeg variant,
+            boolean ratioSupport) {
         return ModifiablePurpleSegment.create()
                 .setChromosome(cluster.chromosome())
                 .setRatioSupport(ratioSupport)
                 .setStart(variant.position())
+                .setMinStart(variant.position())
+                .setMaxStart(variant.position())
                 .setEnd(0)
                 .setSvCluster(true)
                 .setSupport(SegmentSupport.fromVariant(variant.type()));
     }
 
-    @NotNull
-    private static ModifiablePurpleSegment updatedStatusForCentromere(@NotNull ModifiablePurpleSegment segment) {
+    private static ModifiablePurpleSegment setEnd(@NotNull ModifiablePurpleSegment segment, long end) {
+        segment.setEnd(end);
+
         final GenomeRegion centromere = CENTROMERES.get(segment.chromosome());
         if (centromere != null && centromere.overlaps(segment)) {
             segment.setSupport(SegmentSupport.CENTROMERE);

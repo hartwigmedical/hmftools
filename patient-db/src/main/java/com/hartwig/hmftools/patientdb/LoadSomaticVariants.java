@@ -32,7 +32,6 @@ import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.filter.SomaticFilter;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -83,11 +82,12 @@ public class LoadSomaticVariants {
         final CompoundEnrichment compoundEnrichment = new CompoundEnrichment();
         if (cmd.hasOption(HOTSPOT)) {
             LOGGER.info("Enabling near hotspot enrichment");
-            compoundEnrichment.add(new HotspotEnrichment(VariantHotspotFile.read(cmd.getOptionValue(HOTSPOT))));
+            compoundEnrichment.add(HotspotEnrichment.fromHotspotsFile(cmd.getOptionValue(HOTSPOT)));
         }
 
         LOGGER.info("Reading somatic VCF File");
-        final List<SomaticVariant> variants = new SomaticVariantFactory(filter, compoundEnrichment).fromVCFFile(sample, vcfFileLocation);
+        final List<SomaticVariant> variants =
+                SomaticVariantFactory.filteredInstanceWithEnrichment(filter, compoundEnrichment).fromVCFFile(sample, vcfFileLocation);
 
         LOGGER.info("Reading high confidence bed file");
         final Multimap<String, GenomeRegion> highConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);

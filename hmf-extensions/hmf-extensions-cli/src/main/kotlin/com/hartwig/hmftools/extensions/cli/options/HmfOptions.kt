@@ -23,7 +23,7 @@ class HmfOptions {
                 .mapNotNull { option -> option.validators.mapNotNull { it.validate(option, cmd) }.firstOrNull() }
                 .map { "   $it" }
         if (errorMessages.isNotEmpty()) {
-            throw IOException("Could not validate command line options:\n${errorMessages.joinToString("\n")}")
+            throw IOException("Could not validate command line options:\n${errorMessages.joinToString("\n")}\n")
         }
     }
 }

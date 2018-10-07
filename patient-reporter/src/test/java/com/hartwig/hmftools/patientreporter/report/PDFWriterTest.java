@@ -16,6 +16,7 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -27,10 +28,13 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.variant.Clonality;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariant;
@@ -42,9 +46,9 @@ import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableNotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.PatientReporterTestUtil;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
+import com.hartwig.hmftools.patientreporter.algo.DriverProbabilityModel;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
 import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
@@ -73,7 +77,8 @@ public class PDFWriterTest {
     public void canGenerateSequenceReport() throws DRException, IOException {
         final double pathologyTumorPercentage = 0.6;
         final double impliedTumorPurity = 0.58;
-        final int mutationalLoad = 361;
+        final int tumorMutationalLoad = 361;
+        final double tumorMutationalBurden = 10.1;
         final double microsatelliteIndelsPerMb = 2.1;
 
         final SequencedReportData reporterData = testSequencedReportData();
@@ -84,15 +89,18 @@ public class PDFWriterTest {
         final List<GeneCopyNumber> copyNumbers = createTestCopyNumbers();
         final List<GeneFusion> fusions = createTestFusions();
         final List<GeneDisruption> disruptions = createTestDisruptions();
+        final List<DriverCatalog> driverCatalogList = DriverProbabilityModel.createDriverCatalogForSomaticVariants(variants);
 
         final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
 
         final AnalysedPatientReport patientReport = ImmutableAnalysedPatientReport.of(sampleReport,
                 FittedPurityStatus.NORMAL,
                 impliedTumorPurity,
+                new DriverProbabilityModel(driverCatalogList),
                 variants,
-                mutationalLoad,
                 microsatelliteIndelsPerMb,
+                tumorMutationalLoad,
+                tumorMutationalBurden,
                 copyNumbers,
                 fusions,
                 disruptions,
@@ -123,13 +131,12 @@ public class PDFWriterTest {
     @NotNull
     private static List<EnrichedSomaticVariant> createTestVariants(@NotNull final PurityAdjuster purityAdjuster) {
         final EnrichedSomaticVariant variant1 = createSomaticVariantBuilder().gene("BRAF")
-                .chromosome("7")
-                .position(140453136)
-                .ref("A")
-                .alt("T")
-                .hotspot(Hotspot.HOTSPOT)
                 .canonicalHgvsCodingImpact("c.1799T>A")
                 .canonicalHgvsProteinImpact("p.Val600Glu")
+                .canonicalCodingEffect(CodingEffect.MISSENSE)
+                .type(VariantType.SNP)
+                .hotspot(Hotspot.HOTSPOT)
+                .clonality(Clonality.CLONAL)
                 .alleleReadCount(18)
                 .totalReadCount(99)
                 .adjustedCopyNumber(4)
@@ -137,32 +144,30 @@ public class PDFWriterTest {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("7", 4, 0.18 / 0.99))
                 .build();
 
-        final EnrichedSomaticVariant variant2 = createSomaticVariantBuilder().gene("MYC")
-                .chromosome("8")
-                .position(128748854)
-                .ref("GG")
-                .alt("CA")
-                .canonicalHgvsCodingImpact("c.15_16delinsCA")
-                .canonicalHgvsProteinImpact("p.Val6Ile")
-                .alleleReadCount(20)
-                .totalReadCount(88)
-                .adjustedCopyNumber(2)
-                .minorAllelePloidy(1)
-                .adjustedVAF(purityAdjuster.purityAdjustedVAF("8", 2, 0.2 / 0.88))
-                .build();
-
-        final EnrichedSomaticVariant variant3 = createSomaticVariantBuilder().gene("TP53")
-                .chromosome("17")
-                .position(7577111)
-                .ref("GCACAAA")
-                .alt("G")
+        final EnrichedSomaticVariant variant2 = createSomaticVariantBuilder().gene("TP53")
                 .canonicalHgvsCodingImpact("c.821_826delTTTGTG")
                 .canonicalHgvsProteinImpact("p.Val274_Cus275del")
+                .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
+                .type(VariantType.INDEL)
+                .clonality(Clonality.CLONAL)
                 .alleleReadCount(20)
                 .totalReadCount(87)
                 .adjustedCopyNumber(3)
                 .minorAllelePloidy(0)
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("17", 3, 0.20 / 0.87))
+                .build();
+
+        final EnrichedSomaticVariant variant3 = createSomaticVariantBuilder().gene("MYC")
+                .canonicalHgvsCodingImpact("c.15_16delinsCA")
+                .canonicalHgvsProteinImpact("p.Val6Ile")
+                .canonicalCodingEffect(CodingEffect.MISSENSE)
+                .type(VariantType.MNP)
+                .clonality(Clonality.CLONAL)
+                .alleleReadCount(20)
+                .totalReadCount(88)
+                .adjustedCopyNumber(2)
+                .minorAllelePloidy(1)
+                .adjustedVAF(purityAdjuster.purityAdjustedVAF("8", 2, 0.2 / 0.88))
                 .build();
 
         return Lists.newArrayList(variant1, variant2, variant3);
@@ -183,8 +188,7 @@ public class PDFWriterTest {
     private static List<GeneFusion> createTestFusions() {
         GeneFusion fusion1 =
                 createFusion("TMPRSS2", "ENST00000398585", 4, 5, "PNPLA7", "ENST00000406427", 2, 3, KnownFusionsModel.CIVIC, 0.4);
-        GeneFusion fusion2 =
-                createFusion("CLCN6", "ENST00000346436", 1, 2, "BRAF", "ENST00000288602", 8, 9, KnownFusionsModel.ONCOKB, 1D);
+        GeneFusion fusion2 = createFusion("CLCN6", "ENST00000346436", 1, 2, "BRAF", "ENST00000288602", 8, 9, KnownFusionsModel.ONCOKB, 1D);
 
         return Lists.newArrayList(fusion1, fusion2);
     }
@@ -279,7 +283,7 @@ public class PDFWriterTest {
                 reason,
                 NotAnalysableStudy.CPCT,
                 Optional.empty(),
-                PatientReporterTestUtil.SIGNATURE_PATH);
+                testBaseReportData().signaturePath());
 
         return PDFWriter.generateNotAnalysableReport(patientReport);
     }

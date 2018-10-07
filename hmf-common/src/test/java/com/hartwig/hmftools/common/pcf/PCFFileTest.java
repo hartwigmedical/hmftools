@@ -42,15 +42,32 @@ public class PCFFileTest {
 
     @Test
     public void testRatioFile() throws IOException {
-        final List<PCFPosition> results =
-                PCFFile.readPositions(WINDOW, PCFSource.TUMOR_BAF, BASE_PATH + File.separator + "ratio.pcf").get("1");
 
-        assertEquals(5, results.size());
-        assertPosition(835001, results.get(0));
-        assertPosition(2583001, results.get(1));
-        assertPosition(2584001, results.get(2));
-        assertPosition(2695001, results.get(3));
-        assertPosition(4363001, results.get(4));
+        final ListMultimap<String, PCFPosition> resultMap =
+                PCFFile.readPositions(WINDOW, PCFSource.TUMOR_BAF, BASE_PATH + File.separator + "ratio.pcf");
+
+        final List<PCFPosition> chromosomeOneResults = resultMap.get("1");
+
+        assertEquals(5, chromosomeOneResults.size());
+        assertPosition(835001, 1, 835001, chromosomeOneResults.get(0));
+        assertPosition(2583001, 2583001, 2583001, chromosomeOneResults.get(1));
+        assertPosition(2584001, 2584001, 2695001, chromosomeOneResults.get(2));
+        assertPosition(2695001, 2584001, 2695001, chromosomeOneResults.get(3));
+        assertPosition(4363001, 4363001, 4363001, chromosomeOneResults.get(4));
+
+        final List<PCFPosition> chromosomeThreeResults = resultMap.get("3");
+        assertEquals(5, chromosomeThreeResults.size());
+        assertPosition(90449001, 1, 90449001, chromosomeThreeResults.get(0));
+        assertPosition(90452001, 90452001, 90452001, chromosomeThreeResults.get(1));
+        assertPosition(90455001, 90455001, 90457001, chromosomeThreeResults.get(2));
+        assertPosition(90457001, 90455001, 90457001, chromosomeThreeResults.get(3));
+        assertPosition(90458001, 90458001, 90458001, chromosomeThreeResults.get(4));
+    }
+
+    private static void assertPosition(long position, long min, long max, @NotNull final PCFPosition victim) {
+        assertEquals(position, victim.position());
+        assertEquals(min, victim.minPosition());
+        assertEquals(max, victim.maxPosition());
     }
 
     private static void assertPosition(long position, @NotNull final PCFPosition victim) {

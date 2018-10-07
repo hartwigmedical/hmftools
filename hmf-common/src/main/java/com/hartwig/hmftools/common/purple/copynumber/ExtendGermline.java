@@ -112,7 +112,7 @@ class ExtendGermline {
 
     @NotNull
     private static CombinedRegion createChild(@NotNull final FittedRegion child, double newCopyNumber, double newBaf) {
-        final CombinedRegion result = new CombinedRegion(false, child);
+        final CombinedRegion result = new BafWeightedRegion(child);
         result.setTumorCopyNumber(method(child), newCopyNumber);
         result.setInferredTumorBAF(newBaf);
         return result;
@@ -205,7 +205,7 @@ class ExtendGermline {
                 .setBafCount(bafCount)
                 .setDepthWindowCount(depthWindowCount);
 
-        CombinedRegion result = new CombinedRegion(parent.isBafWeighted(), smallerRegion);
+        CombinedRegion result = new BafWeightedRegion(smallerRegion);
         result.setCopyNumberMethod(parent.copyNumberMethod());
 
         for (FittedRegion fittedRegion : parent.regions()) {

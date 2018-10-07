@@ -10,8 +10,7 @@ class AnonymizedPatients(password: String, private val hmfPatientIds: Collection
 
     operator fun get(patientId: PatientId): HmfPatientId? = hmfPatientIdPerHash[canonicalHash(patientId)]
 
-    private fun canonicalPatientId(patientId: PatientId) = samplesInput.patientsMap[patientId] ?: patientId
-    private fun canonicalHash(patientId: PatientId) = generator.hash(canonicalPatientId(patientId).id)
+    private fun canonicalHash(patientId: PatientId) = generator.hash(samplesInput.canonicalId(patientId).id)
 
     fun anonymizedPatientMap(): Map<HmfPatientId, HmfPatientId> {
         return samplesInput.patientsMap.mapNotNull { (patientId, canonicalId) ->

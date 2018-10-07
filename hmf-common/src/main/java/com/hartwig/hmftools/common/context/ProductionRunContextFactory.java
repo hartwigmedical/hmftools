@@ -4,9 +4,10 @@ import com.hartwig.hmftools.common.io.exception.MalformedFileException;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum ProductionRunContextFactory {
+public final class ProductionRunContextFactory {
 
-    ;
+    private ProductionRunContextFactory() {
+    }
 
     @NotNull
     public static RunContext fromRunDirectory(@NotNull final String runDirectory) throws MalformedFileException {

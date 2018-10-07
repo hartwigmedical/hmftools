@@ -7,25 +7,34 @@ import static com.hartwig.hmftools.patientreporter.copynumber.ReportableCopyNumb
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+
 import org.junit.Test;
 
 public class ReportableCopyNumbersTest {
 
     @Test
-    public void testLoss() {
-        assertTrue(includeInReport(0, ABS_LOSS));
-        assertTrue(includeInReport(1, ABS_LOSS));
-        assertTrue(includeInReport(2, ABS_LOSS));
-        assertTrue(includeInReport(2, ABS_LOSS - 0.1));
-        assertFalse(includeInReport(2, ABS_LOSS + 0.1));
+    public void reportLossesCorrectly() {
+        assertTrue(includeInReport(2, ABS_LOSS, DriverCategory.TSG));
+        assertTrue(includeInReport(2, ABS_LOSS, null));
+        assertFalse(includeInReport(2, ABS_LOSS, DriverCategory.ONCO));
+
+        assertTrue(includeInReport(1, ABS_LOSS, DriverCategory.TSG));
+        assertTrue(includeInReport(2, ABS_LOSS, DriverCategory.TSG));
+        assertTrue(includeInReport(2, ABS_LOSS - 0.1, DriverCategory.TSG));
+        assertFalse(includeInReport(2, ABS_LOSS + 0.1, DriverCategory.TSG));
     }
 
     @Test
-    public void testRelGain() {
-        assertTrue(includeInReport(0, REL_GAIN));
-        assertTrue(includeInReport(1, REL_GAIN));
-        assertTrue(includeInReport(1, REL_GAIN + 0.1));
-        assertFalse(includeInReport(1, REL_GAIN - 0.1));
-        assertFalse(includeInReport(1.01, REL_GAIN));
+    public void reportGainsCorrectly() {
+        assertTrue(includeInReport(0, REL_GAIN, DriverCategory.ONCO));
+
+        assertTrue(includeInReport(1, REL_GAIN, DriverCategory.ONCO));
+        assertTrue(includeInReport(1, REL_GAIN, null));
+        assertFalse(includeInReport(1, REL_GAIN, DriverCategory.TSG));
+
+        assertTrue(includeInReport(1, REL_GAIN + 0.1, DriverCategory.ONCO));
+        assertFalse(includeInReport(1, REL_GAIN - 0.1, DriverCategory.ONCO));
+        assertFalse(includeInReport(1.01, REL_GAIN, DriverCategory.ONCO));
     }
 }

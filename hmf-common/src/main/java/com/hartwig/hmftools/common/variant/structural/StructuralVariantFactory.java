@@ -286,7 +286,7 @@ public class StructuralVariantFactory {
                 .imprecise(imprecise(context))
                 .qualityScore(context.getPhredScaledQual());
     }
-static ImmutableStructuralVariantLegImpl.Builder setLegCommon(@NotNull ImmutableStructuralVariantLegImpl.Builder builder, @NotNull VariantContext context, boolean ignoreRefpair) {
+    private static ImmutableStructuralVariantLegImpl.Builder setLegCommon(@NotNull ImmutableStructuralVariantLegImpl.Builder builder, @NotNull VariantContext context, boolean ignoreRefpair) {
         builder.chromosome(context.getContig());
         builder.position(context.getStart());
 

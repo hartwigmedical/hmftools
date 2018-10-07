@@ -104,7 +104,7 @@ public class StructuralVariantImpliedTest {
                 .support(support)
                 .build();
 
-        final CombinedRegion result = new CombinedRegion(true, region);
+        final CombinedRegion result = new BafWeightedRegion(region);
         if (Doubles.positive(copyNumber)) {
             result.setCopyNumberMethod(CopyNumberMethod.BAF_WEIGHTED);
         }

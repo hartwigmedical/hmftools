@@ -1,27 +1,26 @@
 #!/usr/bin/env bash
 
+db_generate_script=$1
+
 OS=$(uname)
 if [ ${OS} = "Darwin" ];
 then
-    DARWIN_VERSION=$(uname -mRank | cut -d. -f1)
-    if [ ${DARWIN_VERSION} -gt 15 ];
-    then
-        SCRIPT_EPOCH=$(date -mRank $1 '+%s')
-    else
-        SCRIPT_EPOCH=$(stat -t '%s' $1 | cut -d\" -f4)
-    fi
+    script_epoch=$(stat -t '%s' ${db_generate_script} | cut -d\" -f4)
 else
-    #Assume Linux with GNU date syntax
-    SCRIPT_EPOCH=$(date -mRank $1 '+%s')
+    # HEKE: Assume Linux with GNU date syntax
+    script_epoch=$(date -r ${db_generate_script} '+%s')
 fi
 
-DB_EPOCH=$(mysql --defaults-file=~/mysql.login << HERE | sed -n '2p'
-SELECT UNIX_TIMESTAMP(MAX(create_time)) db_creation FROM INFORMATION_SCHEMA.TABLES WHERE table_schema = "hmfpatients";
+db_epoch=$(mysql --defaults-file=~/mysql.login << HERE | sed -n '2p'
+SELECT UNIX_TIMESTAMP(MAX(create_time)) db_creation FROM INFORMATION_SCHEMA.TABLES WHERE table_schema = "hmfpatients_test";
 HERE
 )
 
-if [ ${SCRIPT_EPOCH} -gt ${DB_EPOCH} ];
+echo "[INFO]: Script Epoch: ${script_epoch}"
+echo "[INFO]: DB Epoch: ${db_epoch}"
+
+if [ ${script_epoch} -gt ${db_epoch} ];
 then
-    echo REBUILDING DATABASE
-    mysql --defaults-file=~/mysql.login < $1
+    echo "[INFO] Rebuilding test database based on ${db_generate_script}"
+    mysql --defaults-file=~/mysql.login < ${db_generate_script}
 fi

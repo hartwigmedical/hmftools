@@ -8,7 +8,7 @@ class PatientAnonymizer(val password: String) {
 
     @VisibleForTesting
     fun anonymize(newPassword: String, samplesInput: SamplesInput, anonymizedPatients: Collection<HmfPatientId>): AnonymizedPatients {
-        val canonicalPatientStrings = samplesInput.canonicalPatients.map { it.patientId.id }
+        val canonicalPatientStrings = samplesInput.canonicalPatients.map { it.id }
         val anonymizedHashes = anonymizedPatients.map { it.hash }.toSet()
         val anonymizedNonCanonicalPatients = samplesInput.nonCanonicalPatients.filter { anonymizedHashes.contains(generator.hash(it.id)) }
         val patientIdStrings = (anonymizedNonCanonicalPatients.map { it.id } + canonicalPatientStrings).toSet()

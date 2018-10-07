@@ -10,9 +10,12 @@ import com.google.common.collect.Multimap;
 
 import org.jetbrains.annotations.NotNull;
 
-public class VariantHotspotFile {
+public final class VariantHotspotFile {
 
     private static final String DELIMITER = "\t";
+
+    private VariantHotspotFile() {
+    }
 
     @NotNull
     public static Multimap<String, VariantHotspot> read(@NotNull final String fileName) throws IOException {
@@ -29,7 +32,6 @@ public class VariantHotspotFile {
 
         return result;
     }
-
 
     @NotNull
     private static VariantHotspot fromString(@NotNull final String line) {

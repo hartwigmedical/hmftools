@@ -28,7 +28,7 @@ public abstract class NotAnalysableReporter {
         assert study != null;
 
         final PatientTumorLocation patientTumorLocation =
-                PatientReporterHelper.extractPatientTumorLocation(baseReportData().patientTumorLocations(), sample);
+                PatientReporterFileLoader.extractPatientTumorLocation(baseReportData().patientTumorLocations(), sample);
         final Lims lims = baseReportData().limsModel();
 
         final SampleReport sampleReport = ImmutableSampleReport.of(sample,

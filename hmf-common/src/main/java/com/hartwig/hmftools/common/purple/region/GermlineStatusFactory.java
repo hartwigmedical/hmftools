@@ -15,8 +15,8 @@ import org.jetbrains.annotations.NotNull;
 
 class GermlineStatusFactory {
     private static final double GERMLINE_HOM_DELETION_THRESHOLD = 0.1;
-    private static final double GERMLINE_HET_DELETION_THRESHOLD = 0.8;
-    private static final double GERMLINE_AMPLIFICATION_THRESHOLD = 1.2;
+    private static final double GERMLINE_HET_DELETION_THRESHOLD = 0.85;
+    private static final double GERMLINE_AMPLIFICATION_THRESHOLD = 1.15;
     private static final double GERMLINE_NOISE_THRESHOLD = 2.2;
 
     private final Gender gender;

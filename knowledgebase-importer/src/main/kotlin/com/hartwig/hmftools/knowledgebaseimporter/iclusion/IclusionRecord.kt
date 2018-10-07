@@ -39,9 +39,10 @@ data class IclusionRecord(private val metadata: RecordMetadata, override val eve
             val cancerTypes = studyDetails.indications.map { it.indication_name_full }
             val drugs = listOf(HmfDrug(study.acronym, "Trial"))
             val evidenceLevel = "IclusionTrial"
+            val significance = "Responsive"
 
-            return Actionability("iclusion", "EXT" + study.id + " (" + study.ccmo + ")", cancerTypes, drugs, evidenceLevel, "UNKNOWN",
-                    "Predictive", HmfLevel(evidenceLevel), HmfResponse.OTHER)
+            return Actionability("iclusion", "EXT" + study.id + " (" + study.ccmo + ")", cancerTypes, drugs, evidenceLevel, significance,
+                    "Predictive", HmfLevel(evidenceLevel), HmfResponse(significance))
         }
     }
 }

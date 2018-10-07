@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>patient-db</artifactId>
-    <version>3.11</version>
+    <version>3.12</version>
     <packaging>jar</packaging>
     <name>HMF Tools - Patient Database</name>
 
@@ -143,7 +143,7 @@
                 <configuration>
                     <jdbc>
                         <driver>com.mysql.cj.jdbc.Driver</driver>
-                        <url>jdbc:mysql://localhost:3306/hmfpatients?useSSL=false&amp;serverTimezone=CET</url>
+                        <url>jdbc:mysql://localhost:3306/hmfpatients_test?useSSL=false&amp;serverTimezone=CET</url>
                         <user>build</user>
                         <password>build</password>
                     </jdbc>
@@ -151,7 +151,7 @@
                         <database>
                             <name>org.jooq.util.mysql.MySQLDatabase</name>
                             <includes>.*</includes>
-                            <inputSchema>hmfpatients</inputSchema>
+                            <inputSchema>hmfpatients_test</inputSchema>
                         </database>
                         <target>
                             <packageName>com.hartwig.hmftools.patientdb.database.hmfpatients</packageName>

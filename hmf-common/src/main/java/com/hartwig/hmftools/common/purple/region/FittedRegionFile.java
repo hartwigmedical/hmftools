@@ -71,6 +71,8 @@ public enum FittedRegionFile {
                 .add("gcContent")
                 .add("svCluster")
                 .add("ploidyPenalty")
+                .add("minStart")
+                .add("maxStart")
                 .toString();
     }
 
@@ -101,6 +103,8 @@ public enum FittedRegionFile {
                 .add(FORMAT.format(copyNumber.gcContent()))
                 .add(String.valueOf(copyNumber.svCluster()))
                 .add(FORMAT.format(copyNumber.ploidyPenalty()))
+                .add(String.valueOf(copyNumber.minStart()))
+                .add(String.valueOf(copyNumber.maxStart()))
                 .toString();
     }
 
@@ -131,7 +135,13 @@ public enum FittedRegionFile {
                 .tumorBAF(Double.valueOf(values[21]))
                 .gcContent(Double.valueOf(values[22]))
                 .svCluster(Boolean.valueOf(values[23]))
-                .ploidyPenalty(Double.valueOf(values[24]));
+                .ploidyPenalty(Double.valueOf(values[24]))
+                .minStart(0)
+                .maxStart(0);
+
+        if (values.length > 25) {
+            builder.minStart(Long.valueOf(values[25])).maxStart(Long.valueOf(values[26]));
+        }
 
         return builder.build();
     }

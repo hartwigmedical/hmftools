@@ -33,7 +33,7 @@ public class SomaticVariantAnalyzerTest {
 
         final SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants, Sets.newHashSet(RIGHT_GENE));
 
-        assertEquals(2, analysis.mutationalLoad());
+        assertEquals(2, analysis.tumorMutationalLoad());
         assertEquals(1, analysis.variantsToReport().size());
     }
 

@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
+import com.hartwig.hmftools.patientreporter.algo.GeneModel;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -36,7 +37,7 @@ public abstract class PurpleAnalysis {
     public abstract List<GeneCopyNumber> panelGeneCopyNumbers();
 
     @NotNull
-    public List<GeneCopyNumber> reportableGeneCopyNumbers() {
-        return ReportableCopyNumbers.filterCopyNumbersForReport(fittedPurity().ploidy(), panelGeneCopyNumbers());
+    public List<GeneCopyNumber> reportableGeneCopyNumbers(@NotNull GeneModel panelGeneModel) {
+        return ReportableCopyNumbers.filterCopyNumbersForReport(fittedPurity().ploidy(), panelGeneCopyNumbers(), panelGeneModel);
     }
 }

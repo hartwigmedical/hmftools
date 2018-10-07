@@ -23,6 +23,7 @@ import java.util.*
 private val logger = LogManager.getLogger("HmfIdApplication")
 
 fun main(args: Array<String>) {
+    logger.info("Running id-generator $Version")
     val cmd = createOptions().createRunModeCommandLine("hmf-id", args)
     when {
         cmd.hasOption(CREATE_SINGLE_HASH_MODE) -> {
@@ -56,15 +57,15 @@ private fun createOptions(): Options {
     return options
 }
 
-private fun singleHashModeOptions(): Options {
+private fun singleHashModeOptions(): HmfOptions {
     val hmfOptions = HmfOptions()
     hmfOptions.add(RequiredFlagOption(CREATE_SINGLE_HASH_MODE, "create single hash"))
     hmfOptions.add(RequiredInputOption(PASSWORD, "password"))
     hmfOptions.add(RequiredInputOption(SAMPLE_ID, "sample id to convert to hash"))
-    return hmfOptions.options
+    return hmfOptions
 }
 
-private fun createIdsModeOptions(): Options {
+private fun createIdsModeOptions(): HmfOptions {
     val hmfOptions = HmfOptions()
     hmfOptions.add(RequiredFlagOption(CREATE_IDS_MODE, "create hmf ids"))
     hmfOptions.add(RequiredInputOption(PASSWORD, "password"))
@@ -72,10 +73,10 @@ private fun createIdsModeOptions(): Options {
     hmfOptions.add(RequiredInputFileOption(PATIENT_MAPPING_FILE, "csv containing the patient mapping, a patient pair per line"))
     hmfOptions.add(RequiredOutputOption(OUTPUT_FILE, "output file location"))
     hmfOptions.add(RequiredOutputOption(SAMPLE_MAPPING_OUTPUT_FILE, "sample mapping output file location"))
-    return hmfOptions.options
+    return hmfOptions
 }
 
-private fun updateIdsModeOptions(): Options {
+private fun updateIdsModeOptions(): HmfOptions {
     val hmfOptions = HmfOptions()
     hmfOptions.add(RequiredFlagOption(UPDATE_IDS_MODE, "update hmf ids"))
     hmfOptions.add(RequiredInputOption(PASSWORD, "password"))
@@ -84,20 +85,20 @@ private fun updateIdsModeOptions(): Options {
     hmfOptions.add(RequiredInputFileOption(PATIENT_MAPPING_FILE, "csv containing the patient mapping, a patient pair per line"))
     hmfOptions.add(RequiredOutputOption(OUTPUT_FILE, "output file location"))
     hmfOptions.add(RequiredOutputOption(SAMPLE_MAPPING_OUTPUT_FILE, "sample mapping output file location"))
-    return hmfOptions.options
+    return hmfOptions
 }
 
-private fun anonymizeIdsModeOptions(): Options {
+private fun anonymizeIdsModeOptions(): HmfOptions {
     val hmfOptions = HmfOptions()
     hmfOptions.add(RequiredFlagOption(ANONYMIZE_IDS_MODE, "anonymize ids"))
     hmfOptions.add(RequiredInputOption(PASSWORD, "password"))
     hmfOptions.add(RequiredInputFileOption(SAMPLE_IDS_FILE, "file containing a list of samples, one per line"))
     hmfOptions.add(RequiredInputFileOption(PATIENT_MAPPING_FILE, "csv containing the patient mapping, a patient pair per line"))
-    return hmfOptions.options
+    return hmfOptions
 }
 
 private fun runSingleHash(cmd: CommandLine) {
-    logger.info("Running id-generator (single hash)")
+    logger.info("Mode: single hash")
     val generator = IdGenerator(cmd.getOptionValue(PASSWORD))
     val sampleId = SampleId(cmd.getOptionValue(SAMPLE_ID))
     sampleId ?: return
@@ -106,19 +107,19 @@ private fun runSingleHash(cmd: CommandLine) {
 }
 
 private fun runCreateIds(cmd: CommandLine) {
-    logger.info("Running id-generator (create)")
+    logger.info("Mode: create ids")
     val password = cmd.getOptionValue(PASSWORD)
     val anonymizer = SampleAnonymizer(password)
     val samplesInput = readSamplesInput(cmd.getOptionValue(SAMPLE_IDS_FILE), cmd.getOptionValue(PATIENT_MAPPING_FILE))
     val anonymizedSamples = anonymizer.anonymize(password, samplesInput, emptyList())
-    val sampleMappingRecords = anonymizedSamples.anonymizedSamplesMap().map { HmfSampleMappingRecord(it.key, it.value) }
+    val sampleMappingRecords = anonymizedSamples.sampleMapping.map { HmfSampleMappingRecord(it.key, it.value) }
     CsvWriter.writeCSV(anonymizedSamples.map { HmfSampleIdRecord(it) }, cmd.getOptionValue(OUTPUT_FILE))
     CsvWriter.writeCSV(sampleMappingRecords, cmd.getOptionValue(SAMPLE_MAPPING_OUTPUT_FILE))
     logger.info("Created hmf sample ids for ${anonymizedSamples.size} samples")
 }
 
 private fun runUpdateIds(cmd: CommandLine) {
-    logger.info("Running id-generator (update)")
+    logger.info("Mode: update ids")
     val password = cmd.getOptionValue(PASSWORD)
     val newPassword = cmd.getOptionValue(NEW_PASSWORD, password)
     val anonymizer = SampleAnonymizer(password)
@@ -128,14 +129,14 @@ private fun runUpdateIds(cmd: CommandLine) {
     logger.info("Read ${currentIds.size} anonymized samples")
 
     val anonymizedSamples = anonymizer.anonymize(newPassword, samplesInput, currentIds)
-    val sampleMappingRecords = anonymizedSamples.anonymizedSamplesMap().map { HmfSampleMappingRecord(it.key, it.value) }
+    val sampleMappingRecords = anonymizedSamples.sampleMapping.map { HmfSampleMappingRecord(it.key, it.value) }
     CsvWriter.writeCSV(anonymizedSamples.map { HmfSampleIdRecord(it) }, cmd.getOptionValue(OUTPUT_FILE))
     CsvWriter.writeCSV(sampleMappingRecords, cmd.getOptionValue(SAMPLE_MAPPING_OUTPUT_FILE))
     logger.info("Created hmf sample ids for ${anonymizedSamples.size} samples")
 }
 
 private fun runAnonymizeIds(cmd: CommandLine) {
-    logger.info("Running id-generator (anonymize ids)")
+    logger.info("Mode: anonymize ids")
     val currentIds = CsvReader.readCSVByName<HmfSampleIdRecord>(IdGenerator::class.java.getResource(CURRENT_IDS_FILE).openStream())
             .map { it.toHmfSampleId() }
     val samplesInput = readSamplesInput(cmd.getOptionValue(SAMPLE_IDS_FILE), cmd.getOptionValue(PATIENT_MAPPING_FILE))

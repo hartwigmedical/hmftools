@@ -16,6 +16,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
+import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
@@ -25,7 +26,6 @@ import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantF
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
-import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
@@ -187,6 +187,7 @@ public class LoadStructuralVariants {
                             new FileInputStream(cmd.getOptionValue(PROMISCUOUS_FIVE_CSV)),
                             new FileInputStream(cmd.getOptionValue(PROMISCUOUS_THREE_CSV)));
 
+            // TODO (JOBA): Replace by all TSG genes from the driver catalog (+ potentially actionable genes?).
             final StructuralVariantAnalyzer analyzer =
                     new StructuralVariantAnalyzer(annotator, HmfGenePanelSupplier.hmfPanelGeneList(), knownFusionsModel);
             LOGGER.info("analyzing structural variants for impact via disruptions and fusions");

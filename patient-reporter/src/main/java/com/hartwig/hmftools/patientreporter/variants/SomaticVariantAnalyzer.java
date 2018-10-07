@@ -6,8 +6,10 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.patientreporter.algo.DriverProbabilityModel;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -23,10 +25,17 @@ public final class SomaticVariantAnalyzer {
     public static SomaticVariantAnalysis run(@NotNull final List<EnrichedSomaticVariant> variants, @NotNull Set<String> genePanel) {
         final List<EnrichedSomaticVariant> variantsToReport =
                 variants.stream().filter(variantFilter(genePanel)).collect(Collectors.toList());
-        final double indelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
-        final int mutationalLoad = MutationalLoadAnalyzer.determineMutationalLoad(variants);
+        final double microsatelliteIndelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
+        final int tumorMutationalLoad = MutationalLoadAnalyzer.determineTumorMutationalLoad(variants);
+        final double tumorMutationalBurden = TumorMutationalBurdenAnalyzer.determineTumorMutationalBurden(variants);
 
-        return ImmutableSomaticVariantAnalysis.of(variantsToReport, indelsPerMb, mutationalLoad);
+        final List<DriverCatalog> driverCatalog = DriverProbabilityModel.createDriverCatalogForSomaticVariants(variantsToReport);
+
+        return ImmutableSomaticVariantAnalysis.of(variantsToReport,
+                driverCatalog,
+                microsatelliteIndelsPerMb,
+                tumorMutationalLoad,
+                tumorMutationalBurden);
     }
 
     @NotNull

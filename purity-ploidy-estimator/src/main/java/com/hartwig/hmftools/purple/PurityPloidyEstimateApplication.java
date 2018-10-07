@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -65,6 +66,9 @@ import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.filter.SGTFilter;
+import com.hartwig.hmftools.common.variant.recovery.RecoveredVariant;
+import com.hartwig.hmftools.common.variant.recovery.RecoveredVariantFile;
+import com.hartwig.hmftools.common.variant.recovery.StructuralVariantRecovery;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.version.VersionInfo;
@@ -104,6 +108,7 @@ public class PurityPloidyEstimateApplication {
     private static final String SOMATIC_DEVIATION_WEIGHT = "somatic_deviation_weight";
     private static final String HIGHLY_DIPLOID_PERCENTAGE = "highly_diploid_percentage";
     private static final String VERSION = "version";
+    private static final String SV_RECOVERY_VCF = "sv_recovery_vcf";
 
     public static void main(final String... args)
             throws ParseException, IOException, SQLException, ExecutionException, InterruptedException {
@@ -212,6 +217,8 @@ public class PurityPloidyEstimateApplication {
             final BestFitFactory bestFitFactory = new BestFitFactory(somaticConfig.minTotalVariants(),
                     somaticConfig.minPeakVariants(),
                     highlyDiploidPercentage,
+                    somaticConfig.minSomaticPurity(),
+                    somaticConfig.minSomaticPuritySpread(),
                     bestFitPerPurity,
                     snps);
             final FittedPurity bestFit = bestFitFactory.bestFit();
@@ -228,6 +235,24 @@ public class PurityPloidyEstimateApplication {
                     fittedRegions,
                     structuralVariants);
             final List<PurpleCopyNumber> copyNumbers = copyNumberFactory.copyNumbers();
+
+            if (cmd.hasOption(SV_RECOVERY_VCF)) {
+                final StructuralVariantRecovery recovery = new StructuralVariantRecovery(cmd.getOptionValue(SV_RECOVERY_VCF));
+                final List<RecoveredVariant> recovered = recovery.doStuff(copyNumbers);
+                RecoveredVariantFile.write(config.outputDirectory() + "/" + tumorSample + ".recovery.tsv", recovered);
+
+                final Multimap<String, PurpleCopyNumber> copyNumberMap = ArrayListMultimap.create();
+                for (PurpleCopyNumber copyNumber : copyNumbers) {
+                    copyNumberMap.put(copyNumber.chromosome(), copyNumber);
+                }
+
+                //                final StructuralVariantLegPloidyFactory<PurpleCopyNumber> svPloidyFactory =
+                //                        new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
+                //                final List<StructuralVariantLegPloidy> svPloidies = svPloidyFactory.create(structuralVariants, copyNumberMap);
+                //                recovery.doStuff2(svPloidies);
+
+            }
+
             final List<PurpleCopyNumber> germlineDeletions = copyNumberFactory.germlineDeletions();
 
             final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, copyNumbers);
@@ -348,6 +373,8 @@ public class PurityPloidyEstimateApplication {
 
         options.addOption(SOMATIC_DEVIATION_WEIGHT, true, "SOMATIC_DEVIATION_WEIGHT");
         options.addOption(HIGHLY_DIPLOID_PERCENTAGE, true, "HIGHLY_DIPLOID_PERCENTAGE");
+
+        options.addOption(SV_RECOVERY_VCF, true, "SV_RECOVERY_VCF");
 
         return options;
     }

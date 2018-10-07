@@ -12,5 +12,4 @@ public class RExecutorTest {
     public void testR() throws IOException, InterruptedException {
         RExecutor.executeFromClasspath("r/dummyR.R", "0");
     }
-
 }

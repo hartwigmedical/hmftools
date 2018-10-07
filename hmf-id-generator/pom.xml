@@ -10,7 +10,7 @@
 
     <artifactId>hmf-id-generator</artifactId>
     <packaging>jar</packaging>
-    <version>1.3</version>
+    <version>1.4</version>
     <name>HMF Tools - Id Generator</name>
 
     <dependencies>
@@ -81,6 +81,8 @@
                                 <manifest>
                                     <addClasspath>true</addClasspath>
                                     <mainClass>com.hartwig.hmftools.idgenerator.HmfIdApplicationKt</mainClass>
+                                    <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                                    <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                                 </manifest>
                             </archive>
                             <descriptorRefs>

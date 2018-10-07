@@ -10,7 +10,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.transvar.*
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import org.apache.logging.log4j.LogManager
 
-class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFastaSequenceFile, private val geneModel: GeneModel) {
+class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFastaSequenceFile) {
     companion object {
         private val blacklistedDrugs = setOf("chemotherapy", "aspirin", "steroid")
         private val logger = LogManager.getLogger("RecordAnalyzer")
@@ -18,6 +18,7 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
 
     private val cdnaAnalyzer = TransvarCdnaAnalyzer(transvarLocation)
     private val proteinAnalyzer = TransvarProteinAnalyzer(transvarLocation)
+    private val geneModel = GeneModel()
 
     fun knownVariants(knowledgebases: List<KnowledgebaseSource<*, *>>): List<KnownVariantOutput> {
         val records = knowledgebases.flatMap { it.knownKbRecords }
@@ -105,31 +106,31 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
         val genericMutationRecords = records.collectEvents<GenericMutation, R>()
         val geneModel = createGeneModel(genericMutationRecords.map { it.second })
         return genericMutationRecords.flatMap { (record, mutation) ->
-            val gene = geneModel[mutation.gene]
-            mutationCodingRange(mutation, gene).map {
-                Pair(record, GenomicRangeEvent(mutation.gene, mutation.transcript.orEmpty(), gene!!.chromosome(), it.start.toString(),
-                        it.endInclusive.toString(), gene.transcriptID()))
+            val transcript = geneModel[mutation.gene]
+            mutationCodingRange(mutation, transcript).map {
+                Pair(record, GenomicRangeEvent(mutation.gene, mutation.transcript.orEmpty(), transcript!!.chromosome(), it.start.toString(),
+                        it.endInclusive.toString(), transcript.transcriptID()))
             }
         }
     }
 
-    private fun mutationCodingRange(mutation: GenericMutation, gene: HmfTranscriptRegion?): List<ClosedRange<Long>> {
-        if (gene == null) {
+    private fun mutationCodingRange(mutation: GenericMutation, transcript: HmfTranscriptRegion?): List<ClosedRange<Long>> {
+        if (transcript == null) {
             return emptyList()
         }
         return when (mutation) {
-            is GeneMutations -> listOf(gene.start()..gene.end())
-            is ExonMutations -> listOf(gene.exome()[mutation.exonNumber].start()..gene.exome()[mutation.exonNumber].end())
-            is CodonRangeMutations -> gene.codonRangeByIndex(mutation.startCodon, mutation.endCodon)?.map { it -> it.start()..it.end() }
+            is GeneMutations -> listOf(transcript.start()..transcript.end())
+            is ExonMutations -> listOf(transcript.exome()[mutation.exonNumber].start()..transcript.exome()[mutation.exonNumber].end())
+            is CodonRangeMutations -> transcript.codonRangeByIndex(mutation.startCodon, mutation.endCodon)?.map { it -> it.start()..it.end() }
                     ?: emptyList()
-            is CodonMutations -> gene.codonByIndex(mutation.codonNumber)?.map { it -> it.start()..it.end() } ?: emptyList()
-            is GenericRangeMutations -> gene.codingRangeByGenomicCoordinates(mutation.startPosition, mutation.endPosition)
+            is CodonMutations -> transcript.codonByIndex(mutation.codonNumber)?.map { it -> it.start()..it.end() } ?: emptyList()
+            is GenericRangeMutations -> transcript.codingRangeByGenomicCoordinates(mutation.startPosition, mutation.endPosition)
                     ?.map { it -> it.start()..it.end() } ?: emptyList()
         }
     }
 
     private fun createGeneModel(genericMutations: List<GenericMutation>): Map<String, HmfTranscriptRegion?> {
-        val hmfTranscriptRegions = genericMutations.map { geneModel.hmfTranscriptRegionForGenericMutation(it) }
-        return hmfTranscriptRegions.filterNotNull().associateBy({ it.gene() }, { it })
+        val hmfTranscriptRegions = genericMutations.mapNotNull { geneModel.hmfTranscriptRegionForGenericMutation(it) }
+        return hmfTranscriptRegions.associateBy({ it.gene() }, { it })
     }
 }

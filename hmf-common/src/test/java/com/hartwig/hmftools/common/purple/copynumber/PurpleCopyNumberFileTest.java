@@ -47,6 +47,11 @@ public class PurpleCopyNumberFileTest {
         PurpleCopyNumberFile.fromLines(Resources.readLines(Resources.getResource("purple/v2-14.purple.cnv"), Charset.defaultCharset()));
     }
 
+    @Test
+    public void testCompatibilityWith2_15() throws IOException {
+        PurpleCopyNumberFile.fromLines(Resources.readLines(Resources.getResource("purple/v2-15.purple.cnv"), Charset.defaultCharset()));
+    }
+
     @NotNull
     private static List<PurpleCopyNumber> create(int count) {
         Random random = new Random();
@@ -67,6 +72,9 @@ public class PurpleCopyNumberFileTest {
                 .segmentEndSupport(SegmentSupport.values()[random.nextInt(SegmentSupport.values().length)])
                 .method(CopyNumberMethod.values()[random.nextInt(CopyNumberMethod.values().length)])
                 .depthWindowCount(random.nextInt())
+                .gcContent(nextDouble(random))
+                .minStart(random.nextLong())
+                .maxStart(random.nextLong())
                 .build();
     }
 

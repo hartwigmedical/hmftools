@@ -12,7 +12,9 @@ import static org.junit.Assert.assertEquals;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
+import org.junit.Ignore;
 import org.junit.Test;
+
 
 public class GermlineStatusFactoryTest {
 
@@ -24,10 +26,10 @@ public class GermlineStatusFactoryTest {
         assertStatus("1", 0.00, UNKNOWN);
         assertStatus("1", 0.09, HOM_DELETION);
         assertStatus("1", 0.10, HET_DELETION);
-        assertStatus("1", 0.79, HET_DELETION);
-        assertStatus("1", 0.80, DIPLOID);
-        assertStatus("1", 1.20, DIPLOID);
-        assertStatus("1", 1.21, AMPLIFICATION);
+        assertStatus("1", 0.84, HET_DELETION);
+        assertStatus("1", 0.85, DIPLOID);
+        assertStatus("1", 1.15, DIPLOID);
+        assertStatus("1", 1.16, AMPLIFICATION);
         assertStatus("1", 2.20, AMPLIFICATION);
         assertStatus("1", 2.21, NOISE);
     }
@@ -42,19 +44,19 @@ public class GermlineStatusFactoryTest {
         assertStatus("X", 0.09, HET_DELETION, HOM_DELETION);
         assertStatus("X", 0.10, HET_DELETION, HET_DELETION);
 
-        assertStatus("X", 0.39, HET_DELETION, HET_DELETION);
-        assertStatus("X", 0.40, DIPLOID, HET_DELETION);
+        assertStatus("X", 0.424, HET_DELETION, HET_DELETION);
+        assertStatus("X", 0.425, DIPLOID, HET_DELETION);
 
-        assertStatus("X", 0.59, DIPLOID, HET_DELETION);
-        assertStatus("X", 0.60, DIPLOID, HET_DELETION);
-        assertStatus("X", 0.61, AMPLIFICATION, HET_DELETION);
+        assertStatus("X", 0.574, DIPLOID, HET_DELETION);
+        assertStatus("X", 0.575, DIPLOID, HET_DELETION);
+        assertStatus("X", 0.576, AMPLIFICATION, HET_DELETION);
 
-        assertStatus("X", 0.79, AMPLIFICATION, HET_DELETION);
-        assertStatus("X", 0.80, AMPLIFICATION, DIPLOID);
+        assertStatus("X", 0.84, AMPLIFICATION, HET_DELETION);
+        assertStatus("X", 0.85, AMPLIFICATION, DIPLOID);
 
         assertStatus("X", 1.10, AMPLIFICATION, DIPLOID);
-        assertStatus("X", 1.11, NOISE, DIPLOID);
-        assertStatus("X", 1.21, NOISE, AMPLIFICATION);
+        assertStatus("X", 1.15, NOISE, DIPLOID);
+        assertStatus("X", 1.16, NOISE, AMPLIFICATION);
         assertStatus("X", 2.20, NOISE, AMPLIFICATION);
         assertStatus("X", 2.21, NOISE, NOISE);
     }
@@ -64,10 +66,10 @@ public class GermlineStatusFactoryTest {
         assertStatus("Y", 0.00, UNKNOWN);
         assertStatus("Y", 0.049, HOM_DELETION);
         assertStatus("Y", 0.05, HET_DELETION);
-        assertStatus("Y", 0.39, HET_DELETION);
-        assertStatus("Y", 0.40, DIPLOID);
-        assertStatus("Y", 0.60, DIPLOID);
-        assertStatus("Y", 0.61, AMPLIFICATION);
+        assertStatus("Y", 0.424, HET_DELETION);
+        assertStatus("Y", 0.425, DIPLOID);
+        assertStatus("Y", 0.575, DIPLOID);
+        assertStatus("Y", 0.576, AMPLIFICATION);
         assertStatus("Y", 1.10, AMPLIFICATION);
         assertStatus("Y", 1.11, NOISE);
     }

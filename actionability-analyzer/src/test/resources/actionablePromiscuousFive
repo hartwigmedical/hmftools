@@ -1,4 +1,0 @@
-gene	source	reference	drug	drugType	cancerType	level	hmfLevel	evidenceType	significance	hmfResponse
-FGFR2	oncoKb	1	BGJ-398	Unknown	Bladder Cancer	3A	C	Predictive	Responsive	Responsive
-FGFR2	oncoKb	2	AZD4575	Unknown	Bladder Cancer	3A	C	Predictive	Responsive	Responsive
-

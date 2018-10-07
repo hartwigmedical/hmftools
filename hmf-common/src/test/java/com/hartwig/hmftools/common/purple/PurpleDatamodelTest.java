@@ -47,6 +47,9 @@ public class PurpleDatamodelTest {
                 .method(CopyNumberMethod.UNKNOWN)
                 .bafCount(0)
                 .depthWindowCount(1)
+                .gcContent(0)
+                .minStart(start)
+                .maxStart(start)
                 .averageObservedBAF(0.5)
                 .averageActualBAF(0.5);
     }
@@ -64,6 +67,8 @@ public class PurpleDatamodelTest {
                 .observedNormalRatio(1)
                 .ratioSupport(true)
                 .svCluster(false)
+                .minStart(0)
+                .maxStart(0)
                 .status(GermlineStatus.DIPLOID)
                 .gcContent(0.93)
                 .support(SegmentSupport.NONE);
@@ -86,6 +91,7 @@ public class PurpleDatamodelTest {
                 .majorAllelePloidyDeviation(0)
                 .refNormalisedCopyNumber(2)
                 .ratioSupport(true)
+
                 .support(SegmentSupport.NONE)
                 .ploidyPenalty(0);
     }

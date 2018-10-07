@@ -46,6 +46,8 @@ public class FittedRegionFileTest {
                 .svCluster(random.nextBoolean())
                 .gcContent(nextDouble(random))
                 .ploidyPenalty(nextDouble(random))
+                .minStart(random.nextLong())
+                .maxStart(random.nextLong())
                 .build();
     }
 

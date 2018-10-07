@@ -14,11 +14,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotationFactory;
+import com.hartwig.hmftools.common.variant.enrich.NoSomaticEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
+import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
 import com.hartwig.hmftools.common.variant.filter.NearIndelPonFilter;
-import com.hartwig.hmftools.common.variant.snpeff.CanonicalAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 
@@ -40,7 +41,10 @@ public class SomaticVariantFactory {
 
     @NotNull
     public static SomaticVariantFactory unfilteredInstance() {
-        return filteredInstance();
+        final VariantContextFilter filter = new AlwaysPassFilter();
+        final SomaticEnrichment enrichment = new NoSomaticEnrichment();
+
+        return new SomaticVariantFactory(filter, enrichment);
     }
 
     @NotNull
@@ -52,8 +56,15 @@ public class SomaticVariantFactory {
     public static SomaticVariantFactory filteredInstance(@NotNull VariantContextFilter... filters) {
         final CompoundFilter filter = new CompoundFilter(true);
         filter.addAll(Arrays.asList(filters));
-        return new SomaticVariantFactory(filter, new SomaticEnrichment() {
-        });
+        final SomaticEnrichment noEnrichment = new NoSomaticEnrichment();
+
+        return new SomaticVariantFactory(filter, noEnrichment);
+    }
+
+    @NotNull
+    public static SomaticVariantFactory filteredInstanceWithEnrichment(@NotNull VariantContextFilter filter,
+            @NotNull SomaticEnrichment somaticEnrichment) {
+        return new SomaticVariantFactory(filter, somaticEnrichment);
     }
 
     private static final HotspotFilter HOTSPOT_FILTER = new HotspotFilter();
@@ -73,7 +84,7 @@ public class SomaticVariantFactory {
     @NotNull
     private final CanonicalAnnotation canonicalAnnotationFactory;
 
-    public SomaticVariantFactory(@NotNull final VariantContextFilter filter, @NotNull final SomaticEnrichment enrichment) {
+    private SomaticVariantFactory(@NotNull final VariantContextFilter filter, @NotNull final SomaticEnrichment enrichment) {
         this.filter = new CompoundFilter(true);
         this.filter.add(new ChromosomeFilter());
         this.filter.add(filter);
@@ -84,7 +95,7 @@ public class SomaticVariantFactory {
 
     @NotNull
     public List<SomaticVariant> fromVCFFile(@NotNull final String sample, @NotNull final String vcfFile) throws IOException {
-        final List<SomaticVariant> variants = Lists.newArrayList();
+        final List<VariantContext> variants = Lists.newArrayList();
 
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
             final VCFHeader header = (VCFHeader) reader.getHeader();
@@ -96,20 +107,27 @@ public class SomaticVariantFactory {
                 throw new IllegalArgumentException("Allelic depths is a required format field in vcf file " + vcfFile);
             }
 
-            final List<VariantContext> allVariantContexts = reader.iterator().toList();
-            for (int i = 0; i < allVariantContexts.size(); i++) {
-                final VariantContext context = allVariantContexts.get(i);
-                final Optional<ImmutableSomaticVariantImpl.Builder> optionalBuilder = createVariantBuilder(sample, context);
-                if (optionalBuilder.isPresent()) {
-                    ImmutableSomaticVariantImpl.Builder builder = optionalBuilder.get();
+            variants.addAll(reader.iterator().toList());
+        }
 
-                    if (NearIndelPonFilter.isIndelNearPon(i, allVariantContexts)) {
-                        builder.filter(NEAR_INDEL_PON_FILTER);
-                    }
+        return process(sample, variants);
+    }
 
+    @VisibleForTesting
+    List<SomaticVariant> process(@NotNull final String sample, @NotNull final List<VariantContext> allVariantContexts) {
+        final List<SomaticVariant> variants = Lists.newArrayList();
+
+        for (int i = 0; i < allVariantContexts.size(); i++) {
+            final VariantContext context = allVariantContexts.get(i);
+            final Genotype genotype = context.getGenotype(sample);
+            if (genotype.hasAD() && genotype.getAD().length > 1) {
+                if (NearIndelPonFilter.isIndelNearPon(i, allVariantContexts)) {
+                    context.getCommonInfo().addFilter(NEAR_INDEL_PON_FILTER);
+                }
+                if (filter.test(context)) {
+                    final ImmutableSomaticVariantImpl.Builder builder = createVariantBuilder(sample, context, canonicalAnnotationFactory);
                     variants.add(enrichment.enrich(builder, context).build());
                 }
-
             }
         }
 
@@ -117,41 +135,45 @@ public class SomaticVariantFactory {
     }
 
     @NotNull
-    private Optional<ImmutableSomaticVariantImpl.Builder> createVariantBuilder(@NotNull final String sample,
-            @NotNull final VariantContext context) {
-        if (filter.test(context)) {
-            final Genotype genotype = context.getGenotype(sample);
-            if (genotype.hasAD() && genotype.getAD().length > 1) {
-                final AllelicDepth frequencyData = determineAlleleFrequencies(genotype);
-                if (frequencyData.totalReadCount() > 0) {
-                    ImmutableSomaticVariantImpl.Builder builder = ImmutableSomaticVariantImpl.builder()
-                            .chromosome(context.getContig())
-                            .position(context.getStart())
-                            .ref(context.getReference().getBaseString())
-                            .alt(alt(context))
-                            .alleleReadCount(frequencyData.alleleReadCount())
-                            .totalReadCount(frequencyData.totalReadCount())
-                            .hotspot(HOTSPOT_FILTER.test(context) ? Hotspot.HOTSPOT : Hotspot.NON_HOTSPOT)
-                            .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0));
-
-                    attachIDAndCosmicAnnotations(builder, context);
-                    attachSnpEffAnnotations(builder, context);
-                    attachFilter(builder, context);
-                    attachType(builder, context);
-                    return Optional.of(builder);
-                }
-            }
+    private static ImmutableSomaticVariantImpl.Builder createVariantBuilder(@NotNull final String sample,
+            @NotNull final VariantContext context, @NotNull CanonicalAnnotation canonicalAnnotationFactory) {
+        final AllelicDepth frequencyData = determineAlleleFrequencies(context.getGenotype(sample));
+        if (frequencyData.totalReadCount() == 0) {
+            throw new IllegalStateException("Variant with 0 total read count found: " + context);
         }
-        return Optional.empty();
+
+        ImmutableSomaticVariantImpl.Builder builder = ImmutableSomaticVariantImpl.builder()
+                .chromosome(context.getContig())
+                .position(context.getStart())
+                .ref(context.getReference().getBaseString())
+                .alt(alt(context))
+                .alleleReadCount(frequencyData.alleleReadCount())
+                .totalReadCount(frequencyData.totalReadCount())
+                .hotspot(HOTSPOT_FILTER.test(context) ? Hotspot.HOTSPOT : Hotspot.NON_HOTSPOT)
+                .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0));
+
+        attachIDAndCosmicAnnotations(builder, context, canonicalAnnotationFactory);
+        attachSnpEffAnnotations(builder, context, canonicalAnnotationFactory);
+        attachFilter(builder, context);
+        attachType(builder, context);
+
+        return builder;
     }
 
     @VisibleForTesting
     @NotNull
+    // TODO (KODU): This function is used by BachelorPP, should probably change.
     public Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context) {
-        return createVariantBuilder(sample, context).map(ImmutableSomaticVariantImpl.Builder::build);
+        final Genotype genotype = context.getGenotype(sample);
+        if (filter.test(context) && genotype.hasAD() && genotype.getAD().length > 1) {
+            return Optional.of(createVariantBuilder(sample, context, canonicalAnnotationFactory).build());
+        } else {
+            return Optional.empty();
+        }
     }
 
-    private void attachIDAndCosmicAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
+    private static void attachIDAndCosmicAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder,
+            @NotNull VariantContext context, @NotNull CanonicalAnnotation canonicalAnnotationFactory) {
         final String ID = context.getID();
         final List<String> cosmicIDs = Lists.newArrayList();
         if (!ID.isEmpty()) {
@@ -179,17 +201,18 @@ public class SomaticVariantFactory {
         }
     }
 
-    private void attachSnpEffAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
+    private static void attachSnpEffAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context,
+            @NotNull CanonicalAnnotation canonicalAnnotationFactory) {
         final List<SnpEffAnnotation> allAnnotations = SnpEffAnnotationFactory.fromContext(context);
         builder.snpEffAnnotations(allAnnotations);
 
         final List<SnpEffAnnotation> transcriptAnnotations =
                 allAnnotations.stream().filter(SnpEffAnnotation::isTranscriptFeature).collect(Collectors.toList());
         if (!transcriptAnnotations.isEmpty()) {
-            final SnpEffAnnotation snpEffAnnotation = transcriptAnnotations.get(0);
-            builder.worstEffect(snpEffAnnotation.consequenceString());
-            builder.worstCodingEffect(CodingEffect.effect(snpEffAnnotation.gene(), snpEffAnnotation.consequences()));
-            builder.worstEffectTranscript(snpEffAnnotation.transcript());
+            final SnpEffAnnotation worstAnnotation = transcriptAnnotations.get(0);
+            builder.worstEffect(worstAnnotation.consequenceString());
+            builder.worstCodingEffect(CodingEffect.effect(worstAnnotation.gene(), worstAnnotation.consequences()));
+            builder.worstEffectTranscript(worstAnnotation.transcript());
         } else {
             builder.worstEffect(Strings.EMPTY);
             builder.worstCodingEffect(CodingEffect.UNDEFINED);

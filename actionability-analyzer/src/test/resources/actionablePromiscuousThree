@@ -1,8 +1,0 @@
-gene	source	reference	drug	drugType	cancerType	level	hmfLevel	evidenceType	significance	hmfResponse
-RET	oncoKb	1	Vandetanib	Pan-TK inhibitor	Non-Small Cell Lung Cancer	3A	C	Predictive	Responsive	Responsive
-RET	oncoKb	2	Cabozantinib	Pan-kinase inhibitor	Non-Small Cell Lung Cancer	2A	B	Predictive	Responsive	Responsive
-ALK	cgi	3	Alectinib	ALK inhibitor	Non-small cell lung	FDA guidelines	A	Predictive	Responsive	Responsive
-ALK	cgi	4	Ceritinib	ALK inhibitor	Non-small cell lung	FDA guidelines	A	Predictive	Responsive	Responsive
-ALK	civic	5	Pemetrexed	Unknown	Non-small Cell Lung Carcinoma	B	B	Predictive	Sensitivity	Responsive
-ALK	civic	6	Crizotinib	ALK inhibitor;MET inhibitor	Non-small Cell Lung Carcinoma	A	A	Predictive	Sensitivity	Responsive
-ALK	civic	7	Crizotinib	ALK inhibitor;MET inhibitor	Non-small Cell Lung Carcinoma	B	B	Predictive	Sensitivity	Responsive

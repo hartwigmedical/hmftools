@@ -30,24 +30,6 @@ public class SnpEffAnnotationTest {
 
     @NotNull
     private static SnpEffAnnotation annotation(@NotNull VariantConsequence... consequences) {
-        return ImmutableSnpEffAnnotation.builder()
-                .allele(Strings.EMPTY)
-                .severity(Strings.EMPTY)
-                .gene(Strings.EMPTY)
-                .geneID(Strings.EMPTY)
-                .featureType(Strings.EMPTY)
-                .featureID(Strings.EMPTY)
-                .transcriptBioType(Strings.EMPTY)
-                .rank(Strings.EMPTY)
-                .hgvsCoding(Strings.EMPTY)
-                .hgvsProtein(Strings.EMPTY)
-                .cDNAPosAndLength(Strings.EMPTY)
-                .cdsPosAndLength(Strings.EMPTY)
-                .aaPosAndLength(Strings.EMPTY)
-                .distance(Strings.EMPTY)
-                .addition(Strings.EMPTY)
-                .effects(Strings.EMPTY)
-                .consequences(Lists.newArrayList(consequences))
-                .build();
+        return SnpEffAnnotationTestFactory.builder().consequences(Lists.newArrayList(consequences)).build();
     }
 }

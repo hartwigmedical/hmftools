@@ -48,6 +48,8 @@ class BaselineReader {
 
     private static final String FIELD_PRIMARY_TUMOR_LOCATION = "FLD.CARCINOMA.PTUMLOC";
     private static final String FIELD_PRIMARY_TUMOR_LOCATION_OTHER = "FLD.CARCINOMA.PTUMLOCS";
+    private static final String FIELD_PRIMARY_TUMOR_LOCATION_SELCRIT = "FLD.SELCRIT.SELPTM";
+
 
     private static final String FIELD_DEATH_DATE = "FLD.DEATH.DDEATHDTC";
 
@@ -112,16 +114,29 @@ class BaselineReader {
     }
 
     private void setPrimaryTumorData(@NotNull final ImmutableBaselineData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
+        String primaryTumorLocationSelcrit = null;
+        String primaryTumorLocationCarcinoma = null;
+
+        for (final EcrfForm selcritForm : studyEvent.nonEmptyFormsPerOID(FORM_SELCRIT)) {
+            for (final EcrfItemGroup selcritItemGroup : selcritForm.nonEmptyItemGroupsPerOID(ITEMGROUP_SELCRIT)) {
+                primaryTumorLocationSelcrit = selcritItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_SELCRIT);
+                builder.primaryTumorStatus(selcritForm.status());
+            }
+        }
+
         for (final EcrfForm carcinomaForm : studyEvent.nonEmptyFormsPerOID(FORM_CARCINOMA)) {
             for (final EcrfItemGroup carcinomaItemGroup : carcinomaForm.nonEmptyItemGroupsPerOID(ITEMGROUP_CARCINOMA)) {
-                String primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION);
-                if (primaryTumorLocation != null && primaryTumorLocation.trim().toLowerCase().startsWith("other")) {
-                    primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
+                primaryTumorLocationCarcinoma = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION);
+                if (primaryTumorLocationCarcinoma != null && primaryTumorLocationCarcinoma.trim().toLowerCase().startsWith("other")) {
+                    primaryTumorLocationCarcinoma = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
                 }
-                builder.curatedTumorLocation(tumorLocationCurator.search(primaryTumorLocation));
                 builder.primaryTumorStatus(carcinomaForm.status());
             }
         }
+
+        final String primaryTumorLocation = primaryTumorLocationSelcrit != null ? primaryTumorLocationSelcrit : primaryTumorLocationCarcinoma;
+        builder.curatedTumorLocation(tumorLocationCurator.search(primaryTumorLocation));
+
     }
 
     private static void setRegistrationAndBirthData(@NotNull final ImmutableBaselineData.Builder builder,

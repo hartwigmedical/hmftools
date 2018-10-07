@@ -15,7 +15,6 @@ import com.hartwig.hmftools.knowledgebaseimporter.civic.Civic
 import com.hartwig.hmftools.knowledgebaseimporter.cosmic.Cosmic
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.DiseaseOntology
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.Doid
-import com.hartwig.hmftools.knowledgebaseimporter.gene.GeneModel
 import com.hartwig.hmftools.knowledgebaseimporter.iclusion.Iclusion
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.RecordAnalyzer
 import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.OncoKb
@@ -62,10 +61,6 @@ private fun createOptions(): HmfOptions {
     options.add(RequiredInputFileOption(CIVIC_EVIDENCE_LOCATION, "path to civic evidence file"))
     options.add(RequiredInputFileOption(COSMIC_FUSIONS_LOCATION, "path to cosmic fusions file"))
     options.add(RequiredInputFileOption(TREATMENT_TYPE_MAPPING_LOCATION, "path to treatment type mapping file"))
-    options.add(RequiredInputOption(ENSEMBL_DB, "ensembl db url"))
-    options.add(RequiredInputOption(HMFPATIENTS_DB, "hmfpatients db url"))
-    options.add(RequiredInputOption(DB_USER, "db user"))
-    options.add(RequiredInputOption(DB_PASSWORD, "db password"))
     options.add(RequiredInputOption(ICLUSION_ENDPOINT, "iclusion endpoint"))
     options.add(RequiredInputOption(ICLUSION_CLIENT_ID, "iclusion clientId"))
     options.add(RequiredInputOption(ICLUSION_CLIENT_SECRET, "iclusion client secret"))
@@ -77,11 +72,8 @@ private fun createOptions(): HmfOptions {
 
 private fun readKnowledgebases(cmd: CommandLine, diseaseOntology: DiseaseOntology): List<Knowledgebase> {
     val reference = IndexedFastaSequenceFile(File(cmd.getOptionValue(REFERENCE)))
-    val ensemblJdbcUrl = "jdbc:${cmd.getOptionValue(ENSEMBL_DB)}"
-    val hmfpatientsJdbcUrl = "jdbc:${cmd.getOptionValue(HMFPATIENTS_DB)}"
-    val ensemblGeneDAO = GeneModel(ensemblJdbcUrl, hmfpatientsJdbcUrl, cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASSWORD))
     val transvar = cmd.getOptionValue(TRANSVAR_LOCATION)
-    val recordAnalyzer = RecordAnalyzer(transvar, reference, ensemblGeneDAO)
+    val recordAnalyzer = RecordAnalyzer(transvar, reference)
     val treatmentTypeMap = CsvReader.readTSV<HmfDrug>(cmd.getOptionValue(TREATMENT_TYPE_MAPPING_LOCATION))
             .associateBy({ it.name.toLowerCase() }, { it.type })
 
@@ -92,10 +84,9 @@ private fun readKnowledgebases(cmd: CommandLine, diseaseOntology: DiseaseOntolog
     val civic = Civic(cmd.getOptionValue(CIVIC_VARIANTS_LOCATION), cmd.getOptionValue(CIVIC_EVIDENCE_LOCATION), diseaseOntology,
             recordAnalyzer, treatmentTypeMap)
     val cosmic = Cosmic(cmd.getOptionValue(COSMIC_FUSIONS_LOCATION))
-    val iclusion = Iclusion(readIclusionStudies(cmd), diseaseOntology, recordAnalyzer, ensemblGeneDAO)
+    val iclusion = Iclusion(readIclusionStudies(cmd), diseaseOntology, recordAnalyzer)
 
-    return listOf(civic)
-//    return listOf(oncoKb, cgi, civic, cosmic, iclusion)
+    return listOf(oncoKb, cgi, civic, cosmic, iclusion)
 }
 
 private fun readIclusionStudies(cmd: CommandLine): List<IclusionStudyDetails> {

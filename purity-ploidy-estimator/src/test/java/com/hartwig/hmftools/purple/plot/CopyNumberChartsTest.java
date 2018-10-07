@@ -62,6 +62,9 @@ public class CopyNumberChartsTest {
                 .averageObservedBAF(baf)
                 .method(CopyNumberMethod.UNKNOWN)
                 .depthWindowCount(1)
+                .gcContent(0)
+                .minStart(1)
+                .maxStart(1)
                 .segmentStartSupport(SegmentSupport.NONE)
                 .segmentEndSupport(SegmentSupport.NONE)
                 .averageActualBAF(baf).build();

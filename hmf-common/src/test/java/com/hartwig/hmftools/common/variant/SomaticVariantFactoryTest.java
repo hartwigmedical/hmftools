@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 
@@ -16,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 
+import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderVersion;
@@ -26,10 +28,10 @@ public class SomaticVariantFactoryTest {
     private static final String BASE_PATH = Resources.getResource("variant").getPath();
     private static final String SOMATIC_VARIANT_FILE = "somatics.vcf";
 
+    private static final double EPSILON = 1.0e-10;
+
     private SomaticVariantFactory victim;
     private VCFCodec codec;
-
-    private static final double EPSILON = 1.0e-10;
 
     @Before
     public void setup() {
@@ -53,12 +55,6 @@ public class SomaticVariantFactoryTest {
 
         final List<SomaticVariant> filtered = SomaticVariantFactory.passOnlyInstance().fromVCFFile("sample", file);
         assertEquals(2, filtered.size());
-    }
-
-    @Test
-    public void ignoreZeroReadCount() {
-        final String line = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:0,0:121";
-        assertFalse(victim.createVariant(SAMPLE, codec.decode(line)).isPresent());
     }
 
     @Test
@@ -162,6 +158,22 @@ public class SomaticVariantFactoryTest {
                 .createVariant(sample, VariantContextFromString.decode(sample, noCanonicalCosmicID)));
 
         assertEquals("COSM33765", noCanonicalCosmicIDVariant.canonicalCosmicID());
+    }
+
+    @Test
+    public void testFiltersAreReappliedAfterModifyingVariantContext() {
+        victim = SomaticVariantFactory.unfilteredInstance();
+        assertEquals(2, victim.process(SAMPLE, ponFilteredAndNearPonFiltered()).size());
+
+        victim = SomaticVariantFactory.passOnlyInstance();
+        assertEquals(0, victim.process(SAMPLE, ponFilteredAndNearPonFiltered()).size());
+    }
+
+    @NotNull
+    private List<VariantContext> ponFilteredAndNearPonFiltered() {
+        final VariantContext ponFiltered = codec.decode("15\t12345678\trs1;UCSC\tCAT\tA,G\t2\tGERMLINE_PON\tinfo;\tGT:AD:DP\t0/1:60,60:121");
+        final VariantContext nearPonFiltered = codec.decode("15\t12345677\trs1;UCSC\tCAT\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:60,60:121");
+        return  Lists.newArrayList(nearPonFiltered, ponFiltered);
     }
 
     @NotNull

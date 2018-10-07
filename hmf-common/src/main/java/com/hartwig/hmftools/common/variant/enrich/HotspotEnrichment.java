@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.variant.enrich;
 
+import java.io.IOException;
 import java.util.Collection;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -7,6 +8,7 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -19,7 +21,12 @@ public class HotspotEnrichment implements SomaticEnrichment {
 
     private final Multimap<String, VariantHotspot> hotspots;
 
-    public HotspotEnrichment(@NotNull final Multimap<String, VariantHotspot> hotspots) {
+    @NotNull
+    public static HotspotEnrichment fromHotspotsFile(@NotNull String hotspotsFile) throws IOException {
+        return new HotspotEnrichment(VariantHotspotFile.read(hotspotsFile));
+    }
+
+    private HotspotEnrichment(@NotNull final Multimap<String, VariantHotspot> hotspots) {
         this.hotspots = hotspots;
     }
 

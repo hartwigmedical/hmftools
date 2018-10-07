@@ -75,5 +75,4 @@ public enum VariantConsequence {
     public String readableSequenceOntologyTerm() {
         return parentSequenceOntologyTerm.replace("_", " ");
     }
-
 }

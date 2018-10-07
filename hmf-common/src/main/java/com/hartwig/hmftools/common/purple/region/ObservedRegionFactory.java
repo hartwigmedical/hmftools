@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.purple.region;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
@@ -16,6 +17,7 @@ import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
@@ -40,7 +42,7 @@ public class ObservedRegionFactory {
     @NotNull
     public List<ObservedRegion> combine(@NotNull final List<PurpleSegment> regions, @NotNull final Multimap<String, AmberBAF> bafs,
             @NotNull final Multimap<String, CobaltRatio> ratios, @NotNull final Multimap<String, GCProfile> gcProfiles) {
-        final List<ObservedRegion> result = Lists.newArrayList();
+        final List<ModifiableEnrichedRegion> result = Lists.newArrayList();
 
         final GenomePositionSelector<CobaltRatio> cobaltSelector = GenomePositionSelectorFactory.create(ratios);
         final GenomePositionSelector<AmberBAF> bafSelector = GenomePositionSelectorFactory.create(bafs);
@@ -57,24 +59,48 @@ public class ObservedRegionFactory {
 
             double tumorRatio = cobalt.tumorMeanRatio();
             double normalRatio = cobalt.referenceMeanRatio();
-            final EnrichedRegion copyNumber = ImmutableEnrichedRegion.builder()
+            final ModifiableEnrichedRegion observedRegion = ModifiableEnrichedRegion.create()
                     .from(region)
-                    .bafCount(baf.count())
-                    .observedBAF(baf.medianBaf())
-                    .observedTumorRatio(tumorRatio)
-                    .observedNormalRatio(normalRatio)
-                    .ratioSupport(region.ratioSupport())
-                    .support(region.support())
-                    .depthWindowCount(cobalt.tumorCount())
-                    .gcContent(gc.averageGCContent())
-                    .status(statusFactory.status(region, normalRatio, tumorRatio))
-                    .svCluster(region.svCluster())
-                    .build();
+                    .setBafCount(baf.count())
+                    .setObservedBAF(baf.medianBaf())
+                    .setObservedTumorRatio(tumorRatio)
+                    .setObservedNormalRatio(normalRatio)
+                    .setRatioSupport(region.ratioSupport())
+                    .setSupport(region.support())
+                    .setDepthWindowCount(cobalt.tumorCount())
+                    .setGcContent(gc.averageGCContent())
+                    .setStatus(statusFactory.status(region, normalRatio, tumorRatio))
+                    .setSvCluster(region.svCluster())
+                    .setMinStart(region.minStart())
+                    .setMaxStart(region.maxStart());
 
-            result.add(copyNumber);
+            result.add(observedRegion);
         }
 
-        return result;
+        return extendMinSupport(result);
+    }
+
+    @NotNull
+    static List<ObservedRegion> extendMinSupport(@NotNull final List<ModifiableEnrichedRegion> modifiables) {
+
+        for (int i = 0; i < modifiables.size(); i++) {
+            final ModifiableEnrichedRegion target = modifiables.get(i);
+            if (target.support() == SegmentSupport.NONE && target.status() == GermlineStatus.DIPLOID) {
+                for (int j = i - 1; j >= 0; j--) {
+                    final ModifiableEnrichedRegion prior = modifiables.get(j);
+                    if (prior.status() == GermlineStatus.DIPLOID) {
+                        break;
+                    }
+
+                    target.setMinStart(Math.min(target.minStart(), prior.start()));
+
+                    if (prior.support() != SegmentSupport.NONE) {
+                        break;
+                    }
+                }
+            }
+        }
+        return new ArrayList<>(modifiables);
     }
 
     private class BAFAccumulator implements Consumer<AmberBAF> {

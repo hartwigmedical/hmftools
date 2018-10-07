@@ -1,5 +1,5 @@
 package com.hartwig.hmftools.idgenerator.ids
 
-enum class IdType{
+enum class IdType {
     CPCT, DRUP
 }

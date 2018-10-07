@@ -8,9 +8,6 @@ import org.jetbrains.annotations.Nullable;
 
 public final class PatientReportFormat {
 
-    private static final double DEFAULT_MIN_PERCENTAGE_CUTOFF = 0.05;
-    private static final double DEFAULT_MAX_PERCENTAGE_CUTOFF = 0.95;
-
     private PatientReportFormat() {
     }
 
@@ -25,11 +22,11 @@ public final class PatientReportFormat {
     }
 
     @NotNull
-    public static String formatPercentWithDefaultCutoffs(final double percentage) {
-        if (percentage < DEFAULT_MIN_PERCENTAGE_CUTOFF) {
-            return "<" + formatPercent(DEFAULT_MIN_PERCENTAGE_CUTOFF);
-        } else if (percentage > DEFAULT_MAX_PERCENTAGE_CUTOFF) {
-            return ">" + formatPercent(DEFAULT_MAX_PERCENTAGE_CUTOFF);
+    public static String formatPercentWithCutoffs(double percentage, double minCutoff, double maxCutoff) {
+        if (percentage < minCutoff) {
+            return "<" + formatPercent(minCutoff);
+        } else if (percentage > maxCutoff) {
+            return ">" + formatPercent(maxCutoff);
         } else {
             return formatPercent(percentage);
         }
@@ -41,7 +38,7 @@ public final class PatientReportFormat {
     }
 
     @NotNull
-    public static String correctValueForFitStatus(@NotNull final FittedPurityStatus fitStatus, @NotNull final String value) {
+    public static String correctValueForFitStatus(@NotNull FittedPurityStatus fitStatus, @NotNull String value) {
         return fitStatus == FittedPurityStatus.NO_TUMOR ? "N/A" : value;
     }
 

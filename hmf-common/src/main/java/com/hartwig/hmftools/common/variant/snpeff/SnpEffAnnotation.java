@@ -39,6 +39,7 @@ public abstract class SnpEffAnnotation implements TranscriptAnnotation {
     @NotNull
     public abstract String severity();
 
+    @Override
     @NotNull
     public abstract String gene();
 
@@ -78,10 +79,10 @@ public abstract class SnpEffAnnotation implements TranscriptAnnotation {
     @NotNull
     abstract String addition();
 
-    // KODU:
-    // When we use the feature ID it is in practice always a transcript, but this mapping may not hold for every single snpeff annotation!
-    @NotNull
+    // KODU: When we use the feature ID it is in practice always a transcript,
+    // but this mapping may not hold for every single snpeff annotation!
     @Override
+    @NotNull
     public String transcript() {
         return featureID();
     }
