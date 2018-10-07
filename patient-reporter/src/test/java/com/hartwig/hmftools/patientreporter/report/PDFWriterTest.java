@@ -170,7 +170,6 @@ public class PDFWriterTest {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("8", 2, 0.2 / 0.88))
                 .build();
 
-
         return Lists.newArrayList(variant1, variant2, variant3);
     }
 
