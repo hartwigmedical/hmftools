@@ -646,6 +646,9 @@ public class ChainFinder
         {
             if (linkedPair.hasLinkClash(testLink))
                 return false;
+
+            // check that if this link has the same SVs as another link due to replicated SVs, that
+            // the breakends used in the link match each other
         }
 
         // then check that this linked pair doesn't close a chain of a smaller size than one involving all required SVs
