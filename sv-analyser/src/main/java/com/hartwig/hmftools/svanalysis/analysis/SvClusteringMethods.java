@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.round;
+
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_ENCLOSED;
@@ -42,7 +45,8 @@ public class SvClusteringMethods {
     private double mMedianChrArmRate;
     private int mNextClusterId;
 
-    private Map<String, List<SvBreakend>> mChrBreakendMap;
+    private Map<String, List<SvBreakend>> mChrBreakendMap; // every breakend on a chromosome, ordered by asending position
+    private Map<String, Integer> mChrCopyNumberMap; // copy number for whole chromosomes if clear
 
     private static final double REF_BASE_LENGTH = 10000000D;
 
@@ -56,9 +60,11 @@ public class SvClusteringMethods {
         mNextClusterId = 0;
 
         mChrBreakendMap = new HashMap();
+        mChrCopyNumberMap = new HashMap();
     }
 
     public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
+    public Map<String, Integer> getChrCopyNumberMap() { return mChrCopyNumberMap; }
 
     public void clusterByBaseDistance(List<SvClusterData> allVariants, List<SvCluster> clusters)
     {
@@ -335,6 +341,51 @@ public class SvClusteringMethods {
         }
     }
 
+    private static double MAX_COPY_NUMBER_INTEGER_DIFF = 0.2;
+
+    public void calcCopyNumberData(final String sampleId)
+    {
+        // look for duplication on each chromosome
+        for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
+        {
+            final String chromosome = entry.getKey();
+            final List<SvBreakend> breakendList = entry.getValue();
+
+            int minCopyNumber = -1;
+            boolean isValid = true;
+
+            for (final SvBreakend breakend : breakendList)
+            {
+                final SvClusterData var = breakend.getSV();
+
+                double copyNumber = var.copyNumber(breakend.usesStart());
+                int copyNumRounded = (int)round(copyNumber);
+                if(abs(copyNumber - copyNumRounded) > MAX_COPY_NUMBER_INTEGER_DIFF)
+                {
+                    isValid = false;
+                    break;
+                }
+
+                int chromatidCopyNumber = copyNumRounded / 2;
+
+                if(minCopyNumber < 0 || minCopyNumber > chromatidCopyNumber)
+                {
+                    minCopyNumber = chromatidCopyNumber;
+                }
+            }
+
+            if(minCopyNumber > 1 && isValid)
+            {
+                LOGGER.debug("sample({}) chromosome({}) has copyNumber({})", sampleId, chromosome, minCopyNumber);
+                mChrCopyNumberMap.put(chromosome, minCopyNumber);
+            }
+            else
+            {
+                mChrCopyNumberMap.put(chromosome, 1);
+            }
+        }
+    }
+
     public void annotateNearestSvData()
     {
         // mark each SV's nearest other SV and its relationship - neighbouring or overlapping
@@ -349,10 +400,12 @@ public class SvClusteringMethods {
                 final SvBreakend breakend = breakendList.get(i);
                 SvClusterData var = breakend.getSV();
 
+                /*
                 if(var.id().equals("52520"))
                 {
                     LOGGER.debug("s");
                 }
+                */
 
                 SvBreakend prevBreakend = (i > 0) ? breakendList.get(i - 1) : null;
                 SvBreakend nextBreakend = (i < breakendCount-1) ? breakendList.get(i + 1) : null;
@@ -464,7 +517,7 @@ public class SvClusteringMethods {
             final String arm = mUtils.getArmFromChrArm(chrArm);
 
             long chrArmLength = mUtils.getChromosomalArmLength(chromosome, arm);
-            double expectedSvCount = (int)Math.round((chrArmLength / REF_BASE_LENGTH) * mMedianChrArmRate);
+            double expectedSvCount = (int) round((chrArmLength / REF_BASE_LENGTH) * mMedianChrArmRate);
             LOGGER.debug("chrArm({}) expectedSvCount({}) vs actual({})", chrArm, expectedSvCount, mChrArmSvCount.get(chrArm));
 
             mChrArmSvExpected.put(chrArm, expectedSvCount);

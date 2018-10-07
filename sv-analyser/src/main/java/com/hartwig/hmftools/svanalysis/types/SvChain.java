@@ -246,19 +246,34 @@ public class SvChain {
         if(mLinkedPairs.size() != other.getLinkedPairs().size())
             return false;
 
-        for(final SvLinkedPair linkedPair : mLinkedPairs)
+        List<SvLinkedPair> otherLinkedPairs = Lists.newArrayList();
+        otherLinkedPairs.addAll(other.getLinkedPairs());
+
+        for(final SvLinkedPair pair : mLinkedPairs)
         {
-            if(!other.getLinkedPairs().contains(linkedPair))
+            boolean matched = false;
+            for(int i = 0; i < otherLinkedPairs.size(); ++i)
+            {
+                final SvLinkedPair otherPair = otherLinkedPairs.get(i);
+                if(pair.matches(otherPair, true))
+                {
+                    otherLinkedPairs.remove(i); // reduce each time to make subsequent matches faster
+                    matched = true;
+                    break;
+                }
+            }
+
+            if(!matched)
                 return false;
         }
 
         if(isClosedLoop() && other.isClosedLoop())
             return true;
 
-        if(getFirstSV() != other.getFirstSV() || firstLinkOpenOnStart() != other.firstLinkOpenOnStart())
+        if(!getFirstSV().equals(other.getFirstSV(), true) || firstLinkOpenOnStart() != other.firstLinkOpenOnStart())
             return false;
 
-        if(getLastSV() != other.getLastSV() || lastLinkOpenOnStart() != other.lastLinkOpenOnStart())
+        if(!getLastSV().equals(other.getLastSV(), true) || lastLinkOpenOnStart() != other.lastLinkOpenOnStart())
             return false;
 
         return true;
@@ -391,6 +406,17 @@ public class SvChain {
     public boolean hasLinkedPair(final SvLinkedPair pair)
     {
         return mLinkedPairs.contains(pair);
+    }
+
+    public boolean hasLinkClash(final SvLinkedPair pair)
+    {
+        for(SvLinkedPair linkedPair : mLinkedPairs)
+        {
+            if (linkedPair.hasLinkClash(pair))
+                return true;
+        }
+
+        return false;
     }
 
 }

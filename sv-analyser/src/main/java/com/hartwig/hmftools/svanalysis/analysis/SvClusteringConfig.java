@@ -14,6 +14,7 @@ public class SvClusteringConfig {
     final public String GeneDataFile;
     final public boolean UseCombinedOutputFile;
     final public boolean UseGridss;
+    final public int SampleCopyNumber;
 
     // config options
     private static final String CLUSTER_BASE_DISTANCE = "cluster_bases";
@@ -40,6 +41,7 @@ public class SvClusteringConfig {
         ExternalAnnotationsFile = cmd.getOptionValue(EXTERNAL_SV_DATA_FILE, "");
         GeneDataFile = cmd.getOptionValue(DRIVER_GENES_FILE, "");
         UseGridss = cmd.hasOption(USE_GRIDSS);
+        SampleCopyNumber = 2;
     }
 
     public static void addCmdLineArgs(Options options)

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
+import static java.lang.Math.round;
+
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SVI_START;
@@ -9,11 +11,15 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_LINK_ONLY;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
+import com.hartwig.hmftools.svanalysis.types.SvBreakend;
+import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
@@ -27,6 +33,8 @@ public class ClusterAnalyser {
     final SvUtilities mUtils;
 
     private ChainFinder mChainFinder;
+    private Map<String, Integer> mChrCopyNumberMap;
+    private Map<String, List<SvBreakend>> mChrBreakendMap;
 
     public static int MIN_TEMPLATED_INSERTION_LENGTH = 30;
     private static int MAX_TEMPLATED_INSERTION_LENGTH = 500;
@@ -42,7 +50,8 @@ public class ClusterAnalyser {
     {
         mConfig = config;
         mUtils = utils;
-        mChainFinder = new ChainFinder();
+        mChainFinder = new ChainFinder(mUtils);
+        mChrCopyNumberMap = null;
     }
 
     public void setClusterStats(SvCluster cluster)
@@ -61,10 +70,15 @@ public class ClusterAnalyser {
         }
     }
 
+    public void setChrCopyNumberData(Map<String, Integer> map) { mChrCopyNumberMap = map; }
+    public void setChrBreakendData(Map<String, List<SvBreakend>> map) { mChrBreakendMap = map; }
+
     public void findLinksAndChains(final String sampleId, List<SvCluster> clusters)
     {
         for(SvCluster cluster : clusters)
         {
+            applyCopyNumberReplication(sampleId, cluster);
+
             if(cluster.getCount() < 2)
                 continue;
 
@@ -80,7 +94,17 @@ public class ClusterAnalyser {
 
         for(SvCluster cluster : clusters)
         {
-            findIncompleteChains(sampleId, cluster);
+            if(cluster.hasSubClusters())
+            {
+                // repeat the search for inferred links now that additional SVs have been merged in
+                List<SvLinkedPair> newLinkedPairs = createInferredLinkedPairs(sampleId, cluster, true);
+                cluster.getInferredLinkedPairs().addAll(newLinkedPairs);
+
+                createCopyNumberSegments(sampleId, cluster);
+
+                findIncompleteChains(sampleId, cluster);
+            }
+
             resolveTransitiveSVs(sampleId, cluster);
             cacheFinalLinkedPairs(sampleId, cluster);
         }
@@ -89,7 +113,7 @@ public class ClusterAnalyser {
     private void findLinkedPairs(final String sampleId, SvCluster cluster)
     {
         List<SvLinkedPair> assemblyLinkedPairs = createAssemblyLinkedPairs(sampleId, cluster);
-        List<SvLinkedPair> inferredLinkedPairs = createInferredLinkedPairs(sampleId, cluster, assemblyLinkedPairs);
+        List<SvLinkedPair> inferredLinkedPairs = createInferredLinkedPairs(sampleId, cluster, false);
 
         findSpanningSVs(sampleId, cluster, inferredLinkedPairs);
 
@@ -134,14 +158,49 @@ public class ClusterAnalyser {
         }
     }
 
+    private void applyCopyNumberReplication(final String sampleId, SvCluster cluster)
+    {
+        List<SvClusterData> newSVs = Lists.newArrayList();
+
+        for(final SvClusterData var : cluster.getSVs())
+        {
+            int calcCopyNumber = var.impliedCopyNumber(true);
+
+            int chromosomeCopyNumber = mChrCopyNumberMap.get(var.chromosome(true));
+
+            // TEMP: until chromosomal copy-number calc working
+            if(mConfig.SampleCopyNumber != 1)
+            {
+                chromosomeCopyNumber = mConfig.SampleCopyNumber;
+            }
+
+            if(chromosomeCopyNumber >= 2)
+                calcCopyNumber /= chromosomeCopyNumber;
+
+            if(calcCopyNumber <= 1)
+                continue;
+
+            LOGGER.debug("sample({}) replicating SV({}) {} times", sampleId, var.posId(), calcCopyNumber-1);
+
+            for(int i = 1; i < calcCopyNumber; ++i)
+            {
+                SvClusterData newVar = new SvClusterData(var);
+                newSVs.add(newVar);
+            }
+        }
+
+        for(SvClusterData var : newSVs)
+        {
+            cluster.addVariant(var);
+        }
+    }
+
     private void mergeInconsistentClusters(List<SvCluster> clusters)
     {
         // it's possible that to resolve arms and more complex arrangements, that clusters not merged
         // by proximity of overlaps must be put together to solve inconsistencies (ie loose ends)
 
         // merge any cluster which is itself not consistent and has breakends on the same arm as another
-        int initClusterCount = clusters.size();
-
         int index1 = 0;
         while(index1 < clusters.size())
         {
@@ -153,7 +212,7 @@ public class ClusterAnalyser {
                 continue;
             }
 
-            if(!cluster1.isFullyChained() && cluster1.getCount() > 1 && !cluster1.hasSubClusters())
+            if(!cluster1.isFullyChained() && cluster1.getUniqueSvCount() > 1 && !cluster1.hasSubClusters())
             {
                 ++index1;
                 continue;
@@ -173,7 +232,7 @@ public class ClusterAnalyser {
                     continue;
                 }
 
-                if(!cluster2.isFullyChained() && cluster2.getCount() > 1 && !cluster1.hasSubClusters())
+                if(!cluster2.isFullyChained() && cluster2.getUniqueSvCount() > 1 && !cluster1.hasSubClusters())
                 {
                     ++index2;
                     continue;
@@ -274,6 +333,48 @@ public class ClusterAnalyser {
         mChainFinder.formClusterChains();
     }
 
+    private void createCopyNumberSegments(final String sampleId, final SvCluster cluster)
+    {
+        int cnId = 0;
+        final List<SvClusterData> clusterSVs = cluster.getSVs();
+
+        Map<String, List<SvCNData>> chrCNDataMap = new HashMap();
+
+        for(Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
+        {
+            final String chromosome = entry.getKey();
+
+            List<SvBreakend> breakendList = entry.getValue();
+
+            List<SvCNData> copyNumberData = Lists.newArrayList();
+
+            for (int i = 0; i < breakendList.size(); ++i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+                final SvClusterData var = breakend.getSV();
+
+                double copyNumber = var.copyNumber(breakend.usesStart());
+                double copyNumberChange = var.copyNumberChange(breakend.usesStart());
+                double prevCopyNumber = copyNumber - copyNumberChange;
+
+                int adjCopyNumber = (int)round(copyNumber/2 - 1);
+
+                LOGGER.debug(String.format("sample(%s) chr(%s) seg %d: copyNumber(%d %.2f prev=%.2f chg=%.2f)",
+                        sampleId, chromosome, i, adjCopyNumber, copyNumber, prevCopyNumber, copyNumberChange));
+
+                if(clusterSVs.contains(var))
+                {
+                    SvCNData cnData = new SvCNData(cnId++, chromosome, breakend.position(), 0, "", "", 0, 0, 0, adjCopyNumber, "");
+                    copyNumberData.add(cnData);
+                }
+            }
+
+            chrCNDataMap.put(chromosome, copyNumberData);
+        }
+
+        cluster.setChrCNData(chrCNDataMap);
+    }
+
     public List<SvLinkedPair> createAssemblyLinkedPairs(final String sampleId, SvCluster cluster)
     {
         List<SvLinkedPair> linkedPairs = Lists.newArrayList();
@@ -323,6 +424,10 @@ public class ClusterAnalyser {
                         boolean v2Linked = var2.isAssemblyMatched(v2Start);
                         boolean allowDuplicateLink = false;
 
+                        /*
+
+                        handled by replicated SVs instead..
+
                         if(v1Linked || v2Linked)
                         {
                             // check for special case of A-B and A-C where B and C are the same variant (typically a fold-back replicated inversion)
@@ -346,6 +451,7 @@ public class ClusterAnalyser {
                                 }
                             }
                         }
+                        */
 
                         if((v1Linked || v2Linked) && !allowDuplicateLink)
                         {
@@ -385,7 +491,7 @@ public class ClusterAnalyser {
         return linkedPairs;
     }
 
-    public List<SvLinkedPair> createInferredLinkedPairs(final String sampleId, SvCluster cluster, final List<SvLinkedPair> assemblyLinkedPairs)
+    public List<SvLinkedPair> createInferredLinkedPairs(final String sampleId, SvCluster cluster, boolean allowSingleBEs)
     {
         List<SvLinkedPair> linkedPairs = Lists.newArrayList();
 
@@ -400,7 +506,7 @@ public class ClusterAnalyser {
         {
             SvClusterData var1 = cluster.getSVs().get(i);
 
-            if(var1.type() == StructuralVariantType.INS || var1.isNullBreakend())
+            if(var1.type() == StructuralVariantType.INS || (var1.isNullBreakend() && !allowSingleBEs))
                 continue;
 
             if(var1.isDupBEStart() && var1.isDupBEEnd())
@@ -410,6 +516,9 @@ public class ClusterAnalyser {
             {
                 boolean v1Start = isStart(be1);
 
+                if(var1.isNullBreakend() && !v1Start)
+                    continue;
+
                 // if an assembly linked pair has already been created for this breakend, look no further
                 if(var1.isAssemblyMatched(v1Start))
                     continue;
@@ -418,7 +527,7 @@ public class ClusterAnalyser {
                 {
                     SvClusterData var2 = cluster.getSVs().get(j);
 
-                    if(var2.type() == StructuralVariantType.INS || var2.isNullBreakend())
+                    if(var2.type() == StructuralVariantType.INS || (var2.isNullBreakend() && !allowSingleBEs))
                         continue;
 
                     if(var2.isDupBEStart() && var2.isDupBEEnd())
@@ -427,6 +536,9 @@ public class ClusterAnalyser {
                     for(int be2 = SVI_START; be2 <= SVI_END; ++be2)
                     {
                         boolean v2Start = isStart(be2);
+
+                        if(var1.isNullBreakend() && !v1Start)
+                            continue;
 
                         if(var2.isAssemblyMatched(v2Start))
                             continue;

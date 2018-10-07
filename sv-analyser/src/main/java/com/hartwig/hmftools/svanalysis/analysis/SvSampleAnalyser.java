@@ -148,6 +148,7 @@ public class SvSampleAnalyser {
         mPc2.start();
         mClusteringMethods.setChromosomalArmStats(mAllVariants);
         mClusteringMethods.populateChromosomeBreakendMap(mAllVariants);
+        mClusteringMethods.calcCopyNumberData(mSampleId);
         mClusteringMethods.annotateNearestSvData();
         mPc2.stop();
 
@@ -164,6 +165,8 @@ public class SvSampleAnalyser {
             cluster.setUniqueBreakends();
         }
 
+        mAnalyser.setChrCopyNumberData(mClusteringMethods.getChrCopyNumberMap());
+        mAnalyser.setChrBreakendData(mClusteringMethods.getChrBreakendMap());
         mAnalyser.findLinksAndChains(mSampleId, mClusters);
 
         mPc4.stop();
@@ -264,7 +267,7 @@ public class SvSampleAnalyser {
                 writer.write(",ChrEnd,PosEnd,OrientEnd,ArmEnd,AdjAFEnd,AdjCNEnd,AdjCNChgEnd");
 
                 // SV info
-                writer.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,PONCount");
+                writer.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,PONCount,QualScore");
 
                 // location attributes
                 writer.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd");
@@ -298,9 +301,6 @@ public class SvSampleAnalyser {
 
             for(final SvCluster cluster : mClusters)
             {
-                int duplicateBECount = cluster.getDuplicateBECount();
-                int duplicateBESiteCount = cluster.getDuplicateBESiteCount();
-
                 for (final SvClusterData var : cluster.getSVs())
                 {
                     final StructuralVariantData dbData = var.getSvData();
@@ -320,10 +320,10 @@ public class SvSampleAnalyser {
                                     dbData.adjustedEndAF(), dbData.adjustedEndCopyNumber(), dbData.adjustedEndCopyNumberChange()));
 
                     writer.write(
-                            String.format(",%s,%d,%d,%s,%s,%d",
+                            String.format(",%s,%d,%d,%s,%s,%d,%.0f",
                                     dbData.insertSequence().isEmpty() && var.type() != StructuralVariantType.INS ? dbData.homology() : "",
                                     dbData.inexactHomologyOffsetStart(), dbData.inexactHomologyOffsetEnd(),
-                                    dbData.insertSequence(), dbData.imprecise(), var.getPonCount()));
+                                    dbData.insertSequence(), dbData.imprecise(), var.getPonCount(), dbData.qualityScore()));
 
                     writer.write(
                             String.format(",%s,%s,%s,%s,%s,%s,%s",

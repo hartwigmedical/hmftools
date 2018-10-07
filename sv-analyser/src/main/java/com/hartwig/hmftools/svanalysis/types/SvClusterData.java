@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.svanalysis.types;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
@@ -60,6 +61,8 @@ public class SvClusterData
     private String mEndAssemblyMatchType;
     private boolean mStartIsReplicatedLink;
     private boolean mEndIsReplicatedLink;
+    private boolean mIsReplicatedSv;
+    private final SvClusterData mReplicatedSv;
 
     public static String ASSEMBLY_TYPE_DSB = "dsb";
     public static String ASSEMBLY_TYPE_TI = "asm";
@@ -89,6 +92,8 @@ public class SvClusterData
         mNearestSvRelation = "";
 
         setAssemblyData(mSVData.startLinkedBy(), mSVData.endLinkedBy());
+        mIsReplicatedSv = false;
+        mReplicatedSv = null;
 
         mDupBEStart = false;
         mDupBEEnd = false;
@@ -127,6 +132,29 @@ public class SvClusterData
         return new SvClusterData(svData);
     }
 
+    public SvClusterData(final SvClusterData other)
+    {
+        mId = other.getSvData().id() + "r";
+        mSVData = other.getSvData();
+        mStartArm = other.getStartArm();
+        mEndArm = other.getEndArm();
+        mPonCount = other.getPonCount();
+        mPonRegionCount = other.getPonRegionCount();
+        mStartFragileSite = other.isStartFragileSite();
+        mEndFragileSite = other.isEndFragileSite();
+        mStartLineElement = other.isStartLineElement();
+        mEndLineElement = other.isEndLineElement();
+        mNearestSvDistance = other.getNearestSvDistance();
+        mNearestSvRelation = other.getNearestSvRelation();
+        setAssemblyData(mSVData.startLinkedBy(), mSVData.endLinkedBy());
+        mStartAssemblyMatchType = other.getAssemblyMatchType(true);
+        mEndAssemblyMatchType = other.getAssemblyMatchType(false);
+        mDupBEStart = other.isDupBEStart();
+        mDupBEEnd = other.isDupBEEnd();
+        mIsReplicatedSv = true;
+        mReplicatedSv = other;
+    }
+
     public final String id() { return mId; }
     public final StructuralVariantData getSvData() { return mSVData; }
 
@@ -155,13 +183,6 @@ public class SvClusterData
                 id(), useStart ? "start" :"end", chromosome(useStart), orientation(useStart), position(useStart));
     }
 
-    public final String toCsv()
-    {
-        return String.format("%s,%s,%d,%d,%s,%d,%d,%s)",
-                id(), chromosome(true), orientation(true), position(true),
-                chromosome(false), orientation(false), position(false), type());
-    }
-
     public final String arm(boolean isStart) { return isStart ? mStartArm : mEndArm; }
     public final String getStartArm() { return mStartArm; }
     public final String getEndArm() { return mEndArm; }
@@ -177,6 +198,24 @@ public class SvClusterData
             return 0;
 
         return abs(position(false) - position(true));
+    }
+
+    public boolean isReplicatedSv() { return mIsReplicatedSv; }
+    public final SvClusterData getReplicatedSv() { return mReplicatedSv; }
+    public boolean equals(final SvClusterData other, boolean allowReplicated)
+    {
+        if(this == other)
+            return true;
+
+        if(allowReplicated)
+            return (this == other.getReplicatedSv() || mReplicatedSv == other);
+
+        return false;
+    }
+
+    public int impliedCopyNumber(boolean useStart)
+    {
+        return (int)round(copyNumberChange(useStart));
     }
 
     public long getNearestSvDistance() { return mNearestSvDistance; }

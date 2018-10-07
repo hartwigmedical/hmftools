@@ -79,8 +79,8 @@ public class SvLinkedPair {
         boolean secondLinkBE = mLinkType == LINK_TYPE_SGL ? !mSecondLinkOnStart : mSecondLinkOnStart;
 
         return String.format("%s %s:%d:%s & %s %s:%d:%s",
-                first().id(), first().chromosome(mFirstLinkOnStart), first().position(firstLinkBE), firstLinkBE ? "start":"end",
-                second().id(), second().chromosome(mSecondLinkOnStart), second().position(secondLinkBE), secondLinkBE ? "start":"end");
+                first().id(), first().chromosome(firstLinkBE), first().position(firstLinkBE), firstLinkBE ? "start":"end",
+                second().id(), second().chromosome(secondLinkBE), second().position(secondLinkBE), secondLinkBE ? "start":"end");
 
     }
 
@@ -88,14 +88,37 @@ public class SvLinkedPair {
     {
         for(final SvLinkedPair pair : linkedPairs)
         {
-            if(var.equals(pair.first()) && useStart == pair.firstLinkOnStart())
-                return pair;
-
-            if(var.equals(pair.second()) && useStart == pair.secondLinkOnStart())
+            if(pair.hasVariantBE(var, useStart))
                 return pair;
         }
 
         return null;
+    }
+
+    public boolean matches(final SvLinkedPair other)
+    {
+        return this.matches(other, false);
+    }
+
+    public boolean matches(final SvLinkedPair other, boolean allowReplicated)
+    {
+        if(this == other)
+            return true;
+
+        // first and second can be in either order
+        if(mFirst.equals(other.first(), allowReplicated) && mFirstLinkOnStart == other.firstLinkOnStart()
+        && mSecond.equals(other.second(), allowReplicated) && mSecondLinkOnStart == other.secondLinkOnStart())
+        {
+            return true;
+        }
+
+        if(mFirst.equals(other.second(), allowReplicated) && mFirstLinkOnStart == other.secondLinkOnStart()
+        && mSecond.equals(other.first(), allowReplicated) && mSecondLinkOnStart == other.firstLinkOnStart())
+        {
+            return true;
+        }
+
+        return false;
     }
 
     public static String ASSEMBLY_MATCH_MATCHED = "MATCH";

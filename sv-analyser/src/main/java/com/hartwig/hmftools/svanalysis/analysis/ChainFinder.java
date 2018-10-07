@@ -12,10 +12,15 @@ import static com.hartwig.hmftools.svanalysis.types.SvClusterData.RELATION_TYPE_
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_SGL;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantLegImpl;
+import com.hartwig.hmftools.svanalysis.types.SvBreakend;
+import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
@@ -30,6 +35,7 @@ public class ChainFinder
 
     private static final Logger LOGGER = LogManager.getLogger(ChainFinder.class);
 
+    final SvUtilities mUtils;
     private String mSampleId;
     private SvCluster mCluster;
     private List<SvLinkedPair> mAssemblyLinkedPairs;
@@ -38,8 +44,9 @@ public class ChainFinder
     private boolean mHasExistingChains;
     private boolean mRequireFullChains;
 
-    public ChainFinder()
+    public ChainFinder(final SvUtilities utils)
     {
+        mUtils = utils;
         mRequireFullChains = false;
         mCompleteChains = Lists.newArrayList();
     }
@@ -139,13 +146,16 @@ public class ChainFinder
             if (!(pair.linkType() == LINK_TYPE_TI || pair.linkType() == LINK_TYPE_SGL))
                 continue;
 
-            // check for similarity of copy number change
-            double cnc1 = pair.first().copyNumberChange(pair.firstLinkOnStart());
-            double cnc2 = pair.second().copyNumberChange(pair.secondLinkOnStart());
-            double copyNumberChangeDiff = abs(cnc1 - cnc2);
+            if(mRequireFullChains)
+            {
+                // check for similarity of copy number change
+                double cnc1 = pair.first().copyNumberChange(pair.firstLinkOnStart());
+                double cnc2 = pair.second().copyNumberChange(pair.secondLinkOnStart());
+                double copyNumberChangeDiff = abs(cnc1 - cnc2);
 
-            if(copyNumberChangeDiff > MAX_COPY_NUMBER_DIFF)
-                continue;
+                if (copyNumberChangeDiff > MAX_COPY_NUMBER_DIFF)
+                    continue;
+            }
 
             inferredTIs.add(pair);
         }
@@ -435,17 +445,16 @@ public class ChainFinder
                     continue;
                 }
 
-                boolean isDuplicate = false;
-                for (final SvChain completeChain : mCompleteChains)
-                {
-                    if (completeChain.isIdentical(chain))
-                    {
-                        isDuplicate = true;
+                // check if validates the copy number profile
+                if(mHasExistingChains && !validatesCopyNumberData(chain))
+                    continue;
 
-                        LOGGER.debug("skipping duplicate complete chain:");
-                        chain.logLinks();
-                        break;
-                    }
+                boolean isDuplicate = isDuplicateChain(chain, mCompleteChains);
+
+                if(isDuplicate)
+                {
+                    LOGGER.debug("skipping duplicate complete chain:");
+                    chain.logLinks();
                 }
 
                 boolean hasRequiredLinks = chain.hasLinks(requiredLinks);
@@ -472,8 +481,8 @@ public class ChainFinder
                 break;
             }
 
-            LOGGER.debug("iters({} of {} current={}) existingLinks({}) completedChains({}) workingChains({}) - continuing search",
-                    i, testLinks.size(), currentIndex, existingLinks.size(), mCompleteChains.size(), workingChains.size());
+            //LOGGER.debug("iters({} of {} current={}) existingLinks({}) completedChains({}) workingChains({}) - continuing search",
+            //        i, testLinks.size(), currentIndex, existingLinks.size(), mCompleteChains.size(), workingChains.size());
 
             // continue the search, moving on to try adding the next test link
             boolean hasMoreTestLinks = findCompletedLinks(reqSvCount, requiredLinks, workingLinks, workingChains, testLinks, i + 1);
@@ -486,20 +495,34 @@ public class ChainFinder
                 {
                     double lengthPerc = chain.getSvCount() / (double) reqSvCount;
 
-                    if (lengthPerc >= MIN_CHAIN_PERCENT)
-                    {
-                        chain.setId(mCompleteChains.size());
-                        mCompleteChains.add(chain);
+                    if (lengthPerc < MIN_CHAIN_PERCENT)
+                        continue;
 
-                        LOGGER.debug("iters({} of {} current={}) existingLinks({}) completedChains({}) workingChains({}) - found incomplete chain({} svs={})",
-                                i, testLinks.size(), currentIndex, existingLinks.size(), mCompleteChains.size(), workingChains.size(), chain.getId(), chain
-                                        .getSvCount());
-                    }
+                    // check for duplicates
+                    if(isDuplicateChain(chain, mCompleteChains))
+                        continue;
+
+                    chain.setId(mCompleteChains.size());
+                    mCompleteChains.add(chain);
+
+                    LOGGER.debug("iters({} of {} current={}) existingLinks({}) completedChains({}) workingChains({}) - found incomplete chain({} svs={})",
+                            i, testLinks.size(), currentIndex, existingLinks.size(), mCompleteChains.size(), workingChains.size(), chain.getId(), chain.getSvCount());
                 }
             }
         }
 
         return linksAdded;
+    }
+
+    private boolean isDuplicateChain(final SvChain chain, final List<SvChain> chains)
+    {
+        for (final SvChain existingChain : chains)
+        {
+            if (chain.isIdentical(existingChain))
+                return true;
+        }
+
+        return false;
     }
 
     private boolean hasCompleteChains(int reqSvCount)
@@ -520,6 +543,9 @@ public class ChainFinder
         {
             if(chain.hasLinkedPair(linkedPair))
                 return;
+
+            if(chain.hasLinkClash(linkedPair))
+                continue;
 
             if(chain.canAddLinkedPairToStart(linkedPair))
             {
@@ -652,6 +678,153 @@ public class ChainFinder
         }
 
         return true;
+    }
+
+    private boolean validatesCopyNumberData(final SvChain chain)
+    {
+        final Map<String, List<SvCNData>> chrCNDataMap = mCluster.getChrCNData();
+        Map<String, List<Integer>> chrSegmentPathMap = new HashMap();
+
+        final List<SvLinkedPair> linkedPairs = chain.getLinkedPairs();
+        final List<SvClusterData> svList = chain.getSvList();
+
+        // walk through the chain looking at each segment formed either by an SV or the templated insertion from 2 SVs
+        // find the corresponding copy-number segment and register a path through (literally adding +1 to the path)
+        for(int i = 0; i < linkedPairs.size(); ++i)
+        {
+            final SvLinkedPair pair = linkedPairs.get(i);
+
+            String chromosome = "";
+            long startPosition = 0;
+            long endPosition = 0;
+
+            if(i == 0 || i == linkedPairs.size()-1)
+            {
+                // the first open link on the chain is taken as if coming from either the telomere or centromere
+                // for the last open SV also register its path as heading out to telomere/centromere
+                final SvClusterData var = (i == 0) ? svList.get(i) : svList.get(i+1);;
+
+                boolean useStart = (var == pair.first() && pair.firstUnlinkedOnStart()) || (var == pair.second() && pair.secondUnlinkedOnStart());
+
+                if(!var.isNullBreakend() || useStart)
+                {
+                    chromosome = var.chromosome(useStart);
+
+                    byte orientation = var.orientation(useStart);
+
+                    if (orientation == 1)
+                    {
+                        startPosition = 0;
+                        endPosition = var.position(useStart);
+                    }
+                    else
+                    {
+                        startPosition = var.position(useStart);
+                        endPosition = mUtils.getChromosomalArmLength(chromosome, var.arm(useStart));
+                    }
+
+                    registerCopyNumberSegment(chrCNDataMap, chrSegmentPathMap, chromosome, startPosition, endPosition);
+                }
+            }
+
+            // subsequent SVs path a back between the linked ends along the templated insertion length
+            long firstPos = pair.first().position(pair.firstLinkOnStart());
+            long secondPos = pair.second().position(pair.secondLinkOnStart());
+            startPosition = firstPos < secondPos ? firstPos : secondPos;
+            endPosition = secondPos > firstPos ? secondPos : firstPos;
+            chromosome = pair.first().chromosome(pair.firstLinkOnStart());
+
+            registerCopyNumberSegment(chrCNDataMap, chrSegmentPathMap, chromosome, startPosition, endPosition);
+        }
+
+        // compare the path segment counts with the actual copy number profile
+        boolean cnProfileMatched = true;
+        for(Map.Entry<String, List<Integer>> entry : chrSegmentPathMap.entrySet())
+        {
+            final String chromosome = entry.getKey();
+            final List<SvCNData> copyNumberData = chrCNDataMap.get(chromosome);
+            List<Integer> segmentPathList = chrSegmentPathMap.get(chromosome);
+
+            for(int i = 0; i < segmentPathList.size(); ++i)
+            {
+                final SvCNData cnData = copyNumberData.get(i);
+                int pathSegmentCount = segmentPathList.get(i);
+
+                LOGGER.debug(String.format("cluster(%d) chromosome(%s) seg %d: position(%d) copyNumber(%.1f) pathCount(%d)",
+                        mCluster.getId(), chromosome, i, cnData.startPos(), cnData.copyNumber(), pathSegmentCount));
+
+                if(cnData.copyNumber() != pathSegmentCount)
+                {
+                    cnProfileMatched = false;
+                }
+            }
+        }
+
+        // return cnProfileMatched;
+        return true;
+    }
+
+    private void registerCopyNumberSegment(
+            final Map<String, List<SvCNData>> chrCNDataMap, Map<String, List<Integer>> chrSegmentPathMap,
+            final String chromosome, long startPosition, long endPosition)
+    {
+        if(!chrCNDataMap.containsKey(chromosome))
+        {
+            LOGGER.error("sample({}) cluster({}) chromosome({}) not found with positions({} -> {})",
+                    mSampleId, mCluster.getId(), chromosome, startPosition, endPosition);
+            return;
+        }
+
+        if(startPosition >= endPosition)
+        {
+            LOGGER.error("sample({}) cluster({}) invalid segment chr({}) positions({} -> {})",
+                    mSampleId, mCluster.getId(), chromosome, startPosition, endPosition);
+            return;
+        }
+
+        final List<SvCNData> cnList = chrCNDataMap.get(chromosome);
+
+        List<Integer> segmentPathList = chrSegmentPathMap.get(chromosome);
+        if(segmentPathList == null)
+        {
+            segmentPathList = Lists.newArrayList();
+
+            for(int i = 0; i < cnList.size(); ++i)
+                segmentPathList.add(i, 0);
+
+            chrSegmentPathMap.put(chromosome, segmentPathList);
+        }
+
+        // coming in from the right, so need to mark off all segments going right from this point
+        boolean foundStart = false;
+
+        for(int i = 0; i < cnList.size(); ++i)
+        {
+            final SvCNData cnData = cnList.get(i);
+
+            if(!foundStart)
+            {
+                if(cnData.startPos() != startPosition)
+                    continue;
+
+                foundStart = true;
+            }
+            else
+            {
+                // check if have proceeded too far
+                if(cnData.startPos() > endPosition)
+                    break;
+            }
+
+            int segCount = segmentPathList.get(i);
+            segmentPathList.set(i, segCount+ 1);
+        }
+
+        if(!foundStart)
+        {
+            LOGGER.error("sample({}) cluster({}) segment not found for chr({}) positions({} -> {})",
+                    mSampleId, mCluster.getId(), chromosome, startPosition, endPosition);
+        }
     }
 
     // old methods which don't use assembly info

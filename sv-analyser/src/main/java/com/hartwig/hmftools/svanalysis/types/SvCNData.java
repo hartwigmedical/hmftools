@@ -40,6 +40,7 @@ public class SvCNData {
     public final String chromosome() { return mChromosome; }
     public long startPos() { return mStartPos; }
     public long endPos() { return mEndPos; }
+    public long position(boolean useStart) { return useStart ? mStartPos : mEndPos; }
     public double copyNumber() { return mCopyNumber; }
     public final String segStart() { return mSegStart; }
     public final String segEnd() { return mSegEnd; }

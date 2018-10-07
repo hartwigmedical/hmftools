@@ -17,6 +17,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
+import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
@@ -51,6 +52,7 @@ public class SvCluster
     private boolean mIsFullyChained;
 
     private List<SvCluster> mSubClusters;
+    private Map<String, List<SvCNData>> mChrCNDataMap;
 
     private static final Logger LOGGER = LogManager.getLogger(SvCluster.class);
 
@@ -77,6 +79,7 @@ public class SvCluster
         mIsFullyChained = false;
 
         mSubClusters = Lists.newArrayList();
+        mChrCNDataMap = null;
     }
 
     public int getId() { return mClusterId; }
@@ -141,14 +144,7 @@ public class SvCluster
 
     public final String linkingChromosome(boolean useStart)
     {
-        if(mSVs.size() == 1)
-        {
-            if(mSVs.get(0).isNullBreakend() && !useStart)
-                return "";
-
-            return mSVs.get(0).chromosome(useStart);
-        }
-        else if(isFullyChained())
+        if(isFullyChained())
         {
             return mChains.get(0).openChromosome(useStart);
         }
@@ -156,22 +152,25 @@ public class SvCluster
         {
             return mSubClusters.get(0).linkingChromosome(useStart);
         }
-        else
+
+        String chr = "";
+        for(final SvClusterData var: mSVs)
         {
-            return "";
+            if(var.isNullBreakend() && !useStart)
+                return "";
+
+            if(chr.isEmpty())
+                chr = var.chromosome(useStart);
+            else if(!chr.equals(var.chromosome(useStart)))
+                return "";
         }
+
+        return chr;
     }
 
     public final String linkingArm(boolean useStart)
     {
-        if(mSVs.size() == 1)
-        {
-            if(mSVs.get(0).isNullBreakend() && !useStart)
-                return "";
-
-            return mSVs.get(0).arm(useStart);
-        }
-        else if(isFullyChained())
+        if(isFullyChained())
         {
             return mChains.get(0).openArm(useStart);
         }
@@ -179,10 +178,36 @@ public class SvCluster
         {
             return mSubClusters.get(0).linkingArm(useStart);
         }
-        else
+        // take the arm from the SVs if they're all the same
+        String arm = "";
+        for(final SvClusterData var: mSVs)
         {
-            return "";
+            if(var.isNullBreakend() && !useStart)
+                return "";
+
+            if(arm.isEmpty())
+                arm = var.arm(useStart);
+            else if(!arm.equals(var.arm(useStart)))
+                return "";
         }
+
+        return arm;
+    }
+
+    public void setChrCNData(Map<String, List<SvCNData>> map) { mChrCNDataMap = map; }
+    public final Map<String, List<SvCNData>> getChrCNData() { return mChrCNDataMap; }
+
+    public int getUniqueSvCount()
+    {
+        int count = 0;
+
+        for(final SvClusterData var : mSVs)
+        {
+            if(!var.isReplicatedSv())
+                ++count;
+        }
+
+        return count;
     }
 
     public List<SvChain> getChains() { return mChains; }

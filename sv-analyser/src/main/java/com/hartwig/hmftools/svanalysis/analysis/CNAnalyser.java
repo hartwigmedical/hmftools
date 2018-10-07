@@ -134,7 +134,9 @@ public class CNAnalyser {
 
             LOGGER.info("loaded  samples({}) copy number data count({})", mSampleCNData.size(), cnCount);
 
-        } catch (IOException exception) {
+        }
+        catch (IOException exception)
+        {
             LOGGER.error("Failed to read copy number CSV file({})", filename);
         }
     }
@@ -143,7 +145,8 @@ public class CNAnalyser {
 
         if(!specificSample.isEmpty())
         {
-            if (!mSampleCNData.containsKey(specificSample)) {
+            if (!mSampleCNData.containsKey(specificSample))
+            {
                 LOGGER.warn("sample({}) not found", specificSample);
                 return;
             }
@@ -156,10 +159,11 @@ public class CNAnalyser {
             if(mAnalyseFlips)
                 analyseFlips(specificSample, sampleData, specificChromosome);
         }
-        else {
+        else
+        {
             int sampleCount = 0;
-            for (Map.Entry<String, List<SvCNData>> entry : mSampleCNData.entrySet()) {
-
+            for (Map.Entry<String, List<SvCNData>> entry : mSampleCNData.entrySet())
+            {
                 ++sampleCount;
                 LOGGER.info("analysing sample({}) with {} CN entries, totalProcessed({})", entry.getKey(), entry.getValue().size(), sampleCount);
 
@@ -257,8 +261,8 @@ public class CNAnalyser {
             }
             else if(!reset)
             {
-
-                if (minCN < MIN_LOH_CN) {
+                if (minCN < MIN_LOH_CN)
+                {
                     // new LOH section identified
                     isLohSection = true;
                     lohSegments = 1;
@@ -291,9 +295,10 @@ public class CNAnalyser {
     private int writeLOHData(
             final String sampleId, final String chr, SvCNData startData, SvCNData endData, double lastMinCN, double lohMinCN, int segCount)
     {
-        try {
-
-            if (mFileWriter == null) {
+        try
+        {
+            if (mFileWriter == null)
+            {
                 String outputFileName = mOutputPath;
 
                 if (!outputFileName.endsWith("/"))
@@ -333,17 +338,21 @@ public class CNAnalyser {
                 LOGGER.warn("negative length({})", lohLength);
             }
 
-            if (startSvData != null && endSvData != null) {
-
-                if (startSvData.id().equals(endSvData.id())) {
+            if (startSvData != null && endSvData != null)
+            {
+                if (startSvData.id().equals(endSvData.id()))
+                {
                     LOGGER.debug("sample({}) cnID({} -> {}) matches singleSV({} - {})",
                             sampleId, startData.asString(), endData.asString(), startSvData.id(), startSvData.type());
-                } else {
-
+                }
+                else
+                {
                     LOGGER.debug("sample({}) cnID({} -> {}) matches pairSV({} -> {})",
                             sampleId, startData.asString(), endData.asString(), startSvData.id(), endSvData.id());
                 }
-            } else {
+            }
+            else
+            {
                 LOGGER.debug("sample({}) cnID({} -  -> {}) not fully matched pairSV({} -> {})",
                         sampleId, startData.asString(), startData.segStart(), endData.asString(), endData.segStart(),
                         startSvData != null ? startSvData.id() : "", endSvData != null ? endSvData.id() : "");
@@ -362,7 +371,8 @@ public class CNAnalyser {
 
             return (startSvData != null && endSvData != null) ? 1 : 0;
         }
-        catch (final IOException e) {
+        catch (final IOException e)
+        {
             LOGGER.error("error writing to outputFile");
             return 0;
         }
@@ -446,17 +456,21 @@ public class CNAnalyser {
                 // analyse the change
                 double thisCNChange = copyNumber - lastCnData.copyNumber();
 
-                if(checkCNChange) {
+                if(checkCNChange)
+                {
 
                     if (lastCNChange < 0 && thisCNChange > 0
-                        && abs(thisCNChange) >= CN_CHANGE_MIN && abs(thisCNChange + lastCNChange) <= CN_DIFF_MARGIN) {
-
+                        && abs(thisCNChange) >= CN_CHANGE_MIN && abs(thisCNChange + lastCNChange) <= CN_DIFF_MARGIN)
+                    {
                         LOGGER.debug("sample({}) cnID({} -> {}) flipped cnChange({} -> {})", sampleId, lastCnData.asString(), cnData.asString(), lastCNChange, thisCNChange);
                         double cnRounded = roundCopyNumber(lastCNChange);
 
-                        if (!cnChangeMap.containsKey(cnRounded)) {
+                        if (!cnChangeMap.containsKey(cnRounded))
+                        {
                             cnChangeMap.put(cnRounded, 1);
-                        } else {
+                        }
+                        else
+                        {
                             cnChangeMap.replace(cnRounded, cnChangeMap.get(cnRounded) + 1);
                         }
 
@@ -464,8 +478,8 @@ public class CNAnalyser {
 
                         // a deletion bridge (DB) is a CN drop at the last segment and regain on this segment, resulting from 2 distinct SVs
                         // so take the length of the last segment
-                        if(!lastCnData.segStart().equals(StructuralVariantType.BND.toString())) {
-
+                        if(!lastCnData.segStart().equals(StructuralVariantType.BND.toString()))
+                        {
                             StructuralVariantData startSvData = findSvData(lastCnData, 1);
                             StructuralVariantData endSvData = findSvData(cnData, -1);
 
@@ -485,7 +499,9 @@ public class CNAnalyser {
                                     dbLengths.add(gapLength);
 
                                 }
-                            } else {
+                            }
+                            else
+                            {
                                 LOGGER.debug("sample({}) cnID({} -  -> {}) not fully matched pairSV({} -> {})",
                                         sampleId, lastCnData.asString(), lastCnData.segStart(), cnData.asString(), cnData.segStart(),
                                         startSvData != null ? startSvData.id() : "", endSvData != null ? endSvData.id() : "");
@@ -531,9 +547,10 @@ public class CNAnalyser {
             final List<Long> dbLengths, final Map<Double, Integer> cnChangeMap,
             int delCount, int dupCount, int invCount, int bndCount)
     {
-        try {
-
-            if (mFileWriter == null) {
+        try
+        {
+            if (mFileWriter == null)
+            {
                 String outputFileName = mOutputPath;
 
                 if (!outputFileName.endsWith("/"))
@@ -561,9 +578,10 @@ public class CNAnalyser {
             int totalFlips = 0;
             String cnChangesStr = "";
 
-            for(Map.Entry<Double, Integer> entry : cnChangeMap.entrySet()) {
-
-                if(entry.getValue() > maxFlips) {
+            for(Map.Entry<Double, Integer> entry : cnChangeMap.entrySet())
+            {
+                if(entry.getValue() > maxFlips)
+                {
                     cnChgMax = entry.getKey();
                     maxFlips = entry.getValue();
                 }
@@ -577,10 +595,11 @@ public class CNAnalyser {
             }
 
             // now include any other CN change values within the margin of error of the max value
-            for(Map.Entry<Double, Integer> entry : cnChangeMap.entrySet()) {
-
+            for(Map.Entry<Double, Integer> entry : cnChangeMap.entrySet())
+            {
                 double cnChange = entry.getKey();
-                if (cnChange != cnChgMax && abs(cnChange - cnChgMax) <= CN_DIFF_MARGIN) {
+                if (cnChange != cnChgMax && abs(cnChange - cnChgMax) <= CN_DIFF_MARGIN)
+                {
                     maxFlips += entry.getValue();
                 }
             }
@@ -610,13 +629,17 @@ public class CNAnalyser {
         }
     }
 
-    public void close() {
+    public void close()
+    {
         if (mFileWriter == null)
             return;
 
-        try {
+        try
+        {
             mFileWriter.close();
-        } catch (final IOException e) {
+        }
+        catch (final IOException e)
+        {
         }
     }
 
