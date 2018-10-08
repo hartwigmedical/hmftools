@@ -11,6 +11,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
+import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -43,6 +44,7 @@ import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
 import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 
+import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.immutables.value.Value;
@@ -67,7 +69,7 @@ public abstract class PatientReporter {
     public abstract StructuralVariantAnalyzer structuralVariantAnalyzer();
 
     @NotNull
-    public AnalysedPatientReport run(@NotNull final String runDirectory, @Nullable final String comments) throws IOException {
+    public AnalysedPatientReport run(@NotNull final String runDirectory, @Nullable final String comments) throws ParseException, IOException {
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
         assert run.isSomaticRun();
 
@@ -80,7 +82,8 @@ public abstract class PatientReporter {
                 sequencedReportData().somaticVariantEnrichment(),
                 sequencedReportData().panelGeneModel(),
                 sequencedReportData().highConfidenceRegions(),
-                sequencedReportData().refGenomeFastaFile());
+                sequencedReportData().refGenomeFastaFile(),
+                sequencedReportData().tumorLocation());
 
         final StructuralVariantAnalysis structuralVariantAnalysis =
                 analyzeStructuralVariants(run, purpleAnalysis, structuralVariantAnalyzer());
@@ -152,8 +155,8 @@ public abstract class PatientReporter {
     @NotNull
     private static SomaticVariantAnalysis analyzeSomaticVariants(@NotNull RunContext run, @NotNull PurpleAnalysis purpleAnalysis,
             @NotNull SomaticEnrichment somaticEnrichment, @NotNull GeneModel geneModel,
-            @NotNull Multimap<String, GenomeRegion> highConfidenceRegions, @NotNull IndexedFastaSequenceFile refGenomeFastaFile)
-            throws IOException {
+            @NotNull Multimap<String, GenomeRegion> highConfidenceRegions, @NotNull IndexedFastaSequenceFile refGenomeFastaFile,
+            @NotNull final List<PatientTumorLocation> patientTumorLocations) throws ParseException, IOException {
         final String runDirectory = run.runDirectory();
         final String sample = run.tumorSample();
 
@@ -168,7 +171,8 @@ public abstract class PatientReporter {
         LOGGER.info("Analyzing somatic variants....");
         return SomaticVariantAnalyzer.run(enrichedSomaticVariants,
                 geneModel.somaticVariantGenePanel(),
-                geneModel.geneDriverCategoryMap());
+                geneModel.geneDriverCategoryMap(),
+                sample, patientTumorLocations);
     }
 
     @NotNull
