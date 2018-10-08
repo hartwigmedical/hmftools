@@ -15,7 +15,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class DrupActionabilityModelFactory {
+public final class DrupActionabilityModelFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(DrupActionabilityModel.class);
 
