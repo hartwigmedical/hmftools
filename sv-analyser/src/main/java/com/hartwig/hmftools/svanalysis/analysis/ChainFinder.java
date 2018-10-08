@@ -398,8 +398,8 @@ public class ChainFinder
         if (currentIndex >= testLinks.size())
             return false;
 
-        LOGGER.debug("currentIndex({}) links(existing={} test={}) completedChains({}) partialChains({}) reqSvCount({})",
-                currentIndex, existingLinks.size(), testLinks.size(), mCompleteChains.size(), partialChains.size(), reqSvCount);
+        //LOGGER.debug("currentIndex({}) links(existing={} test={}) completedChains({}) partialChains({}) reqSvCount({})",
+        //        currentIndex, existingLinks.size(), testLinks.size(), mCompleteChains.size(), partialChains.size(), reqSvCount);
 
         boolean linksAdded = false;
 
@@ -451,11 +451,13 @@ public class ChainFinder
 
                 boolean isDuplicate = isDuplicateChain(chain, mCompleteChains);
 
+                /*
                 if(isDuplicate)
                 {
                     LOGGER.debug("skipping duplicate complete chain:");
                     chain.logLinks();
                 }
+                */
 
                 boolean hasRequiredLinks = chain.hasLinks(requiredLinks);
 
@@ -649,6 +651,8 @@ public class ChainFinder
 
             // check that if this link has the same SVs as another link due to replicated SVs, that
             // the breakends used in the link match each other
+            if(testLink.sameVariants(linkedPair) && !testLink.matches(linkedPair, true))
+                return false;
         }
 
         // then check that this linked pair doesn't close a chain of a smaller size than one involving all required SVs

@@ -121,7 +121,7 @@ public class SvChain {
         {
             if (addToStart)
             {
-                if (mSvList.get(0) == first)
+                if (mSvList.get(0) == first || mSvList.get(1) == first)
                 {
                     // second SV is the new one here
                     mSvList.add(0, second);
@@ -137,7 +137,7 @@ public class SvChain {
             }
             else
             {
-                if (mSvList.get(lastIndex) == first)
+                if (mSvList.get(lastIndex-1) == first || mSvList.get(lastIndex) == first)
                 {
                     mSvList.add(second);
                     mSvStartIsStartLink.add(pair.secondLinkOnStart());
@@ -327,7 +327,7 @@ public class SvChain {
         {
             final SvLinkedPair pair = mLinkedPairs.get(i);
 
-            LOGGER.debug("chain({}) {}: pair({}) {} len={} {}",
+            LOGGER.debug("chain({}) {}: pair({}) {} {} len={}",
                     mId, i, pair.toString(), pair.linkType(), pair.isInferred() ? "inferred" : "assembly", pair.length());
         }
     }

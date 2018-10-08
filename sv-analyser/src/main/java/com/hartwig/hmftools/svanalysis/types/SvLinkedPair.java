@@ -121,6 +121,18 @@ public class SvLinkedPair {
         return false;
     }
 
+    public boolean sameVariants(final SvLinkedPair other)
+    {
+        // first and second can be in either order
+        if(mFirst.equals(other.first(), true) && mSecond.equals(other.second(), true))
+            return true;
+
+        if(mFirst.equals(other.second(), true) && mSecond.equals(other.first(), true))
+            return true;
+
+        return false;
+    }
+
     public static String ASSEMBLY_MATCH_MATCHED = "MATCH";
     public static String ASSEMBLY_MATCH_DIFF = "DIFF";
     public static String ASSEMBLY_MATCH_ASMB_ONLY = "ASMB_ONLY";

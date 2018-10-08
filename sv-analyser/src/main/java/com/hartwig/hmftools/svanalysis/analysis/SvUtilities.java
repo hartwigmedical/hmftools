@@ -297,9 +297,15 @@ public class SvUtilities {
 
     public static boolean areLinkedSection(final SvClusterData v1, final SvClusterData v2, boolean v1Start, boolean v2Start)
     {
-        // must be same chromosomal arm to be considered facing
-        if(!sameChrArm(v1, v2, v1Start, v2Start))
+        // templated insertions are allowed to traverse the centromere
+        if(v1.position(v1Start) < 0 || v2.position(v1Start) < 0)
             return false;
+
+        if(!v1.chromosome(v1Start).equals(v2.chromosome(v2Start)))
+            return false;
+
+        // if(!sameChrArm(v1, v2, v1Start, v2Start))
+        //     return false;
 
         // start apart and heading towards each other
         long pos1 = v1.position(v1Start);

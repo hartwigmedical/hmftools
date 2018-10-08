@@ -567,6 +567,7 @@ public class ClusterAnalyser {
                         {
                             SvLinkedPair pair = linkedPairs.get(index);
 
+                            /*
                             // check for a matching BE on a pair that is much shorter, and if so skip creating this new linked pair
                             if(newPair.length() > mUtils.getBaseDistance())
                             {
@@ -579,6 +580,7 @@ public class ClusterAnalyser {
                                     }
                                 }
                             }
+                            */
 
                             if (pair.length() > newPair.length())
                                 break;
