@@ -56,13 +56,13 @@ public class SomaticVariantDataSource {
                 DRIVER_PROBABILITY_FIELD.getName());
 
         for (final EnrichedSomaticVariant variant : sort(variants)) {
-            final DriverCategory driverCategory = panelGeneModel.geneDriverCategory(variant.gene());
+            DriverCategory driverCategory = panelGeneModel.geneDriverCategory(variant.gene());
 
-            final String displayGene =
+            String displayGene =
                     panelGeneModel.drupActionableGenes().keySet().contains(variant.gene()) ? variant.gene() + " *" : variant.gene();
 
             String biallelic = Strings.EMPTY;
-            if (driverCategory != null && driverCategory == DriverCategory.TSG) {
+            if (driverCategory != DriverCategory.ONCO) {
                 biallelic = variant.biallelic() ? "Yes" : "No";
             }
 
@@ -75,7 +75,7 @@ public class SomaticVariantDataSource {
                     variant.canonicalHgvsCodingImpact(),
                     variant.canonicalHgvsProteinImpact(),
                     readDepthField(variant),
-                    driverCategory != null && driverCategory == DriverCategory.ONCO ? hotspotField(variant) : Strings.EMPTY,
+                    driverCategory != DriverCategory.TSG ? hotspotField(variant) : Strings.EMPTY,
                     PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyVafField(variant)),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, clonalityField(variant)),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, biallelic),

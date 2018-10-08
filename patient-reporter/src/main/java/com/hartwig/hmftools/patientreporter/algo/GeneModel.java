@@ -21,9 +21,6 @@ public abstract class GeneModel {
     public abstract Map<String, HmfTranscriptRegion> somaticVariantDriverGenePanel();
 
     @NotNull
-    public abstract Map<String, DriverCategory> somaticVariantDriverCategoryMap();
-
-    @NotNull
     public abstract Map<String, HmfTranscriptRegion> significantlyAmplifiedGenes();
 
     @NotNull
@@ -32,10 +29,13 @@ public abstract class GeneModel {
     @NotNull
     public abstract Map<String, HmfTranscriptRegion> drupActionableGenes();
 
+    @NotNull
+    public abstract Map<String, DriverCategory> geneDriverCategoryMap();
+
     @Value.Derived
     @Nullable
     public DriverCategory geneDriverCategory(@NotNull String gene) {
-        return somaticVariantDriverCategoryMap().get(gene);
+        return geneDriverCategoryMap().get(gene);
     }
 
     @Value.Derived
@@ -59,16 +59,12 @@ public abstract class GeneModel {
 
     @Value.Derived
     public boolean isDeletionReportable(@NotNull String gene) {
-        // TODO (KODU): Filter out onco genes from drup actionable genes.
-        return significantlyDeletedGenes().keySet().contains(gene) || somaticVariantDriverCategoryMap().get(gene) != DriverCategory.ONCO
-                || drupActionableGenes().keySet().contains(gene);
+        return significantlyDeletedGenes().keySet().contains(gene) || geneDriverCategoryMap().get(gene) != DriverCategory.ONCO;
     }
 
     @Value.Derived
     public boolean isAmplificationReportable(@NotNull String gene) {
-        // TODO (KODU): Filter out tsg genes from drup actionable genes.
-        return significantlyAmplifiedGenes().keySet().contains(gene) || somaticVariantDriverCategoryMap().get(gene) != DriverCategory.TSG
-                || drupActionableGenes().keySet().contains(gene);
+        return significantlyAmplifiedGenes().keySet().contains(gene) || geneDriverCategoryMap().get(gene) != DriverCategory.TSG;
     }
 
     @Value.Derived
@@ -77,13 +73,13 @@ public abstract class GeneModel {
         // KODU: Structural variant analyser requires a set of ensembl IDs rather than a set of gene names.
         Set<String> disruptionGeneIDPanel = Sets.newHashSet();
         for (Map.Entry<String, HmfTranscriptRegion> driverGene : somaticVariantDriverGenePanel().entrySet()) {
-            if (somaticVariantDriverCategoryMap().get(driverGene.getKey()) == DriverCategory.TSG) {
+            if (geneDriverCategoryMap().get(driverGene.getKey()) != DriverCategory.ONCO) {
                 disruptionGeneIDPanel.add(driverGene.getValue().geneID());
             }
         }
 
         for (Map.Entry<String, HmfTranscriptRegion> drupActionableGene : drupActionableGenes().entrySet()) {
-            if (somaticVariantDriverCategoryMap().get(drupActionableGene.getKey()) != DriverCategory.ONCO) {
+            if (geneDriverCategoryMap().get(drupActionableGene.getKey()) != DriverCategory.ONCO) {
                 disruptionGeneIDPanel.add(drupActionableGene.getValue().geneID());
             }
         }

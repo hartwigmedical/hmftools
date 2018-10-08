@@ -168,7 +168,7 @@ public abstract class PatientReporter {
         LOGGER.info("Analyzing somatic variants....");
         return SomaticVariantAnalyzer.run(enrichedSomaticVariants,
                 geneModel.somaticVariantGenePanel(),
-                geneModel.somaticVariantDriverCategoryMap());
+                geneModel.geneDriverCategoryMap());
     }
 
     @NotNull
