@@ -49,8 +49,7 @@ public interface StructuralVariant {
     @Nullable
     Boolean imprecise();
 
-    @Nullable
-    Double qualityScore();
+    double qualityScore();
 
     @Nullable
     String event();

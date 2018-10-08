@@ -1,27 +1,28 @@
 package com.hartwig.hmftools.common.variant.structural;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 
-import htsjdk.samtools.util.StringUtil;
-import htsjdk.variant.variantcontext.Genotype;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;
-import org.jetbrains.annotations.Nullable;
 
 public class StructuralVariantFactory {
 
@@ -80,10 +81,7 @@ public class StructuralVariantFactory {
                 if (isSingleBreakend) {
                     results.add(createSingleBreakend(context));
                 } else {
-                    String mate = (String) context.getAttribute(PAR_ID);
-                    if (mate == null) {
-                        mate = (String) context.getAttribute(MATE_ID);
-                    }
+                    String mate = mateId(context);
                     if (unmatched.containsKey(mate)) {
                         results.add(create(unmatched.remove(mate), context));
                     } else {
@@ -94,6 +92,16 @@ public class StructuralVariantFactory {
                 results.add(create(context));
             }
         }
+    }
+
+    @Nullable
+    public static String mateId(@NotNull VariantContext context) {
+        String mate = (String) context.getAttribute(PAR_ID);
+        if (mate == null) {
+            return (String) context.getAttribute(MATE_ID);
+        }
+
+        return mate;
     }
 
     @NotNull
@@ -185,7 +193,7 @@ public class StructuralVariantFactory {
     }
 
     @NotNull
-    private static StructuralVariant create(@NotNull VariantContext first, @NotNull VariantContext second) {
+    public static StructuralVariant create(@NotNull VariantContext first, @NotNull VariantContext second) {
         Preconditions.checkArgument(StructuralVariantType.BND.equals(type(first)));
         Preconditions.checkArgument(StructuralVariantType.BND.equals(type(second)));
 
@@ -249,8 +257,9 @@ public class StructuralVariantFactory {
                 .filter(filters(first, second))
                 .build();
     }
+
     @NotNull
-    private static StructuralVariant createSingleBreakend(@NotNull VariantContext context) {
+    public static StructuralVariant createSingleBreakend(@NotNull VariantContext context) {
         Preconditions.checkArgument(StructuralVariantType.BND.equals(type(context)));
         Preconditions.checkArgument(singleBreakendRegex.matcher(context.getAlternateAllele(0).getDisplayString()).matches());
 

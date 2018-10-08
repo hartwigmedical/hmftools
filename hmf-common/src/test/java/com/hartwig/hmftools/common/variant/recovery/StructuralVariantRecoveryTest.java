@@ -14,8 +14,8 @@ public class StructuralVariantRecoveryTest {
 
     @Test
     public void testMate() {
-        assertEquals("17:59493156", StructuralVariantRecovery.mate("C[17:59493156["));
-        assertEquals("17:59493156", StructuralVariantRecovery.mate("]17:59493156]C"));
+        assertEquals("17:59493156", StructuralVariantRecovery.mateLocation("C[17:59493156["));
+        assertEquals("17:59493156", StructuralVariantRecovery.mateLocation("]17:59493156]C"));
     }
 
 }
