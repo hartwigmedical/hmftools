@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.patientreporter;
 
+import java.util.List;
+
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
@@ -31,4 +34,7 @@ public abstract class SequencedReportData {
 
     @NotNull
     public abstract Multimap<String, GenomeRegion> highConfidenceRegions();
+
+    @NotNull
+    public abstract List<PatientTumorLocation> tumorLocation();
 }

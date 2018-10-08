@@ -21,6 +21,7 @@ import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
 import com.hartwig.hmftools.svannotation.annotations.StructuralVariantAnnotation;
 import com.hartwig.hmftools.svannotation.annotations.Transcript;
 
+import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.types.UInteger;
 import org.junit.Test;
@@ -30,11 +31,11 @@ public class PatientReporterTest {
     private static final String RUN_DIRECTORY = Resources.getResource("example").getPath();
 
     @Test
-    public void canRunOnRunDirectory() throws IOException {
+    public void canRunOnRunDirectory() throws IOException, ParseException {
         final BaseReportData baseReportData = testBaseReportData();
         final SequencedReportData reporterData = testSequencedReportData();
         final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(new TestAnnotator(),
-                reporterData.panelGeneModel().somaticVariantGenePanel(),
+                reporterData.panelGeneModel().disruptionGeneIDPanel(),
                 testKnownFusionModel());
         final PatientReporter algo = ImmutablePatientReporter.of(baseReportData, reporterData, svAnalyzer);
         assertNotNull(algo.run(RUN_DIRECTORY, null));

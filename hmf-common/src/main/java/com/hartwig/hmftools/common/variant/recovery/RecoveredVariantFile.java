@@ -28,6 +28,8 @@ public class RecoveredVariantFile {
     public static String header() {
         return new StringJoiner(DELIMITER, HEADER_PREFIX, "").add("chromosome")
                 .add("start")
+                .add("minStart")
+                .add("maxStart")
                 .add("end")
                 .add("bases")
                 .add("baf")
@@ -47,6 +49,7 @@ public class RecoveredVariantFile {
                 .add("qual")
                 .add("filter")
                 .add("mate")
+                .add("mateOrientation")
                 .toString();
     }
 
@@ -54,6 +57,8 @@ public class RecoveredVariantFile {
     public static String toString(@NotNull final RecoveredVariant recoveredVariant) {
         return new StringJoiner(DELIMITER).add(String.valueOf(recoveredVariant.chromosome()))
                 .add(String.valueOf(recoveredVariant.start()))
+                .add(String.valueOf(recoveredVariant.minStart()))
+                .add(String.valueOf(recoveredVariant.maxStart()))
                 .add(String.valueOf(recoveredVariant.end()))
                 .add(String.valueOf(recoveredVariant.bases()))
                 .add(FORMAT.format(recoveredVariant.baf()))
@@ -75,6 +80,7 @@ public class RecoveredVariantFile {
                 .add(String.valueOf(recoveredVariant.qual()))
                 .add(String.valueOf(recoveredVariant.filter()))
                 .add(String.valueOf(recoveredVariant.mate()))
+                .add(String.valueOf(recoveredVariant.mateOrientation()))
                 .toString();
     }
 }

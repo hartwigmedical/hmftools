@@ -25,8 +25,6 @@ public class BreakendConsistency {
         this.sv = sv;
         this.alternateSvs = alternateSvs;
         this.oppositeOrientationSvs = oppositeOrientationSvs;
-        if (alternateSvs.size() != 0) throw new RuntimeException("NYI");
-        if (oppositeOrientationSvs.size() != 0) throw new RuntimeException("NYI");
     }
 
     /**
@@ -54,8 +52,16 @@ public class BreakendConsistency {
     public double referencePathPloidy() { return refPath == null ? 0 : refPath.ploidy(); }
     public EnrichedStructuralVariant sv() { return sv; }
 
+    /**
+     * Ploidy of other SVs. SVs in the opposite orientation have negative ploidy.
+     * @return
+     */
+    public double otherSvPloidy() {
+        return alternateSvs.stream().mapToDouble(x -> x.ploidy()).sum()
+            - oppositeOrientationSvs.stream().mapToDouble(x -> x.ploidy()).sum();
+    }
     @Override
     public String toString() {
-        return String.format("%s ploidy: %.2f ∆cn: %.2f ∆sv: %.2f", sv.id(), ploidy(), copyNumberDelta(), eventDelta());
+        return String.format("%s ploidy: %.2f ∆cn: %.2f ∆sv: %.2f ∆other: %.2f", sv.id(), ploidy(), copyNumberDelta(), eventDelta(), otherSvPloidy());
     }
 }

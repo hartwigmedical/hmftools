@@ -4,13 +4,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.patientreporter.algo.GeneModel;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 final class ReportableCopyNumbers {
 
@@ -28,17 +26,19 @@ final class ReportableCopyNumbers {
         return geneCopyNumbers.stream()
                 .filter(copyNumber -> includeInReport(samplePloidy,
                         copyNumber.value(),
-                        panelGeneModel.geneDriverCategory(copyNumber.gene())))
+                        panelGeneModel.isAmplificationReportable(copyNumber.gene()),
+                        panelGeneModel.isDeletionReportable(copyNumber.gene())))
                 .collect(Collectors.toList());
     }
 
     @VisibleForTesting
-    static boolean includeInReport(final double samplePloidy, final double copyNumber, @Nullable DriverCategory driverCategory) {
-        if (Doubles.lessOrEqual(copyNumber, ABS_LOSS) && driverCategory != DriverCategory.ONCO) {
+    static boolean includeInReport(final double samplePloidy, final double copyNumber, boolean isAmplificationReportable,
+            boolean isDeletionReportable) {
+        if (Doubles.lessOrEqual(copyNumber, ABS_LOSS) && isDeletionReportable) {
             return true;
         }
 
         double relativeCopyNumber = copyNumber / samplePloidy;
-        return Doubles.greaterOrEqual(relativeCopyNumber, REL_GAIN) && driverCategory != DriverCategory.TSG;
+        return Doubles.greaterOrEqual(relativeCopyNumber, REL_GAIN) && isAmplificationReportable;
     }
 }

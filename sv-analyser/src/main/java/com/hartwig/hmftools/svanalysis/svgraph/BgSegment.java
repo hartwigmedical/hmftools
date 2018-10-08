@@ -101,6 +101,10 @@ public class BgSegment implements GenomeInterval {
                 .method(left.method() == right.method() ? left.method() : CopyNumberMethod.UNKNOWN)
                 .averageObservedBAF(left.averageObservedBAF() * left.bafCount() / (double) bafCount +
                         right.averageObservedBAF() * right.bafCount() / (double) bafCount)
+                .gcContent(left.gcContent() * left.length() / (double) length +
+                        right.gcContent() * right.length() / (double) length)
+                .minStart(left.minStart())
+                .maxStart(left.maxStart())
                 .build();
         return merged;
     }

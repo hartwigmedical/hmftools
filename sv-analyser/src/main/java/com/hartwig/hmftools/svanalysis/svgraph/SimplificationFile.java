@@ -51,6 +51,7 @@ public enum SimplificationFile {
                 .add("svploidy")
                 .add("deltacn")
                 .add("deltasv")
+                .add("othersvploidy")
                 .toString();
     }
 
@@ -59,15 +60,16 @@ public enum SimplificationFile {
         List<String> list = new ArrayList<>();
         for (BreakendConsistency bc : simplification.consistency()) {
             list.add(new StringJoiner(DELIMITER)
-                    .add(Integer.toString(id++))
+                    .add(Integer.toString(id))
                     .add(String.valueOf(simplification.type()))
                     .add(FORMAT.format(simplification.ploidy()))
-                    .add(bc.sv().id())
+                    .add(Integer.toString(bc.sv().primaryKey()))
                     .add(FORMAT.format(bc.anchorPloidy()))
                     .add(FORMAT.format(bc.referencePathPloidy()))
                     .add(FORMAT.format(bc.sv().ploidy()))
                     .add(FORMAT.format(bc.copyNumberDelta()))
                     .add(FORMAT.format(bc.eventDelta()))
+                    .add(FORMAT.format(bc.otherSvPloidy()))
                     .toString());
         }
         return list;

@@ -121,7 +121,8 @@ public class PatientReporterApplication {
                 cmd.getOptionValue(DRUP_GENES_CSV),
                 cmd.getOptionValue(HOTSPOT_TSV),
                 cmd.getOptionValue(FASTA_FILE_LOCATION),
-                cmd.getOptionValue(HIGH_CONFIDENCE_BED));
+                cmd.getOptionValue(HIGH_CONFIDENCE_BED),
+                cmd.getOptionValue(TUMOR_LOCATION_CSV));
     }
 
     @NotNull
@@ -146,7 +147,7 @@ public class PatientReporterApplication {
 
         // TODO (KODU): Filter out ONCO genes from below panel to avoid reporting disruptions on oncogenes.
         final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(annotator,
-                sequencedReportData.panelGeneModel().somaticVariantGenePanel(),
+                sequencedReportData.panelGeneModel().disruptionGeneIDPanel(),
                 sequencedReportData.knownFusionsModel());
 
         return ImmutablePatientReporter.of(buildBaseReportData(cmd), sequencedReportData, svAnalyzer);

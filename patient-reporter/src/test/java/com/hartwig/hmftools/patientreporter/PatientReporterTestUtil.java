@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.patientreporter.algo.DrupActionabilityModel;
+import com.hartwig.hmftools.patientreporter.algo.DrupActionabilityModelFactory;
 import com.hartwig.hmftools.patientreporter.algo.GeneModel;
 import com.hartwig.hmftools.patientreporter.algo.GeneModelFactory;
 
@@ -42,8 +43,13 @@ public final class PatientReporterTestUtil {
     }
 
     @NotNull
+    public static DrupActionabilityModel testDrupActionabilityModel() throws IOException {
+        return DrupActionabilityModelFactory.buildFromCsv(DRUP_GENES_CSV);
+    }
+
+    @NotNull
     public static SequencedReportData testSequencedReportData() throws IOException {
-        DrupActionabilityModel drupActionabilityModel = new DrupActionabilityModel(DRUP_GENES_CSV);
+        DrupActionabilityModel drupActionabilityModel = testDrupActionabilityModel();
         GeneModel geneModel = GeneModelFactory.create(drupActionabilityModel);
         CompoundEnrichment compoundEnrichment = new CompoundEnrichment(HotspotEnrichment.fromHotspotsFile(HOTSPOT_TSV));
 
@@ -51,7 +57,8 @@ public final class PatientReporterTestUtil {
                 compoundEnrichment,
                 testKnownFusionModel(),
                 new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),
-                TreeMultimap.create());
+                TreeMultimap.create(),
+                Lists.newArrayList());
     }
 
     @NotNull

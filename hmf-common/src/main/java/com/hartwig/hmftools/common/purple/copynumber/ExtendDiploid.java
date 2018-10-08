@@ -106,10 +106,11 @@ class ExtendDiploid {
             return false;
         }
 
-        final boolean isNeighbourDubious = isDubious(neighbour);
+        int minTumorCount =
+                nextBigBreakIsCentromereOrTelomere(regions, direction, targetIndex) ? minTumorCountAtCentromere : this.minTumorCount;
+
+        final boolean isNeighbourDubious = isDubious(minTumorCount, neighbour);
         if (isNeighbourDubious) {
-            int minTumorCount =
-                    nextBigBreakIsCentromereOrTelomere(regions, direction, targetIndex) ? minTumorCountAtCentromere : this.minTumorCount;
             if (inTolerance(target.region(), neighbour)) {
                 target.extendWithBAFWeightedAverage(neighbour);
                 return true;
@@ -121,7 +122,7 @@ class ExtendDiploid {
             }
         }
 
-        final boolean isNeighbourValid = isValid(neighbour);
+        final boolean isNeighbourValid = isValid(minTumorCount, neighbour);
         if (!isNeighbourValid) {
             target.extend(neighbour);
             return true;
@@ -133,11 +134,11 @@ class ExtendDiploid {
         return false;
     }
 
-    private boolean isValid(@NotNull final FittedRegion region) {
+    private boolean isValid(int minTumorCount, @NotNull final FittedRegion region) {
         return region.status() == GermlineStatus.DIPLOID && (region.support().isSV() || region.depthWindowCount() >= minTumorCount);
     }
 
-    private boolean isDubious(@NotNull final FittedRegion region) {
+    private boolean isDubious(int minTumorCount, @NotNull final FittedRegion region) {
         return region.status() == GermlineStatus.DIPLOID && !region.support().isSV() && region.depthWindowCount() < minTumorCount;
     }
 
@@ -173,14 +174,14 @@ class ExtendDiploid {
                 }
             }
 
-            if (isDubious(neighbour)) {
+            if (isDubious(minTumorCount, neighbour)) {
                 dubiousCount += neighbour.depthWindowCount();
                 if (dubiousCount >= minTumorCount) {
                     return false;
                 }
             }
 
-            if (isValid(neighbour)) {
+            if (isValid(minTumorCount, neighbour)) {
                 return inTolerance(target.region(), neighbour);
             }
 

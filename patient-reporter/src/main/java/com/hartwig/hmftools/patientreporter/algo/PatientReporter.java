@@ -5,19 +5,18 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
+import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.TranscriptRegion;
 import com.hartwig.hmftools.common.variant.ClonalityCutoffKernel;
 import com.hartwig.hmftools.common.variant.ClonalityFactory;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
@@ -45,6 +44,7 @@ import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
 import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 
+import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.immutables.value.Value;
@@ -69,7 +69,7 @@ public abstract class PatientReporter {
     public abstract StructuralVariantAnalyzer structuralVariantAnalyzer();
 
     @NotNull
-    public AnalysedPatientReport run(@NotNull final String runDirectory, @Nullable final String comments) throws IOException {
+    public AnalysedPatientReport run(@NotNull final String runDirectory, @Nullable final String comments) throws ParseException, IOException {
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
         assert run.isSomaticRun();
 
@@ -82,7 +82,8 @@ public abstract class PatientReporter {
                 sequencedReportData().somaticVariantEnrichment(),
                 sequencedReportData().panelGeneModel(),
                 sequencedReportData().highConfidenceRegions(),
-                sequencedReportData().refGenomeFastaFile());
+                sequencedReportData().refGenomeFastaFile(),
+                sequencedReportData().tumorLocation());
 
         final StructuralVariantAnalysis structuralVariantAnalysis =
                 analyzeStructuralVariants(run, purpleAnalysis, structuralVariantAnalyzer());
@@ -112,8 +113,8 @@ public abstract class PatientReporter {
         return ImmutableAnalysedPatientReport.of(sampleReport,
                 purpleAnalysis.status(),
                 purpleAnalysis.fittedPurity().purity(),
-                new DriverProbabilityModel(somaticVariantAnalysis.driverCatalog()),
                 somaticVariantAnalysis.variantsToReport(),
+                somaticVariantAnalysis.driverCatalog(),
                 somaticVariantAnalysis.microsatelliteIndelsPerMb(),
                 somaticVariantAnalysis.tumorMutationalLoad(),
                 somaticVariantAnalysis.tumorMutationalBurden(),
@@ -136,10 +137,9 @@ public abstract class PatientReporter {
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterFileLoader.loadPurpleCopyNumbers(runDirectory, sample);
         LOGGER.info(" " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
 
-        Set<String> cnvGenePanel = panelGeneModel.cnvGenePanel().stream().map(TranscriptRegion::gene).collect(Collectors.toSet());
         final List<GeneCopyNumber> panelGeneCopyNumbers = PatientReporterFileLoader.loadPurpleGeneCopyNumbers(runDirectory, sample)
                 .stream()
-                .filter(geneCopyNumber -> cnvGenePanel.contains(geneCopyNumber.gene()))
+                .filter(geneCopyNumber -> panelGeneModel.cnvGenePanel().contains(geneCopyNumber.gene()))
                 .collect(Collectors.toList());
 
         return ImmutablePurpleAnalysis.builder()
@@ -155,8 +155,8 @@ public abstract class PatientReporter {
     @NotNull
     private static SomaticVariantAnalysis analyzeSomaticVariants(@NotNull RunContext run, @NotNull PurpleAnalysis purpleAnalysis,
             @NotNull SomaticEnrichment somaticEnrichment, @NotNull GeneModel geneModel,
-            @NotNull Multimap<String, GenomeRegion> highConfidenceRegions, @NotNull IndexedFastaSequenceFile refGenomeFastaFile)
-            throws IOException {
+            @NotNull Multimap<String, GenomeRegion> highConfidenceRegions, @NotNull IndexedFastaSequenceFile refGenomeFastaFile,
+            @NotNull final List<PatientTumorLocation> patientTumorLocations) throws ParseException, IOException {
         final String runDirectory = run.runDirectory();
         final String sample = run.tumorSample();
 
@@ -169,8 +169,10 @@ public abstract class PatientReporter {
                 enrich(variants, purpleAnalysis, highConfidenceRegions, refGenomeFastaFile);
 
         LOGGER.info("Analyzing somatic variants....");
-        Set<String> genePanel = geneModel.somaticVariantGenePanel().stream().map(TranscriptRegion::gene).collect(Collectors.toSet());
-        return SomaticVariantAnalyzer.run(enrichedSomaticVariants, genePanel);
+        return SomaticVariantAnalyzer.run(enrichedSomaticVariants,
+                geneModel.somaticVariantGenePanel(),
+                geneModel.geneDriverCategoryMap(),
+                sample, patientTumorLocations);
     }
 
     @NotNull
