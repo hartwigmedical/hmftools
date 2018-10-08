@@ -19,7 +19,7 @@ HERE
 echo "[INFO]: Script Epoch: ${script_epoch}"
 echo "[INFO]: DB Epoch: ${db_epoch}"
 
-if [ ${script_epoch} -gt ${db_epoch} ];
+if [ "$db_epoch" = "NULL" ] || [ ${script_epoch} -gt ${db_epoch} ];
 then
     echo "[INFO] Rebuilding test database based on ${db_generate_script}"
     mysql --defaults-file=~/mysql.login < ${db_generate_script}
