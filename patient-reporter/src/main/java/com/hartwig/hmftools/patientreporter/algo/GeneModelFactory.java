@@ -1,10 +1,7 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
@@ -21,44 +18,42 @@ public final class GeneModelFactory {
 
     @NotNull
     public static GeneModel create(@NotNull DrupActionabilityModel drupActionabilityModel) {
-        final List<HmfTranscriptRegion> somaticVariantGenePanel = Lists.newArrayList();
-        final List<HmfTranscriptRegion> cnvGenePanel = Lists.newArrayList();
-        final Map<String, DriverCategory> geneDriverCategoryMap = Maps.newHashMap();
+        final Map<String, HmfTranscriptRegion> somaticVariantDriverGenePanel = Maps.newHashMap();
+        final Map<String, DriverCategory> somaticVariantDriverCategoryMap = Maps.newHashMap();
+
+        final Map<String, HmfTranscriptRegion> significantlyAmplifiedGenes = Maps.newHashMap();
+        final Map<String, HmfTranscriptRegion> significantlyDeletedGenes = Maps.newHashMap();
 
         Map<String, HmfTranscriptRegion> geneMap = HmfGenePanelSupplier.allGenesMap();
 
         for (String oncoGene : DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet()) {
-            HmfTranscriptRegion geneDefinition = fetchGeneDefinition(oncoGene, geneMap);
-            somaticVariantGenePanel.add(geneDefinition);
-            cnvGenePanel.add(geneDefinition);
-            geneDriverCategoryMap.put(oncoGene, DriverCategory.ONCO);
+            somaticVariantDriverGenePanel.put(oncoGene, fetchGeneDefinition(oncoGene, geneMap));
+            somaticVariantDriverCategoryMap.put(oncoGene, DriverCategory.ONCO);
         }
 
         for (String tsgGene : DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet()) {
-            HmfTranscriptRegion geneDefinition = fetchGeneDefinition(tsgGene, geneMap);
-            somaticVariantGenePanel.add(geneDefinition);
-            cnvGenePanel.add(geneDefinition);
-            geneDriverCategoryMap.put(tsgGene, DriverCategory.TSG);
+            somaticVariantDriverGenePanel.put(tsgGene, fetchGeneDefinition(tsgGene, geneMap));
+            somaticVariantDriverCategoryMap.put(tsgGene, DriverCategory.TSG);
         }
 
         for (String ampTarget : CNADrivers.amplificationTargets()) {
-            cnvGenePanel.add(fetchGeneDefinition(ampTarget, geneMap));
-            geneDriverCategoryMap.put(ampTarget, DriverCategory.ONCO);
+            significantlyAmplifiedGenes.put(ampTarget, fetchGeneDefinition(ampTarget, geneMap));
         }
 
         for (String delTarget : CNADrivers.deletionTargets()) {
-            cnvGenePanel.add(fetchGeneDefinition(delTarget, geneMap));
-            geneDriverCategoryMap.put(delTarget, DriverCategory.TSG);
+            significantlyDeletedGenes.put(delTarget, fetchGeneDefinition(delTarget, geneMap));
         }
 
-        final Set<String> actionableDrupGenes = drupActionabilityModel.actionableGenes();
-        for (String drupGene : actionableDrupGenes) {
-            HmfTranscriptRegion geneDefinition = fetchGeneDefinition(drupGene, geneMap);
-            somaticVariantGenePanel.add(geneDefinition);
-            cnvGenePanel.add(geneDefinition);
+        Map<String, HmfTranscriptRegion> drupActionabilityOPanel = Maps.newHashMap();
+        for (String drupGene : drupActionabilityModel.actionableGenes()) {
+            drupActionabilityOPanel.put(drupGene, fetchGeneDefinition(drupGene, geneMap));
         }
 
-        return ImmutableGeneModel.of(somaticVariantGenePanel, cnvGenePanel, geneDriverCategoryMap, actionableDrupGenes);
+        return ImmutableGeneModel.of(somaticVariantDriverGenePanel,
+                somaticVariantDriverCategoryMap,
+                significantlyAmplifiedGenes,
+                significantlyDeletedGenes,
+                drupActionabilityOPanel);
     }
 
     @NotNull

@@ -59,7 +59,7 @@ public class SomaticVariantDataSource {
             final DriverCategory driverCategory = panelGeneModel.geneDriverCategory(variant.gene());
 
             final String displayGene =
-                    panelGeneModel.drupActionableGenes().contains(variant.gene()) ? variant.gene() + " *" : variant.gene();
+                    panelGeneModel.drupActionableGenes().keySet().contains(variant.gene()) ? variant.gene() + " *" : variant.gene();
 
             String biallelic = Strings.EMPTY;
             if (driverCategory != null && driverCategory == DriverCategory.TSG) {

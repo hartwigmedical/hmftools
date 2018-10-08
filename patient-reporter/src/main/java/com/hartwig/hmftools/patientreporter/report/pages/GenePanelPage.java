@@ -42,7 +42,7 @@ public abstract class GenePanelPage {
     private static ComponentBuilder<?, ?> build(@NotNull final SequencedReportData reporterData) {
         final long coverage = Math.round(reporterData.panelGeneModel().somaticVariantsNumberOfBases() / 1E6);
         final VerticalListBuilder section = toList("Details on the reported gene panel",
-                Lists.newArrayList("Findings are reported for the " + Integer.toString(reporterData.panelGeneModel().somaticVariantNumberOfRegions())
+                Lists.newArrayList("Findings are reported for the " + Integer.toString(reporterData.panelGeneModel().somaticVariantNumberOfGenes())
                         + " genes (canonical transcripts) indicated below, covering " + coverage + " MBases."));
 
         return section.add(cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP), genePanelTable(reporterData));

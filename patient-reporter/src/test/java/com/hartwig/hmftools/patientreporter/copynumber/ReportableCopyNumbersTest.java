@@ -7,34 +7,32 @@ import static com.hartwig.hmftools.patientreporter.copynumber.ReportableCopyNumb
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-
 import org.junit.Test;
 
 public class ReportableCopyNumbersTest {
 
     @Test
     public void reportLossesCorrectly() {
-        assertTrue(includeInReport(2, ABS_LOSS, DriverCategory.TSG));
-        assertTrue(includeInReport(2, ABS_LOSS, null));
-        assertFalse(includeInReport(2, ABS_LOSS, DriverCategory.ONCO));
+        assertTrue(includeInReport(2, ABS_LOSS, true, true));
+        assertTrue(includeInReport(2, ABS_LOSS, false, true));
+        assertFalse(includeInReport(2, ABS_LOSS, true, false));
 
-        assertTrue(includeInReport(1, ABS_LOSS, DriverCategory.TSG));
-        assertTrue(includeInReport(2, ABS_LOSS, DriverCategory.TSG));
-        assertTrue(includeInReport(2, ABS_LOSS - 0.1, DriverCategory.TSG));
-        assertFalse(includeInReport(2, ABS_LOSS + 0.1, DriverCategory.TSG));
+        assertTrue(includeInReport(1, ABS_LOSS, true, true));
+        assertTrue(includeInReport(2, ABS_LOSS, true, true));
+        assertTrue(includeInReport(2, ABS_LOSS - 0.1, true, true));
+        assertFalse(includeInReport(2, ABS_LOSS + 0.1, true, true));
     }
 
     @Test
     public void reportGainsCorrectly() {
-        assertTrue(includeInReport(0, REL_GAIN, DriverCategory.ONCO));
+        assertTrue(includeInReport(0, REL_GAIN, true, true));
 
-        assertTrue(includeInReport(1, REL_GAIN, DriverCategory.ONCO));
-        assertTrue(includeInReport(1, REL_GAIN, null));
-        assertFalse(includeInReport(1, REL_GAIN, DriverCategory.TSG));
+        assertTrue(includeInReport(1, REL_GAIN, true, true));
+        assertTrue(includeInReport(1, REL_GAIN, true, false));
+        assertFalse(includeInReport(1, REL_GAIN, false, true));
 
-        assertTrue(includeInReport(1, REL_GAIN + 0.1, DriverCategory.ONCO));
-        assertFalse(includeInReport(1, REL_GAIN - 0.1, DriverCategory.ONCO));
-        assertFalse(includeInReport(1.01, REL_GAIN, DriverCategory.ONCO));
+        assertTrue(includeInReport(1, REL_GAIN + 0.1, true, true));
+        assertFalse(includeInReport(1, REL_GAIN - 0.1, true, true));
+        assertFalse(includeInReport(1.01, REL_GAIN, true, true));
     }
 }

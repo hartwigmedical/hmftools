@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -15,12 +16,15 @@ import java.util.stream.Stream;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariant;
@@ -133,7 +137,9 @@ public class LoadStructuralVariants {
                             variant.type().toString());
                     ponFiltered = ponCount > 1;
                 }
-                Set<String> filterSet = Stream.of(variant.filter().split(";"))
+                String filterString = variant.filter();
+                assert filterString != null;
+                Set<String> filterSet = Stream.of(filterString.split(";"))
                         .filter(s -> !s.equals("PASS"))
                         .filter(s -> !s.equals("."))
                         .filter(s -> !s.equals(""))
@@ -141,9 +147,9 @@ public class LoadStructuralVariants {
                 if (ponFiltered) {
                     filterSet.add(PON_FILTER_PON);
                 }
-                String filter = filterSet.size() == 0 ? "PASS" : filterSet.stream().sorted().collect(Collectors.joining(";" ));
-                final ImmutableEnrichedStructuralVariant updatedSV = ImmutableEnrichedStructuralVariant.builder()
-                    .from(variant).filter(filter).build();
+                String filter = filterSet.size() == 0 ? "PASS" : filterSet.stream().sorted().collect(Collectors.joining(";"));
+                final ImmutableEnrichedStructuralVariant updatedSV =
+                        ImmutableEnrichedStructuralVariant.builder().from(variant).filter(filter).build();
                 updatedSVs.add(updatedSV);
             }
         } else {
@@ -187,9 +193,8 @@ public class LoadStructuralVariants {
                             new FileInputStream(cmd.getOptionValue(PROMISCUOUS_FIVE_CSV)),
                             new FileInputStream(cmd.getOptionValue(PROMISCUOUS_THREE_CSV)));
 
-            // TODO (JOBA): Replace by all TSG genes from the driver catalog (+ potentially actionable genes?).
-            final StructuralVariantAnalyzer analyzer =
-                    new StructuralVariantAnalyzer(annotator, HmfGenePanelSupplier.hmfPanelGeneList(), knownFusionsModel);
+            // TODO (KODU): Add potentially actionable genes, see also instantation in patient reporter.
+            final StructuralVariantAnalyzer analyzer = new StructuralVariantAnalyzer(annotator, tsgDriverGeneIDs(), knownFusionsModel);
             LOGGER.info("analyzing structural variants for impact via disruptions and fusions");
             final StructuralVariantAnalysis analysis = analyzer.run(enrichedVariants);
 
@@ -199,6 +204,17 @@ public class LoadStructuralVariants {
         }
 
         LOGGER.info("run complete");
+    }
+
+    @NotNull
+    private static Set<String> tsgDriverGeneIDs() {
+        Set<String> tsgDriverGeneIDs = Sets.newHashSet();
+        Map<String, HmfTranscriptRegion> allGenes = HmfGenePanelSupplier.allGenesMap();
+
+        for (String gene : DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet()) {
+            tsgDriverGeneIDs.add(allGenes.get(gene).geneID());
+        }
+        return tsgDriverGeneIDs;
     }
 
     @NotNull

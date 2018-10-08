@@ -5,7 +5,6 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
@@ -17,7 +16,6 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.TranscriptRegion;
 import com.hartwig.hmftools.common.variant.ClonalityCutoffKernel;
 import com.hartwig.hmftools.common.variant.ClonalityFactory;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
@@ -136,10 +134,9 @@ public abstract class PatientReporter {
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterFileLoader.loadPurpleCopyNumbers(runDirectory, sample);
         LOGGER.info(" " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
 
-        Set<String> cnvGenePanel = panelGeneModel.cnvGenePanel().stream().map(TranscriptRegion::gene).collect(Collectors.toSet());
         final List<GeneCopyNumber> panelGeneCopyNumbers = PatientReporterFileLoader.loadPurpleGeneCopyNumbers(runDirectory, sample)
                 .stream()
-                .filter(geneCopyNumber -> cnvGenePanel.contains(geneCopyNumber.gene()))
+                .filter(geneCopyNumber -> panelGeneModel.cnvGenePanel().contains(geneCopyNumber.gene()))
                 .collect(Collectors.toList());
 
         return ImmutablePurpleAnalysis.builder()
@@ -169,8 +166,7 @@ public abstract class PatientReporter {
                 enrich(variants, purpleAnalysis, highConfidenceRegions, refGenomeFastaFile);
 
         LOGGER.info("Analyzing somatic variants....");
-        Set<String> genePanel = geneModel.somaticVariantGenePanel().stream().map(TranscriptRegion::gene).collect(Collectors.toSet());
-        return SomaticVariantAnalyzer.run(enrichedSomaticVariants, genePanel);
+        return SomaticVariantAnalyzer.run(enrichedSomaticVariants, geneModel.somaticVariantGenePanel());
     }
 
     @NotNull

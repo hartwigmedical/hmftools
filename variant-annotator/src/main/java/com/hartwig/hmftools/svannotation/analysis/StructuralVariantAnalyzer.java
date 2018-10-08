@@ -1,16 +1,15 @@
 package com.hartwig.hmftools.svannotation.analysis;
 
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
-import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
@@ -34,16 +33,17 @@ public class StructuralVariantAnalyzer {
     @NotNull
     private final VariantAnnotator annotator;
     @NotNull
-    private final Collection<HmfTranscriptRegion> hmfGenePanelRegions;
+    private final Set<String> disruptionGeneIDPanel;
     @NotNull
     private final KnownFusionsModel knownFusionsModel;
 
     private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnalyzer.class);
 
-    public StructuralVariantAnalyzer(@NotNull final VariantAnnotator annotator,
-            @NotNull final Collection<HmfTranscriptRegion> hmfGenePanelRegions, @NotNull final KnownFusionsModel knownFusionsModel) {
+    public StructuralVariantAnalyzer(@NotNull final VariantAnnotator annotator, @NotNull Set<String> disruptionGeneIDPanel,
+            @NotNull final KnownFusionsModel knownFusionsModel) {
+        // TODO (KODU) See if we can replace with a filter on gene name rather than gene ensembl ID.
         this.annotator = annotator;
-        this.hmfGenePanelRegions = hmfGenePanelRegions;
+        this.disruptionGeneIDPanel = disruptionGeneIDPanel;
         this.knownFusionsModel = knownFusionsModel;
     }
 
@@ -196,7 +196,8 @@ public class StructuralVariantAnalyzer {
             for (final GeneAnnotation gene : geneMap.get(geneName)) {
                 for (final Transcript transcript : gene.transcripts()) {
                     final GeneDisruption disruption = ImmutableGeneDisruption.builder()
-                            .reportable(inHmfPanel(gene) && transcript.isCanonical())
+                            .reportable(disruptionGeneIDPanel.stream().anyMatch(geneID -> gene.synonyms().contains(geneID))
+                                    && transcript.isCanonical())
                             .linkedAnnotation(transcript)
                             .build();
 
@@ -206,10 +207,6 @@ public class StructuralVariantAnalyzer {
         }
 
         return disruptions;
-    }
-
-    private boolean inHmfPanel(@NotNull GeneAnnotation gene) {
-        return hmfGenePanelRegions.stream().anyMatch(region -> gene.synonyms().contains(region.geneID()));
     }
 
     private static boolean transcriptsMatchKnownFusion(@NotNull final KnownFusionsModel fusionsModel, @NotNull final Transcript five,

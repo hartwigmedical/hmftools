@@ -34,7 +34,7 @@ public class PatientReporterTest {
         final BaseReportData baseReportData = testBaseReportData();
         final SequencedReportData reporterData = testSequencedReportData();
         final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(new TestAnnotator(),
-                reporterData.panelGeneModel().somaticVariantGenePanel(),
+                reporterData.panelGeneModel().disruptionGeneIDPanel(),
                 testKnownFusionModel());
         final PatientReporter algo = ImmutablePatientReporter.of(baseReportData, reporterData, svAnalyzer);
         assertNotNull(algo.run(RUN_DIRECTORY, null));
