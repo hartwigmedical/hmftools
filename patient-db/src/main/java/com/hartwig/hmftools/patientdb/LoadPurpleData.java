@@ -128,5 +128,4 @@ public class LoadPurpleData {
         dbAccess.writeCopynumberRegions(tumorSample, enrichedFittedRegions);
         dbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers);
     }
-
 }
