@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.actionability.compare_with_SOC;
+package com.hartwig.hmftools.actionability.soc;
 
 import java.io.File;
 import java.io.IOException;

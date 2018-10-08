@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.actionability.compare_with_SOC;
+package com.hartwig.hmftools.actionability.soc;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -7,17 +7,20 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-abstract class ReadingRegions {
+abstract class ReadingPlatform {
 
     @NotNull
-    abstract String gene();
+    abstract String chromosome();
 
     @NotNull
-    abstract String refSeq();
+    abstract Integer startPosition();
 
     @NotNull
-    abstract String region();
+    abstract Integer endPosition();
 
     @NotNull
-    abstract String amplificationDetection();
+    abstract String targetRegionID();
+
+    @NotNull
+    abstract String target();
 }
