@@ -96,7 +96,7 @@ public abstract class FindingsPage {
                                 col.column("Driver", SomaticVariantDataSource.DRIVER_PROBABILITY_FIELD)))
                         .setDataSource(SomaticVariantDataSource.fromVariants(report.fitStatus(),
                                 report.somaticVariants(),
-                                report.driverProbabilityModel(),
+                                report.somaticVariantDriverCatalog(),
                                 panelGeneModel))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 

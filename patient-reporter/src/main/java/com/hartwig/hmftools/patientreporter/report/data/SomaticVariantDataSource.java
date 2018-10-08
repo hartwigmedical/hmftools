@@ -13,12 +13,12 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.patientreporter.algo.DriverProbabilityModel;
 import com.hartwig.hmftools.patientreporter.algo.GeneModel;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import net.sf.dynamicreports.report.builder.FieldBuilder;
 import net.sf.dynamicreports.report.datasource.DRDataSource;
@@ -44,7 +44,7 @@ public class SomaticVariantDataSource {
 
     @NotNull
     public static JRDataSource fromVariants(@NotNull FittedPurityStatus fitStatus, @NotNull List<EnrichedSomaticVariant> variants,
-            @NotNull DriverProbabilityModel driverProbabilityModel, @NotNull GeneModel panelGeneModel) {
+            @NotNull List<DriverCatalog> driverCatalogList, @NotNull GeneModel panelGeneModel) {
         final DRDataSource variantDataSource = new DRDataSource(GENE_FIELD.getName(),
                 VARIANT_FIELD.getName(),
                 IMPACT_FIELD.getName(),
@@ -66,10 +66,10 @@ public class SomaticVariantDataSource {
                 biallelic = variant.biallelic() ? "Yes" : "No";
             }
 
-            DriverCatalog driver = driverProbabilityModel.catalogForVariant(variant);
+            DriverCatalog driver = catalogForVariant(driverCatalogList, variant);
             String driverProbabilityString = driver != null ? PatientReportFormat.formatPercentWithCutoffs(driver.driverLikelihood(),
                     MIN_PERCENTAGE_CUTOFF_DRIVER_PROB,
-                    MAX_PERCENTAGE_CUTOFF_DRIVER_PROB) : "N/A";
+                    MAX_PERCENTAGE_CUTOFF_DRIVER_PROB) : Strings.EMPTY;
 
             variantDataSource.add(displayGene,
                     variant.canonicalHgvsCodingImpact(),
@@ -83,6 +83,16 @@ public class SomaticVariantDataSource {
         }
 
         return variantDataSource;
+    }
+
+    @Nullable
+    private static DriverCatalog catalogForVariant(@NotNull List<DriverCatalog> driverCatalogList, @NotNull SomaticVariant variant) {
+        for (DriverCatalog entry : driverCatalogList) {
+            if (entry.gene().equals(variant.gene())) {
+                return entry;
+            }
+        }
+        return null;
     }
 
     @NotNull

@@ -3,10 +3,10 @@ package com.hartwig.hmftools.patientreporter;
 import java.util.List;
 import java.util.Optional;
 
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.patientreporter.algo.DriverProbabilityModel;
 import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
 import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 
@@ -28,10 +28,10 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract double impliedPurity();
 
     @NotNull
-    public abstract DriverProbabilityModel driverProbabilityModel();
+    public abstract List<EnrichedSomaticVariant> somaticVariants();
 
     @NotNull
-    public abstract List<EnrichedSomaticVariant> somaticVariants();
+    public abstract List<DriverCatalog> somaticVariantDriverCatalog();
 
     public abstract double microsatelliteIndelsPerMb();
 

@@ -16,7 +16,10 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
+import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -48,7 +51,6 @@ import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
-import com.hartwig.hmftools.patientreporter.algo.DriverProbabilityModel;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
 import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
@@ -89,15 +91,18 @@ public class PDFWriterTest {
         final List<GeneCopyNumber> copyNumbers = createTestCopyNumbers();
         final List<GeneFusion> fusions = createTestFusions();
         final List<GeneDisruption> disruptions = createTestDisruptions();
-        final List<DriverCatalog> driverCatalogList = DriverProbabilityModel.createDriverCatalogForSomaticVariants(variants);
+
+        final List<DriverCatalog> driverCatalog = Lists.newArrayList();
+        driverCatalog.addAll(OncoDrivers.drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), variants));
+        driverCatalog.addAll(TsgDrivers.drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), variants));
 
         final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
 
         final AnalysedPatientReport patientReport = ImmutableAnalysedPatientReport.of(sampleReport,
                 FittedPurityStatus.NORMAL,
                 impliedTumorPurity,
-                new DriverProbabilityModel(driverCatalogList),
                 variants,
+                driverCatalog,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
                 tumorMutationalBurden,
