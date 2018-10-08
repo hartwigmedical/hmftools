@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.actionability.CNVs;
+package com.hartwig.hmftools.common.actionability.cnv;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.actionability.cancerTypeMapping.CancerTypeAnalyzer;
+import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.actionability.variants;
+package com.hartwig.hmftools.common.actionability.somaticvariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

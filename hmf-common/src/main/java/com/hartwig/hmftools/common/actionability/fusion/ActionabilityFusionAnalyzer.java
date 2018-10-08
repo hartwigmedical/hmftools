@@ -1,21 +1,20 @@
-package com.hartwig.hmftools.actionability.fusions;
+package com.hartwig.hmftools.common.actionability.fusion;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class ActionabilityFusionAnalyzer {
-    private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(ActionabilityFusionAnalyzer.class);
-    static final String DELIMITER = "\t";
+    private static final Logger LOGGER = LogManager.getLogger(ActionabilityFusionAnalyzer.class);
+    private static final String DELIMITER = "\t";
 
 
     private ActionabilityFusionAnalyzer(@NotNull final List<ActionabilityFusionPairs> fusionPairs,
@@ -28,7 +27,7 @@ public class ActionabilityFusionAnalyzer {
     private final List<ActionabilityPromiscuosThree> promiscuousThree;
     private final List<ActionabilityPromiscuousFive> promiscuousFive;
 
-    public boolean actionableFusions(@NotNull SomaticVariant variant, @NotNull String primaryTumorLocation, @NotNull int sizeVariants) {
+    public boolean actionableFusions(@NotNull SomaticVariant variant, @NotNull String primaryTumorLocation, int sizeVariants) {
         return true;
     }
 

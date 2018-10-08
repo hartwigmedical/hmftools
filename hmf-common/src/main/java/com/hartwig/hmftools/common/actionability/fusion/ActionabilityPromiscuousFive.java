@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.actionability.fusions;
+package com.hartwig.hmftools.common.actionability.fusion;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -7,13 +7,10 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-abstract class ActionabilityFusionPairs {
+abstract class ActionabilityPromiscuousFive {
 
     @NotNull
-    abstract String fiveGene();
-
-    @NotNull
-    abstract String threeGene();
+    abstract String gene();
 
     @NotNull
     abstract String source();

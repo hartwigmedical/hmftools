@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.actionability.cancerTypeMapping;
+package com.hartwig.hmftools.common.actionability.cancertype;
 
 import java.io.File;
 import java.io.IOException;

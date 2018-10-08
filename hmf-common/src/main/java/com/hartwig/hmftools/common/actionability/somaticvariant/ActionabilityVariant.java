@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.actionability.CNVs;
+package com.hartwig.hmftools.common.actionability.somaticvariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -7,13 +7,21 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-abstract class ActionabilityCNVs {
+abstract class ActionabilityVariant {
 
     @NotNull
     abstract String gene();
 
     @NotNull
-    abstract String cnvType();
+    abstract String chromosome();
+
+    abstract long position();
+
+    @NotNull
+    abstract String ref();
+
+    @NotNull
+    abstract String alt();
 
     @NotNull
     abstract String source();
@@ -22,7 +30,7 @@ abstract class ActionabilityCNVs {
     abstract String reference();
 
     @NotNull
-    abstract String drugsName();
+    abstract String drug();
 
     @NotNull
     abstract String drugsType();
@@ -31,8 +39,8 @@ abstract class ActionabilityCNVs {
     abstract String cancerType();
 
     @NotNull
-    abstract String hmfLevel();
+    abstract String level();
 
     @NotNull
-    abstract String hmfResponse();
+    abstract String response();
 }

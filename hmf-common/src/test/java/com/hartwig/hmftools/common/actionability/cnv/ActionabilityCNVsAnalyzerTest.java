@@ -1,21 +1,17 @@
-package com.hartwig.hmftools.actionability.CNVs;
-
-import static org.junit.Assert.assertEquals;
+package com.hartwig.hmftools.common.actionability.cnv;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.actionability.cancerTypeMapping.CancerTypeAnalyzer;
-import com.hartwig.hmftools.actionability.cancerTypeMapping.CancerTypeReading;
-import com.hartwig.hmftools.actionability.cancerTypeMapping.ImmutableCancerTypeReading;
+import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
+import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeReading;
+import com.hartwig.hmftools.common.actionability.cancertype.ImmutableCancerTypeReading;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.junit.Ignore;
-import org.junit.Test;
 
 public class ActionabilityCNVsAnalyzerTest {
-
 
     @Ignore
     public void ActionabilityWorksCNVs() {
@@ -32,10 +28,7 @@ public class ActionabilityCNVsAnalyzerTest {
                 .hmfResponse("Responsive")
                 .build();
 
-        CancerTypeReading reading = ImmutableCancerTypeReading.builder()
-                .doidSet("1612")
-                .cancerType("Breast")
-                .build();
+        CancerTypeReading reading = ImmutableCancerTypeReading.builder().doidSet("1612").cancerType("Breast").build();
 
         ActionabilityCNVsAnalyzer cnvAnalyzer = new ActionabilityCNVsAnalyzer(Lists.newArrayList(actionanilityCNV));
         CancerTypeAnalyzer cancerType = new CancerTypeAnalyzer(Lists.newArrayList(reading));
@@ -71,8 +64,8 @@ public class ActionabilityCNVsAnalyzerTest {
                 .missenseNonBiallelicCount(0)
                 .build();
 
-     //   assertEquals(true, cnvAnalyzer.actionableCNVs(geneCopyNumber, cancerType, "1612", "Breast"));
-     //   assertEquals(false, cnvAnalyzer.actionableCNVs(geneCopyNumber, cancerType, "1612", "Skin"));
+        //   assertEquals(true, cnvAnalyzer.actionableCNVs(geneCopyNumber, cancerType, "1612", "Breast"));
+        //   assertEquals(false, cnvAnalyzer.actionableCNVs(geneCopyNumber, cancerType, "1612", "Skin"));
 
     }
 }

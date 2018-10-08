@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.actionability.cancerTypeMapping;
+package com.hartwig.hmftools.common.actionability.cancertype;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

@@ -1,11 +1,9 @@
-package com.hartwig.hmftools.actionability.variants;
-
-import static org.junit.Assert.assertEquals;
+package com.hartwig.hmftools.common.actionability.somaticvariant;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.actionability.cancerTypeMapping.CancerTypeAnalyzer;
-import com.hartwig.hmftools.actionability.cancerTypeMapping.CancerTypeReading;
-import com.hartwig.hmftools.actionability.cancerTypeMapping.ImmutableCancerTypeReading;
+import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
+import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeReading;
+import com.hartwig.hmftools.common.actionability.cancertype.ImmutableCancerTypeReading;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
@@ -77,9 +75,9 @@ public class ActionabilityVariantsAnalyzerTest {
                 .mappability(0D)
                 .build();
 
-     //   assertEquals(false, analyzer.actionableVariants(variant, cancerType, "4159", "Skin"));
-     //   assertEquals(false, analyzer.actionableVariants(variant, cancerType, "4159", "Breast"));
-   //     assertEquals(true, analyzer.actionableRange(variant, cancerType, "4159", "Skin"));
-    //    assertEquals(false, analyzer.actionableRange(variant, cancerType, "4159", "Kidney"));
+        //   assertEquals(false, analyzer.actionableVariants(variant, cancerType, "4159", "Skin"));
+        //   assertEquals(false, analyzer.actionableVariants(variant, cancerType, "4159", "Breast"));
+        //     assertEquals(true, analyzer.actionableRange(variant, cancerType, "4159", "Skin"));
+        //    assertEquals(false, analyzer.actionableRange(variant, cancerType, "4159", "Kidney"));
     }
 }

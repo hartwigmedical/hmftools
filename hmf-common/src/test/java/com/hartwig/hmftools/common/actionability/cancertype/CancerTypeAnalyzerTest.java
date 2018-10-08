@@ -1,7 +1,6 @@
-package com.hartwig.hmftools.actionability.cancerTypeMapping;
+package com.hartwig.hmftools.common.actionability.cancertype;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
 

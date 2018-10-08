@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.actionability.cancerTypeMapping;
+package com.hartwig.hmftools.common.actionability.cancertype;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 public class CancerTypeMappingReading {
 
     private static final InputStream TUMOR_LOCATION_MAPPING_RESOURCE =
-            CancerTypeMappingReading.class.getResourceAsStream("/primary_tumor_locations_mapping.csv");
+            CancerTypeMappingReading.class.getResourceAsStream("/actionability/primary_tumor_locations_mapping.csv");
 
     @NotNull
     private final Map<String, CancerTypeMapping> tumorLocationMap = Maps.newHashMap();

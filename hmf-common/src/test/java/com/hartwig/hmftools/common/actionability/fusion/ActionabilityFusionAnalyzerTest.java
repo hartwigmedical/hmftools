@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.actionability.fusions;
+package com.hartwig.hmftools.common.actionability.fusion;
 
 import org.junit.Ignore;
 
