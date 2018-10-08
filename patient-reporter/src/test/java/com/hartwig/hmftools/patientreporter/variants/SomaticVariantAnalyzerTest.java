@@ -3,9 +3,12 @@ package com.hartwig.hmftools.patientreporter.variants;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
@@ -18,23 +21,32 @@ public class SomaticVariantAnalyzerTest {
 
     private static final String PASS_FILTER = "PASS";
 
-    private static final CodingEffect RIGHT_EFFECT = CodingEffect.MISSENSE;
-    private static final CodingEffect WRONG_EFFECT = CodingEffect.SYNONYMOUS;
+    private static final CodingEffect SPLICE = CodingEffect.SPLICE;
+    private static final CodingEffect MISSENSE = CodingEffect.MISSENSE;
+    private static final CodingEffect SYNONYMOUS = CodingEffect.SYNONYMOUS;
     private static final String RIGHT_GENE = "RIGHT";
     private static final String WRONG_GENE = "WRONG";
 
     @Test
-    public void realCaseWorks() {
-        final List<EnrichedSomaticVariant> variants =
-                Lists.newArrayList(builder().gene(RIGHT_GENE).canonicalCodingEffect(RIGHT_EFFECT).worstCodingEffect(RIGHT_EFFECT).build(),
-                        builder().gene(RIGHT_GENE).canonicalCodingEffect(WRONG_EFFECT).worstCodingEffect(WRONG_EFFECT).build(),
-                        builder().gene(WRONG_GENE).canonicalCodingEffect(RIGHT_EFFECT).worstCodingEffect(RIGHT_EFFECT).build(),
-                        builder().gene(WRONG_GENE).canonicalCodingEffect(WRONG_EFFECT).worstCodingEffect(WRONG_EFFECT).build());
+    public void onlyReportsAndCountsRelevantVariants() {
+        List<EnrichedSomaticVariant> variants =
+                Lists.newArrayList(builder().gene(RIGHT_GENE).canonicalCodingEffect(MISSENSE).worstCodingEffect(MISSENSE).build(),
+                        builder().gene(RIGHT_GENE).canonicalCodingEffect(SYNONYMOUS).worstCodingEffect(SYNONYMOUS).build(),
+                        builder().gene(RIGHT_GENE).canonicalCodingEffect(SPLICE).worstCodingEffect(SPLICE).build(),
+                        builder().gene(WRONG_GENE).canonicalCodingEffect(MISSENSE).worstCodingEffect(MISSENSE).build(),
+                        builder().gene(WRONG_GENE).canonicalCodingEffect(SYNONYMOUS).worstCodingEffect(SYNONYMOUS).build());
 
-        final SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants, Sets.newHashSet(RIGHT_GENE));
+        SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants, Sets.newHashSet(RIGHT_GENE), Maps.newHashMap());
 
         assertEquals(2, analysis.tumorMutationalLoad());
-        assertEquals(1, analysis.variantsToReport().size());
+        assertEquals(2, analysis.variantsToReport().size());
+
+        Map<String, DriverCategory> driverCategoryMap = Maps.newHashMap();
+        driverCategoryMap.put(RIGHT_GENE, DriverCategory.ONCO);
+        SomaticVariantAnalysis analysisOnco = SomaticVariantAnalyzer.run(variants, Sets.newHashSet(RIGHT_GENE), driverCategoryMap);
+
+        assertEquals(2, analysisOnco.tumorMutationalLoad());
+        assertEquals(1, analysisOnco.variantsToReport().size());
     }
 
     @NotNull
