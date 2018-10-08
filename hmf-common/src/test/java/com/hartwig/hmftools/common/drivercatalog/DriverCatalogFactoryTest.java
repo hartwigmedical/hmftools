@@ -6,6 +6,8 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
+import com.hartwig.hmftools.common.dnds.DndsDriverImpactLikelihood;
+import com.hartwig.hmftools.common.dnds.ImmutableDndsDriverImpactLikelihood;
 
 import org.junit.Test;
 
@@ -33,4 +35,21 @@ public class DriverCatalogFactoryTest {
         double value = DriverCatalogFactory.probabilityDriverVariant(587, dnds.get("GATA3").indel());
         assertEquals(0.9952, value, EPSILON);
     }
+
+    @Test
+    public void testMultipleZeroNonDriver()  {
+        DndsDriverImpactLikelihood indelLikelihood = ImmutableDndsDriverImpactLikelihood.builder().dndsLikelihood(1).pDriver(0.01).pVariantNonDriverFactor(0).build();
+        double value = DriverCatalogFactory.probabilityDriverVariant(1000, 1000, indelLikelihood, indelLikelihood);
+        assertEquals(1, value, EPSILON);
+    }
+
+    @Test
+    public void testZeroNonDriverWithStandard()  {
+        DndsDriverImpactLikelihood indelLikelihood = ImmutableDndsDriverImpactLikelihood.builder().dndsLikelihood(1).pDriver(0.01).pVariantNonDriverFactor(0).build();
+        DndsDriverImpactLikelihood missenseLikelihood = ImmutableDndsDriverImpactLikelihood.builder().dndsLikelihood(0.87).pDriver(0.01).pVariantNonDriverFactor(10e-8).build();
+
+        double value = DriverCatalogFactory.probabilityDriverVariant(10000, 1000, missenseLikelihood, indelLikelihood);
+        assertEquals(1, value, EPSILON);
+    }
+
 }
