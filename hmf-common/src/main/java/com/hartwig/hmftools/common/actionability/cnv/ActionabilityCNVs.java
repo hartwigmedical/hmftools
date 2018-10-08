@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-abstract class ActionabilityCNVs {
+public abstract class ActionabilityCNVs {
 
     @NotNull
     abstract String gene();

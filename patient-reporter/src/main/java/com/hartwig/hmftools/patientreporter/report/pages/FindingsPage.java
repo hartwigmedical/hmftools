@@ -19,6 +19,8 @@ import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection
 import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSection;
 import com.hartwig.hmftools.patientreporter.report.components.MutationalLoadSection;
 import com.hartwig.hmftools.patientreporter.report.components.TumorMutationBurdenSection;
+import com.hartwig.hmftools.patientreporter.report.data.ActionabilityVariantData;
+import com.hartwig.hmftools.patientreporter.report.data.ActionabilityVariantsDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionDataSource;
@@ -62,7 +64,9 @@ public abstract class FindingsPage {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 tumorMutationalBurdenReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                geneDisruptionReport(report()));
+                geneDisruptionReport(report()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                actionabiltyVariants(report()));
     }
 
     @NotNull
@@ -181,5 +185,23 @@ public abstract class FindingsPage {
         return cmp.verticalList(cmp.text("Somatic Gene Disruptions").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
                 table);
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> actionabiltyVariants(@NotNull final AnalysedPatientReport report) {
+        final ComponentBuilder<?, ?> table = report.geneDisruptions().size() > 0
+                ? cmp.subreport(monospaceBaseTable().fields(ActionabilityVariantsDataSource.actionabilityFields())
+                .columns(col.column("Event", ActionabilityVariantsDataSource.EVENT),
+                        col.column("Matching cancerType", ActionabilityVariantsDataSource.MATCHING_CANCERTYPE),
+                        col.column("Source", ActionabilityVariantsDataSource.SOURCE),
+                        col.column("Drug", ActionabilityVariantsDataSource.DRUG),
+                        col.column("Drugs type", ActionabilityVariantsDataSource.DRUGS_TYPE),
+                        col.column("Level", ActionabilityVariantsDataSource.LEVEL),
+                        col.column("Response", ActionabilityVariantsDataSource.RESPONSE))
+                .setDataSource(ActionabilityVariantsDataSource.fromActionabilityVariants()))
+                : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
+        return cmp.verticalList(cmp.text("Actionability Variants").setStyle(sectionHeaderStyle()),
+                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE), table);
+
     }
 }
