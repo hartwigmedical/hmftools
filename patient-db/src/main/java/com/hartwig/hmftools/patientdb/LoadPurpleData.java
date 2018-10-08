@@ -35,6 +35,7 @@ public class LoadPurpleData {
     private static final Logger LOGGER = LogManager.getLogger(LoadPurpleData.class);
 
     private static final String SAMPLE = "sample";
+    private static final String ALIAS = "sample";
     private static final String PURPLE_DIR = "purple_dir";
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -76,7 +77,7 @@ public class LoadPurpleData {
 
         LOGGER.info("Persisting to db");
         persistToDatabase(dbAccess,
-                tumorSample,
+                cmd.hasOption(ALIAS) ? cmd.getOptionValue(ALIAS) : tumorSample,
                 bestFitPerPurity,
                 copyNumbers,
                 germlineDeletions,
@@ -96,6 +97,7 @@ public class LoadPurpleData {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
+        options.addOption(ALIAS, true, "Overwrite the sample name with specified alias when writing to db");
         options.addOption(DATA_REQUEST, false, "Load from data request. Minimises data requirements.");
         return options;
     }
