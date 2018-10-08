@@ -19,7 +19,6 @@ import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection
 import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSection;
 import com.hartwig.hmftools.patientreporter.report.components.MutationalLoadSection;
 import com.hartwig.hmftools.patientreporter.report.components.TumorMutationBurdenSection;
-import com.hartwig.hmftools.patientreporter.report.data.ActionabilityVariantData;
 import com.hartwig.hmftools.patientreporter.report.data.ActionabilityVariantsDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionDataSource;
@@ -52,6 +51,8 @@ public abstract class FindingsPage {
                 report().sampleReport(),
                 impliedPurityString(report())),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
+                actionabiltyVariants(report()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
                 somaticVariantReport(report(), reporterData().panelGeneModel()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 geneCopyNumberReport(report()),
@@ -64,9 +65,7 @@ public abstract class FindingsPage {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 tumorMutationalBurdenReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                geneDisruptionReport(report()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                actionabiltyVariants(report()));
+                geneDisruptionReport(report()));
     }
 
     @NotNull
