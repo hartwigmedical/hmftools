@@ -47,18 +47,19 @@ public final class PatientReporterTestUtil {
         return DrupActionabilityModelFactory.buildFromCsv(DRUP_GENES_CSV);
     }
 
-//    @NotNull
-//    public static SequencedReportData testSequencedReportData() throws IOException {
-//        DrupActionabilityModel drupActionabilityModel = testDrupActionabilityModel();
-//        GeneModel geneModel = GeneModelFactory.create(drupActionabilityModel);
-//        CompoundEnrichment compoundEnrichment = new CompoundEnrichment(HotspotEnrichment.fromHotspotsFile(HOTSPOT_TSV));
-//
-//        return ImmutableSequencedReportData.of(geneModel,
-//                compoundEnrichment,
-//                testKnownFusionModel(),
-//                new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),
-//                TreeMultimap.create());
-//    }
+    @NotNull
+    public static SequencedReportData testSequencedReportData() throws IOException {
+        DrupActionabilityModel drupActionabilityModel = testDrupActionabilityModel();
+        GeneModel geneModel = GeneModelFactory.create(drupActionabilityModel);
+        CompoundEnrichment compoundEnrichment = new CompoundEnrichment(HotspotEnrichment.fromHotspotsFile(HOTSPOT_TSV));
+
+        return ImmutableSequencedReportData.of(geneModel,
+                compoundEnrichment,
+                testKnownFusionModel(),
+                new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),
+                TreeMultimap.create(),
+                Lists.newArrayList());
+    }
 
     @NotNull
     public static KnownFusionsModel testKnownFusionModel() throws IOException {
