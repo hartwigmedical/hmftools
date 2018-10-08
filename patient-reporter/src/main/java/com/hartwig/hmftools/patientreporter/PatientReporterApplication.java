@@ -121,7 +121,8 @@ public class PatientReporterApplication {
                 cmd.getOptionValue(DRUP_GENES_CSV),
                 cmd.getOptionValue(HOTSPOT_TSV),
                 cmd.getOptionValue(FASTA_FILE_LOCATION),
-                cmd.getOptionValue(HIGH_CONFIDENCE_BED));
+                cmd.getOptionValue(HIGH_CONFIDENCE_BED),
+                cmd.getOptionValue(TUMOR_LOCATION_CSV));
     }
 
     @NotNull
