@@ -58,6 +58,20 @@ public abstract class GeneModel {
     }
 
     @Value.Derived
+    public boolean isDeletionReportable(@NotNull String gene) {
+        // TODO (KODU): Filter out onco genes from drup actionable genes.
+        return significantlyDeletedGenes().keySet().contains(gene) || somaticVariantDriverCategoryMap().get(gene) != DriverCategory.ONCO
+                || drupActionableGenes().keySet().contains(gene);
+    }
+
+    @Value.Derived
+    public boolean isAmplificationReportable(@NotNull String gene) {
+        // TODO (KODU): Filter out tsg genes from drup actionable genes.
+        return significantlyAmplifiedGenes().keySet().contains(gene) || somaticVariantDriverCategoryMap().get(gene) != DriverCategory.TSG
+                || drupActionableGenes().keySet().contains(gene);
+    }
+
+    @Value.Derived
     @NotNull
     public Set<String> disruptionGeneIDPanel() {
         // KODU: Structural variant analyser requires a set of ensembl IDs rather than a set of gene names.
@@ -75,21 +89,6 @@ public abstract class GeneModel {
         }
 
         return disruptionGeneIDPanel;
-    }
-
-
-    @Value.Derived
-    public boolean isDeletionReportable(@NotNull String gene) {
-        // TODO (KODU): Filter out onco genes from drup actionable genes.
-        return significantlyDeletedGenes().keySet().contains(gene) || somaticVariantDriverCategoryMap().get(gene) != DriverCategory.ONCO
-                || drupActionableGenes().keySet().contains(gene);
-    }
-
-    @Value.Derived
-    public boolean isAmplificationReportable(@NotNull String gene) {
-        // TODO (KODU): Filter out tsg genes from drup actionable genes.
-        return significantlyAmplifiedGenes().keySet().contains(gene) || somaticVariantDriverCategoryMap().get(gene) != DriverCategory.TSG
-                || drupActionableGenes().keySet().contains(gene);
     }
 
     @Value.Derived
