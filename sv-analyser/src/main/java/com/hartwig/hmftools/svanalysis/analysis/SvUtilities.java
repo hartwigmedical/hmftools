@@ -394,4 +394,25 @@ public class SvUtilities {
         return chrArm.split("_")[1];
     }
 
+    public static int MAX_FACTORIAL_VALUE = 40;
+
+    public static long factorial(long i)
+    {
+        if(i <= 1 || i > MAX_FACTORIAL_VALUE)
+            return 1;
+
+        return i * factorial(i - 1);
+    }
+
+    public static long combination(long n, long k)
+    {
+        long nFact = factorial(n);
+        long kFact = factorial(k);
+        long nKFact = factorial(n- k);
+        long calc = nFact / nKFact;
+        calc /= kFact;
+        return calc;
+    }
+
+
 }

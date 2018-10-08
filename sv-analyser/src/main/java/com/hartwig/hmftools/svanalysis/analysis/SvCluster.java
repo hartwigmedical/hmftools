@@ -290,6 +290,9 @@ public class SvCluster
 
         for(final SvClusterData var : mSVs)
         {
+            if(var.isReplicatedSv())
+                continue;
+
             String typeStr = var.typeStr();
             if(typeMap.containsKey(typeStr))
             {
@@ -397,30 +400,6 @@ public class SvCluster
                 mUniqueBreakends.add(new SvBreakend(var.chromosome(useStart), var.position(useStart), var.orientation(useStart)));
             }
         }
-    }
-
-    public int getDuplicateBECount()
-    {
-        int count = 0;
-        for(final SvBreakend breakend : mUniqueBreakends)
-        {
-            if(breakend.getCount() > 1)
-                count += breakend.getCount();
-        }
-
-        return count;
-    }
-
-    public int getDuplicateBESiteCount()
-    {
-        int count = 0;
-        for(final SvBreakend breakend : mUniqueBreakends)
-        {
-            if(breakend.getCount() > 1)
-                ++count;
-        }
-
-        return count;
     }
 
     public final SvLinkedPair getLinkedPair(final SvClusterData var, boolean useStart)

@@ -202,6 +202,7 @@ public class SvClusterData
 
     public boolean isReplicatedSv() { return mIsReplicatedSv; }
     public final SvClusterData getReplicatedSv() { return mReplicatedSv; }
+    public final String origId() { return mReplicatedSv != null ? mReplicatedSv.id() : mId; }
     public boolean equals(final SvClusterData other, boolean allowReplicated)
     {
         if(this == other)

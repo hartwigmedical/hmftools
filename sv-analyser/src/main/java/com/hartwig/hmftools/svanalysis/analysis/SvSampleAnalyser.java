@@ -66,10 +66,10 @@ public class SvSampleAnalyser {
     {
         mConfig = config;
         mClusteringUtils = new SvUtilities(mConfig.ClusterBaseDistance);
-        mFileWriter = null;
-        mAnalyser = new ClusterAnalyser(config, mClusteringUtils);
-
         mClusteringMethods = new SvClusteringMethods(mClusteringUtils);
+        mAnalyser = new ClusterAnalyser(config, mClusteringUtils, mClusteringMethods);
+
+        mFileWriter = null;
 
         mSvPONAnnotator = new SvPONAnnotator();
         mSvPONAnnotator.loadPonFile(mConfig.SvPONFile);
@@ -154,7 +154,7 @@ public class SvSampleAnalyser {
 
         mPc3.start();
         mClusteringMethods.clusterByBaseDistance(mAllVariants, mClusters);
-        mClusteringMethods.mergeClusters(mClusters);
+        // mClusteringMethods.mergeClusters(mClusters);
         mPc3.stop();
 
         mPc4.start();
@@ -165,8 +165,6 @@ public class SvSampleAnalyser {
             cluster.setUniqueBreakends();
         }
 
-        mAnalyser.setChrCopyNumberData(mClusteringMethods.getChrCopyNumberMap());
-        mAnalyser.setChrBreakendData(mClusteringMethods.getChrBreakendMap());
         mAnalyser.findLinksAndChains(mSampleId, mClusters);
 
         mPc4.stop();
@@ -193,16 +191,16 @@ public class SvSampleAnalyser {
     {
         int currentIndex = 0;
 
-        while(currentIndex < mAllVariants.size()) {
-
+        while(currentIndex < mAllVariants.size())
+        {
             SvClusterData var = mAllVariants.get(currentIndex);
 
             if(mExternalAnnotator.hasData())
             {
                 mExternalAnnotator.setSVData(mSampleId, var);
             }
-            else {
-
+            else
+            {
                 mSvPONAnnotator.setPonOccurenceCount(var);
                 var.setFragileSites(mFragileSiteAnnotator.isFragileSite(var, true), mFragileSiteAnnotator.isFragileSite(var, false));
                 var.setLineElements(mLineElementAnnotator.isLineElement(var, true), mLineElementAnnotator.isLineElement(var, false));
@@ -282,7 +280,7 @@ public class SvSampleAnalyser {
                 writer.write(",AsmbStart,AsmbEnd,AsmbMatchStart,AsmbMatchEnd");
 
                 // chain info
-                writer.write(",ChainId,ChainCount,ChainTICount,ChainDBCount,ChainIndex");
+                writer.write(",ChainId,ChainCount,ChainIndex");
 
                 // proximity info
                 writer.write(",NearestLen,NearestType");
@@ -301,8 +299,13 @@ public class SvSampleAnalyser {
 
             for(final SvCluster cluster : mClusters)
             {
+                int varCount = cluster.getUniqueSvCount();
+
                 for (final SvClusterData var : cluster.getSVs())
                 {
+                    if(var.isReplicatedSv())
+                        continue;
+
                     final StructuralVariantData dbData = var.getSvData();
 
                     ++svCount;
@@ -310,7 +313,7 @@ public class SvSampleAnalyser {
                     String typeStr = var.isNullBreakend() ? "SGL" : var.type().toString();
                     writer.write(
                             String.format("%s,%d,%d,%s,%s,%.2f",
-                                    mSampleId, cluster.getId(), cluster.getCount(), var.id(), typeStr, dbData.ploidy()));
+                                    mSampleId, cluster.getId(), varCount, var.id(), typeStr, dbData.ploidy()));
 
                     writer.write(
                             String.format(",%s,%d,%d,%s,%.2f,%.2f,%.2f,%s,%d,%d,%s,%.2f,%.2f,%.2f",
@@ -343,7 +346,7 @@ public class SvSampleAnalyser {
                     if(startLP != null)
                     {
                         startLinkStr = String.format("%s,%s,%d",
-                                startLP.first().equals(var) ? startLP.second().id() : startLP.first().id(), startLP.linkType(), startLP.length());
+                                startLP.first().equals(var, true) ? startLP.second().origId() : startLP.first().origId(), startLP.linkType(), startLP.length());
                     }
 
                     final SvLinkedPair endLP = cluster.getLinkedPair(var, false);
@@ -352,7 +355,7 @@ public class SvSampleAnalyser {
                     if(endLP != null)
                     {
                         endLinkStr = String.format("%s,%s,%d",
-                                endLP.first().equals(var) ? endLP.second().id() : endLP.first().id(), endLP.linkType(), endLP.length());
+                                endLP.first().equals(var, true) ? endLP.second().origId() : endLP.first().origId(), endLP.linkType(), endLP.length());
                     }
 
                     if(assemblyMatchStart.equals(ASSEMBLY_MATCH_ASMB_ONLY) || assemblyMatchEnd.equals(ASSEMBLY_MATCH_ASMB_ONLY))
@@ -366,12 +369,11 @@ public class SvSampleAnalyser {
 
                     // chain info
                     final SvChain chain = cluster.findChain(var);
-                    String chainStr = ",0,0,0,0,0";
+                    String chainStr = ",0,0,";
 
                     if(chain != null)
                     {
-                        chainStr = String.format(",%d,%d,%d,%d,%d",
-                                chain.getId(), chain.getLinkCount(), chain.getTICount(), chain.getDBCount(), chain.getSvIndex(var));
+                        chainStr = String.format(",%d,%d,%s", chain.getId(), chain.getUniqueSvCount(), chain.getSvIndices(var));
                     }
 
                     writer.write(chainStr);

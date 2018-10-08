@@ -65,6 +65,7 @@ public class SvClusteringMethods {
 
     public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
     public Map<String, Integer> getChrCopyNumberMap() { return mChrCopyNumberMap; }
+    public int getNextClusterId() { return mNextClusterId++; }
 
     public void clusterByBaseDistance(List<SvClusterData> allVariants, List<SvCluster> clusters)
     {
@@ -92,8 +93,6 @@ public class SvClusteringMethods {
             clusters.add(newCluster);
         }
     }
-
-    private int getNextClusterId() { return mNextClusterId++; }
 
     private void findLinkedSVsByDistance(SvCluster cluster, List<SvClusterData> unassignedVariants)
     {

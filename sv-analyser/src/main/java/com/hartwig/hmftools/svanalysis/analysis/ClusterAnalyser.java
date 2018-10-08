@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvClusterData.haveLinkedAssemblies;
 import static com.hartwig.hmftools.svanalysis.types.SvClusterData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_DIFF;
-import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_LINK_ONLY;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_INFER_ONLY;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 
 import java.util.HashMap;
@@ -17,7 +17,6 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
@@ -31,14 +30,14 @@ public class ClusterAnalyser {
 
     final SvClusteringConfig mConfig;
     final SvUtilities mUtils;
+    SvClusteringMethods mClusteringMethods;
 
     private ChainFinder mChainFinder;
-    private Map<String, Integer> mChrCopyNumberMap;
-    private Map<String, List<SvBreakend>> mChrBreakendMap;
 
     public static int MIN_TEMPLATED_INSERTION_LENGTH = 30;
     private static int MAX_TEMPLATED_INSERTION_LENGTH = 500;
     public static double MAX_COPY_NUMBER_DIFF = 0.5;
+    public static double MAX_COPY_NUMBER_DIFF_PERC = 0.1;
     public static int CLUSTER_SIZE_ANALYSIS_LIMIT = 100;
 
     public static String TRANS_TYPE_TRANS = "TRANS";
@@ -46,12 +45,12 @@ public class ClusterAnalyser {
 
     private static final Logger LOGGER = LogManager.getLogger(ClusterAnalyser.class);
 
-    public ClusterAnalyser(final SvClusteringConfig config, final SvUtilities utils)
+    public ClusterAnalyser(final SvClusteringConfig config, final SvUtilities utils, SvClusteringMethods clusteringMethods)
     {
         mConfig = config;
         mUtils = utils;
+        mClusteringMethods = clusteringMethods;
         mChainFinder = new ChainFinder(mUtils);
-        mChrCopyNumberMap = null;
     }
 
     public void setClusterStats(SvCluster cluster)
@@ -59,8 +58,7 @@ public class ClusterAnalyser {
         cluster.setConsistencyCount();
 
         // record an expression of the types of SVs in this cluster
-        String clusterTypes = cluster.getClusterTypesAsString();
-        cluster.setDesc(clusterTypes);
+        cluster.setDesc(cluster.getClusterTypesAsString());
 
         if(cluster.getCount() > 1)
         {
@@ -69,9 +67,6 @@ public class ClusterAnalyser {
                     cluster.getChromosomalArmCount(), cluster.isConsistent(), cluster.getConsistencyCount());
         }
     }
-
-    public void setChrCopyNumberData(Map<String, Integer> map) { mChrCopyNumberMap = map; }
-    public void setChrBreakendData(Map<String, List<SvBreakend>> map) { mChrBreakendMap = map; }
 
     public void findLinksAndChains(final String sampleId, List<SvCluster> clusters)
     {
@@ -96,6 +91,8 @@ public class ClusterAnalyser {
         {
             if(cluster.hasSubClusters())
             {
+                cluster.setDesc(cluster.getClusterTypesAsString());
+
                 // repeat the search for inferred links now that additional SVs have been merged in
                 List<SvLinkedPair> newLinkedPairs = createInferredLinkedPairs(sampleId, cluster, true);
                 cluster.getInferredLinkedPairs().addAll(newLinkedPairs);
@@ -166,7 +163,7 @@ public class ClusterAnalyser {
         {
             int calcCopyNumber = var.impliedCopyNumber(true);
 
-            int chromosomeCopyNumber = mChrCopyNumberMap.get(var.chromosome(true));
+            int chromosomeCopyNumber = mClusteringMethods.getChrCopyNumberMap().get(var.chromosome(true));
 
             // TEMP: until chromosomal copy-number calc working
             if(mConfig.SampleCopyNumber != 1)
@@ -291,7 +288,7 @@ public class ClusterAnalyser {
                     cluster1Merged = true;
                     cluster2Merged = true;
 
-                    newCluster = new SvCluster(clusters.size(), mUtils);
+                    newCluster = new SvCluster(mClusteringMethods.getNextClusterId(), mUtils);
 
                     LOGGER.debug("new cluster({}) from merge of cluster({} svs={}) and cluster({} svs={})",
                             newCluster.getId(), cluster1.getId(), cluster1.getCount(), cluster2.getId(), cluster2.getCount());
@@ -340,7 +337,7 @@ public class ClusterAnalyser {
 
         Map<String, List<SvCNData>> chrCNDataMap = new HashMap();
 
-        for(Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
+        for(Map.Entry<String, List<SvBreakend>> entry : mClusteringMethods.getChrBreakendMap().entrySet())
         {
             final String chromosome = entry.getKey();
 
@@ -359,8 +356,8 @@ public class ClusterAnalyser {
 
                 int adjCopyNumber = (int)round(copyNumber/2 - 1);
 
-                LOGGER.debug(String.format("sample(%s) chr(%s) seg %d: copyNumber(%d %.2f prev=%.2f chg=%.2f)",
-                        sampleId, chromosome, i, adjCopyNumber, copyNumber, prevCopyNumber, copyNumberChange));
+                //LOGGER.debug(String.format("sample(%s) chr(%s) seg %d: copyNumber(%d %.2f prev=%.2f chg=%.2f)",
+                //        sampleId, chromosome, i, adjCopyNumber, copyNumber, prevCopyNumber, copyNumberChange));
 
                 if(clusterSVs.contains(var))
                 {
@@ -600,8 +597,8 @@ public class ClusterAnalyser {
                         if(newPair.length() < mUtils.getBaseDistance())
                         {
                             // to avoid logging unlikely long TIs
-                            LOGGER.debug("sample({}) cluster({}) adding inferred linked {} pair({}) length({}) at index({})",
-                                    sampleId, cluster.getId(), newPair.linkType(), newPair.toString(), newPair.length(), index);
+                            //LOGGER.debug("sample({}) cluster({}) adding inferred linked {} pair({}) length({}) at index({})",
+                            //         sampleId, cluster.getId(), newPair.linkType(), newPair.toString(), newPair.length(), index);
                         }
                     }
                 }
@@ -732,29 +729,38 @@ public class ClusterAnalyser {
 
     private void cacheFinalLinkedPairs(final String sampleId, SvCluster cluster)
     {
-        List<SvLinkedPair> inferredLinkedPairs = cluster.getInferredLinkedPairs();
+        List<SvLinkedPair> linkedPairs;
 
-        reduceInferredToShortestLinks(inferredLinkedPairs, cluster.getChains());
-
-        List<SvLinkedPair> assemblyLinkedPairs = cluster.getAssemblyLinkedPairs();
-
-        // remove any linked which aren't part of chains
-
-        // mark the resultant set of inferred links
-        for(SvLinkedPair pair : inferredLinkedPairs)
+        if(cluster.isFullyChained())
         {
-            pair.first().setAssemblyMatchType(ASSEMBLY_MATCH_LINK_ONLY, pair.firstLinkOnStart());
-            pair.second().setAssemblyMatchType(ASSEMBLY_MATCH_LINK_ONLY, pair.secondLinkOnStart());
+            linkedPairs = cluster.getChains().get(0).getLinkedPairs();
         }
+        else
+        {
+            List<SvLinkedPair> inferredLinkedPairs = cluster.getInferredLinkedPairs();
 
-        List<SvLinkedPair> linkedPairs = Lists.newArrayList();
-        linkedPairs.addAll(assemblyLinkedPairs);
-        linkedPairs.addAll(inferredLinkedPairs);
+            reduceInferredToShortestLinks(inferredLinkedPairs, cluster.getChains());
+
+            List<SvLinkedPair> assemblyLinkedPairs = cluster.getAssemblyLinkedPairs();
+
+            // remove any linked which aren't part of chains
+
+            // mark the resultant set of inferred links
+            for (SvLinkedPair pair : inferredLinkedPairs)
+            {
+                pair.first().setAssemblyMatchType(ASSEMBLY_MATCH_INFER_ONLY, pair.firstLinkOnStart());
+                pair.second().setAssemblyMatchType(ASSEMBLY_MATCH_INFER_ONLY, pair.secondLinkOnStart());
+            }
+
+            linkedPairs = Lists.newArrayList();
+            linkedPairs.addAll(assemblyLinkedPairs);
+            linkedPairs.addAll(inferredLinkedPairs);
+        }
 
         if(!linkedPairs.isEmpty())
         {
-            LOGGER.info("sample({}) cluster({}: {} count={}) has {} mutually exclusive linked pairs:",
-                    sampleId, cluster.getId(), cluster.getDesc(), cluster.getCount(), linkedPairs.size());
+            LOGGER.info("sample({}) cluster({}: {} count={}) has {} linked pairs:",
+                    sampleId, cluster.getId(), cluster.getDesc(), cluster.getUniqueSvCount(), linkedPairs.size());
 
             for (final SvLinkedPair pair : linkedPairs)
             {
@@ -800,19 +806,13 @@ public class ClusterAnalyser {
                 || (pair.second().equals(pair2.second()) && pair.secondLinkOnStart() == pair2.secondLinkOnStart()))
                 {
                     // to avoid logging unlikely long TIs
-                    LOGGER.debug("removing duplicate linked pair({} len={}) vs shorter({} len={})",
-                            pair2.toString(), pair2.length(), pair.toString(), pair.length());
+                    //LOGGER.debug("removing duplicate linked pair({} len={}) vs shorter({} len={})",
+                    //        pair2.toString(), pair2.length(), pair.toString(), pair.length());
 
                     if(reqLinkedPairs.contains(pair2))
                     {
                         removeFirst = true;
                         break;
-                    }
-
-                    if(pair.first().getTransType() == TRANS_TYPE_TRANS && pair.second().getTransType() == TRANS_TYPE_TRANS)
-                    {
-                        LOGGER.debug("duplicate linked pair({} len={}) already linked to spanSV({})",
-                                pair2.toString(), pair2.length(), pair.first().getTransSvLinks());
                     }
 
                     // remove the longer pair with a duplicate breakend
@@ -826,9 +826,7 @@ public class ClusterAnalyser {
 
             if(removeFirst)
             {
-                LOGGER.debug("duplicate linked pair({} len={})",
-                        pair.toString(), pair.length(), pair.first().getTransSvLinks());
-
+                // LOGGER.debug("duplicate linked pair({} len={})", pair.toString(), pair.length(), pair.first().getTransSvLinks());
                 linkedPairs.remove(i);
             }
             else

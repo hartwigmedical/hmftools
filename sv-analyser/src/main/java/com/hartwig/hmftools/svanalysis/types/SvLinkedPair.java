@@ -6,8 +6,6 @@ import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.MIN_TEMPL
 
 import java.util.List;
 
-import com.google.common.collect.Lists;
-
 public class SvLinkedPair {
 
     private SvClusterData mFirst;
@@ -136,7 +134,7 @@ public class SvLinkedPair {
     public static String ASSEMBLY_MATCH_MATCHED = "MATCH";
     public static String ASSEMBLY_MATCH_DIFF = "DIFF";
     public static String ASSEMBLY_MATCH_ASMB_ONLY = "ASMB_ONLY";
-    public static String ASSEMBLY_MATCH_LINK_ONLY = "LINK_ONLY";
+    public static String ASSEMBLY_MATCH_INFER_ONLY = "INFER_ONLY";
     public static String ASSEMBLY_MATCH_NONE = "NONE";
 
     public String getAssemblyMatchType(final SvClusterData var)
@@ -146,7 +144,7 @@ public class SvLinkedPair {
 
         if((var == mFirst && firstAssembly.isEmpty()) || (var == mSecond && secondAssembly.isEmpty()))
         {
-            return ASSEMBLY_MATCH_LINK_ONLY;
+            return ASSEMBLY_MATCH_INFER_ONLY;
         }
 
         if(firstAssembly.equals(secondAssembly))

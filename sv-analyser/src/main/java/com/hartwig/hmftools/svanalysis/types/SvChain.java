@@ -352,6 +352,19 @@ public class SvChain {
         }
     }
 
+    public int getUniqueSvCount()
+    {
+        int count = 0;
+
+        for(final SvClusterData var : mSvList)
+        {
+            if(!var.isReplicatedSv())
+                ++count;
+        }
+
+        return count;
+    }
+
     public int getTICount()
     {
         int tiCount = 0;
@@ -385,6 +398,23 @@ public class SvChain {
         }
 
         return -1;
+    }
+
+    public final String getSvIndices(final SvClusterData var)
+    {
+        String varIndices = "";
+        for(int index = 0; index < mSvList.size(); ++index)
+        {
+            if(!mSvList.get(index).equals(var, true))
+                continue;
+
+            if(!varIndices.isEmpty())
+                varIndices += ";";
+
+            varIndices += index;
+        }
+
+        return varIndices;
     }
 
     public int getSvIndex(final SvClusterData var, boolean matchStart)
