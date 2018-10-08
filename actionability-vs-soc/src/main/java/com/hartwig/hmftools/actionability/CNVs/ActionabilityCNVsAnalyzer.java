@@ -59,9 +59,10 @@ public class ActionabilityCNVsAnalyzer {
     }
 
     private void printCNVRow(@NotNull ActionabilityCNVs actionabilityCNVs, @NotNull String isActionable) {
-        LOGGER.info(actionabilityCNVs.gene() + "\t" + actionabilityCNVs.cnvType() + "\t"  +
-                actionabilityCNVs.drugsName() + "\t" + actionabilityCNVs.drugsType() + "\t" + actionabilityCNVs.cancerType() + "\t"
-                + actionabilityCNVs.hmfLevel() + "\t" + actionabilityCNVs.hmfResponse() + "\t" + isActionable);
+        LOGGER.info(
+                actionabilityCNVs.gene() + "\t" + actionabilityCNVs.cnvType() + "\t" + actionabilityCNVs.source() + "\t" + actionabilityCNVs
+                        .drugsName() + "\t" + actionabilityCNVs.drugsType() + "\t" + actionabilityCNVs.cancerType() + "\t"
+                        + actionabilityCNVs.hmfLevel() + "\t" + actionabilityCNVs.hmfResponse() + "\t" + isActionable);
     }
 
     private String checkCNVType(final double copyNumber) {

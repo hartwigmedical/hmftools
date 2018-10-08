@@ -104,16 +104,17 @@ public class ActionabilityApplication {
             List<SomaticVariant> variantsOnActionableGenes =
                     variants.stream().filter(variant -> actionableGenesVariants.contains(variant.gene())).collect(Collectors.toList());
 
-            LOGGER.info("Gene" + "\t" + "Chromosome" + "\t" + "Position" + "\t" + "Ref" + "\t" + "Alt" + "\t" + "Drug" + "\t" + "DrugsType"
-                    + "\t" + "CancerType" + "\t" + "Level" + "\t" + "Response" + "\t" + "Actionable_variant");
+            LOGGER.info(
+                    "Gene" + "\t" + "Chromosome" + "\t" + "Position" + "\t" + "Ref" + "\t" + "Alt" + "\t" + "Source" + "\t" + "Drug" + "\t"
+                            + "DrugsType" + "\t" + "CancerType" + "\t" + "Level" + "\t" + "Response" + "\t" + "Actionable_variant");
             for (SomaticVariant variant : variantsOnActionableGenes) {
                 analyzer.actionableVariants(variant, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
             }
 
-            LOGGER.info("Gene" + "\t" + "Chromosome" + "\t" + "Start" + "\t" + "End" + "\t" + "Drug" + "\t" + "DrugType"
+            LOGGER.info("Gene" + "\t" + "Chromosome" + "\t" + "Start" + "\t" + "End" + "\t" + " Source" + "\t" + "Drug" + "\t" + "DrugType"
                     + "\t" + "CancerType" + "\t" + "Level" + "\t" + "Response" + "\t" + "Actionable_variant");
             for (SomaticVariant variant : variantsOnActionableGenes) {
-                  analyzer.actionableRange(variant, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
+                analyzer.actionableRange(variant, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
             }
 
         } else if (!Files.exists(new File(fileActionabilityVariants).toPath())) {
@@ -138,11 +139,13 @@ public class ActionabilityApplication {
             LOGGER.info(actionableGenesCNVS.size() + " actionable genes found for cnvs");
             LOGGER.info("");
 
-            List<GeneCopyNumber> variantsOnActionableGenes =
-                    geneCopyNumbers.stream().filter(geneCopyNumber -> actionableGenesCNVS.contains(geneCopyNumber.gene())).collect(Collectors.toList());
+            List<GeneCopyNumber> variantsOnActionableGenes = geneCopyNumbers.stream()
+                    .filter(geneCopyNumber -> actionableGenesCNVS.contains(geneCopyNumber.gene()))
+                    .collect(Collectors.toList());
 
-            LOGGER.info("Gene" + "\t" + "CnvType" + "\t" + "Drug" + "\t" + "DrugType" + "\t" + "CancerType" + "\t"
-                    + "Level" + "\t" + "Response" + "\t" + "Actionable_variant");
+            LOGGER.info(
+                    "Gene" + "\t" + "CnvType" + "\t" + "Source" + "\t" + "Drug" + "\t" + "DrugType" + "\t" + "CancerType" + "\t" + "Level"
+                            + "\t" + "Response" + "\t" + "Actionable_variant");
             for (GeneCopyNumber geneCopyNumber : variantsOnActionableGenes) {
                 analyzerCNVs.actionableCNVs(geneCopyNumber, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
             }
@@ -153,32 +156,32 @@ public class ActionabilityApplication {
         }
         LOGGER.info("Finished processing actionability cnvs");
 
-//        LOGGER.info("");
-//        LOGGER.info("Start processing fusions");
-//        String fileActionabilityFusionPairs = "/data/common/dbs/knowledgebases/output/actionableFusionPairs.tsv";
-//        String fileActionabilityPromiscuousFive = "/data/common/dbs/knowledgebases/output/actionablePromiscuousFive.tsv";
-//        String fileActionabilityPromiscuousThree = "/data/common/dbs/knowledgebases/output/actionablePromiscuousThree.tsv";
-//        if (Files.exists(new File(fileActionabilityFusionPairs).toPath()) && Files.exists(new File(fileActionabilityPromiscuousFive).toPath()) &&
-//                Files.exists(new File(fileActionabilityPromiscuousThree).toPath()) && Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
-//
-//
-//            ActionabilityFusionAnalyzer analyzerFusion = ActionabilityFusionAnalyzer.loadFromFileFusions(fileActionabilityFusionPairs,
-//                    fileActionabilityPromiscuousFive, fileActionabilityPromiscuousThree);
-//            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
-//
-//
-//        } else if (!Files.exists(new File(fileActionabilityFusionPairs).toPath())) {
-//            LOGGER.warn("File does not exist: " + fileActionabilityFusionPairs);
-//        } else if (!Files.exists(new File(fileActionabilityPromiscuousFive).toPath())) {
-//            LOGGER.warn("File does not exist: " + fileActionabilityPromiscuousFive);
-//        } else if (!Files.exists(new File(fileActionabilityPromiscuousThree).toPath())) {
-//            LOGGER.warn("File does not exist: " + fileActionabilityPromiscuousThree);
-//        } else if (!Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
-//            LOGGER.warn("File does not exist: " + fileCancerTumorsWithDOID);
-//        }
-//
-//
-//        LOGGER.info("Finished processing fusions");
+        //        LOGGER.info("");
+        //        LOGGER.info("Start processing fusions");
+        //        String fileActionabilityFusionPairs = "/data/common/dbs/knowledgebases/output/actionableFusionPairs.tsv";
+        //        String fileActionabilityPromiscuousFive = "/data/common/dbs/knowledgebases/output/actionablePromiscuousFive.tsv";
+        //        String fileActionabilityPromiscuousThree = "/data/common/dbs/knowledgebases/output/actionablePromiscuousThree.tsv";
+        //        if (Files.exists(new File(fileActionabilityFusionPairs).toPath()) && Files.exists(new File(fileActionabilityPromiscuousFive).toPath()) &&
+        //                Files.exists(new File(fileActionabilityPromiscuousThree).toPath()) && Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
+        //
+        //
+        //            ActionabilityFusionAnalyzer analyzerFusion = ActionabilityFusionAnalyzer.loadFromFileFusions(fileActionabilityFusionPairs,
+        //                    fileActionabilityPromiscuousFive, fileActionabilityPromiscuousThree);
+        //            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
+        //
+        //
+        //        } else if (!Files.exists(new File(fileActionabilityFusionPairs).toPath())) {
+        //            LOGGER.warn("File does not exist: " + fileActionabilityFusionPairs);
+        //        } else if (!Files.exists(new File(fileActionabilityPromiscuousFive).toPath())) {
+        //            LOGGER.warn("File does not exist: " + fileActionabilityPromiscuousFive);
+        //        } else if (!Files.exists(new File(fileActionabilityPromiscuousThree).toPath())) {
+        //            LOGGER.warn("File does not exist: " + fileActionabilityPromiscuousThree);
+        //        } else if (!Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
+        //            LOGGER.warn("File does not exist: " + fileCancerTumorsWithDOID);
+        //        }
+        //
+        //
+        //        LOGGER.info("Finished processing fusions");
     }
 
     @NotNull

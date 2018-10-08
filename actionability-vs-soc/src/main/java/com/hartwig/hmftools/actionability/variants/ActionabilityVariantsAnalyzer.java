@@ -63,16 +63,16 @@ public class ActionabilityVariantsAnalyzer {
 
     private static void printVariantRow(@NotNull ActionabilityVariant variant, @NotNull String isActionable) {
         LOGGER.info(variant.gene() + "\t" + variant.chromosome() + "\t" + variant.position() + "\t" + variant.ref() + "\t" + variant.alt()
-                + "\t" + variant.drug() + "\t" + variant.drugsType() + "\t" + variant.cancerType() + "\t" + variant.level() + "\t"
-                + variant.response() + "\t" + isActionable);
+                + variant.source()  +"\t" + variant.drug() + "\t" + variant.drugsType() + "\t" + variant.cancerType() + "\t"
+                + variant.level() + "\t" + variant.response() + "\t" + isActionable);
     }
 
     public boolean actionableRange(@NotNull SomaticVariant variant, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
             @Nullable String doidsPrimaryTumorLocation) {
         boolean booleanValue = false;
         for (ActionabilityRange range : variantsRanges) {
-            if (variant.gene().equals(range.gene()) && variant.chromosome()
-                    .equals(range.chromosome()) && variant.position() >= range.start() && variant.position() <= range.end()) {
+            if (variant.gene().equals(range.gene()) && variant.chromosome().equals(range.chromosome())
+                    && variant.position() >= range.start() && variant.position() <= range.end()) {
 
                 if (cancerTypeAnalyzer.foundTumorLocation(range.cancerType(), doidsPrimaryTumorLocation)) {
                     printVariantRangeRow(range, "yes");
@@ -88,8 +88,9 @@ public class ActionabilityVariantsAnalyzer {
     }
 
     private static void printVariantRangeRow(@NotNull ActionabilityRange range, @NotNull String isActionable) {
-        LOGGER.info(range.gene() + "\t" + range.chromosome() + "\t" + range.start() + "\t" + range.end() + "\t" + range.drug() + "\t"
-                + range.drugsType() + "\t" + range.cancerType() + "\t" + range.level() + "\t" + range.response() + "\t" + isActionable);
+        LOGGER.info(range.gene() + "\t" + range.chromosome() + "\t" + range.start() + "\t" + range.end() + "\t" + range.source() + "\t"
+                + range.drug() + "\t" + range.drugsType() + "\t" + range.cancerType() + "\t" + range.level() + "\t" + range.response()
+                + "\t" + isActionable);
     }
 
     @NotNull
