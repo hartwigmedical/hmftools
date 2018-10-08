@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface RecoveredVariant extends GenomeRegion {
 
+    // Copy Number
     double baf();
 
     double copyNumber();
@@ -37,11 +38,12 @@ public interface RecoveredVariant extends GenomeRegion {
 
     double nextGCContent();
 
-    @Nullable
-    String variant();
+    long minStart();
+
+    long maxStart();
 
     @Nullable
-    String mate();
+    String variant();
 
     @Nullable
     Double qual();
@@ -51,6 +53,12 @@ public interface RecoveredVariant extends GenomeRegion {
 
     @Nullable
     Integer orientation();
+
+    @Nullable
+    String mate();
+
+    @Nullable
+    Integer mateOrientation();
 
     @Nullable
     String alt();

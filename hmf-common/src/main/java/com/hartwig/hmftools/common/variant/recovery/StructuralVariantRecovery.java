@@ -4,6 +4,7 @@ import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 
@@ -13,6 +14,10 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -20,11 +25,14 @@ import org.jetbrains.annotations.Nullable;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.CloseableTribbleIterator;
 import htsjdk.tribble.readers.LineIterator;
-import htsjdk.variant.variantcontext.StructuralVariantType;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
 public class StructuralVariantRecovery {
+
+    private static final double MIN_SINGLE_QUAL_SCORE = 1000;
+    private static final double MIN_MATE_QUAL_SCORE = 250;
+    private static final double MIN_LENGTH = 1000;
 
     private final AbstractFeatureReader<VariantContext, LineIterator> reader;
 
@@ -77,6 +85,8 @@ public class StructuralVariantRecovery {
 
         ImmutableRecoveredVariant.Builder builder = ImmutableRecoveredVariant.builder()
                 .from(current)
+                .minStart(current.minStart())
+                .maxStart(current.maxStart())
                 .copyNumber(current.averageTumorCopyNumber())
                 .support(current.segmentStartSupport())
                 .next(current.segmentEndSupport())
@@ -91,20 +101,51 @@ public class StructuralVariantRecovery {
                 .prevBaf(prev.averageActualBAF())
                 .prevDepthWindowCount(prev.depthWindowCount());
 
+        int expectedOrientation = Doubles.greaterThan(current.averageTumorCopyNumber(), prev.averageTumorCopyNumber()) ? -1 : 1;
+
         List<VariantContext> recovered = findVariants(current.chromosome(), min, max);
         for (VariantContext potentialVariant : recovered) {
-
-            if (hasPotential(current.chromosome(), min, max, potentialVariant)) {
-
-                final String alt = potentialVariant.getAlternateAllele(0).getDisplayString();
-                builder.alt(alt)
-                        .qual(potentialVariant.getPhredScaledQual())
-                        .variant(potentialVariant.getContig() + ":" + potentialVariant.getStart())
-                        .orientation(orientation(alt))
-                        .mate(mate(alt))
-                        .filter(filter(potentialVariant.getFilters()));
-                result.add(builder.build());
+            final String alt = potentialVariant.getAlternateAllele(0).getDisplayString();
+            int orientation = orientation(alt);
+            if (orientation != expectedOrientation) {
+                continue;
             }
+
+            final String mateId = StructuralVariantFactory.mateId(potentialVariant);
+            final String mateLocation = mateLocation(alt);
+            final String mateChromosome = mateChromosome(mateLocation);
+            final Long matePosition = matePosition(mateLocation);
+            final Optional<VariantContext> mate;
+            if (mateChromosome != null && matePosition != null && mateId != null) {
+                mate = findMate(mateId, mateChromosome, matePosition);
+            } else {
+                mate = Optional.empty();
+            }
+
+            if (mate.isPresent()) {
+                StructuralVariant sv = StructuralVariantFactory.create(potentialVariant, mate.get());
+                if (hasPotential(min, max, sv)) {
+                    builder.alt(alt)
+                            .qual(potentialVariant.getPhredScaledQual())
+                            .variant(potentialVariant.getContig() + ":" + potentialVariant.getStart())
+                            .orientation(orientation)
+                            .mate(sv.end().chromosome() + ":" + sv.end().position())
+                            .mateOrientation((int) sv.end().orientation())
+                            .filter(filter(potentialVariant.getFilters()));
+                }
+            } else {
+                if (Doubles.greaterOrEqual(potentialVariant.getPhredScaledQual(), MIN_SINGLE_QUAL_SCORE)) {
+                    builder.alt(alt)
+                            .qual(potentialVariant.getPhredScaledQual())
+                            .variant(potentialVariant.getContig() + ":" + potentialVariant.getStart())
+                            .orientation(orientation)
+                            .mate(null)
+                            .mateOrientation(null)
+                            .filter(filter(potentialVariant.getFilters()));
+                    result.add(builder.build());
+                }
+            }
+
         }
 
         if (result.isEmpty()) {
@@ -114,33 +155,34 @@ public class StructuralVariantRecovery {
         return result;
     }
 
-    private boolean hasPotential(String chromosome, long min, long max, @NotNull VariantContext variant) {
-        final String alt = variant.getAlternateAllele(0).getDisplayString();
+    private boolean hasPotential(long min, long max, @NotNull StructuralVariant variant) {
+        StructuralVariantLeg end = variant.end();
+        assert (end != null);
 
-        @Nullable
-        StructuralVariantType type = variant.getStructuralVariantType();
-        if (type != null && (type == StructuralVariantType.DEL || type == StructuralVariantType.DUP)) {
+        if (variant.qualityScore() < MIN_MATE_QUAL_SCORE) {
+            return false;
+        }
 
-            String mate = mate(alt);
-            String mateChromosome = mateChromosome(mate);
-            Long matePosition = matePosition(alt);
+        long endPosition = end.position();
+        StructuralVariantType type = variant.type();
+        if (type == StructuralVariantType.DEL || type == StructuralVariantType.DUP) {
+            assert (variant.end() != null);
 
-            if (mateChromosome != null && matePosition != null && !mateChromosome.equals(chromosome)) {
-                if (Math.abs(matePosition - variant.getStart()) < 1000) {
-                    return false;
-                }
-
-                long variantStart = Math.min(variant.getStart(), matePosition);
-                long variantEnd = Math.max(variant.getStart(), matePosition);
-                return variantStart <= min || variantEnd >= max;
+            long length = Math.abs(endPosition - variant.start().position());
+            if (length < MIN_LENGTH) {
+                return false;
             }
+
+            long variantStart = Math.min(variant.start().position(), endPosition);
+            long variantEnd = Math.max(variant.start().position(), endPosition);
+            return variantStart <= min || variantEnd >= max;
         }
 
         return true;
     }
 
     @NotNull
-    public List<VariantContext> findVariants(@NotNull final String chromosome, final long lowerBound, final long upperBound)
+    private List<VariantContext> findVariants(@NotNull final String chromosome, final long lowerBound, final long upperBound)
             throws IOException {
         final List<VariantContext> result = Lists.newArrayList();
 
@@ -153,8 +195,23 @@ public class StructuralVariantRecovery {
         return result;
     }
 
+    @NotNull
+    private Optional<VariantContext> findMate(@NotNull final String id, @NotNull final String chromosome, final long position)
+            throws IOException {
+
+        try (CloseableTribbleIterator<VariantContext> iterator = reader.query(chromosome, (int) position, (int) position)) {
+            for (VariantContext variant : iterator) {
+                if (variant.getID().equals(id)) {
+                    return Optional.of(variant);
+                }
+            }
+        }
+
+        return Optional.empty();
+    }
+
     @Nullable
-    static String mate(@NotNull final String alt) {
+    static String mateLocation(@NotNull final String alt) {
         final String bracket;
         if (alt.contains("[")) {
             bracket = "\\[";
