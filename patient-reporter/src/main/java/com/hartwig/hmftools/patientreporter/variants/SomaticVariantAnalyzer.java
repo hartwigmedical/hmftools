@@ -34,7 +34,7 @@ public final class SomaticVariantAnalyzer {
 
     @NotNull
     public static SomaticVariantAnalysis run(@NotNull final List<EnrichedSomaticVariant> variants, @NotNull Set<String> genePanel,
-            @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap, @NotNull RunContext run,
+            @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap, @NotNull String run,
             @NotNull List<PatientTumorLocation> patientTumorLocations, @NotNull String runDirectory) throws ParseException, IOException {
         final List<EnrichedSomaticVariant> variantsToReport =
                 variants.stream().filter(includeFilter(genePanel, driverCategoryPerGeneMap)).collect(Collectors.toList());

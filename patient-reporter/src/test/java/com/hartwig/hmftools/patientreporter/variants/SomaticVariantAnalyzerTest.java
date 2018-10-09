@@ -41,27 +41,27 @@ public class SomaticVariantAnalyzerTest {
                         builder().gene(WRONG_GENE).canonicalCodingEffect(MISSENSE).worstCodingEffect(MISSENSE).build(),
                         builder().gene(WRONG_GENE).canonicalCodingEffect(SYNONYMOUS).worstCodingEffect(SYNONYMOUS).build());
 
-//        SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants,
-//                Sets.newHashSet(RIGHT_GENE),
-//                Maps.newHashMap(),
-//                Strings.EMPTY,
-//                Lists.newArrayList(),
-//                Strings.EMPTY);
-//
-//        assertEquals(2, analysis.tumorMutationalLoad());
-//        assertEquals(2, analysis.variantsToReport().size());
-//
-//        Map<String, DriverCategory> driverCategoryMap = Maps.newHashMap();
-//        driverCategoryMap.put(RIGHT_GENE, DriverCategory.ONCO);
-//        SomaticVariantAnalysis analysisOnco = SomaticVariantAnalyzer.run(variants,
-//                Sets.newHashSet(RIGHT_GENE),
-//                driverCategoryMap,
-//                Strings.EMPTY,
-//                Lists.newArrayList(),
-//                Strings.EMPTY);
-//
-//        assertEquals(2, analysisOnco.tumorMutationalLoad());
-//        assertEquals(1, analysisOnco.variantsToReport().size());
+        SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants,
+                Sets.newHashSet(RIGHT_GENE),
+                Maps.newHashMap(),
+                Strings.EMPTY,
+                Lists.newArrayList(),
+                Strings.EMPTY);
+
+        assertEquals(2, analysis.tumorMutationalLoad());
+        assertEquals(2, analysis.variantsToReport().size());
+
+        Map<String, DriverCategory> driverCategoryMap = Maps.newHashMap();
+        driverCategoryMap.put(RIGHT_GENE, DriverCategory.ONCO);
+        SomaticVariantAnalysis analysisOnco = SomaticVariantAnalyzer.run(variants,
+                Sets.newHashSet(RIGHT_GENE),
+                driverCategoryMap,
+                Strings.EMPTY,
+                Lists.newArrayList(),
+                Strings.EMPTY);
+
+        assertEquals(2, analysisOnco.tumorMutationalLoad());
+        assertEquals(1, analysisOnco.variantsToReport().size());
     }
 
     @NotNull
