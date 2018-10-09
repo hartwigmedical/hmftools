@@ -86,7 +86,7 @@ public abstract class FindingsPage {
                 !report.somaticVariants().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(SomaticVariantDataSource.variantFields())
                         .columns(col.column("Gene", SomaticVariantDataSource.GENE_FIELD),
-                                col.column("Variant", SomaticVariantDataSource.VARIANT_FIELD).setFixedWidth(80),
+                                col.column("Variant", SomaticVariantDataSource.VARIANT_FIELD).setFixedWidth(90),
                                 col.column("Impact", SomaticVariantDataSource.IMPACT_FIELD).setFixedWidth(80),
                                 col.column("Read Depth", SomaticVariantDataSource.READ_DEPTH_FIELD),
                                 col.column("Hotspot", SomaticVariantDataSource.IS_HOTSPOT_FIELD),
