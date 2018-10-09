@@ -17,6 +17,7 @@ data class CgiActionableInput(@get:JvmName("getGene_") private val Gene: String,
             Alteration.contains("RET__TPCN1")     -> null
             Association == "No Responsive"        -> null
             Alteration.contains("ABL1__BCR")      -> copy(Alteration = Alteration.replace("ABL1__BCR", "BCR__ABL1"))
+            Alteration.contains("BRD4__C15orf55") -> copy(Alteration = Alteration.replace("BRD4__C15orf55", "BRD4__NUTM1"))
             Alteration.contains("PDGFRA__FIP1L1") -> copy(Alteration = Alteration.replace("PDGFRA__FIP1L1", "FIP1L1__PDGFRA"))
             Alteration.contains("PDGFB__COL1A1")  -> copy(Alteration = Alteration.replace("PDGFB__COL1A1", "COL1A1__PDGFB"))
             else                                  -> this
