@@ -41,25 +41,25 @@ public class ActionabilityVariantsAnalyzer {
         return genes;
     }
 
-    public boolean actionableVariants(@NotNull SomaticVariant variant, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
+    public Set<ActionabilityVariant> actionableVariants(@NotNull SomaticVariant variant, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
             @Nullable String doidsPrimaryTumorLocation) {
-        boolean booleanValue = false;
+        Set<ActionabilityVariant> Actionablegenes = Sets.newHashSet();
         for (ActionabilityVariant actionabilityVariant : variants) {
             if (variant.gene().equals(actionabilityVariant.gene()) && variant.chromosome().equals(actionabilityVariant.chromosome())
                     && variant.position() == actionabilityVariant.position() && variant.ref().equals(actionabilityVariant.ref())
                     && variant.alt().equals(actionabilityVariant.alt())) {
                 if (cancerTypeAnalyzer.foundTumorLocation(actionabilityVariant.cancerType(), doidsPrimaryTumorLocation)) {
                     printVariantRow(actionabilityVariant, "yes");
+                    Actionablegenes.add(actionabilityVariant);
                 } else {
                     printVariantRow(actionabilityVariant, "no");
+                    Actionablegenes.add(actionabilityVariant);
                 }
-                booleanValue = true;
-            } else {
-                booleanValue = false;
             }
         }
-        return booleanValue;
+        return Actionablegenes;
     }
+
 
     private static void printVariantRow(@NotNull ActionabilityVariant variant, @NotNull String isActionable) {
         LOGGER.info(variant.gene() + "\t" + variant.chromosome() + "\t" + variant.position() + "\t" + variant.ref() + "\t" + variant.alt()

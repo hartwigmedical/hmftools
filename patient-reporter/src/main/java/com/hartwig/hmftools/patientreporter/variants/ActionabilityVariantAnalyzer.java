@@ -13,6 +13,8 @@ import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeMappingReading;
 import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVsAnalyzer;
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityVariantsAnalyzer;
+import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityVariant;
+
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
@@ -31,10 +33,10 @@ import org.jetbrains.annotations.Nullable;
 
 public final class ActionabilityVariantAnalyzer {
     private static final Logger LOGGER = LogManager.getLogger(ActionabilityVariantAnalyzer.class);
-    private String FILE_CANCER_TUMORS_WITH_DOID = "/data/common/dbs/knowledgebases/output/knowledgebaseCancerTypes.tsv";
-    private String FILE_ACTIONABILITY_VARIANTS = "/data/common/dbs/knowledgebases/output/actionableVariants.tsv";
-    private String FILE_ACTIONABILITY_RANGES = "/data/common/dbs/knowledgebases/output/actionableRanges.tsv";
-    String FILE_ACTIONABILITY_CNVS = "/data/common/dbs/knowledgebases/output/actionableCNVs.tsv";
+    private static String FILE_CANCER_TUMORS_WITH_DOID = "/data/common/dbs/knowledgebases/output/knowledgebaseCancerTypes.tsv";
+    private static String FILE_ACTIONABILITY_VARIANTS = "/data/common/dbs/knowledgebases/output/actionableVariants.tsv";
+    private static String FILE_ACTIONABILITY_RANGES = "/data/common/dbs/knowledgebases/output/actionableRanges.tsv";
+    private static String FILE_ACTIONABILITY_CNVS = "/data/common/dbs/knowledgebases/output/actionableCNVs.tsv";
     private static final String SOMATIC_VCF_EXTENSION_V3 = "_post_processed_v2.2.vcf.gz";
     private static final String SOMATIC_VCF_EXTENSION_V4 = "_post_processed.vcf.gz";
     private static final String PURPLE_DIRECTORY = "purple";
@@ -43,14 +45,12 @@ public final class ActionabilityVariantAnalyzer {
     private ActionabilityVariantAnalyzer() {
     }
 
-
-    public void detectVariants(@NotNull String sampleRun,
-            @NotNull List<PatientTumorLocation> patientTumorLocations) throws ParseException, IOException {
+    @NotNull
+    public static void detectVariants(@NotNull String sampleRun,
+            @NotNull List<PatientTumorLocation> patientTumorLocations) throws IOException {
 
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(sampleRun);
         final List<SomaticVariant> variants = loadPassedSomaticVariants(run.tumorSample(), sampleRun);
-        final List<GeneCopyNumber> geneCopyNumbers = loadPurpleGeneCopyNumbers(sampleRun, run.tumorSample());
-
 
         final PatientTumorLocation patientTumorLocation = extractPatientTumorLocation(patientTumorLocations, sampleRun);
         final String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : Strings.EMPTY;
@@ -70,11 +70,10 @@ public final class ActionabilityVariantAnalyzer {
                     variants.stream().filter(variant -> actionableGenesVariants.contains(variant.gene())).collect(Collectors.toList());
 
             for (SomaticVariant variant : variantsOnActionableGenes) {
-                analyzer.actionableVariants(variant, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
+                Set<ActionabilityVariant> data = analyzer.actionableVariants(variant, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
+                LOGGER.info(data);
             }
-//            for (SomaticVariant variant : variantsOnActionableGenes) {
-//                analyzer.actionableRange(variant, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
-//            }
+
         } else if (!Files.exists(new File(FILE_ACTIONABILITY_VARIANTS).toPath())) {
         LOGGER.warn("File does not exist: " + FILE_ACTIONABILITY_VARIANTS);
         } else if (!Files.exists(new File(FILE_ACTIONABILITY_RANGES).toPath())) {
@@ -82,31 +81,6 @@ public final class ActionabilityVariantAnalyzer {
         } else if (!Files.exists(new File(FILE_CANCER_TUMORS_WITH_DOID).toPath())) {
         LOGGER.warn("File does not exist: " + FILE_CANCER_TUMORS_WITH_DOID);
         }
-
-//        if (Files.exists(new File(FILE_ACTIONABILITY_CNVS).toPath()) && Files.exists(new File(FILE_CANCER_TUMORS_WITH_DOID).toPath())) {
-//            ActionabilityCNVsAnalyzer analyzerCNVs = ActionabilityCNVsAnalyzer.loadFromFileCNVs(FILE_ACTIONABILITY_CNVS);
-//            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(FILE_CANCER_TUMORS_WITH_DOID);
-//
-//            Set<String> actionableGenesCNVS = analyzerCNVs.actionableGenes();
-//            LOGGER.info(actionableGenesCNVS.size() + " actionable genes found for cnvs");
-//            LOGGER.info("");
-//
-//            List<GeneCopyNumber> variantsOnActionableGenes = geneCopyNumbers.stream()
-//                    .filter(geneCopyNumber -> actionableGenesCNVS.contains(geneCopyNumber.gene()))
-//                    .collect(Collectors.toList());
-//
-//            LOGGER.info(
-//                    "Gene" + "\t" + "CnvType" + "\t" + "Source" + "\t" + "Drug" + "\t" + "DrugType" + "\t" + "CancerType" + "\t" + "Level"
-//                            + "\t" + "Response" + "\t" + "Actionable_variant");
-//            for (GeneCopyNumber geneCopyNumber : variantsOnActionableGenes) {
-//                analyzerCNVs.actionableCNVs(geneCopyNumber, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
-//            }
-//        } else if (!Files.exists(new File(FILE_ACTIONABILITY_CNVS).toPath())) {
-//            LOGGER.warn("File does not exist: " + FILE_ACTIONABILITY_CNVS);
-//        } else if (!Files.exists(new File(FILE_CANCER_TUMORS_WITH_DOID).toPath())) {
-//            LOGGER.warn("File does not exist: " + FILE_CANCER_TUMORS_WITH_DOID);
-//        }
-
     }
 
     @NotNull

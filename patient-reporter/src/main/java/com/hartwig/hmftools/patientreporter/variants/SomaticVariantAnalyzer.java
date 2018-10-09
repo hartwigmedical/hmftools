@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityVariant;
+import com.hartwig.hmftools.patientreporter.variants.ActionabilityVariantAnalyzer;
 
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
@@ -45,6 +46,7 @@ public final class SomaticVariantAnalyzer {
         driverCatalog.addAll(TsgDrivers.drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), variants));
 
         final List<ActionabilityVariant> variant = Lists.newArrayList();
+       // variant.addAll(ActionabilityVariantAnalyzer.detectVariants(sampleRun, patientTumorLocations));
 
         return ImmutableSomaticVariantAnalysis.of(variantsToReport,
                 driverCatalog,
