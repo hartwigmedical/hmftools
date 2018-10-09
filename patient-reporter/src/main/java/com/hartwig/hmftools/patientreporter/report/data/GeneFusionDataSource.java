@@ -30,7 +30,7 @@ public final class GeneFusionDataSource {
     public static final FieldBuilder<?> END_TRANSCRIPT_FIELD = field("three_transcript", String.class);
     public static final FieldBuilder<?> START_CONTEXT_FIELD = field("five_gene_context", String.class);
     public static final FieldBuilder<?> END_CONTEXT_FIELD = field("three_gene_context", String.class);
-    public static final FieldBuilder<?> COPIES_FIELD = field("copies", String.class);
+    public static final FieldBuilder<?> COPIES_FIELD = field("disruptionCopies", String.class);
     public static final FieldBuilder<?> SOURCE_FIELD = field("source", String.class);
 
     private GeneFusionDataSource() {
