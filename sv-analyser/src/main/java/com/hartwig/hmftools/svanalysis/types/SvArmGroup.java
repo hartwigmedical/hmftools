@@ -59,4 +59,9 @@ public class SvArmGroup {
             mEndPos = max(mEndPos, var.position(false));
         }
     }
+
+    public boolean matches(final SvArmGroup other)
+    {
+        return mChromosome.equals(other.chromosome()) && mArm.equals(other.arm());
+    }
 }

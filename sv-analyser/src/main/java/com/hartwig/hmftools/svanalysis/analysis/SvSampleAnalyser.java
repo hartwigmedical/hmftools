@@ -52,6 +52,7 @@ public class SvSampleAnalyser {
     ExternalSVAnnotator mExternalAnnotator;
     SvClusteringMethods mClusteringMethods;
     GeneAnnotator mGeneAnnotator;
+    CNAnalyser mCnAnalyser;
 
     PerformanceCounter mPerfCounter;
     PerformanceCounter mPc1;
@@ -86,6 +87,14 @@ public class SvSampleAnalyser {
         mGeneAnnotator = new GeneAnnotator();
         mGeneAnnotator.loadGeneDriverFile(mConfig.GeneDataFile);
 
+        mCnAnalyser = null;
+        if(!mConfig.LOHDataFile.isEmpty())
+        {
+            mCnAnalyser = new CNAnalyser(mConfig.OutputCsvPath, null);
+            mCnAnalyser.loadLOHFromCSV(mConfig.LOHDataFile, "");
+            mClusteringMethods.setSampleLohData(mCnAnalyser.getSampleLohData());
+        }
+
         mPerfCounter = new PerformanceCounter("Total");
 
         mPc1 = new PerformanceCounter("Annotate&Filter");
@@ -104,21 +113,6 @@ public class SvSampleAnalyser {
         mSampleId = "";
         mAllVariants = Lists.newArrayList();
         mClusters = Lists.newArrayList();
-    }
-
-    public void loadFromEnrichedSVs(final String sampleId, final List<EnrichedStructuralVariant> variants)
-    {
-        if (variants.isEmpty())
-            return;
-
-        clearState();
-
-        mSampleId = sampleId;
-
-        for (final EnrichedStructuralVariant enrichedSV : variants)
-        {
-            mAllVariants.add(SvClusterData.from(enrichedSV));
-        }
     }
 
     public void loadFromDatabase(final String sampleId, final List<SvClusterData> variants)
@@ -149,12 +143,13 @@ public class SvSampleAnalyser {
         mClusteringMethods.setChromosomalArmStats(mAllVariants);
         mClusteringMethods.populateChromosomeBreakendMap(mAllVariants);
         mClusteringMethods.calcCopyNumberData(mSampleId);
+        mClusteringMethods.createCopyNumberSegments();
         mClusteringMethods.annotateNearestSvData();
         mPc2.stop();
 
         mPc3.start();
         mClusteringMethods.clusterByBaseDistance(mAllVariants, mClusters);
-        // mClusteringMethods.mergeClusters(mClusters);
+        mClusteringMethods.mergeClusters(mSampleId, mClusters);
         mPc3.stop();
 
         mPc4.start();

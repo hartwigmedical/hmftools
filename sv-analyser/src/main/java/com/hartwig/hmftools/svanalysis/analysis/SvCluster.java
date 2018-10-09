@@ -1,11 +1,9 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
+import static java.lang.Math.max;
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getVariantChrArm;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.variantMatchesBreakend;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SVI_END;
@@ -253,6 +251,17 @@ public class SvCluster
         mInferredLinkedPairs.addAll(cluster.getInferredLinkedPairs());
         mChains.addAll(cluster.getChains());
         setConsistencyCount();
+    }
+
+    public int getMaxChainCount()
+    {
+        int maxCount = 0;
+        for(final SvChain chain : mChains)
+        {
+            maxCount = max(maxCount, chain.getUniqueSvCount());
+        }
+
+        return maxCount;
     }
 
     public List<SvCluster> getSubClusters() { return mSubClusters; }

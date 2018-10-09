@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
+import static java.lang.Math.max;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
@@ -81,7 +82,8 @@ public class ClusterAnalyser {
             findLinkedPairs(sampleId, cluster);
 
             // then look for fully-linked clusters, ie chains involving all SVs
-            findCompleteChains(sampleId, cluster);
+            // findCompleteChains(sampleId, cluster);
+            findChains(sampleId, cluster);
         }
 
         // now look at merging unresolved & inconsistent clusters where they share the same chromosomal arms
@@ -99,12 +101,15 @@ public class ClusterAnalyser {
 
                 createCopyNumberSegments(sampleId, cluster);
 
-                findIncompleteChains(sampleId, cluster);
+                // findIncompleteChains(sampleId, cluster);
+                findChains(sampleId, cluster);
             }
 
             resolveTransitiveSVs(sampleId, cluster);
             cacheFinalLinkedPairs(sampleId, cluster);
         }
+
+        demergeClusters(clusters);
     }
 
     private void findLinkedPairs(final String sampleId, SvCluster cluster)
@@ -120,6 +125,38 @@ public class ClusterAnalyser {
         cluster.setAssemblyLinkedPairs(assemblyLinkedPairs);
         cluster.setInferredLinkedPairs(inferredLinkedPairs);
         cluster.setConsistencyCount(); // since assembly replicated links can change consistency
+    }
+
+    private void findChains(final String sampleId, SvCluster cluster)
+    {
+        mChainFinder.initialise(sampleId, cluster);
+
+        boolean hasFullChain = mChainFinder.formClusterChains();
+
+        if(!hasFullChain)
+            return;
+
+        cluster.setIsFullyChained(true);
+
+        // remove any inferred link which isn't in the full chain
+        final SvChain fullChain = cluster.getChains().get(0);
+
+        List<SvLinkedPair> inferredLinkedPairs = cluster.getInferredLinkedPairs();
+
+        // remove any inferred links which weren't used
+        int lpIndex = 0;
+        while(lpIndex < inferredLinkedPairs.size())
+        {
+            SvLinkedPair pair = inferredLinkedPairs.get(lpIndex);
+
+            if (!fullChain.getLinkedPairs().contains(pair))
+            {
+                inferredLinkedPairs.remove(lpIndex);
+                continue;
+            }
+
+            ++lpIndex;
+        }
     }
 
     private void findCompleteChains(final String sampleId, SvCluster cluster)
@@ -153,6 +190,17 @@ public class ClusterAnalyser {
 
             ++lpIndex;
         }
+    }
+
+    private void findIncompleteChains(final String sampleId, SvCluster cluster)
+    {
+        if(cluster.getCount() < 2 || cluster.isFullyChained())
+            return;
+
+        mChainFinder.initialise(sampleId, cluster);
+        mChainFinder.setRequireFullChains(false);
+
+        mChainFinder.formClusterChains();
     }
 
     private void applyCopyNumberReplication(final String sampleId, SvCluster cluster)
@@ -257,7 +305,7 @@ public class ClusterAnalyser {
 
                         if(c1LinkingArm.equals(c2LinkingArm) && c1LinkingChr.equals(cluster2.linkingChromosome(isStart(be2))))
                         {
-                            LOGGER.debug("cluster({}) and cluster({}) linked on chrArm({}:{})",
+                            LOGGER.debug("inconsistent cluster({}) and cluster({}) linked on chrArm({}:{})",
                                     cluster1.getId(), cluster2.getId(), c1LinkingChr, c1LinkingArm);
 
                             foundConnection = true;
@@ -319,15 +367,47 @@ public class ClusterAnalyser {
         }
     }
 
-    private void findIncompleteChains(final String sampleId, SvCluster cluster)
+    private void demergeClusters(List<SvCluster> clusters)
     {
-        if(cluster.getCount() < 2 || cluster.isFullyChained())
-            return;
+        // de-merge any clusters which didn't form longer chains
+        int clusterCount = clusters.size();
+        for(int i = 0; i < clusterCount;)
+        {
+            SvCluster cluster = clusters.get(i);
 
-        mChainFinder.initialise(sampleId, cluster);
-        mChainFinder.setRequireFullChains(false);
+            if (!cluster.hasSubClusters())
+            {
+                ++i;
+                continue;
+            }
 
-        mChainFinder.formClusterChains();
+            int mainChainCount = cluster.getMaxChainCount();
+            int maxSubClusterChainCount = 0;
+
+            for(final SvCluster subCluster : cluster.getSubClusters())
+            {
+                maxSubClusterChainCount = max(maxSubClusterChainCount, subCluster.getMaxChainCount());
+            }
+
+            if(mainChainCount > maxSubClusterChainCount)
+            {
+                ++i;
+                continue;
+            }
+
+            for(final SvCluster subCluster : cluster.getSubClusters())
+            {
+                clusters.add(subCluster);
+            }
+
+            if(mainChainCount > 0)
+            {
+                LOGGER.debug("removed cluster({}) since maxChainCount({}) less than subclusters({}) maxSubClusterChainCount({})",
+                        cluster.getId(), mainChainCount, cluster.getSubClusters().size(), maxSubClusterChainCount);
+            }
+
+            clusters.remove(i);
+        }
     }
 
     private void createCopyNumberSegments(final String sampleId, final SvCluster cluster)

@@ -5,12 +5,14 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_ENCLOSED;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_ENCLOSING;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_NEIGHBOURS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_OVERLAP;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.isOverlapping;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
+import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_TELOMERE;
 import static com.hartwig.hmftools.svanalysis.types.SvClusterData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.svanalysis.types.SvClusterData.RELATION_TYPE_OVERLAP;
 
@@ -27,8 +29,10 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
+import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 import com.hartwig.hmftools.svanalysis.types.SvFootprint;
+import com.hartwig.hmftools.svanalysis.types.SvLOH;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,6 +51,8 @@ public class SvClusteringMethods {
 
     private Map<String, List<SvBreakend>> mChrBreakendMap; // every breakend on a chromosome, ordered by asending position
     private Map<String, Integer> mChrCopyNumberMap; // copy number for whole chromosomes if clear
+    private Map<String, List<SvCNData>> mChrCNDataMap; // copy number segments recreated from SVs
+    private Map<String, List<SvLOH>> mSampleLohData;
 
     private static final double REF_BASE_LENGTH = 10000000D;
 
@@ -61,11 +67,14 @@ public class SvClusteringMethods {
 
         mChrBreakendMap = new HashMap();
         mChrCopyNumberMap = new HashMap();
+        mChrCNDataMap = new HashMap();
+        mSampleLohData = null;
     }
 
     public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
     public Map<String, Integer> getChrCopyNumberMap() { return mChrCopyNumberMap; }
     public int getNextClusterId() { return mNextClusterId++; }
+    public void setSampleLohData(final Map<String, List<SvLOH>> data) { mSampleLohData = data; }
 
     public void clusterByBaseDistance(List<SvClusterData> allVariants, List<SvCluster> clusters)
     {
@@ -135,22 +144,176 @@ public class SvClusteringMethods {
         }
     }
 
-    public void mergeClusters(List<SvCluster> clusters)
+    public void mergeClusters(final String sampleId, List<SvCluster> clusters)
     {
         int initClusterCount = clusters.size();
+
         int iterations = 0;
 
         // the merge must be run a few times since as clusters grow, more single SVs and other clusters
         // will then fall within the bounds of the new larger clusters
-        while(mergeOnOverlaps(clusters) && iterations < 5)
+        boolean foundMerges = mergeOnCommonArmLinks(clusters);
+
+        while(foundMerges && iterations < 5)
         {
+            foundMerges = mergeOnCommonArmLinks(clusters);
             ++iterations;
         }
+
+        mergeOnLOHEvents(sampleId, clusters);
 
         if(clusters.size() < initClusterCount)
         {
             LOGGER.info("reduced cluster count({} -> {}) iterations({})", initClusterCount, clusters.size(), iterations);
         }
+    }
+
+    private void mergeOnLOHEvents(final String sampleId, List<SvCluster> clusters)
+    {
+        if(mSampleLohData == null)
+            return;
+
+        // first extract all the SVs from the LOH events
+        final List<SvLOH> lohList = mSampleLohData.get(sampleId);
+
+        if(lohList == null)
+            return;
+
+        for(final SvLOH lohEvent : lohList)
+        {
+            if(lohEvent.StartSV.isEmpty() || lohEvent.EndSV.isEmpty() || lohEvent.StartSV.equals("0") || lohEvent.EndSV.equals("0"))
+                continue;
+
+            SvCluster startCluster = findClusterFromVariantId(lohEvent.StartSV, clusters);
+            SvCluster endCluster = findClusterFromVariantId(lohEvent.EndSV, clusters);
+
+            if(startCluster == null)
+            {
+                LOGGER.error("sample({}) start varId({}) not found in any cluster", sampleId, lohEvent.StartSV);
+                continue;
+            }
+            else if(endCluster == null)
+            {
+                LOGGER.error("sample({}) end varId({}) not found in any cluster", sampleId, lohEvent.EndSV);
+                continue;
+            }
+
+            if(startCluster == endCluster)
+                continue;
+
+            LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on LOH event(sv1={} sv2={} len={})",
+                    startCluster.getId(), startCluster.getCount(), endCluster.getId(), endCluster.getCount(),
+                    lohEvent.StartSV, lohEvent.EndSV, lohEvent.Length);
+
+            // merge the second cluster into the first
+            for(final SvClusterData var : endCluster.getSVs())
+            {
+                startCluster.addVariant(var);
+            }
+
+            clusters.remove(endCluster);
+        }
+    }
+
+    private SvCluster findClusterFromVariantId(final String varId, List<SvCluster> clusters)
+    {
+        for(SvCluster cluster : clusters)
+        {
+            for(final SvClusterData var : cluster.getSVs())
+            {
+                if(var.id().equals(varId))
+                    return cluster;
+            }
+        }
+
+        return null;
+    }
+
+    private boolean mergeOnCommonArmLinks(List<SvCluster> clusters)
+    {
+        // merge any clusters which have the same inter-arm links and return true if merges were found
+        int initClusterCount = clusters.size();
+
+        int index1 = 0;
+        while(index1 < clusters.size())
+        {
+            SvCluster cluster1 = clusters.get(index1);
+
+            List<SvArmGroup> armGroups1 = cluster1.getArmGroups();
+
+            if (armGroups1.size() == 1)
+            {
+                ++index1;
+                continue;
+            }
+
+            if(cluster1.getCount() == 2 && cluster1.isConsistent())
+            {
+                // skip balanced inversion & translocations
+                ++index1;
+                continue;
+            }
+
+            int index2 = index1 + 1;
+            while(index2 < clusters.size())
+            {
+                SvCluster cluster2 = clusters.get(index2);
+                List<SvArmGroup> armGroups2 = cluster2.getArmGroups();
+
+                if(armGroups2.size() == 1)
+                {
+                    ++index2;
+                    continue;
+                }
+
+                if(cluster2.getCount() == 2 && cluster2.isConsistent())
+                {
+                    // skip balanced inversion & translocations
+                    ++index2;
+                    continue;
+                }
+
+                int sharedArmCount = 0;
+
+                for(SvArmGroup armGroup1 : armGroups1)
+                {
+                    for(SvArmGroup armGroup2 : armGroups2)
+                    {
+                        if(armGroup1.matches(armGroup2))
+                        {
+                            ++sharedArmCount;
+
+                            if(sharedArmCount >= 2)
+                                break;
+                        }
+                    }
+
+                    if(sharedArmCount >= 2)
+                        break;
+                }
+
+                if(sharedArmCount < 2)
+                {
+                    ++index2;
+                    continue;
+                }
+
+                LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on common arms",
+                        cluster1.getId(), cluster1.getCount(), cluster2.getId(), cluster2.getCount());
+
+                // merge the second cluster into the first
+                for(final SvClusterData var : cluster2.getSVs())
+                {
+                    cluster1.addVariant(var);
+                }
+
+                clusters.remove(index2);
+            }
+
+            ++index1;
+        }
+
+        return clusters.size() < initClusterCount;
     }
 
     private boolean mergeOnOverlaps(List<SvCluster> clusters)
@@ -382,6 +545,66 @@ public class SvClusteringMethods {
             {
                 mChrCopyNumberMap.put(chromosome, 1);
             }
+        }
+    }
+
+    public void createCopyNumberSegments()
+    {
+        mChrCNDataMap.clear();
+
+        int cnId = 0;
+
+        for(Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
+        {
+            final String chromosome = entry.getKey();
+
+            List<SvBreakend> breakendList = entry.getValue();
+
+            List<SvCNData> copyNumberList = Lists.newArrayList();
+
+            for (int i = 0; i < breakendList.size(); ++i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+                final SvClusterData var = breakend.getSV();
+
+                if(i == 0)
+                {
+                    // add a section for the telomere - note: copy number is unknown from just the SVs
+                    copyNumberList.add(
+                            new SvCNData(cnId++, chromosome, 0, breakend.position() - 1, CN_SEG_TELOMERE, var.type().toString(),
+                                    0, 0, 0, 2, ""));
+                }
+
+                double copyNumber = var.copyNumber(breakend.usesStart());
+
+                long nextPosition = 0;
+                String nextType;
+
+                if(i == breakendList.size() - 1)
+                {
+                    // last entry - add the other telomere
+                    if(!mUtils.CHROMOSOME_LENGTHS.containsKey(chromosome))
+                    {
+                        // LOGGER.debug("missing chromosome({})", chromosome);
+                        continue;
+                    }
+
+                    nextPosition = mUtils.CHROMOSOME_LENGTHS.get(chromosome);
+                    nextType = CN_SEG_TELOMERE;
+                }
+                else
+                {
+                    final SvBreakend nextBreakend = breakendList.get(i+1);
+                    final SvClusterData nextVar = nextBreakend.getSV();
+                    nextType = nextVar.type().toString();
+                    nextPosition = nextBreakend.position() - 1;
+                }
+
+                copyNumberList.add(
+                        new SvCNData(cnId++, chromosome, breakend.position(), nextPosition, var.type().toString(), nextType, 0, 0, 0, copyNumber, ""));
+            }
+
+            mChrCNDataMap.put(chromosome, copyNumberList);
         }
     }
 

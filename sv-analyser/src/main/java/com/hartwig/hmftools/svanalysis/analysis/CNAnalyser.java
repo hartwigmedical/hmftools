@@ -21,6 +21,8 @@ import java.nio.file.Paths;
 
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+
+import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +30,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.types.SvCNData;
+import com.hartwig.hmftools.svanalysis.types.SvLOH;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,6 +45,8 @@ public class CNAnalyser {
     BufferedWriter mFileWriter;
     DatabaseAccess mDbAccess;
     List<StructuralVariantData> mSvDataList;
+
+    Map<String, List<SvLOH>> mSampleLohData;
 
     private boolean mAnalyseLOH;
     private boolean mAnalyseFlips;
@@ -61,6 +66,7 @@ public class CNAnalyser {
         mFileWriter = null;
         mDbAccess = dbAccess;
         mSvDataList = Lists.newArrayList();
+        mSampleLohData = null;
 
         mAnalyseLOH = true;
         mAnalyseFlips = false;
@@ -141,6 +147,91 @@ public class CNAnalyser {
         }
     }
 
+    public final Map<String, List<SvLOH>> getSampleLohData() { return mSampleLohData; }
+
+
+    private static int LOH_COLUMN_COUNT = 16;
+
+    public void loadLOHFromCSV(final String filename, final String specificSample)
+    {
+        if (filename.isEmpty())
+            return;
+
+        mSampleLohData = new HashMap();
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+
+            // skip field names
+            String line = fileReader.readLine();
+
+            if (line == null)
+            {
+                LOGGER.error("Empty LOH CSV file({})", filename);
+                return;
+            }
+
+            int cnCount = 0;
+            String currentSample = "";
+            List<SvLOH> lohDataList = null;
+
+            while ((line = fileReader.readLine()) != null)
+            {
+                // parse CSV data
+                String[] items = line.split(",");
+
+                if (items.length != LOH_COLUMN_COUNT) {
+                    continue;
+                }
+
+                String sampleId = items[0];
+
+                if(!specificSample.isEmpty() && !specificSample.equals(sampleId))
+                {
+                    continue;
+                }
+
+                if(currentSample.isEmpty() || !currentSample.equals(sampleId))
+                {
+                    if(!currentSample.isEmpty())
+                        mSampleLohData.put(currentSample, lohDataList);
+
+                    lohDataList = Lists.newArrayList();
+                    currentSample = sampleId;
+                }
+
+                // CSV fields
+                // SampleId,Chromosome,CnIdStart,CnIdEnd,PosStart,PosEnd,SegStart,SegEnd,PrevCN,StartCN,EndCN,MinCN,SegCount,Length,StartSV,EndSV
+                // 0  1        2   3        4      5        6      7        8           9         10         11
+
+                SvLOH lohData = new SvLOH(
+                        items[0],
+                        items[1],
+                        Integer.parseInt(items[2]),
+                        Integer.parseInt(items[3]),
+                        Long.parseLong(items[4]),
+                        Long.parseLong(items[5]),
+                        items[6],
+                        items[7],
+                        Double.parseDouble(items[8]),
+                        Double.parseDouble(items[9]),
+                        Double.parseDouble(items[10]),
+                        Double.parseDouble(items[11]),
+                        Integer.parseInt(items[12]),
+                        Long.parseLong(items[13]),
+                        items[14],
+                        items[15]);
+
+                lohDataList.add(lohData);
+            }
+        }
+        catch (IOException exception)
+        {
+            LOGGER.error("Failed to read LOH CSV file({})", filename);
+        }
+    }
+
     public void analyseData(final String specificSample, final String specificChromosome) {
 
         if(!specificSample.isEmpty())
@@ -154,7 +245,7 @@ public class CNAnalyser {
             List<SvCNData> sampleData = mSampleCNData.get(specificSample);
 
             if(mAnalyseLOH)
-                analyseLOH(specificSample, sampleData, specificChromosome);
+                analyseLOH(specificSample, sampleData);
 
             if(mAnalyseFlips)
                 analyseFlips(specificSample, sampleData, specificChromosome);
@@ -168,7 +259,7 @@ public class CNAnalyser {
                 LOGGER.info("analysing sample({}) with {} CN entries, totalProcessed({})", entry.getKey(), entry.getValue().size(), sampleCount);
 
                 if(mAnalyseLOH)
-                    analyseLOH(entry.getKey(), entry.getValue(), specificChromosome);
+                    analyseLOH(entry.getKey(), entry.getValue());
 
                 if(mAnalyseFlips)
                     analyseFlips(entry.getKey(), entry.getValue(), specificChromosome);
@@ -217,10 +308,9 @@ public class CNAnalyser {
         return null;
     }
 
-    private void analyseLOH(final String sampleId, List<SvCNData> cnDataList, final String specificChromosome)
+    private void analyseLOH(final String sampleId, List<SvCNData> cnDataList)
     {
         String currentChr = "";
-        // String currentArm = SvUtilities.CHROMOSOME_ARM_P;
 
         if(mDbAccess != null)
             loadSVData(sampleId);
@@ -308,7 +398,7 @@ public class CNAnalyser {
 
                 Path outputFile = Paths.get(outputFileName);
 
-                mFileWriter = Files.newBufferedWriter(outputFile); // , StandardOpenOption.CREATE_NEW
+                mFileWriter = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
 
                 // SV info
                 mFileWriter.write("SampleId,Chromosome,CnIdStart,CnIdEnd,PosStart,PosEnd,SegStart,SegEnd,");

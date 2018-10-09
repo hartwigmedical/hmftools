@@ -12,6 +12,7 @@ public class SvClusteringConfig {
     final public String LineElementFile;
     final public String ExternalAnnotationsFile;
     final public String GeneDataFile;
+    final public String LOHDataFile;
     final public boolean UseCombinedOutputFile;
     final public boolean UseGridss;
     final public int SampleCopyNumber;
@@ -25,6 +26,7 @@ public class SvClusteringConfig {
     private static final String EXTERNAL_SV_DATA_FILE = "ext_sv_data_file";
     private static final String EXTERNAL_DATA_LINK_FILE = "ext_data_link_file";
     private static final String DRIVER_GENES_FILE = "driver_gene_file";
+    private static final String LOH_DATA_FILE = "loh_file";
     private static final String USE_GRIDSS = "use_gridss";
 
 
@@ -40,6 +42,7 @@ public class SvClusteringConfig {
         LineElementFile = cmd.getOptionValue(LINE_ELEMENT_FILE, "");
         ExternalAnnotationsFile = cmd.getOptionValue(EXTERNAL_SV_DATA_FILE, "");
         GeneDataFile = cmd.getOptionValue(DRIVER_GENES_FILE, "");
+        LOHDataFile = cmd.getOptionValue(LOH_DATA_FILE, "");
         UseGridss = cmd.hasOption(USE_GRIDSS);
         SampleCopyNumber = 2;
     }
@@ -53,6 +56,7 @@ public class SvClusteringConfig {
         options.addOption(EXTERNAL_SV_DATA_FILE, true, "External file with per-SV annotations");
         options.addOption(EXTERNAL_DATA_LINK_FILE, true, "External SV data file, mapped by position info");
         options.addOption(DRIVER_GENES_FILE, true, "Gene data file");
+        options.addOption(LOH_DATA_FILE, true, "Copy Number LOH data file");
         options.addOption(USE_GRIDSS, false, "Using GRIDSS variant calling input data");
     }
 }
