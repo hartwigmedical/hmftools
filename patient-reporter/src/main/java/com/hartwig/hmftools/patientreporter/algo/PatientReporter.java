@@ -91,6 +91,7 @@ public abstract class PatientReporter {
         final List<GeneDisruption> reportableDisruptions = structuralVariantAnalysis.reportableDisruptions();
 
         LOGGER.info("Printing analysis results:");
+        LOGGER.info("Number of actionability variants to report: " + Integer.toString(somaticVariantAnalysis.actionableVariantsReport().size()));
         LOGGER.info(" Number of somatic variants to report : " + Integer.toString(somaticVariantAnalysis.variantsToReport().size()));
         LOGGER.info(" Microsatellite analysis results: " + Double.toString(somaticVariantAnalysis.microsatelliteIndelsPerMb())
                 + " indels per MB");
@@ -114,6 +115,7 @@ public abstract class PatientReporter {
                 purpleAnalysis.status(),
                 purpleAnalysis.fittedPurity().purity(),
                 somaticVariantAnalysis.variantsToReport(),
+                somaticVariantAnalysis.actionableVariantsReport(),
                 somaticVariantAnalysis.driverCatalog(),
                 somaticVariantAnalysis.microsatelliteIndelsPerMb(),
                 somaticVariantAnalysis.tumorMutationalLoad(),

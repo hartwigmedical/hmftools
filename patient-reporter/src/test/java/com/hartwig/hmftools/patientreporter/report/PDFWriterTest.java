@@ -59,6 +59,7 @@ import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 import com.hartwig.hmftools.svannotation.annotations.ImmutableGeneDisruption;
 import com.hartwig.hmftools.svannotation.annotations.ImmutableGeneFusion;
 import com.hartwig.hmftools.svannotation.annotations.Transcript;
+import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityVariant;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -96,12 +97,15 @@ public class PDFWriterTest {
         driverCatalog.addAll(OncoDrivers.drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), variants));
         driverCatalog.addAll(TsgDrivers.drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), variants));
 
+        final List<ActionabilityVariant> actionVariant = Lists.newArrayList();
+
         final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
 
         final AnalysedPatientReport patientReport = ImmutableAnalysedPatientReport.of(sampleReport,
                 FittedPurityStatus.NORMAL,
                 impliedTumorPurity,
                 variants,
+                actionVariant,
                 driverCatalog,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,

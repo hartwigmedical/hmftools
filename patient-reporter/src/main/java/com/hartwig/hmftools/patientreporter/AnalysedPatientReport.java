@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
 import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
+import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -29,6 +30,9 @@ public abstract class AnalysedPatientReport implements PatientReport {
 
     @NotNull
     public abstract List<EnrichedSomaticVariant> somaticVariants();
+
+    @NotNull
+    public abstract List<ActionabilityVariant> somaticActionabilityVariants();
 
     @NotNull
     public abstract List<DriverCatalog> somaticVariantDriverCatalog();
