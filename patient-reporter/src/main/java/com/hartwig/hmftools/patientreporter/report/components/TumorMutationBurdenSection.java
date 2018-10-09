@@ -34,11 +34,7 @@ public class TumorMutationBurdenSection {
     private static String interpret(final double tumorMutationalBurden, @NotNull FittedPurityStatus fitStatus) {
         final String formattedTumorMutationBurden =
                 PatientReportFormat.correctValueForFitStatus(fitStatus, new DecimalFormat("#.####").format(tumorMutationalBurden));
-        if (tumorMutationalBurden > TMB_THRESHOLD) {
-            return "High (" + formattedTumorMutationBurden + ")";
-        } else {
-            return "Low (" + formattedTumorMutationBurden + ")";
-        }
+        return formattedTumorMutationBurden;
     }
 
     private static int computeGraphValue(final double value) {
