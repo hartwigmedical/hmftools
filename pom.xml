@@ -54,7 +54,7 @@
         <hmf-sv-analyser.version>1.0</hmf-sv-analyser.version>
         <hmf-strelka-post-process.version>1.2</hmf-strelka-post-process.version>
         <hmf-extensions.version>1.0</hmf-extensions.version>
-        <hmf-knowledgebase-importer.version>1.1</hmf-knowledgebase-importer.version>
+        <hmf-knowledgebase-importer.version>1.2</hmf-knowledgebase-importer.version>
 
         <immutables.version>2.4.4</immutables.version>
         <htsjdk.version>2.12.0</htsjdk.version>
