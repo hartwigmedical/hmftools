@@ -237,19 +237,20 @@ public class PurityPloidyEstimateApplication {
             final List<PurpleCopyNumber> copyNumbers = copyNumberFactory.copyNumbers();
 
             if (cmd.hasOption(SV_RECOVERY_VCF)) {
-                final StructuralVariantRecovery recovery = new StructuralVariantRecovery(cmd.getOptionValue(SV_RECOVERY_VCF));
-                final List<RecoveredVariant> recovered = recovery.doStuff(copyNumbers);
-                RecoveredVariantFile.write(config.outputDirectory() + "/" + tumorSample + ".recovery.tsv", recovered);
 
-                final Multimap<String, PurpleCopyNumber> copyNumberMap = ArrayListMultimap.create();
+                final ListMultimap<String, PurpleCopyNumber> copyNumberMap = ArrayListMultimap.create();
                 for (PurpleCopyNumber copyNumber : copyNumbers) {
                     copyNumberMap.put(copyNumber.chromosome(), copyNumber);
                 }
 
-                //                final StructuralVariantLegPloidyFactory<PurpleCopyNumber> svPloidyFactory =
-                //                        new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
-                //                final List<StructuralVariantLegPloidy> svPloidies = svPloidyFactory.create(structuralVariants, copyNumberMap);
-                //                recovery.doStuff2(svPloidies);
+                final StructuralVariantRecovery recovery = new StructuralVariantRecovery(cmd.getOptionValue(SV_RECOVERY_VCF));
+                final List<RecoveredVariant> recovered = recovery.recoverVariants(copyNumberMap);
+                RecoveredVariantFile.write(config.outputDirectory() + "/" + tumorSample + ".recovery.tsv", recovered);
+
+                //                                final StructuralVariantLegPloidyFactory<PurpleCopyNumber> svPloidyFactory =
+                //                                        new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
+                //                                final List<StructuralVariantLegPloidy> svPloidies = svPloidyFactory.create(structuralVariants, copyNumberMap);
+                //                                recovery.doStuff2(svPloidies);
 
             }
 

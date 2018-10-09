@@ -6,11 +6,13 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
@@ -56,28 +58,51 @@ public class StructuralVariantRecovery {
         return ploidy.orientation() == 1 ? leftCopyNumber - rightCopyNumber : rightCopyNumber - leftCopyNumber;
     }
 
-    public List<RecoveredVariant> doStuff(@NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException {
+    public List<RecoveredVariant> recoverVariants(@NotNull final ListMultimap<String, PurpleCopyNumber> allCopyNumbers) throws IOException {
 
         final List<RecoveredVariant> result = Lists.newArrayList();
 
-        for (int i = 1; i < copyNumbers.size() - 1; i++) {
-            PurpleCopyNumber prev = copyNumbers.get(i - 1);
-            PurpleCopyNumber current = copyNumbers.get(i);
-            PurpleCopyNumber next = copyNumbers.get(i + 1);
+        for (String chromosome : allCopyNumbers.keySet()) {
+            final List<PurpleCopyNumber> copyNumbers = allCopyNumbers.get(chromosome);
 
-            if (current.segmentStartSupport() == SegmentSupport.NONE) {
-                long minPosition = current.minStart() - 1000;
-                long maxPosition = current.maxStart() + 1000;
-                result.addAll(recover(minPosition, maxPosition, current, prev, next));
+            for (int i = 1; i < copyNumbers.size() - 1; i++) {
+                PurpleCopyNumber prev = copyNumbers.get(i - 1);
+                PurpleCopyNumber current = copyNumbers.get(i);
+                PurpleCopyNumber next = copyNumbers.get(i + 1);
+
+                if (current.segmentStartSupport() == SegmentSupport.NONE) {
+                    long minPosition = current.minStart() - 1000;
+                    long maxPosition = current.maxStart() + 1000;
+                    result.addAll(recover(minPosition, maxPosition, current, prev, next, allCopyNumbers));
+                }
             }
         }
 
         return result;
     }
 
+    @VisibleForTesting
+    @NotNull
+    static <T extends GenomeRegion> T closest(long position, @NotNull final List<T> regions) {
+        assert (!regions.isEmpty());
+
+        long minDistance = position - 1;
+        for (int i = 1; i < regions.size(); i++) {
+            long distanceFromRegion = position - regions.get(i).start();
+            if (distanceFromRegion < 0) {
+                return Math.abs(distanceFromRegion) < minDistance ? regions.get(i) : regions.get(i - 1);
+            }
+
+            minDistance = distanceFromRegion;
+        }
+
+        return regions.get(regions.size() - 1);
+    }
+
     @NotNull
     public List<RecoveredVariant> recover(long min, long max, @NotNull final PurpleCopyNumber current, @NotNull final PurpleCopyNumber prev,
-            @NotNull final PurpleCopyNumber next) throws IOException {
+            @NotNull final PurpleCopyNumber next, @NotNull final ListMultimap<String, PurpleCopyNumber> allCopyNumbers) throws IOException {
+
         List<RecoveredVariant> result = Lists.newArrayList();
 
         ImmutableRecoveredVariant.Builder builder = ImmutableRecoveredVariant.builder()
@@ -114,13 +139,18 @@ public class StructuralVariantRecovery {
             final Long matePosition = matePosition(mateLocation);
             final int uncertainty = uncertainty(potentialVariant);
 
-            final StructuralVariant sv = mateChromosome != null && matePosition != null && mateId != null
-                    ? StructuralVariantFactory.create(potentialVariant,
-                    findMate(mateId, mateChromosome, Math.max(0, matePosition - uncertainty), matePosition + uncertainty))
+            final VariantContext mate = mateChromosome != null && matePosition != null && mateId != null ? findMate(mateId,
+                    mateChromosome,
+                    Math.max(0, matePosition - uncertainty),
+                    matePosition + uncertainty) : null;
+
+            final StructuralVariant sv = mate != null
+                    ? StructuralVariantFactory.create(potentialVariant, mate)
                     : StructuralVariantFactory.createSingleBreakend(potentialVariant);
 
             if (hasPotential(min, max, sv)) {
                 final StructuralVariantLeg end = sv.end();
+                final PurpleCopyNumber mateCopyNumber = end == null ? null : closest(end.position(), allCopyNumbers.get(end.chromosome()));
 
                 builder.alt(alt)
                         .qual(sv.qualityScore())
@@ -128,6 +158,9 @@ public class StructuralVariantRecovery {
                         .orientation(orientation)
                         .mate(end == null ? null : end.chromosome() + ":" + end.position())
                         .mateOrientation(end == null ? null : (int) end.orientation())
+                        .mateMinStart(mateCopyNumber == null ? null : mateCopyNumber.minStart())
+                        .mateMaxStart(mateCopyNumber == null ? null : mateCopyNumber.maxStart())
+                        .mateSupport(mateCopyNumber == null ? null : mateCopyNumber.segmentStartSupport())
                         .filter(sv.filter());
 
                 result.add(builder.build());

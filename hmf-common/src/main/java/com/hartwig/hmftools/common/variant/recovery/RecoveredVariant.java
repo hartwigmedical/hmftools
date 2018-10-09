@@ -61,6 +61,15 @@ public interface RecoveredVariant extends GenomeRegion {
     Integer mateOrientation();
 
     @Nullable
+    Long mateMinStart();
+
+    @Nullable
+    Long mateMaxStart();
+
+    @Nullable
+    SegmentSupport mateSupport();
+
+    @Nullable
     String alt();
 
 }

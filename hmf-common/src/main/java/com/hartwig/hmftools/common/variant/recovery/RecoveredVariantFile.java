@@ -50,6 +50,9 @@ public class RecoveredVariantFile {
                 .add("filter")
                 .add("mate")
                 .add("mateOrientation")
+                .add("mateMinStart")
+                .add("mateMaxStart")
+                .add("mateSupport")
                 .toString();
     }
 
@@ -81,6 +84,9 @@ public class RecoveredVariantFile {
                 .add(String.valueOf(recoveredVariant.filter()))
                 .add(String.valueOf(recoveredVariant.mate()))
                 .add(String.valueOf(recoveredVariant.mateOrientation()))
+                .add(String.valueOf(recoveredVariant.mateMinStart()))
+                .add(String.valueOf(recoveredVariant.mateMaxStart()))
+                .add(String.valueOf(recoveredVariant.mateSupport()))
                 .toString();
     }
 }
