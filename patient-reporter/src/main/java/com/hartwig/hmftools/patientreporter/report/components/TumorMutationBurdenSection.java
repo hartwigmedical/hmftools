@@ -32,9 +32,7 @@ public class TumorMutationBurdenSection {
 
     @NotNull
     private static String interpret(final double tumorMutationalBurden, @NotNull FittedPurityStatus fitStatus) {
-        final String formattedTumorMutationBurden =
-                PatientReportFormat.correctValueForFitStatus(fitStatus, new DecimalFormat("#.####").format(tumorMutationalBurden));
-        return formattedTumorMutationBurden;
+        return PatientReportFormat.correctValueForFitStatus(fitStatus, new DecimalFormat("#.####").format(tumorMutationalBurden));
     }
 
     private static int computeGraphValue(final double value) {
