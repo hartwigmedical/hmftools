@@ -24,7 +24,7 @@ public final class GeneDisruptionDataSource {
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
     public static final FieldBuilder<?> GENE_CONTEXT_FIELD = field("gene_context", String.class);
     public static final FieldBuilder<?> TYPE_FIELD = field("type", String.class);
-    public static final FieldBuilder<?> COPIES_FIELD = field("copies", String.class);
+    public static final FieldBuilder<?> COPIES_FIELD = field("disruptionCopies", String.class);
 
     private GeneDisruptionDataSource() {
     }
@@ -44,9 +44,9 @@ public final class GeneDisruptionDataSource {
         disruptionData.forEach(disruption -> dataSource.add(disruption.chromosome(),
                 disruption.chromosomeBand(),
                 disruption.gene(),
-                disruption.geneContext(),
+                disruption.affectedRange(),
                 disruption.type(),
-                PatientReportFormat.correctValueForFitStatus(fitStatus, disruption.copies())));
+                PatientReportFormat.correctValueForFitStatus(fitStatus, disruption.disruptionCopies())));
 
         return dataSource;
     }
