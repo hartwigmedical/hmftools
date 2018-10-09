@@ -16,6 +16,7 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityVariant;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
@@ -59,7 +60,6 @@ import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 import com.hartwig.hmftools.svannotation.annotations.ImmutableGeneDisruption;
 import com.hartwig.hmftools.svannotation.annotations.ImmutableGeneFusion;
 import com.hartwig.hmftools.svannotation.annotations.Transcript;
-import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityVariant;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

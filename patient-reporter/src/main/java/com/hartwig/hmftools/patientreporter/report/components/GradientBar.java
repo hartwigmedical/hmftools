@@ -9,6 +9,7 @@ import java.util.Optional;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -60,7 +61,7 @@ public abstract class GradientBar {
                 .startText(startText)
                 .endText(endText)
                 .value(value)
-                .marker(Optional.of(ImmutablePair.of(markerPosition, "")))
+                .marker(Optional.of(ImmutablePair.of(markerPosition, Strings.EMPTY)))
                 .build();
     }
 

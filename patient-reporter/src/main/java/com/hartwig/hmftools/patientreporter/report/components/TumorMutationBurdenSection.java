@@ -21,8 +21,7 @@ public class TumorMutationBurdenSection {
         final int graphValue = computeGraphValue(tumorMutationalBurdenIndicator);
         final int markerValue = computeGraphValue(TMB_THRESHOLD);
 
-        final GradientBar gradient =
-                ImmutableGradientBar.of(new Color(253, 235, 208), new Color(248, 196, 113), "Low", "High", graphValue, markerValue);
+        final GradientBar gradient = ImmutableGradientBar.of(new Color(253, 235, 208), new Color(248, 196, 113), "Low", "High", graphValue);
         final SliderSection sliderSection = ImmutableSliderSection.of("Tumor Mutational Burden",
                 interpret(tumorMutationalBurdenIndicator, fitStatus),
                 description(),
@@ -32,7 +31,8 @@ public class TumorMutationBurdenSection {
 
     @NotNull
     private static String interpret(final double tumorMutationalBurden, @NotNull FittedPurityStatus fitStatus) {
-        return PatientReportFormat.correctValueForFitStatus(fitStatus, new DecimalFormat("#.####").format(tumorMutationalBurden));
+        return PatientReportFormat.correctValueForFitStatus(fitStatus, new DecimalFormat("#.####").format(tumorMutationalBurden))
+                + " variants per Mb.";
     }
 
     private static int computeGraphValue(final double value) {
