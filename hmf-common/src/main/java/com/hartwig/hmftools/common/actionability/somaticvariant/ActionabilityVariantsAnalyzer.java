@@ -43,21 +43,21 @@ public class ActionabilityVariantsAnalyzer {
 
     public Set<ActionabilityVariant> actionableVariants(@NotNull SomaticVariant variant, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
             @Nullable String doidsPrimaryTumorLocation) {
-        Set<ActionabilityVariant> Actionablegenes = Sets.newHashSet();
+        Set<ActionabilityVariant> actionableVariants = Sets.newHashSet();
         for (ActionabilityVariant actionabilityVariant : variants) {
             if (variant.gene().equals(actionabilityVariant.gene()) && variant.chromosome().equals(actionabilityVariant.chromosome())
                     && variant.position() == actionabilityVariant.position() && variant.ref().equals(actionabilityVariant.ref())
                     && variant.alt().equals(actionabilityVariant.alt())) {
                 if (cancerTypeAnalyzer.foundTumorLocation(actionabilityVariant.cancerType(), doidsPrimaryTumorLocation)) {
                     printVariantRow(actionabilityVariant, "yes");
-                    Actionablegenes.add(actionabilityVariant);
+                    actionableVariants.add(actionabilityVariant);
                 } else {
                     printVariantRow(actionabilityVariant, "no");
-                    Actionablegenes.add(actionabilityVariant);
+                    actionableVariants.add(actionabilityVariant);
                 }
             }
         }
-        return Actionablegenes;
+        return actionableVariants;
     }
 
 

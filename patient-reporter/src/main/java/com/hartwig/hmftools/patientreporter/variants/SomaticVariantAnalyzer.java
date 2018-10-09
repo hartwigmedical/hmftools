@@ -8,6 +8,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
@@ -33,8 +34,8 @@ public final class SomaticVariantAnalyzer {
 
     @NotNull
     public static SomaticVariantAnalysis run(@NotNull final List<EnrichedSomaticVariant> variants, @NotNull Set<String> genePanel,
-            @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap, @NotNull String sampleRun,
-            @NotNull List<PatientTumorLocation> patientTumorLocations) throws ParseException, IOException {
+            @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap, @NotNull RunContext run,
+            @NotNull List<PatientTumorLocation> patientTumorLocations, @NotNull String runDirectory) throws ParseException, IOException {
         final List<EnrichedSomaticVariant> variantsToReport =
                 variants.stream().filter(includeFilter(genePanel, driverCategoryPerGeneMap)).collect(Collectors.toList());
         final double microsatelliteIndelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
@@ -46,7 +47,7 @@ public final class SomaticVariantAnalyzer {
         driverCatalog.addAll(TsgDrivers.drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), variants));
 
         final List<ActionabilityVariant> variant = Lists.newArrayList();
-       // variant.addAll(ActionabilityVariantAnalyzer.detectVariants(sampleRun, patientTumorLocations));
+        variant.addAll(ActionabilityVariantAnalyzer.detectVariants(runDirectory, patientTumorLocations));
 
         return ImmutableSomaticVariantAnalysis.of(variantsToReport,
                 driverCatalog,

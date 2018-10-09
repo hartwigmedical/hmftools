@@ -174,7 +174,7 @@ public abstract class PatientReporter {
         return SomaticVariantAnalyzer.run(enrichedSomaticVariants,
                 geneModel.somaticVariantGenePanel(),
                 geneModel.geneDriverCategoryMap(),
-                sample, patientTumorLocations);
+                run, patientTumorLocations, runDirectory);
     }
 
     @NotNull
