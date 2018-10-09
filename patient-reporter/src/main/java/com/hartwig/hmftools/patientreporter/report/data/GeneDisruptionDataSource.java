@@ -22,9 +22,11 @@ public final class GeneDisruptionDataSource {
     public static final FieldBuilder<?> CHROMOSOME_FIELD = field("chromosome", String.class);
     public static final FieldBuilder<?> CHROMOSOME_BAND_FIELD = field("chromosome_band", String.class);
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
-    public static final FieldBuilder<?> GENE_CONTEXT_FIELD = field("gene_context", String.class);
+    public static final FieldBuilder<?> AFFECTED_RANGE_FIELD = field("affected_range", String.class);
     public static final FieldBuilder<?> TYPE_FIELD = field("type", String.class);
-    public static final FieldBuilder<?> COPIES_FIELD = field("disruptionCopies", String.class);
+    public static final FieldBuilder<?> COPIES_FIELD = field("copies", String.class);
+    public static final FieldBuilder<?> GENE_MIN_COPIES = field("gene_min_copies", String.class);
+    public static final FieldBuilder<?> GENE_MAX_COPIES = field("gene_max_copies", String.class);
 
     private GeneDisruptionDataSource() {
     }
@@ -34,9 +36,11 @@ public final class GeneDisruptionDataSource {
         final DRDataSource dataSource = new DRDataSource(CHROMOSOME_FIELD.getName(),
                 CHROMOSOME_BAND_FIELD.getName(),
                 GENE_FIELD.getName(),
-                GENE_CONTEXT_FIELD.getName(),
+                AFFECTED_RANGE_FIELD.getName(),
                 TYPE_FIELD.getName(),
-                COPIES_FIELD.getName());
+                COPIES_FIELD.getName(),
+                GENE_MIN_COPIES.getName(),
+                GENE_MAX_COPIES.getName());
 
         final List<GeneDisruptionData> disruptionData =
                 disruptions.stream().sorted(disruptionComparator()).map(GeneDisruptionData::from).collect(Collectors.toList());
@@ -46,14 +50,17 @@ public final class GeneDisruptionDataSource {
                 disruption.gene(),
                 disruption.affectedRange(),
                 disruption.type(),
-                PatientReportFormat.correctValueForFitStatus(fitStatus, disruption.disruptionCopies())));
+                PatientReportFormat.correctValueForFitStatus(fitStatus, disruption.disruptionCopies()),
+                disruption.geneMinCopyNumber(),
+                disruption.geneMaxCopyNumber()));
 
         return dataSource;
     }
 
     @NotNull
     public static FieldBuilder<?>[] geneDisruptionFields() {
-        return new FieldBuilder<?>[] { CHROMOSOME_FIELD, CHROMOSOME_BAND_FIELD, GENE_FIELD, GENE_CONTEXT_FIELD, TYPE_FIELD, COPIES_FIELD };
+        return new FieldBuilder<?>[] { CHROMOSOME_FIELD, CHROMOSOME_BAND_FIELD, GENE_FIELD, AFFECTED_RANGE_FIELD, TYPE_FIELD, COPIES_FIELD,
+                GENE_MIN_COPIES, GENE_MAX_COPIES};
     }
 
     @NotNull

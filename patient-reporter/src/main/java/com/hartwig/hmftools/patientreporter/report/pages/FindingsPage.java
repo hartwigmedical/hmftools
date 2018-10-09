@@ -175,9 +175,11 @@ public abstract class FindingsPage {
                 .columns(col.column("Chromosome", GeneDisruptionDataSource.CHROMOSOME_FIELD),
                         col.column("Chromosome band", GeneDisruptionDataSource.CHROMOSOME_BAND_FIELD),
                         col.column("Gene", GeneDisruptionDataSource.GENE_FIELD),
-                        col.column("Context", GeneDisruptionDataSource.GENE_CONTEXT_FIELD),
+                        col.column("Range", GeneDisruptionDataSource.AFFECTED_RANGE_FIELD),
                         col.column("Type", GeneDisruptionDataSource.TYPE_FIELD),
-                        col.column("Copies", GeneDisruptionDataSource.COPIES_FIELD))
+                        col.column("Copies", GeneDisruptionDataSource.COPIES_FIELD),
+                        col.column("Gene Min Copies", GeneDisruptionDataSource.GENE_MIN_COPIES),
+                        col.column("Gene Max Copies", GeneDisruptionDataSource.GENE_MAX_COPIES))
                 .setDataSource(GeneDisruptionDataSource.fromGeneDisruptions(report.fitStatus(), report.geneDisruptions())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
