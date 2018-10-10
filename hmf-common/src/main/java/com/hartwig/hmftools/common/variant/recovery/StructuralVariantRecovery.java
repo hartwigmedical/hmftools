@@ -71,7 +71,7 @@ public class StructuralVariantRecovery {
                 PurpleCopyNumber next = copyNumbers.get(i + 1);
 
                 if (current.segmentStartSupport() == SegmentSupport.NONE) {
-                    long minPosition = current.minStart() - 1000;
+                    long minPosition = Math.max(1, current.minStart() - 1000);
                     long maxPosition = current.maxStart() + 1000;
                     result.addAll(recover(minPosition, maxPosition, current, prev, next, allCopyNumbers));
                 }
@@ -141,7 +141,7 @@ public class StructuralVariantRecovery {
 
             final VariantContext mate = mateChromosome != null && matePosition != null && mateId != null ? findMate(mateId,
                     mateChromosome,
-                    Math.max(0, matePosition - uncertainty),
+                    Math.max(1, matePosition - uncertainty),
                     matePosition + uncertainty) : null;
 
             final StructuralVariant sv = mate != null
@@ -175,7 +175,7 @@ public class StructuralVariantRecovery {
     }
 
     private int uncertainty(@NotNull final VariantContext context) {
-        final int homlen = context.getAttributeAsInt("HOMLEN", 0);
+        final int homlen = 2 * context.getAttributeAsInt("HOMLEN", 0);
         final int cipos = cipos(context);
         return Math.max(homlen, cipos);
     }
@@ -214,7 +214,7 @@ public class StructuralVariantRecovery {
 
         long endPosition = end.position();
         StructuralVariantType type = variant.type();
-        if (type == StructuralVariantType.DEL || type == StructuralVariantType.DUP) {
+        if (type == StructuralVariantType.DEL || type == StructuralVariantType.DUP || type == StructuralVariantType.INS) {
             assert (variant.end() != null);
 
             long length = Math.abs(endPosition - variant.start().position());
