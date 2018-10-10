@@ -12,9 +12,11 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.somaticvariant.VariantEvidenceItems;
@@ -99,7 +101,7 @@ public class PDFWriterTest {
         driverCatalog.addAll(TsgDrivers.drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), variants));
 
         final List<EvidenceItem> actionVariant = Lists.newArrayList();
-        final List<VariantEvidenceItems> labelEvidence = Lists.newArrayList();
+        final Map<EnrichedSomaticVariant, VariantEvidenceItems> labelEvidence = Maps.newHashMap();
 
         final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
 

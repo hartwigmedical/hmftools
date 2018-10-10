@@ -11,6 +11,8 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.algo.GeneModel;
@@ -109,38 +111,38 @@ public abstract class FindingsPage {
                         cmp.text(geneMutationAddition).setStyle(fontStyle().setFontSize(8))));
     }
 
-//    @NotNull
-//    private static ComponentBuilder<?, ?> germlineVariantReport(@NotNull final AnalysedPatientReport report) {
-//        final String geneMutationAddition = "Marked genes (*) are included in the DRUP study and indicate potential "
-//                + "eligibility in DRUP. Please note that the marking is NOT based on the specific mutation reported for "
-//                + "this sample, but only on a gene-level.";
-//
-//        final ComponentBuilder<?, ?> table =
-//                !report.somaticVariants().isEmpty()
-//                        ? cmp.subreport(monospaceBaseTable().fields(SomaticVariantDataSource.variantFields())
-//                        .columns(col.column("Gene", SomaticVariantDataSource.GENE_FIELD),
-//                                col.column("Variant", SomaticVariantDataSource.VARIANT_FIELD).setFixedWidth(90),
-//                                col.column("Impact", SomaticVariantDataSource.IMPACT_FIELD).setFixedWidth(80),
-//                                col.column("Read Depth", SomaticVariantDataSource.READ_DEPTH_FIELD),
-//                                col.column("Hotspot", SomaticVariantDataSource.IS_HOTSPOT_FIELD),
-//                                col.column("Ploidy (VAF)", SomaticVariantDataSource.PLOIDY_VAF_FIELD).setFixedWidth(80),
-//                                col.column("Clonality", SomaticVariantDataSource.CLONAL_STATUS_FIELD),
-//                                col.column("Biallelic", SomaticVariantDataSource.BIALLELIC_FIELD),
-//                                col.column("Driver", SomaticVariantDataSource.DRIVER_PROBABILITY_FIELD)))
-//                        .setDataSource(SomaticVariantDataSource.fromVariants(report.fitStatus(),
-//                                report.somaticVariants(),
-//                                report.somaticVariantDriverCatalog(),
-//                                panelGeneModel))
-//                        : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
-//
-//        return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
-//                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
-//                table,
-//                cmp.verticalGap(15),
-//                cmp.horizontalList(cmp.horizontalGap(10),
-//                        cmp.text("*").setStyle(fontStyle()).setWidth(2),
-//                        cmp.text(geneMutationAddition).setStyle(fontStyle().setFontSize(8))));
-//    }
+    //    @NotNull
+    //    private static ComponentBuilder<?, ?> germlineVariantReport(@NotNull final AnalysedPatientReport report) {
+    //        final String geneMutationAddition = "Marked genes (*) are included in the DRUP study and indicate potential "
+    //                + "eligibility in DRUP. Please note that the marking is NOT based on the specific mutation reported for "
+    //                + "this sample, but only on a gene-level.";
+    //
+    //        final ComponentBuilder<?, ?> table =
+    //                !report.somaticVariants().isEmpty()
+    //                        ? cmp.subreport(monospaceBaseTable().fields(SomaticVariantDataSource.variantFields())
+    //                        .columns(col.column("Gene", SomaticVariantDataSource.GENE_FIELD),
+    //                                col.column("Variant", SomaticVariantDataSource.VARIANT_FIELD).setFixedWidth(90),
+    //                                col.column("Impact", SomaticVariantDataSource.IMPACT_FIELD).setFixedWidth(80),
+    //                                col.column("Read Depth", SomaticVariantDataSource.READ_DEPTH_FIELD),
+    //                                col.column("Hotspot", SomaticVariantDataSource.IS_HOTSPOT_FIELD),
+    //                                col.column("Ploidy (VAF)", SomaticVariantDataSource.PLOIDY_VAF_FIELD).setFixedWidth(80),
+    //                                col.column("Clonality", SomaticVariantDataSource.CLONAL_STATUS_FIELD),
+    //                                col.column("Biallelic", SomaticVariantDataSource.BIALLELIC_FIELD),
+    //                                col.column("Driver", SomaticVariantDataSource.DRIVER_PROBABILITY_FIELD)))
+    //                        .setDataSource(SomaticVariantDataSource.fromVariants(report.fitStatus(),
+    //                                report.somaticVariants(),
+    //                                report.somaticVariantDriverCatalog(),
+    //                                panelGeneModel))
+    //                        : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
+    //
+    //        return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
+    //                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
+    //                table,
+    //                cmp.verticalGap(15),
+    //                cmp.horizontalList(cmp.horizontalGap(10),
+    //                        cmp.text("*").setStyle(fontStyle()).setWidth(2),
+    //                        cmp.text(geneMutationAddition).setStyle(fontStyle().setFontSize(8))));
+    //    }
 
     @NotNull
     private static ComponentBuilder<?, ?> geneCopyNumberReport(@NotNull final AnalysedPatientReport report) {
@@ -225,22 +227,21 @@ public abstract class FindingsPage {
     private static ComponentBuilder<?, ?> actionabiltyVariants(@NotNull final AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> table = report.geneDisruptions().size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(ActionabilityVariantsDataSource.actionabilityFields())
-                .columns(col.column("Event", ActionabilityVariantsDataSource.EVENT),
-                        col.column("Chromosome", ActionabilityVariantsDataSource.CHROMOSOME),
-                        col.column("Ref", ActionabilityVariantsDataSource.REF),
-                        col.column("Alt", ActionabilityVariantsDataSource.ALT),
+                .columns(col.column("Gene", ActionabilityVariantsDataSource.GENE),
+                        col.column("Variant", ActionabilityVariantsDataSource.VARIANT),
+                        col.column("Impact", ActionabilityVariantsDataSource.IMPACT),
                         col.column("Drug", ActionabilityVariantsDataSource.DRUG),
                         col.column("Drugs type", ActionabilityVariantsDataSource.DRUGS_TYPE),
                         col.column("Level", ActionabilityVariantsDataSource.LEVEL),
                         col.column("Response", ActionabilityVariantsDataSource.RESPONSE),
                         col.column("Source", ActionabilityVariantsDataSource.SOURCE)
-                                .setHyperLink(hyperLink(ActionabilityVariantsDataSource.sourceHyperlink()))
+                                .setHyperLink(hyperLink(ActionabilityVariantsDataSource.sourceHyperlink(report.somaticActionabilityVariants())))
                                 .setStyle(linkStyle()),
                         col.column("Label", ActionabilityVariantsDataSource.LABEL))
-                .setDataSource(ActionabilityVariantsDataSource.fromActionabilityVariants(report.somaticActionabilityVariants(), report.evidenceItem())))
+                .setDataSource(ActionabilityVariantsDataSource.fromActionabilityVariants(report.evidenceItem())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        return cmp.verticalList(cmp.text("Actionability Variants").setStyle(sectionHeaderStyle()),
+        return cmp.verticalList(cmp.text("Evidence Items").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
                 table);
     }

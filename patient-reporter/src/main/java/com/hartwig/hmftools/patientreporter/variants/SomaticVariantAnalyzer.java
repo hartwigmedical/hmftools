@@ -49,7 +49,7 @@ public final class SomaticVariantAnalyzer {
         Map<EnrichedSomaticVariant, VariantEvidenceItems> evidencePerVariant =
                 ActionabilityVariantAnalyzer.detectVariants(variants, patientTumorLocation);
 
-        for (Map.Entry<EnrichedSomaticVariant, VariantEvidenceItems> entry : evidencePerVariant.entrySet()){
+        for (Map.Entry<EnrichedSomaticVariant, VariantEvidenceItems> entry : evidencePerVariant.entrySet()) {
             variant.addAll(entry.getValue().onLabel());
             variant.addAll(entry.getValue().offLabel());
         }
@@ -59,7 +59,8 @@ public final class SomaticVariantAnalyzer {
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
                 tumorMutationalBurden,
-                variant, evidencePerVariant.values());
+                variant,
+                evidencePerVariant);
     }
 
     @NotNull

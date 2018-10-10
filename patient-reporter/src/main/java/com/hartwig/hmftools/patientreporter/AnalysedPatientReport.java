@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
@@ -37,7 +38,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract List<EvidenceItem> somaticActionabilityVariants();
 
     @NotNull
-    public abstract List<VariantEvidenceItems> evidenceItem();
+    public abstract Map<EnrichedSomaticVariant, VariantEvidenceItems> evidenceItem();
 
     @NotNull
     public abstract List<DriverCatalog> somaticVariantDriverCatalog();
