@@ -3,17 +3,15 @@ package com.hartwig.hmftools.patientreporter.report.data;
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityVariant;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
+import net.sf.dynamicreports.report.base.expression.AbstractSimpleExpression;
 import net.sf.dynamicreports.report.builder.FieldBuilder;
 import net.sf.dynamicreports.report.datasource.DRDataSource;
+import net.sf.dynamicreports.report.definition.ReportParameters;
 import net.sf.jasperreports.engine.JRDataSource;
 
 public class ActionabilityVariantsDataSource {
@@ -36,25 +34,46 @@ public class ActionabilityVariantsDataSource {
                 CHROMOSOME.getName(),
                 REF.getName(),
                 ALT.getName(),
-                SOURCE.getName(),
                 DRUG.getName(),
                 DRUGS_TYPE.getName(),
                 LEVEL.getName(),
-                RESPONSE.getName());
+                RESPONSE.getName(),
+                SOURCE.getName());
 
         for (ActionabilityVariant variant : actionabilityVariants) {
             actionabilityVariantsDatasource.add(variant.gene(),
                     variant.chromosome(),
                     variant.ref(),
                     variant.alt(),
-                    variant.source(),
                     variant.drug(),
                     variant.drugsType(),
                     variant.level(),
-                    variant.response());
+                    variant.response(),
+                    variant.source());
         }
-
         return actionabilityVariantsDatasource;
+    }
+
+    @NotNull
+    public static AbstractSimpleExpression<String> sourceHyperlink() {
+        return new AbstractSimpleExpression<String>() {
+            @Override
+            public String evaluate(@NotNull final ReportParameters data) {
+                final String source = data.getValue(SOURCE.getName());
+                switch (source) {
+                    case "oncoKb":
+                        return "http://oncokb.org/#/";
+                    case "iclusion":
+                        return "https://http://www.iclusion.com";
+                    case "cgi":
+                        return "https://www.cancergenomeinterpreter.org/biomarkers";
+                    case "civic":
+                        return "https://civicdb.org/browse/somaticVariants";
+                    default:
+                        return "";
+                }
+            }
+        };
     }
 
     @NotNull

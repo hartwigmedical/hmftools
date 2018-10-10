@@ -35,7 +35,7 @@ public final class ActionabilityVariantAnalyzer {
     public static <T extends SomaticVariant> List<ActionabilityVariant> detectVariants(@NotNull List<T> variants,
             @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
         final String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : Strings.EMPTY;
-
+        LOGGER.info(primaryTumorLocation);
         CancerTypeMappingReading cancerTypeMappingReading = CancerTypeMappingReading.readingFile();
         String doidsPrimaryTumorLocation = cancerTypeMappingReading.doidsForPrimaryTumorLocation(primaryTumorLocation);
 
@@ -52,9 +52,8 @@ public final class ActionabilityVariantAnalyzer {
                     variants.stream().filter(variant -> actionableGenesVariants.contains(variant.gene())).collect(Collectors.toList());
 
             for (SomaticVariant variant : variantsOnActionableGenes) {
-                Set<ActionabilityVariant> data = analyzer.actionableVariants(variant, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
-                actionabilityVariants.addAll(data);
-                LOGGER.info(data);
+                Set<ActionabilityVariant> evidenceItems = analyzer.actionableVariants(variant, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
+                actionabilityVariants.addAll(evidenceItems);
             }
 
         } else if (!Files.exists(new File(FILE_ACTIONABILITY_VARIANTS).toPath())) {

@@ -79,6 +79,7 @@ public abstract class PatientReporter {
         final String tumorSample = run.tumorSample();
         PatientTumorLocation patientTumorLocation =
                 PatientReporterFileLoader.extractPatientTumorLocation(baseReportData().patientTumorLocations(), tumorSample);
+        LOGGER.info("TumorLocation: " + patientTumorLocation);
 
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run,
                 purpleAnalysis,

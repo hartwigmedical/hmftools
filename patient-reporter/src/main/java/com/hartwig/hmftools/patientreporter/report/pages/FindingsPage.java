@@ -192,18 +192,22 @@ public abstract class FindingsPage {
     private static ComponentBuilder<?, ?> actionabiltyVariants(@NotNull final AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> table = report.geneDisruptions().size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(ActionabilityVariantsDataSource.actionabilityFields())
-                .columns(col.column("Source", ActionabilityVariantsDataSource.EVENT),
+                .columns(col.column("Event", ActionabilityVariantsDataSource.EVENT),
                         col.column("Chromosome", ActionabilityVariantsDataSource.CHROMOSOME),
                         col.column("Ref", ActionabilityVariantsDataSource.REF),
                         col.column("Alt", ActionabilityVariantsDataSource.ALT),
                         col.column("Drug", ActionabilityVariantsDataSource.DRUG),
                         col.column("Drugs type", ActionabilityVariantsDataSource.DRUGS_TYPE),
                         col.column("Level", ActionabilityVariantsDataSource.LEVEL),
-                        col.column("Response", ActionabilityVariantsDataSource.RESPONSE))
+                        col.column("Response", ActionabilityVariantsDataSource.RESPONSE),
+                        col.column("Source", ActionabilityVariantsDataSource.SOURCE)
+                                .setHyperLink(hyperLink(ActionabilityVariantsDataSource.sourceHyperlink()))
+                                .setStyle(linkStyle()))
                 .setDataSource(ActionabilityVariantsDataSource.fromActionabilityVariants(report.somaticActionabilityVariants())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Actionability Variants").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE), table);
+                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
+                table);
     }
 }
