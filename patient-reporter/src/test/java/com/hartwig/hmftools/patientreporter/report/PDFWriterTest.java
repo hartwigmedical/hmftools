@@ -101,7 +101,6 @@ public class PDFWriterTest {
         final List<EvidenceItem> actionVariant = Lists.newArrayList();
         final List<VariantEvidenceItems> labelEvidence = Lists.newArrayList();
 
-
         final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
 
         final AnalysedPatientReport patientReport = ImmutableAnalysedPatientReport.of(sampleReport,
@@ -113,6 +112,7 @@ public class PDFWriterTest {
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
                 tumorMutationalBurden,
+                Lists.newArrayList(),
                 copyNumbers,
                 fusions,
                 disruptions,

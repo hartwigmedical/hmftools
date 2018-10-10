@@ -109,6 +109,39 @@ public abstract class FindingsPage {
                         cmp.text(geneMutationAddition).setStyle(fontStyle().setFontSize(8))));
     }
 
+//    @NotNull
+//    private static ComponentBuilder<?, ?> germlineVariantReport(@NotNull final AnalysedPatientReport report) {
+//        final String geneMutationAddition = "Marked genes (*) are included in the DRUP study and indicate potential "
+//                + "eligibility in DRUP. Please note that the marking is NOT based on the specific mutation reported for "
+//                + "this sample, but only on a gene-level.";
+//
+//        final ComponentBuilder<?, ?> table =
+//                !report.somaticVariants().isEmpty()
+//                        ? cmp.subreport(monospaceBaseTable().fields(SomaticVariantDataSource.variantFields())
+//                        .columns(col.column("Gene", SomaticVariantDataSource.GENE_FIELD),
+//                                col.column("Variant", SomaticVariantDataSource.VARIANT_FIELD).setFixedWidth(90),
+//                                col.column("Impact", SomaticVariantDataSource.IMPACT_FIELD).setFixedWidth(80),
+//                                col.column("Read Depth", SomaticVariantDataSource.READ_DEPTH_FIELD),
+//                                col.column("Hotspot", SomaticVariantDataSource.IS_HOTSPOT_FIELD),
+//                                col.column("Ploidy (VAF)", SomaticVariantDataSource.PLOIDY_VAF_FIELD).setFixedWidth(80),
+//                                col.column("Clonality", SomaticVariantDataSource.CLONAL_STATUS_FIELD),
+//                                col.column("Biallelic", SomaticVariantDataSource.BIALLELIC_FIELD),
+//                                col.column("Driver", SomaticVariantDataSource.DRIVER_PROBABILITY_FIELD)))
+//                        .setDataSource(SomaticVariantDataSource.fromVariants(report.fitStatus(),
+//                                report.somaticVariants(),
+//                                report.somaticVariantDriverCatalog(),
+//                                panelGeneModel))
+//                        : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
+//
+//        return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
+//                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
+//                table,
+//                cmp.verticalGap(15),
+//                cmp.horizontalList(cmp.horizontalGap(10),
+//                        cmp.text("*").setStyle(fontStyle()).setWidth(2),
+//                        cmp.text(geneMutationAddition).setStyle(fontStyle().setFontSize(8))));
+//    }
+
     @NotNull
     private static ComponentBuilder<?, ?> geneCopyNumberReport(@NotNull final AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> table =
