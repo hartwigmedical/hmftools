@@ -5,8 +5,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -21,10 +24,10 @@ public class ActionabilityVariantsAnalyzer {
     private static final String DELIMITER = "\t";
 
     @NotNull
-    private final List<ActionabilityVariant> variants;
+    private final List<EvidenceItem> variants;
     private final List<ActionabilityRange> variantsRanges;
 
-    ActionabilityVariantsAnalyzer(@NotNull final List<ActionabilityVariant> variants, @NotNull List<ActionabilityRange> variantsRanges) {
+    ActionabilityVariantsAnalyzer(@NotNull final List<EvidenceItem> variants, @NotNull List<ActionabilityRange> variantsRanges) {
         this.variants = variants;
         this.variantsRanges = variantsRanges;
     }
@@ -32,7 +35,7 @@ public class ActionabilityVariantsAnalyzer {
     @NotNull
     public Set<String> actionableGenes() {
         Set<String> genes = Sets.newHashSet();
-        for (ActionabilityVariant variant : variants) {
+        for (EvidenceItem variant : variants) {
             genes.add(variant.gene());
         }
         for (ActionabilityRange range : variantsRanges) {
@@ -41,30 +44,22 @@ public class ActionabilityVariantsAnalyzer {
         return genes;
     }
 
-    public Set<ActionabilityVariant> actionableVariants(@NotNull SomaticVariant variant, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
-            @Nullable String doidsPrimaryTumorLocation) {
-        Set<ActionabilityVariant> actionableVariants = Sets.newHashSet();
-        for (ActionabilityVariant actionabilityVariant : variants) {
-            if (variant.gene().equals(actionabilityVariant.gene()) && variant.chromosome().equals(actionabilityVariant.chromosome())
-                    && variant.position() == actionabilityVariant.position() && variant.ref().equals(actionabilityVariant.ref())
-                    && variant.alt().equals(actionabilityVariant.alt())) {
-                if (cancerTypeAnalyzer.foundTumorLocation(actionabilityVariant.cancerType(), doidsPrimaryTumorLocation)) {
-                    printVariantRow(actionabilityVariant, "yes");
-                    actionableVariants.add(actionabilityVariant);
+    public VariantEvidenceItems actionableVariants(@NotNull SomaticVariant variant,
+            @NotNull CancerTypeAnalyzer cancerTypeAnalyzer, @Nullable String doidsPrimaryTumorLocation) {
+        List<EvidenceItem> onLabel = Lists.newArrayList();
+        List<EvidenceItem> offLabel = Lists.newArrayList();
+        for (EvidenceItem evidenceItem : variants) {
+            if (variant.gene().equals(evidenceItem.gene()) && variant.chromosome().equals(evidenceItem.chromosome())
+                    && variant.position() == evidenceItem.position() && variant.ref().equals(evidenceItem.ref()) && variant.alt()
+                    .equals(evidenceItem.alt())) {
+                if (cancerTypeAnalyzer.foundTumorLocation(evidenceItem.cancerType(), doidsPrimaryTumorLocation)) {
+                    onLabel.add(evidenceItem);
                 } else {
-                    printVariantRow(actionabilityVariant, "no");
-                    actionableVariants.add(actionabilityVariant);
+                    offLabel.add(evidenceItem);
                 }
             }
         }
-        return actionableVariants;
-    }
-
-
-    private static void printVariantRow(@NotNull ActionabilityVariant variant, @NotNull String isActionable) {
-        LOGGER.info(variant.gene() + "\t" + variant.chromosome() + "\t" + variant.position() + "\t" + variant.ref() + "\t" + variant.alt()
-                + variant.source()  +"\t" + variant.drug() + "\t" + variant.drugsType() + "\t" + variant.cancerType() + "\t"
-                + variant.level() + "\t" + variant.response() + "\t" + isActionable);
+        return ImmutableVariantEvidenceItems.of(onLabel, offLabel);
     }
 
     public boolean actionableRange(@NotNull SomaticVariant variant, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
@@ -96,7 +91,7 @@ public class ActionabilityVariantsAnalyzer {
     @NotNull
     public static ActionabilityVariantsAnalyzer loadFromFileVariantsAndFileRanges(String fileVariants, String fileRanges)
             throws IOException {
-        final List<ActionabilityVariant> variants = new ArrayList<>();
+        final List<EvidenceItem> variants = new ArrayList<>();
         final List<ActionabilityRange> ranges = new ArrayList<>();
         final List<String> lineVariants = Files.readAllLines(new File(fileVariants).toPath());
         final List<String> lineRanges = Files.readAllLines(new File(fileRanges).toPath());
@@ -116,9 +111,9 @@ public class ActionabilityVariantsAnalyzer {
     }
 
     @NotNull
-    private static ActionabilityVariant fromLineVariants(@NotNull String line) {
+    private static EvidenceItem fromLineVariants(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
-        return ImmutableActionabilityVariant.builder()
+        return ImmutableEvidenceItem.builder()
                 .gene(values[0])
                 .chromosome(values[1])
                 .position(Long.valueOf(values[2]))

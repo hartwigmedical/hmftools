@@ -202,8 +202,9 @@ public abstract class FindingsPage {
                         col.column("Response", ActionabilityVariantsDataSource.RESPONSE),
                         col.column("Source", ActionabilityVariantsDataSource.SOURCE)
                                 .setHyperLink(hyperLink(ActionabilityVariantsDataSource.sourceHyperlink()))
-                                .setStyle(linkStyle()))
-                .setDataSource(ActionabilityVariantsDataSource.fromActionabilityVariants(report.somaticActionabilityVariants())))
+                                .setStyle(linkStyle()),
+                        col.column("Label", ActionabilityVariantsDataSource.LABEL))
+                .setDataSource(ActionabilityVariantsDataSource.fromActionabilityVariants(report.somaticActionabilityVariants(), report.evidenceItem())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Actionability Variants").setStyle(sectionHeaderStyle()),

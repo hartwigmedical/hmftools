@@ -2,9 +2,10 @@ package com.hartwig.hmftools.patientreporter.variants;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.actionability.somaticvariant.VariantEvidenceItems;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityVariant;
+import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -28,5 +29,8 @@ public abstract class SomaticVariantAnalysis {
     public abstract double tumorMutationalBurden();
 
     @NotNull
-    public abstract List<ActionabilityVariant> actionableVariantsReport();
+    public abstract List<EvidenceItem> actionableVariantsReport();
+
+    @NotNull
+    public abstract List<VariantEvidenceItems> evidence();
 }

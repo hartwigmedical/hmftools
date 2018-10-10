@@ -4,7 +4,8 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityVariant;
+import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
+import com.hartwig.hmftools.common.actionability.somaticvariant.VariantEvidenceItems;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -24,12 +25,14 @@ public class ActionabilityVariantsDataSource {
     public static final FieldBuilder<?> DRUGS_TYPE = field("drugs type", String.class);
     public static final FieldBuilder<?> LEVEL = field("level", String.class);
     public static final FieldBuilder<?> RESPONSE = field("response", String.class);
+    public static final FieldBuilder<?> LABEL = field("label", String.class);
 
     private ActionabilityVariantsDataSource() {
     }
 
     @NotNull
-    public static JRDataSource fromActionabilityVariants(@NotNull List<ActionabilityVariant> actionabilityVariants) {
+    public static JRDataSource fromActionabilityVariants(@NotNull List<EvidenceItem> evidenceItems,
+            @NotNull List<VariantEvidenceItems> label) {
         final DRDataSource actionabilityVariantsDatasource = new DRDataSource(EVENT.getName(),
                 CHROMOSOME.getName(),
                 REF.getName(),
@@ -38,9 +41,10 @@ public class ActionabilityVariantsDataSource {
                 DRUGS_TYPE.getName(),
                 LEVEL.getName(),
                 RESPONSE.getName(),
+                LABEL.getName(),
                 SOURCE.getName());
 
-        for (ActionabilityVariant variant : actionabilityVariants) {
+        for (EvidenceItem variant : evidenceItems) {
             actionabilityVariantsDatasource.add(variant.gene(),
                     variant.chromosome(),
                     variant.ref(),
@@ -49,6 +53,7 @@ public class ActionabilityVariantsDataSource {
                     variant.drugsType(),
                     variant.level(),
                     variant.response(),
+                    "label",
                     variant.source());
         }
         return actionabilityVariantsDatasource;
@@ -78,6 +83,6 @@ public class ActionabilityVariantsDataSource {
 
     @NotNull
     public static FieldBuilder<?>[] actionabilityFields() {
-        return new FieldBuilder<?>[] { EVENT, CHROMOSOME, REF, ALT, SOURCE, DRUG, DRUGS_TYPE, LEVEL, RESPONSE };
+        return new FieldBuilder<?>[] { EVENT, CHROMOSOME, REF, ALT, DRUG, DRUGS_TYPE, LEVEL, RESPONSE, SOURCE, LABEL };
     }
 }

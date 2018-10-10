@@ -16,7 +16,8 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityVariant;
+import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
+import com.hartwig.hmftools.common.actionability.somaticvariant.VariantEvidenceItems;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
@@ -97,7 +98,9 @@ public class PDFWriterTest {
         driverCatalog.addAll(OncoDrivers.drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), variants));
         driverCatalog.addAll(TsgDrivers.drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), variants));
 
-        final List<ActionabilityVariant> actionVariant = Lists.newArrayList();
+        final List<EvidenceItem> actionVariant = Lists.newArrayList();
+        final List<VariantEvidenceItems> labelEvidence = Lists.newArrayList();
+
 
         final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
 
@@ -105,7 +108,7 @@ public class PDFWriterTest {
                 FittedPurityStatus.NORMAL,
                 impliedTumorPurity,
                 variants,
-                actionVariant,
+                actionVariant,labelEvidence,
                 driverCatalog,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,

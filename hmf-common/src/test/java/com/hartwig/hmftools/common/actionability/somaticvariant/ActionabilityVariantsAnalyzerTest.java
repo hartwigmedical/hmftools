@@ -17,7 +17,7 @@ public class ActionabilityVariantsAnalyzerTest {
 
     @Test
     public void actionabilityWorksVariants() {
-        ActionabilityVariant actionabilityVariant = ImmutableActionabilityVariant.builder()
+        EvidenceItem evidenceItem = ImmutableEvidenceItem.builder()
                 .gene("BRAF")
                 .chromosome("X")
                 .position(1234)
@@ -49,7 +49,7 @@ public class ActionabilityVariantsAnalyzerTest {
         CancerTypeReading reading = ImmutableCancerTypeReading.builder().doidSet("4159").cancerType("Skin").build();
 
         ActionabilityVariantsAnalyzer analyzer =
-                new ActionabilityVariantsAnalyzer(Lists.newArrayList(actionabilityVariant), Lists.newArrayList(actionabilityRange));
+                new ActionabilityVariantsAnalyzer(Lists.newArrayList(evidenceItem), Lists.newArrayList(actionabilityRange));
 
         CancerTypeAnalyzer cancerType = new CancerTypeAnalyzer(Lists.newArrayList(reading));
 

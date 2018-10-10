@@ -4,14 +4,16 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeMappingReading;
-import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityVariant;
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityVariantsAnalyzer;
+import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
+import com.hartwig.hmftools.common.actionability.somaticvariant.VariantEvidenceItems;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
@@ -32,14 +34,14 @@ public final class ActionabilityVariantAnalyzer {
     }
 
     @NotNull
-    public static <T extends SomaticVariant> List<ActionabilityVariant> detectVariants(@NotNull List<T> variants,
+    public static <T extends SomaticVariant> Map<T, VariantEvidenceItems> detectVariants(@NotNull List<T> variants,
             @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
+        Map<T, VariantEvidenceItems> evidenceItemsPerVariant = Maps.newHashMap();
         final String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : Strings.EMPTY;
         LOGGER.info(primaryTumorLocation);
         CancerTypeMappingReading cancerTypeMappingReading = CancerTypeMappingReading.readingFile();
         String doidsPrimaryTumorLocation = cancerTypeMappingReading.doidsForPrimaryTumorLocation(primaryTumorLocation);
 
-        List<ActionabilityVariant> actionabilityVariants = Lists.newArrayList();
         if (Files.exists(new File(FILE_ACTIONABILITY_VARIANTS).toPath()) && Files.exists(new File(FILE_ACTIONABILITY_RANGES).toPath())
                 && Files.exists(new File(FILE_CANCER_TUMORS_WITH_DOID).toPath())) {
             ActionabilityVariantsAnalyzer analyzer =
@@ -48,13 +50,13 @@ public final class ActionabilityVariantAnalyzer {
 
             Set<String> actionableGenesVariants = analyzer.actionableGenes();
 
-            List<SomaticVariant> variantsOnActionableGenes =
+            List<T> variantsOnActionableGenes =
                     variants.stream().filter(variant -> actionableGenesVariants.contains(variant.gene())).collect(Collectors.toList());
 
-            for (SomaticVariant variant : variantsOnActionableGenes) {
-                Set<ActionabilityVariant> evidenceItems = analyzer.actionableVariants(variant, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
-                actionabilityVariants.addAll(evidenceItems);
+            for (T variant : variantsOnActionableGenes) {
+                evidenceItemsPerVariant.put(variant, analyzer.actionableVariants(variant, cancerTypeAnalyzer, doidsPrimaryTumorLocation));
             }
+
 
         } else if (!Files.exists(new File(FILE_ACTIONABILITY_VARIANTS).toPath())) {
         LOGGER.warn("File does not exist: " + FILE_ACTIONABILITY_VARIANTS);
@@ -63,6 +65,7 @@ public final class ActionabilityVariantAnalyzer {
         } else if (!Files.exists(new File(FILE_CANCER_TUMORS_WITH_DOID).toPath())) {
         LOGGER.warn("File does not exist: " + FILE_CANCER_TUMORS_WITH_DOID);
         }
-        return actionabilityVariants;
+
+        return evidenceItemsPerVariant;
     }
 }
