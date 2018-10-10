@@ -17,6 +17,10 @@ import net.sf.dynamicreports.report.datasource.DRDataSource;
 import net.sf.jasperreports.engine.JRDataSource;
 
 public class ActionabilityVariantsDataSource {
+    public static final FieldBuilder<?> EVENT = field("event", String.class);
+    public static final FieldBuilder<?> CHROMOSOME = field("chromosome", String.class);
+    public static final FieldBuilder<?> REF = field("ref", String.class);
+    public static final FieldBuilder<?> ALT = field("alt", String.class);
     public static final FieldBuilder<?> SOURCE = field("source", String.class);
     public static final FieldBuilder<?> DRUG = field("drug", String.class);
     public static final FieldBuilder<?> DRUGS_TYPE = field("drugs type", String.class);
@@ -28,7 +32,10 @@ public class ActionabilityVariantsDataSource {
 
     @NotNull
     public static JRDataSource fromActionabilityVariants(@NotNull List<ActionabilityVariant> actionabilityVariants) {
-        final DRDataSource actionabilityVariantsDatasource = new DRDataSource(
+        final DRDataSource actionabilityVariantsDatasource = new DRDataSource(EVENT.getName(),
+                CHROMOSOME.getName(),
+                REF.getName(),
+                ALT.getName(),
                 SOURCE.getName(),
                 DRUG.getName(),
                 DRUGS_TYPE.getName(),
@@ -36,7 +43,15 @@ public class ActionabilityVariantsDataSource {
                 RESPONSE.getName());
 
         for (ActionabilityVariant variant : actionabilityVariants) {
-            actionabilityVariantsDatasource.add(variant.gene(), variant.source(), variant.drug(), variant.drugsType(), variant.level(), variant.response());
+            actionabilityVariantsDatasource.add(variant.gene(),
+                    variant.chromosome(),
+                    variant.ref(),
+                    variant.alt(),
+                    variant.source(),
+                    variant.drug(),
+                    variant.drugsType(),
+                    variant.level(),
+                    variant.response());
         }
 
         return actionabilityVariantsDatasource;
@@ -44,6 +59,6 @@ public class ActionabilityVariantsDataSource {
 
     @NotNull
     public static FieldBuilder<?>[] actionabilityFields() {
-        return new FieldBuilder<?>[] {SOURCE, DRUG, DRUGS_TYPE, LEVEL, RESPONSE };
+        return new FieldBuilder<?>[] { EVENT, CHROMOSOME, REF, ALT, SOURCE, DRUG, DRUGS_TYPE, LEVEL, RESPONSE };
     }
 }

@@ -192,7 +192,10 @@ public abstract class FindingsPage {
     private static ComponentBuilder<?, ?> actionabiltyVariants(@NotNull final AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> table = report.geneDisruptions().size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(ActionabilityVariantsDataSource.actionabilityFields())
-                .columns(col.column("Source", ActionabilityVariantsDataSource.SOURCE),
+                .columns(col.column("Source", ActionabilityVariantsDataSource.EVENT),
+                        col.column("Chromosome", ActionabilityVariantsDataSource.CHROMOSOME),
+                        col.column("Ref", ActionabilityVariantsDataSource.REF),
+                        col.column("Alt", ActionabilityVariantsDataSource.ALT),
                         col.column("Drug", ActionabilityVariantsDataSource.DRUG),
                         col.column("Drugs type", ActionabilityVariantsDataSource.DRUGS_TYPE),
                         col.column("Level", ActionabilityVariantsDataSource.LEVEL),
