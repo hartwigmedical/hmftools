@@ -51,4 +51,8 @@ abstract class EligibilityReport {
     public abstract String annotations();
 
     public abstract String hgvsProtein();
+
+    public abstract boolean isHomozygous();
+
+    public abstract int phredScore();
 }

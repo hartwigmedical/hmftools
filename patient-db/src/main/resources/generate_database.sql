@@ -579,7 +579,6 @@ DROP TABLE IF EXISTS germlineVariant;
 CREATE TABLE germlineVariant
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-
     sampleId varchar(255) NOT NULL,
     chromosome varchar(255) NOT NULL,
     position int not null,
@@ -602,7 +601,7 @@ CREATE TABLE germlineVariant
     adjustedCopyNumber DOUBLE PRECISION NOT NULL,
     highConfidence BOOLEAN NOT NULL,
     trinucleotideContext varchar(3) NOT NULL,
-    clonality varchar(455) NOT NULL,
+    phredScore int NOT NULL,
     biallelic BOOLEAN NOT NULL,
     hotspot BOOLEAN NOT NULL,
     mappability DOUBLE PRECISION NOT NULL,

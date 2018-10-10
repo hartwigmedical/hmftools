@@ -22,7 +22,7 @@ import org.apache.logging.log4j.Logger;
 
 public class AlleleDepthLoader {
 
-    private static final int BACHELOR_CSV_FIELD_COUNT = 12;
+    private static final int BACHELOR_CSV_FIELD_COUNT = 15;
     private static final String MPILEUP_FILE_EXTN = ".mpu";
 
     private static final Logger LOGGER = LogManager.getLogger(AlleleDepthLoader.class);
@@ -81,7 +81,9 @@ public class AlleleDepthLoader {
                         items[8],
                         items[9],
                         items[10],
-                        items[11]);
+                        items[11],
+                        Boolean.parseBoolean(items[13]),
+                        Integer.parseInt(items[14]));
 
                 bachelorVariants.add(bachRecord);
             }

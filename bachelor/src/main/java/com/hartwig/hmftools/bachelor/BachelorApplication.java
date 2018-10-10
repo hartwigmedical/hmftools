@@ -162,22 +162,12 @@ public class BachelorApplication {
         }
 
         try {
-            for (final EligibilityReport r : result) {
-
-                allDataWriter.write(String.format("%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s",
-                        sampleId,
-                        r.source().toString(),
-                        r.program(),
-                        r.id(),
-                        r.genes(),
-                        r.transcriptId(),
-                        r.chrom(),
-                        r.pos(),
-                        r.ref(),
-                        r.alts(),
-                        r.effects(),
-                        r.annotations(),
-                        r.hgvsProtein()));
+            for (final EligibilityReport r : result)
+            {
+                allDataWriter.write(String.format("%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s,%s,%d",
+                        sampleId, r.source().toString(), r.program(), r.id(), r.genes(), r.transcriptId(),
+                        r.chrom(), r.pos(), r.ref(), r.alts(), r.effects(), r.annotations(),
+                        r.hgvsProtein(), r.isHomozygous(), r.phredScore()));
                 allDataWriter.newLine();
 
                 bedFileWriter.write(String.format("%s\t%s\t%d\t%d", sampleId, r.chrom(), r.pos() - 1, r.pos()));
@@ -190,19 +180,8 @@ public class BachelorApplication {
 
     private static String fileHeader() {
         return String.join(",",
-                Arrays.asList("SAMPLEID",
-                        "SOURCE",
-                        "PROGRAM",
-                        "ID",
-                        "GENE",
-                        "TRANSCRIPT_ID",
-                        "CHROM",
-                        "POS",
-                        "REF",
-                        "ALTS",
-                        "EFFECTS",
-                        "ANNOTATIONS",
-                        "HGVS_PROTEIN"));
+                Arrays.asList("SAMPLEID", "SOURCE", "PROGRAM", "ID", "GENE", "TRANSCRIPT_ID", "CHROM", "POS",
+                        "REF", "ALTS", "EFFECTS",  "ANNOTATIONS", "HGVS_PROTEIN", "IS_HOMOZYGOUS", "PHRED_SCORE"));
     }
 
     public static void main(final String... args) {

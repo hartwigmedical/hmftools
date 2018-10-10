@@ -19,6 +19,8 @@ public class BachelorGermlineVariant {
     private String mAlts;
     private String mEffects;
     private String mAnnotations;
+    private int mPhredScore;
+    private boolean mIsHomozygous;
 
     private int mRefCount;
     private int mAltCount;
@@ -31,7 +33,7 @@ public class BachelorGermlineVariant {
 
     public BachelorGermlineVariant(String patient, String source, String program, String varId,
             String gene, String transcriptId, String chromosome, long position,
-            String ref, String alts, String effects, String annotations)
+            String ref, String alts, String effects, String annotations, boolean isHomozygous, int phredScore)
     {
         mPatient = patient;
         mSource = source;
@@ -44,6 +46,8 @@ public class BachelorGermlineVariant {
         mRef = ref;
         mAlts = alts;
         mAnnotations = annotations;
+        mPhredScore = phredScore;
+        mIsHomozygous = isHomozygous;
 
         mRef = mRef.replaceAll("\\*", "");
         mAlts = mAlts.replaceAll("\\*", "");
@@ -70,6 +74,8 @@ public class BachelorGermlineVariant {
     public String alts() { return mAlts; };
     public String effects() { return mEffects; };
     public String annotations() { return mAnnotations; };
+    public int phredScore() { return mPhredScore; };
+    public boolean isHomozygous() { return mIsHomozygous; }
     public int getRefCount() { return mRefCount; }
     public int getAltCount() { return mAltCount; }
     public void setRefCount(int count) { mRefCount = count; }
@@ -77,6 +83,16 @@ public class BachelorGermlineVariant {
 
     public void setAdjustedVaf(double vaf) { mAdjustedVaf = vaf; }
     public double getAdjustedVaf() { return mAdjustedVaf; }
+
+    public boolean isBiallelic()
+    {
+        if(mEnrichedVariant == null)
+            return false;
+
+        double copyNumber = mEnrichedVariant.adjustedCopyNumber();
+        double adjustedVaf = mEnrichedVariant.adjustedVAF();
+        return (copyNumber - (copyNumber * adjustedVaf) < 0.5);
+    }
 
     public boolean isValid()
     {

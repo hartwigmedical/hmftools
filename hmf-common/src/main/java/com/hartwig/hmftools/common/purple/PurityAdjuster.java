@@ -100,4 +100,8 @@ public class PurityAdjuster {
         return purityAdjustedFrequency(typicalCopyNumber,1, copyNumber, observedFrequency);
     }
 
+    public double purityAdjustedVAFWithHomozygousNormal(@NotNull final String chromosome, final double copyNumber, final double observedFrequency) {
+        int typicalCopyNumber = typicalCopyNumber(chromosome);
+        return purityAdjustedFrequency(typicalCopyNumber,2, copyNumber, observedFrequency);
+    }
 }

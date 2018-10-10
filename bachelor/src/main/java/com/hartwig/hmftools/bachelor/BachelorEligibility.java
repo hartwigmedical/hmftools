@@ -239,7 +239,11 @@ class BachelorEligibility {
             LOGGER.debug("match found: program({}) ", programName);
 
             for (int index = 0; index < sampleVariant.sampleAnnotations().size(); ++index) {
+
                 SnpEffAnnotation snpEff = sampleVariant.sampleAnnotations().get(index);
+
+                if(!snpEff.isTranscriptFeature())
+                    continue;
 
                 // re-check that this variant is one that is relevant
                 if (!program.panelTranscripts().contains(snpEff.transcript())) {
@@ -272,6 +276,9 @@ class BachelorEligibility {
 
                 final String annotationsStr = sampleVariant.rawAnnotations().get(index);
 
+                boolean isHomozygous = variant.getGenotype(0).isHom();
+                int phredScore = variant.getGenotype(0).getPL().length >= 1 ? variant.getGenotype(0).getPL()[0] : 0;
+
                 EligibilityReport report = ImmutableEligibilityReport.builder()
                         .patient(patient)
                         .source(type)
@@ -286,6 +293,8 @@ class BachelorEligibility {
                         .effects(snpEff.effects())
                         .annotations(annotationsStr)
                         .hgvsProtein(snpEff.hgvsProtein())
+                        .isHomozygous(isHomozygous)
+                        .phredScore(phredScore)
                         .build();
 
                 reportList.add(report);

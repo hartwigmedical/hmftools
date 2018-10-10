@@ -301,12 +301,17 @@ public class BachelorPP {
 
         for(PurityAdjustedSomaticVariant var : purityAdjustedVariants)
         {
-            double adjVaf = purityAdjustedVafAtHetrozygousNormal(purityAdjuster, var);
-
             for (BachelorGermlineVariant bachRecord : bachRecords)
             {
                 if (bachRecord.chromosome().equals(var.chromosome()) && bachRecord.position() == var.position())
                 {
+                    double adjVaf = 0;
+
+                    if(bachRecord.isHomozygous())
+                        adjVaf = purityAdjuster.purityAdjustedVAFWithHomozygousNormal(var.chromosome(), var.adjustedCopyNumber(), var.alleleFrequency());
+                    else
+                        adjVaf = purityAdjuster.purityAdjustedVAFWithHetrozygousNormal(var.chromosome(), var.adjustedCopyNumber(), var.alleleFrequency());
+
                     bachRecord.setAdjustedVaf(adjVaf);
                     break;
                 }
@@ -341,11 +346,6 @@ public class BachelorPP {
         }
     }
 
-    private static double purityAdjustedVafAtHetrozygousNormal(@NotNull final PurityAdjuster purityAdjuster, @NotNull final PurityAdjustedSomaticVariant variant)
-    {
-        return purityAdjuster.purityAdjustedVAFWithHetrozygousNormal(variant.chromosome(), variant.adjustedCopyNumber(), variant.alleleFrequency());
-    }
-
     private static void writeToDatabase(final String sampleId, final List<BachelorGermlineVariant> bachRecords,
             final DatabaseAccess dbAccess)
     {
@@ -377,12 +377,15 @@ public class BachelorPP {
 
             writer.write(",AdjCopyNumber,AdjustedVaf,HighConfidenceRegion,TrinucleotideContext,Microhomology,RepeatSequence,RepeatCount");
 
-            writer.write(",Clonality,Biallelic,Hotspot,Mappability,GermlineStatus,MinorAllelePloidy");
+            writer.write(",PhredScore,Biallelic,Hotspot,Mappability,GermlineStatus,MinorAllelePloidy");
 
             writer.newLine();
 
             for (final BachelorGermlineVariant bachRecord : bachRecords)
             {
+                if (!bachRecord.isValid())
+                    continue;
+
                 writer.write(
                         String.format("%s,%s,%s,%s,%d",
                         sampleId,
@@ -408,7 +411,7 @@ public class BachelorPP {
                         bachRecord.getRefCount()));
 
                 writer.write(
-                        String.format(",%.2f,%.2f,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s,%.2f",
+                        String.format(",%.2f,%.2f,%s,%s,%s,%s,%d,%d,%s,%s,%s,%s,%.2f",
                         region.adjustedCopyNumber(),
                         bachRecord.getAdjustedVaf(),
                         region.highConfidenceRegion(),
@@ -416,8 +419,8 @@ public class BachelorPP {
                         region.microhomology(),
                         region.repeatSequence(),
                         region.repeatCount(),
-                        region.clonality(),
-                        region.biallelic(),
+                        bachRecord.phredScore(),
+                        bachRecord.isBiallelic(),
                         region.hotspot(),
                         region.mappability(),
                         region.germlineStatus(),
