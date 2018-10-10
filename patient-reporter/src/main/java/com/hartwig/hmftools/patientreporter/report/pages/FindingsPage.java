@@ -86,7 +86,7 @@ public abstract class FindingsPage {
                 !report.somaticVariants().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(SomaticVariantDataSource.variantFields())
                         .columns(col.column("Gene", SomaticVariantDataSource.GENE_FIELD),
-                                col.column("Variant", SomaticVariantDataSource.VARIANT_FIELD).setFixedWidth(80),
+                                col.column("Variant", SomaticVariantDataSource.VARIANT_FIELD).setFixedWidth(90),
                                 col.column("Impact", SomaticVariantDataSource.IMPACT_FIELD).setFixedWidth(80),
                                 col.column("Read Depth", SomaticVariantDataSource.READ_DEPTH_FIELD),
                                 col.column("Hotspot", SomaticVariantDataSource.IS_HOTSPOT_FIELD),
@@ -175,9 +175,11 @@ public abstract class FindingsPage {
                 .columns(col.column("Chromosome", GeneDisruptionDataSource.CHROMOSOME_FIELD),
                         col.column("Chromosome band", GeneDisruptionDataSource.CHROMOSOME_BAND_FIELD),
                         col.column("Gene", GeneDisruptionDataSource.GENE_FIELD),
-                        col.column("Context", GeneDisruptionDataSource.GENE_CONTEXT_FIELD),
+                        col.column("Range", GeneDisruptionDataSource.AFFECTED_RANGE_FIELD),
                         col.column("Type", GeneDisruptionDataSource.TYPE_FIELD),
-                        col.column("Copies", GeneDisruptionDataSource.COPIES_FIELD))
+                        col.column("Copies", GeneDisruptionDataSource.COPIES_FIELD),
+                        col.column("Gene Min Copies", GeneDisruptionDataSource.GENE_MIN_COPIES),
+                        col.column("Gene Max Copies", GeneDisruptionDataSource.GENE_MAX_COPIES))
                 .setDataSource(GeneDisruptionDataSource.fromGeneDisruptions(report.fitStatus(), report.geneDisruptions())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
@@ -190,17 +192,15 @@ public abstract class FindingsPage {
     private static ComponentBuilder<?, ?> actionabiltyVariants(@NotNull final AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> table = report.geneDisruptions().size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(ActionabilityVariantsDataSource.actionabilityFields())
-                .columns(col.column("Event", ActionabilityVariantsDataSource.EVENT),
-                        col.column("Matching cancerType", ActionabilityVariantsDataSource.MATCHING_CANCERTYPE),
-                        col.column("Source", ActionabilityVariantsDataSource.SOURCE),
+                .columns(col.column("Source", ActionabilityVariantsDataSource.SOURCE),
                         col.column("Drug", ActionabilityVariantsDataSource.DRUG),
                         col.column("Drugs type", ActionabilityVariantsDataSource.DRUGS_TYPE),
                         col.column("Level", ActionabilityVariantsDataSource.LEVEL),
                         col.column("Response", ActionabilityVariantsDataSource.RESPONSE))
-                .setDataSource(ActionabilityVariantsDataSource.fromActionabilityVariants()))
+                .setDataSource(ActionabilityVariantsDataSource.fromActionabilityVariants(report.somaticActionabilityVariants())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
+
         return cmp.verticalList(cmp.text("Actionability Variants").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_DISTANCE), table);
-
     }
 }

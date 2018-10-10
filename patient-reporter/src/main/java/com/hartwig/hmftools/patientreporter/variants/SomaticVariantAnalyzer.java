@@ -8,6 +8,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityVariant;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
@@ -17,8 +18,8 @@ import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class SomaticVariantAnalyzer {
     private static final List<CodingEffect> TSG_CODING_EFFECTS_TO_REPORT =
@@ -31,8 +32,8 @@ public final class SomaticVariantAnalyzer {
 
     @NotNull
     public static SomaticVariantAnalysis run(@NotNull final List<EnrichedSomaticVariant> variants, @NotNull Set<String> genePanel,
-            @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap, @NotNull String sampleRun,
-            @NotNull List<PatientTumorLocation> patientTumorLocations) throws ParseException, IOException {
+            @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap, @Nullable PatientTumorLocation patientTumorLocation)
+            throws IOException {
         final List<EnrichedSomaticVariant> variantsToReport =
                 variants.stream().filter(includeFilter(genePanel, driverCategoryPerGeneMap)).collect(Collectors.toList());
         final double microsatelliteIndelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
@@ -43,11 +44,15 @@ public final class SomaticVariantAnalyzer {
         driverCatalog.addAll(OncoDrivers.drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), variants));
         driverCatalog.addAll(TsgDrivers.drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), variants));
 
+        final List<ActionabilityVariant> variant = Lists.newArrayList();
+        variant.addAll(ActionabilityVariantAnalyzer.detectVariants(variants, patientTumorLocation));
+
         return ImmutableSomaticVariantAnalysis.of(variantsToReport,
                 driverCatalog,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
-                tumorMutationalBurden);
+                tumorMutationalBurden,
+                variant);
     }
 
     @NotNull

@@ -4,16 +4,15 @@ import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
@@ -59,28 +58,51 @@ public class StructuralVariantRecovery {
         return ploidy.orientation() == 1 ? leftCopyNumber - rightCopyNumber : rightCopyNumber - leftCopyNumber;
     }
 
-    public List<RecoveredVariant> doStuff(@NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException {
+    public List<RecoveredVariant> recoverVariants(@NotNull final ListMultimap<String, PurpleCopyNumber> allCopyNumbers) throws IOException {
 
         final List<RecoveredVariant> result = Lists.newArrayList();
 
-        for (int i = 1; i < copyNumbers.size() - 1; i++) {
-            PurpleCopyNumber prev = copyNumbers.get(i - 1);
-            PurpleCopyNumber current = copyNumbers.get(i);
-            PurpleCopyNumber next = copyNumbers.get(i + 1);
+        for (String chromosome : allCopyNumbers.keySet()) {
+            final List<PurpleCopyNumber> copyNumbers = allCopyNumbers.get(chromosome);
 
-            if (current.segmentStartSupport() == SegmentSupport.NONE) {
-                long minPosition = current.minStart() - 1000;
-                long maxPosition = current.maxStart() + 1000;
-                result.addAll(recover(minPosition, maxPosition, current, prev, next));
+            for (int i = 1; i < copyNumbers.size() - 1; i++) {
+                PurpleCopyNumber prev = copyNumbers.get(i - 1);
+                PurpleCopyNumber current = copyNumbers.get(i);
+                PurpleCopyNumber next = copyNumbers.get(i + 1);
+
+                if (current.segmentStartSupport() == SegmentSupport.NONE) {
+                    long minPosition = current.minStart() - 1000;
+                    long maxPosition = current.maxStart() + 1000;
+                    result.addAll(recover(minPosition, maxPosition, current, prev, next, allCopyNumbers));
+                }
             }
         }
 
         return result;
     }
 
+    @VisibleForTesting
+    @NotNull
+    static <T extends GenomeRegion> T closest(long position, @NotNull final List<T> regions) {
+        assert (!regions.isEmpty());
+
+        long minDistance = position - 1;
+        for (int i = 1; i < regions.size(); i++) {
+            long distanceFromRegion = position - regions.get(i).start();
+            if (distanceFromRegion < 0) {
+                return Math.abs(distanceFromRegion) < minDistance ? regions.get(i) : regions.get(i - 1);
+            }
+
+            minDistance = distanceFromRegion;
+        }
+
+        return regions.get(regions.size() - 1);
+    }
+
     @NotNull
     public List<RecoveredVariant> recover(long min, long max, @NotNull final PurpleCopyNumber current, @NotNull final PurpleCopyNumber prev,
-            @NotNull final PurpleCopyNumber next) throws IOException {
+            @NotNull final PurpleCopyNumber next, @NotNull final ListMultimap<String, PurpleCopyNumber> allCopyNumbers) throws IOException {
+
         List<RecoveredVariant> result = Lists.newArrayList();
 
         ImmutableRecoveredVariant.Builder builder = ImmutableRecoveredVariant.builder()
@@ -115,37 +137,34 @@ public class StructuralVariantRecovery {
             final String mateLocation = mateLocation(alt);
             final String mateChromosome = mateChromosome(mateLocation);
             final Long matePosition = matePosition(mateLocation);
-            final Optional<VariantContext> mate;
-            if (mateChromosome != null && matePosition != null && mateId != null) {
-                mate = findMate(mateId, mateChromosome, matePosition);
-            } else {
-                mate = Optional.empty();
-            }
+            final int uncertainty = uncertainty(potentialVariant);
 
-            if (mate.isPresent()) {
-                StructuralVariant sv = StructuralVariantFactory.create(potentialVariant, mate.get());
-                if (hasPotential(min, max, sv)) {
-                    builder.alt(alt)
-                            .qual(potentialVariant.getPhredScaledQual())
-                            .variant(potentialVariant.getContig() + ":" + potentialVariant.getStart())
-                            .orientation(orientation)
-                            .mate(sv.end().chromosome() + ":" + sv.end().position())
-                            .mateOrientation((int) sv.end().orientation())
-                            .filter(filter(potentialVariant.getFilters()));
-                }
-            } else {
-                if (Doubles.greaterOrEqual(potentialVariant.getPhredScaledQual(), MIN_SINGLE_QUAL_SCORE)) {
-                    builder.alt(alt)
-                            .qual(potentialVariant.getPhredScaledQual())
-                            .variant(potentialVariant.getContig() + ":" + potentialVariant.getStart())
-                            .orientation(orientation)
-                            .mate(null)
-                            .mateOrientation(null)
-                            .filter(filter(potentialVariant.getFilters()));
-                    result.add(builder.build());
-                }
-            }
+            final VariantContext mate = mateChromosome != null && matePosition != null && mateId != null ? findMate(mateId,
+                    mateChromosome,
+                    Math.max(0, matePosition - uncertainty),
+                    matePosition + uncertainty) : null;
 
+            final StructuralVariant sv = mate != null
+                    ? StructuralVariantFactory.create(potentialVariant, mate)
+                    : StructuralVariantFactory.createSingleBreakend(potentialVariant);
+
+            if (hasPotential(min, max, sv)) {
+                final StructuralVariantLeg end = sv.end();
+                final PurpleCopyNumber mateCopyNumber = end == null ? null : closest(end.position(), allCopyNumbers.get(end.chromosome()));
+
+                builder.alt(alt)
+                        .qual(sv.qualityScore())
+                        .variant(sv.start().chromosome() + ":" + sv.start().position())
+                        .orientation(orientation)
+                        .mate(end == null ? null : end.chromosome() + ":" + end.position())
+                        .mateOrientation(end == null ? null : (int) end.orientation())
+                        .mateMinStart(mateCopyNumber == null ? null : mateCopyNumber.minStart())
+                        .mateMaxStart(mateCopyNumber == null ? null : mateCopyNumber.maxStart())
+                        .mateSupport(mateCopyNumber == null ? null : mateCopyNumber.segmentStartSupport())
+                        .filter(sv.filter());
+
+                result.add(builder.build());
+            }
         }
 
         if (result.isEmpty()) {
@@ -155,9 +174,39 @@ public class StructuralVariantRecovery {
         return result;
     }
 
+    private int uncertainty(@NotNull final VariantContext context) {
+        final int homlen = context.getAttributeAsInt("HOMLEN", 0);
+        final int cipos = cipos(context);
+        return Math.max(homlen, cipos);
+    }
+
+    private int cipos(@NotNull final VariantContext context) {
+
+        if (context.hasAttribute("IMPRECISE")) {
+            int max = 150;
+
+            final String cipos = context.getAttributeAsString("CIPOS", "-0,0");
+            if (cipos.contains(",")) {
+                for (String s : cipos.split(",")) {
+                    try {
+                        max = Math.max(max, 2 * Math.abs(Integer.valueOf(s)));
+                    } catch (Exception ignored) {
+
+                    }
+                }
+            }
+            return max;
+        } else {
+            return 0;
+        }
+
+    }
+
     private boolean hasPotential(long min, long max, @NotNull StructuralVariant variant) {
         StructuralVariantLeg end = variant.end();
-        assert (end != null);
+        if (end == null) {
+            return variant.qualityScore() >= MIN_SINGLE_QUAL_SCORE;
+        }
 
         if (variant.qualityScore() < MIN_MATE_QUAL_SCORE) {
             return false;
@@ -196,18 +245,18 @@ public class StructuralVariantRecovery {
     }
 
     @NotNull
-    private Optional<VariantContext> findMate(@NotNull final String id, @NotNull final String chromosome, final long position)
+    private VariantContext findMate(@NotNull final String id, @NotNull final String chromosome, final long min, final long max)
             throws IOException {
 
-        try (CloseableTribbleIterator<VariantContext> iterator = reader.query(chromosome, (int) position, (int) position)) {
+        try (CloseableTribbleIterator<VariantContext> iterator = reader.query(chromosome, (int) min, (int) max)) {
             for (VariantContext variant : iterator) {
                 if (variant.getID().equals(id)) {
-                    return Optional.of(variant);
+                    return variant;
                 }
             }
         }
 
-        return Optional.empty();
+        throw new IOException("Unable to find mateId " + id + " between " + min + " and " + max);
     }
 
     @Nullable
@@ -238,17 +287,6 @@ public class StructuralVariantRecovery {
     @Nullable
     static Long matePosition(@Nullable String mate) {
         return mate == null || !mate.contains(":") ? null : Long.valueOf(mate.split(":")[1]);
-    }
-
-    @NotNull
-    private static String filter(@NotNull final Set<String> filters) {
-        if (filters.isEmpty()) {
-            return "PASS";
-        }
-
-        StringJoiner joiner = new StringJoiner(",");
-        filters.forEach(joiner::add);
-        return joiner.toString();
     }
 
     @VisibleForTesting

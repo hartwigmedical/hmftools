@@ -64,7 +64,7 @@ public abstract class ExplanationPage {
                                 + "to look-up these IDs.",
                         "The 'Ploidy (TAF)' field displays the tumor ploidy for the observed variant. The ploidy "
                                 + "has been adjusted for the implied tumor purity (see above) and is shown as a "
-                                + "proportion of A’s and B’s (e.g. AAABB for 3 copies A, and 2 copies B). "
+                                + "proportion of A’s and B’s (e.g. AAABB for 3 disruptionCopies A, and 2 disruptionCopies B). "
                                 + "The copy number is the sum of A’s and B’s. The TAF (Tumor adjusted Alternative "
                                 + "Frequency) value refers to the alternative allele frequency after correction " + "for tumor purity."));
     }
@@ -74,10 +74,10 @@ public abstract class ExplanationPage {
         return toList("Details on reported gene copy numbers",
                 Lists.newArrayList("The lowest copy number value along the exonic regions of the canonical transcript is determined as "
                                 + "a measure for the gene's copy number.",
-                        "Copy numbers are corrected for the implied tumor purity and represent the number of copies in the tumor DNA.",
-                        "Any gene with less than 0.5 copies along the entire canonical transcript is reported as a full loss. ",
-                        "Any gene where only a part along the canonical transcript has less than 0.5 copies is reported as a partial loss. ",
-                        "Any gene with more copies than 3 times the average tumor ploidy is reported as a gain."));
+                        "Copy numbers are corrected for the implied tumor purity and represent the number of disruptionCopies in the tumor DNA.",
+                        "Any gene with less than 0.5 disruptionCopies along the entire canonical transcript is reported as a full loss. ",
+                        "Any gene where only a part along the canonical transcript has less than 0.5 disruptionCopies is reported as a partial loss. ",
+                        "Any gene with more disruptionCopies than 3 times the average tumor ploidy is reported as a gain."));
     }
 
     @NotNull

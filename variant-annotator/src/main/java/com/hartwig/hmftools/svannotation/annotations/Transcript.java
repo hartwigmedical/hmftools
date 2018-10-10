@@ -6,7 +6,9 @@ import org.jooq.types.UInteger;
 
 public class Transcript {
 
+    @NotNull
     private final GeneAnnotation parent;
+    @NotNull
     private final String transcriptId;
     private final int exonUpstream;
     private final int exonUpstreamPhase;
@@ -19,9 +21,9 @@ public class Transcript {
     @Nullable
     private final Long codingEnd;
 
-    public Transcript(final GeneAnnotation parent, @NotNull final String transcriptId, final int exonUpstream, final int exonUpstreamPhase,
-            final int exonDownstream, final int exonDownstreamPhase, final int exonMax, final boolean canonical,
-            @Nullable final UInteger codingStart, @Nullable final UInteger codingEnd) {
+    public Transcript(@NotNull final GeneAnnotation parent, @NotNull final String transcriptId, final int exonUpstream,
+            final int exonUpstreamPhase, final int exonDownstream, final int exonDownstreamPhase, final int exonMax,
+            final boolean canonical, @Nullable final UInteger codingStart, @Nullable final UInteger codingEnd) {
         this.parent = parent;
         this.transcriptId = transcriptId;
         this.exonUpstream = exonUpstream;
@@ -55,10 +57,12 @@ public class Transcript {
         return canonical;
     }
 
+    @NotNull
     public GeneAnnotation parent() {
         return parent;
     }
 
+    @NotNull
     public String geneName() {
         return parent.geneName();
     }

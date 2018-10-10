@@ -10,37 +10,37 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ActionabilityVariant {
 
     @NotNull
-    abstract String gene();
+    public abstract String gene();
 
     @NotNull
-    abstract String chromosome();
+    public abstract String chromosome();
 
-    abstract long position();
-
-    @NotNull
-    abstract String ref();
+    public abstract long position();
 
     @NotNull
-    abstract String alt();
+    public abstract String ref();
 
     @NotNull
-    abstract String source();
+    public abstract String alt();
 
     @NotNull
-    abstract String reference();
+    public abstract String source();
 
     @NotNull
-    abstract String drug();
+    public abstract String reference();
 
     @NotNull
-    abstract String drugsType();
+    public abstract String drug();
 
     @NotNull
-    abstract String cancerType();
+    public abstract String drugsType();
 
     @NotNull
-    abstract String level();
+    public abstract String cancerType();
 
     @NotNull
-    abstract String response();
+    public abstract String level();
+
+    @NotNull
+    public abstract String response();
 }

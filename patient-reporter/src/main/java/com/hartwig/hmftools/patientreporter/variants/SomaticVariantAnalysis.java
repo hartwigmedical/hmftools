@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -25,4 +26,7 @@ public abstract class SomaticVariantAnalysis {
     public abstract int tumorMutationalLoad();
 
     public abstract double tumorMutationalBurden();
+
+    @NotNull
+    public abstract List<ActionabilityVariant> actionableVariantsReport();
 }

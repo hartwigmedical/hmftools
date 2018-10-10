@@ -15,8 +15,6 @@ import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 
-import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -31,7 +29,7 @@ public class SomaticVariantAnalyzerTest {
     private static final String WRONG_GENE = "WRONG";
 
     @Test
-    public void onlyReportsAndCountsRelevantVariants() throws IOException, ParseException {
+    public void onlyReportsAndCountsRelevantVariants() throws IOException {
         List<EnrichedSomaticVariant> variants =
                 Lists.newArrayList(builder().gene(RIGHT_GENE).canonicalCodingEffect(MISSENSE).worstCodingEffect(MISSENSE).build(),
                         builder().gene(RIGHT_GENE).canonicalCodingEffect(SYNONYMOUS).worstCodingEffect(SYNONYMOUS).build(),
@@ -39,16 +37,20 @@ public class SomaticVariantAnalyzerTest {
                         builder().gene(WRONG_GENE).canonicalCodingEffect(MISSENSE).worstCodingEffect(MISSENSE).build(),
                         builder().gene(WRONG_GENE).canonicalCodingEffect(SYNONYMOUS).worstCodingEffect(SYNONYMOUS).build());
 
-        SomaticVariantAnalysis analysis =
-                SomaticVariantAnalyzer.run(variants, Sets.newHashSet(RIGHT_GENE), Maps.newHashMap(), Strings.EMPTY, Lists.newArrayList());
+        SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants,
+                Sets.newHashSet(RIGHT_GENE),
+                Maps.newHashMap(),
+                null);
 
         assertEquals(2, analysis.tumorMutationalLoad());
         assertEquals(2, analysis.variantsToReport().size());
 
         Map<String, DriverCategory> driverCategoryMap = Maps.newHashMap();
         driverCategoryMap.put(RIGHT_GENE, DriverCategory.ONCO);
-        SomaticVariantAnalysis analysisOnco =
-                SomaticVariantAnalyzer.run(variants, Sets.newHashSet(RIGHT_GENE), driverCategoryMap, Strings.EMPTY, Lists.newArrayList());
+        SomaticVariantAnalysis analysisOnco = SomaticVariantAnalyzer.run(variants,
+                Sets.newHashSet(RIGHT_GENE),
+                driverCategoryMap,
+                null);
 
         assertEquals(2, analysisOnco.tumorMutationalLoad());
         assertEquals(1, analysisOnco.variantsToReport().size());
