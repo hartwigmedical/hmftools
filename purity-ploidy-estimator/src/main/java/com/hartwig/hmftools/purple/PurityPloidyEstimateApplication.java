@@ -9,7 +9,6 @@ import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -21,14 +20,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
-import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
-import com.hartwig.hmftools.common.gc.GCProfile;
-import com.hartwig.hmftools.common.gc.GCProfileFactory;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.pcf.PCFPosition;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.baf.ExpectedBAF;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -55,11 +50,6 @@ import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactoryV2;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFile;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
-import com.hartwig.hmftools.common.purple.region.ObservedRegionFactory;
-import com.hartwig.hmftools.common.purple.segment.Cluster;
-import com.hartwig.hmftools.common.purple.segment.ClusterFactory;
-import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
-import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactory;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
@@ -85,8 +75,6 @@ import com.hartwig.hmftools.purple.config.SmoothingConfig;
 import com.hartwig.hmftools.purple.config.SomaticConfig;
 import com.hartwig.hmftools.purple.config.StructuralVariantConfig;
 import com.hartwig.hmftools.purple.plot.ChartWriter;
-import com.hartwig.hmftools.purple.ratio.ChromosomeLengthSupplier;
-import com.hartwig.hmftools.purple.segment.PCFPositionsSupplier;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -155,9 +143,6 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Reading cobalt ratios from {}", ratioFilename);
             final ListMultimap<String, CobaltRatio> ratios = CobaltRatioFile.read(ratioFilename);
 
-            LOGGER.info("Reading GC Profiles from {}", config.gcProfile());
-            final Multimap<String, GCProfile> gcProfiles = GCProfileFactory.loadGCContent(config.windowSize(), config.gcProfile());
-
             // JOBA: Gender
             final Gender amberGender = Gender.fromAmber(bafs);
             final Gender cobaltGender = Gender.fromCobalt(ratios);
@@ -168,33 +153,20 @@ public class PurityPloidyEstimateApplication {
             }
 
             // JOBA: Load structural and somatic variants
-            final List<SomaticVariant> somaticVariants = somaticVariants(configSupplier);
             final List<StructuralVariant> structuralVariants = structuralVariants(configSupplier);
+            final List<SomaticVariant> allSomatics = somaticVariants(configSupplier);
+            final List<SomaticVariant> snpSomatics = allSomatics.stream().filter(SomaticVariant::isSnp).collect(Collectors.toList());
 
-            // JOBA: Ratio Segmentation
-            final Map<String, ChromosomeLength> lengths = new ChromosomeLengthSupplier(config, ratios).get();
-            final Multimap<String, PCFPosition> pcfPositions = PCFPositionsSupplier.createPositions(config);
-            final Multimap<String, Cluster> clusterMap =
-                    new ClusterFactory(config.windowSize()).cluster(structuralVariants, pcfPositions, ratios);
-            final List<PurpleSegment> segments = PurpleSegmentFactory.segment(clusterMap, lengths);
-
-            LOGGER.info("Mapping all observations to the segmented regions");
-            final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(config.windowSize(), cobaltGender);
-            final List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, bafs, ratios, gcProfiles);
+            LOGGER.info( "Initial segmentation");
+            final Segmentation segmentation = new Segmentation(config, cobaltGender, ratios, bafs);
+            final List<ObservedRegion> observedRegions = segmentation.createSegments(structuralVariants);
 
             LOGGER.info("Fitting purity");
             final FitScoreConfig fitScoreConfig = configSupplier.fitScoreConfig();
             final double somaticDeviationWeight = defaultValue(cmd, SOMATIC_DEVIATION_WEIGHT, 1);
             final double highlyDiploidPercentage = defaultValue(cmd, HIGHLY_DIPLOID_PERCENTAGE, 0.95);
 
-            final FittedRegionFactory fittedRegionFactory = new FittedRegionFactoryV2(cobaltGender,
-                    averageTumorDepth,
-                    fitScoreConfig.ploidyPenaltyFactor(),
-                    fitScoreConfig.ploidyPenaltyStandardDeviation(),
-                    fitScoreConfig.ploidyPenaltyMinStandardDeviationPerPloidy(),
-                    fitScoreConfig.ploidyPenaltyMajorAlleleSubOneMultiplier(),
-                    fitScoreConfig.ploidyPenaltyMajorAlleleSubOneAdditional(),
-                    fitScoreConfig.ploidyPenaltyBaselineDeviation());
+            final FittedRegionFactory fittedRegionFactory = createFittedRegionFactory(averageTumorDepth, cobaltGender, fitScoreConfig);
 
             final FittingConfig fittingConfig = configSupplier.fittingConfig();
             final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
@@ -209,20 +181,18 @@ public class PurityPloidyEstimateApplication {
                     somaticDeviationWeight,
                     fittedRegionFactory,
                     observedRegions,
-                    somaticVariants);
+                    snpSomatics);
 
             final List<FittedPurity> bestFitPerPurity = fittedPurityFactory.bestFitPerPurity();
 
             final SomaticConfig somaticConfig = configSupplier.somaticConfig();
-            final List<SomaticVariant> snps =
-                    somaticVariants.stream().filter(x -> x.type() == VariantType.SNP).collect(Collectors.toList());
             final BestFitFactory bestFitFactory = new BestFitFactory(somaticConfig.minTotalVariants(),
                     somaticConfig.minPeakVariants(),
                     highlyDiploidPercentage,
                     somaticConfig.minSomaticPurity(),
                     somaticConfig.minSomaticPuritySpread(),
                     bestFitPerPurity,
-                    snps);
+                    snpSomatics);
             final FittedPurity bestFit = bestFitFactory.bestFit();
 
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
@@ -270,7 +240,7 @@ public class PurityPloidyEstimateApplication {
                     .build();
 
             final List<PurityAdjustedSomaticVariant> enrichedSomatics =
-                    new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers, enrichedFittedRegions).create(somaticVariants);
+                    new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers, enrichedFittedRegions).create(allSomatics);
 
             final List<GeneCopyNumber> geneCopyNumbers =
                     GeneCopyNumberFactory.geneCopyNumbers(genePanel, copyNumbers, germlineDeletions, enrichedSomatics);
@@ -321,6 +291,19 @@ public class PurityPloidyEstimateApplication {
             executorService.shutdown();
         }
         LOGGER.info("Complete");
+    }
+
+    @NotNull
+    private FittedRegionFactory createFittedRegionFactory(final int averageTumorDepth, final Gender cobaltGender,
+            final FitScoreConfig fitScoreConfig) {
+        return new FittedRegionFactoryV2(cobaltGender,
+                        averageTumorDepth,
+                        fitScoreConfig.ploidyPenaltyFactor(),
+                        fitScoreConfig.ploidyPenaltyStandardDeviation(),
+                        fitScoreConfig.ploidyPenaltyMinStandardDeviationPerPloidy(),
+                        fitScoreConfig.ploidyPenaltyMajorAlleleSubOneMultiplier(),
+                        fitScoreConfig.ploidyPenaltyMajorAlleleSubOneAdditional(),
+                        fitScoreConfig.ploidyPenaltyBaselineDeviation());
     }
 
     @NotNull

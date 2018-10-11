@@ -86,7 +86,7 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
 
 
 
-    public double impliedBaf(final PurityAdjuster purityAdjuster, final String chromosome, final double copyNumber,
+    private double impliedBaf(final PurityAdjuster purityAdjuster, final String chromosome, final double copyNumber,
             final double observedBAF) {
         boolean isHomologous = HumanChromosome.fromString(chromosome).isDiploid(gender);
 
@@ -101,7 +101,7 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
     }
 
     @VisibleForTesting
-    double bafToMinimiseDeviation(final PurityAdjuster purityAdjuster, final String chromosome, double impliedCopyNumber) {
+    private double bafToMinimiseDeviation(final PurityAdjuster purityAdjuster, final String chromosome, double impliedCopyNumber) {
 
         final double minBAF = Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, 0.5)));
         final double maxBAF = Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, ambiguousBaf)));

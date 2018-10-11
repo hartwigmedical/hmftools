@@ -8,10 +8,8 @@ import org.jetbrains.annotations.NotNull;
 public interface FittedRegionFactory {
 
     @NotNull
-    List<FittedRegion> fitRegion(final double purity, final double normFactor,
-            @NotNull final Collection<ObservedRegion> observedRegions);
-
-    @NotNull
     FittedRegion fitRegion(final double purity, final double normFactor, final @NotNull ObservedRegion observedRegion);
 
+    @NotNull
+    List<FittedRegion> fitRegion(final double purity, final double normFactor, @NotNull final Collection<ObservedRegion> observedRegions);
 }
