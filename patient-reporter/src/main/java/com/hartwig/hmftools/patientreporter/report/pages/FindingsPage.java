@@ -19,7 +19,7 @@ import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection
 import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSection;
 import com.hartwig.hmftools.patientreporter.report.components.MutationalLoadSection;
 import com.hartwig.hmftools.patientreporter.report.components.TumorMutationBurdenSection;
-import com.hartwig.hmftools.patientreporter.report.data.ActionabilityVariantsDataSource;
+import com.hartwig.hmftools.patientreporter.report.data.EvidenceItemDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionDataSource;
@@ -81,19 +81,19 @@ public abstract class FindingsPage {
     @NotNull
     private static ComponentBuilder<?, ?> evidenceItemReport(@NotNull AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> table = report.evidenceItem().size() > 0
-                ? cmp.subreport(monospaceBaseTable().fields(ActionabilityVariantsDataSource.actionabilityFields())
-                .columns(col.column("Gene", ActionabilityVariantsDataSource.GENE),
-                        col.column("Variant", ActionabilityVariantsDataSource.VARIANT),
-                        col.column("Impact", ActionabilityVariantsDataSource.IMPACT),
-                        col.column("Drug", ActionabilityVariantsDataSource.DRUG),
-                        col.column("Drugs type", ActionabilityVariantsDataSource.DRUGS_TYPE),
-                        col.column("Level", ActionabilityVariantsDataSource.LEVEL),
-                        col.column("Response", ActionabilityVariantsDataSource.RESPONSE),
-                        col.column("Source", ActionabilityVariantsDataSource.SOURCE)
-                                .setHyperLink(hyperLink(ActionabilityVariantsDataSource.sourceHyperlink(report.somaticActionabilityVariants())))
+                ? cmp.subreport(monospaceBaseTable().fields(EvidenceItemDataSource.actionabilityFields())
+                .columns(col.column("Gene", EvidenceItemDataSource.GENE),
+                        col.column("Variant", EvidenceItemDataSource.VARIANT),
+                        col.column("Impact", EvidenceItemDataSource.IMPACT),
+                        col.column("Drug", EvidenceItemDataSource.DRUG),
+                        col.column("Drugs type", EvidenceItemDataSource.DRUGS_TYPE),
+                        col.column("Level", EvidenceItemDataSource.LEVEL),
+                        col.column("Response", EvidenceItemDataSource.RESPONSE),
+                        col.column("Source", EvidenceItemDataSource.SOURCE)
+                                .setHyperLink(hyperLink(EvidenceItemDataSource.sourceHyperlink(report.somaticActionabilityVariants())))
                                 .setStyle(linkStyle()),
-                        col.column("Label", ActionabilityVariantsDataSource.LABEL))
-                .setDataSource(ActionabilityVariantsDataSource.fromActionabilityVariants(report.evidenceItem(),
+                        col.column("Label", EvidenceItemDataSource.LABEL))
+                .setDataSource(EvidenceItemDataSource.fromActionabilityVariants(report.evidenceItem(),
                         report.evidenceItemRange())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
@@ -219,9 +219,8 @@ public abstract class FindingsPage {
         final ComponentBuilder<?, ?> table = report.geneDisruptions().size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(GeneDisruptionDataSource.geneDisruptionFields())
                 .columns(col.column("Chromosome", GeneDisruptionDataSource.CHROMOSOME_FIELD),
-                        col.column("Chromosome band", GeneDisruptionDataSource.CHROMOSOME_BAND_FIELD),
                         col.column("Gene", GeneDisruptionDataSource.GENE_FIELD),
-                        col.column("Range", GeneDisruptionDataSource.AFFECTED_RANGE_FIELD),
+                        col.column("Range", GeneDisruptionDataSource.RANGE_FIELD),
                         col.column("Type", GeneDisruptionDataSource.TYPE_FIELD),
                         col.column("Copies", GeneDisruptionDataSource.COPIES_FIELD),
                         col.column("Gene Min Copies", GeneDisruptionDataSource.GENE_MIN_COPIES),

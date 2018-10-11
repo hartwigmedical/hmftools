@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRan
 import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.somaticvariant.VariantEvidenceItems;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,8 +22,8 @@ import net.sf.dynamicreports.report.datasource.DRDataSource;
 import net.sf.dynamicreports.report.definition.ReportParameters;
 import net.sf.jasperreports.engine.JRDataSource;
 
-public abstract class ActionabilityVariantsDataSource {
-    private static final Logger LOGGER = LogManager.getLogger(ActionabilityVariantsDataSource.class);
+public abstract class EvidenceItemDataSource {
+    private static final Logger LOGGER = LogManager.getLogger(EvidenceItemDataSource.class);
 
     public static final FieldBuilder<?> GENE = field("Gene", String.class);
     public static final FieldBuilder<?> VARIANT = field("variant", String.class);
@@ -36,7 +35,7 @@ public abstract class ActionabilityVariantsDataSource {
     public static final FieldBuilder<?> SOURCE = field("source", String.class);
     public static final FieldBuilder<?> LABEL = field("label", String.class);
 
-    private ActionabilityVariantsDataSource() {
+    private EvidenceItemDataSource() {
     }
 
     @NotNull

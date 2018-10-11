@@ -37,6 +37,12 @@ public final class GeneFusionDataSource {
     }
 
     @NotNull
+    public static FieldBuilder<?>[] geneFusionFields() {
+        return new FieldBuilder<?>[] { FUSION_FIELD, START_TRANSCRIPT_FIELD, END_TRANSCRIPT_FIELD, START_CONTEXT_FIELD, END_CONTEXT_FIELD,
+                COPIES_FIELD, SOURCE_FIELD };
+    }
+
+    @NotNull
     public static JRDataSource fromGeneFusions(@NotNull FittedPurityStatus fitStatus, @NotNull List<GeneFusion> fusions) {
         final DRDataSource dataSource = new DRDataSource(FUSION_FIELD.getName(),
                 START_TRANSCRIPT_FIELD.getName(),
@@ -58,12 +64,6 @@ public final class GeneFusionDataSource {
                 fusion.source()));
 
         return dataSource;
-    }
-
-    @NotNull
-    public static FieldBuilder<?>[] geneFusionFields() {
-        return new FieldBuilder<?>[] { FUSION_FIELD, START_TRANSCRIPT_FIELD, END_TRANSCRIPT_FIELD, START_CONTEXT_FIELD, END_CONTEXT_FIELD,
-                COPIES_FIELD, SOURCE_FIELD };
     }
 
     @NotNull
