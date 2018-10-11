@@ -54,12 +54,22 @@ public class ActionabilityVariantsAnalyzer {
                     .equals(evidenceItem.alt())) {
                 if (cancerTypeAnalyzer.foundTumorLocation(evidenceItem.cancerType(), doidsPrimaryTumorLocation)) {
                     onLabel.add(evidenceItem);
+                    printVariantRow(evidenceItem, "yes");
+
                 } else {
                     offLabel.add(evidenceItem);
+                    printVariantRow(evidenceItem, "no");
+
                 }
             }
         }
         return ImmutableVariantEvidenceItems.of(onLabel, offLabel);
+    }
+
+    private static void printVariantRow(@NotNull EvidenceItem evidence, @NotNull String isActionable) {
+        LOGGER.info(evidence.gene() + "\t" + evidence.chromosome() + "\t" + evidence.position() + "\t" + evidence.ref() + "\t" + evidence.alt() + "\t"
+                + evidence.drug() + "\t" + evidence.drugsType() + "\t" + evidence.cancerType()+ "\t" + evidence.level() + "\t" + evidence.response()
+                + "\t" + evidence.source() + "\t" + isActionable);
     }
 
     public ActionabilityRangeEvidenceItem actionableRange(@NotNull SomaticVariant variant, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,

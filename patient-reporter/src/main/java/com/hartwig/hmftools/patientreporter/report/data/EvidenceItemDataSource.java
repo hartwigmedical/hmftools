@@ -134,8 +134,8 @@ public abstract class EvidenceItemDataSource {
                     case "cgi":
                         return "https://www.cancergenomeinterpreter.org/biomarkers";
                     case "civic":
-                        String[] link = linkReference.get(0).split(":");
-                        return "https://civic.genome.wustl.edu/links/variants/" + link[1];
+                      //  String[] link = linkReference.get(0).split(":");
+                        return "https://civic.genome.wustl.edu/links/variants/";
                     default:
                         return "";
                 }

@@ -51,18 +51,19 @@ public final class SomaticVariantAnalyzer {
         Map<EnrichedSomaticVariant, VariantEvidenceItems> evidencePerVariant =
                 ActionabilityVariantAnalyzer.detectVariants(variants, patientTumorLocation);
 
+        final List<ActionabilityRange> variantRange = Lists.newArrayList();
+        Map<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> evidencePerVariantRanges =
+                ActionabilityVariantAnalyzer.detectVariantsRanges(variants, patientTumorLocation);
+
+
         for (Map.Entry<EnrichedSomaticVariant, VariantEvidenceItems> entry : evidencePerVariant.entrySet()) {
             variant.addAll(entry.getValue().onLabel());
             variant.addAll(entry.getValue().offLabel());
         }
 
-        final List<ActionabilityRange> variantRange = Lists.newArrayList();
-        Map<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> evidencePerVariantRanges =
-                ActionabilityVariantAnalyzer.detectVariantsRanges(variants, patientTumorLocation);
-
-        for (Map.Entry<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> entry : evidencePerVariantRanges.entrySet()) {
-            variantRange.addAll(entry.getValue().onLabel());
-            variantRange.addAll(entry.getValue().offLabel());
+        for (Map.Entry<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> entryRange : evidencePerVariantRanges.entrySet()) {
+            variantRange.addAll(entryRange.getValue().onLabel());
+            variantRange.addAll(entryRange.getValue().offLabel());
         }
 
         return ImmutableSomaticVariantAnalysis.of(variantsToReport,
