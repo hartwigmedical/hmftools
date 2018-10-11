@@ -55,7 +55,7 @@ public class SomaticVariantDataSource {
                 BIALLELIC_FIELD.getName(),
                 DRIVER_FIELD.getName());
 
-        for (final EnrichedSomaticVariant variant : sort(variants)) {
+        for (final EnrichedSomaticVariant variant : sort(variants, driverCatalogList)) {
             DriverCategory driverCategory = panelGeneModel.geneDriverCategory(variant.gene());
 
             String displayGene =
@@ -66,8 +66,6 @@ public class SomaticVariantDataSource {
                 biallelic = variant.biallelic() ? "Yes" : "No";
             }
 
-            DriverCatalog driverEntry = catalogForVariant(driverCatalogList, variant);
-
             variantDataSource.add(displayGene,
                     variant.canonicalHgvsCodingImpact(),
                     variant.canonicalHgvsProteinImpact(),
@@ -76,31 +74,42 @@ public class SomaticVariantDataSource {
                     PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyVafField(variant)),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, clonalityField(variant)),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, biallelic),
-                    driverField(driverEntry));
+                    driverField(catalogEntryForVariant(driverCatalogList, variant)));
         }
 
         return variantDataSource;
     }
 
+    @NotNull
+    private static List<EnrichedSomaticVariant> sort(@NotNull List<EnrichedSomaticVariant> variants,
+            @NotNull List<DriverCatalog> driverCatalogList) {
+        return variants.stream().sorted((variant1, variant2) -> {
+            DriverCatalog entryForVariant1 = catalogEntryForVariant(driverCatalogList, variant1);
+            DriverCatalog entryForVariant2 = catalogEntryForVariant(driverCatalogList, variant2);
+
+            // KODU: Force any variant outside of driver catalog to the bottom of table.
+            double driverLikelihood1 = entryForVariant1 != null ? entryForVariant1.driverLikelihood() : -1;
+            double driverLikelihood2 = entryForVariant2 != null ? entryForVariant2.driverLikelihood() : -1;
+            if (Math.abs(driverLikelihood1 - driverLikelihood2) > 0.001) {
+                return (driverLikelihood1 - driverLikelihood2) < 0 ? 1 : -1;
+            } else {
+                if (variant1.gene().equals(variant2.gene())) {
+                    return variant1.canonicalHgvsCodingImpact().compareTo(variant2.canonicalHgvsCodingImpact());
+                } else {
+                    return variant1.gene().compareTo(variant2.gene());
+                }
+            }
+        }).collect(Collectors.toList());
+    }
+
     @Nullable
-    private static DriverCatalog catalogForVariant(@NotNull List<DriverCatalog> driverCatalogList, @NotNull SomaticVariant variant) {
+    private static DriverCatalog catalogEntryForVariant(@NotNull List<DriverCatalog> driverCatalogList, @NotNull SomaticVariant variant) {
         for (DriverCatalog entry : driverCatalogList) {
             if (entry.gene().equals(variant.gene())) {
                 return entry;
             }
         }
         return null;
-    }
-
-    @NotNull
-    private static List<EnrichedSomaticVariant> sort(@NotNull List<EnrichedSomaticVariant> variants) {
-        return variants.stream().sorted((variant1, variant2) -> {
-            if (variant1.gene().equals(variant2.gene())) {
-                return variant1.canonicalHgvsCodingImpact().compareTo(variant2.canonicalHgvsCodingImpact());
-            } else {
-                return variant1.gene().compareTo(variant2.gene());
-            }
-        }).collect(Collectors.toList());
     }
 
     @NotNull
