@@ -34,7 +34,7 @@ public class SomaticVariantDataSource {
     public static final FieldBuilder<?> PLOIDY_VAF_FIELD = field("ploidy_vaf", String.class);
     public static final FieldBuilder<?> CLONAL_STATUS_FIELD = field("clonal_status", String.class);
     public static final FieldBuilder<?> BIALLELIC_FIELD = field("biallelic", String.class);
-    public static final FieldBuilder<?> DRIVER_PROBABILITY_FIELD = field("driver_probability", String.class);
+    public static final FieldBuilder<?> DRIVER_FIELD = field("driver", String.class);
 
     private static final double MIN_PERCENTAGE_CUTOFF_DRIVER_PROB = 0.2;
     private static final double MAX_PERCENTAGE_CUTOFF_DRIVER_PROB = 0.9;
@@ -53,7 +53,7 @@ public class SomaticVariantDataSource {
                 PLOIDY_VAF_FIELD.getName(),
                 CLONAL_STATUS_FIELD.getName(),
                 BIALLELIC_FIELD.getName(),
-                DRIVER_PROBABILITY_FIELD.getName());
+                DRIVER_FIELD.getName());
 
         for (final EnrichedSomaticVariant variant : sort(variants)) {
             DriverCategory driverCategory = panelGeneModel.geneDriverCategory(variant.gene());
@@ -66,20 +66,17 @@ public class SomaticVariantDataSource {
                 biallelic = variant.biallelic() ? "Yes" : "No";
             }
 
-            DriverCatalog driver = catalogForVariant(driverCatalogList, variant);
-            String driverProbabilityString = driver != null ? PatientReportFormat.formatPercentWithCutoffs(driver.driverLikelihood(),
-                    MIN_PERCENTAGE_CUTOFF_DRIVER_PROB,
-                    MAX_PERCENTAGE_CUTOFF_DRIVER_PROB) : Strings.EMPTY;
+            DriverCatalog driverEntry = catalogForVariant(driverCatalogList, variant);
 
             variantDataSource.add(displayGene,
                     variant.canonicalHgvsCodingImpact(),
                     variant.canonicalHgvsProteinImpact(),
                     readDepthField(variant),
-                    driverCategory != DriverCategory.TSG ? hotspotField(variant) : Strings.EMPTY,
+                    hotspotField(variant),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyVafField(variant)),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, clonalityField(variant)),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, biallelic),
-                    driverProbabilityString);
+                    driverField(driverEntry));
         }
 
         return variantDataSource;
@@ -107,14 +104,27 @@ public class SomaticVariantDataSource {
     }
 
     @NotNull
+    private static String driverField(@Nullable DriverCatalog catalogEntry) {
+        if (catalogEntry == null) {
+            return Strings.EMPTY;
+        }
+
+        if (catalogEntry.driverLikelihood() > 0.8) {
+            return "Likely";
+        } else if (catalogEntry.driverLikelihood() > 0.2) {
+            return "Undetermined";
+        } else {
+            return "Unlikely";
+        }
+    }
+
+    @NotNull
     private static String hotspotField(@NotNull SomaticVariant variant) {
         switch (variant.hotspot()) {
             case HOTSPOT:
                 return "Yes";
             case NEAR_HOTSPOT:
                 return "Near";
-            case NON_HOTSPOT:
-                return "No";
             default:
                 return Strings.EMPTY;
         }
@@ -164,6 +174,6 @@ public class SomaticVariantDataSource {
     @NotNull
     public static FieldBuilder<?>[] variantFields() {
         return new FieldBuilder<?>[] { GENE_FIELD, VARIANT_FIELD, READ_DEPTH_FIELD, IS_HOTSPOT_FIELD, PLOIDY_VAF_FIELD, CLONAL_STATUS_FIELD,
-                BIALLELIC_FIELD, DRIVER_PROBABILITY_FIELD };
+                BIALLELIC_FIELD, DRIVER_FIELD };
     }
 }

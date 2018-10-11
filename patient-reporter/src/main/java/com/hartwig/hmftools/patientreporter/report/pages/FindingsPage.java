@@ -11,8 +11,6 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.algo.GeneModel;
@@ -95,7 +93,7 @@ public abstract class FindingsPage {
                                 col.column("Ploidy (VAF)", SomaticVariantDataSource.PLOIDY_VAF_FIELD).setFixedWidth(80),
                                 col.column("Clonality", SomaticVariantDataSource.CLONAL_STATUS_FIELD),
                                 col.column("Biallelic", SomaticVariantDataSource.BIALLELIC_FIELD),
-                                col.column("Driver", SomaticVariantDataSource.DRIVER_PROBABILITY_FIELD)))
+                                col.column("Driver", SomaticVariantDataSource.DRIVER_FIELD)))
                         .setDataSource(SomaticVariantDataSource.fromVariants(report.fitStatus(),
                                 report.somaticVariants(),
                                 report.somaticVariantDriverCatalog(),
@@ -128,7 +126,7 @@ public abstract class FindingsPage {
     //                                col.column("Ploidy (VAF)", SomaticVariantDataSource.PLOIDY_VAF_FIELD).setFixedWidth(80),
     //                                col.column("Clonality", SomaticVariantDataSource.CLONAL_STATUS_FIELD),
     //                                col.column("Biallelic", SomaticVariantDataSource.BIALLELIC_FIELD),
-    //                                col.column("Driver", SomaticVariantDataSource.DRIVER_PROBABILITY_FIELD)))
+    //                                col.column("Driver", SomaticVariantDataSource.DRIVER_FIELD)))
     //                        .setDataSource(SomaticVariantDataSource.fromVariants(report.fitStatus(),
     //                                report.somaticVariants(),
     //                                report.somaticVariantDriverCatalog(),
