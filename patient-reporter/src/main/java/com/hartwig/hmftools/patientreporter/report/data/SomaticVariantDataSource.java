@@ -24,7 +24,7 @@ import net.sf.dynamicreports.report.builder.FieldBuilder;
 import net.sf.dynamicreports.report.datasource.DRDataSource;
 import net.sf.jasperreports.engine.JRDataSource;
 
-public class SomaticVariantDataSource {
+public final class SomaticVariantDataSource {
 
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
     public static final FieldBuilder<?> VARIANT_FIELD = field("variant", String.class);
@@ -36,10 +36,13 @@ public class SomaticVariantDataSource {
     public static final FieldBuilder<?> BIALLELIC_FIELD = field("biallelic", String.class);
     public static final FieldBuilder<?> DRIVER_FIELD = field("driver", String.class);
 
-    private static final double MIN_PERCENTAGE_CUTOFF_DRIVER_PROB = 0.2;
-    private static final double MAX_PERCENTAGE_CUTOFF_DRIVER_PROB = 0.9;
-
     private SomaticVariantDataSource() {
+    }
+
+    @NotNull
+    public static FieldBuilder<?>[] fields() {
+        return new FieldBuilder<?>[] { GENE_FIELD, VARIANT_FIELD, READ_DEPTH_FIELD, IS_HOTSPOT_FIELD, PLOIDY_VAF_FIELD, CLONAL_STATUS_FIELD,
+                BIALLELIC_FIELD, DRIVER_FIELD };
     }
 
     @NotNull
@@ -178,11 +181,5 @@ public class SomaticVariantDataSource {
     @NotNull
     private static String formatBAFField(@NotNull String allele, int count) {
         return count < 10 ? repeat(allele, count) : allele + "[" + count + "x]";
-    }
-
-    @NotNull
-    public static FieldBuilder<?>[] variantFields() {
-        return new FieldBuilder<?>[] { GENE_FIELD, VARIANT_FIELD, READ_DEPTH_FIELD, IS_HOTSPOT_FIELD, PLOIDY_VAF_FIELD, CLONAL_STATUS_FIELD,
-                BIALLELIC_FIELD, DRIVER_FIELD };
     }
 }
