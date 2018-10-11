@@ -34,6 +34,8 @@ import com.hartwig.hmftools.common.purple.baf.ExpectedBAF;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
+import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
+import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFactory;
@@ -243,14 +245,14 @@ public class PurityPloidyEstimateApplication {
                     copyNumberMap.put(copyNumber.chromosome(), copyNumber);
                 }
 
-                final StructuralVariantRecovery recovery = new StructuralVariantRecovery(cmd.getOptionValue(SV_RECOVERY_VCF));
-                final List<RecoveredVariant> recovered = recovery.recoverVariants(copyNumberMap);
-                RecoveredVariantFile.write(config.outputDirectory() + "/" + tumorSample + ".recovery.tsv", recovered);
+                final StructuralVariantRecovery recovery = new StructuralVariantRecovery(cmd.getOptionValue(SV_RECOVERY_VCF), copyNumberMap);
+                final List<RecoveredVariant> recovered = recovery.recoverVariants();
 
-                //                                final StructuralVariantLegPloidyFactory<PurpleCopyNumber> svPloidyFactory =
-                //                                        new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
-                //                                final List<StructuralVariantLegPloidy> svPloidies = svPloidyFactory.create(structuralVariants, copyNumberMap);
-                //                                recovery.doStuff2(svPloidies);
+                final StructuralVariantLegPloidyFactory<PurpleCopyNumber> svPloidyFactory = new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
+                final List<StructuralVariantLegPloidy> svPloidies = svPloidyFactory.create(structuralVariants, copyNumberMap);
+                recovered.addAll(recovery.recoverUnbalancedVariants(svPloidies));
+
+                RecoveredVariantFile.write(config.outputDirectory() + "/" + tumorSample + ".recovery.tsv", recovered);
 
             }
 
