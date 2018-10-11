@@ -3,10 +3,13 @@ package com.hartwig.hmftools.patientreporter.variants;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVs;
+import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVsEvidenceItems;
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRange;
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRangeEvidenceItem;
 import com.hartwig.hmftools.common.actionability.somaticvariant.VariantEvidenceItems;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
 
@@ -38,8 +41,15 @@ public abstract class SomaticVariantAnalysis {
     public abstract List<ActionabilityRange> actionableVariantsReportRange();
 
     @NotNull
+    public abstract List<ActionabilityCNVs> actionableVariantsCNV();
+
+    @NotNull
     public abstract Map<EnrichedSomaticVariant, VariantEvidenceItems> evidence();
 
     @NotNull
     public abstract Map<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> evidenceRange();
+
+    @NotNull
+    public abstract Map<GeneCopyNumber, ActionabilityCNVsEvidenceItems> evidenceCNV();
+
 }

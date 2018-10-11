@@ -18,6 +18,8 @@ import java.util.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVs;
+import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVsEvidenceItems;
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRange;
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRangeEvidenceItem;
 import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
@@ -113,6 +115,9 @@ public class PDFWriterTest {
         final List<ActionabilityRange> actionVariantRange = Lists.newArrayList();
         final Map<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> labelEvidenceRange = Maps.newHashMap();
 
+        final List<ActionabilityCNVs> actionVariantCNV = Lists.newArrayList();
+        final Map<GeneCopyNumber, ActionabilityCNVsEvidenceItems> labelEvidenceCNV = Maps.newHashMap();
+
         final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
 
         final AnalysedPatientReport patientReport = ImmutableAnalysedPatientReport.of(sampleReport,
@@ -121,8 +126,10 @@ public class PDFWriterTest {
                 somaticVariants,
                 actionVariant,
                 actionVariantRange,
+                actionVariantCNV,
                 labelEvidence,
                 labelEvidenceRange,
+                labelEvidenceCNV,
                 driverCatalog,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,

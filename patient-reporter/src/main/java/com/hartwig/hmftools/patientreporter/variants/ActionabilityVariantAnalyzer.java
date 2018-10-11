@@ -11,11 +11,13 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeMappingReading;
+import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVsAnalyzer;
+import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVsEvidenceItems;
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRangeEvidenceItem;
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityVariantsAnalyzer;
-import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.somaticvariant.VariantEvidenceItems;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.apache.logging.log4j.LogManager;
@@ -29,7 +31,7 @@ public final class ActionabilityVariantAnalyzer {
     private static final String FILE_CANCER_TUMORS_WITH_DOID = "/data/common/dbs/knowledgebases/output/knowledgebaseCancerTypes.tsv";
     private static final String FILE_ACTIONABILITY_VARIANTS = "/data/common/dbs/knowledgebases/output/actionableVariants.tsv";
     private static final String FILE_ACTIONABILITY_RANGES = "/data/common/dbs/knowledgebases/output/actionableRanges.tsv";
-//    private static final String FILE_ACTIONABILITY_CNVS = "/data/common/dbs/knowledgebases/output/actionableCNVs.tsv";
+    private static final String FILE_ACTIONABILITY_CNVS = "/data/common/dbs/knowledgebases/output/actionableCNVs.tsv";
 
     private ActionabilityVariantAnalyzer() {
     }
@@ -39,7 +41,6 @@ public final class ActionabilityVariantAnalyzer {
             @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
         Map<T, VariantEvidenceItems> evidenceItemsPerVariant = Maps.newHashMap();
         final String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : Strings.EMPTY;
-        LOGGER.info(primaryTumorLocation);
         CancerTypeMappingReading cancerTypeMappingReading = CancerTypeMappingReading.readingFile();
         String doidsPrimaryTumorLocation = cancerTypeMappingReading.doidsForPrimaryTumorLocation(primaryTumorLocation);
 
@@ -75,7 +76,6 @@ public final class ActionabilityVariantAnalyzer {
             @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
         Map<T, ActionabilityRangeEvidenceItem> evidenceItemsPerVariant = Maps.newHashMap();
         final String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : Strings.EMPTY;
-        LOGGER.info(primaryTumorLocation);
         CancerTypeMappingReading cancerTypeMappingReading = CancerTypeMappingReading.readingFile();
         String doidsPrimaryTumorLocation = cancerTypeMappingReading.doidsForPrimaryTumorLocation(primaryTumorLocation);
 
@@ -104,5 +104,38 @@ public final class ActionabilityVariantAnalyzer {
         }
 
         return evidenceItemsPerVariant;
+    }
+
+    @NotNull
+    public static <T extends GeneCopyNumber> Map<T, ActionabilityCNVsEvidenceItems> detectCNVs(@NotNull List<T> CNVs,
+            @Nullable PatientTumorLocation patientTumorLocation) throws  IOException {
+        Map<T, ActionabilityCNVsEvidenceItems> evidenceItemsPerVariantCNVs = Maps.newHashMap();
+        final String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : Strings.EMPTY;
+        CancerTypeMappingReading cancerTypeMappingReading = CancerTypeMappingReading.readingFile();
+        String doidsPrimaryTumorLocation = cancerTypeMappingReading.doidsForPrimaryTumorLocation(primaryTumorLocation);
+
+        if (Files.exists(new File(FILE_ACTIONABILITY_CNVS).toPath()) && Files.exists(new File(FILE_CANCER_TUMORS_WITH_DOID).toPath())) {
+            ActionabilityCNVsAnalyzer analyzerCNVs = ActionabilityCNVsAnalyzer.loadFromFileCNVs(FILE_ACTIONABILITY_CNVS);
+            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(FILE_CANCER_TUMORS_WITH_DOID);
+
+            Set<String> actionableGenesCNVS = analyzerCNVs.actionableGenes();
+
+
+            List<T> variantsOnActionableGenes =
+                    CNVs.stream()
+                    .filter(geneCopyNumber -> actionableGenesCNVS.contains(geneCopyNumber.gene()))
+                    .collect(Collectors.toList());
+
+            for (T CNV : variantsOnActionableGenes) {
+                evidenceItemsPerVariantCNVs.put(CNV, analyzerCNVs.actionableCNVs(CNV, cancerTypeAnalyzer, doidsPrimaryTumorLocation));
+            }
+
+
+        } else if (!Files.exists(new File(FILE_ACTIONABILITY_CNVS).toPath())) {
+            LOGGER.warn("File does not exist: " + FILE_ACTIONABILITY_CNVS);
+        } else if (!Files.exists(new File(FILE_CANCER_TUMORS_WITH_DOID).toPath())) {
+            LOGGER.warn("File does not exist: " + FILE_CANCER_TUMORS_WITH_DOID);
+        }
+        return evidenceItemsPerVariantCNVs;
     }
 }

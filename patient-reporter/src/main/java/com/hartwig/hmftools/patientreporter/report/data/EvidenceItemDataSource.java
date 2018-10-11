@@ -6,10 +6,13 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVs;
+import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVsEvidenceItems;
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRange;
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRangeEvidenceItem;
 import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.somaticvariant.VariantEvidenceItems;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 
 import org.apache.logging.log4j.LogManager;
@@ -40,7 +43,8 @@ public abstract class EvidenceItemDataSource {
 
     @NotNull
     public static JRDataSource fromActionabilityVariants(@NotNull Map<EnrichedSomaticVariant, VariantEvidenceItems> evidenceItems,
-            @NotNull Map<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> evidenceItemsRange) {
+            @NotNull Map<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> evidenceItemsRange,
+            @NotNull Map<GeneCopyNumber, ActionabilityCNVsEvidenceItems> evidenceItemCNV) {
         final DRDataSource actionabilityVariantsDatasource = new DRDataSource(GENE.getName(),
                 VARIANT.getName(),
                 IMPACT.getName(),
@@ -111,6 +115,36 @@ public abstract class EvidenceItemDataSource {
             }
         }
 
+        for (Map.Entry<GeneCopyNumber, ActionabilityCNVsEvidenceItems> entry : evidenceItemCNV.entrySet()) {
+
+            String codingEffect = "";
+            String proteinImpact = "";
+
+            for (ActionabilityCNVs CNV : entry.getValue().onLabel()) {
+                actionabilityVariantsDatasource.add(CNV.gene(),
+                        codingEffect,
+                        proteinImpact,
+                        CNV.drugsName(),
+                        CNV.drugsType(),
+                        CNV.hmfLevel(),
+                        CNV.hmfResponse(),
+                        CNV.source(),
+                        "yes");
+            }
+
+            for (ActionabilityCNVs CNV : entry.getValue().onLabel()) {
+                actionabilityVariantsDatasource.add(CNV.gene(),
+                        codingEffect,
+                        proteinImpact,
+                        CNV.drugsName(),
+                        CNV.drugsType(),
+                        CNV.hmfLevel(),
+                        CNV.hmfResponse(),
+                        CNV.source(),
+                        "no");
+            }
+        }
+
         return actionabilityVariantsDatasource;
     }
 
@@ -128,7 +162,8 @@ public abstract class EvidenceItemDataSource {
                 final String source = data.getValue(SOURCE.getName());
                 switch (source) {
                     case "oncoKb":
-                        return "http://oncokb.org/#/gene/" + linkGene.get(0) + "/alteration/" + linkReference.get(0);
+                        return "http://oncokb.org/#/gene/";
+                                //+ linkGene.get(0) + "/alteration/" + linkReference.get(0);
                     case "iclusion":
                         return "https://www.iclusion.org";
                     case "cgi":

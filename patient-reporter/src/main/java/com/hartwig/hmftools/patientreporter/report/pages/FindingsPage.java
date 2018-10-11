@@ -94,7 +94,7 @@ public abstract class FindingsPage {
                                 .setStyle(linkStyle()),
                         col.column("Label", EvidenceItemDataSource.LABEL))
                 .setDataSource(EvidenceItemDataSource.fromActionabilityVariants(report.evidenceItem(),
-                        report.evidenceItemRange())))
+                        report.evidenceItemRange(), report.evidenceItemCNV())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Evidence Items").setStyle(sectionHeaderStyle()),
