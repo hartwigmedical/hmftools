@@ -22,14 +22,14 @@ import org.jetbrains.annotations.NotNull;
 public class PurpleCopyNumberFactory {
 
     @NotNull
-    private final List<PurpleCopyNumber> somatics;
+    private final List<PurpleCopyNumber> somaticCopyNumbers;
     @NotNull
     private final List<PurpleCopyNumber> germlineDeletions;
 
     public PurpleCopyNumberFactory(int minTumorRatioCount, int minTumorRatioCountAtCentromere, @NotNull final Gender gender,
             @NotNull final PurityAdjuster purityAdjuster, final List<FittedRegion> fittedRegions,
             final List<StructuralVariant> structuralVariants) {
-        somatics = Lists.newArrayList();
+        somaticCopyNumbers = Lists.newArrayList();
         germlineDeletions = Lists.newArrayList();
 
         final ExtendGermline extendGermline = new ExtendGermline(gender);
@@ -58,7 +58,7 @@ public class PurpleCopyNumberFactory {
                 final List<CombinedRegion> somatics = extendGermline.extendGermlineAmplifications(bafExtended);
                 final List<CombinedRegion> germlineDeletions = extendGermline.extractGermlineDeletions(bafExtended);
 
-                this.somatics.addAll(toCopyNumber(somatics));
+                this.somaticCopyNumbers.addAll(toCopyNumber(somatics));
                 this.germlineDeletions.addAll(germlineDeletions.stream()
                         .map(x -> toCopyNumber(x, SegmentSupport.UNKNOWN))
                         .collect(toList()));
@@ -68,7 +68,7 @@ public class PurpleCopyNumberFactory {
 
     @NotNull
     public List<PurpleCopyNumber> copyNumbers() {
-        return somatics;
+        return somaticCopyNumbers;
     }
 
     @NotNull

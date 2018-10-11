@@ -35,6 +35,7 @@ import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
+import com.hartwig.hmftools.common.purple.purity.BestFit;
 import com.hartwig.hmftools.common.purple.purity.BestFitFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFactory;
@@ -55,7 +56,6 @@ import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
-import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.filter.SGTFilter;
 import com.hartwig.hmftools.common.variant.recovery.RecoveredVariant;
@@ -95,8 +95,6 @@ public class PurityPloidyEstimateApplication {
 
     private static final String THREADS = "threads";
     private static final String EXPERIMENTAL = "experimental";
-    private static final String SOMATIC_DEVIATION_WEIGHT = "somatic_deviation_weight";
-    private static final String HIGHLY_DIPLOID_PERCENTAGE = "highly_diploid_percentage";
     private static final String VERSION = "version";
     private static final String SV_RECOVERY_VCF = "sv_recovery_vcf";
 
@@ -157,47 +155,20 @@ public class PurityPloidyEstimateApplication {
             final List<SomaticVariant> allSomatics = somaticVariants(configSupplier);
             final List<SomaticVariant> snpSomatics = allSomatics.stream().filter(SomaticVariant::isSnp).collect(Collectors.toList());
 
-            LOGGER.info( "Initial segmentation");
+            LOGGER.info("Applying segmentation");
             final Segmentation segmentation = new Segmentation(config, cobaltGender, ratios, bafs);
             final List<ObservedRegion> observedRegions = segmentation.createSegments(structuralVariants);
 
             LOGGER.info("Fitting purity");
             final FitScoreConfig fitScoreConfig = configSupplier.fitScoreConfig();
-            final double somaticDeviationWeight = defaultValue(cmd, SOMATIC_DEVIATION_WEIGHT, 1);
-            final double highlyDiploidPercentage = defaultValue(cmd, HIGHLY_DIPLOID_PERCENTAGE, 0.95);
-
             final FittedRegionFactory fittedRegionFactory = createFittedRegionFactory(averageTumorDepth, cobaltGender, fitScoreConfig);
+            final BestFit bestFit = fitPurity(executorService, configSupplier, cobaltGender, snpSomatics, observedRegions, fittedRegionFactory);
+            final FittedPurity fittedPurity = bestFit.fit();
+            final PurityAdjuster purityAdjuster = new PurityAdjuster(cobaltGender, fittedPurity);
 
-            final FittingConfig fittingConfig = configSupplier.fittingConfig();
-            final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
-                    cobaltGender,
-                    fittingConfig.maxPloidy(),
-                    fittingConfig.minPurity(),
-                    fittingConfig.maxPurity(),
-                    fittingConfig.purityIncrement(),
-                    fittingConfig.minNormFactor(),
-                    fittingConfig.maxNormFactor(),
-                    fittingConfig.normFactorIncrement(),
-                    somaticDeviationWeight,
-                    fittedRegionFactory,
-                    observedRegions,
-                    snpSomatics);
 
-            final List<FittedPurity> bestFitPerPurity = fittedPurityFactory.bestFitPerPurity();
+            final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), observedRegions);
 
-            final SomaticConfig somaticConfig = configSupplier.somaticConfig();
-            final BestFitFactory bestFitFactory = new BestFitFactory(somaticConfig.minTotalVariants(),
-                    somaticConfig.minPeakVariants(),
-                    highlyDiploidPercentage,
-                    somaticConfig.minSomaticPurity(),
-                    somaticConfig.minSomaticPuritySpread(),
-                    bestFitPerPurity,
-                    snpSomatics);
-            final FittedPurity bestFit = bestFitFactory.bestFit();
-
-            final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
-
-            final PurityAdjuster purityAdjuster = new PurityAdjuster(cobaltGender, bestFit.purity(), bestFit.normFactor());
 
             final SmoothingConfig smoothingConfig = configSupplier.smoothingConfig();
             final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(smoothingConfig.minDiploidTumorRatioCount(),
@@ -215,10 +186,12 @@ public class PurityPloidyEstimateApplication {
                     copyNumberMap.put(copyNumber.chromosome(), copyNumber);
                 }
 
-                final StructuralVariantRecovery recovery = new StructuralVariantRecovery(cmd.getOptionValue(SV_RECOVERY_VCF), copyNumberMap);
+                final StructuralVariantRecovery recovery =
+                        new StructuralVariantRecovery(cmd.getOptionValue(SV_RECOVERY_VCF), copyNumberMap);
                 final List<RecoveredVariant> recovered = recovery.recoverVariants();
 
-                final StructuralVariantLegPloidyFactory<PurpleCopyNumber> svPloidyFactory = new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
+                final StructuralVariantLegPloidyFactory<PurpleCopyNumber> svPloidyFactory =
+                        new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
                 final List<StructuralVariantLegPloidy> svPloidies = svPloidyFactory.create(structuralVariants, copyNumberMap);
                 recovered.addAll(recovery.recoverUnbalancedVariants(svPloidies));
 
@@ -232,10 +205,10 @@ public class PurityPloidyEstimateApplication {
 
             final PurityContext purityContext = ImmutablePurityContext.builder()
                     .version(version.version())
-                    .bestFit(bestFitFactory.bestFit())
-                    .status(bestFitFactory.status())
+                    .bestFit(bestFit.fit())
+                    .status(bestFit.status())
                     .gender(cobaltGender)
-                    .score(bestFitFactory.score())
+                    .score(bestFit.score())
                     .polyClonalProportion(polyclonalProportion(copyNumbers))
                     .build();
 
@@ -246,15 +219,14 @@ public class PurityPloidyEstimateApplication {
                     GeneCopyNumberFactory.geneCopyNumbers(genePanel, copyNumbers, germlineDeletions, enrichedSomatics);
 
             LOGGER.info("Generating QC Stats");
-            final PurpleQC qcChecks =
-                    PurpleQCFactory.create(bestFitFactory.bestFit(), copyNumbers, amberGender, cobaltGender, geneCopyNumbers);
+            final PurpleQC qcChecks = PurpleQCFactory.create(bestFit.fit(), copyNumbers, amberGender, cobaltGender, geneCopyNumbers);
 
             final DBConfig dbConfig = configSupplier.dbConfig();
             if (dbConfig.enabled()) {
                 final DatabaseAccess dbAccess = databaseAccess(dbConfig);
                 persistToDatabase(dbAccess,
                         tumorSample,
-                        bestFitPerPurity,
+                        bestFit.bestFitPerPurity(),
                         copyNumbers,
                         germlineDeletions,
                         enrichedFittedRegions,
@@ -267,7 +239,7 @@ public class PurityPloidyEstimateApplication {
             version.write(outputDirectory);
             PurpleQCFile.write(PurpleQCFile.generateFilename(outputDirectory, tumorSample), qcChecks);
             FittedPurityFile.write(outputDirectory, tumorSample, purityContext);
-            FittedPurityRangeFile.write(outputDirectory, tumorSample, bestFitPerPurity);
+            FittedPurityRangeFile.write(outputDirectory, tumorSample, bestFit.bestFitPerPurity());
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilename(outputDirectory, tumorSample), copyNumbers);
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateGermlineFilename(outputDirectory, tumorSample), germlineDeletions);
             FittedRegionFile.write(FittedRegionFile.generateFilename(outputDirectory, tumorSample), enrichedFittedRegions);
@@ -293,17 +265,48 @@ public class PurityPloidyEstimateApplication {
         LOGGER.info("Complete");
     }
 
+    private BestFit fitPurity(final ExecutorService executorService, final ConfigSupplier configSupplier, final Gender cobaltGender,
+            final List<SomaticVariant> snpSomatics, final List<ObservedRegion> observedRegions,
+            final FittedRegionFactory fittedRegionFactory) throws ExecutionException, InterruptedException {
+        final FittingConfig fittingConfig = configSupplier.fittingConfig();
+        final SomaticConfig somaticConfig = configSupplier.somaticConfig();
+        final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
+                cobaltGender,
+                fittingConfig.maxPloidy(),
+                fittingConfig.minPurity(),
+                fittingConfig.maxPurity(),
+                fittingConfig.purityIncrement(),
+                fittingConfig.minNormFactor(),
+                fittingConfig.maxNormFactor(),
+                fittingConfig.normFactorIncrement(),
+                somaticConfig.somaticDeviationWeight(),
+                fittedRegionFactory,
+                observedRegions,
+                snpSomatics);
+
+        final List<FittedPurity> bestFitPerPurity = fittedPurityFactory.bestFitPerPurity();
+
+        final BestFitFactory bestFitFactory = new BestFitFactory(somaticConfig.minTotalVariants(),
+                somaticConfig.minPeakVariants(),
+                somaticConfig.highlyDiploidPercentage(),
+                somaticConfig.minSomaticPurity(),
+                somaticConfig.minSomaticPuritySpread(),
+                bestFitPerPurity,
+                snpSomatics);
+        return bestFitFactory.bestFit();
+    }
+
     @NotNull
     private FittedRegionFactory createFittedRegionFactory(final int averageTumorDepth, final Gender cobaltGender,
             final FitScoreConfig fitScoreConfig) {
         return new FittedRegionFactoryV2(cobaltGender,
-                        averageTumorDepth,
-                        fitScoreConfig.ploidyPenaltyFactor(),
-                        fitScoreConfig.ploidyPenaltyStandardDeviation(),
-                        fitScoreConfig.ploidyPenaltyMinStandardDeviationPerPloidy(),
-                        fitScoreConfig.ploidyPenaltyMajorAlleleSubOneMultiplier(),
-                        fitScoreConfig.ploidyPenaltyMajorAlleleSubOneAdditional(),
-                        fitScoreConfig.ploidyPenaltyBaselineDeviation());
+                averageTumorDepth,
+                fitScoreConfig.ploidyPenaltyFactor(),
+                fitScoreConfig.ploidyPenaltyStandardDeviation(),
+                fitScoreConfig.ploidyPenaltyMinStandardDeviationPerPloidy(),
+                fitScoreConfig.ploidyPenaltyMajorAlleleSubOneMultiplier(),
+                fitScoreConfig.ploidyPenaltyMajorAlleleSubOneAdditional(),
+                fitScoreConfig.ploidyPenaltyBaselineDeviation());
     }
 
     @NotNull
@@ -356,9 +359,6 @@ public class PurityPloidyEstimateApplication {
         options.addOption(THREADS, true, "Number of threads (default 2)");
         options.addOption(EXPERIMENTAL, false, "Anything goes!");
         options.addOption(VERSION, false, "Exit after displaying version info.");
-
-        options.addOption(SOMATIC_DEVIATION_WEIGHT, true, "SOMATIC_DEVIATION_WEIGHT");
-        options.addOption(HIGHLY_DIPLOID_PERCENTAGE, true, "HIGHLY_DIPLOID_PERCENTAGE");
 
         options.addOption(SV_RECOVERY_VCF, true, "SV_RECOVERY_VCF");
 

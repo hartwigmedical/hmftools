@@ -36,9 +36,9 @@ class Segmentation {
     private final Gender gender;
     private final ListMultimap<String, CobaltRatio> ratios;
     private final Multimap<String, AmberBAF> bafs;
-    final Map<String, ChromosomeLength> lengths;
-    final Multimap<String, PCFPosition> pcfPositions;
-    final Multimap<String, GCProfile> gcProfiles;
+    private final Map<String, ChromosomeLength> lengths;
+    private final Multimap<String, PCFPosition> pcfPositions;
+    private final Multimap<String, GCProfile> gcProfiles;
 
     public Segmentation(@NotNull final CommonConfig config, @NotNull final Gender gender,
             @NotNull final ListMultimap<String, CobaltRatio> ratios, @NotNull final Multimap<String, AmberBAF> bafs) throws IOException {

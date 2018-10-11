@@ -81,6 +81,8 @@ public class ConfigSupplier {
     private final SmoothingConfig smoothingConfig;
     private final FitScoreConfig fitScoreConfig;
 
+
+
     public ConfigSupplier(@NotNull CommandLine cmd, @NotNull Options opt) throws ParseException, IOException {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
         if (runDirectory == null) {
