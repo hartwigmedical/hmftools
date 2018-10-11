@@ -59,6 +59,9 @@ import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
+import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
+import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineVariant;
+import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
 import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
 import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
@@ -93,14 +96,16 @@ public class PDFWriterTest {
         final BaseReportData baseReportData = testBaseReportData();
         final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity);
 
-        final List<EnrichedSomaticVariant> variants = createTestVariants(new PurityAdjuster(Gender.MALE, fittedPurity));
+        final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, fittedPurity);
+        final List<EnrichedSomaticVariant> somaticVariants = createTestSomaticVariants(purityAdjuster);
+        final List<GermlineVariant> germlineVariants = createTestGermlineVariants(purityAdjuster);
         final List<GeneCopyNumber> copyNumbers = createTestCopyNumbers();
         final List<GeneFusion> fusions = createTestFusions();
         final List<GeneDisruption> disruptions = createTestDisruptions();
 
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
-        driverCatalog.addAll(OncoDrivers.drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), variants));
-        driverCatalog.addAll(TsgDrivers.drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), variants));
+        driverCatalog.addAll(OncoDrivers.drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), somaticVariants));
+        driverCatalog.addAll(TsgDrivers.drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), somaticVariants));
 
         final List<EvidenceItem> actionVariant = Lists.newArrayList();
         final Map<EnrichedSomaticVariant, VariantEvidenceItems> labelEvidence = Maps.newHashMap();
@@ -113,7 +118,7 @@ public class PDFWriterTest {
         final AnalysedPatientReport patientReport = ImmutableAnalysedPatientReport.of(sampleReport,
                 FittedPurityStatus.NORMAL,
                 impliedTumorPurity,
-                variants,
+                somaticVariants,
                 actionVariant,
                 actionVariantRange,
                 labelEvidence,
@@ -122,7 +127,7 @@ public class PDFWriterTest {
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
                 tumorMutationalBurden,
-                Lists.newArrayList(),
+                germlineVariants,
                 copyNumbers,
                 fusions,
                 disruptions,
@@ -139,6 +144,28 @@ public class PDFWriterTest {
     }
 
     @NotNull
+    private static List<GermlineVariant> createTestGermlineVariants(@NotNull PurityAdjuster purityAdjuster) {
+        List<GermlineVariant> germlineVariants = Lists.newArrayList();
+
+        double altReads = 67D;
+        double totalReads = 112D;
+
+        double vaf = purityAdjuster.purityAdjustedVAFWithHeterozygousNormal("13", 3, altReads / totalReads);
+
+        germlineVariants.add(ImmutableGermlineVariant.builder()
+                .gene("BRCA2")
+                .variant("c.5946delT")
+                .impact("p.Ser1982fs")
+                .readDepth((int) altReads + " / " + (int) totalReads)
+                .germlineStatus("HET")
+                .ploidyVaf("AAB (" + PatientReportFormat.formatPercent(vaf) + ")")
+                .biallelic("No")
+                .build());
+
+        return germlineVariants;
+    }
+
+    @NotNull
     private static FittedPurity createFittedPurity(double impliedPurity) {
         return ImmutableFittedPurity.builder()
                 .purity(impliedPurity)
@@ -151,7 +178,7 @@ public class PDFWriterTest {
     }
 
     @NotNull
-    private static List<EnrichedSomaticVariant> createTestVariants(@NotNull final PurityAdjuster purityAdjuster) {
+    private static List<EnrichedSomaticVariant> createTestSomaticVariants(@NotNull final PurityAdjuster purityAdjuster) {
         final EnrichedSomaticVariant variant1 = createSomaticVariantBuilder().gene("BRAF")
                 .canonicalHgvsCodingImpact("c.1799T>A")
                 .canonicalHgvsProteinImpact("p.Val600Glu")
