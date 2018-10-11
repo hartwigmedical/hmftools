@@ -55,6 +55,12 @@ public interface RecoveredVariant extends GenomeRegion {
     Integer orientation();
 
     @Nullable
+    Integer tumourVariantFragmentCount();
+
+    @Nullable
+    Integer tumourReferenceFragmentCount();
+
+    @Nullable
     String mate();
 
     @Nullable
@@ -68,6 +74,12 @@ public interface RecoveredVariant extends GenomeRegion {
 
     @Nullable
     SegmentSupport mateSupport();
+
+    @Nullable
+    Integer mateTumourVariantFragmentCount();
+
+    @Nullable
+    Integer mateTumourReferenceFragmentCount();
 
     @Nullable
     String alt();

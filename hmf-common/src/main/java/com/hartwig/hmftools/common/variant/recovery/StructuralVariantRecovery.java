@@ -29,51 +29,27 @@ import htsjdk.variant.vcf.VCFCodec;
 
 public class StructuralVariantRecovery {
 
-    private static final double MIN_SINGLE_QUAL_SCORE = 1000;
+    private static final double MIN_SINGLE_QUAL_SCORE = 250; //TODO, FIX THIS AGAIN
     private static final double MIN_MATE_QUAL_SCORE = 250;
     private static final double MIN_LENGTH = 1000;
 
     private final AbstractFeatureReader<VariantContext, LineIterator> reader;
+    private final ListMultimap<String, PurpleCopyNumber> allCopyNumbers;
 
-    public StructuralVariantRecovery(@NotNull final String vcfFile) {
+    public StructuralVariantRecovery(@NotNull final String vcfFile, @NotNull final ListMultimap<String, PurpleCopyNumber> allCopyNumbers) {
         this.reader = getFeatureReader(vcfFile, new VCFCodec(), true);
+        this.allCopyNumbers = allCopyNumbers;
     }
 
-    public void doStuff2(List<StructuralVariantLegPloidy> svPloidies) throws IOException {
-        for (StructuralVariantLegPloidy svPloidy : svPloidies) {
-            if (Doubles.greaterThan(svPloidy.averageImpliedPloidy(), 0.5) && adjustedCopyNumberChange(svPloidy) > 0.15) {
-
-                System.out.println();
-
-                System.out.println("MADE IT!!");
-            }
-        }
-    }
-
-    @VisibleForTesting
-    static double adjustedCopyNumberChange(@NotNull final StructuralVariantLegPloidy ploidy) {
-        double leftCopyNumber = ploidy.leftCopyNumber().orElse(0D);
-        double rightCopyNumber = ploidy.rightCopyNumber().orElse(0D);
-
-        return ploidy.orientation() == 1 ? leftCopyNumber - rightCopyNumber : rightCopyNumber - leftCopyNumber;
-    }
-
-    public List<RecoveredVariant> recoverVariants(@NotNull final ListMultimap<String, PurpleCopyNumber> allCopyNumbers) throws IOException {
-
+    public List<RecoveredVariant> recoverUnbalancedVariants(List<StructuralVariantLegPloidy> svPloidies) throws IOException {
         final List<RecoveredVariant> result = Lists.newArrayList();
 
-        for (String chromosome : allCopyNumbers.keySet()) {
-            final List<PurpleCopyNumber> copyNumbers = allCopyNumbers.get(chromosome);
-
-            for (int i = 1; i < copyNumbers.size() - 1; i++) {
-                PurpleCopyNumber prev = copyNumbers.get(i - 1);
-                PurpleCopyNumber current = copyNumbers.get(i);
-                PurpleCopyNumber next = copyNumbers.get(i + 1);
-
-                if (current.segmentStartSupport() == SegmentSupport.NONE) {
-                    long minPosition = Math.max(1, current.minStart() - 1000);
-                    long maxPosition = current.maxStart() + 1000;
-                    result.addAll(recover(minPosition, maxPosition, current, prev, next, allCopyNumbers));
+        for (StructuralVariantLegPloidy svPloidy : svPloidies) {
+            if (Doubles.greaterThan(svPloidy.averageImpliedPloidy(), 0.5) && absAdjustedCopyNumberChange(svPloidy) > 0.15) {
+                List<PurpleCopyNumber> chromosomeCopyNumbers = allCopyNumbers.get(svPloidy.chromosome());
+                int index = indexOf(svPloidy.position(), chromosomeCopyNumbers);
+                if (index > 1) {
+                    result.addAll(recoverVariants(index, chromosomeCopyNumbers));
                 }
             }
         }
@@ -81,27 +57,50 @@ public class StructuralVariantRecovery {
         return result;
     }
 
-    @VisibleForTesting
-    @NotNull
-    static <T extends GenomeRegion> T closest(long position, @NotNull final List<T> regions) {
-        assert (!regions.isEmpty());
+    private static double absAdjustedCopyNumberChange(@NotNull final StructuralVariantLegPloidy ploidy) {
+        double leftCopyNumber = ploidy.leftCopyNumber().orElse(0D);
+        double rightCopyNumber = ploidy.rightCopyNumber().orElse(0D);
 
-        long minDistance = position - 1;
-        for (int i = 1; i < regions.size(); i++) {
-            long distanceFromRegion = position - regions.get(i).start();
-            if (distanceFromRegion < 0) {
-                return Math.abs(distanceFromRegion) < minDistance ? regions.get(i) : regions.get(i - 1);
+        return ploidy.orientation() == 1 ? leftCopyNumber - rightCopyNumber : rightCopyNumber - leftCopyNumber;
+    }
+
+    public List<RecoveredVariant> recoverVariants() throws IOException {
+
+        final List<RecoveredVariant> result = Lists.newArrayList();
+
+        for (String chromosome : allCopyNumbers.keySet()) {
+            final List<PurpleCopyNumber> chromosomeCopyNumbers = allCopyNumbers.get(chromosome);
+
+            for (int i = 1; i < chromosomeCopyNumbers.size() - 1; i++) {
+                final PurpleCopyNumber current = chromosomeCopyNumbers.get(i);
+                if (current.segmentStartSupport() == SegmentSupport.NONE) {
+                    result.addAll(recoverVariants(i, chromosomeCopyNumbers));
+                }
             }
-
-            minDistance = distanceFromRegion;
         }
 
-        return regions.get(regions.size() - 1);
+        return result;
+    }
+
+    @NotNull
+    private List<RecoveredVariant> recoverVariants(int index, @NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException {
+        assert (index > 1);
+
+        PurpleCopyNumber prev = copyNumbers.get(index - 1);
+        PurpleCopyNumber current = copyNumbers.get(index);
+        PurpleCopyNumber next = index < copyNumbers.size() - 1 ? copyNumbers.get(index + 1) : null;
+
+        final List<RecoveredVariant> result = Lists.newArrayList();
+        long minPosition = Math.max(1, current.minStart() - 1000);
+        long maxPosition = current.maxStart() + 1000;
+        result.addAll(recover(minPosition, maxPosition, current, prev, next, allCopyNumbers));
+        return result;
     }
 
     @NotNull
     public List<RecoveredVariant> recover(long min, long max, @NotNull final PurpleCopyNumber current, @NotNull final PurpleCopyNumber prev,
-            @NotNull final PurpleCopyNumber next, @NotNull final ListMultimap<String, PurpleCopyNumber> allCopyNumbers) throws IOException {
+            @Nullable final PurpleCopyNumber next, @NotNull final ListMultimap<String, PurpleCopyNumber> allCopyNumbers)
+            throws IOException {
 
         List<RecoveredVariant> result = Lists.newArrayList();
 
@@ -117,7 +116,7 @@ public class StructuralVariantRecovery {
                 .depthWindowCount(current.depthWindowCount())
                 .gcContent(current.gcContent())
                 .prevGCContent(prev.gcContent())
-                .nextGCContent(next.gcContent())
+                .nextGCContent(next == null ? -1 : next.gcContent())
                 .prevLength(prev.end() - prev.start() + 1)
                 .prevCopyNumber(prev.averageTumorCopyNumber())
                 .prevBaf(prev.averageActualBAF())
@@ -150,17 +149,21 @@ public class StructuralVariantRecovery {
 
             if (hasPotential(min, max, sv)) {
                 final StructuralVariantLeg end = sv.end();
-                final PurpleCopyNumber mateCopyNumber = end == null ? null : closest(end.position(), allCopyNumbers.get(end.chromosome()));
+                final PurpleCopyNumber mateCopyNumber = end == null || !allCopyNumbers.containsKey(end.chromosome()) ? null : closest(end.position(), allCopyNumbers.get(end.chromosome()));
 
                 builder.alt(alt)
                         .qual(sv.qualityScore())
                         .variant(sv.start().chromosome() + ":" + sv.start().position())
                         .orientation(orientation)
+                        .tumourReferenceFragmentCount(sv.start().tumourReferenceFragmentCount())
+                        .tumourVariantFragmentCount(sv.start().tumourVariantFragmentCount())
                         .mate(end == null ? null : end.chromosome() + ":" + end.position())
                         .mateOrientation(end == null ? null : (int) end.orientation())
                         .mateMinStart(mateCopyNumber == null ? null : mateCopyNumber.minStart())
                         .mateMaxStart(mateCopyNumber == null ? null : mateCopyNumber.maxStart())
                         .mateSupport(mateCopyNumber == null ? null : mateCopyNumber.segmentStartSupport())
+                        .mateTumourReferenceFragmentCount(end == null ? null : end.tumourReferenceFragmentCount())
+                        .mateTumourVariantFragmentCount(end == null ? null : end.tumourVariantFragmentCount())
                         .filter(sv.filter());
 
                 result.add(builder.build());
@@ -181,9 +184,8 @@ public class StructuralVariantRecovery {
     }
 
     private int cipos(@NotNull final VariantContext context) {
-
+        int max = 150;
         if (context.hasAttribute("IMPRECISE")) {
-            int max = 150;
 
             final String cipos = context.getAttributeAsString("CIPOS", "-0,0");
             if (cipos.contains(",")) {
@@ -195,11 +197,8 @@ public class StructuralVariantRecovery {
                     }
                 }
             }
-            return max;
-        } else {
-            return 0;
         }
-
+        return max;
     }
 
     private boolean hasPotential(long min, long max, @NotNull StructuralVariant variant) {
@@ -237,7 +236,9 @@ public class StructuralVariantRecovery {
 
         try (CloseableTribbleIterator<VariantContext> iterator = reader.query(chromosome, (int) lowerBound, (int) upperBound)) {
             for (VariantContext variant : iterator) {
-                result.add(variant);
+                if (variant.isFiltered()) {
+                    result.add(variant);
+                }
             }
         }
 
@@ -308,6 +309,38 @@ public class StructuralVariantRecovery {
         }
 
         return 0;
+    }
+
+    @VisibleForTesting
+    static <T extends GenomeRegion> int indexOf(long start, @NotNull final List<T> regions) {
+        assert (!regions.isEmpty());
+        for (int i = 0; i < regions.size(); i++) {
+            if (regions.get(i).start() == start) {
+                return i;
+            }
+        }
+
+        throw new UnsupportedOperationException();
+
+    }
+
+    @VisibleForTesting
+    @NotNull
+    static <T extends GenomeRegion> T closest(long position, @NotNull final List<T> regions) {
+        assert(!regions.isEmpty());
+
+
+        long minDistance = position - 1;
+        for (int i = 1; i < regions.size(); i++) {
+            long distanceFromRegion = position - regions.get(i).start();
+            if (distanceFromRegion < 0) {
+                return Math.abs(distanceFromRegion) < minDistance ? regions.get(i) : regions.get(i - 1);
+            }
+
+            minDistance = distanceFromRegion;
+        }
+
+        return regions.get(regions.size() - 1);
     }
 
 }

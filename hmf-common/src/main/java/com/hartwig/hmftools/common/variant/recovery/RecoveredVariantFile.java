@@ -36,6 +36,9 @@ public class RecoveredVariantFile {
                 .add("copyNumber")
                 .add("depthWindowCount")
                 .add("gcContent")
+                .add("support")
+                .add("tumourVariantFragmentCount")
+                .add("tumourReferenceFragmentCount")
                 .add("prevBases")
                 .add("prevBaf")
                 .add("prevCopyNumber")
@@ -53,6 +56,8 @@ public class RecoveredVariantFile {
                 .add("mateMinStart")
                 .add("mateMaxStart")
                 .add("mateSupport")
+                .add("mateTumourVariantFragmentCount")
+                .add("mateTumourReferenceFragmentCount")
                 .toString();
     }
 
@@ -68,6 +73,9 @@ public class RecoveredVariantFile {
                 .add(FORMAT.format(recoveredVariant.copyNumber()))
                 .add(String.valueOf(recoveredVariant.depthWindowCount()))
                 .add(String.valueOf(recoveredVariant.gcContent()))
+                .add(String.valueOf(recoveredVariant.support()))
+                .add(String.valueOf(recoveredVariant.tumourVariantFragmentCount()))
+                .add(String.valueOf(recoveredVariant.tumourReferenceFragmentCount()))
 
                 .add(String.valueOf(recoveredVariant.prevLength()))
                 .add(FORMAT.format(recoveredVariant.prevBaf()))
@@ -87,6 +95,8 @@ public class RecoveredVariantFile {
                 .add(String.valueOf(recoveredVariant.mateMinStart()))
                 .add(String.valueOf(recoveredVariant.mateMaxStart()))
                 .add(String.valueOf(recoveredVariant.mateSupport()))
+                .add(String.valueOf(recoveredVariant.mateTumourVariantFragmentCount()))
+                .add(String.valueOf(recoveredVariant.mateTumourReferenceFragmentCount()))
                 .toString();
     }
 }
