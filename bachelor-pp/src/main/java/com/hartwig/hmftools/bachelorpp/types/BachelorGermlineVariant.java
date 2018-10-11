@@ -21,6 +21,7 @@ public class BachelorGermlineVariant {
     private String mAnnotations;
     private int mPhredScore;
     private boolean mIsHomozygous;
+    private String mHgvsProtein;
 
     private int mRefCount;
     private int mAltCount;
@@ -31,9 +32,12 @@ public class BachelorGermlineVariant {
     private VariantContext mVariantContext;
     private EnrichedSomaticVariant mEnrichedVariant;
 
+    public static int PHRED_SCORE_CUTOFF = 150;
+
     public BachelorGermlineVariant(String patient, String source, String program, String varId,
             String gene, String transcriptId, String chromosome, long position,
-            String ref, String alts, String effects, String annotations, boolean isHomozygous, int phredScore)
+            String ref, String alts, String effects, String annotations, String hgvsProtein,
+            boolean isHomozygous, int phredScore)
     {
         mPatient = patient;
         mSource = source;
@@ -48,6 +52,7 @@ public class BachelorGermlineVariant {
         mAnnotations = annotations;
         mPhredScore = phredScore;
         mIsHomozygous = isHomozygous;
+        mHgvsProtein = hgvsProtein;
 
         mRef = mRef.replaceAll("\\*", "");
         mAlts = mAlts.replaceAll("\\*", "");
@@ -62,19 +67,20 @@ public class BachelorGermlineVariant {
         mEnrichedVariant = null;
     }
 
-    public String variantId() { return mVariantId; };
-    public String patient() { return mPatient; };
-    public String source() { return mSource; };
-    public String program() { return mProgram; };
-    public String gene() { return mGene; };
-    public String transcriptId() { return mTranscriptId; };
-    public String chromosome() { return mChromosome; };
+    public final String variantId() { return mVariantId; };
+    public final String patient() { return mPatient; };
+    public final String source() { return mSource; };
+    public final String program() { return mProgram; };
+    public final String gene() { return mGene; };
+    public final String transcriptId() { return mTranscriptId; };
+    public final String chromosome() { return mChromosome; };
     public long position() { return mPosition; };
-    public String ref() { return mRef; };
-    public String alts() { return mAlts; };
-    public String effects() { return mEffects; };
-    public String annotations() { return mAnnotations; };
+    public final String ref() { return mRef; };
+    public final String alts() { return mAlts; };
+    public final String effects() { return mEffects; };
+    public final String annotations() { return mAnnotations; };
     public int phredScore() { return mPhredScore; };
+    public final String hgvsProtein() { return mHgvsProtein; };
     public boolean isHomozygous() { return mIsHomozygous; }
     public int getRefCount() { return mRefCount; }
     public int getAltCount() { return mAltCount; }
@@ -90,14 +96,19 @@ public class BachelorGermlineVariant {
             return false;
 
         double copyNumber = mEnrichedVariant.adjustedCopyNumber();
-        double adjustedVaf = mEnrichedVariant.adjustedVAF();
-        return (copyNumber - (copyNumber * adjustedVaf) < 0.5);
+        double minorAllelePloidy = copyNumber - (copyNumber * mAdjustedVaf);
+        return (minorAllelePloidy < 0.5);
     }
 
     public boolean isValid()
     {
         return mRefCount > 0 && mAltCount > 0
             && mSomaticVariant != null && mEnrichedVariant != null&& mVariantContext != null;
+    }
+
+    public boolean isLowScore()
+    {
+        return mPhredScore < PHRED_SCORE_CUTOFF && mAdjustedVaf < 0;
     }
 
     public final SomaticVariant getSomaticVariant() { return mSomaticVariant; }

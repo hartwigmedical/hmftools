@@ -78,7 +78,8 @@ public class BachelorPP {
 
     private static final String VCF_FILE_SUFFIX = "_germline_variants.vcf";
 
-    public static void main(@NotNull final String[] args) throws ParseException {
+    public static void main(@NotNull final String[] args) throws ParseException
+    {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
@@ -88,7 +89,8 @@ public class BachelorPP {
 
         String sampleId = cmd.getOptionValue(SAMPLE);
 
-        if (sampleId == null || sampleId.equals("*")) {
+        if (sampleId == null || sampleId.equals("*"))
+        {
             sampleId = "";
         }
 
@@ -99,7 +101,7 @@ public class BachelorPP {
 
         if (adLoader.getBachelorVariants().isEmpty())
         {
-            LOGGER.info("sample({}) has no records to process", sampleId);
+            LOGGER.debug("sample({}) has no records to process", sampleId);
             return;
         }
 
@@ -129,6 +131,21 @@ public class BachelorPP {
 
         annotateRecords(sampleId, bachRecords, cmd, dbAccess);
 
+        int validRecordCount = 0;
+        for (final BachelorGermlineVariant bachRecord : bachRecords)
+        {
+            if (bachRecord.isValid())
+                ++validRecordCount;
+        }
+
+        if(validRecordCount == 0)
+        {
+            LOGGER.info("sample({})has no valid germline reports", sampleId, validRecordCount);
+            return;
+        }
+
+        LOGGER.info("sample({}) writing {} germline reports to database", sampleId, validRecordCount);
+
         if (cmd.hasOption(WRITE_TO_DB))
         {
             writeToDatabase(sampleId, bachRecords, dbAccess);
@@ -148,7 +165,6 @@ public class BachelorPP {
     {
         for (final BachelorGermlineVariant bachRecord : bachRecords)
         {
-
             if (bachRecord.getRefCount() == 0 || bachRecord.getAltCount() == 0)
             {
                 continue;
@@ -312,6 +328,9 @@ public class BachelorPP {
                     else
                         adjVaf = purityAdjuster.purityAdjustedVAFWithHetrozygousNormal(var.chromosome(), var.adjustedCopyNumber(), var.alleleFrequency());
 
+                    if(Double.isNaN(adjVaf))
+                        adjVaf = 0;
+
                     bachRecord.setAdjustedVaf(adjVaf);
                     break;
                 }
@@ -324,7 +343,6 @@ public class BachelorPP {
                 new ClonalityFactory(purityAdjuster, clonalPloidy));
 
         final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(purityAdjustedVariants);
-
 
         for (BachelorGermlineVariant bachRecord : bachRecords)
         {
@@ -341,7 +359,9 @@ public class BachelorPP {
 
             if (!matched)
             {
-                LOGGER.error("enriched variant not found for {}", bachRecord.variantId());
+                LOGGER.info("sample({}) enriched variant not found: var({}) gene({}) transcript({}) chr({}) position({})",
+                        sampleId, bachRecord.variantId(), bachRecord.gene(), bachRecord.transcriptId(),
+                        bachRecord.chromosome(), bachRecord.position());
             }
         }
     }
@@ -349,15 +369,12 @@ public class BachelorPP {
     private static void writeToDatabase(final String sampleId, final List<BachelorGermlineVariant> bachRecords,
             final DatabaseAccess dbAccess)
     {
-        LOGGER.info("writing germline reports to database");
         final GermlineVariantDAO germlineDAO = new GermlineVariantDAO(dbAccess.context());
         germlineDAO.write(sampleId, bachRecords);
     }
 
     public static void writeToFile(final String sampleId, final List<BachelorGermlineVariant> bachRecords, final String outputDir)
     {
-        LOGGER.debug("writing germline reports to file");
-
         String outputFileName = outputDir;
         if (!outputFileName.endsWith("/"))
         {
@@ -373,11 +390,11 @@ public class BachelorPP {
 
             writer.write("SampleId,Program,Source,Chromosome,Position");
 
-            writer.write(",Type,Ref,Alt,Gene,DbsnpId,CosmicId,Effects,WorstCodingEffect,AltCount,RefCount");
+            writer.write(",Type,Ref,Alt,Gene,TranscriptId,DbsnpId,CosmicId,Effects,WorstCodingEffect,AltCount,RefCount");
 
             writer.write(",AdjCopyNumber,AdjustedVaf,HighConfidenceRegion,TrinucleotideContext,Microhomology,RepeatSequence,RepeatCount");
 
-            writer.write(",PhredScore,Biallelic,Hotspot,Mappability,GermlineStatus,MinorAllelePloidy");
+            writer.write(",HgvsProtein,Biallelic,Hotspot,Mappability,GermlineStatus,MinorAllelePloidy,Filter");
 
             writer.newLine();
 
@@ -402,29 +419,33 @@ public class BachelorPP {
                         region.ref(),
                         region.alt(),
                         bachRecord.gene(),
+                        bachRecord.transcriptId(),
                         region.dbsnpID() == null ? "" : region.dbsnpID(),
                         region.canonicalCosmicID() == null ? "" : region.canonicalCosmicID(),
                         bachRecord.effects(),
                         region.worstCodingEffect(),
-                        bachRecord.transcriptId(),
                         bachRecord.getAltCount(),
                         bachRecord.getRefCount()));
 
                 writer.write(
-                        String.format(",%.2f,%.2f,%s,%s,%s,%s,%d,%d,%s,%s,%s,%s,%.2f",
+                        String.format(",%.2f,%.2f,%s,%s,%s,%s,%d",
                         region.adjustedCopyNumber(),
                         bachRecord.getAdjustedVaf(),
                         region.highConfidenceRegion(),
                         region.trinucleotideContext(),
                         region.microhomology(),
                         region.repeatSequence(),
-                        region.repeatCount(),
-                        bachRecord.phredScore(),
-                        bachRecord.isBiallelic(),
-                        region.hotspot(),
-                        region.mappability(),
-                        region.germlineStatus(),
-                        region.minorAllelePloidy()));
+                        region.repeatCount()));
+
+                writer.write(
+                        String.format(",%s,%s,%s,%s,%s,%.2f,%s",
+                                bachRecord.hgvsProtein(),
+                                bachRecord.isBiallelic(),
+                                region.hotspot(),
+                                region.mappability(),
+                                region.germlineStatus(),
+                                region.minorAllelePloidy(),
+                                bachRecord.isLowScore() ? "ARTEFACT" : "PASS"));
 
                 writer.newLine();
             }

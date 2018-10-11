@@ -31,7 +31,8 @@ public class AlleleDepthLoader {
     private List<BachelorGermlineVariant> bachelorVariants;
     private List<Pileup> pileupData;
 
-    public AlleleDepthLoader() {
+    public AlleleDepthLoader()
+    {
         sampleId = "";
         bachelorVariants = Lists.newArrayList();
         pileupData = Lists.newArrayList();
@@ -41,10 +42,10 @@ public class AlleleDepthLoader {
         this.sampleId = sampleId;
     }
 
-    public boolean loadBachelorMatchData(final String filename) {
-        if (filename.isEmpty()) {
+    public boolean loadBachelorMatchData(final String filename)
+    {
+        if (filename.isEmpty())
             return false;
-        }
 
         try {
 
@@ -82,14 +83,18 @@ public class AlleleDepthLoader {
                         items[9],
                         items[10],
                         items[11],
+                        items[12],
                         Boolean.parseBoolean(items[13]),
                         Integer.parseInt(items[14]));
 
                 bachelorVariants.add(bachRecord);
             }
 
-            LOGGER.info("loaded {} bachelor records", bachelorVariants.size());
-        } catch (IOException exception) {
+            LOGGER.debug("loaded {} bachelor records", bachelorVariants.size());
+
+        }
+        catch (IOException exception)
+        {
             LOGGER.error("Failed to read bachelor input CSV file({})", filename);
             return false;
         }
@@ -101,13 +106,14 @@ public class AlleleDepthLoader {
         return bachelorVariants;
     }
 
-    public boolean loadMiniPileupData(final String mpDirectory) {
+    public boolean loadMiniPileupData(final String mpDirectory)
+    {
         final List<File> mpuFiles;
 
         final Path root = Paths.get(mpDirectory);
 
-        try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS)) {
-
+        try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS))
+        {
             mpuFiles = stream.map(p -> p.toFile())
                     .filter(p -> !p.isDirectory())
                     .filter(p_ -> p_.getName().endsWith(MPILEUP_FILE_EXTN))
@@ -128,7 +134,9 @@ public class AlleleDepthLoader {
             }
 
             LOGGER.info("loaded {} pileup files, {} records", mpuFiles.size(), pileupData.size());
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             LOGGER.error("failed to process pileup files from dir({})", mpDirectory);
             return false;
         }
@@ -138,42 +146,51 @@ public class AlleleDepthLoader {
         return true;
     }
 
-    private void applyPileupData() {
+    private void applyPileupData()
+    {
         // match up read info from MP with the bachelor records
-        for (BachelorGermlineVariant bachRecord : bachelorVariants) {
-            for (final Pileup pileup : pileupData) {
-                if (!bachRecord.chromosome().equals(pileup.chromosome())) {
+        for (BachelorGermlineVariant bachRecord : bachelorVariants)
+        {
+            for (final Pileup pileup : pileupData)
+            {
+                if (!bachRecord.chromosome().equals(pileup.chromosome()))
                     continue;
-                }
 
-                if (bachRecord.position() != pileup.position()) {
+                if (bachRecord.position() != pileup.position())
                     continue;
-                }
 
                 bachRecord.setRefCount(pileup.referenceCount());
 
-                if (pileup.insertions() > 0) {
+                if (pileup.insertions() > 0)
+                {
                     bachRecord.setAltCount(pileup.insertions());
-                } else if (pileup.deletions() > 0) {
+                }
+                else if (pileup.deletions() > 0)
+                {
                     bachRecord.setAltCount(pileup.deletions());
-                } else if (bachRecord.alts().length() == bachRecord.ref().length() && bachRecord.alts().length() == 1) {
-                    if (bachRecord.alts().charAt(0) == 'A') {
+                }
+                else if (bachRecord.alts().length() == bachRecord.ref().length() && bachRecord.alts().length() == 1)
+                {
+                    if (bachRecord.alts().charAt(0) == 'A')
+                    {
                         bachRecord.setAltCount(pileup.aMismatchCount());
-                    } else if (bachRecord.alts().charAt(0) == 'C') {
+                    }
+                    else if (bachRecord.alts().charAt(0) == 'C')
+                    {
                         bachRecord.setAltCount(pileup.cMismatchCount());
-                    } else if (bachRecord.alts().charAt(0) == 'G') {
+                    }
+                    else if (bachRecord.alts().charAt(0) == 'G')
+                    {
                         bachRecord.setAltCount(pileup.gMismatchCount());
-                    } else if (bachRecord.alts().charAt(0) == 'T') {
+                    }
+                    else if (bachRecord.alts().charAt(0) == 'T')
+                    {
                         bachRecord.setAltCount(pileup.tMismatchCount());
                     }
                 }
 
                 LOGGER.debug("sample({} chr({}) position({}) matched, counts(ref={} alt={})",
-                        sampleId,
-                        bachRecord.chromosome(),
-                        bachRecord.position(),
-                        bachRecord.getRefCount(),
-                        bachRecord.getAltCount());
+                        sampleId, bachRecord.chromosome(), bachRecord.position(), bachRecord.getRefCount(), bachRecord.getAltCount());
             }
         }
     }
