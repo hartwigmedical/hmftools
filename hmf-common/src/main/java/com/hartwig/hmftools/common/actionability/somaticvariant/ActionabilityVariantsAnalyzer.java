@@ -44,8 +44,8 @@ public class ActionabilityVariantsAnalyzer {
         return genes;
     }
 
-    public VariantEvidenceItems actionableVariants(@NotNull SomaticVariant variant,
-            @NotNull CancerTypeAnalyzer cancerTypeAnalyzer, @Nullable String doidsPrimaryTumorLocation) {
+    public VariantEvidenceItems actionableVariants(@NotNull SomaticVariant variant, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
+            @Nullable String doidsPrimaryTumorLocation) {
         List<EvidenceItem> onLabel = Lists.newArrayList();
         List<EvidenceItem> offLabel = Lists.newArrayList();
         for (EvidenceItem evidenceItem : variants) {
@@ -62,24 +62,25 @@ public class ActionabilityVariantsAnalyzer {
         return ImmutableVariantEvidenceItems.of(onLabel, offLabel);
     }
 
-    public boolean actionableRange(@NotNull SomaticVariant variant, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
+    public ActionabilityRangeEvidenceItem actionableRange(@NotNull SomaticVariant variant, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
             @Nullable String doidsPrimaryTumorLocation) {
-        boolean booleanValue = false;
+        List<ActionabilityRange> onLabel = Lists.newArrayList();
+        List<ActionabilityRange> offLabel = Lists.newArrayList();
         for (ActionabilityRange range : variantsRanges) {
             if (variant.gene().equals(range.gene()) && variant.chromosome().equals(range.chromosome())
                     && variant.position() >= range.start() && variant.position() <= range.end()) {
 
                 if (cancerTypeAnalyzer.foundTumorLocation(range.cancerType(), doidsPrimaryTumorLocation)) {
                     printVariantRangeRow(range, "yes");
+                    onLabel.add(range);
                 } else {
+                    offLabel.add(range);
+
                     printVariantRangeRow(range, "no");
                 }
-                booleanValue = true;
-            } else {
-                booleanValue = false;
             }
         }
-        return booleanValue;
+        return ImmutableActionabilityRangeEvidenceItem.of(onLabel, offLabel);
     }
 
     private static void printVariantRangeRow(@NotNull ActionabilityRange range, @NotNull String isActionable) {

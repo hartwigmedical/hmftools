@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRange;
+import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRangeEvidenceItem;
 import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.somaticvariant.VariantEvidenceItems;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
@@ -38,7 +40,13 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract List<EvidenceItem> somaticActionabilityVariants();
 
     @NotNull
+    public abstract List<ActionabilityRange> somaticActionabilityVariantsRange();
+
+    @NotNull
     public abstract Map<EnrichedSomaticVariant, VariantEvidenceItems> evidenceItem();
+
+    @NotNull
+    public abstract Map<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> evidenceItemRange();
 
     @NotNull
     public abstract List<DriverCatalog> somaticVariantDriverCatalog();

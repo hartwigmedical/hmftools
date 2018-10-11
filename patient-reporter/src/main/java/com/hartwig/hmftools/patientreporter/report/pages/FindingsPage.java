@@ -232,13 +232,12 @@ public abstract class FindingsPage {
                         col.column("Drugs type", ActionabilityVariantsDataSource.DRUGS_TYPE),
                         col.column("Level", ActionabilityVariantsDataSource.LEVEL),
                         col.column("Response", ActionabilityVariantsDataSource.RESPONSE),
-                        col.column("Source", ActionabilityVariantsDataSource.SOURCE)
-                                .setHyperLink(hyperLink(ActionabilityVariantsDataSource.sourceHyperlink(report.somaticActionabilityVariants())))
-                                .setStyle(linkStyle()),
+                        col.column("Source", ActionabilityVariantsDataSource.SOURCE),
                         col.column("Label", ActionabilityVariantsDataSource.LABEL))
-                .setDataSource(ActionabilityVariantsDataSource.fromActionabilityVariants(report.evidenceItem())))
+                .setDataSource(ActionabilityVariantsDataSource.fromActionabilityVariants(report.evidenceItem(), report.evidenceItemRange())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
-
+//.setHyperLink(hyperLink(ActionabilityVariantsDataSource.sourceHyperlink(report.somaticActionabilityVariants())))
+        //                                .setStyle(linkStyle()
         return cmp.verticalList(cmp.text("Evidence Items").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
                 table);

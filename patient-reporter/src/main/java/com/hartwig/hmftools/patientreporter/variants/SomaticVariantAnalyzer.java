@@ -8,6 +8,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRange;
+import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRangeEvidenceItem;
 import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.somaticvariant.VariantEvidenceItems;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
@@ -54,13 +56,24 @@ public final class SomaticVariantAnalyzer {
             variant.addAll(entry.getValue().offLabel());
         }
 
+        final List<ActionabilityRange> variantRange = Lists.newArrayList();
+        Map<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> evidencePerVariantRanges =
+                ActionabilityVariantAnalyzer.detectVariantsRanges(variants, patientTumorLocation);
+
+        for (Map.Entry<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> entry : evidencePerVariantRanges.entrySet()) {
+            variantRange.addAll(entry.getValue().onLabel());
+            variantRange.addAll(entry.getValue().offLabel());
+        }
+
         return ImmutableSomaticVariantAnalysis.of(variantsToReport,
                 driverCatalog,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
                 tumorMutationalBurden,
                 variant,
-                evidencePerVariant);
+                variantRange,
+                evidencePerVariant,
+                evidencePerVariantRanges);
     }
 
     @NotNull

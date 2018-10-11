@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRange;
+import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRangeEvidenceItem;
 import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.somaticvariant.VariantEvidenceItems;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
@@ -38,7 +40,8 @@ public abstract class ActionabilityVariantsDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromActionabilityVariants(@NotNull Map<EnrichedSomaticVariant, VariantEvidenceItems> evidenceItems) {
+    public static JRDataSource fromActionabilityVariants(@NotNull Map<EnrichedSomaticVariant, VariantEvidenceItems> evidenceItems,
+            @NotNull Map<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> evidenceItemsRange) {
         final DRDataSource actionabilityVariantsDatasource = new DRDataSource(GENE.getName(),
                 VARIANT.getName(),
                 IMPACT.getName(),
@@ -78,6 +81,37 @@ public abstract class ActionabilityVariantsDataSource {
                         "no");
             }
         }
+
+        for (Map.Entry<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> entry : evidenceItemsRange.entrySet()) {
+
+            String codingEffect = entry.getKey().canonicalHgvsCodingImpact();
+            String proteinImpact = entry.getKey().canonicalHgvsProteinImpact();
+
+            for (ActionabilityRange variantRange : entry.getValue().onLabel()) {
+                actionabilityVariantsDatasource.add(variantRange.gene(),
+                        codingEffect,
+                        proteinImpact,
+                        variantRange.drug(),
+                        variantRange.drugsType(),
+                        variantRange.level(),
+                        variantRange.response(),
+                        variantRange.source(),
+                        "yes");
+            }
+
+            for (ActionabilityRange variantRange : entry.getValue().offLabel()) {
+                actionabilityVariantsDatasource.add(variantRange.gene(),
+                        codingEffect,
+                        proteinImpact,
+                        variantRange.drug(),
+                        variantRange.drugsType(),
+                        variantRange.level(),
+                        variantRange.response(),
+                        variantRange.source(),
+                        "no");
+            }
+        }
+
         return actionabilityVariantsDatasource;
     }
 

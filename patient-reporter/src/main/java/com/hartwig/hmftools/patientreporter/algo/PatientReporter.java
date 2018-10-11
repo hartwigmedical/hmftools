@@ -98,6 +98,8 @@ public abstract class PatientReporter {
         LOGGER.info("Printing analysis results:");
         LOGGER.info("Number of actionability variants to report: " + Integer.toString(somaticVariantAnalysis.actionableVariantsReport()
                 .size()));
+        LOGGER.info("Number of actionability variants ranges to report: " + Integer.toString(somaticVariantAnalysis.actionableVariantsReportRange()
+                .size()));
         LOGGER.info(" Number of somatic variants to report : " + Integer.toString(somaticVariantAnalysis.variantsToReport().size()));
         LOGGER.info(" Microsatellite analysis results: " + Double.toString(somaticVariantAnalysis.microsatelliteIndelsPerMb())
                 + " indels per MB");
@@ -121,7 +123,9 @@ public abstract class PatientReporter {
                 purpleAnalysis.fittedPurity().purity(),
                 somaticVariantAnalysis.variantsToReport(),
                 somaticVariantAnalysis.actionableVariantsReport(),
+                somaticVariantAnalysis.actionableVariantsReportRange(),
                 somaticVariantAnalysis.evidence(),
+                somaticVariantAnalysis.evidenceRange(),
                 somaticVariantAnalysis.driverCatalog(),
                 somaticVariantAnalysis.microsatelliteIndelsPerMb(),
                 somaticVariantAnalysis.tumorMutationalLoad(),

@@ -18,6 +18,8 @@ import java.util.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRange;
+import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRangeEvidenceItem;
 import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.somaticvariant.VariantEvidenceItems;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
@@ -103,13 +105,19 @@ public class PDFWriterTest {
         final List<EvidenceItem> actionVariant = Lists.newArrayList();
         final Map<EnrichedSomaticVariant, VariantEvidenceItems> labelEvidence = Maps.newHashMap();
 
+        final List<ActionabilityRange> actionVariantRange = Lists.newArrayList();
+        final Map<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> labelEvidenceRange = Maps.newHashMap();
+
         final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
 
         final AnalysedPatientReport patientReport = ImmutableAnalysedPatientReport.of(sampleReport,
                 FittedPurityStatus.NORMAL,
                 impliedTumorPurity,
                 variants,
-                actionVariant,labelEvidence,
+                actionVariant,
+                actionVariantRange,
+                labelEvidence,
+                labelEvidenceRange,
                 driverCatalog,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
@@ -251,7 +259,8 @@ public class PDFWriterTest {
     private static GeneDisruption createDisruption(@NotNull StructuralVariantType type, @NotNull String chromosome,
             @NotNull String chromosomeBand, @NotNull String gene, int exonUpstream, int exonDownstream, double ploidy) {
         EnrichedStructuralVariantLeg start = createEnrichedStructuralVariantLegBuilder().chromosome(chromosome).build();
-        EnrichedStructuralVariant variant = createEnrichedStructuralVariantBuilder().type(type).start(start).ploidy(ploidy).qualityScore(0).build();
+        EnrichedStructuralVariant variant =
+                createEnrichedStructuralVariantBuilder().type(type).start(start).ploidy(ploidy).qualityScore(0).build();
 
         GeneAnnotation geneAnnotation =
                 new GeneAnnotation(variant, true, gene, "id", 1, Lists.newArrayList(), Lists.newArrayList(), chromosomeBand);
