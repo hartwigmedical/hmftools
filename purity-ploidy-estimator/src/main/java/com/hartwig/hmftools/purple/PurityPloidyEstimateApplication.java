@@ -167,22 +167,19 @@ public class PurityPloidyEstimateApplication {
             final PurityAdjuster purityAdjuster = new PurityAdjuster(cobaltGender, fittedPurity);
 
 
-            final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), observedRegions);
-
-
             final SmoothingConfig smoothingConfig = configSupplier.smoothingConfig();
             final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(smoothingConfig.minDiploidTumorRatioCount(),
                     smoothingConfig.minDiploidTumorRatioCountAtCentromere(),
-                    cobaltGender,
-                    purityAdjuster,
-                    fittedRegions,
-                    structuralVariants);
-            final List<PurpleCopyNumber> copyNumbers = copyNumberFactory.copyNumbers();
+                    purityAdjuster);
+
+            LOGGER.info("Calculating copy number");
+            List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), observedRegions);
+            copyNumberFactory.invoke(fittedRegions, structuralVariants);
 
             if (cmd.hasOption(SV_RECOVERY_VCF)) {
 
                 final ListMultimap<String, PurpleCopyNumber> copyNumberMap = ArrayListMultimap.create();
-                for (PurpleCopyNumber copyNumber : copyNumbers) {
+                for (PurpleCopyNumber copyNumber : copyNumberFactory.copyNumbers()) {
                     copyNumberMap.put(copyNumber.chromosome(), copyNumber);
                 }
 
@@ -197,10 +194,23 @@ public class PurityPloidyEstimateApplication {
 
                 RecoveredVariantFile.write(config.outputDirectory() + "/" + tumorSample + ".recovery.tsv", recovered);
 
+
+                // Assume we found new structural variants;
+                final List<StructuralVariant> recoveredVariants = Lists.newArrayList();
+                if (!recoveredVariants.isEmpty()) {
+                    recoveredVariants.addAll(structuralVariants);
+
+                    LOGGER.info("Applying segmentation with recovered structural variants");
+                    final List<ObservedRegion> recoveredObservedRegions = segmentation.createSegments(recoveredVariants);
+
+                    LOGGER.info("Recalculating copy number");
+                    fittedRegions = fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions);
+                    copyNumberFactory.invoke(fittedRegions, structuralVariants);
+                }
             }
 
+            final List<PurpleCopyNumber> copyNumbers = copyNumberFactory.copyNumbers();
             final List<PurpleCopyNumber> germlineDeletions = copyNumberFactory.germlineDeletions();
-
             final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, copyNumbers);
 
             final PurityContext purityContext = ImmutablePurityContext.builder()

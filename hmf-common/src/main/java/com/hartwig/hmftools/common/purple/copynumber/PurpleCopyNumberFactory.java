@@ -21,16 +21,26 @@ import org.jetbrains.annotations.NotNull;
 
 public class PurpleCopyNumberFactory {
 
-    @NotNull
-    private final List<PurpleCopyNumber> somaticCopyNumbers;
-    @NotNull
-    private final List<PurpleCopyNumber> germlineDeletions;
+    private final List<PurpleCopyNumber> somaticCopyNumbers = Lists.newArrayList();
+    private final List<PurpleCopyNumber> germlineDeletions = Lists.newArrayList();
 
-    public PurpleCopyNumberFactory(int minTumorRatioCount, int minTumorRatioCountAtCentromere, @NotNull final Gender gender,
-            @NotNull final PurityAdjuster purityAdjuster, final List<FittedRegion> fittedRegions,
-            final List<StructuralVariant> structuralVariants) {
-        somaticCopyNumbers = Lists.newArrayList();
-        germlineDeletions = Lists.newArrayList();
+    private final Gender gender;
+    private final int minTumorRatioCount;
+    private final int minTumorRatioCountAtCentromere;
+    private final PurityAdjuster purityAdjuster;
+
+    public PurpleCopyNumberFactory(int minTumorRatioCount, int minTumorRatioCountAtCentromere,
+            @NotNull final PurityAdjuster purityAdjuster) {
+        this.purityAdjuster = purityAdjuster;
+        this.gender = purityAdjuster.gender();
+        this.minTumorRatioCount = minTumorRatioCount;
+        this.minTumorRatioCountAtCentromere = minTumorRatioCountAtCentromere;
+
+    }
+
+    public void invoke(final List<FittedRegion> fittedRegions, final List<StructuralVariant> structuralVariants) {
+        somaticCopyNumbers.clear();
+        germlineDeletions.clear();
 
         final ExtendGermline extendGermline = new ExtendGermline(gender);
         final ExtendDiploid extendDiploid =
@@ -77,7 +87,7 @@ public class PurpleCopyNumberFactory {
     }
 
     @NotNull
-    private List<PurpleCopyNumber> toCopyNumber(@NotNull final List<CombinedRegion> regions) {
+    private static List<PurpleCopyNumber> toCopyNumber(@NotNull final List<CombinedRegion> regions) {
         final List<PurpleCopyNumber> result = Lists.newArrayList();
         for (int i = 0; i < regions.size() - 1; i++) {
             final CombinedRegion region = regions.get(i);
@@ -93,7 +103,7 @@ public class PurpleCopyNumberFactory {
     }
 
     @NotNull
-    private PurpleCopyNumber toCopyNumber(@NotNull final CombinedRegion region, @NotNull final SegmentSupport trailingSupport) {
+    private static PurpleCopyNumber toCopyNumber(@NotNull final CombinedRegion region, @NotNull final SegmentSupport trailingSupport) {
         return ImmutablePurpleCopyNumber.builder()
                 .chromosome(region.chromosome())
                 .start(region.start())
