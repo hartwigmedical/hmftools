@@ -93,7 +93,8 @@ public abstract class FindingsPage {
                                 .setHyperLink(hyperLink(ActionabilityVariantsDataSource.sourceHyperlink(report.somaticActionabilityVariants())))
                                 .setStyle(linkStyle()),
                         col.column("Label", ActionabilityVariantsDataSource.LABEL))
-                .setDataSource(ActionabilityVariantsDataSource.fromActionabilityVariants(report.evidenceItem())))
+                .setDataSource(ActionabilityVariantsDataSource.fromActionabilityVariants(report.evidenceItem(),
+                        report.evidenceItemRange())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Evidence Items").setStyle(sectionHeaderStyle()),
@@ -229,29 +230,6 @@ public abstract class FindingsPage {
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Gene Disruptions").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
-                table);
-    }
-
-    @NotNull
-    private static ComponentBuilder<?, ?> actionabiltyVariants(@NotNull final AnalysedPatientReport report) {
-        final ComponentBuilder<?, ?> table = report.geneDisruptions().size() > 0
-                ? cmp.subreport(monospaceBaseTable().fields(ActionabilityVariantsDataSource.actionabilityFields())
-                .columns(col.column("Gene", ActionabilityVariantsDataSource.GENE),
-                        col.column("Variant", ActionabilityVariantsDataSource.VARIANT),
-                        col.column("Impact", ActionabilityVariantsDataSource.IMPACT),
-                        col.column("Drug", ActionabilityVariantsDataSource.DRUG),
-                        col.column("Drugs type", ActionabilityVariantsDataSource.DRUGS_TYPE),
-                        col.column("Level", ActionabilityVariantsDataSource.LEVEL),
-                        col.column("Response", ActionabilityVariantsDataSource.RESPONSE),
-                        col.column("Source", ActionabilityVariantsDataSource.SOURCE)
-                                .setHyperLink(hyperLink(ActionabilityVariantsDataSource.sourceHyperlink(report.somaticActionabilityVariants())))
-                                .setStyle(linkStyle()),
-                        col.column("Label", ActionabilityVariantsDataSource.LABEL))
-                .setDataSource(ActionabilityVariantsDataSource.fromActionabilityVariants(report.evidenceItem())))
-                : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
-
-        return cmp.verticalList(cmp.text("Evidence Items").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
                 table);
     }

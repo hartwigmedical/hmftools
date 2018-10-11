@@ -55,7 +55,4 @@ public final class GermlineVariantDataSource {
 
         return variantDataSource;
     }
-
-
-
 }
