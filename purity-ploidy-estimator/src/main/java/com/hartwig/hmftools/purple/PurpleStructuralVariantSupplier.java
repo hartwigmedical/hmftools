@@ -54,7 +54,12 @@ class PurpleStructuralVariantSupplier {
         optionalWriter = Optional.of(writer);
 
         variantContexts = new TreeSet<>(new VariantContextComparator(outputHeader.getSequenceDictionary()));
-        vcfReader.iterator().forEachRemaining(variantContexts::add);
+        for (VariantContext context : vcfReader) {
+            if (context.isNotFiltered()) {
+                variantContexts.add(context);
+            }
+        }
+
         vcfReader.close();
     }
 
