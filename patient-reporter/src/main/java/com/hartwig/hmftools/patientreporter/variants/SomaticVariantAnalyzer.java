@@ -45,7 +45,7 @@ public final class SomaticVariantAnalyzer {
                 variants.stream().filter(includeFilter(genePanel, driverCategoryPerGeneMap)).collect(Collectors.toList());
         final double microsatelliteIndelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
         final int tumorMutationalLoad = MutationalLoadAnalyzer.determineTumorMutationalLoad(variants);
-        final double tumorMutationalBurden = TumorMutationalBurdenAnalyzer.determineTumorMutationalBurden(variants);
+        final double tumorMutationalBurden = MutationalBurdenAnalyzer.determineTumorMutationalBurden(variants);
 
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
         driverCatalog.addAll(OncoDrivers.drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), variants));
