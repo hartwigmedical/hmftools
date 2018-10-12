@@ -46,56 +46,77 @@ class RunDirectory {
     }
 
     @Nullable
-    private File findGermline() {
-        try {
-            try (final Stream<Path> stream = Files.walk(prefix.toRealPath(), 1, FileVisitOption.FOLLOW_LINKS)) {
-                return stream.filter(p -> p.toString().endsWith("GoNLv5.vcf") || p.toString().endsWith("annotated.vcf"))
+    private File findGermline()
+    {
+        try
+        {
+            try (final Stream<Path> stream = Files.walk(prefix.toRealPath(), 1, FileVisitOption.FOLLOW_LINKS))
+            {
+                return stream.filter(p -> p.toString().endsWith("GoNLv5.vcf") || p.toString().endsWith("annotated.vcf") || p.toString().endsWith("annotated.vcf.gz"))
                         .map(Path::toFile)
                         .findFirst()
                         .orElse(null);
             }
-        } catch (final IOException e) {
+        }
+        catch (final IOException e)
+        {
             return null;
         }
     }
 
     @Nullable
-    private File findSomatic() {
-        try {
-            try (final Stream<Path> stream = Files.walk(prefix, FileVisitOption.FOLLOW_LINKS)) {
+    private File findSomatic()
+    {
+        try
+        {
+            try (final Stream<Path> stream = Files.walk(prefix, FileVisitOption.FOLLOW_LINKS))
+            {
                 return stream.filter(p -> p.toString().endsWith("post_processed_v2.2.vcf.gz"))
                         .map(Path::toFile)
                         .findFirst()
                         .orElse(null);
             }
-        } catch (final IOException e) {
+        }
+        catch (final IOException e)
+        {
             return null;
         }
     }
 
     @Nullable
-    private File findCopyNumber() {
-        try {
-            try (final Stream<Path> stream = Files.walk(prefix, FileVisitOption.FOLLOW_LINKS)) {
+    private File findCopyNumber()
+    {
+        try
+        {
+            try (final Stream<Path> stream = Files.walk(prefix, FileVisitOption.FOLLOW_LINKS))
+            {
                 return stream.filter(p -> p.toString().endsWith("purple.gene.cnv")).map(Path::toFile).findFirst().orElse(null);
             }
-        } catch (final IOException e) {
+        }
+        catch (final IOException e)
+        {
             return null;
         }
     }
 
     @Nullable
-    private File findStructuralVariants() {
-        try {
-            try (final Stream<Path> stream = Files.walk(prefix, FileVisitOption.FOLLOW_LINKS)) {
+    private File findStructuralVariants()
+    {
+        try
+        {
+            try (final Stream<Path> stream = Files.walk(prefix, FileVisitOption.FOLLOW_LINKS))
+            {
                 return stream.filter(p -> p.toString().endsWith("bpi.vcf")).map(Path::toFile).findFirst().orElse(null);
             }
-        } catch (final IOException e) {
+        }
+        catch (final IOException e)
+        {
             return null;
         }
     }
 
-    String getPatientID() {
+    String getPatientID()
+    {
         final String[] split = prefix.getFileName().toString().split("_");
         return split[split.length - 1];
     }

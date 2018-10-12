@@ -141,16 +141,18 @@ public class AlleleDepthLoader {
             return false;
         }
 
-        applyPileupData();
+        boolean allRecordsMatched = applyPileupData();
 
-        return true;
+        return allRecordsMatched;
     }
 
-    private void applyPileupData()
+    private boolean applyPileupData()
     {
         // match up read info from MP with the bachelor records
         for (BachelorGermlineVariant bachRecord : bachelorVariants)
         {
+            boolean matched = false;
+
             for (final Pileup pileup : pileupData)
             {
                 if (!bachRecord.chromosome().equals(pileup.chromosome()))
@@ -159,6 +161,7 @@ public class AlleleDepthLoader {
                 if (bachRecord.position() != pileup.position())
                     continue;
 
+                matched = true;
                 bachRecord.setRefCount(pileup.referenceCount());
 
                 if (pileup.insertions() > 0)
@@ -192,7 +195,16 @@ public class AlleleDepthLoader {
                 LOGGER.debug("sample({} chr({}) position({}) matched, counts(ref={} alt={})",
                         sampleId, bachRecord.chromosome(), bachRecord.position(), bachRecord.getRefCount(), bachRecord.getAltCount());
             }
+
+            if(!matched)
+            {
+                LOGGER.warn("sample({} var({}) chr({}) position({}) no pile-up record found",
+                        sampleId, bachRecord.variantId(), bachRecord.chromosome(), bachRecord.position());
+                return false;
+            }
         }
+
+        return true;
     }
 
     public final List<Pileup> getPileupData() {

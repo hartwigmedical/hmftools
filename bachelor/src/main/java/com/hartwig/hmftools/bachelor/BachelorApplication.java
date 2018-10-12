@@ -59,7 +59,8 @@ public class BachelorApplication {
     private static final String LOG_DEBUG = "log_debug";
 
     @NotNull
-    private static Options createOptions() {
+    private static Options createOptions()
+    {
         final Options options = new Options();
         options.addOption(Option.builder(CONFIG_DIRECTORY).required(false).hasArg().desc("folder to find program XMLs").build());
         options.addOption(Option.builder(CONFIG_XML).required(false).hasArg().desc("single config XML to run").build());
@@ -82,9 +83,10 @@ public class BachelorApplication {
         return parser.parse(options, args);
     }
 
-    private static void printHelpAndExit(final Options options) {
+    private static void printHelpAndExit(final Options options)
+    {
         final HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("Bachelor", "Determines your eligibility", options, "", true);
+        formatter.printHelp("Bachelor", "Determines eligibility", options, "", true);
         System.exit(1);
     }
 
@@ -96,11 +98,14 @@ public class BachelorApplication {
 
         LOGGER.info("processing {} vcf: {}", type, vcf.getPath());
 
-        try (final VCFFileReader reader = new VCFFileReader(vcf, true)) {
+        try (final VCFFileReader reader = new VCFFileReader(vcf, true))
+        {
             // assume that the first sample is the germline
             final String sample = reader.getFileHeader().getGenotypeSamples().get(0);
             return eligibility.processVCF(patient, sample, type, reader);
-        } catch (final TribbleException e) {
+        }
+        catch (final TribbleException e)
+        {
             LOGGER.error("error with VCF file {}: {}", vcf.getPath(), e.getMessage());
             return Collections.emptyList();
         }
@@ -109,10 +114,13 @@ public class BachelorApplication {
     private static Collection<EligibilityReport> processPurpleCNV(final String patient, final File cnv,
             final BachelorEligibility eligibility) {
         LOGGER.info("processing cnv: {}", cnv.getPath());
-        try {
+        try
+        {
             final List<GeneCopyNumber> copyNumbers = GeneCopyNumberFile.read(cnv);
             return eligibility.processCopyNumbers(patient, copyNumbers);
-        } catch (final IOException e) {
+        }
+        catch (final IOException e)
+        {
             LOGGER.error("error with CNV file {}: {}", cnv.getPath(), e.getMessage());
             return Collections.emptyList();
         }
@@ -161,7 +169,8 @@ public class BachelorApplication {
             result.addAll(processSV(patient, run.structuralVariants(), eligibility));
         }
 
-        try {
+        try
+        {
             for (final EligibilityReport r : result)
             {
                 allDataWriter.write(String.format("%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s,%s,%d",
@@ -173,8 +182,10 @@ public class BachelorApplication {
                 bedFileWriter.write(String.format("%s\t%s\t%d\t%d", sampleId, r.chrom(), r.pos() - 1, r.pos()));
                 bedFileWriter.newLine();
             }
-        } catch (final IOException e) {
-            LOGGER.error("error writing output");
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing output: {}", e.toString());
         }
     }
 
@@ -206,11 +217,14 @@ public class BachelorApplication {
                 return;
             }
 
-            if (cmd.hasOption(VALIDATE)) {
+            if (cmd.hasOption(VALIDATE))
+            {
                 System.exit(0);
                 return;
             }
-            if (map.isEmpty()) {
+
+            if (map.isEmpty())
+            {
                 LOGGER.error("no programs loaded, exiting");
                 System.exit(1);
                 return;
@@ -220,11 +234,14 @@ public class BachelorApplication {
             boolean isSingleRun = cmd.hasOption(RUN_DIRECTORY);
             final String sampleId = cmd.getOptionValue(SAMPLE);
 
-            if (!isBatchRun && !isSingleRun) {
+            if (!isBatchRun && !isSingleRun)
+            {
                 LOGGER.error("requires either a batch or single run directory");
                 System.exit(1);
                 return;
-            } else if (isSingleRun && (sampleId == null || sampleId.isEmpty())) {
+            }
+            else if (isSingleRun && (sampleId == null || sampleId.isEmpty()))
+            {
                 LOGGER.error("single run requires sample to be specified");
                 System.exit(1);
                 return;
@@ -232,9 +249,12 @@ public class BachelorApplication {
 
             final BachelorEligibility eligibility = BachelorEligibility.fromMap(map);
 
-            if (isBatchRun) {
+            if (isBatchRun)
+            {
                 LOGGER.info("beginning batch run");
-            } else {
+            }
+            else
+            {
                 LOGGER.info("beginning single sample run: {}", sampleId);
             }
 
@@ -244,13 +264,12 @@ public class BachelorApplication {
             final boolean structuralVariants = cmd.hasOption(SV);
             final boolean doAll = !(germline || somatic || copyNumber || structuralVariants);
 
-            try {
-
+            try
+            {
                 String outputDir = cmd.getOptionValue(OUTPUT_DIR);
 
-                if (!outputDir.endsWith("/")) {
+                if (!outputDir.endsWith("/"))
                     outputDir += "/";
-                }
 
                 String mainFileName = outputDir + "bachelor_output.csv";
                 String bedFileName = outputDir + "bachelor_bed.csv";
@@ -261,10 +280,12 @@ public class BachelorApplication {
 
                 final BufferedWriter bedFileWriter = Files.newBufferedWriter(Paths.get(bedFileName));
 
-                if (cmd.hasOption(BATCH_DIRECTORY)) {
+                if (cmd.hasOption(BATCH_DIRECTORY))
+                {
                     final Path root = Paths.get(cmd.getOptionValue(BATCH_DIRECTORY));
 
-                    try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS).parallel()) {
+                    try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS).parallel())
+                    {
                         final List<RunDirectory> runDirectories = stream.filter(p -> p.toFile().isDirectory())
                                 .filter(p -> !p.equals(root))
                                 .map(RunDirectory::new)
@@ -273,7 +294,8 @@ public class BachelorApplication {
                         LOGGER.info("found {} batch directories", runDirectories.size());
 
                         // add the filtered and passed SV entries for each file
-                        for (final RunDirectory runDir : runDirectories) {
+                        for (final RunDirectory runDir : runDirectories)
+                        {
                             process(eligibility,
                                     runDir,
                                     runDir.getPatientID(),
@@ -284,16 +306,22 @@ public class BachelorApplication {
                                     mainDataWriter,
                                     bedFileWriter);
                         }
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e)
+                    {
                         LOGGER.error("failed walking batch directories");
                     }
-                } else if (cmd.hasOption(RUN_DIRECTORY)) {
+                }
+                else if (cmd.hasOption(RUN_DIRECTORY))
+                {
                     final Path path = Paths.get(cmd.getOptionValue(RUN_DIRECTORY));
-                    if (!Files.exists(path)) {
+                    if (!Files.exists(path))
+                    {
                         LOGGER.error("-runDirectory path does not exist");
                         System.exit(1);
                         return;
                     }
+
                     process(eligibility,
                             new RunDirectory(path),
                             sampleId,
@@ -307,17 +335,23 @@ public class BachelorApplication {
 
                 mainDataWriter.close();
                 bedFileWriter.close();
-            } catch (IOException e) {
-                LOGGER.error("failed writing output");
+            }
+            catch (IOException e)
+            {
+                LOGGER.error("failed writing output: {}", e.toString());
             }
 
             LOGGER.info("processing complete");
 
             LOGGER.info("run complete");
 
-        } catch (final ParseException e) {
+        }
+        catch (final ParseException e)
+        {
             printHelpAndExit(options);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             e.printStackTrace();
         }
     }
