@@ -437,6 +437,8 @@ public class SvSampleAnalyser {
         mPc3.logStats(false);
         mPc4.logStats(false);
         mPc5.logStats(false);
+
+        mAnalyser.logStats();
     }
 
     public List<SvCluster> getClusters() { return mClusters; }

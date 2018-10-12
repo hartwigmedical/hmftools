@@ -610,7 +610,7 @@ public class ClusterAnalyser {
                                 if(newPair.hasLinkClash(pair))
                                     ++linkClashCount;
 
-                                if(linkClashCount >= 2)
+                                if(linkClashCount >= 1)
                                 {
                                     skipNewPair = true;
                                     break;
@@ -1167,6 +1167,12 @@ public class ClusterAnalyser {
                 }
             }
         }
+    }
+
+    public void logStats()
+    {
+        mChainFinder.getContinuousFinderPc().logStats(false);
+        mChainFinder.getRecursiveFinderPc().logStats(false);
     }
 
 }
