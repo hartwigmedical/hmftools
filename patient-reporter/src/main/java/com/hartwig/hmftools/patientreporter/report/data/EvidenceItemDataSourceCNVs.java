@@ -74,11 +74,26 @@ public class EvidenceItemDataSourceCNVs {
                         CNV.drugsType(),
                         CNV.hmfLevel(),
                         CNV.hmfResponse(),
-                        CNV.source(),
+                        sourceName(CNV.source()),
                         "no");
             }
         }
         return actionabilityCNVDatasource;
+    }
+
+    @NotNull
+    private static String sourceName(@NotNull String source) {
+        String sourceName = "";
+        if (source.equals("oncoKb")) {
+            sourceName = "OncoKB";
+        } else if (source.equals("iclusion")) {
+            sourceName = "Iclusion";
+        } else if (source.equals("civic")) {
+            sourceName = "CiViC";
+        } else if (source.equals("cgi")) {
+            sourceName = "CGI";
+        }
+        return sourceName;
     }
 
     @NotNull

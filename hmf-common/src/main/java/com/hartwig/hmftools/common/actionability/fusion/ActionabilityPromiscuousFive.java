@@ -7,29 +7,29 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-abstract class ActionabilityPromiscuousFive {
+public abstract class ActionabilityPromiscuousFive {
 
     @NotNull
-    abstract String gene();
+    public abstract String gene();
 
     @NotNull
-    abstract String source();
+    public abstract String source();
 
     @NotNull
-    abstract String reference();
+    public abstract String reference();
 
     @NotNull
-    abstract String drugsName();
+    public abstract String drugsName();
 
     @NotNull
-    abstract String drugsType();
+    public abstract String drugsType();
 
     @NotNull
-    abstract String cancerType();
+    public abstract String cancerType();
 
     @NotNull
-    abstract String hmfLevel();
+    public abstract String hmfLevel();
 
     @NotNull
-    abstract String hmfResponse();
+    public abstract String hmfResponse();
 }

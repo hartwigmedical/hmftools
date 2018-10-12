@@ -15,6 +15,8 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
+import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
+import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -40,10 +42,12 @@ public class SomaticVariantAnalyzerTest {
 
         //TODO: create genecopyNumber list
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
+        List<GeneFusion> geneFusion = Lists.newArrayList();
+
         SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants,
                 Sets.newHashSet(RIGHT_GENE),
                 Maps.newHashMap(),
-                null, geneCopyNumbers);
+                null, geneCopyNumbers, geneFusion);
 
         assertEquals(2, analysis.tumorMutationalLoad());
         assertEquals(2, analysis.variantsToReport().size());
@@ -53,7 +57,7 @@ public class SomaticVariantAnalyzerTest {
         SomaticVariantAnalysis analysisOnco = SomaticVariantAnalyzer.run(variants,
                 Sets.newHashSet(RIGHT_GENE),
                 driverCategoryMap,
-                null, geneCopyNumbers);
+                null, geneCopyNumbers, geneFusion);
 
         assertEquals(2, analysisOnco.tumorMutationalLoad());
         assertEquals(1, analysisOnco.variantsToReport().size());

@@ -82,16 +82,17 @@ public abstract class PatientReporter {
                 PatientReporterFileLoader.extractPatientTumorLocation(baseReportData().patientTumorLocations(), tumorSample);
         LOGGER.info("TumorLocation: " + patientTumorLocation);
 
+        final StructuralVariantAnalysis structuralVariantAnalysis =
+                analyzeStructuralVariants(run, purpleAnalysis, structuralVariantAnalyzer());
+
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run,
                 purpleAnalysis,
                 sequencedReportData().somaticVariantEnrichment(),
                 sequencedReportData().panelGeneModel(),
                 sequencedReportData().highConfidenceRegions(),
                 sequencedReportData().refGenomeFastaFile(),
-                patientTumorLocation);
+                patientTumorLocation, structuralVariantAnalysis.fusions());
 
-        final StructuralVariantAnalysis structuralVariantAnalysis =
-                analyzeStructuralVariants(run, purpleAnalysis, structuralVariantAnalyzer());
         final List<GeneFusion> reportableFusions = structuralVariantAnalysis.reportableFusions();
         final List<GeneDisruption> reportableDisruptions = structuralVariantAnalysis.reportableDisruptions();
 
@@ -174,7 +175,7 @@ public abstract class PatientReporter {
     private static SomaticVariantAnalysis analyzeSomaticVariants(@NotNull RunContext run, @NotNull PurpleAnalysis purpleAnalysis,
             @NotNull SomaticEnrichment somaticEnrichment, @NotNull GeneModel geneModel,
             @NotNull Multimap<String, GenomeRegion> highConfidenceRegions, @NotNull IndexedFastaSequenceFile refGenomeFastaFile,
-            @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
+            @Nullable PatientTumorLocation patientTumorLocation, @NotNull List<GeneFusion> fusions) throws IOException {
         final String runDirectory = run.runDirectory();
         final String sample = run.tumorSample();
 
@@ -190,7 +191,7 @@ public abstract class PatientReporter {
         return SomaticVariantAnalyzer.run(enrichedSomaticVariants,
                 geneModel.somaticVariantGenePanel(),
                 geneModel.geneDriverCategoryMap(),
-                patientTumorLocation, PatientReporterFileLoader.loadPurpleGeneCopyNumbers(runDirectory, sample));
+                patientTumorLocation, PatientReporterFileLoader.loadPurpleGeneCopyNumbers(runDirectory, sample), fusions);
     }
 
     @NotNull

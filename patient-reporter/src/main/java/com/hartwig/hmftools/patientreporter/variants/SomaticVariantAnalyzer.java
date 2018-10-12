@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVs;
 import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVsEvidenceItems;
+import com.hartwig.hmftools.common.actionability.fusion.ActionabilityFusionPairs;
+import com.hartwig.hmftools.common.actionability.fusion.FusionEvidenceItems;
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRange;
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRangeEvidenceItem;
 import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
@@ -25,6 +27,7 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
+import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,7 +44,7 @@ public final class SomaticVariantAnalyzer {
     @NotNull
     public static SomaticVariantAnalysis run(@NotNull final List<EnrichedSomaticVariant> variants, @NotNull Set<String> genePanel,
             @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap, @Nullable PatientTumorLocation patientTumorLocation,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers) throws IOException {
+            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull List<GeneFusion> fusions) throws IOException {
         final List<EnrichedSomaticVariant> variantsToReport =
                 variants.stream().filter(includeFilter(genePanel, driverCategoryPerGeneMap)).collect(Collectors.toList());
         final double microsatelliteIndelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
@@ -78,6 +81,7 @@ public final class SomaticVariantAnalyzer {
             CNVs.addAll(entryRange.getValue().onLabel());
             CNVs.addAll(entryRange.getValue().offLabel());
         }
+
 
         return ImmutableSomaticVariantAnalysis.of(variantsToReport,
                 driverCatalog,

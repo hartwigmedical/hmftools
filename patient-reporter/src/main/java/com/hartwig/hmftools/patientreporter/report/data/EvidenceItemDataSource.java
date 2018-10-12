@@ -94,7 +94,7 @@ public abstract class EvidenceItemDataSource {
                         variantRange.drugsType(),
                         variantRange.level(),
                         variantRange.response(),
-                        variantRange.source(),
+                        sourceName(variantRange.source()),
                         "yes");
             }
 
@@ -110,8 +110,22 @@ public abstract class EvidenceItemDataSource {
                         "no");
             }
         }
-
         return actionabilityVariantsDatasource;
+    }
+
+    @NotNull
+    private static String sourceName(@NotNull String source) {
+        String sourceName = "";
+        if (source.equals("oncoKb")) {
+            sourceName = "OncoKB";
+        } else if (source.equals("iclusion")) {
+            sourceName = "Iclusion";
+        } else if (source.equals("civic")) {
+            sourceName = "CiViC";
+        } else if (source.equals("cgi")) {
+            sourceName = "CGI";
+        }
+        return sourceName;
     }
 
     @NotNull
