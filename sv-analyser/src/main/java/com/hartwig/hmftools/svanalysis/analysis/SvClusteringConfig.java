@@ -16,6 +16,7 @@ public class SvClusteringConfig {
     final public boolean UseCombinedOutputFile;
     final public boolean UseGridss;
     final public int SampleCopyNumber;
+    final public boolean LogVerbose;
 
     // config options
     private static final String CLUSTER_BASE_DISTANCE = "cluster_bases";
@@ -28,6 +29,7 @@ public class SvClusteringConfig {
     private static final String DRIVER_GENES_FILE = "driver_gene_file";
     private static final String LOH_DATA_FILE = "loh_file";
     private static final String USE_GRIDSS = "use_gridss";
+    private static final String LOG_VERBOSE = "log_verbose";
 
 
     public static final int DEFAULT_BASE_DISTANCE = 100000;
@@ -44,6 +46,7 @@ public class SvClusteringConfig {
         GeneDataFile = cmd.getOptionValue(DRIVER_GENES_FILE, "");
         LOHDataFile = cmd.getOptionValue(LOH_DATA_FILE, "");
         UseGridss = cmd.hasOption(USE_GRIDSS);
+        LogVerbose = cmd.hasOption(LOG_VERBOSE);
         SampleCopyNumber = 2;
     }
 
@@ -58,5 +61,6 @@ public class SvClusteringConfig {
         options.addOption(DRIVER_GENES_FILE, true, "Gene data file");
         options.addOption(LOH_DATA_FILE, true, "Copy Number LOH data file");
         options.addOption(USE_GRIDSS, false, "Using GRIDSS variant calling input data");
+        options.addOption(LOG_VERBOSE, false, "Log extra detail");
     }
 }

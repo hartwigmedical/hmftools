@@ -18,7 +18,6 @@ public class SvArmGroup {
     private final String mArm;
     private long mStartPos;
     private long mEndPos;
-    private boolean mHasEndSet; // for arms with only a BND or SGL
 
     public SvArmGroup(final SvCluster cluster, final String chr, final String arm)
     {
@@ -28,7 +27,6 @@ public class SvArmGroup {
         mArm = arm;
         mStartPos = -1;
         mEndPos = -1;
-        mHasEndSet = false;
         mSVs = Lists.newArrayList();
     }
 
@@ -40,7 +38,12 @@ public class SvArmGroup {
     public final String arm() { return mArm; }
     public long posStart() { return mStartPos; }
     public long posEnd() { return mEndPos; }
-    public boolean hasEndSet() { return mHasEndSet; }
+
+    public boolean hasEndsSet()
+    {
+        // for arms with only a BND or SGL
+        return mStartPos >= 0 && mEndPos >= 0;
+    }
 
     public List<SvClusterData> getSVs() { return mSVs; }
     public int getCount() { return mSVs.size(); }
@@ -51,10 +54,10 @@ public class SvArmGroup {
 
         if(var.chromosome(true).equals(mChromosome))
         {
-            mStartPos = mStartPos == 0 ? var.position(true) : min(mStartPos, var.position(true));
+            mStartPos = mStartPos == -1 ? var.position(true) : min(mStartPos, var.position(true));
         }
 
-        if(var.chromosome(false).equals(mChromosome))
+        if(!var.isNullBreakend() && var.chromosome(false).equals(mChromosome))
         {
             mEndPos = max(mEndPos, var.position(false));
         }

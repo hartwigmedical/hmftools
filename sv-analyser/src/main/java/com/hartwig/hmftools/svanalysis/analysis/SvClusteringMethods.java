@@ -5,6 +5,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_ENCLOSED;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_ENCLOSING;
@@ -157,6 +158,10 @@ public class SvClusteringMethods {
         while(foundMerges && iterations < 5)
         {
             foundMerges = mergeOnCommonArmLinks(clusters);
+
+            if(!foundMerges)
+                foundMerges = mergeOnOverlaps(clusters);
+
             ++iterations;
         }
 
@@ -319,6 +324,7 @@ public class SvClusteringMethods {
     private boolean mergeOnOverlaps(List<SvCluster> clusters)
     {
         // merge any overlapping complex clusters and return true if merges were found
+        // ignore simple SVs and simple, consistent cluster-2s
         int initClusterCount = clusters.size();
 
         int index1 = 0;
@@ -326,12 +332,25 @@ public class SvClusteringMethods {
         {
             SvCluster cluster1 = clusters.get(index1);
 
+            if(cluster1.getCount() <= 2 && cluster1.isConsistent())
+            {
+                ++index1;
+                continue;
+            }
+
             List<SvArmGroup> armGroups1 = cluster1.getArmGroups();
 
             int index2 = index1 + 1;
             while(index2 < clusters.size())
             {
                 SvCluster cluster2 = clusters.get(index2);
+
+                if(cluster2.getCount() <= 2 && cluster2.isConsistent())
+                {
+                    ++index1;
+                    continue;
+                }
+
                 List<SvArmGroup> armGroups2 = cluster2.getArmGroups();
 
                 boolean canMergeArms = false;
@@ -378,32 +397,77 @@ public class SvClusteringMethods {
         return clusters.size() < initClusterCount;
     }
 
-    private static int COMPLEX_CLUSTER_COUNT = 4;
+    private static int COMPLEX_CLUSTER_COUNT = 5;
 
     private boolean canMergeArmGroups(final SvArmGroup group1, final SvArmGroup group2)
     {
         if(!group1.chromosome().equals(group2.chromosome()) || !group1.arm().equals(group2.arm()))
             return false;
 
-        // don't merge single-variant clusters which have no overlap with the other cluster
-        final List<SvClusterData> list1 = group1.getSVs();
-        final List<SvClusterData> list2 = group2.getSVs();
-        int count1 = list1.size();
-        int count2 = list2.size();
+        if(group1.getCount() < COMPLEX_CLUSTER_COUNT && group2.getCount() < COMPLEX_CLUSTER_COUNT)
+            return false;
 
+        // check for an overlapping INV from one cluster to another
+        boolean hasOverlap = false;
+
+        for(int i = 0; i < 2; ++i)
+        {
+            final SvArmGroup checkGroup = (i == 0) ? group1 : group2;
+
+            if(!checkGroup.hasEndsSet())
+                continue;
+
+            final SvArmGroup svGroup = (i == 0) ? group2 : group1;
+
+            // group must have an INV
+            boolean hasInversion = false;
+
+            for (final SvClusterData var : svGroup.getSVs())
+            {
+                if (var.type() == INV)
+                {
+                    hasInversion = true;
+                    break;
+                }
+            }
+
+            if(!hasInversion)
+                continue;
+
+            for (final SvClusterData var : svGroup.getSVs())
+            {
+                if (var.type() != INV)
+                    continue;
+
+                if ((var.position(true) >= checkGroup.posStart() && var.position(true) <= checkGroup.posEnd())
+                || (var.position(false) >= checkGroup.posStart() && var.position(false) <= checkGroup.posEnd()))
+                {
+                    hasOverlap = true;
+                    break;
+                }
+            }
+
+            if(hasOverlap)
+                break;
+        }
+
+        if(!hasOverlap)
+            return false;
+
+        return true;
+
+        /*
         final SvClusterData var1 = count1 == 1 ? list1.get(0) : null;
         final SvClusterData var2 = count2 == 1 ? list2.get(0) : null;
 
         boolean logDetails = false;
 
-        /*
         // if(group1.chromosome().equals("15") && group1.arm().equals("Q") && (var1 != null || var2 != null))
         if(group1.chromosome().equals("15") && group1.arm().equals("Q")
         && ((var1 != null && var1.id().equals("14232")) || (var2 != null && var2.id().equals("14232"))))
         {
             logDetails = true;
         }
-        */
 
         if(var1 != null && var1.getNearestSvRelation() == RELATION_TYPE_NEIGHBOUR)
             return false;
@@ -425,9 +489,7 @@ public class SvClusteringMethods {
         // check for overlapping SVs based on the outer start and end positions
         if((group1.hasEndSet() && group1.posEnd() < group2.posStart()) || (group2.hasEndSet() && group1.posStart() > group2.posEnd()))
         {
-            if(logDetails)
-                LOGGER.debug("groups({} and {}) outside range", group1.posId(), group2.posId());
-
+            // LOGGER.debug("groups({} and {}) outside range", group1.posId(), group2.posId());
             return false;
         }
 
@@ -437,13 +499,14 @@ public class SvClusteringMethods {
             return true;
 
         // if no Svs in a small cluster overlap with any of the SVs in the other cluster, don't merge
-        if(hasOverlappingSVs(list1, list2))
-            return true;
+        // if(hasOverlappingSVs(list1, list2))
+        //     return true;
 
-        if(logDetails)
-            LOGGER.debug("no overlapping vars for groups({} and {}) outside range", group1.posId(), group2.posId());
+        // if(logDetails)
+        //     LOGGER.debug("no overlapping vars for groups({} and {}) outside range", group1.posId(), group2.posId());
 
         return false;
+        */
     }
 
     private boolean hasOverlappingSVs(final List<SvClusterData> list1, final List<SvClusterData> list2)

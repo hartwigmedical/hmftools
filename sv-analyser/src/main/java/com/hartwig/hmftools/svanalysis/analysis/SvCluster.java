@@ -3,6 +3,7 @@ package com.hartwig.hmftools.svanalysis.analysis;
 import static java.lang.Math.max;
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.variantMatchesBreakend;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
@@ -51,6 +52,7 @@ public class SvCluster
 
     private List<SvCluster> mSubClusters;
     private Map<String, List<SvCNData>> mChrCNDataMap;
+    private boolean mHasReplicatedSVs;
 
     private static final Logger LOGGER = LogManager.getLogger(SvCluster.class);
 
@@ -78,6 +80,7 @@ public class SvCluster
 
         mSubClusters = Lists.newArrayList();
         mChrCNDataMap = null;
+        mHasReplicatedSVs = false;
     }
 
     public int getId() { return mClusterId; }
@@ -92,6 +95,9 @@ public class SvCluster
     public void addVariant(final SvClusterData var)
     {
         mSVs.add(var);
+
+        if(var.isReplicatedSv())
+            mHasReplicatedSVs = true;
 
         // keep track of all SVs in their respective chromosomal arms
         for(int be = SVI_START; be <= SVI_END; ++be)
@@ -197,6 +203,9 @@ public class SvCluster
 
     public int getUniqueSvCount()
     {
+        if(!mHasReplicatedSVs)
+            return mSVs.size();
+
         int count = 0;
 
         for(final SvClusterData var : mSVs)
@@ -207,6 +216,8 @@ public class SvCluster
 
         return count;
     }
+
+    public boolean hasReplicatedSVs() { return mHasReplicatedSVs; }
 
     public List<SvChain> getChains() { return mChains; }
     public void addChain(SvChain chain) { mChains.add(chain); }
@@ -327,16 +338,15 @@ public class SvCluster
         return clusterTypeStr;
     }
 
-    public int getLineElementCount()
+    public boolean hasLinkingLineElements()
     {
-        int count = 0;
         for (final SvClusterData var : mSVs)
         {
-            if(!var.isStartLineElement().equals(NO_LINE_ELEMENT) || !var.isEndLineElement().equals(NO_LINE_ELEMENT))
-                ++count;
+            if(var.type() == BND && (!var.isStartLineElement().equals(NO_LINE_ELEMENT) || !var.isEndLineElement().equals(NO_LINE_ELEMENT)))
+                return true;
         }
 
-        return count;
+        return false;
     }
 
     public void setUniqueBreakends()

@@ -39,7 +39,7 @@ public class ClusterAnalyser {
     private static int MAX_TEMPLATED_INSERTION_LENGTH = 500;
     public static double MAX_COPY_NUMBER_DIFF = 0.5;
     public static double MAX_COPY_NUMBER_DIFF_PERC = 0.1;
-    public static int CLUSTER_SIZE_ANALYSIS_LIMIT = 100;
+    public static int CLUSTER_SIZE_ANALYSIS_LIMIT = 200;
 
     public static String TRANS_TYPE_TRANS = "TRANS";
     public static String TRANS_TYPE_SPAN = "SPAN";
@@ -52,6 +52,7 @@ public class ClusterAnalyser {
         mUtils = utils;
         mClusteringMethods = clusteringMethods;
         mChainFinder = new ChainFinder(mUtils);
+        mChainFinder.setLogVerbose(mConfig.LogVerbose);
     }
 
     public void setClusterStats(SvCluster cluster)
@@ -82,7 +83,6 @@ public class ClusterAnalyser {
             findLinkedPairs(sampleId, cluster);
 
             // then look for fully-linked clusters, ie chains involving all SVs
-            // findCompleteChains(sampleId, cluster);
             findChains(sampleId, cluster);
         }
 
@@ -101,7 +101,6 @@ public class ClusterAnalyser {
 
                 createCopyNumberSegments(sampleId, cluster);
 
-                // findIncompleteChains(sampleId, cluster);
                 findChains(sampleId, cluster);
             }
 
@@ -109,6 +108,8 @@ public class ClusterAnalyser {
             cacheFinalLinkedPairs(sampleId, cluster);
         }
 
+        // any clusters which were merged to resolve a collection of them, but
+        // which did not lead to any longer chains, are now de-merged
         demergeClusters(clusters);
     }
 
@@ -130,6 +131,7 @@ public class ClusterAnalyser {
     private void findChains(final String sampleId, SvCluster cluster)
     {
         mChainFinder.initialise(sampleId, cluster);
+        // mChainFinder.setRequireFullChains(true);
 
         boolean hasFullChain = mChainFinder.formClusterChains();
 
@@ -157,50 +159,6 @@ public class ClusterAnalyser {
 
             ++lpIndex;
         }
-    }
-
-    private void findCompleteChains(final String sampleId, SvCluster cluster)
-    {
-        mChainFinder.initialise(sampleId, cluster);
-        mChainFinder.setRequireFullChains(true);
-
-        boolean hasFullChain = mChainFinder.formClusterChains();
-
-        if(!hasFullChain)
-            return;
-
-        cluster.setIsFullyChained(true);
-
-        // remove any inferred link which isn't in the full chain
-        final SvChain fullChain = cluster.getChains().get(0);
-
-        List<SvLinkedPair> inferredLinkedPairs = cluster.getInferredLinkedPairs();
-
-        // remove any inferred links which weren't used
-        int lpIndex = 0;
-        while(lpIndex < inferredLinkedPairs.size())
-        {
-            SvLinkedPair pair = inferredLinkedPairs.get(lpIndex);
-
-            if (!fullChain.getLinkedPairs().contains(pair))
-            {
-                inferredLinkedPairs.remove(lpIndex);
-                continue;
-            }
-
-            ++lpIndex;
-        }
-    }
-
-    private void findIncompleteChains(final String sampleId, SvCluster cluster)
-    {
-        if(cluster.getCount() < 2 || cluster.isFullyChained())
-            return;
-
-        mChainFinder.initialise(sampleId, cluster);
-        mChainFinder.setRequireFullChains(false);
-
-        mChainFinder.formClusterChains();
     }
 
     private void applyCopyNumberReplication(final String sampleId, SvCluster cluster)
@@ -576,7 +534,7 @@ public class ClusterAnalyser {
         if(cluster.getCount() >= CLUSTER_SIZE_ANALYSIS_LIMIT)
             return linkedPairs;
 
-        if(cluster.getLineElementCount() > 0)
+        if(cluster.hasLinkingLineElements())
             return linkedPairs;
 
         for (int i = 0; i < cluster.getCount(); ++i)
@@ -640,14 +598,25 @@ public class ClusterAnalyser {
                         // insert in order
                         int index = 0;
                         boolean skipNewPair = false;
+                        int linkClashCount = 0;
+
                         for (; index < linkedPairs.size(); ++index)
                         {
-                            SvLinkedPair pair = linkedPairs.get(index);
+                            final SvLinkedPair pair = linkedPairs.get(index);
 
-                            /*
-                            // check for a matching BE on a pair that is much shorter, and if so skip creating this new linked pair
+                            // check for matching BEs on a pair that is much shorter, and if so skip creating this new linked pair
                             if(newPair.length() > mUtils.getBaseDistance())
                             {
+                                if(newPair.hasLinkClash(pair))
+                                    ++linkClashCount;
+
+                                if(linkClashCount >= 2)
+                                {
+                                    skipNewPair = true;
+                                    break;
+                                }
+
+                                /*
                                 if (pair.first().equals(newPair.first()) || pair.first().equals(newPair.second()) || pair.second().equals(newPair.first()) || pair.second().equals(newPair.second())) {
 
                                     if (newPair.length() > 2 * pair.length())
@@ -656,8 +625,8 @@ public class ClusterAnalyser {
                                         break;
                                     }
                                 }
+                                */
                             }
-                            */
 
                             if (pair.length() > newPair.length())
                                 break;
@@ -671,14 +640,15 @@ public class ClusterAnalyser {
                         else
                             linkedPairs.add(index, newPair);
 
-                        if(linkedPairs.size() > CLUSTER_SIZE_ANALYSIS_LIMIT * 3)
-                            linkedPairs.remove(linkedPairs.size()-1);
+                        // if(linkedPairs.size() > CLUSTER_SIZE_ANALYSIS_LIMIT * 100)
+                        //     linkedPairs.remove(linkedPairs.size()-1);
 
-                        if(newPair.length() < mUtils.getBaseDistance())
+                        // if(newPair.length() < mUtils.getBaseDistance())
+                        if(mConfig.LogVerbose)
                         {
                             // to avoid logging unlikely long TIs
-                            //LOGGER.debug("sample({}) cluster({}) adding inferred linked {} pair({}) length({}) at index({})",
-                            //         sampleId, cluster.getId(), newPair.linkType(), newPair.toString(), newPair.length(), index);
+                            LOGGER.debug("sample({}) cluster({}) adding inferred linked {} pair({}) length({}) at index({})",
+                                     sampleId, cluster.getId(), newPair.linkType(), newPair.toString(), newPair.length(), index);
                         }
                     }
                 }
@@ -702,7 +672,7 @@ public class ClusterAnalyser {
         if(cluster.getCount() >= CLUSTER_SIZE_ANALYSIS_LIMIT)
             return;
 
-        if(cluster.getLineElementCount() > 0)
+        if(cluster.hasLinkingLineElements())
             return;
 
         List<SvClusterData> spanningSVs = Lists.newArrayList();
@@ -817,35 +787,64 @@ public class ClusterAnalyser {
         }
         else
         {
-            List<SvLinkedPair> inferredLinkedPairs = cluster.getInferredLinkedPairs();
+            linkedPairs = Lists.newArrayList();
 
-            reduceInferredToShortestLinks(inferredLinkedPairs, cluster.getChains());
-
-            List<SvLinkedPair> assemblyLinkedPairs = cluster.getAssemblyLinkedPairs();
-
-            // remove any linked which aren't part of chains
-
-            // mark the resultant set of inferred links
-            for (SvLinkedPair pair : inferredLinkedPairs)
+            // add all chained links
+            for(final SvChain chain : cluster.getChains())
             {
-                pair.first().setAssemblyMatchType(ASSEMBLY_MATCH_INFER_ONLY, pair.firstLinkOnStart());
-                pair.second().setAssemblyMatchType(ASSEMBLY_MATCH_INFER_ONLY, pair.secondLinkOnStart());
+                linkedPairs.addAll(chain.getLinkedPairs());
             }
 
-            linkedPairs = Lists.newArrayList();
-            linkedPairs.addAll(assemblyLinkedPairs);
-            linkedPairs.addAll(inferredLinkedPairs);
+            // any any unchained assembly links
+            for(final SvLinkedPair pair : cluster.getAssemblyLinkedPairs())
+            {
+                if(!linkedPairs.contains(pair))
+                    linkedPairs.add(pair);
+            }
+
+            // finally add any other potential inferred links which don't clash with existing links
+            for(final SvLinkedPair pair : cluster.getInferredLinkedPairs())
+            {
+                if(linkedPairs.contains(pair))
+                    continue;
+
+                boolean hasClash = false;
+                for(final SvLinkedPair existingLink : linkedPairs)
+                {
+                    if (existingLink.hasLinkClash(pair))
+                    {
+                        hasClash = true;
+                        break;
+                    }
+                }
+
+                if(!hasClash)
+                    linkedPairs.add(pair);
+            }
+
+            // mark the resultant set of inferred links
+            for (SvLinkedPair pair : linkedPairs)
+            {
+                if(pair.isInferred())
+                {
+                    pair.first().setAssemblyMatchType(ASSEMBLY_MATCH_INFER_ONLY, pair.firstLinkOnStart());
+                    pair.second().setAssemblyMatchType(ASSEMBLY_MATCH_INFER_ONLY, pair.secondLinkOnStart());
+                }
+            }
         }
 
         if(!linkedPairs.isEmpty())
         {
-            LOGGER.info("sample({}) cluster({}: {} count={}) has {} linked pairs:",
+            LOGGER.info("sample({}) cluster({}: {} count={}) has {} linked pairs",
                     sampleId, cluster.getId(), cluster.getDesc(), cluster.getUniqueSvCount(), linkedPairs.size());
 
-            for (final SvLinkedPair pair : linkedPairs)
+            if(LOGGER.isDebugEnabled())
             {
-                LOGGER.info("linked {} {} pair length({}) variants({})",
-                        pair.isInferred() ? "inferred" : "assembly", pair.linkType(), pair.length(), pair.toString());
+                for (final SvLinkedPair pair : linkedPairs)
+                {
+                    LOGGER.debug("linked {} {} pair length({}) variants({})",
+                            pair.isInferred() ? "inferred" : "assembly", pair.linkType(), pair.length(), pair.toString());
+                }
             }
         }
 
@@ -1149,7 +1148,7 @@ public class ClusterAnalyser {
                     else
                     {
                         hasValidTransData = false;
-                        LOGGER.info("cluster({}) linked pairs have diff chains({} and {})",
+                        LOGGER.debug("cluster({}) linked pairs have diff chains({} and {})",
                                 cluster.getId(), startChain.getId(), endChain.getId());
                     }
                 }
