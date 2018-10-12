@@ -31,16 +31,7 @@ abstract class ActionabilityFusionPairs {
     abstract String cancerType();
 
     @NotNull
-    abstract String levelSource();
-
-    @NotNull
     abstract String hmfLevel();
-
-    @NotNull
-    abstract String evidenceType();
-
-    @NotNull
-    abstract String significanceSource();
 
     @NotNull
     abstract String hmfResponse();

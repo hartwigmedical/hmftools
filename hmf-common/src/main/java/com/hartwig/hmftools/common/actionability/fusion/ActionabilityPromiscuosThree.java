@@ -28,16 +28,7 @@ abstract class ActionabilityPromiscuosThree {
     abstract String cancerType();
 
     @NotNull
-    abstract String level();
-
-    @NotNull
     abstract String hmfLevel();
-
-    @NotNull
-    abstract String evidenceType();
-
-    @NotNull
-    abstract String significanceSource();
 
     @NotNull
     abstract String hmfResponse();

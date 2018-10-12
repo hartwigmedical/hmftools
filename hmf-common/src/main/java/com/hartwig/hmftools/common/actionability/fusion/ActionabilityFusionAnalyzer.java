@@ -71,10 +71,7 @@ public class ActionabilityFusionAnalyzer {
                 .drugsName(values[3])
                 .drugsType(values[4])
                 .cancerType(values[5])
-                .level(values[6])
                 .hmfLevel(values[7])
-                .evidenceType(values[8])
-                .significanceSource(values[9])
                 .hmfResponse(values[10])
                 .build();
     }
@@ -89,10 +86,7 @@ public class ActionabilityFusionAnalyzer {
                 .drugsName(values[3])
                 .drugsType(values[4])
                 .cancerType(values[5])
-                .levelSource(values[6])
                 .hmfLevel(values[7])
-                .evidenceType(values[8])
-                .significanceSource(values[9])
                 .hmfResponse(values[10])
                 .build();
     }
@@ -108,10 +102,7 @@ public class ActionabilityFusionAnalyzer {
                 .drugsName(values[4])
                 .drugsType(values[5])
                 .cancerType(values[6])
-                .levelSource(values[7])
                 .hmfLevel(values[8])
-                .evidenceType(values[9])
-                .significanceSource(values[10])
                 .hmfResponse(values[11])
                 .build();
     }
