@@ -10,8 +10,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVs;
 import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVsEvidenceItems;
-import com.hartwig.hmftools.common.actionability.fusion.ActionabilityFusionPairs;
-import com.hartwig.hmftools.common.actionability.fusion.FusionEvidenceItems;
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRange;
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRangeEvidenceItem;
 import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
@@ -22,11 +20,9 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
 import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
 import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 
 import org.jetbrains.annotations.NotNull;
@@ -77,9 +73,9 @@ public final class SomaticVariantAnalyzer {
             variantRange.addAll(entryRange.getValue().offLabel());
         }
 
-        for (Map.Entry<GeneCopyNumber, ActionabilityCNVsEvidenceItems> entryRange : evidencePerVariantCNVs.entrySet()) {
-            CNVs.addAll(entryRange.getValue().onLabel());
-            CNVs.addAll(entryRange.getValue().offLabel());
+        for (Map.Entry<GeneCopyNumber, ActionabilityCNVsEvidenceItems> entryCNVs : evidencePerVariantCNVs.entrySet()) {
+            CNVs.addAll(entryCNVs.getValue().onLabel());
+            CNVs.addAll(entryCNVs.getValue().offLabel());
         }
 
 
