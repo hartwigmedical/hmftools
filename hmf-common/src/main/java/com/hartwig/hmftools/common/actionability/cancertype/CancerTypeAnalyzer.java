@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -55,17 +56,19 @@ public class CancerTypeAnalyzer {
         Boolean booleanValueRange = false;
         for (CancerTypeReading cancerTypeDoidKnowledgeBase : cancerTypeDoids) {
             if (tumorLocationKnowledgebase.equals(cancerTypeDoidKnowledgeBase.cancerType())) {
-                if (doidsPrimaryTumorLocation.contains(";")) {
-                    String[] multipleDoidsPrimaryTumorLocation = doidsPrimaryTumorLocation.split(";");
-                    if (cancerTypeDoidKnowledgeBase.doidSet().contains(multipleDoidsPrimaryTumorLocation[0])
-                            || cancerTypeDoidKnowledgeBase.doidSet().contains(multipleDoidsPrimaryTumorLocation[1])) {
-                        booleanValueRange = true;
-                    } else if (cancerTypeDoidKnowledgeBase.doidSet().contains(multipleDoidsPrimaryTumorLocation[0])
-                            && cancerTypeDoidKnowledgeBase.doidSet().contains(multipleDoidsPrimaryTumorLocation[1])) {
+                if (doidsPrimaryTumorLocation != null) {
+                    if (doidsPrimaryTumorLocation.contains(";")) {
+                        String[] multipleDoidsPrimaryTumorLocation = doidsPrimaryTumorLocation.split(";");
+                        if (cancerTypeDoidKnowledgeBase.doidSet().contains(multipleDoidsPrimaryTumorLocation[0])
+                                || cancerTypeDoidKnowledgeBase.doidSet().contains(multipleDoidsPrimaryTumorLocation[1])) {
+                            booleanValueRange = true;
+                        } else if (cancerTypeDoidKnowledgeBase.doidSet().contains(multipleDoidsPrimaryTumorLocation[0])
+                                && cancerTypeDoidKnowledgeBase.doidSet().contains(multipleDoidsPrimaryTumorLocation[1])) {
+                            booleanValueRange = true;
+                        }
+                    } else if (cancerTypeDoidKnowledgeBase.doidSet().contains(doidsPrimaryTumorLocation)) {
                         booleanValueRange = true;
                     }
-                } else if (cancerTypeDoidKnowledgeBase.doidSet().contains(doidsPrimaryTumorLocation)) {
-                    booleanValueRange = true;
                 }
             }
         }

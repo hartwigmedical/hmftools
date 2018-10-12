@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.purple;
 
-import static com.hartwig.hmftools.common.numeric.Doubles.greaterThan;
-
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.numeric.Doubles;
@@ -61,7 +59,7 @@ public class PurityAdjuster {
 
     public double purityAdjustedVAF(@NotNull final String chromosome, final double copyNumber, final double observedFrequency) {
         int typicalCopyNumber = typicalCopyNumber(chromosome);
-        return purityAdjustedFrequency(typicalCopyNumber,0, copyNumber, observedFrequency);
+        return purityAdjustedFrequency(typicalCopyNumber, 0, copyNumber, observedFrequency);
 
     }
 
@@ -95,13 +93,15 @@ public class PurityAdjuster {
         return (normalObservations + tumorObservations) / totalObservations;
     }
 
-    public double purityAdjustedVAFWithHetrozygousNormal(@NotNull final String chromosome, final double copyNumber, final double observedFrequency) {
+    public double purityAdjustedVAFWithHeterozygousNormal(@NotNull final String chromosome, final double copyNumber,
+            final double observedFrequency) {
         int typicalCopyNumber = typicalCopyNumber(chromosome);
-        return purityAdjustedFrequency(typicalCopyNumber,1, copyNumber, observedFrequency);
+        return purityAdjustedFrequency(typicalCopyNumber, 1, copyNumber, observedFrequency);
     }
 
-    public double purityAdjustedVAFWithHomozygousNormal(@NotNull final String chromosome, final double copyNumber, final double observedFrequency) {
+    public double purityAdjustedVAFWithHomozygousNormal(@NotNull final String chromosome, final double copyNumber,
+            final double observedFrequency) {
         int typicalCopyNumber = typicalCopyNumber(chromosome);
-        return purityAdjustedFrequency(typicalCopyNumber,2, copyNumber, observedFrequency);
+        return purityAdjustedFrequency(typicalCopyNumber, 2, copyNumber, observedFrequency);
     }
 }

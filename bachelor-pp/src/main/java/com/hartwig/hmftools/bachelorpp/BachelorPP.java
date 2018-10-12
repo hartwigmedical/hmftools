@@ -326,7 +326,7 @@ public class BachelorPP {
                     if(bachRecord.isHomozygous())
                         adjVaf = purityAdjuster.purityAdjustedVAFWithHomozygousNormal(var.chromosome(), var.adjustedCopyNumber(), var.alleleFrequency());
                     else
-                        adjVaf = purityAdjuster.purityAdjustedVAFWithHetrozygousNormal(var.chromosome(), var.adjustedCopyNumber(), var.alleleFrequency());
+                        adjVaf = purityAdjuster.purityAdjustedVAFWithHeterozygousNormal(var.chromosome(), var.adjustedCopyNumber(), var.alleleFrequency());
 
                     if(Double.isNaN(adjVaf))
                         adjVaf = 0;
