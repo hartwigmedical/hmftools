@@ -107,7 +107,7 @@ public abstract class FindingsPage {
 
     @NotNull
     private static ComponentBuilder<?, ?> evidenceItemReportCNVs(@NotNull AnalysedPatientReport report) {
-        final ComponentBuilder<?, ?> table = report.evidenceItem().size() > 0
+        final ComponentBuilder<?, ?> table = report.evidenceItemCNV().size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(EvidenceItemDataSourceCNVs.actionabilityCNVFields())
                 .columns(col.column("Gene", EvidenceItemDataSourceCNVs.GENE),
                         col.column("Chromosome", EvidenceItemDataSourceCNVs.CHROMOSOME),
