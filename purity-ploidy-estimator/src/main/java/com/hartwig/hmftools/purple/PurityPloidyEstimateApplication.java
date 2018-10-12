@@ -23,7 +23,6 @@ import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.baf.ExpectedBAF;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -96,7 +95,6 @@ public class PurityPloidyEstimateApplication {
     private static final String THREADS = "threads";
     private static final String EXPERIMENTAL = "experimental";
     private static final String VERSION = "version";
-    private static final String SV_RECOVERY_VCF = "sv_recovery_vcf";
 
     public static void main(final String... args)
             throws ParseException, IOException, SQLException, ExecutionException, InterruptedException {
@@ -162,10 +160,10 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Fitting purity");
             final FitScoreConfig fitScoreConfig = configSupplier.fitScoreConfig();
             final FittedRegionFactory fittedRegionFactory = createFittedRegionFactory(averageTumorDepth, cobaltGender, fitScoreConfig);
-            final BestFit bestFit = fitPurity(executorService, configSupplier, cobaltGender, snpSomatics, observedRegions, fittedRegionFactory);
+            final BestFit bestFit =
+                    fitPurity(executorService, configSupplier, cobaltGender, snpSomatics, observedRegions, fittedRegionFactory);
             final FittedPurity fittedPurity = bestFit.fit();
             final PurityAdjuster purityAdjuster = new PurityAdjuster(cobaltGender, fittedPurity);
-
 
             final SmoothingConfig smoothingConfig = configSupplier.smoothingConfig();
             final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(smoothingConfig.minDiploidTumorRatioCount(),
@@ -173,10 +171,12 @@ public class PurityPloidyEstimateApplication {
                     purityAdjuster);
 
             LOGGER.info("Calculating copy number");
-            List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), observedRegions);
+            List<FittedRegion> fittedRegions =
+                    fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), observedRegions);
             copyNumberFactory.invoke(fittedRegions, structuralVariants);
 
-            if (cmd.hasOption(SV_RECOVERY_VCF)) {
+            StructuralVariantConfig svConfig = configSupplier.structuralVariantConfig();
+            if (svConfig.recoveryFile().isPresent()) {
 
                 final ListMultimap<String, PurpleCopyNumber> copyNumberMap = ArrayListMultimap.create();
                 for (PurpleCopyNumber copyNumber : copyNumberFactory.copyNumbers()) {
@@ -184,7 +184,7 @@ public class PurityPloidyEstimateApplication {
                 }
 
                 final StructuralVariantRecovery recovery =
-                        new StructuralVariantRecovery(cmd.getOptionValue(SV_RECOVERY_VCF), copyNumberMap);
+                        new StructuralVariantRecovery(svConfig.recoveryFile().get().toString(), copyNumberMap);
                 final List<RecoveredVariant> recovered = recovery.recoverVariants();
 
                 final StructuralVariantLegPloidyFactory<PurpleCopyNumber> svPloidyFactory =
@@ -193,7 +193,6 @@ public class PurityPloidyEstimateApplication {
                 recovered.addAll(recovery.recoverUnbalancedVariants(svPloidies));
 
                 RecoveredVariantFile.write(config.outputDirectory() + "/" + tumorSample + ".recovery.tsv", recovered);
-
 
                 // Assume we found new structural variants;
                 final List<StructuralVariant> recoveredVariants = Lists.newArrayList();
@@ -204,7 +203,8 @@ public class PurityPloidyEstimateApplication {
                     final List<ObservedRegion> recoveredObservedRegions = segmentation.createSegments(recoveredVariants);
 
                     LOGGER.info("Recalculating copy number");
-                    fittedRegions = fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions);
+                    fittedRegions =
+                            fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions);
                     copyNumberFactory.invoke(fittedRegions, structuralVariants);
                 }
             }
@@ -332,6 +332,19 @@ public class PurityPloidyEstimateApplication {
         }
     }
 
+    //    @NotNull
+    //    private static PurpleStructuralVariants structuralVariants2(@NotNull final ConfigSupplier configSupplier) throws IOException {
+    //        final StructuralVariantConfig config = configSupplier.structuralVariantConfig();
+    //        if (config.file().isPresent()) {
+    //            final String filePath = config.file().get().toString();
+    //            LOGGER.info("Loading structural variants from {}", filePath);
+    //            return StructuralVariantFileLoader.fromFile(filePath, true);
+    //        } else {
+    //            LOGGER.info("Structural variants support disabled.");
+    //            return Collections.emptyList();
+    //        }
+    //    }
+
     @NotNull
     private static List<SomaticVariant> somaticVariants(@NotNull final ConfigSupplier configSupplier) throws IOException {
         final SomaticConfig config = configSupplier.somaticConfig();
@@ -349,18 +362,6 @@ public class PurityPloidyEstimateApplication {
         }
     }
 
-    private static double defaultValue(@NotNull final CommandLine cmd, @NotNull final String opt, final double defaultValue) {
-        if (cmd.hasOption(opt)) {
-            final double result = Double.valueOf(cmd.getOptionValue(opt));
-            if (!Doubles.equal(result, defaultValue)) {
-                LOGGER.info("Using non default value {} for parameter {}", result, opt);
-            }
-            return result;
-        }
-
-        return defaultValue;
-    }
-
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
@@ -369,8 +370,6 @@ public class PurityPloidyEstimateApplication {
         options.addOption(THREADS, true, "Number of threads (default 2)");
         options.addOption(EXPERIMENTAL, false, "Anything goes!");
         options.addOption(VERSION, false, "Exit after displaying version info.");
-
-        options.addOption(SV_RECOVERY_VCF, true, "SV_RECOVERY_VCF");
 
         return options;
     }
