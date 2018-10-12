@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFactory
 import static com.hartwig.hmftools.patientdb.LoadPurpleData.persistToDatabase;
 import static com.hartwig.hmftools.purple.PurpleRegionZipper.updateRegionsWithCopyNumbers;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
@@ -61,7 +62,6 @@ import com.hartwig.hmftools.common.variant.recovery.RecoveredVariant;
 import com.hartwig.hmftools.common.variant.recovery.RecoveredVariantFile;
 import com.hartwig.hmftools.common.variant.recovery.StructuralVariantRecovery;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.version.VersionInfo;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.config.CircosConfig;
@@ -149,13 +149,13 @@ public class PurityPloidyEstimateApplication {
             }
 
             // JOBA: Load structural and somatic variants
-            final List<StructuralVariant> structuralVariants = structuralVariants(configSupplier);
+            final PurpleStructuralVariantSupplier structuralVariants = structuralVariants(configSupplier);
             final List<SomaticVariant> allSomatics = somaticVariants(configSupplier);
             final List<SomaticVariant> snpSomatics = allSomatics.stream().filter(SomaticVariant::isSnp).collect(Collectors.toList());
 
             LOGGER.info("Applying segmentation");
             final Segmentation segmentation = new Segmentation(config, cobaltGender, ratios, bafs);
-            final List<ObservedRegion> observedRegions = segmentation.createSegments(structuralVariants);
+            final List<ObservedRegion> observedRegions = segmentation.createSegments(structuralVariants.variants());
 
             LOGGER.info("Fitting purity");
             final FitScoreConfig fitScoreConfig = configSupplier.fitScoreConfig();
@@ -173,7 +173,7 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Calculating copy number");
             List<FittedRegion> fittedRegions =
                     fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), observedRegions);
-            copyNumberFactory.invoke(fittedRegions, structuralVariants);
+            copyNumberFactory.invoke(fittedRegions, structuralVariants.variants());
 
             StructuralVariantConfig svConfig = configSupplier.structuralVariantConfig();
             if (svConfig.recoveryFile().isPresent()) {
@@ -189,7 +189,7 @@ public class PurityPloidyEstimateApplication {
 
                 final StructuralVariantLegPloidyFactory<PurpleCopyNumber> svPloidyFactory =
                         new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
-                final List<StructuralVariantLegPloidy> svPloidies = svPloidyFactory.create(structuralVariants, copyNumberMap);
+                final List<StructuralVariantLegPloidy> svPloidies = svPloidyFactory.create(structuralVariants.variants(), copyNumberMap);
                 recovered.addAll(recovery.recoverUnbalancedVariants(svPloidies));
 
                 RecoveredVariantFile.write(config.outputDirectory() + "/" + tumorSample + ".recovery.tsv", recovered);
@@ -197,7 +197,6 @@ public class PurityPloidyEstimateApplication {
                 // Assume we found new structural variants;
                 final List<StructuralVariant> recoveredVariants = Lists.newArrayList();
                 if (!recoveredVariants.isEmpty()) {
-                    recoveredVariants.addAll(structuralVariants);
 
                     LOGGER.info("Applying segmentation with recovered structural variants");
                     final List<ObservedRegion> recoveredObservedRegions = segmentation.createSegments(recoveredVariants);
@@ -205,7 +204,7 @@ public class PurityPloidyEstimateApplication {
                     LOGGER.info("Recalculating copy number");
                     fittedRegions =
                             fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions);
-                    copyNumberFactory.invoke(fittedRegions, structuralVariants);
+                    copyNumberFactory.invoke(fittedRegions, structuralVariants.variants());
                 }
             }
 
@@ -254,6 +253,7 @@ public class PurityPloidyEstimateApplication {
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateGermlineFilename(outputDirectory, tumorSample), germlineDeletions);
             FittedRegionFile.write(FittedRegionFile.generateFilename(outputDirectory, tumorSample), enrichedFittedRegions);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
+            structuralVariants.write();
 
             final CircosConfig circosConfig = configSupplier.circosConfig();
             LOGGER.info("Writing plots to: {}", circosConfig.plotDirectory());
@@ -266,7 +266,7 @@ public class PurityPloidyEstimateApplication {
             new GenerateCircosData(configSupplier, executorService).write(cobaltGender,
                     copyNumbers,
                     enrichedSomatics,
-                    structuralVariants,
+                    structuralVariants.variants(),
                     fittedRegions,
                     Lists.newArrayList(bafs.values()));
         } finally {
@@ -320,30 +320,19 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private static List<StructuralVariant> structuralVariants(@NotNull final ConfigSupplier configSupplier) throws IOException {
-        final StructuralVariantConfig config = configSupplier.structuralVariantConfig();
-        if (config.file().isPresent()) {
-            final String filePath = config.file().get().toString();
+    private static PurpleStructuralVariantSupplier structuralVariants(@NotNull final ConfigSupplier configSupplier) throws IOException {
+        final CommonConfig commonConfig = configSupplier.commonConfig();
+        final StructuralVariantConfig svConfig = configSupplier.structuralVariantConfig();
+        if (svConfig.file().isPresent()) {
+            final String filePath = svConfig.file().get().toString();
+            final String outputPath = commonConfig.outputDirectory() + File.separator + commonConfig.tumorSample() + ".purple.sv.vcf.gz";
+
             LOGGER.info("Loading structural variants from {}", filePath);
-            return StructuralVariantFileLoader.fromFile(filePath, true);
+            return new PurpleStructuralVariantSupplier(filePath, outputPath);
         } else {
-            LOGGER.info("Structural variants support disabled.");
-            return Collections.emptyList();
+            return new PurpleStructuralVariantSupplier();
         }
     }
-
-    //    @NotNull
-    //    private static PurpleStructuralVariants structuralVariants2(@NotNull final ConfigSupplier configSupplier) throws IOException {
-    //        final StructuralVariantConfig config = configSupplier.structuralVariantConfig();
-    //        if (config.file().isPresent()) {
-    //            final String filePath = config.file().get().toString();
-    //            LOGGER.info("Loading structural variants from {}", filePath);
-    //            return StructuralVariantFileLoader.fromFile(filePath, true);
-    //        } else {
-    //            LOGGER.info("Structural variants support disabled.");
-    //            return Collections.emptyList();
-    //        }
-    //    }
 
     @NotNull
     private static List<SomaticVariant> somaticVariants(@NotNull final ConfigSupplier configSupplier) throws IOException {
