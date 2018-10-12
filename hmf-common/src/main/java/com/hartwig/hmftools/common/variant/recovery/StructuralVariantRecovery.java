@@ -4,6 +4,7 @@ import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ListMultimap;
@@ -74,6 +75,9 @@ public class StructuralVariantRecovery {
             for (int i = 1; i < chromosomeCopyNumbers.size() - 1; i++) {
                 final PurpleCopyNumber current = chromosomeCopyNumbers.get(i);
                 if (current.segmentStartSupport() == SegmentSupport.NONE) {
+
+
+
                     result.addAll(recoverVariants(i, chromosomeCopyNumbers));
                 }
             }
@@ -97,8 +101,9 @@ public class StructuralVariantRecovery {
         return result;
     }
 
+
     @NotNull
-    public List<RecoveredVariant> recover(long min, long max, @NotNull final PurpleCopyNumber current, @NotNull final PurpleCopyNumber prev,
+    private List<RecoveredVariant> recover(long min, long max, @NotNull final PurpleCopyNumber current, @NotNull final PurpleCopyNumber prev,
             @Nullable final PurpleCopyNumber next, @NotNull final ListMultimap<String, PurpleCopyNumber> allCopyNumbers)
             throws IOException {
 
@@ -121,6 +126,57 @@ public class StructuralVariantRecovery {
                 .prevCopyNumber(prev.averageTumorCopyNumber())
                 .prevBaf(prev.averageActualBAF())
                 .prevDepthWindowCount(prev.depthWindowCount());
+
+
+        final List<RecoveredContext> recovered = recover(min, max, current, prev);
+        for (RecoveredContext recoveredContext : recovered) {
+            final StructuralVariant sv = recoveredContext.variant();
+            final StructuralVariantLeg end = sv.end();
+            final PurpleCopyNumber mateCopyNumber = end == null || !allCopyNumbers.containsKey(end.chromosome())
+                    ? null
+                    : closest(end.position(), allCopyNumbers.get(end.chromosome()));
+
+            builder.alt("")
+                    .qual(sv.qualityScore())
+                    .variant(sv.start().chromosome() + ":" + sv.start().position())
+                    .orientation((int) sv.start().orientation())
+                    .tumourReferenceFragmentCount(sv.start().tumourReferenceFragmentCount())
+                    .tumourVariantFragmentCount(sv.start().tumourVariantFragmentCount())
+                    .mate(end == null ? null : end.chromosome() + ":" + end.position())
+                    .mateOrientation(end == null ? null : (int) end.orientation())
+                    .mateMinStart(mateCopyNumber == null ? null : mateCopyNumber.minStart())
+                    .mateMaxStart(mateCopyNumber == null ? null : mateCopyNumber.maxStart())
+                    .mateSupport(mateCopyNumber == null ? null : mateCopyNumber.segmentStartSupport())
+                    .mateTumourReferenceFragmentCount(end == null ? null : end.tumourReferenceFragmentCount())
+                    .mateTumourVariantFragmentCount(end == null ? null : end.tumourVariantFragmentCount())
+                    .filter(sv.filter());
+
+            result.add(builder.build());
+
+        }
+
+        return result;
+    }
+
+
+    @NotNull
+    private List<RecoveredContext> recoverContexts(int index, @NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException {
+        assert (index > 1);
+
+        PurpleCopyNumber prev = copyNumbers.get(index - 1);
+        PurpleCopyNumber current = copyNumbers.get(index);
+
+        final List<RecoveredContext> result = Lists.newArrayList();
+        long minPosition = Math.max(1, current.minStart() - 1000);
+        long maxPosition = current.maxStart() + 1000;
+        result.addAll(recover(minPosition, maxPosition, current, prev));
+        return result;
+    }
+
+
+    @NotNull
+    private List<RecoveredContext> recover(long min, long max, @NotNull final PurpleCopyNumber current, @NotNull final PurpleCopyNumber prev) throws IOException {
+        List<RecoveredContext> result = Lists.newArrayList();
 
         int expectedOrientation = Doubles.greaterThan(current.averageTumorCopyNumber(), prev.averageTumorCopyNumber()) ? -1 : 1;
 
@@ -148,30 +204,8 @@ public class StructuralVariantRecovery {
                     : StructuralVariantFactory.createSingleBreakend(potentialVariant);
 
             if (hasPotential(min, max, sv)) {
-                final StructuralVariantLeg end = sv.end();
-                final PurpleCopyNumber mateCopyNumber = end == null || !allCopyNumbers.containsKey(end.chromosome()) ? null : closest(end.position(), allCopyNumbers.get(end.chromosome()));
-
-                builder.alt(alt)
-                        .qual(sv.qualityScore())
-                        .variant(sv.start().chromosome() + ":" + sv.start().position())
-                        .orientation(orientation)
-                        .tumourReferenceFragmentCount(sv.start().tumourReferenceFragmentCount())
-                        .tumourVariantFragmentCount(sv.start().tumourVariantFragmentCount())
-                        .mate(end == null ? null : end.chromosome() + ":" + end.position())
-                        .mateOrientation(end == null ? null : (int) end.orientation())
-                        .mateMinStart(mateCopyNumber == null ? null : mateCopyNumber.minStart())
-                        .mateMaxStart(mateCopyNumber == null ? null : mateCopyNumber.maxStart())
-                        .mateSupport(mateCopyNumber == null ? null : mateCopyNumber.segmentStartSupport())
-                        .mateTumourReferenceFragmentCount(end == null ? null : end.tumourReferenceFragmentCount())
-                        .mateTumourVariantFragmentCount(end == null ? null : end.tumourVariantFragmentCount())
-                        .filter(sv.filter());
-
-                result.add(builder.build());
+                result.add(ImmutableRecoveredContext.builder().context(potentialVariant).mate(mate).variant(sv).build());
             }
-        }
-
-        if (result.isEmpty()) {
-            result.add(builder.build());
         }
 
         return result;
@@ -327,8 +361,7 @@ public class StructuralVariantRecovery {
     @VisibleForTesting
     @NotNull
     static <T extends GenomeRegion> T closest(long position, @NotNull final List<T> regions) {
-        assert(!regions.isEmpty());
-
+        assert (!regions.isEmpty());
 
         long minDistance = position - 1;
         for (int i = 1; i < regions.size(); i++) {
