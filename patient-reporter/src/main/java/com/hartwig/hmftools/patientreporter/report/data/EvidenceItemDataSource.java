@@ -64,7 +64,7 @@ public abstract class EvidenceItemDataSource {
                         variant.drugsType(),
                         variant.level(),
                         variant.response(),
-                        variant.source(),
+                        sourceName(variant.source()),
                         "yes");
             }
 
@@ -76,7 +76,7 @@ public abstract class EvidenceItemDataSource {
                         variant.drugsType(),
                         variant.level(),
                         variant.response(),
-                        variant.source(),
+                        sourceName(variant.source()),
                         "no");
             }
         }
@@ -106,7 +106,7 @@ public abstract class EvidenceItemDataSource {
                         variantRange.drugsType(),
                         variantRange.level(),
                         variantRange.response(),
-                        variantRange.source(),
+                        sourceName(variantRange.source()),
                         "no");
             }
         }

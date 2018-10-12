@@ -61,7 +61,7 @@ public class EvidenceItemDataSourceCNVs {
                         CNV.drugsType(),
                         CNV.hmfLevel(),
                         CNV.hmfResponse(),
-                        CNV.source(),
+                        sourceName(CNV.source()),
                         "yes");
             }
 
