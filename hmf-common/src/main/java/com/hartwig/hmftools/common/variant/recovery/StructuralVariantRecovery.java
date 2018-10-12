@@ -45,8 +45,8 @@ public class StructuralVariantRecovery {
         final List<RecoveredVariant> result = Lists.newArrayList();
 
         for (StructuralVariantLegPloidy svPloidy : svPloidies) {
-            if (Doubles.greaterThan(svPloidy.averageImpliedPloidy(), 0.5) && absAdjustedCopyNumberChange(svPloidy) > 0.15) {
-                List<PurpleCopyNumber> chromosomeCopyNumbers = allCopyNumbers.get(svPloidy.chromosome());
+            if (Doubles.greaterThan(svPloidy.averageImpliedPloidy(), 0.5) && absAdjustedCopyNumberChange(svPloidy) < 0.25) {
+                final List<PurpleCopyNumber> chromosomeCopyNumbers = allCopyNumbers.get(svPloidy.chromosome());
                 int index = indexOf(svPloidy.position(), chromosomeCopyNumbers);
                 if (index > 1) {
                     result.addAll(recoverVariants(index, chromosomeCopyNumbers));
