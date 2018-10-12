@@ -124,7 +124,7 @@ public final class SomaticVariantDataSource {
         if (catalogEntry.driverLikelihood() > 0.8) {
             return "Likely";
         } else if (catalogEntry.driverLikelihood() > 0.2) {
-            return "Undetermined";
+            return "Potentially";
         } else {
             return "Unlikely";
         }
