@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.variant.recovery;
 
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
 import org.immutables.value.Value;
@@ -11,6 +12,12 @@ import htsjdk.variant.variantcontext.VariantContext;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface RecoveredContext {
+
+    @NotNull
+    PurpleCopyNumber copyNumber();
+
+    @NotNull
+    PurpleCopyNumber prevCopyNumber();
 
     @NotNull
     VariantContext context();
