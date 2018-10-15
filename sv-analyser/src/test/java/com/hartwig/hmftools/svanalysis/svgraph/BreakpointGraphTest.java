@@ -60,6 +60,7 @@ public class BreakpointGraphTest {
                 .insertSequence("")
                 .ploidy(1d)
                 .qualityScore(1000.0)
+                .recovered(false)
                 .startLinkedBy("")
                 .endLinkedBy("")
                 .filter("")

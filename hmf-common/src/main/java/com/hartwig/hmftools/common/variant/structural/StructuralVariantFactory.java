@@ -26,6 +26,7 @@ import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
 public class StructuralVariantFactory {
 
+    private final static String RECOVERED = "RECOVERED";
     private final static String TYPE = "SVTYPE";
     private final static String MATE_ID = "MATEID";
     private final static String PAR_ID = "PARID";
@@ -289,6 +290,7 @@ public class StructuralVariantFactory {
 
         return builder
                 .id(context.getID())
+                .recovered(context.hasAttribute(RECOVERED))
                 .event(context.getAttributeAsString(EVENT, null))
                 .startLinkedBy(context.getAttributeAsStringList(LOCAL_LINKED_BY, "").stream().filter(s -> !Strings.isNullOrEmpty(s)).collect(Collectors.joining( ",")))
                 .endLinkedBy(context.getAttributeAsStringList(REMOTE_LINKED_BY, "").stream().filter(s -> !Strings.isNullOrEmpty(s)).collect(Collectors.joining( ",")))

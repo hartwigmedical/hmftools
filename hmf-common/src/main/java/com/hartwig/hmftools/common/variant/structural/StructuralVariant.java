@@ -82,4 +82,6 @@ public interface StructuralVariant {
         }
         return links;
     }
+
+    boolean recovered();
 }

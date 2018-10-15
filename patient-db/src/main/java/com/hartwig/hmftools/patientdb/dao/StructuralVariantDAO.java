@@ -190,6 +190,7 @@ class StructuralVariantDAO {
                     // TODO: what's the correct approach here?
                     // jooq type conversion or just manual mapping?
                     .imprecise(byteToBoolean(record.getValue(STRUCTURALVARIANT.IMPRECISE)))
+                    .recovered(byteToBoolean(record.getValue(STRUCTURALVARIANT.RECOVERED)))
                     .qualityScore(record.getValue(STRUCTURALVARIANT.QUALSCORE))
                     .event(record.getValue(STRUCTURALVARIANT.EVENT))
                     .startLinkedBy(record.getValue(STRUCTURALVARIANT.STARTLINKEDBY))
@@ -256,6 +257,7 @@ class StructuralVariantDAO {
                     STRUCTURALVARIANT.VCFID,
                     STRUCTURALVARIANT.STARTLINKEDBY,
                     STRUCTURALVARIANT.ENDLINKEDBY,
+                    STRUCTURALVARIANT.RECOVERED,
                     STRUCTURALVARIANT.MODIFIED);
             batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
             inserter.execute();
@@ -306,6 +308,7 @@ class StructuralVariantDAO {
                 variant.id(),
                 variant.startLinkedBy(),
                 variant.endLinkedBy(),
+                variant.recovered(),
                 timestamp);
     }
 

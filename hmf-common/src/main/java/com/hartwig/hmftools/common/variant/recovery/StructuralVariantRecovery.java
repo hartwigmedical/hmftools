@@ -60,15 +60,15 @@ public class StructuralVariantRecovery {
     public List<RecoveredVariant> recoverUnbalancedVariants(List<StructuralVariantLegPloidy> svPloidies) throws IOException {
         final List<RecoveredVariant> result = Lists.newArrayList();
 
-//        for (StructuralVariantLegPloidy svPloidy : svPloidies) {
-//            if (Doubles.greaterThan(svPloidy.averageImpliedPloidy(), 0.5) && absAdjustedCopyNumberChange(svPloidy) < 0.25) {
-//                final List<PurpleCopyNumber> chromosomeCopyNumbers = allCopyNumbers.get(svPloidy.chromosome());
-//                int index = indexOf(svPloidy.position(), chromosomeCopyNumbers);
-//                if (index > 1) {
-//                    result.addAll(recoverVariants(-1 * svPloidy.orientation(),  index, chromosomeCopyNumbers));
-//                }
-//            }
-//        }
+        for (StructuralVariantLegPloidy svPloidy : svPloidies) {
+            if (Doubles.greaterThan(svPloidy.averageImpliedPloidy(), 0.5) && absAdjustedCopyNumberChange(svPloidy) < 0.25) {
+                final List<PurpleCopyNumber> chromosomeCopyNumbers = allCopyNumbers.get(svPloidy.chromosome());
+                int index = indexOf(svPloidy.position(), chromosomeCopyNumbers);
+                if (index > 1) {
+                    result.addAll(recoverVariants(-1 * svPloidy.orientation(),  index, chromosomeCopyNumbers));
+                }
+            }
+        }
 
         return result;
     }
