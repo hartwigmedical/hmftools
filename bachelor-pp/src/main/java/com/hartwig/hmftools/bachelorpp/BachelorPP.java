@@ -394,7 +394,7 @@ public class BachelorPP {
 
             writer.write(",AdjCopyNumber,AdjustedVaf,HighConfidenceRegion,TrinucleotideContext,Microhomology,RepeatSequence,RepeatCount");
 
-            writer.write(",HgvsProtein,Biallelic,Hotspot,Mappability,GermlineStatus,MinorAllelePloidy,Filter");
+            writer.write(",HgvsProtein,HgvsCoding,Biallelic,Hotspot,Mappability,GermlineStatus,MinorAllelePloidy,Filter");
 
             writer.newLine();
 
@@ -438,8 +438,9 @@ public class BachelorPP {
                         region.repeatCount()));
 
                 writer.write(
-                        String.format(",%s,%s,%s,%s,%s,%.2f,%s",
+                        String.format(",%s,%s,%s,%s,%s,%s,%.2f,%s",
                                 bachRecord.hgvsProtein(),
+                                bachRecord.hgvsCoding(),
                                 bachRecord.isBiallelic(),
                                 region.hotspot(),
                                 region.mappability(),

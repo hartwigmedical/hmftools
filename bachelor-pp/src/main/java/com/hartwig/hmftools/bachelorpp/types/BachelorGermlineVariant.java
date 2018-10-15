@@ -22,6 +22,7 @@ public class BachelorGermlineVariant {
     private int mPhredScore;
     private boolean mIsHomozygous;
     private String mHgvsProtein;
+    private String mHgvsCoding;
 
     private int mRefCount;
     private int mAltCount;
@@ -36,7 +37,7 @@ public class BachelorGermlineVariant {
 
     public BachelorGermlineVariant(String patient, String source, String program, String varId,
             String gene, String transcriptId, String chromosome, long position,
-            String ref, String alts, String effects, String annotations, String hgvsProtein,
+            String ref, String alts, String effects, String annotations, String hgvsProtein, String hgvsCoding,
             boolean isHomozygous, int phredScore)
     {
         mPatient = patient;
@@ -53,6 +54,7 @@ public class BachelorGermlineVariant {
         mPhredScore = phredScore;
         mIsHomozygous = isHomozygous;
         mHgvsProtein = hgvsProtein;
+        mHgvsCoding = hgvsCoding;
 
         mRef = mRef.replaceAll("\\*", "");
         mAlts = mAlts.replaceAll("\\*", "");
@@ -79,8 +81,8 @@ public class BachelorGermlineVariant {
     public final String alts() { return mAlts; };
     public final String effects() { return mEffects; };
     public final String annotations() { return mAnnotations; };
-    public int phredScore() { return mPhredScore; };
     public final String hgvsProtein() { return mHgvsProtein; };
+    public final String hgvsCoding() { return mHgvsCoding; };
     public boolean isHomozygous() { return mIsHomozygous; }
     public int getRefCount() { return mRefCount; }
     public int getAltCount() { return mAltCount; }

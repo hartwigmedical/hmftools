@@ -22,7 +22,7 @@ import org.apache.logging.log4j.Logger;
 
 public class AlleleDepthLoader {
 
-    private static final int BACHELOR_CSV_FIELD_COUNT = 15;
+    private static final int BACHELOR_CSV_FIELD_COUNT = 16;
     private static final String MPILEUP_FILE_EXTN = ".mpu";
 
     private static final Logger LOGGER = LogManager.getLogger(AlleleDepthLoader.class);
@@ -60,7 +60,8 @@ public class AlleleDepthLoader {
 
                 // CSV fields PATIENT,SOURCE,PROGRAM,ID,GENES,TRANSCRIPT_ID,CHROM,POS,REF,ALTS,EFFECTS
 
-                if (items.length != BACHELOR_CSV_FIELD_COUNT) {
+                if (items.length != BACHELOR_CSV_FIELD_COUNT)
+                {
                     LOGGER.warn("invalid item count({}), recordIndex({}) in file({})", items.length, bachelorVariants.size(), filename);
                     return false;
                 }
@@ -84,6 +85,7 @@ public class AlleleDepthLoader {
                         items[10],
                         items[11],
                         items[12],
+                        items[15],
                         Boolean.parseBoolean(items[13]),
                         Integer.parseInt(items[14]));
 
