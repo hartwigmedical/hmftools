@@ -8,8 +8,12 @@ import java.util.Collection;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class RecoveredVariantFile {
 
@@ -17,7 +21,7 @@ public class RecoveredVariantFile {
     private static final String DELIMITER = "\t";
     private static final DecimalFormat FORMAT = new DecimalFormat("0.00");
 
-    public static void write(@NotNull final String filePath, @NotNull Collection<RecoveredVariant> variants) throws IOException {
+    public static void write(@NotNull final String filePath, @NotNull Collection<RecoveredContext> variants) throws IOException {
         final Collection<String> lines = Lists.newArrayList();
         lines.add(header());
         variants.stream().map(RecoveredVariantFile::toString).forEach(lines::add);
@@ -62,41 +66,52 @@ public class RecoveredVariantFile {
     }
 
     @NotNull
-    public static String toString(@NotNull final RecoveredVariant recoveredVariant) {
-        return new StringJoiner(DELIMITER).add(String.valueOf(recoveredVariant.chromosome()))
-                .add(String.valueOf(recoveredVariant.start()))
-                .add(String.valueOf(recoveredVariant.minStart()))
-                .add(String.valueOf(recoveredVariant.maxStart()))
-                .add(String.valueOf(recoveredVariant.end()))
-                .add(String.valueOf(recoveredVariant.bases()))
-                .add(FORMAT.format(recoveredVariant.baf()))
-                .add(FORMAT.format(recoveredVariant.copyNumber()))
-                .add(String.valueOf(recoveredVariant.depthWindowCount()))
-                .add(String.valueOf(recoveredVariant.gcContent()))
-                .add(String.valueOf(recoveredVariant.support()))
-                .add(String.valueOf(recoveredVariant.tumourVariantFragmentCount()))
-                .add(String.valueOf(recoveredVariant.tumourReferenceFragmentCount()))
+    public static String toString(@NotNull final RecoveredContext recoveredVariant) {
 
-                .add(String.valueOf(recoveredVariant.prevLength()))
-                .add(FORMAT.format(recoveredVariant.prevBaf()))
-                .add(FORMAT.format(recoveredVariant.prevCopyNumber()))
-                .add(String.valueOf(recoveredVariant.prevDepthWindowCount()))
-                .add(String.valueOf(recoveredVariant.prevGCContent()))
-                .add(String.valueOf(recoveredVariant.previous()))
+        StructuralVariant variant = recoveredVariant.variant();
+        StructuralVariantLeg start = variant.start();
+        @Nullable
+        StructuralVariantLeg end = variant.end();
 
-                .add(String.valueOf(recoveredVariant.nextGCContent()))
-                .add(String.valueOf(recoveredVariant.next()))
-                .add(String.valueOf(recoveredVariant.variant()))
-                .add(String.valueOf(recoveredVariant.orientation()))
-                .add(String.valueOf(recoveredVariant.qual()))
-                .add(String.valueOf(recoveredVariant.filter()))
+        PurpleCopyNumber copyNumber = recoveredVariant.copyNumber();
+        PurpleCopyNumber preCopyNumber = recoveredVariant.prevCopyNumber();
+        PurpleCopyNumber mateCopyNumber = recoveredVariant.mateCopyNumber();
+
+        return new StringJoiner(DELIMITER).add(String.valueOf(copyNumber.chromosome()))
+                .add(String.valueOf(copyNumber.start()))
+                .add(String.valueOf(copyNumber.minStart()))
+                .add(String.valueOf(copyNumber.maxStart()))
+                .add(String.valueOf(copyNumber.end()))
+                .add(String.valueOf(copyNumber.bases()))
+                .add(FORMAT.format(copyNumber.averageActualBAF()))
+                .add(FORMAT.format(copyNumber.averageTumorCopyNumber()))
+                .add(String.valueOf(copyNumber.depthWindowCount()))
+                .add(String.valueOf(copyNumber.gcContent()))
+                .add(String.valueOf(copyNumber.segmentStartSupport()))
+                .add(String.valueOf(variant.start().tumourVariantFragmentCount()))
+                .add(String.valueOf(variant.start().tumourReferenceFragmentCount()))
+
+                .add(String.valueOf(preCopyNumber.bases()))
+                .add(FORMAT.format(preCopyNumber.averageActualBAF()))
+                .add(FORMAT.format(preCopyNumber.averageTumorCopyNumber()))
+                .add(String.valueOf(preCopyNumber.depthWindowCount()))
+                .add(String.valueOf(preCopyNumber.gcContent()))
+                .add(String.valueOf(preCopyNumber.segmentStartSupport()))
+
+                .add("-1")
+                .add(String.valueOf(copyNumber.segmentEndSupport()))
+                .add(String.valueOf(start.chromosome() + ":" + start.position()))
+                .add(String.valueOf(start.orientation()))
+                .add(String.valueOf(variant.qualityScore()))
+                .add(String.valueOf(variant.filter()))
                 .add(String.valueOf(recoveredVariant.mate()))
-                .add(String.valueOf(recoveredVariant.mateOrientation()))
-                .add(String.valueOf(recoveredVariant.mateMinStart()))
-                .add(String.valueOf(recoveredVariant.mateMaxStart()))
-                .add(String.valueOf(recoveredVariant.mateSupport()))
-                .add(String.valueOf(recoveredVariant.mateTumourVariantFragmentCount()))
-                .add(String.valueOf(recoveredVariant.mateTumourReferenceFragmentCount()))
+                .add(String.valueOf(end == null ? null : end.orientation()))
+                .add(String.valueOf(mateCopyNumber == null ? null : mateCopyNumber.minStart()))
+                .add(String.valueOf(mateCopyNumber == null ? null : mateCopyNumber.maxStart()))
+                .add(String.valueOf(mateCopyNumber == null ? null : mateCopyNumber.segmentStartSupport()))
+                .add(String.valueOf(end == null ? null : end.tumourVariantFragmentCount()))
+                .add(String.valueOf(end == null ? null : end.tumourReferenceFragmentCount()))
                 .toString();
     }
+
 }

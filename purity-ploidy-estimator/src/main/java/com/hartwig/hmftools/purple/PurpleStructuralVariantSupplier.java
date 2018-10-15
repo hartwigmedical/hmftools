@@ -9,6 +9,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.index.tabix.TabixFormat;
@@ -29,32 +30,26 @@ class PurpleStructuralVariantSupplier {
 
     private static final String RECOVERED_FLAG = "RECOVERED";
 
-    private final Optional<VariantContextWriter> optionalWriter;
+    private final String outputVCF;
+    private final Optional<VCFHeader> header;
     private final TreeSet<VariantContext> variantContexts;
     private final List<StructuralVariant> variants = Lists.newArrayList();
 
     private boolean modified = true;
 
     PurpleStructuralVariantSupplier() {
-        optionalWriter = Optional.empty();
+        header = Optional.empty();
         variantContexts = new TreeSet<>();
+        outputVCF = Strings.EMPTY;
     }
 
     PurpleStructuralVariantSupplier(@NotNull final String templateVCF, @NotNull final String outputVCF) {
         final VCFFileReader vcfReader = new VCFFileReader(new File(templateVCF), false);
-        final VCFHeader outputHeader = generateOutputHeader(vcfReader.getFileHeader());
-        VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVCF)
-                .setReferenceDictionary(outputHeader.getSequenceDictionary())
-                .setIndexCreator(new TabixIndexCreator(outputHeader.getSequenceDictionary(), new TabixFormat()))
-                .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
-                .setOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER)
-                .build();
-
-        writer.writeHeader(outputHeader);
-        optionalWriter = Optional.of(writer);
-
-        variantContexts = new TreeSet<>(new VariantContextComparator(outputHeader.getSequenceDictionary()));
+        this.outputVCF = outputVCF;
+        header = Optional.of(generateOutputHeader(vcfReader.getFileHeader()));
+        variantContexts = new TreeSet<>(new VariantContextComparator(header.get().getSequenceDictionary()));
         for (VariantContext context : vcfReader) {
+
             if (context.isNotFiltered()) {
                 variantContexts.add(context);
             }
@@ -70,8 +65,15 @@ class PurpleStructuralVariantSupplier {
     }
 
     public void write() {
-        if (optionalWriter.isPresent()) {
-            VariantContextWriter writer = optionalWriter.get();
+        if (header.isPresent()) {
+            VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVCF)
+                    .setReferenceDictionary(header.get().getSequenceDictionary())
+                    .setIndexCreator(new TabixIndexCreator(header.get().getSequenceDictionary(), new TabixFormat()))
+                    .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
+                    .setOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER)
+                    .build();
+
+            writer.writeHeader(header.get());
             variantContexts.forEach(writer::add);
             writer.close();
         }

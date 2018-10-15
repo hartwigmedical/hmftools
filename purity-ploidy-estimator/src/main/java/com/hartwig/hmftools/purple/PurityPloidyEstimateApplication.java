@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -58,10 +59,9 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.filter.SGTFilter;
-import com.hartwig.hmftools.common.variant.recovery.RecoveredVariant;
+import com.hartwig.hmftools.common.variant.recovery.RecoveredContext;
 import com.hartwig.hmftools.common.variant.recovery.RecoveredVariantFile;
 import com.hartwig.hmftools.common.variant.recovery.StructuralVariantRecovery;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.version.VersionInfo;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.config.CircosConfig;
@@ -84,6 +84,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
 public class PurityPloidyEstimateApplication {
@@ -185,7 +186,7 @@ public class PurityPloidyEstimateApplication {
 
                 final StructuralVariantRecovery recovery =
                         new StructuralVariantRecovery(svConfig.recoveryFile().get().toString(), copyNumberMap);
-                final List<RecoveredVariant> recovered = recovery.recoverVariants();
+                final List<RecoveredContext> recovered = recovery.recoverAllContexts(true);
 
                 final StructuralVariantLegPloidyFactory<PurpleCopyNumber> svPloidyFactory =
                         new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
@@ -195,11 +196,12 @@ public class PurityPloidyEstimateApplication {
                 RecoveredVariantFile.write(config.outputDirectory() + "/" + tumorSample + ".recovery.tsv", recovered);
 
                 // Assume we found new structural variants;
-                final List<StructuralVariant> recoveredVariants = Lists.newArrayList();
+                final Set<VariantContext> recoveredVariants = recovery.recoverContexts();
                 if (!recoveredVariants.isEmpty()) {
+                    recoveredVariants.forEach(structuralVariants::recoverVariant);
 
                     LOGGER.info("Applying segmentation with recovered structural variants");
-                    final List<ObservedRegion> recoveredObservedRegions = segmentation.createSegments(recoveredVariants);
+                    final List<ObservedRegion> recoveredObservedRegions = segmentation.createSegments(structuralVariants.variants());
 
                     LOGGER.info("Recalculating copy number");
                     fittedRegions =

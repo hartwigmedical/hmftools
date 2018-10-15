@@ -25,6 +25,9 @@ public interface RecoveredContext {
     @Nullable
     VariantContext mate();
 
+    @Nullable
+    PurpleCopyNumber mateCopyNumber();
+
     @NotNull
     StructuralVariant variant();
 }
