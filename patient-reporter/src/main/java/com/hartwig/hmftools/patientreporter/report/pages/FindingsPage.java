@@ -20,7 +20,6 @@ import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSect
 import com.hartwig.hmftools.patientreporter.report.components.MutationalLoadSection;
 import com.hartwig.hmftools.patientreporter.report.components.TumorMutationBurdenSection;
 import com.hartwig.hmftools.patientreporter.report.data.EvidenceItemDataSource;
-import com.hartwig.hmftools.patientreporter.report.data.EvidenceItemDataSourceCNVs;
 import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionDataSource;
@@ -54,8 +53,6 @@ public abstract class FindingsPage {
                 impliedPurityString(report())),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 evidenceItemReportVariant(report()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                evidenceItemReportCNVs(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 somaticVariantReport(report(), reporterData().panelGeneModel()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -96,35 +93,10 @@ public abstract class FindingsPage {
                                 .setHyperLink(hyperLink(EvidenceItemDataSource.sourceHyperlink(report.somaticActionabilityVariants())))
                                 .setStyle(linkStyle()),
                         col.column("Label", EvidenceItemDataSource.LABEL))
-                .setDataSource(EvidenceItemDataSource.fromActionabilityVariants(report.evidenceItem(),
-                        report.evidenceItemRange())))
+                .setDataSource(EvidenceItemDataSource.fromActionabilityVariants(report.evidenceItem(), report.evidenceItemRange())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Evidence Items of somatic variant").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
-                table);
-    }
-
-    @NotNull
-    private static ComponentBuilder<?, ?> evidenceItemReportCNVs(@NotNull AnalysedPatientReport report) {
-        final ComponentBuilder<?, ?> table = report.evidenceItemCNV().size() > 0
-                ? cmp.subreport(monospaceBaseTable().fields(EvidenceItemDataSourceCNVs.actionabilityCNVFields())
-                .columns(col.column("Gene", EvidenceItemDataSourceCNVs.GENE),
-                        col.column("Chromosome", EvidenceItemDataSourceCNVs.CHROMOSOME),
-                        col.column("Chromosome band", EvidenceItemDataSourceCNVs.CHROMSOME_BAND),
-                        col.column("Cnv type", EvidenceItemDataSourceCNVs.CNV_TYPE),
-                        col.column("Drug", EvidenceItemDataSourceCNVs.DRUG),
-                        col.column("Drugs type", EvidenceItemDataSourceCNVs.DRUGS_TYPE),
-                        col.column("Level", EvidenceItemDataSourceCNVs.LEVEL),
-                        col.column("Response", EvidenceItemDataSourceCNVs.RESPONSE),
-                        col.column("Source", EvidenceItemDataSourceCNVs.SOURCE)
-                                .setHyperLink(hyperLink(EvidenceItemDataSourceCNVs.sourceHyperlink(report.somaticActionabilityCNVs())))
-                                .setStyle(linkStyle()),
-                        col.column("Label", EvidenceItemDataSourceCNVs.LABEL))
-                .setDataSource(EvidenceItemDataSourceCNVs.fromActionabilityCNV(report.evidenceItemCNV())))
-                : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
-
-        return cmp.verticalList(cmp.text("Evidence Items of CNVs").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
                 table);
     }
