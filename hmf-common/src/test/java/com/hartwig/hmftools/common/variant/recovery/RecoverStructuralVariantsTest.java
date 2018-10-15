@@ -19,7 +19,7 @@ import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderVersion;
 
-public class StructuralVariantRecoveryTest {
+public class RecoverStructuralVariantsTest {
 
     private static final String SAMPLE = "sample";
 
@@ -32,14 +32,14 @@ public class StructuralVariantRecoveryTest {
 
     @Test
     public void testOrientation() {
-        assertEquals(1, StructuralVariantRecovery.orientation("C[17:59493156["));
-        assertEquals(-1, StructuralVariantRecovery.orientation("]17:59493156]C"));
+        assertEquals(1, RecoverStructuralVariants.orientation("C[17:59493156["));
+        assertEquals(-1, RecoverStructuralVariants.orientation("]17:59493156]C"));
     }
 
     @Test
     public void testMate() {
-        assertEquals("17:59493156", StructuralVariantRecovery.mateLocation("C[17:59493156["));
-        assertEquals("17:59493156", StructuralVariantRecovery.mateLocation("]17:59493156]C"));
+        assertEquals("17:59493156", RecoverStructuralVariants.mateLocation("C[17:59493156["));
+        assertEquals("17:59493156", RecoverStructuralVariants.mateLocation("]17:59493156]C"));
     }
 
     @Test
@@ -50,14 +50,14 @@ public class StructuralVariantRecoveryTest {
         final GenomeRegion end = GenomeRegionFactory.create("1", 30001, 40000);
         final List<GenomeRegion> regions = Lists.newArrayList(start, middle1, middle2, end);
 
-        assertEquals(start, StructuralVariantRecovery.closest(1, regions));
-        assertEquals(start, StructuralVariantRecovery.closest(5001, regions));
-        assertEquals(middle1, StructuralVariantRecovery.closest(5002, regions));
-        assertEquals(middle1, StructuralVariantRecovery.closest(15001, regions));
-        assertEquals(middle2, StructuralVariantRecovery.closest(15002, regions));
-        assertEquals(middle2, StructuralVariantRecovery.closest(25001, regions));
-        assertEquals(end, StructuralVariantRecovery.closest(25002, regions));
-        assertEquals(end, StructuralVariantRecovery.closest(40000, regions));
+        assertEquals(start, RecoverStructuralVariants.closest(1, regions));
+        assertEquals(start, RecoverStructuralVariants.closest(5001, regions));
+        assertEquals(middle1, RecoverStructuralVariants.closest(5002, regions));
+        assertEquals(middle1, RecoverStructuralVariants.closest(15001, regions));
+        assertEquals(middle2, RecoverStructuralVariants.closest(15002, regions));
+        assertEquals(middle2, RecoverStructuralVariants.closest(25001, regions));
+        assertEquals(end, RecoverStructuralVariants.closest(25002, regions));
+        assertEquals(end, RecoverStructuralVariants.closest(40000, regions));
     }
 
     @Test

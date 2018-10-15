@@ -11,7 +11,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface RecoveredContext {
+interface RecoveredVariant {
 
     @NotNull
     PurpleCopyNumber copyNumber();

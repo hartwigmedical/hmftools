@@ -8,15 +8,14 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -30,8 +29,6 @@ import com.hartwig.hmftools.common.purple.baf.ExpectedBAF;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFactory;
@@ -59,9 +56,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.filter.SGTFilter;
-import com.hartwig.hmftools.common.variant.recovery.RecoveredContext;
-import com.hartwig.hmftools.common.variant.recovery.RecoveredVariantFile;
-import com.hartwig.hmftools.common.variant.recovery.StructuralVariantRecovery;
+import com.hartwig.hmftools.common.variant.recovery.RecoverStructuralVariants;
 import com.hartwig.hmftools.common.version.VersionInfo;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.config.CircosConfig;
@@ -178,35 +173,21 @@ public class PurityPloidyEstimateApplication {
 
             StructuralVariantConfig svConfig = configSupplier.structuralVariantConfig();
             if (svConfig.recoveryFile().isPresent()) {
+                final String vcfRecoveryFile = svConfig.recoveryFile().get().toString();
+                try (final RecoverStructuralVariants recovery = new RecoverStructuralVariants(purityAdjuster,
+                        vcfRecoveryFile,
+                        copyNumberFactory.copyNumbers())) {
+                    final Collection<VariantContext> recoveredVariants = recovery.recoverVariants(structuralVariants.variants());
+                    if (!recoveredVariants.isEmpty()) {
+                        recoveredVariants.forEach(structuralVariants::recoverVariant);
 
-                final ListMultimap<String, PurpleCopyNumber> copyNumberMap = ArrayListMultimap.create();
-                for (PurpleCopyNumber copyNumber : copyNumberFactory.copyNumbers()) {
-                    copyNumberMap.put(copyNumber.chromosome(), copyNumber);
-                }
+                        LOGGER.info("Recalculating segmentation with recovered structural variants");
+                        final List<ObservedRegion> recoveredObservedRegions = segmentation.createSegments(structuralVariants.variants());
 
-                final StructuralVariantRecovery recovery =
-                        new StructuralVariantRecovery(svConfig.recoveryFile().get().toString(), copyNumberMap);
-                final List<RecoveredContext> recovered = recovery.recoverAllContexts(true);
-
-                final StructuralVariantLegPloidyFactory<PurpleCopyNumber> svPloidyFactory =
-                        new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
-                final List<StructuralVariantLegPloidy> svPloidies = svPloidyFactory.create(structuralVariants.variants(), copyNumberMap);
-                recovered.addAll(recovery.recoverUnbalancedVariants(svPloidies));
-
-                RecoveredVariantFile.write(config.outputDirectory() + "/" + tumorSample + ".recovery.tsv", recovered);
-
-                // Assume we found new structural variants;
-                final Set<VariantContext> recoveredVariants = recovery.recoverContexts();
-                if (!recoveredVariants.isEmpty()) {
-                    recoveredVariants.forEach(structuralVariants::recoverVariant);
-
-                    LOGGER.info("Applying segmentation with recovered structural variants");
-                    final List<ObservedRegion> recoveredObservedRegions = segmentation.createSegments(structuralVariants.variants());
-
-                    LOGGER.info("Recalculating copy number");
-                    fittedRegions =
-                            fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions);
-                    copyNumberFactory.invoke(fittedRegions, structuralVariants.variants());
+                        LOGGER.info("Recalculating copy number");
+                        fittedRegions = fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions);
+                        copyNumberFactory.invoke(fittedRegions, structuralVariants.variants());
+                    }
                 }
             }
 

@@ -1,19 +1,29 @@
 package com.hartwig.hmftools.common.variant.recovery;
 
+import static java.util.Comparator.comparingDouble;
+
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
+import java.io.Closeable;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
+import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
@@ -25,54 +35,64 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.CloseableTribbleIterator;
 import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
-public class StructuralVariantRecovery {
+public class RecoverStructuralVariants implements Closeable {
 
-    private static final double MIN_SINGLE_QUAL_SCORE = 250; //TODO, FIX THIS AGAIN
-    private static final double MIN_MATE_QUAL_SCORE = 250;
     private static final double MIN_LENGTH = 1000;
-    private static final Comparator<RecoveredContext> QUALITY_COMPARATOR =
-            Comparator.comparingDouble(x -> x.context().getPhredScaledQual());
+    private static final double MIN_MATE_QUAL_SCORE = 350;
+    private static final double MIN_SINGLE_QUAL_SCORE = 1000;
+    private static final double UNBALANCED_MIN_PLOIDY = 0.5;
+    private static final double UNBALANCED_MAX_COPY_NUMBER_CHANGE = 0.25;
+    private static final String AF_FILTERED = "af";
+    private static final String PON_FILTERED = "PON";
 
-    private final AbstractFeatureReader<VariantContext, LineIterator> reader;
+    private static final Comparator<RecoveredVariant> QUALITY_COMPARATOR = comparingDouble(x -> x.context().getPhredScaledQual());
+
     private final ListMultimap<String, PurpleCopyNumber> allCopyNumbers;
+    private final AbstractFeatureReader<VariantContext, LineIterator> reader;
+    private final StructuralVariantLegPloidyFactory<PurpleCopyNumber> ploidyFactory;
 
-    public StructuralVariantRecovery(@NotNull final String vcfFile, @NotNull final ListMultimap<String, PurpleCopyNumber> allCopyNumbers) {
-        this.reader = getFeatureReader(vcfFile, new VCFCodec(), true);
-        this.allCopyNumbers = allCopyNumbers;
-    }
-
-
-
-    @NotNull
-    public Set<VariantContext> recoverContexts() throws IOException {
-
-        final Set<VariantContext> result = Sets.newHashSet();
-        for (RecoveredContext recoveredContext : recoverAllContexts(false)) {
-            result.add(recoveredContext.context());
-            if (recoveredContext.mate() != null) {
-                result.add(recoveredContext.mate());
-            }
-
+    public RecoverStructuralVariants(@NotNull final PurityAdjuster purityAdjuster, @NotNull final String recoveryVCF,
+            @NotNull final List<PurpleCopyNumber> allCopyNumbers) {
+        this.reader = getFeatureReader(recoveryVCF, new VCFCodec(), true);
+        this.allCopyNumbers = ArrayListMultimap.create();
+        for (PurpleCopyNumber copyNumber : allCopyNumbers) {
+            this.allCopyNumbers.put(copyNumber.chromosome(), copyNumber);
         }
-
-        return result;
+        ploidyFactory = new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
     }
 
     @NotNull
-    public List<RecoveredContext> recoverUnbalancedVariants(List<StructuralVariantLegPloidy> svPloidies) throws IOException {
-        final List<RecoveredContext> result = Lists.newArrayList();
+    public Collection<VariantContext> recoverVariants(@NotNull final List<StructuralVariant> currentVariants) throws IOException {
+        final Map<String, VariantContext> result = Maps.newHashMap();
+
+        final List<StructuralVariant> doubleEndedVariants =
+                currentVariants.stream().filter(x -> x.type() != StructuralVariantType.SGL).collect(Collectors.toList());
+
+        final List<StructuralVariantLegPloidy> doubleEndedPloidies = ploidyFactory.create(doubleEndedVariants, allCopyNumbers);
+
+        recoverFromUnbalancedVariants(doubleEndedPloidies).forEach(x -> addToMap(result, x));
+        recoverFromUnexplainedSegments().forEach(x -> addToMap(result, x));
+
+        return result.values();
+    }
+
+    @NotNull
+    private List<RecoveredVariant> recoverFromUnbalancedVariants(@NotNull final List<StructuralVariantLegPloidy> svPloidies)
+            throws IOException {
+        final List<RecoveredVariant> result = Lists.newArrayList();
 
         for (StructuralVariantLegPloidy svPloidy : svPloidies) {
-            if (Doubles.greaterThan(svPloidy.averageImpliedPloidy(), 0.5) && absAdjustedCopyNumberChange(svPloidy) < 0.25) {
+            if (isUnbalanced(svPloidy)) {
                 final List<PurpleCopyNumber> chromosomeCopyNumbers = allCopyNumbers.get(svPloidy.chromosome());
                 int index = indexOf(svPloidy.position(), chromosomeCopyNumbers);
                 if (index > 1) {
-                    result.addAll(recoverAllContexts(-1 * svPloidy.orientation(), index, chromosomeCopyNumbers));
+                    int expectedOrientation = -1 * svPloidy.orientation();
+                    result.addAll(recoverAllVariants(expectedOrientation, index, chromosomeCopyNumbers));
+                    recoverSingleVariant(expectedOrientation, index, chromosomeCopyNumbers).ifPresent(result::add);
                 }
             }
         }
@@ -80,26 +100,20 @@ public class StructuralVariantRecovery {
         return result;
     }
 
-
     @NotNull
-    public List<RecoveredContext> recoverAllContexts(boolean all) throws IOException {
+    private List<RecoveredVariant> recoverFromUnexplainedSegments() throws IOException {
 
-        final List<RecoveredContext> result = Lists.newArrayList();
+        final List<RecoveredVariant> result = Lists.newArrayList();
 
         for (String chromosome : allCopyNumbers.keySet()) {
             final List<PurpleCopyNumber> chromosomeCopyNumbers = allCopyNumbers.get(chromosome);
 
-            for (int i = 1; i < chromosomeCopyNumbers.size() - 1; i++) {
-                final PurpleCopyNumber current = chromosomeCopyNumbers.get(i);
+            for (int index = 1; index < chromosomeCopyNumbers.size() - 1; index++) {
+                final PurpleCopyNumber current = chromosomeCopyNumbers.get(index);
                 if (current.segmentStartSupport() == SegmentSupport.NONE) {
-                    PurpleCopyNumber prev = chromosomeCopyNumbers.get(i - 1);
+                    PurpleCopyNumber prev = chromosomeCopyNumbers.get(index - 1);
                     int expectedOrientation = Doubles.greaterThan(current.averageTumorCopyNumber(), prev.averageTumorCopyNumber()) ? -1 : 1;
-                    final List<RecoveredContext> recovered = recoverAllContexts(expectedOrientation, i, chromosomeCopyNumbers);
-                    if (all) {
-                        result.addAll(recovered);
-                    } else if (!recovered.isEmpty()) {
-                        result.add(recovered.get(0));
-                    }
+                    recoverSingleVariant(expectedOrientation, index, chromosomeCopyNumbers).ifPresent(result::add);
                 }
             }
         }
@@ -108,14 +122,20 @@ public class StructuralVariantRecovery {
     }
 
     @NotNull
-    private List<RecoveredContext> recoverAllContexts(int expectedOrientation, int index, @NotNull final List<PurpleCopyNumber> copyNumbers)
+    private Optional<RecoveredVariant> recoverSingleVariant(int expectedOrientation, int index,
+            @NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException {
+        return recoverAllVariants(expectedOrientation, index, copyNumbers).stream().findFirst();
+    }
+
+    @NotNull
+    private List<RecoveredVariant> recoverAllVariants(int expectedOrientation, int index, @NotNull final List<PurpleCopyNumber> copyNumbers)
             throws IOException {
         assert (index > 1);
 
         PurpleCopyNumber prev = copyNumbers.get(index - 1);
         PurpleCopyNumber current = copyNumbers.get(index);
 
-        final List<RecoveredContext> result = Lists.newArrayList();
+        final List<RecoveredVariant> result = Lists.newArrayList();
         long minPosition = Math.max(1, current.minStart() - 1000);
         long maxPosition = current.maxStart() + 1000;
         result.addAll(recover(expectedOrientation, minPosition, maxPosition, current, prev));
@@ -124,9 +144,9 @@ public class StructuralVariantRecovery {
     }
 
     @NotNull
-    private List<RecoveredContext> recover(int expectedOrientation, long min, long max, @NotNull final PurpleCopyNumber current,
+    private List<RecoveredVariant> recover(int expectedOrientation, long min, long max, @NotNull final PurpleCopyNumber current,
             @NotNull final PurpleCopyNumber prev) throws IOException {
-        List<RecoveredContext> result = Lists.newArrayList();
+        List<RecoveredVariant> result = Lists.newArrayList();
 
         List<VariantContext> recovered = findVariants(current.chromosome(), min, max);
         for (VariantContext potentialVariant : recovered) {
@@ -156,7 +176,7 @@ public class StructuralVariantRecovery {
                     : StructuralVariantFactory.createSingleBreakend(potentialVariant);
 
             if (hasPotential(min, max, sv)) {
-                result.add(ImmutableRecoveredContext.builder()
+                result.add(ImmutableRecoveredVariant.builder()
                         .context(potentialVariant)
                         .mate(mate)
                         .mateCopyNumber(mateCopyNumber)
@@ -225,32 +245,27 @@ public class StructuralVariantRecovery {
     @NotNull
     private List<VariantContext> findVariants(@NotNull final String chromosome, final long lowerBound, final long upperBound)
             throws IOException {
-        final List<VariantContext> result = Lists.newArrayList();
 
-        try (CloseableTribbleIterator<VariantContext> iterator = reader.query(chromosome, (int) lowerBound, (int) upperBound)) {
-            for (VariantContext variant : iterator) {
-                if (variant.isFiltered()) {
-                    result.add(variant);
-                }
-            }
-        }
+        return reader.query(chromosome, (int) lowerBound, (int) upperBound)
+                .stream()
+                .filter(this::isEligibleForRecovery)
+                .collect(Collectors.toList());
+    }
 
-        return result;
+    private boolean isEligibleForRecovery(@NotNull VariantContext variantContext) {
+        final Set<String> filters = variantContext.getFilters();
+        return !filters.isEmpty() && filters.contains(PON_FILTERED) && filters.contains(AF_FILTERED);
     }
 
     @NotNull
     private VariantContext findMate(@NotNull final String id, @NotNull final String chromosome, final long min, final long max)
             throws IOException {
 
-        try (CloseableTribbleIterator<VariantContext> iterator = reader.query(chromosome, (int) min, (int) max)) {
-            for (VariantContext variant : iterator) {
-                if (variant.getID().equals(id)) {
-                    return variant;
-                }
-            }
-        }
-
-        throw new IOException("Unable to find mateId " + id + " between " + min + " and " + max);
+        return reader.query(chromosome, (int) min, (int) max)
+                .stream()
+                .filter(x -> x.getID().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new IOException("Unable to find mateId " + id + " between " + min + " and " + max));
     }
 
     @Nullable
@@ -274,12 +289,12 @@ public class StructuralVariantRecovery {
     }
 
     @Nullable
-    static String mateChromosome(@Nullable String mate) {
+    private static String mateChromosome(@Nullable String mate) {
         return mate == null || !mate.contains(":") ? null : mate.split(":")[0];
     }
 
     @Nullable
-    static Long matePosition(@Nullable String mate) {
+    private static Long matePosition(@Nullable String mate) {
         return mate == null || !mate.contains(":") ? null : Long.valueOf(mate.split(":")[1]);
     }
 
@@ -305,7 +320,7 @@ public class StructuralVariantRecovery {
     }
 
     @VisibleForTesting
-    static <T extends GenomeRegion> int indexOf(long start, @NotNull final List<T> regions) {
+    private static <T extends GenomeRegion> int indexOf(long start, @NotNull final List<T> regions) {
         assert (!regions.isEmpty());
         for (int i = 0; i < regions.size(); i++) {
             if (regions.get(i).start() == start) {
@@ -314,8 +329,6 @@ public class StructuralVariantRecovery {
         }
 
         return -1;
-        //        throw new UnsupportedOperationException();
-
     }
 
     @VisibleForTesting
@@ -336,10 +349,28 @@ public class StructuralVariantRecovery {
         return regions.get(regions.size() - 1);
     }
 
+    private static void addToMap(@NotNull Map<String, VariantContext> map, @NotNull RecoveredVariant variant) {
+        map.put(variant.context().getID(), variant.context());
+        VariantContext mate = variant.mate();
+        if (mate != null) {
+            map.put(mate.getID(), mate);
+        }
+    }
+
+    private static boolean isUnbalanced(@NotNull final StructuralVariantLegPloidy svPloidy) {
+        return Doubles.greaterThan(svPloidy.averageImpliedPloidy(), UNBALANCED_MIN_PLOIDY) && Doubles.lessThan(absAdjustedCopyNumberChange(
+                svPloidy), UNBALANCED_MAX_COPY_NUMBER_CHANGE);
+    }
+
     private static double absAdjustedCopyNumberChange(@NotNull final StructuralVariantLegPloidy ploidy) {
         double leftCopyNumber = ploidy.leftCopyNumber().orElse(0D);
         double rightCopyNumber = ploidy.rightCopyNumber().orElse(0D);
 
         return ploidy.orientation() == 1 ? leftCopyNumber - rightCopyNumber : rightCopyNumber - leftCopyNumber;
+    }
+
+    @Override
+    public void close() throws IOException {
+        reader.close();
     }
 }
