@@ -293,6 +293,7 @@ class BachelorEligibility {
                         .effects(snpEff.effects())
                         .annotations(annotationsStr)
                         .hgvsProtein(snpEff.hgvsProtein())
+                        .hgvsCoding(snpEff.hgvsCoding())
                         .isHomozygous(isHomozygous)
                         .phredScore(phredScore)
                         .build();

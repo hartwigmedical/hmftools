@@ -58,6 +58,32 @@ public class BachelorApplication {
     private static final String SAMPLE = "sample";
     private static final String LOG_DEBUG = "log_debug";
 
+    private Map<String, Program> mProgramMap;
+    private BufferedWriter mMainDataWriter;
+    private BufferedWriter mBedFileWriter;
+
+    // config
+    private String mOutputDir;
+    private String mBatchDirectoy;
+    private String mRunDirectoy;
+    private boolean mIsBatchRun;
+    private boolean mIsSingleRun;
+    private String mSampleId;
+    private boolean mRunGermline;
+    private boolean mRunSomatic;
+    private boolean mRunCopyNumber;
+    private boolean mRunStructuralVariants;
+
+    public BachelorApplication()
+    {
+        mProgramMap = null;
+        mMainDataWriter = null;
+        mBedFileWriter = null;
+
+        mIsSingleRun = false;
+        mIsBatchRun = false;
+    }
+
     @NotNull
     private static Options createOptions()
     {
@@ -78,21 +104,155 @@ public class BachelorApplication {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException {
+    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException
+    {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
 
-    private static void printHelpAndExit(final Options options)
+    public boolean loadConfig(final CommandLine cmd)
     {
-        final HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("Bachelor", "Determines eligibility", options, "", true);
-        System.exit(1);
+        try
+        {
+            // load configs
+            if (cmd.hasOption(CONFIG_DIRECTORY))
+            {
+                mProgramMap = BachelorHelper.loadXML(Paths.get(cmd.getOptionValue(CONFIG_DIRECTORY)));
+            }
+            else if (cmd.hasOption(CONFIG_XML))
+            {
+                mProgramMap = BachelorHelper.loadXML(Paths.get(cmd.getOptionValue(CONFIG_XML)));
+            }
+            else
+            {
+                LOGGER.error("config directory or xml required!");
+                return false;
+            }
+        }
+        catch(Exception e)
+        {
+            LOGGER.error("error loading XML: {}", e.toString());
+            return false;
+        }
+
+        if (cmd.hasOption(VALIDATE))
+        {
+            return true;
+        }
+
+        if (mProgramMap.isEmpty())
+        {
+            LOGGER.error("no programs loaded, exiting");
+            return false;
+        }
+
+        mOutputDir = cmd.getOptionValue(OUTPUT_DIR);
+        mSampleId = cmd.getOptionValue(SAMPLE);
+
+        mIsBatchRun = cmd.hasOption(BATCH_DIRECTORY);
+        mIsSingleRun = cmd.hasOption(RUN_DIRECTORY);
+
+        if(cmd.hasOption(BATCH_DIRECTORY))
+        {
+            mBatchDirectoy = cmd.getOptionValue(BATCH_DIRECTORY);
+            mIsBatchRun = true;
+        }
+        else if(cmd.hasOption(RUN_DIRECTORY))
+        {
+            mIsSingleRun = true;
+            mRunDirectoy = cmd.getOptionValue(RUN_DIRECTORY);
+        }
+
+        if (!mIsBatchRun && !mIsSingleRun)
+        {
+            LOGGER.error("requires either a batch or single run directory");
+            return false;
+        }
+        else if (mIsSingleRun && (mSampleId == null || mSampleId.isEmpty()))
+        {
+            LOGGER.error("single run requires sample to be specified");
+            return false;
+        }
+
+        mRunGermline = cmd.hasOption(GERMLINE);
+        mRunSomatic = cmd.hasOption(SOMATIC);
+        mRunCopyNumber = cmd.hasOption(COPYNUMBER);
+        mRunStructuralVariants = cmd.hasOption(SV);
+
+        return true;
+    }
+
+    public boolean run()
+    {
+        final BachelorEligibility eligibility = BachelorEligibility.fromMap(mProgramMap);
+
+        if (mIsBatchRun)
+        {
+            LOGGER.info("beginning batch run");
+        }
+        else
+        {
+            LOGGER.info("beginning single sample run: {}", mSampleId);
+        }
+
+        try
+        {
+            if (mIsBatchRun)
+            {
+                final Path root = Paths.get(mBatchDirectoy);
+
+                try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS).parallel())
+                {
+                    final List<RunDirectory> runDirectories = stream.filter(p -> p.toFile().isDirectory())
+                            .filter(p -> !p.equals(root))
+                            .map(RunDirectory::new)
+                            .collect(Collectors.toList());
+
+                    LOGGER.info("found {} batch directories", runDirectories.size());
+
+                    // add the filtered and passed SV entries for each file
+                    for (final RunDirectory runDir : runDirectories)
+                    {
+                        process(eligibility, runDir, runDir.getPatientID());
+                    }
+                }
+                catch (Exception e)
+                {
+                    LOGGER.error("failed walking batch directories");
+                }
+            }
+            else if (mIsSingleRun)
+            {
+                final Path path = Paths.get(mRunDirectoy);
+
+                if (!Files.exists(path))
+                {
+                    LOGGER.error("-runDirectory path does not exist");
+                    return false;
+                }
+
+                process(eligibility, new RunDirectory(path), mSampleId);
+            }
+
+            LOGGER.info("run complete");
+
+            if(mMainDataWriter != null)
+                mMainDataWriter.close();
+
+            if(mBedFileWriter != null)
+                mBedFileWriter.close();
+        }
+        catch (IOException e)
+        {
+            LOGGER.error("failed writing output: {}", e.toString());
+        }
+
+        return true;
     }
 
     private static Collection<EligibilityReport> processVCF(final String patient, final boolean isGermline, final File vcf,
-            final BachelorEligibility eligibility) {
-
+            final BachelorEligibility eligibility)
+    {
         final EligibilityReport.ReportType type =
                 isGermline ? EligibilityReport.ReportType.GERMLINE_MUTATION : EligibilityReport.ReportType.SOMATIC_MUTATION;
 
@@ -144,43 +304,52 @@ public class BachelorApplication {
         return eligibility.processStructuralVariants(patient, factory.results());
     }
 
-    private static void process(final BachelorEligibility eligibility, final RunDirectory run, final String sampleId,
-            final boolean germline, final boolean somatic, final boolean copyNumber, final boolean structuralVariants,
-            final BufferedWriter allDataWriter, final BufferedWriter bedFileWriter) {
+    private void process(final BachelorEligibility eligibility, final RunDirectory run, final String sampleId)
+    {
         final String patient = run.getPatientID();
-        final boolean doGermline = run.germline() != null && germline;
-        final boolean doSomatic = run.somatic() != null && somatic;
-        final boolean doCopyNumber = run.copyNumber() != null && copyNumber;
-        final boolean doStructuralVariants = run.structuralVariants() != null && structuralVariants;
+        final boolean doGermline = run.germline() != null && mRunGermline;
+        final boolean doSomatic = run.somatic() != null && mRunSomatic;
+        final boolean doCopyNumber = run.copyNumber() != null && mRunCopyNumber;
+        final boolean doStructuralVariants = run.structuralVariants() != null && mRunStructuralVariants;
 
         LOGGER.info("processing run for patient({}) from file({})", patient, run.prefix());
 
         final List<EligibilityReport> result = Lists.newArrayList();
-        if (doGermline) {
+        if (doGermline)
+        {
             result.addAll(processVCF(patient, true, run.germline(), eligibility));
         }
-        if (doSomatic) {
+        if (doSomatic)
+        {
             result.addAll(processVCF(patient, false, run.somatic(), eligibility));
         }
-        if (doCopyNumber) {
+        if (doCopyNumber)
+        {
             result.addAll(processPurpleCNV(patient, run.copyNumber(), eligibility));
         }
-        if (doStructuralVariants) {
+        if (doStructuralVariants)
+        {
             result.addAll(processSV(patient, run.structuralVariants(), eligibility));
         }
+
+        if(result.isEmpty())
+            return;
+
+        createOutputFiles();
 
         try
         {
             for (final EligibilityReport r : result)
             {
-                allDataWriter.write(String.format("%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s,%s,%d",
+                mMainDataWriter.write(String.format("%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s,%s,%d,%s",
                         sampleId, r.source().toString(), r.program(), r.id(), r.genes(), r.transcriptId(),
                         r.chrom(), r.pos(), r.ref(), r.alts(), r.effects(), r.annotations(),
-                        r.hgvsProtein(), r.isHomozygous(), r.phredScore()));
-                allDataWriter.newLine();
+                        r.hgvsProtein(), r.isHomozygous(), r.phredScore(), r.hgvsCoding()));
 
-                bedFileWriter.write(String.format("%s\t%s\t%d\t%d", sampleId, r.chrom(), r.pos() - 1, r.pos()));
-                bedFileWriter.newLine();
+                mMainDataWriter.newLine();
+
+                mBedFileWriter.write(String.format("%s\t%s\t%d\t%d", sampleId, r.chrom(), r.pos() - 1, r.pos()));
+                mBedFileWriter.newLine();
             }
         }
         catch (final IOException e)
@@ -189,162 +358,64 @@ public class BachelorApplication {
         }
     }
 
-    private static String fileHeader() {
-        return String.join(",",
-                Arrays.asList("SAMPLEID", "SOURCE", "PROGRAM", "ID", "GENE", "TRANSCRIPT_ID", "CHROM", "POS",
-                        "REF", "ALTS", "EFFECTS",  "ANNOTATIONS", "HGVS_PROTEIN", "IS_HOMOZYGOUS", "PHRED_SCORE"));
+    private void createOutputFiles()
+    {
+        if(mMainDataWriter != null || mBedFileWriter != null)
+            return;
+
+        String outputDir = mOutputDir;
+
+        if (!outputDir.endsWith("/"))
+            outputDir += "/";
+
+        String mainFileName = outputDir + "bachelor_output.csv";
+        String bedFileName = outputDir + "bachelor_bed.csv";
+
+        try
+        {
+            mMainDataWriter = Files.newBufferedWriter(Paths.get(mainFileName));
+            mMainDataWriter.write(fileHeader());
+            mMainDataWriter.newLine();
+
+            mBedFileWriter = Files.newBufferedWriter(Paths.get(bedFileName));
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to create output files: {}", e.toString());
+        }
     }
 
-    public static void main(final String... args) {
+    private String fileHeader()
+    {
+        return String.join(",",
+                Arrays.asList("SAMPLEID", "SOURCE", "PROGRAM", "ID", "GENE", "TRANSCRIPT_ID", "CHROM", "POS",
+                        "REF", "ALTS", "EFFECTS",  "ANNOTATIONS", "HGVS_PROTEIN", "IS_HOMOZYGOUS", "PHRED_SCORE", "HGVS_CODING"));
+    }
+
+    public static void main(final String... args)
+    {
         final Options options = createOptions();
 
-        try {
+        BachelorApplication bachelorApp = new BachelorApplication();
+
+        try
+        {
             final CommandLine cmd = createCommandLine(options, args);
 
-            if (cmd.hasOption(LOG_DEBUG)) {
+            if (cmd.hasOption(LOG_DEBUG))
                 Configurator.setRootLevel(Level.DEBUG);
-            }
 
-            // load configs
-            final Map<String, Program> map;
-            if (cmd.hasOption(CONFIG_DIRECTORY)) {
-                map = BachelorHelper.loadXML(Paths.get(cmd.getOptionValue(CONFIG_DIRECTORY)));
-            } else if (cmd.hasOption(CONFIG_XML)) {
-                map = BachelorHelper.loadXML(Paths.get(cmd.getOptionValue(CONFIG_XML)));
-            } else {
-                LOGGER.error("config directory or xml required!");
+            if(!bachelorApp.loadConfig(cmd))
+            {
                 System.exit(1);
                 return;
             }
 
-            if (cmd.hasOption(VALIDATE))
+            if(!bachelorApp.run())
             {
-                System.exit(0);
-                return;
-            }
-
-            if (map.isEmpty())
-            {
-                LOGGER.error("no programs loaded, exiting");
                 System.exit(1);
                 return;
             }
-
-            boolean isBatchRun = cmd.hasOption(BATCH_DIRECTORY);
-            boolean isSingleRun = cmd.hasOption(RUN_DIRECTORY);
-            final String sampleId = cmd.getOptionValue(SAMPLE);
-
-            if (!isBatchRun && !isSingleRun)
-            {
-                LOGGER.error("requires either a batch or single run directory");
-                System.exit(1);
-                return;
-            }
-            else if (isSingleRun && (sampleId == null || sampleId.isEmpty()))
-            {
-                LOGGER.error("single run requires sample to be specified");
-                System.exit(1);
-                return;
-            }
-
-            final BachelorEligibility eligibility = BachelorEligibility.fromMap(map);
-
-            if (isBatchRun)
-            {
-                LOGGER.info("beginning batch run");
-            }
-            else
-            {
-                LOGGER.info("beginning single sample run: {}", sampleId);
-            }
-
-            final boolean germline = cmd.hasOption(GERMLINE);
-            final boolean somatic = cmd.hasOption(SOMATIC);
-            final boolean copyNumber = cmd.hasOption(COPYNUMBER);
-            final boolean structuralVariants = cmd.hasOption(SV);
-            final boolean doAll = !(germline || somatic || copyNumber || structuralVariants);
-
-            try
-            {
-                String outputDir = cmd.getOptionValue(OUTPUT_DIR);
-
-                if (!outputDir.endsWith("/"))
-                    outputDir += "/";
-
-                String mainFileName = outputDir + "bachelor_output.csv";
-                String bedFileName = outputDir + "bachelor_bed.csv";
-
-                final BufferedWriter mainDataWriter = Files.newBufferedWriter(Paths.get(mainFileName));
-                mainDataWriter.write(fileHeader());
-                mainDataWriter.newLine();
-
-                final BufferedWriter bedFileWriter = Files.newBufferedWriter(Paths.get(bedFileName));
-
-                if (cmd.hasOption(BATCH_DIRECTORY))
-                {
-                    final Path root = Paths.get(cmd.getOptionValue(BATCH_DIRECTORY));
-
-                    try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS).parallel())
-                    {
-                        final List<RunDirectory> runDirectories = stream.filter(p -> p.toFile().isDirectory())
-                                .filter(p -> !p.equals(root))
-                                .map(RunDirectory::new)
-                                .collect(Collectors.toList());
-
-                        LOGGER.info("found {} batch directories", runDirectories.size());
-
-                        // add the filtered and passed SV entries for each file
-                        for (final RunDirectory runDir : runDirectories)
-                        {
-                            process(eligibility,
-                                    runDir,
-                                    runDir.getPatientID(),
-                                    germline || doAll,
-                                    somatic || doAll,
-                                    copyNumber || doAll,
-                                    structuralVariants || doAll,
-                                    mainDataWriter,
-                                    bedFileWriter);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        LOGGER.error("failed walking batch directories");
-                    }
-                }
-                else if (cmd.hasOption(RUN_DIRECTORY))
-                {
-                    final Path path = Paths.get(cmd.getOptionValue(RUN_DIRECTORY));
-                    if (!Files.exists(path))
-                    {
-                        LOGGER.error("-runDirectory path does not exist");
-                        System.exit(1);
-                        return;
-                    }
-
-                    process(eligibility,
-                            new RunDirectory(path),
-                            sampleId,
-                            germline || doAll,
-                            somatic || doAll,
-                            copyNumber || doAll,
-                            structuralVariants || doAll,
-                            mainDataWriter,
-                            bedFileWriter);
-                }
-
-                mainDataWriter.close();
-                bedFileWriter.close();
-            }
-            catch (IOException e)
-            {
-                LOGGER.error("failed writing output: {}", e.toString());
-            }
-
-            LOGGER.info("processing complete");
-
-            LOGGER.info("run complete");
-
         }
         catch (final ParseException e)
         {
@@ -355,4 +426,12 @@ public class BachelorApplication {
             e.printStackTrace();
         }
     }
+
+    private static void printHelpAndExit(final Options options)
+    {
+        final HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp("Bachelor", "Determines eligibility", options, "", true);
+        System.exit(1);
+    }
+
 }

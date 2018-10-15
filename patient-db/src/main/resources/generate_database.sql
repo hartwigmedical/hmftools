@@ -602,6 +602,7 @@ CREATE TABLE germlineVariant
     highConfidence BOOLEAN NOT NULL,
     trinucleotideContext varchar(3) NOT NULL,
     hgvsProtein varchar(255) NOT NULL,
+    hgvsCoding varchar(255) NOT NULL,
     biallelic BOOLEAN NOT NULL,
     hotspot BOOLEAN NOT NULL,
     mappability DOUBLE PRECISION NOT NULL,

@@ -17,6 +17,10 @@ class RunDirectory {
     private final File copyNumber;
     private final File structuralVariants;
 
+    private String VCF_FILE_SUFFIX1 = "annotated.vcf";
+    private String VCF_FILE_SUFFIX2 = "GoNLv5.vcf";
+    private String VCF_FILE_SUFFIX3 = "annotated.vcf.gz";
+
     RunDirectory(final Path runDirectory) {
         prefix = runDirectory;
         germline = findGermline();
@@ -52,7 +56,9 @@ class RunDirectory {
         {
             try (final Stream<Path> stream = Files.walk(prefix.toRealPath(), 1, FileVisitOption.FOLLOW_LINKS))
             {
-                return stream.filter(p -> p.toString().endsWith("GoNLv5.vcf") || p.toString().endsWith("annotated.vcf") || p.toString().endsWith("annotated.vcf.gz"))
+                return stream.filter(p -> p.toString().endsWith(VCF_FILE_SUFFIX1)
+                        || p.toString().endsWith(VCF_FILE_SUFFIX2)
+                        || p.toString().endsWith(VCF_FILE_SUFFIX3))
                         .map(Path::toFile)
                         .findFirst()
                         .orElse(null);
