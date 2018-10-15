@@ -29,6 +29,23 @@ public class ExtendLongArmTest {
         assertCombinedRegion(5001, 20000, 2, CopyNumberMethod.UNKNOWN, result.get(1));
     }
 
+
+    @Test
+    public void testExtendThroughStructuralVariantButKeepBreakIntact() {
+
+        final CombinedRegion first = createCombinedRegion(1, 1000, 3, 0.3, SegmentSupport.NONE);
+        final CombinedRegion second = createCombinedRegion(1001, 2000, 3, 0.3, SegmentSupport.NONE);
+        final CombinedRegion third = createCombinedRegion(2001, 5000, 3, 0.3, SegmentSupport.BND);
+        final CombinedRegion centromere = createCombinedRegion(5001, 20000, 2, 0.5, SegmentSupport.CENTROMERE);
+
+        final List<CombinedRegion> result = ExtendLongArm.extendLongArm(Lists.newArrayList(first, second, third, centromere));
+        assertEquals(3, result.size());
+
+        assertCombinedRegion(1, 2000, 2, CopyNumberMethod.LONG_ARM, result.get(0));
+        assertCombinedRegion(2001, 5000, 2, CopyNumberMethod.LONG_ARM, result.get(1));
+        assertCombinedRegion(5001, 20000, 2, CopyNumberMethod.UNKNOWN, result.get(2));
+    }
+
     @Test
     public void testDoesNotExtendRight() {
         final CombinedRegion centromere = createCombinedRegion(10001, 20000, 2, 0.5, SegmentSupport.CENTROMERE);
