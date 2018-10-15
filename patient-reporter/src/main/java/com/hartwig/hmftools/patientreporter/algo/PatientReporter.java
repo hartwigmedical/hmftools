@@ -112,7 +112,7 @@ public abstract class PatientReporter {
                 .size()));
         LOGGER.info("Number of actionability variants ranges to report: " + Integer.toString(somaticVariantAnalysis.actionableVariantsReportRange()
                 .size()));
-//        LOGGER.info("Number of actionability CNVs to report: " + Integer.toString(somaticVariantAnalysis.actionableVariantsCNV().size()));
+        LOGGER.info("Number of actionability CNVs to report: " + Integer.toString(somaticVariantAnalysis.actionableVariantsCNV().size()));
 
         final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample,
                 patientTumorLocation,
@@ -128,8 +128,10 @@ public abstract class PatientReporter {
                 somaticVariantAnalysis.variantsToReport(),
                 somaticVariantAnalysis.actionableVariantsReport(),
                 somaticVariantAnalysis.actionableVariantsReportRange(),
+                somaticVariantAnalysis.actionableVariantsCNV(),
                 somaticVariantAnalysis.evidence(),
                 somaticVariantAnalysis.evidenceRange(),
+                somaticVariantAnalysis.evidenceCNV(),
                 somaticVariantAnalysis.driverCatalog(),
                 somaticVariantAnalysis.microsatelliteIndelsPerMb(),
                 somaticVariantAnalysis.tumorMutationalLoad(),

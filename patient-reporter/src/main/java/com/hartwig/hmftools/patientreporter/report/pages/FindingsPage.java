@@ -20,7 +20,6 @@ import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSect
 import com.hartwig.hmftools.patientreporter.report.components.MutationalLoadSection;
 import com.hartwig.hmftools.patientreporter.report.components.TumorMutationBurdenSection;
 import com.hartwig.hmftools.patientreporter.report.data.EvidenceItemDataSource;
-import com.hartwig.hmftools.patientreporter.report.data.EvidenceItemDataSourceCNVs;
 import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionDataSource;

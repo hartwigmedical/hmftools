@@ -27,13 +27,18 @@ import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.patientreporter.algo.PatientReporter;
 import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class SomaticVariantAnalyzer {
+    private static final Logger LOGGER = LogManager.getLogger(SomaticVariantAnalyzer.class);
+
     private static final List<CodingEffect> TSG_CODING_EFFECTS_TO_REPORT =
             Lists.newArrayList(CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.MISSENSE, CodingEffect.SPLICE);
 
@@ -60,35 +65,42 @@ public final class SomaticVariantAnalyzer {
         final String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : Strings.EMPTY;
         CancerTypeMappingReading cancerTypeMappingReading = CancerTypeMappingReading.readingFile();
         String doidsPrimaryTumorLocation = cancerTypeMappingReading.doidsForPrimaryTumorLocation(primaryTumorLocation);
+        LOGGER.info("primaryTumorLocation: " + primaryTumorLocation);
+        LOGGER.info("cancerTypeMappingReading: " + cancerTypeMappingReading);
+        LOGGER.info("doid: " + doidsPrimaryTumorLocation);
 
         Set<String> actionableGenesVariants = actionabilityAnalyzerData.variantAnalyzer().actionableGenes();
+        Set<String> actionableGenesCNVS = actionabilityAnalyzerData.cnvAnalyzer().actionableGenes();
 
+        LOGGER.info("evidence items variants");
         final List<EvidenceItem> variant = Lists.newArrayList();
         Map<EnrichedSomaticVariant, VariantEvidenceItems> evidencePerVariant =
                 ActionabilityVariantAnalyzer.detectVariants(actionableGenesVariants, variants, doidsPrimaryTumorLocation, actionabilityAnalyzerData);
 
-        final List<ActionabilityRange> variantRange = Lists.newArrayList();
-        Map<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> evidencePerVariantRanges =
-                ActionabilityVariantAnalyzer.detectVariantsRanges(actionableGenesVariants, variants, doidsPrimaryTumorLocation, actionabilityAnalyzerData);
-//
-//        final List<ActionabilityCNVs> CNVs = Lists.newArrayList();
-//        Map<GeneCopyNumber, ActionabilityCNVsEvidenceItems> evidencePerVariantCNVs =
-//                ActionabilityVariantAnalyzer.detectCNVs(geneCopyNumbers, patientTumorLocation);
-//
         for (Map.Entry<EnrichedSomaticVariant, VariantEvidenceItems> entry : evidencePerVariant.entrySet()) {
             variant.addAll(entry.getValue().onLabel());
             variant.addAll(entry.getValue().offLabel());
         }
-//
-//        for (Map.Entry<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> entryRange : evidencePerVariantRanges.entrySet()) {
-//            variantRange.addAll(entryRange.getValue().onLabel());
-//            variantRange.addAll(entryRange.getValue().offLabel());
-//        }
-//
-//        for (Map.Entry<GeneCopyNumber, ActionabilityCNVsEvidenceItems> entryCNVs : evidencePerVariantCNVs.entrySet()) {
-//            CNVs.addAll(entryCNVs.getValue().onLabel());
-//            CNVs.addAll(entryCNVs.getValue().offLabel());
-//        }
+
+        LOGGER.info("evidence items variants ranges");
+        final List<ActionabilityRange> variantRange = Lists.newArrayList();
+        Map<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> evidencePerVariantRanges =
+                ActionabilityVariantAnalyzer.detectVariantsRanges(actionableGenesVariants, variants, doidsPrimaryTumorLocation, actionabilityAnalyzerData);
+
+        for (Map.Entry<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> entryRange : evidencePerVariantRanges.entrySet()) {
+            variantRange.addAll(entryRange.getValue().onLabel());
+            variantRange.addAll(entryRange.getValue().offLabel());
+        }
+
+        LOGGER.info("evidence items CNVs");
+        final List<ActionabilityCNVs> CNVs = Lists.newArrayList();
+        Map<GeneCopyNumber, ActionabilityCNVsEvidenceItems> evidencePerVariantCNVs =
+                ActionabilityVariantAnalyzer.detectCNVs(actionableGenesCNVS, geneCopyNumbers, doidsPrimaryTumorLocation, actionabilityAnalyzerData);
+
+        for (Map.Entry<GeneCopyNumber, ActionabilityCNVsEvidenceItems> entryCNVs : evidencePerVariantCNVs.entrySet()) {
+            CNVs.addAll(entryCNVs.getValue().onLabel());
+            CNVs.addAll(entryCNVs.getValue().offLabel());
+        }
 
 
         return ImmutableSomaticVariantAnalysis.of(variantsToReport,
@@ -98,7 +110,8 @@ public final class SomaticVariantAnalyzer {
                 tumorMutationalBurden,
                 variant,
                 variantRange,
-                evidencePerVariant, evidencePerVariantRanges);
+                CNVs,
+                evidencePerVariant, evidencePerVariantRanges, evidencePerVariantCNVs);
     }
 
     @NotNull

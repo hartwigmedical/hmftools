@@ -9,6 +9,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRange;
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRangeEvidenceItem;
@@ -44,14 +45,14 @@ public class ActionabilityCNVsAnalyzer {
         return genes;
     }
 
-    public ActionabilityCNVsEvidenceItems actionableCNVs(@NotNull GeneCopyNumber geneCopyNumber, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
-            @Nullable String doidsPrimaryTumorLocation) {
+    public ActionabilityCNVsEvidenceItems actionableCNVs(@NotNull GeneCopyNumber geneCopyNumber, @Nullable String doidsPrimaryTumorLocation,
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzerData) {
         Double minCopyValue = (double) Math.max(0, Math.round(geneCopyNumber.minCopyNumber()));
         List<ActionabilityCNVs> onLabel = Lists.newArrayList();
         List<ActionabilityCNVs> offLabel = Lists.newArrayList();
         for (ActionabilityCNVs actionabilityCNVs : CNVs) {
             if (checkCNVType(minCopyValue).equals(actionabilityCNVs.cnvType())) {
-                if (cancerTypeAnalyzer.foundTumorLocation(actionabilityCNVs.cancerType(), doidsPrimaryTumorLocation)) {
+                if (actionabilityAnalyzerData.cancerTypeAnalyzer().foundTumorLocation(actionabilityCNVs.cancerType(), doidsPrimaryTumorLocation)) {
                     printCNVRow(actionabilityCNVs, "yes");
                     onLabel.add(actionabilityCNVs);
                 } else {

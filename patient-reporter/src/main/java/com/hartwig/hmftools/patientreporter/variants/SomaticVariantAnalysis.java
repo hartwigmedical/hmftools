@@ -39,9 +39,9 @@ public abstract class SomaticVariantAnalysis {
 
     @NotNull
     public abstract List<ActionabilityRange> actionableVariantsReportRange();
-//
-//    @NotNull
-//    public abstract List<ActionabilityCNVs> actionableVariantsCNV();
+
+    @NotNull
+    public abstract List<ActionabilityCNVs> actionableVariantsCNV();
 
     @NotNull
     public abstract Map<EnrichedSomaticVariant, VariantEvidenceItems> evidence();
@@ -49,7 +49,7 @@ public abstract class SomaticVariantAnalysis {
     @NotNull
     public abstract Map<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> evidenceRange();
 
-//    @NotNull
-//    public abstract Map<GeneCopyNumber, ActionabilityCNVsEvidenceItems> evidenceCNV();
+    @NotNull
+    public abstract Map<GeneCopyNumber, ActionabilityCNVsEvidenceItems> evidenceCNV();
 
 }

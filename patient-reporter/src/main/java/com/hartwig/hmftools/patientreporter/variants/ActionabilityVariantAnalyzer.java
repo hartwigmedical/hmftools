@@ -10,8 +10,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
+import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVsEvidenceItems;
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRangeEvidenceItem;
 import com.hartwig.hmftools.common.actionability.somaticvariant.VariantEvidenceItems;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -57,36 +59,22 @@ public final class ActionabilityVariantAnalyzer {
         return evidenceItemsPerVariantRange;
     }
 
-    //    @NotNull
-    //    public static <T extends GeneCopyNumber> Map<T, ActionabilityCNVsEvidenceItems> detectCNVs(@NotNull List<T> CNVs,
-    //            @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
-    //        Map<T, ActionabilityCNVsEvidenceItems> evidenceItemsPerVariantCNVs = Maps.newHashMap();
-    //        final String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : Strings.EMPTY;
-    //        CancerTypeMappingReading cancerTypeMappingReading = CancerTypeMappingReading.readingFile();
-    //        String doidsPrimaryTumorLocation = cancerTypeMappingReading.doidsForPrimaryTumorLocation(primaryTumorLocation);
-    //
-    //        if (Files.exists(new File(FILE_ACTIONABILITY_CNVS).toPath()) && Files.exists(new File(FILE_CANCER_TUMORS_WITH_DOID).toPath())) {
-    //            ActionabilityCNVsAnalyzer analyzerCNVs = ActionabilityCNVsAnalyzer.loadFromFileCNVs(FILE_ACTIONABILITY_CNVS);
-    //            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(FILE_CANCER_TUMORS_WITH_DOID);
-    //
-    //            Set<String> actionableGenesCNVS = analyzerCNVs.actionableGenes();
-    //
-    //            List<T> variantsOnActionableGenes = CNVs.stream()
-    //                    .filter(geneCopyNumber -> actionableGenesCNVS.contains(geneCopyNumber.gene()))
-    //                    .collect(Collectors.toList());
-    //
-    //            for (T CNV : variantsOnActionableGenes) {
-    //                evidenceItemsPerVariantCNVs.put(CNV, analyzerCNVs.actionableCNVs(CNV, cancerTypeAnalyzer, doidsPrimaryTumorLocation));
-    //            }
-    //
-    //        } else if (!Files.exists(new File(FILE_ACTIONABILITY_CNVS).toPath())) {
-    //            LOGGER.warn("File does not exist: " + FILE_ACTIONABILITY_CNVS);
-    //        } else if (!Files.exists(new File(FILE_CANCER_TUMORS_WITH_DOID).toPath())) {
-    //            LOGGER.warn("File does not exist: " + FILE_CANCER_TUMORS_WITH_DOID);
-    //        }
-    //        return evidenceItemsPerVariantCNVs;
-    //    }
-    //
+    @NotNull
+    public static <T extends GeneCopyNumber> Map<T, ActionabilityCNVsEvidenceItems> detectCNVs(
+            @NotNull Set<String> actionableGenesVariantsCNVs, @NotNull List<T> CNVs, @Nullable String doidsPrimaryTumorLocation,
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzerData) {
+        Map<T, ActionabilityCNVsEvidenceItems> evidenceItemsPerVariantCNVs = Maps.newHashMap();
+
+        List<T> variantsOnActionableGenes =
+                CNVs.stream().filter(geneCopyNumber -> actionableGenesVariantsCNVs.contains(geneCopyNumber.gene())).collect(Collectors.toList());
+
+        for (T CNV : variantsOnActionableGenes) {
+            evidenceItemsPerVariantCNVs.put(CNV, actionabilityAnalyzerData.cnvAnalyzer().actionableCNVs(CNV, doidsPrimaryTumorLocation, actionabilityAnalyzerData));
+        }
+
+        return evidenceItemsPerVariantCNVs;
+    }
+
     //    @NotNull
     //    public static <T extends GeneFusion> Map<T, FusionEvidenceItems> detectFusions(@NotNull List<T> fusion,
     //            @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
