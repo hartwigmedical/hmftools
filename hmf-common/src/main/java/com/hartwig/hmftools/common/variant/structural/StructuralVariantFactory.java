@@ -281,7 +281,7 @@ public class StructuralVariantFactory {
         return setCommon(ImmutableStructuralVariantImpl.builder(), context)
                 .start(startLeg)
                 .insertSequence(insertedSequence)
-                .type(StructuralVariantType.BND)
+                .type(StructuralVariantType.SGL)
                 .filter(filters(context, null))
                 .build();
 

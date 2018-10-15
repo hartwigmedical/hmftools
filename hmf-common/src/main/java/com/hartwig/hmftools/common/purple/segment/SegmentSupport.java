@@ -6,6 +6,7 @@ public enum SegmentSupport {
     BND(true),
     INV(true),
     DEL(true),
+    SGL(true),
     INS(true),
     DUP(true),
     MULTIPLE(true),
