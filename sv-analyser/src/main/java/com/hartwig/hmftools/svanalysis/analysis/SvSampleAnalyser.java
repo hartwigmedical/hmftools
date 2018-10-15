@@ -149,6 +149,7 @@ public class SvSampleAnalyser {
 
         mPc3.start();
         mClusteringMethods.clusterByBaseDistance(mAllVariants, mClusters);
+        mAnalyser.findSimpleCompleteChains(mSampleId, mClusters);
         mClusteringMethods.mergeClusters(mSampleId, mClusters);
         mPc3.stop();
 
@@ -156,7 +157,9 @@ public class SvSampleAnalyser {
 
         for(SvCluster cluster : mClusters)
         {
-            mAnalyser.setClusterStats(cluster);
+            if(cluster.getCount() > 1)
+                cluster.logDetails();
+
             cluster.setUniqueBreakends();
         }
 

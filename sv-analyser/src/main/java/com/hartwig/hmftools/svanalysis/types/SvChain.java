@@ -21,7 +21,6 @@ public class SvChain {
     private int mLength;
     private boolean mIsClosedLoop;
     private boolean mIsValid;
-    private boolean mHasReplicatedLink;
 
     private String mStartFinishChromosome;
     private String mStartFinishArm;
@@ -36,7 +35,6 @@ public class SvChain {
         mSvStartIsStartLink = Lists.newArrayList();
         mLength = 0;
         mIsClosedLoop = false;
-        mHasReplicatedLink = false;
         mIsValid = true;
         mStartFinishChromosome = "";
         mStartFinishArm = "";
@@ -50,7 +48,6 @@ public class SvChain {
         mSvStartIsStartLink = Lists.newArrayList();
         mLength = 0;
         mIsClosedLoop = false;
-        mHasReplicatedLink = false;
         mIsValid = true;
 
         for(final SvLinkedPair pair : other.getLinkedPairs())
@@ -106,16 +103,8 @@ public class SvChain {
                 return;
             }
 
-            if(mLinkedPairs.get(0).hasLinkClash(pair) && (first.hasReplicatedLink() || second.hasReplicatedLink()))
-            {
-                // a special case where there is a replicate BND linking to both ends of the rest of the chain (which may be a single other SV)
-                mHasReplicatedLink = true;
-            }
-            else
-            {
-                // no need to add an SV twice (ie to both start and end)
-                mIsClosedLoop = true;
-            }
+            // no need to add an SV twice (ie to both start and end)
+            mIsClosedLoop = true;
         }
         else
         {
@@ -173,19 +162,13 @@ public class SvChain {
     }
 
     public boolean isClosedLoop() { return mIsClosedLoop; }
-    public boolean hasReplicatedLink() { return mHasReplicatedLink; }
 
     private void setStartFinishStatus()
     {
         final String startArm = getFirstSV().arm(firstLinkOpenOnStart());
         final String startChr = getFirstSV().chromosome(firstLinkOpenOnStart());
 
-        if(mHasReplicatedLink)
-        {
-            mStartFinishArm = startArm;
-            mStartFinishChromosome = startChr;
-        }
-        else if(getLastSV().arm(lastLinkOpenOnStart()).equals(startArm) && getLastSV().chromosome(lastLinkOpenOnStart()).equals(startChr))
+        if(getLastSV().arm(lastLinkOpenOnStart()).equals(startArm) && getLastSV().chromosome(lastLinkOpenOnStart()).equals(startChr))
         {
             mStartFinishArm = startArm;
             mStartFinishChromosome = startChr;
@@ -309,9 +292,6 @@ public class SvChain {
 
                 if(lp1.hasLinkClash(lp2))
                 {
-                    if(mHasReplicatedLink && i == 0)
-                        continue;
-
                     mIsValid = false;
                     return;
                 }

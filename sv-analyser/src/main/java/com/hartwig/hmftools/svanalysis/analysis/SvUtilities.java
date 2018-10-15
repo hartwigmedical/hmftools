@@ -369,12 +369,24 @@ public class SvUtilities {
             for(int be = SVI_START; be <= SVI_END; ++be)
             {
                 boolean useStart = isStart(be);
-                int replication = var.isReplicatedLink(useStart) ? 2 : 1;
-                consistencyCount += (var.arm(useStart) == CHROMOSOME_ARM_P ? 1 : -1) * var.orientation(useStart) * replication;
+                consistencyCount += (var.arm(useStart) == CHROMOSOME_ARM_P ? 1 : -1) * var.orientation(useStart) * 1;
             }
         }
 
         return consistencyCount;
+    }
+
+    public static int calcTypeCount(final List<SvClusterData> svList, StructuralVariantType type)
+    {
+        int count = 0;
+
+        for(final SvClusterData var : svList)
+        {
+            if(var.type() == type)
+                ++count;
+        }
+
+        return count;
     }
 
     public static final String getVariantChrArm(final SvClusterData var, boolean isStart)

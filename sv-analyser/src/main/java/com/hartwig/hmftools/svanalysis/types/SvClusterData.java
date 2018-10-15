@@ -59,8 +59,6 @@ public class SvClusterData
     private List<String> mEndOtherAssemblies;
     private String mStartAssemblyMatchType;
     private String mEndAssemblyMatchType;
-    private boolean mStartIsReplicatedLink;
-    private boolean mEndIsReplicatedLink;
     private boolean mIsReplicatedSv;
     private final SvClusterData mReplicatedSv;
 
@@ -320,8 +318,6 @@ public class SvClusterData
         mAssemblyEndData = "";
         mStartAssemblyMatchType = ASSEMBLY_MATCH_NONE;
         mEndAssemblyMatchType = ASSEMBLY_MATCH_NONE;
-        mStartIsReplicatedLink = false;
-        mEndIsReplicatedLink = false;
 
         if(!mSVData.startLinkedBy().isEmpty() && !mSVData.startLinkedBy().equals("."))
         {
@@ -355,16 +351,6 @@ public class SvClusterData
                     mEndOtherAssemblies.add(assemblyList[i]);
             }
         }
-    }
-
-    public boolean hasReplicatedLink() { return mStartIsReplicatedLink || mEndIsReplicatedLink; }
-    public boolean isReplicatedLink(boolean useStart) { return useStart ? mStartIsReplicatedLink : mEndIsReplicatedLink; }
-    public void setIsReplicatedLink(boolean useStart, boolean toggle)
-    {
-        if(useStart)
-            mStartIsReplicatedLink = toggle;
-        else
-            mEndIsReplicatedLink = toggle;
     }
 
     public static boolean haveLinkedAssemblies(final SvClusterData var1, final SvClusterData var2, boolean v1Start, boolean v2Start)

@@ -38,6 +38,7 @@ public class SvCluster
     private int mConsistencyCount;
     private boolean mIsConsistent; // follows from telomere to centromere to telomore
     private String mDesc;
+    private boolean mRequiresRecalc;
     private List<String> mAnnotationList;
 
     private List<SvClusterData> mSVs; // SVs within close promximity of each other
@@ -68,6 +69,7 @@ public class SvCluster
         mConsistencyCount = 0;
         mIsConsistent = false;
         mDesc = "";
+        mRequiresRecalc = true;
         mAnnotationList = Lists.newArrayList();
 
         // chain data
@@ -95,6 +97,7 @@ public class SvCluster
     public void addVariant(final SvClusterData var)
     {
         mSVs.add(var);
+        mRequiresRecalc = true;
 
         if(var.isReplicatedSv())
             mHasReplicatedSVs = true;
@@ -127,6 +130,24 @@ public class SvCluster
                 mArmGroups.add(armGroup);
             }
         }
+    }
+
+    public void removeReplicatedSvs()
+    {
+        if(!mHasReplicatedSVs)
+            return;
+
+        int index = 0;
+        while (index < mSVs.size())
+        {
+            if (mSVs.get(index).isReplicatedSv())
+                mSVs.remove(index);
+            else
+                ++index;
+        }
+
+        mHasReplicatedSVs = false;
+        updateClusterDetails();
     }
 
     public List<SvArmGroup> getArmGroups() { return mArmGroups; }
@@ -261,7 +282,6 @@ public class SvCluster
         mAssemblyLinkedPairs.addAll(cluster.getAssemblyLinkedPairs());
         mInferredLinkedPairs.addAll(cluster.getInferredLinkedPairs());
         mChains.addAll(cluster.getChains());
-        setConsistencyCount();
     }
 
     public int getMaxChainCount()
@@ -278,20 +298,37 @@ public class SvCluster
     public List<SvCluster> getSubClusters() { return mSubClusters; }
     public boolean hasSubClusters() { return !mSubClusters.isEmpty(); }
 
-    public boolean isConsistent() { return mIsConsistent; }
+    public boolean isConsistent()
+    {
+        updateClusterDetails();
+        return mIsConsistent;
+    }
 
     public int getConsistencyCount()
     {
+        updateClusterDetails();
         return mConsistencyCount;
     }
-    public double getConsistencyScore() { return abs(mConsistencyCount/(double)getCount()); }
 
-    public void setConsistencyCount()
+    private void updateClusterDetails()
     {
+        if(!mRequiresRecalc)
+            return;
+
         mConsistencyCount = mUtils.calcConsistency(mSVs);
 
         // for now, just link to this
         mIsConsistent = (mConsistencyCount == 0);
+
+        mDesc = getClusterTypesAsString();
+
+        mRequiresRecalc = false;
+    }
+
+    public void logDetails()
+    {
+        LOGGER.debug("cluster({}) svCount({}) desc({}) armCount({}) consistent({} count={})",
+                getId(), getCount(), getDesc(), getChromosomalArmCount(), isConsistent(), getConsistencyCount());
     }
 
     public int getChromosomalArmCount() { return mArmGroups.size(); }
@@ -355,6 +392,9 @@ public class SvCluster
         for (final SvClusterData var : mSVs)
         {
             if(var.type() == StructuralVariantType.INS)
+                continue;
+
+            if(var.isReplicatedSv())
                 continue;
 
             addVariantToUniqueBreakends(var);

@@ -918,7 +918,7 @@ public class ChainFinder
         boolean chainLinkAdded = false;
         SvChain currentChain = null;
 
-        while(remainingStartLinks.size() > 0 && (!chainComplete || chainLinkAdded))
+        while(!chainComplete || chainLinkAdded)
         {
             // start with a single linked pair
             // for each of its ends (where the first BE is labelled 'first', and the second labelled 'last'),
@@ -927,6 +927,9 @@ public class ChainFinder
 
             if(!chainLinkAdded)
             {
+                if(remainingStartLinks.isEmpty())
+                    break;
+
                 SvLinkedPair linkedPair = remainingStartLinks.get(0);
                 remainingStartLinks.remove(0);
 
@@ -1032,7 +1035,8 @@ public class ChainFinder
 
             chainComplete = (currentChain.getSvCount() == svList.size());
 
-            if((!chainLinkAdded && closestStartPair == null && closestLastPair == null) || chainComplete || remainingStartLinks.isEmpty())
+            if((!chainLinkAdded && closestStartPair == null && closestLastPair == null)
+            || chainComplete || (remainingStartLinks.isEmpty() && unlinkedSvList.isEmpty()))
             {
                 if(currentChain.getLinkCount() > 1)
                 {
@@ -1045,8 +1049,10 @@ public class ChainFinder
                         currentChain.logLinks();
                     }
                 }
-            }
 
+                if(chainComplete)
+                    break;
+            }
         }
     }
 

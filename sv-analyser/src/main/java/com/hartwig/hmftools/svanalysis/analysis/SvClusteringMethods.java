@@ -1,16 +1,21 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_ENCLOSED;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_ENCLOSING;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_NEIGHBOURS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_OVERLAP;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcTypeCount;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.isOverlapping;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_TELOMERE;
@@ -147,13 +152,19 @@ public class SvClusteringMethods {
 
     public void mergeClusters(final String sampleId, List<SvCluster> clusters)
     {
+        // first apply replication rules since this can affect consistency
+        for(SvCluster cluster : clusters)
+        {
+            applyCopyNumberReplication(sampleId, cluster);
+        }
+
         int initClusterCount = clusters.size();
 
         int iterations = 0;
 
         // the merge must be run a few times since as clusters grow, more single SVs and other clusters
         // will then fall within the bounds of the new larger clusters
-        boolean foundMerges = mergeOnCommonArmLinks(clusters);
+        boolean foundMerges = true;
 
         while(foundMerges && iterations < 5)
         {
@@ -170,6 +181,51 @@ public class SvClusteringMethods {
         if(clusters.size() < initClusterCount)
         {
             LOGGER.info("reduced cluster count({} -> {}) iterations({})", initClusterCount, clusters.size(), iterations);
+        }
+    }
+
+    public void applyCopyNumberReplication(final String sampleId, SvCluster cluster)
+    {
+        // use the relative copy number change to replicate some SVs within a cluster
+
+        // first establish the lowest copy number change
+        int minCopyNumber = -1;
+        int maxCopyNumber = -1;
+
+        for(final SvClusterData var : cluster.getSVs())
+        {
+            int calcCopyNumber = var.impliedCopyNumber(true);
+
+            if(minCopyNumber < 0 || calcCopyNumber < minCopyNumber)
+                minCopyNumber = calcCopyNumber;
+
+            maxCopyNumber = max(maxCopyNumber, calcCopyNumber);
+        }
+
+        if(maxCopyNumber <= minCopyNumber || minCopyNumber == 0)
+            return;
+
+        // replicate the SVs which have a higher copy number than their peers
+        int clusterCount = cluster.getCount();
+
+        for(int i = 0; i < clusterCount; ++i)
+        {
+            final SvClusterData var = cluster.getSVs().get(i);
+            int calcCopyNumber = var.impliedCopyNumber(true);
+
+            if(calcCopyNumber <= minCopyNumber)
+                continue;
+
+            int svMultiple = calcCopyNumber / minCopyNumber;
+
+            LOGGER.debug("sample({}) replicating SV({}) {} times, copyNumChg({} vs min={})",
+                    sampleId, var.posId(), svMultiple, calcCopyNumber, minCopyNumber);
+
+            for(int j = 1; j < svMultiple; ++j)
+            {
+                SvClusterData newVar = new SvClusterData(var);
+                cluster.addVariant(newVar);
+            }
         }
     }
 
@@ -234,6 +290,21 @@ public class SvClusteringMethods {
         return null;
     }
 
+    private boolean isSmallConsistentCluster(final SvCluster cluster)
+    {
+        if(cluster.getUniqueSvCount() > SMALL_CLUSTER_SIZE)
+            return false;
+
+        if(cluster.getUniqueSvCount() == 1)
+        {
+            return cluster.getSVs().get(0).isSimpleType();
+        }
+        else
+        {
+            return cluster.isConsistent() && cluster.isFullyChained();
+        }
+    }
+
     private boolean mergeOnCommonArmLinks(List<SvCluster> clusters)
     {
         // merge any clusters which have the same inter-arm links and return true if merges were found
@@ -252,7 +323,7 @@ public class SvClusteringMethods {
                 continue;
             }
 
-            if(cluster1.getCount() == 2 && cluster1.isConsistent())
+            if(isSmallConsistentCluster(cluster1)) // .getCount() == 2 && cluster1.isConsistent(
             {
                 // skip balanced inversion & translocations
                 ++index1;
@@ -271,7 +342,7 @@ public class SvClusteringMethods {
                     continue;
                 }
 
-                if(cluster2.getCount() == 2 && cluster2.isConsistent())
+                if(isSmallConsistentCluster(cluster2))
                 {
                     // skip balanced inversion & translocations
                     ++index2;
@@ -332,7 +403,7 @@ public class SvClusteringMethods {
         {
             SvCluster cluster1 = clusters.get(index1);
 
-            if(cluster1.getCount() <= 2 && cluster1.isConsistent())
+            if(isSmallConsistentCluster(cluster1)) // .getCount() <= 2 && cluster1.isConsistent(
             {
                 ++index1;
                 continue;
@@ -345,9 +416,9 @@ public class SvClusteringMethods {
             {
                 SvCluster cluster2 = clusters.get(index2);
 
-                if(cluster2.getCount() <= 2 && cluster2.isConsistent())
+                if(isSmallConsistentCluster(cluster2))
                 {
-                    ++index1;
+                    ++index2;
                     continue;
                 }
 
@@ -397,15 +468,30 @@ public class SvClusteringMethods {
         return clusters.size() < initClusterCount;
     }
 
+    private boolean canMergeArmGroups(final SvArmGroup group1, final SvArmGroup group2)
+    {
+        if (!group1.chromosome().equals(group2.chromosome()) || !group1.arm().equals(group2.arm()))
+            return false;
+
+        // merge if there are INVs in both groups or BNDs in both groups
+        if(calcTypeCount(group1.getSVs(), INV) > 0 && calcTypeCount(group2.getSVs(), INV) > 0)
+            return true;
+
+        if(calcTypeCount(group1.getSVs(), BND) > 0 && calcTypeCount(group2.getSVs(), BND) > 0)
+            return true;
+
+        return false;
+    }
+
     private static int COMPLEX_CLUSTER_COUNT = 5;
 
-    private boolean canMergeArmGroups(final SvArmGroup group1, final SvArmGroup group2)
+    private boolean canMergeArmGroupsOld(final SvArmGroup group1, final SvArmGroup group2)
     {
         if(!group1.chromosome().equals(group2.chromosome()) || !group1.arm().equals(group2.arm()))
             return false;
 
-        if(group1.getCount() < COMPLEX_CLUSTER_COUNT && group2.getCount() < COMPLEX_CLUSTER_COUNT)
-            return false;
+        // if(group1.getCount() < COMPLEX_CLUSTER_COUNT && group2.getCount() < COMPLEX_CLUSTER_COUNT)
+        //    return false;
 
         // check for an overlapping INV from one cluster to another
         boolean hasOverlap = false;
@@ -419,12 +505,12 @@ public class SvClusteringMethods {
 
             final SvArmGroup svGroup = (i == 0) ? group2 : group1;
 
-            // group must have an INV
+            // group must have an INV or BND
             boolean hasInversion = false;
 
             for (final SvClusterData var : svGroup.getSVs())
             {
-                if (var.type() == INV)
+                if (var.type() == INV) // || var.type() == BND
                 {
                     hasInversion = true;
                     break;
@@ -434,6 +520,7 @@ public class SvClusteringMethods {
             if(!hasInversion)
                 continue;
 
+            /*
             for (final SvClusterData var : svGroup.getSVs())
             {
                 if (var.type() != INV)
@@ -446,6 +533,10 @@ public class SvClusteringMethods {
                     break;
                 }
             }
+            */
+
+            // for now consider any inconsistent cluster with INVs overlapping since the ends are unresolved
+            hasOverlap = true;
 
             if(hasOverlap)
                 break;
@@ -566,47 +657,88 @@ public class SvClusteringMethods {
         }
     }
 
-    private static double MAX_COPY_NUMBER_INTEGER_DIFF = 0.2;
+    private static double MAX_COPY_NUMBER_INTEGER_DIFF = 0.25;
 
     public void calcCopyNumberData(final String sampleId)
     {
-        // look for duplication on each chromosome
+        // look for duplication on each chromosome by examining the copy number heading towards the telomeres
         for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
         {
             final String chromosome = entry.getKey();
             final List<SvBreakend> breakendList = entry.getValue();
 
-            int minCopyNumber = -1;
+            int chrCopyNumber = 0;
             boolean isValid = true;
 
-            for (final SvBreakend breakend : breakendList)
+            for(int i = 0; i < 2; ++i)
             {
+                final SvBreakend breakend = (i == 0) ? breakendList.get(i) : breakendList.get(breakendList.size() - 1);
                 final SvClusterData var = breakend.getSV();
+                boolean useStart = breakend.usesStart();
+                double copyNumber = var.copyNumber(useStart);
 
-                double copyNumber = var.copyNumber(breakend.usesStart());
-                int copyNumRounded = (int)round(copyNumber);
-                if(abs(copyNumber - copyNumRounded) > MAX_COPY_NUMBER_INTEGER_DIFF)
+                double telomereCopyNumber;
+                boolean useCopyNumber;
+
+                if(var.type() != BND)
+                {
+                    if((i == 0 && var.orientation(true) == 1) || (i == 1 && var.orientation(false) == -1))
+                        useCopyNumber = true;
+                    else
+                        useCopyNumber = false;
+                }
+                else
+                {
+                    if((i == 0 && var.orientation(useStart) == 1) || (i == 1 && var.orientation(useStart) == -1))
+                        useCopyNumber = true;
+                    else
+                        useCopyNumber = false;
+                }
+
+                if(useCopyNumber)
+                {
+                    // coming from telemore already so just take copy number
+                    telomereCopyNumber = copyNumber;
+                }
+                else
+                {
+                    // section out to telomere on this chromatid has been lost, so whatever is left needs to be doubled
+                    double copyNumberChange = var.copyNumberChange(useStart);
+                    telomereCopyNumber = copyNumber - copyNumberChange;
+                    telomereCopyNumber *= 2;
+                }
+
+                int copyNumRounded = (int)round(telomereCopyNumber);
+
+                /*
+                if(abs(telomereCopyNumber - copyNumRounded) > MAX_COPY_NUMBER_INTEGER_DIFF)
                 {
                     isValid = false;
-                    break;
+                    continue;
                 }
+                */
 
-                int chromatidCopyNumber = copyNumRounded / 2;
+                /*
+                LOGGER.debug(String.format("chromosome(%s) %s telomere has copyNumber(%d) from SV(%s pos=%d:%d cn=%.1f cnc=%.1f)",
+                        chromosome, i == 0 ? "start" : "end", copyNumRounded,
+                        var.id(), var.position(useStart), var.orientation(useStart),
+                        var.copyNumber(useStart), var.copyNumberChange(useStart)));
+                */
 
-                if(minCopyNumber < 0 || minCopyNumber > chromatidCopyNumber)
-                {
-                    minCopyNumber = chromatidCopyNumber;
-                }
+                if(i == 0)
+                    chrCopyNumber = copyNumRounded;
+                else
+                    chrCopyNumber = min(chrCopyNumber, copyNumRounded);
             }
 
-            if(minCopyNumber > 1 && isValid)
+            if(chrCopyNumber > 2 && isValid)
             {
-                LOGGER.debug("sample({}) chromosome({}) has copyNumber({})", sampleId, chromosome, minCopyNumber);
-                mChrCopyNumberMap.put(chromosome, minCopyNumber);
+                LOGGER.debug("sample({}) chromosome({}) has copyNumber({})", sampleId, chromosome, chrCopyNumber);
+                mChrCopyNumberMap.put(chromosome, chrCopyNumber);
             }
             else
             {
-                mChrCopyNumberMap.put(chromosome, 1);
+                mChrCopyNumberMap.put(chromosome, 2);
             }
         }
     }
