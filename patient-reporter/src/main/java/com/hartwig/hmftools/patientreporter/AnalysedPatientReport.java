@@ -44,8 +44,8 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @NotNull
     public abstract List<ActionabilityRange> somaticActionabilityVariantsRange();
 
-    @NotNull
-    public abstract List<ActionabilityCNVs> somaticActionabilityCNVs();
+//    @NotNull
+//    public abstract List<ActionabilityCNVs> somaticActionabilityCNVs();
 
     @NotNull
     public abstract Map<EnrichedSomaticVariant, VariantEvidenceItems> evidenceItem();
@@ -53,8 +53,8 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @NotNull
     public abstract Map<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> evidenceItemRange();
 
-    @NotNull
-    public abstract Map<GeneCopyNumber, ActionabilityCNVsEvidenceItems> evidenceItemCNV();
+//    @NotNull
+//    public abstract Map<GeneCopyNumber, ActionabilityCNVsEvidenceItems> evidenceItemCNV();
 
     @NotNull
     public abstract List<DriverCatalog> somaticVariantDriverCatalog();

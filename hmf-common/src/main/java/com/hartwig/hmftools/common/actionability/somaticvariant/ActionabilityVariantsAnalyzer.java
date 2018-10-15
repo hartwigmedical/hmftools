@@ -11,6 +11,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
@@ -44,15 +45,15 @@ public class ActionabilityVariantsAnalyzer {
         return genes;
     }
 
-    public VariantEvidenceItems actionableVariants(@NotNull SomaticVariant variant, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
-            @Nullable String doidsPrimaryTumorLocation) {
+    public VariantEvidenceItems actionableVariants(@NotNull SomaticVariant variant, @Nullable String doidsPrimaryTumorLocation,
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzerData) {
         List<EvidenceItem> onLabel = Lists.newArrayList();
         List<EvidenceItem> offLabel = Lists.newArrayList();
         for (EvidenceItem evidenceItem : variants) {
             if (variant.gene().equals(evidenceItem.gene()) && variant.chromosome().equals(evidenceItem.chromosome())
                     && variant.position() == evidenceItem.position() && variant.ref().equals(evidenceItem.ref()) && variant.alt()
                     .equals(evidenceItem.alt())) {
-                if (cancerTypeAnalyzer.foundTumorLocation(evidenceItem.cancerType(), doidsPrimaryTumorLocation)) {
+                if (actionabilityAnalyzerData.cancerTypeAnalyzer().foundTumorLocation(evidenceItem.cancerType(), doidsPrimaryTumorLocation)) {
                     onLabel.add(evidenceItem);
                     printVariantRow(evidenceItem, "yes");
 
@@ -67,19 +68,20 @@ public class ActionabilityVariantsAnalyzer {
     }
 
     private static void printVariantRow(@NotNull EvidenceItem evidence, @NotNull String isActionable) {
-        LOGGER.info(evidence.gene() + "\t" + evidence.chromosome() + "\t" + evidence.position() + "\t" + evidence.ref() + "\t" + evidence.alt() + "\t"
-                + evidence.drug() + "\t" + evidence.drugsType() + "\t" + evidence.cancerType()+ "\t" + evidence.level() + "\t" + evidence.response()
-                + "\t" + evidence.source() + "\t" + isActionable);
+        LOGGER.info(
+                evidence.gene() + "\t" + evidence.chromosome() + "\t" + evidence.position() + "\t" + evidence.ref() + "\t" + evidence.alt()
+                        + "\t" + evidence.drug() + "\t" + evidence.drugsType() + "\t" + evidence.cancerType() + "\t" + evidence.level()
+                        + "\t" + evidence.response() + "\t" + evidence.source() + "\t" + isActionable);
     }
 
-    public ActionabilityRangeEvidenceItem actionableRange(@NotNull SomaticVariant variant, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
-            @Nullable String doidsPrimaryTumorLocation) {
+    public ActionabilityRangeEvidenceItem actionableRange(@NotNull SomaticVariant variant, @Nullable String doidsPrimaryTumorLocation,
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzerData) {
         List<ActionabilityRange> onLabel = Lists.newArrayList();
         List<ActionabilityRange> offLabel = Lists.newArrayList();
         for (ActionabilityRange range : variantsRanges) {
             if (variant.gene().equals(range.gene()) && variant.chromosome().equals(range.chromosome())
                     && variant.position() >= range.start() && variant.position() <= range.end()) {
-                if (cancerTypeAnalyzer.foundTumorLocation(range.cancerType(), doidsPrimaryTumorLocation)) {
+                if (actionabilityAnalyzerData.cancerTypeAnalyzer().foundTumorLocation(range.cancerType(), doidsPrimaryTumorLocation)) {
                     printVariantRangeRow(range, "yes");
                     onLabel.add(range);
                 } else {
