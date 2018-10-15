@@ -79,13 +79,11 @@ public class ActionabilityVariantsAnalyzer {
         for (ActionabilityRange range : variantsRanges) {
             if (variant.gene().equals(range.gene()) && variant.chromosome().equals(range.chromosome())
                     && variant.position() >= range.start() && variant.position() <= range.end()) {
-
                 if (cancerTypeAnalyzer.foundTumorLocation(range.cancerType(), doidsPrimaryTumorLocation)) {
                     printVariantRangeRow(range, "yes");
                     onLabel.add(range);
                 } else {
                     offLabel.add(range);
-
                     printVariantRangeRow(range, "no");
                 }
             }

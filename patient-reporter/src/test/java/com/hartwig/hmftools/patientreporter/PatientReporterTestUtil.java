@@ -8,6 +8,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.google.common.collect.TreeMultimap;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.center.Center;
 import com.hartwig.hmftools.common.center.CenterModel;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
@@ -33,6 +34,7 @@ public final class PatientReporterTestUtil {
 
     private static final String CENTER_CSV = Resources.getResource("center/centers.csv").getPath();
 
+    private static final String KNOWLEDGEBASE_PATH = Resources.getResource("actionability").getPath();
     private static final String DRUP_GENES_CSV = Resources.getResource("csv/drup_genes.csv").getPath();
     private static final String HOTSPOT_TSV = Resources.getResource("csv/hotspots.tsv").getPath();
     private static final String FUSION_PAIRS_CSV = Resources.getResource("csv/fusion_pairs.csv").getPath();
@@ -54,11 +56,11 @@ public final class PatientReporterTestUtil {
         CompoundEnrichment compoundEnrichment = new CompoundEnrichment(HotspotEnrichment.fromHotspotsFile(HOTSPOT_TSV));
 
         return ImmutableSequencedReportData.of(geneModel,
+                ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_PATH),
                 compoundEnrichment,
                 testKnownFusionModel(),
                 new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),
-                TreeMultimap.create(),
-                Lists.newArrayList());
+                TreeMultimap.create());
     }
 
     @NotNull

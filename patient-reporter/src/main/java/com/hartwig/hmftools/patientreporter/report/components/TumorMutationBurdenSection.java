@@ -13,25 +13,24 @@ import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 public class TumorMutationBurdenSection {
     private static final int BUFFER = 3;
     private static final double START = 1E-2;
-    private static final double END = 100;
-    private static final double TMB_THRESHOLD = 10D;
+    private static final double END = 120;
 
     @NotNull
     public static ComponentBuilder<?, ?> build(final double tumorMutationalBurdenIndicator, @NotNull FittedPurityStatus fitStatus) {
         final int graphValue = computeGraphValue(tumorMutationalBurdenIndicator);
-        final int markerValue = computeGraphValue(TMB_THRESHOLD);
 
         final GradientBar gradient = ImmutableGradientBar.of(new Color(253, 235, 208), new Color(248, 196, 113), "Low", "High", graphValue);
         final SliderSection sliderSection = ImmutableSliderSection.of("Tumor Mutational Burden",
                 interpret(tumorMutationalBurdenIndicator, fitStatus),
                 description(),
                 gradient);
+
         return sliderSection.build();
     }
 
     @NotNull
     private static String interpret(final double tumorMutationalBurden, @NotNull FittedPurityStatus fitStatus) {
-        return PatientReportFormat.correctValueForFitStatus(fitStatus, new DecimalFormat("#.####").format(tumorMutationalBurden))
+        return PatientReportFormat.correctValueForFitStatus(fitStatus, new DecimalFormat("#.#").format(tumorMutationalBurden))
                 + " variants per Mb.";
     }
 
@@ -52,7 +51,6 @@ public class TumorMutationBurdenSection {
     @NotNull
     private static String description() {
         return "The tumor mutational burden score represents the number of all somatic variants "
-                + "across the whole genome of the tumor per Mb. Tumors with a score greater than " + TMB_THRESHOLD
-                + " are considered as high tumor mutation burden (TMB).";
+                + "across the whole genome of the tumor per Mb. ";
     }
 }

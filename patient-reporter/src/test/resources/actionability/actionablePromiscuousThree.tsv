@@ -1,0 +1,2 @@
+event.gene	actionability.source	actionability.reference	actionability.drug.name	actionability.drug.type	actionability.cancerType	actionability.level	actionability.hmfLevel	actionability.evidenceType	actionability.significance	actionability.hmfResponse
+ALK	oncoKb	Fusions	Crizotinib	ALK inhibitor;MET inhibitor	Non-Small Cell Lung Cancer	1	A	Predictive	Responsive	Responsive

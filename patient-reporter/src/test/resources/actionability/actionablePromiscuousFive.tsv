@@ -1,0 +1,2 @@
+event.gene	actionability.source	actionability.reference	actionability.drug.name	actionability.drug.type	actionability.cancerType	actionability.level	actionability.hmfLevel	actionability.evidenceType	actionability.significance	actionability.hmfResponse
+FGFR2	oncoKb	Fusions	AZD4547	Unknown	Bladder Cancer	3A	B	Predictive	Responsive	Responsive

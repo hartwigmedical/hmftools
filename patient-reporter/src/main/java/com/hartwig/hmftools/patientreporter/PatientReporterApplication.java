@@ -56,6 +56,8 @@ public class PatientReporterApplication {
     private static final String FUSION_PAIRS_CSV = "fusion_pairs_csv";
     private static final String PROMISCUOUS_FIVE_CSV = "promiscuous_five_csv";
     private static final String PROMISCUOUS_THREE_CSV = "promiscuous_three_csv";
+
+    private static final String KNOWLEDGEBASE_PATH = "knowledgebase_path";
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
     private static final String HOTSPOT_TSV = "hotspot_tsv";
     private static final String ENSEMBL_DB = "ensembl_db";
@@ -115,14 +117,14 @@ public class PatientReporterApplication {
 
     @NotNull
     private static SequencedReportData buildReporterData(@NotNull final CommandLine cmd) throws IOException {
-        return SequencedReportDataLoader.buildFromFiles(cmd.getOptionValue(FUSION_PAIRS_CSV),
+        return SequencedReportDataLoader.buildFromFiles(cmd.getOptionValue(KNOWLEDGEBASE_PATH),
+                cmd.getOptionValue(FUSION_PAIRS_CSV),
                 cmd.getOptionValue(PROMISCUOUS_FIVE_CSV),
                 cmd.getOptionValue(PROMISCUOUS_THREE_CSV),
                 cmd.getOptionValue(DRUP_GENES_CSV),
                 cmd.getOptionValue(HOTSPOT_TSV),
                 cmd.getOptionValue(FASTA_FILE_LOCATION),
-                cmd.getOptionValue(HIGH_CONFIDENCE_BED),
-                cmd.getOptionValue(TUMOR_LOCATION_CSV));
+                cmd.getOptionValue(HIGH_CONFIDENCE_BED));
     }
 
     @NotNull
@@ -155,6 +157,7 @@ public class PatientReporterApplication {
 
     private static boolean validInputForPatientReporter(@NotNull final CommandLine cmd) {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
+        final String knowledgebasePath = cmd.getOptionValue(KNOWLEDGEBASE_PATH);
         final String drupGenesCsv = cmd.getOptionValue(DRUP_GENES_CSV);
         final String hotspotTsv = cmd.getOptionValue(HOTSPOT_TSV);
         final String fusionPairsCsv = cmd.getOptionValue(FUSION_PAIRS_CSV);
@@ -164,8 +167,10 @@ public class PatientReporterApplication {
         final String fastaFileLocation = cmd.getOptionValue(FASTA_FILE_LOCATION);
         final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
 
-        if (runDirectory == null || !exists(runDirectory) && !isDirectory(runDirectory)) {
+        if (runDirectory == null || !exists(runDirectory) || !isDirectory(runDirectory)) {
             LOGGER.warn(RUN_DIRECTORY + " has to be an existing directory: " + runDirectory);
+        } else if (knowledgebasePath == null || !exists(knowledgebasePath) || !isDirectory(knowledgebasePath)) {
+            LOGGER.warn(KNOWLEDGEBASE_PATH + " has to be an existing directory: " + knowledgebasePath);
         } else if (drupGenesCsv == null || !exists(drupGenesCsv)) {
             LOGGER.warn(DRUP_GENES_CSV + " has to be an existing file: " + drupGenesCsv);
         } else if (hotspotTsv == null || !exists(hotspotTsv)) {
@@ -254,6 +259,7 @@ public class PatientReporterApplication {
         options.addOption(FUSION_PAIRS_CSV, true, "Path towards a CSV containing white-listed gene fusion pairs.");
         options.addOption(PROMISCUOUS_FIVE_CSV, true, "Path towards a CSV containing white-listed promiscuous 5' genes.");
         options.addOption(PROMISCUOUS_THREE_CSV, true, "Path towards a CSV containing white-listed promiscuous 3' genes.");
+        options.addOption(KNOWLEDGEBASE_PATH, true, "Path towards a directory holding knowledgebase output files.");
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
         options.addOption(HOTSPOT_TSV, true, "Path towards a TSV containing known hotspot variants.");
         options.addOption(ENSEMBL_DB, true, "Annotate structural somaticVariants using this Ensembl DB URI");

@@ -6,13 +6,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVs;
-import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVsEvidenceItems;
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRange;
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRangeEvidenceItem;
 import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.somaticvariant.VariantEvidenceItems;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 
 import org.apache.logging.log4j.LogManager;
@@ -43,8 +40,7 @@ public abstract class EvidenceItemDataSource {
 
     @NotNull
     public static JRDataSource fromActionabilityVariants(@NotNull Map<EnrichedSomaticVariant, VariantEvidenceItems> evidenceItems,
-            @NotNull Map<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> evidenceItemsRange,
-            @NotNull Map<GeneCopyNumber, ActionabilityCNVsEvidenceItems> evidenceItemCNV) {
+            @NotNull Map<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> evidenceItemsRange) {
         final DRDataSource actionabilityVariantsDatasource = new DRDataSource(GENE.getName(),
                 VARIANT.getName(),
                 IMPACT.getName(),
@@ -68,7 +64,7 @@ public abstract class EvidenceItemDataSource {
                         variant.drugsType(),
                         variant.level(),
                         variant.response(),
-                        variant.source(),
+                        sourceName(variant.source()),
                         "yes");
             }
 
@@ -80,7 +76,7 @@ public abstract class EvidenceItemDataSource {
                         variant.drugsType(),
                         variant.level(),
                         variant.response(),
-                        variant.source(),
+                        sourceName(variant.source()),
                         "no");
             }
         }
@@ -98,7 +94,7 @@ public abstract class EvidenceItemDataSource {
                         variantRange.drugsType(),
                         variantRange.level(),
                         variantRange.response(),
-                        variantRange.source(),
+                        sourceName(variantRange.source()),
                         "yes");
             }
 
@@ -110,42 +106,26 @@ public abstract class EvidenceItemDataSource {
                         variantRange.drugsType(),
                         variantRange.level(),
                         variantRange.response(),
-                        variantRange.source(),
+                        sourceName(variantRange.source()),
                         "no");
             }
         }
-
-        for (Map.Entry<GeneCopyNumber, ActionabilityCNVsEvidenceItems> entry : evidenceItemCNV.entrySet()) {
-
-            String codingEffect = "";
-            String proteinImpact = "";
-
-            for (ActionabilityCNVs CNV : entry.getValue().onLabel()) {
-                actionabilityVariantsDatasource.add(CNV.gene(),
-                        codingEffect,
-                        proteinImpact,
-                        CNV.drugsName(),
-                        CNV.drugsType(),
-                        CNV.hmfLevel(),
-                        CNV.hmfResponse(),
-                        CNV.source(),
-                        "yes");
-            }
-
-            for (ActionabilityCNVs CNV : entry.getValue().onLabel()) {
-                actionabilityVariantsDatasource.add(CNV.gene(),
-                        codingEffect,
-                        proteinImpact,
-                        CNV.drugsName(),
-                        CNV.drugsType(),
-                        CNV.hmfLevel(),
-                        CNV.hmfResponse(),
-                        CNV.source(),
-                        "no");
-            }
-        }
-
         return actionabilityVariantsDatasource;
+    }
+
+    @NotNull
+    private static String sourceName(@NotNull String source) {
+        String sourceName = "";
+        if (source.equals("oncoKb")) {
+            sourceName = "OncoKB";
+        } else if (source.equals("iclusion")) {
+            sourceName = "Iclusion";
+        } else if (source.equals("civic")) {
+            sourceName = "CiViC";
+        } else if (source.equals("cgi")) {
+            sourceName = "CGI";
+        }
+        return sourceName;
     }
 
     @NotNull

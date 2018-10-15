@@ -20,11 +20,10 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
 import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
+import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,12 +40,12 @@ public final class SomaticVariantAnalyzer {
     @NotNull
     public static SomaticVariantAnalysis run(@NotNull final List<EnrichedSomaticVariant> variants, @NotNull Set<String> genePanel,
             @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap, @Nullable PatientTumorLocation patientTumorLocation,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers) throws IOException {
+            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull List<GeneFusion> fusions) throws IOException {
         final List<EnrichedSomaticVariant> variantsToReport =
                 variants.stream().filter(includeFilter(genePanel, driverCategoryPerGeneMap)).collect(Collectors.toList());
         final double microsatelliteIndelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
         final int tumorMutationalLoad = MutationalLoadAnalyzer.determineTumorMutationalLoad(variants);
-        final double tumorMutationalBurden = TumorMutationalBurdenAnalyzer.determineTumorMutationalBurden(variants);
+        final double tumorMutationalBurden = MutationalBurdenAnalyzer.determineTumorMutationalBurden(variants);
 
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
         driverCatalog.addAll(OncoDrivers.drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), variants));
@@ -74,10 +73,11 @@ public final class SomaticVariantAnalyzer {
             variantRange.addAll(entryRange.getValue().offLabel());
         }
 
-        for (Map.Entry<GeneCopyNumber, ActionabilityCNVsEvidenceItems> entryRange : evidencePerVariantCNVs.entrySet()) {
-            CNVs.addAll(entryRange.getValue().onLabel());
-            CNVs.addAll(entryRange.getValue().offLabel());
+        for (Map.Entry<GeneCopyNumber, ActionabilityCNVsEvidenceItems> entryCNVs : evidencePerVariantCNVs.entrySet()) {
+            CNVs.addAll(entryCNVs.getValue().onLabel());
+            CNVs.addAll(entryCNVs.getValue().offLabel());
         }
+
 
         return ImmutableSomaticVariantAnalysis.of(variantsToReport,
                 driverCatalog,
