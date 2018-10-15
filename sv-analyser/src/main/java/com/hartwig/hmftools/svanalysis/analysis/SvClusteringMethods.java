@@ -8,6 +8,7 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
@@ -21,6 +22,7 @@ import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_TELOMERE;
 import static com.hartwig.hmftools.svanalysis.types.SvClusterData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.svanalysis.types.SvClusterData.RELATION_TYPE_OVERLAP;
+import static com.hartwig.hmftools.svanalysis.types.SvClusterData.haveLinkedAssemblies;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -817,13 +819,6 @@ public class SvClusteringMethods {
                 final SvBreakend breakend = breakendList.get(i);
                 SvClusterData var = breakend.getSV();
 
-                /*
-                if(var.id().equals("52520"))
-                {
-                    LOGGER.debug("s");
-                }
-                */
-
                 SvBreakend prevBreakend = (i > 0) ? breakendList.get(i - 1) : null;
                 SvBreakend nextBreakend = (i < breakendCount-1) ? breakendList.get(i + 1) : null;
 
@@ -851,8 +846,52 @@ public class SvClusteringMethods {
                     relationType = RELATION_TYPE_OVERLAP;
 
                 var.setNearestSvRelation(relationType);
+
+                checkFoldbackSvs(breakend, prevBreakend);
             }
         }
+    }
+
+    private void checkFoldbackSvs(SvBreakend be1, SvBreakend be2)
+    {
+        if(be1 == null || be2 == null)
+            return;
+
+        if(be1.orientation() != be2.orientation())
+            return;
+
+        final SvClusterData var1 = be1.getSV();
+        final SvClusterData var2 = be2.getSV();
+
+        if(var1.type() == INS || var2.type() == INS)
+            return;
+
+        int length = (int)abs(be1.position() - be2.position());
+        var1.setFoldbackLink(var2.id(), length);
+        var2.setFoldbackLink(var1.id(), length);
+
+        double copyNumberDiff;
+        if((be1.orientation() == 1 && be1.position() < be2.position())
+        || (be1.orientation() == -1 && be1.position() > be2.position()))
+        {
+            double cn1 = var1.copyNumber(be1.usesStart()) - var1.copyNumberChange(be1.usesStart());
+            double cn2 = var2.copyNumber(be2.usesStart());
+            copyNumberDiff = cn2 - cn1;
+        }
+        else
+        {
+            double cn2 = var2.copyNumber(be2.usesStart()) - var2.copyNumberChange(be2.usesStart());
+            double cn1 = var1.copyNumber(be1.usesStart());
+            copyNumberDiff = cn1 - cn2;
+        }
+
+        boolean otherEndsAssembled = haveLinkedAssemblies(var1, var2, !be1.usesStart(), !be2.usesStart());
+        boolean isLineElement = var1.isLineElement(be1.usesStart()) || var2.isLineElement(be2.usesStart());
+
+        LOGGER.info(String.format("FOLDBACK,%s,%d,%d,%s,%s,%s,%d,%d,%s,%s,%d,%.3f,%s,%s",
+                var1.id(), be1.position(), be1.orientation(), be1.usesStart() ? "start" : "end", var1.type(),
+                var2.id(), be2.position(), be2.orientation(), be2.usesStart() ? "start" : "end", var2.type(),
+                length, copyNumberDiff, otherEndsAssembled, isLineElement));
     }
 
     public void setChromosomalArmStats(final List<SvClusterData> allVariants)

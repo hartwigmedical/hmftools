@@ -45,6 +45,9 @@ public class SvClusterData
     private int mTransLength;
     private String mTransSvLinks;
 
+    private String mFoldbackLink;
+    private int mFoldbackLen;
+
     private long mNearestSvDistance;
     private String mNearestSvRelation;
 
@@ -99,6 +102,9 @@ public class SvClusterData
         mTransType = "";
         mTransLength = 0;
         mTransSvLinks = "";
+
+        mFoldbackLink = "";
+        mFoldbackLen = 0;
 
         mStartGeneData = null;
         mEndGeneData = null;
@@ -231,15 +237,21 @@ public class SvClusterData
     public void setFragileSites(String typeStart, String typeEnd) { mStartFragileSite = typeStart; mEndFragileSite = typeEnd; }
     public String isStartFragileSite() { return mStartFragileSite; }
     public String isEndFragileSite() { return mEndFragileSite; }
+    public String isFragileSite(boolean useStart) { return useStart ? mStartFragileSite : mEndFragileSite; }
 
     public void setLineElements(String typeStart, String typeEnd) { mStartLineElement = typeStart; mEndLineElement = typeEnd; }
     public String isStartLineElement() { return mStartLineElement; }
     public String isEndLineElement() { return mEndLineElement; }
+    public boolean isLineElement(boolean useStart) { return useStart ? !mStartLineElement.equals(NO_LINE_ELEMENT) : !mEndLineElement.equals(NO_LINE_ELEMENT); }
 
     public boolean isDupBEStart() { return mDupBEStart; }
     public boolean isDupBEEnd() { return mDupBEEnd; }
     public void setIsDupBEStart(boolean toggle) { mDupBEStart = toggle; }
     public void setIsDupBEEnd(boolean toggle) { mDupBEEnd = toggle; }
+
+    public String getFoldbackLink() { return mFoldbackLink; }
+    public int getFoldbackLen() { return mFoldbackLen; }
+    public void setFoldbackLink(String link, int len) { mFoldbackLink = link; mFoldbackLen = len; }
 
     public final SvGeneData getStartGeneData() { return mStartGeneData; }
     public final SvGeneData getEndGeneData() { return mEndGeneData; }

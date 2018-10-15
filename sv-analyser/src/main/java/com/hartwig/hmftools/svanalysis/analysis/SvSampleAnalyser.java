@@ -281,7 +281,7 @@ public class SvSampleAnalyser {
                 writer.write(",ChainId,ChainCount,ChainIndex");
 
                 // proximity info
-                writer.write(",NearestLen,NearestType");
+                writer.write(",NearestLen,NearestType,FoldbackLnk,FoldbackLen");
 
                 // transitive info
                 writer.write(",TransType,TransLen,TransSvLinks");
@@ -376,7 +376,9 @@ public class SvSampleAnalyser {
 
                     writer.write(chainStr);
 
-                    writer.write(String.format(",%d,%s", var.getNearestSvDistance(), var.getNearestSvRelation()));
+                    writer.write(String.format(",%d,%s,%s,%d",
+                            var.getNearestSvDistance(), var.getNearestSvRelation(),
+                            var.getFoldbackLink(), var.getFoldbackLen()));
 
                     writer.write(String.format(",%s,%d,%s", var.getTransType(), var.getTransLength(), var.getTransSvLinks()));
 
