@@ -2,36 +2,25 @@ package com.hartwig.hmftools.svanalysis;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
-import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.*;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.SvClusteringConfig;
-import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
-import com.hartwig.hmftools.svanalysis.annotators.ExtDataLinker;
 import com.hartwig.hmftools.svanalysis.svgraph.BreakpointGraph;
-import com.hartwig.hmftools.svanalysis.svgraph.SimpleSimplificationStrategy;
 import com.hartwig.hmftools.svanalysis.svgraph.Simplification;
 import com.hartwig.hmftools.svanalysis.svgraph.SimplificationFile;
-import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator.PON_FILTER_PON;
 
 
 public class GraphAnalyser {
@@ -83,12 +72,13 @@ public class GraphAnalyser {
         for (final String sample : samplesList) {
             List<EnrichedStructuralVariant> svRecords = dbAccess.readStructuralVariants(sample);
             svRecords = hackFixPurpleOffByOne(svRecords);
+            svRecords = svRecords.stream().filter(sv -> sv.filter().equals("") || sv.filter().equals("PASS")).collect(Collectors.toList());
             List<PurpleCopyNumber> cnRecords = dbAccess.readCopynumbers(sample);
 
             LOGGER.info("sample({}) processing {} SVs, {} segments", sample, svRecords.size(), cnRecords.size());
 
             BreakpointGraph graph = new BreakpointGraph(cnRecords, svRecords);
-            List<Simplification> simplifications = graph.simplify(new SimpleSimplificationStrategy());
+            List<Simplification> simplifications = graph.simplify();
 
             String cnFile = PurpleCopyNumberFile.generateFilename(cmd.getOptionValue(OUTPUT_DIRECTORY), String.format("%s_cn_reduced", sample));
             String remainingFile = EnrichedStructuralVariantFile.generateFilename(cmd.getOptionValue(OUTPUT_DIRECTORY), String.format("%s_sv_remaining.csv", sample));

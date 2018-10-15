@@ -82,6 +82,13 @@ public interface StructuralVariant {
         }
         return links;
     }
+    default boolean isFoldBackInversion() {
+        // TODO: should we add a max bounds check in here?
+        // TODO: restrict to same arm?
+        return end() != null
+                && start().chromosome().equals(end().chromosome())
+                && start().orientation() == end().orientation();
 
     boolean recovered();
+    }
 }

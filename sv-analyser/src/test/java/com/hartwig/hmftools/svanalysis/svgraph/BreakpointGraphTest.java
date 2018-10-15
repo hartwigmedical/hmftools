@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.svanalysis.svgraph;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
@@ -14,10 +10,11 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariantLeg;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class BreakpointGraphTest {
     public PurpleCopyNumber cn(String chr, long start, long end, double ploidy) {
@@ -40,16 +37,19 @@ public class BreakpointGraphTest {
     }
 
     public EnrichedStructuralVariant breakpoint(String chr1, long pos1, int orientation1, String chr2, long pos2, int orientation2, double ploidy) {
+        return breakpoint(String.format("{}:{} -> {}:{} CN:{}", chr1, pos1, chr2, pos2, ploidy), chr1, pos1, orientation1, chr2, pos2, orientation2, ploidy);
+    }
+    public EnrichedStructuralVariant breakpoint(String id, String chr1, long pos1, int orientation1, String chr2, long pos2, int orientation2, double ploidy) {
         return ImmutableEnrichedStructuralVariant.builder()
-                .id(String.format("{}:{} -> {}:{} CN:{}", chr1, pos1, chr2, pos2, ploidy))
+                .id(id)
                 .type(StructuralVariantType.BND)
                 .start(ImmutableEnrichedStructuralVariantLeg.builder()
-                    .chromosome(chr1)
-                    .position(pos1)
-                    .orientation((byte)orientation1)
-                    .adjustedCopyNumber(ploidy)
-                    .homology("")
-                    .build())
+                        .chromosome(chr1)
+                        .position(pos1)
+                        .orientation((byte)orientation1)
+                        .adjustedCopyNumber(ploidy)
+                        .homology("")
+                        .build())
                 .end(ImmutableEnrichedStructuralVariantLeg.builder()
                         .chromosome(chr2)
                         .position(pos2)
@@ -58,7 +58,7 @@ public class BreakpointGraphTest {
                         .homology("")
                         .build())
                 .insertSequence("")
-                .ploidy(1d)
+                .ploidy(ploidy)
                 .qualityScore(1000.0)
                 .recovered(false)
                 .startLinkedBy("")
@@ -96,7 +96,7 @@ public class BreakpointGraphTest {
         List<EnrichedStructuralVariant> svs = ImmutableList.of(
                 breakpoint("chr1", 10, 1, "chr1", 21, -1, 1));
         BreakpointGraph bg = new BreakpointGraph(cns, svs);
-        Simplification sv = bg.simplifySimpleDeletion(new SimpleSimplificationStrategy());
+        Simplification sv = bg.simplifySimpleDeletion();
         assertEquals(svs.get(0), sv.variants().get(0));
         assertEquals(0, bg.getAllStructuralVariants().size());
     }
@@ -111,7 +111,7 @@ public class BreakpointGraphTest {
                 breakpoint("chr1", 10, 1, "chr1", 21, -1, 1),
                 breakpoint("chr1", 11, -1, "chr1", 1, -1, 1));
         BreakpointGraph bg = new BreakpointGraph(cns, svs);
-        Simplification sv = bg.simplifySimpleDeletion(new SimpleSimplificationStrategy());
+        Simplification sv = bg.simplifySimpleDeletion();
         assertNull(sv);
     }
 
@@ -124,7 +124,7 @@ public class BreakpointGraphTest {
         List<EnrichedStructuralVariant> svs = ImmutableList.of(
                 breakpoint("chr1", 11, -1, "chr1", 20, 1, 1));
         BreakpointGraph bg = new BreakpointGraph(cns, svs);
-        Simplification sv = bg.simplifySimpleDuplications(new SimpleSimplificationStrategy());
+        Simplification sv = bg.simplifySimpleDuplications();
         assertEquals(svs.get(0), sv.variants().get(0));
         assertEquals(0, bg.getAllStructuralVariants().size());
     }
@@ -139,7 +139,7 @@ public class BreakpointGraphTest {
                 breakpoint("chr1", 11, -1, "chr1", 20, 1, 1),
                 breakpoint("chr1", 11, -1, "chr1", 21, -1, 1));
         BreakpointGraph bg = new BreakpointGraph(cns, svs);
-        Simplification sv = bg.simplifySimpleDuplications(new SimpleSimplificationStrategy());
+        Simplification sv = bg.simplifySimpleDuplications();
         assertNull(sv);
     }
 
@@ -163,7 +163,7 @@ public class BreakpointGraphTest {
                 .endLinkedBy("asm_right")
                 .build());
         BreakpointGraph bg = new BreakpointGraph(cns, svs);
-        List<Simplification> sv = bg.simplifyAssemblyLinks(new SimpleSimplificationStrategy());
+        List<Simplification> sv = bg.simplifyAssemblyLinks();
         assertEquals(1, sv.size());
         assertEquals(2, sv.get(0).variants().size());
         assertEquals(1, bg.getAllStructuralVariants().size());
@@ -173,5 +173,75 @@ public class BreakpointGraphTest {
         assertEquals(-1, bg.getAllStructuralVariants().get(0).end().orientation());
         assertEquals("asm_left", bg.getAllStructuralVariants().get(0).startLinkedBy());
         assertEquals("asm_right", bg.getAllStructuralVariants().get(0).endLinkedBy());
+    }
+    @Test
+    public void candidatesNextBreakpoint_should_find_potential_partners() {
+        List<PurpleCopyNumber> cns = ImmutableList.of(
+                cn("chr1", 1, 10, 2),
+                cn("chr1", 11, 20, 1),
+                cn("chr1", 21, 30, 2),
+                cn("chr1", 31, 40, 1),
+                cn("chr1", 41, 50, 2),
+                cn("other", 1, 1, 1));
+        List<EnrichedStructuralVariant> svs = ImmutableList.of(
+                breakpoint("sv1", "other", 1, -1, "chr1", 1, -1, 1),
+                breakpoint("sv2", "other", 1, 1, "chr1", 10, 1, 1),
+                breakpoint("sv3", "other", 1, 1, "chr1", 20, 1, 1),
+                breakpoint("sv4", "other", 1, 1, "chr1", 30, 1, 1));
+        BreakpointGraph bg = new BreakpointGraph(cns, svs);
+        BgAdjacency ba = bg.getAllAdjacencies()
+                .filter(adj -> adj.fromSegment().chromosome().equals("other") && adj.edge().sv() != null && adj.edge().sv().id().equals("sv1"))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(ba);
+        List<BgAdjacency> result = bg.nextBreakpointCandidates(ba);
+        assertEquals(4, result.size());
+    }
+    @Test
+    public void candidatesNextBreakpoint_should_not_match_if_CN_too_different() {
+        List<PurpleCopyNumber> cns = ImmutableList.of(
+                cn("chr1", 1, 10, 10),
+                cn("chr1", 11, 20, 10),
+                cn("chr1", 21, 30, 1),
+                cn("chr1", 31, 40, 10),
+                cn("chr1", 41, 50, 1),
+                cn("other", 1, 1, 1));
+        List<EnrichedStructuralVariant> svs = ImmutableList.of(
+                breakpoint("sv1", "other", 1, -1, "chr1", 1, -1, 5),
+                breakpoint("sv2", "other", 1, 1, "chr1", 10, 1, 1),
+                breakpoint("sv3", "other", 1, 1, "chr1", 20, 1, 5),
+                breakpoint("sv4", "other", 1, 1, "chr1", 30, 1, 5));
+        BreakpointGraph bg = new BreakpointGraph(cns, svs);
+        BgAdjacency ba = bg.getAllAdjacencies()
+                .filter(adj -> adj.fromSegment().chromosome().equals("other") && adj.edge().sv() != null && adj.edge().sv().id().equals("sv1"))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(ba);
+        List<BgAdjacency> result = bg.nextBreakpointCandidates(ba);
+        // sv3 is the only candidate left
+        // sv2 has too low ploidy
+        // can't traverse to either sv4 or end of chromosome due to low CN
+        assertEquals(1, result.size());
+        assertEquals("sv3", result.get(0).edge().sv().id());
+    }
+    @Test
+    public void nextFoldbackDoublingCandidates() {
+        List<PurpleCopyNumber> cns = ImmutableList.of(
+                cn("chr1", 1, 10, 11),
+                cn("chr1", 11, 20, 11),
+                cn("chr1", 21, 30, 6),
+                cn("other", 1, 1, 1));
+        List<EnrichedStructuralVariant> svs = ImmutableList.of(
+                breakpoint("sv1", "other", 1, -1, "chr1", 1, -1, 10),
+                breakpoint("sv2", "chr1", 30, 1, "chr1", 20, 1, 5));
+        BreakpointGraph bg = new BreakpointGraph(cns, svs);
+        BgAdjacency ba = bg.getAllAdjacencies()
+                .filter(adj -> adj.fromSegment().chromosome().equals("other") && adj.edge().sv() != null && adj.edge().sv().id().equals("sv1"))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(ba);
+        List<BgAdjacency> result = bg.nextFoldbackDoublingCandidates(ba);
+        // can follow a fold-back inversion from either direction
+        assertEquals(2, result.size());
     }
 }

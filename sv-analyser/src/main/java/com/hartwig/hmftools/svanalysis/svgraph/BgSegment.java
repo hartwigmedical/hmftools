@@ -114,8 +114,13 @@ public class BgSegment implements GenomeInterval {
      * @param ploidy
      */
     public void adjustPloidy(Double ploidy) {
+        // TODO: need to adjust BAF range: the added ploidy could be major or minor and we don't know
         this._cn = ImmutablePurpleCopyNumber.builder().from(_cn)
                 .averageTumorCopyNumber(_cn.averageTumorCopyNumber() + ploidy)
                 .build();
+    }
+    public double maxMajorPloidy() {
+        // TODO use BAF range to calculate
+        return ploidy();
     }
 }

@@ -25,6 +25,8 @@ public class BreakpointGraph {
     private final Map<BgSegment, List<BgAdjacency>> startEdges = new HashMap<>();
     private final Map<BgSegment, List<BgAdjacency>> endEdges = new HashMap<>();
 
+    private SimplificationStrategy strategy = new SimpleSimplificationStrategy();
+
     private BreakpointGraph() {
         this.startEdges.put(unplacedSegment, new ArrayList<>());
         this.endEdges.put(unplacedSegment, new ArrayList<>());
@@ -64,6 +66,112 @@ public class BreakpointGraph {
                 .filter(e -> e instanceof BgSv)
                 .map(e -> ((BgSv)e).sv())
                 .collect(Collectors.toList());
+    }
+    public Stream<BgAdjacency> getAllAdjacencies() {
+        return Stream.concat(
+                startEdges.values().stream().flatMap(l -> l.stream()),
+                endEdges.values().stream().flatMap(l -> l.stream()));
+    }
+
+    /**
+     * Possible next breakpoints.
+     * @param adj
+     * @return next possible breakpoints. A entry of null indicates it is possible to traverse to the end of the
+     * chromosome with no additional events.
+     */
+    public List<BgAdjacency> nextBreakpointCandidates(BgAdjacency adj) {
+        List<BgAdjacency> result = new ArrayList<>();
+        int nextOrientation = adj.toOrientation() * -1 ;
+        BgSegment segment = adj.toSegment();
+        while (segment != null) {
+            if (!strategy.couldBeDirectlyLinked(adj.edge().sv(), segment)) {
+                break;
+            }
+            BgSegment nextSegment = null;
+            for (BgAdjacency next : getOutgoing(segment, nextOrientation)) {
+                if (next.isReference()) {
+                    nextSegment = next.toSegment();
+                } else {
+                    if (strategy.couldBeDirectlyLinked(adj.edge().sv(), next.edge().sv())) {
+                        result.add(next);
+                    }
+                }
+            }
+            segment = nextSegment;
+        }
+        if (segment == null) {
+            result.add(null);
+        }
+        return result;
+    }
+    public List<BgAdjacency> nextFoldbackDoublingCandidates(BgAdjacency adj) {
+        List<BgAdjacency> result = new ArrayList<>();
+        int nextOrientation = adj.toOrientation() * -1 ;
+        BgSegment segment = adj.toSegment();
+        Set<BgAdjacency> processed = new HashSet<>();
+        while (segment != null) {
+            if (!strategy.couldBeDirectlyLinked(adj.edge().sv(), segment)) {
+                break;
+            }
+            BgSegment nextSegment = null;
+            for (BgAdjacency next : getOutgoing(segment, nextOrientation)) {
+                if (next.isReference()) {
+                    nextSegment = next.toSegment();
+                } else if (isFoldBackDoublingCandidate(adj, next) && !processed.contains(next)) {
+                    if (strategy.couldBeFoldBackLinked(adj.edge().sv(), next.edge().sv())) {
+                        // check foldback
+                        List<BgSegment> segmentsToPartner = new ArrayList<>();
+                        BgAdjacency partner = getPartner(next);
+                        BgSegment partnerSegment = segment;
+                        processed.add(next);
+                        processed.add(partner);
+                        result.add(next);
+                        result.add(partner);
+                    }
+                }
+            }
+            segment = nextSegment;
+        }
+        if (segment == null) {
+            result.add(null);
+        }
+        return result;
+    }
+    public List<BgSegment> getSegmentsBetween(BgAdjacency a, BgAdjacency b) {
+        assert(a.fromSegment().chromosome().equals(b.fromSegment().chromosome()));
+        BgAdjacency lower = ByFromGenomicPosition.compare(a, b) <= 0 ? a : b;
+        BgAdjacency upper = lower == a ? b : a;
+        List<BgSegment> list = new ArrayList<>();
+        BgSegment segment = lower.fromSegment();
+        if (lower.fromOrientation() == -1 && ByFromGenomicPosition.compare(a, b) != 0) {
+            list.add(segment);
+        }
+        if (lower.fromSegment() == upper.fromSegment()) {
+            return list;
+        }
+        segment = nextReferenceSegment(segment);
+        while (segment != upper.fromSegment()) {
+            list.add(segment);
+            segment = nextReferenceSegment(segment);
+        }
+        if (upper.fromOrientation() == 1) {
+            list.add(segment);
+        }
+        return  list;
+    }
+    public boolean isFoldBackDoublingCandidate(BgAdjacency adj, BgAdjacency foldback) {
+        if (foldback.isReference() || !foldback.edge().sv().isFoldBackInversion()) {
+            return false;
+        }
+        if (foldback.toOrientation() == -1
+                && adj.toSegment().startPosition() < Math.max(foldback.fromSegment().startPosition(), foldback.toSegment().startPosition())) {
+            return false;
+        }
+        if (foldback.toOrientation() == 1
+                && adj.toSegment().startPosition() > Math.min(foldback.fromSegment().startPosition(), foldback.toSegment().startPosition())) {
+            return false;
+        }
+        return true;
     }
     public Collection<BgEdge> getAllEdges() {
         Set<BgEdge> edges = Streams.concat(startEdges.values().stream(), endEdges.values().stream())
@@ -199,6 +307,7 @@ public class BreakpointGraph {
                 .build();
     }
     private void mergeAdjacentSvs(double ploidy, BgAdjacency left, BgAdjacency right) {
+        LOGGER.debug("Merging SV: {} and {} with ploidy {}", left, right, ploidy);
         assertInGraph(left);
         assertInGraph(left);
         assert(startEdges.containsKey(left.fromSegment()));
@@ -405,30 +514,30 @@ public class BreakpointGraph {
         return asmLinks;
     }
     //region Simplifications
-    public List<Simplification> simplify(SimplificationStrategy strategy) {
-        List<Simplification> var = simplifyEvent(strategy);
+    public List<Simplification> simplify() {
+        List<Simplification> var = simplifyEvent();
         List<Simplification> simplified = new ArrayList<>(var);
         while (var.size() > 0) {
             mergeReferenceSegments(false);
-            var = simplifyEvent(strategy);
+            var = simplifyEvent();
             simplified.addAll(var);
         }
         return simplified;
     }
-    public List<Simplification> simplifyEvent(SimplificationStrategy strategy) {
+    public List<Simplification> simplifyEvent() {
         List<Simplification> list = new ArrayList<>();
-        Simplification var = simplifySimpleDuplications(strategy);
+        Simplification var = simplifySimpleDuplications();
         if (var != null) {
             list.add(var);
         }
-        var = simplifySimpleDeletion(strategy);
+        var = simplifySimpleDeletion();
         if (var != null) {
             list.add(var);
         }
-        list.addAll(simplifyAssemblyLinks(strategy));
+        list.addAll(simplifyAssemblyLinks());
         return list;
     }
-    public Simplification simplifySimpleDuplications(SimplificationStrategy strategy) {
+    public Simplification simplifySimpleDuplications() {
         for (BgSegment segment : startEdges.keySet()) {
             List<BgAdjacency> prev = startEdges.get(segment);
             List<BgAdjacency> next = endEdges.get(segment);
@@ -460,7 +569,7 @@ public class BreakpointGraph {
         }
         return null;
     }
-    public Simplification simplifySimpleDeletion(SimplificationStrategy strategy) {
+    public Simplification simplifySimpleDeletion() {
         for (BgSegment segment : startEdges.keySet()) {
             BgSegment prevSegment = prevReferenceSegment(segment);
             BgSegment nextSegment = nextReferenceSegment(segment);
@@ -493,11 +602,11 @@ public class BreakpointGraph {
         }
         return null;
     }
-    public List<Simplification> simplifyAssemblyLinks(SimplificationStrategy strategy) {
-        return simplifyAdjacentBreakendLinks(strategy, "asm");
+    public List<Simplification> simplifyAssemblyLinks() {
+        return simplifyAdjacentBreakendLinks("asm");
 
     }
-    public List<Simplification> simplifyAdjacentBreakendLinks(SimplificationStrategy strategy, String linkedByPrefix) {
+    public List<Simplification> simplifyAdjacentBreakendLinks(String linkedByPrefix) {
         List<Simplification> simplifications = new ArrayList<>();
         Collection<Pair<BgAdjacency, BgAdjacency>> potentialLinks = getLinkedBreakendPairs(linkedByPrefix);
         for (Pair<BgAdjacency, BgAdjacency> links : potentialLinks) {
@@ -508,7 +617,7 @@ public class BreakpointGraph {
             // with a new one hence invalidating our link
             if (getOutgoing(left.fromSegment(), -1).contains(left) &&
                     getOutgoing(right.fromSegment(), 1).contains(right)) {
-                Simplification s = simplifyAdjacentBreakendLink(strategy, left, right);
+                Simplification s = simplifyAdjacentBreakendLink(left, right);
                 if (s != null) {
                     simplifications.add(s);
                 }
@@ -516,7 +625,7 @@ public class BreakpointGraph {
         }
         return simplifications;
     }
-    public Simplification simplifyAdjacentBreakendLink(SimplificationStrategy strategy, BgAdjacency left, BgAdjacency right) {
+    public Simplification simplifyAdjacentBreakendLink(BgAdjacency left, BgAdjacency right) {
         // We need to check if this simplification is still valid since
         // simplifying a pair of linked SVs in a chain will replace that SV
         // with a new one hence invalidating our link
@@ -541,7 +650,50 @@ public class BreakpointGraph {
         }
         return null;
     }
-
+    public List<Simplification> calculateCopyNumberLinkages() {
+        List<Simplification> result = new ArrayList<>();
+        for (BgSegment segment : getAllSegments()) {
+            if (svCount(getOutgoing(segment, -1)) == 1) {
+                BgSegment prev = prevReferenceSegment(segment);
+                if (prev != null && svCount(getOutgoing(prev, 1)) == 0) {
+                    BgAdjacency adj = firstSv(getOutgoing(segment, -1));
+                    List<BgAdjacency> foldBackDoublingPartners = nextFoldbackDoublingCandidates(adj);
+                    if (foldBackDoublingPartners.size() > 0) {
+                        // TODO: process fold-back inversions
+                        continue;
+                        // need to check that the copy number between the two foldback breakend is consistent with this event
+                        // being directly linked to the foldback inversion
+                        //if (strategy.couldBeFoldBackLinked(adj.edge().sv(), getSegmentsBetween(foldback, getPartner(foldback)))) {
+                        //}
+                    }
+                    List<BgAdjacency> partners = nextBreakpointCandidates(adj);
+                    if (partners.size() == 1 && partners.get(0) != null) {
+                        if (strategy.couldBeFoldBackLinked(adj.edge().sv(), partners.get(0).edge().sv())) {
+                            // Don't simplify across fold-back linkage as we halve/double our copy number
+                            // when we traverse back across a fold-back inversion. If we simplify the event
+                            // then we get our ploidy incorrect
+                            LOGGER.debug("Not simplifying to potential fold-back inversion {} to {}", adj.edge().sv(), partners.get(0).edge().sv());
+                        } else {
+                            BgAdjacency partner = partners.get(0);
+                            double ploidy = (adj.edge().ploidy() + partner.edge().ploidy()) / 2;
+                            Simplification chain = ImmutableSimplificationImpl.builder()
+                                    .type(SimplificationType.Chain)
+                                    .ploidy(ploidy)
+                                    .addVariants(
+                                            adj.edge().sv(),
+                                            partner.edge().sv())
+                                    .consistency(getConsistencySet(ploidy, adj, partner))
+                                    .build();
+                            if (strategy.shouldSimplify(chain)) {
+                                result.add(chain);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
     //endregion
     private void sanityCheck() {
         assert(startEdges.keySet().containsAll(endEdges.keySet()));
@@ -580,6 +732,15 @@ public class BreakpointGraph {
             return ComparisonChain.start()
                     .compare(o1.chromosome(), o2.chromosome())
                     .compare(o1.position(), o2.position())
+                    .result();
+        }
+    };
+    private static final Ordering<BgAdjacency> ByFromGenomicPosition = new Ordering<BgAdjacency>() {
+        public int compare(BgAdjacency o1, BgAdjacency o2) {
+            return ComparisonChain.start()
+                    .compare(o1.fromSegment().chromosome(), o2.fromSegment().chromosome())
+                    .compare(o1.fromSegment().position(), o2.fromSegment().position())
+                    .compare(o1.fromOrientation(), o2.fromOrientation())
                     .result();
         }
     };
