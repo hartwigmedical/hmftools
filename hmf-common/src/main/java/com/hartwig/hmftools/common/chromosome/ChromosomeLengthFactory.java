@@ -31,18 +31,13 @@ public final class ChromosomeLengthFactory {
 
     @NotNull
     public static List<ChromosomeLength> create(@NotNull final SAMFileHeader header) {
-        return create(header, Sets.newHashSet("MT"));
-    }
-
-    @NotNull
-    public static List<ChromosomeLength> create(@NotNull final SAMFileHeader header, @NotNull final Set<String> excludedSequences) {
         final List<ChromosomeLength> results = Lists.newArrayList();
 
         for (final SAMSequenceRecord samSequenceRecord : header.getSequenceDictionary().getSequences()) {
-            final String chromosome = samSequenceRecord.getSequenceName();
-            if (!excludedSequences.contains(chromosome)) {
+            final String sequenceName = samSequenceRecord.getSequenceName();
+            if (HumanChromosome.contains(sequenceName)) {
                 results.add(ImmutableChromosomeLength.builder()
-                        .chromosome(chromosome)
+                        .chromosome(sequenceName)
                         .length(samSequenceRecord.getSequenceLength())
                         .build());
             }

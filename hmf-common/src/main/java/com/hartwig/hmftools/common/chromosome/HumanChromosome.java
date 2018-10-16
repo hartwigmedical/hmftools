@@ -30,8 +30,7 @@ public enum HumanChromosome implements Chromosome {
     _21(true, false),
     _22(true, false),
     _X(false, true),
-    _Y(false, true),
-    _MT(false, false);
+    _Y(false, true);
 
     private final boolean isAutosome;
     private final boolean isAllosome;
