@@ -54,11 +54,11 @@ public final class ActionabilityVariantAnalyzer {
                         && CODING_EFFECTS.contains(variant.canonicalCodingEffect()))
                 .collect(Collectors.toList());
 
-//        for (T variant : codingVariantsOnActionableGenesRanges) {
-//            evidenceItemsPerVariantRange.put(variant,
-//                    actionabilityAnalyzerData.variantAnalyzer()
-//                            .actionableRange(variant, doidsPrimaryTumorLocation, actionabilityAnalyzerData));
-//        }
+        for (T variant : codingVariantsOnActionableGenesRanges) {
+            evidenceItemsPerVariantRange.put(variant,
+                    actionabilityAnalyzerData.variantAnalyzer()
+                            .actionableRange(variant, doidsPrimaryTumorLocation, actionabilityAnalyzerData));
+        }
 
         return evidenceItemsPerVariantRange;
     }
@@ -73,10 +73,10 @@ public final class ActionabilityVariantAnalyzer {
                 .filter(geneCopyNumber -> actionableGenesVariantsCNVs.contains(geneCopyNumber.gene()))
                 .collect(Collectors.toList());
 
-        for (T CNV : variantsOnActionableGenes) {
-            evidenceItemsPerVariantCNVs.put(CNV,
-                    actionabilityAnalyzerData.cnvAnalyzer().actionableCNVs(CNV, doidsPrimaryTumorLocation, actionabilityAnalyzerData));
-        }
+//        for (T CNV : variantsOnActionableGenes) {
+//            evidenceItemsPerVariantCNVs.put(CNV,
+//                    actionabilityAnalyzerData.cnvAnalyzer().actionableCNVs(CNV, doidsPrimaryTumorLocation, actionabilityAnalyzerData));
+//        }
 
         return evidenceItemsPerVariantCNVs;
     }
