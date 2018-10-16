@@ -8,8 +8,8 @@ import java.util.List;
 
 public class SvLinkedPair {
 
-    private SvClusterData mFirst;
-    private SvClusterData mSecond;
+    private SvVarData mFirst;
+    private SvVarData mSecond;
     private boolean mFirstLinkOnStart;
     private boolean mSecondLinkOnStart;
     private String mLinkType;
@@ -20,7 +20,7 @@ public class SvLinkedPair {
     public static final String LINK_TYPE_DB = "DB";
     public static final String LINK_TYPE_SGL = "SGL";
 
-    public SvLinkedPair(SvClusterData first, SvClusterData second, final String linkType, boolean firstLinkOnStart, boolean secondLinkOnStart)
+    public SvLinkedPair(SvVarData first, SvVarData second, final String linkType, boolean firstLinkOnStart, boolean secondLinkOnStart)
     {
         mFirst = first;
         mSecond = second;
@@ -47,8 +47,8 @@ public class SvLinkedPair {
         }
     }
 
-    public final SvClusterData first() { return mFirst; }
-    public final SvClusterData second() { return mSecond; }
+    public final SvVarData first() { return mFirst; }
+    public final SvVarData second() { return mSecond; }
     public boolean firstLinkOnStart() { return mFirstLinkOnStart; }
     public boolean secondLinkOnStart() { return mSecondLinkOnStart; }
     public boolean firstUnlinkedOnStart() { return !mFirstLinkOnStart; }
@@ -60,7 +60,7 @@ public class SvLinkedPair {
     public void setIsInferred(boolean toggle) { mIsInferred = toggle; }
     public boolean isInferred() { return mIsInferred; }
 
-    public boolean hasVariantBE(final SvClusterData var, boolean useStart)
+    public boolean hasVariantBE(final SvVarData var, boolean useStart)
     {
         return (var.equals(mFirst) && mFirstLinkOnStart == useStart || var.equals(mSecond) && mSecondLinkOnStart == useStart);
     }
@@ -82,7 +82,7 @@ public class SvLinkedPair {
 
     }
 
-    public static final SvLinkedPair findLinkedPair(final List<SvLinkedPair> linkedPairs, final SvClusterData var, boolean useStart)
+    public static final SvLinkedPair findLinkedPair(final List<SvLinkedPair> linkedPairs, final SvVarData var, boolean useStart)
     {
         for(final SvLinkedPair pair : linkedPairs)
         {
@@ -143,7 +143,7 @@ public class SvLinkedPair {
     public static String ASSEMBLY_MATCH_INFER_ONLY = "INFER_ONLY";
     public static String ASSEMBLY_MATCH_NONE = "NONE";
 
-    public String getAssemblyMatchType(final SvClusterData var)
+    public String getAssemblyMatchType(final SvVarData var)
     {
         final String firstAssembly = mFirstLinkOnStart ? mFirst.getAssemblyData(true) : mFirst.getAssemblyData(false);
         final String secondAssembly = mSecondLinkOnStart ? mSecond.getAssemblyData(true) : mSecond.getAssemblyData(false);

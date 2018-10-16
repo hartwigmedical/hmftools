@@ -2,14 +2,14 @@ package com.hartwig.hmftools.svanalysis.types;
 
 public class SvBreakend {
 
-    private final SvClusterData mSV;
+    private final SvVarData mSV;
     private final String mChromosome;
     private final Long mPosition;
     private final Byte mOrientation;
     private boolean mUsesStart;
     private int mCount;
 
-    public SvBreakend(final SvClusterData var, boolean useStart)
+    public SvBreakend(final SvVarData var, boolean useStart)
     {
         mSV = var;
         mUsesStart = useStart;
@@ -29,7 +29,7 @@ public class SvBreakend {
         mCount = 1;
     }
 
-    public final SvClusterData getSV() { return mSV; }
+    public final SvVarData getSV() { return mSV; }
     public String chromosome() { return mChromosome; }
     public final Long position() { return mPosition; }
     public final Byte orientation() { return mOrientation; }

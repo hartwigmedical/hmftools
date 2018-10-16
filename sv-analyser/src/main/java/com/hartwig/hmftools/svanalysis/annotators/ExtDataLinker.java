@@ -10,7 +10,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.hartwig.hmftools.svanalysis.types.SvClusterData;
+import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -115,14 +115,14 @@ public class ExtDataLinker {
 
     public boolean hasData() { return !mSampleSvData.isEmpty(); }
 
-    public void setSVData(final String sampleId, List<SvClusterData> svClusterData) {
+    public void setSVData(final String sampleId, List<SvVarData> svVarData) {
 
         if(!mSampleSvData.containsKey(sampleId))
             return;
 
         final Map<String, ExternalSvData> sampleDataMap = mSampleSvData.get(sampleId);
 
-        for(SvClusterData var : svClusterData) {
+        for(SvVarData var : svVarData) {
 
             String svPosId = var.type().toString();
             svPosId += "_" + var.chromosome(true);

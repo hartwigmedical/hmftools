@@ -17,10 +17,9 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
-public class SvClusterData
+public class SvVarData
 {
     private final String mId; // sourced from either VCF or DB
 
@@ -63,7 +62,7 @@ public class SvClusterData
     private String mStartAssemblyMatchType;
     private String mEndAssemblyMatchType;
     private boolean mIsReplicatedSv;
-    private final SvClusterData mReplicatedSv;
+    private final SvVarData mReplicatedSv;
     private int mReplicatedCount;
 
     public static String ASSEMBLY_TYPE_DSB = "dsb";
@@ -78,7 +77,7 @@ public class SvClusterData
     public static int SVI_START = 0;
     public static int SVI_END = 1;
 
-    public SvClusterData(final StructuralVariantData svData)
+    public SvVarData(final StructuralVariantData svData)
     {
         mId = svData.id();
         mSVData = svData;
@@ -113,7 +112,7 @@ public class SvClusterData
         mEndGeneData = null;
     }
 
-    public static SvClusterData from(final EnrichedStructuralVariant enrichedSV)
+    public static SvVarData from(final EnrichedStructuralVariant enrichedSV)
     {
         StructuralVariantData svData =
             ImmutableStructuralVariantData.builder()
@@ -136,10 +135,10 @@ public class SvClusterData
                 .type(enrichedSV.type())
                 .build();
 
-        return new SvClusterData(svData);
+        return new SvVarData(svData);
     }
 
-    public SvClusterData(final SvClusterData other)
+    public SvVarData(final SvVarData other)
     {
         mId = other.getSvData().id() + "r";
         mSVData = other.getSvData();
@@ -166,7 +165,7 @@ public class SvClusterData
     public final StructuralVariantData getSvData() { return mSVData; }
 
     // for convenience
-    public boolean equals(final SvClusterData other) { return id().equals(other.id()); }
+    public boolean equals(final SvVarData other) { return id().equals(other.id()); }
 
     public final String chromosome(boolean isStart) { return isStart ? mSVData.startChromosome() : mSVData.endChromosome(); }
     public final long position(boolean isStart) { return isStart ? mSVData.startPosition() : mSVData.endPosition(); }
@@ -208,11 +207,11 @@ public class SvClusterData
     }
 
     public boolean isReplicatedSv() { return mIsReplicatedSv; }
-    public final SvClusterData getReplicatedSv() { return mReplicatedSv; }
+    public final SvVarData getReplicatedSv() { return mReplicatedSv; }
     public int getReplicatedCount() { return mReplicatedCount; }
     public void setReplicatedCount(int count) { mReplicatedCount = 0; }
     public final String origId() { return mReplicatedSv != null ? mReplicatedSv.id() : mId; }
-    public boolean equals(final SvClusterData other, boolean allowReplicated)
+    public boolean equals(final SvVarData other, boolean allowReplicated)
     {
         if(this == other)
             return true;
@@ -363,7 +362,7 @@ public class SvClusterData
         }
     }
 
-    public static boolean haveLinkedAssemblies(final SvClusterData var1, final SvClusterData var2, boolean v1Start, boolean v2Start)
+    public static boolean haveLinkedAssemblies(final SvVarData var1, final SvVarData var2, boolean v1Start, boolean v2Start)
     {
         for(String assemb1 : var1.getTempInsertionAssemblies(v1Start))
         {

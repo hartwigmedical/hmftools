@@ -4,7 +4,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 
 import java.util.List;
 
@@ -12,8 +11,8 @@ public class SvFootprint {
 
     private int mFootprintId;
 
-    private List<SvClusterData> mSVs;
-    private List<SvClusterData> mSpanningSVs;
+    private List<SvVarData> mSVs;
+    private List<SvVarData> mSpanningSVs;
     private List<SvFootprint> mLinkedFootprints;
 
     private final String mChromosome;
@@ -46,11 +45,11 @@ public class SvFootprint {
     public long posStart() { return mStartPos; }
     public long posEnd() { return mEndPos; }
 
-    public List<SvClusterData> getSVs() { return mSVs; }
-    public List<SvClusterData> getSpanningSVs() { return mSpanningSVs; }
+    public List<SvVarData> getSVs() { return mSVs; }
+    public List<SvVarData> getSpanningSVs() { return mSpanningSVs; }
     public int getCount(boolean includeSpans) { return includeSpans ? mSVs.size() + mSpanningSVs.size() : mSVs.size(); }
 
-    public void addVariant(final SvClusterData var, boolean isSpanning)
+    public void addVariant(final SvVarData var, boolean isSpanning)
     {
         if(isSpanning) {
             mSpanningSVs.add(var);

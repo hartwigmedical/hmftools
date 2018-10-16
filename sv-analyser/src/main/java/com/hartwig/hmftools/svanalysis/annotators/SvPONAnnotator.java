@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.svanalysis.types.SvClusterData;
+import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvPON;
 
 import org.apache.logging.log4j.LogManager;
@@ -91,7 +91,7 @@ public class SvPONAnnotator {
         }
     }
 
-    public void setPonOccurenceCount(SvClusterData svData)
+    public void setPonOccurenceCount(SvVarData svData)
     {
         if(mPonList.isEmpty())
             return;
@@ -158,7 +158,7 @@ public class SvPONAnnotator {
         return 0;
     }
 
-    private boolean isMatch(final SvClusterData svData, final SvPON svPon, final int permittedDiff)
+    private boolean isMatch(final SvVarData svData, final SvPON svPon, final int permittedDiff)
     {
         if(!svPon.chrStart().equals(svData.chromosome(true))
         || !svPon.chrEnd().equals(svData.chromosome(false))

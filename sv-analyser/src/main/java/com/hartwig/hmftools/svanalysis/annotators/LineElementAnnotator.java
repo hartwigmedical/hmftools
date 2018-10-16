@@ -8,7 +8,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionFactory;
-import com.hartwig.hmftools.svanalysis.types.SvClusterData;
+import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -73,7 +73,7 @@ public class LineElementAnnotator {
         }
     }
 
-    public String isLineElement(final SvClusterData svData, final boolean useStart)
+    public String isLineElement(final SvVarData svData, final boolean useStart)
     {
         if(mKnownLineElements.isEmpty() && mIdentifiedLineElements.isEmpty())
             return NO_LINE_ELEMENT;

@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
-import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SVI_END;
-import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SVI_START;
-import static com.hartwig.hmftools.svanalysis.types.SvClusterData.haveLinkedAssemblies;
-import static com.hartwig.hmftools.svanalysis.types.SvClusterData.isStart;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveLinkedAssemblies;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_DIFF;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_DB;
@@ -15,7 +15,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
-import com.hartwig.hmftools.svanalysis.types.SvClusterData;
+import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 
 import org.apache.logging.log4j.LogManager;
@@ -73,7 +73,7 @@ public class LinkFinder
 
         for (int i = 0; i < cluster.getCount(); ++i) {
 
-            SvClusterData var1 = cluster.getSVs().get(i);
+            SvVarData var1 = cluster.getSVs().get(i);
 
             if(var1.type() == StructuralVariantType.INS || var1.isNullBreakend())
                 continue;
@@ -91,7 +91,7 @@ public class LinkFinder
 
                 for (int j = i+1; j < cluster.getCount(); ++j)
                 {
-                    SvClusterData var2 = cluster.getSVs().get(j);
+                    SvVarData var2 = cluster.getSVs().get(j);
 
                     if(var2.type() == StructuralVariantType.INS || var2.isNullBreakend())
                         continue;
@@ -151,7 +151,7 @@ public class LinkFinder
         return createInferredLinkedPairs(cluster, cluster.getSVs(), allowSingleBEs);
     }
 
-    public List<SvLinkedPair> createInferredLinkedPairs(SvCluster cluster, List<SvClusterData> svList, boolean allowSingleBEs)
+    public List<SvLinkedPair> createInferredLinkedPairs(SvCluster cluster, List<SvVarData> svList, boolean allowSingleBEs)
     {
         List<SvLinkedPair> linkedPairs = Lists.newArrayList();
 
@@ -164,7 +164,7 @@ public class LinkFinder
 
         for (int i = 0; i < svList.size(); ++i)
         {
-            SvClusterData var1 = svList.get(i);
+            SvVarData var1 = svList.get(i);
 
             if(var1.type() == StructuralVariantType.INS || (var1.isNullBreakend() && !allowSingleBEs))
                 continue;
@@ -185,7 +185,7 @@ public class LinkFinder
 
                 for (int j = i+1; j < svList.size(); ++j)
                 {
-                    SvClusterData var2 = svList.get(j);
+                    SvVarData var2 = svList.get(j);
 
                     if(var2.type() == StructuralVariantType.INS || (var2.isNullBreakend() && !allowSingleBEs))
                         continue;
@@ -291,11 +291,11 @@ public class LinkFinder
         if(cluster.hasLinkingLineElements())
             return;
 
-        List<SvClusterData> spanningSVs = Lists.newArrayList();
+        List<SvVarData> spanningSVs = Lists.newArrayList();
 
         for (int i = 0; i < cluster.getCount(); ++i)
         {
-            SvClusterData var1 = cluster.getSVs().get(i);
+            SvVarData var1 = cluster.getSVs().get(i);
 
             if (var1.type() == StructuralVariantType.INS || var1.isNullBreakend())
                 continue;
@@ -325,14 +325,14 @@ public class LinkFinder
 
         for (int i = 0; i < cluster.getCount(); ++i)
         {
-            SvClusterData var1 = cluster.getSVs().get(i);
+            SvVarData var1 = cluster.getSVs().get(i);
 
             if(!var1.isNullBreakend())
                 continue;
 
             for (int j = i+1; j < cluster.getCount(); ++j)
             {
-                SvClusterData var2 = cluster.getSVs().get(j);
+                SvVarData var2 = cluster.getSVs().get(j);
 
                 if(!var2.isNullBreakend())
                     continue;
@@ -393,13 +393,13 @@ public class LinkFinder
         return linkedPairs;
     }
 
-    private void matchDuplicateBEToLinkedPairs(final List<SvLinkedPair> linkedPairs, final List<SvClusterData> spanningSVs)
+    private void matchDuplicateBEToLinkedPairs(final List<SvLinkedPair> linkedPairs, final List<SvVarData> spanningSVs)
     {
         // link spanning SVs with any single linked pairs
-        for(SvClusterData spanningSV : spanningSVs)
+        for(SvVarData spanningSV : spanningSVs)
         {
-            SvClusterData startLink = null;
-            SvClusterData endLink = null;
+            SvVarData startLink = null;
+            SvVarData endLink = null;
 
             for(SvLinkedPair pair : linkedPairs) {
 
@@ -452,18 +452,18 @@ public class LinkFinder
 
         // attempt to matching spanning SVs to the ends of one or more linked pairs
         // these can only span short TIs (ie not DBs or long TIs)
-        for(SvClusterData spanningSV : cluster.getSpanningSVs())
+        for(SvVarData spanningSV : cluster.getSpanningSVs())
         {
             boolean startMatched = false;
             boolean endMatched = false;
-            SvClusterData startLink = null;
-            SvClusterData endLink = null;
+            SvVarData startLink = null;
+            SvVarData endLink = null;
             SvLinkedPair startPair = null;
             SvLinkedPair endPair = null;
             boolean startLinkOnStart = false;
             boolean endLinkOnStart = false;
 
-            List<SvClusterData> transitiveSVs = Lists.newArrayList();
+            List<SvVarData> transitiveSVs = Lists.newArrayList();
 
             for(SvLinkedPair pair : cluster.getLinkedPairs()) {
 
@@ -634,7 +634,7 @@ public class LinkFinder
                 if(hasValidTransData) {
 
                     // mark all transitive SVs
-                    for (SvClusterData transSv : transitiveSVs) {
+                    for (SvVarData transSv : transitiveSVs) {
                         String svLinkData = spanningSV.id();
                         transSv.setTransData(TRANS_TYPE_TRANS, tiLength, svLinkData);
                     }

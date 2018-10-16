@@ -9,10 +9,10 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getProximity;
-import static com.hartwig.hmftools.svanalysis.types.SvClusterData.RELATION_TYPE_NEIGHBOUR;
-import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SVI_END;
-import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SVI_START;
-import static com.hartwig.hmftools.svanalysis.types.SvClusterData.isStart;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_SGL;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 
@@ -23,7 +23,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.PerformanceCounter;
 import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
-import com.hartwig.hmftools.svanalysis.types.SvClusterData;
+import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 
 import org.apache.logging.log4j.LogManager;
@@ -136,7 +136,7 @@ public class ChainFinder
         // only factor in templated insertions to form chains, even if they also exhibit DBs
         List<SvLinkedPair> inferredTIs = collectRelevantLinkedPairs();
 
-        List<SvClusterData> svList = collectRelevantSVs();
+        List<SvVarData> svList = collectRelevantSVs();
 
         mReqChainCount = svList.size();
 
@@ -187,12 +187,12 @@ public class ChainFinder
         return inferredTIs;
     }
 
-    private List<SvClusterData> collectRelevantSVs()
+    private List<SvVarData> collectRelevantSVs()
     {
-        List<SvClusterData> svList = Lists.newArrayList();
+        List<SvVarData> svList = Lists.newArrayList();
 
             // remove any non-applicable or suspect SVs
-        for(final SvClusterData var : mCluster.getSVs())
+        for(final SvVarData var : mCluster.getSVs())
         {
             if(var.getSvData().ploidy() < LOW_PLOIDY_LIMIT)
                 continue;
@@ -210,7 +210,7 @@ public class ChainFinder
         return svList;
     }
 
-    private boolean checkLinksPotential(List<SvClusterData> svList, List<SvLinkedPair> inferredLinkedPairs)
+    private boolean checkLinksPotential(List<SvVarData> svList, List<SvLinkedPair> inferredLinkedPairs)
     {
         int minRequiredLinks = svList.size() - 1;
 
@@ -238,7 +238,7 @@ public class ChainFinder
         allLinks.addAll(mAssemblyLinkedPairs);
         allLinks.addAll(inferredLinkedPairs);
 
-        for (final SvClusterData var : svList)
+        for (final SvVarData var : svList)
         {
             boolean startMatched = false;
             boolean endMatched = false;
@@ -275,7 +275,7 @@ public class ChainFinder
         return false;
     }
 
-    private boolean formChains(List<SvClusterData> svList, List<SvLinkedPair> inferredLinkedPairs)
+    private boolean formChains(List<SvVarData> svList, List<SvLinkedPair> inferredLinkedPairs)
     {
         // find all the combinations of linked pairs where every breakend end except at most 2 are covered by a linked pair
         if(mHasExistingChains)
@@ -359,7 +359,7 @@ public class ChainFinder
 
         mCluster.getChains().clear();
 
-        List<SvClusterData> chainedSVs = Lists.newArrayList();
+        List<SvVarData> chainedSVs = Lists.newArrayList();
 
         // otherwise add the longest mutually exclusive chains
         while (!mIncompleteChains.isEmpty())
@@ -374,7 +374,7 @@ public class ChainFinder
 
                 if (!chainedSVs.isEmpty())
                 {
-                    for (final SvClusterData var : chain.getSvList())
+                    for (final SvVarData var : chain.getSvList())
                     {
                         if (chainedSVs.contains(var))
                         {
@@ -413,7 +413,7 @@ public class ChainFinder
         }
     }
 
-    public void findContinuousChains(final List<SvClusterData> svList, List<SvLinkedPair> inferredLinkedPairs)
+    public void findContinuousChains(final List<SvVarData> svList, List<SvLinkedPair> inferredLinkedPairs)
     {
         List<SvChain> chains = Lists.newArrayList();
 
@@ -451,7 +451,7 @@ public class ChainFinder
         }
     }
 
-    public void findSvChainsIncrementally(final List<SvClusterData> svList, List<SvChain> chainsList, List<SvLinkedPair> inferredLinkedPairs)
+    public void findSvChainsIncrementally(final List<SvVarData> svList, List<SvChain> chainsList, List<SvLinkedPair> inferredLinkedPairs)
     {
         // routine flow:
         // start with any existing partial chains and unconnected assembly links - these are always used
@@ -469,7 +469,7 @@ public class ChainFinder
         remainingStartLinks.addAll(mAssemblyLinkedPairs);
         remainingStartLinks.addAll(inferredLinkedPairs);
 
-        final List<SvClusterData> unlinkedSvList = Lists.newArrayList();
+        final List<SvVarData> unlinkedSvList = Lists.newArrayList();
 
         if(mCluster.hasSubClusters())
             unlinkedSvList.addAll(mCluster.getUnlinkedSVs());
@@ -589,9 +589,9 @@ public class ChainFinder
             }
 
             // now find the closest TI from amongst the remaining unlinked variant breakends
-            SvClusterData chainFirstSV = currentChain.getFirstSV();
+            SvVarData chainFirstSV = currentChain.getFirstSV();
             boolean chainFirstUnlinkedOnStart = currentChain.firstLinkOpenOnStart();
-            SvClusterData chainLastSV = currentChain.getLastSV();
+            SvVarData chainLastSV = currentChain.getLastSV();
             boolean chainLastUnlinkedOnStart = currentChain.lastLinkOpenOnStart();
 
             requiredLinks.clear();
@@ -666,7 +666,7 @@ public class ChainFinder
         }
     }
 
-    private SvLinkedPair findNextLinkedPair(final List<SvLinkedPair> chainedPairs, final List<SvClusterData> svList, final SvClusterData var, boolean useStart)
+    private SvLinkedPair findNextLinkedPair(final List<SvLinkedPair> chainedPairs, final List<SvVarData> svList, final SvVarData var, boolean useStart)
     {
         if(var.isAssemblyMatched(useStart)) // this breakend will be added when the assembly link is added
             return null;
@@ -674,7 +674,7 @@ public class ChainFinder
         // find the shortest templated insertion which links to this variant
         SvLinkedPair newPair = null;
 
-        for(final SvClusterData otherVar : svList)
+        for(final SvVarData otherVar : svList)
         {
             if(otherVar.type() == INS)
                 continue;
@@ -741,7 +741,7 @@ public class ChainFinder
         return newPair;
     }
 
-    private static void reduceRemainingLists(final SvLinkedPair newPair, List<SvClusterData> unlinkedSvList, List<SvLinkedPair> remainingPairs)
+    private static void reduceRemainingLists(final SvLinkedPair newPair, List<SvVarData> unlinkedSvList, List<SvLinkedPair> remainingPairs)
     {
         unlinkedSvList.remove(newPair.first());
         unlinkedSvList.remove(newPair.second());
@@ -1005,7 +1005,7 @@ public class ChainFinder
                 continue;
 
             // if this new chain is shorter and has some of the same links, then skip if
-            for(final SvClusterData var : chain.getSvList())
+            for(final SvVarData var : chain.getSvList())
             {
                 if(existingChain.getSvList().contains(var))
                 {
@@ -1108,7 +1108,7 @@ public class ChainFinder
         // any chain which exhibits copy number growth (eg BFB) must start or end on the outermost INV facing back towards the centromere
         for(int i = 0; i < 2; ++i)
         {
-            final SvClusterData unlinkedSv = (i == 0) ? chain.getFirstSV() : chain.getLastSV();
+            final SvVarData unlinkedSv = (i == 0) ? chain.getFirstSV() : chain.getLastSV();
 
             if(unlinkedSv.type() != INV && (unlinkedSv.type() != BND && !unlinkedSv.isNullBreakend()))
                 continue;
@@ -1119,7 +1119,7 @@ public class ChainFinder
 
             // check for another INV further out towards the telomere than this one
             boolean hasFurtherOutSV = false;
-            for(SvClusterData var : chain.getSvList())
+            for(SvVarData var : chain.getSvList())
             {
                 if(var.isNullBreakend() && !useStartPosition)
                     continue;
@@ -1153,7 +1153,7 @@ public class ChainFinder
         Map<String, List<Integer>> chrSegmentPathMap = new HashMap();
 
         final List<SvLinkedPair> linkedPairs = chain.getLinkedPairs();
-        final List<SvClusterData> svList = chain.getSvList();
+        final List<SvVarData> svList = chain.getSvList();
 
         // walk through the chain looking at each segment formed either by an SV or the templated insertion from 2 SVs
         // find the corresponding copy-number segment and register a path through (literally adding +1 to the path)
@@ -1169,7 +1169,7 @@ public class ChainFinder
             {
                 // the first open link on the chain is taken as if coming from either the telomere or centromere
                 // for the last open SV also register its path as heading out to telomere/centromere
-                final SvClusterData var = (i == 0) ? svList.get(i) : svList.get(i+1);;
+                final SvVarData var = (i == 0) ? svList.get(i) : svList.get(i+1);;
 
                 boolean useStart = (var == pair.first() && pair.firstUnlinkedOnStart()) || (var == pair.second() && pair.secondUnlinkedOnStart());
 

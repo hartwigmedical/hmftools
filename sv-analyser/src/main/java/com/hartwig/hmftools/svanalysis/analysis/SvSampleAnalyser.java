@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
-import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SINGLE_BREAKEND_TYPE;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_ASMB_ONLY;
-import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_NONE;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.PerformanceCounter;
@@ -15,10 +13,8 @@ import com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.GeneAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator;
-import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
-import com.hartwig.hmftools.svanalysis.types.SvClusterData;
-import com.hartwig.hmftools.svanalysis.types.SvGeneData;
+import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 
 import org.apache.logging.log4j.LogManager;
@@ -30,9 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class SvSampleAnalyser {
 
@@ -42,7 +36,7 @@ public class SvSampleAnalyser {
 
     // data per run (ie sample)
     private String mSampleId;
-    private List<SvClusterData> mAllVariants; // the original list to analyse
+    private List<SvVarData> mAllVariants; // the original list to analyse
 
     private List<SvCluster> mClusters;
 
@@ -116,7 +110,7 @@ public class SvSampleAnalyser {
         mClusters = Lists.newArrayList();
     }
 
-    public void loadFromDatabase(final String sampleId, final List<SvClusterData> variants)
+    public void loadFromDatabase(final String sampleId, final List<SvVarData> variants)
     {
         if (variants.isEmpty())
             return;
@@ -169,7 +163,7 @@ public class SvSampleAnalyser {
 
         if(mGeneAnnotator.hasData())
         {
-            for (SvClusterData var : mAllVariants)
+            for (SvVarData var : mAllVariants)
             {
                 mGeneAnnotator.addGeneData(mSampleId, var);
             }
@@ -191,7 +185,7 @@ public class SvSampleAnalyser {
 
         while(currentIndex < mAllVariants.size())
         {
-            SvClusterData var = mAllVariants.get(currentIndex);
+            SvVarData var = mAllVariants.get(currentIndex);
 
             if(mExternalAnnotator.hasData())
             {
@@ -299,7 +293,7 @@ public class SvSampleAnalyser {
             {
                 int varCount = cluster.getUniqueSvCount();
 
-                for (final SvClusterData var : cluster.getSVs())
+                for (final SvVarData var : cluster.getSVs())
                 {
                     if(var.isReplicatedSv())
                         continue;
@@ -447,9 +441,9 @@ public class SvSampleAnalyser {
 
     public List<SvCluster> getClusters() { return mClusters; }
 
-    private final SvClusterData getSvData(final EnrichedStructuralVariant variant)
+    private final SvVarData getSvData(final EnrichedStructuralVariant variant)
     {
-        for(final SvClusterData svData : mAllVariants)
+        for(final SvVarData svData : mAllVariants)
         {
             if(svData.id() == variant.id())
                 return svData;

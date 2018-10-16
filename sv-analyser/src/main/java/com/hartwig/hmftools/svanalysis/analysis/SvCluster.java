@@ -7,10 +7,9 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.variantMatchesBreakend;
-import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
-import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SVI_END;
-import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SVI_START;
-import static com.hartwig.hmftools.svanalysis.types.SvClusterData.isStart;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.findLinkedPair;
 
 import com.google.common.collect.Lists;
@@ -19,7 +18,7 @@ import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
-import com.hartwig.hmftools.svanalysis.types.SvClusterData;
+import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 
 import org.apache.logging.log4j.LogManager;
@@ -42,16 +41,16 @@ public class SvCluster
     private boolean mRequiresRecalc;
     private List<String> mAnnotationList;
 
-    private List<SvClusterData> mSVs;
+    private List<SvVarData> mSVs;
     private List<SvBreakend> mUniqueBreakends; // for duplicate BE searches
     private List<SvChain> mChains; // pairs of SVs linked into chains
     private List<SvLinkedPair> mLinkedPairs; // final set after chaining and linking
     private List<SvLinkedPair> mInferredLinkedPairs; // forming a TI or DB
     private List<SvLinkedPair> mAssemblyLinkedPairs; // TIs found during assembly
-    private List<SvClusterData> mSpanningSVs; // having 2 duplicate (matching) BEs
+    private List<SvVarData> mSpanningSVs; // having 2 duplicate (matching) BEs
     private List<SvArmGroup> mArmGroups;
     private boolean mIsFullyChained;
-    private List<SvClusterData> mUnchainedSVs;
+    private List<SvVarData> mUnchainedSVs;
 
     private List<SvCluster> mSubClusters;
     private Map<String, List<SvCNData>> mChrCNDataMap;
@@ -101,9 +100,9 @@ public class SvCluster
     public final String getDesc() { return mDesc; }
     public final void setDesc(final String desc) { mDesc = desc; }
 
-    public List<SvClusterData> getSVs() { return mSVs; }
+    public List<SvVarData> getSVs() { return mSVs; }
 
-    public void addVariant(final SvClusterData var)
+    public void addVariant(final SvVarData var)
     {
         mSVs.add(var);
         mUnchainedSVs.add(var);
@@ -190,7 +189,7 @@ public class SvCluster
         }
 
         String chr = "";
-        for(final SvClusterData var: mSVs)
+        for(final SvVarData var: mSVs)
         {
             if(var.isNullBreakend() && !useStart)
                 return "";
@@ -216,7 +215,7 @@ public class SvCluster
         }
         // take the arm from the SVs if they're all the same
         String arm = "";
-        for(final SvClusterData var: mSVs)
+        for(final SvVarData var: mSVs)
         {
             if(var.isNullBreakend() && !useStart)
                 return "";
@@ -240,7 +239,7 @@ public class SvCluster
 
         int count = 0;
 
-        for(final SvClusterData var : mSVs)
+        for(final SvVarData var : mSVs)
         {
             if(!var.isReplicatedSv())
                 ++count;
@@ -257,7 +256,7 @@ public class SvCluster
     {
         mChains.add(chain);
 
-        for(SvClusterData var : chain.getSvList())
+        for(SvVarData var : chain.getSvList())
         {
             mUnchainedSVs.remove(var);
         }
@@ -266,7 +265,7 @@ public class SvCluster
     public void setIsFullyChained(boolean toggle) { mIsFullyChained = toggle; mUnchainedSVs.clear(); }
     public boolean isFullyChained() { return mIsFullyChained; }
 
-    public List<SvClusterData> getUnlinkedSVs() { return mUnchainedSVs; }
+    public List<SvVarData> getUnlinkedSVs() { return mUnchainedSVs; }
 
     public boolean isSimpleSingleSV() { return isSimpleSVs(); }
 
@@ -275,7 +274,7 @@ public class SvCluster
         if(mSVs.size() > SMALL_CLUSTER_SIZE)
             return false;
 
-        for(final SvClusterData var : mSVs)
+        for(final SvVarData var : mSVs)
         {
             if(!var.isSimpleType())
                 return false;
@@ -287,11 +286,11 @@ public class SvCluster
     public final List<SvLinkedPair> getLinkedPairs() { return mLinkedPairs; }
     public final List<SvLinkedPair> getInferredLinkedPairs() { return mInferredLinkedPairs; }
     public final List<SvLinkedPair> getAssemblyLinkedPairs() { return mAssemblyLinkedPairs; }
-    public final List<SvClusterData> getSpanningSVs() { return mSpanningSVs; }
+    public final List<SvVarData> getSpanningSVs() { return mSpanningSVs; }
     public void setLinkedPairs(final List<SvLinkedPair> pairs) { mLinkedPairs = pairs; }
     public void setInferredLinkedPairs(final List<SvLinkedPair> pairs) { mInferredLinkedPairs = pairs; }
     public void setAssemblyLinkedPairs(final List<SvLinkedPair> pairs) { mAssemblyLinkedPairs = pairs; }
-    public void setSpanningSVs(final List<SvClusterData> svList) { mSpanningSVs = svList; }
+    public void setSpanningSVs(final List<SvVarData> svList) { mSpanningSVs = svList; }
 
     public void addSubCluster(SvCluster cluster)
     {
@@ -313,7 +312,7 @@ public class SvCluster
         }
 
         // merge the second cluster into the first
-        for(final SvClusterData var : cluster.getSVs())
+        for(final SvVarData var : cluster.getSVs())
         {
             addVariant(var);
         }
@@ -391,7 +390,7 @@ public class SvCluster
         String clusterTypeStr = "";
         Map<String, Integer> typeMap = new HashMap<>();
 
-        for(final SvClusterData var : mSVs)
+        for(final SvVarData var : mSVs)
         {
             if(var.isReplicatedSv())
                 continue;
@@ -423,7 +422,7 @@ public class SvCluster
 
     public boolean hasLinkingLineElements()
     {
-        for (final SvClusterData var : mSVs)
+        for (final SvVarData var : mSVs)
         {
             if(var.type() == BND && (var.isLineElement(true) || var.isLineElement(false)))
                 return true;
@@ -438,7 +437,7 @@ public class SvCluster
         mMinCopyNumber = -1;
         mMaxCopyNumber = -1;
 
-        for (final SvClusterData var : mSVs)
+        for (final SvVarData var : mSVs)
         {
             int calcCopyNumber = var.impliedCopyNumber(true);
 
@@ -463,7 +462,7 @@ public class SvCluster
     public void setUniqueBreakends()
     {
         // group any matching BEs (same position and orientation)
-        for (final SvClusterData var : mSVs)
+        for (final SvVarData var : mSVs)
         {
             if(var.type() == StructuralVariantType.INS)
                 continue;
@@ -475,7 +474,7 @@ public class SvCluster
         }
 
         // cache this against the SV
-        for (SvClusterData var : mSVs)
+        for (SvVarData var : mSVs)
         {
             if(var.type() == StructuralVariantType.INS)
                 continue;
@@ -499,7 +498,7 @@ public class SvCluster
         }
     }
 
-    private void addVariantToUniqueBreakends(final SvClusterData var)
+    private void addVariantToUniqueBreakends(final SvVarData var)
     {
         for(int be = SVI_START; be <= SVI_END; ++be)
         {
@@ -535,12 +534,12 @@ public class SvCluster
         }
     }
 
-    public final SvLinkedPair getLinkedPair(final SvClusterData var, boolean useStart)
+    public final SvLinkedPair getLinkedPair(final SvVarData var, boolean useStart)
     {
         return findLinkedPair(mLinkedPairs, var, useStart);
     }
 
-    public final SvChain findChain(final SvClusterData var)
+    public final SvChain findChain(final SvVarData var)
     {
         for(final SvChain chain : mChains)
         {
@@ -562,7 +561,7 @@ public class SvCluster
         return null;
     }
 
-    public static final SvCluster findCluster(final SvClusterData var, final List<SvCluster> clusters)
+    public static final SvCluster findCluster(final SvVarData var, final List<SvCluster> clusters)
     {
         for(final SvCluster cluster : clusters)
         {

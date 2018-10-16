@@ -5,13 +5,12 @@ import static java.lang.Math.min;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.svanalysis.analysis.SvCluster;
-import com.hartwig.hmftools.svanalysis.types.SvClusterData;
 
 import java.util.List;
 
 public class SvArmGroup {
 
-    private List<SvClusterData> mSVs;
+    private List<SvVarData> mSVs;
     final SvCluster mCluster;
 
     private final String mChromosome;
@@ -45,10 +44,10 @@ public class SvArmGroup {
         return mStartPos >= 0 && mEndPos >= 0;
     }
 
-    public List<SvClusterData> getSVs() { return mSVs; }
+    public List<SvVarData> getSVs() { return mSVs; }
     public int getCount() { return mSVs.size(); }
 
-    public void addVariant(final SvClusterData var)
+    public void addVariant(final SvVarData var)
     {
         mSVs.add(var);
 

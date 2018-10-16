@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.svanalysis.types.SvClusterData;
+import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.google.common.collect.Maps;
 
 import org.apache.logging.log4j.LogManager;
@@ -100,7 +100,7 @@ public class ExternalSVAnnotator {
 
     public boolean hasData() { return !mSampleSvData.isEmpty(); }
 
-    public void setSVData(final String sampleId, SvClusterData var) {
+    public void setSVData(final String sampleId, SvVarData var) {
 
         if(!mSampleSvData.containsKey(sampleId))
             return;

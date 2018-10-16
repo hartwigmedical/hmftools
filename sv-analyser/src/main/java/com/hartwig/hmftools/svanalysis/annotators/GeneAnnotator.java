@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.svanalysis.annotators;
 
-import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SVI_END;
-import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SVI_START;
-import static com.hartwig.hmftools.svanalysis.types.SvClusterData.isStart;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvGeneData.DRIVER_DEL;
 import static com.hartwig.hmftools.svanalysis.types.SvGeneData.DRIVER_TYPE_TSG;
 
@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.svanalysis.types.SvClusterData;
+import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvGeneData;
 
 import org.apache.logging.log4j.LogManager;
@@ -78,7 +78,7 @@ public class GeneAnnotator {
 
     public boolean hasData() { return !mSampleGeneData.isEmpty(); }
 
-    public void addGeneData(final String sampleId, final SvClusterData var)
+    public void addGeneData(final String sampleId, final SvVarData var)
     {
         if(mSampleGeneData.isEmpty())
             return;

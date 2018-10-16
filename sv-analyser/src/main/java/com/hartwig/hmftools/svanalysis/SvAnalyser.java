@@ -14,8 +14,7 @@ import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.SvClusteringConfig;
 import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.svanalysis.annotators.ExtDataLinker;
-import com.hartwig.hmftools.svanalysis.annotators.GeneAnnotator;
-import com.hartwig.hmftools.svanalysis.types.SvClusterData;
+import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -125,15 +124,15 @@ public class SvAnalyser {
         for (final String sample : samplesList)
         {
             ++count;
-            List<SvClusterData> svClusterData = queryStructuralVariantData(dbAccess, sample);
+            List<SvVarData> svVarData = queryStructuralVariantData(dbAccess, sample);
 
-            LOGGER.info("sample({}) processing {} SVs, totalProcessed({})", sample, svClusterData.size(), count);
+            LOGGER.info("sample({}) processing {} SVs, totalProcessed({})", sample, svVarData.size(), count);
 
-            sampleAnalyser.loadFromDatabase(sample, svClusterData);
+            sampleAnalyser.loadFromDatabase(sample, svVarData);
 
             if(extDataLinker != null && extDataLinker.hasData())
             {
-                extDataLinker.setSVData(sample, svClusterData);
+                extDataLinker.setSVData(sample, svVarData);
             }
             else
             {
@@ -146,9 +145,9 @@ public class SvAnalyser {
         LOGGER.info("run complete");
     }
 
-    private static List<SvClusterData> queryStructuralVariantData(@NotNull DatabaseAccess dbAccess, @NotNull String sampleId)
+    private static List<SvVarData> queryStructuralVariantData(@NotNull DatabaseAccess dbAccess, @NotNull String sampleId)
     {
-        List<SvClusterData> svClusterDataItems = Lists.newArrayList();
+        List<SvVarData> svVarDataItems = Lists.newArrayList();
 
         List<StructuralVariantData> svRecords = dbAccess.readStructuralVariantData(sampleId);
 
@@ -160,10 +159,10 @@ public class SvAnalyser {
             if(!svRecord.filter().equals("PASS"))
                 continue;
 
-            svClusterDataItems.add(new SvClusterData(svRecord));
+            svVarDataItems.add(new SvVarData(svRecord));
         }
 
-        return svClusterDataItems;
+        return svVarDataItems;
     }
 
     private static List<String> getStructuralVariantSamplesList(@NotNull DatabaseAccess dbAccess)

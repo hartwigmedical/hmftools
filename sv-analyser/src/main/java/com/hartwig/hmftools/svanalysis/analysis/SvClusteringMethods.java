@@ -6,24 +6,16 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvCluster.findCluster;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_ENCLOSED;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_ENCLOSING;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_NEIGHBOURS;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_OVERLAP;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcTypeCount;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.isOverlapping;
-import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_TELOMERE;
-import static com.hartwig.hmftools.svanalysis.types.SvClusterData.RELATION_TYPE_NEIGHBOUR;
-import static com.hartwig.hmftools.svanalysis.types.SvClusterData.RELATION_TYPE_OVERLAP;
-import static com.hartwig.hmftools.svanalysis.types.SvClusterData.haveLinkedAssemblies;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_OVERLAP;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveLinkedAssemblies;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -35,12 +27,10 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvCNData;
-import com.hartwig.hmftools.svanalysis.types.SvClusterData;
-import com.hartwig.hmftools.svanalysis.types.SvFootprint;
+import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLOH;
 
 import org.apache.logging.log4j.LogManager;
@@ -87,18 +77,18 @@ public class SvClusteringMethods {
     public int getNextClusterId() { return mNextClusterId++; }
     public void setSampleLohData(final Map<String, List<SvLOH>> data) { mSampleLohData = data; }
 
-    public void clusterByBaseDistance(List<SvClusterData> allVariants, List<SvCluster> clusters)
+    public void clusterByBaseDistance(List<SvVarData> allVariants, List<SvCluster> clusters)
     {
         mNextClusterId = 0;
 
-        List<SvClusterData> unassignedVariants = Lists.newArrayList(allVariants);
+        List<SvVarData> unassignedVariants = Lists.newArrayList(allVariants);
 
         // assign each variant once to a cluster using proximity as a test
         int currentIndex = 0;
 
         while(currentIndex < unassignedVariants.size())
         {
-            SvClusterData currentVar = unassignedVariants.get(currentIndex);
+            SvVarData currentVar = unassignedVariants.get(currentIndex);
 
             // make a new cluster
             SvCluster newCluster = new SvCluster(getNextClusterId(), mUtils);
@@ -114,18 +104,18 @@ public class SvClusteringMethods {
         }
     }
 
-    private void findLinkedSVsByDistance(SvCluster cluster, List<SvClusterData> unassignedVariants)
+    private void findLinkedSVsByDistance(SvCluster cluster, List<SvVarData> unassignedVariants)
     {
         // look for any other SVs which form part of this cluster based on proximity
         int currentIndex = 0;
 
         while (currentIndex < unassignedVariants.size())
         {
-            SvClusterData currentVar = unassignedVariants.get(currentIndex);
+            SvVarData currentVar = unassignedVariants.get(currentIndex);
 
             // compare with all other SVs in this cluster
             boolean matched = false;
-            for (SvClusterData otherVar : cluster.getSVs())
+            for (SvVarData otherVar : cluster.getSVs())
             {
                 // test each possible linkage
                 if (!mUtils.areVariantsLinkedByDistance(currentVar, otherVar))
@@ -203,7 +193,7 @@ public class SvClusteringMethods {
 
         for(int i = 0; i < clusterCount; ++i)
         {
-            SvClusterData var = cluster.getSVs().get(i);
+            SvVarData var = cluster.getSVs().get(i);
             int calcCopyNumber = var.impliedCopyNumber(true);
 
             if(calcCopyNumber <= minCopyNumber)
@@ -218,7 +208,7 @@ public class SvClusteringMethods {
 
             for(int j = 1; j < svMultiple; ++j)
             {
-                SvClusterData newVar = new SvClusterData(var);
+                SvVarData newVar = new SvVarData(var);
                 cluster.addVariant(newVar);
             }
         }
@@ -262,7 +252,7 @@ public class SvClusteringMethods {
                     lohEvent.StartSV, lohEvent.EndSV, lohEvent.Length);
 
             // merge the second cluster into the first
-            for(final SvClusterData var : endCluster.getSVs())
+            for(final SvVarData var : endCluster.getSVs())
             {
                 startCluster.addVariant(var);
             }
@@ -275,7 +265,7 @@ public class SvClusteringMethods {
     {
         for(SvCluster cluster : clusters)
         {
-            for(final SvClusterData var : cluster.getSVs())
+            for(final SvVarData var : cluster.getSVs())
             {
                 if(var.id().equals(varId))
                     return cluster;
@@ -373,7 +363,7 @@ public class SvClusteringMethods {
                         cluster1.getId(), cluster1.getCount(), cluster2.getId(), cluster2.getCount());
 
                 // merge the second cluster into the first
-                for(final SvClusterData var : cluster2.getSVs())
+                for(final SvVarData var : cluster2.getSVs())
                 {
                     cluster1.addVariant(var);
                 }
@@ -457,7 +447,7 @@ public class SvClusteringMethods {
                         cluster1.getId(), cluster1.getCount(), cluster2.getId(), cluster2.getCount());
 
                 // merge the second cluster into the first
-                for(final SvClusterData var : cluster2.getSVs())
+                for(final SvVarData var : cluster2.getSVs())
                 {
                     cluster1.addVariant(var);
                 }
@@ -511,7 +501,7 @@ public class SvClusteringMethods {
             // group must have an INV or BND
             boolean hasInversion = false;
 
-            for (final SvClusterData var : svGroup.getSVs())
+            for (final SvVarData var : svGroup.getSVs())
             {
                 if (var.type() == INV) // || var.type() == BND
                 {
@@ -523,7 +513,7 @@ public class SvClusteringMethods {
             if(!hasInversion)
                 continue;
 
-            for (final SvClusterData var : svGroup.getSVs())
+            for (final SvVarData var : svGroup.getSVs())
             {
                 if (var.type() != INV)
                     continue;
@@ -546,11 +536,11 @@ public class SvClusteringMethods {
         return true;
     }
 
-    private boolean hasOverlappingSVs(final List<SvClusterData> list1, final List<SvClusterData> list2)
+    private boolean hasOverlappingSVs(final List<SvVarData> list1, final List<SvVarData> list2)
     {
-        for(final SvClusterData var1 : list1)
+        for(final SvVarData var1 : list1)
         {
-            for(final SvClusterData var2 : list2)
+            for(final SvVarData var2 : list2)
             {
                 if(isOverlapping(var1, var2))
                     return true;
@@ -560,12 +550,12 @@ public class SvClusteringMethods {
         return false;
     }
 
-    public void populateChromosomeBreakendMap(List<SvClusterData> allVariants)
+    public void populateChromosomeBreakendMap(List<SvVarData> allVariants)
     {
         mChrBreakendMap.clear();
 
         // add each SV's breakends to a map keyed by chromosome, with the breakends in order of position lowest to highest
-        for(final SvClusterData var : allVariants)
+        for(final SvVarData var : allVariants)
         {
             // add each breakend in turn
             for(int i = 0; i < 2 ; ++i)
@@ -619,7 +609,7 @@ public class SvClusteringMethods {
             for(int i = 0; i < 2; ++i)
             {
                 final SvBreakend breakend = (i == 0) ? breakendList.get(i) : breakendList.get(breakendList.size() - 1);
-                final SvClusterData var = breakend.getSV();
+                final SvVarData var = breakend.getSV();
                 boolean useStart = breakend.usesStart();
                 double copyNumber = var.copyNumber(useStart);
 
@@ -706,7 +696,7 @@ public class SvClusteringMethods {
             for (int i = 0; i < breakendList.size(); ++i)
             {
                 final SvBreakend breakend = breakendList.get(i);
-                final SvClusterData var = breakend.getSV();
+                final SvVarData var = breakend.getSV();
 
                 if(i == 0)
                 {
@@ -736,7 +726,7 @@ public class SvClusteringMethods {
                 else
                 {
                     final SvBreakend nextBreakend = breakendList.get(i+1);
-                    final SvClusterData nextVar = nextBreakend.getSV();
+                    final SvVarData nextVar = nextBreakend.getSV();
                     nextType = nextVar.type().toString();
                     nextPosition = nextBreakend.position() - 1;
                 }
@@ -761,7 +751,7 @@ public class SvClusteringMethods {
             for(int i = 0; i < breakendList.size(); ++i)
             {
                 final SvBreakend breakend = breakendList.get(i);
-                SvClusterData var = breakend.getSV();
+                SvVarData var = breakend.getSV();
 
                 final SvBreakend prevBreakend = (i > 0) ? breakendList.get(i - 1) : null;
                 final SvBreakend nextBreakend = (i < breakendCount-1) ? breakendList.get(i + 1) : null;
@@ -831,8 +821,8 @@ public class SvClusteringMethods {
         if(be1.orientation() != be2.orientation())
             return;
 
-        final SvClusterData var1 = be1.getSV();
-        final SvClusterData var2 = be2.getSV();
+        final SvVarData var1 = be1.getSV();
+        final SvVarData var2 = be2.getSV();
 
         if(var1.type() == INS || var2.type() == INS)
             return;
@@ -889,7 +879,7 @@ public class SvClusteringMethods {
 
 
 
-    public void setChromosomalArmStats(final List<SvClusterData> allVariants)
+    public void setChromosomalArmStats(final List<SvVarData> allVariants)
     {
         mChrArmSvCount.clear();
         mChrArmSvExpected.clear();
@@ -897,7 +887,7 @@ public class SvClusteringMethods {
         mMedianChrArmRate = 0;
 
         // form a map of unique arm to SV count
-        for(final SvClusterData var : allVariants)
+        for(final SvVarData var : allVariants)
         {
             String chrArmStart = mUtils.getVariantChrArm(var,true);
             String chrArmEnd = mUtils.getVariantChrArm(var,false);
@@ -975,7 +965,7 @@ public class SvClusteringMethods {
         }
     }
 
-    public String getChrArmData(final SvClusterData var)
+    public String getChrArmData(final SvVarData var)
     {
         String chrArmStart = mUtils.getVariantChrArm(var,true);
 

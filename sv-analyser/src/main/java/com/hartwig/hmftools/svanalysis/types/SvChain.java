@@ -12,7 +12,7 @@ import org.apache.logging.log4j.Logger;
 public class SvChain {
 
     private int mId;
-    private List<SvClusterData> mSvList;
+    private List<SvVarData> mSvList;
 
     // has an entry for each SV, indicating which end of the SV links to the preceding SV / link
     private List<Boolean> mSvStartIsStartLink;
@@ -62,7 +62,7 @@ public class SvChain {
     public boolean isValid() { return mIsValid; }
 
     public int getSvCount() { return mSvList.size(); }
-    public List<SvClusterData> getSvList() { return mSvList; }
+    public List<SvVarData> getSvList() { return mSvList; }
 
     public int getLinkCount() { return mLinkedPairs.size(); }
     public List<SvLinkedPair> getLinkedPairs() { return mLinkedPairs; }
@@ -77,8 +77,8 @@ public class SvChain {
         else
             mLinkedPairs.add(0, pair);
 
-        final SvClusterData first = pair.first();
-        final SvClusterData second = pair.second();
+        final SvVarData first = pair.first();
+        final SvVarData second = pair.second();
 
         boolean containsBoth = mSvList.contains(first) && mSvList.contains(second);
 
@@ -143,8 +143,8 @@ public class SvChain {
         setStartFinishStatus();
     }
 
-    public SvClusterData getFirstSV() { return mSvList.isEmpty() ? null : mSvList.get(0); }
-    public SvClusterData getLastSV() { return mSvList.isEmpty() ? null : mSvList.get(mSvList.size()-1); }
+    public SvVarData getFirstSV() { return mSvList.isEmpty() ? null : mSvList.get(0); }
+    public SvVarData getLastSV() { return mSvList.isEmpty() ? null : mSvList.get(mSvList.size()-1); }
 
     public SvLinkedPair getFirstLinkedPair() { return mLinkedPairs.isEmpty() ? null : mLinkedPairs.get(0); }
     public SvLinkedPair getLastLinkedPair() { return mLinkedPairs.isEmpty() ? null : mLinkedPairs.get(mLinkedPairs.size()-1); }
@@ -336,7 +336,7 @@ public class SvChain {
     {
         int count = 0;
 
-        for(final SvClusterData var : mSvList)
+        for(final SvVarData var : mSvList)
         {
             if(!var.isReplicatedSv())
                 ++count;
@@ -369,7 +369,7 @@ public class SvChain {
         return dbCount;
     }
 
-    public int getSvIndex(final SvClusterData var)
+    public int getSvIndex(final SvVarData var)
     {
         for(int index = 0; index < mSvList.size(); ++index)
         {
@@ -380,7 +380,7 @@ public class SvChain {
         return -1;
     }
 
-    public final String getSvIndices(final SvClusterData var)
+    public final String getSvIndices(final SvVarData var)
     {
         String varIndices = "";
         for(int index = 0; index < mSvList.size(); ++index)
@@ -397,7 +397,7 @@ public class SvChain {
         return varIndices;
     }
 
-    public int getSvIndex(final SvClusterData var, boolean matchStart)
+    public int getSvIndex(final SvVarData var, boolean matchStart)
     {
         for(int index = 0; index < mLinkedPairs.size(); ++index)
         {

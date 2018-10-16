@@ -3,7 +3,6 @@ package com.hartwig.hmftools.svanalysis.types;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.svanalysis.analysis.SvCluster;
 
 public class SvGeneData {
 
@@ -20,8 +19,8 @@ public class SvGeneData {
     private String mStartRegionType;
     private String mEndRegionType;
 
-    private List<SvClusterData> mStartSvList;
-    private List<SvClusterData> mEndSvList;
+    private List<SvVarData> mStartSvList;
+    private List<SvVarData> mEndSvList;
 
     public static String DRIVER_TYPE_TSG = "TSG";
     public static String DRIVER_TYPE_ONCOGENE = "ONCO";
@@ -61,7 +60,7 @@ public class SvGeneData {
     public final String startRegionType() {return mStartRegionType; }
     public final String endRegionType() {return mEndRegionType; }
 
-    public void addSvData(final SvClusterData var, boolean isStart)
+    public void addSvData(final SvVarData var, boolean isStart)
     {
         if(isStart)
             mStartSvList.add(var);
@@ -69,7 +68,7 @@ public class SvGeneData {
             mEndSvList.add(var);
     }
 
-    public final List<SvClusterData> getStartSvList() { return mStartSvList; }
-    public final List<SvClusterData> getEndSvList() { return mEndSvList; }
+    public final List<SvVarData> getStartSvList() { return mStartSvList; }
+    public final List<SvVarData> getEndSvList() { return mEndSvList; }
 
 }

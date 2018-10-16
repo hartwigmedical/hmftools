@@ -3,9 +3,9 @@ package com.hartwig.hmftools.svanalysis.analysis;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SVI_END;
-import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SVI_START;
-import static com.hartwig.hmftools.svanalysis.types.SvClusterData.isStart;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_INFER_ONLY;
 
 import java.util.HashMap;
@@ -13,11 +13,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
-import com.hartwig.hmftools.svanalysis.types.SvClusterData;
+import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 
 import org.apache.logging.log4j.LogManager;
@@ -182,7 +181,7 @@ public class ClusterAnalyser {
 
             for(int i = 0; i < clusterCount; ++i)
             {
-                SvClusterData var = subCluster.getSVs().get(i);
+                SvVarData var = subCluster.getSVs().get(i);
                 int calcCopyNumber = var.impliedCopyNumber(true);
 
                 if(calcCopyNumber <= minCopyNumber)
@@ -198,7 +197,7 @@ public class ClusterAnalyser {
                 // add to the parent cluster only for now
                 for(int j = 1; j < svMultiple; ++j)
                 {
-                    SvClusterData newVar = new SvClusterData(var);
+                    SvVarData newVar = new SvVarData(var);
                     cluster.addVariant(newVar);
                 }
             }
@@ -210,9 +209,9 @@ public class ClusterAnalyser {
 
     private void applyCopyNumberReplicationOld(final String sampleId, SvCluster cluster)
     {
-        List<SvClusterData> newSVs = Lists.newArrayList();
+        List<SvVarData> newSVs = Lists.newArrayList();
 
-        for(final SvClusterData var : cluster.getSVs())
+        for(final SvVarData var : cluster.getSVs())
         {
             int calcCopyNumber = var.impliedCopyNumber(true);
 
@@ -230,12 +229,12 @@ public class ClusterAnalyser {
 
             for(int i = 1; i < calcCopyNumber; ++i)
             {
-                SvClusterData newVar = new SvClusterData(var);
+                SvVarData newVar = new SvVarData(var);
                 newSVs.add(newVar);
             }
         }
 
-        for(SvClusterData var : newSVs)
+        for(SvVarData var : newSVs)
         {
             cluster.addVariant(var);
         }
@@ -415,7 +414,7 @@ public class ClusterAnalyser {
     private void createCopyNumberSegments(final String sampleId, final SvCluster cluster)
     {
         int cnId = 0;
-        final List<SvClusterData> clusterSVs = cluster.getSVs();
+        final List<SvVarData> clusterSVs = cluster.getSVs();
 
         Map<String, List<SvCNData>> chrCNDataMap = new HashMap();
 
@@ -430,7 +429,7 @@ public class ClusterAnalyser {
             for (int i = 0; i < breakendList.size(); ++i)
             {
                 final SvBreakend breakend = breakendList.get(i);
-                final SvClusterData var = breakend.getSV();
+                final SvVarData var = breakend.getSV();
 
                 double copyNumber = var.copyNumber(breakend.usesStart());
                 double copyNumberChange = var.copyNumberChange(breakend.usesStart());
