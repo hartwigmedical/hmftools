@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
+import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SINGLE_BREAKEND_TYPE;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_ASMB_ONLY;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_NONE;
 
@@ -150,19 +151,18 @@ public class SvSampleAnalyser {
         mPc3.start();
         mClusteringMethods.clusterByBaseDistance(mAllVariants, mClusters);
         mAnalyser.findSimpleCompleteChains(mSampleId, mClusters);
+        // mClusteringMethods.reportPotentialFoldbacks(mSampleId, mClusters);
         mClusteringMethods.mergeClusters(mSampleId, mClusters);
         mPc3.stop();
 
-        mPc4.start();
-
+        // log basic clustering details
         for(SvCluster cluster : mClusters)
         {
             if(cluster.getCount() > 1)
                 cluster.logDetails();
-
-            cluster.setUniqueBreakends();
         }
 
+        mPc4.start();
         mAnalyser.findLinksAndChains(mSampleId, mClusters);
 
         mPc4.stop();
@@ -308,10 +308,9 @@ public class SvSampleAnalyser {
 
                     ++svCount;
 
-                    String typeStr = var.isNullBreakend() ? "SGL" : var.type().toString();
                     writer.write(
                             String.format("%s,%d,%d,%s,%s,%.2f",
-                                    mSampleId, cluster.getId(), varCount, var.id(), typeStr, dbData.ploidy()));
+                                    mSampleId, cluster.getId(), varCount, var.id(), var.typeStr(), dbData.ploidy()));
 
                     writer.write(
                             String.format(",%s,%d,%d,%s,%.2f,%.2f,%.2f,%s,%d,%d,%s,%.2f,%.2f,%.2f",
@@ -328,9 +327,9 @@ public class SvSampleAnalyser {
 
                     writer.write(
                             String.format(",%s,%s,%s,%s,%s,%s,%s",
-                                    var.isStartFragileSite(), var.isEndFragileSite(),
-                                    var.isStartLineElement(), var.isEndLineElement(),
-                                    var.isDupBEStart(), var.isDupBEEnd(),
+                                    var.isFragileSite(true), var.isFragileSite(false),
+                                    var.isLineElement(true), var.isLineElement(false),
+                                    var.isDupBreakend(true), var.isDupBreakend(false),
                                     mClusteringMethods.getChrArmData(var)));
 
                     writer.write(
@@ -363,7 +362,7 @@ public class SvSampleAnalyser {
 
                     // assembly info
                     writer.write(String.format(",%s,%s,%s,%s,%s,%s",
-                            startLinkStr, endLinkStr, var.getAssemblyStart(), var.getAssemblyEnd(), assemblyMatchStart, assemblyMatchEnd));
+                            startLinkStr, endLinkStr, var.getAssemblyData(true), var.getAssemblyData(false), assemblyMatchStart, assemblyMatchEnd));
 
                     // chain info
                     final SvChain chain = cluster.findChain(var);

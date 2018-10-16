@@ -145,8 +145,8 @@ public class SvLinkedPair {
 
     public String getAssemblyMatchType(final SvClusterData var)
     {
-        final String firstAssembly = mFirstLinkOnStart ? mFirst.getAssemblyStart() : mFirst.getAssemblyEnd();
-        final String secondAssembly = mSecondLinkOnStart ? mSecond.getAssemblyStart() : mSecond.getAssemblyEnd();
+        final String firstAssembly = mFirstLinkOnStart ? mFirst.getAssemblyData(true) : mFirst.getAssemblyData(false);
+        final String secondAssembly = mSecondLinkOnStart ? mSecond.getAssemblyData(true) : mSecond.getAssemblyData(false);
 
         if((var == mFirst && firstAssembly.isEmpty()) || (var == mSecond && secondAssembly.isEmpty()))
         {

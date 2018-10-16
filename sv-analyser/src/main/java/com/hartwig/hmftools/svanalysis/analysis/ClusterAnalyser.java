@@ -3,16 +3,10 @@ package com.hartwig.hmftools.svanalysis.analysis;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvClusterData.SVI_START;
-import static com.hartwig.hmftools.svanalysis.types.SvClusterData.haveLinkedAssemblies;
 import static com.hartwig.hmftools.svanalysis.types.SvClusterData.isStart;
-import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_DIFF;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_INFER_ONLY;
-import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
-import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_DB;
-import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 
 import java.util.HashMap;
 import java.util.List;
@@ -68,7 +62,7 @@ public class ClusterAnalyser {
             if(cluster.getCount() == 1 || cluster.getCount() > SMALL_CLUSTER_SIZE)
                 continue;
 
-            if(!cluster.isConsistent())
+            if(!cluster.isConsistent() || cluster.hasVariedCopyNumber())
                 continue;
 
             // first establish links between SVs (eg TIs and DBs)
@@ -88,7 +82,10 @@ public class ClusterAnalyser {
     {
         for(SvCluster cluster : clusters)
         {
-            applyCopyNumberReplication(sampleId, cluster);
+            cluster.setUniqueBreakends();
+
+            if(cluster.isSimpleSingleSV() || cluster.isFullyChained())
+                continue;
 
             if(cluster.getUniqueSvCount() < 2)
                 continue;
@@ -101,30 +98,39 @@ public class ClusterAnalyser {
         }
 
         // now look at merging unresolved & inconsistent clusters where they share the same chromosomal arms
-        mergeInconsistentClusters(clusters);
+        List<SvCluster> mergedClusters = mergeInconsistentClusters(clusters);
 
-        for(SvCluster cluster : clusters)
+        if(!mergedClusters.isEmpty())
         {
-            if(cluster.hasSubClusters())
+            for(SvCluster cluster : mergedClusters)
             {
                 cluster.setDesc(cluster.getClusterTypesAsString());
 
-                // repeat the search for inferred links now that additional SVs have been merged in
-                List<SvLinkedPair> newLinkedPairs = mLinkFinder.createInferredLinkedPairs(sampleId, cluster, true);
+                // need to be careful replicating already replicated SVs..
+                // especially those already in linked chains
+                // may be only replicate stand-alone SVs at this point which have now been clustered
+                replicateMergedClusterSVs(sampleId, cluster);
+
+                // repeat the search for inferred links now that additional SVs have been merged in but only on unlinked SVs
+                List<SvLinkedPair> newLinkedPairs = mLinkFinder.createInferredLinkedPairs(cluster, cluster.getUnlinkedSVs(), true);
+
                 cluster.getInferredLinkedPairs().addAll(newLinkedPairs);
 
-                createCopyNumberSegments(sampleId, cluster);
+                // createCopyNumberSegments(sampleId, cluster);
 
                 findChains(sampleId, cluster);
             }
 
+            // any clusters which were merged to resolve a collection of them, but
+            // which did not lead to any longer chains, are now de-merged
+            demergeClusters(clusters);
+        }
+
+        for(SvCluster cluster : clusters)
+        {
             mLinkFinder.resolveTransitiveSVs(sampleId, cluster);
             cacheFinalLinkedPairs(sampleId, cluster);
         }
-
-        // any clusters which were merged to resolve a collection of them, but
-        // which did not lead to any longer chains, are now de-merged
-        demergeClusters(clusters);
     }
 
     private void findChains(final String sampleId, SvCluster cluster)
@@ -152,11 +158,54 @@ public class ClusterAnalyser {
         }
     }
 
-    private void applyCopyNumberReplication(final String sampleId, SvCluster cluster)
+    private void replicateMergedClusterSVs(final String sampleId, SvCluster cluster)
     {
         // first remove any replication previously performed before clusters were merged
-        cluster.removeReplicatedSvs();
-        mClusteringMethods.applyCopyNumberReplication(sampleId, cluster);
+        if(!cluster.hasSubClusters())
+            return;
+
+        if(!cluster.hasVariedCopyNumber())
+            return;
+
+        int minCopyNumber = cluster.getMinCopyNumber();
+
+        for(SvCluster subCluster : cluster.getSubClusters())
+        {
+            if(subCluster.hasReplicatedSVs())
+                continue;
+
+            // for now to difficult to consider the impact on these
+            if(!subCluster.getChains().isEmpty() || !subCluster.getLinkedPairs().isEmpty())
+                continue;
+
+            int clusterCount = subCluster.getCount();
+
+            for(int i = 0; i < clusterCount; ++i)
+            {
+                SvClusterData var = subCluster.getSVs().get(i);
+                int calcCopyNumber = var.impliedCopyNumber(true);
+
+                if(calcCopyNumber <= minCopyNumber)
+                    continue;
+
+                int svMultiple = calcCopyNumber / minCopyNumber;
+
+                LOGGER.debug("sample({}) replicating SV({}) {} times, copyNumChg({} vs min={})",
+                        sampleId, var.posId(), svMultiple, calcCopyNumber, minCopyNumber);
+
+                var.setReplicatedCount(svMultiple);
+
+                // add to the parent cluster only for now
+                for(int j = 1; j < svMultiple; ++j)
+                {
+                    SvClusterData newVar = new SvClusterData(var);
+                    cluster.addVariant(newVar);
+                }
+            }
+
+        }
+
+        // cluster.removeReplicatedSvs();
     }
 
     private void applyCopyNumberReplicationOld(final String sampleId, SvCluster cluster)
@@ -192,10 +241,12 @@ public class ClusterAnalyser {
         }
     }
 
-    private void mergeInconsistentClusters(List<SvCluster> clusters)
+    private List<SvCluster> mergeInconsistentClusters(List<SvCluster> clusters)
     {
         // it's possible that to resolve arms and more complex arrangements, that clusters not merged
         // by proximity of overlaps must be put together to solve inconsistencies (ie loose ends)
+
+        List<SvCluster> mergedClusters = Lists.newArrayList();
 
         // merge any cluster which is itself not consistent and has breakends on the same arm as another
         int index1 = 0;
@@ -203,17 +254,19 @@ public class ClusterAnalyser {
         {
             SvCluster cluster1 = clusters.get(index1);
 
-            if(cluster1.isConsistent())
+            if(cluster1.isSimpleSVs() || (cluster1.isConsistent() && cluster1.isFullyChained()))
             {
                 ++index1;
                 continue;
             }
 
+            /*
             if(!cluster1.isFullyChained() && cluster1.getUniqueSvCount() > 1 && !cluster1.hasSubClusters())
             {
                 ++index1;
                 continue;
             }
+            */
 
             boolean cluster1Merged = false;
             SvCluster newCluster = null;
@@ -223,13 +276,7 @@ public class ClusterAnalyser {
             {
                 SvCluster cluster2 = clusters.get(index2);
 
-                if(cluster2.isConsistent())
-                {
-                    ++index2;
-                    continue;
-                }
-
-                if(!cluster2.isFullyChained() && cluster2.getUniqueSvCount() > 1 && !cluster1.hasSubClusters())
+                if(cluster2.isSimpleSVs() || (cluster2.isConsistent() && cluster2.isFullyChained()))
                 {
                     ++index2;
                     continue;
@@ -295,6 +342,7 @@ public class ClusterAnalyser {
 
                     newCluster.addSubCluster(cluster1);
                     newCluster.addSubCluster(cluster2);
+                    mergedClusters.add(newCluster);
                 }
 
                 if(cluster2Merged)
@@ -317,6 +365,8 @@ public class ClusterAnalyser {
                 ++index1;
             }
         }
+
+        return mergedClusters;
     }
 
     private void demergeClusters(List<SvCluster> clusters)
@@ -327,7 +377,7 @@ public class ClusterAnalyser {
         {
             SvCluster cluster = clusters.get(i);
 
-            if (!cluster.hasSubClusters())
+            if (!cluster.hasSubClusters() || cluster.isFullyChained())
             {
                 ++i;
                 continue;

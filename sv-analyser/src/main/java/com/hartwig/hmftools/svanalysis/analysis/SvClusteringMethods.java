@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvCluster.findCluster;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_ENCLOSED;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.SV_GROUP_ENCLOSING;
@@ -61,6 +62,7 @@ public class SvClusteringMethods {
     private Map<String, Integer> mChrCopyNumberMap; // copy number for whole chromosomes if clear
     private Map<String, List<SvCNData>> mChrCNDataMap; // copy number segments recreated from SVs
     private Map<String, List<SvLOH>> mSampleLohData;
+    private boolean mFoldbackColsLogged;
 
     private static final double REF_BASE_LENGTH = 10000000D;
 
@@ -77,6 +79,7 @@ public class SvClusteringMethods {
         mChrCopyNumberMap = new HashMap();
         mChrCNDataMap = new HashMap();
         mSampleLohData = null;
+        mFoldbackColsLogged = false;
     }
 
     public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
@@ -173,7 +176,7 @@ public class SvClusteringMethods {
             foundMerges = mergeOnCommonArmLinks(clusters);
 
             if(!foundMerges)
-                foundMerges = mergeOnOverlaps(clusters);
+                foundMerges = mergeOnUnresolvedSVs(clusters, true, false);
 
             ++iterations;
         }
@@ -186,33 +189,21 @@ public class SvClusteringMethods {
         }
     }
 
-    public void applyCopyNumberReplication(final String sampleId, SvCluster cluster)
+    public static void applyCopyNumberReplication(final String sampleId, SvCluster cluster)
     {
         // use the relative copy number change to replicate some SVs within a cluster
+        if(!cluster.hasVariedCopyNumber())
+            return;
 
         // first establish the lowest copy number change
-        int minCopyNumber = -1;
-        int maxCopyNumber = -1;
-
-        for(final SvClusterData var : cluster.getSVs())
-        {
-            int calcCopyNumber = var.impliedCopyNumber(true);
-
-            if(minCopyNumber < 0 || calcCopyNumber < minCopyNumber)
-                minCopyNumber = calcCopyNumber;
-
-            maxCopyNumber = max(maxCopyNumber, calcCopyNumber);
-        }
-
-        if(maxCopyNumber <= minCopyNumber || minCopyNumber == 0)
-            return;
+        int minCopyNumber = cluster.getMinCopyNumber();
 
         // replicate the SVs which have a higher copy number than their peers
         int clusterCount = cluster.getCount();
 
         for(int i = 0; i < clusterCount; ++i)
         {
-            final SvClusterData var = cluster.getSVs().get(i);
+            SvClusterData var = cluster.getSVs().get(i);
             int calcCopyNumber = var.impliedCopyNumber(true);
 
             if(calcCopyNumber <= minCopyNumber)
@@ -222,6 +213,8 @@ public class SvClusteringMethods {
 
             LOGGER.debug("sample({}) replicating SV({}) {} times, copyNumChg({} vs min={})",
                     sampleId, var.posId(), svMultiple, calcCopyNumber, minCopyNumber);
+
+            var.setReplicatedCount(svMultiple);
 
             for(int j = 1; j < svMultiple; ++j)
             {
@@ -297,9 +290,9 @@ public class SvClusteringMethods {
         if(cluster.getUniqueSvCount() > SMALL_CLUSTER_SIZE)
             return false;
 
-        if(cluster.getUniqueSvCount() == 1)
+        if(cluster.isSimpleSingleSV())
         {
-            return cluster.getSVs().get(0).isSimpleType();
+            return true;
         }
         else
         {
@@ -394,7 +387,7 @@ public class SvClusteringMethods {
         return clusters.size() < initClusterCount;
     }
 
-    private boolean mergeOnOverlaps(List<SvCluster> clusters)
+    private boolean mergeOnUnresolvedSVs(List<SvCluster> clusters, boolean checkOverlaps, boolean checkSingleLinks)
     {
         // merge any overlapping complex clusters and return true if merges were found
         // ignore simple SVs and simple, consistent cluster-2s
@@ -405,7 +398,7 @@ public class SvClusteringMethods {
         {
             SvCluster cluster1 = clusters.get(index1);
 
-            if(isSmallConsistentCluster(cluster1)) // .getCount() <= 2 && cluster1.isConsistent(
+            if(isSmallConsistentCluster(cluster1))
             {
                 ++index1;
                 continue;
@@ -432,7 +425,15 @@ public class SvClusteringMethods {
                 {
                     for(SvArmGroup armGroup2 : armGroups2)
                     {
-                        if (canMergeArmGroups(armGroup1, armGroup2))
+                        if (checkOverlaps && armGroupsHaveOverlappingSVs(armGroup1, armGroup2))
+                        {
+                            LOGGER.debug("arm({} svs={}) overlaps with arm({} svs={})",
+                                    armGroup1.posId(), armGroup1.getCount(), armGroup2.posId(), armGroup2.getCount());
+
+                            canMergeArms = true;
+                            break;
+                        }
+                        else if (checkSingleLinks && armGroupsHaveLinkingSVs(armGroup1, armGroup2))
                         {
                             LOGGER.debug("arm({} svs={}) overlaps with arm({} svs={})",
                                     armGroup1.posId(), armGroup1.getCount(), armGroup2.posId(), armGroup2.getCount());
@@ -470,7 +471,7 @@ public class SvClusteringMethods {
         return clusters.size() < initClusterCount;
     }
 
-    private boolean canMergeArmGroups(final SvArmGroup group1, final SvArmGroup group2)
+    private boolean armGroupsHaveLinkingSVs(final SvArmGroup group1, final SvArmGroup group2)
     {
         if (!group1.chromosome().equals(group2.chromosome()) || !group1.arm().equals(group2.arm()))
             return false;
@@ -487,7 +488,7 @@ public class SvClusteringMethods {
 
     private static int COMPLEX_CLUSTER_COUNT = 5;
 
-    private boolean canMergeArmGroupsOld(final SvArmGroup group1, final SvArmGroup group2)
+    private boolean armGroupsHaveOverlappingSVs(final SvArmGroup group1, final SvArmGroup group2)
     {
         if(!group1.chromosome().equals(group2.chromosome()) || !group1.arm().equals(group2.arm()))
             return false;
@@ -522,7 +523,6 @@ public class SvClusteringMethods {
             if(!hasInversion)
                 continue;
 
-            /*
             for (final SvClusterData var : svGroup.getSVs())
             {
                 if (var.type() != INV)
@@ -535,10 +535,6 @@ public class SvClusteringMethods {
                     break;
                 }
             }
-            */
-
-            // for now consider any inconsistent cluster with INVs overlapping since the ends are unresolved
-            hasOverlap = true;
 
             if(hasOverlap)
                 break;
@@ -548,58 +544,6 @@ public class SvClusteringMethods {
             return false;
 
         return true;
-
-        /*
-        final SvClusterData var1 = count1 == 1 ? list1.get(0) : null;
-        final SvClusterData var2 = count2 == 1 ? list2.get(0) : null;
-
-        boolean logDetails = false;
-
-        // if(group1.chromosome().equals("15") && group1.arm().equals("Q") && (var1 != null || var2 != null))
-        if(group1.chromosome().equals("15") && group1.arm().equals("Q")
-        && ((var1 != null && var1.id().equals("14232")) || (var2 != null && var2.id().equals("14232"))))
-        {
-            logDetails = true;
-        }
-
-        if(var1 != null && var1.getNearestSvRelation() == RELATION_TYPE_NEIGHBOUR)
-            return false;
-        else if(var2 != null && var2.getNearestSvRelation() == RELATION_TYPE_NEIGHBOUR)
-            return false;
-
-        // don't merge simple DUPs and DELs
-        if(var1 != null && var2 != null)
-        {
-            if((var1.type() == DUP || var1.type() == DEL) && (var2.type() == DUP || var2.type() == DEL))
-            {
-                if(logDetails)
-                    LOGGER.debug("vars({} and {}) are simple SVs", var1.posId(), var2.posId());
-
-                return false;
-            }
-        }
-
-        // check for overlapping SVs based on the outer start and end positions
-        if((group1.hasEndSet() && group1.posEnd() < group2.posStart()) || (group2.hasEndSet() && group1.posStart() > group2.posEnd()))
-        {
-            // LOGGER.debug("groups({} and {}) outside range", group1.posId(), group2.posId());
-            return false;
-        }
-
-        // there is either overlap for full enclosure for these 2 groups
-
-        if(count1 >= COMPLEX_CLUSTER_COUNT || count2 >= COMPLEX_CLUSTER_COUNT)
-            return true;
-
-        // if no Svs in a small cluster overlap with any of the SVs in the other cluster, don't merge
-        // if(hasOverlappingSVs(list1, list2))
-        //     return true;
-
-        // if(logDetails)
-        //     LOGGER.debug("no overlapping vars for groups({} and {}) outside range", group1.posId(), group2.posId());
-
-        return false;
-        */
     }
 
     private boolean hasOverlappingSVs(final List<SvClusterData> list1, final List<SvClusterData> list2)
@@ -819,8 +763,8 @@ public class SvClusteringMethods {
                 final SvBreakend breakend = breakendList.get(i);
                 SvClusterData var = breakend.getSV();
 
-                SvBreakend prevBreakend = (i > 0) ? breakendList.get(i - 1) : null;
-                SvBreakend nextBreakend = (i < breakendCount-1) ? breakendList.get(i + 1) : null;
+                final SvBreakend prevBreakend = (i > 0) ? breakendList.get(i - 1) : null;
+                final SvBreakend nextBreakend = (i < breakendCount-1) ? breakendList.get(i + 1) : null;
 
                 long closestDistance = -1;
                 if(prevBreakend != null && prevBreakend.getSV() != var)
@@ -847,12 +791,39 @@ public class SvClusteringMethods {
 
                 var.setNearestSvRelation(relationType);
 
-                checkFoldbackSvs(breakend, prevBreakend);
+                // checkFoldbackSvs(breakend, prevBreakend);
             }
         }
     }
 
-    private void checkFoldbackSvs(SvBreakend be1, SvBreakend be2)
+    public void reportPotentialFoldbacks(final String sampleId, final List<SvCluster> clusters)
+    {
+        if(!mFoldbackColsLogged)
+        {
+            mFoldbackColsLogged = true;
+            String colNames = "FOLDBACK,Time,SampleId";
+            colNames += ",Id1,Position1,Orientation1,SE1,Type1,Ploidy1,CopyNum1,CopyNumChg1,AsmbData1";
+            colNames += ",Id2,Position2,Orientation2,SE2,Type2,Ploidy2,CopyNum2,CopyNumChg2,AsmbData2";
+            colNames += ",Length,CopyNumDiff,EndsAssembled,IsLine,SameCluster";
+
+            LOGGER.info(colNames);
+        }
+
+        for(Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
+        {
+            List<SvBreakend> breakendList = entry.getValue();
+
+            for(int i = 0; i < breakendList.size(); ++i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+                final SvBreakend prevBreakend = (i > 0) ? breakendList.get(i - 1) : null;
+
+                checkFoldbackSvs(sampleId, breakend, prevBreakend, clusters);
+            }
+        }
+    }
+
+    private void checkFoldbackSvs(final String sampleId, SvBreakend be1, SvBreakend be2, final List<SvCluster> clusters)
     {
         if(be1 == null || be2 == null)
             return;
@@ -866,6 +837,20 @@ public class SvClusteringMethods {
         if(var1.type() == INS || var2.type() == INS)
             return;
 
+        // skip unclustered DELs & DUPs, reciprocal INV or reciprocal BNDs
+        final SvCluster cluster1 = findCluster(var1, clusters);
+
+        if(cluster1.isSimpleSVs() || (cluster1.getCount() == 2 && cluster1.isConsistent()))
+            return;
+
+        final SvCluster cluster2 = findCluster(var2, clusters);
+
+        if(cluster2.isSimpleSVs() || (cluster2.getCount() == 2 && cluster2.isConsistent()))
+            return;
+
+        boolean v1Start = be1.usesStart();
+        boolean v2Start = be2.usesStart();
+
         int length = (int)abs(be1.position() - be2.position());
         var1.setFoldbackLink(var2.id(), length);
         var2.setFoldbackLink(var1.id(), length);
@@ -874,25 +859,35 @@ public class SvClusteringMethods {
         if((be1.orientation() == 1 && be1.position() < be2.position())
         || (be1.orientation() == -1 && be1.position() > be2.position()))
         {
-            double cn1 = var1.copyNumber(be1.usesStart()) - var1.copyNumberChange(be1.usesStart());
-            double cn2 = var2.copyNumber(be2.usesStart());
+            double cn1 = var1.copyNumber(v1Start) - var1.copyNumberChange(v1Start);
+            double cn2 = var2.copyNumber(v2Start);
             copyNumberDiff = cn2 - cn1;
         }
         else
         {
-            double cn2 = var2.copyNumber(be2.usesStart()) - var2.copyNumberChange(be2.usesStart());
-            double cn1 = var1.copyNumber(be1.usesStart());
+            double cn2 = var2.copyNumber(v2Start) - var2.copyNumberChange(v2Start);
+            double cn1 = var1.copyNumber(v1Start);
             copyNumberDiff = cn1 - cn2;
         }
 
-        boolean otherEndsAssembled = haveLinkedAssemblies(var1, var2, !be1.usesStart(), !be2.usesStart());
-        boolean isLineElement = var1.isLineElement(be1.usesStart()) || var2.isLineElement(be2.usesStart());
+        boolean otherEndsAssembled = haveLinkedAssemblies(var1, var2, !v1Start, !v2Start);
+        boolean isLineElement = var1.isLineElement(v1Start) || var2.isLineElement(v2Start);
+        boolean sameCluster = cluster1 == cluster2;
 
-        LOGGER.info(String.format("FOLDBACK,%s,%d,%d,%s,%s,%s,%d,%d,%s,%s,%d,%.3f,%s,%s",
-                var1.id(), be1.position(), be1.orientation(), be1.usesStart() ? "start" : "end", var1.type(),
-                var2.id(), be2.position(), be2.orientation(), be2.usesStart() ? "start" : "end", var2.type(),
-                length, copyNumberDiff, otherEndsAssembled, isLineElement));
+        // Add ploidy of both ends
+        // Add assembly field for both ends
+        // Mark SGL as distinct from BND
+
+        LOGGER.info(String.format("FOLDBACK,%s,%s,%d,%d,%s,%s,%.3f,%.3f,%.3f,%s,%s,%d,%d,%s,%s,%.3f,%.3f,%.3f,%s,%d,%.3f,%s,%s,%s",
+                sampleId,
+                var1.id(), be1.position(), be1.orientation(), v1Start ? "start" : "end", var1.typeStr(),
+                var1.getSvData().ploidy(), var1.copyNumber(v1Start), var1.copyNumberChange(v1Start), var1.getAssemblyData(v1Start),
+                var2.id(), be2.position(), be2.orientation(), v2Start ? "start" : "end", var2.typeStr(),
+                var2.getSvData().ploidy(), var2.copyNumber(v2Start), var2.copyNumberChange(v2Start), var2.getAssemblyData(v2Start),
+                length, copyNumberDiff, otherEndsAssembled, isLineElement, sameCluster));
     }
+
+
 
     public void setChromosomalArmStats(final List<SvClusterData> allVariants)
     {
@@ -914,7 +909,7 @@ public class SvClusteringMethods {
             }
 
             // exclude LINE elements from back-ground rates
-            if(var.isStartLineElement().equals(NO_LINE_ELEMENT))
+            if(var.isLineElement(true))
             {
                 mChrArmSvCount.replace(chrArmStart, mChrArmSvCount.get(chrArmStart) + 1);
             }
@@ -926,7 +921,7 @@ public class SvClusteringMethods {
                     mChrArmSvCount.put(chrArmEnd, 0);
                 }
 
-                if (var.isEndLineElement().equals(NO_LINE_ELEMENT))
+                if (var.isLineElement(false))
                 {
                     mChrArmSvCount.replace(chrArmEnd, mChrArmSvCount.get(chrArmEnd) + 1);
                 }

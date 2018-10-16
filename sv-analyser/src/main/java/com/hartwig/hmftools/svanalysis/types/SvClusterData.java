@@ -64,11 +64,13 @@ public class SvClusterData
     private String mEndAssemblyMatchType;
     private boolean mIsReplicatedSv;
     private final SvClusterData mReplicatedSv;
+    private int mReplicatedCount;
 
     public static String ASSEMBLY_TYPE_DSB = "dsb";
     public static String ASSEMBLY_TYPE_TI = "asm";
     public static String ASSEMBLY_TYPE_OTHER = "bpb";
 
+    public static String SINGLE_BREAKEND_TYPE = "SGL";
     public static String RELATION_TYPE_NEIGHBOUR = "NHBR";
     public static String RELATION_TYPE_OVERLAP = "OVRL";
 
@@ -95,6 +97,7 @@ public class SvClusterData
         setAssemblyData(mSVData.startLinkedBy(), mSVData.endLinkedBy());
         mIsReplicatedSv = false;
         mReplicatedSv = null;
+        mReplicatedCount = 0;
 
         mDupBEStart = false;
         mDupBEEnd = false;
@@ -144,17 +147,17 @@ public class SvClusterData
         mEndArm = other.getEndArm();
         mPonCount = other.getPonCount();
         mPonRegionCount = other.getPonRegionCount();
-        mStartFragileSite = other.isStartFragileSite();
-        mEndFragileSite = other.isEndFragileSite();
-        mStartLineElement = other.isStartLineElement();
-        mEndLineElement = other.isEndLineElement();
+        mStartFragileSite = other.isFragileSite(true);
+        mEndFragileSite = other.isFragileSite(false);
+        mStartLineElement = other.getLineElement(true);
+        mEndLineElement = other.getLineElement(false);
         mNearestSvDistance = other.getNearestSvDistance();
         mNearestSvRelation = other.getNearestSvRelation();
         setAssemblyData(mSVData.startLinkedBy(), mSVData.endLinkedBy());
         mStartAssemblyMatchType = other.getAssemblyMatchType(true);
         mEndAssemblyMatchType = other.getAssemblyMatchType(false);
-        mDupBEStart = other.isDupBEStart();
-        mDupBEEnd = other.isDupBEEnd();
+        mDupBEStart = other.isDupBreakend(true);
+        mDupBEEnd = other.isDupBreakend(false);
         mIsReplicatedSv = true;
         mReplicatedSv = other;
     }
@@ -206,6 +209,8 @@ public class SvClusterData
 
     public boolean isReplicatedSv() { return mIsReplicatedSv; }
     public final SvClusterData getReplicatedSv() { return mReplicatedSv; }
+    public int getReplicatedCount() { return mReplicatedCount; }
+    public void setReplicatedCount(int count) { mReplicatedCount = 0; }
     public final String origId() { return mReplicatedSv != null ? mReplicatedSv.id() : mId; }
     public boolean equals(final SvClusterData other, boolean allowReplicated)
     {
@@ -235,17 +240,13 @@ public class SvClusterData
     public int getPonRegionCount() { return mPonRegionCount; }
 
     public void setFragileSites(String typeStart, String typeEnd) { mStartFragileSite = typeStart; mEndFragileSite = typeEnd; }
-    public String isStartFragileSite() { return mStartFragileSite; }
-    public String isEndFragileSite() { return mEndFragileSite; }
     public String isFragileSite(boolean useStart) { return useStart ? mStartFragileSite : mEndFragileSite; }
 
     public void setLineElements(String typeStart, String typeEnd) { mStartLineElement = typeStart; mEndLineElement = typeEnd; }
-    public String isStartLineElement() { return mStartLineElement; }
-    public String isEndLineElement() { return mEndLineElement; }
     public boolean isLineElement(boolean useStart) { return useStart ? !mStartLineElement.equals(NO_LINE_ELEMENT) : !mEndLineElement.equals(NO_LINE_ELEMENT); }
+    public final String getLineElement(boolean useStart) { return useStart ? mStartLineElement : mEndLineElement; }
 
-    public boolean isDupBEStart() { return mDupBEStart; }
-    public boolean isDupBEEnd() { return mDupBEEnd; }
+    public boolean isDupBreakend(boolean useStart) { return useStart ? mDupBEStart : mDupBEEnd; }
     public void setIsDupBEStart(boolean toggle) { mDupBEStart = toggle; }
     public void setIsDupBEEnd(boolean toggle) { mDupBEEnd = toggle; }
 
@@ -267,13 +268,11 @@ public class SvClusterData
     public final String typeStr()
     {
         if(type() != StructuralVariantType.BND && mStartArm != mEndArm)
-        {
             return "CRS";
-        }
+        else if(isNullBreakend())
+            return SINGLE_BREAKEND_TYPE;
         else
-        {
             return type().toString();
-        }
     }
 
     public final boolean isLocal()
@@ -300,8 +299,7 @@ public class SvClusterData
         mTransSvLinks = transSvLinks;
     }
 
-    public String getAssemblyStart() { return mAssemblyStartData; }
-    public String getAssemblyEnd() { return mAssemblyEndData; }
+    public String getAssemblyData(boolean useStart) { return useStart ? mAssemblyStartData : mAssemblyEndData; }
 
     public List<String> getTempInsertionAssemblies(boolean useStart) { return useStart ? mStartTempInsertionAssemblies : mEndTempInsertionAssemblies; }
     public List<String> getDsbAssemblies(boolean useStart) { return useStart ? mStartDsbAssemblies : mEndDsbAssemblies; }

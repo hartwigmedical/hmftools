@@ -50,19 +50,19 @@ public class LinkFinder
 
     public void findLinkedPairs(final String sampleId, SvCluster cluster)
     {
-        List<SvLinkedPair> assemblyLinkedPairs = createAssemblyLinkedPairs(sampleId, cluster);
-        List<SvLinkedPair> inferredLinkedPairs = createInferredLinkedPairs(sampleId, cluster, false);
+        List<SvLinkedPair> assemblyLinkedPairs = createAssemblyLinkedPairs(cluster);
+        List<SvLinkedPair> inferredLinkedPairs = createInferredLinkedPairs(cluster, false);
 
         findSpanningSVs(sampleId, cluster, inferredLinkedPairs);
 
-        List<SvLinkedPair> singleBELinkedPairs = createSingleBELinkedPairs(sampleId, cluster);
+        List<SvLinkedPair> singleBELinkedPairs = createSingleBELinkedPairs(cluster);
         inferredLinkedPairs.addAll(singleBELinkedPairs);
 
         cluster.setAssemblyLinkedPairs(assemblyLinkedPairs);
         cluster.setInferredLinkedPairs(inferredLinkedPairs);
     }
 
-    public List<SvLinkedPair> createAssemblyLinkedPairs(final String sampleId, SvCluster cluster)
+    public List<SvLinkedPair> createAssemblyLinkedPairs(SvCluster cluster)
     {
         List<SvLinkedPair> linkedPairs = Lists.newArrayList();
 
@@ -80,7 +80,7 @@ public class LinkFinder
 
             // make note of SVs which line up exactly with other SVs
             // these will be used to eliminate transitive SVs later on
-            if(var1.isDupBEStart() && var1.isDupBEEnd())
+            if(var1.isDupBreakend(true) && var1.isDupBreakend(false))
             {
                 continue;
             }
@@ -96,7 +96,7 @@ public class LinkFinder
                     if(var2.type() == StructuralVariantType.INS || var2.isNullBreakend())
                         continue;
 
-                    if(var2.isDupBEStart() && var2.isDupBEEnd())
+                    if(var2.isDupBreakend(true) && var2.isDupBreakend(false))
                         continue;
 
                     for(int be2 = SVI_START; be2 <= SVI_END; ++be2)
@@ -136,8 +136,8 @@ public class LinkFinder
                         linkedPairs.add(newPair);
 
                         // to avoid logging unlikely long TIs
-                        LOGGER.debug("sample({}) cluster({}) adding assembly linked {} pair({}) length({})",
-                                sampleId, cluster.getId(), newPair.linkType(), newPair.toString(), newPair.length());
+                        LOGGER.debug("cluster({}) adding assembly linked {} pair({}) length({})",
+                                cluster.getId(), newPair.linkType(), newPair.toString(), newPair.length());
                     }
                 }
             }
@@ -146,25 +146,30 @@ public class LinkFinder
         return linkedPairs;
     }
 
-    public List<SvLinkedPair> createInferredLinkedPairs(final String sampleId, SvCluster cluster, boolean allowSingleBEs)
+    public List<SvLinkedPair> createInferredLinkedPairs(SvCluster cluster, boolean allowSingleBEs)
+    {
+        return createInferredLinkedPairs(cluster, cluster.getSVs(), allowSingleBEs);
+    }
+
+    public List<SvLinkedPair> createInferredLinkedPairs(SvCluster cluster, List<SvClusterData> svList, boolean allowSingleBEs)
     {
         List<SvLinkedPair> linkedPairs = Lists.newArrayList();
 
         // exclude large clusters for now due to processing times until the algo is better refined
-        if(cluster.getCount() >= CLUSTER_SIZE_ANALYSIS_LIMIT)
+        if(svList.size() >= CLUSTER_SIZE_ANALYSIS_LIMIT)
             return linkedPairs;
 
         if(cluster.hasLinkingLineElements())
             return linkedPairs;
 
-        for (int i = 0; i < cluster.getCount(); ++i)
+        for (int i = 0; i < svList.size(); ++i)
         {
-            SvClusterData var1 = cluster.getSVs().get(i);
+            SvClusterData var1 = svList.get(i);
 
             if(var1.type() == StructuralVariantType.INS || (var1.isNullBreakend() && !allowSingleBEs))
                 continue;
 
-            if(var1.isDupBEStart() && var1.isDupBEEnd())
+            if(var1.isDupBreakend(true) && var1.isDupBreakend(false))
                 continue;
 
             for(int be1 = SVI_START; be1 <= SVI_END; ++be1)
@@ -178,14 +183,14 @@ public class LinkFinder
                 if(var1.isAssemblyMatched(v1Start))
                     continue;
 
-                for (int j = i+1; j < cluster.getCount(); ++j)
+                for (int j = i+1; j < svList.size(); ++j)
                 {
-                    SvClusterData var2 = cluster.getSVs().get(j);
+                    SvClusterData var2 = svList.get(j);
 
                     if(var2.type() == StructuralVariantType.INS || (var2.isNullBreakend() && !allowSingleBEs))
                         continue;
 
-                    if(var2.isDupBEStart() && var2.isDupBEEnd())
+                    if(var2.isDupBreakend(true) && var2.isDupBreakend(false))
                         continue;
 
                     for(int be2 = SVI_START; be2 <= SVI_END; ++be2)
@@ -259,8 +264,8 @@ public class LinkFinder
                         if(mConfig.LogVerbose && !var1.isReplicatedSv() && !var2.isReplicatedSv())
                         {
                             // to avoid logging unlikely long TIs
-                            LOGGER.debug("sample({}) cluster({}) adding inferred linked {} pair({}) length({}) at index({})",
-                                    sampleId, cluster.getId(), newPair.linkType(), newPair.toString(), newPair.length(), index);
+                            LOGGER.debug("cluster({}) adding inferred linked {} pair({}) length({}) at index({})",
+                                    cluster.getId(), newPair.linkType(), newPair.toString(), newPair.length(), index);
                         }
                     }
                 }
@@ -273,8 +278,7 @@ public class LinkFinder
         if(linkedPairs.isEmpty())
             return linkedPairs;
 
-        LOGGER.debug("sample({}) cluster({}) has {} inferred linked pairs",
-                sampleId, cluster.getId(), linkedPairs.size());
+        LOGGER.debug("sample({}) cluster({}) has {} inferred linked pairs", cluster.getId(), linkedPairs.size());
 
         return linkedPairs;
     }
@@ -298,7 +302,7 @@ public class LinkFinder
 
             // make note of SVs which line up exactly with other SVs
             // these will be used to eliminate transitive SVs later on
-            if (var1.isDupBEStart() && var1.isDupBEEnd())
+            if (var1.isDupBreakend(true) && var1.isDupBreakend(false))
             {
                 spanningSVs.add(var1);
             }
@@ -315,7 +319,7 @@ public class LinkFinder
         cluster.setSpanningSVs(spanningSVs);
     }
 
-    public List<SvLinkedPair> createSingleBELinkedPairs(final String sampleId, SvCluster cluster)
+    public List<SvLinkedPair> createSingleBELinkedPairs(SvCluster cluster)
     {
         List<SvLinkedPair> linkedPairs = Lists.newArrayList();
 
@@ -374,16 +378,16 @@ public class LinkFinder
                 if(newPair.length() < mUtils.getBaseDistance())
                 {
                     // to avoid logging unlikely long TIs
-                    LOGGER.debug("sample({}) cluster({}) adding inferred single-BE linked {} pair({}) length({}) at index({})",
-                            sampleId, cluster.getId(), newPair.linkType(), newPair.toString(), newPair.length(), index);
+                    LOGGER.debug("cluster({}) adding inferred single-BE linked {} pair({}) length({}) at index({})",
+                            cluster.getId(), newPair.linkType(), newPair.toString(), newPair.length(), index);
                 }
             }
         }
 
         if(!linkedPairs.isEmpty())
         {
-            LOGGER.debug("sample({}) cluster({}) has {} inferred single-BE linked pairs",
-                    sampleId, cluster.getId(), linkedPairs.size());
+            LOGGER.debug("cluster({}) has {} inferred single-BE linked pairs",
+                    cluster.getId(), linkedPairs.size());
         }
 
         return linkedPairs;

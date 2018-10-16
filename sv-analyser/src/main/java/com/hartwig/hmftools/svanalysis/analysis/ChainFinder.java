@@ -278,13 +278,10 @@ public class ChainFinder
     private boolean formChains(List<SvClusterData> svList, List<SvLinkedPair> inferredLinkedPairs)
     {
         // find all the combinations of linked pairs where every breakend end except at most 2 are covered by a linked pair
-        List<SvChain> partialChains = Lists.newArrayList();
-
         if(mHasExistingChains)
         {
-            partialChains.addAll(mCluster.getChains());
-
-            linkChains(partialChains, mReqChainCount);
+            // partialChains.addAll(mCluster.getChains());
+            // linkChains(partialChains, mReqChainCount);
 
             if(!mRequireFullChains)
             {
@@ -300,66 +297,9 @@ public class ChainFinder
             }
         }
 
-        // first form any partial chains out of the assembly linked pairs
-        for (SvLinkedPair linkedPair : mAssemblyLinkedPairs)
-        {
-            addLinkToChains(linkedPair, partialChains);
-        }
-
-        if(partialChains.size() == 1 && partialChains.get(0).getSvCount() == mReqChainCount)
-        {
-            // the assemblies formed a single chain with all the required link
-            SvChain completeChain = partialChains.get(0);
-            completeChain.setId(mCompleteChains.size());
-            mCompleteChains.add(completeChain);
-            partialChains.clear();
-
-            LOGGER.debug("found complete chain({} svs={}) from assembly links",
-                    completeChain.getId(), completeChain.getSvCount());
-
-            completeChain.logLinks();
-        }
-        else
-        {
-            // check if there are too many links to check
-            /*
-            int reqInferredLinks = svList.size() - mAssemblyLinkedPairs.size() - 1;
-            int testLinkCount = inferredLinkedPairs.size();
-
-            if(reqInferredLinks > 20 || (reqInferredLinks >= 10 && testLinkCount >= 40))
-                return false;
-
-            if(testLinkCount > 10 && testLinkCount > reqInferredLinks)
-            {
-                long calcCount = combination(testLinkCount, reqInferredLinks);
-
-                if (calcCount > 10000)
-                    return false;
-            }
-            */
-
-            boolean useContinuous = true;
-            if(useContinuous || (!mCluster.hasReplicatedSVs() && mReqChainCount - mAssemblyLinkedPairs.size() >= 5))
-            {
-                // reduceInferredToShortestLinks(inferredLinkedPairs, mCompleteChains);
-                mContinuousFinderPc.start();
-                findContinuousChains(svList, inferredLinkedPairs);
-                mContinuousFinderPc.stop();
-            }
-            else
-            {
-                mRecursiveFinderPc.start();
-                findCompletedLinks(mAssemblyLinkedPairs, mAssemblyLinkedPairs, partialChains, inferredLinkedPairs, 0);
-                mRecursiveFinderPc.stop();
-            }
-
-            if(mPathInterations >= MAX_PATH_ITERATIONS)
-            {
-                LOGGER.info("sample({}) cluster({}) max iterations reached: chains(full={} part={}) svCount({}) links(assembly={} infer={})",
-                        mSampleId, mCluster.getId(), mCompleteChains.size(), mIncompleteChains.size(),
-                        svList.size(), mAssemblyLinkedPairs.size(), inferredLinkedPairs.size());
-            }
-        }
+        mContinuousFinderPc.start();
+        findContinuousChains(svList, inferredLinkedPairs);
+        mContinuousFinderPc.stop();
 
         // first check for any complete chains, and if found, add the shortest one
         if(cacheCompleteChain())
@@ -471,6 +411,430 @@ public class ChainFinder
             chainedSVs.addAll(maxLengthChain.getSvList());
             mIncompleteChains.remove(maxLengthChain);
         }
+    }
+
+    public void findContinuousChains(final List<SvClusterData> svList, List<SvLinkedPair> inferredLinkedPairs)
+    {
+        List<SvChain> chains = Lists.newArrayList();
+
+        // re-include assembly links from any sub-clusters and all existing chains will be reformed
+        if(mCluster.hasSubClusters())
+        {
+            for(SvCluster subCluster : mCluster.getSubClusters())
+            {
+                if(!subCluster.isFullyChained())
+                    mAssemblyLinkedPairs.addAll(subCluster.getAssemblyLinkedPairs());
+
+            }
+        }
+
+        findSvChainsIncrementally(svList, chains, inferredLinkedPairs);
+
+        if(chains.size() == 1 && chains.get(0).getSvCount() == mReqChainCount)
+        {
+            SvChain completeChain = chains.get(0);
+            mCompleteChains.add(completeChain);
+            return;
+        }
+
+        for(SvChain chain : chains)
+        {
+            if (chain.getSvCount() < 2)
+                continue;
+
+            mIncompleteChains.add(chain);
+
+            if(mLogVerbose)
+            {
+                LOGGER.debug("found incomplete chain({} svs={})", chain.getId(), chain.getSvCount());
+            }
+        }
+    }
+
+    public void findSvChainsIncrementally(final List<SvClusterData> svList, List<SvChain> chainsList, List<SvLinkedPair> inferredLinkedPairs)
+    {
+        // routine flow:
+        // start with any existing partial chains and unconnected assembly links - these are always used
+        // first to either start a new chain or link to existing chains
+        // then take the open ends of the current chain and find the shortest templated insertion from amongst the remaining unconnected SVs
+
+        List<SvChain> partialChains = Lists.newArrayList();
+        partialChains.addAll(mCluster.getChains());
+
+        if(mAssemblyLinkedPairs.isEmpty() && inferredLinkedPairs.isEmpty() && partialChains.isEmpty())
+            return;
+
+        List<SvLinkedPair> chainedPairs = Lists.newArrayList();
+        List<SvLinkedPair> remainingStartLinks = Lists.newArrayList();
+        remainingStartLinks.addAll(mAssemblyLinkedPairs);
+        remainingStartLinks.addAll(inferredLinkedPairs);
+
+        final List<SvClusterData> unlinkedSvList = Lists.newArrayList();
+
+        if(mCluster.hasSubClusters())
+            unlinkedSvList.addAll(mCluster.getUnlinkedSVs());
+        else
+            unlinkedSvList.addAll(svList);
+
+        // remove links and SVs already allocated to partial chains, but add the open ends of chains to the unlinked list
+        for(final SvChain chain : partialChains)
+        {
+            chainedPairs.addAll(chain.getLinkedPairs());
+
+            if(!unlinkedSvList.contains(chain.getFirstSV()))
+                unlinkedSvList.add(chain.getFirstSV());
+
+            if(!unlinkedSvList.contains(chain.getLastSV()))
+                unlinkedSvList.add(chain.getLastSV());
+        }
+
+        List<SvLinkedPair> requiredLinks = Lists.newArrayList();
+
+        boolean chainComplete = false;
+        boolean chainLinkAdded = false;
+        SvChain currentChain = null;
+
+        while(!chainComplete || chainLinkAdded)
+        {
+            // start with a single linked pair
+            // for each of its ends (where the first BE is labelled 'first', and the second labelled 'last'),
+            // search for the closest possible linking BE from another linked pair
+            // for BEs to link they must be facing (like a TI)
+
+            if(!chainLinkAdded)
+            {
+                if(!partialChains.isEmpty())
+                {
+                    currentChain = new SvChain(partialChains.get(0));
+                    partialChains.remove(0);
+
+                    if (mLogVerbose)
+                    {
+                        LOGGER.debug("sample({}) cluster({}) building from existng chain({}) with {} SVs",
+                                mSampleId, mCluster.getId(), currentChain.getId(), currentChain.getSvCount());
+                    }
+                }
+                else if(!remainingStartLinks.isEmpty())
+                {
+                    SvLinkedPair linkedPair = remainingStartLinks.get(0);
+                    remainingStartLinks.remove(0);
+
+                    currentChain = new SvChain(chainsList.size());
+
+                    if (mLogVerbose)
+                    {
+                        LOGGER.debug("sample({}) cluster({}) starting chain({}) with linked pair({})",
+                                mSampleId, mCluster.getId(), currentChain.getId(), linkedPair.toString());
+                    }
+
+                    currentChain.addLink(linkedPair, true);
+                    chainedPairs.add(linkedPair);
+                    reduceRemainingLists(linkedPair, unlinkedSvList, remainingStartLinks);
+                }
+                else
+                {
+                    // nothing left to start a chain with
+                    break;
+                }
+            }
+
+            chainLinkAdded = false;
+
+            // see if any of the remaining partial chains can now be joined
+            int chainIndex = 0;
+            while (chainIndex < partialChains.size())
+            {
+                final SvChain partialChain = partialChains.get(chainIndex);
+
+                if (reconcileChains(currentChain, partialChain))
+                {
+                    LOGGER.debug("adding existing chain({}) to current chain({})", partialChain.getId(), currentChain.getId());
+                    chainLinkAdded = false;
+                    partialChains.remove(chainIndex);
+                }
+                else
+                {
+                    ++chainIndex;
+                }
+            }
+
+            // look amongst the remaining assembly links for a link to the current chain
+            int index = 0;
+            while(index < remainingStartLinks.size())
+            {
+                SvLinkedPair assemblyLink = remainingStartLinks.get(index);
+
+                if(assemblyLink.isInferred())
+                    break;
+
+                if (currentChain.canAddLinkedPairToStart(assemblyLink))
+                {
+                    currentChain.addLink(assemblyLink, true);
+                }
+                else if (currentChain.canAddLinkedPairToEnd(assemblyLink))
+                {
+                    currentChain.addLink(assemblyLink, false);
+                }
+                else
+                {
+                    ++index;
+                    continue;
+                }
+
+                LOGGER.debug("adding assembly linked pair({}) to chain({})", assemblyLink.toString(), currentChain.getId());
+                remainingStartLinks.remove(index);
+                chainedPairs.add(assemblyLink);
+                reduceRemainingLists(assemblyLink, unlinkedSvList, remainingStartLinks);
+                chainLinkAdded = true;
+            }
+
+            // now find the closest TI from amongst the remaining unlinked variant breakends
+            SvClusterData chainFirstSV = currentChain.getFirstSV();
+            boolean chainFirstUnlinkedOnStart = currentChain.firstLinkOpenOnStart();
+            SvClusterData chainLastSV = currentChain.getLastSV();
+            boolean chainLastUnlinkedOnStart = currentChain.lastLinkOpenOnStart();
+
+            requiredLinks.clear();
+            requiredLinks.addAll(chainedPairs);
+            requiredLinks.addAll(mAssemblyLinkedPairs); // these will restrict potential inferred TIs even if not part of a chain yet
+
+            SvLinkedPair closestStartPair = findNextLinkedPair(requiredLinks, unlinkedSvList, chainFirstSV, chainFirstUnlinkedOnStart);
+            SvLinkedPair closestLastPair = findNextLinkedPair(requiredLinks, unlinkedSvList, chainLastSV, chainLastUnlinkedOnStart);
+
+            if(closestStartPair != null || closestLastPair != null)
+            {
+                chainLinkAdded = true;
+
+                // don't add the same variant to both start and end - instead choose the shortest of the 2
+                if (closestStartPair != null && closestLastPair != null && closestStartPair.hasAnySameVariant(closestLastPair))
+                {
+                    if (closestStartPair.length() < closestLastPair.length())
+                        closestLastPair = null;
+                    else
+                        closestStartPair = null;
+                }
+
+                if (closestStartPair != null)
+                {
+                    if (mLogVerbose)
+                    {
+                        LOGGER.debug("adding linked pair({}) to chain({}) start with length({})",
+                                closestStartPair.toString(), currentChain.getId(), closestStartPair.length());
+                    }
+
+                    // add this to the chain at the start
+                    currentChain.addLink(closestStartPair, true);
+                    chainedPairs.add(closestStartPair);
+                    reduceRemainingLists(closestStartPair, unlinkedSvList, remainingStartLinks);
+                }
+
+                if (closestLastPair != null & closestLastPair != closestStartPair)
+                {
+                    if (mLogVerbose)
+                    {
+                        LOGGER.debug("adding linked pair({}) to chain({}) end with length({})",
+                                closestLastPair.toString(), currentChain.getId(), closestLastPair.length());
+                    }
+
+                    // add this to the chain at the start
+                    currentChain.addLink(closestLastPair, false);
+                    chainedPairs.add(closestLastPair);
+                    reduceRemainingLists(closestLastPair, unlinkedSvList, remainingStartLinks);
+                }
+            }
+
+            chainComplete = (currentChain.getSvCount() == svList.size());
+
+            if((!chainLinkAdded && closestStartPair == null && closestLastPair == null)
+            || chainComplete || (remainingStartLinks.isEmpty() && unlinkedSvList.isEmpty()))
+            {
+                if(currentChain.getLinkCount() > 1)
+                {
+                    chainsList.add(currentChain);
+
+                    if(mLogVerbose)
+                    {
+                        LOGGER.debug("sample({}) cluster({}) adding {} chain({}) with {} linked pairs:",
+                                mSampleId, mCluster.getId(), chainComplete ? "complete" : "partial", currentChain.getId(), currentChain.getLinkCount());
+                        currentChain.logLinks();
+                    }
+                }
+
+                if(chainComplete)
+                    break;
+            }
+        }
+    }
+
+    private SvLinkedPair findNextLinkedPair(final List<SvLinkedPair> chainedPairs, final List<SvClusterData> svList, final SvClusterData var, boolean useStart)
+    {
+        if(var.isAssemblyMatched(useStart)) // this breakend will be added when the assembly link is added
+            return null;
+
+        // find the shortest templated insertion which links to this variant
+        SvLinkedPair newPair = null;
+
+        for(final SvClusterData otherVar : svList)
+        {
+            if(otherVar.type() == INS)
+                continue;
+
+            for(int be = SVI_START; be <= SVI_END; ++be)
+            {
+                boolean otherVarStart = isStart(be);
+
+                if(otherVar.isNullBreakend() && !otherVarStart)
+                    continue;
+
+                if (otherVar.isAssemblyMatched(otherVarStart))
+                    continue;
+
+                if (!mUtils.areLinkedSection(var, otherVar, useStart, otherVarStart))
+                    continue;
+
+                int tiLength = getProximity(var, otherVar, useStart, otherVarStart);
+
+                if (tiLength <= 0 || (newPair != null && tiLength >= newPair.length()))
+                    continue;
+
+                // check if already in a linked pair
+                boolean isValid = true;
+                for(final SvLinkedPair pair : chainedPairs)
+                {
+                    if(pair.hasVariantBE(otherVar, otherVarStart))
+                    {
+                        isValid = false;
+                        break;
+                    }
+                }
+
+                if(!isValid)
+                    continue;
+
+                // form a new TI from these 2 BEs
+                SvLinkedPair testPair = new SvLinkedPair(var, otherVar, SvLinkedPair.LINK_TYPE_TI, useStart, otherVarStart);
+
+                if(mCluster.hasReplicatedSVs())
+                {
+                    // check that if this link has the same SVs as another link due to replicated SVs, that
+                    // the breakends used in the link match each other
+                    for(final SvLinkedPair pair : chainedPairs)
+                    {
+                        // check that if this link has the same SVs as another link due to replicated SVs, that
+                        // the breakends used in the link match each other
+                        if(testPair.sameVariants(pair) && !testPair.matches(pair, true))
+                        {
+                            isValid = false;
+                            break;
+                        }
+                    }
+                }
+
+                if(!isValid)
+                    continue;
+
+                newPair = testPair;
+
+            }
+        }
+
+        return newPair;
+    }
+
+    private static void reduceRemainingLists(final SvLinkedPair newPair, List<SvClusterData> unlinkedSvList, List<SvLinkedPair> remainingPairs)
+    {
+        unlinkedSvList.remove(newPair.first());
+        unlinkedSvList.remove(newPair.second());
+
+        // also remove any inferred TI which has one of these SVs
+        int index = 0;
+        while(index < remainingPairs.size())
+        {
+            final SvLinkedPair pair = remainingPairs.get(index);
+
+            if(pair.isInferred() && pair.hasAnySameVariant(newPair))
+            {
+                remainingPairs.remove(index);
+            }
+            else
+            {
+                ++index;
+            }
+        }
+    }
+
+    private static boolean linkChains(List<SvChain> chains, int reqSvCount)
+    {
+        // reconcile chains together if possible
+        if (chains.size() <= 1)
+            return false;
+
+        int chainsRemoved = 0;
+
+        for (int firstIndex = 0; firstIndex < chains.size(); ++firstIndex)
+        {
+            final SvChain firstChain = chains.get(firstIndex);
+
+            if (firstChain.getSvCount() == reqSvCount || firstChain.isClosedLoop())
+                continue;
+
+            int nextIndex = firstIndex + 1;
+            while (nextIndex < chains.size())
+            {
+                final SvChain nextChain = chains.get(nextIndex);
+
+                if (nextChain.getSvCount() == reqSvCount || nextChain.isClosedLoop())
+                {
+                    ++nextIndex;
+                    continue;
+                }
+
+                if (reconcileChains(firstChain, nextChain))
+                {
+                    chains.remove(nextIndex);
+                    ++chainsRemoved;
+                }
+                else
+                {
+                    ++nextIndex;
+                }
+            }
+        }
+
+        return chainsRemoved > 0;
+    }
+
+    private static boolean reconcileChains(SvChain firstChain, SvChain nextChain)
+    {
+        boolean canAddToStart = firstChain.canAddLinkedPairToStart(nextChain.getFirstLinkedPair());
+        boolean canAddToEnd = firstChain.canAddLinkedPairToEnd(nextChain.getFirstLinkedPair());
+
+        if(canAddToStart || canAddToEnd)
+        {
+            for(SvLinkedPair linkedPair : nextChain.getLinkedPairs())
+            {
+                firstChain.addLink(linkedPair, canAddToStart);
+            }
+
+            return true;
+        }
+
+        canAddToStart = firstChain.canAddLinkedPairToStart(nextChain.getLastLinkedPair());
+        canAddToEnd = firstChain.canAddLinkedPairToEnd(nextChain.getLastLinkedPair());
+
+        if(canAddToStart || canAddToEnd)
+        {
+            // add in reverse
+            for(int index = nextChain.getLinkedPairs().size() - 1; index >= 0; --index)
+            {
+                SvLinkedPair linkedPair = nextChain.getLinkedPairs().get(index);
+                firstChain.addLink(linkedPair, canAddToStart);
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     private boolean findCompletedLinks(
@@ -693,80 +1057,6 @@ public class ChainFinder
         chains.add(newChain);
     }
 
-    private static boolean linkChains(List<SvChain> chains, int reqSvCount)
-    {
-        // reconcile chains together if possible
-        if (chains.size() <= 1)
-            return false;
-
-        int chainsRemoved = 0;
-
-        for (int firstIndex = 0; firstIndex < chains.size(); ++firstIndex)
-        {
-            final SvChain firstChain = chains.get(firstIndex);
-
-            if (firstChain.getSvCount() == reqSvCount || firstChain.isClosedLoop())
-                continue;
-
-            int nextIndex = firstIndex + 1;
-            while (nextIndex < chains.size())
-            {
-                final SvChain nextChain = chains.get(nextIndex);
-
-                if (nextChain.getSvCount() == reqSvCount || nextChain.isClosedLoop())
-                {
-                    ++nextIndex;
-                    continue;
-                }
-
-                if (reconcileChains(firstChain, nextChain))
-                {
-                    chains.remove(nextIndex);
-                    ++chainsRemoved;
-                }
-                else
-                {
-                    ++nextIndex;
-                }
-            }
-        }
-
-        return chainsRemoved > 0;
-    }
-
-    private static boolean reconcileChains(SvChain firstChain, SvChain nextChain)
-    {
-        boolean canAddToStart = firstChain.canAddLinkedPairToStart(nextChain.getFirstLinkedPair());
-        boolean canAddToEnd = firstChain.canAddLinkedPairToEnd(nextChain.getFirstLinkedPair());
-
-        if(canAddToStart || canAddToEnd)
-        {
-            for(SvLinkedPair linkedPair : nextChain.getLinkedPairs())
-            {
-                firstChain.addLink(linkedPair, canAddToStart);
-            }
-
-            return true;
-        }
-
-        canAddToStart = firstChain.canAddLinkedPairToStart(nextChain.getLastLinkedPair());
-        canAddToEnd = firstChain.canAddLinkedPairToEnd(nextChain.getLastLinkedPair());
-
-        if(canAddToStart || canAddToEnd)
-        {
-            // add in reverse
-            for(int index = nextChain.getLinkedPairs().size() - 1; index >= 0; --index)
-            {
-                SvLinkedPair linkedPair = nextChain.getLinkedPairs().get(index);
-                firstChain.addLink(linkedPair, canAddToStart);
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
     private static boolean canAddLinkedPair(final List<SvLinkedPair> existingLinks, final List<SvChain> partialChains, final SvLinkedPair testLink, int requiredSvCount)
     {
         // first check that the breakends aren't already used
@@ -835,7 +1125,7 @@ public class ChainFinder
                     continue;
 
                 if((useStartPosition && var.position(useStartPosition) < chainOuterPosition)
-                || (!useStartPosition && var.position(useStartPosition) > chainOuterPosition))
+                        || (!useStartPosition && var.position(useStartPosition) > chainOuterPosition))
                 {
                     if(mLogVerbose)
                     {
@@ -855,303 +1145,6 @@ public class ChainFinder
         return false;
     }
 
-    public void findContinuousChains(final List<SvClusterData> svList, List<SvLinkedPair> inferredLinkedPairs)
-    {
-        List<SvChain> chains = Lists.newArrayList();
-
-        // re-include assembly links from any sub-clusters and all existing chains will be reformed
-        if(mCluster.hasSubClusters())
-        {
-            for(SvCluster subCluster : mCluster.getSubClusters())
-            {
-                mAssemblyLinkedPairs.addAll(subCluster.getAssemblyLinkedPairs());
-            }
-        }
-
-        findSvChainsIncrementally(svList, chains, inferredLinkedPairs);
-
-        // List<SvLinkedPair> allLinkedPairs = Lists.newArrayList();
-        // allLinkedPairs.addAll(mAssemblyLinkedPairs);
-        // allLinkedPairs.addAll(inferredLinkedPairs);
-        // findSvChains(linkedPairs, chains);
-
-        if(chains.size() == 1 && chains.get(0).getSvCount() == mReqChainCount)
-        {
-            SvChain completeChain = chains.get(0);
-            mCompleteChains.add(completeChain);
-
-            LOGGER.debug("found complete chain({} svs={})", completeChain.getId(), completeChain.getSvCount());
-            completeChain.logLinks();
-            return;
-        }
-
-        for(SvChain chain : chains)
-        {
-            if (chain.getSvCount() < 2)
-                continue;
-
-            mIncompleteChains.add(chain);
-
-            if(mLogVerbose)
-            {
-                LOGGER.debug("found incomplete chain({} svs={})", chain.getId(), chain.getSvCount());
-            }
-        }
-    }
-
-    public void findSvChainsIncrementally(final List<SvClusterData> svList, List<SvChain> chainsList, List<SvLinkedPair> inferredLinkedPairs)
-    {
-        if(mAssemblyLinkedPairs.isEmpty() && inferredLinkedPairs.isEmpty())
-            return;
-
-        List<SvLinkedPair> chainedPairs = Lists.newArrayList();
-        List<SvLinkedPair> remainingStartLinks = Lists.newArrayList();
-        remainingStartLinks.addAll(mAssemblyLinkedPairs);
-        remainingStartLinks.addAll(inferredLinkedPairs);
-
-        final List<SvClusterData> unlinkedSvList = Lists.newArrayList();
-        unlinkedSvList.addAll(svList);
-
-        List<SvLinkedPair> requiredLinks = Lists.newArrayList();
-
-        boolean chainComplete = false;
-        boolean chainLinkAdded = false;
-        SvChain currentChain = null;
-
-        while(!chainComplete || chainLinkAdded)
-        {
-            // start with a single linked pair
-            // for each of its ends (where the first BE is labelled 'first', and the second labelled 'last'),
-            // search for the closest possible linking BE from another linked pair
-            // for BEs to link they must be facing (like a TI)
-
-            if(!chainLinkAdded)
-            {
-                if(remainingStartLinks.isEmpty())
-                    break;
-
-                SvLinkedPair linkedPair = remainingStartLinks.get(0);
-                remainingStartLinks.remove(0);
-
-                currentChain = new SvChain(chainsList.size());
-
-                if (mLogVerbose)
-                {
-                    LOGGER.debug("sample({}) cluster({}) starting chain({}) with linked pair({})",
-                            mSampleId, mCluster.getId(), currentChain.getId(), linkedPair.toString());
-                }
-
-                currentChain.addLink(linkedPair, true);
-                chainedPairs.add(linkedPair);
-                reduceRemainingLists(linkedPair, unlinkedSvList, remainingStartLinks);
-            }
-
-            chainLinkAdded = false;
-
-            // first look amongst the remaining assembly links for a link to the current chain
-            int index = 0;
-            while(index < remainingStartLinks.size())
-            {
-                SvLinkedPair assemblyLink = remainingStartLinks.get(index);
-
-                if(assemblyLink.isInferred())
-                    break;
-
-                if (currentChain.canAddLinkedPairToStart(assemblyLink))
-                {
-                    currentChain.addLink(assemblyLink, true);
-                }
-                else if (currentChain.canAddLinkedPairToEnd(assemblyLink))
-                {
-                    currentChain.addLink(assemblyLink, false);
-                }
-                else
-                {
-                    ++index;
-                    continue;
-                }
-
-                LOGGER.debug("adding assembly linked pair({}) to chain({})", assemblyLink.toString(), currentChain.getId());
-                remainingStartLinks.remove(index);
-                chainedPairs.add(assemblyLink);
-                reduceRemainingLists(assemblyLink, unlinkedSvList, remainingStartLinks);
-                chainLinkAdded = true;
-            }
-
-            // now find the closest TI from amongst the remaining unlinked variant breakends
-            SvClusterData chainFirstSV = currentChain.getFirstSV();
-            boolean chainFirstUnlinkedOnStart = currentChain.firstLinkOpenOnStart();
-            SvClusterData chainLastSV = currentChain.getLastSV();
-            boolean chainLastUnlinkedOnStart = currentChain.lastLinkOpenOnStart();
-
-            requiredLinks.clear();
-            requiredLinks.addAll(chainedPairs);
-            requiredLinks.addAll(mAssemblyLinkedPairs); // these will restrict potential inferred TIs even if not part of a chain yet
-
-            SvLinkedPair closestStartPair = findNextLinkedPair(requiredLinks, unlinkedSvList, chainFirstSV, chainFirstUnlinkedOnStart);
-            SvLinkedPair closestLastPair = findNextLinkedPair(requiredLinks, unlinkedSvList, chainLastSV, chainLastUnlinkedOnStart);
-
-            if(closestStartPair != null || closestLastPair != null)
-            {
-                chainLinkAdded = true;
-
-                // don't add the same variant to both start and end - instead choose the shortest of the 2
-                if (closestStartPair != null && closestLastPair != null && closestStartPair.hasAnySameVariant(closestLastPair))
-                {
-                    if (closestStartPair.length() < closestLastPair.length())
-                        closestLastPair = null;
-                    else
-                        closestStartPair = null;
-                }
-
-                if (closestStartPair != null)
-                {
-                    if (mLogVerbose)
-                    {
-                        LOGGER.debug("adding linked pair({}) to chain({}) start with length({})",
-                                closestStartPair.toString(), currentChain.getId(), closestStartPair.length());
-                    }
-
-                    // add this to the chain at the start
-                    currentChain.addLink(closestStartPair, true);
-                    chainedPairs.add(closestStartPair);
-                    reduceRemainingLists(closestStartPair, unlinkedSvList, remainingStartLinks);
-                }
-
-                if (closestLastPair != null & closestLastPair != closestStartPair)
-                {
-                    if (mLogVerbose)
-                    {
-                        LOGGER.debug("adding linked pair({}) to chain({}) end with length({})",
-                                closestLastPair.toString(), currentChain.getId(), closestLastPair.length());
-                    }
-
-                    // add this to the chain at the start
-                    currentChain.addLink(closestLastPair, false);
-                    chainedPairs.add(closestLastPair);
-                    reduceRemainingLists(closestLastPair, unlinkedSvList, remainingStartLinks);
-                }
-            }
-
-            chainComplete = (currentChain.getSvCount() == svList.size());
-
-            if((!chainLinkAdded && closestStartPair == null && closestLastPair == null)
-            || chainComplete || (remainingStartLinks.isEmpty() && unlinkedSvList.isEmpty()))
-            {
-                if(currentChain.getLinkCount() > 1)
-                {
-                    chainsList.add(currentChain);
-
-                    if(mLogVerbose)
-                    {
-                        LOGGER.debug("sample({}) cluster({}) adding {} chain({}) with {} linked pairs:",
-                                mSampleId, mCluster.getId(), chainComplete ? "complete" : "partial", currentChain.getId(), currentChain.getLinkCount());
-                        currentChain.logLinks();
-                    }
-                }
-
-                if(chainComplete)
-                    break;
-            }
-        }
-    }
-
-    private SvLinkedPair findNextLinkedPair(final List<SvLinkedPair> chainedPairs, final List<SvClusterData> svList, final SvClusterData var, boolean useStart)
-    {
-        if(var.isAssemblyMatched(useStart)) // this breakend will be added when the assembly link is added
-            return null;
-
-        // find the shortest templated insertion which links to this variant
-        SvLinkedPair newPair = null;
-
-        for(final SvClusterData otherVar : svList)
-        {
-            if(otherVar.type() == INS)
-                continue;
-
-            for(int be = SVI_START; be <= SVI_END; ++be)
-            {
-                boolean otherVarStart = isStart(be);
-
-                if(otherVar.isNullBreakend() && !otherVarStart)
-                    continue;
-
-                if (otherVar.isAssemblyMatched(otherVarStart))
-                    continue;
-
-                if (!mUtils.areLinkedSection(var, otherVar, useStart, otherVarStart))
-                    continue;
-
-                int tiLength = getProximity(var, otherVar, useStart, otherVarStart);
-
-                if (tiLength <= 0 || (newPair != null && tiLength >= newPair.length()))
-                    continue;
-
-                // check if already in a linked pair
-                boolean isValid = true;
-                for(final SvLinkedPair pair : chainedPairs)
-                {
-                    if(pair.hasVariantBE(otherVar, otherVarStart))
-                    {
-                        isValid = false;
-                        break;
-                    }
-                }
-
-                if(!isValid)
-                    continue;
-
-                // form a new TI from these 2 BEs
-                SvLinkedPair testPair = new SvLinkedPair(var, otherVar, SvLinkedPair.LINK_TYPE_TI, useStart, otherVarStart);
-
-                if(mCluster.hasReplicatedSVs())
-                {
-                    // check that if this link has the same SVs as another link due to replicated SVs, that
-                    // the breakends used in the link match each other
-                    for(final SvLinkedPair pair : chainedPairs)
-                    {
-                        // check that if this link has the same SVs as another link due to replicated SVs, that
-                        // the breakends used in the link match each other
-                        if(testPair.sameVariants(pair) && !testPair.matches(pair, true))
-                        {
-                            isValid = false;
-                            break;
-                        }
-                    }
-                }
-
-                if(!isValid)
-                    continue;
-
-                newPair = testPair;
-
-            }
-        }
-
-        return newPair;
-    }
-
-    private static void reduceRemainingLists(final SvLinkedPair newPair, List<SvClusterData> unlinkedSvList, List<SvLinkedPair> remainingPairs)
-    {
-        unlinkedSvList.remove(newPair.first());
-        unlinkedSvList.remove(newPair.second());
-
-        // also remove any inferred TI which has one of these SVs
-        int index = 0;
-        while(index < remainingPairs.size())
-        {
-            final SvLinkedPair pair = remainingPairs.get(index);
-
-            if(pair.isInferred() && pair.hasAnySameVariant(newPair))
-            {
-                remainingPairs.remove(index);
-            }
-            else
-            {
-                ++index;
-            }
-        }
-    }
 
     private boolean validatesCopyNumberData(final SvChain chain)
     {
