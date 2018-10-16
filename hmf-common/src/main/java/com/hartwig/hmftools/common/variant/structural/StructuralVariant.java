@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.common.variant.structural;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public interface StructuralVariant {
 
@@ -73,7 +73,8 @@ public interface StructuralVariant {
     }
     default Collection<String> endLinks() {
         String linkedBy = endLinkedBy();
-        if (linkedBy == null) return Collections.emptyList();
+        if (linkedBy == null)
+            return Collections.emptyList();
         List<String> links = new ArrayList<>();
         for (String s : linkedBy.split(",")) {
             if (s.length() > 1) {
@@ -85,10 +86,8 @@ public interface StructuralVariant {
     default boolean isFoldBackInversion() {
         // TODO: should we add a max bounds check in here?
         // TODO: restrict to same arm?
-        return end() != null
-                && start().chromosome().equals(end().chromosome())
-                && start().orientation() == end().orientation();
+        return end() != null && start().chromosome().equals(end().chromosome()) && start().orientation() == end().orientation();
+    }
 
     boolean recovered();
-    }
 }

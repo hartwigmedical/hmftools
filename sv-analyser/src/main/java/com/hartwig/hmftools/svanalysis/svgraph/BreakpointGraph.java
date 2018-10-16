@@ -1,6 +1,22 @@
 package com.hartwig.hmftools.svanalysis.svgraph;
 
-import com.google.common.collect.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.Streams;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
@@ -8,15 +24,12 @@ import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class BreakpointGraph {
     private static final Logger LOGGER = LogManager.getLogger(BreakpointGraph.class);
@@ -31,13 +44,14 @@ public class BreakpointGraph {
         this.startEdges.put(unplacedSegment, new ArrayList<>());
         this.endEdges.put(unplacedSegment, new ArrayList<>());
     }
+
     public BreakpointGraph(List<PurpleCopyNumber> cnRecords, List<EnrichedStructuralVariant> svRecords) {
         this();
         Map<String, List<BgSegment>> segments = cnRecords.stream()
                 .map(cn -> new BgSegment(cn))
                 .sorted(ByGenomicPosition)
                 .collect(Collectors.groupingBy(GenomePosition::chromosome, Collectors.toList()));
-        for (List<BgSegment> chrSegs: segments.values()) {
+        for (List<BgSegment> chrSegs : segments.values()) {
             for (int i = 0; i < chrSegs.size(); i++) {
                 BgSegment s = chrSegs.get(i);
                 startEdges.put(s, new ArrayList<>());
@@ -55,33 +69,33 @@ public class BreakpointGraph {
         }
         sanityCheck();
     }
+
     public BgSegment getUnplacedSegment() {
         return unplacedSegment;
     }
+
     public Collection<BgSegment> getAllSegments() {
         return startEdges.keySet();
     }
+
     public List<EnrichedStructuralVariant> getAllStructuralVariants() {
-        return getAllEdges().stream()
-                .filter(e -> e instanceof BgSv)
-                .map(e -> ((BgSv)e).sv())
-                .collect(Collectors.toList());
+        return getAllEdges().stream().filter(e -> e instanceof BgSv).map(e -> ((BgSv) e).sv()).collect(Collectors.toList());
     }
+
     public Stream<BgAdjacency> getAllAdjacencies() {
-        return Stream.concat(
-                startEdges.values().stream().flatMap(l -> l.stream()),
-                endEdges.values().stream().flatMap(l -> l.stream()));
+        return Stream.concat(startEdges.values().stream().flatMap(l -> l.stream()), endEdges.values().stream().flatMap(l -> l.stream()));
     }
 
     /**
      * Possible next breakpoints.
+     *
      * @param adj
      * @return next possible breakpoints. A entry of null indicates it is possible to traverse to the end of the
      * chromosome with no additional events.
      */
     public List<BgAdjacency> nextBreakpointCandidates(BgAdjacency adj) {
         List<BgAdjacency> result = new ArrayList<>();
-        int nextOrientation = adj.toOrientation() * -1 ;
+        int nextOrientation = adj.toOrientation() * -1;
         BgSegment segment = adj.toSegment();
         while (segment != null) {
             if (!strategy.couldBeDirectlyLinked(adj.edge().sv(), segment)) {
@@ -104,9 +118,10 @@ public class BreakpointGraph {
         }
         return result;
     }
+
     public List<BgAdjacency> nextFoldbackDoublingCandidates(BgAdjacency adj) {
         List<BgAdjacency> result = new ArrayList<>();
-        int nextOrientation = adj.toOrientation() * -1 ;
+        int nextOrientation = adj.toOrientation() * -1;
         BgSegment segment = adj.toSegment();
         Set<BgAdjacency> processed = new HashSet<>();
         while (segment != null) {
@@ -137,8 +152,9 @@ public class BreakpointGraph {
         }
         return result;
     }
+
     public List<BgSegment> getSegmentsBetween(BgAdjacency a, BgAdjacency b) {
-        assert(a.fromSegment().chromosome().equals(b.fromSegment().chromosome()));
+        assert (a.fromSegment().chromosome().equals(b.fromSegment().chromosome()));
         BgAdjacency lower = ByFromGenomicPosition.compare(a, b) <= 0 ? a : b;
         BgAdjacency upper = lower == a ? b : a;
         List<BgSegment> list = new ArrayList<>();
@@ -157,31 +173,32 @@ public class BreakpointGraph {
         if (upper.fromOrientation() == 1) {
             list.add(segment);
         }
-        return  list;
+        return list;
     }
+
     private Pair<BgAdjacency, BgAdjacency> getAdjacencies(EnrichedStructuralVariant sv) {
         // TODO: more efficient implementation
-        List<BgAdjacency> adjList = getAllAdjacencies()
-                .filter(adj -> adj.edge().sv() == sv)
-                .sorted(ByFromGenomicPosition)
-                .collect(Collectors.toList());
-        assert(adjList.size() >= 1 && adjList.size() <= 2);
+        List<BgAdjacency> adjList =
+                getAllAdjacencies().filter(adj -> adj.edge().sv() == sv).sorted(ByFromGenomicPosition).collect(Collectors.toList());
+        assert (adjList.size() >= 1 && adjList.size() <= 2);
         return Pair.of(adjList.get(0), adjList.size() == 1 ? null : adjList.get(1));
     }
+
     public boolean isFoldBackDoublingCandidate(BgAdjacency adj, BgAdjacency foldback) {
         if (foldback.isReference() || !foldback.edge().sv().isFoldBackInversion()) {
             return false;
         }
-        if (foldback.toOrientation() == -1
-                && adj.toSegment().startPosition() < Math.max(foldback.fromSegment().startPosition(), foldback.toSegment().startPosition())) {
+        if (foldback.toOrientation() == -1 && adj.toSegment().startPosition() < Math.max(foldback.fromSegment().startPosition(),
+                foldback.toSegment().startPosition())) {
             return false;
         }
-        if (foldback.toOrientation() == 1
-                && adj.toSegment().startPosition() > Math.min(foldback.fromSegment().startPosition(), foldback.toSegment().startPosition())) {
+        if (foldback.toOrientation() == 1 && adj.toSegment().startPosition() > Math.min(foldback.fromSegment().startPosition(),
+                foldback.toSegment().startPosition())) {
             return false;
         }
         return true;
     }
+
     public Collection<BgEdge> getAllEdges() {
         Set<BgEdge> edges = Streams.concat(startEdges.values().stream(), endEdges.values().stream())
                 .flatMap(adjList -> adjList.stream())
@@ -189,32 +206,38 @@ public class BreakpointGraph {
                 .collect(Collectors.toSet());
         return edges;
     }
+
     public BgSegment getSegment(PurpleCopyNumber purpleCopyNumber) {
-        return startEdges.keySet().stream()
-                .filter(s -> s.cn() == purpleCopyNumber)
-                .findFirst()
-                .orElse(null);
+        return startEdges.keySet().stream().filter(s -> s.cn() == purpleCopyNumber).findFirst().orElse(null);
     }
+
     private void addSV(EnrichedStructuralVariant sv, Map<String, List<BgSegment>> segmentLookup) {
         BgSegment startSegment = containingSegment(sv.start(), segmentLookup);
-        BgSegment endSegment  = containingSegment(sv.end(), segmentLookup);
+        BgSegment endSegment = containingSegment(sv.end(), segmentLookup);
         // sanity checks
-        if ((sv.start() != null && startSegment == null) ||
-                (sv.end() != null && endSegment == null) ||
-                (sv.start().orientation() == 1 && startSegment.endPosition() != sv.start().position()) ||
-                (sv.start().orientation() == -1 && startSegment.startPosition() != sv.start().position()) ||
-                (sv.end() != null && sv.end().orientation() == 1 && endSegment.endPosition() != sv.end().position()) ||
-                (sv.end() != null && sv.end().orientation() == -1 && endSegment.startPosition() != sv.end().position())) {
+        if ((sv.start() != null && startSegment == null) || (sv.end() != null && endSegment == null) || (sv.start().orientation() == 1
+                && startSegment.endPosition() != sv.start().position()) || (sv.start().orientation() == -1
+                && startSegment.startPosition() != sv.start().position()) || (sv.end() != null && sv.end().orientation() == 1
+                && endSegment.endPosition() != sv.end().position()) || (sv.end() != null && sv.end().orientation() == -1
+                && endSegment.startPosition() != sv.end().position())) {
             LOGGER.info("Discarding SV {}:{}{} to {}:{}{} as bounds do not match CN segments {} and {}.",
-                    sv.start().chromosome(), sv.start().position(), sv.start().orientation() == 1 ? "+" : "-",
-                    sv.end() == null ? "" : sv.end().chromosome(), sv.end() == null ? "" : sv.end().position(), sv.end() == null ? "" : (sv.end().orientation() == 1 ? "+" : "-"),
-                    startSegment, endSegment);
+                    sv.start().chromosome(),
+                    sv.start().position(),
+                    sv.start().orientation() == 1 ? "+" : "-",
+                    sv.end() == null ? "" : sv.end().chromosome(),
+                    sv.end() == null ? "" : sv.end().position(),
+                    sv.end() == null ? "" : (sv.end().orientation() == 1 ? "+" : "-"),
+                    startSegment,
+                    endSegment);
             return;
         }
-        addEdge(startSegment, startSegment == unplacedSegment ? -1 :  sv.start().orientation(),
-                endSegment, endSegment == unplacedSegment ? -1 : sv.end().orientation(),
+        addEdge(startSegment,
+                startSegment == unplacedSegment ? -1 : sv.start().orientation(),
+                endSegment,
+                endSegment == unplacedSegment ? -1 : sv.end().orientation(),
                 new BgSv(sv));
     }
+
     private BgSegment containingSegment(EnrichedStructuralVariantLeg leg, Map<String, List<BgSegment>> segmentLookup) {
         if (leg == null) {
             return unplacedSegment;
@@ -232,6 +255,7 @@ public class BreakpointGraph {
         }
         return unplacedSegment;
     }
+
     private void addEdge(BgSegment start, int startOrientation, BgSegment end, int endOrientation, BgEdge edge) {
         BgAdjacency leftAdj = ImmutableBgAdjacencyImpl.builder()
                 .fromSegment(start)
@@ -252,6 +276,7 @@ public class BreakpointGraph {
         addAdjacency(leftAdj);
         addAdjacency(rightAdj);
     }
+
     private void addAdjacency(BgAdjacency adj) {
         switch (adj.fromOrientation()) {
             case 1:
@@ -269,7 +294,8 @@ public class BreakpointGraph {
         for (BgSegment segment : endEdges.keySet()) {
             BgSegment nextSegment = nextReferenceSegment(segment);
             if (nextSegment != null && svCount(getOutgoing(segment, 1)) == 0 && svCount(getOutgoing(nextSegment, -1)) == 0) {
-                if (mergeAcrossCentromere || (nextSegment.cn().segmentStartSupport() != SegmentSupport.CENTROMERE && segment.cn().segmentEndSupport() != SegmentSupport.CENTROMERE)) {
+                if (mergeAcrossCentromere || (nextSegment.cn().segmentStartSupport() != SegmentSupport.CENTROMERE
+                        && segment.cn().segmentEndSupport() != SegmentSupport.CENTROMERE)) {
                     merge(segment, nextSegment);
                     return 1 + mergeReferenceSegments(mergeAcrossCentromere);
                 }
@@ -277,23 +303,25 @@ public class BreakpointGraph {
         }
         return 0;
     }
+
     private boolean isStartLeg(BgAdjacency adj) {
         EnrichedStructuralVariant sv = adj.edge().sv();
-        if (adj.fromSegment() == getUnplacedSegment()) return false;
+        if (adj.fromSegment() == getUnplacedSegment()) {
+            return false;
+        }
         String fromChromosome = adj.fromSegment().chromosome();
         long fromPosition = adj.fromOrientation() == -1 ? adj.fromSegment().startPosition() : adj.fromSegment().endPosition();
-        if (fromChromosome.equals(sv.start().chromosome()) &&
-                fromPosition == sv.start().position() &&
-                adj.fromOrientation() == sv.start().orientation()) {
+        if (fromChromosome.equals(sv.start().chromosome()) && fromPosition == sv.start().position() && adj.fromOrientation() == sv.start()
+                .orientation()) {
             return true;
         }
-        if (fromChromosome.equals(sv.end().chromosome()) &&
-                fromPosition == sv.end().position() &&
-                adj.fromOrientation() == sv.end().orientation()) {
+        if (fromChromosome.equals(sv.end().chromosome()) && fromPosition == sv.end().position() && adj.fromOrientation() == sv.end()
+                .orientation()) {
             return false;
         }
         throw new RuntimeException(String.format("Unable to determine sv leg for adjacency %s", adj));
     }
+
     private EnrichedStructuralVariant createSpanningSv(BgAdjacency left, BgAdjacency right) {
         EnrichedStructuralVariant leftSv = left.edge().sv();
         EnrichedStructuralVariant rightSv = right.edge().sv();
@@ -308,23 +336,27 @@ public class BreakpointGraph {
                 .endLinkedBy(isStartLeg(right) ? rightSv.endLinkedBy() : rightSv.startLinkedBy())
                 .type(StructuralVariantType.BND)
                 .id(leftSv.id() + "-" + rightSv.id())
-                .insertSequence(leftSv.insertSequence() + "-" + String.format("%s:%d-%d", left.fromSegment().chromosome(), left.fromSegment().position(), right.fromSegment().endPosition()) + "-" + rightSv.insertSequence())
+                .insertSequence(leftSv.insertSequence() + "-" + String.format("%s:%d-%d",
+                        left.fromSegment().chromosome(),
+                        left.fromSegment().position(),
+                        right.fromSegment().endPosition()) + "-" + rightSv.insertSequence())
                 .qualityScore(leftSv.qualityScore() + rightSv.qualityScore())
                 .imprecise(leftSv.imprecise() || rightSv.imprecise())
                 .filter(leftSv.filter() + rightSv.filter())
                 .event(leftSv.event() + ";" + rightSv.event())
                 .build();
     }
+
     private void mergeAdjacentSvs(double ploidy, BgAdjacency left, BgAdjacency right) {
         LOGGER.debug("Merging SV: {} and {} with ploidy {}", left, right, ploidy);
         assertInGraph(left);
         assertInGraph(left);
-        assert(startEdges.containsKey(left.fromSegment()));
-        assert(left.fromOrientation() == -1);
-        assert(right.fromOrientation() == 1);
-        assert(left.fromSegment().chromosome().equals(right.fromSegment().chromosome()));
-        assert(left.fromSegment().position() <= right.fromSegment().position());
-        assert(left.edge() != right.edge());
+        assert (startEdges.containsKey(left.fromSegment()));
+        assert (left.fromOrientation() == -1);
+        assert (right.fromOrientation() == 1);
+        assert (left.fromSegment().chromosome().equals(right.fromSegment().chromosome()));
+        assert (left.fromSegment().position() <= right.fromSegment().position());
+        assert (left.edge() != right.edge());
         removeAdjacency(left);
         removeAdjacency(right);
         addEdge(left.toSegment(), left.toOrientation(), right.toSegment(), right.toOrientation(), new BgSv(createSpanningSv(left, right)));
@@ -337,16 +369,17 @@ public class BreakpointGraph {
         sanityCheck();
     }
 
-
-    private Collection<BreakendConsistency> getConsistencySet(final double ploidy, final BgAdjacency ... svs) {
+    private Collection<BreakendConsistency> getConsistencySet(final double ploidy, final BgAdjacency... svs) {
         return Stream.concat(Arrays.stream(svs), Arrays.stream(svs).map(adj -> getPartner(adj)))
                 .filter(adj -> adj.fromSegment() != getUnplacedSegment())
                 .distinct()
                 .map(adj -> getConsistency(ploidy, adj))
                 .collect(Collectors.toList());
     }
+
     private BreakendConsistency getConsistency(final double ploidy, final BgAdjacency sv) {
-        BgSegment referenceSegment = sv.fromOrientation() == 1 ? nextReferenceSegment(sv.fromSegment()) : prevReferenceSegment(sv.fromSegment());
+        BgSegment referenceSegment =
+                sv.fromOrientation() == 1 ? nextReferenceSegment(sv.fromSegment()) : prevReferenceSegment(sv.fromSegment());
         List<EnrichedStructuralVariant> alternatePaths = getOutgoing(sv.fromSegment(), sv.fromOrientation()).stream()
                 .filter(adj -> !adj.isReference() && adj != sv)
                 .map(adj -> adj.edge().sv())
@@ -361,6 +394,7 @@ public class BreakpointGraph {
     private void removeAdjacency(@NotNull BgAdjacency adj) {
         removeAdjacency(adj, getPartner(adj));
     }
+
     private void removeAdjacency(@NotNull BgAdjacency leftAdj, @NotNull BgAdjacency rightAdj) {
         if (leftAdj == null || rightAdj == null) {
             throw new NullPointerException();
@@ -388,6 +422,7 @@ public class BreakpointGraph {
         }
         return null;
     }
+
     public BgSegment nextReferenceSegment(BgSegment segment) {
         for (BgAdjacency adj : getOutgoing(segment, 1)) {
             if (adj.edge() instanceof BgReferenceEdge) {
@@ -396,6 +431,7 @@ public class BreakpointGraph {
         }
         return null;
     }
+
     public static BgAdjacency firstSv(List<BgAdjacency> adjacencies) {
         for (BgAdjacency adj : adjacencies) {
             if (!adj.isReference()) {
@@ -404,6 +440,7 @@ public class BreakpointGraph {
         }
         return null;
     }
+
     public static int svCount(List<BgAdjacency> adjacencies) {
         int count = 0;
         for (BgAdjacency adj : adjacencies) {
@@ -413,6 +450,7 @@ public class BreakpointGraph {
         }
         return count;
     }
+
     public List<BgAdjacency> getOutgoing(BgSegment segment, int orientation) {
         switch (orientation) {
             case 1:
@@ -423,6 +461,7 @@ public class BreakpointGraph {
                 throw new IllegalArgumentException("Invalid orientation");
         }
     }
+
     public BgSegment merge(BgSegment left, BgSegment right) {
         if (left == unplacedSegment || right == unplacedSegment) {
             throw new IllegalArgumentException("Cannot merge placeholder unplaced DNA segment.");
@@ -435,27 +474,22 @@ public class BreakpointGraph {
         if (svCount(leftEnd) > 0 || svCount(rightStart) > 0) {
             throw new IllegalArgumentException("Cannot merge DNA segments separated by a SV.");
         }
-        if (leftEnd.size() != 1 || rightStart.size() != 1 ||
-                leftEnd.get(0).toSegment() != right ||
-                rightStart.get(0).toSegment() != left) {
+        if (leftEnd.size() != 1 || rightStart.size() != 1 || leftEnd.get(0).toSegment() != right || rightStart.get(0).toSegment() != left) {
             throw new IllegalArgumentException("Cannot merge DNA segments that are not adjacent in the reference.");
         }
         // Create new segment
         BgSegment merged = BgSegment.merge(left, right);
         // update adjacency from segments
-        List<BgAdjacency> newStart = leftStart.stream()
-                .map(adj -> replaceSegments(adj, left, right, merged))
-                .collect(Collectors.toList());
-        List<BgAdjacency> newEnd = rightEnd.stream()
-                .map(adj -> replaceSegments(adj, left, right, merged))
-                .collect(Collectors.toList());
+        List<BgAdjacency> newStart = leftStart.stream().map(adj -> replaceSegments(adj, left, right, merged)).collect(Collectors.toList());
+        List<BgAdjacency> newEnd = rightEnd.stream().map(adj -> replaceSegments(adj, left, right, merged)).collect(Collectors.toList());
         startEdges.put(merged, newStart);
         endEdges.put(merged, newEnd);
         // Update the other side of the adjacencies
-        for (BgAdjacency adj: Iterables.concat(leftStart, rightEnd)) {
+        for (BgAdjacency adj : Iterables.concat(leftStart, rightEnd)) {
             BgAdjacency partner = getPartner(adj);
             BgAdjacency newPartner = replaceSegments(partner, left, right, merged);
-            getOutgoing(adj.toSegment(), adj.toOrientation()).set(getOutgoing(adj.toSegment(), adj.toOrientation()).indexOf(partner), newPartner);
+            getOutgoing(adj.toSegment(), adj.toOrientation()).set(getOutgoing(adj.toSegment(), adj.toOrientation()).indexOf(partner),
+                    newPartner);
         }
         // remove old segments from the graph
         startEdges.remove(left);
@@ -463,15 +497,24 @@ public class BreakpointGraph {
         endEdges.remove(left);
         endEdges.remove(right);
         LOGGER.debug("Merged CN: {}:{}-{} CN={} with {}:{}-{} CN={} to create {}:{}-{} CN={}",
-                left.chromosome(), left.startPosition(), left.endPosition(), left.ploidy(),
-                right.chromosome(), right.startPosition(), right.endPosition(), right.ploidy(),
-                merged.chromosome(), merged.startPosition(), merged.endPosition(), merged.ploidy());
+                left.chromosome(),
+                left.startPosition(),
+                left.endPosition(),
+                left.ploidy(),
+                right.chromosome(),
+                right.startPosition(),
+                right.endPosition(),
+                right.ploidy(),
+                merged.chromosome(),
+                merged.startPosition(),
+                merged.endPosition(),
+                merged.ploidy());
         sanityCheck();
         return merged;
     }
+
     private static BgAdjacency replaceSegments(BgAdjacency adj, BgSegment left, BgSegment right, BgSegment merged) {
-        ImmutableBgAdjacencyImpl.Builder builder = ImmutableBgAdjacencyImpl.builder()
-                .from(adj);
+        ImmutableBgAdjacencyImpl.Builder builder = ImmutableBgAdjacencyImpl.builder().from(adj);
         if (adj.fromSegment() == left) {
             builder.fromSegment(merged);
         }
@@ -486,6 +529,7 @@ public class BreakpointGraph {
         }
         return builder.build();
     }
+
     private BgAdjacency getPartner(BgAdjacency adj) {
         for (BgAdjacency remoteAdj : getOutgoing(adj.toSegment(), adj.toOrientation())) {
             if (remoteAdj != adj && remoteAdj.edge() == adj.edge()) {
@@ -494,13 +538,13 @@ public class BreakpointGraph {
         }
         throw new IllegalStateException("Partner adjacency missing from graph");
     }
+
     private Collection<Pair<BgAdjacency, BgAdjacency>> getLinkedBreakendPairs(final String linkedByPrefix) {
         Set<Pair<BgAdjacency, BgAdjacency>> asmLinks = new HashSet<>();
-        Map<String, BgAdjacency> endLinks = endEdges.values().stream()
+        Map<String, BgAdjacency> endLinks = endEdges.values()
+                .stream()
                 .flatMap(list -> list.stream())
-                .flatMap(adj -> adj.linkedBy().stream()
-                        .filter(s -> s.startsWith(linkedByPrefix))
-                        .map(link -> ImmutablePair.of(link, adj)))
+                .flatMap(adj -> adj.linkedBy().stream().filter(s -> s.startsWith(linkedByPrefix)).map(link -> ImmutablePair.of(link, adj)))
                 .collect(Collectors.toMap(p -> p.left, p -> p.right));
         // we only need to iterate over the start edges since assembly links
         // involve a segment of DNA so we need one to come into the segment
@@ -523,6 +567,7 @@ public class BreakpointGraph {
         }
         return asmLinks;
     }
+
     //region Simplifications
     public List<Simplification> simplify() {
         List<Simplification> simplified = new ArrayList<>();
@@ -542,28 +587,31 @@ public class BreakpointGraph {
 
     /**
      * Determines whether the given simplication can be made based on the current state of the graph
+     *
      * @param simplification
      * @return true if the simplification is valid, false if the given simplification is no longer possible
      */
     public boolean isValid(Simplification simplification) {
-        return simplification.adjacencies().stream().allMatch(adj ->
-                getAllSegments().contains(adj.fromSegment())
-                && getAllSegments().contains(adj.toSegment())
-                && getOutgoing(adj.fromSegment(), adj.fromOrientation()).contains(adj));
+        return simplification.adjacencies()
+                .stream()
+                .allMatch(adj -> getAllSegments().contains(adj.fromSegment()) && getAllSegments().contains(adj.toSegment()) && getOutgoing(
+                        adj.fromSegment(),
+                        adj.fromOrientation()).contains(adj));
     }
+
     public void simplify(Simplification simplification) {
-        assert(isValid(simplification));
-        assert(strategy.shouldSimplify(simplification));
+        assert (isValid(simplification));
+        assert (strategy.shouldSimplify(simplification));
         LOGGER.debug("Simplifying {} {}", simplification.type(), simplification);
         switch (simplification.type()) {
             case SimpleDuplication:
             case SimpleDeletion:
-                assert(simplification.variants().size() == 1);
+                assert (simplification.variants().size() == 1);
                 Pair<BgAdjacency, BgAdjacency> adj = getAdjacencies(simplification.variants().get(0));
                 BgAdjacency left = adj.getLeft();
                 BgAdjacency right = adj.getRight();
                 List<BgSegment> segments = getSegmentsBetween(left, right);
-                assert(segments.size() == 1);
+                assert (segments.size() == 1);
                 removeAdjacency(left, right);
                 for (BgSegment segment : segments) {
                     // removing a deletion adds to the CN
@@ -572,13 +620,14 @@ public class BreakpointGraph {
                 }
                 return;
             case Chain:
-                assert(simplification.adjacencies().size() == 2);
+                assert (simplification.adjacencies().size() == 2);
                 mergeAdjacentSvs(simplification.ploidy(), simplification.adjacencies().get(0), simplification.adjacencies().get(1));
                 return;
             default:
                 throw new RuntimeException("NYI");
         }
     }
+
     public List<Simplification> findPotentialSimplifications() {
         List<Simplification> list = new ArrayList<>();
         list.addAll(findAssemblyLinkageSimplifications());
@@ -587,6 +636,7 @@ public class BreakpointGraph {
         list.addAll(findCopyNumberLinkages());
         return list;
     }
+
     public List<Simplification> findSimpleDuplicationSimplifications() {
         List<Simplification> result = new ArrayList<>();
         for (BgSegment segment : startEdges.keySet()) {
@@ -618,16 +668,15 @@ public class BreakpointGraph {
         }
         return result;
     }
+
     public List<Simplification> findSimpleDeletionSimplifications() {
         List<Simplification> result = new ArrayList<>();
         for (BgSegment segment : startEdges.keySet()) {
             BgSegment prevSegment = prevReferenceSegment(segment);
             BgSegment nextSegment = nextReferenceSegment(segment);
-            if (prevSegment != null && nextSegment != null &&
-                    svCount(getOutgoing(segment, -1)) == 0 &&
-                    svCount(getOutgoing(segment, 1)) == 0 &&
-                    svCount(getOutgoing(prevSegment, 1)) == 1 &&
-                    svCount(getOutgoing(nextSegment, -1)) == 1) {
+            if (prevSegment != null && nextSegment != null && svCount(getOutgoing(segment, -1)) == 0
+                    && svCount(getOutgoing(segment, 1)) == 0 && svCount(getOutgoing(prevSegment, 1)) == 1
+                    && svCount(getOutgoing(nextSegment, -1)) == 1) {
                 BgAdjacency leftSv = firstSv(getOutgoing(prevSegment, 1));
                 BgAdjacency rightSv = firstSv(getOutgoing(nextSegment, -1));
                 if (leftSv.edge() == rightSv.edge()) {
@@ -648,12 +697,15 @@ public class BreakpointGraph {
         }
         return result;
     }
+
     public List<Simplification> findAssemblyLinkageSimplifications() {
         return findPreLinkedVariants("asm");
     }
+
     public List<Simplification> findPreLinkedVariants(String linkedByPrefix) {
         return findAdjacentBreakendLinks(getLinkedBreakendPairs(linkedByPrefix));
     }
+
     public List<Simplification> findAdjacentBreakendLinks(Collection<Pair<BgAdjacency, BgAdjacency>> links) {
         List<Simplification> result = new ArrayList<>();
         for (Pair<BgAdjacency, BgAdjacency> link : links) {
@@ -663,9 +715,7 @@ public class BreakpointGraph {
             Simplification chain = ImmutableSimplificationImpl.builder()
                     .type(SimplificationType.Chain)
                     .ploidy(ploidy)
-                    .addVariants(
-                            left.edge().sv(),
-                            right.edge().sv())
+                    .addVariants(left.edge().sv(), right.edge().sv())
                     .consistency(getConsistencySet(ploidy, left, right))
                     .addAdjacencies(left, right)
                     .build();
@@ -675,9 +725,10 @@ public class BreakpointGraph {
         }
         return result;
     }
+
     public List<Simplification> findCopyNumberLinkages() {
         List<Simplification> result = new ArrayList<>();
-        for (BgSegment segment : getAllSegments())
+        for (BgSegment segment : getAllSegments()) {
             if (segment != getUnplacedSegment() && svCount(getOutgoing(segment, -1)) == 1) {
                 BgSegment prev = prevReferenceSegment(segment);
                 if (prev != null && svCount(getOutgoing(prev, 1)) == 0) {
@@ -697,7 +748,9 @@ public class BreakpointGraph {
                             // Don't simplify across fold-back linkage as we halve/double our copy number
                             // when we traverse back across a fold-back inversion. If we simplify the event
                             // then we get our ploidy incorrect
-                            LOGGER.debug("Not simplifying to potential fold-back inversion {} to {}", adj.edge().sv(), partners.get(0).edge().sv());
+                            LOGGER.debug("Not simplifying to potential fold-back inversion {} to {}",
+                                    adj.edge().sv(),
+                                    partners.get(0).edge().sv());
                         } else {
                             BgAdjacency partner = partners.get(0);
                             if (partner.edge().sv() != adj.edge().sv()) {
@@ -705,12 +758,9 @@ public class BreakpointGraph {
                                 Simplification chain = ImmutableSimplificationImpl.builder()
                                         .type(SimplificationType.Chain)
                                         .ploidy(ploidy)
-                                        .addVariants(
-                                                adj.edge().sv(),
-                                                partner.edge().sv())
+                                        .addVariants(adj.edge().sv(), partner.edge().sv())
                                         .consistency(getConsistencySet(ploidy, getPartner(adj), partner))
-                                        .addAdjacencies(
-                                                partner.fromOrientation() == -1 ? partner : getPartner(adj),
+                                        .addAdjacencies(partner.fromOrientation() == -1 ? partner : getPartner(adj),
                                                 partner.fromOrientation() == -1 ? getPartner(adj) : partner)
                                         .build();
                                 if (strategy.shouldSimplify(chain)) {
@@ -727,13 +777,13 @@ public class BreakpointGraph {
 
     //endregion
     private void sanityCheck() {
-        assert(startEdges.keySet().containsAll(endEdges.keySet()));
-        assert(endEdges.keySet().containsAll(startEdges.keySet()));
+        assert (startEdges.keySet().containsAll(endEdges.keySet()));
+        assert (endEdges.keySet().containsAll(startEdges.keySet()));
         for (BgSegment segment : startEdges.keySet()) {
             for (BgAdjacency adj : startEdges.get(segment)) {
-                assert(adj.fromOrientation() == -1);
-                assert(adj.fromSegment() == segment);
-                assert(startEdges.containsKey(adj.toSegment()));
+                assert (adj.fromOrientation() == -1);
+                assert (adj.fromSegment() == segment);
+                assert (startEdges.containsKey(adj.toSegment()));
                 List<BgAdjacency> remoteAdjList;
                 switch (adj.toOrientation()) {
                     case 1:
@@ -749,21 +799,21 @@ public class BreakpointGraph {
             }
         }
     }
+
     private void assertInGraph(BgSegment segment) {
-        assert(startEdges.containsKey(segment));
+        assert (startEdges.containsKey(segment));
     }
+
     private void assertInGraph(BgAdjacency adj) {
         assertInGraph(adj.fromSegment());
         assertInGraph(adj.toSegment());
-        assert(getOutgoing(adj.fromSegment(), adj.fromOrientation()).contains(adj));
+        assert (getOutgoing(adj.fromSegment(), adj.fromOrientation()).contains(adj));
 
     }
+
     private static final Ordering<GenomePosition> ByGenomicPosition = new Ordering<GenomePosition>() {
         public int compare(GenomePosition o1, GenomePosition o2) {
-            return ComparisonChain.start()
-                    .compare(o1.chromosome(), o2.chromosome())
-                    .compare(o1.position(), o2.position())
-                    .result();
+            return ComparisonChain.start().compare(o1.chromosome(), o2.chromosome()).compare(o1.position(), o2.position()).result();
         }
     };
     private static final Ordering<BgAdjacency> ByFromGenomicPosition = new Ordering<BgAdjacency>() {
