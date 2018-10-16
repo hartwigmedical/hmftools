@@ -9,13 +9,11 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
-import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeMappingReading;
 import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVs;
 import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVsEvidenceItems;
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRange;
 import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRangeEvidenceItem;
-import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityVariantsAnalyzer;
 import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.somaticvariant.VariantEvidenceItems;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
@@ -27,7 +25,6 @@ import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.patientreporter.algo.PatientReporter;
 import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 
 import org.apache.logging.log4j.LogManager;
@@ -50,7 +47,8 @@ public final class SomaticVariantAnalyzer {
     @NotNull
     public static SomaticVariantAnalysis run(@NotNull final List<EnrichedSomaticVariant> variants, @NotNull Set<String> genePanel,
             @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap, @Nullable PatientTumorLocation patientTumorLocation,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull List<GeneFusion> fusions, @NotNull ActionabilityAnalyzer actionabilityAnalyzerData) throws IOException {
+            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull List<GeneFusion> fusions,
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzerData) throws IOException {
         final List<EnrichedSomaticVariant> variantsToReport =
                 variants.stream().filter(includeFilter(genePanel, driverCategoryPerGeneMap)).collect(Collectors.toList());
         final double microsatelliteIndelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
@@ -60,7 +58,6 @@ public final class SomaticVariantAnalyzer {
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
         driverCatalog.addAll(OncoDrivers.drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), variants));
         driverCatalog.addAll(TsgDrivers.drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), variants));
-
 
         final String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : Strings.EMPTY;
         CancerTypeMappingReading cancerTypeMappingReading = CancerTypeMappingReading.readingFile();
@@ -74,8 +71,11 @@ public final class SomaticVariantAnalyzer {
 
         LOGGER.info("evidence items variants");
         final List<EvidenceItem> variant = Lists.newArrayList();
-        Map<EnrichedSomaticVariant, VariantEvidenceItems> evidencePerVariant =
-                ActionabilityVariantAnalyzer.detectVariants(actionableGenesVariants, variants, doidsPrimaryTumorLocation, actionabilityAnalyzerData);
+        Map<EnrichedSomaticVariant, VariantEvidenceItems> evidencePerVariant = ActionabilityVariantAnalyzer.detectVariants(
+                actionableGenesVariants,
+                variants,
+                doidsPrimaryTumorLocation,
+                actionabilityAnalyzerData);
 
         for (Map.Entry<EnrichedSomaticVariant, VariantEvidenceItems> entry : evidencePerVariant.entrySet()) {
             variant.addAll(entry.getValue().onLabel());
@@ -85,7 +85,10 @@ public final class SomaticVariantAnalyzer {
         LOGGER.info("evidence items variants ranges");
         final List<ActionabilityRange> variantRange = Lists.newArrayList();
         Map<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> evidencePerVariantRanges =
-                ActionabilityVariantAnalyzer.detectVariantsRanges(actionableGenesVariants, variants, doidsPrimaryTumorLocation, actionabilityAnalyzerData);
+                ActionabilityVariantAnalyzer.detectVariantsRanges(actionableGenesVariants,
+                        variants,
+                        doidsPrimaryTumorLocation,
+                        actionabilityAnalyzerData);
 
         for (Map.Entry<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> entryRange : evidencePerVariantRanges.entrySet()) {
             variantRange.addAll(entryRange.getValue().onLabel());
@@ -94,14 +97,16 @@ public final class SomaticVariantAnalyzer {
 
         LOGGER.info("evidence items CNVs");
         final List<ActionabilityCNVs> CNVs = Lists.newArrayList();
-        Map<GeneCopyNumber, ActionabilityCNVsEvidenceItems> evidencePerVariantCNVs =
-                ActionabilityVariantAnalyzer.detectCNVs(actionableGenesCNVS, geneCopyNumbers, doidsPrimaryTumorLocation, actionabilityAnalyzerData);
+        Map<GeneCopyNumber, ActionabilityCNVsEvidenceItems> evidencePerVariantCNVs = ActionabilityVariantAnalyzer.detectCNVs(
+                actionableGenesCNVS,
+                geneCopyNumbers,
+                doidsPrimaryTumorLocation,
+                actionabilityAnalyzerData);
 
         for (Map.Entry<GeneCopyNumber, ActionabilityCNVsEvidenceItems> entryCNVs : evidencePerVariantCNVs.entrySet()) {
             CNVs.addAll(entryCNVs.getValue().onLabel());
             CNVs.addAll(entryCNVs.getValue().offLabel());
         }
-
 
         return ImmutableSomaticVariantAnalysis.of(variantsToReport,
                 driverCatalog,
@@ -111,7 +116,9 @@ public final class SomaticVariantAnalyzer {
                 variant,
                 variantRange,
                 CNVs,
-                evidencePerVariant, evidencePerVariantRanges, evidencePerVariantCNVs);
+                evidencePerVariant,
+                evidencePerVariantRanges,
+                evidencePerVariantCNVs);
     }
 
     @NotNull
