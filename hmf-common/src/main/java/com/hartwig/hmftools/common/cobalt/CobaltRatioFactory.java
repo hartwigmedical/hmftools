@@ -11,12 +11,14 @@ import org.jetbrains.annotations.NotNull;
 public final class CobaltRatioFactory {
 
     @NotNull
-    public static Multimap<Chromosome, CobaltRatio> merge(@NotNull final Multimap<Chromosome, CobaltCount> counts, @NotNull final Multimap<String, ReadRatio> referenceGCRatio, @NotNull final Multimap<String, ReadRatio> tumorGCRatio,
-            @NotNull final Multimap<String, ReadRatio> referenceGCDiploidRatio) {
+    public static Multimap<Chromosome, CobaltRatio> merge(@NotNull final Multimap<Chromosome, CobaltCount> counts,
+            @NotNull final Multimap<Chromosome, ReadRatio> referenceGCRatio, @NotNull final Multimap<Chromosome, ReadRatio> tumorGCRatio,
+            @NotNull final Multimap<Chromosome, ReadRatio> referenceGCDiploidRatio) {
         final Multimap<Chromosome, CobaltRatio> result = ArrayListMultimap.create();
-        final GenomePositionSelector<ReadRatio> tumorGCRatioSelector = GenomePositionSelectorFactory.create(tumorGCRatio);
-        final GenomePositionSelector<ReadRatio> referenceGCRatioSelector = GenomePositionSelectorFactory.create(referenceGCRatio);
-        final GenomePositionSelector<ReadRatio> referenceGCDiploidRatioSelector = GenomePositionSelectorFactory.create(referenceGCDiploidRatio);
+        final GenomePositionSelector<ReadRatio> tumorGCRatioSelector = GenomePositionSelectorFactory.createImproved(tumorGCRatio);
+        final GenomePositionSelector<ReadRatio> referenceGCRatioSelector = GenomePositionSelectorFactory.createImproved(referenceGCRatio);
+        final GenomePositionSelector<ReadRatio> referenceGCDiploidRatioSelector =
+                GenomePositionSelectorFactory.createImproved(referenceGCDiploidRatio);
         for (Chromosome chromosome : counts.keySet()) {
             for (CobaltCount count : counts.get(chromosome)) {
                 final CobaltRatio ratio = ImmutableCobaltRatio.builder()

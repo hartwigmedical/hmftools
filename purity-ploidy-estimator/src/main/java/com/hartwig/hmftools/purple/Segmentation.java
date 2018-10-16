@@ -50,7 +50,7 @@ class Segmentation {
         this.pcfPositions = PCFPositionsSupplier.createPositions(config);
 
         LOGGER.info("Reading GC Profiles from {}", config.gcProfile());
-        this.gcProfiles = GCProfileFactory.loadGCContent(config.windowSize(), config.gcProfile());
+        this.gcProfiles = GCProfileFactory.loadGCContentOld(config.windowSize(), config.gcProfile());
 
     }
 

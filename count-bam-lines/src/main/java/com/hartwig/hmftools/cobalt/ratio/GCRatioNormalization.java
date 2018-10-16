@@ -19,11 +19,11 @@ import org.jetbrains.annotations.NotNull;
 class GCRatioNormalization {
 
     private final GCMedianReadCountBuilder medianReadCountBuilder = new GCMedianReadCountBuilder();
-    private final Multimap<String, ReadCountWithGCContent> entries = ArrayListMultimap.create();
+    private final Multimap<Chromosome, ReadCountWithGCContent> entries = ArrayListMultimap.create();
 
     void addPosition(@NotNull final Chromosome chromosome, @NotNull final GCProfile gcProfile, final int readCount) {
         final ReadCountWithGCContent readCountWithGCContent = new ReadCountWithGCContent(readCount, gcProfile);
-        entries.put(gcProfile.chromosome(), readCountWithGCContent);
+        entries.put(chromosome, readCountWithGCContent);
 
         // TODO (JOBA): TEST With/without isMappable
         if (chromosome.isAutosome() && readCountWithGCContent.isMappable() && readCount > 0) {
@@ -36,9 +36,9 @@ class GCRatioNormalization {
     }
 
     @NotNull
-    ListMultimap<String, ReadRatio> build(@NotNull final GCMedianReadCount gcMedianReadCount) {
-        final ListMultimap<String, ReadRatio> result = ArrayListMultimap.create();
-        for (String chromosome : entries.keySet()) {
+    ListMultimap<Chromosome, ReadRatio> build(@NotNull final GCMedianReadCount gcMedianReadCount) {
+        final ListMultimap<Chromosome, ReadRatio> result = ArrayListMultimap.create();
+        for (Chromosome chromosome : entries.keySet()) {
             final List<ReadRatio> normalisedRatio = entries.get(chromosome).stream().map(x -> create(gcMedianReadCount, x)).collect(Collectors.toList());
             result.replaceValues(chromosome, normalisedRatio);
         }
@@ -47,7 +47,7 @@ class GCRatioNormalization {
     }
 
     @NotNull
-    private static ReadRatio create(GCMedianReadCount medians, ReadCountWithGCContent readCount) {
+    private static ReadRatio create(@NotNull final GCMedianReadCount medians, @NotNull final ReadCountWithGCContent readCount) {
         int gcMedianCount = medians.medianReadCount(readCount.gcProfile());
         final double ratio;
 

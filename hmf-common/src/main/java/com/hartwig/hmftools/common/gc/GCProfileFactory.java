@@ -7,6 +7,8 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.io.reader.LineReader;
 
 import org.jetbrains.annotations.NotNull;
@@ -21,17 +23,37 @@ public enum GCProfileFactory {
     private static final int NON_N_PERCENTAGE_COLUMN = 3;
     private static final int MAPPABLE_PERCENTAGE_COLUMN = 4;
 
+    @Deprecated
     @NotNull
-    public static Multimap<String, GCProfile> loadGCContent(int windowSize, @NotNull final String fileName) throws IOException {
-        return loadGCContent(windowSize, LineReader.build().readLines(new File(fileName).toPath(), x -> true));
+    public static Multimap<String, GCProfile> loadGCContentOld(int windowSize, @NotNull final String fileName) throws IOException {
+        return loadGCContentOld(windowSize, LineReader.build().readLines(new File(fileName).toPath(), x -> true));
     }
 
+    @Deprecated
     @NotNull
-    private static Multimap<String, GCProfile> loadGCContent(int windowSize, @NotNull final List<String> lines) {
+    private static Multimap<String, GCProfile> loadGCContentOld(int windowSize, @NotNull final List<String> lines) {
         final Multimap<String, GCProfile> result = ArrayListMultimap.create();
         for (String line : lines) {
             final GCProfile gcProfile = fromLine(windowSize, line);
             result.put(gcProfile.chromosome(), gcProfile);
+        }
+
+        return result;
+    }
+
+    @NotNull
+    public static Multimap<Chromosome, GCProfile> loadGCContent(int windowSize, @NotNull final String fileName) throws IOException {
+        return loadGCContent(windowSize, LineReader.build().readLines(new File(fileName).toPath(), x -> true));
+    }
+
+    @NotNull
+    private static Multimap<Chromosome, GCProfile> loadGCContent(int windowSize, @NotNull final List<String> lines) {
+        final Multimap<Chromosome, GCProfile> result = ArrayListMultimap.create();
+        for (String line : lines) {
+            final GCProfile gcProfile = fromLine(windowSize, line);
+            if (HumanChromosome.contains(gcProfile.chromosome())) {
+                result.put(HumanChromosome.fromString(gcProfile.chromosome()), gcProfile);
+            }
         }
 
         return result;

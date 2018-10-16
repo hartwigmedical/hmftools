@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.common.purple.gender;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.ReferenceRatioStatistics;
 import com.hartwig.hmftools.common.cobalt.ReferenceRatioStatisticsFactory;
@@ -25,7 +28,12 @@ public enum Gender {
 
     @NotNull
     public static Gender fromCobalt(@NotNull final Multimap<String, CobaltRatio> readRatios) {
-        return fromCobalt(ReferenceRatioStatisticsFactory.fromCobalt(readRatios));
+        Multimap<Chromosome, CobaltRatio> map = ArrayListMultimap.create();
+        for (CobaltRatio cobaltRatio : readRatios.values()) {
+            map.put(HumanChromosome.fromString(cobaltRatio.chromosome()), cobaltRatio);
+        }
+
+        return fromCobalt(ReferenceRatioStatisticsFactory.fromCobalt(map));
     }
 
     @NotNull
