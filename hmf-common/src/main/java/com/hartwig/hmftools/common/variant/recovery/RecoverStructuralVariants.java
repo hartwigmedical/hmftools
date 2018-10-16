@@ -254,7 +254,7 @@ public class RecoverStructuralVariants implements Closeable {
 
     private boolean isEligibleForRecovery(@NotNull VariantContext variantContext) {
         final Set<String> filters = variantContext.getFilters();
-        return !filters.isEmpty() && filters.contains(PON_FILTERED) && filters.contains(AF_FILTERED);
+        return !filters.isEmpty() && !filters.contains(PON_FILTERED) && !filters.contains(AF_FILTERED);
     }
 
     @NotNull

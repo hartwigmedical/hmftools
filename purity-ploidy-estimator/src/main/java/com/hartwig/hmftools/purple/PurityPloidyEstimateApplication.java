@@ -89,8 +89,8 @@ public class PurityPloidyEstimateApplication {
     private static final int THREADS_DEFAULT = 2;
 
     private static final String THREADS = "threads";
-    private static final String EXPERIMENTAL = "experimental";
     private static final String VERSION = "version";
+    private static final String EXPERIMENTAL = "experimental";
 
     public static void main(final String... args)
             throws ParseException, IOException, SQLException, ExecutionException, InterruptedException {
@@ -181,7 +181,7 @@ public class PurityPloidyEstimateApplication {
                     if (!recoveredVariants.isEmpty()) {
                         recoveredVariants.forEach(structuralVariants::recoverVariant);
 
-                        LOGGER.info("Recalculating segmentation with recovered structural variants");
+                        LOGGER.info("Recalculating segmentation with {} recovered structural variants", recoveredVariants.size());
                         final List<ObservedRegion> recoveredObservedRegions = segmentation.createSegments(structuralVariants.variants());
 
                         LOGGER.info("Recalculating copy number");
