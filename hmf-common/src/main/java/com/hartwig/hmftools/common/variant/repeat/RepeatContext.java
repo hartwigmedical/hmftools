@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.repeat;
+package com.hartwig.hmftools.common.variant.repeat;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

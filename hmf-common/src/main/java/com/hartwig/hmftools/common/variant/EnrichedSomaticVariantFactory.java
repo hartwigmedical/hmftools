@@ -8,11 +8,11 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.purple.repeat.RepeatContext;
-import com.hartwig.hmftools.common.purple.repeat.RepeatContextFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
+import com.hartwig.hmftools.common.variant.repeat.RepeatContext;
+import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
 
 import org.apache.commons.math3.util.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -87,7 +87,7 @@ public class EnrichedSomaticVariantFactory {
     }
 
     @NotNull
-    public static Pair<Integer, String> relativePositionAndRef(@NotNull final SomaticVariant variant,
+    private static Pair<Integer, String> relativePositionAndRef(@NotNull final SomaticVariant variant,
             @NotNull final IndexedFastaSequenceFile reference) {
         final int chromosomeLength = reference.getSequenceDictionary().getSequence(variant.chromosome()).getSequenceLength();
         long positionBeforeEvent = variant.position();
@@ -105,7 +105,7 @@ public class EnrichedSomaticVariantFactory {
     }
 
     @NotNull
-    public static Optional<RepeatContext> getRepeatContext(@NotNull final SomaticVariant variant, int relativePosition,
+    private static Optional<RepeatContext> getRepeatContext(@NotNull final SomaticVariant variant, int relativePosition,
             @NotNull String sequence) {
         if (variant.type().equals(VariantType.INDEL)) {
             return RepeatContextFactory.repeats(relativePosition + 1, sequence);

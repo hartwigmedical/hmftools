@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.repeat;
+package com.hartwig.hmftools.common.variant.repeat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
