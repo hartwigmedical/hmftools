@@ -46,6 +46,8 @@ public class RecoverStructuralVariants implements Closeable {
     private static final double MIN_SINGLE_QUAL_SCORE = 1000;
     private static final double UNBALANCED_MIN_PLOIDY = 0.5;
     private static final double UNBALANCED_MAX_COPY_NUMBER_CHANGE = 0.25;
+    private static final double UNBALANCED_MIN_DEPTH_WINDOW_COUNT = 5;
+    private static final int MIN_MATE_UNCERTAINTY = 150;
     private static final String AF_FILTERED = "af";
     private static final String PON_FILTERED = "PON";
 
@@ -90,9 +92,12 @@ public class RecoverStructuralVariants implements Closeable {
                 final List<PurpleCopyNumber> chromosomeCopyNumbers = allCopyNumbers.get(svPloidy.chromosome());
                 int index = indexOf(svPloidy.position(), chromosomeCopyNumbers);
                 if (index > 1) {
-                    int expectedOrientation = -1 * svPloidy.orientation();
-                    result.addAll(recoverAllVariants(expectedOrientation, index, chromosomeCopyNumbers));
-                    recoverSingleVariant(expectedOrientation, index, chromosomeCopyNumbers).ifPresent(result::add);
+                    final PurpleCopyNumber prev = chromosomeCopyNumbers.get(index - 1);
+                    final PurpleCopyNumber next = index < chromosomeCopyNumbers.size() - 2 ? chromosomeCopyNumbers.get(index + 1) : null;
+                    if (isSupportedByDepthWindowCounts(prev, next)) {
+                        int expectedOrientation = -1 * svPloidy.orientation();
+                        recoverSingleVariant(expectedOrientation, index, chromosomeCopyNumbers).ifPresent(result::add);
+                    }
                 }
             }
         }
@@ -197,7 +202,7 @@ public class RecoverStructuralVariants implements Closeable {
     }
 
     private int cipos(@NotNull final VariantContext context) {
-        int max = 150;
+        int max = MIN_MATE_UNCERTAINTY;
         if (context.hasAttribute("IMPRECISE")) {
 
             final String cipos = context.getAttributeAsString("CIPOS", "-0,0");
@@ -248,11 +253,12 @@ public class RecoverStructuralVariants implements Closeable {
 
         return reader.query(chromosome, (int) lowerBound, (int) upperBound)
                 .stream()
-                .filter(this::isEligibleForRecovery)
+                .filter(RecoverStructuralVariants::isAppropriatelyFiltered)
                 .collect(Collectors.toList());
     }
 
-    private boolean isEligibleForRecovery(@NotNull VariantContext variantContext) {
+    @VisibleForTesting
+    static boolean isAppropriatelyFiltered(@NotNull VariantContext variantContext) {
         final Set<String> filters = variantContext.getFilters();
         return !filters.isEmpty() && !filters.contains(PON_FILTERED) && !filters.contains(AF_FILTERED);
     }
@@ -360,6 +366,11 @@ public class RecoverStructuralVariants implements Closeable {
     private static boolean isUnbalanced(@NotNull final StructuralVariantLegPloidy svPloidy) {
         return Doubles.greaterThan(svPloidy.averageImpliedPloidy(), UNBALANCED_MIN_PLOIDY) && Doubles.lessThan(absAdjustedCopyNumberChange(
                 svPloidy), UNBALANCED_MAX_COPY_NUMBER_CHANGE);
+    }
+
+    private static boolean isSupportedByDepthWindowCounts(@NotNull final PurpleCopyNumber prev, @Nullable final PurpleCopyNumber next) {
+        return prev.depthWindowCount() >= UNBALANCED_MIN_DEPTH_WINDOW_COUNT && (next == null || next.depthWindowCount()
+                >= UNBALANCED_MIN_DEPTH_WINDOW_COUNT);
     }
 
     private static double absAdjustedCopyNumberChange(@NotNull final StructuralVariantLegPloidy ploidy) {
