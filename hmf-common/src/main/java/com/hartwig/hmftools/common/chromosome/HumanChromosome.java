@@ -60,6 +60,10 @@ public enum HumanChromosome implements Chromosome {
     }
 
     public static HumanChromosome fromString(@NotNull final String chromosome) {
+        if (chromosome.toLowerCase().startsWith("chr")) {
+            return HumanChromosome.valueOf("_" + chromosome.substring(3));
+        }
+
         return HumanChromosome.valueOf("_" + chromosome);
     }
 
