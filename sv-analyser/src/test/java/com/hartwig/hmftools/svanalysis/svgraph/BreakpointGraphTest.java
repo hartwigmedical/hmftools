@@ -96,7 +96,7 @@ public class BreakpointGraphTest {
         List<EnrichedStructuralVariant> svs = ImmutableList.of(
                 breakpoint("chr1", 10, 1, "chr1", 21, -1, 1));
         BreakpointGraph bg = new BreakpointGraph(cns, svs);
-        Simplification sv = bg.simplifySimpleDeletion();
+        Simplification sv = bg.simplify().get(0);
         assertEquals(svs.get(0), sv.variants().get(0));
         assertEquals(0, bg.getAllStructuralVariants().size());
     }
@@ -111,8 +111,8 @@ public class BreakpointGraphTest {
                 breakpoint("chr1", 10, 1, "chr1", 21, -1, 1),
                 breakpoint("chr1", 11, -1, "chr1", 1, -1, 1));
         BreakpointGraph bg = new BreakpointGraph(cns, svs);
-        Simplification sv = bg.simplifySimpleDeletion();
-        assertNull(sv);
+        List<Simplification> results = bg.simplify();
+        assertEquals(0, results.size());
     }
 
     @Test
@@ -124,7 +124,7 @@ public class BreakpointGraphTest {
         List<EnrichedStructuralVariant> svs = ImmutableList.of(
                 breakpoint("chr1", 11, -1, "chr1", 20, 1, 1));
         BreakpointGraph bg = new BreakpointGraph(cns, svs);
-        Simplification sv = bg.simplifySimpleDuplications();
+        Simplification sv = bg.simplify().get(0);
         assertEquals(svs.get(0), sv.variants().get(0));
         assertEquals(0, bg.getAllStructuralVariants().size());
     }
@@ -139,8 +139,8 @@ public class BreakpointGraphTest {
                 breakpoint("chr1", 11, -1, "chr1", 20, 1, 1),
                 breakpoint("chr1", 11, -1, "chr1", 21, -1, 1));
         BreakpointGraph bg = new BreakpointGraph(cns, svs);
-        Simplification sv = bg.simplifySimpleDuplications();
-        assertNull(sv);
+        List<Simplification> results = bg.simplify();
+        assertEquals(0, results.size());
     }
 
     @Test
@@ -163,7 +163,7 @@ public class BreakpointGraphTest {
                 .endLinkedBy("asm_right")
                 .build());
         BreakpointGraph bg = new BreakpointGraph(cns, svs);
-        List<Simplification> sv = bg.simplifyAssemblyLinks();
+        List<Simplification> sv = bg.simplify();
         assertEquals(1, sv.size());
         assertEquals(2, sv.get(0).variants().size());
         assertEquals(1, bg.getAllStructuralVariants().size());

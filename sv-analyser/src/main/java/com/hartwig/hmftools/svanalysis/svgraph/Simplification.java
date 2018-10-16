@@ -16,4 +16,6 @@ public interface Simplification {
     @NotNull
     Collection<BreakendConsistency> consistency();
     double ploidy();
+    @NotNull
+    List<BgAdjacency> adjacencies();
 }
