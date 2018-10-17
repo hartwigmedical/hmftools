@@ -2,7 +2,9 @@ package com.hartwig.hmftools.patientreporter.report.data;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 
@@ -49,7 +51,7 @@ public final class EvidenceItemDataSource {
                 REFERENCE_FIELD.getName(),
                 ON_LABEL_FIELD.getName());
 
-        for (EvidenceItem evidenceItem : evidenceItems) {
+        for (EvidenceItem evidenceItem : sort(evidenceItems)) {
             evidenceItemDataSource.add(evidenceItem.event(),
                     evidenceItem.drug(),
                     evidenceItem.drugsType(),
@@ -61,6 +63,11 @@ public final class EvidenceItemDataSource {
         }
 
         return evidenceItemDataSource;
+    }
+
+    @NotNull
+    private static List<EvidenceItem> sort(@NotNull List<EvidenceItem> evidenceItems) {
+        return evidenceItems.stream().sorted(Comparator.comparing(EvidenceItem::level)).collect(Collectors.toList());
     }
 
     @NotNull
