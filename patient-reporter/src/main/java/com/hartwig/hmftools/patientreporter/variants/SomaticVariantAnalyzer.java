@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
 import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 
 import org.apache.logging.log4j.LogManager;
@@ -43,7 +44,7 @@ public final class SomaticVariantAnalyzer {
     public static SomaticVariantAnalysis run(@NotNull final List<EnrichedSomaticVariant> variants, @NotNull Set<String> genePanel,
             @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap, @Nullable PatientTumorLocation patientTumorLocation,
             @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull List<GeneFusion> fusions,
-            @NotNull ActionabilityAnalyzer actionabilityAnalyzerData) throws IOException {
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzerData, final double purplePloidy) throws IOException {
         final List<EnrichedSomaticVariant> variantsToReport =
                 variants.stream().filter(includeFilter(genePanel, driverCategoryPerGeneMap)).collect(Collectors.toList());
         final double microsatelliteIndelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
@@ -72,11 +73,11 @@ public final class SomaticVariantAnalyzer {
                 actionabilityAnalyzerData);
 
         LOGGER.info("evidencePerVariant items CNVs");
-        Map<GeneCopyNumber, List<EvidenceItem>> evidencePerVariantCNVs = ActionabilityVariantAnalyzer.detectCNVs(
+        Map<GeneCopyNumber, List<EvidenceItem>> evidencePerVariantCNVs = ActionabilityVariantAnalyzer.findEvidenceForCopyNumber(
                 actionableGenesCNVS,
                 geneCopyNumbers,
                 doidsPrimaryTumorLocation,
-                actionabilityAnalyzerData);
+                actionabilityAnalyzerData, purplePloidy);
 
         return ImmutableSomaticVariantAnalysis.of(variantsToReport,
                 driverCatalog,

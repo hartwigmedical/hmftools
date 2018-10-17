@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,7 +25,6 @@ public final class ActionabilityVariantAnalyzer {
             @NotNull Set<String> actionableGenesVariants, @NotNull List<T> variants, @Nullable String doidsPrimaryTumorLocation,
             @NotNull ActionabilityAnalyzer actionabilityAnalyzerData) {
         Map<T, List<EvidenceItem>> evidenceItemsPerVariant = Maps.newHashMap();
-
         List<T> variantsOnActionableGenesRanges =
                 variants.stream().filter(variant -> actionableGenesVariants.contains(variant.gene())).collect(Collectors.toList());
 
@@ -37,21 +37,22 @@ public final class ActionabilityVariantAnalyzer {
     }
 
     @NotNull
-    public static Map<GeneCopyNumber, List<EvidenceItem>> detectCNVs(@NotNull Set<String> actionableGenesVariantsCNVs,
-            @NotNull List<GeneCopyNumber> CNVs, @Nullable String doidsPrimaryTumorLocation,
-            @NotNull ActionabilityAnalyzer actionabilityAnalyzerData) {
-        Map<GeneCopyNumber, List<EvidenceItem>> evidenceItemsPerVariantCNVs = Maps.newHashMap();
+    public static <T extends GeneCopyNumber> Map<T, List<EvidenceItem>> findEvidenceForCopyNumber(@NotNull Set<String> actionableGenesVariantsCNVs,
+            @NotNull List<T> CNVs, @Nullable String doidsPrimaryTumorLocation,
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzerData, final double purplePloidy) {
+        Map<T, List<EvidenceItem>> evidenceItemsCopyNumber = Maps.newHashMap();
 
-        List<GeneCopyNumber> cnvsOnActionableGenes = CNVs.stream()
+        List<T> cnvsOnActionableGenes = CNVs.stream()
                 .filter(geneCopyNumber -> actionableGenesVariantsCNVs.contains(geneCopyNumber.gene()))
                 .collect(Collectors.toList());
 
-        //        for (T CNV : variantsOnActionableGenes) {
-        //            evidenceItemsPerVariantCNVs.put(CNV,
-        //                    actionabilityAnalyzerData.cnvAnalyzer().evidenceForCopyNumberEvent(CNV, doidsPrimaryTumorLocation, actionabilityAnalyzerData));
-        //        }
+        for (T CNV : cnvsOnActionableGenes) {
+            evidenceItemsCopyNumber.put(CNV,
+                    actionabilityAnalyzerData.cnvAnalyzer()
+                            .evidenceForCopyNumberEvent(CNV, doidsPrimaryTumorLocation, actionabilityAnalyzerData.cancerTypeAnalyzer(), purplePloidy));
+        }
 
-        return evidenceItemsPerVariantCNVs;
+        return evidenceItemsCopyNumber;
     }
 
     //    @NotNull

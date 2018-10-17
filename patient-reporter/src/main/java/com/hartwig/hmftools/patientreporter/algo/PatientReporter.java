@@ -201,7 +201,7 @@ public abstract class PatientReporter {
                 patientTumorLocation,
                 PatientReporterFileLoader.loadPurpleGeneCopyNumbers(runDirectory, sample),
                 fusions,
-                actionabilityAnalyzerData);
+                actionabilityAnalyzerData, purpleAnalysis.fittedPurity().ploidy());
     }
 
     @NotNull

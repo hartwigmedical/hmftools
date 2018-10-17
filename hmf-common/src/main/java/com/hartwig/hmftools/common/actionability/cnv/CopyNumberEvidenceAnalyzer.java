@@ -36,11 +36,11 @@ public class CopyNumberEvidenceAnalyzer {
 
     @NotNull
     public List<EvidenceItem> evidenceForCopyNumberEvent(@NotNull GeneCopyNumber geneCopyNumber, @Nullable String doidsPrimaryTumorLocation,
-            @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
+            @NotNull CancerTypeAnalyzer cancerTypeAnalyzer, final double purplePloidy) {
         Double minCopyValue = (double) Math.max(0, Math.round(geneCopyNumber.minCopyNumber()));
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
         for (ActionableCopyNumber actionableCopyNumber : actionableCopyNumbers) {
-            if (checkCNVType(minCopyValue).equals(actionableCopyNumber.cnvType())) {
+            if (checkCNVType(minCopyValue, purplePloidy).equals(actionableCopyNumber.cnvType())) {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableCopyNumber(actionableCopyNumber);
 
                 evidenceBuilder.event(geneCopyNumber.gene() + " " + actionableCopyNumber.cnvType());
@@ -54,7 +54,7 @@ public class CopyNumberEvidenceAnalyzer {
     }
 
     @NotNull
-    private static String checkCNVType(final double copyNumber) {
+    private static String checkCNVType(final double copyNumber, final double purplePloidy) {
         Double relativeCopyNumber = copyNumber / 8.0;
         String CNVType = "";
         if (Doubles.lessOrEqual(copyNumber, ABS_LOSS)) {
