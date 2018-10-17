@@ -2,6 +2,7 @@ package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.purple.CommandLineUtil.defaultIntValue;
 import static com.hartwig.hmftools.purple.CommandLineUtil.defaultValue;
+import static com.hartwig.hmftools.purple.config.StructuralVariantConfig.createStructuralVariantConfig;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,7 +33,7 @@ public class ConfigSupplier {
     private static final String COBALT = "cobalt";
     private static final String GC_PROFILE = "gc_profile";
 
-    private static final String STRUCTURAL_VARIANTS = "structural_vcf";
+
 
     private static final String BAF = "baf";
     private static final String CIRCOS = "circos";
@@ -49,7 +50,6 @@ public class ConfigSupplier {
         options.addOption(RUN_DIRECTORY, true, "The path containing the data for a single run.");
         options.addOption(OUTPUT_DIRECTORY, true, "The output path. Defaults to run_dir/purple/");
 
-        options.addOption(STRUCTURAL_VARIANTS, true, "Optional location of structural variant vcf for more accurate segmentation.");
 
         options.addOption(BAF, true, "Baf file location.");
         options.addOption(CIRCOS, true, "Location of circos binary.");
@@ -69,6 +69,7 @@ public class ConfigSupplier {
         FittingConfig.addOptions(options);
         FitScoreConfig.addOptions(options);
         SomaticConfig.addOptions(options);
+        StructuralVariantConfig.addOptions(options);
     }
 
     private final CommonConfig commonConfig;
@@ -80,6 +81,8 @@ public class ConfigSupplier {
     private final FittingConfig fittingConfig;
     private final SmoothingConfig smoothingConfig;
     private final FitScoreConfig fitScoreConfig;
+
+
 
     public ConfigSupplier(@NotNull CommandLine cmd, @NotNull Options opt) throws ParseException, IOException {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
@@ -126,11 +129,6 @@ public class ConfigSupplier {
         LOGGER.info("Reference Sample: {}, Tumor Sample: {}", commonConfig.refSample(), commonConfig.tumorSample());
         LOGGER.info("Output Directory: {}", commonConfig.outputDirectory());
 
-        structuralVariantConfig = createStructuralVariantConfig(cmd, opt);
-        if (!structuralVariantConfig.file().isPresent()) {
-            LOGGER.info("No structural vcf supplied");
-        }
-
         smoothingConfig = ImmutableSmoothingConfig.builder()
                 .minDiploidTumorRatioCount(defaultIntValue(cmd, MIN_DIPLOID_TUMOR_RATIO_COUNT, MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT))
                 .minDiploidTumorRatioCountAtCentromere(defaultIntValue(cmd,
@@ -144,6 +142,7 @@ public class ConfigSupplier {
         fittingConfig = FittingConfig.createConfig(cmd);
         fitScoreConfig = FitScoreConfig.createConfig(cmd);
         somaticConfig = SomaticConfig.createSomaticConfig(cmd);
+        structuralVariantConfig = createStructuralVariantConfig(cmd, opt);
     }
 
     public FitScoreConfig fitScoreConfig() {
@@ -190,24 +189,7 @@ public class ConfigSupplier {
         return smoothingConfig;
     }
 
-    @NotNull
-    private static StructuralVariantConfig createStructuralVariantConfig(@NotNull CommandLine cmd, @NotNull Options opt)
-            throws ParseException {
-        final Optional<File> file;
-        if (cmd.hasOption(STRUCTURAL_VARIANTS)) {
-            final String somaticFilename = cmd.getOptionValue(STRUCTURAL_VARIANTS);
-            final File somaticFile = new File(somaticFilename);
-            if (!somaticFile.exists()) {
-                printHelp(opt);
-                throw new ParseException("Unable to read structural variants from: " + somaticFilename);
-            }
-            file = Optional.of(somaticFile);
-        } else {
-            file = Optional.empty();
-        }
 
-        return ImmutableStructuralVariantConfig.builder().file(file).build();
-    }
 
     @NotNull
     private static CircosConfig createCircosConfig(@NotNull CommandLine cmd, @NotNull CommonConfig config) {

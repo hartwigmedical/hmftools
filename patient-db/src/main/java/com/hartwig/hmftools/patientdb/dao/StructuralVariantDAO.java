@@ -190,6 +190,7 @@ class StructuralVariantDAO {
                     // TODO: what's the correct approach here?
                     // jooq type conversion or just manual mapping?
                     .imprecise(byteToBoolean(record.getValue(STRUCTURALVARIANT.IMPRECISE)))
+                    .recovered(byteToBoolean(record.getValue(STRUCTURALVARIANT.RECOVERED)))
                     .qualityScore(record.getValue(STRUCTURALVARIANT.QUALSCORE))
                     .event(record.getValue(STRUCTURALVARIANT.EVENT))
                     .startLinkedBy(record.getValue(STRUCTURALVARIANT.STARTLINKEDBY))
@@ -256,6 +257,7 @@ class StructuralVariantDAO {
                     STRUCTURALVARIANT.VCFID,
                     STRUCTURALVARIANT.STARTLINKEDBY,
                     STRUCTURALVARIANT.ENDLINKEDBY,
+                    STRUCTURALVARIANT.RECOVERED,
                     STRUCTURALVARIANT.MODIFIED);
             batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
             inserter.execute();
@@ -276,27 +278,27 @@ class StructuralVariantDAO {
                 variant.end() == null ? null : variant.end().homology(),
                 variant.insertSequence(),
                 variant.type(),
-                variant.start().alleleFrequency(),
-                variant.start().adjustedAlleleFrequency(),
-                variant.start().adjustedCopyNumber(),
-                variant.start().adjustedCopyNumberChange(),
-                variant.end() == null ? null : variant.end().alleleFrequency(),
-                variant.end() == null ? null : variant.end().adjustedAlleleFrequency(),
-                variant.end() == null ? null : variant.end().adjustedCopyNumber(),
-                variant.end() == null ? null : variant.end().adjustedCopyNumberChange(),
+                DatabaseUtil.decimal(variant.start().alleleFrequency()),
+                DatabaseUtil.decimal(variant.start().adjustedAlleleFrequency()),
+                DatabaseUtil.decimal(variant.start().adjustedCopyNumber()),
+                DatabaseUtil.decimal(variant.start().adjustedCopyNumberChange()),
+                variant.end() == null ? null : DatabaseUtil.decimal(variant.end().alleleFrequency()),
+                variant.end() == null ? null : DatabaseUtil.decimal(variant.end().adjustedAlleleFrequency()),
+                variant.end() == null ? null : DatabaseUtil.decimal(variant.end().adjustedCopyNumber()),
+                variant.end() == null ? null : DatabaseUtil.decimal(variant.end().adjustedCopyNumberChange()),
                 variant.ploidy(),
                 variant.filter(),
                 variant.imprecise(),
-                variant.qualityScore(),
+                DatabaseUtil.decimal(variant.qualityScore()),
                 variant.event(),
                 variant.start().tumourVariantFragmentCount(),
                 variant.start().tumourReferenceFragmentCount(),
                 variant.start().normalVariantFragmentCount(),
                 variant.start().normalReferenceFragmentCount(),
-                variant.end() == null ? null : variant.end().tumourVariantFragmentCount(),
-                variant.end() == null ? null : variant.end().tumourReferenceFragmentCount(),
-                variant.end() == null ? null : variant.end().normalVariantFragmentCount(),
-                variant.end() == null ? null : variant.end().normalReferenceFragmentCount(),
+                variant.end() == null ? null : DatabaseUtil.decimal(variant.end().tumourVariantFragmentCount()),
+                variant.end() == null ? null : DatabaseUtil.decimal(variant.end().tumourReferenceFragmentCount()),
+                variant.end() == null ? null : DatabaseUtil.decimal(variant.end().normalVariantFragmentCount()),
+                variant.end() == null ? null : DatabaseUtil.decimal(variant.end().normalReferenceFragmentCount()),
                 variant.start().startOffset(),
                 variant.start().endOffset(),
                 variant.end() == null ? null : variant.end().startOffset(),
@@ -306,6 +308,7 @@ class StructuralVariantDAO {
                 variant.id(),
                 variant.startLinkedBy(),
                 variant.endLinkedBy(),
+                variant.recovered(),
                 timestamp);
     }
 

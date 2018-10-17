@@ -12,7 +12,10 @@ final class ExtendLongArm {
     static List<CombinedRegion> extendLongArm(@NotNull final List<CombinedRegion> regions) {
 
         final int centromereIndex = findCentromere(regions);
-        extendLeft(centromereIndex, regions);
+        if (centromereIndex > 0) {
+            final double copyNumber = regions.get(centromereIndex).tumorCopyNumber();
+            extendLeft(copyNumber, centromereIndex - 1, regions);
+        }
 
         return regions;
     }
@@ -27,29 +30,34 @@ final class ExtendLongArm {
         return -1;
     }
 
-    private static void extendLeft(int startIndex, @NotNull final List<CombinedRegion> regions) {
-        assert (startIndex < regions.size());
-        if (startIndex > 0) {
-            final CombinedRegion source = regions.get(startIndex);
-            final CombinedRegion target = regions.get(startIndex - 1);
-            if (!target.isProcessed()) {
-                target.setTumorCopyNumber(CopyNumberMethod.LONG_ARM, source.tumorCopyNumber());
-            } else {
+    private static void extendLeft(double copyNumber, int targetIndex, @NotNull final List<CombinedRegion> regions) {
+        if (targetIndex < 0 || regions.get(targetIndex).isProcessed()) {
+            return;
+        }
+
+        final CombinedRegion target = regions.get(targetIndex);
+        target.setTumorCopyNumber(CopyNumberMethod.LONG_ARM, copyNumber);
+        if (target.region().support() != SegmentSupport.NONE) {
+            extendLeft(copyNumber, targetIndex - 1, regions);
+            return;
+        }
+
+        targetIndex--;
+        while (targetIndex >= 0) {
+            final CombinedRegion neighbour = regions.get(targetIndex);
+            if (neighbour.isProcessed()) {
                 return;
             }
 
-            int targetIndex = startIndex - 2;
-            while (targetIndex >= 0) {
-                final CombinedRegion neighbour = regions.get(targetIndex);
-                if (neighbour.isProcessed()) {
-                    return;
-                } else {
-                    target.extend(regions.get(targetIndex).region());
-                }
+            target.extend(neighbour.region());
+            regions.remove(targetIndex);
+            targetIndex--;
 
-                regions.remove(targetIndex);
-                targetIndex--;
+            if (target.region().support() != SegmentSupport.NONE) {
+                extendLeft(copyNumber, targetIndex, regions);
+                return;
             }
         }
+
     }
 }

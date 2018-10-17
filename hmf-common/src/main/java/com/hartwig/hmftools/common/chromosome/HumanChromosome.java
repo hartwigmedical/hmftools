@@ -30,8 +30,7 @@ public enum HumanChromosome implements Chromosome {
     _21(true, false),
     _22(true, false),
     _X(false, true),
-    _Y(false, true),
-    _MT(false, false);
+    _Y(false, true);
 
     private final boolean isAutosome;
     private final boolean isAllosome;
@@ -60,6 +59,10 @@ public enum HumanChromosome implements Chromosome {
     }
 
     public static HumanChromosome fromString(@NotNull final String chromosome) {
+        if (chromosome.toLowerCase().startsWith("chr")) {
+            return HumanChromosome.valueOf("_" + chromosome.substring(3));
+        }
+
         return HumanChromosome.valueOf("_" + chromosome);
     }
 

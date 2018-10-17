@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.repeat;
+package com.hartwig.hmftools.common.variant.repeat;
 
 import java.util.Comparator;
 import java.util.Map;

@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.baf.ExpectedBAF;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,8 +43,13 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
     public List<FittedRegion> fitRegion(final double purity, final double normFactor,
             @NotNull final Collection<ObservedRegion> observedRegions) {
 
-        final Predicate<ObservedRegion> valid = observedRegion -> gender == Gender.MALE || !observedRegion.chromosome().equals("Y");
+        final Predicate<ObservedRegion> valid = observedRegion -> isFittableRegion(gender, observedRegion);
         return observedRegions.stream().filter(valid).map(x -> fitRegion(purity, normFactor, x)).collect(Collectors.toList());
+    }
+
+    @VisibleForTesting
+    static boolean isFittableRegion(@NotNull final Gender gender, @NotNull final GenomeRegion region) {
+        return gender != Gender.FEMALE || !region.chromosome().equals("Y");
     }
 
     @Override
@@ -86,7 +92,7 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
 
 
 
-    public double impliedBaf(final PurityAdjuster purityAdjuster, final String chromosome, final double copyNumber,
+    private double impliedBaf(final PurityAdjuster purityAdjuster, final String chromosome, final double copyNumber,
             final double observedBAF) {
         boolean isHomologous = HumanChromosome.fromString(chromosome).isDiploid(gender);
 
@@ -101,7 +107,7 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
     }
 
     @VisibleForTesting
-    double bafToMinimiseDeviation(final PurityAdjuster purityAdjuster, final String chromosome, double impliedCopyNumber) {
+    private double bafToMinimiseDeviation(final PurityAdjuster purityAdjuster, final String chromosome, double impliedCopyNumber) {
 
         final double minBAF = Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, 0.5)));
         final double maxBAF = Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, ambiguousBaf)));

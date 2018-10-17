@@ -40,16 +40,15 @@ class StructuralVariantImplied {
                     GenomePositionSelectorFactory.create(createPloidies(structuralVariants, copyNumbers));
 
             for (Chromosome chromosome : HumanChromosome.values()) {
-                final String chromosomeName = chromosome.toString();
-                final List<CombinedRegion> chromosomeCopyNumbers = copyNumbers.get(chromosomeName);
+                final List<CombinedRegion> chromosomeCopyNumbers = copyNumbers.get(chromosome.toString());
                 boolean svInferred = false;
                 for (final CombinedRegion copyNumber : chromosomeCopyNumbers) {
                     if (implyCopyNumberFromSV(copyNumber)) {
                         final Optional<StructuralVariantLegPloidy> optionalStart =
-                                selector.select(GenomePositions.create(chromosomeName, copyNumber.start()));
+                                selector.select(GenomePositions.create(copyNumber.chromosome(), copyNumber.start()));
 
                         final Optional<StructuralVariantLegPloidy> optionalEnd =
-                                selector.select(GenomePositions.create(chromosomeName, copyNumber.end() + 1));
+                                selector.select(GenomePositions.create(copyNumber.chromosome(), copyNumber.end() + 1));
 
                         if (optionalStart.isPresent() || optionalEnd.isPresent()) {
                             svInferred = true;

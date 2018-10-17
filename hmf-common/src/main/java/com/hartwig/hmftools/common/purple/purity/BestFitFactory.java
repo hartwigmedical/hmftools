@@ -20,12 +20,14 @@ public class BestFitFactory {
     private static final double ABS_RANGE = 0.0005;
     private static final double MIN_SOMATIC_UNADJUSTED_VAF = 0.1;
 
-    private final FittedPurity bestFit;
+    private final FittedPurity fit;
     private final FittedPurityScore score;
     private final FittedPurityStatus status;
     private final double highlyDiploidPercentage;
     private final int minVariants;
     private double minSomaticPurity;
+
+    private final BestFit bestFit;
 
     public BestFitFactory(int minVariants, int minPeak, double highlyDiploidPercentage, double minSomaticPurity,
             double minSomaticPuritySpread, @NotNull final List<FittedPurity> fittedPurities, @NotNull final List<SomaticVariant> somatics) {
@@ -46,20 +48,22 @@ public class BestFitFactory {
 
             if (noDetectableTumor(somaticCount)) {
                 status = FittedPurityStatus.NO_TUMOR;
-                bestFit = somaticFit.orElse(lowestScore);
+                fit = somaticFit.orElse(lowestScore);
             } else if (somaticsWontHelp(somatics.size(), lowestScore.purity(), somaticFit)) {
                 status = FittedPurityStatus.HIGHLY_DIPLOID;
-                bestFit = lowestScore;
+                fit = lowestScore;
             } else {
                 status = FittedPurityStatus.SOMATIC;
                 assert somaticFit.isPresent();
-                bestFit = somaticFit.get();
+                fit = somaticFit.get();
             }
 
         } else {
             status = FittedPurityStatus.NORMAL;
-            bestFit = lowestScore;
+            fit = lowestScore;
         }
+
+        bestFit = ImmutableBestFit.builder().fit(fit).status(status).score(score).bestFitPerPurity(fittedPurities).build();
     }
 
     private long somaticCount(@NotNull Collection<SomaticVariant> variants) {
@@ -79,16 +83,8 @@ public class BestFitFactory {
         return Doubles.greaterOrEqual(score.maxDiploidProportion(), highlyDiploidPercentage);
     }
 
-    public FittedPurityStatus status() {
-        return status;
-    }
-
-    public FittedPurity bestFit() {
+    public BestFit bestFit() {
         return bestFit;
-    }
-
-    public FittedPurityScore score() {
-        return score;
     }
 
     @NotNull

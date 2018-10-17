@@ -31,15 +31,15 @@ public class RatioSupplier {
     }
 
     @NotNull
-    public Multimap<Chromosome, CobaltRatio> generateRatios(@NotNull final Multimap<String, GCProfile> gcProfiles,
+    public Multimap<Chromosome, CobaltRatio> generateRatios(@NotNull final Multimap<Chromosome, GCProfile> gcProfiles,
             @NotNull final Multimap<Chromosome, CobaltCount> readCounts) throws IOException {
         LOGGER.info("Applying ratio gc normalization");
         final GCRatioSupplier gcRatioSupplier = new GCRatioSupplier(gcProfiles, readCounts);
-        final ListMultimap<String, ReadRatio> tumorGCRatio = gcRatioSupplier.tumorRatios();
-        final ListMultimap<String, ReadRatio> referenceGCRatio = gcRatioSupplier.referenceRatios();
+        final ListMultimap<Chromosome, ReadRatio> tumorGCRatio = gcRatioSupplier.tumorRatios();
+        final ListMultimap<Chromosome, ReadRatio> referenceGCRatio = gcRatioSupplier.referenceRatios();
 
         LOGGER.info("Applying ratio diploid normalization");
-        final ListMultimap<String, ReadRatio> referenceGCDiploidRatio = new DiploidRatioSupplier(referenceGCRatio).result();
+        final ListMultimap<Chromosome, ReadRatio> referenceGCDiploidRatio = new DiploidRatioSupplier(referenceGCRatio).result();
 
         LOGGER.info("Persisting gc read count medians to {}", outputDirectory);
         final String tumorGCMedianFilename = GCMedianReadCountFile.generateFilename(outputDirectory, tumor);

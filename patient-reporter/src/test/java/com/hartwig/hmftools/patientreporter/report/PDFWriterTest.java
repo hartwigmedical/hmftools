@@ -271,6 +271,7 @@ public class PDFWriterTest {
                 .start(createEnrichedStructuralVariantLegBuilder().chromosome("any").build())
                 .ploidy(ploidy)
                 .qualityScore(0)
+                .recovered(false)
                 .build();
         GeneAnnotation upstreamGene =
                 new GeneAnnotation(variant, isUpstream, gene, Strings.EMPTY, 1, Lists.newArrayList(), Lists.newArrayList(), Strings.EMPTY);
@@ -294,7 +295,7 @@ public class PDFWriterTest {
             @NotNull String chromosomeBand, @NotNull String gene, int exonUpstream, int exonDownstream, double ploidy) {
         EnrichedStructuralVariantLeg start = createEnrichedStructuralVariantLegBuilder().chromosome(chromosome).build();
         EnrichedStructuralVariant variant =
-                createEnrichedStructuralVariantBuilder().type(type).start(start).ploidy(ploidy).qualityScore(0).build();
+                createEnrichedStructuralVariantBuilder().type(type).start(start).ploidy(ploidy).qualityScore(0).recovered(false).build();
 
         GeneAnnotation geneAnnotation =
                 new GeneAnnotation(variant, true, gene, "id", 1, Lists.newArrayList(), Lists.newArrayList(), chromosomeBand);

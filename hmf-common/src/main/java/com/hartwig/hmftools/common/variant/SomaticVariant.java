@@ -85,5 +85,11 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
         return !cosmicIDs().isEmpty();
     }
 
-    default boolean isFiltered() {return !filter().equals(SomaticVariantFactory.PASS_FILTER);}
+    default boolean isFiltered() {
+        return !filter().equals(SomaticVariantFactory.PASS_FILTER);
+    }
+
+    default boolean isSnp() {
+        return type() == VariantType.SNP;
+    }
 }

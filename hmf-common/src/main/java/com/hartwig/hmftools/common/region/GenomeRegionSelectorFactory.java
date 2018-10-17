@@ -7,6 +7,8 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;
@@ -40,6 +42,29 @@ public final class GenomeRegionSelectorFactory {
             @Override
             public void select(@NotNull final GenomeRegion region, @NotNull final Consumer<R> handler) {
                 chromosomeSelectors.getOrDefault(region.chromosome(), nullSelector).select(region, handler);
+            }
+        };
+    }
+
+    @NotNull
+    public static <R extends GenomeRegion> GenomeRegionSelector<R> createImproved(@NotNull final Multimap<Chromosome, R> regions) {
+        final GenomeRegionSelector<R> nullSelector = new NullGenomeRegionSelector<>();
+
+        final Map<Chromosome, GenomeRegionSelector<R>> chromosomeSelectors = Maps.newHashMap();
+        for (final Chromosome chromosome : regions.keySet()) {
+            chromosomeSelectors.put(chromosome, new GenomeRegionSelectorImpl<>(regions.get(chromosome)));
+        }
+
+        return new GenomeRegionSelector<R>() {
+            @NotNull
+            @Override
+            public Optional<R> select(@NotNull final GenomePosition position) {
+                return chromosomeSelectors.getOrDefault(HumanChromosome.fromString(position.chromosome()), nullSelector).select(position);
+            }
+
+            @Override
+            public void select(@NotNull final GenomeRegion region, @NotNull final Consumer<R> handler) {
+                chromosomeSelectors.getOrDefault(HumanChromosome.fromString(region.chromosome()), nullSelector).select(region, handler);
             }
         };
     }

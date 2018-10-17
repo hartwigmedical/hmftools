@@ -29,6 +29,11 @@ public class PurityAdjuster {
         this.normFactor = normFactor;
     }
 
+    @NotNull
+    public Gender gender() {
+        return gender;
+    }
+
     public double purity() {
         return purity;
     }

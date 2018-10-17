@@ -26,12 +26,15 @@ public interface SomaticConfig {
     String SOMATIC_MIN_TOTAL = "somatic_min_total";
     String SOMATIC_MIN_PURITY = "somatic_min_purity";
     String SOMATIC_MIN_PURITY_SPREAD = "somatic_min_purity_spread";
+    String SOMATIC_DEVIATION_WEIGHT = "somatic_deviation_weight";
+    String HIGHLY_DIPLOID_PERCENTAGE = "highly_diploid_percentage";
 
     double SOMATIC_MIN_PURITY_DEFAULT = 0.16;
     double SOMATIC_MIN_PURITY_SPREAD_DEFAULT = 0.15;
     int SOMATIC_MIN_PEAK_DEFAULT = 50;
     int SOMATIC_MIN_TOTAL_DEFAULT = 300;
-
+    double SOMATIC_DEVIATION_WEIGHT_DEFAULT = 1;
+    double HIGHLY_DIPLOID_PERCENTAGE_DEFAULT = 0.95;
 
     static void addOptions(@NotNull Options options) {
         options.addOption(SOMATIC_MIN_PEAK, true, "Minimum number of somatic variants to consider a peak. Default 50.");
@@ -39,6 +42,8 @@ public interface SomaticConfig {
         options.addOption(SOMATIC_MIN_PURITY, true, "Somatic purities below this minimum will not be used. Default 0.16");
         options.addOption(SOMATIC_MIN_PURITY_SPREAD, true, "Minimum purity spread before somatics can be used. Default 0.15");
         options.addOption(SOMATIC_VARIANTS, true, "Optional location of somatic variant vcf to assist fitting in highly-diploid samples.");
+        options.addOption(SOMATIC_DEVIATION_WEIGHT, true, "SOMATIC_DEVIATION_WEIGHT");
+        options.addOption(HIGHLY_DIPLOID_PERCENTAGE, true, "HIGHLY_DIPLOID_PERCENTAGE");
     }
 
     Optional<File> file();
@@ -51,6 +56,9 @@ public interface SomaticConfig {
 
     double minSomaticPuritySpread();
 
+    double somaticDeviationWeight();
+
+    double highlyDiploidPercentage();
 
     @NotNull
     static SomaticConfig createSomaticConfig(@NotNull CommandLine cmd) throws ParseException {
@@ -73,6 +81,8 @@ public interface SomaticConfig {
                 .minPeakVariants(defaultIntValue(cmd, SOMATIC_MIN_PEAK, SOMATIC_MIN_PEAK_DEFAULT))
                 .minSomaticPurity(defaultValue(cmd, SOMATIC_MIN_PURITY, SOMATIC_MIN_PURITY_DEFAULT))
                 .minSomaticPuritySpread(defaultValue(cmd, SOMATIC_MIN_PURITY_SPREAD, SOMATIC_MIN_PURITY_SPREAD_DEFAULT))
+                .somaticDeviationWeight(defaultValue(cmd, SOMATIC_DEVIATION_WEIGHT, SOMATIC_DEVIATION_WEIGHT_DEFAULT))
+                .highlyDiploidPercentage(defaultValue(cmd, HIGHLY_DIPLOID_PERCENTAGE, HIGHLY_DIPLOID_PERCENTAGE_DEFAULT))
                 .build();
     }
 }

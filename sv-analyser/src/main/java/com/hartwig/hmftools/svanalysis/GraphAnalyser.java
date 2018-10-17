@@ -7,10 +7,8 @@ import com.hartwig.hmftools.common.variant.structural.*;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.analysis.SvClusteringConfig;
 import com.hartwig.hmftools.svanalysis.svgraph.BreakpointGraph;
-import com.hartwig.hmftools.svanalysis.svgraph.SimpleSimplificationStrategy;
 import com.hartwig.hmftools.svanalysis.svgraph.Simplification;
 import com.hartwig.hmftools.svanalysis.svgraph.SimplificationFile;
-
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -73,12 +71,13 @@ public class GraphAnalyser {
         for (final String sample : samplesList) {
             List<EnrichedStructuralVariant> svRecords = dbAccess.readStructuralVariants(sample);
             svRecords = hackFixPurpleOffByOne(svRecords);
+            svRecords = svRecords.stream().filter(sv -> sv.filter().equals("") || sv.filter().equals("PASS")).collect(Collectors.toList());
             List<PurpleCopyNumber> cnRecords = dbAccess.readCopynumbers(sample);
 
             LOGGER.info("sample({}) processing {} SVs, {} segments", sample, svRecords.size(), cnRecords.size());
 
             BreakpointGraph graph = new BreakpointGraph(cnRecords, svRecords);
-            List<Simplification> simplifications = graph.simplify(new SimpleSimplificationStrategy());
+            List<Simplification> simplifications = graph.simplify();
 
             String cnFile = PurpleCopyNumberFile.generateFilename(cmd.getOptionValue(OUTPUT_DIRECTORY), String.format("%s_cn_reduced", sample));
             String remainingFile = EnrichedStructuralVariantFile.generateFilename(cmd.getOptionValue(OUTPUT_DIRECTORY), String.format("%s_sv_remaining.csv", sample));

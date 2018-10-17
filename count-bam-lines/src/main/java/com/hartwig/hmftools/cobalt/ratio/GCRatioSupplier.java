@@ -17,12 +17,12 @@ import org.jetbrains.annotations.NotNull;
 class GCRatioSupplier {
 
     private final GCMedianReadCount tumorGCMedianReadCount;
-    private final ListMultimap<String, ReadRatio> tumorRatios;
     private final GCMedianReadCount referenceGCMedianReadCount;
-    private final ListMultimap<String, ReadRatio> referenceRatios;
+    private final ListMultimap<Chromosome, ReadRatio> tumorRatios;
+    private final ListMultimap<Chromosome, ReadRatio> referenceRatios;
 
-    GCRatioSupplier(@NotNull final Multimap<String, GCProfile> gcProfiles, @NotNull final Multimap<Chromosome, CobaltCount> counts) {
-        final GenomeRegionSelector<GCProfile> gcProfileSelector = GenomeRegionSelectorFactory.create(gcProfiles);
+    GCRatioSupplier(@NotNull final Multimap<Chromosome, GCProfile> gcProfiles, @NotNull final Multimap<Chromosome, CobaltCount> counts) {
+        final GenomeRegionSelector<GCProfile> gcProfileSelector = GenomeRegionSelectorFactory.createImproved(gcProfiles);
 
         final GCRatioNormalization tumorRatiosBuilder = new GCRatioNormalization();
         final GCRatioNormalization referenceRatiosBuilder = new GCRatioNormalization();
@@ -46,7 +46,7 @@ class GCRatioSupplier {
     }
 
     @NotNull
-    ListMultimap<String, ReadRatio> referenceRatios() {
+    ListMultimap<Chromosome, ReadRatio> referenceRatios() {
         return referenceRatios;
     }
 
@@ -56,7 +56,7 @@ class GCRatioSupplier {
     }
 
     @NotNull
-    ListMultimap<String, ReadRatio> tumorRatios() {
+    ListMultimap<Chromosome, ReadRatio> tumorRatios() {
         return tumorRatios;
     }
 

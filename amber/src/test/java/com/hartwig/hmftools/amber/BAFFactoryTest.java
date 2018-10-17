@@ -26,12 +26,12 @@ public class BAFFactoryTest {
             DEFAULT_MIN_DEPTH_PERCENTAGE,
             DEFAULT_MAX_DEPTH_PERCENTAGE);
 
-    private final static Pileup GOOD_NORMAL = PileupFile.fromString("seq2\t156\tA\t10\t...G..GGGG\t<975;:<<<<<");
+    private final static Pileup GOOD_NORMAL = PileupFile.fromString("chr2\t156\tA\t10\t...G..GGGG\t<975;:<<<<<");
 
     @Test
     public void testDepths() {
-        final Pileup normal = PileupFile.fromString("seq2\t156\tA\t11\t.$......+2AG.+2AG.+2AGGG\t<975;:<<<<<");
-        final Pileup tumor = PileupFile.fromString("seq2\t156\tA\t31\t.$......+2AG.+2AG.+2AGGG\t<975;:<<<<<");
+        final Pileup normal = PileupFile.fromString("chr2\t156\tA\t11\t.$......+2AG.+2AG.+2AGGG\t<975;:<<<<<");
+        final Pileup tumor = PileupFile.fromString("chr2\t156\tA\t31\t.$......+2AG.+2AG.+2AGGG\t<975;:<<<<<");
         assertNotEquals(normal.readCount(), tumor.readCount());
 
         final AmberBAF victim = BAFFactory.create('A', normal, tumor);
@@ -42,7 +42,7 @@ public class BAFFactoryTest {
 
     @Test
     public void testWorking() {
-        final Pileup tumor = PileupFile.fromString("seq2\t156\tA\t10\t.GGGGGGGGG\t<975;:<<<<<");
+        final Pileup tumor = PileupFile.fromString("chr2\t156\tA\t10\t.GGGGGGGGG\t<975;:<<<<<");
 
         final List<AmberBAF> result = VICTIM.create(Collections.singletonList(GOOD_NORMAL), Collections.singletonList(tumor));
         assertEquals(1, result.size());
@@ -56,7 +56,7 @@ public class BAFFactoryTest {
 
     @Test
     public void testNoTumorReadCount() {
-        final Pileup tumor = PileupFile.fromString("seq2\t156\tA\t0\t*\t*");
+        final Pileup tumor = PileupFile.fromString("chr2\t156\tA\t0\t*\t*");
 
         final List<AmberBAF> result = VICTIM.create(Collections.singletonList(GOOD_NORMAL), Collections.singletonList(tumor));
         assertEquals(0, result.size());
@@ -65,7 +65,7 @@ public class BAFFactoryTest {
 
     @Test
     public void testInvalidBAF() {
-        final Pileup tumor = PileupFile.fromString("seq2\t156\tA\t10\tCCCCCCCCCC\t*");
+        final Pileup tumor = PileupFile.fromString("chr2\t156\tA\t10\tCCCCCCCCCC\t*");
 
         final List<AmberBAF> result = VICTIM.create(Collections.singletonList(GOOD_NORMAL), Collections.singletonList(tumor));
         assertEquals(0, result.size());

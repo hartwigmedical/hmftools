@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 public enum StructuralVariantType {
     BND,
+    SGL,
     INV,
     DEL,
     INS,

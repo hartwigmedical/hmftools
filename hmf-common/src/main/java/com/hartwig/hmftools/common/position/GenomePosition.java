@@ -13,9 +13,11 @@ public interface GenomePosition extends Comparable<GenomePosition> {
 
     @Override
     default int compareTo(@NotNull final GenomePosition other) {
-        if (chromosome().equals(other.chromosome())) {
+        int chromosomeCompare = HumanChromosome.fromString(chromosome()).compareTo(HumanChromosome.fromString(other.chromosome()));
+        if (chromosomeCompare == 0) {
             return Long.compare(position(), other.position());
         }
-        return HumanChromosome.fromString(chromosome()).compareTo(HumanChromosome.fromString(other.chromosome()));
+
+        return chromosomeCompare;
     }
 }

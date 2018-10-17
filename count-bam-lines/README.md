@@ -22,7 +22,7 @@ Segmentation is done with the Bioconductor [copynumber](http://bioconductor.org/
 This can be installed in R with the following commands:
 ```
    source("https://bioconductor.org/biocLite.R")
-   biocLite("copy number")
+   biocLite("copynumber")
 ```
 
 

@@ -500,6 +500,7 @@ CREATE TABLE structuralVariant
     startLinkedBy varchar(512),
     endLinkedBy varchar(512),
     vcfId varchar(255),
+    recovered BOOLEAN NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );

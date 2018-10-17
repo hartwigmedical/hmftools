@@ -23,5 +23,4 @@ public final class ExpectedBAF {
 
         return totalProbability / (maxDepth - minDepth);
     }
-
 }
