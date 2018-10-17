@@ -149,7 +149,8 @@ public abstract class PatientReporter {
                 reportableDisruptions,
                 PatientReporterFileLoader.findCircosPlotPath(runDirectory, tumorSample),
                 Optional.ofNullable(comments),
-                baseReportData().signaturePath());
+                baseReportData().signaturePath(),
+                baseReportData().logoPath());
     }
 
     @NotNull

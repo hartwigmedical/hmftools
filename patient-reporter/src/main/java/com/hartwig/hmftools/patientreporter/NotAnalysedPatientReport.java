@@ -30,5 +30,8 @@ public abstract class NotAnalysedPatientReport implements PatientReport {
     @NotNull
     @Override
     public abstract String signaturePath();
+
+    @NotNull
+    public abstract String logoPath();
 }
 
