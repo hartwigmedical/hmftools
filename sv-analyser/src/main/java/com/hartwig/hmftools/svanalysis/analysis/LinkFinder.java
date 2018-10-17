@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.sameChrArm;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveLinkedAssemblies;
@@ -145,6 +149,81 @@ public class LinkFinder
 
         return linkedPairs;
     }
+    public static boolean areLinkedSection(final SvVarData v1, final SvVarData v2, boolean v1Start, boolean v2Start)
+    {
+        return areLinkedSection(v1, v2, v1Start, v2Start, false);
+    }
+
+    public static double LINKED_PAIR_MAX_COPY_NUM_DIFF = 0.25;
+    public static double LINKED_PAIR_MAX_COPY_NUM_DIFF_PERC = 0.1;
+
+    public static boolean areLinkedSection(final SvVarData v1, final SvVarData v2, boolean v1Start, boolean v2Start, boolean checkCopyNumberMatch)
+    {
+        // templated insertions are allowed to traverse the centromere
+        if(v1.position(v1Start) < 0 || v2.position(v1Start) < 0)
+            return false;
+
+        if(!v1.chromosome(v1Start).equals(v2.chromosome(v2Start)))
+            return false;
+
+        // if(!sameChrArm(v1, v2, v1Start, v2Start))
+        //     return false;
+
+        // start apart and heading towards each other
+        long pos1 = v1.position(v1Start);
+        boolean headsLeft1 = (v1.orientation(v1Start) == 1);
+        long pos2 = v2.position(v2Start);
+        boolean headsLeft2 = (v2.orientation(v2Start) == 1);
+
+        boolean breakendsFace = false;
+        if(pos1 < pos2 && !headsLeft1 && headsLeft2)
+            breakendsFace = true;
+        else if(pos2 < pos1 && headsLeft1 && !headsLeft2)
+            breakendsFace = true;
+
+        if(!breakendsFace)
+            return false;
+
+        if(checkCopyNumberMatch)
+        {
+            boolean skipReplicated = v1.isReplicatedSv() || v1.getReplicatedCount() > 0 || v2.isReplicatedSv() || v2.getReplicatedCount() > 0;
+
+            if(!skipReplicated)
+            {
+                double cn1 = v1.copyNumber(v1Start);
+                double cn2 = v2.copyNumber(v2Start);
+                double copyNumDiff = abs(cn2 - cn1);
+                double copyNumDiffPerc = copyNumDiff / max(abs(cn1), abs(cn2));
+
+                if (copyNumDiff > LINKED_PAIR_MAX_COPY_NUM_DIFF && copyNumDiffPerc > LINKED_PAIR_MAX_COPY_NUM_DIFF_PERC)
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static boolean areSectionBreak(final SvVarData v1, final SvVarData v2, boolean v1Start, boolean v2Start)
+    {
+        // only relevant if on same chromosomal arm
+        if(!sameChrArm(v1, v2, v1Start, v2Start))
+            return false;
+
+        // start apart or equal and heading same direction
+        long pos1 = v1.position(v1Start);
+        boolean headsLeft1 = (v1.orientation(v1Start) == 1);
+        long pos2 = v2.position(v2Start);
+        boolean headsLeft2 = (v2.orientation(v2Start) == 1);
+
+        if(pos1 <= pos2 && headsLeft1 && !headsLeft2)
+            return true;
+
+        if(pos2 <= pos1 && !headsLeft1 && headsLeft2)
+            return true;
+
+        return false;
+    }
+
 
     public List<SvLinkedPair> createInferredLinkedPairs(SvCluster cluster, boolean allowSingleBEs)
     {
@@ -205,12 +284,12 @@ public class LinkFinder
 
                         SvLinkedPair newPair = null;
 
-                        if (mUtils.areLinkedSection(var1, var2, v1Start, v2Start))
+                        if (areLinkedSection(var1, var2, v1Start, v2Start))
                         {
                             // form a new TI from these 2 BEs
                             newPair = new SvLinkedPair(var1, var2, LINK_TYPE_TI, v1Start, v2Start);
                         }
-                        else if (mUtils.areSectionBreak(var1, var2, v1Start, v2Start))
+                        else if (areSectionBreak(var1, var2, v1Start, v2Start))
                         {
                             // form a new DB from these 2 BEs
                             newPair = new SvLinkedPair(var1, var2, LINK_TYPE_DB, v1Start, v2Start);
@@ -278,7 +357,7 @@ public class LinkFinder
         if(linkedPairs.isEmpty())
             return linkedPairs;
 
-        LOGGER.debug("sample({}) cluster({}) has {} inferred linked pairs", cluster.getId(), linkedPairs.size());
+        LOGGER.debug("cluster({}) has {} inferred linked pairs", cluster.getId(), linkedPairs.size());
 
         return linkedPairs;
     }
@@ -337,7 +416,7 @@ public class LinkFinder
                 if(!var2.isNullBreakend())
                     continue;
 
-                if (!mUtils.areSectionBreak(var1, var2, true, true))
+                if (!areSectionBreak(var1, var2, true, true))
                     continue;
 
                 // form a new DB from these 2 BEs

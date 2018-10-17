@@ -8,6 +8,7 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getProximity;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
@@ -144,7 +145,7 @@ public class ChainFinder
             mMinIncompleteChainCount = (int)round(MIN_CHAIN_PERCENT * mReqChainCount);
 
         // check whether there are enough potential links to form full or near-to-full chains
-        if (!checkLinksPotential(svList, inferredTIs))
+        if (!mCluster.hasSubClusters() && !checkLinksPotential(svList, inferredTIs))
             return false;
 
         if (mCluster.getCount() >= 4)
@@ -689,7 +690,7 @@ public class ChainFinder
                 if (otherVar.isAssemblyMatched(otherVarStart))
                     continue;
 
-                if (!mUtils.areLinkedSection(var, otherVar, useStart, otherVarStart))
+                if (!areLinkedSection(var, otherVar, useStart, otherVarStart, !mCluster.hasReplicatedSVs()))
                     continue;
 
                 int tiLength = getProximity(var, otherVar, useStart, otherVarStart);
@@ -1110,7 +1111,7 @@ public class ChainFinder
         {
             final SvVarData unlinkedSv = (i == 0) ? chain.getFirstSV() : chain.getLastSV();
 
-            if(unlinkedSv.type() != INV && (unlinkedSv.type() != BND && !unlinkedSv.isNullBreakend()))
+            if(unlinkedSv.type() != INV && !unlinkedSv.isTranslocation())
                 continue;
 
             boolean useStartPosition = unlinkedSv.orientation(true) == -1;

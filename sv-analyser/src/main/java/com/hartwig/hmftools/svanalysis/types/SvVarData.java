@@ -3,9 +3,11 @@ package com.hartwig.hmftools.svanalysis.types;
 import static java.lang.Math.abs;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator.NO_FS;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
@@ -69,7 +71,6 @@ public class SvVarData
     public static String ASSEMBLY_TYPE_TI = "asm";
     public static String ASSEMBLY_TYPE_OTHER = "bpb";
 
-    public static String SINGLE_BREAKEND_TYPE = "SGL";
     public static String RELATION_TYPE_NEIGHBOUR = "NHBR";
     public static String RELATION_TYPE_OVERLAP = "OVRL";
 
@@ -200,7 +201,7 @@ public class SvVarData
 
     public final long length()
     {
-        if(type() == StructuralVariantType.BND || position(false) < 0)
+        if(isTranslocation())
             return 0;
 
         return abs(position(false) - position(true));
@@ -266,10 +267,8 @@ public class SvVarData
 
     public final String typeStr()
     {
-        if(type() != StructuralVariantType.BND && mStartArm != mEndArm)
+        if(!isTranslocation() && mStartArm != mEndArm)
             return "CRS";
-        else if(isNullBreakend())
-            return SINGLE_BREAKEND_TYPE;
         else
             return type().toString();
     }
@@ -283,6 +282,15 @@ public class SvVarData
     public final boolean isSimpleType()
     {
         return (type() == DEL || type() == DUP || type() == INS);
+    }
+
+    public static boolean isTranslocation(StructuralVariantType type)
+    {
+        return (type == BND || type == SGL);
+    }
+    public boolean isTranslocation()
+    {
+        return isTranslocation(type());
     }
 
     public static boolean isStart(int svIter) { return svIter == SVI_START; }

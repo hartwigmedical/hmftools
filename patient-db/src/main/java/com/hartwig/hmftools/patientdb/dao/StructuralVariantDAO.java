@@ -82,7 +82,7 @@ class StructuralVariantDAO {
                     .adjustedEndCopyNumber(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER)))
                     .adjustedEndCopyNumberChange(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE)))
                     .ploidy(getValueNotNull(record.getValue(STRUCTURALVARIANT.PLOIDY)))
-                    .type(StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
+                    .type(isSingleBreakend ? StructuralVariantType.SGL : StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
                     .homology(record.getValue(STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE))
                     .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
                     .filter(record.getValue(STRUCTURALVARIANT.FILTER))

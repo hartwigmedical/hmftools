@@ -2,7 +2,7 @@ package com.hartwig.hmftools.svanalysis.types;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.MIN_TEMPLATED_INSERTION_LENGTH;
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 
 import java.util.List;
 

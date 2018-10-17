@@ -31,11 +31,8 @@ public class ClusterAnalyser {
     private ChainFinder mChainFinder;
     private LinkFinder mLinkFinder;
 
-    public static int MIN_TEMPLATED_INSERTION_LENGTH = 30;
-    private static int MAX_TEMPLATED_INSERTION_LENGTH = 500;
     public static double MAX_COPY_NUMBER_DIFF = 0.5;
     public static double MAX_COPY_NUMBER_DIFF_PERC = 0.1;
-    public static int CLUSTER_SIZE_ANALYSIS_LIMIT = 200;
     public static int SMALL_CLUSTER_SIZE = 3;
 
     public static String TRANS_TYPE_TRANS = "TRANS";

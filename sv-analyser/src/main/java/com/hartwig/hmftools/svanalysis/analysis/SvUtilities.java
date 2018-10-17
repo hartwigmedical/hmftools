@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
@@ -293,54 +294,6 @@ public class SvUtilities {
             return false;
 
         return v1.chromosome(v1Start).equals(v2.chromosome(v2Start)) && v1.arm(v1Start) == v2.arm(v2Start);
-    }
-
-    public static boolean areLinkedSection(final SvVarData v1, final SvVarData v2, boolean v1Start, boolean v2Start)
-    {
-        // templated insertions are allowed to traverse the centromere
-        if(v1.position(v1Start) < 0 || v2.position(v1Start) < 0)
-            return false;
-
-        if(!v1.chromosome(v1Start).equals(v2.chromosome(v2Start)))
-            return false;
-
-        // if(!sameChrArm(v1, v2, v1Start, v2Start))
-        //     return false;
-
-        // start apart and heading towards each other
-        long pos1 = v1.position(v1Start);
-        boolean headsLeft1 = (v1.orientation(v1Start) == 1);
-        long pos2 = v2.position(v2Start);
-        boolean headsLeft2 = (v2.orientation(v2Start) == 1);
-
-        if(pos1 < pos2 && !headsLeft1 && headsLeft2)
-            return true;
-
-        if(pos2 < pos1 && headsLeft1 && !headsLeft2)
-            return true;
-
-        return false;
-    }
-
-    public static boolean areSectionBreak(final SvVarData v1, final SvVarData v2, boolean v1Start, boolean v2Start)
-    {
-        // only relevant if on same chromosomal arm
-        if(!sameChrArm(v1, v2, v1Start, v2Start))
-            return false;
-
-        // start apart or equal and heading same direction
-        long pos1 = v1.position(v1Start);
-        boolean headsLeft1 = (v1.orientation(v1Start) == 1);
-        long pos2 = v2.position(v2Start);
-        boolean headsLeft2 = (v2.orientation(v2Start) == 1);
-
-        if(pos1 <= pos2 && headsLeft1 && !headsLeft2)
-            return true;
-
-        if(pos2 <= pos1 && !headsLeft1 && headsLeft2)
-            return true;
-
-        return false;
     }
 
     public static boolean variantMatchesBreakend(final SvVarData var, final SvBreakend breakend, boolean useStart, int permittedDist)

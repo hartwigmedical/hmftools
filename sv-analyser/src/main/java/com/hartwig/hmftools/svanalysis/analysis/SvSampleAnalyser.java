@@ -249,7 +249,7 @@ public class SvSampleAnalyser {
                 mFileWriter = writer;
 
                 // definitional fields
-                writer.write("SampleId,ClusterId,ClusterCount,Id,Type,Ploidy");
+                writer.write("SampleId,ClusterId,SubClusterId,ClusterCount,Id,Type,Ploidy");
 
                 // position and copy number
                 writer.write(",ChrStart,PosStart,OrientStart,ArmStart,AdjAFStart,AdjCNStart,AdjCNChgStart");
@@ -298,13 +298,26 @@ public class SvSampleAnalyser {
                     if(var.isReplicatedSv())
                         continue;
 
+                    SvCluster subCluster = cluster;
+                    if(cluster.hasSubClusters())
+                    {
+                        for(final SvCluster sc : cluster.getSubClusters())
+                        {
+                            if(sc.getSVs().contains(var))
+                            {
+                                subCluster = sc;
+                                break;
+                            }
+                        }
+                    }
+
                     final StructuralVariantData dbData = var.getSvData();
 
                     ++svCount;
 
                     writer.write(
-                            String.format("%s,%d,%d,%s,%s,%.2f",
-                                    mSampleId, cluster.getId(), varCount, var.id(), var.typeStr(), dbData.ploidy()));
+                            String.format("%s,%d,%d,%d,%s,%s,%.2f",
+                                    mSampleId, cluster.getId(), subCluster.getId(), varCount, var.id(), var.typeStr(), dbData.ploidy()));
 
                     writer.write(
                             String.format(",%s,%d,%d,%s,%.2f,%.2f,%.2f,%s,%d,%d,%s,%.2f,%.2f,%.2f",

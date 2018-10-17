@@ -424,7 +424,7 @@ public class SvCluster
     {
         for (final SvVarData var : mSVs)
         {
-            if(var.type() == BND && (var.isLineElement(true) || var.isLineElement(false)))
+            if(var.isTranslocation() && (var.isLineElement(true) || var.isLineElement(false)))
                 return true;
         }
 

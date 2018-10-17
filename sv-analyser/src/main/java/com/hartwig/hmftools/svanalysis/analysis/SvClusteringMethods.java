@@ -616,7 +616,7 @@ public class SvClusteringMethods {
                 double telomereCopyNumber;
                 boolean useCopyNumber;
 
-                if(var.type() != BND)
+                if(!var.isTranslocation())
                 {
                     if((i == 0 && var.orientation(true) == 1) || (i == 1 && var.orientation(false) == -1))
                         useCopyNumber = true;
