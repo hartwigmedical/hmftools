@@ -32,8 +32,9 @@ public final class ActionabilityVariantAnalyzer {
             @NotNull ActionabilityAnalyzer actionabilityAnalyzerData) {
         Map<T, VariantEvidenceItems> evidenceItemsPerVariant = Maps.newHashMap();
 
-        List<T> variantsOnActionableGenes =
-                variants.stream().filter(variant -> actionableGenesVariants.contains(variant.gene())).collect(Collectors.toList());
+        List<T> variantsOnActionableGenes = variants.stream()
+                .filter(variant -> actionableGenesVariants.contains(variant.gene())
+                        && CODING_EFFECTS.contains(variant.canonicalCodingEffect())).collect(Collectors.toList());
 
         for (T variant : variantsOnActionableGenes) {
             evidenceItemsPerVariant.put(variant,
@@ -73,10 +74,10 @@ public final class ActionabilityVariantAnalyzer {
                 .filter(geneCopyNumber -> actionableGenesVariantsCNVs.contains(geneCopyNumber.gene()))
                 .collect(Collectors.toList());
 
-//        for (T CNV : variantsOnActionableGenes) {
-//            evidenceItemsPerVariantCNVs.put(CNV,
-//                    actionabilityAnalyzerData.cnvAnalyzer().actionableCNVs(CNV, doidsPrimaryTumorLocation, actionabilityAnalyzerData));
-//        }
+        for (T CNV : variantsOnActionableGenes) {
+            evidenceItemsPerVariantCNVs.put(CNV,
+                    actionabilityAnalyzerData.cnvAnalyzer().actionableCNVs(CNV, doidsPrimaryTumorLocation, actionabilityAnalyzerData));
+        }
 
         return evidenceItemsPerVariantCNVs;
     }
