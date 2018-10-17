@@ -249,7 +249,7 @@ public class SvSampleAnalyser {
                 mFileWriter = writer;
 
                 // definitional fields
-                writer.write("SampleId,ClusterId,SubClusterId,ClusterCount,Id,Type,Ploidy");
+                writer.write("SampleId,Id,Type,ClusterId,SubClusterId,ClusterCount,Ploidy");
 
                 // position and copy number
                 writer.write(",ChrStart,PosStart,OrientStart,ArmStart,AdjAFStart,AdjCNStart,AdjCNChgStart");
@@ -316,8 +316,8 @@ public class SvSampleAnalyser {
                     ++svCount;
 
                     writer.write(
-                            String.format("%s,%d,%d,%d,%s,%s,%.2f",
-                                    mSampleId, cluster.getId(), subCluster.getId(), varCount, var.id(), var.typeStr(), dbData.ploidy()));
+                            String.format("%s,%s,%s,%d,%d,%d,%.2f",
+                                    mSampleId, var.id(), var.typeStr(), cluster.getId(), subCluster.getId(), varCount, dbData.ploidy()));
 
                     writer.write(
                             String.format(",%s,%d,%d,%s,%.2f,%.2f,%.2f,%s,%d,%d,%s,%.2f,%.2f,%.2f",

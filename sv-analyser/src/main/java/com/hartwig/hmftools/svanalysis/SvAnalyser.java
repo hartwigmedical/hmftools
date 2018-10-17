@@ -42,6 +42,7 @@ public class SvAnalyser {
     private static final String LOG_VCF_MANTA_DATA = "log_vcf_manta_data";
     private static final String LINE_ELEMENT_FILE = "line_element_file";
     private static final String COPY_NUMBER_ANALYSIS = "copy_number_analysis";
+    private static final String RUN_RESULTS_CHECKER = "run_results_checker";
     private static final String COPY_NUMBER_FILE = "cn_file";
     private static final String EXTERNAL_DATA_LINK_FILE = "ext_data_link_file";
 
@@ -142,6 +143,22 @@ public class SvAnalyser {
 
         sampleAnalyser.close();
 
+        if(cmd.hasOption(RUN_RESULTS_CHECKER))
+        {
+            ResultsChecker resultsChecker = new ResultsChecker();
+            resultsChecker.setLogMismatches(cmd.hasOption(LOG_DEBUG));
+
+            if(resultsChecker.loadConfig(cmd))
+            {
+                resultsChecker.addDefaultColumnsToCheck();
+                if(resultsChecker.runChecks())
+                    LOGGER.info("results validation passed");
+                else
+                    LOGGER.warn("results validation failed");
+            }
+        }
+
+
         LOGGER.info("run complete");
     }
 
@@ -187,8 +204,10 @@ public class SvAnalyser {
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file for SVs");
         options.addOption(COPY_NUMBER_ANALYSIS, false, "Run copy number analysis");
         options.addOption(COPY_NUMBER_FILE, true, "Copy number CSV file");
+        options.addOption(RUN_RESULTS_CHECKER, false, "Check results vs validation file");
 
         SvClusteringConfig.addCmdLineArgs(options);
+        ResultsChecker.addCmdLineArgs(options);
 
         return options;
     }
