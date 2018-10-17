@@ -55,7 +55,7 @@ public final class ActionabilityVariantAnalyzer {
 
         //        for (T CNV : variantsOnActionableGenes) {
         //            evidenceItemsPerVariantCNVs.put(CNV,
-        //                    actionabilityAnalyzerData.cnvAnalyzer().actionableCNVs(CNV, doidsPrimaryTumorLocation, actionabilityAnalyzerData));
+        //                    actionabilityAnalyzerData.cnvAnalyzer().evidenceForCopyNumberEvent(CNV, doidsPrimaryTumorLocation, actionabilityAnalyzerData));
         //        }
 
         return evidenceItemsPerVariantCNVs;

@@ -23,7 +23,7 @@ public abstract class EvidenceItemDataSource {
     public static final FieldBuilder<?> GENE_FIELD = field("Gene", String.class);
     public static final FieldBuilder<?> EVENT_FIELD = field("variant", String.class);
     public static final FieldBuilder<?> DRUG_FIELD = field("drug", String.class);
-    public static final FieldBuilder<?> DRUGS_TYPE_FIELD = field("drugs type", String.class);
+    public static final FieldBuilder<?> DRUGS_TYPE_FIELD = field("drug type", String.class);
     public static final FieldBuilder<?> LEVEL_FIELD = field("level", String.class);
     public static final FieldBuilder<?> RESPONSE_FIELD = field("response", String.class);
     public static final FieldBuilder<?> SOURCE_FIELD = field("source", String.class);

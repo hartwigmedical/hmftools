@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ActionabilityCNVs {
+abstract class ActionableCopyNumber {
 
     @NotNull
     public abstract String gene();
@@ -22,7 +22,7 @@ public abstract class ActionabilityCNVs {
     public abstract String reference();
 
     @NotNull
-    public abstract String drugsName();
+    public abstract String drug();
 
     @NotNull
     public abstract String drugsType();
@@ -31,8 +31,8 @@ public abstract class ActionabilityCNVs {
     public abstract String cancerType();
 
     @NotNull
-    public abstract String hmfLevel();
+    public abstract String level();
 
     @NotNull
-    public abstract String hmfResponse();
+    public abstract String response();
 }
