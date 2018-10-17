@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

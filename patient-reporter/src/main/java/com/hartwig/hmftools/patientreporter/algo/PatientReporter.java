@@ -113,7 +113,8 @@ public abstract class PatientReporter {
 
         LOGGER.info("Printing evidence results:");
         LOGGER.info(" Number of actionability variants to report: " + Integer.toString(somaticVariantAnalysis.evidencePerVariant().size()));
-        LOGGER.info(" Number of actionability CNVs to report: " + Integer.toString(somaticVariantAnalysis.evidencePerCopyNumber().size()));
+        LOGGER.info(" Number of actionability gene copy numbers to report: " + Integer.toString(somaticVariantAnalysis.evidencePerCopyNumber().size()));
+       // LOGGER.info("Number of actionability fusions to report: " + Integer.toString(somaticVariantAnalysis.evidenceFusions().size()));
 
         final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample,
                 patientTumorLocation,

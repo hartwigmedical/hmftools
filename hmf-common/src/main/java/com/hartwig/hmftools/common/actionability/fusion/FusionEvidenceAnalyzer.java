@@ -34,7 +34,7 @@ public class FusionEvidenceAnalyzer {
         for (ActionableFusion fusionPairsSet : fusionPairs) {
             genes.add(fusionPairsSet.fiveGene());
         }
-        for (ActionablePromiscuousThree promiscuousThreeSet: promiscuousThree) {
+        for (ActionablePromiscuousThree promiscuousThreeSet : promiscuousThree) {
             genes.add(promiscuousThreeSet.gene());
         }
         for (ActionablePromiscuousFive promiscuousFiveSet : promiscuousFive) {
@@ -44,8 +44,10 @@ public class FusionEvidenceAnalyzer {
     }
 
     @NotNull
-    public List<EvidenceItem> actionableFusions(@NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
-            @Nullable String doidsPrimaryTumorLocation) {
-        return Lists.newArrayList();
+    public List<EvidenceItem> actionableFusions(@Nullable String doidsPrimaryTumorLocation,
+            @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
+        List<EvidenceItem> evidenceItems = Lists.newArrayList();
+
+        return evidenceItems;
     }
 }

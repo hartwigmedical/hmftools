@@ -64,6 +64,7 @@ public final class SomaticVariantAnalyzer {
 
         Set<String> actionableGenesVariants = actionabilityAnalyzerData.variantAnalyzer().actionableGenes();
         Set<String> actionableGenesCNVS = actionabilityAnalyzerData.cnvAnalyzer().actionableGenes();
+        Set<String> actionableFusions = actionabilityAnalyzerData.fusionAnalyzer().actionableGenes();
 
         LOGGER.info("evidencePerVariant items variants");
         Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant = ActionabilityVariantAnalyzer.findEvidenceForVariants(
@@ -77,7 +78,14 @@ public final class SomaticVariantAnalyzer {
                 actionableGenesCNVS,
                 geneCopyNumbers,
                 doidsPrimaryTumorLocation,
-                actionabilityAnalyzerData, purplePloidy);
+                actionabilityAnalyzerData,
+                purplePloidy);
+
+        LOGGER.info("evidencePerVariant items fusions");
+        Map<GeneFusion, List<EvidenceItem>> evidencePerFusion = ActionabilityVariantAnalyzer.findEvidenceFusion(actionableFusions,
+                fusions,
+                doidsPrimaryTumorLocation,
+                actionabilityAnalyzerData);
 
         return ImmutableSomaticVariantAnalysis.of(variantsToReport,
                 driverCatalog,
