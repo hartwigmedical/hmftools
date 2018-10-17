@@ -10,9 +10,6 @@ import org.jetbrains.annotations.Nullable;
 public abstract class EvidenceItem {
 
     @NotNull
-    public abstract String gene();
-
-    @NotNull
     public abstract String event();
 
     @NotNull

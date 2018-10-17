@@ -17,32 +17,30 @@ import net.sf.dynamicreports.report.datasource.DRDataSource;
 import net.sf.dynamicreports.report.definition.ReportParameters;
 import net.sf.jasperreports.engine.JRDataSource;
 
-public abstract class EvidenceItemDataSource {
+public final class EvidenceItemDataSource {
     private static final Logger LOGGER = LogManager.getLogger(EvidenceItemDataSource.class);
 
-    public static final FieldBuilder<?> GENE_FIELD = field("Gene", String.class);
-    public static final FieldBuilder<?> EVENT_FIELD = field("variant", String.class);
+    public static final FieldBuilder<?> EVENT_FIELD = field("event", String.class);
     public static final FieldBuilder<?> DRUG_FIELD = field("drug", String.class);
     public static final FieldBuilder<?> DRUGS_TYPE_FIELD = field("drug type", String.class);
     public static final FieldBuilder<?> LEVEL_FIELD = field("level", String.class);
     public static final FieldBuilder<?> RESPONSE_FIELD = field("response", String.class);
     public static final FieldBuilder<?> SOURCE_FIELD = field("source", String.class);
-    private static final FieldBuilder<?> REFERENCE_FIELD = field("reference", String.class);
     public static final FieldBuilder<?> ON_LABEL_FIELD = field("on_label", String.class);
+    private static final FieldBuilder<?> REFERENCE_FIELD = field("reference", String.class);
 
     private EvidenceItemDataSource() {
     }
 
     @NotNull
     public static FieldBuilder<?>[] evidenceItemFields() {
-        return new FieldBuilder<?>[] { GENE_FIELD, EVENT_FIELD, DRUG_FIELD, DRUGS_TYPE_FIELD, LEVEL_FIELD, RESPONSE_FIELD, SOURCE_FIELD,
-                REFERENCE_FIELD, ON_LABEL_FIELD };
+        return new FieldBuilder<?>[] { EVENT_FIELD, DRUG_FIELD, DRUGS_TYPE_FIELD, LEVEL_FIELD, RESPONSE_FIELD, SOURCE_FIELD, ON_LABEL_FIELD,
+                REFERENCE_FIELD };
     }
 
     @NotNull
     public static JRDataSource fromEvidenceItems(@NotNull List<EvidenceItem> evidenceItems) {
-        final DRDataSource evidenceItemDataSource = new DRDataSource(GENE_FIELD.getName(),
-                EVENT_FIELD.getName(),
+        final DRDataSource evidenceItemDataSource = new DRDataSource(EVENT_FIELD.getName(),
                 DRUG_FIELD.getName(),
                 DRUGS_TYPE_FIELD.getName(),
                 LEVEL_FIELD.getName(),
@@ -52,8 +50,7 @@ public abstract class EvidenceItemDataSource {
                 ON_LABEL_FIELD.getName());
 
         for (EvidenceItem evidenceItem : evidenceItems) {
-            evidenceItemDataSource.add(evidenceItem.gene(),
-                    evidenceItem.event(),
+            evidenceItemDataSource.add(evidenceItem.event(),
                     evidenceItem.drug(),
                     evidenceItem.drugsType(),
                     evidenceItem.level(),

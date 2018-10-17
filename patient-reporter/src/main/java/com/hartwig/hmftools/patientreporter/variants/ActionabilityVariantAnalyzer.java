@@ -6,20 +6,15 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class ActionabilityVariantAnalyzer {
-
-    private static final Set<CodingEffect> CODING_EFFECTS =
-            Sets.newHashSet(CodingEffect.SPLICE, CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.MISSENSE);
 
     private ActionabilityVariantAnalyzer() {
     }
@@ -30,12 +25,10 @@ public final class ActionabilityVariantAnalyzer {
             @NotNull ActionabilityAnalyzer actionabilityAnalyzerData) {
         Map<T, List<EvidenceItem>> evidenceItemsPerVariant = Maps.newHashMap();
 
-        List<T> codingVariantsOnActionableGenesRanges = variants.stream()
-                .filter(variant -> actionableGenesVariants.contains(variant.gene())
-                        && CODING_EFFECTS.contains(variant.canonicalCodingEffect()))
-                .collect(Collectors.toList());
+        List<T> variantsOnActionableGenesRanges =
+                variants.stream().filter(variant -> actionableGenesVariants.contains(variant.gene())).collect(Collectors.toList());
 
-        for (T variant : codingVariantsOnActionableGenesRanges) {
+        for (T variant : variantsOnActionableGenesRanges) {
             evidenceItemsPerVariant.put(variant,
                     actionabilityAnalyzerData.variantAnalyzer()
                             .evidenceForSomaticVariant(variant, doidsPrimaryTumorLocation, actionabilityAnalyzerData.cancerTypeAnalyzer()));
@@ -44,8 +37,8 @@ public final class ActionabilityVariantAnalyzer {
     }
 
     @NotNull
-    public static Map<GeneCopyNumber, List<EvidenceItem>> detectCNVs(
-            @NotNull Set<String> actionableGenesVariantsCNVs, @NotNull List<GeneCopyNumber> CNVs, @Nullable String doidsPrimaryTumorLocation,
+    public static Map<GeneCopyNumber, List<EvidenceItem>> detectCNVs(@NotNull Set<String> actionableGenesVariantsCNVs,
+            @NotNull List<GeneCopyNumber> CNVs, @Nullable String doidsPrimaryTumorLocation,
             @NotNull ActionabilityAnalyzer actionabilityAnalyzerData) {
         Map<GeneCopyNumber, List<EvidenceItem>> evidenceItemsPerVariantCNVs = Maps.newHashMap();
 

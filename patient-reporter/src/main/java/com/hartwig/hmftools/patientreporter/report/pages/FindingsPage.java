@@ -82,8 +82,7 @@ public abstract class FindingsPage {
     private static ComponentBuilder<?, ?> evidenceItemReportVariant(@NotNull AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> table = report.evidenceItems().size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(EvidenceItemDataSource.evidenceItemFields())
-                .columns(col.column("Gene", EvidenceItemDataSource.GENE_FIELD),
-                        col.column("Event", EvidenceItemDataSource.EVENT_FIELD),
+                .columns(col.column("Event", EvidenceItemDataSource.EVENT_FIELD),
                         col.column("Drug", EvidenceItemDataSource.DRUG_FIELD),
                         col.column("Drugs type", EvidenceItemDataSource.DRUGS_TYPE_FIELD),
                         col.column("Level", EvidenceItemDataSource.LEVEL_FIELD),

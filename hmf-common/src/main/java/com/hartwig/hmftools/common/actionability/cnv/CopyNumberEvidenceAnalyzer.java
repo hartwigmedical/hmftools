@@ -43,7 +43,7 @@ public class CopyNumberEvidenceAnalyzer {
             if (checkCNVType(minCopyValue).equals(actionableCopyNumber.cnvType())) {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableCopyNumber(actionableCopyNumber);
 
-                evidenceBuilder.event(actionableCopyNumber.cnvType());
+                evidenceBuilder.event(geneCopyNumber.gene() + " " + actionableCopyNumber.cnvType());
                 evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionableCopyNumber.cancerType(),
                         doidsPrimaryTumorLocation));
 
@@ -68,7 +68,6 @@ public class CopyNumberEvidenceAnalyzer {
     @NotNull
     private static ImmutableEvidenceItem.Builder fromActionableCopyNumber(@NotNull ActionableCopyNumber actionableCopyNumber) {
         return ImmutableEvidenceItem.builder()
-                .gene(actionableCopyNumber.gene())
                 .reference(actionableCopyNumber.reference())
                 .source(actionableCopyNumber.source())
                 .drug(actionableCopyNumber.drug())
