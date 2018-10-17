@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -11,6 +12,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
+import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
@@ -91,7 +93,9 @@ public abstract class PatientReporter {
                 sequencedReportData().panelGeneModel(),
                 sequencedReportData().highConfidenceRegions(),
                 sequencedReportData().refGenomeFastaFile(),
-                patientTumorLocation, structuralVariantAnalysis.fusions(), sequencedReportData().actionabilityAnalyzer());
+                patientTumorLocation,
+                structuralVariantAnalysis.fusions(),
+                sequencedReportData().actionabilityAnalyzer());
 
         final List<GeneFusion> reportableFusions = structuralVariantAnalysis.reportableFusions();
         final List<GeneDisruption> reportableDisruptions = structuralVariantAnalysis.reportableDisruptions();
@@ -108,11 +112,8 @@ public abstract class PatientReporter {
         LOGGER.info(" Number of gene disruptions to report : " + Integer.toString(reportableDisruptions.size()));
 
         LOGGER.info("Printing evidence results:");
-        LOGGER.info("Number of actionability variants to report: " + Integer.toString(somaticVariantAnalysis.actionableVariantsReport()
-                .size()));
-        LOGGER.info("Number of actionability variants ranges to report: " + Integer.toString(somaticVariantAnalysis.actionableVariantsReportRange()
-                .size()));
-        LOGGER.info("Number of actionability CNVs to report: " + Integer.toString(somaticVariantAnalysis.actionableVariantsCNV().size()));
+        LOGGER.info(" Number of actionability variants to report: " + Integer.toString(somaticVariantAnalysis.evidencePerVariant().size()));
+        LOGGER.info(" Number of actionability CNVs to report: " + Integer.toString(somaticVariantAnalysis.evidencePerCopyNumber().size()));
 
         final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample,
                 patientTumorLocation,
@@ -122,16 +123,21 @@ public abstract class PatientReporter {
                 baseReportData().limsModel().labProceduresForSample(tumorSample),
                 baseReportData().centerModel().getAddresseeStringForSample(tumorSample));
 
+        List<EvidenceItem> evidenceItems = Lists.newArrayList();
+        for (Map.Entry<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant : somaticVariantAnalysis.evidencePerVariant()
+                .entrySet()) {
+            evidenceItems.addAll(evidencePerVariant.getValue());
+        }
+
+        for (Map.Entry<GeneCopyNumber, List<EvidenceItem>> evidencePerCNV : somaticVariantAnalysis.evidencePerCopyNumber().entrySet()) {
+            evidenceItems.addAll(evidencePerCNV.getValue());
+        }
+
         return ImmutableAnalysedPatientReport.of(sampleReport,
                 purpleAnalysis.status(),
                 purpleAnalysis.fittedPurity().purity(),
+                evidenceItems,
                 somaticVariantAnalysis.variantsToReport(),
-                somaticVariantAnalysis.actionableVariantsReport(),
-                somaticVariantAnalysis.actionableVariantsReportRange(),
-                somaticVariantAnalysis.actionableVariantsCNV(),
-                somaticVariantAnalysis.evidence(),
-                somaticVariantAnalysis.evidenceRange(),
-                somaticVariantAnalysis.evidenceCNV(),
                 somaticVariantAnalysis.driverCatalog(),
                 somaticVariantAnalysis.microsatelliteIndelsPerMb(),
                 somaticVariantAnalysis.tumorMutationalLoad(),
@@ -175,7 +181,8 @@ public abstract class PatientReporter {
     private static SomaticVariantAnalysis analyzeSomaticVariants(@NotNull RunContext run, @NotNull PurpleAnalysis purpleAnalysis,
             @NotNull SomaticEnrichment somaticEnrichment, @NotNull GeneModel geneModel,
             @NotNull Multimap<String, GenomeRegion> highConfidenceRegions, @NotNull IndexedFastaSequenceFile refGenomeFastaFile,
-            @Nullable PatientTumorLocation patientTumorLocation, @NotNull List<GeneFusion> fusions, @NotNull ActionabilityAnalyzer actionabilityAnalyzerData) throws IOException {
+            @Nullable PatientTumorLocation patientTumorLocation, @NotNull List<GeneFusion> fusions,
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzerData) throws IOException {
         final String runDirectory = run.runDirectory();
         final String sample = run.tumorSample();
 
@@ -191,7 +198,10 @@ public abstract class PatientReporter {
         return SomaticVariantAnalyzer.run(enrichedSomaticVariants,
                 geneModel.somaticVariantGenePanel(),
                 geneModel.geneDriverCategoryMap(),
-                patientTumorLocation, PatientReporterFileLoader.loadPurpleGeneCopyNumbers(runDirectory, sample), fusions, actionabilityAnalyzerData);
+                patientTumorLocation,
+                PatientReporterFileLoader.loadPurpleGeneCopyNumbers(runDirectory, sample),
+                fusions,
+                actionabilityAnalyzerData);
     }
 
     @NotNull

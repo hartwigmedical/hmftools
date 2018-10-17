@@ -2,8 +2,6 @@ package com.hartwig.hmftools.common.actionability.fusion;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
-
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

@@ -12,9 +12,9 @@ import org.jetbrains.annotations.Nullable;
 public abstract class VariantEvidenceItems {
 
     @NotNull
-    public abstract List<EvidenceItem> onLabel();
+    public abstract List<ActionableSomaticVariant> onLabel();
 
     @NotNull
-    public abstract List<EvidenceItem> offLabel();
+    public abstract List<ActionableSomaticVariant> offLabel();
 
 }

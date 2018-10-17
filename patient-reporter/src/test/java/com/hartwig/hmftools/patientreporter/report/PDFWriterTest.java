@@ -12,18 +12,10 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVs;
-import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVsEvidenceItems;
-import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRange;
-import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRangeEvidenceItem;
-import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
-import com.hartwig.hmftools.common.actionability.somaticvariant.VariantEvidenceItems;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
@@ -94,8 +86,8 @@ public class PDFWriterTest {
         final double tumorMutationalBurden = 10.1;
         final double microsatelliteIndelsPerMb = 2.1;
 
-        final SequencedReportData reporterData = testSequencedReportData();
         final BaseReportData baseReportData = testBaseReportData();
+        final SequencedReportData reporterData = testSequencedReportData();
         final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity);
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, fittedPurity);
@@ -109,27 +101,13 @@ public class PDFWriterTest {
         driverCatalog.addAll(OncoDrivers.drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), somaticVariants));
         driverCatalog.addAll(TsgDrivers.drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), somaticVariants));
 
-        final List<EvidenceItem> actionVariant = Lists.newArrayList();
-        final Map<EnrichedSomaticVariant, VariantEvidenceItems> labelEvidence = Maps.newHashMap();
-
-        final List<ActionabilityRange> actionVariantRange = Lists.newArrayList();
-        final Map<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> labelEvidenceRange = Maps.newHashMap();
-
-        final List<ActionabilityCNVs> actionVariantCNV = Lists.newArrayList();
-        final Map<GeneCopyNumber, ActionabilityCNVsEvidenceItems> labelEvidenceCNV = Maps.newHashMap();
-
         final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
 
         final AnalysedPatientReport patientReport = ImmutableAnalysedPatientReport.of(sampleReport,
                 FittedPurityStatus.NORMAL,
                 impliedTumorPurity,
+                Lists.newArrayList(),
                 somaticVariants,
-                actionVariant,
-                actionVariantRange,
-                actionVariantCNV,
-                labelEvidence,
-                labelEvidenceRange,
-                labelEvidenceCNV,
                 driverCatalog,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,

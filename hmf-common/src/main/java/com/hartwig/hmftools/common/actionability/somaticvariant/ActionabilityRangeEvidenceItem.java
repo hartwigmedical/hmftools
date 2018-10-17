@@ -13,8 +13,8 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ActionabilityRangeEvidenceItem {
 
     @NotNull
-    public abstract List<ActionabilityRange> onLabel();
+    public abstract List<ActionableRange> onLabel();
 
     @NotNull
-    public abstract List<ActionabilityRange> offLabel();
+    public abstract List<ActionableRange> offLabel();
 }

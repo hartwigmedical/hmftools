@@ -9,13 +9,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
+import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeMappingReading;
-import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVs;
-import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVsEvidenceItems;
-import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRange;
-import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRangeEvidenceItem;
-import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
-import com.hartwig.hmftools.common.actionability.somaticvariant.VariantEvidenceItems;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
@@ -69,55 +64,26 @@ public final class SomaticVariantAnalyzer {
         Set<String> actionableGenesVariants = actionabilityAnalyzerData.variantAnalyzer().actionableGenes();
         Set<String> actionableGenesCNVS = actionabilityAnalyzerData.cnvAnalyzer().actionableGenes();
 
-        LOGGER.info("evidence items variants");
-        final List<EvidenceItem> variant = Lists.newArrayList();
-        Map<EnrichedSomaticVariant, VariantEvidenceItems> evidencePerVariant = ActionabilityVariantAnalyzer.detectVariants(
+        LOGGER.info("evidencePerVariant items variants");
+        Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant = ActionabilityVariantAnalyzer.findEvidenceForVariants(
                 actionableGenesVariants,
                 variants,
                 doidsPrimaryTumorLocation,
                 actionabilityAnalyzerData);
 
-        for (Map.Entry<EnrichedSomaticVariant, VariantEvidenceItems> entry : evidencePerVariant.entrySet()) {
-            variant.addAll(entry.getValue().onLabel());
-            variant.addAll(entry.getValue().offLabel());
-        }
-
-        LOGGER.info("evidence items variants ranges");
-        final List<ActionabilityRange> variantRange = Lists.newArrayList();
-        Map<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> evidencePerVariantRanges =
-                ActionabilityVariantAnalyzer.detectVariantsRanges(actionableGenesVariants,
-                        variants,
-                        doidsPrimaryTumorLocation,
-                        actionabilityAnalyzerData);
-
-        for (Map.Entry<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> entryRange : evidencePerVariantRanges.entrySet()) {
-            variantRange.addAll(entryRange.getValue().onLabel());
-            variantRange.addAll(entryRange.getValue().offLabel());
-        }
-
-        LOGGER.info("evidence items CNVs");
-        final List<ActionabilityCNVs> CNVs = Lists.newArrayList();
-        Map<GeneCopyNumber, ActionabilityCNVsEvidenceItems> evidencePerVariantCNVs = ActionabilityVariantAnalyzer.detectCNVs(
+        LOGGER.info("evidencePerVariant items CNVs");
+        Map<GeneCopyNumber, List<EvidenceItem>> evidencePerVariantCNVs = ActionabilityVariantAnalyzer.detectCNVs(
                 actionableGenesCNVS,
                 geneCopyNumbers,
                 doidsPrimaryTumorLocation,
                 actionabilityAnalyzerData);
-
-        for (Map.Entry<GeneCopyNumber, ActionabilityCNVsEvidenceItems> entryCNVs : evidencePerVariantCNVs.entrySet()) {
-            CNVs.addAll(entryCNVs.getValue().onLabel());
-            CNVs.addAll(entryCNVs.getValue().offLabel());
-        }
 
         return ImmutableSomaticVariantAnalysis.of(variantsToReport,
                 driverCatalog,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
                 tumorMutationalBurden,
-                variant,
-                variantRange,
-                CNVs,
                 evidencePerVariant,
-                evidencePerVariantRanges,
                 evidencePerVariantCNVs);
     }
 

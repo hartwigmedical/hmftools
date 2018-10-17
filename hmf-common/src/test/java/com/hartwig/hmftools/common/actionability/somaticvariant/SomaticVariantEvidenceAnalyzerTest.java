@@ -13,11 +13,11 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
-public class ActionabilityVariantsAnalyzerTest {
+public class SomaticVariantEvidenceAnalyzerTest {
 
     @Test
     public void actionabilityWorksVariants() {
-        EvidenceItem evidenceItem = ImmutableEvidenceItem.builder()
+        ActionableSomaticVariant actionableSomaticVariant = ImmutableActionableSomaticVariant.builder()
                 .gene("BRAF")
                 .chromosome("X")
                 .position(1234)
@@ -32,7 +32,7 @@ public class ActionabilityVariantsAnalyzerTest {
                 .response("Responsive")
                 .build();
 
-        ActionabilityRange actionabilityRange = ImmutableActionabilityRange.builder()
+        ActionableRange actionableRange = ImmutableActionableRange.builder()
                 .gene("BRAF")
                 .chromosome("7")
                 .start(10)
@@ -48,8 +48,8 @@ public class ActionabilityVariantsAnalyzerTest {
 
         CancerTypeReading reading = ImmutableCancerTypeReading.builder().doidSet("4159").cancerType("Skin").build();
 
-        ActionabilityVariantsAnalyzer analyzer =
-                new ActionabilityVariantsAnalyzer(Lists.newArrayList(evidenceItem), Lists.newArrayList(actionabilityRange));
+        SomaticVariantEvidenceAnalyzer analyzer =
+                new SomaticVariantEvidenceAnalyzer(Lists.newArrayList(actionableSomaticVariant), Lists.newArrayList(actionableRange));
 
         CancerTypeAnalyzer cancerType = new CancerTypeAnalyzer(Lists.newArrayList(reading));
 

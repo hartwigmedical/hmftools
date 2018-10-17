@@ -6,7 +6,7 @@ import java.io.IOException;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVsAnalyzer;
 import com.hartwig.hmftools.common.actionability.fusion.ActionabilityFusionAnalyzer;
-import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityVariantsAnalyzer;
+import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEvidenceAnalyzer;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,7 +22,7 @@ public class ActionabilityAnalyzer {
     private static final String CANCER_TYPE_DOID_MAPPING_FILE = "knowledgebaseCancerTypes.tsv";
 
     @NotNull
-    private final ActionabilityVariantsAnalyzer variantAnalyzer;
+    private final SomaticVariantEvidenceAnalyzer variantAnalyzer;
     @NotNull
     private final ActionabilityCNVsAnalyzer cnvAnalyzer;
     @NotNull
@@ -33,8 +33,8 @@ public class ActionabilityAnalyzer {
     @NotNull
     public static ActionabilityAnalyzer fromKnowledgebase(@NotNull String knowledgebasePath) throws IOException {
         String basePath = knowledgebasePath + File.separator;
-        ActionabilityVariantsAnalyzer variantAnalyzer =
-                ActionabilityVariantsAnalyzer.loadFromFileVariantsAndFileRanges(basePath + ACTIONABLE_VARIANT_FILE,
+        SomaticVariantEvidenceAnalyzer variantAnalyzer =
+                SomaticVariantEvidenceAnalyzer.loadFromFileVariantsAndFileRanges(basePath + ACTIONABLE_VARIANT_FILE,
                         basePath + ACTIONABLE_RANGES_FILE);
 
         ActionabilityCNVsAnalyzer cnvAnalyzer = ActionabilityCNVsAnalyzer.loadFromFileCNVs(basePath + ACTIONABLE_CNV_FILE);
@@ -49,7 +49,7 @@ public class ActionabilityAnalyzer {
         return new ActionabilityAnalyzer(variantAnalyzer, cnvAnalyzer, fusionAnalyzer, cancerTypeAnalyzer);
     }
 
-    private ActionabilityAnalyzer(@NotNull final ActionabilityVariantsAnalyzer variantAnalyzer,
+    private ActionabilityAnalyzer(@NotNull final SomaticVariantEvidenceAnalyzer variantAnalyzer,
             @NotNull final ActionabilityCNVsAnalyzer cnvAnalyzer,
             @NotNull final ActionabilityFusionAnalyzer fusionAnalyzer, @NotNull final CancerTypeAnalyzer cancerTypeAnalyzer) {
         this.variantAnalyzer = variantAnalyzer;
@@ -59,7 +59,7 @@ public class ActionabilityAnalyzer {
     }
 
     @NotNull
-    public ActionabilityVariantsAnalyzer variantAnalyzer() {
+    public SomaticVariantEvidenceAnalyzer variantAnalyzer() {
         return variantAnalyzer;
     }
 

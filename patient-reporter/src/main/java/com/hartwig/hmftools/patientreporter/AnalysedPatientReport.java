@@ -1,15 +1,9 @@
 package com.hartwig.hmftools.patientreporter;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVs;
-import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVsEvidenceItems;
-import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRange;
-import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRangeEvidenceItem;
-import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
-import com.hartwig.hmftools.common.actionability.somaticvariant.VariantEvidenceItems;
+import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
@@ -36,25 +30,10 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract double impliedPurity();
 
     @NotNull
+    public abstract List<EvidenceItem> evidenceItems();
+
+    @NotNull
     public abstract List<EnrichedSomaticVariant> somaticVariants();
-
-    @NotNull
-    public abstract List<EvidenceItem> somaticActionabilityVariants();
-
-    @NotNull
-    public abstract List<ActionabilityRange> somaticActionabilityVariantsRange();
-
-    @NotNull
-    public abstract List<ActionabilityCNVs> somaticActionabilityCNVs();
-
-    @NotNull
-    public abstract Map<EnrichedSomaticVariant, VariantEvidenceItems> evidenceItem();
-
-    @NotNull
-    public abstract Map<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> evidenceItemRange();
-
-    @NotNull
-    public abstract Map<GeneCopyNumber, ActionabilityCNVsEvidenceItems> evidenceItemCNV();
 
     @NotNull
     public abstract List<DriverCatalog> somaticVariantDriverCatalog();

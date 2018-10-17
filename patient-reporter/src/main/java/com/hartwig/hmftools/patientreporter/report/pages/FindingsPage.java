@@ -80,23 +80,22 @@ public abstract class FindingsPage {
 
     @NotNull
     private static ComponentBuilder<?, ?> evidenceItemReportVariant(@NotNull AnalysedPatientReport report) {
-        final ComponentBuilder<?, ?> table = report.evidenceItem().size() > 0
-                ? cmp.subreport(monospaceBaseTable().fields(EvidenceItemDataSource.actionabilityFields())
-                .columns(col.column("Gene", EvidenceItemDataSource.GENE),
-                        col.column("Variant", EvidenceItemDataSource.VARIANT),
-                        col.column("Impact", EvidenceItemDataSource.IMPACT),
-                        col.column("Drug", EvidenceItemDataSource.DRUG),
-                        col.column("Drugs type", EvidenceItemDataSource.DRUGS_TYPE),
-                        col.column("Level", EvidenceItemDataSource.LEVEL),
-                        col.column("Response", EvidenceItemDataSource.RESPONSE),
-                        col.column("Source", EvidenceItemDataSource.SOURCE)
-                                .setHyperLink(hyperLink(EvidenceItemDataSource.sourceHyperlink(report.somaticActionabilityVariants())))
+        final ComponentBuilder<?, ?> table = report.evidenceItems().size() > 0
+                ? cmp.subreport(monospaceBaseTable().fields(EvidenceItemDataSource.evidenceItemFields())
+                .columns(col.column("Gene", EvidenceItemDataSource.GENE_FIELD),
+                        col.column("Event", EvidenceItemDataSource.EVENT_FIELD),
+                        col.column("Drug", EvidenceItemDataSource.DRUG_FIELD),
+                        col.column("Drugs type", EvidenceItemDataSource.DRUGS_TYPE_FIELD),
+                        col.column("Level", EvidenceItemDataSource.LEVEL_FIELD),
+                        col.column("Response", EvidenceItemDataSource.RESPONSE_FIELD),
+                        col.column("Source", EvidenceItemDataSource.SOURCE_FIELD)
+                                .setHyperLink(hyperLink(EvidenceItemDataSource.sourceHyperlink()))
                                 .setStyle(linkStyle()),
-                        col.column("Label", EvidenceItemDataSource.LABEL))
-                .setDataSource(EvidenceItemDataSource.fromActionabilityVariants(report.evidenceItem(), report.evidenceItemRange())))
+                        col.column("On-Label", EvidenceItemDataSource.ON_LABEL_FIELD))
+                .setDataSource(EvidenceItemDataSource.fromEvidenceItems(report.evidenceItems())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        return cmp.verticalList(cmp.text("Evidence Items of somatic variant").setStyle(sectionHeaderStyle()),
+        return cmp.verticalList(cmp.text("Clinical Evidence").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
                 table);
     }

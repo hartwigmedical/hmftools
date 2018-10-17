@@ -12,7 +12,7 @@
 //import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 //import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeMappingReading;
 //import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVsAnalyzer;
-//import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityVariantsAnalyzer;
+//import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEvidenceAnalyzer;
 //import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 //import com.hartwig.hmftools.common.context.RunContext;
 //import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
@@ -78,8 +78,8 @@
 //        LOGGER.info("Variants: " + variants.size());
 //        if (Files.exists(new File(fileActionabilityVariants).toPath()) && Files.exists(new File(fileActionabilityRanges).toPath())
 //                && Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
-//            ActionabilityVariantsAnalyzer analyzer =
-//                    ActionabilityVariantsAnalyzer.loadFromFileVariantsAndFileRanges(fileActionabilityVariants, fileActionabilityRanges);
+//            SomaticVariantEvidenceAnalyzer analyzer =
+//                    SomaticVariantEvidenceAnalyzer.loadFromFileVariantsAndFileRanges(fileActionabilityVariants, fileActionabilityRanges);
 //            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
 //
 //            Set<String> actionableGenesVariants = analyzer.actionableGenes();
