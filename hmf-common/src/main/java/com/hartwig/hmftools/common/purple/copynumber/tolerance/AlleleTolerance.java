@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class AlleleTolerance implements CopyNumberTolerance {
 
+    private static final double MAX_DEVIATION = 0.9;
     private static final double MIN_OBSERVED_BAF_CHANGE = 0.03;
     private static final double MAX_DEVIATION_ADJUSTMENT = 0.20;
     private static final double MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE = 0.3;
@@ -57,7 +58,7 @@ public class AlleleTolerance implements CopyNumberTolerance {
     }
 
     private static double unadjustedMaxDeviation(double minTolerance, double additional, int samples) {
-        return minTolerance + additional / Math.sqrt(samples);
+        return Math.min(MAX_DEVIATION,  minTolerance + additional / Math.sqrt(samples));
     }
 
     private static boolean inAbsoluteTolerance(double tolerance, double firstCopyNumber, double secondCopyNumber) {
