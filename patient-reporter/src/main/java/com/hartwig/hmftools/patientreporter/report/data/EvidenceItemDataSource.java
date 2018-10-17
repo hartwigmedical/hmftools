@@ -93,19 +93,19 @@ public final class EvidenceItemDataSource {
             @Override
             public String evaluate(@NotNull final ReportParameters data) {
                 String source = data.getValue(SOURCE_FIELD.getName()).toString().toLowerCase();
-                // TODO (LISC): Use reference to create link.
                 String reference = data.getValue(REFERENCE_FIELD.getName()).toString();
+                String gene = data.getValue(EVENT_FIELD.getName()).toString();
                 switch (source) {
                     case "oncoKb":
-                        return "http://oncokb.org/#/gene/";
-                    //+ linkGene.get(0) + "/alteration/" + linkReference.get(0);
+                        String [] geneId = gene.split(" ");
+                        return "http://oncokb.org/#/gene/" + geneId[0] + "/alteration/" + reference;
                     case "iclusion":
                         return "https://www.iclusion.org";
                     case "cgi":
                         return "https://www.cancergenomeinterpreter.org/biomarkers";
                     case "civic":
-                        //  String[] link = linkReference.get(0).split(":");
-                        return "https://civic.genome.wustl.edu/links/variants/";
+                        String [] variantId = reference.split(":");
+                        return "https://civic.genome.wustl.edu/links/variants/" + variantId[1];
                     default:
                         return Strings.EMPTY;
                 }
