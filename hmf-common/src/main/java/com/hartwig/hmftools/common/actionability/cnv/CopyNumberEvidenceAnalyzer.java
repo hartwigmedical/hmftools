@@ -55,7 +55,7 @@ public class CopyNumberEvidenceAnalyzer {
 
     @NotNull
     private static String checkCNVType(final double copyNumber, final double purplePloidy) {
-        Double relativeCopyNumber = copyNumber / 8.0;
+        Double relativeCopyNumber = copyNumber / purplePloidy;
         String CNVType = "";
         if (Doubles.lessOrEqual(copyNumber, ABS_LOSS)) {
             CNVType = "Deletion";
