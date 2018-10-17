@@ -425,7 +425,7 @@ public class SvClusteringMethods {
                         }
                         else if (checkSingleLinks && armGroupsHaveLinkingSVs(armGroup1, armGroup2))
                         {
-                            LOGGER.debug("arm({} svs={}) overlaps with arm({} svs={})",
+                            LOGGER.debug("arm({} svs={}) has linking SVs with arm({} svs={})",
                                     armGroup1.posId(), armGroup1.getCount(), armGroup2.posId(), armGroup2.getCount());
 
                             canMergeArms = true;
@@ -498,12 +498,12 @@ public class SvClusteringMethods {
 
             final SvArmGroup svGroup = (i == 0) ? group2 : group1;
 
-            // group must have an INV or BND
+            // group must have an INV
             boolean hasInversion = false;
 
             for (final SvVarData var : svGroup.getSVs())
             {
-                if (var.type() == INV) // || var.type() == BND
+                if (var.type() == INV)
                 {
                     hasInversion = true;
                     break;

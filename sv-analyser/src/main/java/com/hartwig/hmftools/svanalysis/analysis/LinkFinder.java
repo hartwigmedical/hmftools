@@ -27,7 +27,7 @@ public class LinkFinder
     final SvUtilities mUtils;
     SvClusteringMethods mClusteringMethods;
 
-    // private ChainFinder mChainFinder;
+    private boolean mLogVerbose;
 
     public static int MIN_TEMPLATED_INSERTION_LENGTH = 30;
     private static int MAX_TEMPLATED_INSERTION_LENGTH = 500;
@@ -44,9 +44,9 @@ public class LinkFinder
     {
         mConfig = config;
         mUtils = utils;
-        // mChainFinder = new ChainFinder(mUtils);
-        // mChainFinder.setLogVerbose(mConfig.LogVerbose);
     }
+
+    public void setLogVerbose(boolean toggle) { mLogVerbose = toggle; }
 
     public void findLinkedPairs(final String sampleId, SvCluster cluster)
     {
@@ -261,7 +261,7 @@ public class LinkFinder
                         //     linkedPairs.remove(linkedPairs.size()-1);
 
                         // if(newPair.length() < mUtils.getBaseDistance())
-                        if(mConfig.LogVerbose && !var1.isReplicatedSv() && !var2.isReplicatedSv())
+                        if(mLogVerbose && !var1.isReplicatedSv() && !var2.isReplicatedSv())
                         {
                             // to avoid logging unlikely long TIs
                             LOGGER.debug("cluster({}) adding inferred linked {} pair({}) length({}) at index({})",

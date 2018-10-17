@@ -275,7 +275,7 @@ public class SvSampleAnalyser {
                 writer.write(",ChainId,ChainCount,ChainIndex");
 
                 // proximity info
-                writer.write(",NearestLen,NearestType,FoldbackLnk,FoldbackLen");
+                writer.write(",NearestLen,NearestType"); // ,FoldbackLnk,FoldbackLen
 
                 // transitive info
                 writer.write(",TransType,TransLen,TransSvLinks");
@@ -369,33 +369,10 @@ public class SvSampleAnalyser {
 
                     writer.write(chainStr);
 
-                    writer.write(String.format(",%d,%s,%s,%d",
-                            var.getNearestSvDistance(), var.getNearestSvRelation(),
-                            var.getFoldbackLink(), var.getFoldbackLen()));
+                    writer.write(String.format(",%d,%s",
+                            var.getNearestSvDistance(), var.getNearestSvRelation())); // var.getFoldbackLink(), var.getFoldbackLen()
 
                     writer.write(String.format(",%s,%d,%s", var.getTransType(), var.getTransLength(), var.getTransSvLinks()));
-
-                    /*
-                    final SvGeneData geneStart = var.getStartGeneData();
-                    if(geneStart != null)
-                    {
-                        writer.write(String.format(",%s,%s,%s", geneStart.gene(), geneStart.driver(), geneStart.driverType()));
-                    }
-                    else
-                    {
-                        writer.write(String.format(",,,"));
-                    }
-
-                    final SvGeneData geneEnd = var.getEndGeneData();
-                    if(geneEnd != null)
-                    {
-                        writer.write(String.format(",%s,%s,%s", geneEnd.gene(), geneEnd.driver(), geneEnd.driverType()));
-                    }
-                    else
-                    {
-                        writer.write(String.format(",,,"));
-                    }
-                    */
 
                     ++lineCount;
                     writer.newLine();
