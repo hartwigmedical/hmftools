@@ -71,7 +71,7 @@ public final class ActionabilityVariantAnalyzer {
     //        if (Files.exists(new File(FILE_ACTIONABILITY_FUSIONPAIRS).toPath())
     //                && Files.exists(new File(FILE_ACTIONABILITY_PROMISCUOUS_FIVE).toPath()) && Files.exists(new File(
     //                FILE_ACTIONABILITY_PROMISCUOUS_THREE).toPath()) && Files.exists(new File(FILE_CANCER_TUMORS_WITH_DOID).toPath())) {
-    //            ActionabilityFusionAnalyzer analyzerFusions = ActionabilityFusionAnalyzer.loadFromFileFusions(FILE_ACTIONABILITY_FUSIONPAIRS,
+    //            FusionEvidenceAnalyzer analyzerFusions = FusionEvidenceAnalyzer.loadFromFileFusions(FILE_ACTIONABILITY_FUSIONPAIRS,
     //                    FILE_ACTIONABILITY_PROMISCUOUS_FIVE,
     //                    FILE_ACTIONABILITY_PROMISCUOUS_THREE);
     //            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(FILE_CANCER_TUMORS_WITH_DOID);

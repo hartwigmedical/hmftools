@@ -6,7 +6,8 @@ import java.io.IOException;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.actionability.cnv.CopyNumberEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.cnv.CopyNumberEvidenceAnalyzerFactory;
-import com.hartwig.hmftools.common.actionability.fusion.ActionabilityFusionAnalyzer;
+import com.hartwig.hmftools.common.actionability.fusion.FusionEvidenceAnalyzer;
+import com.hartwig.hmftools.common.actionability.fusion.FusionEvidenceAnalyzerFactory;
 import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEvidenceAnalyzerFactory;
 
@@ -16,7 +17,7 @@ public class ActionabilityAnalyzer {
 
     private static final String ACTIONABLE_VARIANT_FILE = "actionableVariants.tsv";
     private static final String ACTIONABLE_RANGES_FILE = "actionableRanges.tsv";
-    private static final String ACTIONABLE_CNV_FILE = "evidenceForCopyNumberEvent.tsv";
+    private static final String ACTIONABLE_CNV_FILE = "actionableCNVs.tsv";
     private static final String ACTIONABLE_FUSION_PAIR_FILE = "actionableFusionPairs.tsv";
     private static final String ACTIONABLE_PROMISCUOUS_FIVE_FILE = "actionablePromiscuousFive.tsv";
     private static final String ACTIONABLE_PROMISCUOUS_THREE_FILE = "actionablePromiscuousThree.tsv";
@@ -28,7 +29,7 @@ public class ActionabilityAnalyzer {
     @NotNull
     private final CopyNumberEvidenceAnalyzer cnvAnalyzer;
     @NotNull
-    private final ActionabilityFusionAnalyzer fusionAnalyzer;
+    private final FusionEvidenceAnalyzer fusionAnalyzer;
     @NotNull
     private final CancerTypeAnalyzer cancerTypeAnalyzer;
 
@@ -41,7 +42,7 @@ public class ActionabilityAnalyzer {
 
         CopyNumberEvidenceAnalyzer cnvAnalyzer = CopyNumberEvidenceAnalyzerFactory.loadFromFileCNVs(basePath + ACTIONABLE_CNV_FILE);
 
-        ActionabilityFusionAnalyzer fusionAnalyzer = ActionabilityFusionAnalyzer.loadFromFileFusions(basePath + ACTIONABLE_FUSION_PAIR_FILE,
+        FusionEvidenceAnalyzer fusionAnalyzer = FusionEvidenceAnalyzerFactory.loadFromFileFusions(basePath + ACTIONABLE_FUSION_PAIR_FILE,
                 basePath + ACTIONABLE_PROMISCUOUS_FIVE_FILE,
                 basePath + ACTIONABLE_PROMISCUOUS_THREE_FILE);
 
@@ -52,7 +53,7 @@ public class ActionabilityAnalyzer {
     }
 
     private ActionabilityAnalyzer(@NotNull final SomaticVariantEvidenceAnalyzer variantAnalyzer,
-            @NotNull final CopyNumberEvidenceAnalyzer cnvAnalyzer, @NotNull final ActionabilityFusionAnalyzer fusionAnalyzer,
+            @NotNull final CopyNumberEvidenceAnalyzer cnvAnalyzer, @NotNull final FusionEvidenceAnalyzer fusionAnalyzer,
             @NotNull final CancerTypeAnalyzer cancerTypeAnalyzer) {
         this.variantAnalyzer = variantAnalyzer;
         this.cnvAnalyzer = cnvAnalyzer;
@@ -71,7 +72,7 @@ public class ActionabilityAnalyzer {
     }
 
     @NotNull
-    public ActionabilityFusionAnalyzer fusionAnalyzer() {
+    public FusionEvidenceAnalyzer fusionAnalyzer() {
         return fusionAnalyzer;
     }
 

@@ -150,7 +150,7 @@
 //        //                Files.exists(new File(fileActionabilityPromiscuousThree).toPath()) && Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
 //        //
 //        //
-//        //            ActionabilityFusionAnalyzer analyzerFusion = ActionabilityFusionAnalyzer.loadFromFileFusions(fileActionabilityFusionPairs,
+//        //            FusionEvidenceAnalyzer analyzerFusion = FusionEvidenceAnalyzer.loadFromFileFusions(fileActionabilityFusionPairs,
 //        //                    fileActionabilityPromiscuousFive, fileActionabilityPromiscuousThree);
 //        //            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
 //        //
