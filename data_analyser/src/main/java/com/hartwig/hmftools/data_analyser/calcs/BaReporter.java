@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.calcCSS;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.getTopCssPairs;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getMatchingList;
-import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getNewFile;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sizeToStr;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
@@ -34,10 +33,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.data_analyser.loaders.GenericDataLoader;
+import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.data_analyser.types.BucketGroup;
-import com.hartwig.hmftools.data_analyser.types.BucketPair;
-import com.hartwig.hmftools.data_analyser.types.GenericDataCollection;
+import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.data_analyser.types.NmfMatrix;
 import com.hartwig.hmftools.data_analyser.types.SampleData;
 

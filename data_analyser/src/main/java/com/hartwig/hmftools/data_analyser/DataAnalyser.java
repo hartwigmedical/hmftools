@@ -6,8 +6,8 @@ import com.hartwig.hmftools.data_analyser.calcs.NmfConfig;
 import com.hartwig.hmftools.data_analyser.calcs.NmfManager;
 import com.hartwig.hmftools.data_analyser.calcs.SampleSimulator;
 import com.hartwig.hmftools.data_analyser.calcs.SimConfig;
-import com.hartwig.hmftools.data_analyser.loaders.GenericDataLoader;
-import com.hartwig.hmftools.data_analyser.types.GenericDataCollection;
+import com.hartwig.hmftools.common.utils.GenericDataLoader;
+import com.hartwig.hmftools.common.utils.GenericDataCollection;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

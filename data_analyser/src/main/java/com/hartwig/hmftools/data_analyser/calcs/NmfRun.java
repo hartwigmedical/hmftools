@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.data_analyser.calcs;
 
 import static java.lang.Math.max;
-import static java.lang.Math.exp;
-import static java.lang.Math.log;
 import static java.lang.Math.min;
 import static java.lang.Math.sqrt;
 
@@ -10,13 +8,12 @@ import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_I1;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_I2;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_VAL;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.getTopCssPairs;
-import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.copyVector;
 
 import java.util.List;
 import java.util.Random;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.numeric.PerformanceCounter;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.data_analyser.types.NmfMatrix;
 
 import org.apache.logging.log4j.LogManager;

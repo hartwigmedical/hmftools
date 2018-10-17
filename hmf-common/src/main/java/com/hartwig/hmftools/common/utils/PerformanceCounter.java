@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.numeric;
+package com.hartwig.hmftools.common.utils;
 
 import java.util.List;
 

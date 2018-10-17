@@ -4,9 +4,6 @@ import static java.lang.Integer.max;
 
 import static com.hartwig.hmftools.data_analyser.DataAnalyser.OUTPUT_DIR;
 import static com.hartwig.hmftools.data_analyser.DataAnalyser.OUTPUT_FILE_ID;
-import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_I1;
-import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_I2;
-import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.CSSR_VAL;
 import static com.hartwig.hmftools.data_analyser.calcs.CosineSim.getTopCssPairs;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getNewFile;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.writeMatrixData;
@@ -18,9 +15,9 @@ import java.util.List;
 import java.util.Random;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.numeric.PerformanceCounter;
-import com.hartwig.hmftools.data_analyser.loaders.GenericDataLoader;
-import com.hartwig.hmftools.data_analyser.types.GenericDataCollection;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.utils.GenericDataLoader;
+import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.data_analyser.types.NmfMatrix;
 
 import org.apache.commons.cli.CommandLine;

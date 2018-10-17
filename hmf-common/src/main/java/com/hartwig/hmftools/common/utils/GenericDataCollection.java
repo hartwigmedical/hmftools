@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.data_analyser.types;
+package com.hartwig.hmftools.common.utils;
 
 
 import java.util.List;

@@ -20,7 +20,6 @@ import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getDiffList;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getMatchingList;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getNewFile;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.getSortedVectorIndices;
-import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.initVector;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.listToArray;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sizeToStr;
 import static com.hartwig.hmftools.data_analyser.calcs.DataUtils.sumVector;
@@ -32,8 +31,7 @@ import static com.hartwig.hmftools.data_analyser.calcs.SigOptimiser.SMALL_RATIO_
 import static com.hartwig.hmftools.data_analyser.types.BucketGroup.BG_TYPE_BACKGROUND;
 import static com.hartwig.hmftools.data_analyser.types.BucketGroup.BG_TYPE_MAJOR;
 import static com.hartwig.hmftools.data_analyser.types.BucketGroup.BG_TYPE_UNIQUE;
-import static com.hartwig.hmftools.data_analyser.types.BucketGroup.ratioRange;
-import static com.hartwig.hmftools.data_analyser.types.GenericDataCollection.GD_TYPE_STRING;
+import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_STRING;
 import static com.hartwig.hmftools.data_analyser.types.NmfMatrix.redimension;
 import static com.hartwig.hmftools.data_analyser.types.SampleData.PARTIAL_ALLOC_PERCENT;
 
@@ -45,10 +43,10 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.numeric.PerformanceCounter;
-import com.hartwig.hmftools.data_analyser.loaders.GenericDataLoader;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.data_analyser.types.BucketGroup;
-import com.hartwig.hmftools.data_analyser.types.GenericDataCollection;
+import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.data_analyser.types.NmfMatrix;
 import com.hartwig.hmftools.data_analyser.types.SampleData;
 

@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.data_analyser.loaders;
+package com.hartwig.hmftools.common.utils;
 
-import static com.hartwig.hmftools.data_analyser.types.GenericDataCollection.GD_TYPE_DECIMAL;
-import static com.hartwig.hmftools.data_analyser.types.GenericDataCollection.GD_TYPE_INTEGER;
-import static com.hartwig.hmftools.data_analyser.types.GenericDataCollection.GD_TYPE_STRING;
-import static com.hartwig.hmftools.data_analyser.types.GenericDataCollection.isValidType;
+import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_DECIMAL;
+import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_INTEGER;
+import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_STRING;
+import static com.hartwig.hmftools.common.utils.GenericDataCollection.isValidType;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -11,12 +11,9 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.data_analyser.types.GenericDataCollection;
 
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.omg.PortableInterceptor.INACTIVE;
 
 public class GenericDataLoader {
 

@@ -24,17 +24,14 @@ import java.util.List;
 import java.util.Random;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.numeric.PerformanceCounter;
-import com.hartwig.hmftools.data_analyser.loaders.GenericDataLoader;
-import com.hartwig.hmftools.data_analyser.types.GenericDataCollection;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.utils.GenericDataLoader;
+import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.data_analyser.types.NmfMatrix;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import sun.misc.Perf;
-import sun.misc.PerfCounter;
 
 public class SampleSimulator {
 

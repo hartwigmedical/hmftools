@@ -11,8 +11,8 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.data_analyser.calcs.DataUtils;
 import com.hartwig.hmftools.data_analyser.calcs.SigContribOptimiser;
-import com.hartwig.hmftools.data_analyser.loaders.GenericDataLoader;
-import com.hartwig.hmftools.data_analyser.types.GenericDataCollection;
+import com.hartwig.hmftools.common.utils.GenericDataLoader;
+import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.data_analyser.types.NmfMatrix;
 import com.hartwig.hmftools.data_analyser.types.SampleData;
 
