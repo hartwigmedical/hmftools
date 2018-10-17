@@ -92,11 +92,11 @@ public final class EvidenceItemDataSource {
         return new AbstractSimpleExpression<String>() {
             @Override
             public String evaluate(@NotNull final ReportParameters data) {
-                String source = data.getValue(SOURCE_FIELD.getName()).toString().toLowerCase();
+                String source = data.getValue(SOURCE_FIELD.getName()).toString();
                 String reference = data.getValue(REFERENCE_FIELD.getName()).toString();
                 String gene = data.getValue(EVENT_FIELD.getName()).toString();
-                switch (source) {
-                    case "oncoKb":
+                switch (source.toLowerCase()) {
+                    case "oncokb":
                         String [] geneId = gene.split(" ");
                         return "http://oncokb.org/#/gene/" + geneId[0] + "/alteration/" + reference;
                     case "iclusion":
