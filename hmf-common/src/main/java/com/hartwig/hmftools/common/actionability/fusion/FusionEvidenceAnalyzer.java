@@ -8,7 +8,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
-import com.hartwig.hmftools.common.actionability.cnv.ActionableCopyNumber;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 
 import org.jetbrains.annotations.NotNull;
