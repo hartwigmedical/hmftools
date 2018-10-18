@@ -40,7 +40,8 @@ public class CopyNumberEvidenceAnalyzer {
         Double minCopyValue = (double) Math.max(0, Math.round(geneCopyNumber.minCopyNumber()));
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
         for (ActionableCopyNumber actionableCopyNumber : actionableCopyNumbers) {
-            if (checkCNVType(minCopyValue, purplePloidy).equals(actionableCopyNumber.cnvType())) {
+            if (checkCNVType(minCopyValue, purplePloidy).equals(actionableCopyNumber.cnvType()) && actionableCopyNumber.gene()
+                    .equals(geneCopyNumber.gene())) {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableCopyNumber(actionableCopyNumber);
 
                 evidenceBuilder.event(geneCopyNumber.gene() + " " + actionableCopyNumber.cnvType());
