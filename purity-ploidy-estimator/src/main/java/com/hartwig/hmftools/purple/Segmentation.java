@@ -37,7 +37,7 @@ class Segmentation {
     private final Gender gender;
     private final ListMultimap<String, CobaltRatio> ratios;
     private final Multimap<String, AmberBAF> bafs;
-    private final Map<String, ChromosomeLength> lengths;
+    private final Map<Chromosome, ChromosomeLength> lengths;
     private final Multimap<String, PCFPosition> pcfPositions;
     private final Multimap<Chromosome, GCProfile> gcProfiles;
 
@@ -59,7 +59,7 @@ class Segmentation {
     public List<ObservedRegion> createSegments(@NotNull final List<StructuralVariant> structuralVariants) {
         final Multimap<String, Cluster> clusterMap =
                 new ClusterFactory(config.windowSize()).cluster(structuralVariants, pcfPositions, ratios);
-        List<PurpleSegment> segments = PurpleSegmentFactory.segment(clusterMap, lengths);
+        final List<PurpleSegment> segments = PurpleSegmentFactory.segment(clusterMap, lengths);
 
         final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(config.windowSize(), gender);
         return observedRegionFactory.combine(segments, bafs, ratios, gcProfiles);

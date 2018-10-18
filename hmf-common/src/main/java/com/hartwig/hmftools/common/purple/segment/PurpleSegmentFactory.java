@@ -10,6 +10,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.centromeres.Centromeres;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.pcf.PCFPosition;
@@ -25,7 +26,7 @@ public final class PurpleSegmentFactory {
 
     @NotNull
     public static List<PurpleSegment> segment(@NotNull final Multimap<String, Cluster> clusters,
-            @NotNull final Map<String, ChromosomeLength> lengths) {
+            @NotNull final Map<Chromosome, ChromosomeLength> lengths) {
         final List<PurpleSegment> results = Lists.newArrayList();
         results.addAll(segmentMap(clusters, lengths).values());
         Collections.sort(results);
@@ -34,12 +35,12 @@ public final class PurpleSegmentFactory {
 
     @NotNull
     private static Multimap<String, PurpleSegment> segmentMap(@NotNull final Multimap<String, Cluster> clusters,
-            @NotNull final Map<String, ChromosomeLength> lengths) {
+            @NotNull final Map<Chromosome, ChromosomeLength> lengths) {
         final Multimap<String, PurpleSegment> segments = ArrayListMultimap.create();
-        for (String chromosome : lengths.keySet()) {
+        for (String chromosome : clusters.keySet()) {
             if (HumanChromosome.contains(chromosome)) {
                 final Collection<Cluster> cluster = clusters.containsKey(chromosome) ? clusters.get(chromosome) : Collections.emptyList();
-                segments.putAll(chromosome, create(lengths.get(chromosome), cluster));
+                segments.putAll(chromosome, create(lengths.get(HumanChromosome.fromString(chromosome)), cluster));
             }
         }
 

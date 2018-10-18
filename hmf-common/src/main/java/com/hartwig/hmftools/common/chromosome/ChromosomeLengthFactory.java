@@ -2,12 +2,11 @@ package com.hartwig.hmftools.common.chromosome;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;
@@ -18,12 +17,29 @@ import htsjdk.samtools.SAMSequenceRecord;
 public final class ChromosomeLengthFactory {
 
     @NotNull
-    public static <T extends GenomePosition> Map<String, ChromosomeLength> create(int windowSize,
+    public static <T extends GenomePosition> Map<Chromosome, ChromosomeLength> create(int windowSize,
             @NotNull final Multimap<String, T> position) {
-        final Map<String, ChromosomeLength> result = Maps.newHashMap();
+        final Map<Chromosome, ChromosomeLength> result = Maps.newHashMap();
         for (String chromosome : position.keySet()) {
             long max = position.get(chromosome).stream().mapToLong(x -> x.position() + windowSize - 1).max().orElse(0L);
-            result.put(chromosome, ImmutableChromosomeLength.builder().chromosome(chromosome).length(max).build());
+            result.put(HumanChromosome.fromString(chromosome), ImmutableChromosomeLength.builder().chromosome(chromosome).length(max).build());
+        }
+
+        return result;
+    }
+
+    @NotNull
+    public static <T extends GenomePosition> Map<Chromosome, ChromosomeLength> create(int windowSize,
+            @NotNull final ListMultimap<Chromosome, T> position) {
+        final Map<Chromosome, ChromosomeLength> result = Maps.newHashMap();
+        for (Chromosome chromosome : position.keySet()) {
+            List<T> chromosomeList = position.get(chromosome);
+            if (!chromosomeList.isEmpty()) {
+                T last = chromosomeList.get(chromosomeList.size() - 1);
+                final long max = last.position() + windowSize - 1;
+                final String contig = last.chromosome();
+                result.put(chromosome, ImmutableChromosomeLength.builder().chromosome(contig).length(max).build());
+            }
         }
 
         return result;
