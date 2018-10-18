@@ -25,6 +25,7 @@ import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.pcf.PCFFile;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.baf.ExpectedBAF;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -122,7 +123,7 @@ public class PurityPloidyEstimateApplication {
             final List<HmfTranscriptRegion> genePanel = HmfGenePanelSupplier.allGeneList();
 
             // JOBA: Load BAFs from AMBER
-            final String amberFile = configSupplier.bafConfig().bafFile().toString();
+            final String amberFile = AmberBAFFile.generateAmberFilename(config.amberDirectory(), config.tumorSample());
             LOGGER.info("Reading amber bafs from {}", amberFile);
             final Multimap<Chromosome, AmberBAF> bafs = AmberBAFFile.read(amberFile);
             int averageTumorDepth =

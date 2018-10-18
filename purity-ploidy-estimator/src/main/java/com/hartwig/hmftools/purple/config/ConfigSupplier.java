@@ -79,7 +79,6 @@ public class ConfigSupplier {
     private final CommonConfig commonConfig;
     private final SomaticConfig somaticConfig;
     private final StructuralVariantConfig structuralVariantConfig;
-    private final BAFConfig bafConfig;
     private final CircosConfig circosConfig;
     private final DBConfig dbConfig;
     private final FittingConfig fittingConfig;
@@ -126,7 +125,6 @@ public class ConfigSupplier {
             throw new ParseException(REF_GENOME + " is a mandatory argument");
         }
 
-
         final String amberDirectory = cmd.hasOption(AMBER) ? cmd.getOptionValue(AMBER) : runDirectory + File.separator + "amber";
         final String cobaltDirectory = cmd.hasOption(COBALT) ? cmd.getOptionValue(COBALT) : runDirectory + File.separator + "cobalt";
 
@@ -150,7 +148,6 @@ public class ConfigSupplier {
                         MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT))
                 .build();
 
-        bafConfig = createBAFConfig(cmd, opt, commonConfig);
         circosConfig = createCircosConfig(cmd, commonConfig);
         dbConfig = DBConfig.createConfig(cmd);
         fittingConfig = FittingConfig.createConfig(cmd);
@@ -176,11 +173,6 @@ public class ConfigSupplier {
     @NotNull
     public StructuralVariantConfig structuralVariantConfig() {
         return structuralVariantConfig;
-    }
-
-    @NotNull
-    public BAFConfig bafConfig() {
-        return bafConfig;
     }
 
     @NotNull
@@ -212,29 +204,6 @@ public class ConfigSupplier {
                 .circosDirectory(config.outputDirectory() + File.separator + "circos")
                 .circosBinary(cmd.hasOption(CIRCOS) ? Optional.of(cmd.getOptionValue(CIRCOS)) : Optional.empty())
                 .build();
-    }
-
-    @NotNull
-    private static BAFConfig createBAFConfig(@NotNull final CommandLine cmd, Options opt, @NotNull final CommonConfig config)
-            throws ParseException {
-        if (cmd.hasOption(BAF)) {
-            final String filename = cmd.getOptionValue(BAF);
-            final File file = new File(filename);
-            if (!file.exists()) {
-                printHelp(opt);
-                throw new ParseException("Unable to read bafs from: " + filename);
-            }
-            return ImmutableBAFConfig.builder().bafFile(file).build();
-        }
-
-        final String amberBaf = AmberBAFFile.generateAmberFilename(config.amberDirectory(), config.tumorSample());
-        final File amberFile = new File(amberBaf);
-        if (amberFile.exists()) {
-            return ImmutableBAFConfig.builder().bafFile(amberFile).build();
-        }
-
-        printHelp(opt);
-        throw new ParseException("Baf file " + amberBaf + " not found. Please supply -baf argument.");
     }
 
     private static void printHelp(@NotNull Options opt) {
