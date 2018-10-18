@@ -6,11 +6,13 @@ import static com.hartwig.hmftools.purple.config.StructuralVariantConfig.createS
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Ref;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
+import com.hartwig.hmftools.common.refgenome.RefGenome;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
@@ -32,6 +34,7 @@ public class ConfigSupplier {
     private static final String AMBER = "amber";
     private static final String COBALT = "cobalt";
     private static final String GC_PROFILE = "gc_profile";
+    private static final String REF_GENOME = "ref_genome";
 
 
 
@@ -49,6 +52,7 @@ public class ConfigSupplier {
         options.addOption(TUMOR_SAMPLE, true, "The tumor sample name. Defaults to value in metadata.");
         options.addOption(RUN_DIRECTORY, true, "The path containing the data for a single run.");
         options.addOption(OUTPUT_DIRECTORY, true, "The output path. Defaults to run_dir/purple/");
+        options.addOption(REF_GENOME, true, "Reference genome to use. Must be one of \"hg37\" or \"hg38\".");
 
 
         options.addOption(BAF, true, "Baf file location.");
@@ -114,6 +118,15 @@ public class ConfigSupplier {
             throw new IOException("Unable to write directory " + outputDirectory);
         }
 
+        final RefGenome refGenome;
+        try {
+            refGenome = RefGenome.valueOf(cmd.getOptionValue(REF_GENOME).toUpperCase());
+        } catch (Exception exception) {
+            printHelp(opt);
+            throw new ParseException(REF_GENOME + " is a mandatory argument");
+        }
+
+
         final String amberDirectory = cmd.hasOption(AMBER) ? cmd.getOptionValue(AMBER) : runDirectory + File.separator + "amber";
         final String cobaltDirectory = cmd.hasOption(COBALT) ? cmd.getOptionValue(COBALT) : runDirectory + File.separator + "cobalt";
 
@@ -124,6 +137,7 @@ public class ConfigSupplier {
                 .amberDirectory(amberDirectory)
                 .cobaltDirectory(cobaltDirectory)
                 .gcProfile(gcProfile)
+                .refGenome(refGenome)
                 .build();
 
         LOGGER.info("Reference Sample: {}, Tumor Sample: {}", commonConfig.refSample(), commonConfig.tumorSample());

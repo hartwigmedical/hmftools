@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.config;
 
+import com.hartwig.hmftools.common.refgenome.RefGenome;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,8 +30,10 @@ public interface CommonConfig {
     @NotNull
     String gcProfile();
 
+    @NotNull
+    RefGenome refGenome();
+
     default int windowSize() {
         return WINDOW_SIZE;
     }
-
 }
