@@ -8,6 +8,7 @@ import java.util.function.Predicate;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.tolerance.AlleleTolerance;
@@ -50,7 +51,7 @@ public class PurpleCopyNumberFactory {
         final ListMultimap<String, CombinedRegion> diploidExtension = ArrayListMultimap.create();
         for (HumanChromosome chromosome : HumanChromosome.values()) {
             final List<FittedRegion> chromosomeFittedRegions =
-                    fittedRegions.stream().filter(matchesChromosome(chromosome.toString())).collect(toList());
+                    fittedRegions.stream().filter(matchesChromosome(chromosome)).collect(toList());
             diploidExtension.putAll(chromosome.toString(), extendDiploid.extendDiploid(chromosomeFittedRegions));
         }
 
@@ -123,7 +124,7 @@ public class PurpleCopyNumberFactory {
     }
 
     @NotNull
-    private static <T extends GenomeRegion> Predicate<T> matchesChromosome(@NotNull final String chromosome) {
-        return t -> t.chromosome().equals(chromosome);
+    private static <T extends GenomeRegion> Predicate<T> matchesChromosome(@NotNull final Chromosome chromosome) {
+        return t -> HumanChromosome.fromString(t.chromosome()).equals(chromosome);
     }
 }
