@@ -31,16 +31,13 @@ public class CircosINDELWriter {
         return "#chromosome\tstart\tend\tvalue";
     }
 
-    private static String transformPosition(PurityAdjustedSomaticVariant position) {
-        return new StringJoiner("\t").add("hs" + position.chromosome())
-                .add(String.valueOf(position.position()))
-                .add(String.valueOf(position.position()))
-                .add(String.valueOf(position.adjustedVAF()))
-                .add("color=" + color(position))
-                .toString();
+    @NotNull
+    private static String transformPosition(@NotNull final PurityAdjustedSomaticVariant position) {
+        return CircosFileWriter.transformPosition(position, CircosINDELWriter::color);
     }
 
-    private static String color(PurityAdjustedSomaticVariant variant) {
+    @NotNull
+    private static String color(@NotNull final PurityAdjustedSomaticVariant variant) {
 
         if (variant.alt().length() > variant.ref().length()) {
             return "vdyellow";
