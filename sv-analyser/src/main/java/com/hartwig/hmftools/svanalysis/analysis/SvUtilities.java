@@ -329,6 +329,25 @@ public class SvUtilities {
         return consistencyCount;
     }
 
+    public static double DEFAULT_MAX_COPY_NUM_DIFF = 0.25;
+    public static double DEFAULT_MAX_COPY_NUM_DIFF_PERC = 0.1;
+
+    public static boolean copyNumbersEqual(double cn1, double cn2)
+    {
+        return copyNumbersEqual(cn1, cn2, DEFAULT_MAX_COPY_NUM_DIFF, DEFAULT_MAX_COPY_NUM_DIFF_PERC);
+    }
+
+    public static boolean copyNumbersEqual(double cn1, double cn2, double maxDiff, double maxDiffPerc)
+    {
+        double copyNumDiff = abs(cn2 - cn1);
+        double copyNumDiffPerc = copyNumDiff / max(abs(cn1), abs(cn2));
+
+        if (copyNumDiff > maxDiff && copyNumDiffPerc > maxDiffPerc)
+            return false;
+
+        return true;
+    }
+
     public static int calcTypeCount(final List<SvVarData> svList, StructuralVariantType type)
     {
         int count = 0;

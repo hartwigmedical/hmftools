@@ -51,6 +51,8 @@ public class SvCluster
     private List<SvArmGroup> mArmGroups;
     private boolean mIsFullyChained;
     private List<SvVarData> mUnchainedSVs;
+    private boolean mIsResolved;
+    private String mResolvedType;
 
     private List<SvCluster> mSubClusters;
     private Map<String, List<SvCNData>> mChrCNDataMap;
@@ -72,6 +74,8 @@ public class SvCluster
         // annotation info
         mConsistencyCount = 0;
         mIsConsistent = false;
+        mIsResolved = false;
+        mResolvedType = "";
         mDesc = "";
         mRequiresRecalc = true;
         mAnnotationList = Lists.newArrayList();
@@ -352,6 +356,10 @@ public class SvCluster
         return mConsistencyCount;
     }
 
+    public void setResolved(boolean toggle, final String type) { mIsResolved = toggle; mResolvedType = type; }
+    public boolean getResolved() { return mIsResolved; }
+    public final String getResolvedType() { return mResolvedType; }
+
     private void updateClusterDetails()
     {
         if(!mRequiresRecalc)
@@ -371,9 +379,19 @@ public class SvCluster
 
     public void logDetails()
     {
-        LOGGER.debug("cluster({}) svCount({}) desc({}) armCount({}) consistent({} count={}) chains({}) {}",
-                getId(), getCount(), getDesc(), getChromosomalArmCount(), isConsistent(), getConsistencyCount(),
-                mChains.size(), isSimpleSingleSV() ? "simple" : (mIsFullyChained ? "full-chained" : ""));
+        if(isSimpleSingleSV())
+        {
+            LOGGER.info("cluster({}) simple svCount({}) desc({}) armCount({}) consistency({}) ",
+                    getId(), getCount(), getDesc(), getChromosomalArmCount(), getConsistencyCount());
+        }
+        else
+        {
+            double chainedPerc = 1 - (getUnlinkedSVs().size()/mSVs.size());
+            LOGGER.info(String.format("cluster(%d) complex SVs(%d rep=%d) desc(%s) arms(%d) consistency(%d) chains(%d perc=%.2f) replic(%s)",
+                    getId(), getUniqueSvCount(), getCount(), getDesc(), getChromosomalArmCount(), getConsistencyCount(),
+                    mChains.size(), chainedPerc, mHasReplicatedSVs));
+
+        }
     }
 
     public int getChromosomalArmCount() { return mArmGroups.size(); }

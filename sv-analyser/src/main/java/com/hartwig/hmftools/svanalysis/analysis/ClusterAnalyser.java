@@ -3,6 +3,7 @@ package com.hartwig.hmftools.svanalysis.analysis;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
@@ -31,12 +33,7 @@ public class ClusterAnalyser {
     private ChainFinder mChainFinder;
     private LinkFinder mLinkFinder;
 
-    public static double MAX_COPY_NUMBER_DIFF = 0.5;
-    public static double MAX_COPY_NUMBER_DIFF_PERC = 0.1;
     public static int SMALL_CLUSTER_SIZE = 3;
-
-    public static String TRANS_TYPE_TRANS = "TRANS";
-    public static String TRANS_TYPE_SPAN = "SPAN";
 
     private static final Logger LOGGER = LogManager.getLogger(ClusterAnalyser.class);
 
@@ -84,13 +81,21 @@ public class ClusterAnalyser {
                 continue;
 
             if(cluster.getUniqueSvCount() < 2)
+            {
+                setClusterArmBoundaries(cluster);
                 continue;
+            }
 
             // first establish links between SVs (eg TIs and DBs)
             mLinkFinder.findLinkedPairs(sampleId, cluster);
 
             // then look for fully-linked clusters, ie chains involving all SVs
             findChains(sampleId, cluster);
+
+            setClusterArmBoundaries(cluster);
+            // setClusterResolvedState(cluster);
+
+            cluster.logDetails();
         }
 
         // now look at merging unresolved & inconsistent clusters where they share the same chromosomal arms
@@ -119,11 +124,14 @@ public class ClusterAnalyser {
 
             // any clusters which were merged to resolve a collection of them, but
             // which did not lead to any longer chains, are now de-merged
-            demergeClusters(clusters);
+            demergeClusters(mergedClusters);
         }
 
         for(SvCluster cluster : clusters)
         {
+            if(cluster.hasSubClusters()) // these haven't been logged
+                cluster.logDetails();
+
             mLinkFinder.resolveTransitiveSVs(sampleId, cluster);
             cacheFinalLinkedPairs(sampleId, cluster);
         }
@@ -204,42 +212,130 @@ public class ClusterAnalyser {
         // cluster.removeReplicatedSvs();
     }
 
-    private void applyCopyNumberReplicationOld(final String sampleId, SvCluster cluster)
+    private void setClusterResolvedState(SvCluster cluster)
     {
-        List<SvVarData> newSVs = Lists.newArrayList();
-
-        for(final SvVarData var : cluster.getSVs())
+        if (cluster.isSimpleSVs())
         {
-            int calcCopyNumber = var.impliedCopyNumber(true);
-
-            int chromosomeCopyNumber = mClusteringMethods.getChrCopyNumberMap().get(var.chromosome(true));
-
-            chromosomeCopyNumber /= 2;
-
-            if(chromosomeCopyNumber >= 2)
-                calcCopyNumber /= chromosomeCopyNumber;
-
-            if(calcCopyNumber <= 1)
-                continue;
-
-            LOGGER.debug("sample({}) replicating SV({}) {} times", sampleId, var.posId(), calcCopyNumber-1);
-
-            for(int i = 1; i < calcCopyNumber; ++i)
-            {
-                SvVarData newVar = new SvVarData(var);
-                newSVs.add(newVar);
-            }
+            cluster.setResolved(true, "Simple");
+            return;
         }
 
-        for(SvVarData var : newSVs)
+        // next simple reciprocal inversions and translocations
+        if (cluster.getCount() == 2 && cluster.isConsistent() && cluster.getChains().size() == 1)
         {
-            cluster.addVariant(var);
+            cluster.setResolved(true, "Reciprocal");
+            return;
+        }
+
+        // next clusters with which start and end on the same arm, have the same start and end orientation
+        // and the same start and end copy number
+
+    }
+
+    private void setClusterArmBoundaries(SvCluster cluster)
+    {
+        // for each arm group within the cluster, find the bounding SV breakends
+        // excluding any which are part of a continuous chain (ends excluded)
+        final List<SvVarData> unlinkedSVs = cluster.getUnlinkedSVs();
+        final List<SvChain> chains = cluster.getChains();
+
+        for(final SvArmGroup armGroup : cluster.getArmGroups())
+        {
+            armGroup.setBreakend(null, true);
+            armGroup.setBreakend(null, false);
+
+            SvVarData startVar = null;
+            SvVarData endVar = null;
+            long startPosition = -1;
+            long endPosition = 0;
+
+            for(final SvVarData var : armGroup.getSVs())
+            {
+                if(var.isReplicatedSv())
+                    continue;
+
+                boolean checkStart = false;
+                boolean checkEnd = false;
+
+                if(unlinkedSVs.contains(var))
+                {
+                    if(var.type() == BND)
+                    {
+                        if(var.chromosome(true).equals(armGroup.chromosome()))
+                            checkStart = true;
+                        else if(var.chromosome(false).equals(armGroup.chromosome()))
+                            checkEnd = true;
+                    }
+                    else
+                    {
+                        checkStart = true;
+                        checkEnd = true;
+                    }
+                }
+                else
+                {
+                    // check chain ends for a match with this SV
+                    // translocations are skipped if their open end is on another arm
+                    for(final SvChain chain : chains)
+                    {
+                        if(chain.getFirstSV().equals(var)
+                        && (!var.isTranslocation() || var.chromosome(chain.firstLinkOpenOnStart()).equals(armGroup.chromosome())))
+                        {
+                            if(chain.firstLinkOpenOnStart())
+                                checkStart = true;
+                            else
+                                checkEnd = true;
+                        }
+
+                        if(chain.getLastSV().equals(var)
+                        && (!var.isTranslocation() || var.chromosome(chain.lastLinkOpenOnStart()).equals(armGroup.chromosome())))
+                        {
+                            if(chain.lastLinkOpenOnStart())
+                                checkStart = true;
+                            else
+                                checkEnd = true;
+                        }
+                    }
+                }
+
+                if(checkStart && (startPosition < 0 || var.position(true) < startPosition))
+                {
+                    startVar = var;
+                    startPosition = var.position(true);
+                }
+
+                if(checkEnd && !var.isNullBreakend() && var.position(false) > endPosition)
+                {
+                    endVar = var;
+                    endPosition = var.position(false);
+                }
+            }
+
+            if(startVar != null)
+            {
+                boolean useStart = startVar.type() == BND ? startVar.chromosome(true).equals(armGroup.chromosome()) : true;
+                armGroup.setBreakend(new SvBreakend(startVar, useStart), true);
+            }
+
+            if(endVar != null)
+            {
+                boolean useStart = endVar.type() == BND ? endVar.chromosome(true).equals(armGroup.chromosome()) : false;
+                armGroup.setBreakend(new SvBreakend(endVar, useStart), false);
+            }
+
+            if(cluster.getCount() > 1)
+            {
+                LOGGER.debug("cluster({}) arm({}) consistent({}) start({}) end({})",
+                        cluster.getId(), armGroup.id(), armGroup.isConsistent(),
+                        armGroup.getBreakend(true) != null ? armGroup.getBreakend(true).toString() : "null",
+                        armGroup.getBreakend(false) != null ? armGroup.getBreakend(false).toString() : "null");
+            }
         }
     }
 
     private List<SvCluster> mergeInconsistentClusters(List<SvCluster> clusters)
     {
-        // it's possible that to resolve arms and more complex arrangements, that clusters not merged
+        // it's possible that to resolve arms and more complex arrangements, clusters not merged
         // by proximity of overlaps must be put together to solve inconsistencies (ie loose ends)
 
         List<SvCluster> mergedClusters = Lists.newArrayList();
@@ -256,14 +352,6 @@ public class ClusterAnalyser {
                 continue;
             }
 
-            /*
-            if(!cluster1.isFullyChained() && cluster1.getUniqueSvCount() > 1 && !cluster1.hasSubClusters())
-            {
-                ++index1;
-                continue;
-            }
-            */
-
             boolean cluster1Merged = false;
             SvCluster newCluster = null;
 
@@ -278,45 +366,15 @@ public class ClusterAnalyser {
                     continue;
                 }
 
-                boolean cluster2Merged = false;
-
-                boolean foundConnection = false;
-
-                for(int be1 = SVI_START; be1 <= SVI_END; ++be1)
-                {
-                    final String c1LinkingArm = cluster1.linkingArm(isStart(be1));
-
-                    if(c1LinkingArm.isEmpty())
-                        continue;
-
-                    final String c1LinkingChr = cluster1.linkingChromosome(isStart(be1));
-
-                    for(int be2 = SVI_START; be2 <= SVI_END; ++be2)
-                    {
-                        final String c2LinkingArm = cluster2.linkingArm(isStart(be2));
-
-                        if(c2LinkingArm.isEmpty())
-                            continue;
-
-                        if(c1LinkingArm.equals(c2LinkingArm) && c1LinkingChr.equals(cluster2.linkingChromosome(isStart(be2))))
-                        {
-                            LOGGER.debug("inconsistent cluster({}) and cluster({}) linked on chrArm({}:{})",
-                                    cluster1.getId(), cluster2.getId(), c1LinkingChr, c1LinkingArm);
-
-                            foundConnection = true;
-                            break;
-                        }
-                    }
-
-                    if(foundConnection)
-                        break;
-                }
+                boolean foundConnection = canMergeClustersOnOverlaps(cluster1, cluster2);
 
                 if(!foundConnection)
                 {
                     ++index2;
                     continue;
                 }
+
+                boolean cluster2Merged = false;
 
                 if(cluster1.hasSubClusters())
                 {
@@ -325,6 +383,7 @@ public class ClusterAnalyser {
 
                     cluster2Merged = true;
                     cluster1.addSubCluster(cluster2);
+                    setClusterArmBoundaries(cluster1);
                 }
                 else
                 {
@@ -339,6 +398,7 @@ public class ClusterAnalyser {
                     newCluster.addSubCluster(cluster1);
                     newCluster.addSubCluster(cluster2);
                     mergedClusters.add(newCluster);
+                    setClusterArmBoundaries(newCluster);
                 }
 
                 if(cluster2Merged)
@@ -363,6 +423,95 @@ public class ClusterAnalyser {
         }
 
         return mergedClusters;
+    }
+
+    private boolean canMergeClustersOnOverlaps(SvCluster cluster1, SvCluster cluster2)
+    {
+        // checks for overlapping breakends in inconsistent matching arms
+        final List<SvArmGroup> armGroups1 = cluster1.getArmGroups();
+        final List<SvArmGroup> armGroups2 = cluster2.getArmGroups();
+
+        for (SvArmGroup armGroup1 : armGroups1)
+        {
+            if(armGroup1.isConsistent())
+                continue;
+
+            for (SvArmGroup armGroup2 : armGroups2)
+            {
+                if(armGroup2.isConsistent())
+                    continue;
+
+                if(!armGroup1.matches(armGroup2))
+                    continue;
+
+                // for now merge any inconsistent arm
+                LOGGER.debug("inconsistent cluster({}) and cluster({}) linked on chrArm({})",
+                        cluster1.getId(), cluster2.getId(), armGroup1.id());
+
+                return true;
+
+                /*
+                for(int i = 0; i < 2; ++i)
+                {
+                    final SvArmGroup group1 = (i==0) ? armGroup1 : armGroup2;
+                    final SvArmGroup group2 = (i==0) ? armGroup2 : armGroup1;
+
+                    if(group2.getBreakend(true) == null || group2.getBreakend(false) == null)
+                        continue;
+
+                    for(int be = SVI_START; be <= SVI_END; ++be)
+                    {
+                        boolean useStart = isStart(be);
+
+                        if(group1.getBreakend(useStart) == null)
+                            continue;
+
+                        if(group1.getBreakend(useStart).position() >= group2.getBreakend(true).position()
+                        && group1.getBreakend(useStart).position() <= group2.getBreakend(false).position())
+                        {
+                            LOGGER.debug("inconsistent cluster({}) and cluster({}) linked on chrArm({})",
+                                    cluster1.getId(), cluster2.getId(), armGroup1.id());
+
+                            return true;
+                        }
+                    }
+                }
+                    */
+            }
+        }
+
+        return false;
+    }
+
+    private boolean canMergeClustersOnSameArm(SvCluster cluster1, SvCluster cluster2)
+    {
+        for(int be1 = SVI_START; be1 <= SVI_END; ++be1)
+        {
+            final String c1LinkingArm = cluster1.linkingArm(isStart(be1));
+
+            if(c1LinkingArm.isEmpty())
+                continue;
+
+            final String c1LinkingChr = cluster1.linkingChromosome(isStart(be1));
+
+            for(int be2 = SVI_START; be2 <= SVI_END; ++be2)
+            {
+                final String c2LinkingArm = cluster2.linkingArm(isStart(be2));
+
+                if(c2LinkingArm.isEmpty())
+                    continue;
+
+                if(c1LinkingArm.equals(c2LinkingArm) && c1LinkingChr.equals(cluster2.linkingChromosome(isStart(be2))))
+                {
+                    LOGGER.debug("inconsistent cluster({}) and cluster({}) linked on chrArm({}:{})",
+                            cluster1.getId(), cluster2.getId(), c1LinkingChr, c1LinkingArm);
+
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private void demergeClusters(List<SvCluster> clusters)
@@ -508,9 +657,10 @@ public class ClusterAnalyser {
 
         if(!linkedPairs.isEmpty())
         {
-            LOGGER.info("sample({}) cluster({}: {} count={}) has {} linked pairs",
+            LOGGER.debug("sample({}) cluster({}: {} count={}) has {} linked pairs",
                     sampleId, cluster.getId(), cluster.getDesc(), cluster.getUniqueSvCount(), linkedPairs.size());
 
+            /*
             if(LOGGER.isDebugEnabled())
             {
                 for (final SvLinkedPair pair : linkedPairs)
@@ -519,6 +669,7 @@ public class ClusterAnalyser {
                             pair.isInferred() ? "inferred" : "assembly", pair.linkType(), pair.length(), pair.toString());
                 }
             }
+            */
         }
 
         cluster.setLinkedPairs(linkedPairs);

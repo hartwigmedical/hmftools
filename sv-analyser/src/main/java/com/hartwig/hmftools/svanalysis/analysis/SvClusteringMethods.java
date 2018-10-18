@@ -175,7 +175,7 @@ public class SvClusteringMethods {
 
         if(clusters.size() < initClusterCount)
         {
-            LOGGER.info("reduced cluster count({} -> {}) iterations({})", initClusterCount, clusters.size(), iterations);
+            LOGGER.debug("reduced cluster count({} -> {}) iterations({})", initClusterCount, clusters.size(), iterations);
         }
     }
 

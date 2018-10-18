@@ -323,7 +323,7 @@ public class ChainFinder
         {
             chain.recalcLength();
 
-            if (chain.getLinkCount() < 2 || chain.getSvCount() != mReqChainCount)
+            if (chain.getSvCount() != mReqChainCount)
                 continue; // only consider reciprocal chains if this short
 
             if (shortestFullChain == null || chain.getLength() < shortestLength)
@@ -401,7 +401,7 @@ public class ChainFinder
 
             if(maxLengthChain.getLinkCount() >= 3)
             {
-                LOGGER.info("sample({}) cluster({}) adding incomplete chain({}) length({}) with {} linked pairs",
+                LOGGER.debug("sample({}) cluster({}) adding incomplete chain({}) length({}) with {} linked pairs",
                         mSampleId, mCluster.getId(), maxLengthChain.getId(), maxLengthChain.getLength(), maxLengthChain.getLinkCount());
 
                 maxLengthChain.logLinks();
@@ -446,7 +446,7 @@ public class ChainFinder
 
             if(mLogVerbose)
             {
-                LOGGER.debug("found incomplete chain({} svs={})", chain.getId(), chain.getSvCount());
+                LOGGER.debug("cluster({}) found incomplete chain({} svs={})", mCluster.getId(), chain.getId(), chain.getSvCount());
             }
         }
     }
@@ -648,7 +648,8 @@ public class ChainFinder
             if((!chainLinkAdded && closestStartPair == null && closestLastPair == null)
             || chainComplete || (remainingStartLinks.isEmpty() && unlinkedSvList.isEmpty()))
             {
-                if(currentChain.getLinkCount() > 1)
+                // take any chain with 2 or more links or a chain from assembly links
+                if(currentChain.getLinkCount() > 1 || !currentChain.getLinkedPairs().get(0).isInferred())
                 {
                     chainsList.add(currentChain);
 

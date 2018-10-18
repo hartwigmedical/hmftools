@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.sameChrArm;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
@@ -35,8 +36,6 @@ public class LinkFinder
 
     public static int MIN_TEMPLATED_INSERTION_LENGTH = 30;
     private static int MAX_TEMPLATED_INSERTION_LENGTH = 500;
-    // public static double MAX_COPY_NUMBER_DIFF = 0.5;
-    // public static double MAX_COPY_NUMBER_DIFF_PERC = 0.1;
     public static int CLUSTER_SIZE_ANALYSIS_LIMIT = 200;
 
     public static String TRANS_TYPE_TRANS = "TRANS";
@@ -154,9 +153,6 @@ public class LinkFinder
         return areLinkedSection(v1, v2, v1Start, v2Start, false);
     }
 
-    public static double LINKED_PAIR_MAX_COPY_NUM_DIFF = 0.25;
-    public static double LINKED_PAIR_MAX_COPY_NUM_DIFF_PERC = 0.1;
-
     public static boolean areLinkedSection(final SvVarData v1, final SvVarData v2, boolean v1Start, boolean v2Start, boolean checkCopyNumberMatch)
     {
         // templated insertions are allowed to traverse the centromere
@@ -192,10 +188,8 @@ public class LinkFinder
             {
                 double cn1 = v1.copyNumber(v1Start);
                 double cn2 = v2.copyNumber(v2Start);
-                double copyNumDiff = abs(cn2 - cn1);
-                double copyNumDiffPerc = copyNumDiff / max(abs(cn1), abs(cn2));
 
-                if (copyNumDiff > LINKED_PAIR_MAX_COPY_NUM_DIFF && copyNumDiffPerc > LINKED_PAIR_MAX_COPY_NUM_DIFF_PERC)
+                if(!copyNumbersEqual(cn1, cn2))
                     return false;
             }
         }

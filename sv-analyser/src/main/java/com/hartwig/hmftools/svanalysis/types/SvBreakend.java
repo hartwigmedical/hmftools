@@ -37,4 +37,12 @@ public class SvBreakend {
 
     public int getCount() { return mCount; }
     public void addToCount(int change) { mCount += change; }
+
+    public final String toString()
+    {
+        if(mSV == null)
+            return String.format("%s %d:%d", mChromosome, mOrientation, mPosition);
+
+        return mSV.posId(mUsesStart);
+    }
 }
