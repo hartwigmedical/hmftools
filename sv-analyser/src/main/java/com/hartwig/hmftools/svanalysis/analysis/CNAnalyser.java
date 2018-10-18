@@ -379,20 +379,29 @@ public class CNAnalyser {
         SvCNData lohStartCN = null;
         int lohSectionCount = 0;
         int lohSVsMatchedCount = 0;
+        boolean lohOnStartTelomere = false;
 
         for(SvCNData cnData : cnDataList)
         {
             double minCN = (1 - cnData.actualBaf()) * cnData.copyNumber();
 
-            boolean reset = currentChr.isEmpty() || (!currentChr.isEmpty() && !cnData.chromosome().equals(currentChr));
+            boolean newChromosome = currentChr.isEmpty() || (!currentChr.isEmpty() && !cnData.chromosome().equals(currentChr));
+            boolean reset = newChromosome;
 
             if(isLohSection)
             {
                 if(minCN >= MIN_LOH_CN || cnData.segEnd().equals(CN_SEG_TELOMERE) || reset)
                 {
-                    // log all relevant data for this completed section
-                    lohSVsMatchedCount += writeLOHData(sampleId, currentChr, lohStartCN, cnData, priorCN, lohMinCN, lohSegments);
-                    ++lohSectionCount;
+                    if(lohOnStartTelomere)
+                    {
+                        lohOnStartTelomere = false;
+                    }
+                    else
+                    {
+                        // log all relevant data for this completed section
+                        lohSVsMatchedCount += writeLOHData(sampleId, currentChr, lohStartCN, cnData, priorCN, lohMinCN, lohSegments);
+                        ++lohSectionCount;
+                    }
 
                     reset = true;
                 }
@@ -413,19 +422,26 @@ public class CNAnalyser {
                     lohMinCN = minCN;
                     priorCN = lastMinCN;
 
-                    LOGGER.debug(String.format("chr(%s) starting LOH at pos(%d) minCN(%.3f cn=%.3f baf=%.3f) priorCN(%.3f)",
-                            currentChr, cnData.startPos(), cnData.copyNumber(), cnData.actualBaf(), lohMinCN, priorCN));
+                    if(lohOnStartTelomere)
+                    {
+                        LOGGER.debug("chr({}) LOH at telemore", currentChr);
+                    }
+                    else
+                    {
+                        LOGGER.debug(String.format("chr(%s) starting LOH at pos(%d) minCN(%.3f cn=%.3f baf=%.3f) priorCN(%.3f)",
+                                currentChr, cnData.startPos(), cnData.copyNumber(), cnData.actualBaf(), lohMinCN, priorCN));
+                    }
                 }
             }
 
             if(reset)
             {
                 isLohSection = false;
+                lohOnStartTelomere = newChromosome && (minCN < MIN_LOH_CN); // if true, will persist until the LOH segment is finished, but not record it
                 lohSegments = 0;
                 lohStartCN = null;
 
                 currentChr = cnData.chromosome();
-                //currentArm = SvUtilities.CHROMOSOME_ARM_P;
             }
 
             lastMinCN = minCN;
@@ -626,12 +642,15 @@ public class CNAnalyser {
                             StructuralVariantData startSvData = findSvData(lastCnData, 1);
                             StructuralVariantData endSvData = findSvData(cnData, -1);
 
-                            if (startSvData != null && endSvData != null) {
-
-                                if (startSvData.id().equals(endSvData.id())) {
+                            if (startSvData != null && endSvData != null)
+                            {
+                                if (startSvData.id().equals(endSvData.id()))
+                                {
                                     LOGGER.debug("sample({}) cnID({} -> {}) matches singleSV({} - {})",
                                             sampleId, lastCnData.asString(), cnData.asString(), startSvData.id(), startSvData.type());
-                                } else {
+                                }
+                                else
+                                {
 
                                     LOGGER.debug("sample({}) cnID({} -> {}) matches pairSV({} -> {})",
                                             sampleId, lastCnData.asString(), cnData.asString(), startSvData.id(), endSvData.id());
