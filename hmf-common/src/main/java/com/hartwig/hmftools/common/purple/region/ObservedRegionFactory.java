@@ -45,8 +45,8 @@ public class ObservedRegionFactory {
             @NotNull final Multimap<Chromosome, CobaltRatio> ratios, @NotNull final Multimap<Chromosome, GCProfile> gcProfiles) {
         final List<ModifiableEnrichedRegion> result = Lists.newArrayList();
 
-        final GenomePositionSelector<CobaltRatio> cobaltSelector = GenomePositionSelectorFactory.createImproved(ratios);
-        final GenomePositionSelector<AmberBAF> bafSelector = GenomePositionSelectorFactory.createImproved(bafs);
+        final GenomePositionSelector<CobaltRatio> cobaltSelector = GenomePositionSelectorFactory.create(ratios);
+        final GenomePositionSelector<AmberBAF> bafSelector = GenomePositionSelectorFactory.create(bafs);
         final GenomeRegionSelector<GCProfile> gcSelector = GenomeRegionSelectorFactory.createImproved(gcProfiles);
 
         for (final PurpleSegment region : regions) {

@@ -23,31 +23,9 @@ public final class GenomePositionSelectorFactory {
         return new GenomePositionSelectorImpl<>(positions);
     }
 
-    @NotNull
-    public static <P extends GenomePosition> GenomePositionSelector<P> create(@NotNull final Multimap<String, P> positions) {
-
-        final GenomePositionSelector<P> nullSelector = new NullGenomePositionSelector<>();
-
-        final Map<String, GenomePositionSelector<P>> chromosomeSelectors = Maps.newHashMap();
-        for (final String chromosome : positions.keySet()) {
-            chromosomeSelectors.put(chromosome, new GenomePositionSelectorImpl<>(positions.get(chromosome)));
-        }
-        return new GenomePositionSelector<P>() {
-            @NotNull
-            @Override
-            public Optional<P> select(@NotNull final GenomePosition position) {
-                return chromosomeSelectors.getOrDefault(position.chromosome(), nullSelector).select(position);
-            }
-
-            @Override
-            public void select(final GenomeRegion region, final Consumer<P> handler) {
-                chromosomeSelectors.getOrDefault(region.chromosome(), nullSelector).select(region, handler);
-            }
-        };
-    }
 
     @NotNull
-    public static <P extends GenomePosition> GenomePositionSelector<P> createImproved(@NotNull final Multimap<Chromosome, P> positions) {
+    public static <P extends GenomePosition> GenomePositionSelector<P> create(@NotNull final Multimap<Chromosome, P> positions) {
 
         final GenomePositionSelector<P> nullSelector = new NullGenomePositionSelector<>();
 

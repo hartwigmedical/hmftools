@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.cobalt.ImmutableReadCount;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
 import com.hartwig.hmftools.common.window.Window;
@@ -59,8 +61,8 @@ class ChromosomeReadCount implements Callable<ChromosomeReadCount> {
         return this;
     }
 
-    String chromosome() {
-        return chromosome;
+    Chromosome chromosome() {
+        return HumanChromosome.fromString(chromosome);
     }
 
     List<ReadCount> readCount() {
