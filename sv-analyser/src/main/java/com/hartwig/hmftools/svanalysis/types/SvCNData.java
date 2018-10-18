@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svanalysis.types;
 
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+
 public class SvCNData {
 
     final private int mId;
@@ -34,6 +36,21 @@ public class SvCNData {
         mBafCount = bafCount;
         mObservedBaf = observedBaf;
         mActualBaf = actualBaf;
+    }
+
+    public SvCNData(final PurpleCopyNumber record, int id)
+    {
+        mId = id;
+        mChromosome = record.chromosome();
+        mStartPos = record.start();
+        mEndPos = record.end();
+        mCopyNumber = record.averageTumorCopyNumber();
+        mSegStart = record.segmentStartSupport().toString();
+        mSegEnd = record.segmentEndSupport().toString();
+        mMethod = record.method().toString();
+        mBafCount = record.bafCount();
+        mObservedBaf = record.averageObservedBAF();
+        mActualBaf = record.averageActualBAF();
     }
 
     public int id() { return mId; }

@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.svanalysis.SvAnalyser.SAMPLE;
 import static com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator.PON_FILTER_PON;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_UNKNOWN;
@@ -19,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
@@ -32,8 +34,11 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvLOH;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 public class CNAnalyser {
 
@@ -42,6 +47,10 @@ public class CNAnalyser {
     private final String mOutputPath;
     private final SvUtilities mUtils;
     private Map<String, List<SvCNData>> mSampleCNData;
+
+    private List<String> mSampleIds;
+    private int mRecordId;
+
     BufferedWriter mFileWriter;
     DatabaseAccess mDbAccess;
     List<StructuralVariantData> mSvDataList;
@@ -50,6 +59,8 @@ public class CNAnalyser {
 
     private boolean mAnalyseLOH;
     private boolean mAnalyseFlips;
+
+    private static final String COPY_NUMBER_FILE = "cn_file";
 
     private static double CN_ROUNDING= 0.2;
     private static double CN_DIFF_MARGIN = 0.25;
@@ -63,39 +74,61 @@ public class CNAnalyser {
         mSampleCNData = new HashMap();
         mUtils = new SvUtilities(0);
         mOutputPath = outputPath;
+        mSampleIds = Lists.newArrayList();
         mFileWriter = null;
         mDbAccess = dbAccess;
         mSvDataList = Lists.newArrayList();
         mSampleLohData = null;
+        mRecordId = 0;
 
         mAnalyseLOH = true;
         mAnalyseFlips = false;
     }
 
+    public static void addCmdLineArgs(Options options)
+    {
+        options.addOption(COPY_NUMBER_FILE, true, "Copy number CSV file");
+    }
+
+    public boolean loadConfig(final CommandLine cmd, final List<String> sampleIds)
+    {
+        mSampleIds.addAll(sampleIds);
+
+        if(cmd.hasOption(COPY_NUMBER_FILE))
+        {
+            loadFromCSV(cmd.getOptionValue(COPY_NUMBER_FILE), mSampleIds.size() == 1 ? mSampleIds.get(0) : "");
+        }
+
+        setAnalyseFlips(false);
+        setAnalyseLOH(true);
+
+        return true;
+    }
+
     public void setAnalyseLOH(boolean toggle) { mAnalyseLOH = toggle; }
     public void setAnalyseFlips(boolean toggle) { mAnalyseFlips = toggle; }
 
-    public void loadFromCSV(final String filename, final String specificSample)
+    private void loadFromCSV(final String filename, final String specificSample)
     {
-        if (filename.isEmpty()) {
+        if (filename.isEmpty())
             return;
-        }
 
-        try {
-
+        try
+        {
             BufferedReader fileReader = new BufferedReader(new FileReader(filename));
 
             // skip field names
             String line = fileReader.readLine();
 
-            if (line == null) {
+            if (line == null)
+            {
                 LOGGER.error("Empty copy number CSV file({})", filename);
                 return;
             }
 
             int cnCount = 0;
-            while ((line = fileReader.readLine()) != null) {
-
+            while ((line = fileReader.readLine()) != null)
+            {
                 // parse CSV data
                 String[] items = line.split(",");
 
@@ -110,7 +143,8 @@ public class CNAnalyser {
                     continue;
                 }
 
-                if (!mSampleCNData.containsKey(sampleId)) {
+                if (!mSampleCNData.containsKey(sampleId))
+                {
                     List<SvCNData> newList = Lists.newArrayList();
                     mSampleCNData.put(sampleId, newList);
                 }
@@ -147,8 +181,103 @@ public class CNAnalyser {
         }
     }
 
-    public final Map<String, List<SvLOH>> getSampleLohData() { return mSampleLohData; }
+    public void analyseData()
+    {
+        int sampleCount = 0;
 
+        if(!mSampleCNData.isEmpty())
+        {
+            for (Map.Entry<String, List<SvCNData>> entry : mSampleCNData.entrySet())
+            {
+                if(mSampleCNData.size() > 1)
+                {
+                    ++sampleCount;
+                    LOGGER.info("analysing sample({}) with {} CN entries, totalProcessed({})",
+                            entry.getKey(), entry.getValue().size(), sampleCount);
+                }
+
+                analyseData(entry.getKey(), entry.getValue());
+            }
+        }
+        else if(mDbAccess != null)
+        {
+            for(final String sampleId : mSampleIds)
+            {
+                List<SvCNData> sampleData = loadFromDatabase(sampleId);
+
+                ++sampleCount;
+                LOGGER.info("analysing sample({}) with {} CN entries, totalProcessed({})",
+                        sampleId, sampleData.size(), sampleCount);
+
+                analyseData(sampleId, sampleData);
+            }
+        }
+    }
+
+    private List<SvCNData> loadFromDatabase(final String sampleId)
+    {
+        List<SvCNData> cnDataList = Lists.newArrayList();
+        List<PurpleCopyNumber> cnRecords = mDbAccess.readCopynumbers(sampleId);
+
+        for(final PurpleCopyNumber cnRecord : cnRecords)
+        {
+            cnDataList.add(new SvCNData(cnRecord, ++mRecordId));
+        }
+
+        return cnDataList;
+    }
+
+    private void analyseData(final String sampleId, final List<SvCNData> sampleData)
+    {
+        if(mAnalyseLOH)
+            analyseLOH(sampleId, sampleData);
+
+        if(mAnalyseFlips)
+            analyseFlips(sampleId, sampleData, "");
+    }
+
+    private void loadSVData(final String sampleId)
+    {
+        if(mDbAccess == null)
+            return;
+
+        mSvDataList = mDbAccess.readStructuralVariantData(sampleId);
+
+        if(mSvDataList.isEmpty())
+        {
+            LOGGER.warn("sample({}) no SV records found", sampleId);
+        }
+    }
+
+    private StructuralVariantData findSvData(final SvCNData cnData, int requiredOrient)
+    {
+        if(cnData.segStart().equals(CN_SEG_NONE) || cnData.segStart().equals(CN_SEG_UNKNOWN)
+        || cnData.segStart().equals(CN_SEG_TELOMERE) || cnData.segStart().equals(CN_SEG_CENTROMERE))
+            return null;
+
+        for(final StructuralVariantData var : mSvDataList)
+        {
+            if(var.filter().equals(PON_FILTER_PON))
+                continue;
+
+            // if(svData.type() == StructuralVariantType.BND)
+            if(var.startChromosome().equals(cnData.chromosome()) && var.startPosition() == cnData.startPos())
+            {
+                if(requiredOrient == 0 || var.startOrientation() == requiredOrient)
+                    return var;
+            }
+
+            if(var.endChromosome().equals(cnData.chromosome()) && var.endPosition() == cnData.startPos())
+            {
+                if(requiredOrient == 0 || var.endOrientation() == requiredOrient)
+                    return var;
+            }
+        }
+
+        return null;
+    }
+
+    public final Map<String, List<SvLOH>> getSampleLohData() { return mSampleLohData; }
 
     private static int LOH_COLUMN_COUNT = 16;
 
@@ -232,82 +361,6 @@ public class CNAnalyser {
         }
     }
 
-    public void analyseData(final String specificSample, final String specificChromosome) {
-
-        if(!specificSample.isEmpty())
-        {
-            if (!mSampleCNData.containsKey(specificSample))
-            {
-                LOGGER.warn("sample({}) not found", specificSample);
-                return;
-            }
-
-            List<SvCNData> sampleData = mSampleCNData.get(specificSample);
-
-            if(mAnalyseLOH)
-                analyseLOH(specificSample, sampleData);
-
-            if(mAnalyseFlips)
-                analyseFlips(specificSample, sampleData, specificChromosome);
-        }
-        else
-        {
-            int sampleCount = 0;
-            for (Map.Entry<String, List<SvCNData>> entry : mSampleCNData.entrySet())
-            {
-                ++sampleCount;
-                LOGGER.info("analysing sample({}) with {} CN entries, totalProcessed({})", entry.getKey(), entry.getValue().size(), sampleCount);
-
-                if(mAnalyseLOH)
-                    analyseLOH(entry.getKey(), entry.getValue());
-
-                if(mAnalyseFlips)
-                    analyseFlips(entry.getKey(), entry.getValue(), specificChromosome);
-            }
-        }
-    }
-
-    private void loadSVData(final String sampleId)
-    {
-        if(mDbAccess == null)
-            return;
-
-        mSvDataList = mDbAccess.readStructuralVariantData(sampleId);
-
-        if(mSvDataList.isEmpty())
-        {
-            LOGGER.warn("sample({}) no SV records found", sampleId);
-        }
-    }
-
-    private StructuralVariantData findSvData(final SvCNData cnData, int requiredOrient)
-    {
-        if(cnData.segStart().equals(CN_SEG_NONE) || cnData.segStart().equals(CN_SEG_UNKNOWN)
-        || cnData.segStart().equals(CN_SEG_TELOMERE) || cnData.segStart().equals(CN_SEG_CENTROMERE))
-            return null;
-
-        for(final StructuralVariantData var : mSvDataList)
-        {
-            if(var.filter().equals(PON_FILTER_PON))
-                continue;
-
-            // if(svData.type() == StructuralVariantType.BND)
-            if(var.startChromosome().equals(cnData.chromosome()) && var.startPosition() == cnData.startPos())
-            {
-                if(requiredOrient == 0 || var.startOrientation() == requiredOrient)
-                    return var;
-            }
-
-            if(var.endChromosome().equals(cnData.chromosome()) && var.endPosition() == cnData.startPos())
-            {
-                if(requiredOrient == 0 || var.endOrientation() == requiredOrient)
-                    return var;
-            }
-        }
-
-        return null;
-    }
-
     private void analyseLOH(final String sampleId, List<SvCNData> cnDataList)
     {
         String currentChr = "";
@@ -360,8 +413,8 @@ public class CNAnalyser {
                     lohMinCN = minCN;
                     priorCN = lastMinCN;
 
-                    LOGGER.debug("chr({}) starting LOH at pos({}) minCN({} cn={} baf={}) priorCN({})",
-                            currentChr, cnData.startPos(), cnData.copyNumber(), cnData.actualBaf(), lohMinCN, priorCN);
+                    LOGGER.debug(String.format("chr(%s) starting LOH at pos(%d) minCN(%.3f cn=%.3f baf=%.3f) priorCN(%.3f)",
+                            currentChr, cnData.startPos(), cnData.copyNumber(), cnData.actualBaf(), lohMinCN, priorCN));
                 }
             }
 

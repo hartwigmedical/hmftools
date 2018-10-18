@@ -32,7 +32,7 @@ public class SvAnalyser {
 
     private static final Logger LOGGER = LogManager.getLogger(SvAnalyser.class);
 
-    private static final String SAMPLE = "sample";
+    public static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
     private static final String CLUSTER_SVS = "cluster_svs";
     private static final String DATA_OUTPUT_PATH = "data_output_path";
@@ -43,7 +43,6 @@ public class SvAnalyser {
     private static final String LINE_ELEMENT_FILE = "line_element_file";
     private static final String COPY_NUMBER_ANALYSIS = "copy_number_analysis";
     private static final String RUN_RESULTS_CHECKER = "run_results_checker";
-    private static final String COPY_NUMBER_FILE = "cn_file";
     private static final String EXTERNAL_DATA_LINK_FILE = "ext_data_link_file";
 
     private static final String DB_USER = "db_user";
@@ -66,6 +65,22 @@ public class SvAnalyser {
         if(tumorSample == null || tumorSample.equals("*"))
             tumorSample = "";
 
+        List<String> samplesList = Lists.newArrayList();
+
+        if (tumorSample.isEmpty())
+        {
+            samplesList = getStructuralVariantSamplesList(dbAccess);
+        }
+        else if (tumorSample.contains(","))
+        {
+            String[] tumorList = tumorSample.split(",");
+            samplesList = Arrays.stream(tumorList).collect(Collectors.toList());
+        }
+        else
+        {
+            samplesList.add(tumorSample);
+        }
+
         if(cmd.hasOption(WRITE_FILTERED_SVS) || cmd.hasOption(LOG_VCF_INSERTS))
         {
             LOGGER.info("reading VCF files including filtered SVs");
@@ -84,10 +99,9 @@ public class SvAnalyser {
         if(cmd.hasOption(COPY_NUMBER_ANALYSIS))
         {
             CNAnalyser cnAnalyser = new CNAnalyser(cmd.getOptionValue(DATA_OUTPUT_PATH), dbAccess);
-            cnAnalyser.loadFromCSV(cmd.getOptionValue(COPY_NUMBER_FILE), tumorSample);
-            cnAnalyser.setAnalyseFlips(false);
-            cnAnalyser.setAnalyseLOH(true);
-            cnAnalyser.analyseData(tumorSample, "");
+
+            cnAnalyser.loadConfig(cmd, samplesList);
+            cnAnalyser.analyseData();
             cnAnalyser.close();
 
             LOGGER.info("CN analysis complete");
@@ -104,22 +118,6 @@ public class SvAnalyser {
 
         SvClusteringConfig clusteringConfig = new SvClusteringConfig(cmd, tumorSample);
         SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(clusteringConfig);
-
-        List<String> samplesList = Lists.newArrayList();
-
-        if (tumorSample.isEmpty())
-        {
-            samplesList = getStructuralVariantSamplesList(dbAccess);
-        }
-        else if (tumorSample.contains(","))
-        {
-            String[] tumorList = tumorSample.split(",");
-            samplesList = Arrays.stream(tumorList).collect(Collectors.toList());
-        }
-        else
-        {
-            samplesList.add(tumorSample);
-        }
 
         int count = 0;
         for (final String sample : samplesList)
@@ -203,11 +201,11 @@ public class SvAnalyser {
         options.addOption(LOG_VCF_MANTA_DATA, false, "Read extra manta data from VCF files, write to CSV");
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file for SVs");
         options.addOption(COPY_NUMBER_ANALYSIS, false, "Run copy number analysis");
-        options.addOption(COPY_NUMBER_FILE, true, "Copy number CSV file");
         options.addOption(RUN_RESULTS_CHECKER, false, "Check results vs validation file");
 
         SvClusteringConfig.addCmdLineArgs(options);
         ResultsChecker.addCmdLineArgs(options);
+        CNAnalyser.addCmdLineArgs(options);
 
         return options;
     }
