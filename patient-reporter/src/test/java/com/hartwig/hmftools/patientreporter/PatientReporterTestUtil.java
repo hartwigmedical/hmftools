@@ -29,7 +29,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public final class PatientReporterTestUtil {
 
     private static final String SIGNATURE_PATH = Resources.getResource("signature/signature.png").getPath();
-    private static final String RVA_LOGO = Resources.getResource("rvalogo/rvalogo_test.jpg").getPath();
+    private static final String RVA_LOGO = Resources.getResource("rvalogo/rva_logo_test.jpg").getPath();
 
     private static final String REF_GENOME_PATH = Resources.getResource("refgenome/ref.fasta").getPath();
 
