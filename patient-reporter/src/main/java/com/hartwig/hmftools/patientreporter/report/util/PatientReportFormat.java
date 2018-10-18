@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientreporter.report.util;
 
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
-import com.hartwig.hmftools.svannotation.annotations.Transcript;
+import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

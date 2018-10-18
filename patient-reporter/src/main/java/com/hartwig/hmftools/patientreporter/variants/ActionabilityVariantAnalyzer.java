@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

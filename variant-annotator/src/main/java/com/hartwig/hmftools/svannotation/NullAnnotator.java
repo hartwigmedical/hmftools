@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
-import com.hartwig.hmftools.svannotation.annotations.StructuralVariantAnnotation;
+import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 

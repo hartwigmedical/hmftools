@@ -20,8 +20,7 @@ import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
-import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

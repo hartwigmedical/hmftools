@@ -1,8 +1,7 @@
-package com.hartwig.hmftools.svannotation.annotations;
+package com.hartwig.hmftools.common.variant.structural.annotation;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jooq.types.UInteger;
 
 public class Transcript {
 
@@ -23,7 +22,7 @@ public class Transcript {
 
     public Transcript(@NotNull final GeneAnnotation parent, @NotNull final String transcriptId, final int exonUpstream,
             final int exonUpstreamPhase, final int exonDownstream, final int exonDownstreamPhase, final int exonMax,
-            final boolean canonical, @Nullable final UInteger codingStart, @Nullable final UInteger codingEnd) {
+            final boolean canonical, @Nullable final Long codingStart, @Nullable final Long codingEnd) {
         this.parent = parent;
         this.transcriptId = transcriptId;
         this.exonUpstream = exonUpstream;
@@ -32,8 +31,8 @@ public class Transcript {
         this.exonDownstreamPhase = exonDownstreamPhase;
         this.exonMax = exonMax;
         this.canonical = canonical;
-        this.codingStart = codingStart == null ? null : codingStart.longValue();
-        this.codingEnd = codingEnd == null ? null : codingEnd.longValue();
+        this.codingStart = codingStart;
+        this.codingEnd = codingEnd;
     }
 
     @NotNull
