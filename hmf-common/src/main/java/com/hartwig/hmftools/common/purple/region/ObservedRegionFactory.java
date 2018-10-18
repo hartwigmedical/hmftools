@@ -41,12 +41,12 @@ public class ObservedRegionFactory {
     }
 
     @NotNull
-    public List<ObservedRegion> combine(@NotNull final List<PurpleSegment> regions, @NotNull final Multimap<String, AmberBAF> bafs,
+    public List<ObservedRegion> combine(@NotNull final List<PurpleSegment> regions, @NotNull final Multimap<Chromosome, AmberBAF> bafs,
             @NotNull final Multimap<Chromosome, CobaltRatio> ratios, @NotNull final Multimap<Chromosome, GCProfile> gcProfiles) {
         final List<ModifiableEnrichedRegion> result = Lists.newArrayList();
 
         final GenomePositionSelector<CobaltRatio> cobaltSelector = GenomePositionSelectorFactory.createImproved(ratios);
-        final GenomePositionSelector<AmberBAF> bafSelector = GenomePositionSelectorFactory.create(bafs);
+        final GenomePositionSelector<AmberBAF> bafSelector = GenomePositionSelectorFactory.createImproved(bafs);
         final GenomeRegionSelector<GCProfile> gcSelector = GenomeRegionSelectorFactory.createImproved(gcProfiles);
 
         for (final PurpleSegment region : regions) {

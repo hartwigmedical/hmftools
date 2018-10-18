@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.purple.gender;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
@@ -20,10 +19,9 @@ public enum Gender {
     private static final int MIN_BAF_COUNT = 1000;
 
     @NotNull
-    public static Gender fromAmber(@NotNull final Multimap<String, AmberBAF> bafs) {
-        return bafs.get("X").stream().filter(x -> x.position() > 2_699_520 && x.position() < 155_260_560).count() > MIN_BAF_COUNT
-                ? FEMALE
-                : MALE;
+    public static Gender fromAmber(@NotNull final Multimap<Chromosome, AmberBAF> bafs) {
+        return bafs.get(HumanChromosome._X).stream().filter(x -> x.position() > 2_699_520 && x.position() < 155_260_560).count()
+                > MIN_BAF_COUNT ? FEMALE : MALE;
     }
 
     @NotNull

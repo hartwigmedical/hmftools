@@ -124,7 +124,7 @@ public class PurityPloidyEstimateApplication {
             // JOBA: Load BAFs from AMBER
             final String amberFile = configSupplier.bafConfig().bafFile().toString();
             LOGGER.info("Reading amber bafs from {}", amberFile);
-            final Multimap<String, AmberBAF> bafs = AmberBAFFile.read(amberFile);
+            final Multimap<Chromosome, AmberBAF> bafs = AmberBAFFile.read(amberFile);
             int averageTumorDepth =
                     (int) Math.round(bafs.values().stream().mapToInt(AmberBAF::tumorDepth).filter(x -> x > 0).average().orElse(100));
             LOGGER.info("Average amber tumor depth is {} reads implying an ambiguous BAF of {}",
