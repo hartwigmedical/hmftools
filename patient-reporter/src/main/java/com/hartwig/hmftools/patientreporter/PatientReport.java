@@ -21,5 +21,5 @@ public interface PatientReport {
     String signaturePath();
 
     @NotNull
-    String logoPath();
+    String logoRVA();
 }

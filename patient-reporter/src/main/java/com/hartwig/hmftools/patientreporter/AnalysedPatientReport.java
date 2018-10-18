@@ -69,5 +69,5 @@ public abstract class AnalysedPatientReport implements PatientReport {
 
     @NotNull
     @Override
-    public abstract String logoPath();
+    public abstract String logoRVA();
 }
