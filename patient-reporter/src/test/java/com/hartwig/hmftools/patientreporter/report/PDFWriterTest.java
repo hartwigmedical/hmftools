@@ -118,7 +118,7 @@ public class PDFWriterTest {
                 disruptions,
                 Resources.getResource("circos/circos_example.png").getPath(),
                 Optional.of("this is a test report and does not relate to any real CPCT patient"),
-                baseReportData.signaturePath(), baseReportData.signaturePath());
+                baseReportData.signaturePath(), baseReportData.logoPath());
 
         final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport, reporterData);
         assertNotNull(mainReport);
