@@ -46,9 +46,44 @@ public class FusionEvidenceAnalyzer {
     }
 
     @NotNull
-    public List<EvidenceItem> actionableFusions(@Nullable String doidsPrimaryTumorLocation,
-            @NotNull CancerTypeAnalyzer cancerTypeAnalyzer, @NotNull GeneFusion geneFusion) {
+    public List<EvidenceItem> actionableFusions(@Nullable String doidsPrimaryTumorLocation, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
+            @NotNull GeneFusion geneFusion) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
+
+        for (ActionableFusion actionableFusion : fusionPairs) {
+            if (actionableFusion.fiveGene().equals(geneFusion.upstreamLinkedAnnotation().geneName()) && actionableFusion.threeGene()
+                    .equals(geneFusion.downstreamLinkedAnnotation().geneName())) {
+                ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionPairs(actionableFusion);
+
+                evidenceBuilder.event("");
+                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionableFusion.cancerType(), doidsPrimaryTumorLocation));
+                evidenceItems.add(evidenceBuilder.build());
+            }
+        }
+
+        for (ActionablePromiscuousThree actionablePromiscuousThree : promiscuousThree) {
+            if (actionablePromiscuousThree.gene().equals(geneFusion.downstreamLinkedAnnotation().geneName())) {
+                ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionsPromiscuousThree(actionablePromiscuousThree);
+
+                evidenceBuilder.event("");
+                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionablePromiscuousThree.cancerType(),
+                        doidsPrimaryTumorLocation));
+
+                evidenceItems.add(evidenceBuilder.build());
+            }
+        }
+
+        for (ActionablePromiscuousFive actionablePromiscuousFive : promiscuousFive) {
+            if (actionablePromiscuousFive.gene().equals(geneFusion.upstreamLinkedAnnotation().geneName())) {
+                ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionsPromiscuousFive(actionablePromiscuousFive);
+
+                evidenceBuilder.event("");
+                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionablePromiscuousFive.cancerType(),
+                        doidsPrimaryTumorLocation));
+
+                evidenceItems.add(evidenceBuilder.build());
+            }
+        }
 
         return evidenceItems;
     }
@@ -65,7 +100,8 @@ public class FusionEvidenceAnalyzer {
     }
 
     @NotNull
-    private static ImmutableEvidenceItem.Builder fromActionableFusionsPromiscuousThree(@NotNull ActionablePromiscuousThree actionablePromiscuousThree) {
+    private static ImmutableEvidenceItem.Builder fromActionableFusionsPromiscuousThree(
+            @NotNull ActionablePromiscuousThree actionablePromiscuousThree) {
         return ImmutableEvidenceItem.builder()
                 .reference(actionablePromiscuousThree.reference())
                 .source(actionablePromiscuousThree.source())
@@ -76,7 +112,8 @@ public class FusionEvidenceAnalyzer {
     }
 
     @NotNull
-    private static ImmutableEvidenceItem.Builder fromActionableFusionsPromiscuousFive(@NotNull ActionablePromiscuousFive actionablePromiscuousFive) {
+    private static ImmutableEvidenceItem.Builder fromActionableFusionsPromiscuousFive(
+            @NotNull ActionablePromiscuousFive actionablePromiscuousFive) {
         return ImmutableEvidenceItem.builder()
                 .reference(actionablePromiscuousFive.reference())
                 .source(actionablePromiscuousFive.source())
