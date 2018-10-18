@@ -68,5 +68,6 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract String signaturePath();
 
     @NotNull
+    @Override
     public abstract String logoPath();
 }

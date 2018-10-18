@@ -118,7 +118,8 @@ public class PDFWriterTest {
                 disruptions,
                 Resources.getResource("circos/circos_example.png").getPath(),
                 Optional.of("this is a test report and does not relate to any real CPCT patient"),
-                baseReportData.signaturePath(), baseReportData.logoPath());
+                baseReportData.signaturePath(),
+                baseReportData.logoPath());
 
         final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport, reporterData);
         assertNotNull(mainReport);
@@ -320,7 +321,8 @@ public class PDFWriterTest {
                 reason,
                 NotAnalysableStudy.CPCT,
                 Optional.empty(),
-                testBaseReportData().signaturePath(), testBaseReportData().logoPath());
+                testBaseReportData().signaturePath(),
+                testBaseReportData().logoPath());
 
         return PDFWriter.generateNotAnalysableReport(patientReport);
     }
