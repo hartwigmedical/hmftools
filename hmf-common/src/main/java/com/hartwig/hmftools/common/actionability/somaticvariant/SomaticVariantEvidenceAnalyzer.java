@@ -76,7 +76,7 @@ public class SomaticVariantEvidenceAnalyzer {
 
     @NotNull
     private static String eventString(@NotNull SomaticVariant variant) {
-        return variant.gene() + " " + variant.canonicalHgvsCodingImpact();
+        return variant.gene() + " " + variant.canonicalHgvsProteinImpact();
     }
 
     @NotNull
