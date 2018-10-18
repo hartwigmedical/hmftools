@@ -27,13 +27,8 @@ public enum Gender {
     }
 
     @NotNull
-    public static Gender fromCobalt(@NotNull final Multimap<String, CobaltRatio> readRatios) {
-        Multimap<Chromosome, CobaltRatio> map = ArrayListMultimap.create();
-        for (CobaltRatio cobaltRatio : readRatios.values()) {
-            map.put(HumanChromosome.fromString(cobaltRatio.chromosome()), cobaltRatio);
-        }
-
-        return fromCobalt(ReferenceRatioStatisticsFactory.fromCobalt(map));
+    public static Gender fromCobalt(@NotNull final Multimap<Chromosome, CobaltRatio> readRatios) {
+        return fromCobalt(ReferenceRatioStatisticsFactory.fromCobalt(readRatios));
     }
 
     @NotNull

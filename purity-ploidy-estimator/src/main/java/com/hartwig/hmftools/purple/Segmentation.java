@@ -35,14 +35,14 @@ class Segmentation {
 
     private final CommonConfig config;
     private final Gender gender;
-    private final ListMultimap<String, CobaltRatio> ratios;
     private final Multimap<String, AmberBAF> bafs;
     private final Map<Chromosome, ChromosomeLength> lengths;
     private final Multimap<String, PCFPosition> pcfPositions;
     private final Multimap<Chromosome, GCProfile> gcProfiles;
+    private final ListMultimap<Chromosome, CobaltRatio> ratios;
 
     public Segmentation(@NotNull final CommonConfig config, @NotNull final Gender gender,
-            @NotNull final ListMultimap<String, CobaltRatio> ratios, @NotNull final Multimap<String, AmberBAF> bafs) throws IOException {
+            @NotNull final ListMultimap<Chromosome, CobaltRatio> ratios, @NotNull final Multimap<String, AmberBAF> bafs) throws IOException {
         this.config = config;
         this.gender = gender;
         this.ratios = ratios;

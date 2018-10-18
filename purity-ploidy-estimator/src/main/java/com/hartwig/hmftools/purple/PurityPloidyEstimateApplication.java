@@ -21,6 +21,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
@@ -133,7 +134,7 @@ public class PurityPloidyEstimateApplication {
             // JOBA: Load Ratios from COBALT
             final String ratioFilename = CobaltRatioFile.generateFilename(config.cobaltDirectory(), config.tumorSample());
             LOGGER.info("Reading cobalt ratios from {}", ratioFilename);
-            final ListMultimap<String, CobaltRatio> ratios = CobaltRatioFile.read(ratioFilename);
+            final ListMultimap<Chromosome, CobaltRatio> ratios = CobaltRatioFile.read(ratioFilename);
 
             // JOBA: Gender
             final Gender amberGender = Gender.fromAmber(bafs);

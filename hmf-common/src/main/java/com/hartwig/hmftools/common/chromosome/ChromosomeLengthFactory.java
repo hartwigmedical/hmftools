@@ -18,18 +18,6 @@ public final class ChromosomeLengthFactory {
 
     @NotNull
     public static <T extends GenomePosition> Map<Chromosome, ChromosomeLength> create(int windowSize,
-            @NotNull final Multimap<String, T> position) {
-        final Map<Chromosome, ChromosomeLength> result = Maps.newHashMap();
-        for (String chromosome : position.keySet()) {
-            long max = position.get(chromosome).stream().mapToLong(x -> x.position() + windowSize - 1).max().orElse(0L);
-            result.put(HumanChromosome.fromString(chromosome), ImmutableChromosomeLength.builder().chromosome(chromosome).length(max).build());
-        }
-
-        return result;
-    }
-
-    @NotNull
-    public static <T extends GenomePosition> Map<Chromosome, ChromosomeLength> create(int windowSize,
             @NotNull final ListMultimap<Chromosome, T> position) {
         final Map<Chromosome, ChromosomeLength> result = Maps.newHashMap();
         for (Chromosome chromosome : position.keySet()) {

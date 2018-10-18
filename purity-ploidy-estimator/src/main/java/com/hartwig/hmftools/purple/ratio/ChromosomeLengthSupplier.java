@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
@@ -26,7 +27,7 @@ public class ChromosomeLengthSupplier implements Supplier<Map<Chromosome, Chromo
     @NotNull
     private final Map<Chromosome, ChromosomeLength> chromosomeLengths;
 
-    public ChromosomeLengthSupplier(@NotNull final CommonConfig config, @NotNull Multimap<String, CobaltRatio> cobaltRatios)
+    public ChromosomeLengthSupplier(@NotNull final CommonConfig config, @NotNull ListMultimap<Chromosome, CobaltRatio> cobaltRatios)
             throws IOException {
         final String chrLengthFile = ChromosomeLengthFile.generateFilename(config.cobaltDirectory(), config.tumorSample());
         if (new File(chrLengthFile).exists()) {
