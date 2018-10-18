@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -45,7 +46,7 @@ public class FusionEvidenceAnalyzer {
 
     @NotNull
     public List<EvidenceItem> actionableFusions(@Nullable String doidsPrimaryTumorLocation,
-            @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
+            @NotNull CancerTypeAnalyzer cancerTypeAnalyzer, @NotNull GeneFusion geneFusion) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
 
         return evidenceItems;

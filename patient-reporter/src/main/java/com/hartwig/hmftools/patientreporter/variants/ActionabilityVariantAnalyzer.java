@@ -74,7 +74,7 @@ public final class ActionabilityVariantAnalyzer {
         for (T fusion : fusionsOnActionableGenes) {
             evidenceItemsFusions.put(fusion,
                     actionabilityAnalyzerData.fusionAnalyzer()
-                            .actionableFusions(doidsPrimaryTumorLocation, actionabilityAnalyzerData.cancerTypeAnalyzer()));
+                            .actionableFusions(doidsPrimaryTumorLocation, actionabilityAnalyzerData.cancerTypeAnalyzer(), fusion));
         }
 
         return evidenceItemsFusions;

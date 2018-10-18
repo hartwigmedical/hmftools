@@ -87,6 +87,8 @@ public abstract class PatientReporter {
         final StructuralVariantAnalysis structuralVariantAnalysis =
                 analyzeStructuralVariants(run, purpleAnalysis, structuralVariantAnalyzer());
 
+        final List<GeneFusion> reportableFusions = structuralVariantAnalysis.reportableFusions();
+
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run,
                 purpleAnalysis,
                 sequencedReportData().somaticVariantEnrichment(),
@@ -94,10 +96,8 @@ public abstract class PatientReporter {
                 sequencedReportData().highConfidenceRegions(),
                 sequencedReportData().refGenomeFastaFile(),
                 patientTumorLocation,
-                structuralVariantAnalysis.fusions(),
-                sequencedReportData().actionabilityAnalyzer());
+                sequencedReportData().actionabilityAnalyzer(), reportableFusions);
 
-        final List<GeneFusion> reportableFusions = structuralVariantAnalysis.reportableFusions();
         final List<GeneDisruption> reportableDisruptions = structuralVariantAnalysis.reportableDisruptions();
 
         LOGGER.info("Printing analysis results:");
@@ -183,8 +183,8 @@ public abstract class PatientReporter {
     private static SomaticVariantAnalysis analyzeSomaticVariants(@NotNull RunContext run, @NotNull PurpleAnalysis purpleAnalysis,
             @NotNull SomaticEnrichment somaticEnrichment, @NotNull GeneModel geneModel,
             @NotNull Multimap<String, GenomeRegion> highConfidenceRegions, @NotNull IndexedFastaSequenceFile refGenomeFastaFile,
-            @Nullable PatientTumorLocation patientTumorLocation, @NotNull List<GeneFusion> fusions,
-            @NotNull ActionabilityAnalyzer actionabilityAnalyzerData) throws IOException {
+            @Nullable PatientTumorLocation patientTumorLocation,
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzerData, @NotNull List<GeneFusion> fusions) throws IOException {
         final String runDirectory = run.runDirectory();
         final String sample = run.tumorSample();
 
