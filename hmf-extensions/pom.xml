@@ -5,13 +5,13 @@
     <parent>
         <artifactId>hmftools</artifactId>
         <groupId>com.hartwig</groupId>
-        <version>1</version>
+        <version>local-SNAPSHOT</version>
     </parent>
 
     <artifactId>hmf-extensions</artifactId>
     <packaging>pom</packaging>
     <name>HMF Tools - Extensions</name>
-    <version>1.0</version>
+    <version>local-SNAPSHOT</version>
 
     <modules>
         <module>hmf-extensions-cli</module>

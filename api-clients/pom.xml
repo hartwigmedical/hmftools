@@ -5,12 +5,12 @@
     <parent>
         <artifactId>hmftools</artifactId>
         <groupId>com.hartwig</groupId>
-        <version>1</version>
+        <version>local-SNAPSHOT</version>
     </parent>
 
     <artifactId>api-clients</artifactId>
     <packaging>jar</packaging>
-    <version>1.0</version>
+    <version>local-SNAPSHOT</version>
     <name>HMF Tools - API Clients</name>
 
     <dependencies>

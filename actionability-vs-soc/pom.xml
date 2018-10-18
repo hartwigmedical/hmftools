@@ -5,7 +5,7 @@
     <parent>
         <artifactId>hmftools</artifactId>
         <groupId>com.hartwig</groupId>
-        <version>1</version>
+        <version>local-SNAPSHOT</version>
     </parent>
 
     <artifactId>actionability-vs-soc</artifactId>

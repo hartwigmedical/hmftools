@@ -5,7 +5,7 @@
     <groupId>com.hartwig</groupId>
     <artifactId>hmftools</artifactId>
     <packaging>pom</packaging>
-    <version>1</version>
+    <version>local-SNAPSHOT</version>
     <name>HMF Genomics Tools</name>
 
     <modules>
@@ -46,14 +46,14 @@
         <maven.jar.plugin.version>2.4</maven.jar.plugin.version>
         <maven.surefire.plugin.version>2.21.0</maven.surefire.plugin.version>
 
-        <hmf-common.version>1</hmf-common.version>
-        <hmf-gene-panel.version>1</hmf-gene-panel.version>
+        <hmf-common.version>local-SNAPSHOT</hmf-common.version>
+        <hmf-gene-panel.version>local-SNAPSHOT</hmf-gene-panel.version>
+        <hmf-apiclients.version>local-SNAPSHOT</hmf-apiclients.version>
+        <hmf-extensions.version>local-SNAPSHOT</hmf-extensions.version>
         <hmf-patient-db.version>3.12</hmf-patient-db.version>
-        <hmf-apiclients.version>1.0</hmf-apiclients.version>
         <hmf-variant-annotation.version>1.6</hmf-variant-annotation.version>
         <hmf-sv-analyser.version>1.0</hmf-sv-analyser.version>
         <hmf-strelka-post-process.version>1.2</hmf-strelka-post-process.version>
-        <hmf-extensions.version>1.0</hmf-extensions.version>
         <hmf-knowledgebase-importer.version>1.2</hmf-knowledgebase-importer.version>
 
         <immutables.version>2.4.4</immutables.version>
