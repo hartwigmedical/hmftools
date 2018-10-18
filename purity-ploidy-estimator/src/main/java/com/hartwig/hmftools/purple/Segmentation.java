@@ -7,6 +7,7 @@ import java.util.Map;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.gc.GCProfile;
@@ -38,7 +39,7 @@ class Segmentation {
     private final Multimap<String, AmberBAF> bafs;
     private final Map<String, ChromosomeLength> lengths;
     private final Multimap<String, PCFPosition> pcfPositions;
-    private final Multimap<String, GCProfile> gcProfiles;
+    private final Multimap<Chromosome, GCProfile> gcProfiles;
 
     public Segmentation(@NotNull final CommonConfig config, @NotNull final Gender gender,
             @NotNull final ListMultimap<String, CobaltRatio> ratios, @NotNull final Multimap<String, AmberBAF> bafs) throws IOException {
@@ -50,7 +51,7 @@ class Segmentation {
         this.pcfPositions = PCFPositionsSupplier.createPositions(config);
 
         LOGGER.info("Reading GC Profiles from {}", config.gcProfile());
-        this.gcProfiles = GCProfileFactory.loadGCContentOld(config.windowSize(), config.gcProfile());
+        this.gcProfiles = GCProfileFactory.loadGCContent(config.windowSize(), config.gcProfile());
 
     }
 
