@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientreporter.report.data;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -67,7 +66,13 @@ public final class EvidenceItemDataSource {
 
     @NotNull
     private static List<EvidenceItem> sort(@NotNull List<EvidenceItem> evidenceItems) {
-        return evidenceItems.stream().sorted(Comparator.comparing(EvidenceItem::level)).collect(Collectors.toList());
+        return evidenceItems.stream().sorted((item1, item2) -> {
+            if (item1.level().equals(item2.level())) {
+                return item1.event().compareTo(item2.event());
+            } else {
+                return item1.level().compareTo(item2.level());
+            }
+        }).collect(Collectors.toList());
     }
 
     @NotNull
@@ -97,14 +102,14 @@ public final class EvidenceItemDataSource {
                 String gene = data.getValue(EVENT_FIELD.getName()).toString();
                 switch (source.toLowerCase()) {
                     case "oncokb":
-                        String [] geneId = gene.split(" ");
+                        String[] geneId = gene.split(" ");
                         return "http://oncokb.org/#/gene/" + geneId[0] + "/alteration/" + reference;
                     case "iclusion":
                         return "https://www.iclusion.org";
                     case "cgi":
                         return "https://www.cancergenomeinterpreter.org/biomarkers";
                     case "civic":
-                        String [] variantId = reference.split(":");
+                        String[] variantId = reference.split(":");
                         return "https://civic.genome.wustl.edu/links/variants/" + variantId[1];
                     default:
                         return Strings.EMPTY;
