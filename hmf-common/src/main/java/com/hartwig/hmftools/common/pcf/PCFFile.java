@@ -9,6 +9,8 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.window.Window;
 
@@ -34,10 +36,10 @@ public final class PCFFile {
     }
 
     @NotNull
-    public static ListMultimap<String, PCFPosition> readPositions(int windowSize, @NotNull PCFSource source, @NotNull final String filename)
+    public static ListMultimap<Chromosome, PCFPosition> readPositions(int windowSize, @NotNull PCFSource source, @NotNull final String filename)
             throws IOException {
 
-        ListMultimap<String, PCFPosition> result = ArrayListMultimap.create();
+        ListMultimap<Chromosome, PCFPosition> result = ArrayListMultimap.create();
         final Window window = new Window(windowSize);
         @Nullable
         ModifiablePCFPosition builder = null;
@@ -49,45 +51,47 @@ public final class PCFFile {
         for (String line : Files.readAllLines(new File(filename).toPath())) {
             if (!line.startsWith(HEADER_PREFIX)) {
                 String[] values = line.split(DELIMITER);
-                final String chromosome = values[1];
+                final String chromosomeName = values[1];
+                if (HumanChromosome.contains(chromosomeName)) {
 
-                if (!chromosome.equals(prevChromosome)) {
-                    if (builder != null) {
-                        chromosomeResult.add(builder);
-                        result.putAll(prevChromosome, PCFMerge.merge(chromosomeResult));
+                    if (!chromosomeName.equals(prevChromosome)) {
+                        if (builder != null) {
+                            chromosomeResult.add(builder);
+                            result.putAll(HumanChromosome.fromString(prevChromosome), PCFMerge.merge(chromosomeResult));
+                        }
+                        chromosomeResult.clear();
+                        builder = null;
+                        minPosition = 1;
+                        prevChromosome = chromosomeName;
                     }
-                    chromosomeResult.clear();
-                    builder = null;
-                    minPosition = 1;
-                    prevChromosome = chromosome;
+
+                    long start = window.start(Long.valueOf(values[3]));
+                    long end = window.start(Long.valueOf(values[4])) + windowSize;
+                    if (builder != null) {
+                        chromosomeResult.add(builder.setMaxPosition(start));
+                    }
+
+                    chromosomeResult.add(ModifiablePCFPosition.create()
+                            .setChromosome(chromosomeName)
+                            .setSource(source)
+                            .setPosition(start)
+                            .setMinPosition(minPosition)
+                            .setMaxPosition(start));
+
+                    minPosition = end;
+                    builder = ModifiablePCFPosition.create()
+                            .setChromosome(chromosomeName)
+                            .setSource(source)
+                            .setPosition(end)
+                            .setMinPosition(end)
+                            .setMaxPosition(end);
                 }
-
-                long start = window.start(Long.valueOf(values[3]));
-                long end = window.start(Long.valueOf(values[4])) + windowSize;
-                if (builder != null) {
-                    chromosomeResult.add(builder.setMaxPosition(start));
-                }
-
-                chromosomeResult.add(ModifiablePCFPosition.create()
-                        .setChromosome(chromosome)
-                        .setSource(source)
-                        .setPosition(start)
-                        .setMinPosition(minPosition)
-                        .setMaxPosition(start));
-
-                minPosition = end;
-                builder = ModifiablePCFPosition.create()
-                        .setChromosome(chromosome)
-                        .setSource(source)
-                        .setPosition(end)
-                        .setMinPosition(end)
-                        .setMaxPosition(end);
             }
         }
 
         if (builder != null) {
             chromosomeResult.add(builder);
-            result.putAll(prevChromosome, PCFMerge.merge(chromosomeResult));
+            result.putAll(HumanChromosome.fromString(prevChromosome), PCFMerge.merge(chromosomeResult));
         }
 
         return result;

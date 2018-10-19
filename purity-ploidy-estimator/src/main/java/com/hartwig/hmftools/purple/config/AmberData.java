@@ -38,7 +38,7 @@ public interface AmberData {
     @NotNull
     Multimap<Chromosome, AmberBAF> bafs();
 
-    Multimap<String, PCFPosition> tumorSegments();
+    Multimap<Chromosome, PCFPosition> tumorSegments();
 
     int averageTumorDepth();
 
@@ -66,7 +66,7 @@ public interface AmberData {
         final Multimap<Chromosome, AmberBAF> bafs = AmberBAFFile.read(amberFilename);
 
         LOGGER.info("Reading amber pcfs from {}", pcfFilename);
-        final Multimap<String, PCFPosition> tumorSegments =
+        final Multimap<Chromosome, PCFPosition> tumorSegments =
                 PCFFile.readPositions(commonConfig.windowSize(), PCFSource.TUMOR_BAF, pcfFilename);
 
         int averageTumorDepth = (int) Math.round(bafs.values()

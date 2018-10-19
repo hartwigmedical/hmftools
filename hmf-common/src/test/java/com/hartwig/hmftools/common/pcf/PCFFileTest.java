@@ -8,6 +8,8 @@ import java.util.List;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -20,10 +22,10 @@ public class PCFFileTest {
     @Test
     public void testBafFile() throws IOException {
 
-        final ListMultimap<String, PCFPosition> resultMap =
+        final ListMultimap<Chromosome, PCFPosition> resultMap =
                 PCFFile.readPositions(WINDOW, PCFSource.TUMOR_BAF, BASE_PATH + File.separator + "baf.pcf");
 
-        final List<PCFPosition> chromOneResults = resultMap.get("1");
+        final List<PCFPosition> chromOneResults = resultMap.get(HumanChromosome._1);
 
         assertEquals(4, chromOneResults.size());
         assertPosition(93548001, chromOneResults.get(0));
@@ -31,7 +33,7 @@ public class PCFFileTest {
         assertPosition(193803001, chromOneResults.get(2));
         assertPosition(193804001, chromOneResults.get(3));
 
-        final List<PCFPosition> chromTwoResults = resultMap.get("2");
+        final List<PCFPosition> chromTwoResults = resultMap.get(HumanChromosome._2);
 
         assertEquals(4, chromTwoResults.size());
         assertPosition(93548001, chromTwoResults.get(0));
@@ -43,10 +45,10 @@ public class PCFFileTest {
     @Test
     public void testRatioFile() throws IOException {
 
-        final ListMultimap<String, PCFPosition> resultMap =
+        final ListMultimap<Chromosome, PCFPosition> resultMap =
                 PCFFile.readPositions(WINDOW, PCFSource.TUMOR_BAF, BASE_PATH + File.separator + "ratio.pcf");
 
-        final List<PCFPosition> chromosomeOneResults = resultMap.get("1");
+        final List<PCFPosition> chromosomeOneResults = resultMap.get(HumanChromosome._1);
 
         assertEquals(5, chromosomeOneResults.size());
         assertPosition(835001, 1, 835001, chromosomeOneResults.get(0));
@@ -55,7 +57,7 @@ public class PCFFileTest {
         assertPosition(2695001, 2584001, 2695001, chromosomeOneResults.get(3));
         assertPosition(4363001, 4363001, 4363001, chromosomeOneResults.get(4));
 
-        final List<PCFPosition> chromosomeThreeResults = resultMap.get("3");
+        final List<PCFPosition> chromosomeThreeResults = resultMap.get(HumanChromosome._3);
         assertEquals(5, chromosomeThreeResults.size());
         assertPosition(90449001, 1, 90449001, chromosomeThreeResults.get(0));
         assertPosition(90452001, 90452001, 90452001, chromosomeThreeResults.get(1));

@@ -34,7 +34,7 @@ class Segmentation {
     private final CommonConfig config;
     private final Gender gender;
     private final Multimap<Chromosome, AmberBAF> bafs;
-    private final Multimap<String, PCFPosition> pcfPositions;
+    private final Multimap<Chromosome, PCFPosition> pcfPositions;
     private final Multimap<Chromosome, GCProfile> gcProfiles;
     private final ListMultimap<Chromosome, CobaltRatio> ratios;
     private final ConfigSupplier configSupplier;
@@ -56,7 +56,7 @@ class Segmentation {
 
     @NotNull
     public List<ObservedRegion> createSegments(@NotNull final List<StructuralVariant> structuralVariants) {
-        final Multimap<String, Cluster> clusterMap =
+        final Multimap<Chromosome, Cluster> clusterMap =
                 new ClusterFactory(config.windowSize()).cluster(structuralVariants, pcfPositions, ratios);
 
         final PurpleSegmentFactory factory =

@@ -31,21 +31,21 @@ public class ClusterFactory {
     }
 
     @NotNull
-    public ListMultimap<String, Cluster> cluster(@NotNull final List<StructuralVariant> variants,
-            @NotNull final Multimap<String, PCFPosition> pcfPositions, @NotNull ListMultimap<Chromosome, CobaltRatio> ratios) {
-        final Multimap<String, ClusterVariantLeg> positions = asMap(ClusterVariantLegFactory.create(variants));
+    public ListMultimap<Chromosome, Cluster> cluster(@NotNull final List<StructuralVariant> variants,
+            @NotNull final Multimap<Chromosome, PCFPosition> pcfPositions, @NotNull ListMultimap<Chromosome, CobaltRatio> ratios) {
+        final Multimap<Chromosome, ClusterVariantLeg> positions = asMap(ClusterVariantLegFactory.create(variants));
         return cluster(positions, pcfPositions, ratios);
     }
 
     @NotNull
-    private ListMultimap<String, Cluster> cluster(@NotNull final Multimap<String, ClusterVariantLeg> variantPositions,
-            @NotNull final Multimap<String, PCFPosition> pcfPositions, @NotNull final ListMultimap<Chromosome, CobaltRatio> ratios) {
-        ListMultimap<String, Cluster> clusters = ArrayListMultimap.create();
-        for (String chromosome : pcfPositions.keySet()) {
+    private ListMultimap<Chromosome, Cluster> cluster(@NotNull final Multimap<Chromosome, ClusterVariantLeg> variantPositions,
+            @NotNull final Multimap<Chromosome, PCFPosition> pcfPositions, @NotNull final ListMultimap<Chromosome, CobaltRatio> ratios) {
+        ListMultimap<Chromosome, Cluster> clusters = ArrayListMultimap.create();
+        for (Chromosome chromosome : pcfPositions.keySet()) {
             final Collection<PCFPosition> chromosomePcfPositions = pcfPositions.get(chromosome);
+            final List<CobaltRatio> chromosomeRatios = ratios.containsKey(chromosome) ? ratios.get(chromosome) : Collections.EMPTY_LIST;
             final Collection<ClusterVariantLeg> chromosomeVariants =
                     variantPositions.containsKey(chromosome) ? variantPositions.get(chromosome) : Collections.EMPTY_LIST;
-            final List<CobaltRatio> chromosomeRatios = ratios.containsKey(chromosome) ? ratios.get(HumanChromosome.fromString(chromosome)) : Collections.EMPTY_LIST;
             clusters.putAll(chromosome, cluster(chromosomeVariants, chromosomePcfPositions, chromosomeRatios));
         }
 
@@ -117,11 +117,13 @@ public class ClusterFactory {
     }
 
     @NotNull
-    private static Multimap<String, ClusterVariantLeg> asMap(@NotNull final List<ClusterVariantLeg> variants) {
-        final Multimap<String, ClusterVariantLeg> result = ArrayListMultimap.create();
+    private static Multimap<Chromosome, ClusterVariantLeg> asMap(@NotNull final List<ClusterVariantLeg> variants) {
+        final Multimap<Chromosome, ClusterVariantLeg> result = ArrayListMultimap.create();
 
         for (ClusterVariantLeg variant : variants) {
-            result.put(variant.chromosome(), variant);
+            if (HumanChromosome.contains(variant.chromosome())) {
+                result.put(HumanChromosome.fromString(variant.chromosome()), variant);
+            }
         }
 
         return result;
