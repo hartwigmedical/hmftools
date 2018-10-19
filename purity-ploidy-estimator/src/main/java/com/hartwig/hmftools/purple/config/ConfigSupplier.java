@@ -112,13 +112,10 @@ public class ConfigSupplier {
             throw new IOException("Unable to write directory " + outputDirectory);
         }
 
-        final String cobaltDirectory = cmd.hasOption(COBALT) ? cmd.getOptionValue(COBALT) : runDirectory + File.separator + "cobalt";
-
         commonConfig = ImmutableCommonConfig.builder()
                 .refSample(refSample)
                 .tumorSample(tumorSample)
                 .outputDirectory(outputDirectory)
-                .cobaltDirectory(cobaltDirectory)
                 .runDirectory(runDirectory)
                 .gcProfile(gcProfile)
                 .build();

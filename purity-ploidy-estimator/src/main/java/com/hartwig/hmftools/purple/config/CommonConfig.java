@@ -19,10 +19,6 @@ public interface CommonConfig {
     @NotNull
     String outputDirectory();
 
-    @Deprecated
-    @NotNull
-    String cobaltDirectory();
-
     @NotNull
     String runDirectory();
 

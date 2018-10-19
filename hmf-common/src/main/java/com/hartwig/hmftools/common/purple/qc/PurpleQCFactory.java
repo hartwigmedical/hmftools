@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.purple.qc;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
@@ -21,8 +22,8 @@ public final class PurpleQCFactory {
             @NotNull Gender cobaltGender, @NotNull List<GeneCopyNumber> geneCopyNumbers) {
         int unsupportedSegments = (int) copyNumbers.stream().filter(x -> x.segmentStartSupport() == SegmentSupport.NONE).count();
         int deletedGenes = (int) geneCopyNumbers.stream()
-                .filter(x -> !x.chromosome().equals("Y") && x.germlineHet2HomRegions() == 0 && x.germlineHomRegions() == 0
-                        && Doubles.lessThan(x.minCopyNumber(), 0.5))
+                .filter(x -> !HumanChromosome.fromString(x.chromosome()).equals(HumanChromosome._Y) && x.germlineHet2HomRegions() == 0
+                        && x.germlineHomRegions() == 0 && Doubles.lessThan(x.minCopyNumber(), 0.5))
                 .count();
 
         return ImmutablePurpleQC.builder()

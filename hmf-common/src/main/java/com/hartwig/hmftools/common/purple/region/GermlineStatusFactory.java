@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.purple.region.GermlineStatus.HOM_DELET
 import static com.hartwig.hmftools.common.purple.region.GermlineStatus.NOISE;
 import static com.hartwig.hmftools.common.purple.region.GermlineStatus.UNKNOWN;
 
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
@@ -30,11 +32,13 @@ class GermlineStatusFactory {
     }
 
     @NotNull
-    GermlineStatus fromRatio(final String chromosome, final double normalRatio, final double tumorRatio) {
+    GermlineStatus fromRatio(final String contig, final double normalRatio, final double tumorRatio) {
         if (Doubles.isZero(normalRatio)) {
             return UNKNOWN;
         }
-        double adjustment = chromosome.equals("X") && gender.equals(Gender.MALE) || chromosome.equals("Y") ? 2 : 1;
+
+        final Chromosome chromosome = HumanChromosome.fromString(contig);
+        double adjustment = chromosome.isDiploid(gender) ? 1 : 2;
 
         double adjustedHomDeletionThreshold = GERMLINE_HOM_DELETION_THRESHOLD / adjustment;
         if (Doubles.lessThan(normalRatio, adjustedHomDeletionThreshold) && Doubles.lessThan(tumorRatio, adjustedHomDeletionThreshold)) {

@@ -122,17 +122,16 @@ public class PurityPloidyEstimateApplication {
             // JOBA: Read Gene Panel
             final List<HmfTranscriptRegion> genePanel = HmfGenePanelSupplier.allGeneList();
 
-            // JOBA: Load BAFs from AMBER
+            // JOBA: Load Amber Data
             final Gender amberGender = configSupplier.amberData().gender();
             final Multimap<Chromosome, AmberBAF> bafs = configSupplier.amberData().bafs();
             int averageTumorDepth = configSupplier.amberData().averageTumorDepth();
 
-            // JOBA: Load Cobalt Info
+            // JOBA: Load Cobalt Data
             final Gender cobaltGender = configSupplier.cobaltData().gender();
             final ListMultimap<Chromosome, CobaltRatio> ratios = configSupplier.cobaltData().ratios();
 
             // JOBA: Gender
-
             if (cobaltGender.equals(amberGender)) {
                 LOGGER.info("Sample gender is {}", cobaltGender.toString().toLowerCase());
             } else {
