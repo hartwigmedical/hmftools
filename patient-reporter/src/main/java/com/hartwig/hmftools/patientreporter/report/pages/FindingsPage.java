@@ -80,19 +80,20 @@ public abstract class FindingsPage {
 
     @NotNull
     private static ComponentBuilder<?, ?> evidenceItemReportVariant(@NotNull AnalysedPatientReport report) {
-        final ComponentBuilder<?, ?> table = report.evidenceItems().size() > 0
-                ? cmp.subreport(monospaceBaseTable().fields(EvidenceItemDataSource.evidenceItemFields())
-                .columns(col.column("Event", EvidenceItemDataSource.EVENT_FIELD),
-                        col.column("Drug", EvidenceItemDataSource.DRUG_FIELD),
-                        col.column("Drugs type", EvidenceItemDataSource.DRUGS_TYPE_FIELD),
-                        col.column("Level", EvidenceItemDataSource.LEVEL_FIELD),
-                        col.column("Response", EvidenceItemDataSource.RESPONSE_FIELD),
-                        col.column("Source", EvidenceItemDataSource.SOURCE_FIELD)
-                                .setHyperLink(hyperLink(EvidenceItemDataSource.sourceHyperlink()))
-                                .setStyle(linkStyle()),
-                        col.column("On-Label", EvidenceItemDataSource.ON_LABEL_FIELD))
-                .setDataSource(EvidenceItemDataSource.fromEvidenceItems(report.evidenceItems())))
-                : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
+        final ComponentBuilder<?, ?> table =
+                report.evidenceItems().size() > 0
+                        ? cmp.subreport(monospaceBaseTable().fields(EvidenceItemDataSource.evidenceItemFields())
+                        .columns(col.column("Event", EvidenceItemDataSource.EVENT_FIELD),
+                                col.column("Drug", EvidenceItemDataSource.DRUG_FIELD),
+                                col.column("Drugs type", EvidenceItemDataSource.DRUGS_TYPE_FIELD),
+                                col.column("Level", EvidenceItemDataSource.LEVEL_FIELD),
+                                col.column("Response", EvidenceItemDataSource.RESPONSE_FIELD),
+                                col.column("Source", EvidenceItemDataSource.SOURCE_FIELD)
+                                        .setHyperLink(hyperLink(EvidenceItemDataSource.sourceHyperlink()))
+                                        .setStyle(linkStyle()),
+                                col.column("On-Label", EvidenceItemDataSource.ON_LABEL_FIELD))
+                        .setDataSource(EvidenceItemDataSource.fromEvidenceItems(report.evidenceItems())))
+                        : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Clinical Evidence").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
@@ -134,6 +135,7 @@ public abstract class FindingsPage {
 
     @NotNull
     private static ComponentBuilder<?, ?> germlineVariantReport(@NotNull AnalysedPatientReport report) {
+        String noVariantsFoundText = report.hasGermlineAnalysis() ? "None" : "Germline analysis is not available";
         final ComponentBuilder<?, ?> table =
                 !report.germlineVariants().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(GermlineVariantDataSource.fields())
@@ -145,7 +147,7 @@ public abstract class FindingsPage {
                                 col.column("Ploidy (VAF)", GermlineVariantDataSource.PLOIDY_VAF_FIELD).setFixedWidth(80),
                                 col.column("Biallelic", GermlineVariantDataSource.BIALLELIC_FIELD))
                         .setDataSource(GermlineVariantDataSource.fromVariants(report.fitStatus(), report.germlineVariants())))
-                        : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
+                        : cmp.text(noVariantsFoundText).setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Germline Variants").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),

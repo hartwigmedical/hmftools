@@ -103,10 +103,11 @@ final class PatientReporterFileLoader {
 
     @Nullable
     static List<GermlineVariant> loadPassedGermlineVariants(@NotNull String runDirectory, @NotNull String sample) throws IOException {
-        if (!BachelorFile.hasBachelorRun(runDirectory, sample)) {
+        String bachelorDirectory = runDirectory + File.separator + BACHELOR_DIRECTORY;
+        if (!BachelorFile.hasBachelorRun(bachelorDirectory, sample)) {
             return null;
         } else {
-            String bachelorFile = BachelorFile.findBachelorFilePath(runDirectory, sample);
+            String bachelorFile = BachelorFile.findBachelorFilePath(bachelorDirectory, sample);
             List<GermlineVariant> germlineVariants =
                     bachelorFile != null ? BachelorFile.loadBachelorFile(bachelorFile) : Lists.newArrayList();
 
