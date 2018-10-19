@@ -25,7 +25,6 @@ public final class BachelorFile {
     private BachelorFile() {
     }
 
-
     public static boolean hasBachelorRun(@NotNull String bachelorDirectory, @NotNull String sample) {
         if (findBachelorFilePath(bachelorDirectory, sample) == null) {
             String bachelorHasRunPath = bachelorDirectory + File.separator + BACHELOR_HAS_RUN_FILE;
@@ -59,8 +58,8 @@ public final class BachelorFile {
     }
 
     @NotNull
-    private static GermlineVariant fromString(@NotNull final String germlineVariant) {
-        String[] values = germlineVariant.split(DELIMITER);
+    private static GermlineVariant fromString(@NotNull String line) {
+        String[] values = line.split(DELIMITER);
 
         String program = values[1];
         if (!program.equalsIgnoreCase("lynparza")) {
