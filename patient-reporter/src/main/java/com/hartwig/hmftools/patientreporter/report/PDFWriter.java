@@ -123,7 +123,7 @@ public class PDFWriter {
         return cmp.horizontalList(cmp.horizontalGap(370),
                 cmp.xyList()
                         .add(40, 5, cmp.image(logoPath)),
-                cmp.horizontalGap(10));
+                cmp.verticalGap(120));
     }
 
     @NotNull
