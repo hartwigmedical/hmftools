@@ -52,7 +52,7 @@ public abstract class FindingsPage {
                 report().sampleReport(),
                 impliedPurityString(report())),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                evidenceItemReportVariant(report()),
+                evidenceItemReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 somaticVariantReport(report(), reporterData().panelGeneModel()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -79,7 +79,7 @@ public abstract class FindingsPage {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> evidenceItemReportVariant(@NotNull AnalysedPatientReport report) {
+    private static ComponentBuilder<?, ?> evidenceItemReport(@NotNull AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> table =
                 report.evidenceItems().size() > 0
                         ? cmp.subreport(monospaceBaseTable().fields(EvidenceItemDataSource.evidenceItemFields())
