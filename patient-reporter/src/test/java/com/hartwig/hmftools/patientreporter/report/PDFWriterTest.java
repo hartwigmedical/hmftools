@@ -61,7 +61,6 @@ import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineVariant;
-import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -133,19 +132,23 @@ public class PDFWriterTest {
     private static List<GermlineVariant> createTestGermlineVariants(@NotNull PurityAdjuster purityAdjuster) {
         List<GermlineVariant> germlineVariants = Lists.newArrayList();
 
-        double altReads = 67D;
-        double totalReads = 112D;
+        int totalReads = 112;
+        int altReads = 67;
+        double adjustedCopyNumber = 3D;
 
-        double vaf = purityAdjuster.purityAdjustedVAFWithHeterozygousNormal("13", 3, altReads / totalReads);
+        double adjustedVAF = purityAdjuster.purityAdjustedVAFWithHeterozygousNormal("13", adjustedCopyNumber, altReads / totalReads);
 
         germlineVariants.add(ImmutableGermlineVariant.builder()
                 .gene("BRCA2")
-                .variant("c.5946delT")
-                .impact("p.Ser1982fs")
-                .readDepth((int) altReads + " / " + (int) totalReads)
+                .hgvsCodingImpact("c.5946delT")
+                .hgvsProteinImpact("p.Ser1982fs")
+                .totalReadCount(totalReads)
+                .alleleReadCount(altReads)
                 .germlineStatus("HET")
-                .ploidyVaf("AAB (" + PatientReportFormat.formatPercent(vaf) + ")")
-                .biallelic("No")
+                .adjustedCopyNumber(adjustedCopyNumber)
+                .adjustedVAF(adjustedVAF)
+                .minorAllelePloidy(1D)
+                .biallelic(false)
                 .build());
 
         return germlineVariants;

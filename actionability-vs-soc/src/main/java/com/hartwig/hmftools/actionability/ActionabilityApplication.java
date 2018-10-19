@@ -19,8 +19,8 @@
 //import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 //import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 //import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
-//import com.hartwig.hmftools.common.variant.SomaticVariant;
-//import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+//import com.hartwig.hmftools.common.hgvsCodingImpact.SomaticVariant;
+//import com.hartwig.hmftools.common.hgvsCodingImpact.SomaticVariantFactory;
 //
 //import org.apache.commons.cli.CommandLine;
 //import org.apache.commons.cli.CommandLineParser;
@@ -87,19 +87,19 @@
 //            LOGGER.info("");
 //
 //            List<SomaticVariant> variantsOnActionableGenes =
-//                    variants.stream().filter(variant -> actionableGenesVariants.contains(variant.gene())).collect(Collectors.toList());
+//                    variants.stream().filter(hgvsCodingImpact -> actionableGenesVariants.contains(hgvsCodingImpact.gene())).collect(Collectors.toList());
 //
 //            LOGGER.info(
 //                    "Gene" + "\t" + "Chromosome" + "\t" + "Position" + "\t" + "Ref" + "\t" + "Alt" + "\t" + "Source" + "\t" + "Drug" + "\t"
 //                            + "DrugsType" + "\t" + "CancerType" + "\t" + "Level" + "\t" + "Response" + "\t" + "Actionable_variant");
-//            for (SomaticVariant variant : variantsOnActionableGenes) {
-//                analyzer.actionableVariants(variant, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
+//            for (SomaticVariant hgvsCodingImpact : variantsOnActionableGenes) {
+//                analyzer.actionableVariants(hgvsCodingImpact, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
 //            }
 //
 //            LOGGER.info("Gene" + "\t" + "Chromosome" + "\t" + "Start" + "\t" + "End" + "\t" + " Source" + "\t" + "Drug" + "\t" + "DrugType"
 //                    + "\t" + "CancerType" + "\t" + "Level" + "\t" + "Response" + "\t" + "Actionable_variant");
-//            for (SomaticVariant variant : variantsOnActionableGenes) {
-//                analyzer.actionableRange(variant, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
+//            for (SomaticVariant hgvsCodingImpact : variantsOnActionableGenes) {
+//                analyzer.actionableRange(hgvsCodingImpact, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
 //            }
 //
 //        } else if (!Files.exists(new File(fileActionabilityVariants).toPath())) {

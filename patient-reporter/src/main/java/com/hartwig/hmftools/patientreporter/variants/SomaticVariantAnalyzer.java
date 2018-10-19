@@ -114,7 +114,7 @@ public final class SomaticVariantAnalyzer {
             } else if (driverCategoryPerGeneMap.get(variant.gene()) == DriverCategory.ONCO) {
                 return ONCO_CODING_EFFECTS_TO_REPORT.contains(effect);
             } else {
-                // KODU: If a variant has uncertain driver category we should always report.
+                // KODU: If a hgvsCodingImpact has uncertain driver category we should always report.
                 return TSG_CODING_EFFECTS_TO_REPORT.contains(effect) || ONCO_CODING_EFFECTS_TO_REPORT.contains(effect);
             }
         };
