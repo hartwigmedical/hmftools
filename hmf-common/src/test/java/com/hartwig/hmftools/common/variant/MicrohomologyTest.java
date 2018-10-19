@@ -2,30 +2,28 @@ package com.hartwig.hmftools.common.variant;
 
 import static org.junit.Assert.assertEquals;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class MicrohomologyTest {
 
     @Test
-    public void testRepeats() {
-        assertHomology("GTAACCAGGAGTGTATT",
-                0,
-                "CGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAG",
-                "CGTAACCAGGAGTGTATT");
+    public void worksInRepeatSection() {
+        String expectedMicrohomology = "GTAACCAGGAGTGTATT";
+        String refGenome = "CGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAG";
+        String ref = "CGTAACCAGGAGTGTATT";
+
+        assertEquals(expectedMicrohomology, Microhomology.microhomology(0, refGenome, ref));
     }
 
     @Test
-    public void testSangerExample() {
-        assertHomology("TATC", 5, "GCACTGTATCCACTTGATATCATTAT", "GTATCCACTTGA");
-        assertHomology("TATC", 6, "GCACTGTATCCACTTGATATCATTAT", "TATCCACTTGAT");
-        assertHomology("TATC", 7, "GCACTGTATCCACTTGATATCATTAT", "ATCCACTTGATA");
-        assertHomology("TATC", 8, "GCACTGTATCCACTTGATATCATTAT", "TCCACTTGATAT");
-        assertHomology("TATC", 9, "GCACTGTATCCACTTGATATCATTAT", "CCACTTGATATC");
-    }
+    public void worksOnSangerExamples() {
+        String expectedMicrohomology = "TATC";
+        String refGenome = "GCACTGTATCCACTTGATATCATTAT";
 
-    private static void assertHomology(@NotNull final String expected, int position, @NotNull final String sequence,
-            @NotNull final String ref) {
-        assertEquals(expected, Microhomology.microhomology(position, sequence, ref));
+        assertEquals(expectedMicrohomology, Microhomology.microhomology(5, refGenome, "GTATCCACTTGA"));
+        assertEquals(expectedMicrohomology, Microhomology.microhomology(6, refGenome, "TATCCACTTGAT"));
+        assertEquals(expectedMicrohomology, Microhomology.microhomology(7, refGenome, "ATCCACTTGATA"));
+        assertEquals(expectedMicrohomology, Microhomology.microhomology(8, refGenome, "TCCACTTGATAT"));
+        assertEquals(expectedMicrohomology, Microhomology.microhomology(9, refGenome, "CCACTTGATATC"));
     }
 }
