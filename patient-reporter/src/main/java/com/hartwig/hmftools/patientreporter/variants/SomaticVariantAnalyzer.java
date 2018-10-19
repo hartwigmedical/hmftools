@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.patientreporter.algo.ActionabilityVariantAnalyzer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -81,7 +82,7 @@ public final class SomaticVariantAnalyzer {
                 purplePloidy);
 
         LOGGER.info("evidencePerVariant items fusions");
-        Map<GeneFusion, List<EvidenceItem>> evidencePerFusion = ActionabilityVariantAnalyzer.findEvidenceFusion(actionableFusions,
+        Map<GeneFusion, List<EvidenceItem>> evidencePerFusion = ActionabilityVariantAnalyzer.findEvidenceForFusions(actionableFusions,
                 fusions,
                 doidsPrimaryTumorLocation,
                 actionabilityAnalyzerData);
