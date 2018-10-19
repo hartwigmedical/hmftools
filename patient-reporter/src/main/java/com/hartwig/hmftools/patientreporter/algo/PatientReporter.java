@@ -43,6 +43,7 @@ import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutablePurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
+import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalyzer;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
@@ -87,6 +88,9 @@ public abstract class PatientReporter {
         final StructuralVariantAnalysis structuralVariantAnalysis =
                 analyzeStructuralVariants(run, purpleAnalysis, structuralVariantAnalyzer());
 
+        final List<GeneFusion> reportableFusions = structuralVariantAnalysis.reportableFusions();
+        final List<GeneDisruption> reportableDisruptions = structuralVariantAnalysis.reportableDisruptions();
+
         LOGGER.info(structuralVariantAnalysis.fusions());
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run,
                 purpleAnalysis,
@@ -95,10 +99,10 @@ public abstract class PatientReporter {
                 sequencedReportData().highConfidenceRegions(),
                 sequencedReportData().refGenomeFastaFile(),
                 patientTumorLocation,
-                sequencedReportData().actionabilityAnalyzer(), structuralVariantAnalysis.fusions());
+                sequencedReportData().actionabilityAnalyzer(),
+                structuralVariantAnalysis.fusions());
 
-        final List<GeneFusion> reportableFusions = structuralVariantAnalysis.reportableFusions();
-        final List<GeneDisruption> reportableDisruptions = structuralVariantAnalysis.reportableDisruptions();
+        final List<GermlineVariant> germlineVariants = analyzeGermlineVariants(run);
 
         LOGGER.info("Printing analysis results:");
         LOGGER.info(" Number of somatic variants to report : " + Integer.toString(somaticVariantAnalysis.variantsToReport().size()));
@@ -107,6 +111,7 @@ public abstract class PatientReporter {
         LOGGER.info(" Mutational load results: " + Integer.toString(somaticVariantAnalysis.tumorMutationalLoad()));
         LOGGER.info(" Tumor mutational burden: " + Double.toString(somaticVariantAnalysis.tumorMutationalBurden())
                 + " number of mutations per MB");
+        LOGGER.info(" Number of germline variants to report : " + Integer.toString(germlineVariants != null ? germlineVariants.size() : 0));
         LOGGER.info(" Number of copy number events to report: " + Integer.toString(reportableGeneCopynumbers.size()));
         LOGGER.info(" Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
         LOGGER.info(" Number of gene disruptions to report : " + Integer.toString(reportableDisruptions.size()));
@@ -133,7 +138,9 @@ public abstract class PatientReporter {
 
         LOGGER.info("Printing evidence results:");
         LOGGER.info(" Number of actionability variants to report: " + Integer.toString(somaticVariantAnalysis.evidencePerVariant().size()));
-        LOGGER.info(" Number of actionability gene copy numbers to report: " + Integer.toString(somaticVariantAnalysis.evidencePerCopyNumber().size()));
+        LOGGER.info(
+                " Number of actionability gene copy numbers to report: " + Integer.toString(somaticVariantAnalysis.evidencePerCopyNumber()
+                        .size()));
         LOGGER.info("Number of actionability fusions to report: " + Integer.toString(somaticVariantAnalysis.evidencePerFusion().size()));
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
@@ -145,7 +152,8 @@ public abstract class PatientReporter {
                 somaticVariantAnalysis.microsatelliteIndelsPerMb(),
                 somaticVariantAnalysis.tumorMutationalLoad(),
                 somaticVariantAnalysis.tumorMutationalBurden(),
-                Lists.newArrayList(),
+                germlineVariants != null,
+                germlineVariants != null ? germlineVariants : Lists.newArrayList(),
                 reportableGeneCopynumbers,
                 reportableFusions,
                 reportableDisruptions,
@@ -185,8 +193,8 @@ public abstract class PatientReporter {
     private static SomaticVariantAnalysis analyzeSomaticVariants(@NotNull RunContext run, @NotNull PurpleAnalysis purpleAnalysis,
             @NotNull SomaticEnrichment somaticEnrichment, @NotNull GeneModel geneModel,
             @NotNull Multimap<String, GenomeRegion> highConfidenceRegions, @NotNull IndexedFastaSequenceFile refGenomeFastaFile,
-            @Nullable PatientTumorLocation patientTumorLocation,
-            @NotNull ActionabilityAnalyzer actionabilityAnalyzerData, @NotNull List<GeneFusion> fusions) throws IOException {
+            @Nullable PatientTumorLocation patientTumorLocation, @NotNull ActionabilityAnalyzer actionabilityAnalyzerData,
+            @NotNull List<GeneFusion> fusions) throws IOException {
         final String runDirectory = run.runDirectory();
         final String sample = run.tumorSample();
 
@@ -205,7 +213,8 @@ public abstract class PatientReporter {
                 patientTumorLocation,
                 PatientReporterFileLoader.loadPurpleGeneCopyNumbers(runDirectory, sample),
                 fusions,
-                actionabilityAnalyzerData, purpleAnalysis.fittedPurity().ploidy());
+                actionabilityAnalyzerData,
+                purpleAnalysis.fittedPurity().ploidy());
     }
 
     @NotNull
@@ -242,5 +251,21 @@ public abstract class PatientReporter {
 
         LOGGER.info("Analysing structural variants...");
         return structuralVariantAnalyzer.run(enrichedStructuralVariants);
+    }
+
+    @Nullable
+    private static List<GermlineVariant> analyzeGermlineVariants(@NotNull RunContext run) throws IOException {
+        final String runDirectory = run.runDirectory();
+        final String sample = run.tumorSample();
+
+        LOGGER.info("Loading germline variants...");
+        final List<GermlineVariant> variants = PatientReporterFileLoader.loadPassedGermlineVariants(sample, runDirectory);
+        if (variants == null) {
+            LOGGER.warn(" Could not load germline variants. Probably bachelor hasn't been run yet!");
+        } else {
+            LOGGER.info(" " + variants.size() + " PASS germline variants loaded for sample " + sample);
+        }
+
+        return variants;
     }
 }

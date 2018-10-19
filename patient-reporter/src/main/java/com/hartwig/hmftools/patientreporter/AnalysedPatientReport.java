@@ -44,6 +44,8 @@ public abstract class AnalysedPatientReport implements PatientReport {
 
     public abstract double tumorMutationalBurden();
 
+    public abstract boolean hasGermlineAnalysis();
+
     @NotNull
     public abstract List<GermlineVariant> germlineVariants();
 

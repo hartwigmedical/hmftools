@@ -111,6 +111,7 @@ public class PDFWriterTest {
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
                 tumorMutationalBurden,
+                germlineVariants.size() > 0,
                 germlineVariants,
                 copyNumbers,
                 fusions,
@@ -139,6 +140,7 @@ public class PDFWriterTest {
         double adjustedVAF = purityAdjuster.purityAdjustedVAFWithHeterozygousNormal("13", adjustedCopyNumber, altReads / totalReads);
 
         germlineVariants.add(ImmutableGermlineVariant.builder()
+                .passFilter(true)
                 .gene("BRCA2")
                 .hgvsCodingImpact("c.5946delT")
                 .hgvsProteinImpact("p.Ser1982fs")

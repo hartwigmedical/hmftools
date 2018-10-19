@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.germline;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -11,18 +12,40 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class BachelorFile {
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorFile.class);
+
     private static final String DELIMITER = ",";
+    private static final String BACHELOR_FILE_EXTENSION = "_germline_variants.csv";
+    private static final String BACHELOR_HAS_RUN_FILE = "bachelor_found_no_variants";
 
     private BachelorFile() {
     }
 
+
+    public static boolean hasBachelorRun(@NotNull String bachelorDirectory, @NotNull String sample) {
+        if (findBachelorFilePath(bachelorDirectory, sample) == null) {
+            String bachelorHasRunPath = bachelorDirectory + File.separator + BACHELOR_HAS_RUN_FILE;
+            return Files.exists(new File(bachelorHasRunPath).toPath());
+        }
+
+        return true;
+    }
+
+    @Nullable
+    public static String findBachelorFilePath(@NotNull String bachelorDirectory, @NotNull String sample) {
+        String path = bachelorDirectory + File.separator + sample + BACHELOR_FILE_EXTENSION;
+        return Files.exists(new File(path).toPath()) ? path : null;
+    }
+
     @NotNull
     public static List<GermlineVariant> loadBachelorFile(@NotNull String filePath) throws IOException {
-        return fromLines(Files.readAllLines(new File(filePath).toPath()));
+        Path path = new File(filePath).toPath();
+        assert Files.exists(path);
+        return fromLines(Files.readAllLines(path));
     }
 
     @NotNull
@@ -44,7 +67,9 @@ public final class BachelorFile {
             LOGGER.warn("Unexpected bachelor program found: " + program);
         }
 
+        String filter = values[30].trim();
         return ImmutableGermlineVariant.builder()
+                .passFilter(filter.equalsIgnoreCase("pass"))
                 .gene(values[8].trim())
                 .hgvsCodingImpact(values[24].trim())
                 .hgvsProteinImpact(values[23].trim())

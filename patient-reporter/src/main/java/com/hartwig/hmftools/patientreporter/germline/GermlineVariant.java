@@ -11,6 +11,8 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class GermlineVariant implements AllelicDepth {
 
+    public abstract boolean passFilter();
+
     @NotNull
     public abstract String gene();
 

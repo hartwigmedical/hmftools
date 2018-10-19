@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.germline;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.List;
@@ -23,6 +24,7 @@ public class BachelorFileTest {
         assertEquals(1, germlineVariants.size());
 
         GermlineVariant variant = germlineVariants.get(0);
+        assertTrue(variant.passFilter());
         assertEquals("BRCA1", variant.gene());
         assertEquals("c.191G>A", variant.hgvsCodingImpact());
         assertEquals("p.Cys64Tyr", variant.hgvsProteinImpact());
@@ -34,5 +36,4 @@ public class BachelorFileTest {
         assertEquals(1.07, variant.minorAllelePloidy(), EPSILON);
         assertFalse(variant.biallelic());
     }
-
 }
