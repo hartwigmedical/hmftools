@@ -92,7 +92,8 @@ public final class SomaticVariantAnalyzer {
                 tumorMutationalLoad,
                 tumorMutationalBurden,
                 evidencePerVariant,
-                evidencePerVariantCNVs);
+                evidencePerVariantCNVs,
+                evidencePerFusion);
     }
 
     @NotNull

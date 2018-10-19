@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;

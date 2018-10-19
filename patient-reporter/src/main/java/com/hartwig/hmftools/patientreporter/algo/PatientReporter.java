@@ -88,7 +88,9 @@ public abstract class PatientReporter {
                 analyzeStructuralVariants(run, purpleAnalysis, structuralVariantAnalyzer());
 
         final List<GeneFusion> reportableFusions = structuralVariantAnalysis.reportableFusions();
-
+        LOGGER.info("knownfusionmodel prominuous three: " + sequencedReportData().knownFusionsModel().promiscuousThree());
+        LOGGER.info("knownfusionmodel: " + sequencedReportData().knownFusionsModel());
+        LOGGER.info("reportableFusions: " + reportableFusions);
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run,
                 purpleAnalysis,
                 sequencedReportData().somaticVariantEnrichment(),
@@ -111,11 +113,6 @@ public abstract class PatientReporter {
         LOGGER.info(" Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
         LOGGER.info(" Number of gene disruptions to report : " + Integer.toString(reportableDisruptions.size()));
 
-        LOGGER.info("Printing evidence results:");
-        LOGGER.info(" Number of actionability variants to report: " + Integer.toString(somaticVariantAnalysis.evidencePerVariant().size()));
-        LOGGER.info(" Number of actionability gene copy numbers to report: " + Integer.toString(somaticVariantAnalysis.evidencePerCopyNumber().size()));
-       // LOGGER.info("Number of actionability fusions to report: " + Integer.toString(somaticVariantAnalysis.evidenceFusions().size()));
-
         final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample,
                 patientTumorLocation,
                 baseReportData().limsModel().tumorPercentageForSample(tumorSample),
@@ -129,10 +126,17 @@ public abstract class PatientReporter {
                 .entrySet()) {
             evidenceItems.addAll(evidencePerVariant.getValue());
         }
-
         for (Map.Entry<GeneCopyNumber, List<EvidenceItem>> evidencePerCNV : somaticVariantAnalysis.evidencePerCopyNumber().entrySet()) {
             evidenceItems.addAll(evidencePerCNV.getValue());
         }
+        for (Map.Entry<GeneFusion, List<EvidenceItem>> evidencePerFusion : somaticVariantAnalysis.evidencePerFusion().entrySet()) {
+            evidenceItems.addAll(evidencePerFusion.getValue());
+        }
+
+        LOGGER.info("Printing evidence results:");
+        LOGGER.info(" Number of actionability variants to report: " + Integer.toString(somaticVariantAnalysis.evidencePerVariant().size()));
+        LOGGER.info(" Number of actionability gene copy numbers to report: " + Integer.toString(somaticVariantAnalysis.evidencePerCopyNumber().size()));
+        LOGGER.info("Number of actionability fusions to report: " + Integer.toString(somaticVariantAnalysis.evidencePerFusion().size()));
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
                 purpleAnalysis.status(),
