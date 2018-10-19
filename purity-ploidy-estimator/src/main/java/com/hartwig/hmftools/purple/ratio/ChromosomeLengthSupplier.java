@@ -7,7 +7,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFactory;
@@ -20,6 +19,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 public class ChromosomeLengthSupplier implements Supplier<Map<Chromosome, ChromosomeLength>> {
 
     private static final Logger LOGGER = LogManager.getLogger(ChromosomeLengthSupplier.class);
@@ -34,6 +34,7 @@ public class ChromosomeLengthSupplier implements Supplier<Map<Chromosome, Chromo
             LOGGER.info("Loading chromosome lengths from {}", chrLengthFile);
             chromosomeLengths = ChromosomeLengthFile.read(chrLengthFile)
                     .stream()
+                    .filter(x -> HumanChromosome.contains(x.chromosome()))
                     .collect(Collectors.toMap(x -> HumanChromosome.fromString(x.chromosome()), item -> item));
         } else {
             LOGGER.info("Generating chromosome lengths from tumor read ratios");

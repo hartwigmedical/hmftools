@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.purple.config;
 
+import java.util.Map;
+
+import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.refgenome.RefGenome;
 
 import org.immutables.value.Value;
@@ -29,9 +32,6 @@ public interface CommonConfig {
 
     @NotNull
     String gcProfile();
-
-    @NotNull
-    RefGenome refGenome();
 
     default int windowSize() {
         return WINDOW_SIZE;
