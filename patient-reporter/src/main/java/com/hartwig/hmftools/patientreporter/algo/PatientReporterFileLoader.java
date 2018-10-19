@@ -49,21 +49,19 @@ final class PatientReporterFileLoader {
     }
 
     @NotNull
-    static PurityContext loadPurity(@NotNull final String runDirectory, @NotNull final String sample) throws IOException {
+    static PurityContext loadPurity(@NotNull String runDirectory, @NotNull String sample) throws IOException {
         final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
         return FittedPurityFile.read(cnvBasePath, sample);
     }
 
     @NotNull
-    static List<PurpleCopyNumber> loadPurpleCopyNumbers(@NotNull final String runDirectory, @NotNull final String sample)
-            throws IOException {
+    static List<PurpleCopyNumber> loadPurpleCopyNumbers(@NotNull String runDirectory, @NotNull String sample) throws IOException {
         final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
         return PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilename(cnvBasePath, sample));
     }
 
     @NotNull
-    static List<GeneCopyNumber> loadPurpleGeneCopyNumbers(@NotNull final String runDirectory, @NotNull final String sample)
-            throws IOException {
+    static List<GeneCopyNumber> loadPurpleGeneCopyNumbers(@NotNull String runDirectory, @NotNull String sample) throws IOException {
         final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
         final String fileName = GeneCopyNumberFile.generateFilename(cnvBasePath, sample);
         return GeneCopyNumberFile.read(fileName);
@@ -76,7 +74,7 @@ final class PatientReporterFileLoader {
     }
 
     @NotNull
-    static Path findStructuralVariantVCF(@NotNull final String runDirectory) throws IOException {
+    static Path findStructuralVariantVCF(@NotNull String runDirectory) throws IOException {
         // TODO (KODU): Clean up once pipeline v3 no longer exists
         Optional<Path> path = Files.walk(Paths.get(runDirectory)).filter(p -> p.toString().endsWith(SV_EXTENSION_V3)).findFirst();
         if (!path.isPresent()) {
@@ -87,7 +85,7 @@ final class PatientReporterFileLoader {
     }
 
     @NotNull
-    static List<SomaticVariant> loadPassedSomaticVariants(@NotNull String sample, @NotNull String runDirectory,
+    static List<SomaticVariant> loadPassedSomaticVariants(@NotNull String runDirectory, @NotNull String sample,
             @NotNull SomaticEnrichment somaticEnrichment) throws IOException {
         // TODO (KODU): Clean up once pipeline v3 no longer exists
         Path vcfPath;
@@ -116,8 +114,8 @@ final class PatientReporterFileLoader {
     }
 
     @Nullable
-    static PatientTumorLocation extractPatientTumorLocation(@NotNull final List<PatientTumorLocation> patientTumorLocations,
-            @NotNull final String sample) {
+    static PatientTumorLocation extractPatientTumorLocation(@NotNull List<PatientTumorLocation> patientTumorLocations,
+            @NotNull String sample) {
         final String patientIdentifier = toPatientIdentifier(sample);
 
         final List<PatientTumorLocation> matchingIdTumorLocations = patientTumorLocations.stream()

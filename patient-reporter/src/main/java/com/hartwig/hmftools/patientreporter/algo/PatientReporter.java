@@ -199,7 +199,7 @@ public abstract class PatientReporter {
         final String sample = run.tumorSample();
 
         LOGGER.info("Loading somatic variants...");
-        final List<SomaticVariant> variants = PatientReporterFileLoader.loadPassedSomaticVariants(sample, runDirectory, somaticEnrichment);
+        final List<SomaticVariant> variants = PatientReporterFileLoader.loadPassedSomaticVariants(runDirectory, sample, somaticEnrichment);
         LOGGER.info(" " + variants.size() + " PASS somatic variants loaded for sample " + sample);
 
         LOGGER.info("Enriching somatic variants");
@@ -259,7 +259,7 @@ public abstract class PatientReporter {
         final String sample = run.tumorSample();
 
         LOGGER.info("Loading germline variants...");
-        final List<GermlineVariant> variants = PatientReporterFileLoader.loadPassedGermlineVariants(sample, runDirectory);
+        final List<GermlineVariant> variants = PatientReporterFileLoader.loadPassedGermlineVariants(runDirectory, sample);
         if (variants == null) {
             LOGGER.warn(" Could not load germline variants. Probably bachelor hasn't been run yet!");
         } else {
