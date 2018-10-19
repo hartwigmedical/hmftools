@@ -29,7 +29,6 @@ public class ConfigSupplier {
     private static final String RUN_DIRECTORY = "run_dir";
     private static final String OUTPUT_DIRECTORY = "output_dir";
     private static final String OUTPUT_DIRECTORY_DEFAULT = "purple";
-    private static final String AMBER = "amber";
     private static final String GC_PROFILE = "gc_profile";
 
     private static final String BAF = "baf";
@@ -49,7 +48,7 @@ public class ConfigSupplier {
 
         options.addOption(BAF, true, "Baf file location.");
         options.addOption(CIRCOS, true, "Location of circos binary.");
-        options.addOption(AMBER, true, "AMBER directory. Defaults to <run_dir>/amber");
+
         options.addOption(GC_PROFILE, true, "Location of GC Profile.");
 
         options.addOption(MIN_DIPLOID_TUMOR_RATIO_COUNT,
@@ -67,6 +66,7 @@ public class ConfigSupplier {
         StructuralVariantConfig.addOptions(options);
         RefGenomeConfig.addOptions(options);
         CobaltData.addOptions(options);
+        AmberData.addOptions(options);
     }
 
     private final CommonConfig commonConfig;
@@ -80,6 +80,7 @@ public class ConfigSupplier {
     private final RefGenomeConfig refGenomeConfig;
 
     private final CobaltData cobaltData;
+    private final AmberData amberData;
 
     public ConfigSupplier(@NotNull CommandLine cmd, @NotNull Options opt) throws ParseException, IOException {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
@@ -111,14 +112,12 @@ public class ConfigSupplier {
             throw new IOException("Unable to write directory " + outputDirectory);
         }
 
-        final String amberDirectory = cmd.hasOption(AMBER) ? cmd.getOptionValue(AMBER) : runDirectory + File.separator + "amber";
         final String cobaltDirectory = cmd.hasOption(COBALT) ? cmd.getOptionValue(COBALT) : runDirectory + File.separator + "cobalt";
 
         commonConfig = ImmutableCommonConfig.builder()
                 .refSample(refSample)
                 .tumorSample(tumorSample)
                 .outputDirectory(outputDirectory)
-                .amberDirectory(amberDirectory)
                 .cobaltDirectory(cobaltDirectory)
                 .runDirectory(runDirectory)
                 .gcProfile(gcProfile)
@@ -143,10 +142,17 @@ public class ConfigSupplier {
         refGenomeConfig = RefGenomeConfig.createRefGenomeConfig(cmd, tumorSample, cobaltDirectory);
 
         cobaltData = CobaltData.createCobaltData(cmd, commonConfig);
+        amberData = AmberData.createAmberData(cmd, commonConfig);
     }
 
+    @NotNull
     public CobaltData cobaltData() {
         return cobaltData;
+    }
+
+    @NotNull
+    public AmberData amberData() {
+        return amberData;
     }
 
     @NotNull

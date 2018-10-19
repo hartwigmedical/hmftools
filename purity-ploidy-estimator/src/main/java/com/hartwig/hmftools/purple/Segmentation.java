@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.purple.config.CommonConfig;
+import com.hartwig.hmftools.purple.config.ConfigSupplier;
 import com.hartwig.hmftools.purple.ratio.ChromosomeLengthSupplier;
 import com.hartwig.hmftools.purple.segment.PCFPositionsSupplier;
 
@@ -41,14 +42,14 @@ class Segmentation {
     private final Multimap<Chromosome, GCProfile> gcProfiles;
     private final ListMultimap<Chromosome, CobaltRatio> ratios;
 
-    public Segmentation(@NotNull final CommonConfig config, @NotNull final Gender gender,
+    public Segmentation(@NotNull final ConfigSupplier configSupplier, @NotNull final Gender gender,
             @NotNull final ListMultimap<Chromosome, CobaltRatio> ratios, @NotNull final Multimap<Chromosome, AmberBAF> bafs) throws IOException {
-        this.config = config;
+        this.config = configSupplier.commonConfig();
         this.gender = gender;
         this.ratios = ratios;
         this.bafs = bafs;
         this.lengths = new ChromosomeLengthSupplier(config, ratios).get();
-        this.pcfPositions = PCFPositionsSupplier.createPositions(config);
+        this.pcfPositions = PCFPositionsSupplier.createPositions(configSupplier);
 
         LOGGER.info("Reading GC Profiles from {}", config.gcProfile());
         this.gcProfiles = GCProfileFactory.loadGCContent(config.windowSize(), config.gcProfile());

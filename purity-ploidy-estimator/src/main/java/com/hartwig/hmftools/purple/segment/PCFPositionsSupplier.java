@@ -19,7 +19,10 @@ import com.hartwig.hmftools.common.pcf.PCFSource;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.window.Window;
+import com.hartwig.hmftools.purple.config.AmberData;
+import com.hartwig.hmftools.purple.config.CobaltData;
 import com.hartwig.hmftools.purple.config.CommonConfig;
+import com.hartwig.hmftools.purple.config.ConfigSupplier;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,19 +32,14 @@ public final class PCFPositionsSupplier {
     private static final Logger LOGGER = LogManager.getLogger(PCFPositionsSupplier.class);
 
     @NotNull
-    public static Multimap<String, PCFPosition> createPositions(@NotNull final CommonConfig config) throws IOException {
-        final String referenceFile = PCFFile.generateRatioFilename(config.cobaltDirectory(), config.refSample());
-        LOGGER.info("Loading reference ratio PCF segments from {}", referenceFile);
-        final Multimap<String, PCFPosition> referenceBreakPoint =
-                PCFFile.readPositions(config.windowSize(), PCFSource.REFERENCE_RATIO, referenceFile);
+    public static Multimap<String, PCFPosition> createPositions(@NotNull final ConfigSupplier configSupplier) {
+        final CommonConfig config = configSupplier.commonConfig();
+        final AmberData amberData = configSupplier.amberData();
+        final CobaltData cobaltData = configSupplier.cobaltData();
 
-        final String tumorFile = PCFFile.generateRatioFilename(config.cobaltDirectory(), config.tumorSample());
-        LOGGER.info("Loading tumor ratio PCF segments from {}", tumorFile);
-        final Multimap<String, PCFPosition> tumorBreakPoints = PCFFile.readPositions(config.windowSize(), PCFSource.TUMOR_RATIO, tumorFile);
-
-        final String amberFile = PCFFile.generateBAFFilename(config.amberDirectory(), config.tumorSample());
-        LOGGER.info("Loading tumor baf PCF segments from {}", amberFile);
-        final Multimap<String, PCFPosition> tumorBAF = PCFFile.readPositions(config.windowSize(), PCFSource.TUMOR_BAF, amberFile);
+        final Multimap<String, PCFPosition> referenceBreakPoint = cobaltData.referenceSegments();
+        final Multimap<String, PCFPosition> tumorBreakPoints = cobaltData.tumorSegments();
+        final Multimap<String, PCFPosition> tumorBAF = amberData.tumorSegments();
 
         final Set<String> contigs = tumorBAF.values().stream().map(GenomePosition::chromosome).collect(Collectors.toSet());
 

@@ -19,14 +19,12 @@ public interface CommonConfig {
     @NotNull
     String outputDirectory();
 
+    @Deprecated
     @NotNull
     String cobaltDirectory();
 
     @NotNull
     String runDirectory();
-
-    @NotNull
-    String amberDirectory();
 
     @NotNull
     String gcProfile();

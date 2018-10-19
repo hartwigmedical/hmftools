@@ -123,21 +123,16 @@ public class PurityPloidyEstimateApplication {
             final List<HmfTranscriptRegion> genePanel = HmfGenePanelSupplier.allGeneList();
 
             // JOBA: Load BAFs from AMBER
-            final String amberFile = AmberBAFFile.generateAmberFilename(config.amberDirectory(), config.tumorSample());
-            LOGGER.info("Reading amber bafs from {}", amberFile);
-            final Multimap<Chromosome, AmberBAF> bafs = AmberBAFFile.read(amberFile);
-            int averageTumorDepth =
-                    (int) Math.round(bafs.values().stream().mapToInt(AmberBAF::tumorDepth).filter(x -> x > 0).average().orElse(100));
-            LOGGER.info("Average amber tumor depth is {} reads implying an ambiguous BAF of {}",
-                    averageTumorDepth,
-                    new DecimalFormat("0.000").format(ExpectedBAF.expectedBAF(averageTumorDepth)));
+            final Gender amberGender = configSupplier.amberData().gender();
+            final Multimap<Chromosome, AmberBAF> bafs = configSupplier.amberData().bafs();
+            int averageTumorDepth = configSupplier.amberData().averageTumorDepth();
 
             // JOBA: Load Cobalt Info
             final Gender cobaltGender = configSupplier.cobaltData().gender();
             final ListMultimap<Chromosome, CobaltRatio> ratios = configSupplier.cobaltData().ratios();
 
             // JOBA: Gender
-            final Gender amberGender = Gender.fromAmber(bafs);
+
             if (cobaltGender.equals(amberGender)) {
                 LOGGER.info("Sample gender is {}", cobaltGender.toString().toLowerCase());
             } else {
@@ -150,7 +145,7 @@ public class PurityPloidyEstimateApplication {
             final List<SomaticVariant> snpSomatics = allSomatics.stream().filter(SomaticVariant::isSnp).collect(Collectors.toList());
 
             LOGGER.info("Applying segmentation");
-            final Segmentation segmentation = new Segmentation(config, cobaltGender, ratios, bafs);
+            final Segmentation segmentation = new Segmentation(configSupplier, cobaltGender, ratios, bafs);
             final List<ObservedRegion> observedRegions = segmentation.createSegments(structuralVariants.variants());
 
             LOGGER.info("Fitting purity");

@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFactory;
@@ -14,6 +15,9 @@ import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFile;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
+import com.hartwig.hmftools.common.pcf.PCFFile;
+import com.hartwig.hmftools.common.pcf.PCFPosition;
+import com.hartwig.hmftools.common.pcf.PCFSource;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositionFactory;
 import com.hartwig.hmftools.common.purple.gender.Gender;
@@ -45,6 +49,10 @@ public interface CobaltData {
 
     boolean chromosomeLengthsEstimated();
 
+    Multimap<String, PCFPosition> tumorSegments();
+
+    Multimap<String, PCFPosition> referenceSegments();
+
     static void addOptions(@NotNull Options options) {
         options.addOption(COBALT, true, "COBALT directory. Defaults to <run_dir>/cobalt");
     }
@@ -56,7 +64,17 @@ public interface CobaltData {
                 cmd.hasOption(COBALT) ? cmd.getOptionValue(COBALT) : commonConfig.runDirectory() + File.separator + "cobalt";
         final String cobaltFilename = CobaltRatioFile.generateFilename(cobaltDirectory, commonConfig.tumorSample());
         if (!new File(cobaltFilename).exists()) {
-            throw new ParseException("Unable to open cobalt file: " + cobaltFilename);
+            throw new ParseException("Unable to open cobalt ratio file: " + cobaltFilename);
+        }
+
+        final String referenceSegmentFile = PCFFile.generateRatioFilename(cobaltDirectory, commonConfig.refSample());
+        if (!new File(referenceSegmentFile).exists()) {
+            throw new ParseException("Unable to open cobalt reference pcf file: " + referenceSegmentFile);
+        }
+
+        final String tumorSegmentFile = PCFFile.generateRatioFilename(cobaltDirectory, commonConfig.tumorSample());
+        if (!new File(tumorSegmentFile).exists()) {
+            throw new ParseException("Unable to open cobalt tumor pcf file: " + tumorSegmentFile);
         }
 
         LOGGER.info("Reading cobalt ratios from {}", cobaltFilename);
@@ -74,11 +92,21 @@ public interface CobaltData {
             lengths = fromLengths(ChromosomeLengthFile.read(chrLengthFile));
         }
 
+        LOGGER.info("Reading cobalt reference segments from {}", referenceSegmentFile);
+        final Multimap<String, PCFPosition> referenceSegments =
+                PCFFile.readPositions(commonConfig.windowSize(), PCFSource.REFERENCE_RATIO, referenceSegmentFile);
+
+        LOGGER.info("Reading cobalt tumor segments from {}", tumorSegmentFile);
+        final Multimap<String, PCFPosition> tumorSegments =
+                PCFFile.readPositions(commonConfig.windowSize(), PCFSource.TUMOR_RATIO, tumorSegmentFile);
+
         return ImmutableCobaltData.builder()
                 .chromosomeLengths(lengths)
                 .chromosomeLengthsEstimated(lengthsEstimated)
                 .ratios(ratios)
                 .gender(gender)
+                .tumorSegments(tumorSegments)
+                .referenceSegments(referenceSegments)
                 .build();
     }
 
