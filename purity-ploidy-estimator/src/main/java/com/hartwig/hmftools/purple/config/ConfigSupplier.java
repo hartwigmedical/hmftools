@@ -64,7 +64,7 @@ public class ConfigSupplier {
         FitScoreConfig.addOptions(options);
         SomaticConfig.addOptions(options);
         StructuralVariantConfig.addOptions(options);
-        RefGenomeConfig.addOptions(options);
+        RefGenomeData.addOptions(options);
         CobaltData.addOptions(options);
         AmberData.addOptions(options);
     }
@@ -77,7 +77,7 @@ public class ConfigSupplier {
     private final FittingConfig fittingConfig;
     private final SmoothingConfig smoothingConfig;
     private final FitScoreConfig fitScoreConfig;
-    private final RefGenomeConfig refGenomeConfig;
+    private final RefGenomeData refGenomeData;
 
     private final CobaltData cobaltData;
     private final AmberData amberData;
@@ -139,10 +139,11 @@ public class ConfigSupplier {
         fitScoreConfig = FitScoreConfig.createConfig(cmd);
         somaticConfig = SomaticConfig.createSomaticConfig(cmd);
         structuralVariantConfig = createStructuralVariantConfig(cmd, opt);
-        refGenomeConfig = RefGenomeConfig.createRefGenomeConfig(cmd, tumorSample, cobaltDirectory);
 
         cobaltData = CobaltData.createCobaltData(cmd, commonConfig);
         amberData = AmberData.createAmberData(cmd, commonConfig);
+
+        refGenomeData = RefGenomeData.createRefGenomeConfig(cmd, cobaltData);
     }
 
     @NotNull
@@ -156,8 +157,8 @@ public class ConfigSupplier {
     }
 
     @NotNull
-    public RefGenomeConfig refGenomeConfig() {
-        return refGenomeConfig;
+    public RefGenomeData refGenomeConfig() {
+        return refGenomeData;
     }
 
     @NotNull
