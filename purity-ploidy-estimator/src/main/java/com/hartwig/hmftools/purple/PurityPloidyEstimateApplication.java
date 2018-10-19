@@ -132,14 +132,12 @@ public class PurityPloidyEstimateApplication {
                     averageTumorDepth,
                     new DecimalFormat("0.000").format(ExpectedBAF.expectedBAF(averageTumorDepth)));
 
-            // JOBA: Load Ratios from COBALT
-            final String ratioFilename = CobaltRatioFile.generateFilename(config.cobaltDirectory(), config.tumorSample());
-            LOGGER.info("Reading cobalt ratios from {}", ratioFilename);
-            final ListMultimap<Chromosome, CobaltRatio> ratios = CobaltRatioFile.read(ratioFilename);
+            // JOBA: Load Cobalt Info
+            final Gender cobaltGender = configSupplier.cobaltData().gender();
+            final ListMultimap<Chromosome, CobaltRatio> ratios = configSupplier.cobaltData().ratios();
 
             // JOBA: Gender
             final Gender amberGender = Gender.fromAmber(bafs);
-            final Gender cobaltGender = Gender.fromCobalt(ratios);
             if (cobaltGender.equals(amberGender)) {
                 LOGGER.info("Sample gender is {}", cobaltGender.toString().toLowerCase());
             } else {

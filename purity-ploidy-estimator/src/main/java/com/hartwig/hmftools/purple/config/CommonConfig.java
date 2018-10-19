@@ -1,10 +1,5 @@
 package com.hartwig.hmftools.purple.config;
 
-import java.util.Map;
-
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.refgenome.RefGenome;
-
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,6 +21,9 @@ public interface CommonConfig {
 
     @NotNull
     String cobaltDirectory();
+
+    @NotNull
+    String runDirectory();
 
     @NotNull
     String amberDirectory();

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.purple.CommandLineUtil.defaultIntValue;
 import static com.hartwig.hmftools.purple.CommandLineUtil.defaultValue;
+import static com.hartwig.hmftools.purple.config.CobaltData.COBALT;
 import static com.hartwig.hmftools.purple.config.StructuralVariantConfig.createStructuralVariantConfig;
 
 import java.io.File;
@@ -29,7 +30,6 @@ public class ConfigSupplier {
     private static final String OUTPUT_DIRECTORY = "output_dir";
     private static final String OUTPUT_DIRECTORY_DEFAULT = "purple";
     private static final String AMBER = "amber";
-    private static final String COBALT = "cobalt";
     private static final String GC_PROFILE = "gc_profile";
 
     private static final String BAF = "baf";
@@ -50,7 +50,6 @@ public class ConfigSupplier {
         options.addOption(BAF, true, "Baf file location.");
         options.addOption(CIRCOS, true, "Location of circos binary.");
         options.addOption(AMBER, true, "AMBER directory. Defaults to <run_dir>/amber");
-        options.addOption(COBALT, true, "COBALT directory. Defaults to <run_dir>/cobalt");
         options.addOption(GC_PROFILE, true, "Location of GC Profile.");
 
         options.addOption(MIN_DIPLOID_TUMOR_RATIO_COUNT,
@@ -67,6 +66,7 @@ public class ConfigSupplier {
         SomaticConfig.addOptions(options);
         StructuralVariantConfig.addOptions(options);
         RefGenomeConfig.addOptions(options);
+        CobaltData.addOptions(options);
     }
 
     private final CommonConfig commonConfig;
@@ -78,6 +78,8 @@ public class ConfigSupplier {
     private final SmoothingConfig smoothingConfig;
     private final FitScoreConfig fitScoreConfig;
     private final RefGenomeConfig refGenomeConfig;
+
+    private final CobaltData cobaltData;
 
     public ConfigSupplier(@NotNull CommandLine cmd, @NotNull Options opt) throws ParseException, IOException {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
@@ -118,6 +120,7 @@ public class ConfigSupplier {
                 .outputDirectory(outputDirectory)
                 .amberDirectory(amberDirectory)
                 .cobaltDirectory(cobaltDirectory)
+                .runDirectory(runDirectory)
                 .gcProfile(gcProfile)
                 .build();
 
@@ -138,6 +141,12 @@ public class ConfigSupplier {
         somaticConfig = SomaticConfig.createSomaticConfig(cmd);
         structuralVariantConfig = createStructuralVariantConfig(cmd, opt);
         refGenomeConfig = RefGenomeConfig.createRefGenomeConfig(cmd, tumorSample, cobaltDirectory);
+
+        cobaltData = CobaltData.createCobaltData(cmd, commonConfig);
+    }
+
+    public CobaltData cobaltData() {
+        return cobaltData;
     }
 
     @NotNull
