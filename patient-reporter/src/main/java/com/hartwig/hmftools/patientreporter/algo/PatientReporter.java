@@ -87,10 +87,7 @@ public abstract class PatientReporter {
         final StructuralVariantAnalysis structuralVariantAnalysis =
                 analyzeStructuralVariants(run, purpleAnalysis, structuralVariantAnalyzer());
 
-        final List<GeneFusion> reportableFusions = structuralVariantAnalysis.reportableFusions();
-        LOGGER.info("knownfusionmodel prominuous three: " + sequencedReportData().knownFusionsModel().promiscuousThree());
-        LOGGER.info("knownfusionmodel: " + sequencedReportData().knownFusionsModel());
-        LOGGER.info("reportableFusions: " + reportableFusions);
+        LOGGER.info(structuralVariantAnalysis.fusions());
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run,
                 purpleAnalysis,
                 sequencedReportData().somaticVariantEnrichment(),
@@ -98,8 +95,9 @@ public abstract class PatientReporter {
                 sequencedReportData().highConfidenceRegions(),
                 sequencedReportData().refGenomeFastaFile(),
                 patientTumorLocation,
-                sequencedReportData().actionabilityAnalyzer(), reportableFusions);
+                sequencedReportData().actionabilityAnalyzer(), structuralVariantAnalysis.fusions());
 
+        final List<GeneFusion> reportableFusions = structuralVariantAnalysis.reportableFusions();
         final List<GeneDisruption> reportableDisruptions = structuralVariantAnalysis.reportableDisruptions();
 
         LOGGER.info("Printing analysis results:");
