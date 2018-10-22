@@ -20,6 +20,7 @@ import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.report.builder.FieldBuilder;
@@ -82,8 +83,11 @@ public final class GeneDisruptionDataSource {
                     disruption.range(),
                     disruption.type(),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, disruption.copies()),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, String.valueOf(disruption.geneMinCopies())),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, String.valueOf(disruption.geneMaxCopies())));
+                    Strings.EMPTY,
+                    Strings.EMPTY);
+            // TODO (KODU): Propagate copy number info here - DEV-548
+                    //                    PatientReportFormat.correctValueForFitStatus(fitStatus, String.valueOf(disruption.geneMinCopies())),
+                    //                    PatientReportFormat.correctValueForFitStatus(fitStatus, String.valueOf(disruption.geneMaxCopies())));
         }
 
         return dataSource;
