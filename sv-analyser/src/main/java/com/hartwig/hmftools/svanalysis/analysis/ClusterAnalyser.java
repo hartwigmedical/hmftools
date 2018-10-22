@@ -6,13 +6,12 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
-import static com.hartwig.hmftools.svanalysis.analysis.SvCluster.findCluster;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.findCluster;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.findVariantById;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveLinkedAssemblies;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_INFER_ONLY;
 
@@ -25,6 +24,7 @@ import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
+import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 

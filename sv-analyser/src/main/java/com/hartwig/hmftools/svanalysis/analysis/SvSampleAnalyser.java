@@ -14,6 +14,7 @@ import com.hartwig.hmftools.svanalysis.annotators.GeneAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
+import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 

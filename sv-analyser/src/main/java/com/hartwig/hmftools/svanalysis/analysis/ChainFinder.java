@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
+import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 

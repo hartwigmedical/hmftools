@@ -20,6 +20,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
+import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 

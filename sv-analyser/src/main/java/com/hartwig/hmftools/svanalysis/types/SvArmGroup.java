@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEq
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.svanalysis.analysis.SvCluster;
 
 import java.util.List;
 

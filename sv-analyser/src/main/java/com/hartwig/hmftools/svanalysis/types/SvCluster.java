@@ -1,9 +1,8 @@
-package com.hartwig.hmftools.svanalysis.analysis;
+package com.hartwig.hmftools.svanalysis.types;
 
 import static java.lang.Math.max;
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.variantMatchesBreakend;
@@ -14,12 +13,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.findLinkedPair;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
-import com.hartwig.hmftools.svanalysis.types.SvBreakend;
-import com.hartwig.hmftools.svanalysis.types.SvCNData;
-import com.hartwig.hmftools.svanalysis.types.SvChain;
-import com.hartwig.hmftools.svanalysis.types.SvVarData;
-import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
+import com.hartwig.hmftools.svanalysis.analysis.SvUtilities;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

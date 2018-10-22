@@ -14,7 +14,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLU
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areSectionBreak;
-import static com.hartwig.hmftools.svanalysis.analysis.SvCluster.findCluster;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.findCluster;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcTypeCount;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.isOverlapping;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_TELOMERE;
@@ -38,6 +38,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvCNData;
+import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLOH;
