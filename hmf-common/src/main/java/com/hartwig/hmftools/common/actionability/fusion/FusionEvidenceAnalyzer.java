@@ -55,6 +55,8 @@ public class FusionEvidenceAnalyzer {
     @NotNull
     public List<EvidenceItem> actionableFusions(@Nullable String doidsPrimaryTumorLocation, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
             @NotNull GeneFusion geneFusion) {
+        LOGGER.info("unique genefusions");
+        LOGGER.info(geneFusion);
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
 
         for (ActionableFusion actionableFusion : fusionPairs) {

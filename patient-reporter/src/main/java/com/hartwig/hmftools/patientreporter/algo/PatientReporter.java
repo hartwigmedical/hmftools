@@ -91,7 +91,6 @@ public abstract class PatientReporter {
         final List<GeneFusion> reportableFusions = structuralVariantAnalysis.reportableFusions();
         final List<GeneDisruption> reportableDisruptions = structuralVariantAnalysis.reportableDisruptions();
 
-        LOGGER.info(structuralVariantAnalysis.fusions());
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run,
                 purpleAnalysis,
                 sequencedReportData().somaticVariantEnrichment(),
