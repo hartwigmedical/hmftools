@@ -138,7 +138,8 @@ public class PDFWriterTest {
         int altReads = 67;
         double adjustedCopyNumber = 3D;
 
-        double adjustedVAF = purityAdjuster.purityAdjustedVAFWithHeterozygousNormal("13", adjustedCopyNumber, altReads / totalReads);
+        double adjustedVAF =
+                purityAdjuster.purityAdjustedVAFWithHeterozygousNormal("13", adjustedCopyNumber, (double) altReads / (double) totalReads);
 
         germlineVariants.add(ImmutableGermlineVariant.builder()
                 .passFilter(true)
