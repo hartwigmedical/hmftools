@@ -45,7 +45,7 @@ public class ReportableGeneDisruptionFactoryTest {
     }
 
     @Test
-    private void canConvertNormalDisruptions() {
+    public void canConvertNormalDisruptions() {
         GeneDisruption disruption1 = createDisruption(StructuralVariantType.BND, "17", "q12", "CDK12", 12, 2.3, false);
         GeneDisruption disruption2 = createDisruption(StructuralVariantType.INS, "21", "q22.12", "RUNX1", 0, 0.8, true);
         GeneDisruption disruption3 = createDisruption(StructuralVariantType.DUP, "1", "p13.1", "CD58", 2, 0.2, true);
