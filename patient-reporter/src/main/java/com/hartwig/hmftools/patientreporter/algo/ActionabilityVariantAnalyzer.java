@@ -65,15 +65,20 @@ public final class ActionabilityVariantAnalyzer {
         Map<GeneFusion, List<EvidenceItem>> evidenceItemsFusions = Maps.newHashMap();
         List<GeneFusion> fusionsOnActionableGenes = fusions.stream()
                 .filter(fusion -> actionableGenesFusions.contains(fusion.downstreamLinkedAnnotation().geneName())
-                        && actionableGenesFusions.contains(fusion.upstreamLinkedAnnotation().geneName()))
+                        || actionableGenesFusions.contains(fusion.upstreamLinkedAnnotation().geneName()))
                 .collect(Collectors.toList());
 
-        for (GeneFusion fusion : fusionsOnActionableGenes) {
+        for (GeneFusion fusion : uniqueGeneFusions(fusionsOnActionableGenes)) {
             evidenceItemsFusions.put(fusion,
                     actionabilityAnalyzerData.fusionAnalyzer()
                             .actionableFusions(doidsPrimaryTumorLocation, actionabilityAnalyzerData.cancerTypeAnalyzer(), fusion));
         }
 
         return evidenceItemsFusions;
+    }
+
+    @NotNull
+    private static List<GeneFusion> uniqueGeneFusions(@NotNull List<GeneFusion> fusions) {
+        return fusions;
     }
 }

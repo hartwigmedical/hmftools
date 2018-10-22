@@ -41,12 +41,12 @@ public class FusionEvidenceAnalyzer {
             genes.add(fusionPairsSet.threeGene());
         }
 
-        for (ActionablePromiscuousThree promiscuousThreeSet : promiscuousThree) {
-            genes.add(promiscuousThreeSet.gene());
-        }
-
         for (ActionablePromiscuousFive promiscuousFiveSet : promiscuousFive) {
             genes.add(promiscuousFiveSet.gene());
+        }
+
+        for (ActionablePromiscuousThree promiscuousThreeSet : promiscuousThree) {
+            genes.add(promiscuousThreeSet.gene());
         }
 
         return genes;
@@ -68,6 +68,18 @@ public class FusionEvidenceAnalyzer {
             }
         }
 
+        for (ActionablePromiscuousFive actionablePromiscuousFive : promiscuousFive) {
+            if (actionablePromiscuousFive.gene().equals(geneFusion.upstreamLinkedAnnotation().geneName())) {
+                ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionsPromiscuousFive(actionablePromiscuousFive);
+
+                evidenceBuilder.event(actionablePromiscuousFive.gene() + " - " + geneFusion.downstreamLinkedAnnotation().geneName());
+                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionablePromiscuousFive.cancerType(),
+                        doidsPrimaryTumorLocation));
+
+                evidenceItems.add(evidenceBuilder.build());
+            }
+        }
+
         for (ActionablePromiscuousThree actionablePromiscuousThree : promiscuousThree) {
             if (actionablePromiscuousThree.gene().equals(geneFusion.downstreamLinkedAnnotation().geneName())) {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionsPromiscuousThree(actionablePromiscuousThree);
@@ -80,17 +92,6 @@ public class FusionEvidenceAnalyzer {
             }
         }
 
-        for (ActionablePromiscuousFive actionablePromiscuousFive : promiscuousFive) {
-            if (actionablePromiscuousFive.gene().equals(geneFusion.upstreamLinkedAnnotation().geneName())) {
-                ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionsPromiscuousFive(actionablePromiscuousFive);
-
-                evidenceBuilder.event(actionablePromiscuousFive.gene() + " - " + geneFusion.downstreamLinkedAnnotation().geneName());
-                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionablePromiscuousFive.cancerType(),
-                        doidsPrimaryTumorLocation));
-
-                evidenceItems.add(evidenceBuilder.build());
-            }
-        }
         return evidenceItems;
     }
 
