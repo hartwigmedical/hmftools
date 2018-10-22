@@ -31,7 +31,7 @@ public final class GeneDisruptionDataSource {
 
     private static final Logger LOGGER = LogManager.getLogger(GeneDisruptionDataSource.class);
 
-    public static final FieldBuilder<?> CHROMOSOME_FIELD = field("chromosome", String.class);
+    public static final FieldBuilder<?> LOCATION_FIELD = field("location", String.class);
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
     public static final FieldBuilder<?> RANGE_FIELD = field("range", String.class);
     public static final FieldBuilder<?> TYPE_FIELD = field("type", String.class);
@@ -44,13 +44,13 @@ public final class GeneDisruptionDataSource {
 
     @NotNull
     public static FieldBuilder<?>[] geneDisruptionFields() {
-        return new FieldBuilder<?>[] { CHROMOSOME_FIELD, GENE_FIELD, RANGE_FIELD, TYPE_FIELD, COPIES_FIELD, GENE_MIN_COPIES,
+        return new FieldBuilder<?>[] { LOCATION_FIELD, GENE_FIELD, RANGE_FIELD, TYPE_FIELD, COPIES_FIELD, GENE_MIN_COPIES,
                 GENE_MAX_COPIES };
     }
 
     @NotNull
     public static JRDataSource fromGeneDisruptions(@NotNull FittedPurityStatus fitStatus, @NotNull List<GeneDisruption> disruptions) {
-        final DRDataSource dataSource = new DRDataSource(CHROMOSOME_FIELD.getName(),
+        final DRDataSource dataSource = new DRDataSource(LOCATION_FIELD.getName(),
                 GENE_FIELD.getName(),
                 RANGE_FIELD.getName(),
                 TYPE_FIELD.getName(),
@@ -66,7 +66,7 @@ public final class GeneDisruptionDataSource {
             GeneDisruption primaryDisruption = pairedDisruption.getLeft();
 
             disruptionDataList.add(ImmutableGeneDisruptionData.builder()
-                    .chromosome(chromosomeField(primaryDisruption))
+                    .location(locationField(primaryDisruption))
                     .gene(gene(primaryDisruption).geneName())
                     .type(typeField(primaryDisruption))
                     .range(rangeField(pairedDisruption))
@@ -78,7 +78,7 @@ public final class GeneDisruptionDataSource {
         }
 
         for (GeneDisruptionData disruption : sort(disruptionDataList)) {
-            dataSource.add(disruption.chromosome(),
+            dataSource.add(disruption.location(),
                     disruption.gene(),
                     disruption.range(),
                     disruption.type(),
@@ -142,8 +142,8 @@ public final class GeneDisruptionDataSource {
     @NotNull
     private static List<GeneDisruptionData> sort(@NotNull List<GeneDisruptionData> disruptions) {
         return disruptions.stream().sorted((disruption1, disruption2) -> {
-            String locationAndGene1 = zeroPrefixed(disruption1.chromosome()) + disruption1.gene();
-            String locationAndGene2 = zeroPrefixed(disruption2.chromosome()) + disruption2.gene();
+            String locationAndGene1 = zeroPrefixed(disruption1.location()) + disruption1.gene();
+            String locationAndGene2 = zeroPrefixed(disruption2.location()) + disruption2.gene();
 
             if (locationAndGene1.equals(locationAndGene2)) {
                 return disruption1.exonUpstream() - disruption2.exonUpstream();
@@ -154,29 +154,29 @@ public final class GeneDisruptionDataSource {
     }
 
     @NotNull
-    private static String zeroPrefixed(@NotNull String chromosome) {
+    private static String zeroPrefixed(@NotNull String location) {
         // KODU: First remove q or p arm if present.
-        int armStart = chromosome.indexOf("q");
+        int armStart = location.indexOf("q");
         if (armStart < 0) {
-            armStart = chromosome.indexOf("p");
+            armStart = location.indexOf("p");
         }
 
-        String chromosomeForFilter = armStart > 0 ? chromosome.substring(0, armStart) : chromosome;
+        String chromosome = armStart > 0 ? location.substring(0, armStart) : location;
 
         try {
-            int chromosomeIndex = Integer.valueOf(chromosomeForFilter);
+            int chromosomeIndex = Integer.valueOf(chromosome);
             if (chromosomeIndex < 10) {
-                return "0" + chromosome;
+                return "0" + location;
             } else {
-                return chromosome;
+                return location;
             }
         } catch (NumberFormatException exception) {
-            return chromosome;
+            return location;
         }
     }
 
     @NotNull
-    private static String chromosomeField(@NotNull GeneDisruption disruption) {
+    private static String locationField(@NotNull GeneDisruption disruption) {
         GeneAnnotation gene = gene(disruption);
         return gene.variant().chromosome(gene.isStart()) + gene.karyotypeBand();
     }

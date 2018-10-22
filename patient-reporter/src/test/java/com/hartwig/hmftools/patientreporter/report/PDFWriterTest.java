@@ -266,9 +266,11 @@ public class PDFWriterTest {
     private static List<GeneDisruption> createTestDisruptions() {
         Pair<GeneDisruption, GeneDisruption> pairedDisruption =
                 createTestDisruptionPair(StructuralVariantType.INV, "2", "q34", "ERBB4", 4, 9, 1D);
-        GeneDisruption disruption = createDisruption(StructuralVariantType.BND, "17", "q12", "CDK12", 12, 1D, true);
+        GeneDisruption disruption1 = createDisruption(StructuralVariantType.BND, "17", "q12", "CDK12", 12, 2.3, false);
+        GeneDisruption disruption2 = createDisruption(StructuralVariantType.INS, "21", "q22.12", "RUNX1", 0, 0.8, true);
+        GeneDisruption disruption3 = createDisruption(StructuralVariantType.DUP, "1", "p13.1", "CD58", 2, 0.2, true);
 
-        return Lists.newArrayList(pairedDisruption.getLeft(), pairedDisruption.getRight(), disruption);
+        return Lists.newArrayList(pairedDisruption.getLeft(), pairedDisruption.getRight(), disruption1, disruption2, disruption3);
     }
 
     @NotNull
@@ -307,7 +309,7 @@ public class PDFWriterTest {
         EnrichedStructuralVariantLeg leg =
                 createEnrichedStructuralVariantLegBuilder().orientation(orientation).chromosome(chromosome).build();
         ImmutableEnrichedStructuralVariant.Builder builder = createEnrichedStructuralVariantBuilder().type(type).ploidy(ploidy);
-        EnrichedStructuralVariant variant = isUpstream ? builder.start(leg).build() : builder.end(leg).build();
+        EnrichedStructuralVariant variant = builder.start(leg).build();
 
         GeneAnnotation geneAnnotation =
                 new GeneAnnotation(variant, true, gene, "id", 1, Lists.newArrayList(), Lists.newArrayList(), chromosomeBand);

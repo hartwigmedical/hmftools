@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 abstract class GeneDisruptionData {
 
     @NotNull
-    public abstract String chromosome();
+    public abstract String location();
 
     @NotNull
     public abstract String gene();

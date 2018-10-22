@@ -217,13 +217,13 @@ public abstract class FindingsPage {
     private static ComponentBuilder<?, ?> geneDisruptionReport(@NotNull AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> table = report.geneDisruptions().size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(GeneDisruptionDataSource.geneDisruptionFields())
-                .columns(col.column("Chromosome", GeneDisruptionDataSource.CHROMOSOME_FIELD),
+                .columns(col.column("Location", GeneDisruptionDataSource.LOCATION_FIELD),
                         col.column("Gene", GeneDisruptionDataSource.GENE_FIELD),
-                        col.column("Range", GeneDisruptionDataSource.RANGE_FIELD),
+                        col.column("Range", GeneDisruptionDataSource.RANGE_FIELD).setFixedWidth(120),
                         col.column("Type", GeneDisruptionDataSource.TYPE_FIELD),
                         col.column("Copies", GeneDisruptionDataSource.COPIES_FIELD),
-                        col.column("Gene Min Copies", GeneDisruptionDataSource.GENE_MIN_COPIES),
-                        col.column("Gene Max Copies", GeneDisruptionDataSource.GENE_MAX_COPIES))
+                        col.column("Gene Min Copies", GeneDisruptionDataSource.GENE_MIN_COPIES).setFixedWidth(80),
+                        col.column("Gene Max Copies", GeneDisruptionDataSource.GENE_MAX_COPIES).setFixedWidth(80))
                 .setDataSource(GeneDisruptionDataSource.fromGeneDisruptions(report.fitStatus(), report.geneDisruptions())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
