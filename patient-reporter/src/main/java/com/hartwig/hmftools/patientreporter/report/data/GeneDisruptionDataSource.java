@@ -1,27 +1,18 @@
 package com.hartwig.hmftools.patientreporter.report.data;
 
-import static com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat.exonDescription;
 import static com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat.ploidyToCopiesString;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
-import com.hartwig.hmftools.patientreporter.disruption.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruption;
+import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruptionFactory;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,8 +21,6 @@ import net.sf.dynamicreports.report.datasource.DRDataSource;
 import net.sf.jasperreports.engine.JRDataSource;
 
 public final class GeneDisruptionDataSource {
-
-    private static final Logger LOGGER = LogManager.getLogger(GeneDisruptionDataSource.class);
 
     public static final FieldBuilder<?> LOCATION_FIELD = field("location", String.class);
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
@@ -60,31 +49,14 @@ public final class GeneDisruptionDataSource {
                 GENE_MIN_COPIES.getName(),
                 GENE_MAX_COPIES.getName());
 
-        Map<StructuralVariant, Pair<GeneDisruption, GeneDisruption>> pairedMap = mapDisruptionsPerStructuralVariant(disruptions);
-
-        List<ReportableGeneDisruption> disruptionDataList = Lists.newArrayList();
-        for (Map.Entry<StructuralVariant, Pair<GeneDisruption, GeneDisruption>> entry : pairedMap.entrySet()) {
-            Pair<GeneDisruption, GeneDisruption> pairedDisruption = entry.getValue();
-            GeneDisruption primaryDisruption = pairedDisruption.getLeft();
-
-            disruptionDataList.add(ImmutableReportableGeneDisruption.builder()
-                    .location(locationField(primaryDisruption))
-                    .gene(gene(primaryDisruption).geneName())
-                    .type(typeField(primaryDisruption))
-                    .range(rangeField(pairedDisruption))
-                    .copies(copiesField(primaryDisruption))
-                    .geneMinCopies(0)
-                    .geneMaxCopies(0)
-                    .exonUpstream(primaryDisruption.linkedAnnotation().exonUpstream())
-                    .build());
-        }
+        List<ReportableGeneDisruption> disruptionDataList = ReportableGeneDisruptionFactory.toReportableGeneDisruptions(disruptions);
 
         for (ReportableGeneDisruption disruption : sort(disruptionDataList)) {
             dataSource.add(disruption.location(),
                     disruption.gene(),
                     disruption.range(),
-                    disruption.type(),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, disruption.copies()),
+                    disruption.type().name(),
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyToCopiesString(disruption.ploidy())),
                     Strings.EMPTY,
                     Strings.EMPTY);
             // TODO (KODU): Propagate copy number info here - DEV-548
@@ -96,60 +68,13 @@ public final class GeneDisruptionDataSource {
     }
 
     @NotNull
-    private static Map<StructuralVariant, Pair<GeneDisruption, GeneDisruption>> mapDisruptionsPerStructuralVariant(
-            @NotNull List<GeneDisruption> disruptions) {
-        Map<StructuralVariant, List<GeneDisruption>> disruptionsPerVariant = Maps.newHashMap();
-        for (GeneDisruption disruption : disruptions) {
-            StructuralVariant variant = disruption.linkedAnnotation().parent().variant();
-            List<GeneDisruption> currentDisruptions = disruptionsPerVariant.get(variant);
-            if (currentDisruptions == null) {
-                currentDisruptions = Lists.newArrayList();
-            }
-            currentDisruptions.add(disruption);
-            disruptionsPerVariant.put(variant, currentDisruptions);
-        }
-
-        return toPairedMap(disruptionsPerVariant);
-    }
-
-    @NotNull
-    private static Map<StructuralVariant, Pair<GeneDisruption, GeneDisruption>> toPairedMap(
-            @NotNull Map<StructuralVariant, List<GeneDisruption>> disruptionsPerVariant) {
-        Map<StructuralVariant, Pair<GeneDisruption, GeneDisruption>> pairedMap = Maps.newHashMap();
-
-        for (Map.Entry<StructuralVariant, List<GeneDisruption>> entry : disruptionsPerVariant.entrySet()) {
-            List<GeneDisruption> disruptions = entry.getValue();
-
-            if (disruptions.size() != 1 && disruptions.size() != 2) {
-                LOGGER.warn("Found unusual number of disruptions on single event: " + disruptions.size());
-                continue;
-            }
-
-            GeneDisruption left;
-            GeneDisruption right;
-            if (disruptions.size() == 1) {
-                left = disruptions.get(0);
-                right = null;
-            } else {
-                // TODO (KODU): Should I use isStart/isEnd rather than upstream/downstream?
-                left = isUpstream(disruptions.get(0)) ? disruptions.get(0) : disruptions.get(1);
-                right = !isUpstream(disruptions.get(0)) ? disruptions.get(0) : disruptions.get(1);
-            }
-
-            pairedMap.put(entry.getKey(), Pair.of(left, right));
-        }
-
-        return pairedMap;
-    }
-
-    @NotNull
     private static List<ReportableGeneDisruption> sort(@NotNull List<ReportableGeneDisruption> disruptions) {
         return disruptions.stream().sorted((disruption1, disruption2) -> {
             String locationAndGene1 = zeroPrefixed(disruption1.location()) + disruption1.gene();
             String locationAndGene2 = zeroPrefixed(disruption2.location()) + disruption2.gene();
 
             if (locationAndGene1.equals(locationAndGene2)) {
-                return disruption1.exonUpstream() - disruption2.exonUpstream();
+                return disruption1.firstAffectedExon() - disruption2.firstAffectedExon();
             } else {
                 return locationAndGene1.compareTo(locationAndGene2);
             }
@@ -176,43 +101,5 @@ public final class GeneDisruptionDataSource {
         } catch (NumberFormatException exception) {
             return location;
         }
-    }
-
-    @NotNull
-    private static String locationField(@NotNull GeneDisruption disruption) {
-        GeneAnnotation gene = gene(disruption);
-        return gene.variant().chromosome(gene.isStart()) + gene.karyotypeBand();
-    }
-
-    @NotNull
-    private static String rangeField(@NotNull Pair<GeneDisruption, GeneDisruption> pairedDisruption) {
-        GeneDisruption primary = pairedDisruption.getLeft();
-        GeneDisruption secondary = pairedDisruption.getRight();
-        if (secondary == null) {
-            return exonDescription(primary.linkedAnnotation()) + (isUpstream(primary) ? " Upstream" : " Downstream");
-        } else {
-            return exonDescription(primary.linkedAnnotation()) + " -> " + exonDescription(secondary.linkedAnnotation());
-        }
-    }
-
-    @NotNull
-    private static String typeField(@NotNull GeneDisruption disruption) {
-        return gene(disruption).variant().type().name();
-    }
-
-    @NotNull
-    private static String copiesField(@NotNull GeneDisruption disruption) {
-        return ploidyToCopiesString(gene(disruption).variant().ploidy());
-    }
-
-    @NotNull
-    private static GeneAnnotation gene(@NotNull GeneDisruption disruption) {
-        return disruption.linkedAnnotation().parent();
-    }
-
-    private static boolean isUpstream(@NotNull GeneDisruption disruption) {
-        // KODU (TODO): Figure out whether definition is correct!
-        GeneAnnotation gene = gene(disruption);
-        return gene.variant().orientation(gene.isStart()) > 0;
     }
 }

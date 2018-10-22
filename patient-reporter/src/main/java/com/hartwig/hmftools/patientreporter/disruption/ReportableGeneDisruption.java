@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientreporter.disruption;
 
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,14 +21,13 @@ public abstract class ReportableGeneDisruption {
     public abstract String range();
 
     @NotNull
-    public abstract String type();
+    public abstract StructuralVariantType type();
 
-    @NotNull
-    public abstract String copies();
+    public abstract double ploidy();
 
     public abstract int geneMinCopies();
 
     public abstract int geneMaxCopies();
 
-    public abstract int exonUpstream();
+    public abstract int firstAffectedExon();
 }
