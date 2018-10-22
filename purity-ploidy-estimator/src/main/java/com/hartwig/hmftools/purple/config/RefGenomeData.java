@@ -35,6 +35,9 @@ public interface RefGenomeData {
     }
 
     @NotNull
+    RefGenome refRegome();
+
+    @NotNull
     Map<Chromosome, GenomePosition> length();
 
     @NotNull
@@ -73,6 +76,7 @@ public interface RefGenomeData {
         return ImmutableRefGenomeData.builder()
                 .length(toPosition(refGenome.lengths(), contigMap))
                 .centromere(toPosition(refGenome.centromeres(), contigMap))
+                .refRegome(refGenome)
                 .build();
     }
 

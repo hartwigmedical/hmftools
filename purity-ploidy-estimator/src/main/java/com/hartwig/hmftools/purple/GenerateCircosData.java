@@ -28,6 +28,7 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
+import com.hartwig.hmftools.common.refgenome.RefGenome;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
@@ -54,12 +55,14 @@ class GenerateCircosData {
     private final CircosConfig config;
     private final String baseCircosTumorSample;
     private final String baseCircosReferenceSample;
+    private final RefGenome refGenome;
 
     GenerateCircosData(final ConfigSupplier configSupplier, final ExecutorService executorService) {
         this.tumorSample = configSupplier.commonConfig().tumorSample();
         this.referenceSample = configSupplier.commonConfig().refSample();
         this.config = configSupplier.circosConfig();
         this.executorService = executorService;
+        this.refGenome = configSupplier.refGenomeConfig().refRegome();
         this.baseCircosTumorSample = config.circosDirectory() + File.separator + tumorSample;
         this.baseCircosReferenceSample = config.circosDirectory() + File.separator + referenceSample;
     }
@@ -162,9 +165,17 @@ class GenerateCircosData {
         writeConfig(gender, "circos");
         writeConfig(gender, "input");
 
-        copyResourceToCircos("gaps.txt");
         copyResourceToCircos("ideogram.conf");
         copyResourceToCircos("ticks.conf");
+
+        switch (refGenome) {
+            case HG38:
+                copyResourceToCircos("gaps_hg38.txt" ,"gaps.txt");
+                break;
+            case HG19:
+                copyResourceToCircos("gaps_hg19.txt","gaps.txt");
+                break;
+        }
     }
 
     private void writeConfig(@NotNull final Gender gender, @NotNull final String type) throws IOException {
@@ -177,9 +188,13 @@ class GenerateCircosData {
     }
 
     private void copyResourceToCircos(@NotNull final String name) throws IOException {
+        copyResourceToCircos(name, name);
+    }
+
+    private void copyResourceToCircos(@NotNull final String inputName, @NotNull final String outputName) throws IOException {
         Charset charset = StandardCharsets.UTF_8;
-        final String content = readResource("/circos/" + name);
-        final String outputFilename = config.circosDirectory() + File.separator + name;
+        final String content = readResource("/circos/" + inputName);
+        final String outputFilename = config.circosDirectory() + File.separator + outputName;
         Files.write(new File(outputFilename).toPath(), content.getBytes(charset));
     }
 
