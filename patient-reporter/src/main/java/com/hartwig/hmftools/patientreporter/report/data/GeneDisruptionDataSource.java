@@ -129,6 +129,7 @@ public final class GeneDisruptionDataSource {
                 left = disruptions.get(0);
                 right = null;
             } else {
+                // TODO (KODU): Should I use isStart/isEnd rather than upstream/downstream?
                 left = isUpstream(disruptions.get(0)) ? disruptions.get(0) : disruptions.get(1);
                 right = !isUpstream(disruptions.get(0)) ? disruptions.get(0) : disruptions.get(1);
             }
@@ -208,6 +209,7 @@ public final class GeneDisruptionDataSource {
     }
 
     private static boolean isUpstream(@NotNull GeneDisruption disruption) {
+        // KODU (TODO): Figure out whether definition is correct!
         GeneAnnotation gene = gene(disruption);
         return gene.variant().orientation(gene.isStart()) > 0;
     }
