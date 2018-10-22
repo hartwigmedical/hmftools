@@ -62,6 +62,7 @@ import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineVariant;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -252,10 +253,8 @@ public class PDFWriterTest {
     private static Transcript createFusionLeg(boolean isUpstream, @NotNull String gene, @NotNull String transcript, int exonUpstream,
             int exonDownstream, double ploidy) {
         EnrichedStructuralVariant variant = createEnrichedStructuralVariantBuilder().type(StructuralVariantType.BND)
-                .start(createEnrichedStructuralVariantLegBuilder().chromosome("any").build())
+                .start(createEnrichedStructuralVariantLegBuilder().orientation((byte) 1).chromosome("any").build())
                 .ploidy(ploidy)
-                .qualityScore(0)
-                .recovered(false)
                 .build();
         GeneAnnotation upstreamGene =
                 new GeneAnnotation(variant, isUpstream, gene, Strings.EMPTY, 1, Lists.newArrayList(), Lists.newArrayList(), Strings.EMPTY);
@@ -264,27 +263,55 @@ public class PDFWriterTest {
 
     @NotNull
     private static List<GeneDisruption> createTestDisruptions() {
-        GeneDisruption disruption1 = createDisruption(StructuralVariantType.DUP, "8", "p12", "NRG1", 1, 2, 0.3);
-        GeneDisruption disruption2 = createDisruption(StructuralVariantType.INV, "2", "q34", "ERBB4", 4, 5, 1D);
-        GeneDisruption disruption3 = createDisruption(StructuralVariantType.INS, "3", "q22.3", "PIK3CB", 1, 2, 3D);
-        GeneDisruption disruption4 = createDisruption(StructuralVariantType.DEL, "8", "p12", "NRG1", 1, 2, 0.2);
-        GeneDisruption disruption5 = createDisruption(StructuralVariantType.BND, "17", "q12", "CDK12", 12, 13, 1D);
-        GeneDisruption disruption6 = createDisruption(StructuralVariantType.INV, "2", "q34", "ERBB4", 20, 21, 1D);
+        Pair<GeneDisruption, GeneDisruption> pairedDisruption =
+                createTestDisruptionPair(StructuralVariantType.INV, "2", "q34", "ERBB4", 4, 9, 1D);
+        GeneDisruption disruption = createDisruption(StructuralVariantType.BND, "17", "q12", "CDK12", 12, 1D, true);
 
-        return Lists.newArrayList(disruption1, disruption2, disruption3, disruption4, disruption5, disruption6);
+        return Lists.newArrayList(pairedDisruption.getLeft(), pairedDisruption.getRight(), disruption);
+    }
+
+    @NotNull
+    private static Pair<GeneDisruption, GeneDisruption> createTestDisruptionPair(@NotNull StructuralVariantType type,
+            @NotNull String chromosome, @NotNull String chromosomeBand, @NotNull String gene, int startExon, int endExon, double ploidy) {
+        EnrichedStructuralVariantLeg start =
+                createEnrichedStructuralVariantLegBuilder().orientation((byte) 1).chromosome(chromosome).build();
+        EnrichedStructuralVariantLeg end = createEnrichedStructuralVariantLegBuilder().orientation((byte) 0).chromosome(chromosome).build();
+        EnrichedStructuralVariant variant =
+                createEnrichedStructuralVariantBuilder().type(type).start(start).end(end).ploidy(ploidy).build();
+
+        GeneAnnotation upstreamGeneAnnotation =
+                new GeneAnnotation(variant, true, gene, "id", 1, Lists.newArrayList(), Lists.newArrayList(), chromosomeBand);
+
+        Transcript upstreamTranscript =
+                new Transcript(upstreamGeneAnnotation, "trans", startExon, -1, startExon + 1, -1, 15, true, null, null);
+
+        GeneDisruption upstreamDisruption = ImmutableGeneDisruption.builder().reportable(true).linkedAnnotation(upstreamTranscript).build();
+
+        GeneAnnotation downstreamGeneAnnotation =
+                new GeneAnnotation(variant, false, gene, "id", 1, Lists.newArrayList(), Lists.newArrayList(), chromosomeBand);
+
+        Transcript downstreamTranscript =
+                new Transcript(downstreamGeneAnnotation, "trans", endExon, -1, endExon + 1, -1, 15, true, null, null);
+
+        GeneDisruption downstreamDisruption =
+                ImmutableGeneDisruption.builder().reportable(true).linkedAnnotation(downstreamTranscript).build();
+
+        return Pair.of(upstreamDisruption, downstreamDisruption);
     }
 
     @NotNull
     private static GeneDisruption createDisruption(@NotNull StructuralVariantType type, @NotNull String chromosome,
-            @NotNull String chromosomeBand, @NotNull String gene, int exonUpstream, int exonDownstream, double ploidy) {
-        EnrichedStructuralVariantLeg start = createEnrichedStructuralVariantLegBuilder().chromosome(chromosome).build();
-        EnrichedStructuralVariant variant =
-                createEnrichedStructuralVariantBuilder().type(type).start(start).ploidy(ploidy).qualityScore(0).recovered(false).build();
+            @NotNull String chromosomeBand, @NotNull String gene, int exonUpstream, double ploidy, boolean isUpstream) {
+        byte orientation = isUpstream ? (byte) 1 : (byte) 0;
+        EnrichedStructuralVariantLeg leg =
+                createEnrichedStructuralVariantLegBuilder().orientation(orientation).chromosome(chromosome).build();
+        ImmutableEnrichedStructuralVariant.Builder builder = createEnrichedStructuralVariantBuilder().type(type).ploidy(ploidy);
+        EnrichedStructuralVariant variant = isUpstream ? builder.start(leg).build() : builder.end(leg).build();
 
         GeneAnnotation geneAnnotation =
                 new GeneAnnotation(variant, true, gene, "id", 1, Lists.newArrayList(), Lists.newArrayList(), chromosomeBand);
 
-        Transcript transcript = new Transcript(geneAnnotation, "trans", exonUpstream, -1, exonDownstream, -1, 5, true, null, null);
+        Transcript transcript = new Transcript(geneAnnotation, "trans", exonUpstream, -1, exonUpstream + 1, -1, 5, true, null, null);
 
         return ImmutableGeneDisruption.builder().reportable(true).linkedAnnotation(transcript).build();
     }
@@ -346,12 +373,16 @@ public class PDFWriterTest {
 
     @NotNull
     private static ImmutableEnrichedStructuralVariantLeg.Builder createEnrichedStructuralVariantLegBuilder() {
-        return ImmutableEnrichedStructuralVariantLeg.builder().orientation((byte) 1).homology(Strings.EMPTY).position(1);
+        return ImmutableEnrichedStructuralVariantLeg.builder().homology(Strings.EMPTY).position(1);
     }
 
     @NotNull
     private static ImmutableEnrichedStructuralVariant.Builder createEnrichedStructuralVariantBuilder() {
-        return ImmutableEnrichedStructuralVariant.builder().id(Strings.EMPTY).insertSequence(Strings.EMPTY);
+        return ImmutableEnrichedStructuralVariant.builder()
+                .id(Strings.EMPTY)
+                .insertSequence(Strings.EMPTY)
+                .qualityScore(0)
+                .recovered(false);
     }
 
     @NotNull
