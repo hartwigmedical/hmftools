@@ -9,7 +9,6 @@ import java.util.List;
 
 import com.google.common.io.Resources;
 
-import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class BachelorFileTest {
@@ -28,7 +27,7 @@ public class BachelorFileTest {
         assertEquals("BRCA1", variant.gene());
         assertEquals("c.191G>A", variant.hgvsCodingImpact());
         assertEquals("p.Cys64Tyr", variant.hgvsProteinImpact());
-        assertEquals(Strings.EMPTY, variant.germlineStatus());
+        assertEquals("HET", variant.germlineStatus());
         assertEquals(33, variant.alleleReadCount());
         assertEquals(89, variant.totalReadCount());
         assertEquals(2.99, variant.adjustedCopyNumber(), EPSILON);

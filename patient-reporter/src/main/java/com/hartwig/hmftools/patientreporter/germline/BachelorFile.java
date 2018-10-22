@@ -10,7 +10,6 @@ import com.google.common.collect.Lists;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -74,7 +73,7 @@ public final class BachelorFile {
                 .hgvsProteinImpact(values[23].trim())
                 .totalReadCount(Integer.valueOf(values[15]))
                 .alleleReadCount(Integer.valueOf(values[14]))
-                .germlineStatus(Strings.EMPTY)
+                .germlineStatus(values[28].trim())
                 .adjustedVAF(Double.valueOf(values[17]))
                 .adjustedCopyNumber(Double.valueOf(values[16]))
                 .minorAllelePloidy(Double.valueOf(values[29]))
