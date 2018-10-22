@@ -6,14 +6,11 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class CancerTypeAnalyzer {
-    private static final Logger LOGGER = LogManager.getLogger(CancerTypeAnalyzer.class);
     private static final String DELIMITER = "\t";
 
     @NotNull
