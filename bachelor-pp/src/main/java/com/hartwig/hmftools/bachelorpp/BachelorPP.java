@@ -444,7 +444,7 @@ public class BachelorPP {
                                 bachRecord.isBiallelic(),
                                 region.hotspot(),
                                 region.mappability(),
-                                region.germlineStatus(),
+                                bachRecord.isHomozygous() ? "HOM" : "HET",
                                 region.minorAllelePloidy(),
                                 bachRecord.isLowScore() ? "ARTEFACT" : "PASS"));
 
