@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.report;
 
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReportData;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testSampleReport;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testSequencedReportData;
 
 import static org.junit.Assert.assertNotNull;
@@ -8,10 +9,7 @@ import static org.junit.Assert.assertNotNull;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
@@ -20,7 +18,6 @@ import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
 import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
-import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
@@ -53,7 +50,6 @@ import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.BaseReportData;
 import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableNotAnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
@@ -75,8 +71,6 @@ public class PDFWriterTest {
     private static final boolean WRITE_TO_PDF = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
-
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
 
     @Test
     public void canGenerateSequenceReport() throws DRException, IOException {
@@ -105,7 +99,7 @@ public class PDFWriterTest {
 
         final AnalysedPatientReport patientReport = ImmutableAnalysedPatientReport.of(sampleReport,
                 FittedPurityStatus.NORMAL,
-                impliedTumorPurity,
+                fittedPurity.purity(),
                 Lists.newArrayList(),
                 somaticVariants,
                 driverCatalog,
@@ -360,18 +354,6 @@ public class PDFWriterTest {
                 testBaseReportData().logoPath());
 
         return PDFWriter.generateNotAnalysableReport(patientReport);
-    }
-
-    @NotNull
-    private static SampleReport testSampleReport(final double pathologyTumorPercentage) throws IOException {
-        final String sample = "CPCT02991111T";
-        return ImmutableSampleReport.of(sample,
-                ImmutablePatientTumorLocation.of("CPCT02991111", "Skin", "Melanoma"),
-                pathologyTumorPercentage,
-                LocalDate.parse("05-Jan-2016", FORMATTER),
-                LocalDate.parse("01-Jan-2016", FORMATTER),
-                "PREP013V23-QC037V20-SEQ008V25",
-                testBaseReportData().centerModel().getAddresseeStringForSample(sample));
     }
 
     @NotNull
