@@ -20,11 +20,10 @@ public final class CopyNumberEvidenceAnalyzerFactory {
         final List<ActionableCopyNumber> CNVs = new ArrayList<>();
         final List<String> lineCNVs = Files.readAllLines(new File(fileCNVs).toPath());
 
-        for (String line : lineCNVs) {
-            if (!line.contains("event") || !line.contains("actionability")) {
-                CNVs.add(fromLineCNVs(line));
-            }
+        for (String line : lineCNVs.subList(1, lineCNVs.size())) {
+            CNVs.add(fromLineCNVs(line));
         }
+
         return new CopyNumberEvidenceAnalyzer(CNVs);
     }
 

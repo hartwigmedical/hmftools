@@ -27,22 +27,16 @@ public final class FusionEvidenceAnalyzerFactory {
         final List<String> linePromiscuousFives = Files.readAllLines(new File(filePromiscuousFive).toPath());
         final List<String> linePromiscuousThrees = Files.readAllLines(new File(filePromiscuousThree).toPath());
 
-        for (String lineFusionPair : lineFusionPairs) {
-            if (!lineFusionPair.contains("event") || !lineFusionPair.contains("actionability")) {
-                fusionPairs.add(fromLineFusionPairs(lineFusionPair));
-            }
+        for (String lineFusionPair : lineFusionPairs.subList(1, lineFusionPairs.size())) {
+            fusionPairs.add(fromLineFusionPairs(lineFusionPair));
         }
 
-        for (String linePromiscuousFive : linePromiscuousFives) {
-            if (!linePromiscuousFive.contains("event") || !linePromiscuousFive.contains("actionability")) {
-                promiscuousFive.add(fromLinePromiscuousFive(linePromiscuousFive));
-            }
+        for (String linePromiscuousFive : linePromiscuousFives.subList(1, linePromiscuousFives.size())) {
+            promiscuousFive.add(fromLinePromiscuousFive(linePromiscuousFive));
         }
 
-        for (String linePromiscuousThree : linePromiscuousThrees) {
-            if (!linePromiscuousThree.contains("event") || !linePromiscuousThree.contains("actionability")) {
-                promiscuousThree.add(fromLinePromiscuousThree(linePromiscuousThree));
-            }
+        for (String linePromiscuousThree : linePromiscuousThrees.subList(1, linePromiscuousThrees.size())) {
+            promiscuousThree.add(fromLinePromiscuousThree(linePromiscuousThree));
         }
 
         return new FusionEvidenceAnalyzer(fusionPairs, promiscuousFive, promiscuousThree);

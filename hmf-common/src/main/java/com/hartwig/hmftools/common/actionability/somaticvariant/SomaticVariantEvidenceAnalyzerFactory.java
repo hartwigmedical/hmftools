@@ -23,17 +23,14 @@ public final class SomaticVariantEvidenceAnalyzerFactory {
         final List<String> lineVariants = Files.readAllLines(new File(fileVariants).toPath());
         final List<String> lineRanges = Files.readAllLines(new File(fileRanges).toPath());
 
-        for (String lineVariant : lineVariants) {
-            if (!lineVariant.contains("event") || !lineVariant.contains("actionability")) {
-                variants.add(fromLineVariants(lineVariant));
-            }
+        for (String lineVariant : lineVariants.subList(1, lineVariants.size())) {
+            variants.add(fromLineVariants(lineVariant));
         }
 
-        for (String lineRange : lineRanges) {
-            if (!lineRange.contains("event") || !lineRange.contains("actionability")) {
-                ranges.add(fromLineRanges(lineRange));
-            }
+        for (String lineRange : lineRanges.subList(1, lineRanges.size())) {
+            ranges.add(fromLineRanges(lineRange));
         }
+
         return new SomaticVariantEvidenceAnalyzer(variants, ranges);
     }
 

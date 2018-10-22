@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -47,7 +46,6 @@ public class CancerTypeAnalyzer {
         try {
             return value[1];
         } catch (ArrayIndexOutOfBoundsException e) {
-            LOGGER.warn("IndexOutOfBoundsException: " + e.getMessage());
             return Strings.EMPTY;
         }
     }
