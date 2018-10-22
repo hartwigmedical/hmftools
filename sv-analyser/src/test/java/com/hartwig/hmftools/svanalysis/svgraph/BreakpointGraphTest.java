@@ -166,7 +166,6 @@ public class BreakpointGraphTest {
     }
 
     @Test
-    @Ignore
     public void candidatesNextBreakpoint_should_find_potential_partners() {
         List<PurpleCopyNumber> cns = ImmutableList.of(cn("chr1", 1, 10, 2),
                 cn("chr1", 11, 20, 1),
@@ -192,7 +191,6 @@ public class BreakpointGraphTest {
     }
 
     @Test
-    @Ignore
     public void candidatesNextBreakpoint_should_not_match_if_CN_too_different() {
         List<PurpleCopyNumber> cns = ImmutableList.of(cn("chr1", 1, 10, 10),
                 cn("chr1", 11, 20, 10),
@@ -222,7 +220,6 @@ public class BreakpointGraphTest {
     }
 
     @Test
-    @Ignore
     public void nextFoldbackDoublingCandidates() {
         List<PurpleCopyNumber> cns =
                 ImmutableList.of(cn("chr1", 1, 10, 11), cn("chr1", 11, 20, 11), cn("chr1", 21, 30, 6), cn("other", 1, 1, 1));

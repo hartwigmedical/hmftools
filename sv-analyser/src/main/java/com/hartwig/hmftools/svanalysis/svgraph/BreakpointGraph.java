@@ -246,7 +246,7 @@ public class BreakpointGraph {
         if (segments == null) {
             return unplacedSegment;
         }
-        int position = Collections.binarySearch(segments, leg);
+        int position = Collections.binarySearch(segments, leg, ByGenomicPosition);
         if (position < 0) {
             position = -2 - position;
         }
