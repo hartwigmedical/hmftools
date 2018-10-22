@@ -56,6 +56,8 @@ import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.disruption.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruption;
+import com.hartwig.hmftools.patientreporter.fusion.ReportableGeneFusion;
+import com.hartwig.hmftools.patientreporter.fusion.ReportableGeneFusionFactory;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineVariant;
 
@@ -89,7 +91,7 @@ public class PDFWriterTest {
         final List<EnrichedSomaticVariant> somaticVariants = createTestSomaticVariants(purityAdjuster);
         final List<GermlineVariant> germlineVariants = createTestGermlineVariants(purityAdjuster);
         final List<GeneCopyNumber> copyNumbers = createTestCopyNumbers();
-        final List<GeneFusion> fusions = createTestFusions();
+        final List<ReportableGeneFusion> fusions = createTestFusions();
         final List<ReportableGeneDisruption> disruptions = createTestDisruptions();
 
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
@@ -238,12 +240,12 @@ public class PDFWriterTest {
     }
 
     @NotNull
-    private static List<GeneFusion> createTestFusions() {
+    private static List<ReportableGeneFusion> createTestFusions() {
         GeneFusion fusion1 =
                 createFusion("TMPRSS2", "ENST00000398585", 4, 5, "PNPLA7", "ENST00000406427", 2, 3, KnownFusionsModel.CIVIC, 0.4);
         GeneFusion fusion2 = createFusion("CLCN6", "ENST00000346436", 1, 2, "BRAF", "ENST00000288602", 8, 9, KnownFusionsModel.ONCOKB, 1D);
 
-        return Lists.newArrayList(fusion1, fusion2);
+        return ReportableGeneFusionFactory.toReportableGeneFusions(Lists.newArrayList(fusion1, fusion2));
     }
 
     @NotNull

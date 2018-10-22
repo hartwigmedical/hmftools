@@ -7,12 +7,11 @@ import static com.hartwig.hmftools.common.fusions.KnownFusionsModel.ONCOKB;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.patientreporter.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.jetbrains.annotations.NotNull;
@@ -43,7 +42,7 @@ public final class GeneFusionDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromGeneFusions(@NotNull FittedPurityStatus fitStatus, @NotNull List<GeneFusion> fusions) {
+    public static JRDataSource fromGeneFusions(@NotNull FittedPurityStatus fitStatus, @NotNull List<ReportableGeneFusion> fusions) {
         final DRDataSource dataSource = new DRDataSource(FUSION_FIELD.getName(),
                 START_TRANSCRIPT_FIELD.getName(),
                 END_TRANSCRIPT_FIELD.getName(),
@@ -52,22 +51,21 @@ public final class GeneFusionDataSource {
                 COPIES_FIELD.getName(),
                 SOURCE_FIELD.getName());
 
-        final List<GeneFusionData> fusionsData =
-                fusions.stream().sorted(fusionComparator()).map(GeneFusionData::from).collect(Collectors.toList());
-
-        fusionsData.forEach(fusion -> dataSource.add(name(fusion),
-                fusion.geneStartTranscript(),
-                fusion.geneEndTranscript(),
-                fusion.geneContextStart(),
-                fusion.geneContextEnd(),
-                PatientReportFormat.correctValueForFitStatus(fitStatus, fusion.copies()),
-                fusion.source()));
+        for (ReportableGeneFusion fusion : sort(fusions)) {
+            dataSource.add(name(fusion),
+                    fusion.geneStartTranscript(),
+                    fusion.geneEndTranscript(),
+                    fusion.geneContextStart(),
+                    fusion.geneContextEnd(),
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, fusion.copies()),
+                    fusion.source());
+        }
 
         return dataSource;
     }
 
     @NotNull
-    private static String name(@NotNull GeneFusionData fusion) {
+    private static String name(@NotNull ReportableGeneFusion fusion) {
         return fusion.geneStart() + " - " + fusion.geneEnd();
     }
 
@@ -99,7 +97,13 @@ public final class GeneFusionDataSource {
     }
 
     @NotNull
-    private static Comparator<GeneFusion> fusionComparator() {
-        return Comparator.comparing(fusion -> fusion.upstreamLinkedAnnotation().geneName());
+    private static List<ReportableGeneFusion> sort(@NotNull List<ReportableGeneFusion> fusions) {
+        return fusions.stream().sorted((fusion1, fusion2) -> {
+            if (fusion1.geneStart().equals(fusion2.geneStart())) {
+                return fusion1.geneEnd().compareTo(fusion2.geneEnd());
+            } else {
+                return fusion1.geneStart().compareTo(fusion2.geneStart());
+            }
+        }).collect(Collectors.toList());
     }
 }
