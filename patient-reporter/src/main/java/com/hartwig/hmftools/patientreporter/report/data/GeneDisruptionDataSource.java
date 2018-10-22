@@ -8,12 +8,12 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.report.builder.FieldBuilder;
@@ -49,43 +49,59 @@ public final class GeneDisruptionDataSource {
                 GENE_MIN_COPIES.getName(),
                 GENE_MAX_COPIES.getName());
 
-        for (GeneDisruption disruption : sort(disruptions)) {
-            dataSource.add(chromosomeField(disruption),
-                    gene(disruption).geneName(),
-                    rangeField(disruption),
-                    typeField(disruption),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, copiesField(disruption)),
-                    Strings.EMPTY,
-                    Strings.EMPTY);
+        List<GeneDisruptionData> disruptionDataList = Lists.newArrayList();
+        for (GeneDisruption disruption : disruptions) {
+            disruptionDataList.add(ImmutableGeneDisruptionData.builder()
+                    .chromosome(chromosomeField(disruption))
+                    .gene(gene(disruption).geneName())
+                    .type(typeField(disruption))
+                    .range(rangeField(disruption))
+                    .copies(copiesField(disruption))
+                    .geneMinCopies(0)
+                    .geneMaxCopies(0)
+                    .exonUpstream(disruption.linkedAnnotation().exonUpstream())
+                    .build());
+        }
+
+        for (GeneDisruptionData disruption : sort(disruptionDataList)) {
+            dataSource.add(disruption.chromosome(),
+                    disruption.gene(),
+                    disruption.range(),
+                    disruption.type(),
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, disruption.copies()),
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, String.valueOf(disruption.geneMinCopies())),
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, String.valueOf(disruption.geneMaxCopies())));
         }
 
         return dataSource;
     }
 
     @NotNull
-    private static List<GeneDisruption> sort(@NotNull List<GeneDisruption> disruptions) {
+    private static List<GeneDisruptionData> sort(@NotNull List<GeneDisruptionData> disruptions) {
         return disruptions.stream().sorted((disruption1, disruption2) -> {
-            String location1 = chromosomalLocationKey(disruption1);
-            String location2 = chromosomalLocationKey(disruption2);
+            String locationAndGene1 = zeroPrefixed(disruption1.chromosome()) + disruption1.gene();
+            String locationAndGene2 = zeroPrefixed(disruption2.chromosome()) + disruption2.gene();
 
-            if (location1.equals(location2)) {
-                return disruption1.linkedAnnotation().exonUpstream() - disruption2.linkedAnnotation().exonUpstream();
+            if (locationAndGene1.equals(locationAndGene2)) {
+                return disruption1.exonUpstream() - disruption2.exonUpstream();
             } else {
-                return location1.compareTo(location2);
+                return locationAndGene1.compareTo(locationAndGene2);
             }
         }).collect(Collectors.toList());
     }
 
     @NotNull
-    private static String chromosomalLocationKey(@NotNull GeneDisruption disruption) {
-        GeneAnnotation gene = gene(disruption);
-        return zeroPrefixed(gene.variant().chromosome(gene.isStart())) + gene.karyotypeBand() + gene.geneName();
-    }
-
-    @NotNull
     private static String zeroPrefixed(@NotNull String chromosome) {
+        // KODU: First remove q or p arm if present.
+        int armStart= chromosome.indexOf("q");
+        if (armStart < 0) {
+            armStart = chromosome.indexOf("p");
+        }
+
+        String chromosomeForFilter = armStart > 0 ? chromosome.substring(0, armStart) : chromosome;
+
         try {
-            int chromosomeIndex = Integer.valueOf(chromosome);
+            int chromosomeIndex = Integer.valueOf(chromosomeForFilter);
             if (chromosomeIndex < 10) {
                 return "0" + chromosome;
             } else {
