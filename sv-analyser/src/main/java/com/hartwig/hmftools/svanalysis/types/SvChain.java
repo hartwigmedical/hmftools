@@ -2,6 +2,8 @@ package com.hartwig.hmftools.svanalysis.types;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -25,6 +27,8 @@ public class SvChain {
     private String mStartFinishChromosome;
     private String mStartFinishArm;
 
+    private int mConsistencyCount;
+
     private static final Logger LOGGER = LogManager.getLogger(SvChain.class);
 
     public SvChain(int chainId)
@@ -38,6 +42,7 @@ public class SvChain {
         mIsValid = true;
         mStartFinishChromosome = "";
         mStartFinishArm = "";
+        mConsistencyCount = 0;
     }
 
     public SvChain(final SvChain other)
@@ -141,6 +146,8 @@ public class SvChain {
 
         setIsValid();
         setStartFinishStatus();
+
+        mConsistencyCount = calcConsistency(mSvList);
     }
 
     public SvVarData getFirstSV() { return mSvList.isEmpty() ? null : mSvList.get(0); }
@@ -179,6 +186,9 @@ public class SvChain {
             mStartFinishChromosome = "";
         }
     }
+
+    public int getConsistencyCount() { return mConsistencyCount; }
+    public boolean isConsistent() { return mConsistencyCount == 0; }
 
     public String startFinishChromosome() { return mStartFinishChromosome; }
     public String startFinishArm() { return mStartFinishArm; }

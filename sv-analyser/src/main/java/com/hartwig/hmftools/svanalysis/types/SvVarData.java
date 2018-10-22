@@ -27,6 +27,7 @@ public class SvVarData
 
     // full set of DB fields
     private final StructuralVariantData mSVData;
+    private boolean mNoneSegment; // created from a NONE copy number segment
     private String mStartArm;
     private String mEndArm;
     private int mPonCount;
@@ -46,8 +47,10 @@ public class SvVarData
     private int mTransLength;
     private String mTransSvLinks;
 
-    private String mFoldbackLink;
-    private int mFoldbackLen;
+    private String mFoldbackLinkStart;
+    private String mFoldbackLinkEnd;
+    private int mFoldbackLenStart;
+    private int mFoldbackLenEnd;
 
     private long mNearestSvDistance;
     private String mNearestSvRelation;
@@ -82,6 +85,7 @@ public class SvVarData
     {
         mId = svData.id();
         mSVData = svData;
+        mNoneSegment = false;
         mStartArm = "";
         mEndArm = "";
         mPonCount = 0;
@@ -106,8 +110,10 @@ public class SvVarData
         mTransLength = 0;
         mTransSvLinks = "";
 
-        mFoldbackLink = "";
-        mFoldbackLen = 0;
+        mFoldbackLinkStart = "";
+        mFoldbackLinkEnd = "";
+        mFoldbackLenStart = -1;
+        mFoldbackLenEnd = -1;
 
         mStartGeneData = null;
         mEndGeneData = null;
@@ -143,6 +149,7 @@ public class SvVarData
     {
         mId = other.getSvData().id() + "r";
         mSVData = other.getSvData();
+        mNoneSegment = other.isNoneSegment();
         mStartArm = other.getStartArm();
         mEndArm = other.getEndArm();
         mPonCount = other.getPonCount();
@@ -164,6 +171,8 @@ public class SvVarData
 
     public final String id() { return mId; }
     public final StructuralVariantData getSvData() { return mSVData; }
+    public void setNoneSegment(boolean toggle) { mNoneSegment = toggle; }
+    public boolean isNoneSegment() { return mNoneSegment; }
 
     // for convenience
     public boolean equals(final SvVarData other) { return id().equals(other.id()); }
@@ -175,7 +184,7 @@ public class SvVarData
     public final double copyNumberChange(boolean isStart){ return isStart ? mSVData.adjustedStartCopyNumberChange() : mSVData.adjustedEndCopyNumberChange(); }
     public final StructuralVariantType type() { return mSVData.type(); }
 
-    public boolean isNullBreakend() { return mSVData.endChromosome().equals("0") && mSVData.endPosition() < 0; }
+    public boolean isNullBreakend() { return type() == SGL; }
 
     public final String posId()
     {
@@ -201,7 +210,7 @@ public class SvVarData
 
     public final long length()
     {
-        if(isTranslocation())
+        if(type() == BND || isNullBreakend())
             return 0;
 
         return abs(position(false) - position(true));
@@ -210,7 +219,7 @@ public class SvVarData
     public boolean isReplicatedSv() { return mIsReplicatedSv; }
     public final SvVarData getReplicatedSv() { return mReplicatedSv; }
     public int getReplicatedCount() { return mReplicatedCount; }
-    public void setReplicatedCount(int count) { mReplicatedCount = 0; }
+    public void setReplicatedCount(int count) { mReplicatedCount = count; }
     public final String origId() { return mReplicatedSv != null ? mReplicatedSv.id() : mId; }
     public boolean equals(final SvVarData other, boolean allowReplicated)
     {
@@ -250,9 +259,21 @@ public class SvVarData
     public void setIsDupBEStart(boolean toggle) { mDupBEStart = toggle; }
     public void setIsDupBEEnd(boolean toggle) { mDupBEEnd = toggle; }
 
-    public String getFoldbackLink() { return mFoldbackLink; }
-    public int getFoldbackLen() { return mFoldbackLen; }
-    public void setFoldbackLink(String link, int len) { mFoldbackLink = link; mFoldbackLen = len; }
+    public String getFoldbackLink(boolean useStart) { return useStart ? mFoldbackLinkStart : mFoldbackLinkEnd; }
+    public int getFoldbackLen(boolean useStart) { return useStart ? mFoldbackLenStart : mFoldbackLenEnd; }
+    public void setFoldbackLink(boolean isStart, String link, int len)
+    {
+        if(isStart)
+        {
+            mFoldbackLinkStart = link;
+            mFoldbackLenStart = len;
+        }
+        else
+        {
+            mFoldbackLinkEnd = link;
+            mFoldbackLenEnd = len;
+        }
+    }
 
     public final SvGeneData getStartGeneData() { return mStartGeneData; }
     public final SvGeneData getEndGeneData() { return mEndGeneData; }
@@ -267,8 +288,10 @@ public class SvVarData
 
     public final String typeStr()
     {
-        if(!isTranslocation() && mStartArm != mEndArm)
+        if(chromosome(true).equals(chromosome(false)) && mStartArm != mEndArm )
             return "CRS";
+        else if(isNoneSegment())
+            return "NONE";
         else
             return type().toString();
     }
@@ -284,10 +307,7 @@ public class SvVarData
         return (type() == DEL || type() == DUP || type() == INS);
     }
 
-    public static boolean isTranslocation(StructuralVariantType type)
-    {
-        return (type == BND || type == SGL);
-    }
+    public static boolean isTranslocation(StructuralVariantType type) { return type == BND; }
     public boolean isTranslocation()
     {
         return isTranslocation(type());
@@ -379,6 +399,17 @@ public class SvVarData
         }
 
         return false;
+    }
+
+    public static SvVarData findVariantById(final String id, List<SvVarData> svList)
+    {
+        for(SvVarData var : svList)
+        {
+            if(var.id().equals(id))
+                return var;
+        }
+
+        return null;
     }
 
 }

@@ -648,17 +648,15 @@ public class ChainFinder
             if((!chainLinkAdded && closestStartPair == null && closestLastPair == null)
             || chainComplete || (remainingStartLinks.isEmpty() && unlinkedSvList.isEmpty()))
             {
-                // take any chain with 2 or more links or a chain from assembly links
-                if(currentChain.getLinkCount() > 1 || !currentChain.getLinkedPairs().get(0).isInferred())
-                {
-                    chainsList.add(currentChain);
+                // previously: take any chain with 2 or more links or a chain from assembly links
+                // if(currentChain.getLinkCount() > 1 || !currentChain.getLinkedPairs().get(0).isInferred())
+                chainsList.add(currentChain);
 
-                    if(mLogVerbose)
-                    {
-                        LOGGER.debug("sample({}) cluster({}) adding {} chain({}) with {} linked pairs:",
-                                mSampleId, mCluster.getId(), chainComplete ? "complete" : "partial", currentChain.getId(), currentChain.getLinkCount());
-                        currentChain.logLinks();
-                    }
+                if(mLogVerbose)
+                {
+                    LOGGER.debug("sample({}) cluster({}) adding {} chain({}) with {} linked pairs:",
+                            mSampleId, mCluster.getId(), chainComplete ? "complete" : "partial", currentChain.getId(), currentChain.getLinkCount());
+                    currentChain.logLinks();
                 }
 
                 if(chainComplete)

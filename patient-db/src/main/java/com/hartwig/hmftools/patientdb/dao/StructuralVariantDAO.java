@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import static com.hartwig.hmftools.common.amber.qc.AmberQCStatus.PASS;
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTBREAKEND;

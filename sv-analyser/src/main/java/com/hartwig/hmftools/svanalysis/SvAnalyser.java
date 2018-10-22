@@ -14,6 +14,7 @@ import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.SvClusteringConfig;
 import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.svanalysis.annotators.ExtDataLinker;
+import com.hartwig.hmftools.svanalysis.types.CopyNumberNoneSegment;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
 import org.apache.commons.cli.CommandLine;
@@ -44,6 +45,7 @@ public class SvAnalyser {
     private static final String COPY_NUMBER_ANALYSIS = "copy_number_analysis";
     private static final String RUN_RESULTS_CHECKER = "run_results_checker";
     private static final String EXTERNAL_DATA_LINK_FILE = "ext_data_link_file";
+    private static final String INCLUDE_NONE_SEGMENTS = "incl_none_segments";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -127,6 +129,23 @@ public class SvAnalyser {
 
             LOGGER.info("sample({}) processing {} SVs, totalProcessed({})", sample, svVarData.size(), count);
 
+            if(cmd.hasOption(INCLUDE_NONE_SEGMENTS))
+            {
+                CNAnalyser cnAnalyser = new CNAnalyser(cmd.getOptionValue(DATA_OUTPUT_PATH), dbAccess);
+
+                int varCount = svVarData.size();
+                List<StructuralVariantData> noneSegmentSVs = cnAnalyser.loadNoneSegments(sample, varCount+1);
+
+                LOGGER.debug("sample({}) including {} none copy number segments", sample, noneSegmentSVs.size());
+
+                for(final StructuralVariantData svData : noneSegmentSVs)
+                {
+                    SvVarData var = new SvVarData(svData);
+                    var.setNoneSegment(true);
+                    svVarData.add(var);
+                }
+            }
+
             sampleAnalyser.loadFromDatabase(sample, svVarData);
 
             if(extDataLinker != null && extDataLinker.hasData())
@@ -202,6 +221,7 @@ public class SvAnalyser {
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file for SVs");
         options.addOption(COPY_NUMBER_ANALYSIS, false, "Run copy number analysis");
         options.addOption(RUN_RESULTS_CHECKER, false, "Check results vs validation file");
+        options.addOption(INCLUDE_NONE_SEGMENTS, false, "Include copy number NONE segments in SV analysis");
 
         SvClusteringConfig.addCmdLineArgs(options);
         ResultsChecker.addCmdLineArgs(options);

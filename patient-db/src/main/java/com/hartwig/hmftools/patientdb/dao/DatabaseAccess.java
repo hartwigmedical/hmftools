@@ -217,6 +217,11 @@ public class DatabaseAccess {
         return copyNumberDAO.read(sample);
     }
 
+    @NotNull
+    public List<PurpleCopyNumber> readCopyNumberNoneSegments(@NotNull final String sample) {
+        return copyNumberDAO.readNoneSegments(sample);
+    }
+
     public void writeMetrics(@NotNull String sample, @NotNull WGSMetrics metrics) {
         metricDAO.writeMetrics(sample, metrics);
     }

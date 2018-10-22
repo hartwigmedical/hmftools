@@ -5,7 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.svanalysis.SvAnalyser.SAMPLE;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 import static com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator.PON_FILTER_PON;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_UNKNOWN;
@@ -20,14 +20,27 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import com.hartwig.hmftools.common.amber.qc.AmberQC;
+import com.hartwig.hmftools.common.amber.qc.AmberQCStatus;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantLeg;
+import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariantLeg;
+import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantImpl;
+import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantLegImpl;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
+import com.hartwig.hmftools.svanalysis.types.CopyNumberNoneSegment;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -38,7 +51,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 public class CNAnalyser {
 
@@ -249,6 +261,81 @@ public class CNAnalyser {
         }
     }
 
+    public final List<StructuralVariantData> loadNoneSegments(final String sampleId, int startId)
+    {
+        List<StructuralVariantData> svList = Lists.newArrayList();
+
+        List<PurpleCopyNumber> cnRecords = mDbAccess.readCopyNumberNoneSegments(sampleId);
+
+        for(int i = 0; i < cnRecords.size(); i = i+2)
+        {
+            if(i + 1 >= cnRecords.size())
+                break;
+
+            final PurpleCopyNumber prevCnRecord = cnRecords.get(i);
+            final PurpleCopyNumber noneCnRecord = cnRecords.get(i+1);
+
+            if(prevCnRecord.segmentEndSupport() != SegmentSupport.NONE || noneCnRecord.segmentStartSupport() != SegmentSupport.NONE)
+                continue;
+
+            double copyNumber = noneCnRecord.averageTumorCopyNumber();
+            double copyNumberDiff = copyNumber - prevCnRecord.averageTumorCopyNumber();
+            double copyNumberChange = abs(copyNumberDiff);
+
+            // negative CN change means sequence has come in from left (a lower position) and dropped at the breakend
+            byte orientation = copyNumberDiff > 0 ? (byte)-1 : 1;
+
+            int varId = startId++;
+
+            svList.add(
+                    ImmutableStructuralVariantData.builder()
+                            .id(Integer.toString(varId))
+                            .vcfId("")
+                            .type(StructuralVariantType.SGL)
+                            .ploidy(copyNumber)
+                            .startPosition(noneCnRecord.start())
+                            .startChromosome(noneCnRecord.chromosome())
+                            .startOrientation(orientation)
+                            .startAF(0.0)
+                            .adjustedStartAF(0.0)
+                            .adjustedStartCopyNumber(copyNumber)
+                            .adjustedStartCopyNumberChange(copyNumberChange)
+                            .homology("")
+                            .inexactHomologyOffsetStart(0)
+                            .insertSequence("")
+                            .imprecise(false)
+                            .qualityScore(0.0)
+                            .filter(AmberQCStatus.PASS.toString())
+                            .endPosition(-1)
+                            .endChromosome("0")
+                            .endOrientation((byte)1)
+                            .endAF(0.0)
+                            .adjustedEndAF(0.0)
+                            .adjustedEndCopyNumber(0.0)
+                            .adjustedEndCopyNumberChange(0.0)
+                            .event("")
+                            .startTumourVariantFragmentCount(0)
+                            .startTumourReferenceFragmentCount(0)
+                            .startNormalVariantFragmentCount(0)
+                            .startNormalReferenceFragmentCount(0)
+                            .endTumourVariantFragmentCount(0)
+                            .endTumourReferenceFragmentCount(0)
+                            .endNormalVariantFragmentCount(0)
+                            .endNormalReferenceFragmentCount(0)
+                            .startIntervalOffsetStart(0)
+                            .startIntervalOffsetEnd(0)
+                            .endIntervalOffsetStart(0)
+                            .endIntervalOffsetEnd(0)
+                            .inexactHomologyOffsetStart(0)
+                            .inexactHomologyOffsetEnd(0)
+                            .startLinkedBy("")
+                            .endLinkedBy("")
+                            .build());
+        }
+
+        return svList;
+    }
+
     private StructuralVariantData findSvData(final SvCNData cnData, int requiredOrient)
     {
         if(cnData.segStart().equals(CN_SEG_NONE) || cnData.segStart().equals(CN_SEG_UNKNOWN)
@@ -380,8 +467,9 @@ public class CNAnalyser {
         int lohSectionCount = 0;
         int lohSVsMatchedCount = 0;
         boolean lohOnStartTelomere = false;
+        boolean totalLoss = false;
 
-        for(SvCNData cnData : cnDataList)
+        for(final SvCNData cnData : cnDataList)
         {
             double minCN = (1 - cnData.actualBaf()) * cnData.copyNumber();
 
@@ -392,9 +480,11 @@ public class CNAnalyser {
             {
                 if(minCN >= MIN_LOH_CN || cnData.segEnd().equals(CN_SEG_TELOMERE) || reset)
                 {
-                    if(lohOnStartTelomere)
+                    if(lohOnStartTelomere || totalLoss)
                     {
+                        // LOH section invalidated
                         lohOnStartTelomere = false;
+                        totalLoss = false;
                     }
                     else
                     {
@@ -404,6 +494,11 @@ public class CNAnalyser {
                     }
 
                     reset = true;
+                }
+                else if(cnData.copyNumber() < 0.5)
+                {
+                    // other chromatid loss has occurred
+                    totalLoss = true;
                 }
                 else
                 {
@@ -440,6 +535,7 @@ public class CNAnalyser {
                 lohOnStartTelomere = newChromosome && (minCN < MIN_LOH_CN); // if true, will persist until the LOH segment is finished, but not record it
                 lohSegments = 0;
                 lohStartCN = null;
+                totalLoss = false;
 
                 currentChr = cnData.chromosome();
             }

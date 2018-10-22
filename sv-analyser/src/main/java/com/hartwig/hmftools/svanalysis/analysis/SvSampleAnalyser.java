@@ -144,7 +144,8 @@ public class SvSampleAnalyser {
 
         mPc3.start();
         mClusteringMethods.clusterByBaseDistance(mAllVariants, mClusters);
-        mAnalyser.findSimpleCompleteChains(mSampleId, mClusters);
+        mAnalyser.setClusters(mClusters);
+        mAnalyser.findSimpleCompleteChains(mSampleId);
         // mClusteringMethods.reportPotentialFoldbacks(mSampleId, mClusters);
         mClusteringMethods.mergeClusters(mSampleId, mClusters);
         mPc3.stop();
@@ -157,8 +158,9 @@ public class SvSampleAnalyser {
         }
 
         mPc4.start();
-        mAnalyser.findLinksAndChains(mSampleId, mClusters);
-
+        mAnalyser.findLinksAndChains(mSampleId);
+        mAnalyser.markFoldbacks();
+        mClusteringMethods.logInversionPairData(mSampleId, mClusters);
         mPc4.stop();
 
         if(mGeneAnnotator.hasData())
@@ -275,7 +277,7 @@ public class SvSampleAnalyser {
                 writer.write(",ChainId,ChainCount,ChainIndex");
 
                 // proximity info
-                writer.write(",NearestLen,NearestType"); // ,FoldbackLnk,FoldbackLen
+                writer.write(",NearestLen,NearestType,FoldbackLnkStart,FoldbackLenStart,FoldbackLnkEnd,FoldbackLenEnd");
 
                 // transitive info
                 writer.write(",TransType,TransLen,TransSvLinks");
@@ -382,8 +384,9 @@ public class SvSampleAnalyser {
 
                     writer.write(chainStr);
 
-                    writer.write(String.format(",%d,%s",
-                            var.getNearestSvDistance(), var.getNearestSvRelation())); // var.getFoldbackLink(), var.getFoldbackLen()
+                    writer.write(String.format(",%d,%s,%s,%d,%s,%d",
+                            var.getNearestSvDistance(), var.getNearestSvRelation(),
+                            var.getFoldbackLink(true), var.getFoldbackLen(true), var.getFoldbackLink(false), var.getFoldbackLen(false)));
 
                     writer.write(String.format(",%s,%d,%s", var.getTransType(), var.getTransLength(), var.getTransSvLinks()));
 

@@ -6,13 +6,20 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areSectionBreak;
 import static com.hartwig.hmftools.svanalysis.analysis.SvCluster.findCluster;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcTypeCount;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.isOverlapping;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_TELOMERE;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_DB;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_OVERLAP;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveLinkedAssemblies;
@@ -27,9 +34,11 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvCNData;
+import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLOH;
 
@@ -53,6 +62,7 @@ public class SvClusteringMethods {
     private Map<String, List<SvCNData>> mChrCNDataMap; // copy number segments recreated from SVs
     private Map<String, List<SvLOH>> mSampleLohData;
     private boolean mFoldbackColsLogged;
+    private boolean mInversionPairColsLogged;
 
     private static final double REF_BASE_LENGTH = 10000000D;
 
@@ -70,6 +80,7 @@ public class SvClusteringMethods {
         mChrCNDataMap = new HashMap();
         mSampleLohData = null;
         mFoldbackColsLogged = false;
+        mInversionPairColsLogged = false;
     }
 
     public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
@@ -842,8 +853,6 @@ public class SvClusteringMethods {
         boolean v2Start = be2.usesStart();
 
         int length = (int)abs(be1.position() - be2.position());
-        var1.setFoldbackLink(var2.id(), length);
-        var2.setFoldbackLink(var1.id(), length);
 
         double copyNumberDiff;
         if((be1.orientation() == 1 && be1.position() < be2.position())
@@ -866,7 +875,6 @@ public class SvClusteringMethods {
 
         // Add ploidy of both ends
         // Add assembly field for both ends
-        // Mark SGL as distinct from BND
 
         LOGGER.info(String.format("FOLDBACK,%s,%s,%d,%d,%s,%s,%.3f,%.3f,%.3f,%s,%s,%d,%d,%s,%s,%.3f,%.3f,%.3f,%s,%d,%.3f,%s,%s,%s",
                 sampleId,
@@ -877,7 +885,174 @@ public class SvClusteringMethods {
                 length, copyNumberDiff, otherEndsAssembled, isLineElement, sameCluster));
     }
 
+    public void logInversionPairData(final String sampleId, final List<SvCluster> clusters)
+    {
+        if(!mInversionPairColsLogged)
+        {
+            mInversionPairColsLogged = true;
+            String colNames = "INV_PAIRS,Time,SampleId,Id1,Chromsome,Orient1,PosStart1,PosEnd1";
+            colNames += ",Id2,Orient2,PosStart2,PosEnd2,PairType,PairDesc,DelDupLen,TIAssembly,TILen";
 
+            LOGGER.info(colNames);
+        }
+
+        for(final SvCluster cluster : clusters)
+        {
+            if(cluster.getUniqueSvCount() != 2 || !cluster.getDesc().equals("INV=2"))
+                continue;
+
+            if(!cluster.isConsistent())
+                continue;
+
+            if(cluster.getLinkedPairs().isEmpty())
+            {
+                LOGGER.warn("cluster({}) missing creating linked pairs");
+                continue;
+            }
+
+            final SvVarData var1 = cluster.getSVs().get(0);
+            final SvVarData var2 = cluster.getSVs().get(1);
+
+            // determine overlap configurations
+
+            /* 4 types of inversion pairs
+            1. DEL with enclosed inverted TI (also know as 'Reciprocal INV') - Have 2 DSB and a ’TI' from the middle which is inverted.
+                - outer breakends face out (the DEL)
+                - TI enclosed
+            2. DEL with external inverted TI
+                - resultant type = DEL
+                - length = other 2 breakends
+            3. DUP with external inverted TI
+                - 2 x TIs, but TI breakends don't overlap
+                - type = DUP
+                - TI and DUP length are interchangable, but choose shorter for TI
+            4. DUP with enclosed inverted TI
+                - no overlapping breakends
+                - TI from the innermost 2
+                - outer breakends face in
+                - resultant type = DUP
+                - length is outside 2 breakends (ie the other 2)
+             */
+
+            // first work out if there are 1 or 2 templated insertions
+
+            final SvLinkedPair linkedPair1 = cluster.getLinkedPairs().get(0);
+
+            boolean v1OpenOnStart = linkedPair1.first().equals(var1) ? linkedPair1.firstUnlinkedOnStart() : linkedPair1.secondUnlinkedOnStart();
+            boolean v2OpenOnStart = linkedPair1.first().equals(var2) ? linkedPair1.firstUnlinkedOnStart() : linkedPair1.secondUnlinkedOnStart();
+
+            SvLinkedPair linkedPair2 = cluster.getLinkedPairs().size() == 2 ? cluster.getLinkedPairs().get(1) : null;
+
+            if(linkedPair2 != null && !linkedPair1.hasLinkClash(linkedPair2))
+            {
+                // existing second link is fine to consider
+            }
+            else if(areLinkedSection(var1, var2, v1OpenOnStart, v2OpenOnStart, false))
+            {
+                // could one be formed from the other 2 breakends
+                linkedPair2 = new SvLinkedPair(var1, var2, LINK_TYPE_TI, v1OpenOnStart, v2OpenOnStart);
+            }
+            else if(areSectionBreak(var1, var2, v1OpenOnStart, v2OpenOnStart))
+            {
+                linkedPair2 = new SvLinkedPair(var1, var2, LINK_TYPE_DB, v1OpenOnStart, v2OpenOnStart);
+            }
+            else
+            {
+                LOGGER.error("sample({}) ids({} & {}) must be one or the other", sampleId, var1.id(), var2.id());
+                return;
+            }
+
+            // set the first link to be the longer of the 2 for classification purposes
+            SvLinkedPair lp1;
+            SvLinkedPair lp2;
+
+            if(linkedPair1.linkType() == LINK_TYPE_TI && linkedPair2.linkType() == LINK_TYPE_TI)
+            {
+                lp1 = linkedPair1.length() > linkedPair2.length() ? linkedPair1 : linkedPair2;
+                lp2 = linkedPair1 == lp1 ? linkedPair2 : linkedPair1;
+            }
+            else if(linkedPair1.linkType() == LINK_TYPE_TI)
+            {
+                // take the DB for the main DEL if one exists
+                lp2 = linkedPair1;
+                lp1 = linkedPair2;
+            }
+            else if(linkedPair2.linkType() == LINK_TYPE_TI)
+            {
+                lp1 = linkedPair1;
+                lp2 = linkedPair2;
+            }
+            else
+            {
+                // 2 deletion bridges
+                lp1 = linkedPair1.length() > linkedPair2.length() ? linkedPair1 : linkedPair2;
+                lp2 = linkedPair1 == lp1 ? linkedPair2 : linkedPair1;
+            }
+
+            long mainPos1 = lp1.first().position(lp1.firstLinkOnStart());
+            long mainPos2 = lp1.second().position(lp1.secondLinkOnStart());
+
+            long otherPos1 = lp2.first().position(lp2.firstLinkOnStart());
+            long otherPos2 = lp2.second().position(lp2.secondLinkOnStart());
+
+            boolean isTIEnclosed = false;
+
+            long lowerMainPosLimit = mainPos1 < mainPos2 ? mainPos1 : mainPos2;
+            lowerMainPosLimit -= MIN_TEMPLATED_INSERTION_LENGTH;
+
+            long upperMainPosLimit = mainPos1 > mainPos2 ? mainPos1 : mainPos2;
+            upperMainPosLimit += MIN_TEMPLATED_INSERTION_LENGTH;
+
+            if(otherPos1 >= lowerMainPosLimit && otherPos1 <= upperMainPosLimit
+            && otherPos2 >= lowerMainPosLimit && otherPos2 <= upperMainPosLimit)
+            {
+                isTIEnclosed = true;
+            }
+
+            StructuralVariantType invPairType;
+            String invPairDesc = "";
+
+            if(lp1.linkType() == LINK_TYPE_DB && lp2 != null && lp2.linkType() == LINK_TYPE_DB)
+            {
+                invPairType = DEL;
+                invPairDesc = "DEL_Internal_TI";
+            }
+            else
+            {
+                if (lp1.linkType() == LINK_TYPE_DB || lp2.linkType() == LINK_TYPE_DB)
+                {
+                    invPairType = DEL;
+
+                    if (!isTIEnclosed)
+                    {
+                        invPairDesc = "DEL_External_TI";
+                    }
+                    else
+                    {
+                        invPairDesc = "DEL_Internal_TI";
+                    }
+                }
+                else
+                {
+                    invPairType = DUP;
+
+                    if (!isTIEnclosed)
+                    {
+                        invPairDesc = "DUP_External_TI";
+                    }
+                    else
+                    {
+                        invPairDesc = "DUP_Internal_TI";
+                    }
+                }
+            }
+
+            LOGGER.info(String.format("INV_PAIRS,%s,%s,%s,%d,%d,%d,%s,%d,%d,%d,%s,%s,%d,%s,%d",
+                    sampleId, var1.id(), var1.chromosome(true), var1.orientation(true), var1.position(true), var1.position(false),
+                    var2.id(), var2.orientation(true), var2.position(true), var2.position(false),
+                    invPairType, invPairDesc, lp1.length(), !lp1.isInferred(), lp2.length()));
+        }
+    }
 
     public void setChromosomalArmStats(final List<SvVarData> allVariants)
     {

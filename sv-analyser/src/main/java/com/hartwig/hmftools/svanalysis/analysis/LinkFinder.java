@@ -400,20 +400,20 @@ public class LinkFinder
         {
             SvVarData var1 = cluster.getSVs().get(i);
 
-            if(!var1.isNullBreakend())
+            if(!var1.isNullBreakend() || var1.isNoneSegment())
                 continue;
 
             for (int j = i+1; j < cluster.getCount(); ++j)
             {
                 SvVarData var2 = cluster.getSVs().get(j);
 
-                if(!var2.isNullBreakend())
+                if(!var2.isNullBreakend() || var2.isNoneSegment())
                     continue;
 
                 if (!areSectionBreak(var1, var2, true, true))
                     continue;
 
-                // form a new DB from these 2 BEs
+                // form a new DB from these 2 single breakends
                 SvLinkedPair newPair = new SvLinkedPair(var1, var2, SvLinkedPair.LINK_TYPE_SGL, false, false);
 
                 // insert in order
@@ -423,16 +423,13 @@ public class LinkFinder
                 {
                     SvLinkedPair pair = linkedPairs.get(index);
 
-                    // check for a matching BE on a pair that is much shorter, and if so skip creating this new linked pair
+                    // check for a matching BE on a pair that is shorter, and if so skip creating this new linked pair
                     if(newPair.length() > mUtils.getBaseDistance())
                     {
-                        if (pair.first().equals(newPair.first()) || pair.first().equals(newPair.second()) || pair.second().equals(newPair.first()) || pair.second().equals(newPair.second())) {
-
-                            if (newPair.length() > 2 * pair.length())
-                            {
-                                skipNewPair = true;
-                                break;
-                            }
+                        if(pair.hasAnySameVariant(newPair) && newPair.length() > pair.length())
+                        {
+                            skipNewPair = true;
+                            break;
                         }
                     }
 

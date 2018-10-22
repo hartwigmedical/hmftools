@@ -37,7 +37,6 @@ public class StructuralVariantFactory {
     private final static String BPI_START = "BPI_START";
     private final static String BPI_END = "BPI_END";
     private final static String BPI_AF = "BPI_AF";
-    private final static String ALT = "ALT";
     private final static String IMPRECISE = "IMPRECISE";
     private final static String IHOMPOS = "IHOMPOS";
     private final static String CIPOS = "CIPOS";
