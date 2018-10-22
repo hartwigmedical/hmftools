@@ -57,6 +57,8 @@ import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
+import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruption;
+import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruptionFactory;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineVariant;
 
@@ -92,7 +94,7 @@ public class PDFWriterTest {
         final List<GermlineVariant> germlineVariants = createTestGermlineVariants(purityAdjuster);
         final List<GeneCopyNumber> copyNumbers = createTestCopyNumbers();
         final List<GeneFusion> fusions = createTestFusions();
-        final List<GeneDisruption> disruptions = createTestDisruptions();
+        final List<ReportableGeneDisruption> disruptions = createTestDisruptions();
 
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
         driverCatalog.addAll(OncoDrivers.drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), somaticVariants));
@@ -276,14 +278,17 @@ public class PDFWriterTest {
     }
 
     @NotNull
-    private static List<GeneDisruption> createTestDisruptions() {
+    private static List<ReportableGeneDisruption> createTestDisruptions() {
         Pair<GeneDisruption, GeneDisruption> pairedDisruption =
                 createTestDisruptionPair(StructuralVariantType.INV, "2", "q34", "ERBB4", 4, 9, 1D);
         GeneDisruption disruption1 = createDisruption(StructuralVariantType.BND, "17", "q12", "CDK12", 12, 2.3, false);
         GeneDisruption disruption2 = createDisruption(StructuralVariantType.INS, "21", "q22.12", "RUNX1", 0, 0.8, true);
         GeneDisruption disruption3 = createDisruption(StructuralVariantType.DUP, "1", "p13.1", "CD58", 2, 0.2, true);
 
-        return Lists.newArrayList(pairedDisruption.getLeft(), pairedDisruption.getRight(), disruption1, disruption2, disruption3);
+        List<GeneDisruption> disruptions =
+                Lists.newArrayList(pairedDisruption.getLeft(), pairedDisruption.getRight(), disruption1, disruption2, disruption3);
+
+        return ReportableGeneDisruptionFactory.toReportableGeneDisruptions(disruptions);
     }
 
     @NotNull

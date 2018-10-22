@@ -33,7 +33,6 @@ import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.BaseReportData;
@@ -43,6 +42,8 @@ import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutablePurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
+import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruption;
+import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruptionFactory;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalyzer;
@@ -89,7 +90,8 @@ public abstract class PatientReporter {
                 analyzeStructuralVariants(run, purpleAnalysis, structuralVariantAnalyzer());
 
         final List<GeneFusion> reportableFusions = structuralVariantAnalysis.reportableFusions();
-        final List<GeneDisruption> reportableDisruptions = structuralVariantAnalysis.reportableDisruptions();
+        final List<ReportableGeneDisruption> reportableDisruptions = ReportableGeneDisruptionFactory.toReportableGeneDisruptions(
+                structuralVariantAnalysis.reportableDisruptions());
 
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run,
                 purpleAnalysis,

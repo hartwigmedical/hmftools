@@ -8,9 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
 import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruption;
-import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruptionFactory;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.apache.logging.log4j.util.Strings;
@@ -40,7 +38,8 @@ public final class GeneDisruptionDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromGeneDisruptions(@NotNull FittedPurityStatus fitStatus, @NotNull List<GeneDisruption> disruptions) {
+    public static JRDataSource fromGeneDisruptions(@NotNull FittedPurityStatus fitStatus,
+            @NotNull List<ReportableGeneDisruption> disruptions) {
         final DRDataSource dataSource = new DRDataSource(LOCATION_FIELD.getName(),
                 GENE_FIELD.getName(),
                 RANGE_FIELD.getName(),
@@ -49,9 +48,7 @@ public final class GeneDisruptionDataSource {
                 GENE_MIN_COPIES.getName(),
                 GENE_MAX_COPIES.getName());
 
-        List<ReportableGeneDisruption> disruptionDataList = ReportableGeneDisruptionFactory.toReportableGeneDisruptions(disruptions);
-
-        for (ReportableGeneDisruption disruption : sort(disruptionDataList)) {
+        for (ReportableGeneDisruption disruption : sort(disruptions)) {
             dataSource.add(disruption.location(),
                     disruption.gene(),
                     disruption.range(),
@@ -60,8 +57,8 @@ public final class GeneDisruptionDataSource {
                     Strings.EMPTY,
                     Strings.EMPTY);
             // TODO (KODU): Propagate copy number info here - DEV-548
-                    //                    PatientReportFormat.correctValueForFitStatus(fitStatus, String.valueOf(disruption.geneMinCopies())),
-                    //                    PatientReportFormat.correctValueForFitStatus(fitStatus, String.valueOf(disruption.geneMaxCopies())));
+            //                    PatientReportFormat.correctValueForFitStatus(fitStatus, String.valueOf(disruption.geneMinCopies())),
+            //                    PatientReportFormat.correctValueForFitStatus(fitStatus, String.valueOf(disruption.geneMaxCopies())));
         }
 
         return dataSource;
