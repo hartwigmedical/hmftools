@@ -14,6 +14,8 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
@@ -85,6 +87,7 @@ public class PDFWriterTest {
         final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity);
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, fittedPurity);
+        final List<EvidenceItem> evidenceItems = createTestEvidenceItems();
         final List<EnrichedSomaticVariant> somaticVariants = createTestSomaticVariants(purityAdjuster);
         final List<GermlineVariant> germlineVariants = createTestGermlineVariants(purityAdjuster);
         final List<GeneCopyNumber> copyNumbers = createTestCopyNumbers();
@@ -100,7 +103,7 @@ public class PDFWriterTest {
         final AnalysedPatientReport patientReport = ImmutableAnalysedPatientReport.of(sampleReport,
                 FittedPurityStatus.NORMAL,
                 fittedPurity.purity(),
-                Lists.newArrayList(),
+                evidenceItems,
                 somaticVariants,
                 driverCatalog,
                 microsatelliteIndelsPerMb,
@@ -122,6 +125,22 @@ public class PDFWriterTest {
         if (WRITE_TO_PDF) {
             mainReport.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "hmf_test_sequence_report.pdf"));
         }
+    }
+
+    @NotNull
+    private static List<EvidenceItem> createTestEvidenceItems() {
+        List<EvidenceItem> evidenceItems = Lists.newArrayList();
+        evidenceItems.add(ImmutableEvidenceItem.builder()
+                .event("TP53 p.Pro177_Cys182del")
+                .drug("Docetaxel")
+                .drugsType("Chemotherapy")
+                .level("D")
+                .response("Resistant")
+                .reference("variant:222")
+                .source("civic")
+                .isOnLabel(false)
+                .build());
+        return evidenceItems;
     }
 
     @NotNull
