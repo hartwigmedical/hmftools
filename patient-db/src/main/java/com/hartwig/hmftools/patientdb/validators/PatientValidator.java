@@ -197,7 +197,7 @@ public final class PatientValidator {
             if (treatment.drugs().isEmpty()) {
                 findings.add(ValidationFinding.of(ECRF_LEVEL,
                         patientIdentifier,
-                        "Treatment given is yes, but no drugs are filled in",
+                        "Treatment given is yes, but no drug are filled in",
                         treatment.formStatus()));
             } else {
                 treatment.drugs().forEach(drug -> findings.addAll(validateDrugData(patientIdentifier, drug, treatment.formStatus())));
@@ -206,7 +206,7 @@ public final class PatientValidator {
             if (!treatment.drugs().isEmpty()) {
                 findings.add(ValidationFinding.of(ECRF_LEVEL,
                         patientIdentifier,
-                        "Treatment given is no, but drugs are filled in",
+                        "Treatment given is no, but drug are filled in",
                         treatment.formStatus(),
                         treatment.drugs().toString()));
             }
@@ -282,7 +282,7 @@ public final class PatientValidator {
                     if (lengthOfMatchedCharacters > 0 && (double) lengthOfMatchedCharacters / lengthOfSearchCharacters < 0.9) {
                         findings.add(ValidationFinding.of(curationName,
                                 patientIdentifier,
-                                "Matched drugs are based on less than 90% of search term.",
+                                "Matched drug are based on less than 90% of search term.",
                                 treatment.formStatus(),
                                 drugName + " matched to " + Strings.join(curatedTreatments, ',') + " based on " + Strings.join(matchedTerms,
                                         ',')));

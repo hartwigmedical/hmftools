@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class AlleleTolerance implements CopyNumberTolerance {
 
+    private static final double MAX_DEVIATION = 0.9;
     private static final double MIN_OBSERVED_BAF_CHANGE = 0.03;
     private static final double MAX_DEVIATION_ADJUSTMENT = 0.20;
     private static final double MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE = 0.3;
@@ -30,7 +31,7 @@ public class AlleleTolerance implements CopyNumberTolerance {
 
             double maxCopyNumber = Math.max(first.tumorCopyNumber(), second.tumorCopyNumber());
             double maxMinorAllelePloidyDeviation =
-                    purityAdjustment * unadjustedMaxDeviation(MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE, 0.5 * maxCopyNumber, minBafCount);
+                    purityAdjustment * minorAlleleMaxDeviation(MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE, 0.5 * maxCopyNumber, minBafCount);
             double minorAllelePloidyDeviation = Math.abs(first.minorAllelePloidy() - second.minorAllelePloidy());
             if (Doubles.greaterThan(minorAllelePloidyDeviation, maxMinorAllelePloidyDeviation) && Doubles.greaterThan(observedBafDeviation,
                     MIN_OBSERVED_BAF_CHANGE)) {
@@ -39,7 +40,7 @@ public class AlleleTolerance implements CopyNumberTolerance {
         }
 
         int minWindowDepthCount = Math.min(first.depthWindowCount(), second.depthWindowCount());
-        double maxDeviation = purityAdjustment * unadjustedMaxDeviation(MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE, 2, minWindowDepthCount);
+        double maxDeviation = purityAdjustment * copyNumberMaxDeviation(MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE, 2, minWindowDepthCount);
 
         boolean copyNumberInTolerance = inAbsoluteTolerance(maxDeviation, first.tumorCopyNumber(), second.tumorCopyNumber())
                 || inRelativeTolerance(first.tumorCopyNumber(), second.tumorCopyNumber());
@@ -56,8 +57,12 @@ public class AlleleTolerance implements CopyNumberTolerance {
         return Math.max(1, MAX_DEVIATION_ADJUSTMENT / purityAdjuster.purity());
     }
 
-    private static double unadjustedMaxDeviation(double minTolerance, double additional, int samples) {
+    private static double minorAlleleMaxDeviation(double minTolerance, double additional, int samples) {
         return minTolerance + additional / Math.sqrt(samples);
+    }
+
+    private static double copyNumberMaxDeviation(double minTolerance, double additional, int samples) {
+        return Math.min(MAX_DEVIATION, minorAlleleMaxDeviation(minTolerance, additional, samples));
     }
 
     private static boolean inAbsoluteTolerance(double tolerance, double firstCopyNumber, double secondCopyNumber) {

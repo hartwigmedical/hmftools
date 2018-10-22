@@ -7,6 +7,8 @@ import java.util.List;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,17 +24,17 @@ public class ReadCountFile {
     }
 
     @NotNull
-    public static Multimap<String, ReadCount> readFile(@NotNull final String filename) throws IOException {
+    public static Multimap<Chromosome, ReadCount> readFile(@NotNull final String filename) throws IOException {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
     @NotNull
-    private static Multimap<String, ReadCount> fromLines(@NotNull final List<String> lines) {
-        final Multimap<String, ReadCount> result = ArrayListMultimap.create();
+    private static Multimap<Chromosome, ReadCount> fromLines(@NotNull final List<String> lines) {
+        final Multimap<Chromosome, ReadCount> result = ArrayListMultimap.create();
         for (String line : lines) {
             if (!line.startsWith(HEADER_PREFIX)) {
                 final ReadCount readCount = fromLine(line);
-                result.put(readCount.chromosome(), readCount);
+                result.put(HumanChromosome.fromString(readCount.chromosome()), readCount);
             }
         }
 

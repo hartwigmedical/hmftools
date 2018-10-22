@@ -11,16 +11,16 @@
 //
 //import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 //import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeMappingReading;
-//import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVsAnalyzer;
-//import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityVariantsAnalyzer;
+//import com.hartwig.hmftools.common.actionability.cnv.CopyNumberEvidenceAnalyzer;
+//import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEvidenceAnalyzer;
 //import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 //import com.hartwig.hmftools.common.context.RunContext;
 //import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 //import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 //import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 //import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
-//import com.hartwig.hmftools.common.variant.SomaticVariant;
-//import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+//import com.hartwig.hmftools.common.hgvsCodingImpact.SomaticVariant;
+//import com.hartwig.hmftools.common.hgvsCodingImpact.SomaticVariantFactory;
 //
 //import org.apache.commons.cli.CommandLine;
 //import org.apache.commons.cli.CommandLineParser;
@@ -78,8 +78,8 @@
 //        LOGGER.info("Variants: " + variants.size());
 //        if (Files.exists(new File(fileActionabilityVariants).toPath()) && Files.exists(new File(fileActionabilityRanges).toPath())
 //                && Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
-//            ActionabilityVariantsAnalyzer analyzer =
-//                    ActionabilityVariantsAnalyzer.loadFromFileVariantsAndFileRanges(fileActionabilityVariants, fileActionabilityRanges);
+//            SomaticVariantEvidenceAnalyzer analyzer =
+//                    SomaticVariantEvidenceAnalyzer.loadFromFileVariantsAndFileRanges(fileActionabilityVariants, fileActionabilityRanges);
 //            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
 //
 //            Set<String> actionableGenesVariants = analyzer.actionableGenes();
@@ -87,19 +87,19 @@
 //            LOGGER.info("");
 //
 //            List<SomaticVariant> variantsOnActionableGenes =
-//                    variants.stream().filter(variant -> actionableGenesVariants.contains(variant.gene())).collect(Collectors.toList());
+//                    variants.stream().filter(hgvsCodingImpact -> actionableGenesVariants.contains(hgvsCodingImpact.gene())).collect(Collectors.toList());
 //
 //            LOGGER.info(
 //                    "Gene" + "\t" + "Chromosome" + "\t" + "Position" + "\t" + "Ref" + "\t" + "Alt" + "\t" + "Source" + "\t" + "Drug" + "\t"
 //                            + "DrugsType" + "\t" + "CancerType" + "\t" + "Level" + "\t" + "Response" + "\t" + "Actionable_variant");
-//            for (SomaticVariant variant : variantsOnActionableGenes) {
-//                analyzer.actionableVariants(variant, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
+//            for (SomaticVariant hgvsCodingImpact : variantsOnActionableGenes) {
+//                analyzer.actionableVariants(hgvsCodingImpact, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
 //            }
 //
 //            LOGGER.info("Gene" + "\t" + "Chromosome" + "\t" + "Start" + "\t" + "End" + "\t" + " Source" + "\t" + "Drug" + "\t" + "DrugType"
 //                    + "\t" + "CancerType" + "\t" + "Level" + "\t" + "Response" + "\t" + "Actionable_variant");
-//            for (SomaticVariant variant : variantsOnActionableGenes) {
-//                analyzer.actionableRange(variant, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
+//            for (SomaticVariant hgvsCodingImpact : variantsOnActionableGenes) {
+//                analyzer.actionableRange(hgvsCodingImpact, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
 //            }
 //
 //        } else if (!Files.exists(new File(fileActionabilityVariants).toPath())) {
@@ -113,11 +113,11 @@
 //        LOGGER.info("Finish processing actionability somaticVariants");
 //        LOGGER.info("");
 //        LOGGER.info("Start processing actionability cnvs");
-//        String fileActionabilityCNVs = "/data/common/dbs/knowledgebases/output/actionableCNVs.tsv";
+//        String fileActionabilityCNVs = "/data/common/dbs/knowledgebases/output/evidenceForCopyNumberEvent.tsv";
 //
 //        LOGGER.info("CNVs: " + geneCopyNumbers.size());
 //        if (Files.exists(new File(fileActionabilityCNVs).toPath()) && Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
-//            ActionabilityCNVsAnalyzer analyzerCNVs = ActionabilityCNVsAnalyzer.loadFromFileCNVs(fileActionabilityCNVs);
+//            CopyNumberEvidenceAnalyzer analyzerCNVs = CopyNumberEvidenceAnalyzer.loadFromFileCNVs(fileActionabilityCNVs);
 //            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
 //
 //            Set<String> actionableGenesCNVS = analyzerCNVs.actionableGenes();
@@ -132,7 +132,7 @@
 //                    "Gene" + "\t" + "CnvType" + "\t" + "Source" + "\t" + "Drug" + "\t" + "DrugType" + "\t" + "CancerType" + "\t" + "Level"
 //                            + "\t" + "Response" + "\t" + "Actionable_variant");
 //            for (GeneCopyNumber geneCopyNumber : variantsOnActionableGenes) {
-//                analyzerCNVs.actionableCNVs(geneCopyNumber, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
+//                analyzerCNVs.evidenceForCopyNumberEvent(geneCopyNumber, cancerTypeAnalyzer, doidsPrimaryTumorLocation);
 //            }
 //        } else if (!Files.exists(new File(fileActionabilityCNVs).toPath())) {
 //            LOGGER.warn("File does not exist: " + fileActionabilityCNVs);
@@ -150,7 +150,7 @@
 //        //                Files.exists(new File(fileActionabilityPromiscuousThree).toPath()) && Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
 //        //
 //        //
-//        //            ActionabilityFusionAnalyzer analyzerFusion = ActionabilityFusionAnalyzer.loadFromFileFusions(fileActionabilityFusionPairs,
+//        //            FusionEvidenceAnalyzer analyzerFusion = FusionEvidenceAnalyzer.loadFromFileFusions(fileActionabilityFusionPairs,
 //        //                    fileActionabilityPromiscuousFive, fileActionabilityPromiscuousThree);
 //        //            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
 //        //

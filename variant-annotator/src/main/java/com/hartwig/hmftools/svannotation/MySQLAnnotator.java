@@ -23,12 +23,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
-import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
-import com.hartwig.hmftools.svannotation.annotations.StructuralVariantAnnotation;
-import com.hartwig.hmftools.svannotation.annotations.Transcript;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
+import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
+import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.ensembl.database.homo_sapiens_core.enums.GeneStatus;
 import org.ensembl.database.homo_sapiens_core.enums.ObjectXrefEnsemblObjectType;
 import org.ensembl.database.homo_sapiens_core.tables.Exon;
@@ -44,8 +42,6 @@ import org.jooq.impl.DSL;
 import org.jooq.types.UInteger;
 
 public class MySQLAnnotator implements VariantAnnotator {
-    private static final Logger LOGGER = LogManager.getLogger(MySQLAnnotator.class);
-
     private static final String ENTREZ_IDS = "ENTREZ_IDS";
     private static final String KARYOTYPE_BAND = "KARYOTYPE_BAND";
     private static final String CODING_START = "CODING_START";
@@ -175,11 +171,13 @@ public class MySQLAnnotator implements VariantAnnotator {
                 .on(GENE.SEQ_REGION_ID.eq(KARYOTYPE.SEQ_REGION_ID))
                 .innerJoin(OBJECT_XREF)
                 .on(GENE.GENE_ID.eq(OBJECT_XREF.ENSEMBL_ID))
-                .and(OBJECT_XREF.ENSEMBL_OBJECT_TYPE.eq(ObjectXrefEnsemblObjectType.Gene)).leftJoin(ENTREZ_XREF) // was an inner join before
+                .and(OBJECT_XREF.ENSEMBL_OBJECT_TYPE.eq(ObjectXrefEnsemblObjectType.Gene))
+                .leftJoin(ENTREZ_XREF) // was an inner join before
                 .on(OBJECT_XREF.XREF_ID.eq(ENTREZ_XREF.XREF_ID))
                 .and(ENTREZ_XREF.EXTERNAL_DB_ID.eq(UInteger.valueOf(1300)))
                 .innerJoin(XREF)
-                .on(XREF.XREF_ID.eq(GENE.DISPLAY_XREF_ID)).where((GENE.STATUS.eq(GeneStatus.KNOWN).or(GENE.STATUS.eq(GeneStatus.NOVEL))))
+                .on(XREF.XREF_ID.eq(GENE.DISPLAY_XREF_ID))
+                .where((GENE.STATUS.eq(GeneStatus.KNOWN).or(GENE.STATUS.eq(GeneStatus.NOVEL))))
                 .and(decode().when(GENE.SEQ_REGION_STRAND.gt(zero),
                         decode().when(GENE.SEQ_REGION_START.ge(UInteger.valueOf(promoterDistance)),
                                 GENE.SEQ_REGION_START.sub(promoterDistance)).otherwise(GENE.SEQ_REGION_START))
@@ -270,6 +268,8 @@ public class MySQLAnnotator implements VariantAnnotator {
             // NERA: past the last exon
             return null;
         } else {
+            UInteger codingStart = (UInteger) transcript.get(CODING_START);
+            UInteger codingEnd = (UInteger) transcript.get(CODING_END);
             return new Transcript(parent,
                     transcriptStableId,
                     exonUpstream,
@@ -278,8 +278,8 @@ public class MySQLAnnotator implements VariantAnnotator {
                     exonDownstreamPhase,
                     exonMax,
                     canonical,
-                    (UInteger) transcript.get(CODING_START),
-                    (UInteger) transcript.get(CODING_END));
+                    codingStart != null ? codingStart.longValue() : null,
+                    codingEnd != null ? codingEnd.longValue() : null);
         }
     }
 

@@ -20,10 +20,7 @@ public interface CommonConfig {
     String outputDirectory();
 
     @NotNull
-    String cobaltDirectory();
-
-    @NotNull
-    String amberDirectory();
+    String runDirectory();
 
     @NotNull
     String gcProfile();
@@ -31,5 +28,4 @@ public interface CommonConfig {
     default int windowSize() {
         return WINDOW_SIZE;
     }
-
 }

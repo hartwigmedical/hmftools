@@ -5,12 +5,12 @@
     <parent>
         <artifactId>hmftools</artifactId>
         <groupId>com.hartwig</groupId>
-        <version>1</version>
+        <version>local-SNAPSHOT</version>
     </parent>
 
     <artifactId>amber</artifactId>
     <packaging>jar</packaging>
-    <version>1.6</version>
+    <version>1.7</version>
     <name>HMF Tools - AMBER</name>
 
     <dependencies>

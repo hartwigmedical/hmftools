@@ -11,6 +11,8 @@ import java.util.StringJoiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,13 +32,8 @@ public enum AmberBAFFile {
     }
 
     @NotNull
-    public static Multimap<String, AmberBAF> read(@NotNull final String fileName) throws IOException {
+    public static Multimap<Chromosome, AmberBAF> read(@NotNull final String fileName) throws IOException {
         return fromLines(Files.readAllLines(new File(fileName).toPath()));
-    }
-
-    @NotNull
-    public static List<String> readingPurityData(@NotNull List<AmberBAF> bafs) {
-        return toLines(bafs);
     }
 
     public static void write(@NotNull final String filename, @NotNull Multimap<String, AmberBAF> bafs) throws IOException {
@@ -84,15 +81,15 @@ public enum AmberBAFFile {
     }
 
     @NotNull
-    private static Multimap<String, AmberBAF> fromLines(@NotNull List<String> lines) {
-        Multimap<String, AmberBAF> result = ArrayListMultimap.create();
+    private static Multimap<Chromosome, AmberBAF> fromLines(@NotNull List<String> lines) {
+        Multimap<Chromosome, AmberBAF> result = ArrayListMultimap.create();
         int i = 0;
         for (String line : lines) {
             i++;
             try {
                 if (!line.startsWith(HEADER_PREFIX)) {
                     final AmberBAF region = fromString(line);
-                    result.put(region.chromosome(), region);
+                    result.put(HumanChromosome.fromString(region.chromosome()), region);
                 }
             } catch (RuntimeException e) {
                 LOGGER.info("Unable to parse line {}: {}", i, line);

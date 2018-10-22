@@ -29,6 +29,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public final class PatientReporterTestUtil {
 
     private static final String SIGNATURE_PATH = Resources.getResource("signature/signature.png").getPath();
+    private static final String RVA_LOGO = Resources.getResource("rvalogo/rva_logo_test.jpg").getPath();
 
     private static final String REF_GENOME_PATH = Resources.getResource("refgenome/ref.fasta").getPath();
 
@@ -75,6 +76,6 @@ public final class PatientReporterTestUtil {
         final List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
         final Lims lims = LimsFactory.empty();
         final CenterModel centerModel = Center.readFromCSV(CENTER_CSV);
-        return ImmutableBaseReportData.of(patientTumorLocations, lims, centerModel, SIGNATURE_PATH);
+        return ImmutableBaseReportData.of(patientTumorLocations, lims, centerModel, SIGNATURE_PATH, RVA_LOGO);
     }
 }

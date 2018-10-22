@@ -21,9 +21,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.pcf.PCFFile;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.baf.ExpectedBAF;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -120,24 +122,16 @@ public class PurityPloidyEstimateApplication {
             // JOBA: Read Gene Panel
             final List<HmfTranscriptRegion> genePanel = HmfGenePanelSupplier.allGeneList();
 
-            // JOBA: Load BAFs from AMBER
-            final String amberFile = configSupplier.bafConfig().bafFile().toString();
-            LOGGER.info("Reading amber bafs from {}", amberFile);
-            final Multimap<String, AmberBAF> bafs = AmberBAFFile.read(amberFile);
-            int averageTumorDepth =
-                    (int) Math.round(bafs.values().stream().mapToInt(AmberBAF::tumorDepth).filter(x -> x > 0).average().orElse(100));
-            LOGGER.info("Average amber tumor depth is {} reads implying an ambiguous BAF of {}",
-                    averageTumorDepth,
-                    new DecimalFormat("0.000").format(ExpectedBAF.expectedBAF(averageTumorDepth)));
+            // JOBA: Load Amber Data
+            final Gender amberGender = configSupplier.amberData().gender();
+            final Multimap<Chromosome, AmberBAF> bafs = configSupplier.amberData().bafs();
+            int averageTumorDepth = configSupplier.amberData().averageTumorDepth();
 
-            // JOBA: Load Ratios from COBALT
-            final String ratioFilename = CobaltRatioFile.generateFilename(config.cobaltDirectory(), config.tumorSample());
-            LOGGER.info("Reading cobalt ratios from {}", ratioFilename);
-            final ListMultimap<String, CobaltRatio> ratios = CobaltRatioFile.read(ratioFilename);
+            // JOBA: Load Cobalt Data
+            final Gender cobaltGender = configSupplier.cobaltData().gender();
+            final ListMultimap<Chromosome, CobaltRatio> ratios = configSupplier.cobaltData().ratios();
 
             // JOBA: Gender
-            final Gender amberGender = Gender.fromAmber(bafs);
-            final Gender cobaltGender = Gender.fromCobalt(ratios);
             if (cobaltGender.equals(amberGender)) {
                 LOGGER.info("Sample gender is {}", cobaltGender.toString().toLowerCase());
             } else {
@@ -150,7 +144,7 @@ public class PurityPloidyEstimateApplication {
             final List<SomaticVariant> snpSomatics = allSomatics.stream().filter(SomaticVariant::isSnp).collect(Collectors.toList());
 
             LOGGER.info("Applying segmentation");
-            final Segmentation segmentation = new Segmentation(config, cobaltGender, ratios, bafs);
+            final Segmentation segmentation = new Segmentation(configSupplier, cobaltGender, ratios, bafs);
             final List<ObservedRegion> observedRegions = segmentation.createSegments(structuralVariants.variants());
 
             LOGGER.info("Fitting purity");

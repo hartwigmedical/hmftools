@@ -13,16 +13,15 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
+import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
+import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.patientreporter.BaseReportData;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
-import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
-import com.hartwig.hmftools.svannotation.annotations.StructuralVariantAnnotation;
-import com.hartwig.hmftools.svannotation.annotations.Transcript;
 
 import org.jetbrains.annotations.NotNull;
-import org.jooq.types.UInteger;
 import org.junit.Test;
 
 public class PatientReporterTest {
@@ -55,16 +54,7 @@ public class PatientReporterTest {
                         Collections.singletonList("PNPLA7"),
                         Lists.newArrayList(375775),
                         "q13");
-                g1.addTranscript(new Transcript(g1,
-                        "ENST00000406427",
-                        12,
-                        0,
-                        13,
-                        0,
-                        37,
-                        true,
-                        UInteger.valueOf(100),
-                        UInteger.valueOf(200)));
+                g1.addTranscript(new Transcript(g1, "ENST00000406427", 12, 0, 13, 0, 37, true, 100L, 200L));
                 ann.annotations().add(g1);
 
                 final GeneAnnotation g2 = new GeneAnnotation(sv,
@@ -75,7 +65,7 @@ public class PatientReporterTest {
                         Collections.singletonList("TMPRSS2"),
                         Lists.newArrayList(7113),
                         "q14");
-                g2.addTranscript(new Transcript(g2, "ENST00000398585", 1, 0, 2, 0, 14, true, UInteger.valueOf(300), UInteger.valueOf(400)));
+                g2.addTranscript(new Transcript(g2, "ENST00000398585", 1, 0, 2, 0, 14, true, 300L, 400L));
                 ann.annotations().add(g2);
 
                 result.add(ann);

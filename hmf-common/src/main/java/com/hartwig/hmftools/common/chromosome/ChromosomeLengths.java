@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 
+@Deprecated
 public final class ChromosomeLengths {
 
     private ChromosomeLengths() {

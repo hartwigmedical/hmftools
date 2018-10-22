@@ -3,9 +3,9 @@ package com.hartwig.hmftools.svannotation.analysis;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
-import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
-import com.hartwig.hmftools.svannotation.annotations.StructuralVariantAnnotation;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

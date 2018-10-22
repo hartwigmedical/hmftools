@@ -70,7 +70,7 @@ public abstract class GeneModel {
     @Value.Derived
     @NotNull
     public Set<String> disruptionGeneIDPanel() {
-        // KODU: Structural variant analyser requires a set of ensembl IDs rather than a set of gene names.
+        // KODU: Structural hgvsCodingImpact analyser requires a set of ensembl IDs rather than a set of gene names.
         Set<String> disruptionGeneIDPanel = Sets.newHashSet();
         for (Map.Entry<String, HmfTranscriptRegion> driverGene : somaticVariantDriverGenePanel().entrySet()) {
             if (geneDriverCategoryMap().get(driverGene.getKey()) != DriverCategory.ONCO) {

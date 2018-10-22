@@ -1,7 +1,11 @@
 package com.hartwig.hmftools.patientreporter.report.util;
 
+import static com.google.common.base.Strings.repeat;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
-import com.hartwig.hmftools.svannotation.annotations.Transcript;
+import com.hartwig.hmftools.common.variant.AllelicDepth;
+import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -22,24 +26,13 @@ public final class PatientReportFormat {
     }
 
     @NotNull
-    public static String formatPercentWithCutoffs(double percentage, double minCutoff, double maxCutoff) {
-        if (percentage < minCutoff) {
-            return "<" + formatPercent(minCutoff);
-        } else if (percentage > maxCutoff) {
-            return ">" + formatPercent(maxCutoff);
-        } else {
-            return formatPercent(percentage);
-        }
-    }
-
-    @NotNull
     public static String ploidyToCopiesString(@Nullable Double ploidy) {
         return ploidy != null ? String.format("%.1f", ploidy) : "-";
     }
 
     @NotNull
     public static String correctValueForFitStatus(@NotNull FittedPurityStatus fitStatus, @NotNull String value) {
-        return fitStatus == FittedPurityStatus.NO_TUMOR ? "N/A" : value;
+        return fitStatus != FittedPurityStatus.NO_TUMOR ? value : "N/A";
     }
 
     @NotNull
@@ -54,5 +47,32 @@ public final class PatientReportFormat {
         } else {
             return String.format("Error up(%d) down(%d)", transcript.exonUpstream(), transcript.exonDownstream());
         }
+    }
+
+    @NotNull
+    public static String readDepthField(@NotNull AllelicDepth allelicDepth) {
+        return allelicDepth.alleleReadCount() + " / " + allelicDepth.totalReadCount();
+    }
+
+    @NotNull
+    public static String ploidyVafField(double adjustedCopyNumber, double minorAllelePloidy, double adjustedVAF) {
+        return descriptiveBAF(adjustedCopyNumber, minorAllelePloidy) + " ("
+                + PatientReportFormat.formatPercent(Math.min(1, adjustedVAF)) + ")";
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static String descriptiveBAF(double adjustedCopyNumber, double minorAllelePloidy) {
+        int totalAlleleCount = (int) Math.max(0, Math.round(adjustedCopyNumber));
+        int minorAlleleCount = (int) Math.max(0, Math.round(minorAllelePloidy));
+        int majorAlleleCount = Math.max(0, totalAlleleCount - minorAlleleCount);
+
+        return formatBAFField("A", Math.max(minorAlleleCount, majorAlleleCount)) + formatBAFField("B",
+                Math.min(minorAlleleCount, majorAlleleCount));
+    }
+
+    @NotNull
+    private static String formatBAFField(@NotNull String allele, int count) {
+        return count < 10 ? repeat(allele, count) : allele + "[" + count + "x]";
     }
 }

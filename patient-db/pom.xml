@@ -5,7 +5,7 @@
     <parent>
         <artifactId>hmftools</artifactId>
         <groupId>com.hartwig</groupId>
-        <version>1</version>
+        <version>local-SNAPSHOT</version>
     </parent>
 
     <artifactId>patient-db</artifactId>
@@ -106,7 +106,6 @@
 
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>${maven.assembly.plugin.version}</version>
                 <executions>
                     <execution>
                         <phase>package</phase>

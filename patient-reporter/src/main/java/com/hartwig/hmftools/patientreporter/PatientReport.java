@@ -19,4 +19,7 @@ public interface PatientReport {
 
     @NotNull
     String signaturePath();
+
+    @NotNull
+    String logoRVA();
 }

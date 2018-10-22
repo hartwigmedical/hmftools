@@ -76,6 +76,7 @@ public class PDFWriter {
         singleItemDataSource.add(new Object());
 
         return report().pageFooter(cmp.pageXslashY())
+                .lastPageFooter(cmp.verticalList(logoRVAfooter(report.logoRVA())))
                 .lastPageFooter(cmp.verticalList(signatureFooter(report.signaturePath()),
                         cmp.pageXslashY(),
                         cmp.text("End of report.").setStyle(stl.style().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
@@ -109,11 +110,20 @@ public class PDFWriter {
         singleItemDataSource.add(new Object());
 
         return report().pageFooter(cmp.pageXslashY())
+                .lastPageFooter(cmp.verticalList(logoRVAfooter(report.logoRVA())))
                 .lastPageFooter(cmp.verticalList(signatureFooter(report.signaturePath()),
                         cmp.pageXslashY(),
                         cmp.text("End of report.").setStyle(stl.style().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
                 .addDetail(totalReport)
                 .setDataSource(singleItemDataSource);
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> logoRVAfooter(@NotNull final String logoPath) {
+        return cmp.horizontalList(cmp.horizontalGap(370),
+                cmp.xyList()
+                        .add(40, 5, cmp.image(logoPath)),
+                cmp.verticalGap(120));
     }
 
     @NotNull

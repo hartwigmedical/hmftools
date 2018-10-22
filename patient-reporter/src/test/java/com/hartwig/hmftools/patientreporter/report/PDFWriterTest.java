@@ -12,18 +12,10 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVs;
-import com.hartwig.hmftools.common.actionability.cnv.ActionabilityCNVsEvidenceItems;
-import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRange;
-import com.hartwig.hmftools.common.actionability.somaticvariant.ActionabilityRangeEvidenceItem;
-import com.hartwig.hmftools.common.actionability.somaticvariant.EvidenceItem;
-import com.hartwig.hmftools.common.actionability.somaticvariant.VariantEvidenceItems;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
@@ -51,6 +43,12 @@ import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantL
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableGeneDisruption;
+import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.BaseReportData;
 import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
@@ -63,13 +61,6 @@ import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineVariant;
-import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
-import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
-import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
-import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
-import com.hartwig.hmftools.svannotation.annotations.ImmutableGeneDisruption;
-import com.hartwig.hmftools.svannotation.annotations.ImmutableGeneFusion;
-import com.hartwig.hmftools.svannotation.annotations.Transcript;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -94,8 +85,8 @@ public class PDFWriterTest {
         final double tumorMutationalBurden = 10.1;
         final double microsatelliteIndelsPerMb = 2.1;
 
-        final SequencedReportData reporterData = testSequencedReportData();
         final BaseReportData baseReportData = testBaseReportData();
+        final SequencedReportData reporterData = testSequencedReportData();
         final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity);
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, fittedPurity);
@@ -109,38 +100,26 @@ public class PDFWriterTest {
         driverCatalog.addAll(OncoDrivers.drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), somaticVariants));
         driverCatalog.addAll(TsgDrivers.drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), somaticVariants));
 
-        final List<EvidenceItem> actionVariant = Lists.newArrayList();
-        final Map<EnrichedSomaticVariant, VariantEvidenceItems> labelEvidence = Maps.newHashMap();
-
-        final List<ActionabilityRange> actionVariantRange = Lists.newArrayList();
-        final Map<EnrichedSomaticVariant, ActionabilityRangeEvidenceItem> labelEvidenceRange = Maps.newHashMap();
-
-        final List<ActionabilityCNVs> actionVariantCNV = Lists.newArrayList();
-        final Map<GeneCopyNumber, ActionabilityCNVsEvidenceItems> labelEvidenceCNV = Maps.newHashMap();
-
         final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
 
         final AnalysedPatientReport patientReport = ImmutableAnalysedPatientReport.of(sampleReport,
                 FittedPurityStatus.NORMAL,
                 impliedTumorPurity,
+                Lists.newArrayList(),
                 somaticVariants,
-                actionVariant,
-                actionVariantRange,
-                actionVariantCNV,
-                labelEvidence,
-                labelEvidenceRange,
-                labelEvidenceCNV,
                 driverCatalog,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
                 tumorMutationalBurden,
+                germlineVariants.size() > 0,
                 germlineVariants,
                 copyNumbers,
                 fusions,
                 disruptions,
                 Resources.getResource("circos/circos_example.png").getPath(),
                 Optional.of("this is a test report and does not relate to any real CPCT patient"),
-                baseReportData.signaturePath());
+                baseReportData.signaturePath(),
+                baseReportData.logoPath());
 
         final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport, reporterData);
         assertNotNull(mainReport);
@@ -154,19 +133,24 @@ public class PDFWriterTest {
     private static List<GermlineVariant> createTestGermlineVariants(@NotNull PurityAdjuster purityAdjuster) {
         List<GermlineVariant> germlineVariants = Lists.newArrayList();
 
-        double altReads = 67D;
-        double totalReads = 112D;
+        int totalReads = 112;
+        int altReads = 67;
+        double adjustedCopyNumber = 3D;
 
-        double vaf = purityAdjuster.purityAdjustedVAFWithHeterozygousNormal("13", 3, altReads / totalReads);
+        double adjustedVAF = purityAdjuster.purityAdjustedVAFWithHeterozygousNormal("13", adjustedCopyNumber, altReads / totalReads);
 
         germlineVariants.add(ImmutableGermlineVariant.builder()
+                .passFilter(true)
                 .gene("BRCA2")
-                .variant("c.5946delT")
-                .impact("p.Ser1982fs")
-                .readDepth((int) altReads + " / " + (int) totalReads)
+                .hgvsCodingImpact("c.5946delT")
+                .hgvsProteinImpact("p.Ser1982fs")
+                .totalReadCount(totalReads)
+                .alleleReadCount(altReads)
                 .germlineStatus("HET")
-                .ploidyVaf("AAB (" + PatientReportFormat.formatPercent(vaf) + ")")
-                .biallelic("No")
+                .adjustedCopyNumber(adjustedCopyNumber)
+                .adjustedVAF(adjustedVAF)
+                .minorAllelePloidy(1D)
+                .biallelic(false)
                 .build());
 
         return germlineVariants;
@@ -342,7 +326,8 @@ public class PDFWriterTest {
                 reason,
                 NotAnalysableStudy.CPCT,
                 Optional.empty(),
-                testBaseReportData().signaturePath());
+                testBaseReportData().signaturePath(),
+                testBaseReportData().logoPath());
 
         return PDFWriter.generateNotAnalysableReport(patientReport);
     }

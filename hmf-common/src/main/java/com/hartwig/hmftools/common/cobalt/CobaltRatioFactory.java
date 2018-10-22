@@ -15,10 +15,10 @@ public final class CobaltRatioFactory {
             @NotNull final Multimap<Chromosome, ReadRatio> referenceGCRatio, @NotNull final Multimap<Chromosome, ReadRatio> tumorGCRatio,
             @NotNull final Multimap<Chromosome, ReadRatio> referenceGCDiploidRatio) {
         final Multimap<Chromosome, CobaltRatio> result = ArrayListMultimap.create();
-        final GenomePositionSelector<ReadRatio> tumorGCRatioSelector = GenomePositionSelectorFactory.createImproved(tumorGCRatio);
-        final GenomePositionSelector<ReadRatio> referenceGCRatioSelector = GenomePositionSelectorFactory.createImproved(referenceGCRatio);
+        final GenomePositionSelector<ReadRatio> tumorGCRatioSelector = GenomePositionSelectorFactory.create(tumorGCRatio);
+        final GenomePositionSelector<ReadRatio> referenceGCRatioSelector = GenomePositionSelectorFactory.create(referenceGCRatio);
         final GenomePositionSelector<ReadRatio> referenceGCDiploidRatioSelector =
-                GenomePositionSelectorFactory.createImproved(referenceGCDiploidRatio);
+                GenomePositionSelectorFactory.create(referenceGCDiploidRatio);
         for (Chromosome chromosome : counts.keySet()) {
             for (CobaltCount count : counts.get(chromosome)) {
                 final CobaltRatio ratio = ImmutableCobaltRatio.builder()

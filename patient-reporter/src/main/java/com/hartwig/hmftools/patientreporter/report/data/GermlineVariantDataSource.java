@@ -18,7 +18,7 @@ public final class GermlineVariantDataSource {
 
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
     public static final FieldBuilder<?> VARIANT_FIELD = field("variant", String.class);
-    public static final FieldBuilder<?> IMPACT_FIELD = field("impact", String.class);
+    public static final FieldBuilder<?> IMPACT_FIELD = field("hgvsProteinImpact", String.class);
     public static final FieldBuilder<?> READ_DEPTH_FIELD = field("read_depth", String.class);
     public static final FieldBuilder<?> GERMLINE_STATUS_FIELD = field("germline_status", String.class);
     public static final FieldBuilder<?> PLOIDY_VAF_FIELD = field("ploidy_vaf", String.class);
@@ -43,14 +43,20 @@ public final class GermlineVariantDataSource {
                 PLOIDY_VAF_FIELD.getName(),
                 BIALLELIC_FIELD.getName());
 
+
         for (GermlineVariant variant : variants) {
+            String ploidyVaf =
+                    PatientReportFormat.ploidyVafField(variant.adjustedCopyNumber(), variant.minorAllelePloidy(), variant.adjustedVAF());
+
+            String biallelic = variant.biallelic() ? "Yes" : "No";
+
             variantDataSource.add(variant.gene(),
-                    variant.variant(),
-                    variant.impact(),
-                    variant.readDepth(),
+                    variant.hgvsCodingImpact(),
+                    variant.hgvsProteinImpact(),
+                    PatientReportFormat.readDepthField(variant),
                     variant.germlineStatus(),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, variant.ploidyVaf()),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, variant.biallelic()));
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyVaf),
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, biallelic));
         }
 
         return variantDataSource;

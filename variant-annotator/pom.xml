@@ -2,12 +2,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <artifactId>hmftools</artifactId>
         <groupId>com.hartwig</groupId>
-        <version>1</version>
+        <version>local-SNAPSHOT</version>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
 
     <artifactId>variant-annotator</artifactId>
     <packaging>jar</packaging>
@@ -28,6 +29,10 @@
             <artifactId>ensembl-db</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>sv-analyser</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.jooq</groupId>
             <artifactId>jooq</artifactId>
         </dependency>
@@ -44,17 +49,13 @@
             <artifactId>commons-cli</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.immutables</groupId>
-            <artifactId>value</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.hartwig</groupId>
-            <artifactId>sv-analyser</artifactId>
+            <groupId>org.immutables</groupId>
+            <artifactId>value</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

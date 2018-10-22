@@ -55,11 +55,11 @@ public class CountSupplier {
     public Multimap<Chromosome, CobaltCount> fromReadCountFiles() throws IOException {
         final String referenceFilename = ReadCountFile.generateFilename(outputDirectory, reference);
         LOGGER.info("Reading reference count from {}", referenceFilename);
-        Multimap<String, ReadCount> referenceCounts = ReadCountFile.readFile(referenceFilename);
+        Multimap<Chromosome, ReadCount> referenceCounts = ReadCountFile.readFile(referenceFilename);
 
         final String tumorFilename = ReadCountFile.generateFilename(outputDirectory, tumor);
         LOGGER.info("Reading tumor count from {}", tumorFilename);
-        Multimap<String, ReadCount> tumorCounts = ReadCountFile.readFile(tumorFilename);
+        Multimap<Chromosome, ReadCount> tumorCounts = ReadCountFile.readFile(tumorFilename);
 
         return CobaltCountFactory.merge(referenceCounts, tumorCounts);
     }
@@ -91,20 +91,24 @@ public class CountSupplier {
         LOGGER.info("Calculating Read Count from {}", referenceFile.toString());
         final List<Future<ChromosomeReadCount>> referenceFutures = createFutures(readerFactory, referenceFile, lengths);
 
-        final Multimap<String, ReadCount> tumorCounts = fromFutures(tumorFutures);
-        final Multimap<String, ReadCount> referenceCounts = fromFutures(referenceFutures);
+        final Multimap<Chromosome, ReadCount> tumorCounts = fromFutures(tumorFutures);
+        final Multimap<Chromosome, ReadCount> referenceCounts = fromFutures(referenceFutures);
 
         LOGGER.info("Read Count Complete");
         return CobaltCountFactory.merge(referenceCounts, tumorCounts);
     }
 
     @NotNull
-    private List<Future<ChromosomeReadCount>> createFutures(final SamReaderFactory readerFactory, final File file, final List<ChromosomeLength> lengths) {
+    private List<Future<ChromosomeReadCount>> createFutures(final SamReaderFactory readerFactory, final File file,
+            final List<ChromosomeLength> lengths) {
         final List<Future<ChromosomeReadCount>> futures = Lists.newArrayList();
         for (ChromosomeLength chromosome : lengths) {
-            final ChromosomeReadCount callable =
-                    new ChromosomeReadCount(file, readerFactory, chromosome.chromosome(), chromosome.length(), windowSize,
-                            minMappingQuality);
+            final ChromosomeReadCount callable = new ChromosomeReadCount(file,
+                    readerFactory,
+                    chromosome.chromosome(),
+                    chromosome.length(),
+                    windowSize,
+                    minMappingQuality);
             futures.add(executorService.submit(callable));
         }
 
@@ -112,12 +116,12 @@ public class CountSupplier {
     }
 
     @NotNull
-    private static Multimap<String, ReadCount> fromFutures(List<Future<ChromosomeReadCount>> futures)
+    private static Multimap<Chromosome, ReadCount> fromFutures(List<Future<ChromosomeReadCount>> futures)
             throws ExecutionException, InterruptedException {
-        final ListMultimap<String, ReadCount> readCounts = ArrayListMultimap.create();
+        final ListMultimap<Chromosome, ReadCount> readCounts = ArrayListMultimap.create();
         for (Future<ChromosomeReadCount> future : futures) {
             final ChromosomeReadCount readCount = future.get();
-            final String chromosome = readCount.chromosome();
+            final Chromosome chromosome = readCount.chromosome();
             final List<ReadCount> result = readCount.readCount();
 
             readCounts.putAll(chromosome, result);

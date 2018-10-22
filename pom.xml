@@ -5,14 +5,16 @@
     <groupId>com.hartwig</groupId>
     <artifactId>hmftools</artifactId>
     <packaging>pom</packaging>
-    <version>1</version>
+    <version>local-SNAPSHOT</version>
     <name>HMF Genomics Tools</name>
 
     <modules>
         <module>hmf-common</module>
+        <module>hmf-extensions</module>
+        <module>api-clients</module>
         <module>variant-annotator</module>
-        <module>health-checker</module>
         <module>patient-reporter</module>
+        <module>health-checker</module>
         <module>fastq-stats</module>
         <module>patient-db</module>
         <module>break-point-inspector</module>
@@ -21,12 +23,10 @@
         <module>purity-ploidy-estimator</module>
         <module>hmf-gene-panel-builder</module>
         <module>strelka-post-process</module>
-        <module>api-clients</module>
         <module>ensembl-db</module>
         <module>bam-slicer</module>
         <module>bachelor</module>
         <module>bachelor-pp</module>
-        <module>hmf-extensions</module>
         <module>hmf-id-generator</module>
         <module>portal-data-converter</module>
         <module>sv-analyser</module>
@@ -46,15 +46,13 @@
         <maven.jar.plugin.version>2.4</maven.jar.plugin.version>
         <maven.surefire.plugin.version>2.21.0</maven.surefire.plugin.version>
 
-        <hmf-common.version>1</hmf-common.version>
-        <hmf-gene-panel.version>1</hmf-gene-panel.version>
+        <hmf-common.version>local-SNAPSHOT</hmf-common.version>
+        <hmf-gene-panel.version>local-SNAPSHOT</hmf-gene-panel.version>
+        <hmf-api-clients.version>local-SNAPSHOT</hmf-api-clients.version>
+        <hmf-extensions.version>local-SNAPSHOT</hmf-extensions.version>
         <hmf-patient-db.version>3.12</hmf-patient-db.version>
-        <hmf-apiclients.version>1.0</hmf-apiclients.version>
         <hmf-variant-annotation.version>1.6</hmf-variant-annotation.version>
         <hmf-sv-analyser.version>1.0</hmf-sv-analyser.version>
-        <hmf-strelka-post-process.version>1.2</hmf-strelka-post-process.version>
-        <hmf-extensions.version>1.0</hmf-extensions.version>
-        <hmf-knowledgebase-importer.version>1.2</hmf-knowledgebase-importer.version>
 
         <immutables.version>2.4.4</immutables.version>
         <htsjdk.version>2.12.0</htsjdk.version>
@@ -182,12 +180,7 @@
             <dependency>
                 <groupId>com.hartwig</groupId>
                 <artifactId>api-clients</artifactId>
-                <version>${hmf-apiclients.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>strelka-post-process</artifactId>
-                <version>${hmf-strelka-post-process.version}</version>
+                <version>${hmf-api-clients.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
@@ -203,11 +196,6 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>hmf-extensions-csv</artifactId>
                 <version>${hmf-extensions.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>knowledgebase-importer</artifactId>
-                <version>${hmf-knowledgebase-importer.version}</version>
             </dependency>
 
             <dependency>

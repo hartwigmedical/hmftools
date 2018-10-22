@@ -13,6 +13,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,7 +29,7 @@ public class CobaltRatioFile {
     }
 
     @NotNull
-    public static ListMultimap<String, CobaltRatio> read(@NotNull final String filename) throws IOException {
+    public static ListMultimap<Chromosome, CobaltRatio> read(@NotNull final String filename) throws IOException {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
@@ -75,12 +76,12 @@ public class CobaltRatioFile {
     }
 
     @NotNull
-    private static ListMultimap<String, CobaltRatio> fromLines(@NotNull final List<String> lines) {
-        final ListMultimap<String, CobaltRatio> result = ArrayListMultimap.create();
+    private static ListMultimap<Chromosome, CobaltRatio> fromLines(@NotNull final List<String> lines) {
+        final ListMultimap<Chromosome, CobaltRatio> result = ArrayListMultimap.create();
         for (String line : lines) {
             if (!line.startsWith("Ch")) {
                 final CobaltRatio ratio = fromLine(line);
-                result.put(ratio.chromosome(), ratio);
+                result.put(HumanChromosome.fromString(ratio.chromosome()), ratio);
             }
         }
 

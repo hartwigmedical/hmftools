@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 
 import org.junit.Test;
 
@@ -18,8 +19,8 @@ public class AmberBAFFileTest {
 
     @Test
     public void testNewOldCompatibility() throws IOException {
-        final List<AmberBAF> oldFormat = Lists.newArrayList(AmberBAFFile.read(BASE_PATH + "old.amber.baf").get("1"));
-        final List<AmberBAF> newFormat = Lists.newArrayList(AmberBAFFile.read(BASE_PATH + "new.amber.baf").get("1"));
+        final List<AmberBAF> oldFormat = Lists.newArrayList(AmberBAFFile.read(BASE_PATH + "old.amber.baf").get(HumanChromosome._1));
+        final List<AmberBAF> newFormat = Lists.newArrayList(AmberBAFFile.read(BASE_PATH + "new.amber.baf").get(HumanChromosome._1));
 
         for (int i = 0; i < oldFormat.size(); i++) {
 

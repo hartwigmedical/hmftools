@@ -51,18 +51,18 @@ public abstract class ExplanationPage {
     private static ComponentBuilder<?, ?> snvIndelExplanationSection() {
         return toList("Details on reported somatic somaticVariants",
                 Lists.newArrayList(
-                        "The 'Position' refers to the chromosome and start base of the variant with " + "respect to this reference genome.",
+                        "The 'Position' refers to the chromosome and start base of the hgvsCodingImpact with " + "respect to this reference genome.",
                         "The 'Variant' displays what was expected as reference base and what " + "was found instead ('ref' > 'alt').",
-                        "The 'Depth (VAF)' displays the number of observations of the specific variant versus "
+                        "The 'Depth (VAF)' displays the number of observations of the specific hgvsCodingImpact versus "
                                 + "the total number of reads in this location in the format 'alt / total (%)'.",
-                        "The 'Predicted Effect' provides additional information on the variant, including "
+                        "The 'Predicted Effect' provides additional information on the hgvsCodingImpact, including "
                                 + "the change in coding sequence ('c.'), the change in protein ('p.') and "
                                 + "the predicted variantDetails on the final protein on the second line of this field.",
                         "The 'Cosmic' fields display a link to the COSMIC database which contains "
-                                + "additional information on the variant. If the variant could not be found in the "
+                                + "additional information on the hgvsCodingImpact. If the hgvsCodingImpact could not be found in the "
                                 + "COSMIC database, this field will be left blank. The COSMIC v76 database is used "
                                 + "to look-up these IDs.",
-                        "The 'Ploidy (TAF)' field displays the tumor ploidy for the observed variant. The ploidy "
+                        "The 'Ploidy (TAF)' field displays the tumor ploidy for the observed hgvsCodingImpact. The ploidy "
                                 + "has been adjusted for the implied tumor purity (see above) and is shown as a "
                                 + "proportion of A’s and B’s (e.g. AAABB for 3 disruptionCopies A, and 2 disruptionCopies B). "
                                 + "The copy number is the sum of A’s and B’s. The TAF (Tumor adjusted Alternative "

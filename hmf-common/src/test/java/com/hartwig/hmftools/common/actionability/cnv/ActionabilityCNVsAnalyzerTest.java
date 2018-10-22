@@ -15,22 +15,22 @@ public class ActionabilityCNVsAnalyzerTest {
 
     @Ignore
     public void ActionabilityWorksCNVs() {
-        ActionabilityCNVs actionanilityCNV = ImmutableActionabilityCNVs.builder()
+        ActionableCopyNumber actionanilityCNV = ImmutableActionableCopyNumber.builder()
                 .gene("ERBB2")
                 .cnvType("Amplification")
                 .source("oncoKb")
                 .reference("ERBB2:amp")
-                .drugsName("Trastuzumab")
+                .drug("Trastuzumab")
                 .drugsType("EGFR inhibitor")
                 .cancerType("Breast Cancer")
                 .source("1")
-                .hmfLevel("A")
-                .hmfResponse("Responsive")
+                .level("A")
+                .response("Responsive")
                 .build();
 
         CancerTypeReading reading = ImmutableCancerTypeReading.builder().doidSet("1612").cancerType("Breast").build();
 
-        ActionabilityCNVsAnalyzer cnvAnalyzer = new ActionabilityCNVsAnalyzer(Lists.newArrayList(actionanilityCNV));
+        CopyNumberEvidenceAnalyzer cnvAnalyzer = new CopyNumberEvidenceAnalyzer(Lists.newArrayList(actionanilityCNV));
         CancerTypeAnalyzer cancerType = new CancerTypeAnalyzer(Lists.newArrayList(reading));
 
         GeneCopyNumber geneCopyNumber = ImmutableGeneCopyNumber.builder()
@@ -64,8 +64,8 @@ public class ActionabilityCNVsAnalyzerTest {
                 .missenseNonBiallelicCount(0)
                 .build();
 
-        //   assertEquals(true, cnvAnalyzer.actionableCNVs(geneCopyNumber, cancerType, "1612", "Breast"));
-        //   assertEquals(false, cnvAnalyzer.actionableCNVs(geneCopyNumber, cancerType, "1612", "Skin"));
+        //   assertEquals(true, cnvAnalyzer.evidenceForCopyNumberEvent(geneCopyNumber, cancerType, "1612", "Breast"));
+        //   assertEquals(false, cnvAnalyzer.evidenceForCopyNumberEvent(geneCopyNumber, cancerType, "1612", "Skin"));
 
     }
 }

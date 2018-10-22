@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collection;
-import java.util.StringJoiner;
 import java.util.function.Function;
 
 import com.google.common.collect.Lists;
@@ -34,21 +33,18 @@ public class CircosSNPWriter {
         Files.write(new File(filePath).toPath(), lines);
     }
 
+    @NotNull
     private static String header() {
         return "#chromosome\tstart\tend\tvalue";
     }
 
-    private static String transformPosition(PurityAdjustedSomaticVariant position) {
-        return new StringJoiner("\t").add("hs" + position.chromosome())
-                .add(String.valueOf(position.position()))
-                .add(String.valueOf(position.position()))
-                .add(String.valueOf(position.adjustedVAF()))
-                .add("color=" + color(position))
-                .toString();
+    @NotNull
+    private static String transformPosition(@NotNull final PurityAdjustedSomaticVariant position) {
+        return CircosFileWriter.transformPosition(position, CircosSNPWriter::color);
     }
 
-    private static String color(PurityAdjustedSomaticVariant variant) {
-
+    @NotNull
+    private static String color(@NotNull final PurityAdjustedSomaticVariant variant) {
         if (signature("C", "A", variant)) return BLUE;
         if (signature("C", "G", variant)) return BLACK;
         if (signature("C", "T", variant)) return RED;
@@ -59,12 +55,14 @@ public class CircosSNPWriter {
         return "purple";
     }
 
-    private static boolean signature(String ref, String alt, PurityAdjustedSomaticVariant variant) {
-        return (variant.ref().equals(ref) && variant.alt().equals(alt))
-                || (variant.ref().equals(inverse(ref)) && variant.alt().equals(inverse(alt)));
+    private static boolean signature(@NotNull final String ref, @NotNull final String alt,
+            @NotNull final PurityAdjustedSomaticVariant variant) {
+        return (variant.ref().equals(ref) && variant.alt().equals(alt)) || (variant.ref().equals(inverse(ref)) && variant.alt()
+                .equals(inverse(alt)));
     }
 
-    private static String inverse(String base) {
+    @NotNull
+    private static String inverse(@NotNull final String base) {
         if (base.equals("G")) {
             return "C";
         }

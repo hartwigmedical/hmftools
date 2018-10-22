@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
-import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 
 import org.jetbrains.annotations.NotNull;
 

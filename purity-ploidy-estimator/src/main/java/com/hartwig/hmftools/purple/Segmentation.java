@@ -2,12 +2,11 @@ package com.hartwig.hmftools.purple;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
-import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.gc.GCProfile;
 import com.hartwig.hmftools.common.gc.GCProfileFactory;
@@ -21,7 +20,7 @@ import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.purple.config.CommonConfig;
-import com.hartwig.hmftools.purple.ratio.ChromosomeLengthSupplier;
+import com.hartwig.hmftools.purple.config.ConfigSupplier;
 import com.hartwig.hmftools.purple.segment.PCFPositionsSupplier;
 
 import org.apache.logging.log4j.LogManager;
@@ -34,23 +33,24 @@ class Segmentation {
 
     private final CommonConfig config;
     private final Gender gender;
-    private final ListMultimap<String, CobaltRatio> ratios;
-    private final Multimap<String, AmberBAF> bafs;
-    private final Map<String, ChromosomeLength> lengths;
+    private final Multimap<Chromosome, AmberBAF> bafs;
     private final Multimap<String, PCFPosition> pcfPositions;
-    private final Multimap<String, GCProfile> gcProfiles;
+    private final Multimap<Chromosome, GCProfile> gcProfiles;
+    private final ListMultimap<Chromosome, CobaltRatio> ratios;
+    private final ConfigSupplier configSupplier;
 
-    public Segmentation(@NotNull final CommonConfig config, @NotNull final Gender gender,
-            @NotNull final ListMultimap<String, CobaltRatio> ratios, @NotNull final Multimap<String, AmberBAF> bafs) throws IOException {
-        this.config = config;
+    public Segmentation(@NotNull final ConfigSupplier configSupplier, @NotNull final Gender gender,
+            @NotNull final ListMultimap<Chromosome, CobaltRatio> ratios, @NotNull final Multimap<Chromosome, AmberBAF> bafs)
+            throws IOException {
+        this.config = configSupplier.commonConfig();
         this.gender = gender;
         this.ratios = ratios;
         this.bafs = bafs;
-        this.lengths = new ChromosomeLengthSupplier(config, ratios).get();
-        this.pcfPositions = PCFPositionsSupplier.createPositions(config);
+        this.pcfPositions = PCFPositionsSupplier.createPositions(configSupplier);
+        this.configSupplier = configSupplier;
 
         LOGGER.info("Reading GC Profiles from {}", config.gcProfile());
-        this.gcProfiles = GCProfileFactory.loadGCContentOld(config.windowSize(), config.gcProfile());
+        this.gcProfiles = GCProfileFactory.loadGCContent(config.windowSize(), config.gcProfile());
 
     }
 
@@ -58,7 +58,11 @@ class Segmentation {
     public List<ObservedRegion> createSegments(@NotNull final List<StructuralVariant> structuralVariants) {
         final Multimap<String, Cluster> clusterMap =
                 new ClusterFactory(config.windowSize()).cluster(structuralVariants, pcfPositions, ratios);
-        List<PurpleSegment> segments = PurpleSegmentFactory.segment(clusterMap, lengths);
+
+        final PurpleSegmentFactory factory =
+                new PurpleSegmentFactory(configSupplier.refGenomeConfig().centromere(), configSupplier.refGenomeConfig().length());
+
+        final List<PurpleSegment> segments = factory.segment(clusterMap);
 
         final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(config.windowSize(), gender);
         return observedRegionFactory.combine(segments, bafs, ratios, gcProfiles);

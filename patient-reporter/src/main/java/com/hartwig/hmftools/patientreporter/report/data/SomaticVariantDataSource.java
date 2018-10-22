@@ -1,13 +1,10 @@
 package com.hartwig.hmftools.patientreporter.report.data;
 
-import static com.google.common.base.Strings.repeat;
-
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
@@ -69,12 +66,15 @@ public final class SomaticVariantDataSource {
                 biallelic = variant.biallelic() ? "Yes" : "No";
             }
 
+            String ploidyVaf =
+                    PatientReportFormat.ploidyVafField(variant.adjustedCopyNumber(), variant.minorAllelePloidy(), variant.adjustedVAF());
+
             variantDataSource.add(displayGene,
                     variant.canonicalHgvsCodingImpact(),
                     variant.canonicalHgvsProteinImpact(),
-                    readDepthField(variant),
+                    PatientReportFormat.readDepthField(variant),
                     hotspotField(variant),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyVafField(variant)),
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyVaf),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, clonalityField(variant)),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, biallelic),
                     driverField(catalogEntryForVariant(driverCatalogList, variant)));
@@ -90,7 +90,7 @@ public final class SomaticVariantDataSource {
             DriverCatalog entryForVariant1 = catalogEntryForVariant(driverCatalogList, variant1);
             DriverCatalog entryForVariant2 = catalogEntryForVariant(driverCatalogList, variant2);
 
-            // KODU: Force any variant outside of driver catalog to the bottom of table.
+            // KODU: Force any hgvsCodingImpact outside of driver catalog to the bottom of table.
             double driverLikelihood1 = entryForVariant1 != null ? entryForVariant1.driverLikelihood() : -1;
             double driverLikelihood2 = entryForVariant2 != null ? entryForVariant2.driverLikelihood() : -1;
             if (Math.abs(driverLikelihood1 - driverLikelihood2) > 0.001) {
@@ -154,32 +154,5 @@ public final class SomaticVariantDataSource {
             default:
                 return Strings.EMPTY;
         }
-    }
-
-    @NotNull
-    private static String readDepthField(@NotNull EnrichedSomaticVariant variant) {
-        return variant.alleleReadCount() + " / " + variant.totalReadCount();
-    }
-
-    @NotNull
-    private static String ploidyVafField(@NotNull EnrichedSomaticVariant variant) {
-        return descriptiveBAF(variant.adjustedCopyNumber(), variant.minorAllelePloidy()) + " ("
-                + PatientReportFormat.formatPercent(Math.min(1, variant.adjustedVAF())) + ")";
-    }
-
-    @NotNull
-    @VisibleForTesting
-    static String descriptiveBAF(double adjustedCopyNumber, double minorAllelePloidy) {
-        int totalAlleleCount = (int) Math.max(0, Math.round(adjustedCopyNumber));
-        int minorAlleleCount = (int) Math.max(0, Math.round(minorAllelePloidy));
-        int majorAlleleCount = Math.max(0, totalAlleleCount - minorAlleleCount);
-
-        return formatBAFField("A", Math.max(minorAlleleCount, majorAlleleCount)) + formatBAFField("B",
-                Math.min(minorAlleleCount, majorAlleleCount));
-    }
-
-    @NotNull
-    private static String formatBAFField(@NotNull String allele, int count) {
-        return count < 10 ? repeat(allele, count) : allele + "[" + count + "x]";
     }
 }

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -21,6 +22,8 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
+import com.hartwig.hmftools.patientreporter.germline.BachelorFile;
+import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,40 +36,45 @@ final class PatientReporterFileLoader {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterFileLoader.class);
 
-    private static final String SOMATIC_VCF_EXTENSION_V3 = "_post_processed_v2.2.vcf.gz";
-    private static final String SOMATIC_VCF_EXTENSION_V4 = "_post_processed.vcf.gz";
     private static final String PURPLE_DIRECTORY = "purple";
-    private static final String SV_EXTENSION_V3 = "_somaticSV_bpi.vcf";
-    private static final String SV_EXTENSION_V4 = "_somaticSV_bpi.vcf.gz";
     private static final String CIRCOS_PLOT_DIRECTORY = "plot";
     private static final String CIRCOS_PLOT_EXTENSION = ".circos.png";
+    private static final String SV_EXTENSION_V3 = "_somaticSV_bpi.vcf";
+    private static final String SV_EXTENSION_V4 = "_somaticSV_bpi.vcf.gz";
+    private static final String SOMATIC_VCF_EXTENSION_V3 = "_post_processed_v2.2.vcf.gz";
+    private static final String SOMATIC_VCF_EXTENSION_V4 = "_post_processed.vcf.gz";
+    private static final String BACHELOR_DIRECTORY = "bachelor";
 
     private PatientReporterFileLoader() {
     }
 
     @NotNull
-    static PurityContext loadPurity(@NotNull final String runDirectory, @NotNull final String sample) throws IOException {
+    static PurityContext loadPurity(@NotNull String runDirectory, @NotNull String sample) throws IOException {
         final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
         return FittedPurityFile.read(cnvBasePath, sample);
     }
 
     @NotNull
-    static List<PurpleCopyNumber> loadPurpleCopyNumbers(@NotNull final String runDirectory, @NotNull final String sample)
-            throws IOException {
+    static List<PurpleCopyNumber> loadPurpleCopyNumbers(@NotNull String runDirectory, @NotNull String sample) throws IOException {
         final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
         return PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilename(cnvBasePath, sample));
     }
 
     @NotNull
-    static List<GeneCopyNumber> loadPurpleGeneCopyNumbers(@NotNull final String runDirectory, @NotNull final String sample)
-            throws IOException {
+    static List<GeneCopyNumber> loadPurpleGeneCopyNumbers(@NotNull String runDirectory, @NotNull String sample) throws IOException {
         final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
         final String fileName = GeneCopyNumberFile.generateFilename(cnvBasePath, sample);
         return GeneCopyNumberFile.read(fileName);
     }
 
     @NotNull
-    static Path findStructuralVariantVCF(@NotNull final String runDirectory) throws IOException {
+    static String findCircosPlotPath(@NotNull String runDirectory, @NotNull String sample) {
+        return runDirectory + File.separator + PURPLE_DIRECTORY + File.separator + CIRCOS_PLOT_DIRECTORY + File.separator + sample
+                + CIRCOS_PLOT_EXTENSION;
+    }
+
+    @NotNull
+    static Path findStructuralVariantVCF(@NotNull String runDirectory) throws IOException {
         // TODO (KODU): Clean up once pipeline v3 no longer exists
         Optional<Path> path = Files.walk(Paths.get(runDirectory)).filter(p -> p.toString().endsWith(SV_EXTENSION_V3)).findFirst();
         if (!path.isPresent()) {
@@ -77,20 +85,14 @@ final class PatientReporterFileLoader {
     }
 
     @NotNull
-    static String findCircosPlotPath(@NotNull final String runDirectory, @NotNull final String sample) {
-        return runDirectory + File.separator + PURPLE_DIRECTORY + File.separator + CIRCOS_PLOT_DIRECTORY + File.separator + sample
-                + CIRCOS_PLOT_EXTENSION;
-    }
-
-    @NotNull
-    static List<SomaticVariant> loadPassedSomaticVariants(@NotNull final String sample, @NotNull final String path,
+    static List<SomaticVariant> loadPassedSomaticVariants(@NotNull String runDirectory, @NotNull String sample,
             @NotNull SomaticEnrichment somaticEnrichment) throws IOException {
         // TODO (KODU): Clean up once pipeline v3 no longer exists
         Path vcfPath;
         try {
-            vcfPath = PathExtensionFinder.build().findPath(path, SOMATIC_VCF_EXTENSION_V3);
+            vcfPath = PathExtensionFinder.build().findPath(runDirectory, SOMATIC_VCF_EXTENSION_V3);
         } catch (FileNotFoundException exception) {
-            vcfPath = PathExtensionFinder.build().findPath(path, SOMATIC_VCF_EXTENSION_V4);
+            vcfPath = PathExtensionFinder.build().findPath(runDirectory, SOMATIC_VCF_EXTENSION_V4);
         }
 
         return SomaticVariantFactory.filteredInstanceWithEnrichment(new PassingVariantFilter(), somaticEnrichment)
@@ -98,8 +100,22 @@ final class PatientReporterFileLoader {
     }
 
     @Nullable
-    static PatientTumorLocation extractPatientTumorLocation(@NotNull final List<PatientTumorLocation> patientTumorLocations,
-            @NotNull final String sample) {
+    static List<GermlineVariant> loadPassedGermlineVariants(@NotNull String runDirectory, @NotNull String sample) throws IOException {
+        String bachelorDirectory = runDirectory + File.separator + BACHELOR_DIRECTORY;
+        if (!BachelorFile.hasBachelorRun(bachelorDirectory, sample)) {
+            return null;
+        } else {
+            String bachelorFile = BachelorFile.findBachelorFilePath(bachelorDirectory, sample);
+            List<GermlineVariant> germlineVariants =
+                    bachelorFile != null ? BachelorFile.loadBachelorFile(bachelorFile) : Lists.newArrayList();
+
+            return germlineVariants.stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
+        }
+    }
+
+    @Nullable
+    static PatientTumorLocation extractPatientTumorLocation(@NotNull List<PatientTumorLocation> patientTumorLocations,
+            @NotNull String sample) {
         final String patientIdentifier = toPatientIdentifier(sample);
 
         final List<PatientTumorLocation> matchingIdTumorLocations = patientTumorLocations.stream()

@@ -3,8 +3,8 @@ package com.hartwig.hmftools.patientreporter.report.data;
 import static com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat.exonDescription;
 import static com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat.ploidyToCopiesString;
 
-import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
-import com.hartwig.hmftools.svannotation.annotations.Transcript;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

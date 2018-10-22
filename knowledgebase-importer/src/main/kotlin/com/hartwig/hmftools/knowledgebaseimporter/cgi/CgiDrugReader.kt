@@ -11,7 +11,7 @@ fun readCgiDrugs(input: CgiActionableInput): List<CgiDrug> {
     val cgiDrugs = readGenericDrugs(familyField, namesField) + readGroupedDrugs(familyField, namesField) +
             readDrugs(familyField, namesField)
     if (cgiDrugs.isEmpty()) {
-        logger.error("Encountered unexpected formats when reading cgi drugs and drug families.")
+        logger.error("Encountered unexpected formats when reading cgi drug and drug families.")
         logger.error("Drug names field: $namesField")
         logger.error("Drug family field: $familyField")
     }

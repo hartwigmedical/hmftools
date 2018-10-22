@@ -71,6 +71,7 @@ public class PatientReporterApplication {
     private static final String CENTER_CSV = "center_csv";
     private static final String SIGNATURE = "signature";
     private static final String COMMENTS = "comments";
+    private static final String LOGO = "logo";
 
     public static void main(final String... args) throws ParseException, IOException, DRException, SQLException {
         final Options options = createOptions();
@@ -112,7 +113,7 @@ public class PatientReporterApplication {
         final Lims lims = LimsFactory.fromLimsJson(cmd.getOptionValue(LIMS_JSON));
         LOGGER.info(" Loaded data for {} samples.", lims.sampleCount());
         final CenterModel centerModel = Center.readFromCSV(cmd.getOptionValue(CENTER_CSV));
-        return ImmutableBaseReportData.of(patientTumorLocations, lims, centerModel, cmd.getOptionValue(SIGNATURE));
+        return ImmutableBaseReportData.of(patientTumorLocations, lims, centerModel, cmd.getOptionValue(SIGNATURE), cmd.getOptionValue(LOGO));
     }
 
     @NotNull
@@ -223,6 +224,8 @@ public class PatientReporterApplication {
         final String limsJson = cmd.getOptionValue(LIMS_JSON);
         final String centerCsv = cmd.getOptionValue(CENTER_CSV);
         final String signaturePath = cmd.getOptionValue(SIGNATURE);
+        final String logoPath = cmd.getOptionValue(LOGO);
+
 
         if (tumorLocationCsv == null || !exists(tumorLocationCsv)) {
             LOGGER.warn(TUMOR_LOCATION_CSV + " has to be an existing file: " + tumorLocationCsv);
@@ -232,6 +235,8 @@ public class PatientReporterApplication {
             LOGGER.warn(CENTER_CSV + " has to be an existing file: " + centerCsv);
         } else if (signaturePath == null || !exists(signaturePath)) {
             LOGGER.warn(SIGNATURE + " has to be an existing file: " + signaturePath);
+        } else if (logoPath == null || !exists(logoPath)) {
+            LOGGER.warn(LOGO + " has to be an existing file: " + logoPath);
         } else {
             return true;
         }
@@ -270,6 +275,7 @@ public class PatientReporterApplication {
         options.addOption(HIGH_CONFIDENCE_BED, true, "Path towards the high confidence BED file.");
         options.addOption(CENTER_CSV, true, "Path towards a CSV containing center (hospital) data.");
         options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
+        options.addOption(LOGO, true, "Path towards a image file containing the logo.");
         options.addOption(COMMENTS, true, "Additional comments to be added to the report, if any.");
         return options;
     }
