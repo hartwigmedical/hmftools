@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.report.builder.FieldBuilder;
@@ -54,11 +53,8 @@ public final class GeneDisruptionDataSource {
                     disruption.range(),
                     disruption.type().name(),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyToCopiesString(disruption.ploidy())),
-                    Strings.EMPTY,
-                    Strings.EMPTY);
-            // TODO (KODU): Propagate copy number info here - DEV-548
-            //                    PatientReportFormat.correctValueForFitStatus(fitStatus, String.valueOf(disruption.geneMinCopies())),
-            //                    PatientReportFormat.correctValueForFitStatus(fitStatus, String.valueOf(disruption.geneMaxCopies())));
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, String.valueOf(disruption.geneMinCopies())),
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, String.valueOf(disruption.geneMaxCopies())));
         }
 
         return dataSource;

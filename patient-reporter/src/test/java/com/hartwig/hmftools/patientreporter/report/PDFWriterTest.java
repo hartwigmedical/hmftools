@@ -38,14 +38,11 @@ import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableGeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
@@ -57,12 +54,11 @@ import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
+import com.hartwig.hmftools.patientreporter.disruption.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruption;
-import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruptionFactory;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineVariant;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -279,62 +275,47 @@ public class PDFWriterTest {
 
     @NotNull
     private static List<ReportableGeneDisruption> createTestDisruptions() {
-        Pair<GeneDisruption, GeneDisruption> pairedDisruption =
-                createTestDisruptionPair(StructuralVariantType.INV, "2", "q34", "ERBB4", 4, 9, 1D);
-        GeneDisruption disruption1 = createDisruption(StructuralVariantType.BND, "17", "q12", "CDK12", 12, 2.3, false);
-        GeneDisruption disruption2 = createDisruption(StructuralVariantType.INS, "21", "q22.12", "RUNX1", 0, 0.8, true);
-        GeneDisruption disruption3 = createDisruption(StructuralVariantType.DUP, "1", "p13.1", "CD58", 2, 0.2, true);
+        ReportableGeneDisruption disruption1 = createDisruptionBuilder()
+                .location("2q34")
+                .gene("ERBB4")
+                .range("Intron 4 -> Intron 9")
+                .type(StructuralVariantType.INV)
+                .ploidy(1D)
+                .geneMinCopies(1)
+                .geneMaxCopies(1)
+                .build();
 
-        List<GeneDisruption> disruptions =
-                Lists.newArrayList(pairedDisruption.getLeft(), pairedDisruption.getRight(), disruption1, disruption2, disruption3);
+        ReportableGeneDisruption disruption2 = createDisruptionBuilder()
+                .location("17q12")
+                .gene("CDK12")
+                .range("Intron 12 Downstream")
+                .type(StructuralVariantType.BND)
+                .ploidy(2.3)
+                .geneMinCopies(2)
+                .geneMaxCopies(4)
+                .build();
 
-        return ReportableGeneDisruptionFactory.toReportableGeneDisruptions(disruptions);
-    }
+        ReportableGeneDisruption disruption3 = createDisruptionBuilder()
+                .location("21q22.12")
+                .gene("RUNX1")
+                .range("Promoter Region Upstream")
+                .type(StructuralVariantType.INS)
+                .ploidy(0.8)
+                .geneMinCopies(1)
+                .geneMaxCopies(1)
+                .build();
 
-    @NotNull
-    private static Pair<GeneDisruption, GeneDisruption> createTestDisruptionPair(@NotNull StructuralVariantType type,
-            @NotNull String chromosome, @NotNull String chromosomeBand, @NotNull String gene, int startExon, int endExon, double ploidy) {
-        EnrichedStructuralVariantLeg start =
-                createEnrichedStructuralVariantLegBuilder().orientation((byte) 1).chromosome(chromosome).build();
-        EnrichedStructuralVariantLeg end = createEnrichedStructuralVariantLegBuilder().orientation((byte) 0).chromosome(chromosome).build();
-        EnrichedStructuralVariant variant =
-                createEnrichedStructuralVariantBuilder().type(type).start(start).end(end).ploidy(ploidy).build();
+        ReportableGeneDisruption disruption4 = createDisruptionBuilder()
+                .location("1p13.1")
+                .gene("CD58")
+                .range("Intron 2 Upstream")
+                .type(StructuralVariantType.DUP)
+                .ploidy(0.2)
+                .geneMinCopies(4)
+                .geneMaxCopies(4)
+                .build();
 
-        GeneAnnotation upstreamGeneAnnotation =
-                new GeneAnnotation(variant, true, gene, "id", 1, Lists.newArrayList(), Lists.newArrayList(), chromosomeBand);
-
-        Transcript upstreamTranscript =
-                new Transcript(upstreamGeneAnnotation, "trans", startExon, -1, startExon + 1, -1, 15, true, null, null);
-
-        GeneDisruption upstreamDisruption = ImmutableGeneDisruption.builder().reportable(true).linkedAnnotation(upstreamTranscript).build();
-
-        GeneAnnotation downstreamGeneAnnotation =
-                new GeneAnnotation(variant, false, gene, "id", 1, Lists.newArrayList(), Lists.newArrayList(), chromosomeBand);
-
-        Transcript downstreamTranscript =
-                new Transcript(downstreamGeneAnnotation, "trans", endExon, -1, endExon + 1, -1, 15, true, null, null);
-
-        GeneDisruption downstreamDisruption =
-                ImmutableGeneDisruption.builder().reportable(true).linkedAnnotation(downstreamTranscript).build();
-
-        return Pair.of(upstreamDisruption, downstreamDisruption);
-    }
-
-    @NotNull
-    private static GeneDisruption createDisruption(@NotNull StructuralVariantType type, @NotNull String chromosome,
-            @NotNull String chromosomeBand, @NotNull String gene, int exonUpstream, double ploidy, boolean isUpstream) {
-        byte orientation = isUpstream ? (byte) 1 : (byte) 0;
-        EnrichedStructuralVariantLeg leg =
-                createEnrichedStructuralVariantLegBuilder().orientation(orientation).chromosome(chromosome).build();
-        ImmutableEnrichedStructuralVariant.Builder builder = createEnrichedStructuralVariantBuilder().type(type).ploidy(ploidy);
-        EnrichedStructuralVariant variant = builder.start(leg).build();
-
-        GeneAnnotation geneAnnotation =
-                new GeneAnnotation(variant, true, gene, "id", 1, Lists.newArrayList(), Lists.newArrayList(), chromosomeBand);
-
-        Transcript transcript = new Transcript(geneAnnotation, "trans", exonUpstream, -1, exonUpstream + 1, -1, 5, true, null, null);
-
-        return ImmutableGeneDisruption.builder().reportable(true).linkedAnnotation(transcript).build();
+        return Lists.newArrayList(disruption1, disruption2, disruption3, disruption4);
     }
 
     @Test
@@ -392,6 +373,11 @@ public class PDFWriterTest {
                 .insertSequence(Strings.EMPTY)
                 .qualityScore(0)
                 .recovered(false);
+    }
+
+    @NotNull
+    private static ImmutableReportableGeneDisruption.Builder createDisruptionBuilder() {
+        return ImmutableReportableGeneDisruption.builder().firstAffectedExon(1);
     }
 
     @NotNull
