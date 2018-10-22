@@ -148,7 +148,6 @@ public class PatientReporterApplication {
             annotator = NullAnnotator.make();
         }
 
-        // TODO (KODU): Filter out ONCO genes from below panel to avoid reporting disruptions on oncogenes.
         final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(annotator,
                 sequencedReportData.panelGeneModel().disruptionGeneIDPanel(),
                 sequencedReportData.knownFusionsModel());
@@ -225,7 +224,6 @@ public class PatientReporterApplication {
         final String centerCsv = cmd.getOptionValue(CENTER_CSV);
         final String signaturePath = cmd.getOptionValue(SIGNATURE);
         final String logoPath = cmd.getOptionValue(LOGO);
-
 
         if (tumorLocationCsv == null || !exists(tumorLocationCsv)) {
             LOGGER.warn(TUMOR_LOCATION_CSV + " has to be an existing file: " + tumorLocationCsv);

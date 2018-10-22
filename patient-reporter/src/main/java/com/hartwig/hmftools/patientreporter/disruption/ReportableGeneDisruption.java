@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.report.data;
+package com.hartwig.hmftools.patientreporter.disruption;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-abstract class GeneDisruptionData {
+public abstract class ReportableGeneDisruption {
 
     @NotNull
     public abstract String location();

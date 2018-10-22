@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
+import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -60,12 +61,12 @@ public final class GeneDisruptionDataSource {
 
         Map<StructuralVariant, Pair<GeneDisruption, GeneDisruption>> pairedMap = mapDisruptionsPerStructuralVariant(disruptions);
 
-        List<GeneDisruptionData> disruptionDataList = Lists.newArrayList();
+        List<ReportableGeneDisruption> disruptionDataList = Lists.newArrayList();
         for (Map.Entry<StructuralVariant, Pair<GeneDisruption, GeneDisruption>> entry : pairedMap.entrySet()) {
             Pair<GeneDisruption, GeneDisruption> pairedDisruption = entry.getValue();
             GeneDisruption primaryDisruption = pairedDisruption.getLeft();
 
-            disruptionDataList.add(ImmutableGeneDisruptionData.builder()
+            disruptionDataList.add(ImmutableReportableGeneDisruption.builder()
                     .location(locationField(primaryDisruption))
                     .gene(gene(primaryDisruption).geneName())
                     .type(typeField(primaryDisruption))
@@ -77,7 +78,7 @@ public final class GeneDisruptionDataSource {
                     .build());
         }
 
-        for (GeneDisruptionData disruption : sort(disruptionDataList)) {
+        for (ReportableGeneDisruption disruption : sort(disruptionDataList)) {
             dataSource.add(disruption.location(),
                     disruption.gene(),
                     disruption.range(),
@@ -141,7 +142,7 @@ public final class GeneDisruptionDataSource {
     }
 
     @NotNull
-    private static List<GeneDisruptionData> sort(@NotNull List<GeneDisruptionData> disruptions) {
+    private static List<ReportableGeneDisruption> sort(@NotNull List<ReportableGeneDisruption> disruptions) {
         return disruptions.stream().sorted((disruption1, disruption2) -> {
             String locationAndGene1 = zeroPrefixed(disruption1.location()) + disruption1.gene();
             String locationAndGene2 = zeroPrefixed(disruption2.location()) + disruption2.gene();
