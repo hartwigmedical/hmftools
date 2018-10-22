@@ -76,6 +76,13 @@ public class SomaticVariantFactoryTest {
     }
 
     @Test
+    public void handleZeroReadCount() {
+        final String line = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:0,0:121";
+        final Optional<SomaticVariant> missingAFVariant = victim.createVariant(SAMPLE, codec.decode(line));
+        assertFalse(missingAFVariant.isPresent());
+    }
+
+    @Test
     public void incorrectSampleFieldYieldsMissingReadCounts() {
         final String missingAFLine = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:DP\t0/1:21";
 
