@@ -38,13 +38,17 @@ public class FusionEvidenceAnalyzer {
         Set<String> genes = Sets.newHashSet();
         for (ActionableFusion fusionPairsSet : fusionPairs) {
             genes.add(fusionPairsSet.fiveGene());
+            genes.add(fusionPairsSet.threeGene());
         }
+
         for (ActionablePromiscuousThree promiscuousThreeSet : promiscuousThree) {
             genes.add(promiscuousThreeSet.gene());
         }
+
         for (ActionablePromiscuousFive promiscuousFiveSet : promiscuousFive) {
             genes.add(promiscuousFiveSet.gene());
         }
+
         return genes;
     }
 

@@ -1,0 +1,2 @@
+event.fiveGene	event.threeGene	actionability.source	actionability.reference	actionability.drug.name	actionability.drug.type	actionability.cancerType	actionability.level	actionability.hmfLevel	actionability.evidenceType	actionability.significance	actionability.hmfResponse
+BCR	ABL1	oncoKb	BCR-ABL1 Fusion	Dasatinib	BCR-ABL inhibitor	Acute Lymphoid Leukemia	1	A	Predictive	Responsive	Responsive
