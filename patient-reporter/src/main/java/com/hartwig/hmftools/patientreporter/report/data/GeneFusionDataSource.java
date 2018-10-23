@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.fusions.KnownFusionsModel.CGI;
 import static com.hartwig.hmftools.common.fusions.KnownFusionsModel.CIVIC;
 import static com.hartwig.hmftools.common.fusions.KnownFusionsModel.COSMIC;
 import static com.hartwig.hmftools.common.fusions.KnownFusionsModel.ONCOKB;
+import static com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat.ploidyToCopiesString;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
@@ -14,6 +15,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.report.base.expression.AbstractSimpleExpression;
@@ -57,7 +59,7 @@ public final class GeneFusionDataSource {
                     fusion.geneEndTranscript(),
                     fusion.geneContextStart(),
                     fusion.geneContextEnd(),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, fusion.copies()),
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyToCopiesString(fusion.ploidy())),
                     fusion.source());
         }
 
@@ -90,7 +92,7 @@ public final class GeneFusionDataSource {
                     case CIVIC:
                         return "https://civicdb.org/browse/somaticVariants";
                     default:
-                        return "";
+                        return Strings.EMPTY;
                 }
             }
         };

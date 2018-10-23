@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ReportableGeneFusion {
+
     @NotNull
     public abstract String geneStart();
 
@@ -26,8 +27,7 @@ public abstract class ReportableGeneFusion {
     @NotNull
     public abstract String geneEndTranscript();
 
-    @NotNull
-    public abstract String copies();
+    public abstract double ploidy();
 
     @NotNull
     public abstract String source();

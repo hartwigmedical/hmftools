@@ -37,14 +37,7 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableGeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.BaseReportData;
 import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
@@ -56,12 +49,11 @@ import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.disruption.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruption;
+import com.hartwig.hmftools.patientreporter.fusion.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.fusion.ReportableGeneFusion;
-import com.hartwig.hmftools.patientreporter.fusion.ReportableGeneFusionFactory;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineVariant;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -241,38 +233,29 @@ public class PDFWriterTest {
 
     @NotNull
     private static List<ReportableGeneFusion> createTestFusions() {
-        GeneFusion fusion1 =
-                createFusion("TMPRSS2", "ENST00000398585", 4, 5, "PNPLA7", "ENST00000406427", 2, 3, KnownFusionsModel.CIVIC, 0.4);
-        GeneFusion fusion2 = createFusion("CLCN6", "ENST00000346436", 1, 2, "BRAF", "ENST00000288602", 8, 9, KnownFusionsModel.ONCOKB, 1D);
-
-        return ReportableGeneFusionFactory.toReportableGeneFusions(Lists.newArrayList(fusion1, fusion2));
-    }
-
-    @NotNull
-    private static GeneFusion createFusion(@NotNull String startGene, @NotNull String startTranscript, int startExonUpstream,
-            int startExonDownstream, @NotNull String endGene, @NotNull String endTranscript, int endExonUpstream, int endExonDownstream,
-            @NotNull String source, double ploidy) {
-        Transcript upstreamTranscript = createFusionLeg(true, startGene, startTranscript, startExonUpstream, startExonDownstream, ploidy);
-        Transcript downstreamTranscript = createFusionLeg(false, endGene, endTranscript, endExonUpstream, endExonDownstream, ploidy);
-
-        return ImmutableGeneFusion.builder()
-                .reportable(true)
-                .primarySource(source)
-                .upstreamLinkedAnnotation(upstreamTranscript)
-                .downstreamLinkedAnnotation(downstreamTranscript)
+        ReportableGeneFusion fusion1 = ImmutableReportableGeneFusion.builder()
+                .geneStart("TMPRSS2")
+                .geneStartTranscript("ENST00000398585")
+                .geneContextStart("Intron 5")
+                .geneEnd("PNPLA7")
+                .geneEndTranscript("ENST00000406427")
+                .geneContextEnd("Intron 3")
+                .ploidy(0.4)
+                .source(KnownFusionsModel.CIVIC)
                 .build();
-    }
 
-    @NotNull
-    private static Transcript createFusionLeg(boolean isUpstream, @NotNull String gene, @NotNull String transcript, int exonUpstream,
-            int exonDownstream, double ploidy) {
-        EnrichedStructuralVariant variant = createEnrichedStructuralVariantBuilder().type(StructuralVariantType.BND)
-                .start(createEnrichedStructuralVariantLegBuilder().orientation((byte) 1).chromosome("any").build())
-                .ploidy(ploidy)
+        ReportableGeneFusion fusion2 = ImmutableReportableGeneFusion.builder()
+                .geneStart("CLCN6")
+                .geneStartTranscript("ENST00000346436")
+                .geneContextStart("Intron 1")
+                .geneEnd("BRAF")
+                .geneEndTranscript("ENST00000288602")
+                .geneContextEnd("Intron 8")
+                .ploidy(1D)
+                .source(KnownFusionsModel.ONCOKB)
                 .build();
-        GeneAnnotation upstreamGene =
-                new GeneAnnotation(variant, isUpstream, gene, Strings.EMPTY, 1, Lists.newArrayList(), Lists.newArrayList(), Strings.EMPTY);
-        return new Transcript(upstreamGene, transcript, exonUpstream, -1, exonDownstream, -1, 10, true, null, null);
+
+        return Lists.newArrayList(fusion1, fusion2);
     }
 
     @NotNull
@@ -361,20 +344,6 @@ public class PDFWriterTest {
                 testBaseReportData().logoPath());
 
         return PDFWriter.generateNotAnalysableReport(patientReport);
-    }
-
-    @NotNull
-    private static ImmutableEnrichedStructuralVariantLeg.Builder createEnrichedStructuralVariantLegBuilder() {
-        return ImmutableEnrichedStructuralVariantLeg.builder().homology(Strings.EMPTY).position(1);
-    }
-
-    @NotNull
-    private static ImmutableEnrichedStructuralVariant.Builder createEnrichedStructuralVariantBuilder() {
-        return ImmutableEnrichedStructuralVariant.builder()
-                .id(Strings.EMPTY)
-                .insertSequence(Strings.EMPTY)
-                .qualityScore(0)
-                .recovered(false);
     }
 
     @NotNull

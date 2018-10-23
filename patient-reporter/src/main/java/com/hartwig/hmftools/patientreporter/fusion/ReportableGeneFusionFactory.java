@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientreporter.fusion;
 
 import static com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat.exonDescription;
-import static com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat.ploidyToCopiesString;
 
 import java.util.List;
 
@@ -10,7 +9,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class ReportableGeneFusionFactory {
 
@@ -31,7 +29,7 @@ public final class ReportableGeneFusionFactory {
                     .geneEnd(downstream.geneName())
                     .geneContextEnd(exonDescription(downstream))
                     .geneEndTranscript(downstream.transcriptId())
-                    .copies(ploidyToCopiesString(fusionPloidy(fusion)))
+                    .ploidy(fusionPloidy(fusion))
                     .source(fusion.primarySource())
                     .build());
         }
@@ -39,13 +37,14 @@ public final class ReportableGeneFusionFactory {
         return reportableFusions;
     }
 
-    @Nullable
+    @NotNull
     private static Double fusionPloidy(@NotNull GeneFusion fusion) {
         Double upstreamPloidy = fusion.upstreamLinkedAnnotation().parent().variant().ploidy();
         Double downstreamPloidy = fusion.downstreamLinkedAnnotation().parent().variant().ploidy();
 
         if (upstreamPloidy == null || downstreamPloidy == null) {
-            return null;
+            // KODU: Not sure when ploidy would be null...
+            return Double.NaN;
         }
 
         assert upstreamPloidy.equals(downstreamPloidy);
