@@ -10,8 +10,8 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
+import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.pcf.PCFPosition;
 import com.hartwig.hmftools.common.position.GenomePosition;
@@ -33,7 +33,7 @@ public class ClusterFactory {
     @NotNull
     public ListMultimap<Chromosome, Cluster> cluster(@NotNull final List<StructuralVariant> variants,
             @NotNull final Multimap<Chromosome, PCFPosition> pcfPositions, @NotNull ListMultimap<Chromosome, CobaltRatio> ratios) {
-        final Multimap<Chromosome, ClusterVariantLeg> positions = asMap(ClusterVariantLegFactory.create(variants));
+        final Multimap<Chromosome, ClusterVariantLeg> positions = Multimaps.fromPositions(ClusterVariantLegFactory.create(variants));
         return cluster(positions, pcfPositions, ratios);
     }
 
@@ -116,16 +116,4 @@ public class ClusterFactory {
         return min;
     }
 
-    @NotNull
-    private static Multimap<Chromosome, ClusterVariantLeg> asMap(@NotNull final List<ClusterVariantLeg> variants) {
-        final Multimap<Chromosome, ClusterVariantLeg> result = ArrayListMultimap.create();
-
-        for (ClusterVariantLeg variant : variants) {
-            if (HumanChromosome.contains(variant.chromosome())) {
-                result.put(HumanChromosome.fromString(variant.chromosome()), variant);
-            }
-        }
-
-        return result;
-    }
 }

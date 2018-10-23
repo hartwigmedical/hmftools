@@ -10,9 +10,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
@@ -247,8 +248,7 @@ public abstract class PatientReporter {
 
         LOGGER.info("Enriching structural variants with purple data.");
         final PurityAdjuster purityAdjuster = new PurityAdjuster(purpleAnalysis.gender(), purpleAnalysis.fittedPurity());
-        final Multimap<String, PurpleCopyNumber> copyNumberMap =
-                Multimaps.index(purpleAnalysis.copyNumbers(), PurpleCopyNumber::chromosome);
+        final Multimap<Chromosome, PurpleCopyNumber> copyNumberMap = Multimaps.fromRegions(purpleAnalysis.copyNumbers());
 
         final List<EnrichedStructuralVariant> enrichedStructuralVariants =
                 EnrichedStructuralVariantFactory.enrich(structuralVariants, purityAdjuster, copyNumberMap);

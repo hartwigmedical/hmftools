@@ -15,12 +15,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -62,10 +62,7 @@ public class RecoverStructuralVariants implements Closeable {
     public RecoverStructuralVariants(@NotNull final PurityAdjuster purityAdjuster, @NotNull final String recoveryVCF,
             @NotNull final List<PurpleCopyNumber> allCopyNumbers) {
         this.reader = getFeatureReader(recoveryVCF, new VCFCodec(), true);
-        this.allCopyNumbers = ArrayListMultimap.create();
-        for (PurpleCopyNumber copyNumber : allCopyNumbers) {
-            this.allCopyNumbers.put(HumanChromosome.fromString(copyNumber.chromosome()), copyNumber);
-        }
+        this.allCopyNumbers = Multimaps.fromRegions(allCopyNumbers);
         ploidyFactory = new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
     }
 
