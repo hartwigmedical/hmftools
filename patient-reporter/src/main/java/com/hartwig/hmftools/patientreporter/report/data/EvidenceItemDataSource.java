@@ -51,16 +51,17 @@ public final class EvidenceItemDataSource {
                 ON_LABEL_FIELD.getName());
 
         for (EvidenceItem evidenceItem : sort(evidenceItems)) {
-            evidenceItemDataSource.add(evidenceItem.event(),
-                    evidenceItem.drug(),
-                    evidenceItem.drugsType(),
-                    evidenceItem.level(),
-                    evidenceItem.response(),
-                    sourceName(evidenceItem.source()),
-                    evidenceItem.reference(),
-                    evidenceItem.isOnLabel() ? "Yes" : "No");
+            if(!evidenceItem.source().equals("iclusion")){
+                evidenceItemDataSource.add(evidenceItem.event(),
+                        evidenceItem.drug(),
+                        evidenceItem.drugsType(),
+                        evidenceItem.level(),
+                        evidenceItem.response(),
+                        sourceName(evidenceItem.source()),
+                        evidenceItem.reference(),
+                        evidenceItem.isOnLabel() ? "Yes" : "No");
+            }
         }
-
         return evidenceItemDataSource;
     }
 
@@ -80,8 +81,6 @@ public final class EvidenceItemDataSource {
         switch (source) {
             case "oncoKb":
                 return "OncoKB";
-            case "iclusion":
-                return "Iclusion";
             case "civic":
                 return "CiViC";
             case "cgi":
@@ -104,8 +103,6 @@ public final class EvidenceItemDataSource {
                     case "oncokb":
                         String[] geneId = gene.split(" ");
                         return "http://oncokb.org/#/gene/" + geneId[0] + "/alteration/" + reference;
-                    case "iclusion":
-                        return "https://www.iclusion.org";
                     case "cgi":
                         return "https://www.cancergenomeinterpreter.org/biomarkers";
                     case "civic":

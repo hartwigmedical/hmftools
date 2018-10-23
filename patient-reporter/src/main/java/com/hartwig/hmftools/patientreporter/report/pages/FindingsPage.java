@@ -19,6 +19,7 @@ import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection
 import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSection;
 import com.hartwig.hmftools.patientreporter.report.components.MutationalLoadSection;
 import com.hartwig.hmftools.patientreporter.report.components.TumorMutationBurdenSection;
+import com.hartwig.hmftools.patientreporter.report.data.ClinicalTrialDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.EvidenceItemDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionDataSource;
@@ -53,6 +54,8 @@ public abstract class FindingsPage {
                 impliedPurityString(report())),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 evidenceItemReport(report()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                clinicalTrialToReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 somaticVariantReport(report(), reporterData().panelGeneModel()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -99,6 +102,26 @@ public abstract class FindingsPage {
                 cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
                 table);
     }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> clinicalTrialToReport(@NotNull AnalysedPatientReport report) {
+        final ComponentBuilder<?, ?> table =
+                report.evidenceItems().size() > 0
+                        ? cmp.subreport(monospaceBaseTable().fields(ClinicalTrialDataSource.clinicalTrialFields())
+                        .columns(col.column("Event", ClinicalTrialDataSource.EVENT_FIELD),
+                                col.column("Trail", ClinicalTrialDataSource.TRIAL_FIELD),
+                                col.column("Source", ClinicalTrialDataSource.SOURCE_FIELD).setHyperLink(hyperLink(ClinicalTrialDataSource.sourceHyperlink()))
+                                        .setStyle(linkStyle()),
+                                col.column("CCMO", ClinicalTrialDataSource.CCMO_FIELD),
+                                col.column("On-Label", ClinicalTrialDataSource.ON_LABEL_FIELD))
+                        .setDataSource(ClinicalTrialDataSource.fromClinicalTrial(report.evidenceItems())))
+                        : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
+
+        return cmp.verticalList(cmp.text("Clinical Trails").setStyle(sectionHeaderStyle()),
+                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
+                table);
+    }
+
 
     @NotNull
     private static ComponentBuilder<?, ?> somaticVariantReport(@NotNull AnalysedPatientReport report, @NotNull GeneModel panelGeneModel) {
