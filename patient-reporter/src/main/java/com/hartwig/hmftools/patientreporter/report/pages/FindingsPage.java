@@ -219,7 +219,7 @@ public abstract class FindingsPage {
                 ? cmp.subreport(monospaceBaseTable().fields(GeneDisruptionDataSource.geneDisruptionFields())
                 .columns(col.column("Location", GeneDisruptionDataSource.LOCATION_FIELD),
                         col.column("Gene", GeneDisruptionDataSource.GENE_FIELD),
-                        col.column("Range", GeneDisruptionDataSource.RANGE_FIELD).setFixedWidth(120),
+                        col.column("Disrupted Range", GeneDisruptionDataSource.RANGE_FIELD).setFixedWidth(120),
                         col.column("Type", GeneDisruptionDataSource.TYPE_FIELD),
                         col.column("Copies", GeneDisruptionDataSource.COPIES_FIELD),
                         col.column("Gene Min Copies", GeneDisruptionDataSource.GENE_MIN_COPIES).setFixedWidth(80),

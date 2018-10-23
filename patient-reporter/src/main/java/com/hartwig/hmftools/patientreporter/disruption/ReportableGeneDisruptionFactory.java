@@ -109,9 +109,10 @@ public final class ReportableGeneDisruptionFactory {
                 left = disruptions.get(0);
                 right = null;
             } else {
-                // TODO (KODU): Should I use isStart/isEnd rather than upstream/downstream?
-                left = isUpstream(disruptions.get(0)) ? disruptions.get(0) : disruptions.get(1);
-                right = !isUpstream(disruptions.get(0)) ? disruptions.get(0) : disruptions.get(1);
+                boolean firstBeforeSecond =
+                        disruptions.get(0).linkedAnnotation().exonUpstream() <= disruptions.get(1).linkedAnnotation().exonUpstream();
+                left = firstBeforeSecond ? disruptions.get(0) : disruptions.get(1);
+                right = firstBeforeSecond ? disruptions.get(1) : disruptions.get(0);
             }
 
             pairedMap.put(entry.getKey(), Pair.of(left, right));
@@ -143,8 +144,7 @@ public final class ReportableGeneDisruptionFactory {
     }
 
     private static boolean isUpstream(@NotNull GeneDisruption disruption) {
-        // KODU (TODO): Figure out whether definition is correct!
         GeneAnnotation gene = gene(disruption);
-        return gene.variant().orientation(gene.isStart()) > 0;
+        return gene.variant().orientation(gene.isStart()) * gene.strand() < 0;
     }
 }
