@@ -40,6 +40,7 @@ Argument | Default | Description
 -db_pass | None | Database password. Mandatory if db_enabled.
 -db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpatients`. Mandatory if db_enabled.
 -gc_profile | None | Location of GC profile. Available to download from [HMF-Pipeline-Resources.](https://resources.hartwigmedicalfoundation.nl)
+-ref_genome | Detect | Will attempt to detect reference genome from cobalt output but failing that must be either hg18 or hg38
 
 
 ### Example Usage
