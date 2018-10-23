@@ -7,8 +7,6 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -67,11 +65,7 @@ public final class EvidenceItemDataSource {
     @NotNull
     private static List<EvidenceItem> sort(@NotNull List<EvidenceItem> evidenceItems) {
         return evidenceItems.stream().sorted((item1, item2) -> {
-            if (item1.event().equals(item2.event())) {
                 return item1.event().compareTo(item2.event());
-            } else {
-                return item1.level().compareTo(item2.level());
-            }
         }).collect(Collectors.toList());
     }
 
