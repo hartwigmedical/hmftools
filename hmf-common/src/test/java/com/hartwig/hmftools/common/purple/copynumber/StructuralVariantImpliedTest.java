@@ -9,6 +9,8 @@ import java.util.Optional;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
@@ -25,7 +27,8 @@ import org.junit.Test;
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class StructuralVariantImpliedTest {
 
-    private static final String CHROMOSOME = "1";
+    private static final String CONTIG = "1";
+    private static final Chromosome CHROMOSOME = HumanChromosome.fromString(CONTIG);
     private static final int PLOIDY = 1;
     private static final PurityAdjuster PURE = new PurityAdjuster(Gender.FEMALE, 1, 1);
 
@@ -41,7 +44,7 @@ public class StructuralVariantImpliedTest {
         final CombinedRegion fifthCN = copyNumber(4001, 5000, 10, SegmentSupport.NONE);
 
         final List<StructuralVariant> svs = Lists.newArrayList(firstSV, secondSV);
-        final ListMultimap<String, CombinedRegion> copyNumbers = copyNumbers(firstCN, secondCN, thirdCN, forthCN, fifthCN);
+        final ListMultimap<Chromosome, CombinedRegion> copyNumbers = copyNumbers(firstCN, secondCN, thirdCN, forthCN, fifthCN);
 
         final StructuralVariantImplied victim = new StructuralVariantImplied(PURE);
         final List<CombinedRegion> result = victim.svImpliedCopyNumber(svs, copyNumbers).get(CHROMOSOME);
@@ -65,7 +68,7 @@ public class StructuralVariantImpliedTest {
         final CombinedRegion fifthCN = copyNumber(4001, 5000, 10, SegmentSupport.NONE);
 
         final List<StructuralVariant> svs = Lists.newArrayList(firstSV, secondSV);
-        final ListMultimap<String, CombinedRegion> copyNumbers = copyNumbers(firstCN, secondCN, thirdCN, forthCN, fifthCN);
+        final ListMultimap<Chromosome, CombinedRegion> copyNumbers = copyNumbers(firstCN, secondCN, thirdCN, forthCN, fifthCN);
 
         final StructuralVariantImplied victim = new StructuralVariantImplied(PURE);
         final List<CombinedRegion> result = victim.svImpliedCopyNumber(svs, copyNumbers).get(CHROMOSOME);
@@ -93,12 +96,12 @@ public class StructuralVariantImpliedTest {
 
     @NotNull
     private static StructuralVariant sv(long start, long end, StructuralVariantType type, double startAF, double endAF) {
-        return PurpleDatamodelTest.createStructuralVariant(CHROMOSOME, start, CHROMOSOME, end, type, startAF, endAF).build();
+        return PurpleDatamodelTest.createStructuralVariant(CONTIG, start, CONTIG, end, type, startAF, endAF).build();
     }
 
     @NotNull
     private static CombinedRegion copyNumber(long start, long end, double copyNumber, SegmentSupport support) {
-        final FittedRegion region = PurpleDatamodelTest.createDefaultFittedRegion(CHROMOSOME, start, end)
+        final FittedRegion region = PurpleDatamodelTest.createDefaultFittedRegion(CONTIG, start, end)
                 .tumorCopyNumber(copyNumber)
                 .tumorBAF(0.5)
                 .support(support)
@@ -113,8 +116,8 @@ public class StructuralVariantImpliedTest {
     }
 
     @NotNull
-    private static ListMultimap<String, CombinedRegion> copyNumbers(CombinedRegion... copyNumbers) {
-        final ListMultimap<String, CombinedRegion> result = ArrayListMultimap.create();
+    private static ListMultimap<Chromosome, CombinedRegion> copyNumbers(CombinedRegion... copyNumbers) {
+        final ListMultimap<Chromosome, CombinedRegion> result = ArrayListMultimap.create();
         result.putAll(CHROMOSOME, Lists.newArrayList(copyNumbers));
         return result;
     }
@@ -122,6 +125,6 @@ public class StructuralVariantImpliedTest {
     @NotNull
     private static StructuralVariantLegPloidy create(int orientation, @NotNull final Optional<Double> leftCopyNumber,
             @NotNull final Optional<Double> rightCopyNumber) {
-        return PurpleDatamodelTest.svLegPloidy(orientation, leftCopyNumber, rightCopyNumber, PLOIDY).chromosome(CHROMOSOME).build();
+        return PurpleDatamodelTest.svLegPloidy(orientation, leftCopyNumber, rightCopyNumber, PLOIDY).chromosome(CONTIG).build();
     }
 }

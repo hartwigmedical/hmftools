@@ -48,32 +48,29 @@ public class PurpleCopyNumberFactory {
                 new ExtendDiploid(new AlleleTolerance(purityAdjuster), minTumorRatioCount, minTumorRatioCountAtCentromere);
         final PopulateUnknown populateUnknownFactory = new PopulateUnknown(gender);
 
-        final ListMultimap<String, CombinedRegion> diploidExtension = ArrayListMultimap.create();
+        final ListMultimap<Chromosome, CombinedRegion> diploidExtension = ArrayListMultimap.create();
         for (HumanChromosome chromosome : HumanChromosome.values()) {
             final List<FittedRegion> chromosomeFittedRegions =
                     fittedRegions.stream().filter(matchesChromosome(chromosome)).collect(toList());
-            diploidExtension.putAll(chromosome.toString(), extendDiploid.extendDiploid(chromosomeFittedRegions));
+            diploidExtension.putAll(chromosome, extendDiploid.extendDiploid(chromosomeFittedRegions));
         }
 
         final StructuralVariantImplied svImpliedFactory = new StructuralVariantImplied(purityAdjuster);
-        final ListMultimap<String, CombinedRegion> allSVImplied =
+        final ListMultimap<Chromosome, CombinedRegion> allSVImplied =
                 svImpliedFactory.svImpliedCopyNumber(structuralVariants, diploidExtension);
 
-        for (HumanChromosome chromosome : HumanChromosome.values()) {
-            if (allSVImplied.containsKey(chromosome.toString())) {
-                final List<CombinedRegion> svImplied = allSVImplied.get(chromosome.toString());
-                final List<CombinedRegion> longArmExtended = ExtendLongArm.extendLongArm(svImplied);
-                final List<CombinedRegion> populateUnknown = populateUnknownFactory.populateUnknown(longArmExtended);
-                final List<CombinedRegion> bafExtended = ExtendDiploidBAF.extendBAF(populateUnknown);
+        for (final HumanChromosome chromosome : HumanChromosome.values()) {
 
-                final List<CombinedRegion> somatics = extendGermline.extendGermlineAmplifications(bafExtended);
-                final List<CombinedRegion> germlineDeletions = extendGermline.extractGermlineDeletions(bafExtended);
+            final List<CombinedRegion> svImplied = allSVImplied.get(chromosome);
+            final List<CombinedRegion> longArmExtended = ExtendLongArm.extendLongArm(svImplied);
+            final List<CombinedRegion> populateUnknown = populateUnknownFactory.populateUnknown(longArmExtended);
+            final List<CombinedRegion> bafExtended = ExtendDiploidBAF.extendBAF(populateUnknown);
 
-                this.somaticCopyNumbers.addAll(toCopyNumber(somatics));
-                this.germlineDeletions.addAll(germlineDeletions.stream()
-                        .map(x -> toCopyNumber(x, SegmentSupport.UNKNOWN))
-                        .collect(toList()));
-            }
+            final List<CombinedRegion> somatics = extendGermline.extendGermlineAmplifications(bafExtended);
+            final List<CombinedRegion> germlineDeletions = extendGermline.extractGermlineDeletions(bafExtended);
+
+            this.somaticCopyNumbers.addAll(toCopyNumber(somatics));
+            this.germlineDeletions.addAll(germlineDeletions.stream().map(x -> toCopyNumber(x, SegmentSupport.UNKNOWN)).collect(toList()));
         }
     }
 

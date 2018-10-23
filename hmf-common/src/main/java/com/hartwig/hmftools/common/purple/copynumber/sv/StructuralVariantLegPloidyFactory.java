@@ -8,6 +8,7 @@ import java.util.function.Function;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
@@ -35,7 +36,7 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
 
     @NotNull
     public List<StructuralVariantLegPloidy> create(@NotNull final StructuralVariant variant,
-            @NotNull final Multimap<String, T> copyNumbers) {
+            @NotNull final Multimap<Chromosome, T> copyNumbers) {
         final List<StructuralVariantLegPloidy> result = Lists.newArrayList();
         final List<StructuralVariantLegs> allLegs = StructuralVariantLegsFactory.create(variant);
 
@@ -49,7 +50,7 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
 
     @NotNull
     public List<StructuralVariantLegPloidy> create(@NotNull final List<StructuralVariant> variants,
-            @NotNull final Multimap<String, T> copyNumbers) {
+            @NotNull final Multimap<Chromosome, T> copyNumbers) {
         final List<StructuralVariantLegPloidy> result = Lists.newArrayList();
         final List<StructuralVariantLegs> allLegs = StructuralVariantLegsFactory.create(variants);
 
@@ -63,12 +64,12 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
 
     @VisibleForTesting
     @NotNull
-    List<StructuralVariantLegPloidy> create(@NotNull final StructuralVariantLegs legs, @NotNull final Multimap<String, T> copyNumbers) {
+    List<StructuralVariantLegPloidy> create(@NotNull final StructuralVariantLegs legs, @NotNull final Multimap<Chromosome, T> copyNumbers) {
         final Optional<ModifiableStructuralVariantLegPloidy> start =
-                legs.start().flatMap(x -> create(x, GenomeRegionSelectorFactory.create(copyNumbers)));
+                legs.start().flatMap(x -> create(x, GenomeRegionSelectorFactory.createImproved(copyNumbers)));
 
         final Optional<ModifiableStructuralVariantLegPloidy> end =
-                legs.end().flatMap(x -> create(x, GenomeRegionSelectorFactory.create(copyNumbers)));
+                legs.end().flatMap(x -> create(x, GenomeRegionSelectorFactory.createImproved(copyNumbers)));
 
         if (!start.isPresent() && !end.isPresent()) {
             return Collections.emptyList();
