@@ -47,6 +47,7 @@ public class SvCluster
     private List<SvVarData> mUnchainedSVs;
     private boolean mIsResolved;
     private String mResolvedType;
+    private long mLengthOverride;
 
     private List<SvCluster> mSubClusters;
     private Map<String, List<SvCNData>> mChrCNDataMap;
@@ -54,6 +55,15 @@ public class SvCluster
 
     private int mMinCopyNumber;
     private int mMaxCopyNumber;
+
+
+    public static String RESOLVED_TYPE_SIMPLE_SV = "SimpleSV";
+    public static String RESOLVED_TYPE_RECIPROCAL_TRANS = "RecipTrans";
+
+    public static String RESOLVED_TYPE_INV_PAIR_DEL_INT_TI = "RecipInv";
+    public static String RESOLVED_TYPE_INV_PAIR_DEL_EXT_TI = "DEL_Ext_TI";
+    public static String RESOLVED_TYPE_INV_PAIR_DUP_INT_TI = "DUP_Int_TI";
+    public static String RESOLVED_TYPE_INV_PAIR_DUP_EXT_TI = "DUP_Ext_TI";
 
     private static final Logger LOGGER = LogManager.getLogger(SvCluster.class);
 
@@ -66,11 +76,12 @@ public class SvCluster
         mArmGroups = Lists.newArrayList();
 
         // annotation info
+        mDesc = "";
         mConsistencyCount = 0;
         mIsConsistent = false;
         mIsResolved = false;
         mResolvedType = "";
-        mDesc = "";
+        mLengthOverride = 0;
         mRequiresRecalc = true;
         mAnnotationList = Lists.newArrayList();
 
@@ -105,6 +116,7 @@ public class SvCluster
         mSVs.add(var);
         mUnchainedSVs.add(var);
         mRequiresRecalc = true;
+        mIsResolved = false;
 
         if(var.isReplicatedSv())
             mHasReplicatedSVs = true;
@@ -136,6 +148,29 @@ public class SvCluster
                 armGroup.addVariant(var);
                 mArmGroups.add(armGroup);
             }
+        }
+    }
+
+    public void mergeOtherCluster(final SvCluster other)
+    {
+        // just add the other cluster's variants - no preservation of links or chains
+        if(other.getCount() > getCount())
+        {
+            LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={})",
+                    other.getId(), other.getCount(), getId(), getCount());
+
+            // maintain the id of the larger group
+            mClusterId = other.getId();
+        }
+        else
+        {
+            LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={})",
+                    getId(), getCount(), other.getId(), other.getCount());
+        }
+
+        for(final SvVarData var : other.getSVs())
+        {
+            addVariant(var);
         }
     }
 
@@ -172,8 +207,6 @@ public class SvCluster
 
         return null;
     }
-
-    public boolean isSingleArm() { return mArmGroups.size() == 1; }
 
     public final String linkingChromosome(boolean useStart)
     {
@@ -351,8 +384,10 @@ public class SvCluster
     }
 
     public void setResolved(boolean toggle, final String type) { mIsResolved = toggle; mResolvedType = type; }
-    public boolean getResolved() { return mIsResolved; }
+    public boolean isResolved() { return mIsResolved; }
     public final String getResolvedType() { return mResolvedType; }
+    public void setLengthOverride(long length) { mLengthOverride = length; }
+    public long getLengthOverride() { return mLengthOverride; }
 
     private void updateClusterDetails()
     {
@@ -373,6 +408,8 @@ public class SvCluster
 
     public void logDetails()
     {
+        updateClusterDetails();
+
         if(isSimpleSingleSV())
         {
             LOGGER.info("cluster({}) simple svCount({}) desc({}) armCount({}) consistency({}) ",

@@ -47,7 +47,6 @@ public class ChainFinder
     private List<SvChain> mCompleteChains;
     private List<SvChain> mIncompleteChains;
     private boolean mHasExistingChains;
-    private boolean mRequireFullChains;
     private int mMinIncompleteChainCount;
     private int mReqChainCount;
     private int mPathInterations;
@@ -60,7 +59,6 @@ public class ChainFinder
     public ChainFinder(final SvUtilities utils)
     {
         mUtils = utils;
-        mRequireFullChains = false;
         mCompleteChains = Lists.newArrayList();
         mIncompleteChains = Lists.newArrayList();
         mLogVerbose = false;
@@ -125,7 +123,6 @@ public class ChainFinder
         mIncompleteChains.clear();
     }
 
-    public void setRequireFullChains(boolean toggle) { mRequireFullChains = toggle; }
     public void setLogVerbose(boolean toggle) { mLogVerbose = toggle; }
 
     public final List<SvChain> getCompleteChains() { return mCompleteChains; }
@@ -140,9 +137,6 @@ public class ChainFinder
         List<SvVarData> svList = collectRelevantSVs();
 
         mReqChainCount = svList.size();
-
-        if(!mRequireFullChains)
-            mMinIncompleteChainCount = (int)round(MIN_CHAIN_PERCENT * mReqChainCount);
 
         // check whether there are enough potential links to form full or near-to-full chains
         if (!mCluster.hasSubClusters() && !checkLinksPotential(svList, inferredTIs))
@@ -215,9 +209,6 @@ public class ChainFinder
     {
         int minRequiredLinks = svList.size() - 1;
 
-        if(!mRequireFullChains)
-            minRequiredLinks = mMinIncompleteChainCount - 1;
-
         if (mAssemblyLinkedPairs.size() + inferredLinkedPairs.size() < minRequiredLinks && !mHasExistingChains)
         {
             LOGGER.debug("cluster({}) insufficient links(assembly={} inferred={}) vs svCount({}) to form chains",
@@ -284,18 +275,15 @@ public class ChainFinder
             // partialChains.addAll(mCluster.getChains());
             // linkChains(partialChains, mReqChainCount);
 
-            if(!mRequireFullChains)
+            int maxSubChainCount = 0;
+            for(final SvChain chain : mCluster.getChains())
             {
-                int maxSubChainCount = 0;
-                for(final SvChain chain : mCluster.getChains())
-                {
-                    LOGGER.debug("cluster({}) has existing chain({} svs={})", mCluster.getId(), chain.getId(), chain.getSvCount());
+                LOGGER.debug("cluster({}) has existing chain({} svs={})", mCluster.getId(), chain.getId(), chain.getSvCount());
 
-                    maxSubChainCount = max(maxSubChainCount, chain.getSvCount());
-                }
-
-                mMinIncompleteChainCount = max(maxSubChainCount, mMinIncompleteChainCount);
+                maxSubChainCount = max(maxSubChainCount, chain.getSvCount());
             }
+
+            mMinIncompleteChainCount = max(maxSubChainCount, mMinIncompleteChainCount);
         }
 
         mContinuousFinderPc.start();
@@ -958,7 +946,7 @@ public class ChainFinder
             boolean hasMoreTestLinks = findCompletedLinks(requiredLinks, workingLinks, workingChains, testLinks, i + 1);
             boolean hasCompleteChains = hasCompleteChains(mReqChainCount);
 
-            if (!hasMoreTestLinks && !hasCompleteChains && !mRequireFullChains)
+            if (!hasMoreTestLinks && !hasCompleteChains)
             {
                 // add any sufficiently long chains since this search path has been exhausted
                 for (final SvChain chain : workingChains)

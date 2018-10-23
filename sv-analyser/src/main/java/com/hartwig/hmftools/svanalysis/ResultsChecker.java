@@ -25,6 +25,13 @@ public class ResultsChecker
     // id columns
     private static String COL_SAMPLE_ID = "SampleId";
     private static String COL_VAR_ID = "Id";
+    private static String COL_CHR_START = "ChrStart";
+    private static String COL_CHR_END = "ChrEnd";
+    private static String COL_POS_START = "PosStart";
+    private static String COL_POS_END = "PosEnd";
+    private static String COL_TYPE = "Type";
+    private static String COL_ORIENT_START = "OrientStart";
+    private static String COL_ORIENT_END = "OrientEnd";
     private static int COL_SAMPLE_ID_INDEX = 0;
     private static int COL_VAR_ID_INDEX = 1;
 
@@ -93,44 +100,33 @@ public class ResultsChecker
         return mSourceFile != null && mValidateFile != null;
     }
 
-    public void setColumnsToCheck(final List<String> columns)
+    public void setIdColumns(boolean matchOnPosition)
     {
-        mColumnsToCheck.clear();
-        mColumnsToCheck.addAll(columns);
+        List<String> idColumns = Lists.newArrayList();
 
-        setColumnIndices(mSourceFile, mColumnsToCheck, mSourceColumnsToCheck);
-        setColumnIndices(mValidateFile, mColumnsToCheck, mValidateColumnsToCheck);
-    }
+        idColumns.add(COL_SAMPLE_ID);
 
-    private void setColumnIndices(final GenericDataCollection dataCollection, final List<String> columns, List<Integer> columnIndices)
-    {
-        columnIndices.clear();
-
-        final List<String> fieldNames = dataCollection.getFieldNames();
-
-        for(final String column : columns)
+        if(matchOnPosition)
         {
-            boolean found = false;
-            for(int i = 0; i < fieldNames.size(); ++i)
-            {
-                if(fieldNames.get(i).equals(column))
-                {
-                    columnIndices.add(i);
-                    found = true;
-                    break;
-                }
-            }
-
-            if(!found)
-                columnIndices.add(-1);
+            idColumns.add(COL_CHR_START);
+            idColumns.add(COL_CHR_END);
+            idColumns.add(COL_POS_START);
+            idColumns.add(COL_POS_END);
+            idColumns.add(COL_ORIENT_START);
+            idColumns.add(COL_ORIENT_END);
+            idColumns.add(COL_TYPE);
         }
+        else
+        {
+            idColumns.add(COL_VAR_ID);
+        }
+
+        // assumption is that both source and validate file match location of ID columns
+        setColumnIndices(mSourceFile, idColumns, mIdColumns);
     }
 
     public void addDefaultColumnsToCheck()
     {
-        mIdColumns.add(COL_SAMPLE_ID_INDEX);
-        mIdColumns.add(COL_VAR_ID_INDEX);
-
         List<String> columns = Lists.newArrayList();
         columns.add(COL_CLUSTER_ID);
         columns.add(COL_CLUSTER_COUNT);
@@ -234,7 +230,7 @@ public class ResultsChecker
             {
                 if(mLogMismatches)
                 {
-                    final String fieldName = mSourceFile.getFieldNames().get(sourceIndex);
+                    final String fieldName = mColumnsToCheck.get(i);
 
                     LOGGER.debug("mismatch: sample({}) var({}) field({}) values({} vs {})",
                             sourceItems.get(COL_SAMPLE_ID_INDEX), sourceItems.get(COL_VAR_ID_INDEX),
@@ -258,5 +254,37 @@ public class ResultsChecker
         return true;
     }
 
+    private void setColumnsToCheck(final List<String> columns)
+    {
+        mColumnsToCheck.clear();
+        mColumnsToCheck.addAll(columns);
+
+        setColumnIndices(mSourceFile, mColumnsToCheck, mSourceColumnsToCheck);
+        setColumnIndices(mValidateFile, mColumnsToCheck, mValidateColumnsToCheck);
+    }
+
+    private void setColumnIndices(final GenericDataCollection dataCollection, final List<String> columns, List<Integer> columnIndices)
+    {
+        columnIndices.clear();
+
+        final List<String> fieldNames = dataCollection.getFieldNames();
+
+        for(final String column : columns)
+        {
+            boolean found = false;
+            for(int i = 0; i < fieldNames.size(); ++i)
+            {
+                if(fieldNames.get(i).equals(column))
+                {
+                    columnIndices.add(i);
+                    found = true;
+                    break;
+                }
+            }
+
+            if(!found)
+                columnIndices.add(-1);
+        }
+    }
 
 }

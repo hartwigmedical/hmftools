@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.isSmallConsistentCluster;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChrFromChrArm;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_ASMB_ONLY;
 
 import com.google.common.collect.Lists;
@@ -13,6 +15,7 @@ import com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.GeneAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator;
+import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
@@ -27,7 +30,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SvSampleAnalyser {
 
@@ -138,9 +143,10 @@ public class SvSampleAnalyser {
         mPc2.start();
         mClusteringMethods.setChromosomalArmStats(mAllVariants);
         mClusteringMethods.populateChromosomeBreakendMap(mAllVariants);
-        mClusteringMethods.calcCopyNumberData(mSampleId);
-        mClusteringMethods.createCopyNumberSegments();
+        // mClusteringMethods.calcCopyNumberData(mSampleId);
+        // mClusteringMethods.createCopyNumberSegments();
         mClusteringMethods.annotateNearestSvData();
+        mClusteringMethods.setSimpleVariantLengths(mSampleId);
         mPc2.stop();
 
         mPc3.start();
@@ -161,8 +167,10 @@ public class SvSampleAnalyser {
         mPc4.start();
         mAnalyser.findLinksAndChains(mSampleId);
         mAnalyser.markFoldbacks();
-        mClusteringMethods.logInversionPairData(mSampleId, mClusters);
+        // mClusteringMethods.logInversionPairData(mSampleId, mClusters);
         mPc4.stop();
+
+        logSampleClusterInfo();
 
         if(mGeneAnnotator.hasData())
         {
@@ -405,6 +413,65 @@ public class SvSampleAnalyser {
         catch (final IOException e)
         {
             LOGGER.error("error writing to outputFile: {}", e.toString());
+        }
+    }
+
+    private void logSampleClusterInfo()
+    {
+        int simpleClusterCount = 0;
+        int complexClusterCount = 0;
+        Map<String, Integer> armSimpleClusterCount = new HashMap();
+        Map<String, Integer> armComplexClusterCount = new HashMap();
+
+        for(final SvCluster cluster : mClusters)
+        {
+            boolean isSmallConsistent = isSmallConsistentCluster(cluster);
+
+            Map<String, Integer> targetMap;
+
+            if(isSmallConsistent)
+            {
+                ++simpleClusterCount;
+                targetMap = armSimpleClusterCount;
+            }
+            else
+            {
+                ++complexClusterCount;
+                targetMap = armComplexClusterCount;
+            }
+
+            for(final SvArmGroup armGroup : cluster.getArmGroups())
+            {
+                if(targetMap.containsKey(armGroup))
+                {
+                    targetMap.put(armGroup.id(), targetMap.get(armGroup.id()) + 1);
+                }
+                else
+                {
+                    targetMap.put(armGroup.id(), 1);
+                }
+            }
+        }
+
+        int armsWithExcessComplexClusters = 0;
+
+        for(final Map.Entry<String, Integer> entry : armComplexClusterCount.entrySet())
+        {
+            final String chrArm = entry.getKey();
+            int complexCount = entry.getValue();
+            Integer simpleCount = armSimpleClusterCount.containsKey(chrArm) ? armSimpleClusterCount.get(chrArm) : 0;
+
+            if(simpleCount > 0 && complexCount > simpleCount)
+            {
+                LOGGER.debug("chrArm({}) clusters simple({}) vs complex({})", chrArm, simpleCount, complexCount);
+                ++armsWithExcessComplexClusters;
+            }
+        }
+
+        if(complexClusterCount > simpleClusterCount || armsWithExcessComplexClusters >= 2)
+        {
+            LOGGER.info("sample({}) clusters total({}) simple({}) complex({}) excessComplexArms()",
+                    mSampleId, mClusters.size(), simpleClusterCount, complexClusterCount, armsWithExcessComplexClusters);
         }
     }
 

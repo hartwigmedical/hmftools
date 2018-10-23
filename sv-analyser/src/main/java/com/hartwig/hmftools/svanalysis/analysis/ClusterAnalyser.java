@@ -6,6 +6,12 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.isConsistentCluster;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.markInversionPairTypes;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcTypeCount;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECIPROCAL_TRANS;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.findCluster;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
@@ -66,10 +72,14 @@ public class ClusterAnalyser {
         // for small clusters, try to find a full chain through all SVs
         for(SvCluster cluster : mClusters)
         {
-            if(cluster.getCount() == 1 || cluster.getCount() > SMALL_CLUSTER_SIZE)
+            if(cluster.getCount() == 1 && cluster.isSimpleSVs())
+            {
+                setClusterResolvedState(cluster);
                 continue;
+            }
 
-            if(!cluster.isConsistent() || cluster.hasVariedCopyNumber())
+            // skip more complicated clusters for now
+            if(cluster.getCount() > SMALL_CLUSTER_SIZE || !cluster.isConsistent() || cluster.hasVariedCopyNumber())
                 continue;
 
             // first establish links between SVs (eg TIs and DBs)
@@ -78,9 +88,13 @@ public class ClusterAnalyser {
             // then look for fully-linked clusters, ie chains involving all SVs
             findChains(sampleId, cluster);
 
-            if(cluster.isFullyChained())
+            cacheFinalLinkedPairs(sampleId, cluster);
+
+            setClusterResolvedState(cluster);
+
+            if(isConsistentCluster(cluster))
             {
-                LOGGER.debug("sample({}) cluster({}) fully chained with {} SVs", sampleId, cluster.getId(), cluster.getCount());
+                LOGGER.debug("sample({}) cluster({}) simple and consistent with {} SVs", sampleId, cluster.getId(), cluster.getCount());
             }
         }
     }
@@ -228,17 +242,26 @@ public class ClusterAnalyser {
 
     private void setClusterResolvedState(SvCluster cluster)
     {
+        if(cluster.isResolved())
+            return;
+
         if (cluster.isSimpleSVs())
         {
-            cluster.setResolved(true, "Simple");
+            cluster.setResolved(true, RESOLVED_TYPE_SIMPLE_SV);
             return;
         }
 
         // next simple reciprocal inversions and translocations
-        if (cluster.getCount() == 2 && cluster.isConsistent() && cluster.getChains().size() == 1)
+        if (cluster.getCount() == 2 && cluster.isConsistent())
         {
-            cluster.setResolved(true, "Reciprocal");
-            return;
+            if(calcTypeCount(cluster.getSVs(), BND) == 2)
+            {
+                cluster.setResolved(true, RESOLVED_TYPE_RECIPROCAL_TRANS);
+            }
+            else if(calcTypeCount(cluster.getSVs(), INV) == 2)
+            {
+                markInversionPairTypes(cluster, false, "");
+            }
         }
 
         // next clusters with which start and end on the same arm, have the same start and end orientation
@@ -347,37 +370,6 @@ public class ClusterAnalyser {
         }
     }
 
-    private boolean isConsistentCluster(final SvCluster cluster)
-    {
-        if(cluster.isSimpleSVs())
-            return true;
-
-        if(!cluster.isConsistent())
-            return false;
-
-        if(cluster.isFullyChained())
-            return true;
-
-        // other wise check whether all remaining SVs are either in consistent chains
-        // or themselves consistent
-        for(final SvChain chain : cluster.getChains())
-        {
-            if(!chain.isConsistent())
-                return false;
-        }
-
-        List<SvVarData> varList = Lists.newArrayList();
-        for(final SvVarData var : cluster.getUnlinkedSVs())
-        {
-            varList.clear();
-            varList.add(var);
-            if(calcConsistency(varList) != 0)
-                return false;
-        }
-
-        return true;
-    }
-
     private List<SvCluster> mergeInconsistentClusters(List<SvCluster> clusters)
     {
         // it's possible that to resolve arms and more complex arrangements, clusters not merged
@@ -392,7 +384,6 @@ public class ClusterAnalyser {
             SvCluster cluster1 = clusters.get(index1);
 
             if(isConsistentCluster(cluster1))
-            // if(cluster1.isSimpleSVs() || (cluster1.isConsistent() && cluster1.isFullyChained()))
             {
                 ++index1;
                 continue;
@@ -407,7 +398,6 @@ public class ClusterAnalyser {
                 SvCluster cluster2 = clusters.get(index2);
 
                 if(isConsistentCluster(cluster2))
-                // if(cluster2.isSimpleSVs() || (cluster2.isConsistent() && cluster2.isFullyChained()))
                 {
                     ++index2;
                     continue;
@@ -524,37 +514,6 @@ public class ClusterAnalyser {
                     }
                 }
                     */
-            }
-        }
-
-        return false;
-    }
-
-    private boolean canMergeClustersOnSameArm(SvCluster cluster1, SvCluster cluster2)
-    {
-        for(int be1 = SVI_START; be1 <= SVI_END; ++be1)
-        {
-            final String c1LinkingArm = cluster1.linkingArm(isStart(be1));
-
-            if(c1LinkingArm.isEmpty())
-                continue;
-
-            final String c1LinkingChr = cluster1.linkingChromosome(isStart(be1));
-
-            for(int be2 = SVI_START; be2 <= SVI_END; ++be2)
-            {
-                final String c2LinkingArm = cluster2.linkingArm(isStart(be2));
-
-                if(c2LinkingArm.isEmpty())
-                    continue;
-
-                if(c1LinkingArm.equals(c2LinkingArm) && c1LinkingChr.equals(cluster2.linkingChromosome(isStart(be2))))
-                {
-                    LOGGER.debug("inconsistent cluster({}) and cluster({}) linked on chrArm({}:{})",
-                            cluster1.getId(), cluster2.getId(), c1LinkingChr, c1LinkingArm);
-
-                    return true;
-                }
             }
         }
 

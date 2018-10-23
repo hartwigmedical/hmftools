@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
@@ -14,6 +15,15 @@ import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLU
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areSectionBreak;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.isLocalOverlap;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_INV_PAIR_DEL_EXT_TI;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_INV_PAIR_DEL_INT_TI;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_INV_PAIR_DUP_EXT_TI;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_INV_PAIR_DUP_INT_TI;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECIPROCAL_TRANS;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.findCluster;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcTypeCount;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.isOverlapping;
@@ -38,6 +48,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvCNData;
+import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
@@ -62,10 +73,15 @@ public class SvClusteringMethods {
     private Map<String, Integer> mChrCopyNumberMap; // copy number for whole chromosomes if clear
     private Map<String, List<SvCNData>> mChrCNDataMap; // copy number segments recreated from SVs
     private Map<String, List<SvLOH>> mSampleLohData;
+
+    private long mDelDupCutoffLength;
+
     private boolean mFoldbackColsLogged;
     private boolean mInversionPairColsLogged;
 
     private static final double REF_BASE_LENGTH = 10000000D;
+    public static final int MAX_SIMPLE_DUP_DEL_CUTOFF = 5000000;
+    public static final int MIN_SIMPLE_DUP_DEL_CUTOFF = 100000;
 
     public SvClusteringMethods(final SvUtilities clusteringUtils)
     {
@@ -76,6 +92,8 @@ public class SvClusteringMethods {
         mMedianChrArmRate = 0;
         mNextClusterId = 0;
 
+        mDelDupCutoffLength = 0;
+
         mChrBreakendMap = new HashMap();
         mChrCopyNumberMap = new HashMap();
         mChrCNDataMap = new HashMap();
@@ -85,9 +103,12 @@ public class SvClusteringMethods {
     }
 
     public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
-    public Map<String, Integer> getChrCopyNumberMap() { return mChrCopyNumberMap; }
+    // public Map<String, Integer> getChrCopyNumberMap() { return mChrCopyNumberMap; }
     public int getNextClusterId() { return mNextClusterId++; }
     public void setSampleLohData(final Map<String, List<SvLOH>> data) { mSampleLohData = data; }
+
+    public long getDelDupCutoffLength() { return mDelDupCutoffLength; }
+
 
     public void clusterByBaseDistance(List<SvVarData> allVariants, List<SvCluster> clusters)
     {
@@ -132,12 +153,10 @@ public class SvClusteringMethods {
                 // test each possible linkage
                 if (!mUtils.areVariantsLinkedByDistance(currentVar, otherVar))
                 {
-                    //LOGGER.debug("non-linked SVs: v1({}) and v2({})", currentVar.posId(), otherVar.posId());
                     continue;
                 }
 
                 cluster.addVariant(currentVar);
-                // LOGGER.debug("cluster({}) add matched variant({}), totalCount({})", cluster.getId(), currentVar.id(), cluster.getSVs().size());
 
                 matched = true;
                 break;
@@ -177,8 +196,11 @@ public class SvClusteringMethods {
         {
             foundMerges = mergeOnCommonArmLinks(clusters);
 
-            if(!foundMerges)
-                foundMerges = mergeOnUnresolvedSVs(clusters, true, false);
+            if(mergeOnUnresolvedSVs(clusters, true, false))
+                foundMerges = true;
+
+            if(mergeLongDupsDels(clusters))
+                foundMerges = true;
 
             ++iterations;
         }
@@ -263,12 +285,7 @@ public class SvClusteringMethods {
                     startCluster.getId(), startCluster.getCount(), endCluster.getId(), endCluster.getCount(),
                     lohEvent.StartSV, lohEvent.EndSV, lohEvent.Length);
 
-            // merge the second cluster into the first
-            for(final SvVarData var : endCluster.getSVs())
-            {
-                startCluster.addVariant(var);
-            }
-
+            startCluster.mergeOtherCluster(endCluster);
             clusters.remove(endCluster);
         }
     }
@@ -287,20 +304,45 @@ public class SvClusteringMethods {
         return null;
     }
 
-    private boolean isSmallConsistentCluster(final SvCluster cluster)
+    public static boolean isSmallConsistentCluster(final SvCluster cluster)
     {
         if(cluster.getUniqueSvCount() > SMALL_CLUSTER_SIZE)
             return false;
 
-        if(cluster.isSimpleSingleSV())
-        {
-            return true;
-        }
-        else
-        {
-            return cluster.isConsistent() && cluster.isFullyChained();
-        }
+        return isConsistentCluster(cluster);
     }
+
+    public static boolean isConsistentCluster(final SvCluster cluster)
+    {
+        if(cluster.isSimpleSVs())
+            return true;
+
+        if(!cluster.isConsistent())
+            return false;
+
+        if(cluster.isFullyChained())
+            return true;
+
+        // other wise check whether all remaining SVs are either in consistent chains
+        // or themselves consistent
+        for(final SvChain chain : cluster.getChains())
+        {
+            if(!chain.isConsistent())
+                return false;
+        }
+
+        List<SvVarData> varList = Lists.newArrayList();
+        for(final SvVarData var : cluster.getUnlinkedSVs())
+        {
+            varList.clear();
+            varList.add(var);
+            if(calcConsistency(varList) != 0)
+                return false;
+        }
+
+        return true;
+    }
+
 
     private boolean mergeOnCommonArmLinks(List<SvCluster> clusters)
     {
@@ -320,7 +362,7 @@ public class SvClusteringMethods {
                 continue;
             }
 
-            if(isSmallConsistentCluster(cluster1)) // .getCount() == 2 && cluster1.isConsistent(
+            if(isSmallConsistentCluster(cluster1))
             {
                 // skip balanced inversion & translocations
                 ++index1;
@@ -371,15 +413,7 @@ public class SvClusteringMethods {
                     continue;
                 }
 
-                LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on common arms",
-                        cluster1.getId(), cluster1.getCount(), cluster2.getId(), cluster2.getCount());
-
-                // merge the second cluster into the first
-                for(final SvVarData var : cluster2.getSVs())
-                {
-                    cluster1.addVariant(var);
-                }
-
+                cluster1.mergeOtherCluster(cluster2);
                 clusters.remove(index2);
             }
 
@@ -427,7 +461,7 @@ public class SvClusteringMethods {
                 {
                     for(SvArmGroup armGroup2 : armGroups2)
                     {
-                        if (checkOverlaps && armGroupsHaveOverlappingSVs(armGroup1, armGroup2))
+                        if (checkOverlaps && armGroupsHaveOverlappingSVs(armGroup1, armGroup2, true))
                         {
                             LOGGER.debug("arm({} svs={}) overlaps with arm({} svs={})",
                                     armGroup1.posId(), armGroup1.getCount(), armGroup2.posId(), armGroup2.getCount());
@@ -455,15 +489,8 @@ public class SvClusteringMethods {
                     continue;
                 }
 
-                LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={})",
-                        cluster1.getId(), cluster1.getCount(), cluster2.getId(), cluster2.getCount());
-
                 // merge the second cluster into the first
-                for(final SvVarData var : cluster2.getSVs())
-                {
-                    cluster1.addVariant(var);
-                }
-
+                cluster1.mergeOtherCluster(cluster2);
                 clusters.remove(index2);
             }
 
@@ -488,15 +515,10 @@ public class SvClusteringMethods {
         return false;
     }
 
-    private static int COMPLEX_CLUSTER_COUNT = 5;
-
-    private boolean armGroupsHaveOverlappingSVs(final SvArmGroup group1, final SvArmGroup group2)
+    private boolean armGroupsHaveOverlappingSVs(final SvArmGroup group1, final SvArmGroup group2, boolean reqInversion)
     {
         if(!group1.chromosome().equals(group2.chromosome()) || !group1.arm().equals(group2.arm()))
             return false;
-
-        // if(group1.getCount() < COMPLEX_CLUSTER_COUNT && group2.getCount() < COMPLEX_CLUSTER_COUNT)
-        //    return false;
 
         // check for an overlapping INV from one cluster to another
         boolean hasOverlap = false;
@@ -510,20 +532,22 @@ public class SvClusteringMethods {
 
             final SvArmGroup svGroup = (i == 0) ? group2 : group1;
 
-            // group must have an INV
-            boolean hasInversion = false;
-
-            for (final SvVarData var : svGroup.getSVs())
+            if(reqInversion)
             {
-                if (var.type() == INV)
-                {
-                    hasInversion = true;
-                    break;
-                }
-            }
+                boolean hasInversion = false;
 
-            if(!hasInversion)
-                continue;
+                for (final SvVarData var : svGroup.getSVs())
+                {
+                    if (var.type() == INV)
+                    {
+                        hasInversion = true;
+                        break;
+                    }
+                }
+
+                if (!hasInversion)
+                    continue;
+            }
 
             for (final SvVarData var : svGroup.getSVs())
             {
@@ -548,21 +572,207 @@ public class SvClusteringMethods {
         return true;
     }
 
-    private boolean hasOverlappingSVs(final List<SvVarData> list1, final List<SvVarData> list2)
+    private boolean mergeLongDupsDels(List<SvCluster> clusters)
     {
-        for(final SvVarData var1 : list1)
+        if(mDelDupCutoffLength == 0)
+            return false;
+
+        int initClusterCount = clusters.size();
+
+        int index1 = 0;
+        while(index1 < clusters.size())
         {
-            for(final SvVarData var2 : list2)
+            SvCluster cluster1 = clusters.get(index1);
+
+            boolean hasLongDupOrDel = false;
+
+            if(cluster1.isSimpleSVs())
             {
-                if(isOverlapping(var1, var2))
-                    return true;
+                for(final SvVarData var : cluster1.getSVs())
+                {
+                    if((var.type() == DUP || var.type() == DEL) && var.length() >= mDelDupCutoffLength)
+                    {
+                        hasLongDupOrDel = true;
+                        break;
+                    }
+                }
             }
+            else if(cluster1.isResolved()
+                && (cluster1.getResolvedType() == RESOLVED_TYPE_INV_PAIR_DEL_EXT_TI
+                    || cluster1.getResolvedType() == RESOLVED_TYPE_INV_PAIR_DUP_INT_TI
+                    ||cluster1.getResolvedType() == RESOLVED_TYPE_INV_PAIR_DUP_EXT_TI))
+            {
+                if(cluster1.getLengthOverride() >= mDelDupCutoffLength)
+                    hasLongDupOrDel = true;
+            }
+
+            if(!hasLongDupOrDel)
+            {
+                ++index1;
+                continue;
+            }
+
+            List<SvArmGroup> armGroups1 = cluster1.getArmGroups();
+
+            int index2 = index1 + 1;
+            while(index2 < clusters.size())
+            {
+                SvCluster cluster2 = clusters.get(index2);
+
+                boolean canMergeArms = false;
+
+                if(cluster2.isSimpleSVs())
+                {
+                    // merge simple DEL-DUP combinations if both exceed the required length
+                    if(cluster2.getCount() == 1)
+                    {
+                        final SvVarData var1 = cluster1.getSVs().get(0);
+                        final SvVarData var2 = cluster2.getSVs().get(0);
+
+                        if((var2.type() == DEL || var2.type() == DUP) && var2.type() != var1.type()
+                        && var2.length() >= mDelDupCutoffLength && isLocalOverlap(var1, var2))
+                        {
+                            canMergeArms = true;
+
+                            LOGGER.debug("long DEL-DUPs({} and {}) overlap with lengths({} and {})", var1.posId(), var2.posId(), var1.length(), var2.length());
+                        }
+                    }
+                }
+                else if(cluster2.getResolvedType() != RESOLVED_TYPE_RECIPROCAL_TRANS && cluster2.getResolvedType() != RESOLVED_TYPE_INV_PAIR_DEL_INT_TI)
+                {
+                    List<SvArmGroup> armGroups2 = cluster2.getArmGroups();
+
+                    for (SvArmGroup armGroup1 : armGroups1)
+                    {
+                        for (SvArmGroup armGroup2 : armGroups2)
+                        {
+                            if (armGroupsHaveOverlappingSVs(armGroup1, armGroup2, false))
+                            {
+                                LOGGER.debug("long DUP-DEL arm({} svs={}) overlaps with arm({} svs={})",
+                                        armGroup1.posId(), armGroup1.getCount(), armGroup2.posId(), armGroup2.getCount());
+
+                                canMergeArms = true;
+                                break;
+                            }
+                        }
+
+                        if (canMergeArms)
+                            break;
+                    }
+                }
+
+                if(!canMergeArms)
+                {
+                    ++index2;
+                    continue;
+                }
+
+                cluster1.mergeOtherCluster(cluster2);
+                clusters.remove(index2);
+            }
+
+            ++index1;
         }
 
-        return false;
+        return clusters.size() < initClusterCount;
     }
 
-    public void populateChromosomeBreakendMap(List<SvVarData> allVariants)
+
+    private static int DEL_DUP_LENGTH_TRIM_COUNT = 5;
+    private static int MAX_ARM_COUNT = 41; // excluding the 5 short arms
+
+    public void setSimpleVariantLengths(final String sampleId)
+    {
+        mDelDupCutoffLength = 0;
+
+        List<Long> lengthsList = Lists.newArrayList();
+
+        int simpleArmCount = 0;
+
+        for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
+        {
+            final String chromosome = entry.getKey();
+            final List<SvBreakend> breakendList = entry.getValue();
+
+            // first check for complex events on the arm since these will be skipped
+            boolean pArmHasInversions = false;
+            boolean qArmHasInversions = false;
+
+            for(final SvBreakend breakend : breakendList)
+            {
+                final SvVarData var = breakend.getSV();
+
+                if(var.type() != INV)
+                    continue;
+
+                if(!pArmHasInversions && (var.arm(true) == CHROMOSOME_ARM_P || var.arm(false) == CHROMOSOME_ARM_P))
+                    pArmHasInversions = true;
+
+                if(!qArmHasInversions && (var.arm(true) == CHROMOSOME_ARM_Q || var.arm(false) == CHROMOSOME_ARM_Q))
+                    qArmHasInversions = true;
+
+                if(pArmHasInversions && qArmHasInversions)
+                    break;
+            }
+
+            // skip chromosome altogether
+            if(pArmHasInversions && qArmHasInversions)
+                continue;
+
+            if(!pArmHasInversions)
+                ++simpleArmCount;
+
+            if(!qArmHasInversions)
+                ++simpleArmCount;
+
+            int armCount = 0;
+
+            for(final SvBreakend breakend : breakendList)
+            {
+                if(!breakend.usesStart() || !(breakend.getSV().type() == DEL || breakend.getSV().type() == DUP))
+                    continue;
+
+                final SvVarData var = breakend.getSV();
+
+                if(pArmHasInversions)
+                {
+                    if (var.arm(true) == CHROMOSOME_ARM_P || var.arm(false) == CHROMOSOME_ARM_P)
+                        continue;
+                }
+
+                if(qArmHasInversions)
+                {
+                    if (var.arm(true) == CHROMOSOME_ARM_Q || var.arm(false) == CHROMOSOME_ARM_Q)
+                        continue;
+                }
+
+                lengthsList.add(var.length());
+                ++armCount;
+            }
+
+            LOGGER.debug("sample({}) chr({}) svCount({} delDups({})",
+                    sampleId, chromosome, breakendList.size(), armCount);
+        }
+
+        int trimCount = (int)round(simpleArmCount / (double)MAX_ARM_COUNT * DEL_DUP_LENGTH_TRIM_COUNT);
+
+        if(lengthsList.size() > trimCount)
+        {
+            Collections.sort(lengthsList);
+            int lengthIndex = lengthsList.size() - trimCount - 1; // 10 items, index 0 - 9, exclude 5 - 9, select 9
+            mDelDupCutoffLength = lengthsList.get(lengthIndex);
+        }
+
+        LOGGER.debug("sample({}) simple dels and dups: count({}) cutoff-length({}) simpleArms({}) trimCount({})",
+                sampleId, lengthsList.size(), mDelDupCutoffLength, simpleArmCount, trimCount);
+
+        LOGGER.info("DEL_DUP_CUTOFF: {},{},{},{},{}",
+                sampleId, lengthsList.size(), mDelDupCutoffLength, simpleArmCount, trimCount);
+
+        mDelDupCutoffLength = min(max(mDelDupCutoffLength, MIN_SIMPLE_DUP_DEL_CUTOFF), MAX_SIMPLE_DUP_DEL_CUTOFF);
+    }
+
+    public void populateChromosomeBreakendMap(final List<SvVarData> allVariants)
     {
         mChrBreakendMap.clear();
 
@@ -888,7 +1098,7 @@ public class SvClusteringMethods {
 
     public void logInversionPairData(final String sampleId, final List<SvCluster> clusters)
     {
-        if(!mInversionPairColsLogged)
+        if (!mInversionPairColsLogged)
         {
             mInversionPairColsLogged = true;
             String colNames = "INV_PAIRS,Time,SampleId,Id1,Chromsome,Orient1,PosStart1,PosEnd1";
@@ -897,161 +1107,175 @@ public class SvClusteringMethods {
             LOGGER.info(colNames);
         }
 
-        for(final SvCluster cluster : clusters)
+        for (final SvCluster cluster : clusters)
         {
-            if(cluster.getUniqueSvCount() != 2 || !cluster.getDesc().equals("INV=2"))
+            if (cluster.getUniqueSvCount() != 2 || !cluster.getDesc().equals("INV=2"))
                 continue;
 
-            if(!cluster.isConsistent())
+            if (!cluster.isConsistent())
                 continue;
 
-            if(cluster.getLinkedPairs().isEmpty())
-            {
-                LOGGER.warn("cluster({}) missing creating linked pairs");
-                continue;
-            }
+            markInversionPairTypes(cluster, true, sampleId);
+        }
 
-            final SvVarData var1 = cluster.getSVs().get(0);
-            final SvVarData var2 = cluster.getSVs().get(1);
+    }
 
-            // determine overlap configurations
+    public static void markInversionPairTypes(SvCluster cluster, boolean logData, final String sampleId)
+    {
+        if(cluster.getLinkedPairs().isEmpty())
+        {
+            LOGGER.warn("cluster({}) missing creating linked pairs");
+            return;
+        }
 
-            /* 4 types of inversion pairs
-            1. DEL with enclosed inverted TI (also know as 'Reciprocal INV') - Have 2 DSB and a ’TI' from the middle which is inverted.
-                - outer breakends face out (the DEL)
-                - TI enclosed
-            2. DEL with external inverted TI
-                - resultant type = DEL
-                - length = other 2 breakends
-            3. DUP with external inverted TI
-                - 2 x TIs, but TI breakends don't overlap
-                - type = DUP
-                - TI and DUP length are interchangable, but choose shorter for TI
-            4. DUP with enclosed inverted TI
-                - no overlapping breakends
-                - TI from the innermost 2
-                - outer breakends face in
-                - resultant type = DUP
-                - length is outside 2 breakends (ie the other 2)
-             */
+        final SvVarData var1 = cluster.getSVs().get(0);
+        final SvVarData var2 = cluster.getSVs().get(1);
 
-            // first work out if there are 1 or 2 templated insertions
+        // determine overlap configurations
 
-            final SvLinkedPair linkedPair1 = cluster.getLinkedPairs().get(0);
+        /* 4 types of inversion pairs
+        1. DEL with enclosed inverted TI (also know as 'Reciprocal INV') - Have 2 DSB and a ’TI' from the middle which is inverted.
+            - outer breakends face out (the DEL)
+            - TI enclosed
+        2. DEL with external inverted TI
+            - resultant type = DEL
+            - length = other 2 breakends
+        3. DUP with external inverted TI
+            - 2 x TIs, but TI breakends don't overlap
+            - type = DUP
+            - TI and DUP length are interchangable, but choose shorter for TI
+        4. DUP with enclosed inverted TI
+            - no overlapping breakends
+            - TI from the innermost 2
+            - outer breakends face in
+            - resultant type = DUP
+            - length is outside 2 breakends (ie the other 2)
+         */
 
-            boolean v1OpenOnStart = linkedPair1.first().equals(var1) ? linkedPair1.firstUnlinkedOnStart() : linkedPair1.secondUnlinkedOnStart();
-            boolean v2OpenOnStart = linkedPair1.first().equals(var2) ? linkedPair1.firstUnlinkedOnStart() : linkedPair1.secondUnlinkedOnStart();
+        // first work out if there are 1 or 2 templated insertions
 
-            SvLinkedPair linkedPair2 = cluster.getLinkedPairs().size() == 2 ? cluster.getLinkedPairs().get(1) : null;
+        final SvLinkedPair linkedPair1 = cluster.getLinkedPairs().get(0);
 
-            if(linkedPair2 != null && !linkedPair1.hasLinkClash(linkedPair2))
-            {
-                // existing second link is fine to consider
-            }
-            else if(areLinkedSection(var1, var2, v1OpenOnStart, v2OpenOnStart, false))
-            {
-                // could one be formed from the other 2 breakends
-                linkedPair2 = new SvLinkedPair(var1, var2, LINK_TYPE_TI, v1OpenOnStart, v2OpenOnStart);
-            }
-            else if(areSectionBreak(var1, var2, v1OpenOnStart, v2OpenOnStart))
-            {
-                linkedPair2 = new SvLinkedPair(var1, var2, LINK_TYPE_DB, v1OpenOnStart, v2OpenOnStart);
-            }
-            else
-            {
-                LOGGER.error("sample({}) ids({} & {}) must be one or the other", sampleId, var1.id(), var2.id());
-                return;
-            }
+        boolean v1OpenOnStart = linkedPair1.first().equals(var1) ? linkedPair1.firstUnlinkedOnStart() : linkedPair1.secondUnlinkedOnStart();
+        boolean v2OpenOnStart = linkedPair1.first().equals(var2) ? linkedPair1.firstUnlinkedOnStart() : linkedPair1.secondUnlinkedOnStart();
 
-            // set the first link to be the longer of the 2 for classification purposes
-            SvLinkedPair lp1;
-            SvLinkedPair lp2;
+        SvLinkedPair linkedPair2 = cluster.getLinkedPairs().size() == 2 ? cluster.getLinkedPairs().get(1) : null;
 
-            if(linkedPair1.linkType() == LINK_TYPE_TI && linkedPair2.linkType() == LINK_TYPE_TI)
-            {
-                lp1 = linkedPair1.length() > linkedPair2.length() ? linkedPair1 : linkedPair2;
-                lp2 = linkedPair1 == lp1 ? linkedPair2 : linkedPair1;
-            }
-            else if(linkedPair1.linkType() == LINK_TYPE_TI)
-            {
-                // take the DB for the main DEL if one exists
-                lp2 = linkedPair1;
-                lp1 = linkedPair2;
-            }
-            else if(linkedPair2.linkType() == LINK_TYPE_TI)
-            {
-                lp1 = linkedPair1;
-                lp2 = linkedPair2;
-            }
-            else
-            {
-                // 2 deletion bridges
-                lp1 = linkedPair1.length() > linkedPair2.length() ? linkedPair1 : linkedPair2;
-                lp2 = linkedPair1 == lp1 ? linkedPair2 : linkedPair1;
-            }
+        if(linkedPair2 != null && !linkedPair1.hasLinkClash(linkedPair2))
+        {
+            // existing second link is fine to consider
+        }
+        else if(areLinkedSection(var1, var2, v1OpenOnStart, v2OpenOnStart, false))
+        {
+            // could one be formed from the other 2 breakends
+            linkedPair2 = new SvLinkedPair(var1, var2, LINK_TYPE_TI, v1OpenOnStart, v2OpenOnStart);
+        }
+        else if(areSectionBreak(var1, var2, v1OpenOnStart, v2OpenOnStart))
+        {
+            linkedPair2 = new SvLinkedPair(var1, var2, LINK_TYPE_DB, v1OpenOnStart, v2OpenOnStart);
+        }
+        else
+        {
+            LOGGER.error("sample({}) ids({} & {}) must be one or the other", sampleId, var1.id(), var2.id());
+            return;
+        }
 
-            long mainPos1 = lp1.first().position(lp1.firstLinkOnStart());
-            long mainPos2 = lp1.second().position(lp1.secondLinkOnStart());
+        // set the first link to be the longer of the 2 for classification purposes
+        SvLinkedPair lp1;
+        SvLinkedPair lp2;
 
-            long otherPos1 = lp2.first().position(lp2.firstLinkOnStart());
-            long otherPos2 = lp2.second().position(lp2.secondLinkOnStart());
+        if(linkedPair1.linkType() == LINK_TYPE_TI && linkedPair2.linkType() == LINK_TYPE_TI)
+        {
+            lp1 = linkedPair1.length() > linkedPair2.length() ? linkedPair1 : linkedPair2;
+            lp2 = linkedPair1 == lp1 ? linkedPair2 : linkedPair1;
+        }
+        else if(linkedPair1.linkType() == LINK_TYPE_TI)
+        {
+            // take the DB for the main DEL if one exists
+            lp2 = linkedPair1;
+            lp1 = linkedPair2;
+        }
+        else if(linkedPair2.linkType() == LINK_TYPE_TI)
+        {
+            lp1 = linkedPair1;
+            lp2 = linkedPair2;
+        }
+        else
+        {
+            // 2 deletion bridges
+            lp1 = linkedPair1.length() > linkedPair2.length() ? linkedPair1 : linkedPair2;
+            lp2 = linkedPair1 == lp1 ? linkedPair2 : linkedPair1;
+        }
 
-            boolean isTIEnclosed = false;
+        long mainPos1 = lp1.first().position(lp1.firstLinkOnStart());
+        long mainPos2 = lp1.second().position(lp1.secondLinkOnStart());
 
-            long lowerMainPosLimit = mainPos1 < mainPos2 ? mainPos1 : mainPos2;
-            lowerMainPosLimit -= MIN_TEMPLATED_INSERTION_LENGTH;
+        long otherPos1 = lp2.first().position(lp2.firstLinkOnStart());
+        long otherPos2 = lp2.second().position(lp2.secondLinkOnStart());
 
-            long upperMainPosLimit = mainPos1 > mainPos2 ? mainPos1 : mainPos2;
-            upperMainPosLimit += MIN_TEMPLATED_INSERTION_LENGTH;
+        boolean isTIEnclosed = false;
 
-            if(otherPos1 >= lowerMainPosLimit && otherPos1 <= upperMainPosLimit
-            && otherPos2 >= lowerMainPosLimit && otherPos2 <= upperMainPosLimit)
-            {
-                isTIEnclosed = true;
-            }
+        long lowerMainPosLimit = mainPos1 < mainPos2 ? mainPos1 : mainPos2;
+        lowerMainPosLimit -= MIN_TEMPLATED_INSERTION_LENGTH;
 
-            StructuralVariantType invPairType;
-            String invPairDesc = "";
+        long upperMainPosLimit = mainPos1 > mainPos2 ? mainPos1 : mainPos2;
+        upperMainPosLimit += MIN_TEMPLATED_INSERTION_LENGTH;
 
-            if(lp1.linkType() == LINK_TYPE_DB && lp2 != null && lp2.linkType() == LINK_TYPE_DB)
+        if(otherPos1 >= lowerMainPosLimit && otherPos1 <= upperMainPosLimit
+        && otherPos2 >= lowerMainPosLimit && otherPos2 <= upperMainPosLimit)
+        {
+            isTIEnclosed = true;
+        }
+
+        StructuralVariantType invPairType;
+        String invPairDesc = "";
+
+        if(lp1.linkType() == LINK_TYPE_DB && lp2 != null && lp2.linkType() == LINK_TYPE_DB)
+        {
+            invPairType = DEL;
+            invPairDesc = RESOLVED_TYPE_INV_PAIR_DEL_INT_TI;
+        }
+        else
+        {
+            if (lp1.linkType() == LINK_TYPE_DB || lp2.linkType() == LINK_TYPE_DB)
             {
                 invPairType = DEL;
-                invPairDesc = "DEL_Internal_TI";
-            }
-            else
-            {
-                if (lp1.linkType() == LINK_TYPE_DB || lp2.linkType() == LINK_TYPE_DB)
-                {
-                    invPairType = DEL;
 
-                    if (!isTIEnclosed)
-                    {
-                        invPairDesc = "DEL_External_TI";
-                    }
-                    else
-                    {
-                        invPairDesc = "DEL_Internal_TI";
-                    }
+                if (!isTIEnclosed)
+                {
+                    invPairDesc = RESOLVED_TYPE_INV_PAIR_DEL_EXT_TI;
                 }
                 else
                 {
-                    invPairType = DUP;
-
-                    if (!isTIEnclosed)
-                    {
-                        invPairDesc = "DUP_External_TI";
-                    }
-                    else
-                    {
-                        invPairDesc = "DUP_Internal_TI";
-                    }
+                    invPairDesc = RESOLVED_TYPE_INV_PAIR_DEL_EXT_TI;
                 }
             }
+            else
+            {
+                invPairType = DUP;
 
+                if (!isTIEnclosed)
+                {
+                    invPairDesc = RESOLVED_TYPE_INV_PAIR_DUP_EXT_TI;
+                }
+                else
+                {
+                    invPairDesc = RESOLVED_TYPE_INV_PAIR_DUP_INT_TI;
+                }
+            }
+        }
+
+        if(logData)
+        {
             LOGGER.info(String.format("INV_PAIRS,%s,%s,%s,%d,%d,%d,%s,%d,%d,%d,%s,%s,%d,%s,%d",
                     sampleId, var1.id(), var1.chromosome(true), var1.orientation(true), var1.position(true), var1.position(false),
                     var2.id(), var2.orientation(true), var2.position(true), var2.position(false),
                     invPairType, invPairDesc, lp1.length(), !lp1.isInferred(), lp2.length()));
+        }
+        else
+        {
+            cluster.setResolved(true, invPairDesc);
+            cluster.setLengthOverride(lp1.length());
         }
     }
 

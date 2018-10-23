@@ -14,7 +14,6 @@ import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.SvClusteringConfig;
 import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.svanalysis.annotators.ExtDataLinker;
-import com.hartwig.hmftools.svanalysis.types.CopyNumberNoneSegment;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
 import org.apache.commons.cli.CommandLine;
@@ -164,6 +163,7 @@ public class SvAnalyser {
         {
             ResultsChecker resultsChecker = new ResultsChecker();
             resultsChecker.setLogMismatches(cmd.hasOption(LOG_DEBUG));
+            resultsChecker.setIdColumns(true);
 
             if(resultsChecker.loadConfig(cmd))
             {
