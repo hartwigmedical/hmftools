@@ -109,19 +109,19 @@ public abstract class FindingsPage {
                 report.evidenceItems().size() > 0
                         ? cmp.subreport(monospaceBaseTable().fields(ClinicalTrialDataSource.clinicalTrialFields())
                         .columns(col.column("Event", ClinicalTrialDataSource.EVENT_FIELD),
-                                col.column("Trail", ClinicalTrialDataSource.TRIAL_FIELD),
-                                col.column("Source", ClinicalTrialDataSource.SOURCE_FIELD).setHyperLink(hyperLink(ClinicalTrialDataSource.sourceHyperlink()))
+                                col.column("Trial", ClinicalTrialDataSource.TRIAL_FIELD),
+                                col.column("Source", ClinicalTrialDataSource.SOURCE_FIELD)
+                                        .setHyperLink(hyperLink(ClinicalTrialDataSource.sourceHyperlink()))
                                         .setStyle(linkStyle()),
                                 col.column("CCMO", ClinicalTrialDataSource.CCMO_FIELD),
                                 col.column("On-Label", ClinicalTrialDataSource.ON_LABEL_FIELD))
                         .setDataSource(ClinicalTrialDataSource.fromClinicalTrial(report.evidenceItems())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        return cmp.verticalList(cmp.text("Clinical Trails").setStyle(sectionHeaderStyle()),
+        return cmp.verticalList(cmp.text("Clinical Trials").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
                 table);
     }
-
 
     @NotNull
     private static ComponentBuilder<?, ?> somaticVariantReport(@NotNull AnalysedPatientReport report, @NotNull GeneModel panelGeneModel) {

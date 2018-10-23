@@ -7,8 +7,6 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -43,7 +41,7 @@ public class ClinicalTrialDataSource {
                 ON_LABEL_FIELD.getName());
 
         for (EvidenceItem evidenceItem : sort(evidenceItems)) {
-            if (evidenceItem.source().isTrialSource()){
+            if (evidenceItem.source().isTrialSource()) {
                 evidenceItemDataSource.add(evidenceItem.event(),
                         evidenceItem.drug(),
                         evidenceItem.source().sourceName(),
@@ -57,18 +55,14 @@ public class ClinicalTrialDataSource {
     @NotNull
     private static String CCMOID(@NotNull String CCMO_ids) {
         String CCMO_ids_new = CCMO_ids.replace(")", "");
-        String [] CCMO_ids_def = CCMO_ids_new.split("\\(");
+        String[] CCMO_ids_def = CCMO_ids_new.split("\\(");
         return CCMO_ids_def[1];
     }
 
     @NotNull
     private static List<EvidenceItem> sort(@NotNull List<EvidenceItem> evidenceItems) {
         return evidenceItems.stream().sorted((item1, item2) -> {
-            if (item1.event().equals(item2.event())) {
-                return item1.event().compareTo(item2.event());
-            } else {
-                return item1.level().compareTo(item2.level());
-            }
+            return item1.event().compareTo(item2.event());
         }).collect(Collectors.toList());
     }
 
