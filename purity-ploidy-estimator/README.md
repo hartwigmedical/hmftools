@@ -26,7 +26,6 @@ Argument | Default | Description
 -tumor_sample | None | Name of tumor sample.
 -run_dir | None | Base directory of run. Default values of output_dir, amber and cobalt will be relative to this.
 -output_dir |  <run_dir>/purple | Output directory.
--baf | <amber_dir>/<tumor_sample>.amber.baf | Location of baf file. By default will look in the amber directory.
 -amber | <run_dir>/amber | Location of amber directory.
 -cobalt | <run_dir>/cobalt | Location of cobalt directory.
 -threads | 2 | Number of threads to use.
@@ -34,12 +33,13 @@ Argument | Default | Description
 -somatic_min_peak | 100 | Minimum number of somatic variants to consider a peak.
 -somatic_min_total | 1000 | Minimum number of somatic variants required to assist highly diploid fits.
 -structural_vcf | None | Optional location of structural variants vcf. Sample name should match <tumor_sample>. GZ files supported.
+-sv_recovery_vcf | None | Optional location of structural variants recovery vcf. Sample name should match <tumor_sample>. GZ files supported.
 -circos | None | Optional path to circos binary. When supplied, circos graphs will be written to <output_dir>/plot
 -db_enabled | None | This parameter has no arguments. Optionally include if you wish to persist results to a database. Database initialization script can be found [here](https://github.com/hartwigmedical/hmftools/blob/master/patient-db/src/main/resources/generate_database.sql).
 -db_user | None | Database username. Mandatory if db_enabled.
 -db_pass | None | Database password. Mandatory if db_enabled.
 -db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpatients`. Mandatory if db_enabled.
--gene_panel | Default gene panel | Specify gene panel to be used.
+-gc_profile | None | Location of GC profile. Available to download from [HMF-Pipeline-Resources.](https://resources.hartwigmedicalfoundation.nl)
 
 
 ### Example Usage
@@ -83,7 +83,7 @@ Jointly fit tumor purity and CNV ratio normalisation factor (Norm Factor) accord
 * Segments are weighted by the count of BAF observations which is treated as a proxy for segment length and confidence of BAF and ratio inputs.
 * Segments with lower observed BAFs have more degenerate fits and are weighted less in the fit
 
-An excel model of the model used to score each segment is available [here](https://nc.hartwigmedicalfoundation.nl/index.php/s/xH7rSMTsgDmqzMB). 
+An excel model of the model used to score each segment is available from [Excel Models](https://resources.hartwigmedicalfoundation.nl). 
 
 ### Absolute Copy Number Per Segment
 
