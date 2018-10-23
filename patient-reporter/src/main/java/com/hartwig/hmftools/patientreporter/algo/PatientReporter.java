@@ -94,8 +94,9 @@ public abstract class PatientReporter {
 
         final List<ReportableGeneFusion> reportableFusions =
                 ReportableGeneFusionFactory.toReportableGeneFusions(structuralVariantAnalysis.reportableFusions());
-        final List<ReportableGeneDisruption> reportableDisruptions =
-                ReportableGeneDisruptionFactory.toReportableGeneDisruptions(structuralVariantAnalysis.reportableDisruptions());
+        final List<ReportableGeneDisruption> reportableDisruptions = ReportableGeneDisruptionFactory.toReportableGeneDisruptions(
+                structuralVariantAnalysis.reportableDisruptions(),
+                purpleAnalysis.geneCopyNumbers());
 
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run,
                 purpleAnalysis,
@@ -179,8 +180,9 @@ public abstract class PatientReporter {
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterFileLoader.loadPurpleCopyNumbers(runDirectory, sample);
         LOGGER.info(" " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
 
-        final List<GeneCopyNumber> panelGeneCopyNumbers = PatientReporterFileLoader.loadPurpleGeneCopyNumbers(runDirectory, sample)
-                .stream()
+        final List<GeneCopyNumber> geneCopyNumbers = PatientReporterFileLoader.loadPurpleGeneCopyNumbers(runDirectory, sample);
+
+        final List<GeneCopyNumber> panelGeneCopyNumbers = geneCopyNumbers.stream()
                 .filter(geneCopyNumber -> panelGeneModel.cnvGenePanel().contains(geneCopyNumber.gene()))
                 .collect(Collectors.toList());
 
@@ -190,6 +192,7 @@ public abstract class PatientReporter {
                 .fittedPurity(purityContext.bestFit())
                 .fittedScorePurity(purityContext.score())
                 .copyNumbers(purpleCopyNumbers)
+                .geneCopyNumbers(geneCopyNumbers)
                 .panelGeneCopyNumbers(panelGeneCopyNumbers)
                 .build();
     }

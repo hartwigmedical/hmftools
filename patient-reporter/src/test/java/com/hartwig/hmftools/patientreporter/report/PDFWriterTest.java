@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.report;
 
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestCopyNumberBuilder;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReportData;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testSampleReport;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testSequencedReportData;
@@ -22,14 +23,11 @@ import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
 import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
@@ -222,12 +220,24 @@ public class PDFWriterTest {
 
     @NotNull
     private static List<GeneCopyNumber> createTestCopyNumbers() {
-        final GeneCopyNumber copyNumber1 =
-                createCopyNumberBuilder().chromosome("9").chromosomeBand("p21.3").gene("CDKN2A").minCopyNumber(0).maxCopyNumber(0).build();
-        final GeneCopyNumber copyNumber2 =
-                createCopyNumberBuilder().chromosome("17").chromosomeBand("p13.1").gene("TP53").minCopyNumber(0).maxCopyNumber(2).build();
-        final GeneCopyNumber copyNumber3 =
-                createCopyNumberBuilder().chromosome("17").chromosomeBand("q12").gene("ERBB2").minCopyNumber(11).maxCopyNumber(11).build();
+        final GeneCopyNumber copyNumber1 = createTestCopyNumberBuilder().chromosome("9")
+                .chromosomeBand("p21.3")
+                .gene("CDKN2A")
+                .minCopyNumber(0)
+                .maxCopyNumber(0)
+                .build();
+        final GeneCopyNumber copyNumber2 = createTestCopyNumberBuilder().chromosome("17")
+                .chromosomeBand("p13.1")
+                .gene("TP53")
+                .minCopyNumber(0)
+                .maxCopyNumber(2)
+                .build();
+        final GeneCopyNumber copyNumber3 = createTestCopyNumberBuilder().chromosome("17")
+                .chromosomeBand("q12")
+                .gene("ERBB2")
+                .minCopyNumber(11)
+                .maxCopyNumber(11)
+                .build();
         return Lists.newArrayList(copyNumber1, copyNumber2, copyNumber3);
     }
 
@@ -260,8 +270,7 @@ public class PDFWriterTest {
 
     @NotNull
     private static List<ReportableGeneDisruption> createTestDisruptions() {
-        ReportableGeneDisruption disruption1 = createDisruptionBuilder()
-                .location("2q34")
+        ReportableGeneDisruption disruption1 = createDisruptionBuilder().location("2q34")
                 .gene("ERBB4")
                 .range("Intron 4 -> Intron 9")
                 .type(StructuralVariantType.INV)
@@ -270,8 +279,7 @@ public class PDFWriterTest {
                 .geneMaxCopies(1)
                 .build();
 
-        ReportableGeneDisruption disruption2 = createDisruptionBuilder()
-                .location("17q12")
+        ReportableGeneDisruption disruption2 = createDisruptionBuilder().location("17q12")
                 .gene("CDK12")
                 .range("Intron 12 Downstream")
                 .type(StructuralVariantType.BND)
@@ -280,8 +288,7 @@ public class PDFWriterTest {
                 .geneMaxCopies(4)
                 .build();
 
-        ReportableGeneDisruption disruption3 = createDisruptionBuilder()
-                .location("21q22.12")
+        ReportableGeneDisruption disruption3 = createDisruptionBuilder().location("21q22.12")
                 .gene("RUNX1")
                 .range("Promoter Region Upstream")
                 .type(StructuralVariantType.INS)
@@ -290,8 +297,7 @@ public class PDFWriterTest {
                 .geneMaxCopies(1)
                 .build();
 
-        ReportableGeneDisruption disruption4 = createDisruptionBuilder()
-                .location("1p13.1")
+        ReportableGeneDisruption disruption4 = createDisruptionBuilder().location("1p13.1")
                 .gene("CD58")
                 .range("Intron 2 Upstream")
                 .type(StructuralVariantType.DUP)
@@ -354,34 +360,5 @@ public class PDFWriterTest {
     @NotNull
     private static ImmutableEnrichedSomaticVariant.Builder createSomaticVariantBuilder() {
         return SomaticVariantTestBuilderFactory.createEnriched().filter("PASS");
-    }
-
-    @NotNull
-    private static ImmutableGeneCopyNumber.Builder createCopyNumberBuilder() {
-        return ImmutableGeneCopyNumber.builder()
-                .start(1)
-                .end(2)
-                .minRegionStart(0)
-                .minRegionStartSupport(SegmentSupport.NONE)
-                .minRegionEnd(0)
-                .minRegionEndSupport(SegmentSupport.NONE)
-                .minRegionMethod(CopyNumberMethod.UNKNOWN)
-                .minRegions(1)
-                .germlineHet2HomRegions(0)
-                .germlineHomRegions(0)
-                .somaticRegions(1)
-                .maxCopyNumber(0)
-                .transcriptID("trans")
-                .transcriptVersion(0)
-                .nonsenseBiallelicCount(0)
-                .nonsenseNonBiallelicCount(0)
-                .nonsenseNonBiallelicPloidy(0)
-                .spliceBiallelicCount(0)
-                .spliceNonBiallelicCount(0)
-                .spliceNonBiallelicPloidy(0)
-                .missenseBiallelicCount(0)
-                .missenseNonBiallelicCount(0)
-                .missenseNonBiallelicPloidy(0)
-                .minMinorAllelePloidy(0);
     }
 }

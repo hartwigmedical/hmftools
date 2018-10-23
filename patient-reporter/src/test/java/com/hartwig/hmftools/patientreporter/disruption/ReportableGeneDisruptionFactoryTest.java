@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.patientreporter.disruption;
 
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestCopyNumberBuilder;
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariant;
@@ -15,7 +18,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableGeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -26,12 +28,12 @@ public class ReportableGeneDisruptionFactoryTest {
 
     @Test
     public void canConvertPairedDisruption() {
-        Pair<GeneDisruption, GeneDisruption> pairedDisruption =
-                createTestDisruptionPair(StructuralVariantType.INV, "2", "q34", "ERBB4", 4, 9, 1D);
+        List<GeneCopyNumber> copyNumbers =
+                Lists.newArrayList(createTestCopyNumberBuilder().gene("ERBB4").minCopyNumber(1).maxCopyNumber(1).build());
+        List<GeneDisruption> pairedDisruptions = createTestDisruptionPair(StructuralVariantType.INV, "2", "q34", "ERBB4", 4, 9, 1D);
 
         List<ReportableGeneDisruption> reportableDisruptions =
-                ReportableGeneDisruptionFactory.toReportableGeneDisruptions(Lists.newArrayList(pairedDisruption.getLeft(),
-                        pairedDisruption.getRight()));
+                ReportableGeneDisruptionFactory.toReportableGeneDisruptions(pairedDisruptions, copyNumbers);
 
         assertEquals(1, reportableDisruptions.size());
 
@@ -40,25 +42,28 @@ public class ReportableGeneDisruptionFactoryTest {
         assertEquals("2q34", disruption.location());
         assertEquals("ERBB4", disruption.gene());
         assertEquals("Intron 4 -> Intron 9", disruption.range());
+        assertEquals(Integer.valueOf(1), disruption.geneMinCopies());
+        assertEquals(Integer.valueOf(1), disruption.geneMaxCopies());
         assertEquals(4, disruption.firstAffectedExon());
         assertEquals(1D, disruption.ploidy(), EPSILON);
     }
 
     @Test
-    public void canConvertNormalDisruptions() {
+    public void canConvertNormalDisruptionsWithoutCopyNumbers() {
         GeneDisruption disruption1 = createDisruption(StructuralVariantType.BND, "17", "q12", "CDK12", 12, 2.3, false);
         GeneDisruption disruption2 = createDisruption(StructuralVariantType.INS, "21", "q22.12", "RUNX1", 0, 0.8, true);
         GeneDisruption disruption3 = createDisruption(StructuralVariantType.DUP, "1", "p13.1", "CD58", 2, 0.2, true);
 
         List<GeneDisruption> disruptions = Lists.newArrayList(disruption1, disruption2, disruption3);
 
-        List<ReportableGeneDisruption> reportableDisruptions = ReportableGeneDisruptionFactory.toReportableGeneDisruptions(disruptions);
+        List<ReportableGeneDisruption> reportableDisruptions =
+                ReportableGeneDisruptionFactory.toReportableGeneDisruptions(disruptions, Lists.newArrayList());
         assertEquals(3, reportableDisruptions.size());
     }
 
     @NotNull
-    private static Pair<GeneDisruption, GeneDisruption> createTestDisruptionPair(@NotNull StructuralVariantType type,
-            @NotNull String chromosome, @NotNull String chromosomeBand, @NotNull String gene, int startExon, int endExon, double ploidy) {
+    private static List<GeneDisruption> createTestDisruptionPair(@NotNull StructuralVariantType type, @NotNull String chromosome,
+            @NotNull String chromosomeBand, @NotNull String gene, int startExon, int endExon, double ploidy) {
         EnrichedStructuralVariantLeg start =
                 createEnrichedStructuralVariantLegBuilder().orientation((byte) 1).chromosome(chromosome).build();
         EnrichedStructuralVariantLeg end = createEnrichedStructuralVariantLegBuilder().orientation((byte) 0).chromosome(chromosome).build();
@@ -82,7 +87,7 @@ public class ReportableGeneDisruptionFactoryTest {
         GeneDisruption downstreamDisruption =
                 ImmutableGeneDisruption.builder().reportable(true).linkedAnnotation(downstreamTranscript).build();
 
-        return Pair.of(upstreamDisruption, downstreamDisruption);
+        return Lists.newArrayList(upstreamDisruption, downstreamDisruption);
     }
 
     @NotNull

@@ -48,13 +48,16 @@ public final class GeneDisruptionDataSource {
                 GENE_MAX_COPIES.getName());
 
         for (ReportableGeneDisruption disruption : sort(disruptions)) {
+            String geneMinCopies = disruption.geneMinCopies() != null ? String.valueOf(disruption.geneMinCopies()) : "N/A";
+            String geneMaxCopies = disruption.geneMaxCopies() != null ? String.valueOf(disruption.geneMaxCopies()) : "N/A";
+
             dataSource.add(disruption.location(),
                     disruption.gene(),
                     disruption.range(),
                     disruption.type().name(),
                     PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyToCopiesString(disruption.ploidy())),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, String.valueOf(disruption.geneMinCopies())),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, String.valueOf(disruption.geneMaxCopies())));
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, geneMinCopies),
+                    PatientReportFormat.correctValueForFitStatus(fitStatus, geneMaxCopies));
         }
 
         return dataSource;
