@@ -13,7 +13,7 @@ public abstract class EvidenceItem {
     public abstract String event();
 
     @NotNull
-    public abstract String source();
+    public abstract ActionabilitySource source();
 
     @NotNull
     public abstract String reference();

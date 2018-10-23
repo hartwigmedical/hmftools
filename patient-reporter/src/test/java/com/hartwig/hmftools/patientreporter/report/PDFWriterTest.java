@@ -15,6 +15,7 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
@@ -127,7 +128,7 @@ public class PDFWriterTest {
                 .level("D")
                 .response("Resistant")
                 .reference("variant:222")
-                .source("civic")
+                .source(ActionabilitySource.CIVIC)
                 .isOnLabel(false)
                 .build());
         return evidenceItems;

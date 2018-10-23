@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
@@ -101,7 +102,7 @@ public class FusionEvidenceAnalyzer {
     private static ImmutableEvidenceItem.Builder fromActionableFusionPairs(@NotNull ActionableFusion actionableFusionPair) {
         return ImmutableEvidenceItem.builder()
                 .reference(actionableFusionPair.reference())
-                .source(actionableFusionPair.source())
+                .source(ActionabilitySource.fromString(actionableFusionPair.source()))
                 .drug(actionableFusionPair.drug())
                 .drugsType(actionableFusionPair.drugsType())
                 .level(actionableFusionPair.level())
@@ -113,7 +114,7 @@ public class FusionEvidenceAnalyzer {
             @NotNull ActionablePromiscuousThree actionablePromiscuousThree) {
         return ImmutableEvidenceItem.builder()
                 .reference(actionablePromiscuousThree.reference())
-                .source(actionablePromiscuousThree.source())
+                .source(ActionabilitySource.fromString(actionablePromiscuousThree.source()))
                 .drug(actionablePromiscuousThree.drug())
                 .drugsType(actionablePromiscuousThree.drugsType())
                 .level(actionablePromiscuousThree.level())
@@ -125,7 +126,7 @@ public class FusionEvidenceAnalyzer {
             @NotNull ActionablePromiscuousFive actionablePromiscuousFive) {
         return ImmutableEvidenceItem.builder()
                 .reference(actionablePromiscuousFive.reference())
-                .source(actionablePromiscuousFive.source())
+                .source(ActionabilitySource.fromString(actionablePromiscuousFive.source()))
                 .drug(actionablePromiscuousFive.drug())
                 .drugsType(actionablePromiscuousFive.drugsType())
                 .level(actionablePromiscuousFive.level())

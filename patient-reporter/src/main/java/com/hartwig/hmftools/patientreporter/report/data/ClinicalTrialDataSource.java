@@ -19,7 +19,6 @@ import net.sf.dynamicreports.report.definition.ReportParameters;
 import net.sf.jasperreports.engine.JRDataSource;
 
 public class ClinicalTrialDataSource {
-    private static final Logger LOGGER = LogManager.getLogger(ClinicalTrialDataSource.class);
 
     public static final FieldBuilder<?> EVENT_FIELD = field("event", String.class);
     public static final FieldBuilder<?> TRIAL_FIELD = field("trial", String.class);
@@ -44,15 +43,22 @@ public class ClinicalTrialDataSource {
                 ON_LABEL_FIELD.getName());
 
         for (EvidenceItem evidenceItem : sort(evidenceItems)) {
-            if (evidenceItem.source().equals("iclusion")){
+            if (evidenceItem.source().isTrialSource()){
                 evidenceItemDataSource.add(evidenceItem.event(),
                         evidenceItem.drug(),
-                        sourceName(evidenceItem.source()),
-                        evidenceItem.reference(),
+                        evidenceItem.source().sourceName(),
+                        CCMOID(evidenceItem.reference()),
                         evidenceItem.isOnLabel() ? "Yes" : "No");
             }
         }
         return evidenceItemDataSource;
+    }
+
+    @NotNull
+    private static String CCMOID(@NotNull String CCMO_ids) {
+        String CCMO_ids_new = CCMO_ids.replace(")", "");
+        String [] CCMO_ids_def = CCMO_ids_new.split("\\(");
+        return CCMO_ids_def[1];
     }
 
     @NotNull
@@ -65,18 +71,6 @@ public class ClinicalTrialDataSource {
             }
         }).collect(Collectors.toList());
     }
-
-    @NotNull
-    private static String sourceName(@NotNull String source) {
-        switch (source) {
-            case "iclusion":
-                return "Iclusion";
-            default:
-                LOGGER.warn("Unrecognized source in evidence item: " + source);
-                return Strings.EMPTY;
-        }
-    }
-
 
     @NotNull
     public static AbstractSimpleExpression<String> sourceHyperlink() {
