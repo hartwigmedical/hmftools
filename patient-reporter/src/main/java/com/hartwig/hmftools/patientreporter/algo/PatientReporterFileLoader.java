@@ -22,6 +22,8 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
+import com.hartwig.hmftools.patientreporter.chordclassifier.ChordAnalysis;
+import com.hartwig.hmftools.patientreporter.chordclassifier.ChordFile;
 import com.hartwig.hmftools.patientreporter.germline.BachelorFile;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 
@@ -44,6 +46,7 @@ final class PatientReporterFileLoader {
     private static final String SOMATIC_VCF_EXTENSION_V3 = "_post_processed_v2.2.vcf.gz";
     private static final String SOMATIC_VCF_EXTENSION_V4 = "_post_processed.vcf.gz";
     private static final String BACHELOR_DIRECTORY = "bachelor";
+    private static final String CHORD_DIRECTORY = "chord_classifier";
 
     private PatientReporterFileLoader() {
     }
@@ -110,6 +113,18 @@ final class PatientReporterFileLoader {
                     bachelorFile != null ? BachelorFile.loadBachelorFile(bachelorFile) : Lists.newArrayList();
 
             return germlineVariants.stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
+        }
+    }
+
+    @Nullable
+    static List<ChordAnalysis> loadChordFile(@NotNull String runDirectory, @NotNull String sample) throws IOException {
+        final String chordFilePath = runDirectory + File.separator + CHORD_DIRECTORY;
+        if(!ChordFile.hasChordRun(runDirectory, sample)) {
+            return null;
+        } else {
+            String chordFile = ChordFile.findChordFilePath(chordFilePath, sample);
+            return chordFile != null ? ChordFile.loadChordFile(chordFile) : Lists.newArrayList();
+
         }
     }
 

@@ -41,6 +41,7 @@ import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
+import com.hartwig.hmftools.patientreporter.chordclassifier.ChordAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutablePurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruption;
@@ -110,6 +111,8 @@ public abstract class PatientReporter {
 
         final List<GermlineVariant> germlineVariants = analyzeGermlineVariants(run);
 
+        final List<ChordAnalysis> chordValue = analyzeChord(run);
+
         LOGGER.info("Printing analysis results:");
         LOGGER.info(" Number of somatic variants to report : " + Integer.toString(somaticVariantAnalysis.variantsToReport().size()));
         LOGGER.info(" Microsatellite analysis results: " + Double.toString(somaticVariantAnalysis.microsatelliteIndelsPerMb())
@@ -117,6 +120,7 @@ public abstract class PatientReporter {
         LOGGER.info(" Mutational load results: " + Integer.toString(somaticVariantAnalysis.tumorMutationalLoad()));
         LOGGER.info(" Tumor mutational burden: " + Double.toString(somaticVariantAnalysis.tumorMutationalBurden())
                 + " number of mutations per MB");
+        LOGGER.info("Chord value: " + Double.toString(chordValue != null ? chordValue.size() : 0));
         LOGGER.info(" Number of germline variants to report : " + Integer.toString(germlineVariants != null ? germlineVariants.size() : 0));
         LOGGER.info(" Number of copy number events to report: " + Integer.toString(reportableGeneCopynumbers.size()));
         LOGGER.info(" Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
@@ -274,5 +278,17 @@ public abstract class PatientReporter {
         }
 
         return variants;
+    }
+
+    @Nullable
+    private static List<ChordAnalysis> analyzeChord (@NotNull RunContext run) throws IOException {
+        final String runDirectory = run.runDirectory();
+        final String sample = run.tumorSample();
+        final List<ChordAnalysis> chordValue = PatientReporterFileLoader.loadChordFile(runDirectory, sample);
+
+        if (chordValue == null) {
+            LOGGER.warn(" Could not load chord file. Probably chord classifier hasn't been run yet!");
+        }
+        return chordValue;
     }
 }
