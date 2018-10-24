@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.patientreporter.chordclassifier.ChordAnalysis;
 import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
@@ -39,6 +40,8 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract List<DriverCatalog> somaticVariantDriverCatalog();
 
     public abstract double microsatelliteIndelsPerMb();
+
+    public abstract List<ChordAnalysis> chordValue();
 
     public abstract int tumorMutationalLoad();
 

@@ -46,6 +46,8 @@ import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
+import com.hartwig.hmftools.patientreporter.chordclassifier.ChordAnalysis;
+import com.hartwig.hmftools.patientreporter.chordclassifier.ImmutableChordAnalysis;
 import com.hartwig.hmftools.patientreporter.disruption.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.fusion.ImmutableReportableGeneFusion;
@@ -81,6 +83,7 @@ public class PDFWriterTest {
         final List<EvidenceItem> evidenceItems = createTestEvidenceItems();
         final List<EnrichedSomaticVariant> somaticVariants = createTestSomaticVariants(purityAdjuster);
         final List<GermlineVariant> germlineVariants = createTestGermlineVariants(purityAdjuster);
+        final List<ChordAnalysis> chordAnalysis = createTestChord();
         final List<GeneCopyNumber> copyNumbers = createTestCopyNumbers();
         final List<ReportableGeneFusion> fusions = createTestFusions();
         final List<ReportableGeneDisruption> disruptions = createTestDisruptions();
@@ -98,6 +101,7 @@ public class PDFWriterTest {
                 somaticVariants,
                 driverCatalog,
                 microsatelliteIndelsPerMb,
+                chordAnalysis,
                 tumorMutationalLoad,
                 tumorMutationalBurden,
                 germlineVariants.size() > 0,
@@ -160,6 +164,19 @@ public class PDFWriterTest {
                 .build());
 
         return germlineVariants;
+    }
+
+    @NotNull
+    private static List<ChordAnalysis> createTestChord() {
+        List<ChordAnalysis> chordValues = Lists.newArrayList();
+        chordValues.add(ImmutableChordAnalysis.builder()
+        .BRCA1Value(0.5)
+        .noneValue(0.2)
+        .BRCA2Value(0.4)
+        .hrdValue(0.3)
+        .predictedResponseValue(0.9)
+        .build());
+        return chordValues;
     }
 
     @NotNull

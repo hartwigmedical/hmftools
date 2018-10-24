@@ -46,7 +46,7 @@ final class PatientReporterFileLoader {
     private static final String SOMATIC_VCF_EXTENSION_V3 = "_post_processed_v2.2.vcf.gz";
     private static final String SOMATIC_VCF_EXTENSION_V4 = "_post_processed.vcf.gz";
     private static final String BACHELOR_DIRECTORY = "bachelor";
-    private static final String CHORD_DIRECTORY = "chord_classifier";
+    private static final String CHORD_DIRECTORY = "chord";
 
     private PatientReporterFileLoader() {
     }

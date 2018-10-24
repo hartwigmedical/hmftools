@@ -21,7 +21,7 @@ public class ChordSection {
         final int graphValue = computeGraphValue(tumorMutationalBurdenIndicator);
 
         final GradientBar gradient = ImmutableGradientBar.of(new Color(253, 235, 208), new Color(248, 196, 113), "Low", "High", graphValue);
-        final SliderSection sliderSection = ImmutableSliderSection.of("Chord value",
+        final SliderSection sliderSection = ImmutableSliderSection.of("Chord Value",
                 interpret(tumorMutationalBurdenIndicator, fitStatus),
                 description(),
                 gradient);
@@ -32,7 +32,7 @@ public class ChordSection {
     @NotNull
     private static String interpret(final double tumorMutationalBurden, @NotNull FittedPurityStatus fitStatus) {
         return PatientReportFormat.correctValueForFitStatus(fitStatus, new DecimalFormat("#.#").format(tumorMutationalBurden))
-                + " variants per Mb.";
+                + " value of HR detection";
     }
 
     private static int computeGraphValue(final double value) {

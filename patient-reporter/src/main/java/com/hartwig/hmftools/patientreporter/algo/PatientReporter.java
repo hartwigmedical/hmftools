@@ -99,6 +99,8 @@ public abstract class PatientReporter {
                 structuralVariantAnalysis.reportableDisruptions(),
                 purpleAnalysis.geneCopyNumbers());
 
+        final List<ChordAnalysis> chordValue = analyzeChord(run);
+
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run,
                 purpleAnalysis,
                 sequencedReportData().somaticVariantEnrichment(),
@@ -111,8 +113,6 @@ public abstract class PatientReporter {
 
         final List<GermlineVariant> germlineVariants = analyzeGermlineVariants(run);
 
-        final List<ChordAnalysis> chordValue = analyzeChord(run);
-
         LOGGER.info("Printing analysis results:");
         LOGGER.info(" Number of somatic variants to report : " + Integer.toString(somaticVariantAnalysis.variantsToReport().size()));
         LOGGER.info(" Microsatellite analysis results: " + Double.toString(somaticVariantAnalysis.microsatelliteIndelsPerMb())
@@ -121,6 +121,7 @@ public abstract class PatientReporter {
         LOGGER.info(" Tumor mutational burden: " + Double.toString(somaticVariantAnalysis.tumorMutationalBurden())
                 + " number of mutations per MB");
         LOGGER.info("Chord value: " + Double.toString(chordValue != null ? chordValue.size() : 0));
+        LOGGER.info(chordValue);
         LOGGER.info(" Number of germline variants to report : " + Integer.toString(germlineVariants != null ? germlineVariants.size() : 0));
         LOGGER.info(" Number of copy number events to report: " + Integer.toString(reportableGeneCopynumbers.size()));
         LOGGER.info(" Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
@@ -160,6 +161,7 @@ public abstract class PatientReporter {
                 somaticVariantAnalysis.variantsToReport(),
                 somaticVariantAnalysis.driverCatalog(),
                 somaticVariantAnalysis.microsatelliteIndelsPerMb(),
+                chordValue != null ? chordValue : Lists.newArrayList(),
                 somaticVariantAnalysis.tumorMutationalLoad(),
                 somaticVariantAnalysis.tumorMutationalBurden(),
                 germlineVariants != null,

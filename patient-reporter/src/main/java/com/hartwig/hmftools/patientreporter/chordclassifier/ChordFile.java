@@ -15,9 +15,9 @@ import org.jetbrains.annotations.Nullable;
 
 public final class ChordFile {
     private static final Logger LOGGER = LogManager.getLogger(ChordFile.class);
-    private static final String DELIMITER = ",";
-    private static final String CHORD_FILE_EXTENSION = "_germline_variants.csv";
-    private static final String CHORD_HAS_RUN_FILE = "bachelor_found_no_variants";
+    private static final String DELIMITER = "\t";
+    private static final String CHORD_FILE_EXTENSION = "_chord_prediction.txt";
+    private static final String CHORD_HAS_RUN_FILE = "_chord_was_running.txt";
 
     private ChordFile() {
     }

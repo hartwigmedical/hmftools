@@ -15,6 +15,7 @@ import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.algo.GeneModel;
 import com.hartwig.hmftools.patientreporter.report.Commons;
+import com.hartwig.hmftools.patientreporter.report.components.ChordSection;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSection;
 import com.hartwig.hmftools.patientreporter.report.components.MutationalLoadSection;
@@ -66,6 +67,8 @@ public abstract class FindingsPage {
                 geneFusionReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 microsatelliteReport(report()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                chordReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 tumorMutationalLoadReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -224,6 +227,11 @@ public abstract class FindingsPage {
     @NotNull
     private static ComponentBuilder<?, ?> microsatelliteReport(@NotNull AnalysedPatientReport report) {
         return MicrosatelliteSection.build(report.microsatelliteIndelsPerMb(), report.fitStatus());
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> chordReport(@NotNull AnalysedPatientReport report) {
+        return ChordSection.build(report.chordValue().iterator().next().hrdValue(), report.fitStatus());
     }
 
     @NotNull
