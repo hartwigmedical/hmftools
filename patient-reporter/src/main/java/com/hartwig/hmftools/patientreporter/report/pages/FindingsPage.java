@@ -172,7 +172,7 @@ public abstract class FindingsPage {
                         .setDataSource(GermlineVariantDataSource.fromVariants(report.fitStatus(), report.germlineVariants())))
                         : cmp.text(noVariantsFoundText).setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        return cmp.verticalList(cmp.text("Germline Variants").setStyle(sectionHeaderStyle()),
+        return cmp.verticalList(cmp.text("Actionable Germline Variants").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
                 table);
     }

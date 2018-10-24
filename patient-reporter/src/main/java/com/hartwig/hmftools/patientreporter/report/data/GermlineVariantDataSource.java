@@ -43,7 +43,6 @@ public final class GermlineVariantDataSource {
                 PLOIDY_VAF_FIELD.getName(),
                 BIALLELIC_FIELD.getName());
 
-
         for (GermlineVariant variant : variants) {
             String ploidyVaf =
                     PatientReportFormat.ploidyVafField(variant.adjustedCopyNumber(), variant.minorAllelePloidy(), variant.adjustedVAF());
