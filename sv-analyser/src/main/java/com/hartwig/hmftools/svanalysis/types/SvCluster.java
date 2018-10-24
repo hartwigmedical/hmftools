@@ -5,6 +5,7 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.variantMatchesBreakend;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
@@ -25,8 +26,6 @@ import java.util.stream.Collectors;
 
 public class SvCluster
 {
-    final SvUtilities mUtils;
-
     private int mClusterId;
 
     private int mConsistencyCount;
@@ -67,10 +66,9 @@ public class SvCluster
 
     private static final Logger LOGGER = LogManager.getLogger(SvCluster.class);
 
-    public SvCluster(final int clusterId, final SvUtilities utils)
+    public SvCluster(final int clusterId)
     {
         mClusterId = clusterId;
-        mUtils = utils;
         mSVs = Lists.newArrayList();
         mUniqueBreakends = Lists.newArrayList();
         mArmGroups = Lists.newArrayList();
@@ -394,7 +392,7 @@ public class SvCluster
         if(!mRequiresRecalc)
             return;
 
-        mConsistencyCount = mUtils.calcConsistency(mSVs);
+        mConsistencyCount = calcConsistency(mSVs);
 
         // for now, just link to this
         mIsConsistent = (mConsistencyCount == 0);

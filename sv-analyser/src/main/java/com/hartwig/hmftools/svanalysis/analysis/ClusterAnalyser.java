@@ -374,7 +374,6 @@ public class ClusterAnalyser {
     {
         // it's possible that to resolve arms and more complex arrangements, clusters not merged
         // by proximity of overlaps must be put together to solve inconsistencies (ie loose ends)
-
         List<SvCluster> mergedClusters = Lists.newArrayList();
 
         // merge any cluster which is itself not consistent and has breakends on the same arm as another
@@ -427,7 +426,7 @@ public class ClusterAnalyser {
                     cluster1Merged = true;
                     cluster2Merged = true;
 
-                    newCluster = new SvCluster(mClusteringMethods.getNextClusterId(), mUtils);
+                    newCluster = new SvCluster(mClusteringMethods.getNextClusterId());
 
                     LOGGER.debug("new cluster({}) from merge of cluster({} svs={}) and cluster({} svs={})",
                             newCluster.getId(), cluster1.getId(), cluster1.getCount(), cluster2.getId(), cluster2.getCount());
@@ -486,34 +485,6 @@ public class ClusterAnalyser {
                         cluster1.getId(), cluster2.getId(), armGroup1.id());
 
                 return true;
-
-                /*
-                for(int i = 0; i < 2; ++i)
-                {
-                    final SvArmGroup group1 = (i==0) ? armGroup1 : armGroup2;
-                    final SvArmGroup group2 = (i==0) ? armGroup2 : armGroup1;
-
-                    if(group2.getBreakend(true) == null || group2.getBreakend(false) == null)
-                        continue;
-
-                    for(int be = SVI_START; be <= SVI_END; ++be)
-                    {
-                        boolean useStart = isStart(be);
-
-                        if(group1.getBreakend(useStart) == null)
-                            continue;
-
-                        if(group1.getBreakend(useStart).position() >= group2.getBreakend(true).position()
-                        && group1.getBreakend(useStart).position() <= group2.getBreakend(false).position())
-                        {
-                            LOGGER.debug("inconsistent cluster({}) and cluster({}) linked on chrArm({})",
-                                    cluster1.getId(), cluster2.getId(), armGroup1.id());
-
-                            return true;
-                        }
-                    }
-                }
-                    */
             }
         }
 

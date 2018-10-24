@@ -103,7 +103,10 @@ public class SvArmGroup {
         if(mStartBreakend == null || mEndBreakend == null)
             return false;
 
-        if(mStartBreakend.orientation() != 1 || mEndBreakend.orientation() != -1)
+        if(!mStartBreakend.getSV().isSimpleType() && mStartBreakend.orientation() != 1)
+            return false;
+
+        if(!mEndBreakend.getSV().isSimpleType() && mEndBreakend.orientation() != -1)
             return false;
 
         double cnStart = mStartBreakend.getSV().copyNumber(mStartBreakend.usesStart());

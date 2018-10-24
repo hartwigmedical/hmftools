@@ -163,10 +163,10 @@ public class SvAnalyser {
         {
             ResultsChecker resultsChecker = new ResultsChecker();
             resultsChecker.setLogMismatches(cmd.hasOption(LOG_DEBUG));
-            resultsChecker.setIdColumns(true);
 
             if(resultsChecker.loadConfig(cmd))
             {
+                resultsChecker.setIdColumns(true);
                 resultsChecker.addDefaultColumnsToCheck();
                 if(resultsChecker.runChecks())
                     LOGGER.info("results validation passed");

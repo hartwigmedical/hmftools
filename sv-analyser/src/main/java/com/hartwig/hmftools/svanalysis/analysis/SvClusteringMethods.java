@@ -124,20 +124,50 @@ public class SvClusteringMethods {
             SvVarData currentVar = unassignedVariants.get(currentIndex);
 
             // make a new cluster
-            SvCluster newCluster = new SvCluster(getNextClusterId(), mUtils);
+            SvCluster newCluster = new SvCluster(getNextClusterId());
 
             // first remove the current SV from consideration
             newCluster.addVariant(currentVar);
             unassignedVariants.remove(currentIndex); // index will remain the same and so point to the next item
 
             // and then search for all other linked ones
-            findLinkedSVsByDistance(newCluster, unassignedVariants);
+            findLinkedSVsByDistance(newCluster, unassignedVariants, true);
+
+            // check for invalid clusters - currently just overlapping DELs
+            if(newCluster.getCount() > 1 && newCluster.getCount() == calcTypeCount(newCluster.getSVs(), DEL))
+                addDelGroupClusters(clusters, newCluster);
+            else
+                clusters.add(newCluster);
+        }
+    }
+
+    private void addDelGroupClusters(List<SvCluster> clusters, SvCluster delGroupCluster)
+    {
+        // only cluster if proximate and not overlapping
+        int currentIndex = 0;
+
+        List<SvVarData> delSVs = Lists.newArrayList();
+        delSVs.addAll(delGroupCluster.getSVs());
+
+        while(currentIndex < delSVs.size())
+        {
+            SvVarData currentVar = delSVs.get(currentIndex);
+
+            // make a new cluster
+            SvCluster newCluster = new SvCluster(getNextClusterId());
+
+            // first remove the current SV from consideration
+            newCluster.addVariant(currentVar);
+            delSVs.remove(currentIndex); // index will remain the same and so point to the next item
+
+            // and then search for all other linked ones
+            findLinkedSVsByDistance(newCluster, delSVs, false);
 
             clusters.add(newCluster);
         }
     }
 
-    private void findLinkedSVsByDistance(SvCluster cluster, List<SvVarData> unassignedVariants)
+    private void findLinkedSVsByDistance(SvCluster cluster, List<SvVarData> unassignedVariants, boolean allowOverlaps)
     {
         // look for any other SVs which form part of this cluster based on proximity
         int currentIndex = 0;
@@ -152,12 +182,12 @@ public class SvClusteringMethods {
             {
                 // test each possible linkage
                 if (!mUtils.areVariantsLinkedByDistance(currentVar, otherVar))
-                {
                     continue;
-                }
+
+                if(!allowOverlaps && !(currentVar.position(false) < otherVar.position(true) || otherVar.position(false) < currentVar.position(true)))
+                    continue;
 
                 cluster.addVariant(currentVar);
-
                 matched = true;
                 break;
             }
@@ -750,8 +780,7 @@ public class SvClusteringMethods {
                 ++armCount;
             }
 
-            LOGGER.debug("sample({}) chr({}) svCount({} delDups({})",
-                    sampleId, chromosome, breakendList.size(), armCount);
+            // LOGGER.debug("sample({}) chr({}) svCount({} delDups({})", sampleId, chromosome, breakendList.size(), armCount);
         }
 
         int trimCount = (int)round(simpleArmCount / (double)MAX_ARM_COUNT * DEL_DUP_LENGTH_TRIM_COUNT);
@@ -766,8 +795,8 @@ public class SvClusteringMethods {
         LOGGER.debug("sample({}) simple dels and dups: count({}) cutoff-length({}) simpleArms({}) trimCount({})",
                 sampleId, lengthsList.size(), mDelDupCutoffLength, simpleArmCount, trimCount);
 
-        LOGGER.info("DEL_DUP_CUTOFF: {},{},{},{},{}",
-                sampleId, lengthsList.size(), mDelDupCutoffLength, simpleArmCount, trimCount);
+        // LOGGER.info("DEL_DUP_CUTOFF: {},{},{},{},{}",
+        //        sampleId, lengthsList.size(), mDelDupCutoffLength, simpleArmCount, trimCount);
 
         mDelDupCutoffLength = min(max(mDelDupCutoffLength, MIN_SIMPLE_DUP_DEL_CUTOFF), MAX_SIMPLE_DUP_DEL_CUTOFF);
     }
@@ -1109,7 +1138,7 @@ public class SvClusteringMethods {
 
         for (final SvCluster cluster : clusters)
         {
-            if (cluster.getUniqueSvCount() != 2 || !cluster.getDesc().equals("INV=2"))
+            if (cluster.getUniqueSvCount() != 2 || calcTypeCount(cluster.getSVs(), INV) != 2)
                 continue;
 
             if (!cluster.isConsistent())
