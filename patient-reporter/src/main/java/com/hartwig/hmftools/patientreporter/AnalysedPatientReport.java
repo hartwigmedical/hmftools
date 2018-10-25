@@ -41,11 +41,12 @@ public abstract class AnalysedPatientReport implements PatientReport {
 
     public abstract double microsatelliteIndelsPerMb();
 
-    public abstract List<ChordAnalysis> chordValue();
-
     public abstract int tumorMutationalLoad();
 
     public abstract double tumorMutationalBurden();
+
+    @NotNull
+    public abstract ChordAnalysis chordAnalysis();
 
     public abstract boolean hasGermlineAnalysis();
 

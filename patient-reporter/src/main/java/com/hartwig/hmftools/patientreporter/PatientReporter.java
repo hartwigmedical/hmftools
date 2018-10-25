@@ -94,7 +94,7 @@ abstract class PatientReporter {
                 structuralVariantAnalysis.reportableDisruptions(),
                 purpleAnalysis.geneCopyNumbers());
 
-        final List<ChordAnalysis> chordValue = analyzeChord(run);
+        final ChordAnalysis chordAnalysis = analyzeChord(run);
 
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run,
                 purpleAnalysis,
@@ -115,8 +115,7 @@ abstract class PatientReporter {
         LOGGER.info(" Mutational load results: " + Integer.toString(somaticVariantAnalysis.tumorMutationalLoad()));
         LOGGER.info(" Tumor mutational burden: " + Double.toString(somaticVariantAnalysis.tumorMutationalBurden())
                 + " number of mutations per MB");
-        LOGGER.info("chordValue: ");
-        LOGGER.info(chordValue != null ? chordValue.iterator().next().hrdValue() : "no found chordValue: null");
+        LOGGER.info(" CHORD analysis HRD prediction: " + Double.toString(chordAnalysis.hrdValue()));
         LOGGER.info(" Number of germline variants to report : " + Integer.toString(germlineVariants != null ? germlineVariants.size() : 0));
         LOGGER.info(" Number of copy number events to report: " + Integer.toString(reportableGeneCopynumbers.size()));
         LOGGER.info(" Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
@@ -156,9 +155,9 @@ abstract class PatientReporter {
                 somaticVariantAnalysis.variantsToReport(),
                 somaticVariantAnalysis.driverCatalog(),
                 somaticVariantAnalysis.microsatelliteIndelsPerMb(),
-                chordValue != null ? chordValue : Lists.newArrayList(),
                 somaticVariantAnalysis.tumorMutationalLoad(),
                 somaticVariantAnalysis.tumorMutationalBurden(),
+                chordAnalysis,
                 germlineVariants != null,
                 germlineVariants != null ? germlineVariants : Lists.newArrayList(),
                 reportableGeneCopynumbers,
@@ -277,15 +276,8 @@ abstract class PatientReporter {
         return variants;
     }
 
-    @Nullable
-    private static List<ChordAnalysis> analyzeChord (@NotNull RunContext run) throws IOException {
-        final String runDirectory = run.runDirectory();
-        final String sample = run.tumorSample();
-        final List<ChordAnalysis> chordValue = PatientReporterFileLoader.loadChordFile(runDirectory, sample);
-
-        if (chordValue == null) {
-            LOGGER.warn(" Could not load chord file. Probably chord classifier hasn't been run yet!");
-        }
-        return chordValue;
+    @NotNull
+    private static ChordAnalysis analyzeChord(@NotNull RunContext run) throws IOException {
+        return PatientReporterFileLoader.loadChordFile(run.runDirectory(), run.tumorSample());
     }
 }

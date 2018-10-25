@@ -116,16 +116,10 @@ public final class PatientReporterFileLoader {
         }
     }
 
-    @Nullable
-    static List<ChordAnalysis> loadChordFile(@NotNull String runDirectory, @NotNull String sample) throws IOException {
-        final String chordFilePath = runDirectory + File.separator + CHORD_DIRECTORY;
-        if(!ChordFile.hasChordRun(chordFilePath, sample)) {
-            return null;
-        } else {
-            String chordFile = ChordFile.findChordFilePath(chordFilePath, sample);
-            return chordFile != null ? ChordFile.loadChordFile(chordFile) : Lists.newArrayList();
-
-        }
+    @NotNull
+    static ChordAnalysis loadChordFile(@NotNull String runDirectory, @NotNull String sample) throws IOException {
+        final String chordDirectory = runDirectory + File.separator + CHORD_DIRECTORY;
+        return ChordFile.loadChordFile(chordDirectory, sample);
     }
 
     @Nullable

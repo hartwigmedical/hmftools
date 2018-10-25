@@ -7,19 +7,19 @@ import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 
-public class ChordSection {
+public final class ChordSection {
 
     private static final int BUFFER = 3;
-    private static final double START = 1E-2;
-    private static final double END = 120;
+    private static final double START = 0;
+    private static final double END = 1;
 
     @NotNull
-    public static ComponentBuilder<?, ?> build(final double chordValue) {
-        final int graphValue = computeGraphValue(chordValue);
+    public static ComponentBuilder<?, ?> build(final double chordHrdProbability) {
+        final int graphValue = computeGraphValue(chordHrdProbability);
 
         final GradientBar gradient = ImmutableGradientBar.of(new Color(214, 234, 248), new Color(174, 214, 241), "Low", "High", graphValue);
         final SliderSection sliderSection = ImmutableSliderSection.of("Chord Value",
-                interpret(chordValue),
+                interpret(chordHrdProbability),
                 description(),
                 gradient);
 
@@ -42,7 +42,7 @@ public class ChordSection {
     }
 
     private static double scale(double value) {
-        return Math.log10(value);
+        return value;
     }
 
     @NotNull

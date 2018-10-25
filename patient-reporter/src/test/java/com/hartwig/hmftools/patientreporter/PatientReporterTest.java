@@ -24,7 +24,7 @@ import org.junit.Test;
 
 public class PatientReporterTest {
 
-    private static final String RUN_DIRECTORY = Resources.getResource("example").getPath();
+    private static final String RUN_DIRECTORY = Resources.getResource("test_run").getPath();
 
     @Test
     public void canRunOnRunDirectory() throws IOException {

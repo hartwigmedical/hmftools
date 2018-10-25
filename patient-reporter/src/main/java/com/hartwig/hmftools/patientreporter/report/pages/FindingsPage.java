@@ -67,13 +67,13 @@ public abstract class FindingsPage {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 germlineVariantReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
+                chordReport(report()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
                 geneCopyNumberReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 geneFusionReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 microsatelliteReport(report()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                Double.toString(report().chordValue().iterator().next().hrdValue()) != null ? chordReport(report()) : cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 tumorMutationalLoadReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -240,7 +240,7 @@ public abstract class FindingsPage {
 
     @NotNull
     private static ComponentBuilder<?, ?> chordReport(@NotNull AnalysedPatientReport report) {
-        return ChordSection.build(report.chordValue().iterator().next().hrdValue());
+        return ChordSection.build(report.chordAnalysis().hrdValue());
     }
 
     @NotNull
