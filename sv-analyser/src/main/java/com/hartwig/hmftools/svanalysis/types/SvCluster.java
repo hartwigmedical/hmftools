@@ -58,11 +58,16 @@ public class SvCluster
 
     public static String RESOLVED_TYPE_SIMPLE_SV = "SimpleSV";
     public static String RESOLVED_TYPE_RECIPROCAL_TRANS = "RecipTrans";
+    // public static String RESOLVED_TYPE_RECIPROCAL_INV = "RecipInv";
 
-    public static String RESOLVED_TYPE_INV_PAIR_DEL_INT_TI = "RecipInv";
-    public static String RESOLVED_TYPE_INV_PAIR_DEL_EXT_TI = "DEL_Ext_TI";
-    public static String RESOLVED_TYPE_INV_PAIR_DUP_INT_TI = "DUP_Int_TI";
-    public static String RESOLVED_TYPE_INV_PAIR_DUP_EXT_TI = "DUP_Ext_TI";
+    public static String RESOLVED_TYPE_NONE = "None";
+    public static String RESOLVED_TYPE_DEL_INT_TI = "DEL_Int_TI";
+    public static String RESOLVED_TYPE_DEL_EXT_TI = "DEL_Ext_TI";
+    public static String RESOLVED_TYPE_DUP_INT_TI = "DUP_Int_TI";
+    public static String RESOLVED_TYPE_DUP_EXT_TI = "DUP_Ext_TI";
+
+    public static String RESOLVED_TYPE_SIMPLE_CHAIN = "SimpleChain";
+    public static String RESOLVED_TYPE_COMPLEX_CHAIN = "ComplexChain";
 
     private static final Logger LOGGER = LogManager.getLogger(SvCluster.class);
 
@@ -78,7 +83,7 @@ public class SvCluster
         mConsistencyCount = 0;
         mIsConsistent = false;
         mIsResolved = false;
-        mResolvedType = "";
+        mResolvedType = RESOLVED_TYPE_NONE;
         mLengthOverride = 0;
         mRequiresRecalc = true;
         mAnnotationList = Lists.newArrayList();
@@ -115,6 +120,8 @@ public class SvCluster
         mUnchainedSVs.add(var);
         mRequiresRecalc = true;
         mIsResolved = false;
+        mResolvedType = RESOLVED_TYPE_NONE;
+        mLengthOverride = 0;
 
         if(var.isReplicatedSv())
             mHasReplicatedSVs = true;

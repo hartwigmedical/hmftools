@@ -288,9 +288,9 @@ public class SvVarData
 
     public final String typeStr()
     {
-        if(chromosome(true).equals(chromosome(false)) && mStartArm != mEndArm )
-            return "CRS";
-        else if(isNoneSegment())
+        //if(chromosome(true).equals(chromosome(false)) && mStartArm != mEndArm )
+        //    return "CRS";
+        if(isNoneSegment())
             return "NONE";
         else
             return type().toString();

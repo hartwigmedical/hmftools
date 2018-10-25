@@ -322,6 +322,10 @@ public class SvUtilities {
             for(int be = SVI_START; be <= SVI_END; ++be)
             {
                 boolean useStart = isStart(be);
+
+                if(!useStart && var.isNullBreakend())
+                    continue;
+
                 consistencyCount += (var.arm(useStart) == CHROMOSOME_ARM_P ? 1 : -1) * var.orientation(useStart) * 1;
             }
         }

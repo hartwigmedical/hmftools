@@ -151,8 +151,8 @@ public class SvSampleAnalyser {
 
         mPc3.start();
         mClusteringMethods.clusterByBaseDistance(mAllVariants, mClusters);
-        mAnalyser.setClusters(mClusters);
-        mAnalyser.findSimpleCompleteChains(mSampleId);
+        mAnalyser.setClusterData(mSampleId, mClusters);
+        mAnalyser.findSimpleCompleteChains();
         // mClusteringMethods.reportPotentialFoldbacks(mSampleId, mClusters);
         mClusteringMethods.mergeClusters(mSampleId, mClusters);
         mPc3.stop();
@@ -165,7 +165,7 @@ public class SvSampleAnalyser {
         }
 
         mPc4.start();
-        mAnalyser.findLinksAndChains(mSampleId);
+        mAnalyser.findLinksAndChains();
         mAnalyser.markFoldbacks();
         // mClusteringMethods.logInversionPairData(mSampleId, mClusters);
         mPc4.stop();
@@ -274,7 +274,7 @@ public class SvSampleAnalyser {
                 writer.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd");
 
                 // cluster-level info
-                writer.write(",ClusterDesc,Consistency,ArmCount");
+                writer.write(",ClusterDesc,ResolvedType,Consistency,ArmCount");
 
                 // linked pair info
                 writer.write(",LnkSvStart,LnkTypeStart,LnkLenStart,LnkSvEnd,LnkTypeEnd,LnkLenEnd");
@@ -302,7 +302,7 @@ public class SvSampleAnalyser {
 
             for(final SvCluster cluster : mClusters)
             {
-                int varCount = cluster.getUniqueSvCount();
+                int clusterSvCount = cluster.getUniqueSvCount();
 
                 for (final SvVarData var : cluster.getSVs())
                 {
@@ -328,7 +328,7 @@ public class SvSampleAnalyser {
 
                     writer.write(
                             String.format("%s,%s,%s,%d,%d,%d,%.2f",
-                                    mSampleId, var.id(), var.typeStr(), cluster.getId(), subCluster.getId(), varCount, dbData.ploidy()));
+                                    mSampleId, var.id(), var.typeStr(), cluster.getId(), subCluster.getId(), clusterSvCount, dbData.ploidy()));
 
                     writer.write(
                             String.format(",%s,%d,%d,%s,%.2f,%.2f,%.2f,%s,%d,%d,%s,%.2f,%.2f,%.2f",
@@ -351,8 +351,8 @@ public class SvSampleAnalyser {
                                     mClusteringMethods.getChrArmData(var)));
 
                     writer.write(
-                            String.format(",%s,%d,%d",
-                                    cluster.getDesc(), cluster.getConsistencyCount(), cluster.getChromosomalArmCount()));
+                            String.format(",%s,%s,%d,%d",
+                                    cluster.getDesc(), cluster.getResolvedType(), cluster.getConsistencyCount(), cluster.getChromosomalArmCount()));
 
                     // linked pair info
                     final SvLinkedPair startLP = cluster.getLinkedPair(var, true);

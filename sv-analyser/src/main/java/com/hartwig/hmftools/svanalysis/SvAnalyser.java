@@ -34,14 +34,14 @@ public class SvAnalyser {
 
     public static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
-    private static final String CLUSTER_SVS = "cluster_svs";
+    private static final String RUN_SVA = "run_sv_analysis";
     private static final String DATA_OUTPUT_PATH = "data_output_path";
     private static final String LOG_DEBUG = "log_debug";
     private static final String WRITE_FILTERED_SVS = "write_pon_filters";
     private static final String LOG_VCF_INSERTS = "log_vcf_inserts";
     private static final String LOG_VCF_MANTA_DATA = "log_vcf_manta_data";
     private static final String LINE_ELEMENT_FILE = "line_element_file";
-    private static final String COPY_NUMBER_ANALYSIS = "copy_number_analysis";
+    private static final String COPY_NUMBER_ANALYSIS = "run_cn_analysis";
     private static final String RUN_RESULTS_CHECKER = "run_results_checker";
     private static final String EXTERNAL_DATA_LINK_FILE = "ext_data_link_file";
     private static final String INCLUDE_NONE_SEGMENTS = "incl_none_segments";
@@ -70,7 +70,8 @@ public class SvAnalyser {
 
         if (tumorSample.isEmpty())
         {
-            samplesList = getStructuralVariantSamplesList(dbAccess);
+            if(dbAccess != null)
+                samplesList = getStructuralVariantSamplesList(dbAccess);
         }
         else if (tumorSample.contains(","))
         {
@@ -80,6 +81,91 @@ public class SvAnalyser {
         else
         {
             samplesList.add(tumorSample);
+        }
+
+        if(cmd.hasOption(COPY_NUMBER_ANALYSIS))
+        {
+            CNAnalyser cnAnalyser = new CNAnalyser(cmd.getOptionValue(DATA_OUTPUT_PATH), dbAccess);
+
+            cnAnalyser.loadConfig(cmd, samplesList);
+            cnAnalyser.analyseData();
+            cnAnalyser.close();
+
+            LOGGER.info("CN analysis complete");
+            return;
+        }
+
+        if(cmd.hasOption(RUN_SVA))
+        {
+            ExtDataLinker extDataLinker = null;
+
+            if (cmd.hasOption(EXTERNAL_DATA_LINK_FILE))
+            {
+                extDataLinker = new ExtDataLinker();
+                extDataLinker.loadFile(cmd.getOptionValue(EXTERNAL_DATA_LINK_FILE));
+            }
+
+            SvClusteringConfig clusteringConfig = new SvClusteringConfig(cmd, tumorSample);
+            SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(clusteringConfig);
+
+            int count = 0;
+            for (final String sample : samplesList)
+            {
+                ++count;
+                List<SvVarData> svVarData = queryStructuralVariantData(dbAccess, sample);
+
+                LOGGER.info("sample({}) processing {} SVs, totalProcessed({})", sample, svVarData.size(), count);
+
+                if (cmd.hasOption(INCLUDE_NONE_SEGMENTS))
+                {
+                    CNAnalyser cnAnalyser = new CNAnalyser(cmd.getOptionValue(DATA_OUTPUT_PATH), dbAccess);
+
+                    int varCount = svVarData.size();
+                    List<StructuralVariantData> noneSegmentSVs = cnAnalyser.loadNoneSegments(sample, varCount + 1);
+
+                    LOGGER.debug("sample({}) including {} none copy number segments", sample, noneSegmentSVs.size());
+
+                    for (final StructuralVariantData svData : noneSegmentSVs)
+                    {
+                        SvVarData var = new SvVarData(svData);
+                        var.setNoneSegment(true);
+                        svVarData.add(var);
+                    }
+                }
+
+                sampleAnalyser.loadFromDatabase(sample, svVarData);
+
+                if (extDataLinker != null && extDataLinker.hasData())
+                {
+                    extDataLinker.setSVData(sample, svVarData);
+                }
+                else
+                {
+                    sampleAnalyser.analyse();
+                }
+            }
+
+            sampleAnalyser.close();
+        }
+
+        if(cmd.hasOption(RUN_RESULTS_CHECKER))
+        {
+            ResultsChecker resultsChecker = new ResultsChecker();
+            resultsChecker.setLogMismatches(cmd.hasOption(LOG_DEBUG));
+
+            if(resultsChecker.loadConfig(cmd, samplesList))
+            {
+                resultsChecker.setIdColumns(true);
+                resultsChecker.addDefaultColumnsToCheck();
+
+                if(resultsChecker.loadData())
+                {
+                    if (resultsChecker.runChecks())
+                        LOGGER.info("results validation passed");
+                    else
+                        LOGGER.warn("results validation failed");
+                }
+            }
         }
 
         if(cmd.hasOption(WRITE_FILTERED_SVS) || cmd.hasOption(LOG_VCF_INSERTS))
@@ -96,85 +182,6 @@ public class SvAnalyser {
             LOGGER.info("reads complete");
             return;
         }
-
-        if(cmd.hasOption(COPY_NUMBER_ANALYSIS))
-        {
-            CNAnalyser cnAnalyser = new CNAnalyser(cmd.getOptionValue(DATA_OUTPUT_PATH), dbAccess);
-
-            cnAnalyser.loadConfig(cmd, samplesList);
-            cnAnalyser.analyseData();
-            cnAnalyser.close();
-
-            LOGGER.info("CN analysis complete");
-            return;
-        }
-
-        ExtDataLinker extDataLinker = null;
-
-        if (cmd.hasOption(EXTERNAL_DATA_LINK_FILE))
-        {
-            extDataLinker = new ExtDataLinker();
-            extDataLinker.loadFile(cmd.getOptionValue(EXTERNAL_DATA_LINK_FILE));
-        }
-
-        SvClusteringConfig clusteringConfig = new SvClusteringConfig(cmd, tumorSample);
-        SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(clusteringConfig);
-
-        int count = 0;
-        for (final String sample : samplesList)
-        {
-            ++count;
-            List<SvVarData> svVarData = queryStructuralVariantData(dbAccess, sample);
-
-            LOGGER.info("sample({}) processing {} SVs, totalProcessed({})", sample, svVarData.size(), count);
-
-            if(cmd.hasOption(INCLUDE_NONE_SEGMENTS))
-            {
-                CNAnalyser cnAnalyser = new CNAnalyser(cmd.getOptionValue(DATA_OUTPUT_PATH), dbAccess);
-
-                int varCount = svVarData.size();
-                List<StructuralVariantData> noneSegmentSVs = cnAnalyser.loadNoneSegments(sample, varCount+1);
-
-                LOGGER.debug("sample({}) including {} none copy number segments", sample, noneSegmentSVs.size());
-
-                for(final StructuralVariantData svData : noneSegmentSVs)
-                {
-                    SvVarData var = new SvVarData(svData);
-                    var.setNoneSegment(true);
-                    svVarData.add(var);
-                }
-            }
-
-            sampleAnalyser.loadFromDatabase(sample, svVarData);
-
-            if(extDataLinker != null && extDataLinker.hasData())
-            {
-                extDataLinker.setSVData(sample, svVarData);
-            }
-            else
-            {
-                sampleAnalyser.analyse();
-            }
-        }
-
-        sampleAnalyser.close();
-
-        if(cmd.hasOption(RUN_RESULTS_CHECKER))
-        {
-            ResultsChecker resultsChecker = new ResultsChecker();
-            resultsChecker.setLogMismatches(cmd.hasOption(LOG_DEBUG));
-
-            if(resultsChecker.loadConfig(cmd))
-            {
-                resultsChecker.setIdColumns(true);
-                resultsChecker.addDefaultColumnsToCheck();
-                if(resultsChecker.runChecks())
-                    LOGGER.info("results validation passed");
-                else
-                    LOGGER.warn("results validation failed");
-            }
-        }
-
 
         LOGGER.info("run complete");
     }
@@ -212,7 +219,7 @@ public class SvAnalyser {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
-        options.addOption(CLUSTER_SVS, false, "Whether to run clustering logic");
+        options.addOption(RUN_SVA, false, "Whether to run clustering logic");
         options.addOption(DATA_OUTPUT_PATH, true, "CSV output directory");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         options.addOption(WRITE_FILTERED_SVS, false, "Includes filtered SVs and writes all to file for PON creation");
