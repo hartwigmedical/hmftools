@@ -19,8 +19,7 @@ public final class ChordSection {
     public static ComponentBuilder<?, ?> build(final double chordHrdProbability, @NotNull FittedPurityStatus fitStatus) {
         final int graphValue = computeGraphValue(chordHrdProbability);
 
-//        final GradientBar gradient = ImmutableGradientBar.of(new Color(214, 234, 248), new Color(174, 214, 241), "Low", "High", graphValue);
-        final GradientBar gradient = ImmutableGradientBar.of(new Color(239, 239, 239), new Color(171, 191, 171), "Low", "High", graphValue);
+        final GradientBar gradient = ImmutableGradientBar.of(new Color(214, 234, 248), new Color(174, 214, 241), "Low", "High", graphValue);
 
         final SliderSection sliderSection = ImmutableSliderSection.of("HR-Deficiency Probability",
                 interpret(chordHrdProbability, fitStatus),

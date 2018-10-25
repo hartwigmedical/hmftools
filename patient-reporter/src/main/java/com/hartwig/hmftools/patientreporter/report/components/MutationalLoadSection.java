@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 
 public final class MutationalLoadSection {
-    private static final int DRUP_THRESHOLD = 140;
+    private static final int ML_THRESHOLD = 140;
 
     //MIVO: buffer at edges of slider bar for min/max values. e.g. value of 1 would put min=1 and max=99
     private static final int BUFFER = 3;
@@ -20,7 +20,7 @@ public final class MutationalLoadSection {
     @NotNull
     public static ComponentBuilder<?, ?> build(final int mutationalLoad, @NotNull FittedPurityStatus fitStatus) {
         final int graphValue = computeGraphValue(mutationalLoad);
-        final int markerValue = computeGraphValue(DRUP_THRESHOLD);
+        final int markerValue = computeGraphValue(ML_THRESHOLD);
         final GradientBar gradient =
                 ImmutableGradientBar.of(new Color(239, 229, 203), new Color(159, 163, 193), "Low", "High", graphValue, markerValue);
         final SliderSection sliderSection =
@@ -31,7 +31,7 @@ public final class MutationalLoadSection {
     @NotNull
     private static String interpret(final int mutationalLoad, @NotNull FittedPurityStatus fitStatus) {
         final String formattedMutationalLoad = PatientReportFormat.correctValueForFitStatus(fitStatus, Integer.toString(mutationalLoad));
-        if (mutationalLoad > DRUP_THRESHOLD) {
+        if (mutationalLoad > ML_THRESHOLD) {
             return "High (" + formattedMutationalLoad + ")";
         } else {
             return "Low (" + formattedMutationalLoad + ")";
@@ -54,8 +54,8 @@ public final class MutationalLoadSection {
 
     @NotNull
     private static String description() {
-        return "The tumor mutational load represents the total number of somatic missense somaticVariants across"
-                + " the whole genome of the tumor. Patients with a mutational load over " + DRUP_THRESHOLD
+        return "The tumor mutational load represents the total number of somatic missense variants across"
+                + " the whole genome of the tumor. Patients with a mutational load over " + ML_THRESHOLD
                 + " could be eligible for immunotherapy within the DRUP study. ";
     }
 }
