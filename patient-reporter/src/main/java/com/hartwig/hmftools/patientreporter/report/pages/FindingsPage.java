@@ -61,7 +61,7 @@ public abstract class FindingsPage {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 evidenceItemReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                clinicalTrialToReport(report()),
+                clinicalTrialReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 somaticVariantReport(report(), reporterData().panelGeneModel()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -114,7 +114,7 @@ public abstract class FindingsPage {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> clinicalTrialToReport(@NotNull AnalysedPatientReport report) {
+    private static ComponentBuilder<?, ?> clinicalTrialReport(@NotNull AnalysedPatientReport report) {
         List<EvidenceItem> clinicalTrials = ReportableClinicalTrials.reportableTrials(report.evidenceItems());
 
         final ComponentBuilder<?, ?> table =
@@ -184,9 +184,14 @@ public abstract class FindingsPage {
                         .setDataSource(GermlineVariantDataSource.fromVariants(report.fitStatus(), report.germlineVariants())))
                         : cmp.text(noVariantsFoundText).setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        return cmp.verticalList(cmp.text("Actionable Germline Variants").setStyle(sectionHeaderStyle()),
+        return cmp.verticalList(cmp.text("HR-Related Germline Variants").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
                 table);
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> chordReport(@NotNull AnalysedPatientReport report) {
+        return ChordSection.build(report.chordAnalysis().hrdValue(), report.fitStatus());
     }
 
     @NotNull
@@ -236,11 +241,6 @@ public abstract class FindingsPage {
     @NotNull
     private static ComponentBuilder<?, ?> microsatelliteReport(@NotNull AnalysedPatientReport report) {
         return MicrosatelliteSection.build(report.microsatelliteIndelsPerMb(), report.fitStatus());
-    }
-
-    @NotNull
-    private static ComponentBuilder<?, ?> chordReport(@NotNull AnalysedPatientReport report) {
-        return ChordSection.build(report.chordAnalysis().hrdValue(), report.fitStatus());
     }
 
     @NotNull
