@@ -168,8 +168,8 @@ public class PDFWriterTest {
 
     @NotNull
     private static ChordAnalysis createTestChordAnalysis() {
-        double brca1Value = 0.4;
-        double brca2Value = 0.5;
+        double brca1Value = 0.10;
+        double brca2Value = 0.86;
 
         return ImmutableChordAnalysis.builder()
                 .noneValue(1 - (brca1Value + brca2Value))
