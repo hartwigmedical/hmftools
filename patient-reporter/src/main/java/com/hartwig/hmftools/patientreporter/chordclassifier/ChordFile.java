@@ -62,11 +62,11 @@ public final class ChordFile {
         String[] values = line.split(DELIMITER);
 
         return ImmutableChordAnalysis.builder()
-                .BRCA1Value(Double.valueOf(values[0]))
-                .noneValue(Double.valueOf(values[1]))
-                .BRCA2Value(Double.valueOf(values[2]))
-                .hrdValue(Double.valueOf(values[3]))
-                .predictedResponseValue(Double.valueOf(values[4]))
+                .BRCA1Value(Double.valueOf(values[1]))
+                .noneValue(Double.valueOf(values[2]))
+                .BRCA2Value(Double.valueOf(values[3]))
+                .hrdValue(Double.valueOf(values[4]))
+                .predictedResponseValue(Double.valueOf(values[5]))
                 .build();
     }
 
