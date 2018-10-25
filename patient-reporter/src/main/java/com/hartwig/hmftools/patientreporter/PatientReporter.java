@@ -73,7 +73,7 @@ abstract class PatientReporter {
     public abstract StructuralVariantAnalyzer structuralVariantAnalyzer();
 
     @NotNull
-    public AnalysedPatientReport run(@NotNull final String runDirectory, @Nullable final String comments) throws IOException {
+    public AnalysedPatientReport run(@NotNull String runDirectory, boolean doReportGermline, @Nullable String comments) throws IOException {
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
         assert run.isSomaticRun();
 
@@ -106,15 +106,14 @@ abstract class PatientReporter {
                 sequencedReportData().actionabilityAnalyzer(),
                 structuralVariantAnalysis.fusions());
 
-        final List<GermlineVariant> germlineVariants = analyzeGermlineVariants(run);
+        final List<GermlineVariant> germlineVariants = doReportGermline ? analyzeGermlineVariants(run) : null;
 
         LOGGER.info("Printing analysis results:");
         LOGGER.info(" Number of somatic variants to report : " + Integer.toString(somaticVariantAnalysis.variantsToReport().size()));
         LOGGER.info(" Microsatellite analysis results: " + Double.toString(somaticVariantAnalysis.microsatelliteIndelsPerMb())
                 + " indels per MB");
-        LOGGER.info(" Mutational load results: " + Integer.toString(somaticVariantAnalysis.tumorMutationalLoad()));
-        LOGGER.info(" Tumor mutational burden: " + Double.toString(somaticVariantAnalysis.tumorMutationalBurden())
-                + " number of mutations per MB");
+        LOGGER.info(" Tumor mutational load: " + Integer.toString(somaticVariantAnalysis.tumorMutationalLoad()));
+        LOGGER.info(" Tumor mutational burden: " + Double.toString(somaticVariantAnalysis.tumorMutationalBurden()) + " mutations per MB");
         LOGGER.info(" CHORD analysis HRD prediction: " + Double.toString(chordAnalysis.hrdValue()));
         LOGGER.info(" Number of germline variants to report : " + Integer.toString(germlineVariants != null ? germlineVariants.size() : 0));
         LOGGER.info(" Number of copy number events to report: " + Integer.toString(reportableGeneCopynumbers.size()));
@@ -141,12 +140,11 @@ abstract class PatientReporter {
             evidenceItems.addAll(evidencePerFusion.getValue());
         }
 
-        LOGGER.info("Printing evidence results:");
-        LOGGER.info(" Number of actionability variants to report: " + Integer.toString(somaticVariantAnalysis.evidencePerVariant().size()));
-        LOGGER.info(
-                " Number of actionability gene copy numbers to report: " + Integer.toString(somaticVariantAnalysis.evidencePerCopyNumber()
-                        .size()));
-        LOGGER.info(" Number of actionability fusions to report: " + Integer.toString(somaticVariantAnalysis.evidencePerFusion().size()));
+        LOGGER.info("Printing actionability results:");
+        LOGGER.info(" Number of evidence items based on variants: " + Integer.toString(somaticVariantAnalysis.evidencePerVariant().size()));
+        LOGGER.info(" Number of evidence items based on copy numbers: " + Integer.toString(somaticVariantAnalysis.evidencePerCopyNumber()
+                .size()));
+        LOGGER.info(" Number of evidence items based on fusions: " + Integer.toString(somaticVariantAnalysis.evidencePerFusion().size()));
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
                 purpleAnalysis.status(),

@@ -34,7 +34,7 @@ public class PatientReporterTest {
                 reporterData.panelGeneModel().disruptionGeneIDPanel(),
                 testKnownFusionModel());
         final PatientReporter algo = ImmutablePatientReporter.of(baseReportData, reporterData, svAnalyzer);
-        assertNotNull(algo.run(RUN_DIRECTORY, null));
+        assertNotNull(algo.run(RUN_DIRECTORY, true, null));
     }
 
     private static class TestAnnotator implements VariantAnnotator {

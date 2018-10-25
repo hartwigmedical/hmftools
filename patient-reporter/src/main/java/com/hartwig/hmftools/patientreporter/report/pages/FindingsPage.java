@@ -97,7 +97,8 @@ public abstract class FindingsPage {
 
     @NotNull
     private static ComponentBuilder<?, ?> germlineVariantReport(@NotNull AnalysedPatientReport report) {
-        String noVariantsFoundText = report.hasGermlineAnalysis() ? "None" : "Germline analysis is not available";
+        String noVariantsFoundText =
+                report.hasGermlineAnalysis() ? "None" : "Reporting of HR-related germline variants is not available";
         final ComponentBuilder<?, ?> table =
                 !report.germlineVariants().isEmpty() && report.hasGermlineAnalysis()
                         ? cmp.subreport(monospaceBaseTable().fields(GermlineVariantDataSource.fields())

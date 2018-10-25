@@ -54,6 +54,7 @@ public class PatientReporterApplication {
     private static final String FUSION_PAIRS_CSV = "fusion_pairs_csv";
     private static final String PROMISCUOUS_FIVE_CSV = "promiscuous_five_csv";
     private static final String PROMISCUOUS_THREE_CSV = "promiscuous_three_csv";
+    private static final String DO_REPORT_GERMLINE = "do_report_germline";
 
     private static final String KNOWLEDGEBASE_PATH = "knowledgebase_path";
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
@@ -67,9 +68,9 @@ public class PatientReporterApplication {
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
 
     private static final String CENTER_CSV = "center_csv";
+    private static final String RVA_LOGO = "rva_logo";
     private static final String SIGNATURE = "signature";
     private static final String COMMENTS = "comments";
-    private static final String LOGO = "logo";
 
     public static void main(final String... args) throws ParseException, IOException, DRException, SQLException {
         final Options options = createOptions();
@@ -95,7 +96,8 @@ public class PatientReporterApplication {
             final SequencedReportData reporterData = buildReporterData(cmd);
             final PatientReporter reporter = buildReporter(cmd, reporterData);
 
-            final AnalysedPatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY), cmd.getOptionValue(COMMENTS));
+            final AnalysedPatientReport report =
+                    reporter.run(cmd.getOptionValue(RUN_DIRECTORY), cmd.hasOption(DO_REPORT_GERMLINE), cmd.getOptionValue(COMMENTS));
             pdfWriter.writeSequenceReport(report, reporterData);
         } else {
             printUsageAndExit(options);
@@ -111,7 +113,11 @@ public class PatientReporterApplication {
         final Lims lims = LimsFactory.fromLimsJson(cmd.getOptionValue(LIMS_JSON));
         LOGGER.info(" Loaded data for {} samples.", lims.sampleCount());
         final CenterModel centerModel = Center.readFromCSV(cmd.getOptionValue(CENTER_CSV));
-        return ImmutableBaseReportData.of(patientTumorLocations, lims, centerModel, cmd.getOptionValue(SIGNATURE), cmd.getOptionValue(LOGO));
+        return ImmutableBaseReportData.of(patientTumorLocations,
+                lims,
+                centerModel,
+                cmd.getOptionValue(SIGNATURE),
+                cmd.getOptionValue(RVA_LOGO));
     }
 
     @NotNull
@@ -221,7 +227,7 @@ public class PatientReporterApplication {
         final String limsJson = cmd.getOptionValue(LIMS_JSON);
         final String centerCsv = cmd.getOptionValue(CENTER_CSV);
         final String signaturePath = cmd.getOptionValue(SIGNATURE);
-        final String logoPath = cmd.getOptionValue(LOGO);
+        final String rvaLogoPath = cmd.getOptionValue(RVA_LOGO);
 
         if (tumorLocationCsv == null || !exists(tumorLocationCsv)) {
             LOGGER.warn(TUMOR_LOCATION_CSV + " has to be an existing file: " + tumorLocationCsv);
@@ -231,8 +237,8 @@ public class PatientReporterApplication {
             LOGGER.warn(CENTER_CSV + " has to be an existing file: " + centerCsv);
         } else if (signaturePath == null || !exists(signaturePath)) {
             LOGGER.warn(SIGNATURE + " has to be an existing file: " + signaturePath);
-        } else if (logoPath == null || !exists(logoPath)) {
-            LOGGER.warn(LOGO + " has to be an existing file: " + logoPath);
+        } else if (rvaLogoPath == null || !exists(rvaLogoPath)) {
+            LOGGER.warn(RVA_LOGO + " has to be an existing file: " + rvaLogoPath);
         } else {
             return true;
         }
@@ -260,6 +266,7 @@ public class PatientReporterApplication {
         options.addOption(FUSION_PAIRS_CSV, true, "Path towards a CSV containing white-listed gene fusion pairs.");
         options.addOption(PROMISCUOUS_FIVE_CSV, true, "Path towards a CSV containing white-listed promiscuous 5' genes.");
         options.addOption(PROMISCUOUS_THREE_CSV, true, "Path towards a CSV containing white-listed promiscuous 3' genes.");
+        options.addOption(DO_REPORT_GERMLINE, false, "If provided, report germline. Otherwise do not report germline.");
         options.addOption(KNOWLEDGEBASE_PATH, true, "Path towards a directory holding knowledgebase output files.");
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
         options.addOption(HOTSPOT_TSV, true, "Path towards a TSV containing known hotspot variants.");
@@ -271,7 +278,7 @@ public class PatientReporterApplication {
         options.addOption(HIGH_CONFIDENCE_BED, true, "Path towards the high confidence BED file.");
         options.addOption(CENTER_CSV, true, "Path towards a CSV containing center (hospital) data.");
         options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
-        options.addOption(LOGO, true, "Path towards a image file containing the logo.");
+        options.addOption(RVA_LOGO, true, "Path towards a image file containing the logo.");
         options.addOption(COMMENTS, true, "Additional comments to be added to the report, if any.");
         return options;
     }
