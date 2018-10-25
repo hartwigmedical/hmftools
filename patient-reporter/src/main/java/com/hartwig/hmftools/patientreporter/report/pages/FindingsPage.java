@@ -18,7 +18,7 @@ import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableClinicalTrials;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItems;
-import com.hartwig.hmftools.patientreporter.algo.GeneModel;
+import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 import com.hartwig.hmftools.patientreporter.report.Commons;
 import com.hartwig.hmftools.patientreporter.report.components.ChordSection;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;

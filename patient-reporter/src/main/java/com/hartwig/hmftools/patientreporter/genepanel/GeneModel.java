@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.algo;
+package com.hartwig.hmftools.patientreporter.genepanel;
 
 import java.util.Map;
 import java.util.Set;

@@ -44,8 +44,6 @@ import com.hartwig.hmftools.patientreporter.ImmutableNotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
-import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
-import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.chord.ChordAnalysis;
 import com.hartwig.hmftools.patientreporter.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.patientreporter.disruption.ImmutableReportableGeneDisruption;
@@ -54,6 +52,8 @@ import com.hartwig.hmftools.patientreporter.fusion.ImmutableReportableGeneFusion
 import com.hartwig.hmftools.patientreporter.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineVariant;
+import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
+import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableStudy;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

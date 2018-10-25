@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.algo;
+package com.hartwig.hmftools.patientreporter.qcfail;
 
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 

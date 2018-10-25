@@ -10,8 +10,8 @@ import com.hartwig.hmftools.common.region.BEDFileLoader;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModel;
 import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModelFactory;
-import com.hartwig.hmftools.patientreporter.algo.GeneModel;
-import com.hartwig.hmftools.patientreporter.algo.GeneModelFactory;
+import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
+import com.hartwig.hmftools.patientreporter.genepanel.GeneModelFactory;
 
 import org.jetbrains.annotations.NotNull;
 

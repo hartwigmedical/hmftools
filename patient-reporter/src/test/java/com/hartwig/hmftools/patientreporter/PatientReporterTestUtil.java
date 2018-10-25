@@ -23,8 +23,8 @@ import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModel;
 import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModelFactory;
-import com.hartwig.hmftools.patientreporter.algo.GeneModel;
-import com.hartwig.hmftools.patientreporter.algo.GeneModelFactory;
+import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
+import com.hartwig.hmftools.patientreporter.genepanel.GeneModelFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -83,17 +83,17 @@ public final class PatientReporterTestUtil {
     }
 
     @NotNull
-    public static KnownFusionsModel testKnownFusionModel() throws IOException {
-        return KnownFusionsModel.fromInputStreams(new FileInputStream(FUSION_PAIRS_CSV),
-                new FileInputStream(PROMISCUOUS_FIVE_CSV),
-                new FileInputStream(PROMISCUOUS_THREE_CSV));
-    }
-
-    @NotNull
     public static BaseReportData testBaseReportData() throws IOException {
         final List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
         final Lims lims = LimsFactory.empty();
         final CenterModel centerModel = Center.readFromCSV(CENTER_CSV);
         return ImmutableBaseReportData.of(patientTumorLocations, lims, centerModel, SIGNATURE_PATH, RVA_LOGO);
+    }
+
+    @NotNull
+    static KnownFusionsModel testKnownFusionModel() throws IOException {
+        return KnownFusionsModel.fromInputStreams(new FileInputStream(FUSION_PAIRS_CSV),
+                new FileInputStream(PROMISCUOUS_FIVE_CSV),
+                new FileInputStream(PROMISCUOUS_THREE_CSV));
     }
 }

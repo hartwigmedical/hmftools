@@ -2,8 +2,8 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.util.Optional;
 
-import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
-import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
+import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
+import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableStudy;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

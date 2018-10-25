@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.algo;
+package com.hartwig.hmftools.patientreporter;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -35,12 +35,6 @@ import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantF
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
-import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.BaseReportData;
-import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
-import com.hartwig.hmftools.patientreporter.SampleReport;
-import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.chord.ChordAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutablePurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
@@ -48,6 +42,7 @@ import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruptionFactory;
 import com.hartwig.hmftools.patientreporter.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.fusion.ReportableGeneFusionFactory;
+import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalyzer;
@@ -65,7 +60,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class PatientReporter {
+abstract class PatientReporter {
     private static final Logger LOGGER = LogManager.getLogger(PatientReporter.class);
 
     @NotNull

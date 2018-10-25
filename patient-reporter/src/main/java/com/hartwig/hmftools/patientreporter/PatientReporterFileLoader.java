@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.algo;
+package com.hartwig.hmftools.patientreporter;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -34,7 +34,7 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
-final class PatientReporterFileLoader {
+public final class PatientReporterFileLoader {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterFileLoader.class);
 
@@ -129,7 +129,7 @@ final class PatientReporterFileLoader {
     }
 
     @Nullable
-    static PatientTumorLocation extractPatientTumorLocation(@NotNull List<PatientTumorLocation> patientTumorLocations,
+    public static PatientTumorLocation extractPatientTumorLocation(@NotNull List<PatientTumorLocation> patientTumorLocations,
             @NotNull String sample) {
         final String patientIdentifier = toPatientIdentifier(sample);
 

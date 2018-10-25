@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.algo;
+package com.hartwig.hmftools.patientreporter;
 
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReportData;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testKnownFusionModel;
@@ -16,8 +16,6 @@ import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
-import com.hartwig.hmftools.patientreporter.BaseReportData;
-import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
 
