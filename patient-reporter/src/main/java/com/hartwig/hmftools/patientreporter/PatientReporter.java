@@ -146,7 +146,7 @@ abstract class PatientReporter {
         LOGGER.info(
                 " Number of actionability gene copy numbers to report: " + Integer.toString(somaticVariantAnalysis.evidencePerCopyNumber()
                         .size()));
-        LOGGER.info("Number of actionability fusions to report: " + Integer.toString(somaticVariantAnalysis.evidencePerFusion().size()));
+        LOGGER.info(" Number of actionability fusions to report: " + Integer.toString(somaticVariantAnalysis.evidencePerFusion().size()));
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
                 purpleAnalysis.status(),
