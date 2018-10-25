@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter.germline;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -41,9 +40,7 @@ public final class BachelorFile {
 
     @NotNull
     public static List<GermlineVariant> loadBachelorFile(@NotNull String filePath) throws IOException {
-        Path path = new File(filePath).toPath();
-        assert Files.exists(path);
-        return fromLines(Files.readAllLines(path));
+        return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
     @NotNull

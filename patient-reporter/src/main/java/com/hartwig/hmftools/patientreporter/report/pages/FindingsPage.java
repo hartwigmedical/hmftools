@@ -23,8 +23,8 @@ import com.hartwig.hmftools.patientreporter.report.Commons;
 import com.hartwig.hmftools.patientreporter.report.components.ChordSection;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSection;
+import com.hartwig.hmftools.patientreporter.report.components.MutationalBurdenSection;
 import com.hartwig.hmftools.patientreporter.report.components.MutationalLoadSection;
-import com.hartwig.hmftools.patientreporter.report.components.TumorMutationBurdenSection;
 import com.hartwig.hmftools.patientreporter.report.data.ClinicalTrialDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.EvidenceItemDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource;
@@ -240,7 +240,7 @@ public abstract class FindingsPage {
 
     @NotNull
     private static ComponentBuilder<?, ?> chordReport(@NotNull AnalysedPatientReport report) {
-        return ChordSection.build(report.chordAnalysis().hrdValue());
+        return ChordSection.build(report.chordAnalysis().hrdValue(), report.fitStatus());
     }
 
     @NotNull
@@ -250,7 +250,7 @@ public abstract class FindingsPage {
 
     @NotNull
     private static ComponentBuilder<?, ?> tumorMutationalBurdenReport(@NotNull AnalysedPatientReport report) {
-        return TumorMutationBurdenSection.build(report.tumorMutationalBurden(), report.fitStatus());
+        return MutationalBurdenSection.build(report.tumorMutationalBurden(), report.fitStatus());
     }
 
     @NotNull
