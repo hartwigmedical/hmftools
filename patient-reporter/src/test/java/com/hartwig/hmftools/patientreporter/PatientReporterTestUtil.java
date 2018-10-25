@@ -33,13 +33,13 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public final class PatientReporterTestUtil {
 
     private static final String SIGNATURE_PATH = Resources.getResource("signature/signature.png").getPath();
-    private static final String RVA_LOGO = Resources.getResource("rvalogo/rva_logo_test.jpg").getPath();
+    private static final String RVA_LOGO = Resources.getResource("rva_logo/rva_logo_test.jpg").getPath();
 
     private static final String REF_GENOME_PATH = Resources.getResource("refgenome/ref.fasta").getPath();
 
-    private static final String CENTER_CSV = Resources.getResource("center/centers.csv").getPath();
-
     private static final String KNOWLEDGEBASE_PATH = Resources.getResource("actionability").getPath();
+
+    private static final String CENTER_CSV = Resources.getResource("csv/centers.csv").getPath();
     private static final String DRUP_GENES_CSV = Resources.getResource("csv/drup_genes.csv").getPath();
     private static final String HOTSPOT_TSV = Resources.getResource("csv/hotspots.tsv").getPath();
     private static final String FUSION_PAIRS_CSV = Resources.getResource("csv/fusion_pairs.csv").getPath();
