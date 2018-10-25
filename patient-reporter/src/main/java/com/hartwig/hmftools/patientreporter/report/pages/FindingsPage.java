@@ -10,9 +10,14 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
+import java.util.List;
+
+import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
+import com.hartwig.hmftools.patientreporter.actionability.ReportableClinicalTrials;
+import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItems;
 import com.hartwig.hmftools.patientreporter.algo.GeneModel;
 import com.hartwig.hmftools.patientreporter.report.Commons;
 import com.hartwig.hmftools.patientreporter.report.components.ChordSection;
@@ -86,8 +91,10 @@ public abstract class FindingsPage {
 
     @NotNull
     private static ComponentBuilder<?, ?> evidenceItemReport(@NotNull AnalysedPatientReport report) {
+        List<EvidenceItem> reportableItems = ReportableEvidenceItems.reportableEvidenceItems(report.evidenceItems());
+
         final ComponentBuilder<?, ?> table =
-                report.evidenceItems().size() > 0
+                reportableItems.size() > 0
                         ? cmp.subreport(monospaceBaseTable().fields(EvidenceItemDataSource.evidenceItemFields())
                         .columns(col.column("Event", EvidenceItemDataSource.EVENT_FIELD),
                                 col.column("Drug", EvidenceItemDataSource.DRUG_FIELD),
@@ -98,7 +105,7 @@ public abstract class FindingsPage {
                                         .setHyperLink(hyperLink(EvidenceItemDataSource.sourceHyperlink()))
                                         .setStyle(linkStyle()),
                                 col.column("On-Label", EvidenceItemDataSource.ON_LABEL_FIELD))
-                        .setDataSource(EvidenceItemDataSource.fromEvidenceItems(report.evidenceItems())))
+                        .setDataSource(EvidenceItemDataSource.fromEvidenceItems(reportableItems)))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Clinical Evidence").setStyle(sectionHeaderStyle()),
@@ -108,8 +115,10 @@ public abstract class FindingsPage {
 
     @NotNull
     private static ComponentBuilder<?, ?> clinicalTrialToReport(@NotNull AnalysedPatientReport report) {
+        List<EvidenceItem> clinicalTrials = ReportableClinicalTrials.reportableTrials(report.evidenceItems());
+
         final ComponentBuilder<?, ?> table =
-                report.evidenceItems().size() > 0
+                clinicalTrials.size() > 0
                         ? cmp.subreport(monospaceBaseTable().fields(ClinicalTrialDataSource.clinicalTrialFields())
                         .columns(col.column("Event", ClinicalTrialDataSource.EVENT_FIELD),
                                 col.column("Trial", ClinicalTrialDataSource.TRIAL_FIELD),
@@ -118,7 +127,7 @@ public abstract class FindingsPage {
                                         .setStyle(linkStyle()),
                                 col.column("CCMO", ClinicalTrialDataSource.CCMO_FIELD),
                                 col.column("On-Label", ClinicalTrialDataSource.ON_LABEL_FIELD))
-                        .setDataSource(ClinicalTrialDataSource.fromClinicalTrial(report.evidenceItems())))
+                        .setDataSource(ClinicalTrialDataSource.fromClinicalTrials(clinicalTrials)))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Clinical Trials").setStyle(sectionHeaderStyle()),

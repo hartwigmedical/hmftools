@@ -48,16 +48,16 @@ public final class EvidenceItemDataSource {
                 ON_LABEL_FIELD.getName());
 
         for (EvidenceItem evidenceItem : sort(evidenceItems)) {
-            if(!evidenceItem.source().isTrialSource() ){
-                evidenceItemDataSource.add(evidenceItem.event(),
-                        evidenceItem.drug(),
-                        evidenceItem.drugsType(),
-                        evidenceItem.level(),
-                        evidenceItem.response(),
-                        evidenceItem.source().sourceName(),
-                        evidenceItem.reference(),
-                        evidenceItem.isOnLabel() ? "Yes" : "No");
-            }
+            assert !evidenceItem.source().isTrialSource();
+
+            evidenceItemDataSource.add(evidenceItem.event(),
+                    evidenceItem.drug(),
+                    evidenceItem.drugsType(),
+                    evidenceItem.level(),
+                    evidenceItem.response(),
+                    evidenceItem.source().sourceName(),
+                    evidenceItem.reference(),
+                    evidenceItem.isOnLabel() ? "Yes" : "No");
         }
         return evidenceItemDataSource;
     }
@@ -65,7 +65,7 @@ public final class EvidenceItemDataSource {
     @NotNull
     private static List<EvidenceItem> sort(@NotNull List<EvidenceItem> evidenceItems) {
         return evidenceItems.stream().sorted((item1, item2) -> {
-                return item1.event().compareTo(item2.event());
+            return item1.event().compareTo(item2.event());
         }).collect(Collectors.toList());
     }
 

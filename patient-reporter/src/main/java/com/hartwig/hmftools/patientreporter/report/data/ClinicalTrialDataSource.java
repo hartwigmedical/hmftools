@@ -33,22 +33,23 @@ public class ClinicalTrialDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromClinicalTrial(@NotNull List<EvidenceItem> evidenceItems) {
+    public static JRDataSource fromClinicalTrials(@NotNull List<EvidenceItem> trials) {
         final DRDataSource evidenceItemDataSource = new DRDataSource(EVENT_FIELD.getName(),
                 TRIAL_FIELD.getName(),
                 SOURCE_FIELD.getName(),
                 CCMO_FIELD.getName(),
                 ON_LABEL_FIELD.getName());
 
-        for (EvidenceItem evidenceItem : sort(evidenceItems)) {
-            if (evidenceItem.source().isTrialSource()) {
-                evidenceItemDataSource.add(evidenceItem.event(),
-                        evidenceItem.drug(),
-                        evidenceItem.source().sourceName(),
-                        CCMOID(evidenceItem.reference()),
-                        evidenceItem.isOnLabel() ? "Yes" : "No");
-            }
+        for (EvidenceItem evidenceItem : sort(trials)) {
+            assert evidenceItem.source().isTrialSource();
+
+            evidenceItemDataSource.add(evidenceItem.event(),
+                    evidenceItem.drug(),
+                    evidenceItem.source().sourceName(),
+                    CCMOID(evidenceItem.reference()),
+                    evidenceItem.isOnLabel() ? "Yes" : "No");
         }
+
         return evidenceItemDataSource;
     }
 
