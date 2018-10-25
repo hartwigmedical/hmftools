@@ -5,7 +5,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 import static com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator.PON_FILTER_PON;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_UNKNOWN;
@@ -20,20 +19,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import com.hartwig.hmftools.common.amber.qc.AmberQC;
 import com.hartwig.hmftools.common.amber.qc.AmberQCStatus;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
-import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantLeg;
-import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantImpl;
-import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantLegImpl;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
-import com.hartwig.hmftools.svanalysis.types.CopyNumberNoneSegment;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import java.nio.file.StandardOpenOption;
