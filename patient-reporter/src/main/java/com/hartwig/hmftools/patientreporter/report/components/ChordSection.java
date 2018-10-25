@@ -3,9 +3,6 @@ package com.hartwig.hmftools.patientreporter.report.components;
 import java.awt.Color;
 import java.text.DecimalFormat;
 
-import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
-import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
-
 import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
@@ -17,12 +14,12 @@ public class ChordSection {
     private static final double END = 120;
 
     @NotNull
-    public static ComponentBuilder<?, ?> build(final double tumorMutationalBurdenIndicator, @NotNull FittedPurityStatus fitStatus) {
-        final int graphValue = computeGraphValue(tumorMutationalBurdenIndicator);
+    public static ComponentBuilder<?, ?> build(final double chordValue) {
+        final int graphValue = computeGraphValue(chordValue);
 
-        final GradientBar gradient = ImmutableGradientBar.of(new Color(253, 235, 208), new Color(248, 196, 113), "Low", "High", graphValue);
+        final GradientBar gradient = ImmutableGradientBar.of(new Color(214, 234, 248), new Color(174, 214, 241), "Low", "High", graphValue);
         final SliderSection sliderSection = ImmutableSliderSection.of("Chord Value",
-                interpret(tumorMutationalBurdenIndicator, fitStatus),
+                interpret(chordValue),
                 description(),
                 gradient);
 
@@ -30,9 +27,8 @@ public class ChordSection {
     }
 
     @NotNull
-    private static String interpret(final double tumorMutationalBurden, @NotNull FittedPurityStatus fitStatus) {
-        return PatientReportFormat.correctValueForFitStatus(fitStatus, new DecimalFormat("#.#").format(tumorMutationalBurden))
-                + " value of HR detection";
+    private static String interpret(final double chordValue) {
+        return new DecimalFormat("#.####").format(chordValue)  + " value of HR detection";
     }
 
     private static int computeGraphValue(final double value) {

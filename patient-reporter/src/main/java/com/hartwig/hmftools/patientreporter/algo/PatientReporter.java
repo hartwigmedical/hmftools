@@ -120,8 +120,8 @@ public abstract class PatientReporter {
         LOGGER.info(" Mutational load results: " + Integer.toString(somaticVariantAnalysis.tumorMutationalLoad()));
         LOGGER.info(" Tumor mutational burden: " + Double.toString(somaticVariantAnalysis.tumorMutationalBurden())
                 + " number of mutations per MB");
-        LOGGER.info("Chord value: " + Double.toString(chordValue != null ? chordValue.size() : 0));
-        LOGGER.info(chordValue);
+        LOGGER.info("chordValue: ");
+        LOGGER.info(chordValue != null ? chordValue.iterator().next().hrdValue() : "no found chordValue: null");
         LOGGER.info(" Number of germline variants to report : " + Integer.toString(germlineVariants != null ? germlineVariants.size() : 0));
         LOGGER.info(" Number of copy number events to report: " + Integer.toString(reportableGeneCopynumbers.size()));
         LOGGER.info(" Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
