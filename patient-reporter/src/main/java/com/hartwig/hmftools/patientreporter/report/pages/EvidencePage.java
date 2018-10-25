@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.report.pages;
 
+import static com.hartwig.hmftools.patientreporter.report.Commons.HEADER_TO_TABLE_VERTICAL_GAP;
 import static com.hartwig.hmftools.patientreporter.report.Commons.SECTION_VERTICAL_GAP;
 import static com.hartwig.hmftools.patientreporter.report.Commons.fontStyle;
 import static com.hartwig.hmftools.patientreporter.report.Commons.linkStyle;
@@ -43,9 +44,7 @@ import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 @Value.Immutable
 @Value.Style(passAnnotations = NotNull.class,
              allParameters = true)
-public abstract class FindingsPage {
-
-    private static final int HEADER_TO_TABLE_DISTANCE = 6;
+public abstract class EvidencePage {
 
     @NotNull
     abstract AnalysedPatientReport report();
@@ -109,7 +108,7 @@ public abstract class FindingsPage {
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Clinical Evidence").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
+                cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
                 table);
     }
 
@@ -131,7 +130,7 @@ public abstract class FindingsPage {
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Clinical Trials").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
+                cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
                 table);
     }
 
@@ -160,7 +159,7 @@ public abstract class FindingsPage {
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
+                cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
                 table,
                 cmp.verticalGap(15),
                 cmp.horizontalList(cmp.horizontalGap(10),
@@ -185,7 +184,7 @@ public abstract class FindingsPage {
                         : cmp.text(noVariantsFoundText).setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("HR-Related Germline Variants").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
+                cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
                 table);
     }
 
@@ -208,7 +207,7 @@ public abstract class FindingsPage {
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Gains & Losses").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
+                cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
                 table);
     }
 
@@ -234,7 +233,7 @@ public abstract class FindingsPage {
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Gene Fusions").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
+                cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
                 table);
     }
 
@@ -268,7 +267,7 @@ public abstract class FindingsPage {
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Gene Disruptions").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
+                cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
                 table);
     }
 }

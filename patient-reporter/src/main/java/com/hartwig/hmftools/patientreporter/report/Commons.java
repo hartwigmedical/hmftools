@@ -27,6 +27,7 @@ public final class Commons {
     public static final String HARTWIG_ADDRESS = "Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam";
 
     public static final int SECTION_VERTICAL_GAP = 25;
+    public static final int HEADER_TO_TABLE_VERTICAL_GAP = 6;
     public static final int HEADER_TO_DETAIL_VERTICAL_GAP = 8;
 
     private static final String FONT = "Tinos";
