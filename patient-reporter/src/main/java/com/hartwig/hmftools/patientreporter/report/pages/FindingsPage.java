@@ -15,10 +15,12 @@ import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.algo.GeneModel;
 import com.hartwig.hmftools.patientreporter.report.Commons;
+import com.hartwig.hmftools.patientreporter.report.components.ChordSection;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSection;
 import com.hartwig.hmftools.patientreporter.report.components.MutationalLoadSection;
 import com.hartwig.hmftools.patientreporter.report.components.TumorMutationBurdenSection;
+import com.hartwig.hmftools.patientreporter.report.data.ClinicalTrialDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.EvidenceItemDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionDataSource;
@@ -54,6 +56,8 @@ public abstract class FindingsPage {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 evidenceItemReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
+                clinicalTrialToReport(report()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
                 somaticVariantReport(report(), reporterData().panelGeneModel()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 germlineVariantReport(report()),
@@ -63,6 +67,8 @@ public abstract class FindingsPage {
                 geneFusionReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 microsatelliteReport(report()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                Double.toString(report().chordValue().iterator().next().hrdValue()) != null ? chordReport(report()) : cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 tumorMutationalLoadReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -96,6 +102,26 @@ public abstract class FindingsPage {
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Clinical Evidence").setStyle(sectionHeaderStyle()),
+                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
+                table);
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> clinicalTrialToReport(@NotNull AnalysedPatientReport report) {
+        final ComponentBuilder<?, ?> table =
+                report.evidenceItems().size() > 0
+                        ? cmp.subreport(monospaceBaseTable().fields(ClinicalTrialDataSource.clinicalTrialFields())
+                        .columns(col.column("Event", ClinicalTrialDataSource.EVENT_FIELD),
+                                col.column("Trial", ClinicalTrialDataSource.TRIAL_FIELD),
+                                col.column("Source", ClinicalTrialDataSource.SOURCE_FIELD)
+                                        .setHyperLink(hyperLink(ClinicalTrialDataSource.sourceHyperlink()))
+                                        .setStyle(linkStyle()),
+                                col.column("CCMO", ClinicalTrialDataSource.CCMO_FIELD),
+                                col.column("On-Label", ClinicalTrialDataSource.ON_LABEL_FIELD))
+                        .setDataSource(ClinicalTrialDataSource.fromClinicalTrial(report.evidenceItems())))
+                        : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
+
+        return cmp.verticalList(cmp.text("Clinical Trials").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
                 table);
     }
@@ -149,7 +175,7 @@ public abstract class FindingsPage {
                         .setDataSource(GermlineVariantDataSource.fromVariants(report.fitStatus(), report.germlineVariants())))
                         : cmp.text(noVariantsFoundText).setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        return cmp.verticalList(cmp.text("Germline Variants").setStyle(sectionHeaderStyle()),
+        return cmp.verticalList(cmp.text("Actionable Germline Variants").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
                 table);
     }
@@ -204,6 +230,11 @@ public abstract class FindingsPage {
     }
 
     @NotNull
+    private static ComponentBuilder<?, ?> chordReport(@NotNull AnalysedPatientReport report) {
+        return ChordSection.build(report.chordValue().iterator().next().hrdValue());
+    }
+
+    @NotNull
     private static ComponentBuilder<?, ?> tumorMutationalLoadReport(@NotNull AnalysedPatientReport report) {
         return MutationalLoadSection.build(report.tumorMutationalLoad(), report.fitStatus());
     }
@@ -217,13 +248,13 @@ public abstract class FindingsPage {
     private static ComponentBuilder<?, ?> geneDisruptionReport(@NotNull AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> table = report.geneDisruptions().size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(GeneDisruptionDataSource.geneDisruptionFields())
-                .columns(col.column("Chromosome", GeneDisruptionDataSource.CHROMOSOME_FIELD),
+                .columns(col.column("Location", GeneDisruptionDataSource.LOCATION_FIELD),
                         col.column("Gene", GeneDisruptionDataSource.GENE_FIELD),
-                        col.column("Range", GeneDisruptionDataSource.RANGE_FIELD),
+                        col.column("Disrupted Range", GeneDisruptionDataSource.RANGE_FIELD).setFixedWidth(120),
                         col.column("Type", GeneDisruptionDataSource.TYPE_FIELD),
                         col.column("Copies", GeneDisruptionDataSource.COPIES_FIELD),
-                        col.column("Gene Min Copies", GeneDisruptionDataSource.GENE_MIN_COPIES),
-                        col.column("Gene Max Copies", GeneDisruptionDataSource.GENE_MAX_COPIES))
+                        col.column("Gene Min Copies", GeneDisruptionDataSource.GENE_MIN_COPIES).setFixedWidth(80),
+                        col.column("Gene Max Copies", GeneDisruptionDataSource.GENE_MAX_COPIES).setFixedWidth(80))
                 .setDataSource(GeneDisruptionDataSource.fromGeneDisruptions(report.fitStatus(), report.geneDisruptions())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 

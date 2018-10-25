@@ -25,14 +25,14 @@ public final class PCFPositionsSupplier {
     private static final Logger LOGGER = LogManager.getLogger(PCFPositionsSupplier.class);
 
     @NotNull
-    public static Multimap<String, PCFPosition> createPositions(@NotNull final ConfigSupplier configSupplier) {
+    public static Multimap<Chromosome, PCFPosition> createPositions(@NotNull final ConfigSupplier configSupplier) {
         final CommonConfig config = configSupplier.commonConfig();
         final AmberData amberData = configSupplier.amberData();
         final CobaltData cobaltData = configSupplier.cobaltData();
 
-        final Multimap<String, PCFPosition> referenceBreakPoint = cobaltData.referenceSegments();
-        final Multimap<String, PCFPosition> tumorBreakPoints = cobaltData.tumorSegments();
-        final Multimap<String, PCFPosition> tumorBAF = amberData.tumorSegments();
+        final Multimap<Chromosome, PCFPosition> referenceBreakPoint = cobaltData.referenceSegments();
+        final Multimap<Chromosome, PCFPosition> tumorBreakPoints = cobaltData.tumorSegments();
+        final Multimap<Chromosome, PCFPosition> tumorBAF = amberData.tumorSegments();
 
         LOGGER.info("Merging reference and tumor ratio break points");
         return union(union(union(tumorBreakPoints, referenceBreakPoint), tumorBAF),
@@ -40,13 +40,13 @@ public final class PCFPositionsSupplier {
     }
 
     @NotNull
-    private static Multimap<String, PCFPosition> centromeres(int windowSize, @NotNull final Map<Chromosome, GenomePosition> centromeres) {
-        final Multimap<String, PCFPosition> result = ArrayListMultimap.create();
+    private static Multimap<Chromosome, PCFPosition> centromeres(int windowSize, @NotNull final Map<Chromosome, GenomePosition> centromeres) {
+        final Multimap<Chromosome, PCFPosition> result = ArrayListMultimap.create();
         final Window window = new Window(windowSize);
-        for (GenomePosition centromere : centromeres.values()) {
-            result.put(centromere.chromosome(), create(centromere.chromosome(), window.start(centromere.position())));
+        for (Map.Entry<Chromosome, GenomePosition> entry : centromeres.entrySet()) {
+            final GenomePosition centromere = entry.getValue();
+            result.put(entry.getKey(), create(centromere.chromosome(), window.start(centromere.position())));
         }
-
         return result;
     }
 

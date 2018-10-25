@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
@@ -38,19 +39,25 @@ public class FusionEvidenceAnalyzer {
         Set<String> genes = Sets.newHashSet();
         for (ActionableFusion fusionPairsSet : fusionPairs) {
             genes.add(fusionPairsSet.fiveGene());
+            genes.add(fusionPairsSet.threeGene());
         }
-        for (ActionablePromiscuousThree promiscuousThreeSet : promiscuousThree) {
-            genes.add(promiscuousThreeSet.gene());
-        }
+
         for (ActionablePromiscuousFive promiscuousFiveSet : promiscuousFive) {
             genes.add(promiscuousFiveSet.gene());
         }
+
+        for (ActionablePromiscuousThree promiscuousThreeSet : promiscuousThree) {
+            genes.add(promiscuousThreeSet.gene());
+        }
+
         return genes;
     }
 
     @NotNull
     public List<EvidenceItem> actionableFusions(@Nullable String doidsPrimaryTumorLocation, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer,
             @NotNull GeneFusion geneFusion) {
+        LOGGER.info("unique genefusions");
+        LOGGER.info(geneFusion.upstreamLinkedAnnotation().geneName() + " " + geneFusion.downstreamLinkedAnnotation().geneName());
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
 
         for (ActionableFusion actionableFusion : fusionPairs) {
@@ -58,20 +65,8 @@ public class FusionEvidenceAnalyzer {
                     .equals(geneFusion.downstreamLinkedAnnotation().geneName())) {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionPairs(actionableFusion);
 
-                evidenceBuilder.event(actionableFusion.fiveGene() + " - " + actionableFusion.threeGene());
+                evidenceBuilder.event(actionableFusion.fiveGene() + " - " + actionableFusion.threeGene() + " fusion");
                 evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionableFusion.cancerType(), doidsPrimaryTumorLocation));
-                evidenceItems.add(evidenceBuilder.build());
-            }
-        }
-
-        for (ActionablePromiscuousThree actionablePromiscuousThree : promiscuousThree) {
-            if (actionablePromiscuousThree.gene().equals(geneFusion.downstreamLinkedAnnotation().geneName())) {
-                ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionsPromiscuousThree(actionablePromiscuousThree);
-
-                evidenceBuilder.event(geneFusion.upstreamLinkedAnnotation().geneName() + " - " + actionablePromiscuousThree.gene());
-                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionablePromiscuousThree.cancerType(),
-                        doidsPrimaryTumorLocation));
-
                 evidenceItems.add(evidenceBuilder.build());
             }
         }
@@ -80,13 +75,26 @@ public class FusionEvidenceAnalyzer {
             if (actionablePromiscuousFive.gene().equals(geneFusion.upstreamLinkedAnnotation().geneName())) {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionsPromiscuousFive(actionablePromiscuousFive);
 
-                evidenceBuilder.event(actionablePromiscuousFive.gene() + " - " + geneFusion.downstreamLinkedAnnotation().geneName());
+                evidenceBuilder.event(actionablePromiscuousFive.gene() + " - " + geneFusion.downstreamLinkedAnnotation().geneName() + " fusion");
                 evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionablePromiscuousFive.cancerType(),
                         doidsPrimaryTumorLocation));
 
                 evidenceItems.add(evidenceBuilder.build());
             }
         }
+
+        for (ActionablePromiscuousThree actionablePromiscuousThree : promiscuousThree) {
+            if (actionablePromiscuousThree.gene().equals(geneFusion.downstreamLinkedAnnotation().geneName())) {
+                ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionsPromiscuousThree(actionablePromiscuousThree);
+
+                evidenceBuilder.event(geneFusion.upstreamLinkedAnnotation().geneName() + " - " + actionablePromiscuousThree.gene() + " fusion");
+                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionablePromiscuousThree.cancerType(),
+                        doidsPrimaryTumorLocation));
+
+                evidenceItems.add(evidenceBuilder.build());
+            }
+        }
+
         return evidenceItems;
     }
 
@@ -94,7 +102,7 @@ public class FusionEvidenceAnalyzer {
     private static ImmutableEvidenceItem.Builder fromActionableFusionPairs(@NotNull ActionableFusion actionableFusionPair) {
         return ImmutableEvidenceItem.builder()
                 .reference(actionableFusionPair.reference())
-                .source(actionableFusionPair.source())
+                .source(ActionabilitySource.fromString(actionableFusionPair.source()))
                 .drug(actionableFusionPair.drug())
                 .drugsType(actionableFusionPair.drugsType())
                 .level(actionableFusionPair.level())
@@ -106,7 +114,7 @@ public class FusionEvidenceAnalyzer {
             @NotNull ActionablePromiscuousThree actionablePromiscuousThree) {
         return ImmutableEvidenceItem.builder()
                 .reference(actionablePromiscuousThree.reference())
-                .source(actionablePromiscuousThree.source())
+                .source(ActionabilitySource.fromString(actionablePromiscuousThree.source()))
                 .drug(actionablePromiscuousThree.drug())
                 .drugsType(actionablePromiscuousThree.drugsType())
                 .level(actionablePromiscuousThree.level())
@@ -118,7 +126,7 @@ public class FusionEvidenceAnalyzer {
             @NotNull ActionablePromiscuousFive actionablePromiscuousFive) {
         return ImmutableEvidenceItem.builder()
                 .reference(actionablePromiscuousFive.reference())
-                .source(actionablePromiscuousFive.source())
+                .source(ActionabilitySource.fromString(actionablePromiscuousFive.source()))
                 .drug(actionablePromiscuousFive.drug())
                 .drugsType(actionablePromiscuousFive.drugsType())
                 .level(actionablePromiscuousFive.level())

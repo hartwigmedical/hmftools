@@ -10,7 +10,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.pcf.PCFPosition;
 import com.hartwig.hmftools.common.pcf.PCFSource;
 import com.hartwig.hmftools.common.position.GenomePosition;
@@ -29,7 +28,7 @@ public final class PurpleSegmentFactory {
     }
 
     @NotNull
-    public List<PurpleSegment> segment(@NotNull final Multimap<String, Cluster> clusters) {
+    public List<PurpleSegment> segment(@NotNull final Multimap<Chromosome, Cluster> clusters) {
         final List<PurpleSegment> results = Lists.newArrayList();
         results.addAll(segmentMap(clusters).values());
         Collections.sort(results);
@@ -37,19 +36,16 @@ public final class PurpleSegmentFactory {
     }
 
     @NotNull
-    private Multimap<String, PurpleSegment> segmentMap(@NotNull final Multimap<String, Cluster> clusters) {
+    private Multimap<Chromosome, PurpleSegment> segmentMap(@NotNull final Multimap<Chromosome, Cluster> clusters) {
 
-        final Multimap<String, PurpleSegment> segments = ArrayListMultimap.create();
-        for (String contig : clusters.keySet()) {
-            if (HumanChromosome.contains(contig)) {
-                Chromosome chromosome = HumanChromosome.fromString(contig);
+        final Multimap<Chromosome, PurpleSegment> segments = ArrayListMultimap.create();
+        for (Chromosome chromosome : clusters.keySet()) {
 
-                GenomePosition length = lengths.get(chromosome);
-                GenomePosition centromere = centromeres.get(chromosome);
+            GenomePosition length = lengths.get(chromosome);
+            GenomePosition centromere = centromeres.get(chromosome);
 
-                final Collection<Cluster> cluster = clusters.containsKey(contig) ? clusters.get(contig) : Collections.emptyList();
-                segments.putAll(contig, create(centromere, length, cluster));
-            }
+            final Collection<Cluster> cluster = clusters.containsKey(chromosome) ? clusters.get(chromosome) : Collections.emptyList();
+            segments.putAll(chromosome, create(centromere, length, cluster));
         }
 
         return segments;

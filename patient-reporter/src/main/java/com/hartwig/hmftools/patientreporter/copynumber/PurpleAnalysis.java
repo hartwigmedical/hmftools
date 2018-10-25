@@ -34,6 +34,9 @@ public abstract class PurpleAnalysis {
     public abstract List<PurpleCopyNumber> copyNumbers();
 
     @NotNull
+    public abstract List<GeneCopyNumber> geneCopyNumbers();
+
+    @NotNull
     public abstract List<GeneCopyNumber> panelGeneCopyNumbers();
 
     @NotNull

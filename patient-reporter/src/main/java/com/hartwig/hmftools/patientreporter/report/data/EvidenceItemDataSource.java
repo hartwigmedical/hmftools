@@ -7,8 +7,6 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -19,7 +17,6 @@ import net.sf.dynamicreports.report.definition.ReportParameters;
 import net.sf.jasperreports.engine.JRDataSource;
 
 public final class EvidenceItemDataSource {
-    private static final Logger LOGGER = LogManager.getLogger(EvidenceItemDataSource.class);
 
     public static final FieldBuilder<?> EVENT_FIELD = field("event", String.class);
     public static final FieldBuilder<?> DRUG_FIELD = field("drug", String.class);
@@ -51,45 +48,25 @@ public final class EvidenceItemDataSource {
                 ON_LABEL_FIELD.getName());
 
         for (EvidenceItem evidenceItem : sort(evidenceItems)) {
-            evidenceItemDataSource.add(evidenceItem.event(),
-                    evidenceItem.drug(),
-                    evidenceItem.drugsType(),
-                    evidenceItem.level(),
-                    evidenceItem.response(),
-                    sourceName(evidenceItem.source()),
-                    evidenceItem.reference(),
-                    evidenceItem.isOnLabel() ? "Yes" : "No");
+            if(!evidenceItem.source().isTrialSource() ){
+                evidenceItemDataSource.add(evidenceItem.event(),
+                        evidenceItem.drug(),
+                        evidenceItem.drugsType(),
+                        evidenceItem.level(),
+                        evidenceItem.response(),
+                        evidenceItem.source().sourceName(),
+                        evidenceItem.reference(),
+                        evidenceItem.isOnLabel() ? "Yes" : "No");
+            }
         }
-
         return evidenceItemDataSource;
     }
 
     @NotNull
     private static List<EvidenceItem> sort(@NotNull List<EvidenceItem> evidenceItems) {
         return evidenceItems.stream().sorted((item1, item2) -> {
-            if (item1.level().equals(item2.level())) {
                 return item1.event().compareTo(item2.event());
-            } else {
-                return item1.level().compareTo(item2.level());
-            }
         }).collect(Collectors.toList());
-    }
-
-    @NotNull
-    private static String sourceName(@NotNull String source) {
-        switch (source) {
-            case "oncoKb":
-                return "OncoKB";
-            case "iclusion":
-                return "Iclusion";
-            case "civic":
-                return "CiViC";
-            case "cgi":
-                return "CGI";
-            default:
-                LOGGER.warn("Unrecognized source in evidence item: " + source);
-                return Strings.EMPTY;
-        }
     }
 
     @NotNull
@@ -104,8 +81,6 @@ public final class EvidenceItemDataSource {
                     case "oncokb":
                         String[] geneId = gene.split(" ");
                         return "http://oncokb.org/#/gene/" + geneId[0] + "/alteration/" + reference;
-                    case "iclusion":
-                        return "https://www.iclusion.org";
                     case "cgi":
                         return "https://www.cancergenomeinterpreter.org/biomarkers";
                     case "civic":

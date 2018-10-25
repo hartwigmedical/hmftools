@@ -13,8 +13,6 @@ import com.hartwig.hmftools.common.purple.baf.ExpectedBAF;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class FittedRegionFactoryV2 implements FittedRegionFactory {
@@ -42,7 +40,6 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
     @NotNull
     public List<FittedRegion> fitRegion(final double purity, final double normFactor,
             @NotNull final Collection<ObservedRegion> observedRegions) {
-
         final Predicate<ObservedRegion> valid = observedRegion -> isFittableRegion(gender, observedRegion);
         return observedRegions.stream().filter(valid).map(x -> fitRegion(purity, normFactor, x)).collect(Collectors.toList());
     }
@@ -90,8 +87,6 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
         return builder.build();
     }
 
-
-
     private double impliedBaf(final PurityAdjuster purityAdjuster, final String chromosome, final double copyNumber,
             final double observedBAF) {
         boolean isHomologous = HumanChromosome.fromString(chromosome).isDiploid(gender);
@@ -103,31 +98,28 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
         return Doubles.lessOrEqual(observedBAF, ambiguousBaf)
                 ? bafToMinimiseDeviation(purityAdjuster, chromosome, copyNumber)
                 : purityAdjuster.purityAdjustedBAFSimple(chromosome, copyNumber, observedBAF);
-
     }
 
-    @VisibleForTesting
     private double bafToMinimiseDeviation(final PurityAdjuster purityAdjuster, final String chromosome, double impliedCopyNumber) {
-
         final double minBAF = Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, 0.5)));
         final double maxBAF = Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, ambiguousBaf)));
 
-        // Major Ploidy
+        // JOBA: Major Ploidy
         final double minBAFMajorAllelePloidy = minBAF * impliedCopyNumber;
         final double maxBAFMajorAllelePloidy = maxBAF * impliedCopyNumber;
 
-        // Major Ploidy crosses whole number?
+        // JOBA: Major Ploidy crosses whole number?
         final double minBAFMajorAllelePloidyCeil = Math.ceil(minBAFMajorAllelePloidy);
         if (!Doubles.equal(Math.signum(minBAFMajorAllelePloidyCeil - minBAFMajorAllelePloidy),
                 Math.signum(minBAFMajorAllelePloidyCeil - maxBAFMajorAllelePloidy))) {
             return minBAFMajorAllelePloidyCeil / impliedCopyNumber;
         }
 
-        // Minor Ploidy
+        // JOBA: Minor Ploidy
         final double minBAFMinorAllelePloidy = impliedCopyNumber - minBAFMajorAllelePloidy;
         final double maxBAFMinorAllelePloidy = impliedCopyNumber - maxBAFMajorAllelePloidy;
 
-        // Minor Ploidy crosses whole number?
+        // JOBA: Minor Ploidy crosses whole number?
         final double maxBAFMinorAllelePloidyCeil = Math.ceil(maxBAFMinorAllelePloidy);
         if (!Doubles.equal(Math.signum(maxBAFMinorAllelePloidyCeil - minBAFMinorAllelePloidy),
                 Math.signum(maxBAFMinorAllelePloidyCeil - maxBAFMinorAllelePloidy))) {
@@ -137,7 +129,7 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
         double purity = purityAdjuster.purity();
         double normFactor = purityAdjuster.normFactor();
 
-        // Minimise
+        // JOBA: Minimise
         final double minBAFTotalDeviation =
                 ploidyDeviation.majorAlleleDeviation(purity, normFactor, minBAFMajorAllelePloidy) + ploidyDeviation.minorAlleleDeviation(
                         purity,
@@ -150,5 +142,4 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
                         maxBAFMinorAllelePloidy);
         return Doubles.lessThan(minBAFTotalDeviation, maxBAFTotalDeviation) ? 0.5 : ambiguousBaf;
     }
-
 }

@@ -17,6 +17,8 @@ import java.util.Optional;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -42,7 +44,7 @@ public class StructuralVariantPloidyFactoryTest {
         final PurpleCopyNumber right = copyNumber(2001, 3000, 4);
 
         final StructuralVariantLegs legs = ImmutableStructuralVariantLegs.builder().start(start).end(Optional.empty()).build();
-        final ListMultimap<String, PurpleCopyNumber> copyNumbers = copyNumbers(left, middle, right);
+        final ListMultimap<Chromosome, PurpleCopyNumber> copyNumbers = copyNumbers(left, middle, right);
         final List<StructuralVariantLegPloidy> ploidies = PURE_PLOIDY_FACTORY.create(legs, copyNumbers);
         assertEquals(1, ploidies.size());
         for (StructuralVariantLegPloidy ploidy : ploidies) {
@@ -61,7 +63,7 @@ public class StructuralVariantPloidyFactoryTest {
         final PurpleCopyNumber right = copyNumber(2001, 3000, 4);
 
         final StructuralVariantLegs legs = ImmutableStructuralVariantLegs.builder().start(start).end(end).build();
-        final ListMultimap<String, PurpleCopyNumber> copyNumbers = copyNumbers(left, middle, right);
+        final ListMultimap<Chromosome, PurpleCopyNumber> copyNumbers = copyNumbers(left, middle, right);
         final List<StructuralVariantLegPloidy> ploidies = PURE_PLOIDY_FACTORY.create(legs, copyNumbers);
         assertEquals(2, ploidies.size());
         for (StructuralVariantLegPloidy ploidy : ploidies) {
@@ -148,9 +150,9 @@ public class StructuralVariantPloidyFactoryTest {
     }
 
     @NotNull
-    private static ListMultimap<String, PurpleCopyNumber> copyNumbers(@NotNull PurpleCopyNumber... copyNumbers) {
-        final ListMultimap<String, PurpleCopyNumber> result = ArrayListMultimap.create();
-        result.putAll(CHROMOSOME, Lists.newArrayList(copyNumbers));
+    private static ListMultimap<Chromosome, PurpleCopyNumber> copyNumbers(@NotNull PurpleCopyNumber... copyNumbers) {
+        final ListMultimap<Chromosome, PurpleCopyNumber> result = ArrayListMultimap.create();
+        result.putAll(HumanChromosome.fromString(CHROMOSOME), Lists.newArrayList(copyNumbers));
         return result;
     }
 }

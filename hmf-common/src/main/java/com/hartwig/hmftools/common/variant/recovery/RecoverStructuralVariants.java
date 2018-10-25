@@ -15,10 +15,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -53,17 +55,14 @@ public class RecoverStructuralVariants implements Closeable {
 
     private static final Comparator<RecoveredVariant> QUALITY_COMPARATOR = comparingDouble(x -> x.context().getPhredScaledQual());
 
-    private final ListMultimap<String, PurpleCopyNumber> allCopyNumbers;
+    private final ListMultimap<Chromosome, PurpleCopyNumber> allCopyNumbers;
     private final AbstractFeatureReader<VariantContext, LineIterator> reader;
     private final StructuralVariantLegPloidyFactory<PurpleCopyNumber> ploidyFactory;
 
     public RecoverStructuralVariants(@NotNull final PurityAdjuster purityAdjuster, @NotNull final String recoveryVCF,
             @NotNull final List<PurpleCopyNumber> allCopyNumbers) {
         this.reader = getFeatureReader(recoveryVCF, new VCFCodec(), true);
-        this.allCopyNumbers = ArrayListMultimap.create();
-        for (PurpleCopyNumber copyNumber : allCopyNumbers) {
-            this.allCopyNumbers.put(copyNumber.chromosome(), copyNumber);
-        }
+        this.allCopyNumbers = Multimaps.fromRegions(allCopyNumbers);
         ploidyFactory = new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
     }
 
@@ -89,7 +88,7 @@ public class RecoverStructuralVariants implements Closeable {
 
         for (StructuralVariantLegPloidy svPloidy : svPloidies) {
             if (isUnbalanced(svPloidy)) {
-                final List<PurpleCopyNumber> chromosomeCopyNumbers = allCopyNumbers.get(svPloidy.chromosome());
+                final List<PurpleCopyNumber> chromosomeCopyNumbers = allCopyNumbers.get(HumanChromosome.fromString(svPloidy.chromosome()));
                 int index = indexOf(svPloidy.position(), chromosomeCopyNumbers);
                 if (index > 1) {
                     final PurpleCopyNumber prev = chromosomeCopyNumbers.get(index - 1);
@@ -110,7 +109,7 @@ public class RecoverStructuralVariants implements Closeable {
 
         final List<RecoveredVariant> result = Lists.newArrayList();
 
-        for (String chromosome : allCopyNumbers.keySet()) {
+        for (Chromosome chromosome : allCopyNumbers.keySet()) {
             final List<PurpleCopyNumber> chromosomeCopyNumbers = allCopyNumbers.get(chromosome);
 
             for (int index = 1; index < chromosomeCopyNumbers.size() - 1; index++) {
@@ -174,7 +173,7 @@ public class RecoverStructuralVariants implements Closeable {
 
             final PurpleCopyNumber mateCopyNumber = mate == null || !allCopyNumbers.containsKey(mate.getContig())
                     ? null
-                    : closest(mate.getStart(), allCopyNumbers.get(mate.getContig()));
+                    : closest(mate.getStart(), allCopyNumbers.get(HumanChromosome.fromString(mate.getContig())));
 
             final StructuralVariant sv = mate != null
                     ? StructuralVariantFactory.create(potentialVariant, mate)
@@ -369,8 +368,8 @@ public class RecoverStructuralVariants implements Closeable {
     }
 
     private static boolean isSupportedByDepthWindowCounts(@NotNull final PurpleCopyNumber prev, @Nullable final PurpleCopyNumber next) {
-        return prev.depthWindowCount() >= UNBALANCED_MIN_DEPTH_WINDOW_COUNT && (next == null || next.depthWindowCount()
-                >= UNBALANCED_MIN_DEPTH_WINDOW_COUNT);
+        return prev.depthWindowCount() >= UNBALANCED_MIN_DEPTH_WINDOW_COUNT && (next == null
+                || next.depthWindowCount() >= UNBALANCED_MIN_DEPTH_WINDOW_COUNT);
     }
 
     private static double absAdjustedCopyNumberChange(@NotNull final StructuralVariantLegPloidy ploidy) {

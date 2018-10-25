@@ -5,6 +5,7 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
@@ -20,7 +21,7 @@ public final class EnrichedStructuralVariantFactory {
 
     @NotNull
     public static List<EnrichedStructuralVariant> enrich(@NotNull final List<StructuralVariant> variants,
-            @NotNull final PurityAdjuster purityAdjuster, @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers) {
+            @NotNull final PurityAdjuster purityAdjuster, @NotNull final Multimap<Chromosome, PurpleCopyNumber> copyNumbers) {
         final StructuralVariantLegPloidyFactory<PurpleCopyNumber> ploidyFactory =
                 new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
 
@@ -31,8 +32,8 @@ public final class EnrichedStructuralVariantFactory {
             final ImmutableEnrichedStructuralVariantLeg.Builder startBuilder =
                     ImmutableEnrichedStructuralVariantLeg.builder().from(variant.start());
             final StructuralVariantLeg variantEndLeg = variant.end();
-            final ImmutableEnrichedStructuralVariantLeg.Builder endBuilder = variantEndLeg == null ? null :
-                    ImmutableEnrichedStructuralVariantLeg.builder().from(variant.end());
+            final ImmutableEnrichedStructuralVariantLeg.Builder endBuilder =
+                    variantEndLeg == null ? null : ImmutableEnrichedStructuralVariantLeg.builder().from(variant.end());
 
             final List<StructuralVariantLegPloidy> ploidies = ploidyFactory.create(variant, copyNumbers);
             if (!ploidies.isEmpty()) {

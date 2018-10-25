@@ -49,9 +49,9 @@ public interface CobaltData {
 
     boolean chromosomeLengthsEstimated();
 
-    Multimap<String, PCFPosition> tumorSegments();
+    Multimap<Chromosome, PCFPosition> tumorSegments();
 
-    Multimap<String, PCFPosition> referenceSegments();
+    Multimap<Chromosome, PCFPosition> referenceSegments();
 
     static void addOptions(@NotNull Options options) {
         options.addOption(COBALT, true, "COBALT directory. Defaults to <run_dir>/cobalt");
@@ -93,11 +93,11 @@ public interface CobaltData {
         }
 
         LOGGER.info("Reading cobalt reference segments from {}", referenceSegmentFile);
-        final Multimap<String, PCFPosition> referenceSegments =
+        final Multimap<Chromosome, PCFPosition> referenceSegments =
                 PCFFile.readPositions(commonConfig.windowSize(), PCFSource.REFERENCE_RATIO, referenceSegmentFile);
 
         LOGGER.info("Reading cobalt tumor segments from {}", tumorSegmentFile);
-        final Multimap<String, PCFPosition> tumorSegments =
+        final Multimap<Chromosome, PCFPosition> tumorSegments =
                 PCFFile.readPositions(commonConfig.windowSize(), PCFSource.TUMOR_RATIO, tumorSegmentFile);
 
         return ImmutableCobaltData.builder()

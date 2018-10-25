@@ -17,6 +17,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
@@ -242,7 +244,7 @@ public class LoadStructuralVariants {
                 : new PurityAdjuster(purityContext.gender(), purityContext.bestFit().purity(), purityContext.bestFit().normFactor());
 
         final List<PurpleCopyNumber> copyNumberList = dbAccess.readCopynumbers(tumorSample);
-        final Multimap<String, PurpleCopyNumber> copyNumbers = Multimaps.index(copyNumberList, PurpleCopyNumber::chromosome);
+        final Multimap<Chromosome, PurpleCopyNumber> copyNumbers = Multimaps.index(copyNumberList, x -> HumanChromosome.fromString(x.chromosome()));
         return EnrichedStructuralVariantFactory.enrich(variants, purityAdjuster, copyNumbers);
     }
 

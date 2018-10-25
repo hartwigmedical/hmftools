@@ -29,8 +29,8 @@ class StructuralVariantImplied {
     }
 
     @NotNull
-    ListMultimap<String, CombinedRegion> svImpliedCopyNumber(final List<StructuralVariant> structuralVariants,
-            @NotNull final ListMultimap<String, CombinedRegion> copyNumbers) {
+    ListMultimap<Chromosome, CombinedRegion> svImpliedCopyNumber(final List<StructuralVariant> structuralVariants,
+            @NotNull final ListMultimap<Chromosome, CombinedRegion> copyNumbers) {
 
         long previousMissingCopyNumbers = copyNumbers.size();
         long currentMissingCopyNumbers = missingCopyNumberCount(copyNumbers);
@@ -40,7 +40,7 @@ class StructuralVariantImplied {
                     GenomePositionSelectorFactory.create(createPloidies(structuralVariants, copyNumbers));
 
             for (Chromosome chromosome : HumanChromosome.values()) {
-                final List<CombinedRegion> chromosomeCopyNumbers = copyNumbers.get(chromosome.toString());
+                final List<CombinedRegion> chromosomeCopyNumbers = copyNumbers.get(chromosome);
                 boolean svInferred = false;
                 for (final CombinedRegion copyNumber : chromosomeCopyNumbers) {
                     if (implyCopyNumberFromSV(copyNumber)) {
@@ -70,9 +70,8 @@ class StructuralVariantImplied {
         return copyNumbers;
     }
 
-
-    private static void inferCopyNumberFromStructuralVariants(@NotNull final CombinedRegion region, final Optional<StructuralVariantLegPloidy> start,
-            final Optional<StructuralVariantLegPloidy> end) {
+    private static void inferCopyNumberFromStructuralVariants(@NotNull final CombinedRegion region,
+            final Optional<StructuralVariantLegPloidy> start, final Optional<StructuralVariantLegPloidy> end) {
         region.setTumorCopyNumber(CopyNumberMethod.STRUCTURAL_VARIANT, inferCopyNumberFromStructuralVariants(start, end));
     }
 
@@ -90,11 +89,11 @@ class StructuralVariantImplied {
 
     @NotNull
     private List<StructuralVariantLegPloidy> createPloidies(final List<StructuralVariant> structuralVariants,
-            @NotNull ListMultimap<String, CombinedRegion> copyNumbers) {
+            @NotNull ListMultimap<Chromosome, CombinedRegion> copyNumbers) {
         return structuralVariantPloidyFactory.create(structuralVariants, copyNumbers);
     }
 
-    private long missingCopyNumberCount(Multimap<String, CombinedRegion> copyNumbers) {
+    private long missingCopyNumberCount(Multimap<?, CombinedRegion> copyNumbers) {
         return copyNumbers.values().stream().filter(this::implyCopyNumberFromSV).count();
     }
 

@@ -35,6 +35,9 @@ public interface RefGenomeData {
     }
 
     @NotNull
+    RefGenome refRegome();
+
+    @NotNull
     Map<Chromosome, GenomePosition> length();
 
     @NotNull
@@ -44,8 +47,8 @@ public interface RefGenomeData {
     static RefGenomeData createRefGenomeConfig(@NotNull CommandLine cmd, @NotNull CobaltData cobaltData) throws ParseException {
 
         if (cobaltData.chromosomeLengthsEstimated() && !cmd.hasOption(REF_GENOME)) {
-            throw new ParseException("Cobalt chromosome information unavailable. You must specify " + cmd.getOptionValue(REF_GENOME)
-                    + " as either \"hg19\" or \"hg38\".");
+            throw new ParseException(
+                    "Cobalt chromosome information unavailable. You must specify -" + REF_GENOME + " as either \"hg19\" or \"hg38\".");
         }
 
         final Map<Chromosome, GenomePosition> lengthPositions = cobaltData.chromosomeLengths();
@@ -73,6 +76,7 @@ public interface RefGenomeData {
         return ImmutableRefGenomeData.builder()
                 .length(toPosition(refGenome.lengths(), contigMap))
                 .centromere(toPosition(refGenome.centromeres(), contigMap))
+                .refRegome(refGenome)
                 .build();
     }
 

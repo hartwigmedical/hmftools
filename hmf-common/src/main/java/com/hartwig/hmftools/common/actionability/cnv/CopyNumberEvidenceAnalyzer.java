@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
@@ -70,7 +71,7 @@ public class CopyNumberEvidenceAnalyzer {
     private static ImmutableEvidenceItem.Builder fromActionableCopyNumber(@NotNull ActionableCopyNumber actionableCopyNumber) {
         return ImmutableEvidenceItem.builder()
                 .reference(actionableCopyNumber.reference())
-                .source(actionableCopyNumber.source())
+                .source(ActionabilitySource.fromString(actionableCopyNumber.source()))
                 .drug(actionableCopyNumber.drug())
                 .drugsType(actionableCopyNumber.drugsType())
                 .level(actionableCopyNumber.level())

@@ -119,36 +119,43 @@ public class SomaticVariantFactory {
 
         for (int i = 0; i < allVariantContexts.size(); i++) {
             final VariantContext context = allVariantContexts.get(i);
-            final Genotype genotype = context.getGenotype(sample);
-            if (genotype.hasAD() && genotype.getAD().length > 1) {
-                if (NearIndelPonFilter.isIndelNearPon(i, allVariantContexts)) {
-                    context.getCommonInfo().addFilter(NEAR_INDEL_PON_FILTER);
-                }
-                if (filter.test(context)) {
-                    final ImmutableSomaticVariantImpl.Builder builder = createVariantBuilder(sample, context, canonicalAnnotationFactory);
-                    variants.add(enrichment.enrich(builder, context).build());
-                }
+            if (NearIndelPonFilter.isIndelNearPon(i, allVariantContexts)) {
+                context.getCommonInfo().addFilter(NEAR_INDEL_PON_FILTER);
             }
+
+            createVariant(sample, context).ifPresent(variants::add);
         }
 
         return variants;
     }
 
     @NotNull
-    private static ImmutableSomaticVariantImpl.Builder createVariantBuilder(@NotNull final String sample,
-            @NotNull final VariantContext context, @NotNull CanonicalAnnotation canonicalAnnotationFactory) {
-        final AllelicDepth frequencyData = determineAlleleFrequencies(context.getGenotype(sample));
-        if (frequencyData.totalReadCount() == 0) {
-            throw new IllegalStateException("Variant with 0 total read count found: " + context);
+    // TODO (KODU): This function is used by BachelorPP, should probably change.
+    public Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context) {
+        final Genotype genotype = context.getGenotype(sample);
+
+        if (filter.test(context) && genotype.hasAD() && genotype.getAD().length > 1) {
+            final AllelicDepth allelicDepth = determineAlleleFrequencies(context.getGenotype(sample));
+            if (allelicDepth.totalReadCount() > 0) {
+                return Optional.of(createVariantBuilder(allelicDepth, context, canonicalAnnotationFactory))
+                        .map(x -> enrichment.enrich(x, context))
+                        .map(ImmutableSomaticVariantImpl.Builder::build);
+            }
         }
+        return Optional.empty();
+    }
+
+    @NotNull
+    private static ImmutableSomaticVariantImpl.Builder createVariantBuilder(@NotNull final AllelicDepth allelicDepth,
+            @NotNull final VariantContext context, @NotNull CanonicalAnnotation canonicalAnnotationFactory) {
 
         ImmutableSomaticVariantImpl.Builder builder = ImmutableSomaticVariantImpl.builder()
                 .chromosome(context.getContig())
                 .position(context.getStart())
                 .ref(context.getReference().getBaseString())
                 .alt(alt(context))
-                .alleleReadCount(frequencyData.alleleReadCount())
-                .totalReadCount(frequencyData.totalReadCount())
+                .alleleReadCount(allelicDepth.alleleReadCount())
+                .totalReadCount(allelicDepth.totalReadCount())
                 .hotspot(HOTSPOT_FILTER.test(context) ? Hotspot.HOTSPOT : Hotspot.NON_HOTSPOT)
                 .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0));
 
@@ -158,18 +165,6 @@ public class SomaticVariantFactory {
         attachType(builder, context);
 
         return builder;
-    }
-
-    @VisibleForTesting
-    @NotNull
-    // TODO (KODU): This function is used by BachelorPP, should probably change.
-    public Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context) {
-        final Genotype genotype = context.getGenotype(sample);
-        if (filter.test(context) && genotype.hasAD() && genotype.getAD().length > 1) {
-            return Optional.of(createVariantBuilder(sample, context, canonicalAnnotationFactory).build());
-        } else {
-            return Optional.empty();
-        }
     }
 
     private static void attachIDAndCosmicAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder,

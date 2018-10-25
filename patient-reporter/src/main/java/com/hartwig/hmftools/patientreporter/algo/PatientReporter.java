@@ -10,9 +10,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
@@ -33,7 +34,6 @@ import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.BaseReportData;
@@ -41,8 +41,13 @@ import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
+import com.hartwig.hmftools.patientreporter.chordclassifier.ChordAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutablePurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
+import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruption;
+import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruptionFactory;
+import com.hartwig.hmftools.patientreporter.fusion.ReportableGeneFusion;
+import com.hartwig.hmftools.patientreporter.fusion.ReportableGeneFusionFactory;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalyzer;
@@ -88,10 +93,14 @@ public abstract class PatientReporter {
         final StructuralVariantAnalysis structuralVariantAnalysis =
                 analyzeStructuralVariants(run, purpleAnalysis, structuralVariantAnalyzer());
 
-        final List<GeneFusion> reportableFusions = structuralVariantAnalysis.reportableFusions();
-        final List<GeneDisruption> reportableDisruptions = structuralVariantAnalysis.reportableDisruptions();
+        final List<ReportableGeneFusion> reportableFusions =
+                ReportableGeneFusionFactory.toReportableGeneFusions(structuralVariantAnalysis.reportableFusions());
+        final List<ReportableGeneDisruption> reportableDisruptions = ReportableGeneDisruptionFactory.toReportableGeneDisruptions(
+                structuralVariantAnalysis.reportableDisruptions(),
+                purpleAnalysis.geneCopyNumbers());
 
-        LOGGER.info(structuralVariantAnalysis.fusions());
+        final List<ChordAnalysis> chordValue = analyzeChord(run);
+
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run,
                 purpleAnalysis,
                 sequencedReportData().somaticVariantEnrichment(),
@@ -111,6 +120,8 @@ public abstract class PatientReporter {
         LOGGER.info(" Mutational load results: " + Integer.toString(somaticVariantAnalysis.tumorMutationalLoad()));
         LOGGER.info(" Tumor mutational burden: " + Double.toString(somaticVariantAnalysis.tumorMutationalBurden())
                 + " number of mutations per MB");
+        LOGGER.info("chordValue: ");
+        LOGGER.info(chordValue != null ? chordValue.iterator().next().hrdValue() : "no found chordValue: null");
         LOGGER.info(" Number of germline variants to report : " + Integer.toString(germlineVariants != null ? germlineVariants.size() : 0));
         LOGGER.info(" Number of copy number events to report: " + Integer.toString(reportableGeneCopynumbers.size()));
         LOGGER.info(" Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
@@ -150,6 +161,7 @@ public abstract class PatientReporter {
                 somaticVariantAnalysis.variantsToReport(),
                 somaticVariantAnalysis.driverCatalog(),
                 somaticVariantAnalysis.microsatelliteIndelsPerMb(),
+                chordValue != null ? chordValue : Lists.newArrayList(),
                 somaticVariantAnalysis.tumorMutationalLoad(),
                 somaticVariantAnalysis.tumorMutationalBurden(),
                 germlineVariants != null,
@@ -174,8 +186,9 @@ public abstract class PatientReporter {
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterFileLoader.loadPurpleCopyNumbers(runDirectory, sample);
         LOGGER.info(" " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
 
-        final List<GeneCopyNumber> panelGeneCopyNumbers = PatientReporterFileLoader.loadPurpleGeneCopyNumbers(runDirectory, sample)
-                .stream()
+        final List<GeneCopyNumber> geneCopyNumbers = PatientReporterFileLoader.loadPurpleGeneCopyNumbers(runDirectory, sample);
+
+        final List<GeneCopyNumber> panelGeneCopyNumbers = geneCopyNumbers.stream()
                 .filter(geneCopyNumber -> panelGeneModel.cnvGenePanel().contains(geneCopyNumber.gene()))
                 .collect(Collectors.toList());
 
@@ -185,6 +198,7 @@ public abstract class PatientReporter {
                 .fittedPurity(purityContext.bestFit())
                 .fittedScorePurity(purityContext.score())
                 .copyNumbers(purpleCopyNumbers)
+                .geneCopyNumbers(geneCopyNumbers)
                 .panelGeneCopyNumbers(panelGeneCopyNumbers)
                 .build();
     }
@@ -243,8 +257,7 @@ public abstract class PatientReporter {
 
         LOGGER.info("Enriching structural variants with purple data.");
         final PurityAdjuster purityAdjuster = new PurityAdjuster(purpleAnalysis.gender(), purpleAnalysis.fittedPurity());
-        final Multimap<String, PurpleCopyNumber> copyNumberMap =
-                Multimaps.index(purpleAnalysis.copyNumbers(), PurpleCopyNumber::chromosome);
+        final Multimap<Chromosome, PurpleCopyNumber> copyNumberMap = Multimaps.fromRegions(purpleAnalysis.copyNumbers());
 
         final List<EnrichedStructuralVariant> enrichedStructuralVariants =
                 EnrichedStructuralVariantFactory.enrich(structuralVariants, purityAdjuster, copyNumberMap);
@@ -267,5 +280,17 @@ public abstract class PatientReporter {
         }
 
         return variants;
+    }
+
+    @Nullable
+    private static List<ChordAnalysis> analyzeChord (@NotNull RunContext run) throws IOException {
+        final String runDirectory = run.runDirectory();
+        final String sample = run.tumorSample();
+        final List<ChordAnalysis> chordValue = PatientReporterFileLoader.loadChordFile(runDirectory, sample);
+
+        if (chordValue == null) {
+            LOGGER.warn(" Could not load chord file. Probably chord classifier hasn't been run yet!");
+        }
+        return chordValue;
     }
 }

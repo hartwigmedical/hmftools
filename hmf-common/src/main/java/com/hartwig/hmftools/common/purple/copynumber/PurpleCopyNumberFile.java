@@ -9,6 +9,7 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
@@ -20,12 +21,13 @@ public enum PurpleCopyNumberFile {
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final String DELIMITER = "\t";
     static final String HEADER_PREFIX = "#";
-    private static final String EXTENSION = ".purple.cnv";
+
+    private static final String SOMATIC_EXTENSION = ".purple.cnv";
     private static final String GERMLINE_EXTENSION = ".purple.germline.cnv";
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
-        return basePath + File.separator + sample + EXTENSION;
+        return basePath + File.separator + sample + SOMATIC_EXTENSION;
     }
 
     @NotNull
@@ -42,14 +44,16 @@ public enum PurpleCopyNumberFile {
         Files.write(new File(filename).toPath(), toLines(copyNumbers));
     }
 
+    @VisibleForTesting
     @NotNull
-    static List<String> toLines(@NotNull final List<PurpleCopyNumber> purity) {
+    static List<String> toLines(@NotNull final List<PurpleCopyNumber> copyNumbers) {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
-        purity.stream().map(PurpleCopyNumberFile::toString).forEach(lines::add);
+        copyNumbers.stream().map(PurpleCopyNumberFile::toString).forEach(lines::add);
         return lines;
     }
 
+    @VisibleForTesting
     @NotNull
     static List<PurpleCopyNumber> fromLines(@NotNull List<String> lines) {
         return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(PurpleCopyNumberFile::fromString).collect(toList());

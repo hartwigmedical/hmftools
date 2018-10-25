@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
@@ -83,7 +84,7 @@ public class SomaticVariantEvidenceAnalyzer {
     private static ImmutableEvidenceItem.Builder fromActionableVariant(@NotNull ActionableSomaticVariant actionableVariant) {
         return ImmutableEvidenceItem.builder()
                 .reference(actionableVariant.reference())
-                .source(actionableVariant.source())
+                .source(ActionabilitySource.fromString(actionableVariant.source()))
                 .drug(actionableVariant.drug())
                 .drugsType(actionableVariant.drugsType())
                 .level(actionableVariant.level())
@@ -94,7 +95,7 @@ public class SomaticVariantEvidenceAnalyzer {
     private static ImmutableEvidenceItem.Builder fromActionableRange(@NotNull ActionableRange actionableRange) {
         return ImmutableEvidenceItem.builder()
                 .reference(actionableRange.reference())
-                .source(actionableRange.source())
+                .source(ActionabilitySource.fromString(actionableRange.source()))
                 .drug(actionableRange.drug())
                 .drugsType(actionableRange.drugsType())
                 .level(actionableRange.level())

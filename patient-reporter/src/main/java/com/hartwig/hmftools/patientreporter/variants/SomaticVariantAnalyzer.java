@@ -22,6 +22,8 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.patientreporter.algo.ActionabilityVariantAnalyzer;
+import com.hartwig.hmftools.patientreporter.chordclassifier.ChordAnalysis;
+import com.hartwig.hmftools.patientreporter.chordclassifier.ChordFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,7 +46,8 @@ public final class SomaticVariantAnalyzer {
     public static SomaticVariantAnalysis run(@NotNull final List<EnrichedSomaticVariant> variants, @NotNull Set<String> genePanel,
             @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap, @Nullable PatientTumorLocation patientTumorLocation,
             @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull List<GeneFusion> fusions,
-            @NotNull ActionabilityAnalyzer actionabilityAnalyzerData, final double purplePloidy) throws IOException {
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzerData, final double purplePloidy)
+            throws IOException {
         final List<EnrichedSomaticVariant> variantsToReport =
                 variants.stream().filter(includeFilter(genePanel, driverCategoryPerGeneMap)).collect(Collectors.toList());
         final double microsatelliteIndelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
