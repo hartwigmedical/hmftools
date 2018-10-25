@@ -41,7 +41,7 @@ import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
-import com.hartwig.hmftools.patientreporter.chordclassifier.ChordAnalysis;
+import com.hartwig.hmftools.patientreporter.chord.ChordAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutablePurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruption;

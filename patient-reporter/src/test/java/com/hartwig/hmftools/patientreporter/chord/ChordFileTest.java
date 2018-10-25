@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.patientreporter.chordclassifier;
+package com.hartwig.hmftools.patientreporter.chord;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.List;
@@ -10,7 +10,7 @@ import com.google.common.io.Resources;
 import org.junit.Test;
 
 public class ChordFileTest {
-    private static final String CHORD_FILE = Resources.getResource("chordclassifier/chord_prediction.txt").getPath();
+    private static final String CHORD_FILE = Resources.getResource("chord/chord_prediction.txt").getPath();
     private static final double EPSILON = 1.0e-10;
 
     @Test

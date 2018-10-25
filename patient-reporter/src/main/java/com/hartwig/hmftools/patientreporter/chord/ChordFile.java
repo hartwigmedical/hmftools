@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.chordclassifier;
+package com.hartwig.hmftools.patientreporter.chord;
 
 import java.io.File;
 import java.io.IOException;
