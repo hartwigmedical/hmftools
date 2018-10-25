@@ -18,9 +18,16 @@ import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.bachelorpp.types.BachelorGermlineVariant;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.purity.FittedPurity;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityRangeFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.qc.PurpleQC;
+import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.region.FittedRegionFile;
 import com.hartwig.hmftools.common.region.BEDFileLoader;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.ClonalityCutoffKernel;
@@ -61,16 +68,20 @@ public class BachelorPP {
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorPP.class);
 
+    // config items
     private static final String SAMPLE = "sample";
-    private static final String WRITE_VCF_FILE = "write_vcf_file";
-    private static final String BACH_INPUT_FILE = "bach_input_file";
     private static final String VCF_HEADER_FILE = "vcf_header_file";
     private static final String REF_GENOME = "ref_genome";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
-    private static final String MPILEUP_DIR = "mpileup_dir";
     private static final String WRITE_TO_DB = "write_to_db";
-    private static final String DATA_OUTPUT_PATH = "data_output_path";
+    private static final String WRITE_VCF_FILE = "write_vcf_file";
     private static final String LOG_DEBUG = "log_debug";
+    private static final String SAMPLE_PATH = "sample_path";
+    private static final String PURPLE_DATA_DIRECTORY = "purple_data_dir";
+
+    // file locations
+    private static final String BACHELOR_SUB_DIRECTORY = "bachelor";
+    private static final String BACH_INPUT_FILE = "bachelor_output.csv";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -94,10 +105,21 @@ public class BachelorPP {
             sampleId = "";
         }
 
+        String sampleDirectory = cmd.getOptionValue(SAMPLE_PATH);
+
+        if(!sampleDirectory.endsWith("/"))
+            sampleDirectory += "/";
+
+        final String bachelorDirectory = sampleDirectory + BACHELOR_SUB_DIRECTORY;
+
+        final String bachelorInputFile = bachelorDirectory + "/" + BACH_INPUT_FILE;
+
         AlleleDepthLoader adLoader = new AlleleDepthLoader();
 
         adLoader.setSampleId(sampleId);
-        adLoader.loadBachelorMatchData(cmd.getOptionValue(BACH_INPUT_FILE));
+
+        if(!adLoader.loadBachelorMatchData(bachelorInputFile))
+            return;
 
         if (adLoader.getBachelorVariants().isEmpty())
         {
@@ -105,11 +127,8 @@ public class BachelorPP {
             return;
         }
 
-        if (cmd.hasOption(MPILEUP_DIR))
-        {
-            if (!adLoader.loadMiniPileupData(cmd.getOptionValue(MPILEUP_DIR)))
-                return;
-        }
+        if (!adLoader.loadMiniPileupData(bachelorDirectory))
+            return;
 
         DatabaseAccess dbAccess;
         try
@@ -124,12 +143,10 @@ public class BachelorPP {
 
         final List<BachelorGermlineVariant> bachRecords = adLoader.getBachelorVariants();
 
-        final String outputDir = cmd.getOptionValue(DATA_OUTPUT_PATH);
-
         // create variant objects for VCF file writing and enrichment, and cache aginst bachelor record
         buildVariants(sampleId, bachRecords);
 
-        annotateRecords(sampleId, bachRecords, cmd, dbAccess);
+        annotateRecords(sampleId, bachRecords, cmd, dbAccess, sampleDirectory);
 
         int validRecordCount = 0;
         for (final BachelorGermlineVariant bachRecord : bachRecords)
@@ -153,10 +170,10 @@ public class BachelorPP {
 
         if (cmd.hasOption(WRITE_VCF_FILE))
         {
-            writeVcfFile(sampleId, bachRecords, outputDir, cmd.getOptionValue(VCF_HEADER_FILE));
+            writeVcfFile(sampleId, bachRecords, bachelorDirectory, cmd.getOptionValue(VCF_HEADER_FILE));
         }
 
-        writeToFile(sampleId, bachRecords, outputDir);
+        writeToFile(sampleId, bachRecords, bachelorDirectory);
 
         LOGGER.info("run complete");
     }
@@ -208,58 +225,8 @@ public class BachelorPP {
         }
     }
 
-    private static void writeVcfFile(final String sampleId, final List<BachelorGermlineVariant> bachRecords, final String outputDir,
-            final String vcfHeaderFile)
-    {
-        LOGGER.debug("writing germline VCF");
-
-        String outputFileName = outputDir;
-        if (!outputFileName.endsWith("/"))
-        {
-            outputFileName += "/";
-        }
-
-        outputFileName += sampleId + VCF_FILE_SUFFIX;
-
-        final File sampleVcfFile = new File(vcfHeaderFile);
-        final VCFFileReader vcfReader = new VCFFileReader(sampleVcfFile, false);
-        final VCFHeader sampleHeader = vcfReader.getFileHeader();
-
-        final VCFHeader header = sampleHeader; // new VCFHeader();
-        header.addMetaDataLine(new VCFInfoHeaderLine("AD", 1, VCFHeaderLineType.Integer, "Allele Depth for germline variant"));
-        // header.addMetaDataLine(new VCFHeaderLine("BachelorPP", BachelorPP.class.getPackage().getImplementationVersion()));
-        // header.addMetaDataLine(new VCFHeaderLine("CHROM", "POS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tCPCT02040008T"));
-
-        // Filter.UpdateVCFHeader(header);
-        //  AlleleFrequency.UpdateVCFHeader(header);
-
-        // setup VCF
-        final VariantContextWriter writer = new VariantContextWriterBuilder().setReferenceDictionary(header.getSequenceDictionary())
-                .setOutputFile(outputFileName)
-                .build();
-
-        writer.writeHeader(header);
-
-        // variants.sort(new VariantContextComparator(header.getSequenceDictionary()));
-
-        // write variants
-        try
-        {
-            for (final BachelorGermlineVariant bachRecord : bachRecords)
-            {
-                writer.add(bachRecord.getVariantContext());
-            }
-        }
-        catch (final NullPointerException e)
-        {
-            LOGGER.error("failed to write VCF record: {}", e.toString());
-        }
-
-        writer.close();
-    }
-
     private static void annotateRecords(final String sampleId, List<BachelorGermlineVariant> bachRecords, final CommandLine cmd,
-            final DatabaseAccess dbAccess)
+            final DatabaseAccess dbAccess, final String sampleDirectory)
     {
         final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
         final String fastaFileLocation = cmd.getOptionValue(REF_GENOME);
@@ -290,27 +257,63 @@ public class BachelorPP {
             return;
         }
 
-        LOGGER.debug("querying purple database");
-        final PurityContext purityContext = dbAccess.readPurityContext(sampleId);
+        final PurityContext purityContext;
+        final Multimap<String, PurpleCopyNumber> copyNumbers;
+        final Multimap<String, FittedRegion> copyNumberRegions;
 
-        if (purityContext == null)
+        if(cmd.hasOption(PURPLE_DATA_DIRECTORY))
         {
-            LOGGER.warn("Unable to retrieve purple data. Enrichment may be incomplete.");
+            final String purplePath = sampleDirectory + cmd.getOptionValue(PURPLE_DATA_DIRECTORY);
+
+            LOGGER.debug("loading purple data from file");
+
+
+            try
+            {
+                purityContext = FittedPurityFile.read(purplePath, sampleId);
+
+                // PurpleQC purpleQC = PurpleQCFile.read(PurpleQCFile.generateFilename(purplePath, sampleId));
+                // List<FittedPurity> bestFitPerPurity = FittedPurityRangeFile.read(purplePath, sampleId);
+
+                List<PurpleCopyNumber> copyNumberData = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateGermlineFilename(purplePath, sampleId));
+
+                copyNumbers = Multimaps.index(copyNumberData, PurpleCopyNumber::chromosome);
+
+                List<FittedRegion> fittedRegionData = FittedRegionFile.read(FittedRegionFile.generateFilename(purplePath, sampleId));
+
+                copyNumberRegions = Multimaps.index(fittedRegionData, FittedRegion::chromosome);
+            }
+            catch (IOException e)
+            {
+                LOGGER.error("failed to read purple data from {}: {}", purplePath, e.toString());
+                return;
+            }
         }
+        else
+        {
+            LOGGER.debug("loading purple data from database");
+
+            purityContext = dbAccess.readPurityContext(sampleId);
+
+            if (purityContext == null)
+            {
+                LOGGER.warn("failed to read purity data");
+            }
+
+            copyNumbers = Multimaps.index(dbAccess.readCopynumbers(sampleId), PurpleCopyNumber::chromosome);
+
+            copyNumberRegions = Multimaps.index(dbAccess.readCopyNumberRegions(sampleId), FittedRegion::chromosome);
+        }
+
 
         final PurityAdjuster purityAdjuster = purityContext == null
                 ? new PurityAdjuster(Gender.FEMALE, 1, 1)
                 : new PurityAdjuster(purityContext.gender(), purityContext.bestFit().purity(), purityContext.bestFit().normFactor());
 
-        final Multimap<String, PurpleCopyNumber> copyNumbers =
-                Multimaps.index(dbAccess.readCopynumbers(sampleId), PurpleCopyNumber::chromosome);
 
-        final Multimap<String, FittedRegion> copyNumberRegions =
-                Multimaps.index(dbAccess.readCopyNumberRegions(sampleId), FittedRegion::chromosome);
-
-        LOGGER.debug("incorporating purple purity");
         final PurityAdjustedSomaticVariantFactory purityAdjustmentFactory =
                 new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers, copyNumberRegions);
+
         final List<PurityAdjustedSomaticVariant> purityAdjustedVariants = purityAdjustmentFactory.create(variants);
 
         final double clonalPloidy = ClonalityCutoffKernel.clonalCutoff(purityAdjustedVariants);
@@ -366,8 +369,7 @@ public class BachelorPP {
         }
     }
 
-    private static void writeToDatabase(final String sampleId, final List<BachelorGermlineVariant> bachRecords,
-            final DatabaseAccess dbAccess)
+    private static void writeToDatabase(final String sampleId, final List<BachelorGermlineVariant> bachRecords, final DatabaseAccess dbAccess)
     {
         final GermlineVariantDAO germlineDAO = new GermlineVariantDAO(dbAccess.context());
         germlineDAO.write(sampleId, bachRecords);
@@ -459,22 +461,72 @@ public class BachelorPP {
         }
     }
 
+    private static void writeVcfFile(final String sampleId, final List<BachelorGermlineVariant> bachRecords, final String outputDir, final String vcfHeaderFile)
+    {
+        LOGGER.debug("writing germline VCF");
+
+        String outputFileName = outputDir;
+        if (!outputFileName.endsWith("/"))
+        {
+            outputFileName += "/";
+        }
+
+        outputFileName += sampleId + VCF_FILE_SUFFIX;
+
+        final File sampleVcfFile = new File(vcfHeaderFile);
+        final VCFFileReader vcfReader = new VCFFileReader(sampleVcfFile, false);
+        final VCFHeader sampleHeader = vcfReader.getFileHeader();
+
+        final VCFHeader header = sampleHeader; // new VCFHeader();
+        header.addMetaDataLine(new VCFInfoHeaderLine("AD", 1, VCFHeaderLineType.Integer, "Allele Depth for germline variant"));
+        // header.addMetaDataLine(new VCFHeaderLine("BachelorPP", BachelorPP.class.getPackage().getImplementationVersion()));
+        // header.addMetaDataLine(new VCFHeaderLine("CHROM", "POS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tCPCT02040008T"));
+
+        // Filter.UpdateVCFHeader(header);
+        //  AlleleFrequency.UpdateVCFHeader(header);
+
+        // setup VCF
+        final VariantContextWriter writer = new VariantContextWriterBuilder().setReferenceDictionary(header.getSequenceDictionary())
+                .setOutputFile(outputFileName)
+                .build();
+
+        writer.writeHeader(header);
+
+        // variants.sort(new VariantContextComparator(header.getSequenceDictionary()));
+
+        // write variants
+        try
+        {
+            for (final BachelorGermlineVariant bachRecord : bachRecords)
+            {
+                writer.add(bachRecord.getVariantContext());
+            }
+        }
+        catch (final NullPointerException e)
+        {
+            LOGGER.error("failed to write VCF record: {}", e.toString());
+        }
+
+        writer.close();
+    }
+
     @NotNull
-    private static Options createBasicOptions() {
+    private static Options createBasicOptions()
+    {
         final Options options = new Options();
         options.addOption(SAMPLE, true, "Tumor sample.");
 
-        options.addOption(BACH_INPUT_FILE, true, "Name of input Bachelor file");
+        options.addOption(SAMPLE_PATH, true, "Sample directory with a 'bachelor' sub-directory expected");
         options.addOption(VCF_HEADER_FILE, true, "Temp: VCF file header example");
-        options.addOption(MPILEUP_DIR, true, "Name of input Mini Pileup file");
+        options.addOption(SAMPLE_PATH, true, "Name of input Mini Pileup file");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file");
         options.addOption(HIGH_CONFIDENCE_BED, true, "Path to the high confidence bed file");
+        options.addOption(PURPLE_DATA_DIRECTORY, true, "Sub-directory with sample path for purple data");
 
         options.addOption(DB_USER, true, "Database user name");
         options.addOption(DB_PASS, true, "Database password");
         options.addOption(DB_URL, true, "Database url");
 
-        options.addOption(DATA_OUTPUT_PATH, true, "CSV output directory");
         options.addOption(WRITE_VCF_FILE, false, "Whether to output a VCF file");
         options.addOption(WRITE_TO_DB, false, "Whether to upload records to DB");
 
@@ -484,13 +536,15 @@ public class BachelorPP {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException {
+    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
+    {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
 
     @NotNull
-    private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException {
+    private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException
+    {
         final String userName = cmd.getOptionValue(DB_USER);
         final String password = cmd.getOptionValue(DB_PASS);
         final String databaseUrl = cmd.getOptionValue(DB_URL);
