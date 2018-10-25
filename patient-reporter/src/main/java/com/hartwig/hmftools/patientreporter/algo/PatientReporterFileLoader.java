@@ -119,7 +119,7 @@ final class PatientReporterFileLoader {
     @Nullable
     static List<ChordAnalysis> loadChordFile(@NotNull String runDirectory, @NotNull String sample) throws IOException {
         final String chordFilePath = runDirectory + File.separator + CHORD_DIRECTORY;
-        if(!ChordFile.hasChordRun(runDirectory, sample)) {
+        if(!ChordFile.hasChordRun(chordFilePath, sample)) {
             return null;
         } else {
             String chordFile = ChordFile.findChordFilePath(chordFilePath, sample);

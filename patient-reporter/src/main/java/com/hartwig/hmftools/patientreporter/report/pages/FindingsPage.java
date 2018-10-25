@@ -68,7 +68,7 @@ public abstract class FindingsPage {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 microsatelliteReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                chordReport(report()),
+                Double.toString(report().chordValue().iterator().next().hrdValue()) != null ? chordReport(report()) : null,
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 tumorMutationalLoadReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),

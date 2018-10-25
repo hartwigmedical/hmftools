@@ -17,14 +17,15 @@ public final class ChordFile {
     private static final Logger LOGGER = LogManager.getLogger(ChordFile.class);
     private static final String DELIMITER = "\t";
     private static final String CHORD_FILE_EXTENSION = "_chord_prediction.txt";
-    private static final String CHORD_HAS_RUN_FILE = "_chord_was_running.txt";
 
     private ChordFile() {
     }
 
     public static boolean hasChordRun(@NotNull String hrdDirectory, @NotNull String sample) {
+        LOGGER.info(hrdDirectory);
         if (findChordFilePath(hrdDirectory, sample) == null) {
-            String hrdHasRunPath = hrdDirectory + File.separator + CHORD_HAS_RUN_FILE;
+            String hrdHasRunPath = hrdDirectory + File.separator + sample + CHORD_FILE_EXTENSION;
+            LOGGER.info(hrdHasRunPath);
             return Files.exists(new File(hrdHasRunPath).toPath());
         }
 
@@ -59,11 +60,6 @@ public final class ChordFile {
     @NotNull
     private static ChordAnalysis fromString(@NotNull String line) {
         String[] values = line.split(DELIMITER);
-
-        String program = values[1];
-        if (!program.equalsIgnoreCase("lynparza")) {
-            LOGGER.warn("Unexpected file for chord detecting found: " + program);
-        }
 
         return ImmutableChordAnalysis.builder()
                 .BRCA1Value(Double.valueOf(values[0]))
