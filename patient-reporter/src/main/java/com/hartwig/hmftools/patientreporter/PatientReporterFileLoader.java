@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.algo;
+package com.hartwig.hmftools.patientreporter;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -22,8 +22,8 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
-import com.hartwig.hmftools.patientreporter.chordclassifier.ChordAnalysis;
-import com.hartwig.hmftools.patientreporter.chordclassifier.ChordFile;
+import com.hartwig.hmftools.patientreporter.chord.ChordAnalysis;
+import com.hartwig.hmftools.patientreporter.chord.ChordFile;
 import com.hartwig.hmftools.patientreporter.germline.BachelorFile;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 
@@ -34,7 +34,7 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
-final class PatientReporterFileLoader {
+public final class PatientReporterFileLoader {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterFileLoader.class);
 
@@ -116,20 +116,14 @@ final class PatientReporterFileLoader {
         }
     }
 
-    @Nullable
-    static List<ChordAnalysis> loadChordFile(@NotNull String runDirectory, @NotNull String sample) throws IOException {
-        final String chordFilePath = runDirectory + File.separator + CHORD_DIRECTORY;
-        if(!ChordFile.hasChordRun(chordFilePath, sample)) {
-            return null;
-        } else {
-            String chordFile = ChordFile.findChordFilePath(chordFilePath, sample);
-            return chordFile != null ? ChordFile.loadChordFile(chordFile) : Lists.newArrayList();
-
-        }
+    @NotNull
+    static ChordAnalysis loadChordFile(@NotNull String runDirectory, @NotNull String sample) throws IOException {
+        final String chordDirectory = runDirectory + File.separator + CHORD_DIRECTORY;
+        return ChordFile.loadChordFile(chordDirectory, sample);
     }
 
     @Nullable
-    static PatientTumorLocation extractPatientTumorLocation(@NotNull List<PatientTumorLocation> patientTumorLocations,
+    public static PatientTumorLocation extractPatientTumorLocation(@NotNull List<PatientTumorLocation> patientTumorLocations,
             @NotNull String sample) {
         final String patientIdentifier = toPatientIdentifier(sample);
 

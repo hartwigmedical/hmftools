@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.algo;
+package com.hartwig.hmftools.patientreporter.actionability;
 
 import static org.junit.Assert.assertEquals;
 

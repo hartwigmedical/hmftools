@@ -1,25 +1,28 @@
 package com.hartwig.hmftools.patientreporter.report.components;
 
 import java.awt.Color;
-import java.text.DecimalFormat;
+
+import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
+import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 
-public class ChordSection {
+public final class ChordSection {
 
     private static final int BUFFER = 3;
-    private static final double START = 1E-2;
-    private static final double END = 120;
+    private static final double START = 0;
+    private static final double END = 1;
 
     @NotNull
-    public static ComponentBuilder<?, ?> build(final double chordValue) {
-        final int graphValue = computeGraphValue(chordValue);
+    public static ComponentBuilder<?, ?> build(final double chordHrdProbability, @NotNull FittedPurityStatus fitStatus) {
+        final int graphValue = computeGraphValue(chordHrdProbability);
 
         final GradientBar gradient = ImmutableGradientBar.of(new Color(214, 234, 248), new Color(174, 214, 241), "Low", "High", graphValue);
-        final SliderSection sliderSection = ImmutableSliderSection.of("Chord Value",
-                interpret(chordValue),
+
+        final SliderSection sliderSection = ImmutableSliderSection.of("HR-Deficiency Probability",
+                interpret(chordHrdProbability, fitStatus),
                 description(),
                 gradient);
 
@@ -27,8 +30,9 @@ public class ChordSection {
     }
 
     @NotNull
-    private static String interpret(final double chordValue) {
-        return new DecimalFormat("#.####").format(chordValue)  + " value of HR detection";
+    private static String interpret(final double chordHrdProbability, @NotNull FittedPurityStatus fitStatus) {
+        String hrdProbability = PatientReportFormat.formatPercent(chordHrdProbability);
+        return PatientReportFormat.correctValueForFitStatus(fitStatus, hrdProbability);
     }
 
     private static int computeGraphValue(final double value) {
@@ -42,11 +46,12 @@ public class ChordSection {
     }
 
     private static double scale(double value) {
-        return Math.log10(value);
+        return value;
     }
 
     @NotNull
     private static String description() {
-        return "";
+        return "The HR-deficiency probability is determined by CHORD, a WGS signature-based classifier comparing the " +
+                "signature of this sample with signatures found across samples with known BRCA1/BRCA2 inactivation.";
     }
 }

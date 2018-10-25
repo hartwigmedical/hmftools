@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.algo;
+package com.hartwig.hmftools.patientreporter.qcfail;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;

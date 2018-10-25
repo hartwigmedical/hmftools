@@ -21,9 +21,7 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
-import com.hartwig.hmftools.patientreporter.algo.ActionabilityVariantAnalyzer;
-import com.hartwig.hmftools.patientreporter.chordclassifier.ChordAnalysis;
-import com.hartwig.hmftools.patientreporter.chordclassifier.ChordFile;
+import com.hartwig.hmftools.patientreporter.actionability.ActionabilityVariantAnalyzer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

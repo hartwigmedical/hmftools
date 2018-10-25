@@ -44,16 +44,16 @@ import com.hartwig.hmftools.patientreporter.ImmutableNotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
-import com.hartwig.hmftools.patientreporter.algo.NotAnalysableReason;
-import com.hartwig.hmftools.patientreporter.algo.NotAnalysableStudy;
-import com.hartwig.hmftools.patientreporter.chordclassifier.ChordAnalysis;
-import com.hartwig.hmftools.patientreporter.chordclassifier.ImmutableChordAnalysis;
+import com.hartwig.hmftools.patientreporter.chord.ChordAnalysis;
+import com.hartwig.hmftools.patientreporter.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.patientreporter.disruption.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.fusion.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineVariant;
+import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
+import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableStudy;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -83,7 +83,7 @@ public class PDFWriterTest {
         final List<EvidenceItem> evidenceItems = createTestEvidenceItems();
         final List<EnrichedSomaticVariant> somaticVariants = createTestSomaticVariants(purityAdjuster);
         final List<GermlineVariant> germlineVariants = createTestGermlineVariants(purityAdjuster);
-        final List<ChordAnalysis> chordAnalysis = createTestChord();
+        final ChordAnalysis chordAnalysis = createTestChordAnalysis();
         final List<GeneCopyNumber> copyNumbers = createTestCopyNumbers();
         final List<ReportableGeneFusion> fusions = createTestFusions();
         final List<ReportableGeneDisruption> disruptions = createTestDisruptions();
@@ -101,9 +101,9 @@ public class PDFWriterTest {
                 somaticVariants,
                 driverCatalog,
                 microsatelliteIndelsPerMb,
-                chordAnalysis,
                 tumorMutationalLoad,
                 tumorMutationalBurden,
+                chordAnalysis,
                 germlineVariants.size() > 0,
                 germlineVariants,
                 copyNumbers,
@@ -167,16 +167,17 @@ public class PDFWriterTest {
     }
 
     @NotNull
-    private static List<ChordAnalysis> createTestChord() {
-        List<ChordAnalysis> chordValues = Lists.newArrayList();
-        chordValues.add(ImmutableChordAnalysis.builder()
-        .BRCA1Value(0.5)
-        .noneValue(0.2)
-        .BRCA2Value(0.4)
-        .hrdValue(0.3)
-        .predictedResponseValue(0.9)
-        .build());
-        return chordValues;
+    private static ChordAnalysis createTestChordAnalysis() {
+        double brca1Value = 0.10;
+        double brca2Value = 0.86;
+
+        return ImmutableChordAnalysis.builder()
+                .noneValue(1 - (brca1Value + brca2Value))
+                .BRCA1Value(brca1Value)
+                .BRCA2Value(brca2Value)
+                .hrdValue(brca1Value + brca2Value)
+                .predictedResponseValue(brca1Value + brca2Value > 0.5 ? 1 : 0)
+                .build();
     }
 
     @NotNull

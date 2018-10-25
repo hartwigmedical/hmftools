@@ -1,2 +1,2 @@
 SampleId,Program,Source,Chromosome,Position,Type,Ref,Alt,Gene,TranscriptId,DbsnpId,CosmicId,Effects,WorstCodingEffect,AltCount,RefCount,AdjCopyNumber,AdjustedVaf,HighConfidenceRegion,TrinucleotideContext,Microhomology,RepeatSequence,RepeatCount,HgvsProtein,HgvsCoding,Biallelic,Hotspot,Mappability,GermlineStatus,MinorAllelePloidy,Filter
-XXX,Lynparza,GERMLINE_MUTATION,17,41258494,SNP,C,T,BRCA1,ENST00000357654,rs55851803,,missense_variant,MISSENSE,33,89,2.99,0.12,true,ACA,,,0,p.Cys64Tyr,c.191G>A,false,NON_HOTSPOT,0.0,HET,1.07,PASS
+CPCT11111111T,Lynparza,GERMLINE_MUTATION,17,41258494,SNP,C,T,BRCA1,ENST00000357654,rs55851803,,missense_variant,MISSENSE,33,89,2.99,0.12,true,ACA,,,0,p.Cys64Tyr,c.191G>A,false,NON_HOTSPOT,0.0,HET,1.07,PASS

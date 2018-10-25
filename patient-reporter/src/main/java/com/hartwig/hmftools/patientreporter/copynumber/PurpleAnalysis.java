@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
-import com.hartwig.hmftools.patientreporter.algo.GeneModel;
+import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

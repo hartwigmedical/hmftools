@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.algo;
+package com.hartwig.hmftools.patientreporter.qcfail;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

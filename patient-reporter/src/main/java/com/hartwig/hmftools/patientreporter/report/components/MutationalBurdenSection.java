@@ -10,7 +10,8 @@ import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 
-public class TumorMutationBurdenSection {
+public final class MutationalBurdenSection {
+
     private static final int BUFFER = 3;
     private static final double START = 1E-2;
     private static final double END = 120;

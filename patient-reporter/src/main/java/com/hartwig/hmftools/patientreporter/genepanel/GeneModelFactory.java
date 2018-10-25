@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.algo;
+package com.hartwig.hmftools.patientreporter.genepanel;
 
 import java.util.Map;
 import java.util.Set;
@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModel;
 
 import org.jetbrains.annotations.NotNull;
 

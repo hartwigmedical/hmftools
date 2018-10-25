@@ -5,7 +5,7 @@ import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
-import com.hartwig.hmftools.patientreporter.algo.GeneModel;
+import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

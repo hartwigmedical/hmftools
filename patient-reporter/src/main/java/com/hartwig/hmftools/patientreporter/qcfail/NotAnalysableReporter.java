@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.algo;
+package com.hartwig.hmftools.patientreporter.qcfail;
 
 import java.util.Optional;
 
@@ -8,6 +8,7 @@ import com.hartwig.hmftools.patientreporter.BaseReportData;
 import com.hartwig.hmftools.patientreporter.ImmutableNotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.PatientReporterFileLoader;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 
 import org.immutables.value.Value;

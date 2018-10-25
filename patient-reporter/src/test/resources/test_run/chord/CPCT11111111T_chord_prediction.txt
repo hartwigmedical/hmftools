@@ -1,0 +1,2 @@
+BRCA1	none	BRCA2	hrd	predicted_response
+CPCT11111111T	0.014	0.894	0.050	0.023	0
