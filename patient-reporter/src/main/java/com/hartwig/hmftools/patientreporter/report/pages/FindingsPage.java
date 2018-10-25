@@ -96,7 +96,7 @@ public abstract class FindingsPage {
         final ComponentBuilder<?, ?> table =
                 reportableItems.size() > 0
                         ? cmp.subreport(monospaceBaseTable().fields(EvidenceItemDataSource.evidenceItemFields())
-                        .columns(col.column("Event", EvidenceItemDataSource.EVENT_FIELD),
+                        .columns(col.column("Event", EvidenceItemDataSource.EVENT_FIELD).setFixedWidth(120),
                                 col.column("Drug", EvidenceItemDataSource.DRUG_FIELD),
                                 col.column("Drugs type", EvidenceItemDataSource.DRUGS_TYPE_FIELD),
                                 col.column("Level", EvidenceItemDataSource.LEVEL_FIELD),
@@ -120,7 +120,7 @@ public abstract class FindingsPage {
         final ComponentBuilder<?, ?> table =
                 clinicalTrials.size() > 0
                         ? cmp.subreport(monospaceBaseTable().fields(ClinicalTrialDataSource.clinicalTrialFields())
-                        .columns(col.column("Event", ClinicalTrialDataSource.EVENT_FIELD),
+                        .columns(col.column("Event", ClinicalTrialDataSource.EVENT_FIELD).setFixedWidth(120),
                                 col.column("Trial", ClinicalTrialDataSource.TRIAL_FIELD),
                                 col.column("Source", ClinicalTrialDataSource.SOURCE_FIELD)
                                         .setHyperLink(hyperLink(ClinicalTrialDataSource.sourceHyperlink()))
