@@ -20,12 +20,8 @@ import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gender.Gender;
-import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityRangeFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.qc.PurpleQC;
-import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFile;
 import com.hartwig.hmftools.common.region.BEDFileLoader;
@@ -275,7 +271,7 @@ public class BachelorPP {
                 // PurpleQC purpleQC = PurpleQCFile.read(PurpleQCFile.generateFilename(purplePath, sampleId));
                 // List<FittedPurity> bestFitPerPurity = FittedPurityRangeFile.read(purplePath, sampleId);
 
-                List<PurpleCopyNumber> copyNumberData = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateGermlineFilename(purplePath, sampleId));
+                List<PurpleCopyNumber> copyNumberData = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilename(purplePath, sampleId));
 
                 copyNumbers = Multimaps.index(copyNumberData, PurpleCopyNumber::chromosome);
 
