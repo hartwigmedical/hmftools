@@ -16,8 +16,6 @@ import org.junit.Test;
 
 public class ReportableEvidenceItemsTest {
 
-
-
     @Test
     public void higherLevelWorks() {
         EvidenceItem item1 = builder().level("A").build();

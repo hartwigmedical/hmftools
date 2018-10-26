@@ -11,13 +11,10 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class ReportableEvidenceItems {
-    private static final Logger LOGGER = LogManager.getLogger(ReportableEvidenceItems.class);
 
     private ReportableEvidenceItems() {
     }
