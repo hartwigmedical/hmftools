@@ -14,25 +14,35 @@ public class SimpleSimplificationStrategy implements SimplificationStrategy {
     public boolean shouldSimplify(Simplification s) {
         for (BreakendConsistency bc : s.consistency()) {
             switch (s.type()) {
-                case SimpleDeletion:
+                case SimpleIndel:
                 case SimpleDuplication:
                     if (bc.copyNumberDelta() > MAX_COPY_NUMBER_INCONSISTENCY) {
-                        LOGGER.debug("Not simplifying {}: ∆cn={} ploidy={}", s.type(), bc.copyNumberDelta(), bc.ploidy());
+                        LOGGER.debug("Not simplifying {}: ∆cn={} copyNumber={}", s.type(), bc.copyNumberDelta(), bc.copyNumber());
                         return false;
                     }
                     break;
+                case TranslocationInsertion:
+                    // TODO we do care about the copyNumber of the inserted sequence
+                    // but not at the insertion site
+                case SimpleInversion:
                 case Chain:
                     break;
+                default:
+                    throw new RuntimeException("NYI");
             }
             switch (s.type()) {
-                case SimpleDeletion:
+                case SimpleIndel:
                 case SimpleDuplication:
                 case Chain:
+                case TranslocationInsertion:
+                case SimpleInversion:
                     if (bc.eventDelta() > MAX_SV_PLOIDY_INCONSISTENCY) {
-                        LOGGER.debug("Not simplifying {}: ∆sv={} ploidy={}", s.type(), bc.eventDelta(), bc.ploidy());
+                        LOGGER.debug("Not simplifying {}: ∆sv={} copyNumber={}", s.type(), bc.eventDelta(), bc.copyNumber());
                         return false;
                     }
                     break;
+                default:
+                    throw new RuntimeException("NYI");
             }
         }
         return true;
@@ -40,11 +50,11 @@ public class SimpleSimplificationStrategy implements SimplificationStrategy {
 
     @Override
     public boolean couldBeDirectlyLinked(EnrichedStructuralVariant sv, BgSegment segment) {
-        if (sv.ploidy() < segment.maxMajorPloidy() + MAX_COPY_NUMBER_INCONSISTENCY) {
+        if (sv.ploidy() < segment.maxMajorCopyNumber() + MAX_COPY_NUMBER_INCONSISTENCY) {
             return true;
         } else {
             // we can't traverse across this segment since our CN is too low
-            LOGGER.debug("Unable to traverse across {} from {}. ploidy={}, maxMajorCN={}", segment, sv, sv.ploidy(), segment.maxMajorPloidy());
+            LOGGER.debug("Unable to traverse across {} from {}. copyNumber={}, maxMajorCN={}", segment, sv, sv.ploidy(), segment.maxMajorCopyNumber());
             return false;
         }
     }
@@ -58,14 +68,14 @@ public class SimpleSimplificationStrategy implements SimplificationStrategy {
             return true;
         } else {
             // we can't traverse across this segment since our CN is too low
-            LOGGER.debug("Unable to traverse from {} to {}. ∆ploidy={}", sv1, sv2, diff);
+            LOGGER.debug("Unable to traverse from {} to {}. ∆copyNumber={}", sv1, sv2, diff);
             return false;
         }
     }
 
     @Override
     public boolean couldBeFoldBackLinked(EnrichedStructuralVariant foldback, List<BgSegment> segments) {
-        return segments.stream().allMatch(segment -> foldback.ploidy() < segment.maxMajorPloidy() + MAX_COPY_NUMBER_INCONSISTENCY);
+        return segments.stream().allMatch(segment -> foldback.ploidy() < segment.maxMajorCopyNumber() + MAX_COPY_NUMBER_INCONSISTENCY);
     }
 
     @Override

@@ -35,7 +35,7 @@ public abstract class PurpleCopyNumber implements CopyNumber {
     }
 
     public long length() {
-        return end() - start();
+        return end() - start() + 1;
     }
 
     public abstract long minStart();

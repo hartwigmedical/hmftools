@@ -15,7 +15,7 @@ public interface Simplification {
     SimplificationType type();
     @NotNull
     Collection<BreakendConsistency> consistency();
-    double ploidy();
+    double copyNumber();
     @NotNull
     List<BgAdjacency> adjacencies();
 }
