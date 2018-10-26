@@ -142,7 +142,7 @@ public class PDFWriterTest {
                 .drugsType("CDK4/6 inhibitor")
                 .level("C")
                 .response("Responsive")
-                .reference("variant:222")
+                .reference("")
                 .source(ActionabilitySource.CGI)
                 .isOnLabel(true)
                 .build());
