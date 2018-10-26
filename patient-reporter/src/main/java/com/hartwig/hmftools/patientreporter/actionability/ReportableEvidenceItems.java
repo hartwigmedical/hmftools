@@ -1,13 +1,21 @@
 package com.hartwig.hmftools.patientreporter.actionability;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class ReportableEvidenceItems {
+    private static final Logger LOGGER = LogManager.getLogger(ReportableEvidenceItems.class);
 
     private ReportableEvidenceItems() {
     }
@@ -20,6 +28,8 @@ public final class ReportableEvidenceItems {
                 reportableItems.add(evidence);
             }
         }
-        return reportableItems;
+
+        HashSet<EvidenceItem> filteringReportableItems = new HashSet<>(reportableItems);
+        return new ArrayList<>(filteringReportableItems);
     }
 }
