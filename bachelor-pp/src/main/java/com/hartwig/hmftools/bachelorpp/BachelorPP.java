@@ -331,7 +331,7 @@ public class BachelorPP {
                     else
                         adjVaf = purityAdjuster.purityAdjustedVAFWithHeterozygousNormal(var.chromosome(), var.adjustedCopyNumber(), var.alleleFrequency());
 
-                    if(Double.isNaN(adjVaf))
+                    if(Double.isNaN(adjVaf) || Double.isInfinite(adjVaf))
                         adjVaf = 0;
 
                     bachRecord.setAdjustedVaf(adjVaf);
