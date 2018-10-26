@@ -135,6 +135,18 @@ public class PDFWriterTest {
                 .source(ActionabilitySource.CIVIC)
                 .isOnLabel(false)
                 .build());
+
+        evidenceItems.add(ImmutableEvidenceItem.builder()
+                .event("BRAF p.Val600Glu")
+                .drug("IMPemBra")
+                .drugsType("Trial")
+                .level("B")
+                .response("Response")
+                .reference("EXT8846 (NL54421.031.15)")
+                .source(ActionabilitySource.ICLUSION)
+                .isOnLabel(true)
+                .build());
+
         return evidenceItems;
     }
 
