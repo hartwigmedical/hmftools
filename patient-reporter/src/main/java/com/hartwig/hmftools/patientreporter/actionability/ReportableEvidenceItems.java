@@ -1,11 +1,8 @@
 package com.hartwig.hmftools.patientreporter.actionability;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
@@ -30,6 +27,24 @@ public final class ReportableEvidenceItems {
         }
 
         HashSet<EvidenceItem> filteringReportableItems = new HashSet<>(reportableItems);
-        return new ArrayList<>(filteringReportableItems);
+        ArrayList<EvidenceItem> filteredReportableItems = new ArrayList<>(filteringReportableItems);
+
+        List<EvidenceItem> evidenceUnique = Lists.newArrayList();
+        for (EvidenceItem distinctTrials : filteredReportableItems) {
+            if (evidenceUnique.isEmpty()) {
+                evidenceUnique.add(distinctTrials);
+            } else if (distinctTrials.event().equals(evidenceUnique.iterator().next().event()) && distinctTrials.drug()
+                    .equals(evidenceUnique.iterator().next().drug()) && distinctTrials.response()
+                    .equals(evidenceUnique.iterator().next().response()) && !evidenceUnique.iterator().next().isOnLabel()) {
+                evidenceUnique.remove(distinctTrials);
+            } else if (distinctTrials.event().equals(evidenceUnique.iterator().next().event()) && distinctTrials.drug()
+                    .equals(evidenceUnique.iterator().next().drug()) && distinctTrials.response()
+                    .equals(evidenceUnique.iterator().next().response()) && !distinctTrials.isOnLabel()) {
+                evidenceUnique.remove(distinctTrials);
+            } else {
+                evidenceUnique.add(distinctTrials);
+            }
+        }
+        return evidenceUnique;
     }
 }

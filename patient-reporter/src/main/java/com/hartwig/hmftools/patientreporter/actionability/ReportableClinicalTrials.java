@@ -1,13 +1,17 @@
 package com.hartwig.hmftools.patientreporter.actionability;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 
 import org.jetbrains.annotations.NotNull;
+
+import javafx.collections.transformation.FilteredList;
 
 public final class ReportableClinicalTrials {
 
@@ -22,7 +26,7 @@ public final class ReportableClinicalTrials {
                 trials.add(evidence);
             }
         }
-        HashSet<EvidenceItem> filteringReportableEvidenceItems = new HashSet<>(trials);
-        return new ArrayList<>(filteringReportableEvidenceItems);
+        HashSet<EvidenceItem> filteringReportableTrials = new HashSet<>(trials);
+        return new ArrayList<>(filteringReportableTrials);
     }
 }

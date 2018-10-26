@@ -63,7 +63,7 @@ import net.sf.dynamicreports.report.exception.DRException;
 
 public class PDFWriterTest {
 
-    private static final boolean WRITE_TO_PDF = false;
+    private static final boolean WRITE_TO_PDF = true;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
 
@@ -137,6 +137,28 @@ public class PDFWriterTest {
                 .build());
 
         evidenceItems.add(ImmutableEvidenceItem.builder()
+                .event("CDK4 Amplification")
+                .drug("LEE011")
+                .drugsType("CDK4/6 inhibitor")
+                .level("C")
+                .response("Responsive")
+                .reference("variant:222")
+                .source(ActionabilitySource.CGI)
+                .isOnLabel(true)
+                .build());
+
+        evidenceItems.add(ImmutableEvidenceItem.builder()
+                .event("TP53 p.Pro177_Cys182del")
+                .drug("Docetaxel")
+                .drugsType("Chemotherapy")
+                .level("D")
+                .response("Resistant")
+                .reference("variant:222")
+                .source(ActionabilitySource.CIVIC)
+                .isOnLabel(true)
+                .build());
+
+        evidenceItems.add(ImmutableEvidenceItem.builder()
                 .event("BRAF p.Val600Glu")
                 .drug("IMPemBra")
                 .drugsType("Trial")
@@ -145,6 +167,17 @@ public class PDFWriterTest {
                 .reference("EXT8846 (NL54421.031.15)")
                 .source(ActionabilitySource.ICLUSION)
                 .isOnLabel(true)
+                .build());
+
+        evidenceItems.add(ImmutableEvidenceItem.builder()
+                .event("BRAF p.Val600Glu")
+                .drug("IMPemBra")
+                .drugsType("Trial")
+                .level("B")
+                .response("Response")
+                .reference("EXT8846 (NL54421.031.15)")
+                .source(ActionabilitySource.ICLUSION)
+                .isOnLabel(false)
                 .build());
 
         evidenceItems.add(ImmutableEvidenceItem.builder()
