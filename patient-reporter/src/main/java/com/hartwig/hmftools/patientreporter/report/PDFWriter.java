@@ -18,7 +18,6 @@ import com.hartwig.hmftools.patientreporter.report.pages.ImmutableCircosPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableEvidencePage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableExplanationPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableFindingsPage;
-import com.hartwig.hmftools.patientreporter.report.pages.ImmutableGenePanelPage;
 import com.hartwig.hmftools.patientreporter.report.pages.NonSequenceablePage;
 import com.hartwig.hmftools.patientreporter.report.pages.SampleDetailsPage;
 
@@ -95,8 +94,6 @@ public class PDFWriter {
                 .add(ImmutableFindingsPage.of(report, reporterData).reportComponent())
                 .newPage()
                 .add(ImmutableCircosPage.of(report.circosPath()).reportComponent())
-                .newPage()
-                .add(ImmutableGenePanelPage.of(reporterData).reportComponent())
                 .newPage()
                 .add(ImmutableExplanationPage.builder().build().reportComponent())
                 .newPage()
