@@ -7,6 +7,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getProximity;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
@@ -138,9 +139,11 @@ public class ChainFinder
 
         mReqChainCount = svList.size();
 
+        /*
         // check whether there are enough potential links to form full or near-to-full chains
         if (!mCluster.hasSubClusters() && !checkLinksPotential(svList, inferredTIs))
             return false;
+        */
 
         if (mCluster.getCount() >= 4)
         {
@@ -682,7 +685,7 @@ public class ChainFinder
 
                 int tiLength = getProximity(var, otherVar, useStart, otherVarStart);
 
-                if (tiLength <= 0 || (newPair != null && tiLength >= newPair.length()))
+                if (tiLength <= MIN_TEMPLATED_INSERTION_LENGTH || (newPair != null && tiLength >= newPair.length()))
                     continue;
 
                 // check if already in a linked pair

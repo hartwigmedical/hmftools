@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
@@ -366,9 +367,10 @@ public class SvClusteringMethods {
         List<SvVarData> varList = Lists.newArrayList();
         for(final SvVarData var : cluster.getUnlinkedSVs())
         {
-            varList.clear();
-            varList.add(var);
-            if(calcConsistency(varList) != 0)
+            if(!var.isLocal()) // so filters out cross arm, null breakends and translocation
+                return false;
+
+            if(calcConsistency(var) != 0)
                 return false;
         }
 
@@ -1439,7 +1441,7 @@ public class SvClusteringMethods {
 
     }
 
-    public void markDelDupPairTypes(SvCluster cluster, boolean logData, final String sampleId)
+    public boolean markDelDupPairTypes(SvCluster cluster, boolean logData, final String sampleId)
     {
         final SvVarData var1 = cluster.getSVs().get(0);
         final SvVarData var2 = cluster.getSVs().get(1);
@@ -1479,7 +1481,7 @@ public class SvClusteringMethods {
         if(lp1 == null && lp2 == null)
         {
             LOGGER.warn("cluster({} {}) has no linked pairs", cluster.getId(), cluster.getDesc());
-            return;
+            return false;
         }
 
         final SvLinkedPair tiLinkedPair;
@@ -1583,7 +1585,7 @@ public class SvClusteringMethods {
         if(!isValid)
         {
             LOGGER.debug("cluster({}) invalid classification", cluster.getId());
-            return;
+            return false;
         }
 
         if(logData)
@@ -1597,6 +1599,7 @@ public class SvClusteringMethods {
 
         cluster.setResolved(true, pairDesc);
         cluster.setLengthOverride(tiLinkedPair.length());
+        return true;
     }
 
     public void setChromosomalArmStats(final List<SvVarData> allVariants)

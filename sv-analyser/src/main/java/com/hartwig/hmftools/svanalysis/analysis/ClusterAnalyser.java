@@ -155,6 +155,11 @@ public class ClusterAnalyser {
             // any clusters which were merged to resolve a collection of them, but
             // which did not lead to any longer chains, are now de-merged
             demergeClusters(mergedClusters);
+
+            for(SvCluster cluster : mergedClusters)
+            {
+                setClusterResolvedState(cluster);
+            }
         }
 
         for(SvCluster cluster : mClusters)
@@ -252,16 +257,16 @@ public class ClusterAnalyser {
             if(cluster.getCount() == 1)
             {
                 cluster.setResolved(true, RESOLVED_TYPE_SIMPLE_SV);
-            }
-            else if(calcTypeCount(cluster.getSVs(), DEL) + calcTypeCount(cluster.getSVs(), DUP) == 2)
-            {
-                mClusteringMethods.markDelDupPairTypes(cluster, false, mSampleId);
-            }
-            else
-            {
-                cluster.setResolved(true, RESOLVED_TYPE_SIMPLE_SV);
+                return;
             }
 
+            if(calcTypeCount(cluster.getSVs(), DEL) + calcTypeCount(cluster.getSVs(), DUP) == 2)
+            {
+                if(mClusteringMethods.markDelDupPairTypes(cluster, false, mSampleId))
+                    return;
+            }
+
+            cluster.setResolved(true, RESOLVED_TYPE_SIMPLE_SV);
             return;
         }
 
@@ -288,6 +293,24 @@ public class ClusterAnalyser {
                 cluster.setResolved(true, RESOLVED_TYPE_SIMPLE_CHAIN);
             else
                 cluster.setResolved(true, RESOLVED_TYPE_COMPLEX_CHAIN);
+
+            return;
+        }
+
+        if(cluster.hasLinkingLineElements())
+        {
+            // skip further classification for now
+            cluster.setResolved(false, "Line");
+            return;
+        }
+
+        // cluster remains largely unresolved..
+        if(!cluster.getChains().isEmpty())
+        {
+            if(!cluster.hasReplicatedSVs())
+                cluster.setResolved(false, "SimplePartialChain");
+            else
+                cluster.setResolved(false, "ComplexPartialChain");
         }
     }
 

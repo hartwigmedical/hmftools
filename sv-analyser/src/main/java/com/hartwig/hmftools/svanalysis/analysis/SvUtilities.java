@@ -319,15 +319,23 @@ public class SvUtilities {
 
         for(final SvVarData var : svList)
         {
-            for(int be = SVI_START; be <= SVI_END; ++be)
-            {
-                boolean useStart = isStart(be);
+            consistencyCount += calcConsistency(var);
+        }
 
-                if(!useStart && var.isNullBreakend())
-                    continue;
+        return consistencyCount;
+    }
 
-                consistencyCount += (var.arm(useStart) == CHROMOSOME_ARM_P ? 1 : -1) * var.orientation(useStart) * 1;
-            }
+    public static int calcConsistency(final SvVarData var)
+    {
+        int consistencyCount = 0;
+        for(int be = SVI_START; be <= SVI_END; ++be)
+        {
+            boolean useStart = isStart(be);
+
+            if(!useStart && var.isNullBreakend())
+                continue;
+
+            consistencyCount += (var.arm(useStart) == CHROMOSOME_ARM_P ? 1 : -1) * var.orientation(useStart) * 1;
         }
 
         return consistencyCount;

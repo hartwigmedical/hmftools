@@ -274,7 +274,7 @@ public class SvSampleAnalyser {
                 writer.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd");
 
                 // cluster-level info
-                writer.write(",ClusterDesc,ResolvedType,Consistency,ArmCount");
+                writer.write(",ClusterDesc,IsResolved,ResolvedType,Consistency,ArmCount");
 
                 // linked pair info
                 writer.write(",LnkSvStart,LnkTypeStart,LnkLenStart,LnkSvEnd,LnkTypeEnd,LnkLenEnd");
@@ -351,8 +351,8 @@ public class SvSampleAnalyser {
                                     mClusteringMethods.getChrArmData(var)));
 
                     writer.write(
-                            String.format(",%s,%s,%d,%d",
-                                    cluster.getDesc(), cluster.getResolvedType(), cluster.getConsistencyCount(), cluster.getChromosomalArmCount()));
+                            String.format(",%s,%s,%s,%d,%d",
+                                    cluster.getDesc(), cluster.isResolved(), cluster.getResolvedType(), cluster.getConsistencyCount(), cluster.getChromosomalArmCount()));
 
                     // linked pair info
                     final SvLinkedPair startLP = cluster.getLinkedPair(var, true);
