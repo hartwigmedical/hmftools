@@ -31,15 +31,16 @@ public final class ReportableEvidenceItems {
 
         List<EvidenceItem> evidenceUnique = Lists.newArrayList();
         for (EvidenceItem distinctTrials : filteredReportableItems) {
+            EvidenceItem valueEvidenceUnique = evidenceUnique.iterator().next();
             if (evidenceUnique.isEmpty()) {
                 evidenceUnique.add(distinctTrials);
-            } else if (distinctTrials.event().equals(evidenceUnique.iterator().next().event()) && distinctTrials.drug()
-                    .equals(evidenceUnique.iterator().next().drug()) && distinctTrials.response()
-                    .equals(evidenceUnique.iterator().next().response()) && !evidenceUnique.iterator().next().isOnLabel()) {
+            } else if (distinctTrials.event().equals(valueEvidenceUnique.event()) && distinctTrials.drug()
+                    .equals(valueEvidenceUnique.drug()) && distinctTrials.response()
+                    .equals(valueEvidenceUnique.response()) && !valueEvidenceUnique.isOnLabel()) {
                 evidenceUnique.remove(distinctTrials);
-            } else if (distinctTrials.event().equals(evidenceUnique.iterator().next().event()) && distinctTrials.drug()
-                    .equals(evidenceUnique.iterator().next().drug()) && distinctTrials.response()
-                    .equals(evidenceUnique.iterator().next().response()) && !distinctTrials.isOnLabel()) {
+            } else if (distinctTrials.event().equals(valueEvidenceUnique.event()) && distinctTrials.drug()
+                    .equals(valueEvidenceUnique.drug()) && distinctTrials.response()
+                    .equals(valueEvidenceUnique.response()) && !distinctTrials.isOnLabel()) {
                 evidenceUnique.remove(distinctTrials);
             } else {
                 evidenceUnique.add(distinctTrials);
