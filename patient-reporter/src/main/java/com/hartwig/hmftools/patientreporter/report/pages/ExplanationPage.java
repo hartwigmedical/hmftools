@@ -41,6 +41,8 @@ public abstract class ExplanationPage {
     private static ComponentBuilder<?, ?> generalExplanationSection() {
         return toList("Details on the report in general",
                 Lists.newArrayList("The analysis is based on reference genome version GRCh37.",
+                        "Transcripts used for reporting can be found on https://github.com/hartwigmedical and "
+                                + "are generally the canonical transcripts as defined by Ensembl.",
                         "Variant detection in samples with lower tumor content is less sensitive. "
                                 + "In case of a low tumor purity (below 20%) likelihood of failing to detect potential variants increases.",
                         "The implied tumor purity is the percentage of tumor cells in the biopsy based on analysis of "
@@ -58,22 +60,14 @@ public abstract class ExplanationPage {
     @NotNull
     private static ComponentBuilder<?, ?> snvIndelExplanationSection() {
         return toList("Details on reported somatic variants",
-                Lists.newArrayList("Variants are reported which have been annotated with clinical evidence or impact genes that have "
-                                + "been found to be significantly mutated in cancer.",
-                        "The 'Variant' and the 'Impact' fields display the impact of the variant in HGVS notation.",
-                        "The 'Read Depth' displays the raw number of reads supporting the "
-                                + "mutation versus the total number of reads on the mutated position.",
-                        "The 'Depth (VAF)' displays the number of observations of the specific hgvsCodingImpact versus "
-                                + "the total number of reads in this location in the format 'alt / total (%)'.",
-                        "The 'Hotspot' field indicates whether the variant has been found in cancer samples before and is primarily based "
-                                + "on OncoKb, CiViC and CGI",
+                Lists.newArrayList("The 'Read Depth' displays the raw number of reads supporting the "
+                                + "variant versus the total number of reads on the mutated position.",
                         "The 'Ploidy (VAF)' field displays the tumor ploidy for the observed position. The ploidy "
                                 + "has been adjusted for the implied tumor purity (see above) and is shown as a "
                                 + "proportion of A’s and B’s (e.g. AAABB for 3 copies of A, and 2 copies of B). "
                                 + "The copy number is the sum of A’s and B’s. The VAF value is to the alternative allele "
                                 + "frequency after correction for tumor purity.",
-                        "The 'Clonality' field indicates whether the variant is present clonal or sub-clonal in the tumor sample.",
-                        "The 'Biallelic' field indicates whether the variant is present across all alleles in the tumor",
+                        "The 'Biallelic' field indicates whether the variant is present across all alleles in the tumor.",
                         "The 'Driver' field is based on the driver probability calculated based on the HMF database. "
                                 + "A variant with High driver likelihood is likely to be positively selected for."));
     }
