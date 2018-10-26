@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.report.data;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,13 +24,14 @@ public class ClinicalTrialDataSource {
     public static final FieldBuilder<?> SOURCE_FIELD = field("source", String.class);
     public static final FieldBuilder<?> CCMO_FIELD = field("ccmo", String.class);
     public static final FieldBuilder<?> ON_LABEL_FIELD = field("on_label", String.class);
+    private static final FieldBuilder<?> REFERENCE_FIELD = field("reference", String.class);
 
     private ClinicalTrialDataSource() {
     }
 
     @NotNull
     public static FieldBuilder<?>[] clinicalTrialFields() {
-        return new FieldBuilder<?>[] { EVENT_FIELD, TRIAL_FIELD, SOURCE_FIELD, CCMO_FIELD, ON_LABEL_FIELD };
+        return new FieldBuilder<?>[] { EVENT_FIELD, TRIAL_FIELD, SOURCE_FIELD, CCMO_FIELD, ON_LABEL_FIELD, REFERENCE_FIELD };
     }
 
     @NotNull
@@ -38,7 +40,8 @@ public class ClinicalTrialDataSource {
                 TRIAL_FIELD.getName(),
                 SOURCE_FIELD.getName(),
                 CCMO_FIELD.getName(),
-                ON_LABEL_FIELD.getName());
+                ON_LABEL_FIELD.getName(),
+                REFERENCE_FIELD.getName());
 
         for (EvidenceItem evidenceItem : sort(trials)) {
             assert evidenceItem.source().isTrialSource();
@@ -46,25 +49,25 @@ public class ClinicalTrialDataSource {
             evidenceItemDataSource.add(evidenceItem.event(),
                     evidenceItem.drug(),
                     evidenceItem.source().sourceName(),
-                    CCMOID(evidenceItem.reference()),
-                    evidenceItem.isOnLabel() ? "Yes" : "No");
+                    CCMOId(evidenceItem.reference()),
+                    evidenceItem.isOnLabel() ? "Yes" : "No",
+                    evidenceItem.reference());
         }
 
         return evidenceItemDataSource;
     }
 
     @NotNull
-    private static String CCMOID(@NotNull String CCMO_ids) {
-        String CCMO_ids_new = CCMO_ids.replace(")", "");
-        String[] CCMO_ids_def = CCMO_ids_new.split("\\(");
-        return CCMO_ids_def[1];
+    private static String CCMOId(@NotNull String reference) {
+        // KODU: Expected format "EXT1 (CCMO)"
+        String referenceWithoutParenthesis = reference.replace(")", "");
+        String[] splitExtAndCCMO = referenceWithoutParenthesis.split("\\(");
+        return splitExtAndCCMO[1];
     }
 
     @NotNull
     private static List<EvidenceItem> sort(@NotNull List<EvidenceItem> evidenceItems) {
-        return evidenceItems.stream().sorted((item1, item2) -> {
-            return item1.event().compareTo(item2.event());
-        }).collect(Collectors.toList());
+        return evidenceItems.stream().sorted(Comparator.comparing(EvidenceItem::drug)).collect(Collectors.toList());
     }
 
     @NotNull
@@ -73,13 +76,23 @@ public class ClinicalTrialDataSource {
             @Override
             public String evaluate(@NotNull final ReportParameters data) {
                 String source = data.getValue(SOURCE_FIELD.getName()).toString();
+                String reference = data.getValue(REFERENCE_FIELD.getName()).toString();
+                String ext = EXTId(reference);
                 switch (source.toLowerCase()) {
                     case "iclusion":
-                        return "https://www.iclusion.org";
+                        return "https://iclusion.org/hmf/" + ext;
                     default:
                         return Strings.EMPTY;
                 }
             }
         };
+    }
+
+    @NotNull
+    private static String EXTId(@NotNull String reference) {
+        // KODU: Expected format "EXT1 (CCMO)"
+        String[] splitExtAndCCMO = reference.split("\\(");
+        String ext = splitExtAndCCMO[0];
+        return ext.substring(3, ext.length()).trim();
     }
 }

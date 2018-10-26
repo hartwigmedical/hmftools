@@ -135,6 +135,73 @@ public class PDFWriterTest {
                 .source(ActionabilitySource.CIVIC)
                 .isOnLabel(false)
                 .build());
+
+        evidenceItems.add(ImmutableEvidenceItem.builder()
+                .event("CDK4 Amplification")
+                .drug("LEE011")
+                .drugsType("CDK4/6 inhibitor")
+                .level("C")
+                .response("Responsive")
+                .reference("")
+                .source(ActionabilitySource.CGI)
+                .isOnLabel(true)
+                .build());
+
+        evidenceItems.add(ImmutableEvidenceItem.builder()
+                .event("TP53 p.Pro177_Cys182del")
+                .drug("Docetaxel")
+                .drugsType("Chemotherapy")
+                .level("D")
+                .response("Resistant")
+                .reference("variant:222")
+                .source(ActionabilitySource.CIVIC)
+                .isOnLabel(true)
+                .build());
+
+        evidenceItems.add(ImmutableEvidenceItem.builder()
+                .event("BRAF p.Val600Glu")
+                .drug("IMPemBra")
+                .drugsType("Trial")
+                .level("B")
+                .response("Response")
+                .reference("EXT8846 (NL54421.031.15)")
+                .source(ActionabilitySource.ICLUSION)
+                .isOnLabel(true)
+                .build());
+
+        evidenceItems.add(ImmutableEvidenceItem.builder()
+                .event("BRAF p.Val600Glu")
+                .drug("IMPemBra")
+                .drugsType("Trial")
+                .level("B")
+                .response("Response")
+                .reference("EXT8846 (NL54421.031.15)")
+                .source(ActionabilitySource.ICLUSION)
+                .isOnLabel(false)
+                .build());
+
+        evidenceItems.add(ImmutableEvidenceItem.builder()
+                .event("TP53 p.Pro177_Cys182del")
+                .drug("Docetaxel")
+                .drugsType("Chemotherapy")
+                .level("D")
+                .response("Resistant")
+                .reference("variant:222")
+                .source(ActionabilitySource.CIVIC)
+                .isOnLabel(false)
+                .build());
+
+        evidenceItems.add(ImmutableEvidenceItem.builder()
+                .event("BRAF p.Val600Glu")
+                .drug("IMPemBra")
+                .drugsType("Trial")
+                .level("B")
+                .response("Response")
+                .reference("EXT8846 (NL54421.031.15)")
+                .source(ActionabilitySource.ICLUSION)
+                .isOnLabel(true)
+                .build());
+
         return evidenceItems;
     }
 
