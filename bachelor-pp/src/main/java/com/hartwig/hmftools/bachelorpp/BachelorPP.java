@@ -263,13 +263,9 @@ public class BachelorPP {
 
             LOGGER.debug("loading purple data from file");
 
-
             try
             {
                 purityContext = FittedPurityFile.read(purplePath, sampleId);
-
-                // PurpleQC purpleQC = PurpleQCFile.read(PurpleQCFile.generateFilename(purplePath, sampleId));
-                // List<FittedPurity> bestFitPerPurity = FittedPurityRangeFile.read(purplePath, sampleId);
 
                 List<PurpleCopyNumber> copyNumberData = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilename(purplePath, sampleId));
 
