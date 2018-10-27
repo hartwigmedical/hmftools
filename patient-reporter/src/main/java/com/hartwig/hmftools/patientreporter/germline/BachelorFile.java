@@ -63,13 +63,16 @@ public final class BachelorFile {
         }
 
         String filter = values[30].trim();
+        int refReadCount = Integer.valueOf(values[15]);
+        int altReadCount = Integer.valueOf(values[14]);
+
         return ImmutableGermlineVariant.builder()
                 .passFilter(filter.equalsIgnoreCase("pass"))
                 .gene(values[8].trim())
                 .hgvsCodingImpact(values[24].trim())
                 .hgvsProteinImpact(values[23].trim())
-                .totalReadCount(Integer.valueOf(values[15]))
-                .alleleReadCount(Integer.valueOf(values[14]))
+                .totalReadCount(refReadCount + altReadCount)
+                .alleleReadCount(altReadCount)
                 .germlineStatus(values[28].trim())
                 .adjustedVAF(Double.valueOf(values[17]))
                 .adjustedCopyNumber(Double.valueOf(values[16]))
