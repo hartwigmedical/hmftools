@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.patientreporter.report.Commons.sectionHeaderS
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
+import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
@@ -24,6 +25,7 @@ import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 
+import net.sf.dynamicreports.report.builder.FieldBuilder;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 
@@ -77,12 +79,12 @@ public abstract class EvidencePage {
     private static ComponentBuilder<?, ?> summaryReportedgenomicAlterations(@NotNull AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> table =
                 cmp.subreport(monospaceBaseTable().fields(TumorReportedGenomicAlterationsDataSource.TumorReportedGenomicAlterationsSummaryFields())
-                        .columns(col.column("Tumor Purity", TumorReportedGenomicAlterationsDataSource.NUMBER_SOMATIC_VARIANTS),
-                                col.column("Mutational Load", TumorReportedGenomicAlterationsDataSource.GENES_SOMATIC_VARIANTS_WITH_DRIVER_LIKELIHOOD),
-                                col.column("Mutational Burden", TumorReportedGenomicAlterationsDataSource.GENES_WITH_AMPLIFICATION),
-                                col.column("Microsatellite (in)stability",
+                        .columns(col.column("Number of somatic variants", TumorReportedGenomicAlterationsDataSource.NUMBER_SOMATIC_VARIANTS),
+                                col.column("Somatic variants with driver likelihood > 0.8", TumorReportedGenomicAlterationsDataSource.GENES_SOMATIC_VARIANTS_WITH_DRIVER_LIKELIHOOD),
+                                col.column("Genes with amplification", TumorReportedGenomicAlterationsDataSource.GENES_WITH_AMPLIFICATION),
+                                col.column("Genes with (partial) loss",
                                         TumorReportedGenomicAlterationsDataSource.GENES_WITH_LOSS),
-                                col.column("Implied tumor characteristics", TumorReportedGenomicAlterationsDataSource.FUSION_GENES))
+                                col.column("Fusion genes", TumorReportedGenomicAlterationsDataSource.FUSION_GENES))
                         .setDataSource(TumorReportedGenomicAlterationsDataSource.fromTumorReportedGenomicAlterationsSummary(report)));
         return cmp.verticalList(cmp.text("Tumor reportable genomic alterations summary").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),

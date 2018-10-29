@@ -1,16 +1,12 @@
 package com.hartwig.hmftools.patientreporter.report.data;
 
-import static com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat.ploidyToCopiesString;
-
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
