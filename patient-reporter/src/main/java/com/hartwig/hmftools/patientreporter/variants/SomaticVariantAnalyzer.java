@@ -43,18 +43,18 @@ public final class SomaticVariantAnalyzer {
     public static SomaticVariantAnalysis run(@NotNull List<EnrichedSomaticVariant> variants, @NotNull Set<String> genePanel,
             @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap, @NotNull Set<String> drupActionableGenes,
             @Nullable PatientTumorLocation patientTumorLocation, @NotNull ActionabilityAnalyzer actionabilityAnalyzer) throws IOException {
-        final double microsatelliteIndelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
-        final int tumorMutationalLoad = MutationalLoadAnalyzer.determineTumorMutationalLoad(variants);
-        final double tumorMutationalBurden = MutationalBurdenAnalyzer.determineTumorMutationalBurden(variants);
+        double microsatelliteIndelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
+        int tumorMutationalLoad = MutationalLoadAnalyzer.determineTumorMutationalLoad(variants);
+        double tumorMutationalBurden = MutationalBurdenAnalyzer.determineTumorMutationalBurden(variants);
 
-        final List<DriverCatalog> driverCatalog = Lists.newArrayList();
+        List<DriverCatalog> driverCatalog = Lists.newArrayList();
         driverCatalog.addAll(OncoDrivers.drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), variants));
         driverCatalog.addAll(TsgDrivers.drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), variants));
 
-        final List<EnrichedSomaticVariant> variantsToReport =
+        List<EnrichedSomaticVariant> variantsToReport =
                 variants.stream().filter(includeFilter(genePanel, driverCategoryPerGeneMap)).collect(Collectors.toList());
 
-        final Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant =
+        Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant =
                 findEvidenceForVariants(actionabilityAnalyzer, variants, patientTumorLocation);
 
         // KODU: Add all variants with evidence that have not previously been added.
@@ -64,7 +64,7 @@ public final class SomaticVariantAnalyzer {
             }
         }
 
-        final List<ReportableSomaticVariant> reportableVariants =
+        List<ReportableSomaticVariant> reportableVariants =
                 toReportableSomaticVariants(variantsToReport, driverCatalog, driverCategoryPerGeneMap, drupActionableGenes);
 
         return ImmutableSomaticVariantAnalysis.of(reportableVariants,
@@ -77,15 +77,15 @@ public final class SomaticVariantAnalyzer {
     @NotNull
     private static List<EvidenceItem> toList(@NotNull Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant) {
         List<EvidenceItem> evidenceItemList = Lists.newArrayList();
-        for (List<EvidenceItem> itemsPerVariant : evidencePerVariant.values()) {
-            evidenceItemList.addAll(itemsPerVariant);
+        for (List<EvidenceItem> items : evidencePerVariant.values()) {
+            evidenceItemList.addAll(items);
         }
         return evidenceItemList;
     }
 
     @NotNull
-    private static <T extends SomaticVariant> Map<T, List<EvidenceItem>> findEvidenceForVariants(
-            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @NotNull List<T> variants,
+    private static Map<EnrichedSomaticVariant, List<EvidenceItem>> findEvidenceForVariants(
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @NotNull List<EnrichedSomaticVariant> variants,
             @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
         final String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : Strings.EMPTY;
         CancerTypeMappingReading cancerTypeMappingReading = CancerTypeMappingReading.readingFile();
@@ -96,11 +96,11 @@ public final class SomaticVariantAnalyzer {
 
         Set<String> actionableGenes = actionabilityAnalyzer.variantAnalyzer().actionableGenes();
 
-        Map<T, List<EvidenceItem>> evidenceItemsPerVariant = Maps.newHashMap();
-        List<T> variantsOnActionableGenesRanges =
+        Map<EnrichedSomaticVariant, List<EvidenceItem>> evidenceItemsPerVariant = Maps.newHashMap();
+        List<EnrichedSomaticVariant> variantsOnActionableGenesRanges =
                 variants.stream().filter(variant -> actionableGenes.contains(variant.gene())).collect(Collectors.toList());
 
-        for (T variant : variantsOnActionableGenesRanges) {
+        for (EnrichedSomaticVariant variant : variantsOnActionableGenesRanges) {
             evidenceItemsPerVariant.put(variant,
                     actionabilityAnalyzer.variantAnalyzer()
                             .evidenceForSomaticVariant(variant, doidsPrimaryTumorLocation, actionabilityAnalyzer.cancerTypeAnalyzer()));

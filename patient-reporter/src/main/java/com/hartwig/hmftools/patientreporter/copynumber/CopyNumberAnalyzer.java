@@ -28,7 +28,7 @@ public final class CopyNumberAnalyzer {
     }
 
     @NotNull
-    public static CopyNumberAnalysis analyzeCopyNumbers(@NotNull PurityContext purityContext,
+    public static CopyNumberAnalysis run(@NotNull PurityContext purityContext,
             @NotNull List<PurpleCopyNumber> purpleCopyNumbers, @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers,
             @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation,
             @NotNull GeneModel geneModel) throws IOException {
@@ -73,8 +73,8 @@ public final class CopyNumberAnalyzer {
     @NotNull
     private static List<EvidenceItem> toList(@NotNull Map<GeneCopyNumber, List<EvidenceItem>> evidencePerCopyNumber) {
         List<EvidenceItem> evidenceItemList = Lists.newArrayList();
-        for (List<EvidenceItem> itemsPerVariant : evidencePerCopyNumber.values()) {
-            evidenceItemList.addAll(itemsPerVariant);
+        for (List<EvidenceItem> items : evidencePerCopyNumber.values()) {
+            evidenceItemList.addAll(items);
         }
         return evidenceItemList;
     }
