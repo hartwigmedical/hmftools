@@ -76,7 +76,7 @@ public final class SomaticVariantDataSource {
     }
 
     @NotNull
-    private static List<ReportableSomaticVariant> sort(@NotNull List<ReportableSomaticVariant> variants) {
+    public static List<ReportableSomaticVariant> sort(@NotNull List<ReportableSomaticVariant> variants) {
         return variants.stream().sorted((variant1, variant2) -> {
             Double variant1DriverLikelihood = variant1.driverLikelihood();
             Double variant2DriverLikelihood = variant2.driverLikelihood();
@@ -97,7 +97,7 @@ public final class SomaticVariantDataSource {
     }
 
     @NotNull
-    private static String driverField(@NotNull ReportableSomaticVariant variant) {
+    public static String driverField(@NotNull ReportableSomaticVariant variant) {
         Double driverLikelihood = variant.driverLikelihood();
         if (driverLikelihood == null) {
             return Strings.EMPTY;

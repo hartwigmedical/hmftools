@@ -67,7 +67,7 @@ public final class GeneFusionDataSource {
     }
 
     @NotNull
-    private static String name(@NotNull ReportableGeneFusion fusion) {
+    public static String name(@NotNull ReportableGeneFusion fusion) {
         return fusion.geneStart() + " - " + fusion.geneEnd();
     }
 
@@ -99,7 +99,7 @@ public final class GeneFusionDataSource {
     }
 
     @NotNull
-    private static List<ReportableGeneFusion> sort(@NotNull List<ReportableGeneFusion> fusions) {
+    public static List<ReportableGeneFusion> sort(@NotNull List<ReportableGeneFusion> fusions) {
         return fusions.stream().sorted((fusion1, fusion2) -> {
             if (fusion1.geneStart().equals(fusion2.geneStart())) {
                 return fusion1.geneEnd().compareTo(fusion2.geneEnd());

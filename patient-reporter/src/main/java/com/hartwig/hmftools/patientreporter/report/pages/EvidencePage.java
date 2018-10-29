@@ -18,6 +18,7 @@ import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection
 import com.hartwig.hmftools.patientreporter.report.data.ClinicalTrialDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.EvidenceItemDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.ImpliedTumorCharacteristicsSummaryDataSource;
+import com.hartwig.hmftools.patientreporter.report.data.TumorReportedGenomicAlterationsDataSource;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.immutables.value.Value;
@@ -42,6 +43,8 @@ public abstract class EvidencePage {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 summaryImpliedTumorCharacteristics(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
+                summaryReportedgenomicAlterations(report()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
                 evidenceItemReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 clinicalTrialReport(report()));
@@ -65,7 +68,23 @@ public abstract class EvidencePage {
                                         ImpliedTumorCharacteristicsSummaryDataSource.MICROSATELLITE_INSTALBILITY),
                                 col.column("Implied tumor characteristics", ImpliedTumorCharacteristicsSummaryDataSource.HR_DEFICIENCY))
                         .setDataSource(ImpliedTumorCharacteristicsSummaryDataSource.fromImpliedTumorCharacteristicsSummary(report)));
-        return cmp.verticalList(cmp.text("Implied tumor characteristics").setStyle(sectionHeaderStyle()),
+        return cmp.verticalList(cmp.text("Implied tumor characteristics summary").setStyle(sectionHeaderStyle()),
+                cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
+                table);
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> summaryReportedgenomicAlterations(@NotNull AnalysedPatientReport report) {
+        final ComponentBuilder<?, ?> table =
+                cmp.subreport(monospaceBaseTable().fields(TumorReportedGenomicAlterationsDataSource.TumorReportedGenomicAlterationsSummaryFields())
+                        .columns(col.column("Tumor Purity", TumorReportedGenomicAlterationsDataSource.NUMBER_SOMATIC_VARIANTS),
+                                col.column("Mutational Load", TumorReportedGenomicAlterationsDataSource.GENES_SOMATIC_VARIANTS_WITH_DRIVER_LIKELIHOOD),
+                                col.column("Mutational Burden", TumorReportedGenomicAlterationsDataSource.GENES_WITH_AMPLIFICATION),
+                                col.column("Microsatellite (in)stability",
+                                        TumorReportedGenomicAlterationsDataSource.GENES_WITH_LOSS),
+                                col.column("Implied tumor characteristics", TumorReportedGenomicAlterationsDataSource.FUSION_GENES))
+                        .setDataSource(TumorReportedGenomicAlterationsDataSource.fromTumorReportedGenomicAlterationsSummary(report)));
+        return cmp.verticalList(cmp.text("Tumor reportable genomic alterations summary").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
                 table);
     }

@@ -50,7 +50,7 @@ public final class GeneCopyNumberDataSource {
     }
 
     @NotNull
-    private static String type(@NotNull GeneCopyNumber geneCopyNumber) {
+    public static String type(@NotNull GeneCopyNumber geneCopyNumber) {
         if (geneCopyNumber.alteration() == CopyNumberAlteration.GAIN) {
             return "gain";
         } else {
