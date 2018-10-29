@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.report.data;
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.copynumber.CopyNumberAlteration;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -38,7 +39,7 @@ public final class GeneCopyNumberDataSource {
                 GAIN_OR_LOSS_FIELD.getName(),
                 COPY_NUMBER_FIELD.getName());
 
-        for (final GeneCopyNumber copyNumber : copyNumbers) {
+        for (GeneCopyNumber copyNumber : sort(copyNumbers)) {
             copyNumberDatasource.add(copyNumber.chromosome(),
                     copyNumber.chromosomeBand(),
                     copyNumber.gene(),
@@ -46,6 +47,42 @@ public final class GeneCopyNumberDataSource {
                     PatientReportFormat.correctValueForFitReliability(Integer.toString(copyNumber.value()), hasReliablePurityFit));
         }
         return copyNumberDatasource;
+    }
+
+    @NotNull
+    private static List<GeneCopyNumber> sort(@NotNull List<GeneCopyNumber> geneCopyNumbers) {
+        return geneCopyNumbers.stream().sorted((copyNumber1, copyNumber2) -> {
+            String location1 = zeroPrefixed(copyNumber1.chromosome() + copyNumber1.chromosomeBand());
+            String location2 = zeroPrefixed(copyNumber2.chromosome() + copyNumber2.chromosomeBand());
+
+            if (location1.equals(location2)) {
+                return copyNumber1.gene().compareTo(copyNumber2.gene());
+            } else {
+                return location1.compareTo(location2);
+            }
+        }).collect(Collectors.toList());
+    }
+
+    @NotNull
+    private static String zeroPrefixed(@NotNull String location) {
+        // KODU: First remove q or p arm if present.
+        int armStart = location.indexOf("q");
+        if (armStart < 0) {
+            armStart = location.indexOf("p");
+        }
+
+        String chromosome = armStart > 0 ? location.substring(0, armStart) : location;
+
+        try {
+            int chromosomeIndex = Integer.valueOf(chromosome);
+            if (chromosomeIndex < 10) {
+                return "0" + location;
+            } else {
+                return location;
+            }
+        } catch (NumberFormatException exception) {
+            return location;
+        }
     }
 
     @NotNull

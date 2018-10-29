@@ -266,18 +266,20 @@ public class PDFWriterTest {
 
     @NotNull
     private static List<GeneCopyNumber> createTestCopyNumbers() {
-        final GeneCopyNumber copyNumber1 = createTestCopyNumberBuilder().chromosome("9")
-                .chromosomeBand("p21.3")
-                .gene("CDKN2A")
-                .minCopyNumber(0)
-                .maxCopyNumber(0)
-                .build();
-        final GeneCopyNumber copyNumber2 = createTestCopyNumberBuilder().chromosome("17")
+        final GeneCopyNumber copyNumber1 = createTestCopyNumberBuilder().chromosome("17")
                 .chromosomeBand("p13.1")
                 .gene("TP53")
                 .minCopyNumber(0)
                 .maxCopyNumber(2)
                 .build();
+
+        final GeneCopyNumber copyNumber2 = createTestCopyNumberBuilder().chromosome("9")
+                .chromosomeBand("p21.3")
+                .gene("CDKN2A")
+                .minCopyNumber(0)
+                .maxCopyNumber(0)
+                .build();
+
         final GeneCopyNumber copyNumber3 = createTestCopyNumberBuilder().chromosome("17")
                 .chromosomeBand("q12")
                 .gene("ERBB2")
