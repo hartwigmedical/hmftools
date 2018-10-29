@@ -181,6 +181,8 @@ public class PurityPloidyEstimateApplication {
             }
 
             final List<PurpleCopyNumber> copyNumbers = copyNumberFactory.copyNumbers();
+            structuralVariants.inferMissingVariant(copyNumbers);
+
             final List<PurpleCopyNumber> germlineDeletions = copyNumberFactory.germlineDeletions();
             final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, copyNumbers);
 
