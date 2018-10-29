@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
 import java.util.List;
-import java.util.Map;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +17,7 @@ public abstract class SomaticVariantAnalysis {
     public abstract List<ReportableSomaticVariant> reportableSomaticVariants();
 
     @NotNull
-    public abstract Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant();
+    public abstract List<EvidenceItem> evidenceItems();
 
     public abstract double microsatelliteIndelsPerMb();
 

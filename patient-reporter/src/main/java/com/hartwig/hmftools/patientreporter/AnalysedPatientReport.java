@@ -73,5 +73,5 @@ public abstract class AnalysedPatientReport implements PatientReport {
 
     @NotNull
     @Override
-    public abstract String logoRVA();
+    public abstract String logoRVAPath();
 }

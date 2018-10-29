@@ -33,6 +33,6 @@ public abstract class NotAnalysedPatientReport implements PatientReport {
 
     @NotNull
     @Override
-    public abstract String logoRVA();
+    public abstract String logoRVAPath();
 }
 

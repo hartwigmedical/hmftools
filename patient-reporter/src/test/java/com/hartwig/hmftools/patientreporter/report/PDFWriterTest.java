@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter.report;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestCopyNumberBuilder;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReportData;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testSampleReport;
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testSequencedReportData;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -34,7 +33,6 @@ import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableNotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
-import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrial;
 import com.hartwig.hmftools.patientreporter.actionability.ImmutableClinicalTrial;
 import com.hartwig.hmftools.patientreporter.chord.ChordAnalysis;
@@ -71,7 +69,6 @@ public class PDFWriterTest {
         final double microsatelliteIndelsPerMb = 2.1;
 
         final BaseReportData baseReportData = testBaseReportData();
-        final SequencedReportData reporterData = testSequencedReportData();
         final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity);
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, fittedPurity);
@@ -104,9 +101,9 @@ public class PDFWriterTest {
                 Resources.getResource("circos/circos_example.png").getPath(),
                 Optional.of("this is a test report and does not relate to any real CPCT patient"),
                 baseReportData.signaturePath(),
-                baseReportData.logoPath());
+                baseReportData.logoRVAPath());
 
-        final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport, reporterData);
+        final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport);
         assertNotNull(mainReport);
 
         if (WRITE_TO_PDF) {
@@ -391,7 +388,7 @@ public class PDFWriterTest {
                 NotAnalysableStudy.CPCT,
                 Optional.empty(),
                 testBaseReportData().signaturePath(),
-                testBaseReportData().logoPath());
+                testBaseReportData().logoRVAPath());
 
         return PDFWriter.generateNotAnalysableReport(patientReport);
     }

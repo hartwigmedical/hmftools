@@ -44,6 +44,6 @@ public abstract class NotAnalysableReporter {
                 reason,
                 study,
                 Optional.ofNullable(comments),
-                baseReportData().signaturePath(), baseReportData().logoPath());
+                baseReportData().signaturePath(), baseReportData().logoRVAPath());
     }
 }

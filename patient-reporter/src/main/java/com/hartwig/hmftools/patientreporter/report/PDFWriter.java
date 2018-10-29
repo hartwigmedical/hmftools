@@ -13,7 +13,6 @@ import java.nio.file.Files;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableCircosPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableEvidencePage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableExplanationPage;
@@ -42,9 +41,9 @@ public class PDFWriter {
         this.reportDirectory = reportDirectory;
     }
 
-    public void writeSequenceReport(@NotNull final AnalysedPatientReport report, @NotNull final SequencedReportData reporterData)
+    public void writeSequenceReport(@NotNull final AnalysedPatientReport report)
             throws IOException, DRException {
-        final JasperReportBuilder reportBuilder = generatePatientReport(report, reporterData);
+        final JasperReportBuilder reportBuilder = generatePatientReport(report);
         writeReport(fileName(report.sampleReport().sampleId()), reportBuilder);
     }
 
@@ -76,7 +75,7 @@ public class PDFWriter {
         singleItemDataSource.add(new Object());
 
         return report().pageFooter(cmp.pageXslashY())
-                .lastPageFooter(cmp.verticalList(logoRVAfooter(report.logoRVA())))
+                .lastPageFooter(cmp.verticalList(logoRVAfooter(report.logoRVAPath())))
                 .lastPageFooter(cmp.verticalList(signatureFooter(report.signaturePath()),
                         cmp.pageXslashY(),
                         cmp.text("End of report.").setStyle(stl.style().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
@@ -86,8 +85,7 @@ public class PDFWriter {
 
     @VisibleForTesting
     @NotNull
-    static JasperReportBuilder generatePatientReport(@NotNull final AnalysedPatientReport report,
-            @NotNull final SequencedReportData reporterData) {
+    static JasperReportBuilder generatePatientReport(@NotNull final AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> totalReport = cmp.multiPageList()
                 .add(ImmutableEvidencePage.of(report).reportComponent())
                 .newPage()
@@ -110,7 +108,7 @@ public class PDFWriter {
         singleItemDataSource.add(new Object());
 
         return report().pageFooter(cmp.pageXslashY())
-                .lastPageFooter(cmp.verticalList(logoRVAfooter(report.logoRVA())))
+                .lastPageFooter(cmp.verticalList(logoRVAfooter(report.logoRVAPath())))
                 .lastPageFooter(cmp.verticalList(signatureFooter(report.signaturePath()),
                         cmp.pageXslashY(),
                         cmp.text("End of report.").setStyle(stl.style().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))

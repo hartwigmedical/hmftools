@@ -40,7 +40,7 @@ public final class SomaticVariantAnalyzer {
     }
 
     @NotNull
-    public static SomaticVariantAnalysis run(@NotNull final List<EnrichedSomaticVariant> variants, @NotNull Set<String> genePanel,
+    public static SomaticVariantAnalysis run(@NotNull List<EnrichedSomaticVariant> variants, @NotNull Set<String> genePanel,
             @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap, @NotNull Set<String> drupActionableGenes,
             @Nullable PatientTumorLocation patientTumorLocation, @NotNull ActionabilityAnalyzer actionabilityAnalyzer) throws IOException {
         final double microsatelliteIndelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
@@ -54,18 +54,33 @@ public final class SomaticVariantAnalyzer {
         final List<EnrichedSomaticVariant> variantsToReport =
                 variants.stream().filter(includeFilter(genePanel, driverCategoryPerGeneMap)).collect(Collectors.toList());
 
+        final Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant =
+                findEvidenceForVariants(actionabilityAnalyzer, variants, patientTumorLocation);
+
+        // KODU: Add all variants with evidence that have not previously been added.
+        for (EnrichedSomaticVariant variantWithEvidence : evidencePerVariant.keySet()) {
+            if (!evidencePerVariant.get(variantWithEvidence).isEmpty() && !variantsToReport.contains(variantWithEvidence)) {
+                variantsToReport.add(variantWithEvidence);
+            }
+        }
+
         final List<ReportableSomaticVariant> reportableVariants =
                 toReportableSomaticVariants(variantsToReport, driverCatalog, driverCategoryPerGeneMap, drupActionableGenes);
 
-        LOGGER.info("Looking for actionability for somatic variants");
-        Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant =
-                findEvidenceForVariants(actionabilityAnalyzer, variants, patientTumorLocation);
-
         return ImmutableSomaticVariantAnalysis.of(reportableVariants,
-                evidencePerVariant,
+                toList(evidencePerVariant),
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
                 tumorMutationalBurden);
+    }
+
+    @NotNull
+    private static List<EvidenceItem> toList(@NotNull Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant) {
+        List<EvidenceItem> evidenceItemList = Lists.newArrayList();
+        for (List<EvidenceItem> itemsPerVariant : evidencePerVariant.values()) {
+            evidenceItemList.addAll(itemsPerVariant);
+        }
+        return evidenceItemList;
     }
 
     @NotNull

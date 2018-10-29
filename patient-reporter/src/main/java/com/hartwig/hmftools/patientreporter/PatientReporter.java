@@ -117,20 +117,15 @@ abstract class PatientReporter {
         final List<GermlineVariant> germlineVariants = doReportGermline ? analyzeGermlineVariants(run) : null;
 
         LOGGER.info("Printing analysis results:");
-        LOGGER.info(
-                " Number of somatic variants to report : " + Integer.toString(somaticVariantAnalysis.reportableSomaticVariants().size()));
-        LOGGER.info(" Microsatellite analysis results: " + Double.toString(somaticVariantAnalysis.microsatelliteIndelsPerMb())
-                + " indels per MB");
-        LOGGER.info(" Tumor mutational load: " + Integer.toString(somaticVariantAnalysis.tumorMutationalLoad()));
-        LOGGER.info(" Tumor mutational burden: " + Double.toString(somaticVariantAnalysis.tumorMutationalBurden()) + " mutations per MB");
-        LOGGER.info(" CHORD analysis HRD prediction: " + Double.toString(chordAnalysis.hrdValue()));
-        LOGGER.info(" Number of germline variants to report : " + Integer.toString(germlineVariants != null ? germlineVariants.size() : 0));
-        LOGGER.info(" Number of copy number events to report: " + Integer.toString(reportableGeneCopynumbers.size()));
-        LOGGER.info(
-                " Number of gene fusions to report : " + Integer.toString(reportableStructuralVariantAnalysis.reportableFusions().size()));
-        LOGGER.info(
-                " Number of gene disruptions to report : " + Integer.toString(reportableStructuralVariantAnalysis.reportableDisruptions()
-                        .size()));
+        LOGGER.info(" Somatic variants to report : " + somaticVariantAnalysis.reportableSomaticVariants().size());
+        LOGGER.info(" Microsatellite analysis results: " + somaticVariantAnalysis.microsatelliteIndelsPerMb() + " indels per MB");
+        LOGGER.info(" Tumor mutational load: " + somaticVariantAnalysis.tumorMutationalLoad());
+        LOGGER.info(" Tumor mutational burden: " + somaticVariantAnalysis.tumorMutationalBurden() + " mutations per MB");
+        LOGGER.info(" CHORD analysis HRD prediction: " + chordAnalysis.hrdValue());
+        LOGGER.info(" Germline variants to report : " + Integer.toString(germlineVariants != null ? germlineVariants.size() : 0));
+        LOGGER.info(" Copy number events to report: " + reportableGeneCopynumbers.size());
+        LOGGER.info(" Gene fusions to report : " + reportableStructuralVariantAnalysis.reportableFusions().size());
+        LOGGER.info(" Gene disruptions to report : " + reportableStructuralVariantAnalysis.reportableDisruptions().size());
 
         final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample,
                 patientTumorLocation,
@@ -140,34 +135,28 @@ abstract class PatientReporter {
                 baseReportData().limsModel().labProceduresForSample(tumorSample),
                 baseReportData().centerModel().getAddresseeStringForSample(tumorSample));
 
-        List<EvidenceItem> evidenceItems = Lists.newArrayList();
-        for (Map.Entry<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant : somaticVariantAnalysis.evidencePerVariant()
-                .entrySet()) {
-            evidenceItems.addAll(evidencePerVariant.getValue());
-        }
+        List<EvidenceItem> allEvidenceItems = Lists.newArrayList();
+        allEvidenceItems.addAll(somaticVariantAnalysis.evidenceItems());
 
         for (Map.Entry<GeneCopyNumber, List<EvidenceItem>> evidencePerCNV : purpleAnalysis.evidencePerGeneCopyNumber().entrySet()) {
-            evidenceItems.addAll(evidencePerCNV.getValue());
+            allEvidenceItems.addAll(evidencePerCNV.getValue());
         }
 
         for (Map.Entry<GeneFusion, List<EvidenceItem>> evidencePerFusion : reportableStructuralVariantAnalysis.evidencePerFusion()
                 .entrySet()) {
-            evidenceItems.addAll(evidencePerFusion.getValue());
+            allEvidenceItems.addAll(evidencePerFusion.getValue());
         }
 
         LOGGER.info("Printing actionability results:");
-        LOGGER.info(" Number of evidence items based on variants: " + Integer.toString(somaticVariantAnalysis.evidencePerVariant().size()));
-        LOGGER.info(
-                " Number of evidence items based on copy numbers: " + Integer.toString(purpleAnalysis.evidencePerGeneCopyNumber().size()));
-        LOGGER.info(
-                " Number of evidence items based on fusions: " + Integer.toString(reportableStructuralVariantAnalysis.evidencePerFusion()
-                        .size()));
+        LOGGER.info(" Evidence items based on variants: " + somaticVariantAnalysis.evidenceItems().size());
+        LOGGER.info(" Evidence items based on copy numbers: " + purpleAnalysis.evidencePerGeneCopyNumber().size());
+        LOGGER.info(" Evidence items based on fusions: " + reportableStructuralVariantAnalysis.evidencePerFusion().size());
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
                 purpleAnalysis.fittedPurity().purity(),
                 purpleAnalysis.status() != FittedPurityStatus.NO_TUMOR,
-                ReportableEvidenceItemFactory.filterEvidenceItemsForReporting(evidenceItems),
-                ClinicalTrialFactory.extractTrials(evidenceItems),
+                ReportableEvidenceItemFactory.filterEvidenceItemsForReporting(allEvidenceItems),
+                ClinicalTrialFactory.extractTrials(allEvidenceItems),
                 somaticVariantAnalysis.reportableSomaticVariants(),
                 somaticVariantAnalysis.microsatelliteIndelsPerMb(),
                 somaticVariantAnalysis.tumorMutationalLoad(),
@@ -181,7 +170,7 @@ abstract class PatientReporter {
                 PatientReporterFileLoader.findCircosPlotPath(runDirectory, tumorSample),
                 Optional.ofNullable(comments),
                 baseReportData().signaturePath(),
-                baseReportData().logoPath());
+                baseReportData().logoRVAPath());
     }
 
     @NotNull
