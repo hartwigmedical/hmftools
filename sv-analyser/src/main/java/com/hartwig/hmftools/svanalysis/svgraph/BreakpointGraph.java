@@ -196,15 +196,18 @@ public class BreakpointGraph {
             long traversed = left.fromSegment().length();
             while (traversed <= maxInsertionSiteDifference && segment != null) {
                 for (BgAdjacency right : getOutgoing(segment, 1)) {
-                    if (!right.isReference() && left.fromOrientation() != right.fromOrientation() && left.edge().sv() != right.edge().sv()) {
-                        if (left.toSegment() == getUnplacedSegment() || right.toSegment() == getUnplacedSegment()) {
-                            // breakend could be insertion
+                    if (right.isReference()) continue;
+                    if (left.fromOrientation() == right.fromOrientation()) continue;
+                    if (left.edge().sv() == right.edge().sv()) continue;
+                    if (distanceBetweenBreakends(left, getPartner(left)) < maxInsertionLength) continue;
+                    if (distanceBetweenBreakends(right, getPartner(right)) < maxInsertionLength) continue;
+                    if (left.toSegment() == getUnplacedSegment() || right.toSegment() == getUnplacedSegment()) {
+                        // breakend could be insertion
+                        result.add(ImmutablePair.of(left, right));
+                    } else if (left.toSegment().chromosome().equals(right.toSegment().chromosome())) {
+                        Long insLength = segmentLength(getPartner(left), getPartner(right));
+                        if (insLength != null && insLength <= maxInsertionLength) {
                             result.add(ImmutablePair.of(left, right));
-                        } else if (left.toSegment().chromosome().equals(right.toSegment().chromosome())) {
-                            Long insLength = segmentLength(getPartner(left), getPartner(right));
-                            if (insLength != null && insLength <= maxInsertionLength) {
-                                result.add(ImmutablePair.of(left, right));
-                            }
                         }
                     }
                 }
@@ -215,6 +218,16 @@ public class BreakpointGraph {
             }
         }
         return result;
+    }
+
+    private long distanceBetweenBreakends(BgAdjacency adjA, BgAdjacency adjB) {
+        return distanceBetweenBreakends(adjA.fromSegment(), adjA.fromOrientation(), adjB.fromSegment(), adjB.fromOrientation());
+    }
+    private long distanceBetweenBreakends(BgSegment segA, int orientationA, BgSegment segB, int orientationB) {
+        if (segA.chromosome().equals(segB.chromosome())) {
+            return Math.abs(segA.positionOf(orientationA) - segB.positionOf(orientationB));
+        }
+        return Long.MAX_VALUE;
     }
 
     /**
@@ -750,6 +763,7 @@ public class BreakpointGraph {
 
     private void simplifyTranslocationInsertion(Simplification simplification) {
         assert (simplification.variants().size() == 2 || simplification.variants().size() == 3);
+        assert (simplification.variants().stream().distinct().count() == simplification.variants().size());
         BgAdjacency left = simplification.adjacencies().get(0);
         BgAdjacency right = simplification.adjacencies().get(1);
         List<BgSegment> segments = getSegmentsBetween(left, right);
@@ -848,11 +862,6 @@ public class BreakpointGraph {
             }
         }
         return result;
-    }
-
-    public List<Simplification> findSimpleTranslocationSimplifications() {
-        // Look for the insertion site
-        throw new RuntimeException("NYI");
     }
 
     public List<Simplification> findAssemblyLinkageSimplifications() {

@@ -63,9 +63,15 @@ public class BgSegment implements GenomeInterval {
     public long position() {
         return _cn.start();
     }
+
+    public long positionOf(int breakendOrientation) {
+        return breakendOrientation < 0 ? _cn.start() : _cn.end();
+    }
+
     private static boolean canMerge(BgSegment left, BgSegment right) {
         return left._cn.end() == right._cn.start() - 1 && left._cn.chromosome().equals(right._cn.chromosome());
     }
+
     public static BgSegment merge(BgSegment left, BgSegment right) {
         if (!canMerge(left, right)) {
             throw new IllegalArgumentException("Cannot merge segments");
