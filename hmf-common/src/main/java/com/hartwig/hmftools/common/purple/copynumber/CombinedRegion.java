@@ -2,8 +2,8 @@ package com.hartwig.hmftools.common.purple.copynumber;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
@@ -60,5 +60,9 @@ public interface CombinedRegion extends GenomeRegion {
     void setTumorCopyNumber(@NotNull final CopyNumberMethod method, double copyNumber);
 
     void setInferredTumorBAF(double baf);
+
+    default SegmentSupport support() {
+        return region().support();
+    }
 
 }
