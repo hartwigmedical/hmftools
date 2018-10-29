@@ -149,6 +149,7 @@ abstract class PatientReporter {
         return ImmutableAnalysedPatientReport.of(sampleReport,
                 copyNumberAnalysis.fittedPurity().purity(),
                 copyNumberAnalysis.status() != FittedPurityStatus.NO_TUMOR,
+                copyNumberAnalysis.fittedPurity().ploidy(),
                 ReportableEvidenceItemFactory.filterEvidenceItemsForReporting(allEvidenceItems),
                 ClinicalTrialFactory.extractTrials(allEvidenceItems),
                 somaticVariantAnalysis.reportableSomaticVariants(),

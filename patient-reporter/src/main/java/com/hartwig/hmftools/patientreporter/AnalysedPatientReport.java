@@ -28,6 +28,8 @@ public abstract class AnalysedPatientReport implements PatientReport {
 
     public abstract boolean hasReliablePurityFit();
 
+    public abstract double averageTumorPloidy();
+
     @NotNull
     public abstract List<EvidenceItem> clinicalEvidence();
 

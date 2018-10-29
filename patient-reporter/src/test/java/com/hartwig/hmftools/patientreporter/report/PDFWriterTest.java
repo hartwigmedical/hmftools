@@ -64,12 +64,13 @@ public class PDFWriterTest {
     public void canGenerateSequenceReport() throws DRException, IOException {
         final double pathologyTumorPercentage = 0.6;
         final double impliedTumorPurity = 0.58;
+        final double averageTumorPloidy = 2.53;
         final int tumorMutationalLoad = 361;
         final double tumorMutationalBurden = 10.1;
         final double microsatelliteIndelsPerMb = 2.1;
 
         final BaseReportData baseReportData = testBaseReportData();
-        final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity);
+        final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity, averageTumorPloidy);
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, fittedPurity);
         final List<EvidenceItem> clinicalEvidence = createTestClinicalEvidence();
@@ -86,6 +87,7 @@ public class PDFWriterTest {
         final AnalysedPatientReport patientReport = ImmutableAnalysedPatientReport.of(sampleReport,
                 fittedPurity.purity(),
                 true,
+                fittedPurity.ploidy(),
                 clinicalEvidence,
                 clinicalTrials,
                 somaticVariants,
@@ -195,20 +197,21 @@ public class PDFWriterTest {
     }
 
     @NotNull
-    private static FittedPurity createFittedPurity(double impliedPurity) {
+    private static FittedPurity createFittedPurity(double impliedPurity, double averageTumorPloidy) {
         return ImmutableFittedPurity.builder()
                 .purity(impliedPurity)
                 .diploidProportion(0)
                 .normFactor(0)
                 .score(0)
-                .ploidy(2)
+                .ploidy(averageTumorPloidy)
                 .somaticDeviation(0)
                 .build();
     }
 
     @NotNull
     private static List<ReportableSomaticVariant> createTestSomaticVariants(@NotNull final PurityAdjuster purityAdjuster) {
-        final ReportableSomaticVariant variant1 = ImmutableReportableSomaticVariant.builder().gene("BRAF")
+        final ReportableSomaticVariant variant1 = ImmutableReportableSomaticVariant.builder()
+                .gene("BRAF")
                 .isDrupActionable(true)
                 .hgvsCodingImpact("c.1799T>A")
                 .hgvsProteinImpact("p.Val600Glu")
@@ -224,7 +227,8 @@ public class PDFWriterTest {
                 .driverLikelihood(1D)
                 .build();
 
-        final ReportableSomaticVariant variant2 = ImmutableReportableSomaticVariant.builder().gene("TP53")
+        final ReportableSomaticVariant variant2 = ImmutableReportableSomaticVariant.builder()
+                .gene("TP53")
                 .isDrupActionable(false)
                 .hgvsCodingImpact("c.821_826delTTTGTG")
                 .hgvsProteinImpact("p.Val274_Cus275del")
@@ -240,7 +244,8 @@ public class PDFWriterTest {
                 .driverLikelihood(0.5)
                 .build();
 
-        final ReportableSomaticVariant variant3 = ImmutableReportableSomaticVariant.builder().gene("MYC")
+        final ReportableSomaticVariant variant3 = ImmutableReportableSomaticVariant.builder()
+                .gene("MYC")
                 .isDrupActionable(false)
                 .hgvsCodingImpact("c.15_16delinsCA")
                 .hgvsProteinImpact("p.Val6Ile")
