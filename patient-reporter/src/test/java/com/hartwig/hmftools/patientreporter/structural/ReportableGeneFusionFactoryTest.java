@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.fusion;
+package com.hartwig.hmftools.patientreporter.structural;
 
 import static org.junit.Assert.assertEquals;
 

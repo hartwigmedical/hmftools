@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.fusion;
+package com.hartwig.hmftools.patientreporter.structural;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
