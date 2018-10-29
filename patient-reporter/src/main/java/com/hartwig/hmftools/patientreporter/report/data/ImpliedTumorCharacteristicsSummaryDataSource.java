@@ -2,12 +2,15 @@ package com.hartwig.hmftools.patientreporter.report.data;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
+import java.text.DecimalFormat;
+
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.report.components.ChordSection;
 import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSection;
 import com.hartwig.hmftools.patientreporter.report.components.MutationalBurdenSection;
 import com.hartwig.hmftools.patientreporter.report.components.MutationalLoadSection;
 import com.hartwig.hmftools.patientreporter.report.pages.EvidencePage;
+import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -42,8 +45,9 @@ public class ImpliedTumorCharacteristicsSummaryDataSource {
                 MICROSATELLITE_INSTALBILITY.getName(),
                 HR_DEFICIENCY.getName());
 
+        String avgTumorPloidyString = new DecimalFormat("#.##").format(report.averageTumorPloidy());
         impliedTumorCharacteristicsSummaryDataSource.add(EvidencePage.impliedPurityString(report),
-                "tumor ploidy",
+                PatientReportFormat.correctValueForFitReliability(avgTumorPloidyString, report.hasReliablePurityFit()),
                 MutationalLoadSection.interpret(report.tumorMutationalLoad(), report.hasReliablePurityFit()),
                 MutationalBurdenSection.interpret(report.tumorMutationalBurden(), report.hasReliablePurityFit()),
                 MicrosatelliteSection.interpret(report.microsatelliteIndelsPerMb(), report.hasReliablePurityFit()),

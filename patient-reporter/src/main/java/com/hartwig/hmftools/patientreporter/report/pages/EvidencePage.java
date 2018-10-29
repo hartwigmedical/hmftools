@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.patientreporter.report.Commons.sectionHeaderS
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
-import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
@@ -24,7 +23,6 @@ import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 
-import net.sf.dynamicreports.report.builder.FieldBuilder;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 
@@ -44,7 +42,7 @@ public abstract class EvidencePage {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 summaryImpliedTumorCharacteristics(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                summaryReportedgenomicAlterations(report()),
+                summaryReportedGenomicAlterations(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 evidenceItemReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -61,6 +59,7 @@ public abstract class EvidencePage {
         final ComponentBuilder<?, ?> table =
                 cmp.subreport(monospaceBaseTable().fields(ImpliedTumorCharacteristicsSummaryDataSource.ImpliedTumorCharacteristicsSummaryFields())
                         .columns(col.column("Tumor Purity", ImpliedTumorCharacteristicsSummaryDataSource.TUMOR_PURITY),
+                                col.column("Avg Tumor Ploidy", ImpliedTumorCharacteristicsSummaryDataSource.AVERAGE_TUMOR_PLOIDY),
                                 col.column("Mutational Load", ImpliedTumorCharacteristicsSummaryDataSource.MUTATIONAL_LOAD),
                                 col.column("Mutational Burden", ImpliedTumorCharacteristicsSummaryDataSource.MUTATIONAL_BURDEN),
                                 col.column("Microsatellite (in)stability",
@@ -73,14 +72,15 @@ public abstract class EvidencePage {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> summaryReportedgenomicAlterations(@NotNull AnalysedPatientReport report) {
+    private static ComponentBuilder<?, ?> summaryReportedGenomicAlterations(@NotNull AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> table =
                 cmp.subreport(monospaceBaseTable().fields(TumorReportedGenomicAlterationsDataSource.TumorReportedGenomicAlterationsSummaryFields())
-                        .columns(col.column("Number of somatic variants", TumorReportedGenomicAlterationsDataSource.NUMBER_SOMATIC_VARIANTS),
-                                col.column("Somatic variants with driver likelihood > 0.8", TumorReportedGenomicAlterationsDataSource.GENES_SOMATIC_VARIANTS_WITH_DRIVER_LIKELIHOOD),
+                        .columns(col.column("Number of somatic variants",
+                                TumorReportedGenomicAlterationsDataSource.NUMBER_SOMATIC_VARIANTS),
+                                col.column("Somatic variants with driver likelihood > 0.8",
+                                        TumorReportedGenomicAlterationsDataSource.GENES_SOMATIC_VARIANTS_WITH_DRIVER_LIKELIHOOD),
                                 col.column("Genes with amplification", TumorReportedGenomicAlterationsDataSource.GENES_WITH_AMPLIFICATION),
-                                col.column("Genes with (partial) loss",
-                                        TumorReportedGenomicAlterationsDataSource.GENES_WITH_LOSS),
+                                col.column("Genes with (partial) loss", TumorReportedGenomicAlterationsDataSource.GENES_WITH_LOSS),
                                 col.column("Fusion genes", TumorReportedGenomicAlterationsDataSource.FUSION_GENES))
                         .setDataSource(TumorReportedGenomicAlterationsDataSource.fromTumorReportedGenomicAlterationsSummary(report)));
         return cmp.verticalList(cmp.text("Tumor reportable genomic alterations summary").setStyle(sectionHeaderStyle()),

@@ -5,10 +5,8 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
-
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
 
@@ -42,10 +40,11 @@ public class TumorReportedGenomicAlterationsDataSource {
                 GENES_WITH_AMPLIFICATION.getName(),
                 GENES_WITH_LOSS.getName(),
                 FUSION_GENES.getName());
+
         TumorReportedGenomicAlterationsSummaryDataSource.add(countSomaticVariants(report.somaticVariants()),
                 somaticVariantsWithDriver(report.somaticVariants()),
-                AmplificationGenes(report.geneCopyNumbers()),
-                LossGenes(report.geneCopyNumbers()),
+                amplificationGenes(report.geneCopyNumbers()),
+                lossGenes(report.geneCopyNumbers()),
                 geneFusions(report.geneFusions()));
 
         return TumorReportedGenomicAlterationsSummaryDataSource;
@@ -64,8 +63,7 @@ public class TumorReportedGenomicAlterationsDataSource {
     private static String somaticVariantsWithDriver(@NotNull List<ReportableSomaticVariant> variants) {
         List<String> somaticVariants = Lists.newArrayList();
         for (final ReportableSomaticVariant variant : SomaticVariantDataSource.sort(variants)) {
-            if (SomaticVariantDataSource.driverField(variant)
-                    .equals("High")) {
+            if (SomaticVariantDataSource.driverField(variant).equals("High")) {
                 somaticVariants.add(variant.gene());
             }
         }
@@ -73,7 +71,7 @@ public class TumorReportedGenomicAlterationsDataSource {
     }
 
     @NotNull
-    private static String AmplificationGenes(@NotNull final List<GeneCopyNumber> copyNumbers) {
+    private static String amplificationGenes(@NotNull final List<GeneCopyNumber> copyNumbers) {
         List<String> geneCopyNumbersAmplification = Lists.newArrayList();
         for (final GeneCopyNumber copyNumber : copyNumbers) {
             if (GeneCopyNumberDataSource.type(copyNumber).equals("gain")) {
@@ -84,7 +82,7 @@ public class TumorReportedGenomicAlterationsDataSource {
     }
 
     @NotNull
-    private static String LossGenes(@NotNull final List<GeneCopyNumber> copyNumbers) {
+    private static String lossGenes(@NotNull final List<GeneCopyNumber> copyNumbers) {
         List<String> geneCopyNumbersLoss = Lists.newArrayList();
         for (final GeneCopyNumber copyNumber : copyNumbers) {
             if (GeneCopyNumberDataSource.type(copyNumber).equals("full loss") || GeneCopyNumberDataSource.type(copyNumber)
