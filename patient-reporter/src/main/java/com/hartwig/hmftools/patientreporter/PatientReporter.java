@@ -6,12 +6,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeMappingReading;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
@@ -35,6 +37,7 @@ import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantF
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.patientreporter.actionability.ActionabilityVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.chord.ChordAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutablePurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
@@ -51,6 +54,7 @@ import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -77,13 +81,16 @@ abstract class PatientReporter {
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
         assert run.isSomaticRun();
 
-        final PurpleAnalysis purpleAnalysis = analyzePurpleCopyNumbers(run, sequencedReportData().panelGeneModel());
-        final List<GeneCopyNumber> reportableGeneCopynumbers =
-                purpleAnalysis.reportableGeneCopyNumbers(sequencedReportData().panelGeneModel());
-
         final String tumorSample = run.tumorSample();
         PatientTumorLocation patientTumorLocation =
                 PatientReporterFileLoader.extractPatientTumorLocation(baseReportData().patientTumorLocations(), tumorSample);
+
+        final PurpleAnalysis purpleAnalysis = analyzePurpleCopyNumbers(run,
+                sequencedReportData().actionabilityAnalyzer(),
+                patientTumorLocation,
+                sequencedReportData().panelGeneModel());
+        final List<GeneCopyNumber> reportableGeneCopynumbers =
+                purpleAnalysis.reportableGeneCopyNumbers(sequencedReportData().panelGeneModel());
 
         final StructuralVariantAnalysis structuralVariantAnalysis =
                 analyzeStructuralVariants(run, purpleAnalysis, structuralVariantAnalyzer());
@@ -133,17 +140,19 @@ abstract class PatientReporter {
                 .entrySet()) {
             evidenceItems.addAll(evidencePerVariant.getValue());
         }
-        for (Map.Entry<GeneCopyNumber, List<EvidenceItem>> evidencePerCNV : somaticVariantAnalysis.evidencePerCopyNumber().entrySet()) {
+
+        for (Map.Entry<GeneCopyNumber, List<EvidenceItem>> evidencePerCNV : purpleAnalysis.evidencePerGeneCopyNumber().entrySet()) {
             evidenceItems.addAll(evidencePerCNV.getValue());
         }
+
         for (Map.Entry<GeneFusion, List<EvidenceItem>> evidencePerFusion : somaticVariantAnalysis.evidencePerFusion().entrySet()) {
             evidenceItems.addAll(evidencePerFusion.getValue());
         }
 
         LOGGER.info("Printing actionability results:");
         LOGGER.info(" Number of evidence items based on variants: " + Integer.toString(somaticVariantAnalysis.evidencePerVariant().size()));
-        LOGGER.info(" Number of evidence items based on copy numbers: " + Integer.toString(somaticVariantAnalysis.evidencePerCopyNumber()
-                .size()));
+        LOGGER.info(
+                " Number of evidence items based on copy numbers: " + Integer.toString(purpleAnalysis.evidencePerGeneCopyNumber().size()));
         LOGGER.info(" Number of evidence items based on fusions: " + Integer.toString(somaticVariantAnalysis.evidencePerFusion().size()));
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
@@ -168,7 +177,8 @@ abstract class PatientReporter {
     }
 
     @NotNull
-    private static PurpleAnalysis analyzePurpleCopyNumbers(@NotNull RunContext run, @NotNull GeneModel panelGeneModel) throws IOException {
+    private static PurpleAnalysis analyzePurpleCopyNumbers(@NotNull RunContext run, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
+            @Nullable PatientTumorLocation patientTumorLocation, @NotNull GeneModel panelGeneModel) throws IOException {
         final String runDirectory = run.runDirectory();
         final String sample = run.tumorSample();
 
@@ -179,6 +189,19 @@ abstract class PatientReporter {
         LOGGER.info(" " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
 
         final List<GeneCopyNumber> geneCopyNumbers = PatientReporterFileLoader.loadPurpleGeneCopyNumbers(runDirectory, sample);
+
+        LOGGER.info("Determining evidence for copy numbers");
+        Set<String> actionableGenesCNVS = actionabilityAnalyzer.cnvAnalyzer().actionableGenes();
+        final String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : Strings.EMPTY;
+        CancerTypeMappingReading cancerTypeMappingReading = CancerTypeMappingReading.readingFile();
+        String doidsPrimaryTumorLocation = cancerTypeMappingReading.doidsForPrimaryTumorLocation(primaryTumorLocation);
+
+        final Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber = ActionabilityVariantAnalyzer.findEvidenceForCopyNumber(
+                actionableGenesCNVS,
+                geneCopyNumbers,
+                doidsPrimaryTumorLocation,
+                actionabilityAnalyzer,
+                purityContext.bestFit().ploidy());
 
         final List<GeneCopyNumber> panelGeneCopyNumbers = geneCopyNumbers.stream()
                 .filter(geneCopyNumber -> panelGeneModel.cnvGenePanel().contains(geneCopyNumber.gene()))
@@ -191,6 +214,7 @@ abstract class PatientReporter {
                 .fittedScorePurity(purityContext.score())
                 .copyNumbers(purpleCopyNumbers)
                 .geneCopyNumbers(geneCopyNumbers)
+                .evidencePerGeneCopyNumber(evidencePerGeneCopyNumber)
                 .panelGeneCopyNumbers(panelGeneCopyNumbers)
                 .build();
     }
@@ -217,10 +241,8 @@ abstract class PatientReporter {
                 geneModel.somaticVariantGenePanel(),
                 geneModel.geneDriverCategoryMap(),
                 patientTumorLocation,
-                PatientReporterFileLoader.loadPurpleGeneCopyNumbers(runDirectory, sample),
                 fusions,
-                actionabilityAnalyzerData,
-                purpleAnalysis.fittedPurity().ploidy());
+                actionabilityAnalyzerData);
     }
 
     @NotNull

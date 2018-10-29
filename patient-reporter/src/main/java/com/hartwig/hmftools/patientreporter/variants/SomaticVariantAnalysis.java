@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 
@@ -32,9 +31,6 @@ public abstract class SomaticVariantAnalysis {
 
     @NotNull
     public abstract Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant();
-
-    @NotNull
-    public abstract Map<GeneCopyNumber, List<EvidenceItem>> evidencePerCopyNumber();
 
     @NotNull
     public abstract Map<GeneFusion, List<EvidenceItem>> evidencePerFusion();

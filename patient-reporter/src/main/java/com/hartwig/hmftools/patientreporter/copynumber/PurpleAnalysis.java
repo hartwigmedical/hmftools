@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.patientreporter.copynumber;
 
 import java.util.List;
+import java.util.Map;
 
+import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -38,6 +40,9 @@ public abstract class PurpleAnalysis {
 
     @NotNull
     public abstract List<GeneCopyNumber> panelGeneCopyNumbers();
+
+    @NotNull
+    public abstract Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber();
 
     @NotNull
     public List<GeneCopyNumber> reportableGeneCopyNumbers(@NotNull GeneModel panelGeneModel) {
