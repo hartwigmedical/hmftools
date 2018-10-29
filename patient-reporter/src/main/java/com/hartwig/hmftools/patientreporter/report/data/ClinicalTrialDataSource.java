@@ -6,7 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrial;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -20,7 +20,7 @@ import net.sf.jasperreports.engine.JRDataSource;
 public class ClinicalTrialDataSource {
 
     public static final FieldBuilder<?> EVENT_FIELD = field("event", String.class);
-    public static final FieldBuilder<?> TRIAL_FIELD = field("trial", String.class);
+    public static final FieldBuilder<?> TRIAL_FIELD = field("acronym", String.class);
     public static final FieldBuilder<?> SOURCE_FIELD = field("source", String.class);
     public static final FieldBuilder<?> CCMO_FIELD = field("ccmo", String.class);
     public static final FieldBuilder<?> ON_LABEL_FIELD = field("on_label", String.class);
@@ -35,7 +35,7 @@ public class ClinicalTrialDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromClinicalTrials(@NotNull List<EvidenceItem> trials) {
+    public static JRDataSource fromClinicalTrials(@NotNull List<ClinicalTrial> trials) {
         final DRDataSource evidenceItemDataSource = new DRDataSource(EVENT_FIELD.getName(),
                 TRIAL_FIELD.getName(),
                 SOURCE_FIELD.getName(),
@@ -43,15 +43,15 @@ public class ClinicalTrialDataSource {
                 ON_LABEL_FIELD.getName(),
                 REFERENCE_FIELD.getName());
 
-        for (EvidenceItem evidenceItem : sort(trials)) {
-            assert evidenceItem.source().isTrialSource();
+        for (ClinicalTrial trial : sort(trials)) {
+            assert trial.source().isTrialSource();
 
-            evidenceItemDataSource.add(evidenceItem.event(),
-                    evidenceItem.drug(),
-                    evidenceItem.source().sourceName(),
-                    CCMOId(evidenceItem.reference()),
-                    evidenceItem.isOnLabel() ? "Yes" : "No",
-                    evidenceItem.reference());
+            evidenceItemDataSource.add(trial.event(),
+                    trial.acronym(),
+                    trial.source().sourceName(),
+                    CCMOId(trial.reference()),
+                    trial.isOnLabel() ? "Yes" : "No",
+                    trial.reference());
         }
 
         return evidenceItemDataSource;
@@ -66,8 +66,8 @@ public class ClinicalTrialDataSource {
     }
 
     @NotNull
-    private static List<EvidenceItem> sort(@NotNull List<EvidenceItem> evidenceItems) {
-        return evidenceItems.stream().sorted(Comparator.comparing(EvidenceItem::drug)).collect(Collectors.toList());
+    private static List<ClinicalTrial> sort(@NotNull List<ClinicalTrial> trials) {
+        return trials.stream().sorted(Comparator.comparing(ClinicalTrial::acronym)).collect(Collectors.toList());
     }
 
     @NotNull

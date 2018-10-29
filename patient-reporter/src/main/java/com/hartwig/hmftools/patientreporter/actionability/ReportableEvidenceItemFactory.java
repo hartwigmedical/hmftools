@@ -14,13 +14,13 @@ import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class ReportableEvidenceItems {
+public final class ReportableEvidenceItemFactory {
 
-    private ReportableEvidenceItems() {
+    private ReportableEvidenceItemFactory() {
     }
 
     @NotNull
-    public static List<EvidenceItem> reportableEvidenceItems(@NotNull List<EvidenceItem> evidenceItems) {
+    public static List<EvidenceItem> filterEvidenceItemsForReporting(@NotNull List<EvidenceItem> evidenceItems) {
         Set<EvidenceItem> uniqueReportableItems = Sets.newHashSet();
         for (EvidenceItem evidence : evidenceItems) {
             if (!evidence.source().isTrialSource()) {

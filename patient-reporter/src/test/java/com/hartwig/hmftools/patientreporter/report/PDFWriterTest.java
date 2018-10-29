@@ -36,6 +36,8 @@ import com.hartwig.hmftools.patientreporter.ImmutableNotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedReportData;
+import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrial;
+import com.hartwig.hmftools.patientreporter.actionability.ImmutableClinicalTrial;
 import com.hartwig.hmftools.patientreporter.chord.ChordAnalysis;
 import com.hartwig.hmftools.patientreporter.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
@@ -74,7 +76,8 @@ public class PDFWriterTest {
         final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity);
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, fittedPurity);
-        final List<EvidenceItem> evidenceItems = createTestEvidenceItems();
+        final List<EvidenceItem> clinicalEvidence = createTestClinicalEvidence();
+        final List<ClinicalTrial> clinicalTrials = createTestClinicalTrials();
         final List<ReportableSomaticVariant> somaticVariants = createTestSomaticVariants(purityAdjuster);
         final List<GermlineVariant> germlineVariants = createTestGermlineVariants(purityAdjuster);
         final ChordAnalysis chordAnalysis = createTestChordAnalysis();
@@ -87,7 +90,8 @@ public class PDFWriterTest {
         final AnalysedPatientReport patientReport = ImmutableAnalysedPatientReport.of(sampleReport,
                 FittedPurityStatus.NORMAL,
                 fittedPurity.purity(),
-                evidenceItems,
+                clinicalEvidence,
+                clinicalTrials,
                 somaticVariants,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
@@ -112,7 +116,7 @@ public class PDFWriterTest {
     }
 
     @NotNull
-    private static List<EvidenceItem> createTestEvidenceItems() {
+    private static List<EvidenceItem> createTestClinicalEvidence() {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
         evidenceItems.add(ImmutableEvidenceItem.builder()
                 .event("TP53 p.Pro177_Cys182del")
@@ -136,62 +140,20 @@ public class PDFWriterTest {
                 .isOnLabel(true)
                 .build());
 
-        evidenceItems.add(ImmutableEvidenceItem.builder()
-                .event("TP53 p.Pro177_Cys182del")
-                .drug("Docetaxel")
-                .drugsType("Chemotherapy")
-                .level("D")
-                .response("Resistant")
-                .reference("variant:222")
-                .source(ActionabilitySource.CIVIC)
-                .isOnLabel(true)
-                .build());
-
-        evidenceItems.add(ImmutableEvidenceItem.builder()
-                .event("BRAF p.Val600Glu")
-                .drug("IMPemBra")
-                .drugsType("Trial")
-                .level("B")
-                .response("Response")
-                .reference("EXT8846 (NL54421.031.15)")
-                .source(ActionabilitySource.ICLUSION)
-                .isOnLabel(true)
-                .build());
-
-        evidenceItems.add(ImmutableEvidenceItem.builder()
-                .event("BRAF p.Val600Glu")
-                .drug("IMPemBra")
-                .drugsType("Trial")
-                .level("B")
-                .response("Response")
-                .reference("EXT8846 (NL54421.031.15)")
-                .source(ActionabilitySource.ICLUSION)
-                .isOnLabel(false)
-                .build());
-
-        evidenceItems.add(ImmutableEvidenceItem.builder()
-                .event("TP53 p.Pro177_Cys182del")
-                .drug("Docetaxel")
-                .drugsType("Chemotherapy")
-                .level("D")
-                .response("Resistant")
-                .reference("variant:222")
-                .source(ActionabilitySource.CIVIC)
-                .isOnLabel(false)
-                .build());
-
-        evidenceItems.add(ImmutableEvidenceItem.builder()
-                .event("BRAF p.Val600Glu")
-                .drug("IMPemBra")
-                .drugsType("Trial")
-                .level("B")
-                .response("Response")
-                .reference("EXT8846 (NL54421.031.15)")
-                .source(ActionabilitySource.ICLUSION)
-                .isOnLabel(true)
-                .build());
-
         return evidenceItems;
+    }
+
+    @NotNull
+    private static List<ClinicalTrial> createTestClinicalTrials() {
+        List<ClinicalTrial> trials = Lists.newArrayList();
+        trials.add(ImmutableClinicalTrial.builder()
+                .event("BRAF p.Val600Glu")
+                .acronym("IMPemBra")
+                .reference("EXT8846 (NL54421.031.15)")
+                .source(ActionabilitySource.ICLUSION)
+                .isOnLabel(true)
+                .build());
+        return trials;
     }
 
     @NotNull

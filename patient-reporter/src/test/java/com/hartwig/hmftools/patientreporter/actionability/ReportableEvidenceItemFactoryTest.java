@@ -14,16 +14,16 @@ import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class ReportableEvidenceItemsTest {
+public class ReportableEvidenceItemFactoryTest {
 
     @Test
     public void higherLevelWorks() {
         EvidenceItem item1 = builder().level("A").build();
         EvidenceItem item2 = builder().level("B").build();
 
-        assertTrue(ReportableEvidenceItems.hasHigherEvidence(item1, item2));
-        assertFalse(ReportableEvidenceItems.hasHigherEvidence(item2, item1));
-        assertFalse(ReportableEvidenceItems.hasHigherEvidence(item1, item1));
+        assertTrue(ReportableEvidenceItemFactory.hasHigherEvidence(item1, item2));
+        assertFalse(ReportableEvidenceItemFactory.hasHigherEvidence(item2, item1));
+        assertFalse(ReportableEvidenceItemFactory.hasHigherEvidence(item1, item1));
     }
 
     @Test
@@ -32,16 +32,16 @@ public class ReportableEvidenceItemsTest {
         EvidenceItem item2 = builder().level("B").isOnLabel(false).build();
         EvidenceItem item3 = builder().level("C").isOnLabel(false).build();
 
-        EvidenceItem highestOffLabel = ReportableEvidenceItems.highestOffLabel(Lists.newArrayList(item1, item2, item3));
+        EvidenceItem highestOffLabel = ReportableEvidenceItemFactory.highestOffLabel(Lists.newArrayList(item1, item2, item3));
         assertNotNull(highestOffLabel);
         assertEquals("B", highestOffLabel.level());
 
 
-        EvidenceItem highestOnLabel = ReportableEvidenceItems.highestOnLabel(Lists.newArrayList(item1, item2, item3));
+        EvidenceItem highestOnLabel = ReportableEvidenceItemFactory.highestOnLabel(Lists.newArrayList(item1, item2, item3));
         assertNotNull(highestOnLabel);
         assertEquals("A", highestOnLabel.level());
 
-        EvidenceItem onLabelOnly = ReportableEvidenceItems.highestOffLabel(Lists.newArrayList(item1));
+        EvidenceItem onLabelOnly = ReportableEvidenceItemFactory.highestOffLabel(Lists.newArrayList(item1));
         assertNull(onLabelOnly);
     }
 

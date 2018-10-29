@@ -6,6 +6,7 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
+import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrial;
 import com.hartwig.hmftools.patientreporter.chord.ChordAnalysis;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
@@ -30,7 +31,10 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract double impliedPurity();
 
     @NotNull
-    public abstract List<EvidenceItem> evidenceItems();
+    public abstract List<EvidenceItem> clinicalEvidence();
+
+    @NotNull
+    public abstract List<ClinicalTrial> clinicalTrials();
 
     @NotNull
     public abstract List<ReportableSomaticVariant> somaticVariants();
