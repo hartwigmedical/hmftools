@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.disruption;
+package com.hartwig.hmftools.patientreporter.structural;
 
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestCopyNumberBuilder;
 
