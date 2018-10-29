@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.tribble.index.tabix.TabixFormat;
 import htsjdk.tribble.index.tabix.TabixIndexCreator;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -47,9 +48,8 @@ class PurpleStructuralVariantSupplier {
         final VCFFileReader vcfReader = new VCFFileReader(new File(templateVCF), false);
         this.outputVCF = outputVCF;
         header = Optional.of(generateOutputHeader(vcfReader.getFileHeader()));
-        variantContexts = new TreeSet<>(new VariantContextComparator(header.get().getSequenceDictionary()));
+        variantContexts = new TreeSet<>(new VCComparator(header.get().getSequenceDictionary()));
         for (VariantContext context : vcfReader) {
-
             if (context.isNotFiltered()) {
                 variantContexts.add(context);
             }
@@ -99,6 +99,20 @@ class PurpleStructuralVariantSupplier {
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(RECOVERED_FLAG, 0, VCFHeaderLineType.Flag, "Entry has been recovered"));
 
         return outputVCFHeader;
+    }
+
+    private class VCComparator extends VariantContextComparator {
+
+        VCComparator(final SAMSequenceDictionary dictionary) {
+            super(dictionary);
+        }
+
+        @Override
+        public int compare(final VariantContext firstVariantContext, final VariantContext secondVariantContext) {
+            int positionResult = super.compare(firstVariantContext, secondVariantContext);
+
+            return positionResult == 0 ? firstVariantContext.getID().compareTo(secondVariantContext.getID()) : positionResult;
+        }
     }
 
 }
