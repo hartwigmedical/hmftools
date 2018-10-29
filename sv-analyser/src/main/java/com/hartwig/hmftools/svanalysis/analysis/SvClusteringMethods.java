@@ -423,6 +423,7 @@ public class SvClusteringMethods {
                 }
 
                 int sharedArmCount = 0;
+                String commonArms = "";
 
                 for(SvArmGroup armGroup1 : armGroups1)
                 {
@@ -431,6 +432,11 @@ public class SvClusteringMethods {
                         if(armGroup1.matches(armGroup2))
                         {
                             ++sharedArmCount;
+
+                            if(!commonArms.isEmpty())
+                                commonArms += ";";
+
+                            commonArms += armGroup1.id();
 
                             if(sharedArmCount >= 2)
                                 break;
@@ -446,6 +452,9 @@ public class SvClusteringMethods {
                     ++index2;
                     continue;
                 }
+
+                LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on common arms({})",
+                        cluster1.getId(), cluster1.getCount(), cluster2.getId(), cluster2.getCount(), commonArms);
 
                 cluster1.mergeOtherCluster(cluster2);
                 clusters.remove(index2);
@@ -618,84 +627,18 @@ public class SvClusteringMethods {
         {
             SvCluster cluster1 = clusters.get(index1);
 
-            boolean hasLongDupOrDel = false;
-
-            if(cluster1.isSimpleSVs())
-            {
-                for(final SvVarData var : cluster1.getSVs())
-                {
-                    if((var.type() == DUP || var.type() == DEL) && var.length() >= mDelDupCutoffLength)
-                    {
-                        hasLongDupOrDel = true;
-                        break;
-                    }
-                }
-            }
-            else if(cluster1.isResolved()
-                && (cluster1.getResolvedType() == RESOLVED_TYPE_DEL_EXT_TI
-                    || cluster1.getResolvedType() == RESOLVED_TYPE_DUP_INT_TI
-                    ||cluster1.getResolvedType() == RESOLVED_TYPE_DUP_EXT_TI))
-            {
-                if(cluster1.getLengthOverride() >= mDelDupCutoffLength)
-                    hasLongDupOrDel = true;
-            }
-
-            if(!hasLongDupOrDel)
+            if(!clusterHasLongDelDup(cluster1))
             {
                 ++index1;
                 continue;
             }
-
-            List<SvArmGroup> armGroups1 = cluster1.getArmGroups();
 
             int index2 = index1 + 1;
             while(index2 < clusters.size())
             {
                 SvCluster cluster2 = clusters.get(index2);
 
-                boolean canMergeArms = false;
-
-                if(cluster2.isSimpleSVs())
-                {
-                    // merge simple DEL-DUP combinations if both exceed the required length
-                    if(cluster2.getCount() == 1)
-                    {
-                        final SvVarData var1 = cluster1.getSVs().get(0);
-                        final SvVarData var2 = cluster2.getSVs().get(0);
-
-                        if((var2.type() == DEL || var2.type() == DUP) && var2.type() != var1.type()
-                        && var2.length() >= mDelDupCutoffLength && isLocalOverlap(var1, var2))
-                        {
-                            canMergeArms = true;
-
-                            LOGGER.debug("long DEL-DUPs({} and {}) overlap with lengths({} and {})", var1.posId(), var2.posId(), var1.length(), var2.length());
-                        }
-                    }
-                }
-                else if(cluster2.getResolvedType() != RESOLVED_TYPE_RECIPROCAL_TRANS)
-                {
-                    List<SvArmGroup> armGroups2 = cluster2.getArmGroups();
-
-                    for (SvArmGroup armGroup1 : armGroups1)
-                    {
-                        for (SvArmGroup armGroup2 : armGroups2)
-                        {
-                            if (armGroupsHaveOverlappingSVs(armGroup1, armGroup2, false))
-                            {
-                                LOGGER.debug("long DUP-DEL arm({} svs={}) overlaps with arm({} svs={})",
-                                        armGroup1.posId(), armGroup1.getCount(), armGroup2.posId(), armGroup2.getCount());
-
-                                canMergeArms = true;
-                                break;
-                            }
-                        }
-
-                        if (canMergeArms)
-                            break;
-                    }
-                }
-
-                if(!canMergeArms)
+                if(!canMergeClustersOnLongDelDups(cluster1, cluster2))
                 {
                     ++index2;
                     continue;
@@ -711,6 +654,73 @@ public class SvClusteringMethods {
         return clusters.size() < initClusterCount;
     }
 
+    public boolean clusterHasLongDelDup(final SvCluster cluster)
+    {
+        if(cluster.isSimpleSVs())
+        {
+            for(final SvVarData var : cluster.getSVs())
+            {
+                if((var.type() == DUP || var.type() == DEL) && var.length() >= mDelDupCutoffLength)
+                {
+                    return true;
+                }
+            }
+        }
+        else if(cluster.isResolved())
+        {
+            if(cluster.getResolvedType() == RESOLVED_TYPE_DEL_EXT_TI
+            || cluster.getResolvedType() == RESOLVED_TYPE_DUP_INT_TI
+            ||cluster.getResolvedType() == RESOLVED_TYPE_DUP_EXT_TI)
+            {
+                if (cluster.getLengthOverride() >= mDelDupCutoffLength)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    public boolean canMergeClustersOnLongDelDups(final SvCluster cluster1, final SvCluster cluster2)
+    {
+        if(cluster2.isSimpleSVs())
+        {
+            // merge simple DEL-DUP combinations if both exceed the required length
+            if(cluster2.getCount() == 1)
+            {
+                final SvVarData var1 = cluster1.getSVs().get(0);
+                final SvVarData var2 = cluster2.getSVs().get(0);
+
+                if((var2.type() == DEL || var2.type() == DUP) && var2.type() != var1.type()
+                        && var2.length() >= mDelDupCutoffLength && isLocalOverlap(var1, var2))
+                {
+                    LOGGER.debug("long DEL-DUPs({} and {}) overlap with lengths({} and {})",
+                            var1.posId(), var2.posId(), var1.length(), var2.length());
+                    return true;
+                }
+            }
+        }
+        else if(cluster2.getResolvedType() != RESOLVED_TYPE_RECIPROCAL_TRANS)
+        {
+            List<SvArmGroup> armGroups1 = cluster1.getArmGroups();
+            List<SvArmGroup> armGroups2 = cluster2.getArmGroups();
+
+            for (SvArmGroup armGroup1 : armGroups1)
+            {
+                for (SvArmGroup armGroup2 : armGroups2)
+                {
+                    if (armGroupsHaveOverlappingSVs(armGroup1, armGroup2, false))
+                    {
+                        LOGGER.debug("long DUP-DEL arm({} svs={}) overlaps with arm({} svs={})",
+                                armGroup1.posId(), armGroup1.getCount(), armGroup2.posId(), armGroup2.getCount());
+
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
 
     private static int DEL_DUP_LENGTH_TRIM_COUNT = 5;
     private static int MAX_ARM_COUNT = 41; // excluding the 5 short arms

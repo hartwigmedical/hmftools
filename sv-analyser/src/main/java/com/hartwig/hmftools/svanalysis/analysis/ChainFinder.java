@@ -502,7 +502,7 @@ public class ChainFinder
 
                     if (mLogVerbose)
                     {
-                        LOGGER.debug("sample({}) cluster({}) building from existng chain({}) with {} SVs",
+                        LOGGER.debug("sample({}) cluster({}) building from existing chain({}) with {} SVs",
                                 mSampleId, mCluster.getId(), currentChain.getId(), currentChain.getSvCount());
                     }
                 }

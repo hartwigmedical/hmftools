@@ -144,6 +144,7 @@ public class SvCluster
                 {
                     armGroup.addVariant(var);
                     groupFound = true;
+                    break;
                 }
             }
 

@@ -5,6 +5,9 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 import com.google.common.collect.Lists;
 
@@ -62,14 +65,20 @@ public class SvArmGroup {
     {
         mSVs.add(var);
 
-        if(var.chromosome(true).equals(mChromosome))
+        for(int be = SVI_START; be <= SVI_END; ++be)
         {
-            mStartPos = mStartPos == -1 ? var.position(true) : min(mStartPos, var.position(true));
-        }
+            if(be == SVI_END && var.isNullBreakend())
+                continue;
 
-        if(!var.isNullBreakend() && var.chromosome(false).equals(mChromosome))
-        {
-            mEndPos = max(mEndPos, var.position(false));
+            boolean useStart = isStart(be);
+
+            if(!var.chromosome(useStart).equals(mChromosome))
+                continue;
+
+            long position = var.position(useStart);
+
+            mStartPos = mStartPos == -1 ? position : min(mStartPos, position);
+            mEndPos = max(mEndPos, position);
         }
     }
 

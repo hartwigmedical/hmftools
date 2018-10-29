@@ -277,7 +277,7 @@ public class SvSampleAnalyser {
                 writer.write(",ClusterDesc,IsResolved,ResolvedType,Consistency,ArmCount");
 
                 // linked pair info
-                writer.write(",LnkSvStart,LnkTypeStart,LnkLenStart,LnkSvEnd,LnkTypeEnd,LnkLenEnd");
+                writer.write(",LnkSvStart,LnkTypeStart,LnkLenStart,LnkInfoStart,LnkSvEnd,LnkTypeEnd,LnkLenEnd,LnkInfoEnd");
 
                 // GRIDDS caller info
                 writer.write(",AsmbStart,AsmbEnd,AsmbMatchStart,AsmbMatchEnd");
@@ -289,7 +289,7 @@ public class SvSampleAnalyser {
                 writer.write(",NearestLen,NearestType,FoldbackLnkStart,FoldbackLenStart,FoldbackLnkEnd,FoldbackLenEnd");
 
                 // transitive info
-                writer.write(",TransType,TransLen,TransSvLinks");
+                // writer.write(",TransType,TransLen,TransSvLinks");
 
                 // gene info
                 // writer.write(",GeneStart,GeneDriverStart,GeneTypeStart,GeneEnd,GeneDriverEnd,GeneTypeEnd");
@@ -356,21 +356,23 @@ public class SvSampleAnalyser {
 
                     // linked pair info
                     final SvLinkedPair startLP = cluster.getLinkedPair(var, true);
-                    String startLinkStr = "0,,-1";
+                    String startLinkStr = "0,,-1,";
                     String assemblyMatchStart = var.getAssemblyMatchType(true);
                     if(startLP != null)
                     {
-                        startLinkStr = String.format("%s,%s,%d",
-                                startLP.first().equals(var, true) ? startLP.second().origId() : startLP.first().origId(), startLP.linkType(), startLP.length());
+                        startLinkStr = String.format("%s,%s,%d,%s",
+                                startLP.first().equals(var, true) ? startLP.second().origId() : startLP.first().origId(),
+                                startLP.linkType(), startLP.length(), startLP.getInfo());
                     }
 
                     final SvLinkedPair endLP = cluster.getLinkedPair(var, false);
-                    String endLinkStr = "0,,-1";
+                    String endLinkStr = "0,,-1,";
                     String assemblyMatchEnd = var.getAssemblyMatchType(false);
                     if(endLP != null)
                     {
-                        endLinkStr = String.format("%s,%s,%d",
-                                endLP.first().equals(var, true) ? endLP.second().origId() : endLP.first().origId(), endLP.linkType(), endLP.length());
+                        endLinkStr = String.format("%s,%s,%d,%s",
+                                endLP.first().equals(var, true) ? endLP.second().origId() : endLP.first().origId(),
+                                endLP.linkType(), endLP.length(), endLP.getInfo());
                     }
 
                     if(assemblyMatchStart.equals(ASSEMBLY_MATCH_ASMB_ONLY) || assemblyMatchEnd.equals(ASSEMBLY_MATCH_ASMB_ONLY))
@@ -397,7 +399,7 @@ public class SvSampleAnalyser {
                             var.getNearestSvDistance(), var.getNearestSvRelation(),
                             var.getFoldbackLink(true), var.getFoldbackLen(true), var.getFoldbackLink(false), var.getFoldbackLen(false)));
 
-                    writer.write(String.format(",%s,%d,%s", var.getTransType(), var.getTransLength(), var.getTransSvLinks()));
+                    // writer.write(String.format(",%s,%d,%s", var.getTransType(), var.getTransLength(), var.getTransSvLinks()));
 
                     ++lineCount;
                     writer.newLine();

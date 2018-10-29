@@ -97,6 +97,9 @@ public class LinkFinder
                 {
                     SvVarData var2 = cluster.getSVs().get(j);
 
+                    if(var1.equals(var2, true))
+                        continue;
+
                     if(var2.type() == StructuralVariantType.INS || var2.isNullBreakend())
                         continue;
 
@@ -260,6 +263,9 @@ public class LinkFinder
                 for (int j = i+1; j < svList.size(); ++j)
                 {
                     SvVarData var2 = svList.get(j);
+
+                    if(var1.equals(var2, true))
+                        continue;
 
                     if(var2.type() == StructuralVariantType.INS || (var2.isNullBreakend() && !allowSingleBEs))
                         continue;

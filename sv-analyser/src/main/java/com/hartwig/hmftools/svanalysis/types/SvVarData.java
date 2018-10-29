@@ -227,7 +227,13 @@ public class SvVarData
             return true;
 
         if(allowReplicated)
-            return (this == other.getReplicatedSv() || mReplicatedSv == other);
+        {
+            if(this == other.getReplicatedSv() || mReplicatedSv == other)
+                return true;
+
+            if(mReplicatedSv != null && mReplicatedSv == other.getReplicatedSv())
+                return true;
+        }
 
         return false;
     }

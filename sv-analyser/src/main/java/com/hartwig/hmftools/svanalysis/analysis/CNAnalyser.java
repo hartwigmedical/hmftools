@@ -257,7 +257,7 @@ public class CNAnalyser {
 
         List<PurpleCopyNumber> cnRecords = mDbAccess.readCopyNumberNoneSegments(sampleId);
 
-        for(int i = 0; i < cnRecords.size(); i = i+2)
+        for(int i = 0; i < cnRecords.size(); ++i)
         {
             if(i + 1 >= cnRecords.size())
                 break;

@@ -17,8 +17,11 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMP
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.findCluster;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.findVariantById;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_INFER_ONLY;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 import java.util.HashMap;
 import java.util.List;
@@ -169,6 +172,8 @@ public class ClusterAnalyser {
 
             mLinkFinder.resolveTransitiveSVs(mSampleId, cluster);
             cacheFinalLinkedPairs(cluster);
+
+            reportChainFeatures(cluster);
         }
     }
 
@@ -252,6 +257,8 @@ public class ClusterAnalyser {
         if(cluster.isResolved())
             return;
 
+        boolean logData = false;
+
         if (cluster.isSimpleSVs())
         {
             if(cluster.getCount() == 1)
@@ -262,7 +269,7 @@ public class ClusterAnalyser {
 
             if(calcTypeCount(cluster.getSVs(), DEL) + calcTypeCount(cluster.getSVs(), DUP) == 2)
             {
-                if(mClusteringMethods.markDelDupPairTypes(cluster, false, mSampleId))
+                if(mClusteringMethods.markDelDupPairTypes(cluster, logData, mSampleId))
                     return;
             }
 
@@ -275,11 +282,11 @@ public class ClusterAnalyser {
         {
             if(calcTypeCount(cluster.getSVs(), BND) == 2)
             {
-                mClusteringMethods.markBndPairTypes(cluster, false, mSampleId);
+                mClusteringMethods.markBndPairTypes(cluster, logData, mSampleId);
             }
             else if(calcTypeCount(cluster.getSVs(), INV) == 2)
             {
-                mClusteringMethods.markInversionPairTypes(cluster, false, mSampleId);
+                mClusteringMethods.markInversionPairTypes(cluster, logData, mSampleId);
             }
 
             return;
@@ -287,12 +294,14 @@ public class ClusterAnalyser {
 
         // next clusters with which start and end on the same arm, have the same start and end orientation
         // and the same start and end copy number
-        if(isConsistentCluster(cluster))
+        if(isConsistentCluster(cluster) || cluster.isFullyChained())
         {
+            boolean isResolved = cluster.isConsistent();
+
             if(!cluster.hasReplicatedSVs())
-                cluster.setResolved(true, RESOLVED_TYPE_SIMPLE_CHAIN);
+                cluster.setResolved(isResolved, RESOLVED_TYPE_SIMPLE_CHAIN);
             else
-                cluster.setResolved(true, RESOLVED_TYPE_COMPLEX_CHAIN);
+                cluster.setResolved(isResolved, RESOLVED_TYPE_COMPLEX_CHAIN);
 
             return;
         }
@@ -380,16 +389,26 @@ public class ClusterAnalyser {
                     }
                 }
 
-                if(checkStart && (startPosition < 0 || var.position(true) < startPosition))
+                for(int be = SVI_START; be <= SVI_END; ++be)
                 {
-                    startVar = var;
-                    startPosition = var.position(true);
-                }
+                    if((!checkStart && be == SVI_START) || (!checkEnd && be == SVI_END))
+                        continue;
 
-                if(checkEnd && !var.isNullBreakend() && var.position(false) > endPosition)
-                {
-                    endVar = var;
-                    endPosition = var.position(false);
+                    boolean useStart = isStart(be);
+
+                    long position = var.position(useStart);
+
+                    if(startPosition < 0 || position < startPosition)
+                    {
+                        startVar = var;
+                        startPosition = position;
+                    }
+
+                    if(position > endPosition)
+                    {
+                        endVar = var;
+                        endPosition = position;
+                    }
                 }
             }
 
@@ -407,10 +426,11 @@ public class ClusterAnalyser {
 
             if(cluster.getCount() > 1)
             {
-                LOGGER.debug("cluster({}) arm({}) consistent({}) start({}) end({})",
+                LOGGER.debug("cluster({}) arm({}) consistent({}) start({}) end({}) posBoundaries({} -> {})",
                         cluster.getId(), armGroup.id(), armGroup.isConsistent(),
                         armGroup.getBreakend(true) != null ? armGroup.getBreakend(true).toString() : "null",
-                        armGroup.getBreakend(false) != null ? armGroup.getBreakend(false).toString() : "null");
+                        armGroup.getBreakend(false) != null ? armGroup.getBreakend(false).toString() : "null",
+                        armGroup.posStart(), armGroup.posEnd());
             }
         }
     }
@@ -427,7 +447,10 @@ public class ClusterAnalyser {
         {
             SvCluster cluster1 = clusters.get(index1);
 
-            if(isConsistentCluster(cluster1))
+            boolean isConsistent1 = isConsistentCluster(cluster1);
+            boolean hasLongDelDup1 = mClusteringMethods.clusterHasLongDelDup(cluster1);
+
+            if(isConsistent1 && !hasLongDelDup1)
             {
                 ++index1;
                 continue;
@@ -441,13 +464,22 @@ public class ClusterAnalyser {
             {
                 SvCluster cluster2 = clusters.get(index2);
 
-                if(isConsistentCluster(cluster2))
+                boolean isConsistent2 = isConsistentCluster(cluster2);
+                boolean hasLongDelDup2 = mClusteringMethods.clusterHasLongDelDup(cluster2);
+
+                if(isConsistent2 && !hasLongDelDup2)
                 {
                     ++index2;
                     continue;
                 }
 
-                boolean foundConnection = canMergeClustersOnOverlaps(cluster1, cluster2);
+                boolean foundConnection = !isConsistent1 && !isConsistent2 && canMergeClustersOnOverlaps(cluster1, cluster2);
+
+                if(!foundConnection && hasLongDelDup1)
+                    foundConnection = mClusteringMethods.canMergeClustersOnLongDelDups(cluster1, cluster2);
+
+                if(!foundConnection && hasLongDelDup2)
+                    foundConnection = mClusteringMethods.canMergeClustersOnLongDelDups(cluster2, cluster1);
 
                 if(!foundConnection)
                 {
@@ -576,6 +608,155 @@ public class ClusterAnalyser {
             }
 
             clusters.remove(i);
+        }
+    }
+
+    public void reportChainFeatures(final SvCluster cluster)
+    {
+        for (final SvChain chain : cluster.getChains())
+        {
+            if(chain.getLinkedPairs().size() <= 1)
+                continue;
+
+            findChainRepeatedSegments(cluster, chain);
+
+            findChainTranslocationTIs(cluster, chain);
+        }
+    }
+
+    private void findChainRepeatedSegments(final SvCluster cluster, final SvChain chain)
+    {
+        if(!chain.hasReplicatedSVs())
+            return;
+
+        List<SvVarData> replicatedSVs = Lists.newArrayList();
+
+        final List<SvVarData> svList = chain.getSvList();
+
+        for (int i = 0; i < svList.size(); ++i)
+        {
+            final SvVarData var1 = svList.get(i);
+
+            if(replicatedSVs.contains(var1))
+                continue;
+
+            for (int j = i + 1; j < svList.size(); ++j)
+            {
+                final SvVarData var2 = svList.get(j);
+
+                if (!var1.equals(var2, true))
+                    continue;
+
+                replicatedSVs.add(var1);
+
+                // look for repeated sections forwards or backwards from this point
+                List<SvVarData> forwardRepeats = getRepeatedSvSequence(svList, i, j, true);
+
+                if(!forwardRepeats.isEmpty())
+                {
+                    // ClusterId,ChainId,SvId1,SvId2,IsOutAndBack,TILength,IsAssembly,ChainLinks,HasReplication
+                    LOGGER.info("CF_REPEAT_SEQ: {},{},{},{},{}",
+                            cluster.getId(), chain.getId(), var1.id(), forwardRepeats.size() + 1, true);
+
+                    replicatedSVs.addAll(forwardRepeats);
+                    break;
+                }
+
+                forwardRepeats = getRepeatedSvSequence(svList, i, j, false);
+
+                if(!forwardRepeats.isEmpty())
+                {
+                    // ClusterId,ChainId,SvId,SequenceCount,MatchDirection
+                    LOGGER.info("CF_REPEAT_SEQ: {},{},{},{},{}",
+                            cluster.getId(), chain.getId(), var1.id(), forwardRepeats.size() + 1, false);
+
+                    replicatedSVs.addAll(forwardRepeats);
+                    break;
+                }
+
+                // not sequence found
+            }
+        }
+    }
+
+    private List<SvVarData> getRepeatedSvSequence(final List<SvVarData> svList, int firstIndex, int secondIndex, boolean walkForwards)
+    {
+        // walk forward from these 2 start points comparing SVs
+        List<SvVarData> sequence = Lists.newArrayList();
+
+        int i = firstIndex + 1;
+        int j = secondIndex;
+
+        if(walkForwards)
+            ++j;
+        else
+            --j;
+
+        while(i < secondIndex && i < j && j < svList.size())
+        {
+            final SvVarData var1 = svList.get(i);
+            final SvVarData var2 = svList.get(j);
+
+            if(!var1.equals(var2, true))
+                break;
+
+            sequence.add(var1);
+
+            if(walkForwards)
+                ++j;
+            else
+                --j;
+        }
+
+        return sequence;
+    }
+
+    private void findChainTranslocationTIs(final SvCluster cluster, final SvChain chain)
+    {
+        final List<SvLinkedPair> linkedPairs = chain.getLinkedPairs();
+
+        int svCount = chain.getSvCount();
+        int uniqueSvCount = chain.getUniqueSvCount();
+
+        boolean hasReplication = uniqueSvCount < svCount;
+
+        final List<SvVarData> svList = chain.getSvList();
+
+        for(int i = 0; i < linkedPairs.size(); ++i)
+        {
+            final SvLinkedPair pair = linkedPairs.get(i);
+            final SvVarData svBack = svList.get(i);
+
+            if(svList.size() == i+1)
+                break; // chain loops back to same SV (whether closed or not
+
+            final SvVarData svForward = svList.get(i+1);
+
+            // find out-and-back or out-and-on translocations showing evidence of foreign fragment insertions
+            if(svForward.type() == BND && i < linkedPairs.size() - 1 && i < svList.size() - 2)
+            {
+                final SvLinkedPair nextPair = linkedPairs.get(i+1);
+                final SvVarData nextSvForward = svList.get(i+2);
+
+                if(nextSvForward.type() == BND)
+                {
+                    boolean svForwardLinkedOnStart = pair.getLinkedOnStart(svForward);
+                    final String startChromosome = svForward.chromosome(svForwardLinkedOnStart);
+                    // final String linkChromosome = svForward.chromosome(!svForwardLinkedOnStart);
+
+                    boolean nextSvForwardLinkedOnStart = nextPair.getLinkedOnStart(nextSvForward);
+                    final String endChromosome = nextSvForward.chromosome(!nextSvForwardLinkedOnStart);
+
+                    boolean outAndBack = startChromosome.equals(endChromosome);
+
+                    nextPair.setInfo("TransTI");
+
+                    // ClusterId,ChainId,SvId1,SvId2,IsOutAndBack,TILength,IsAssembly,ChainLinks,HasReplication
+                    LOGGER.info("CF_TRANS_TI: {},{},{},{},{},{},{},{},{}",
+                            cluster.getId(), chain.getId(), svForward.id(), nextSvForward.id(),
+                            outAndBack, nextPair.length(), !nextPair.isInferred(), chain.getLinkCount(), hasReplication);
+                }
+            }
         }
     }
 
@@ -810,17 +991,6 @@ public class ClusterAnalyser {
         {
             LOGGER.debug("cluster({}: {} count={}) has {} linked pairs",
                     cluster.getId(), cluster.getDesc(), cluster.getUniqueSvCount(), linkedPairs.size());
-
-            /*
-            if(LOGGER.isDebugEnabled())
-            {
-                for (final SvLinkedPair pair : linkedPairs)
-                {
-                    LOGGER.debug("linked {} {} pair length({}) variants({})",
-                            pair.isInferred() ? "inferred" : "assembly", pair.linkType(), pair.length(), pair.toString());
-                }
-            }
-            */
         }
 
         cluster.setLinkedPairs(linkedPairs);

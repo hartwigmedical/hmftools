@@ -15,6 +15,7 @@ public class SvLinkedPair {
     private String mLinkType;
     private int mLinkLength;
     private boolean mIsInferred;
+    private String mLinkInfo;
 
     public static final String LINK_TYPE_TI = "TI";
     public static final String LINK_TYPE_DB = "DB";
@@ -28,6 +29,7 @@ public class SvLinkedPair {
         mSecondLinkOnStart = secondLinkOnStart;
         mLinkType = linkType;
         mIsInferred = true;
+        mLinkInfo = "";
 
         if(mLinkType == LINK_TYPE_SGL)
         {
@@ -54,11 +56,22 @@ public class SvLinkedPair {
     public boolean firstUnlinkedOnStart() { return !mFirstLinkOnStart; }
     public boolean secondUnlinkedOnStart() { return !mSecondLinkOnStart; }
 
+    public boolean getLinkedOnStart(final SvVarData var)
+    {
+        if(var.equals(mFirst))
+            return mFirstLinkOnStart;
+        else
+            return mSecondLinkOnStart;
+    }
+
     public final String linkType() { return mLinkType; }
     public final int length() { return mLinkLength; }
 
     public void setIsInferred(boolean toggle) { mIsInferred = toggle; }
     public boolean isInferred() { return mIsInferred; }
+
+    public void setInfo(final String info) { mLinkInfo = info; }
+    public final String getInfo() { return mLinkInfo; }
 
     public boolean hasVariantBE(final SvVarData var, boolean useStart)
     {

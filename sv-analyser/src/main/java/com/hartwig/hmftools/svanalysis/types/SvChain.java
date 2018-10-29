@@ -23,6 +23,7 @@ public class SvChain {
     private int mLength;
     private boolean mIsClosedLoop;
     private boolean mIsValid;
+    private boolean mHasReplicatedSVs;
 
     private String mStartFinishChromosome;
     private String mStartFinishArm;
@@ -43,6 +44,7 @@ public class SvChain {
         mStartFinishChromosome = "";
         mStartFinishArm = "";
         mConsistencyCount = 0;
+        mHasReplicatedSVs = false;
     }
 
     public SvChain(final SvChain other)
@@ -54,6 +56,7 @@ public class SvChain {
         mLength = 0;
         mIsClosedLoop = false;
         mIsValid = true;
+        mHasReplicatedSVs = false;
 
         for(final SvLinkedPair pair : other.getLinkedPairs())
         {
@@ -85,7 +88,11 @@ public class SvChain {
         final SvVarData first = pair.first();
         final SvVarData second = pair.second();
 
-        boolean containsBoth = mSvList.contains(first) && mSvList.contains(second);
+        boolean containsFirst = mSvList.contains(first);
+        boolean containsSecond = mSvList.contains(second);
+
+        if(containsFirst || containsSecond)
+            mHasReplicatedSVs = true;
 
         if(mSvList.isEmpty())
         {
@@ -99,7 +106,7 @@ public class SvChain {
 
         int lastIndex = mSvList.size() - 1;
 
-        if(containsBoth)
+        if(containsFirst && containsSecond)
         {
             // check that these SVs are at the start and end, otherwise the new link is invalid
             if((mSvList.get(0) == first && mSvList.get(lastIndex) != second) || (mSvList.get(0) == second && mSvList.get(lastIndex) != first))
@@ -169,6 +176,7 @@ public class SvChain {
     }
 
     public boolean isClosedLoop() { return mIsClosedLoop; }
+    public boolean hasReplicatedSVs() { return mHasReplicatedSVs; }
 
     private void setStartFinishStatus()
     {
@@ -353,30 +361,6 @@ public class SvChain {
         }
 
         return count;
-    }
-
-    public int getTICount()
-    {
-        int tiCount = 0;
-        for(final SvLinkedPair pair : mLinkedPairs)
-        {
-            if(pair.linkType() == SvLinkedPair.LINK_TYPE_TI)
-                ++tiCount;
-        }
-
-        return tiCount;
-    }
-
-    public int getDBCount()
-    {
-        int dbCount = 0;
-        for(final SvLinkedPair pair : mLinkedPairs)
-        {
-            if(pair.linkType() == SvLinkedPair.LINK_TYPE_DB)
-                ++dbCount;
-        }
-
-        return dbCount;
     }
 
     public int getSvIndex(final SvVarData var)
