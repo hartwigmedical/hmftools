@@ -50,7 +50,7 @@
 //
 //        final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDir);
 //        final List<SomaticVariant> variants = loadPassedSomaticVariants(run.tumorSample(), runDir);
-//        final List<GeneCopyNumber> geneCopyNumbers = loadPurpleGeneCopyNumbers(runDir, run.tumorSample());
+//        final List<GeneCopyNumber> exomeGeneCopyNumbers = loadPurpleGeneCopyNumbers(runDir, run.tumorSample());
 //        final String patientIdentifier = toPatientIdentifier(run.tumorSample());
 //        LOGGER.info("Tumor sample: " + run.tumorSample());
 //        LOGGER.info("patientId: " + patientIdentifier);
@@ -115,7 +115,7 @@
 //        LOGGER.info("Start processing actionability cnvs");
 //        String fileActionabilityCNVs = "/data/common/dbs/knowledgebases/output/evidenceForCopyNumberEvent.tsv";
 //
-//        LOGGER.info("CNVs: " + geneCopyNumbers.size());
+//        LOGGER.info("CNVs: " + exomeGeneCopyNumbers.size());
 //        if (Files.exists(new File(fileActionabilityCNVs).toPath()) && Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
 //            CopyNumberEvidenceAnalyzer analyzerCNVs = CopyNumberEvidenceAnalyzer.loadFromFileCNVs(fileActionabilityCNVs);
 //            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
@@ -124,7 +124,7 @@
 //            LOGGER.info(actionableGenesCNVS.size() + " actionable genes found for cnvs");
 //            LOGGER.info("");
 //
-//            List<GeneCopyNumber> variantsOnActionableGenes = geneCopyNumbers.stream()
+//            List<GeneCopyNumber> variantsOnActionableGenes = exomeGeneCopyNumbers.stream()
 //                    .filter(geneCopyNumber -> actionableGenesCNVS.contains(geneCopyNumber.gene()))
 //                    .collect(Collectors.toList());
 //

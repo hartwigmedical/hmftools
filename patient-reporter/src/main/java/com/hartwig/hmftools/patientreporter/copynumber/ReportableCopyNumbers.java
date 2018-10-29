@@ -21,10 +21,10 @@ final class ReportableCopyNumbers {
     }
 
     @NotNull
-    static List<GeneCopyNumber> filterCopyNumbersForReport(final double samplePloidy, @NotNull final List<GeneCopyNumber> geneCopyNumbers,
-            @NotNull GeneModel panelGeneModel) {
+    static List<GeneCopyNumber> filterCopyNumbersForReporting(@NotNull final List<GeneCopyNumber> geneCopyNumbers,
+            double averageTumorPloidy, @NotNull GeneModel panelGeneModel) {
         return geneCopyNumbers.stream()
-                .filter(copyNumber -> includeInReport(samplePloidy,
+                .filter(copyNumber -> includeInReport(averageTumorPloidy,
                         copyNumber.value(),
                         panelGeneModel.isAmplificationReportable(copyNumber.gene()),
                         panelGeneModel.isDeletionReportable(copyNumber.gene())))
@@ -32,13 +32,13 @@ final class ReportableCopyNumbers {
     }
 
     @VisibleForTesting
-    static boolean includeInReport(final double samplePloidy, final double copyNumber, boolean isAmplificationReportable,
+    static boolean includeInReport(double averageTumorPloidy, double copyNumber, boolean isAmplificationReportable,
             boolean isDeletionReportable) {
         if (Doubles.lessOrEqual(copyNumber, ABS_LOSS) && isDeletionReportable) {
             return true;
         }
 
-        double relativeCopyNumber = copyNumber / samplePloidy;
+        double relativeCopyNumber = copyNumber / averageTumorPloidy;
         return Doubles.greaterOrEqual(relativeCopyNumber, REL_GAIN) && isAmplificationReportable;
     }
 }

@@ -39,7 +39,7 @@ public class SomaticVariantAnalyzerTest {
 //        SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants,
 //                Sets.newHashSet(RIGHT_GENE),
 //                Maps.newHashMap(),
-//                null, geneCopyNumbers, geneFusion);
+//                null, exomeGeneCopyNumbers, geneFusion);
 //
 //        assertEquals(2, analysis.tumorMutationalLoad());
 //        assertEquals(2, analysis.reportableSomaticVariants().size());
@@ -49,7 +49,7 @@ public class SomaticVariantAnalyzerTest {
 //        SomaticVariantAnalysis analysisOnco = SomaticVariantAnalyzer.run(variants,
 //                Sets.newHashSet(RIGHT_GENE),
 //                driverCategoryMap,
-//                null, geneCopyNumbers, geneFusion);
+//                null, exomeGeneCopyNumbers, geneFusion);
 //
 //        assertEquals(2, analysisOnco.tumorMutationalLoad());
 //        assertEquals(1, analysisOnco.reportableSomaticVariants().size());

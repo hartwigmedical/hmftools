@@ -9,7 +9,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 
 import org.jetbrains.annotations.NotNull;
@@ -18,28 +17,6 @@ import org.jetbrains.annotations.Nullable;
 public final class ActionabilityVariantAnalyzer {
 
     private ActionabilityVariantAnalyzer() {
-    }
-
-    @NotNull
-    public static Map<GeneCopyNumber, List<EvidenceItem>> findEvidenceForCopyNumber(@NotNull Set<String> actionableGenesVariantsCNVs,
-            @NotNull List<GeneCopyNumber> CNVs, @Nullable String doidsPrimaryTumorLocation,
-            @NotNull ActionabilityAnalyzer actionabilityAnalyzerData, final double purplePloidy) {
-        Map<GeneCopyNumber, List<EvidenceItem>> evidenceItemsCopyNumber = Maps.newHashMap();
-
-        List<GeneCopyNumber> cnvsOnActionableGenes = CNVs.stream()
-                .filter(geneCopyNumber -> actionableGenesVariantsCNVs.contains(geneCopyNumber.gene()))
-                .collect(Collectors.toList());
-
-        for (GeneCopyNumber CNV : cnvsOnActionableGenes) {
-            evidenceItemsCopyNumber.put(CNV,
-                    actionabilityAnalyzerData.cnvAnalyzer()
-                            .evidenceForCopyNumberEvent(CNV,
-                                    doidsPrimaryTumorLocation,
-                                    actionabilityAnalyzerData.cancerTypeAnalyzer(),
-                                    purplePloidy));
-        }
-
-        return evidenceItemsCopyNumber;
     }
 
     @NotNull
