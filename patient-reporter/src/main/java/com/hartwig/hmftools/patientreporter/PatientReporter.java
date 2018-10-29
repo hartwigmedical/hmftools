@@ -43,12 +43,12 @@ import com.hartwig.hmftools.patientreporter.copynumber.ImmutablePurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
-import com.hartwig.hmftools.patientreporter.structural.ImmutableStructuralVariantReport;
+import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableStructuralVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruptionFactory;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusionFactory;
-import com.hartwig.hmftools.patientreporter.structural.StructuralVariantReport;
+import com.hartwig.hmftools.patientreporter.structural.ReportableStructuralVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalyzer;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
@@ -94,7 +94,7 @@ abstract class PatientReporter {
         final List<GeneCopyNumber> reportableGeneCopynumbers =
                 purpleAnalysis.reportableGeneCopyNumbers(sequencedReportData().panelGeneModel());
 
-        final StructuralVariantReport structuralVariantReport = analyzeStructuralVariants(run,
+        final ReportableStructuralVariantAnalysis reportableStructuralVariantAnalysis = analyzeStructuralVariants(run,
                 purpleAnalysis,
                 structuralVariantAnalyzer(),
                 patientTumorLocation,
@@ -122,8 +122,8 @@ abstract class PatientReporter {
         LOGGER.info(" CHORD analysis HRD prediction: " + Double.toString(chordAnalysis.hrdValue()));
         LOGGER.info(" Number of germline variants to report : " + Integer.toString(germlineVariants != null ? germlineVariants.size() : 0));
         LOGGER.info(" Number of copy number events to report: " + Integer.toString(reportableGeneCopynumbers.size()));
-        LOGGER.info(" Number of gene fusions to report : " + Integer.toString(structuralVariantReport.reportableFusions().size()));
-        LOGGER.info(" Number of gene disruptions to report : " + Integer.toString(structuralVariantReport.reportableDisruptions().size()));
+        LOGGER.info(" Number of gene fusions to report : " + Integer.toString(reportableStructuralVariantAnalysis.reportableFusions().size()));
+        LOGGER.info(" Number of gene disruptions to report : " + Integer.toString(reportableStructuralVariantAnalysis.reportableDisruptions().size()));
 
         final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample,
                 patientTumorLocation,
@@ -143,7 +143,7 @@ abstract class PatientReporter {
             evidenceItems.addAll(evidencePerCNV.getValue());
         }
 
-        for (Map.Entry<GeneFusion, List<EvidenceItem>> evidencePerFusion : structuralVariantReport.evidencePerFusion().entrySet()) {
+        for (Map.Entry<GeneFusion, List<EvidenceItem>> evidencePerFusion : reportableStructuralVariantAnalysis.evidencePerFusion().entrySet()) {
             evidenceItems.addAll(evidencePerFusion.getValue());
         }
 
@@ -151,7 +151,7 @@ abstract class PatientReporter {
         LOGGER.info(" Number of evidence items based on variants: " + Integer.toString(somaticVariantAnalysis.evidencePerVariant().size()));
         LOGGER.info(
                 " Number of evidence items based on copy numbers: " + Integer.toString(purpleAnalysis.evidencePerGeneCopyNumber().size()));
-        LOGGER.info(" Number of evidence items based on fusions: " + Integer.toString(structuralVariantReport.evidencePerFusion().size()));
+        LOGGER.info(" Number of evidence items based on fusions: " + Integer.toString(reportableStructuralVariantAnalysis.evidencePerFusion().size()));
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
                 purpleAnalysis.status(),
@@ -166,8 +166,8 @@ abstract class PatientReporter {
                 germlineVariants != null,
                 germlineVariants != null ? germlineVariants : Lists.newArrayList(),
                 reportableGeneCopynumbers,
-                structuralVariantReport.reportableFusions(),
-                structuralVariantReport.reportableDisruptions(),
+                reportableStructuralVariantAnalysis.reportableFusions(),
+                reportableStructuralVariantAnalysis.reportableDisruptions(),
                 PatientReporterFileLoader.findCircosPlotPath(runDirectory, tumorSample),
                 Optional.ofNullable(comments),
                 baseReportData().signaturePath(),
@@ -260,7 +260,7 @@ abstract class PatientReporter {
     }
 
     @NotNull
-    private static StructuralVariantReport analyzeStructuralVariants(@NotNull RunContext run, @NotNull PurpleAnalysis purpleAnalysis,
+    private static ReportableStructuralVariantAnalysis analyzeStructuralVariants(@NotNull RunContext run, @NotNull PurpleAnalysis purpleAnalysis,
             @NotNull StructuralVariantAnalyzer structuralVariantAnalyzer, @Nullable PatientTumorLocation patientTumorLocation,
             @NotNull ActionabilityAnalyzer actionabilityAnalyzer) throws IOException {
         final Path structuralVariantVCF = PatientReporterFileLoader.findStructuralVariantVCF(run.runDirectory());
@@ -295,7 +295,7 @@ abstract class PatientReporter {
                 doidsPrimaryTumorLocation,
                 actionabilityAnalyzer);
 
-        return ImmutableStructuralVariantReport.of(reportableFusions, reportableDisruptions, evidencePerFusion);
+        return ImmutableReportableStructuralVariantAnalysis.of(reportableFusions, reportableDisruptions, evidencePerFusion);
     }
 
     @Nullable
