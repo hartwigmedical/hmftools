@@ -91,7 +91,7 @@ public class PDFWriter {
         final ComponentBuilder<?, ?> totalReport = cmp.multiPageList()
                 .add(ImmutableEvidencePage.of(report).reportComponent())
                 .newPage()
-                .add(ImmutableFindingsPage.of(report, reporterData).reportComponent())
+                .add(ImmutableFindingsPage.of(report).reportComponent())
                 .newPage()
                 .add(ImmutableCircosPage.of(report.circosPath()).reportComponent())
                 .newPage()
@@ -120,10 +120,7 @@ public class PDFWriter {
 
     @NotNull
     private static ComponentBuilder<?, ?> logoRVAfooter(@NotNull final String logoPath) {
-        return cmp.horizontalList(cmp.horizontalGap(370),
-                cmp.xyList()
-                        .add(40, 5, cmp.image(logoPath)),
-                cmp.verticalGap(120));
+        return cmp.horizontalList(cmp.horizontalGap(370), cmp.xyList().add(40, 5, cmp.image(logoPath)), cmp.verticalGap(120));
     }
 
     @NotNull

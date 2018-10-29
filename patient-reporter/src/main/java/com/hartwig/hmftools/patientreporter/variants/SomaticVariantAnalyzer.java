@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.actionability.ActionabilityVariantAnalyzer;
 
 import org.apache.logging.log4j.LogManager;
@@ -40,10 +41,9 @@ public final class SomaticVariantAnalyzer {
 
     @NotNull
     public static SomaticVariantAnalysis run(@NotNull final List<EnrichedSomaticVariant> variants, @NotNull Set<String> genePanel,
-            @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap, @Nullable PatientTumorLocation patientTumorLocation,
-            @NotNull ActionabilityAnalyzer actionabilityAnalyzerData) throws IOException {
-        final List<EnrichedSomaticVariant> variantsToReport =
-                variants.stream().filter(includeFilter(genePanel, driverCategoryPerGeneMap)).collect(Collectors.toList());
+            @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap, @NotNull Set<String> drupActionableGenes,
+            @Nullable PatientTumorLocation patientTumorLocation, @NotNull ActionabilityAnalyzer actionabilityAnalyzerData)
+            throws IOException {
         final double microsatelliteIndelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
         final int tumorMutationalLoad = MutationalLoadAnalyzer.determineTumorMutationalLoad(variants);
         final double tumorMutationalBurden = MutationalBurdenAnalyzer.determineTumorMutationalBurden(variants);
@@ -51,6 +51,12 @@ public final class SomaticVariantAnalyzer {
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
         driverCatalog.addAll(OncoDrivers.drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), variants));
         driverCatalog.addAll(TsgDrivers.drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), variants));
+
+        final List<EnrichedSomaticVariant> variantsToReport =
+                variants.stream().filter(includeFilter(genePanel, driverCategoryPerGeneMap)).collect(Collectors.toList());
+
+        final List<ReportableSomaticVariant> reportableVariants =
+                toReportableSomaticVariants(variantsToReport, driverCatalog, driverCategoryPerGeneMap, drupActionableGenes);
 
         final String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : Strings.EMPTY;
         CancerTypeMappingReading cancerTypeMappingReading = CancerTypeMappingReading.readingFile();
@@ -61,19 +67,62 @@ public final class SomaticVariantAnalyzer {
 
         Set<String> actionableGenesVariants = actionabilityAnalyzerData.variantAnalyzer().actionableGenes();
 
-        LOGGER.info("evidencePerVariant items variants");
+        LOGGER.info("Looking for actionability for somatic variants");
         Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant = ActionabilityVariantAnalyzer.findEvidenceForVariants(
                 actionableGenesVariants,
                 variants,
                 doidsPrimaryTumorLocation,
                 actionabilityAnalyzerData);
 
-        return ImmutableSomaticVariantAnalysis.of(variantsToReport,
-                driverCatalog,
+
+        return ImmutableSomaticVariantAnalysis.of(reportableVariants,
                 evidencePerVariant,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
                 tumorMutationalBurden);
+    }
+
+    @NotNull
+    private static List<ReportableSomaticVariant> toReportableSomaticVariants(@NotNull List<EnrichedSomaticVariant> variants,
+            @NotNull List<DriverCatalog> driverCatalog, @NotNull Map<String, DriverCategory> driverCategoryPerGene,
+            @NotNull Set<String> drupActionableGenes) {
+        List<ReportableSomaticVariant> reportableVariants = Lists.newArrayList();
+        for (EnrichedSomaticVariant variant : variants) {
+            DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant);
+
+            reportableVariants.add(fromVariant(variant).isDrupActionable(drupActionableGenes.contains(variant.gene()))
+                    .driverCategory(driverCategoryPerGene.get(variant.gene()))
+                    .driverLikelihood(catalog != null ? catalog.driverLikelihood() : null)
+                    .build());
+        }
+
+        return reportableVariants;
+    }
+
+    @Nullable
+    private static DriverCatalog catalogEntryForVariant(@NotNull List<DriverCatalog> driverCatalogList, @NotNull SomaticVariant variant) {
+        for (DriverCatalog entry : driverCatalogList) {
+            if (entry.gene().equals(variant.gene())) {
+                return entry;
+            }
+        }
+        return null;
+    }
+
+    @NotNull
+    private static ImmutableReportableSomaticVariant.Builder fromVariant(@NotNull EnrichedSomaticVariant variant) {
+        return ImmutableReportableSomaticVariant.builder()
+                .gene(variant.gene())
+                .hgvsCodingImpact(variant.canonicalHgvsCodingImpact())
+                .hgvsProteinImpact(variant.canonicalHgvsProteinImpact())
+                .totalReadCount(variant.totalReadCount())
+                .alleleReadCount(variant.alleleReadCount())
+                .hotspot(variant.hotspot())
+                .clonality(variant.clonality())
+                .adjustedCopyNumber(variant.adjustedCopyNumber())
+                .adjustedVAF(variant.adjustedVAF())
+                .minorAllelePloidy(variant.minorAllelePloidy())
+                .biallelic(variant.biallelic());
     }
 
     @NotNull
@@ -94,7 +143,7 @@ public final class SomaticVariantAnalyzer {
             } else if (driverCategoryPerGeneMap.get(variant.gene()) == DriverCategory.ONCO) {
                 return ONCO_CODING_EFFECTS_TO_REPORT.contains(effect);
             } else {
-                // KODU: If a hgvsCodingImpact has uncertain driver category we should always report.
+                // KODU: If a variant has uncertain driver category we should always report.
                 return TSG_CODING_EFFECTS_TO_REPORT.contains(effect) || ONCO_CODING_EFFECTS_TO_REPORT.contains(effect);
             }
         };

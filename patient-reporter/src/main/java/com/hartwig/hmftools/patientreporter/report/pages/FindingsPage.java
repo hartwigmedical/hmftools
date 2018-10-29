@@ -12,8 +12,6 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.SequencedReportData;
-import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 import com.hartwig.hmftools.patientreporter.report.components.ChordSection;
 import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSection;
 import com.hartwig.hmftools.patientreporter.report.components.MutationalBurdenSection;
@@ -39,11 +37,8 @@ public abstract class FindingsPage {
     abstract AnalysedPatientReport report();
 
     @NotNull
-    abstract SequencedReportData reporterData();
-
-    @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
-        return cmp.verticalList(somaticVariantReport(report(), reporterData().panelGeneModel()),
+        return cmp.verticalList(somaticVariantReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 germlineVariantReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -63,7 +58,7 @@ public abstract class FindingsPage {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> somaticVariantReport(@NotNull AnalysedPatientReport report, @NotNull GeneModel panelGeneModel) {
+    private static ComponentBuilder<?, ?> somaticVariantReport(@NotNull AnalysedPatientReport report) {
         final String drupEligibilityAddition = "Marked genes (*) are included in the DRUP study and indicate potential "
                 + "eligibility in DRUP. Please note that the marking is NOT based on the specific mutation reported for "
                 + "this sample, but only on a gene-level.";
@@ -80,10 +75,7 @@ public abstract class FindingsPage {
                                 col.column("Clonality", SomaticVariantDataSource.CLONAL_STATUS_FIELD),
                                 col.column("Biallelic", SomaticVariantDataSource.BIALLELIC_FIELD),
                                 col.column("Driver", SomaticVariantDataSource.DRIVER_FIELD)))
-                        .setDataSource(SomaticVariantDataSource.fromVariants(report.fitStatus(),
-                                report.somaticVariants(),
-                                report.somaticVariantDriverCatalog(),
-                                panelGeneModel))
+                        .setDataSource(SomaticVariantDataSource.fromVariants(report.fitStatus(), report.somaticVariants()))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
@@ -97,8 +89,7 @@ public abstract class FindingsPage {
 
     @NotNull
     private static ComponentBuilder<?, ?> germlineVariantReport(@NotNull AnalysedPatientReport report) {
-        String noVariantsFoundText =
-                report.hasGermlineAnalysis() ? "None" : "Reporting of HR-related germline variants is not available";
+        String noVariantsFoundText = report.hasGermlineAnalysis() ? "None" : "Reporting of HR-related germline variants is not available";
         final ComponentBuilder<?, ?> table =
                 !report.germlineVariants().isEmpty() && report.hasGermlineAnalysis()
                         ? cmp.subreport(monospaceBaseTable().fields(GermlineVariantDataSource.fields())

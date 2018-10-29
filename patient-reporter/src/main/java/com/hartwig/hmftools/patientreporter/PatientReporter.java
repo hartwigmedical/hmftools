@@ -114,7 +114,7 @@ abstract class PatientReporter {
         final List<GermlineVariant> germlineVariants = doReportGermline ? analyzeGermlineVariants(run) : null;
 
         LOGGER.info("Printing analysis results:");
-        LOGGER.info(" Number of somatic variants to report : " + Integer.toString(somaticVariantAnalysis.variantsToReport().size()));
+        LOGGER.info(" Number of somatic variants to report : " + Integer.toString(somaticVariantAnalysis.reportableSomaticVariants().size()));
         LOGGER.info(" Microsatellite analysis results: " + Double.toString(somaticVariantAnalysis.microsatelliteIndelsPerMb())
                 + " indels per MB");
         LOGGER.info(" Tumor mutational load: " + Integer.toString(somaticVariantAnalysis.tumorMutationalLoad()));
@@ -157,8 +157,7 @@ abstract class PatientReporter {
                 purpleAnalysis.status(),
                 purpleAnalysis.fittedPurity().purity(),
                 evidenceItems,
-                somaticVariantAnalysis.variantsToReport(),
-                somaticVariantAnalysis.driverCatalog(),
+                somaticVariantAnalysis.reportableSomaticVariants(),
                 somaticVariantAnalysis.microsatelliteIndelsPerMb(),
                 somaticVariantAnalysis.tumorMutationalLoad(),
                 somaticVariantAnalysis.tumorMutationalBurden(),
@@ -238,6 +237,7 @@ abstract class PatientReporter {
         return SomaticVariantAnalyzer.run(enrichedSomaticVariants,
                 geneModel.somaticVariantGenePanel(),
                 geneModel.geneDriverCategoryMap(),
+                geneModel.drupActionableGenes().keySet(),
                 patientTumorLocation,
                 actionabilityAnalyzerData);
     }

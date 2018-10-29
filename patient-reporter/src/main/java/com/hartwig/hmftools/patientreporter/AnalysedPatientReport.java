@@ -4,14 +4,13 @@ import java.util.List;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.patientreporter.chord.ChordAnalysis;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
+import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -34,10 +33,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract List<EvidenceItem> evidenceItems();
 
     @NotNull
-    public abstract List<EnrichedSomaticVariant> somaticVariants();
-
-    @NotNull
-    public abstract List<DriverCatalog> somaticVariantDriverCatalog();
+    public abstract List<ReportableSomaticVariant> somaticVariants();
 
     public abstract double microsatelliteIndelsPerMb();
 
