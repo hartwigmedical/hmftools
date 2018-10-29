@@ -173,7 +173,7 @@ public class ClusterAnalyser {
             mLinkFinder.resolveTransitiveSVs(mSampleId, cluster);
             cacheFinalLinkedPairs(cluster);
 
-            reportChainFeatures(cluster);
+            // reportChainFeatures(cluster);
         }
     }
 
@@ -652,29 +652,41 @@ public class ClusterAnalyser {
                 // look for repeated sections forwards or backwards from this point
                 List<SvVarData> forwardRepeats = getRepeatedSvSequence(svList, i, j, true);
 
-                if(!forwardRepeats.isEmpty())
-                {
-                    // ClusterId,ChainId,SvId1,SvId2,IsOutAndBack,TILength,IsAssembly,ChainLinks,HasReplication
-                    LOGGER.info("CF_REPEAT_SEQ: {},{},{},{},{}",
-                            cluster.getId(), chain.getId(), var1.id(), forwardRepeats.size() + 1, true);
-
-                    replicatedSVs.addAll(forwardRepeats);
-                    break;
-                }
-
-                forwardRepeats = getRepeatedSvSequence(svList, i, j, false);
+                boolean forwardSequence = false;
 
                 if(!forwardRepeats.isEmpty())
                 {
-                    // ClusterId,ChainId,SvId,SequenceCount,MatchDirection
-                    LOGGER.info("CF_REPEAT_SEQ: {},{},{},{},{}",
-                            cluster.getId(), chain.getId(), var1.id(), forwardRepeats.size() + 1, false);
-
+                    forwardSequence = true;
                     replicatedSVs.addAll(forwardRepeats);
+                }
+                else
+                {
+                    forwardSequence = false;
+                    forwardRepeats = getRepeatedSvSequence(svList, i, j, false);
+                }
+
+                if(!forwardRepeats.isEmpty())
+                {
+                    replicatedSVs.addAll(forwardRepeats);
+
+                    forwardRepeats.set(0, var1);
+
+                    String svIds = var1.id();
+                    for(int k = 1; k < forwardRepeats.size(); ++k)
+                        svIds += ";" + forwardRepeats.get(k).id();
+
+                    LOGGER.info("sample({}) cluster({}) chain({}) {} sequence of {} SVs starting at index({}:{}) SV({})",
+                            mSampleId, cluster.getId(), chain.getId(), forwardSequence ? "forward" : "reverse",
+                            forwardRepeats.size(), i, j, var1.id());
+
+                    // ClusterId,ChainId,SequenceCount,VarIds,MatchDirection
+                    LOGGER.info("CF_REPEAT_SEQ: {},{},{},{},{},{}",
+                            mSampleId, cluster.getId(), chain.getId(), forwardRepeats.size(), svIds, forwardSequence);
+
                     break;
                 }
 
-                // not sequence found
+                // no sequence found
             }
         }
     }
@@ -684,15 +696,15 @@ public class ClusterAnalyser {
         // walk forward from these 2 start points comparing SVs
         List<SvVarData> sequence = Lists.newArrayList();
 
-        int i = firstIndex + 1;
-        int j = secondIndex;
+        int i = firstIndex;
+        int j = secondIndex + 1;
 
         if(walkForwards)
-            ++j;
+            ++i;
         else
-            --j;
+            --i;
 
-        while(i < secondIndex && i < j && j < svList.size())
+        while(i < secondIndex && i >= 0 && j < svList.size())
         {
             final SvVarData var1 = svList.get(i);
             final SvVarData var2 = svList.get(j);
@@ -702,10 +714,12 @@ public class ClusterAnalyser {
 
             sequence.add(var1);
 
+            ++j;
+
             if(walkForwards)
-                ++j;
+                ++i;
             else
-                --j;
+                --i;
         }
 
         return sequence;
@@ -751,9 +765,9 @@ public class ClusterAnalyser {
 
                     nextPair.setInfo("TransTI");
 
-                    // ClusterId,ChainId,SvId1,SvId2,IsOutAndBack,TILength,IsAssembly,ChainLinks,HasReplication
-                    LOGGER.info("CF_TRANS_TI: {},{},{},{},{},{},{},{},{}",
-                            cluster.getId(), chain.getId(), svForward.id(), nextSvForward.id(),
+                    // SampleId, ClusterId,ChainId,SvId1,SvId2,IsOutAndBack,TILength,IsAssembly,ChainLinks,HasReplication
+                    LOGGER.info("CF_TRANS_TI: {},{},{},{},{},{},{},{},{},{}",
+                            mSampleId, cluster.getId(), chain.getId(), svForward.id(), nextSvForward.id(),
                             outAndBack, nextPair.length(), !nextPair.isInferred(), chain.getLinkCount(), hasReplication);
                 }
             }
