@@ -19,7 +19,6 @@ import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.patientreporter.actionability.ActionabilityVariantAnalyzer;
 
 import org.apache.logging.log4j.LogManager;
@@ -42,7 +41,7 @@ public final class SomaticVariantAnalyzer {
     @NotNull
     public static SomaticVariantAnalysis run(@NotNull final List<EnrichedSomaticVariant> variants, @NotNull Set<String> genePanel,
             @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap, @Nullable PatientTumorLocation patientTumorLocation,
-            @NotNull List<GeneFusion> fusions, @NotNull ActionabilityAnalyzer actionabilityAnalyzerData) throws IOException {
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzerData) throws IOException {
         final List<EnrichedSomaticVariant> variantsToReport =
                 variants.stream().filter(includeFilter(genePanel, driverCategoryPerGeneMap)).collect(Collectors.toList());
         final double microsatelliteIndelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
@@ -61,7 +60,6 @@ public final class SomaticVariantAnalyzer {
         LOGGER.info("doid: " + doidsPrimaryTumorLocation);
 
         Set<String> actionableGenesVariants = actionabilityAnalyzerData.variantAnalyzer().actionableGenes();
-        Set<String> actionableFusions = actionabilityAnalyzerData.fusionAnalyzer().actionableGenes();
 
         LOGGER.info("evidencePerVariant items variants");
         Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant = ActionabilityVariantAnalyzer.findEvidenceForVariants(
@@ -70,19 +68,12 @@ public final class SomaticVariantAnalyzer {
                 doidsPrimaryTumorLocation,
                 actionabilityAnalyzerData);
 
-        LOGGER.info("evidencePerVariant items fusions");
-        Map<GeneFusion, List<EvidenceItem>> evidencePerFusion = ActionabilityVariantAnalyzer.findEvidenceForFusions(actionableFusions,
-                fusions,
-                doidsPrimaryTumorLocation,
-                actionabilityAnalyzerData);
-
         return ImmutableSomaticVariantAnalysis.of(variantsToReport,
                 driverCatalog,
+                evidencePerVariant,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
-                tumorMutationalBurden,
-                evidencePerVariant,
-                evidencePerFusion);
+                tumorMutationalBurden);
     }
 
     @NotNull
