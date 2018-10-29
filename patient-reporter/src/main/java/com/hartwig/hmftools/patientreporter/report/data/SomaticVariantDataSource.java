@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
 
@@ -39,7 +38,7 @@ public final class SomaticVariantDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromVariants(@NotNull FittedPurityStatus fitStatus, @NotNull List<ReportableSomaticVariant> variants) {
+    public static JRDataSource fromVariants(@NotNull List<ReportableSomaticVariant> variants, boolean hasReliablePurityFit) {
         final DRDataSource variantDataSource = new DRDataSource(GENE_FIELD.getName(),
                 VARIANT_FIELD.getName(),
                 IMPACT_FIELD.getName(),
@@ -66,9 +65,9 @@ public final class SomaticVariantDataSource {
                     variant.hgvsProteinImpact(),
                     PatientReportFormat.readDepthField(variant),
                     hotspotField(variant),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyVaf),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, clonalityField(variant)),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, biallelic),
+                    PatientReportFormat.correctValueForFitReliability(ploidyVaf, hasReliablePurityFit),
+                    PatientReportFormat.correctValueForFitReliability(clonalityField(variant), hasReliablePurityFit),
+                    PatientReportFormat.correctValueForFitReliability(biallelic, hasReliablePurityFit),
                     driverField(variant));
         }
 

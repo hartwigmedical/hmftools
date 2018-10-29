@@ -12,7 +12,6 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
-import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.report.Commons;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
@@ -54,9 +53,7 @@ public abstract class EvidencePage {
 
     @NotNull
     public static String impliedPurityString(@NotNull AnalysedPatientReport report) {
-        return report.fitStatus() == FittedPurityStatus.NO_TUMOR
-                ? "[below detection threshold]"
-                : PatientReportFormat.formatPercent(report.impliedPurity());
+        return report.hasReliablePurityFit() ? PatientReportFormat.formatPercent(report.impliedPurity()) : "[below detection threshold]";
     }
 
     @NotNull
@@ -93,20 +90,19 @@ public abstract class EvidencePage {
 
     @NotNull
     private static ComponentBuilder<?, ?> evidenceItemReport(@NotNull AnalysedPatientReport report) {
-        final ComponentBuilder<?, ?> table =
-                report.clinicalEvidence().size() > 0
-                        ? cmp.subreport(monospaceBaseTable().fields(EvidenceItemDataSource.evidenceItemFields())
-                        .columns(col.column("Event", EvidenceItemDataSource.EVENT_FIELD).setFixedWidth(120),
-                                col.column("Drug", EvidenceItemDataSource.DRUG_FIELD),
-                                col.column("Drugs type", EvidenceItemDataSource.DRUGS_TYPE_FIELD),
-                                col.column("Level", EvidenceItemDataSource.LEVEL_FIELD),
-                                col.column("Response", EvidenceItemDataSource.RESPONSE_FIELD),
-                                col.column("Source", EvidenceItemDataSource.SOURCE_FIELD)
-                                        .setHyperLink(hyperLink(EvidenceItemDataSource.sourceHyperlink()))
-                                        .setStyle(linkStyle()),
-                                col.column("On-Label", EvidenceItemDataSource.ON_LABEL_FIELD))
-                        .setDataSource(EvidenceItemDataSource.fromEvidenceItems(report.clinicalEvidence())))
-                        : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
+        final ComponentBuilder<?, ?> table = report.clinicalEvidence().size() > 0
+                ? cmp.subreport(monospaceBaseTable().fields(EvidenceItemDataSource.evidenceItemFields())
+                .columns(col.column("Event", EvidenceItemDataSource.EVENT_FIELD).setFixedWidth(120),
+                        col.column("Drug", EvidenceItemDataSource.DRUG_FIELD),
+                        col.column("Drugs type", EvidenceItemDataSource.DRUGS_TYPE_FIELD),
+                        col.column("Level", EvidenceItemDataSource.LEVEL_FIELD),
+                        col.column("Response", EvidenceItemDataSource.RESPONSE_FIELD),
+                        col.column("Source", EvidenceItemDataSource.SOURCE_FIELD)
+                                .setHyperLink(hyperLink(EvidenceItemDataSource.sourceHyperlink()))
+                                .setStyle(linkStyle()),
+                        col.column("On-Label", EvidenceItemDataSource.ON_LABEL_FIELD))
+                .setDataSource(EvidenceItemDataSource.fromEvidenceItems(report.clinicalEvidence())))
+                : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Clinical Evidence").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
@@ -115,18 +111,17 @@ public abstract class EvidencePage {
 
     @NotNull
     private static ComponentBuilder<?, ?> clinicalTrialReport(@NotNull AnalysedPatientReport report) {
-        final ComponentBuilder<?, ?> table =
-                report.clinicalTrials().size() > 0
-                        ? cmp.subreport(monospaceBaseTable().fields(ClinicalTrialDataSource.clinicalTrialFields())
-                        .columns(col.column("Event", ClinicalTrialDataSource.EVENT_FIELD).setFixedWidth(120),
-                                col.column("Trial", ClinicalTrialDataSource.TRIAL_FIELD),
-                                col.column("Source", ClinicalTrialDataSource.SOURCE_FIELD)
-                                        .setHyperLink(hyperLink(ClinicalTrialDataSource.sourceHyperlink()))
-                                        .setStyle(linkStyle()),
-                                col.column("CCMO", ClinicalTrialDataSource.CCMO_FIELD),
-                                col.column("On-Label", ClinicalTrialDataSource.ON_LABEL_FIELD))
-                        .setDataSource(ClinicalTrialDataSource.fromClinicalTrials(report.clinicalTrials())))
-                        : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
+        final ComponentBuilder<?, ?> table = report.clinicalTrials().size() > 0
+                ? cmp.subreport(monospaceBaseTable().fields(ClinicalTrialDataSource.clinicalTrialFields())
+                .columns(col.column("Event", ClinicalTrialDataSource.EVENT_FIELD).setFixedWidth(120),
+                        col.column("Trial", ClinicalTrialDataSource.TRIAL_FIELD),
+                        col.column("Source", ClinicalTrialDataSource.SOURCE_FIELD)
+                                .setHyperLink(hyperLink(ClinicalTrialDataSource.sourceHyperlink()))
+                                .setStyle(linkStyle()),
+                        col.column("CCMO", ClinicalTrialDataSource.CCMO_FIELD),
+                        col.column("On-Label", ClinicalTrialDataSource.ON_LABEL_FIELD))
+                .setDataSource(ClinicalTrialDataSource.fromClinicalTrials(report.clinicalTrials())))
+                : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Clinical Trials").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),

@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrial;
 import com.hartwig.hmftools.patientreporter.chord.ChordAnalysis;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
@@ -25,10 +24,9 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @Override
     public abstract SampleReport sampleReport();
 
-    @NotNull
-    public abstract FittedPurityStatus fitStatus();
-
     public abstract double impliedPurity();
+
+    public abstract boolean hasReliablePurityFit();
 
     @NotNull
     public abstract List<EvidenceItem> clinicalEvidence();

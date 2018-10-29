@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter.report.util;
 import static com.google.common.base.Strings.repeat;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
@@ -31,8 +30,8 @@ public final class PatientReportFormat {
     }
 
     @NotNull
-    public static String correctValueForFitStatus(@NotNull FittedPurityStatus fitStatus, @NotNull String value) {
-        return fitStatus != FittedPurityStatus.NO_TUMOR ? value : "N/A";
+    public static String correctValueForFitReliability(@NotNull String value, boolean hasReliablePurityFit) {
+        return hasReliablePurityFit ? value : "N/A";
     }
 
     @NotNull
@@ -56,8 +55,8 @@ public final class PatientReportFormat {
 
     @NotNull
     public static String ploidyVafField(double adjustedCopyNumber, double minorAllelePloidy, double adjustedVAF) {
-        return descriptiveBAF(adjustedCopyNumber, minorAllelePloidy) + " ("
-                + PatientReportFormat.formatPercent(Math.min(1, adjustedVAF)) + ")";
+        return descriptiveBAF(adjustedCopyNumber, minorAllelePloidy) + " (" + PatientReportFormat.formatPercent(Math.min(1, adjustedVAF))
+                + ")";
     }
 
     @NotNull

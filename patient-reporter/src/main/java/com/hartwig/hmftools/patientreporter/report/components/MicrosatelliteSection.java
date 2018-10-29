@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter.report.components;
 import java.awt.Color;
 import java.text.DecimalFormat;
 
-import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.jetbrains.annotations.NotNull;
@@ -19,21 +18,24 @@ public final class MicrosatelliteSection {
     private static final double END = 100;
 
     @NotNull
-    public static ComponentBuilder<?, ?> build(final double microsatelliteIndicator, @NotNull FittedPurityStatus fitStatus) {
+    public static ComponentBuilder<?, ?> build(double microsatelliteIndicator, boolean hasReliablePurityFit) {
         final int graphValue = computeGraphValue(microsatelliteIndicator);
         final int markerValue = computeGraphValue(MSI_THRESHOLD);
 
         final GradientBar gradient =
                 ImmutableGradientBar.of(new Color(239, 239, 239), new Color(171, 191, 171), "MSS", "MSI", graphValue, markerValue);
-        final SliderSection sliderSection =
-                ImmutableSliderSection.of("Microsatellite Status", interpret(microsatelliteIndicator, fitStatus), description(), gradient);
+        final SliderSection sliderSection = ImmutableSliderSection.of("Microsatellite Status",
+                interpret(microsatelliteIndicator, hasReliablePurityFit),
+                description(),
+                gradient);
         return sliderSection.build();
     }
 
     @NotNull
-    public static String interpret(final double microsatelliteIndicator, @NotNull FittedPurityStatus fitStatus) {
+    public static String interpret(double microsatelliteIndicator, boolean hasReliablePurityFit) {
         final String formattedMicrosatelliteIndicator =
-                PatientReportFormat.correctValueForFitStatus(fitStatus, new DecimalFormat("#.####").format(microsatelliteIndicator));
+                PatientReportFormat.correctValueForFitReliability(new DecimalFormat("#.####").format(microsatelliteIndicator),
+                        hasReliablePurityFit);
         if (microsatelliteIndicator > MSI_THRESHOLD) {
             return "Unstable (" + formattedMicrosatelliteIndicator + ")";
         } else {
@@ -41,7 +43,7 @@ public final class MicrosatelliteSection {
         }
     }
 
-    private static int computeGraphValue(final double value) {
+    private static int computeGraphValue(double value) {
         final double scaledStart = scale(START);
         final double scaledEnd = scale(END);
         final double scaledValue = scale(value);

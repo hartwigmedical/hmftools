@@ -11,7 +11,6 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
 
@@ -44,7 +43,7 @@ public final class GeneFusionDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromGeneFusions(@NotNull FittedPurityStatus fitStatus, @NotNull List<ReportableGeneFusion> fusions) {
+    public static JRDataSource fromGeneFusions(@NotNull List<ReportableGeneFusion> fusions, boolean hasReliablePurityFit) {
         final DRDataSource dataSource = new DRDataSource(FUSION_FIELD.getName(),
                 START_TRANSCRIPT_FIELD.getName(),
                 END_TRANSCRIPT_FIELD.getName(),
@@ -59,7 +58,7 @@ public final class GeneFusionDataSource {
                     fusion.geneEndTranscript(),
                     fusion.geneContextStart(),
                     fusion.geneContextEnd(),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyToCopiesString(fusion.ploidy())),
+                    PatientReportFormat.correctValueForFitReliability(ploidyToCopiesString(fusion.ploidy()), hasReliablePurityFit),
                     fusion.source());
         }
 

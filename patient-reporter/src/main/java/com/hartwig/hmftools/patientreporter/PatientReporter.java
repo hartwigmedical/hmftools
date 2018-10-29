@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.ClonalityCutoffKernel;
@@ -163,8 +164,8 @@ abstract class PatientReporter {
                         .size()));
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
-                purpleAnalysis.status(),
                 purpleAnalysis.fittedPurity().purity(),
+                purpleAnalysis.status() != FittedPurityStatus.NO_TUMOR,
                 ReportableEvidenceItemFactory.filterEvidenceItemsForReporting(evidenceItems),
                 ClinicalTrialFactory.extractTrials(evidenceItems),
                 somaticVariantAnalysis.reportableSomaticVariants(),

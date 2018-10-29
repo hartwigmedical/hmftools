@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter.report.components;
 import java.awt.Color;
 import java.text.DecimalFormat;
 
-import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.jetbrains.annotations.NotNull;
@@ -17,12 +16,12 @@ public final class MutationalBurdenSection {
     private static final double END = 120;
 
     @NotNull
-    public static ComponentBuilder<?, ?> build(final double tumorMutationalBurdenIndicator, @NotNull FittedPurityStatus fitStatus) {
+    public static ComponentBuilder<?, ?> build(double tumorMutationalBurdenIndicator, boolean hasReliablePurityFit) {
         final int graphValue = computeGraphValue(tumorMutationalBurdenIndicator);
 
         final GradientBar gradient = ImmutableGradientBar.of(new Color(253, 235, 208), new Color(248, 196, 113), "Low", "High", graphValue);
         final SliderSection sliderSection = ImmutableSliderSection.of("Tumor Mutational Burden",
-                interpret(tumorMutationalBurdenIndicator, fitStatus),
+                interpret(tumorMutationalBurdenIndicator, hasReliablePurityFit),
                 description(),
                 gradient);
 
@@ -30,12 +29,12 @@ public final class MutationalBurdenSection {
     }
 
     @NotNull
-    public static String interpret(final double tumorMutationalBurden, @NotNull FittedPurityStatus fitStatus) {
-        return PatientReportFormat.correctValueForFitStatus(fitStatus, new DecimalFormat("#.#").format(tumorMutationalBurden))
-                + " variants per Mb.";
+    public static String interpret(double tumorMutationalBurden, boolean hasReliablePurityFit) {
+        return PatientReportFormat.correctValueForFitReliability(new DecimalFormat("#.#").format(tumorMutationalBurden),
+                hasReliablePurityFit) + " variants per Mb.";
     }
 
-    private static int computeGraphValue(final double value) {
+    private static int computeGraphValue(double value) {
         final double scaledStart = scale(START);
         final double scaledEnd = scale(END);
         final double scaledIntervalLength = scaledEnd - scaledStart;

@@ -7,7 +7,6 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 
@@ -37,8 +36,7 @@ public final class GeneDisruptionDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromGeneDisruptions(@NotNull FittedPurityStatus fitStatus,
-            @NotNull List<ReportableGeneDisruption> disruptions) {
+    public static JRDataSource fromGeneDisruptions(@NotNull List<ReportableGeneDisruption> disruptions, boolean hasReliablePurityFit) {
         final DRDataSource dataSource = new DRDataSource(LOCATION_FIELD.getName(),
                 GENE_FIELD.getName(),
                 RANGE_FIELD.getName(),
@@ -55,9 +53,9 @@ public final class GeneDisruptionDataSource {
                     disruption.gene(),
                     disruption.range(),
                     disruption.type().name(),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyToCopiesString(disruption.ploidy())),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, geneMinCopies),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, geneMaxCopies));
+                    PatientReportFormat.correctValueForFitReliability(ploidyToCopiesString(disruption.ploidy()), hasReliablePurityFit),
+                    PatientReportFormat.correctValueForFitReliability(geneMinCopies, hasReliablePurityFit),
+                    PatientReportFormat.correctValueForFitReliability(geneMaxCopies, hasReliablePurityFit));
         }
 
         return dataSource;

@@ -75,7 +75,7 @@ public abstract class FindingsPage {
                                 col.column("Clonality", SomaticVariantDataSource.CLONAL_STATUS_FIELD),
                                 col.column("Biallelic", SomaticVariantDataSource.BIALLELIC_FIELD),
                                 col.column("Driver", SomaticVariantDataSource.DRIVER_FIELD)))
-                        .setDataSource(SomaticVariantDataSource.fromVariants(report.fitStatus(), report.somaticVariants()))
+                        .setDataSource(SomaticVariantDataSource.fromVariants(report.somaticVariants(), report.hasReliablePurityFit()))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
@@ -100,7 +100,7 @@ public abstract class FindingsPage {
                                 col.column("Germline Status", GermlineVariantDataSource.GERMLINE_STATUS_FIELD),
                                 col.column("Ploidy (VAF)", GermlineVariantDataSource.PLOIDY_VAF_FIELD).setFixedWidth(80),
                                 col.column("Biallelic", GermlineVariantDataSource.BIALLELIC_FIELD))
-                        .setDataSource(GermlineVariantDataSource.fromVariants(report.fitStatus(), report.germlineVariants())))
+                        .setDataSource(GermlineVariantDataSource.fromVariants(report.germlineVariants(), report.hasReliablePurityFit())))
                         : cmp.text(noVariantsFoundText).setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("HR-Related Germline Variants").setStyle(sectionHeaderStyle()),
@@ -110,7 +110,7 @@ public abstract class FindingsPage {
 
     @NotNull
     private static ComponentBuilder<?, ?> chordReport(@NotNull AnalysedPatientReport report) {
-        return ChordSection.build(report.chordAnalysis().hrdValue(), report.fitStatus());
+        return ChordSection.build(report.chordAnalysis().hrdValue(), report.hasReliablePurityFit());
     }
 
     @NotNull
@@ -123,7 +123,7 @@ public abstract class FindingsPage {
                                 col.column("Gene", GeneCopyNumberDataSource.GENE_FIELD),
                                 col.column("Type", GeneCopyNumberDataSource.GAIN_OR_LOSS_FIELD),
                                 col.column("Copies", GeneCopyNumberDataSource.COPY_NUMBER_FIELD))
-                        .setDataSource(GeneCopyNumberDataSource.fromCopyNumbers(report.fitStatus(), report.geneCopyNumbers())))
+                        .setDataSource(GeneCopyNumberDataSource.fromCopyNumbers(report.geneCopyNumbers(), report.hasReliablePurityFit())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Gains & Losses").setStyle(sectionHeaderStyle()),
@@ -149,7 +149,7 @@ public abstract class FindingsPage {
                                 col.column("Source", GeneFusionDataSource.SOURCE_FIELD)
                                         .setHyperLink(hyperLink(GeneFusionDataSource.sourceHyperlink()))
                                         .setStyle(linkStyle()))
-                        .setDataSource(GeneFusionDataSource.fromGeneFusions(report.fitStatus(), report.geneFusions())))
+                        .setDataSource(GeneFusionDataSource.fromGeneFusions(report.geneFusions(), report.hasReliablePurityFit())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Gene Fusions").setStyle(sectionHeaderStyle()),
@@ -159,17 +159,17 @@ public abstract class FindingsPage {
 
     @NotNull
     private static ComponentBuilder<?, ?> microsatelliteReport(@NotNull AnalysedPatientReport report) {
-        return MicrosatelliteSection.build(report.microsatelliteIndelsPerMb(), report.fitStatus());
+        return MicrosatelliteSection.build(report.microsatelliteIndelsPerMb(), report.hasReliablePurityFit());
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> tumorMutationalLoadReport(@NotNull AnalysedPatientReport report) {
-        return MutationalLoadSection.build(report.tumorMutationalLoad(), report.fitStatus());
+        return MutationalLoadSection.build(report.tumorMutationalLoad(), report.hasReliablePurityFit());
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> tumorMutationalBurdenReport(@NotNull AnalysedPatientReport report) {
-        return MutationalBurdenSection.build(report.tumorMutationalBurden(), report.fitStatus());
+        return MutationalBurdenSection.build(report.tumorMutationalBurden(), report.hasReliablePurityFit());
     }
 
     @NotNull
@@ -183,7 +183,7 @@ public abstract class FindingsPage {
                         col.column("Copies", GeneDisruptionDataSource.COPIES_FIELD),
                         col.column("Gene Min Copies", GeneDisruptionDataSource.GENE_MIN_COPIES).setFixedWidth(80),
                         col.column("Gene Max Copies", GeneDisruptionDataSource.GENE_MAX_COPIES).setFixedWidth(80))
-                .setDataSource(GeneDisruptionDataSource.fromGeneDisruptions(report.fitStatus(), report.geneDisruptions())))
+                .setDataSource(GeneDisruptionDataSource.fromGeneDisruptions(report.geneDisruptions(), report.hasReliablePurityFit())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Gene Disruptions").setStyle(sectionHeaderStyle()),

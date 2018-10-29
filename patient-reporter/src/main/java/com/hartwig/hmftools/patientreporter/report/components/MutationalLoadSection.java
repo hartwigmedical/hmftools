@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientreporter.report.components;
 
 import java.awt.Color;
 
-import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.jetbrains.annotations.NotNull;
@@ -18,19 +17,22 @@ public final class MutationalLoadSection {
     private static final int END = 1000;
 
     @NotNull
-    public static ComponentBuilder<?, ?> build(final int mutationalLoad, @NotNull FittedPurityStatus fitStatus) {
+    public static ComponentBuilder<?, ?> build(int mutationalLoad, boolean hasReliablePurityFit) {
         final int graphValue = computeGraphValue(mutationalLoad);
         final int markerValue = computeGraphValue(ML_THRESHOLD);
         final GradientBar gradient =
                 ImmutableGradientBar.of(new Color(239, 229, 203), new Color(159, 163, 193), "Low", "High", graphValue, markerValue);
-        final SliderSection sliderSection =
-                ImmutableSliderSection.of("Tumor Mutational Load", interpret(mutationalLoad, fitStatus), description(), gradient);
+        final SliderSection sliderSection = ImmutableSliderSection.of("Tumor Mutational Load",
+                interpret(mutationalLoad, hasReliablePurityFit),
+                description(),
+                gradient);
         return sliderSection.build();
     }
 
     @NotNull
-    public static String interpret(final int mutationalLoad, @NotNull FittedPurityStatus fitStatus) {
-        final String formattedMutationalLoad = PatientReportFormat.correctValueForFitStatus(fitStatus, Integer.toString(mutationalLoad));
+    public static String interpret(int mutationalLoad, boolean hasReliablePurityFit) {
+        final String formattedMutationalLoad =
+                PatientReportFormat.correctValueForFitReliability(Integer.toString(mutationalLoad), hasReliablePurityFit);
         if (mutationalLoad > ML_THRESHOLD) {
             return "High (" + formattedMutationalLoad + ")";
         } else {
@@ -38,7 +40,7 @@ public final class MutationalLoadSection {
         }
     }
 
-    private static int computeGraphValue(final double value) {
+    private static int computeGraphValue(double value) {
         final double scaledStart = scale(START);
         final double scaledEnd = scale(END);
         final double scaledIntervalLength = scaledEnd - scaledStart;
