@@ -31,7 +31,7 @@ public final class MicrosatelliteSection {
     }
 
     @NotNull
-    private static String interpret(final double microsatelliteIndicator, @NotNull FittedPurityStatus fitStatus) {
+    public static String interpret(final double microsatelliteIndicator, @NotNull FittedPurityStatus fitStatus) {
         final String formattedMicrosatelliteIndicator =
                 PatientReportFormat.correctValueForFitStatus(fitStatus, new DecimalFormat("#.####").format(microsatelliteIndicator));
         if (microsatelliteIndicator > MSI_THRESHOLD) {

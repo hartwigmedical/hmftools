@@ -30,7 +30,7 @@ public final class MutationalBurdenSection {
     }
 
     @NotNull
-    private static String interpret(final double tumorMutationalBurden, @NotNull FittedPurityStatus fitStatus) {
+    public static String interpret(final double tumorMutationalBurden, @NotNull FittedPurityStatus fitStatus) {
         return PatientReportFormat.correctValueForFitStatus(fitStatus, new DecimalFormat("#.#").format(tumorMutationalBurden))
                 + " variants per Mb.";
     }

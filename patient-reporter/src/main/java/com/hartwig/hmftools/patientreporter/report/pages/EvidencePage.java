@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.patientreporter.report.Commons.sectionHeaderS
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
+import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
 import java.util.List;
@@ -22,11 +23,13 @@ import com.hartwig.hmftools.patientreporter.report.Commons;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 import com.hartwig.hmftools.patientreporter.report.data.ClinicalTrialDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.EvidenceItemDataSource;
+import com.hartwig.hmftools.patientreporter.report.data.ImpliedTumorCharacteristicsSummaryDataSource;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 
+import net.sf.dynamicreports.report.builder.FieldBuilder;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 
@@ -44,16 +47,34 @@ public abstract class EvidencePage {
                 report().sampleReport(),
                 impliedPurityString(report())),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
+                summaryImpliedTumorCharacteristics(report()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
                 evidenceItemReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 clinicalTrialReport(report()));
     }
 
     @NotNull
-    private static String impliedPurityString(@NotNull AnalysedPatientReport report) {
+    public static String impliedPurityString(@NotNull AnalysedPatientReport report) {
         return report.fitStatus() == FittedPurityStatus.NO_TUMOR
                 ? "[below detection threshold]"
                 : PatientReportFormat.formatPercent(report.impliedPurity());
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> summaryImpliedTumorCharacteristics(@NotNull AnalysedPatientReport report) {
+
+        final ComponentBuilder<?, ?> table =
+                        cmp.subreport(monospaceBaseTable().fields(ImpliedTumorCharacteristicsSummaryDataSource.ImpliedTumorCharacteristicsSummaryFields())
+                        .columns(col.column("Tumor Purity", ImpliedTumorCharacteristicsSummaryDataSource.TUMOR_PURITY),
+                                col.column("Mutational Load", ImpliedTumorCharacteristicsSummaryDataSource.MUTATIONAL_LOAD),
+                                col.column("Mutational Burden", ImpliedTumorCharacteristicsSummaryDataSource.MUTATIONAL_BURDEN),
+                                col.column("Microsatellite (in)stability", ImpliedTumorCharacteristicsSummaryDataSource.MICROSATELLITE_INSTALBILITY),
+                                col.column("Implied tumor characteristics", ImpliedTumorCharacteristicsSummaryDataSource.HR_DEFICIENCY))
+                        .setDataSource(ImpliedTumorCharacteristicsSummaryDataSource.fromImpliedTumorCharacteristicsSummary(report)));
+        return cmp.verticalList(cmp.text("Implied tumor characteristics").setStyle(sectionHeaderStyle()),
+                cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
+                table);
     }
 
     @NotNull

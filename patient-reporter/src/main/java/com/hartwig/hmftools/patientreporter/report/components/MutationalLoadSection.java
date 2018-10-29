@@ -29,7 +29,7 @@ public final class MutationalLoadSection {
     }
 
     @NotNull
-    private static String interpret(final int mutationalLoad, @NotNull FittedPurityStatus fitStatus) {
+    public static String interpret(final int mutationalLoad, @NotNull FittedPurityStatus fitStatus) {
         final String formattedMutationalLoad = PatientReportFormat.correctValueForFitStatus(fitStatus, Integer.toString(mutationalLoad));
         if (mutationalLoad > ML_THRESHOLD) {
             return "High (" + formattedMutationalLoad + ")";

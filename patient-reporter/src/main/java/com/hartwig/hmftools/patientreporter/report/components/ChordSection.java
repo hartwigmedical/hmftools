@@ -31,7 +31,7 @@ public final class ChordSection {
     }
 
     @NotNull
-    private static String interpret(final double chordHrdScore, @NotNull FittedPurityStatus fitStatus) {
+    public static String interpret(final double chordHrdScore, @NotNull FittedPurityStatus fitStatus) {
         String hrdScoreString = new DecimalFormat("#.##").format(chordHrdScore);
         return PatientReportFormat.correctValueForFitStatus(fitStatus, hrdScoreString);
     }
