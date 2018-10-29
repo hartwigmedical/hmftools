@@ -6,7 +6,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.copynumber.CopyNumberAlteration;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.jetbrains.annotations.NotNull;
@@ -27,7 +26,12 @@ public final class GeneCopyNumberDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromCopyNumbers(@NotNull FittedPurityStatus fitStatus, @NotNull final List<GeneCopyNumber> copyNumbers) {
+    public static FieldBuilder<?>[] copyNumberFields() {
+        return new FieldBuilder<?>[] { CHROMOSOME, CHROMOSOME_BAND, GENE_FIELD, GAIN_OR_LOSS_FIELD, COPY_NUMBER_FIELD };
+    }
+
+    @NotNull
+    public static JRDataSource fromCopyNumbers(@NotNull final List<GeneCopyNumber> copyNumbers, boolean hasReliablePurityFit) {
         final DRDataSource copyNumberDatasource = new DRDataSource(CHROMOSOME.getName(),
                 CHROMOSOME_BAND.getName(),
                 GENE_FIELD.getName(),
@@ -39,14 +43,9 @@ public final class GeneCopyNumberDataSource {
                     copyNumber.chromosomeBand(),
                     copyNumber.gene(),
                     type(copyNumber),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, Integer.toString(copyNumber.value())));
+                    PatientReportFormat.correctValueForFitReliability(Integer.toString(copyNumber.value()), hasReliablePurityFit));
         }
         return copyNumberDatasource;
-    }
-
-    @NotNull
-    public static FieldBuilder<?>[] copyNumberFields() {
-        return new FieldBuilder<?>[] { CHROMOSOME, CHROMOSOME_BAND, GENE_FIELD, GAIN_OR_LOSS_FIELD, COPY_NUMBER_FIELD };
     }
 
     @NotNull
