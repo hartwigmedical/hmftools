@@ -486,4 +486,27 @@ public class BreakpointGraphTest {
         assertEquals(SimplificationType.SimpleInversion, simplifications.get(0).type());
         assertEquals(2, bg.getAllSegments().size());
     }
+    @Test
+    public void mergeAdjacentSvs_should_retain_links() {
+        List<PurpleCopyNumber> cns = ImmutableList.of(
+                cn("chr1", 1, 10, 1),
+                cn("chr1", 11, 20, 0),
+                cn("chr1", 21, 30, 1),
+                cn("chr1", 31, 40, 0),
+                cn("chr1", 41, 50, 1),
+                cn("chr1", 51, 60, 0),
+                cn("chr1", 61, 70, 1));
+
+        BreakpointGraph bg = new BreakpointGraph(cns, ImmutableList.of(
+                ImmutableEnrichedStructuralVariant.builder().from(
+                    breakpoint("merge_left", "chr1", 10, 1, "chr1", 21, -1, 1))
+                    .endLinkedBy("asm1").build(),
+                ImmutableEnrichedStructuralVariant.builder().from(
+                        breakpoint("merge_right", "chr1", 30, 1, "chr1", 41, -1, 1))
+                        .startLinkedBy("asm1").endLinkedBy("asm2").build(),
+                ImmutableEnrichedStructuralVariant.builder().from(
+                        breakpoint("chain", "chr1", 50, 1, "chr1", 61, -1, 1))
+                        .startLinkedBy("asm2").build()));
+        bg.simplify();
+    }
 }

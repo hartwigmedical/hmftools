@@ -309,7 +309,8 @@ public class BreakpointGraph {
         return unplacedSegment;
     }
 
-    private void addEdge(BgSegment start, int startOrientation, BgSegment end, int endOrientation, BgEdge edge) {
+    private Pair<BgAdjacency, BgAdjacency> addEdge(BgSegment start, int startOrientation, BgSegment end, int endOrientation, BgEdge edge) {
+        assert(edge.sv() == null || start.chromosome().equals(edge.sv().chromosome(true)));
         BgAdjacency leftAdj = ImmutableBgAdjacencyImpl.builder()
                 .fromSegment(start)
                 .fromOrientation(startOrientation)
@@ -328,6 +329,7 @@ public class BreakpointGraph {
                 .build();
         addAdjacency(leftAdj);
         addAdjacency(rightAdj);
+        return Pair.of(leftAdj, rightAdj);
     }
 
     private void addAdjacency(BgAdjacency adj) {
@@ -376,43 +378,70 @@ public class BreakpointGraph {
     }
 
     private EnrichedStructuralVariant createSpanningSv(BgAdjacency left, BgAdjacency right) {
+        assert(!left.isReference());
+        assert(!right.isReference());
         EnrichedStructuralVariant leftSv = left.edge().sv();
         EnrichedStructuralVariant rightSv = right.edge().sv();
         EnrichedStructuralVariantLeg leftLeg = isStartLeg(left) ? leftSv.end() : leftSv.start();
         EnrichedStructuralVariantLeg rightLeg = isStartLeg(right) ? rightSv.end() : rightSv.start();
-        return ImmutableEnrichedStructuralVariant.builder()
-                .from(leftSv)
-                .ploidy((leftSv.ploidy() + rightSv.ploidy()) / 2)
-                .start(leftLeg)
-                .end(rightLeg)
-                .startLinkedBy(isStartLeg(left) ? leftSv.endLinkedBy() : leftSv.startLinkedBy())
-                .endLinkedBy(isStartLeg(right) ? rightSv.endLinkedBy() : rightSv.startLinkedBy())
+        String leftLinkedBy = isStartLeg(left) ? leftSv.endLinkedBy() : leftSv.startLinkedBy();
+        String rightLinkedBy = isStartLeg(right) ? rightSv.endLinkedBy() : rightSv.startLinkedBy();
+        EnrichedStructuralVariantLeg startLeg = leftLeg;
+        EnrichedStructuralVariantLeg endLeg = rightLeg;
+        assert(startLeg != null || endLeg != null);
+        if (startLeg == null) {
+            startLeg = endLeg;
+            endLeg = null;
+        }
+        if (endLeg != null && ByGenomicPosition.compare(startLeg, endLeg) > 0) {
+            EnrichedStructuralVariantLeg tmp = startLeg;
+            startLeg = endLeg;
+            endLeg = tmp;
+        }
+        EnrichedStructuralVariant startSv = startLeg == leftLeg ? leftSv : rightSv;
+        EnrichedStructuralVariant endSv = startLeg == leftLeg ? rightSv : leftSv;
+        ImmutableEnrichedStructuralVariant sv = ImmutableEnrichedStructuralVariant.builder()
+                .from(startSv)
+                .ploidy((startSv.ploidy() + endSv.ploidy()) / 2)
+                .start(startLeg)
+                .end(endLeg)
+                .startLinkedBy(startLeg == leftLeg ? leftLinkedBy : rightLinkedBy)
+                .endLinkedBy(startLeg == leftLeg ? rightLinkedBy : leftLinkedBy)
                 .type(StructuralVariantType.BND)
                 .id(leftSv.id() + "-" + rightSv.id())
-                .insertSequence(leftSv.insertSequence() + "-" + String.format("%s:%d-%d",
+                .insertSequence(startSv.insertSequence() + String.format("[%s:%d-%d]",
                         left.fromSegment().chromosome(),
                         left.fromSegment().position(),
-                        right.fromSegment().endPosition()) + "-" + rightSv.insertSequence())
+                        right.fromSegment().endPosition()) + endSv.insertSequence())
                 .qualityScore(leftSv.qualityScore() + rightSv.qualityScore())
                 .imprecise(leftSv.imprecise() || rightSv.imprecise())
-                .filter(leftSv.filter() + rightSv.filter())
+                .filter(leftSv.filter() + ";" + rightSv.filter())
                 .event(leftSv.event() + ";" + rightSv.event())
                 .build();
+        return sv;
     }
 
     private void mergeAdjacentSvs(double copyNumber, BgAdjacency left, BgAdjacency right) {
         LOGGER.debug("Merging SV: {} and {} with copyNumber {}", left, right, copyNumber);
         assertInGraph(left);
-        assertInGraph(left);
+        assertInGraph(right);
         assert (startEdges.containsKey(left.fromSegment()));
         assert (left.fromOrientation() == -1);
         assert (right.fromOrientation() == 1);
         assert (left.fromSegment().chromosome().equals(right.fromSegment().chromosome()));
         assert (left.fromSegment().position() <= right.fromSegment().position());
         assert (left.edge() != right.edge());
+        EnrichedStructuralVariant sv = createSpanningSv(left, right);
+        BgEdge edge = new BgSv(sv);
         removeAdjacency(left);
         removeAdjacency(right);
-        addEdge(left.toSegment(), left.toOrientation(), right.toSegment(), right.toOrientation(), new BgSv(createSpanningSv(left, right)));
+        // left (and right) could map to start or end of the SV record
+        // and we need to assign the edges correctly
+        if (left.edge().sv().start() == sv.start() || left.edge().sv().end() == sv.start()) {
+            addEdge(left.toSegment(), left.toOrientation(), right.toSegment(), right.toOrientation(), edge);
+        } else {
+            addEdge(right.toSegment(), right.toOrientation(),left.toSegment(), left.toOrientation(), edge);
+        }
         BgSegment segment = left.fromSegment();
         while (segment != right.fromSegment()) {
             segment.adjustCopyNumber(-copyNumber);
@@ -597,7 +626,9 @@ public class BreakpointGraph {
         Map<String, BgAdjacency> endLinks = endEdges.values()
                 .stream()
                 .flatMap(list -> list.stream())
-                .flatMap(adj -> adj.linkedBy().stream().filter(s -> s.startsWith(linkedByPrefix)).map(link -> ImmutablePair.of(link, adj)))
+                .flatMap(adj -> adj.linkedBy().stream()
+                        .filter(s -> s.startsWith(linkedByPrefix))
+                        .map(link -> ImmutablePair.of(link, adj)))
                 .collect(Collectors.toMap(p -> p.left, p -> p.right));
         // we only need to iterate over the start edges since assembly links
         // involve a segment of DNA so we need one to come into the segment
@@ -630,6 +661,7 @@ public class BreakpointGraph {
                 // might be invalidated by a previous simplification
                 if (isValid(s)) {
                     simplify(s);
+                    sanityCheck();
                     simplified.add(s);
                 }
             }
@@ -1005,6 +1037,33 @@ public class BreakpointGraph {
                 assert (Iterables.any(remoteAdjList, remoteAdj -> remoteAdj.edge() == adj.edge()));
             }
         }
+        sanityCheckAssemblyLinkedBy();
+    }
+    private void sanityCheckAssemblyLinkedBy() {
+        Map<String, List<BgAdjacency>> starts = startEdges.values().stream()
+                .flatMap(l -> l.stream())
+                .filter(adj -> !adj.isReference())
+                .flatMap(adj -> adj.linkedBy().stream()
+                        .map(s -> Pair.of(s, adj)))
+                .filter(p -> p.getLeft().startsWith("asm"))
+                .collect(Collectors.groupingBy(p -> p.getLeft(), Collectors.mapping(p -> p.getRight(), Collectors.toList())));
+        Map<String, List<BgAdjacency>> ends = startEdges.values().stream()
+                .flatMap(l -> l.stream())
+                .filter(adj -> !adj.isReference())
+                .flatMap(adj -> adj.linkedBy().stream()
+                        .map(s -> Pair.of(s, adj)))
+                .filter(p -> p.getLeft().startsWith("asm"))
+                .collect(Collectors.groupingBy(p -> p.getLeft(), Collectors.mapping(p -> p.getRight(), Collectors.toList())));
+        for (String linkedBy : starts.keySet()) {
+            List<BgAdjacency> list = starts.get(linkedBy);
+            assert(list.size() == 1);
+            assert(ends.keySet().contains(linkedBy));
+        }
+        for (String linkedBy : ends.keySet()) {
+            List<BgAdjacency> list = starts.get(linkedBy);
+            assert(list.size() == 1);
+            assert(starts.keySet().contains(linkedBy));
+        }
     }
 
     private void assertInGraph(BgSegment segment) {
@@ -1019,7 +1078,9 @@ public class BreakpointGraph {
 
     private static final Ordering<GenomePosition> ByGenomicPosition = new Ordering<GenomePosition>() {
         public int compare(GenomePosition o1, GenomePosition o2) {
-            return ComparisonChain.start().compare(o1.chromosome(), o2.chromosome()).compare(o1.position(), o2.position()).result();
+            return ComparisonChain.start()
+                    .compare(o1.chromosome(), o2.chromosome())
+                    .compare(o1.position(), o2.position()).result();
         }
     };
     private static final Ordering<BgAdjacency> ByFromGenomicPosition = new Ordering<BgAdjacency>() {
