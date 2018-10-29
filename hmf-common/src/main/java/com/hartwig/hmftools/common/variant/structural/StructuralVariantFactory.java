@@ -13,6 +13,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
+import com.hartwig.hmftools.common.variant.filter.ExcludeCNVFilter;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -70,6 +71,7 @@ public class StructuralVariantFactory {
         }
 
         filter.add(new ChromosomeFilter());
+        filter.add(new ExcludeCNVFilter());
         this.filter = filter;
     }
 
