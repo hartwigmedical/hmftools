@@ -8,6 +8,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeMappingReading;
@@ -20,7 +21,6 @@ import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.patientreporter.actionability.ActionabilityVariantAnalyzer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,8 +42,7 @@ public final class SomaticVariantAnalyzer {
     @NotNull
     public static SomaticVariantAnalysis run(@NotNull final List<EnrichedSomaticVariant> variants, @NotNull Set<String> genePanel,
             @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap, @NotNull Set<String> drupActionableGenes,
-            @Nullable PatientTumorLocation patientTumorLocation, @NotNull ActionabilityAnalyzer actionabilityAnalyzerData)
-            throws IOException {
+            @Nullable PatientTumorLocation patientTumorLocation, @NotNull ActionabilityAnalyzer actionabilityAnalyzer) throws IOException {
         final double microsatelliteIndelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
         final int tumorMutationalLoad = MutationalLoadAnalyzer.determineTumorMutationalLoad(variants);
         final double tumorMutationalBurden = MutationalBurdenAnalyzer.determineTumorMutationalBurden(variants);
@@ -58,6 +57,21 @@ public final class SomaticVariantAnalyzer {
         final List<ReportableSomaticVariant> reportableVariants =
                 toReportableSomaticVariants(variantsToReport, driverCatalog, driverCategoryPerGeneMap, drupActionableGenes);
 
+        LOGGER.info("Looking for actionability for somatic variants");
+        Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant =
+                findEvidenceForVariants(actionabilityAnalyzer, variants, patientTumorLocation);
+
+        return ImmutableSomaticVariantAnalysis.of(reportableVariants,
+                evidencePerVariant,
+                microsatelliteIndelsPerMb,
+                tumorMutationalLoad,
+                tumorMutationalBurden);
+    }
+
+    @NotNull
+    private static <T extends SomaticVariant> Map<T, List<EvidenceItem>> findEvidenceForVariants(
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @NotNull List<T> variants,
+            @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
         final String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : Strings.EMPTY;
         CancerTypeMappingReading cancerTypeMappingReading = CancerTypeMappingReading.readingFile();
         String doidsPrimaryTumorLocation = cancerTypeMappingReading.doidsForPrimaryTumorLocation(primaryTumorLocation);
@@ -65,21 +79,19 @@ public final class SomaticVariantAnalyzer {
         LOGGER.info("cancerTypeMappingReading: " + cancerTypeMappingReading);
         LOGGER.info("doid: " + doidsPrimaryTumorLocation);
 
-        Set<String> actionableGenesVariants = actionabilityAnalyzerData.variantAnalyzer().actionableGenes();
+        Set<String> actionableGenes = actionabilityAnalyzer.variantAnalyzer().actionableGenes();
 
-        LOGGER.info("Looking for actionability for somatic variants");
-        Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant = ActionabilityVariantAnalyzer.findEvidenceForVariants(
-                actionableGenesVariants,
-                variants,
-                doidsPrimaryTumorLocation,
-                actionabilityAnalyzerData);
+        Map<T, List<EvidenceItem>> evidenceItemsPerVariant = Maps.newHashMap();
+        List<T> variantsOnActionableGenesRanges =
+                variants.stream().filter(variant -> actionableGenes.contains(variant.gene())).collect(Collectors.toList());
 
+        for (T variant : variantsOnActionableGenesRanges) {
+            evidenceItemsPerVariant.put(variant,
+                    actionabilityAnalyzer.variantAnalyzer()
+                            .evidenceForSomaticVariant(variant, doidsPrimaryTumorLocation, actionabilityAnalyzer.cancerTypeAnalyzer()));
+        }
 
-        return ImmutableSomaticVariantAnalysis.of(reportableVariants,
-                evidencePerVariant,
-                microsatelliteIndelsPerMb,
-                tumorMutationalLoad,
-                tumorMutationalBurden);
+        return evidenceItemsPerVariant;
     }
 
     @NotNull

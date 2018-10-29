@@ -10,7 +10,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 
 import org.jetbrains.annotations.NotNull;
@@ -19,22 +18,6 @@ import org.jetbrains.annotations.Nullable;
 public final class ActionabilityVariantAnalyzer {
 
     private ActionabilityVariantAnalyzer() {
-    }
-
-    @NotNull
-    public static <T extends SomaticVariant> Map<T, List<EvidenceItem>> findEvidenceForVariants(
-            @NotNull Set<String> actionableGenesVariants, @NotNull List<T> variants, @Nullable String doidsPrimaryTumorLocation,
-            @NotNull ActionabilityAnalyzer actionabilityAnalyzerData) {
-        Map<T, List<EvidenceItem>> evidenceItemsPerVariant = Maps.newHashMap();
-        List<T> variantsOnActionableGenesRanges =
-                variants.stream().filter(variant -> actionableGenesVariants.contains(variant.gene())).collect(Collectors.toList());
-
-        for (T variant : variantsOnActionableGenesRanges) {
-            evidenceItemsPerVariant.put(variant,
-                    actionabilityAnalyzerData.variantAnalyzer()
-                            .evidenceForSomaticVariant(variant, doidsPrimaryTumorLocation, actionabilityAnalyzerData.cancerTypeAnalyzer()));
-        }
-        return evidenceItemsPerVariant;
     }
 
     @NotNull
