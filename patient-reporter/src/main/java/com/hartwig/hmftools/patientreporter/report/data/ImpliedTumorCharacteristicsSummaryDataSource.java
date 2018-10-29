@@ -29,22 +29,25 @@ public class ImpliedTumorCharacteristicsSummaryDataSource {
 
     @NotNull
     public static FieldBuilder<?>[] ImpliedTumorCharacteristicsSummaryFields() {
-        return new FieldBuilder<?>[] { TUMOR_PURITY, AVERAGE_TUMOR_PLOIDY, MUTATIONAL_LOAD, MUTATIONAL_BURDEN, MICROSATELLITE_INSTALBILITY, HR_DEFICIENCY };
+        return new FieldBuilder<?>[] { TUMOR_PURITY, AVERAGE_TUMOR_PLOIDY, MUTATIONAL_LOAD, MUTATIONAL_BURDEN, MICROSATELLITE_INSTALBILITY,
+                HR_DEFICIENCY };
     }
 
     @NotNull
     public static JRDataSource fromImpliedTumorCharacteristicsSummary(@NotNull AnalysedPatientReport report) {
-        final DRDataSource impliedTumorCharacteristicsSummaryDataSource = new DRDataSource(TUMOR_PURITY.getName(), AVERAGE_TUMOR_PLOIDY.getName(),
+        final DRDataSource impliedTumorCharacteristicsSummaryDataSource = new DRDataSource(TUMOR_PURITY.getName(),
+                AVERAGE_TUMOR_PLOIDY.getName(),
                 MUTATIONAL_LOAD.getName(),
                 MUTATIONAL_BURDEN.getName(),
                 MICROSATELLITE_INSTALBILITY.getName(),
                 HR_DEFICIENCY.getName());
+
         impliedTumorCharacteristicsSummaryDataSource.add(EvidencePage.impliedPurityString(report),
                 "tumor ploidy",
-                MutationalLoadSection.interpret(report.tumorMutationalLoad(), report.fitStatus()),
-                MutationalBurdenSection.interpret(report.tumorMutationalBurden(), report.fitStatus()),
-                MicrosatelliteSection.interpret(report.microsatelliteIndelsPerMb(), report.fitStatus()),
-                ChordSection.interpret(report.chordAnalysis().hrdValue(), report.fitStatus()));
+                MutationalLoadSection.interpret(report.tumorMutationalLoad(), report.hasReliablePurityFit()),
+                MutationalBurdenSection.interpret(report.tumorMutationalBurden(), report.hasReliablePurityFit()),
+                MicrosatelliteSection.interpret(report.microsatelliteIndelsPerMb(), report.hasReliablePurityFit()),
+                ChordSection.interpret(report.chordAnalysis().hrdValue(), report.hasReliablePurityFit()));
 
         return impliedTumorCharacteristicsSummaryDataSource;
     }
