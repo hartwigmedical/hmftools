@@ -77,7 +77,16 @@ public final class SummaryPart {
                         cmp.text(TumorReportedGenomicAlterationsDataSource.geneFusions(report.geneFusions())).setStyle(dataTableStyle()),
                         cmp.text("Genes with disruptions").setStyle(tableHeaderStyle()),
                         cmp.text(TumorReportedGenomicAlterationsDataSource.geneDisruptions(report.geneDisruptions()))
+                                .setStyle(dataTableStyle()),
+                        cmp.text("Total clinical evidence items").setStyle(tableHeaderStyle()),
+                        cmp.text(report.clinicalEvidence().size())
+                                .setStyle(dataTableStyle()),
+                        cmp.text("Total clinical trials").setStyle(tableHeaderStyle()),
+                        cmp.text(report.clinicalTrials().size())
                                 .setStyle(dataTableStyle()));
+
+
+
 
         return cmp.horizontalList(summaryImpliedTumorCharacteristics,
                 cmp.horizontalGap(40),
