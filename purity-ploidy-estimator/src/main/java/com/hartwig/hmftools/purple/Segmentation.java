@@ -14,8 +14,6 @@ import com.hartwig.hmftools.common.pcf.PCFPosition;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegionFactory;
-import com.hartwig.hmftools.common.purple.segment.Cluster;
-import com.hartwig.hmftools.common.purple.segment.ClusterFactory;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
@@ -39,30 +37,25 @@ class Segmentation {
     private final ListMultimap<Chromosome, CobaltRatio> ratios;
     private final ConfigSupplier configSupplier;
 
-    public Segmentation(@NotNull final ConfigSupplier configSupplier, @NotNull final Gender gender,
-            @NotNull final ListMultimap<Chromosome, CobaltRatio> ratios, @NotNull final Multimap<Chromosome, AmberBAF> bafs)
-            throws IOException {
+    public Segmentation(@NotNull final ConfigSupplier configSupplier, @NotNull final Gender gender) throws IOException {
         this.config = configSupplier.commonConfig();
         this.gender = gender;
-        this.ratios = ratios;
-        this.bafs = bafs;
+        this.ratios = configSupplier.cobaltData().ratios();
+        this.bafs = configSupplier.amberData().bafs();
         this.pcfPositions = PCFPositionsSupplier.createPositions(configSupplier);
         this.configSupplier = configSupplier;
 
         LOGGER.info("Reading GC Profiles from {}", config.gcProfile());
         this.gcProfiles = GCProfileFactory.loadGCContent(config.windowSize(), config.gcProfile());
-
     }
 
     @NotNull
     public List<ObservedRegion> createSegments(@NotNull final List<StructuralVariant> structuralVariants) {
-        final Multimap<Chromosome, Cluster> clusterMap =
-                new ClusterFactory(config.windowSize()).cluster(structuralVariants, pcfPositions, ratios);
+        final PurpleSegmentFactory factory = new PurpleSegmentFactory(config.windowSize(),
+                configSupplier.refGenomeConfig().centromere(),
+                configSupplier.refGenomeConfig().length());
 
-        final PurpleSegmentFactory factory =
-                new PurpleSegmentFactory(configSupplier.refGenomeConfig().centromere(), configSupplier.refGenomeConfig().length());
-
-        final List<PurpleSegment> segments = factory.segment(clusterMap);
+        final List<PurpleSegment> segments = factory.segment(structuralVariants, pcfPositions, ratios);
 
         final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(config.windowSize(), gender);
         return observedRegionFactory.combine(segments, bafs, ratios, gcProfiles);

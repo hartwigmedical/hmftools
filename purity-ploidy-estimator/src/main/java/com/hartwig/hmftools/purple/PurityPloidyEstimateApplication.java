@@ -124,7 +124,6 @@ public class PurityPloidyEstimateApplication {
 
             // JOBA: Load Cobalt Data
             final Gender cobaltGender = configSupplier.cobaltData().gender();
-            final ListMultimap<Chromosome, CobaltRatio> ratios = configSupplier.cobaltData().ratios();
 
             // JOBA: Gender
             if (cobaltGender.equals(amberGender)) {
@@ -139,7 +138,7 @@ public class PurityPloidyEstimateApplication {
             final List<SomaticVariant> snpSomatics = allSomatics.stream().filter(SomaticVariant::isSnp).collect(Collectors.toList());
 
             LOGGER.info("Applying segmentation");
-            final Segmentation segmentation = new Segmentation(configSupplier, cobaltGender, ratios, bafs);
+            final Segmentation segmentation = new Segmentation(configSupplier, cobaltGender);
             final List<ObservedRegion> observedRegions = segmentation.createSegments(structuralVariants.variants());
 
             LOGGER.info("Fitting purity");

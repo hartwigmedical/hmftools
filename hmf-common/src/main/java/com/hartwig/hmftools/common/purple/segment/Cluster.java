@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Modifiable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class Cluster implements GenomeRegion {
+abstract class Cluster implements GenomeRegion {
 
     @NotNull
     public abstract List<PCFPosition> pcfPositions();

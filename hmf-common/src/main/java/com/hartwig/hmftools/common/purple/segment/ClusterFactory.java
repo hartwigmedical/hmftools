@@ -20,12 +20,12 @@ import com.hartwig.hmftools.common.window.Window;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ClusterFactory {
+class ClusterFactory {
 
     public final long windowSize;
     private final Window window;
 
-    public ClusterFactory(final int windowSize) {
+    ClusterFactory(final int windowSize) {
         this.windowSize = windowSize;
         this.window = new Window(windowSize);
     }
