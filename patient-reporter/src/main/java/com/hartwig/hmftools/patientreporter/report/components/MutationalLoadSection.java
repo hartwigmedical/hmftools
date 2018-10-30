@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 
 public final class MutationalLoadSection {
-    private static final int ML_THRESHOLD = 140;
+    public static final int ML_THRESHOLD = 140;
 
     private static final int BUFFER = 3;
     private static final int START = 1;
@@ -29,7 +29,7 @@ public final class MutationalLoadSection {
     }
 
     @NotNull
-    public static String interpret(int mutationalLoad, boolean hasReliablePurityFit) {
+    private static String interpret(int mutationalLoad, boolean hasReliablePurityFit) {
         final String formattedMutationalLoad =
                 PatientReportFormat.correctValueForFitReliability(Integer.toString(mutationalLoad), hasReliablePurityFit);
         if (mutationalLoad > ML_THRESHOLD) {

@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 
 public final class MicrosatelliteSection {
-    private static final double MSI_THRESHOLD = 4D;
+    public static final double MSI_THRESHOLD = 4D;
 
     private static final int BUFFER = 3;
     private static final double START = 1E-2;
@@ -31,7 +31,7 @@ public final class MicrosatelliteSection {
     }
 
     @NotNull
-    public static String interpret(double microsatelliteIndicator, boolean hasReliablePurityFit) {
+    private static String interpret(double microsatelliteIndicator, boolean hasReliablePurityFit) {
         final String formattedMicrosatelliteIndicator =
                 PatientReportFormat.correctValueForFitReliability(new DecimalFormat("#.####").format(microsatelliteIndicator),
                         hasReliablePurityFit);
