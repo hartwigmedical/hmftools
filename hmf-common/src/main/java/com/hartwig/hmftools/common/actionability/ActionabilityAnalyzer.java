@@ -71,7 +71,7 @@ public class ActionabilityAnalyzer {
                 PrimaryTumorToDOIDMapping.createFromResource());
     }
 
-    public ActionabilityAnalyzer(@NotNull final SomaticVariantEvidenceAnalyzer variantAnalyzer,
+    private ActionabilityAnalyzer(@NotNull final SomaticVariantEvidenceAnalyzer variantAnalyzer,
             @NotNull final CopyNumberEvidenceAnalyzer cnvAnalyzer, @NotNull final FusionEvidenceAnalyzer fusionAnalyzer,
             @NotNull final CancerTypeAnalyzer cancerTypeAnalyzer, @NotNull final PrimaryTumorToDOIDMapping primaryTumorToDOIDMapping) {
         this.variantAnalyzer = variantAnalyzer;
