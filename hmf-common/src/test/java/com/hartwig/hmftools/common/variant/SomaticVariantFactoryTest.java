@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -25,8 +24,7 @@ import htsjdk.variant.vcf.VCFHeaderVersion;
 public class SomaticVariantFactoryTest {
 
     private static final String SAMPLE = "sample";
-    private static final String BASE_PATH = Resources.getResource("variant").getPath();
-    private static final String SOMATIC_VARIANT_FILE = "somatics.vcf";
+    private static final String SOMATIC_VARIANT_FILE = Resources.getResource("variant/somatics.vcf").getPath();
 
     private static final double EPSILON = 1.0e-10;
 
@@ -49,11 +47,10 @@ public class SomaticVariantFactoryTest {
 
     @Test
     public void canLoadSomaticSimpleVCFFromFile() throws IOException {
-        final String file = BASE_PATH + File.separator + SOMATIC_VARIANT_FILE;
-        final List<SomaticVariant> unfiltered = SomaticVariantFactory.unfilteredInstance().fromVCFFile("sample", file);
+        final List<SomaticVariant> unfiltered = SomaticVariantFactory.unfilteredInstance().fromVCFFile("sample", SOMATIC_VARIANT_FILE);
         assertEquals(3, unfiltered.size());
 
-        final List<SomaticVariant> filtered = SomaticVariantFactory.passOnlyInstance().fromVCFFile("sample", file);
+        final List<SomaticVariant> filtered = SomaticVariantFactory.passOnlyInstance().fromVCFFile("sample", SOMATIC_VARIANT_FILE);
         assertEquals(2, filtered.size());
     }
 
@@ -178,9 +175,10 @@ public class SomaticVariantFactoryTest {
 
     @NotNull
     private List<VariantContext> ponFilteredAndNearPonFiltered() {
-        final VariantContext ponFiltered = codec.decode("15\t12345678\trs1;UCSC\tCAT\tA,G\t2\tGERMLINE_PON\tinfo;\tGT:AD:DP\t0/1:60,60:121");
+        final VariantContext ponFiltered =
+                codec.decode("15\t12345678\trs1;UCSC\tCAT\tA,G\t2\tGERMLINE_PON\tinfo;\tGT:AD:DP\t0/1:60,60:121");
         final VariantContext nearPonFiltered = codec.decode("15\t12345677\trs1;UCSC\tCAT\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:60,60:121");
-        return  Lists.newArrayList(nearPonFiltered, ponFiltered);
+        return Lists.newArrayList(nearPonFiltered, ponFiltered);
     }
 
     @NotNull
