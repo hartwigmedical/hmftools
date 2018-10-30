@@ -62,7 +62,7 @@ public final class GeneDisruptionDataSource {
     }
 
     @NotNull
-    private static List<ReportableGeneDisruption> sort(@NotNull List<ReportableGeneDisruption> disruptions) {
+    public static List<ReportableGeneDisruption> sort(@NotNull List<ReportableGeneDisruption> disruptions) {
         return disruptions.stream().sorted((disruption1, disruption2) -> {
             String locationAndGene1 = zeroPrefixed(disruption1.location()) + disruption1.gene();
             String locationAndGene2 = zeroPrefixed(disruption2.location()) + disruption2.gene();

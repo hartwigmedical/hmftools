@@ -81,7 +81,8 @@ public abstract class EvidencePage {
                                         TumorReportedGenomicAlterationsDataSource.GENES_SOMATIC_VARIANTS_WITH_DRIVER_LIKELIHOOD),
                                 col.column("Genes with amplification", TumorReportedGenomicAlterationsDataSource.GENES_WITH_AMPLIFICATION),
                                 col.column("Genes with (partial) loss", TumorReportedGenomicAlterationsDataSource.GENES_WITH_LOSS),
-                                col.column("Fusion genes", TumorReportedGenomicAlterationsDataSource.FUSION_GENES))
+                                col.column("Fusion genes", TumorReportedGenomicAlterationsDataSource.FUSION_GENES),
+                                col.column("Disruption genes", TumorReportedGenomicAlterationsDataSource.DISRUPTION_GENES))
                         .setDataSource(TumorReportedGenomicAlterationsDataSource.fromTumorReportedGenomicAlterationsSummary(report)));
         return cmp.verticalList(cmp.text("Tumor reportable genomic alterations summary").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),

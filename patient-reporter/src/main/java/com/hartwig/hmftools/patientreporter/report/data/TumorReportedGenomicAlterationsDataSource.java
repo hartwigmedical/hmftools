@@ -7,6 +7,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
 
@@ -23,6 +24,8 @@ public class TumorReportedGenomicAlterationsDataSource {
     public static final FieldBuilder<?> GENES_WITH_AMPLIFICATION = field("Genes with amplification", String.class);
     public static final FieldBuilder<?> GENES_WITH_LOSS = field("Genes with (partial) loss", String.class);
     public static final FieldBuilder<?> FUSION_GENES = field("Fusion genes", String.class);
+    public static final FieldBuilder<?> DISRUPTION_GENES = field("Disruption genes", String.class);
+
 
     private TumorReportedGenomicAlterationsDataSource() {
     }
@@ -30,7 +33,7 @@ public class TumorReportedGenomicAlterationsDataSource {
     @NotNull
     public static FieldBuilder<?>[] TumorReportedGenomicAlterationsSummaryFields() {
         return new FieldBuilder<?>[] { NUMBER_SOMATIC_VARIANTS, GENES_SOMATIC_VARIANTS_WITH_DRIVER_LIKELIHOOD, GENES_WITH_AMPLIFICATION,
-                GENES_WITH_LOSS, FUSION_GENES };
+                GENES_WITH_LOSS, FUSION_GENES, DISRUPTION_GENES };
     }
 
     @NotNull
@@ -39,13 +42,15 @@ public class TumorReportedGenomicAlterationsDataSource {
                 GENES_SOMATIC_VARIANTS_WITH_DRIVER_LIKELIHOOD.getName(),
                 GENES_WITH_AMPLIFICATION.getName(),
                 GENES_WITH_LOSS.getName(),
-                FUSION_GENES.getName());
+                FUSION_GENES.getName(),
+                DISRUPTION_GENES.getName());
 
         TumorReportedGenomicAlterationsSummaryDataSource.add(countSomaticVariants(report.somaticVariants()),
                 somaticVariantsWithDriver(report.somaticVariants()),
                 amplificationGenes(report.geneCopyNumbers()),
                 lossGenes(report.geneCopyNumbers()),
-                geneFusions(report.geneFusions()));
+                geneFusions(report.geneFusions()),
+                geneDisruptions(report.geneDisruptions()));
 
         return TumorReportedGenomicAlterationsSummaryDataSource;
     }
@@ -100,6 +105,15 @@ public class TumorReportedGenomicAlterationsDataSource {
             geneFusions.add(GeneFusionDataSource.name(fusion));
         }
         return String.join("\n", geneFusions);
+    }
+
+    @NotNull
+    private static String geneDisruptions(@NotNull List<ReportableGeneDisruption> disruptions) {
+        List<String> geneDisruptions = Lists.newArrayList();
+        for (ReportableGeneDisruption disruption : GeneDisruptionDataSource.sort(disruptions)) {
+            geneDisruptions.add(disruption.gene());
+        }
+        return String.join("\n", geneDisruptions);
     }
 }
 
