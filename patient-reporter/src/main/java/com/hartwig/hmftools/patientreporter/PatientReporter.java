@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
+import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -77,18 +78,18 @@ abstract class PatientReporter {
 
         final String tumorSample = run.tumorSample();
         final PatientTumorLocation patientTumorLocation =
-                PatientReporterFileLoader.extractPatientTumorLocation(baseReportData().patientTumorLocations(), tumorSample);
+                PatientTumorLocationFunctions.findPatientTumorLocationForSample(baseReportData().patientTumorLocations(), tumorSample);
 
         final CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(run,
+                sequencedReportData().panelGeneModel(),
                 sequencedReportData().actionabilityAnalyzer(),
-                patientTumorLocation,
-                sequencedReportData().panelGeneModel());
+                patientTumorLocation);
 
         final FusionDisruptionAnalysis fusionDisruptionAnalysis = analyzeStructuralVariants(run,
                 copyNumberAnalysis,
                 structuralVariantAnalyzer(),
-                patientTumorLocation,
-                sequencedReportData().actionabilityAnalyzer());
+                sequencedReportData().actionabilityAnalyzer(),
+                patientTumorLocation);
 
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run,
                 copyNumberAnalysis,
@@ -96,8 +97,8 @@ abstract class PatientReporter {
                 sequencedReportData().panelGeneModel(),
                 sequencedReportData().highConfidenceRegions(),
                 sequencedReportData().refGenomeFastaFile(),
-                patientTumorLocation,
-                sequencedReportData().actionabilityAnalyzer());
+                sequencedReportData().actionabilityAnalyzer(),
+                patientTumorLocation);
 
         final ChordAnalysis chordAnalysis = analyzeChord(run);
 
@@ -154,8 +155,8 @@ abstract class PatientReporter {
     }
 
     @NotNull
-    private static CopyNumberAnalysis analyzeCopyNumbers(@NotNull RunContext run, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
-            @Nullable PatientTumorLocation patientTumorLocation, @NotNull GeneModel panelGeneModel) throws IOException {
+    private static CopyNumberAnalysis analyzeCopyNumbers(@NotNull RunContext run, @NotNull GeneModel geneModel,
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
         final String runDirectory = run.runDirectory();
         final String sample = run.tumorSample();
 
@@ -171,17 +172,16 @@ abstract class PatientReporter {
         return CopyNumberAnalyzer.run(purityContext,
                 purpleCopyNumbers,
                 exomeGeneCopyNumbers,
+                geneModel,
                 actionabilityAnalyzer,
-                patientTumorLocation,
-                panelGeneModel);
+                patientTumorLocation);
     }
 
     @NotNull
     private static SomaticVariantAnalysis analyzeSomaticVariants(@NotNull RunContext run, @NotNull CopyNumberAnalysis copyNumberAnalysis,
             @NotNull SomaticEnrichment somaticEnrichment, @NotNull GeneModel geneModel,
             @NotNull Multimap<String, GenomeRegion> highConfidenceRegions, @NotNull IndexedFastaSequenceFile refGenomeFastaFile,
-            @Nullable PatientTumorLocation patientTumorLocation, @NotNull ActionabilityAnalyzer actionabilityAnalyzerData)
-            throws IOException {
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
         final String runDirectory = run.runDirectory();
         final String sample = run.tumorSample();
 
@@ -198,8 +198,8 @@ abstract class PatientReporter {
                 geneModel.somaticVariantGenePanel(),
                 geneModel.geneDriverCategoryMap(),
                 geneModel.drupActionableGenes().keySet(),
-                patientTumorLocation,
-                actionabilityAnalyzerData);
+                actionabilityAnalyzer,
+                patientTumorLocation);
     }
 
     @NotNull
@@ -223,7 +223,7 @@ abstract class PatientReporter {
     @NotNull
     private static FusionDisruptionAnalysis analyzeStructuralVariants(@NotNull RunContext run,
             @NotNull CopyNumberAnalysis copyNumberAnalysis, @NotNull StructuralVariantAnalyzer structuralVariantAnalyzer,
-            @Nullable PatientTumorLocation patientTumorLocation, @NotNull ActionabilityAnalyzer actionabilityAnalyzer) throws IOException {
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
         final Path structuralVariantVCF = PatientReporterFileLoader.findStructuralVariantVCF(run.runDirectory());
         LOGGER.info("Loading structural variants...");
         final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(structuralVariantVCF.toString(), true);
@@ -240,8 +240,8 @@ abstract class PatientReporter {
 
         return FusionDisruptionAnalyzer.run(structuralVariantAnalysis,
                 copyNumberAnalysis.exomeGeneCopyNumbers(),
-                patientTumorLocation,
-                actionabilityAnalyzer);
+                actionabilityAnalyzer,
+                patientTumorLocation);
     }
 
     @Nullable

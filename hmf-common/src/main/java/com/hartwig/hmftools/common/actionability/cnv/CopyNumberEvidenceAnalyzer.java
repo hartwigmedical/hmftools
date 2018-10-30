@@ -33,10 +33,10 @@ public class CopyNumberEvidenceAnalyzer {
     }
 
     @NotNull
-    public List<EvidenceItem> evidenceForCopyNumberEvent(@NotNull GeneCopyNumber geneCopyNumber, @Nullable String doidsPrimaryTumorLocation,
+    public List<EvidenceItem> evidenceForCopyNumber(@NotNull GeneCopyNumber geneCopyNumber, @Nullable String doidsPrimaryTumorLocation,
             @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
-        // KODU: Assume the gene copy number has already been determined to be a significant event.
+        // KODU: Assume the gene copy number has already been determined to be a significant event (LOSS or GAIN)
         for (ActionableCopyNumber actionableCopyNumber : actionableCopyNumbers) {
             if (checkCNVType(geneCopyNumber.value()).equals(actionableCopyNumber.cnvType()) && actionableCopyNumber.gene()
                     .equals(geneCopyNumber.gene())) {

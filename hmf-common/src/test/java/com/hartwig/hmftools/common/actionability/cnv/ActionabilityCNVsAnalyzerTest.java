@@ -64,8 +64,8 @@ public class ActionabilityCNVsAnalyzerTest {
                 .missenseNonBiallelicCount(0)
                 .build();
 
-        //   assertEquals(true, cnvAnalyzer.evidenceForCopyNumberEvent(geneCopyNumber, cancerType, "1612", "Breast"));
-        //   assertEquals(false, cnvAnalyzer.evidenceForCopyNumberEvent(geneCopyNumber, cancerType, "1612", "Skin"));
+        //   assertEquals(true, cnvAnalyzer.evidenceForCopyNumber(geneCopyNumber, cancerType, "1612", "Breast"));
+        //   assertEquals(false, cnvAnalyzer.evidenceForCopyNumber(geneCopyNumber, cancerType, "1612", "Skin"));
 
     }
 }
