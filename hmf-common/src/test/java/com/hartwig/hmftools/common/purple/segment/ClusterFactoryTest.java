@@ -174,8 +174,6 @@ public class ClusterFactoryTest {
                 .chromosome(CHROM)
                 .position(position)
                 .type(StructuralVariantType.BND)
-                .homology("")
-                .orientation((byte) 1)
                 .build();
     }
 

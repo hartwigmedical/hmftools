@@ -120,9 +120,7 @@ public class PurpleSegmentFactoryTest {
         return ImmutableClusterVariantLeg.builder()
                 .chromosome(CHROMOSOME_LENGTH.chromosome())
                 .position(position)
-                .homology("")
                 .type(StructuralVariantType.BND)
-                .orientation((byte) 1)
                 .build();
     }
 }
