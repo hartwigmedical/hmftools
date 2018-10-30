@@ -113,7 +113,10 @@ public class ClusterAnalyser {
         {
             cluster.setUniqueBreakends();
 
-            if(cluster.isSimpleSingleSV() || cluster.isFullyChained())
+            if(cluster.isSimpleSingleSV())
+                continue;
+
+            if(cluster.isFullyChained())
                 continue;
 
             if(cluster.getUniqueSvCount() < 2)
@@ -129,13 +132,16 @@ public class ClusterAnalyser {
             findChains(cluster);
 
             setClusterArmBoundaries(cluster);
+
+            cacheFinalLinkedPairs(cluster);
+
             setClusterResolvedState(cluster);
 
             cluster.logDetails();
         }
 
         // now look at merging unresolved & inconsistent clusters where they share the same chromosomal arms
-        List<SvCluster> mergedClusters = mergeInconsistentClusters(mClusters);
+        List<SvCluster> mergedClusters = mergeInconsistentClusters();
 
         if(!mergedClusters.isEmpty())
         {
@@ -164,6 +170,8 @@ public class ClusterAnalyser {
 
             for(SvCluster cluster : mergedClusters)
             {
+                cacheFinalLinkedPairs(cluster);
+
                 setClusterResolvedState(cluster);
             }
         }
@@ -174,7 +182,7 @@ public class ClusterAnalyser {
                 cluster.logDetails();
 
             mLinkFinder.resolveTransitiveSVs(mSampleId, cluster);
-            cacheFinalLinkedPairs(cluster);
+            // cacheFinalLinkedPairs(cluster);
 
             // reportChainFeatures(cluster);
         }
@@ -445,7 +453,7 @@ public class ClusterAnalyser {
         }
     }
 
-    private List<SvCluster> mergeInconsistentClusters(List<SvCluster> clusters)
+    private List<SvCluster> mergeInconsistentClusters()
     {
         // it's possible that to resolve arms and more complex arrangements, clusters not merged
         // by proximity of overlaps must be put together to solve inconsistencies (ie loose ends)
@@ -453,9 +461,9 @@ public class ClusterAnalyser {
 
         // merge any cluster which is itself not consistent and has breakends on the same arm as another
         int index1 = 0;
-        while(index1 < clusters.size())
+        while(index1 < mClusters.size())
         {
-            SvCluster cluster1 = clusters.get(index1);
+            SvCluster cluster1 = mClusters.get(index1);
 
             boolean isConsistent1 = isConsistentCluster(cluster1);
             boolean hasLongDelDup1 = mClusteringMethods.clusterHasLongDelDup(cluster1);
@@ -470,9 +478,9 @@ public class ClusterAnalyser {
             SvCluster newCluster = null;
 
             int index2 = index1 + 1;
-            while(index2 < clusters.size())
+            while(index2 < mClusters.size())
             {
-                SvCluster cluster2 = clusters.get(index2);
+                SvCluster cluster2 = mClusters.get(index2);
 
                 boolean isConsistent2 = isConsistentCluster(cluster2);
                 boolean hasLongDelDup2 = mClusteringMethods.clusterHasLongDelDup(cluster2);
@@ -525,7 +533,7 @@ public class ClusterAnalyser {
                 }
 
                 if(cluster2Merged)
-                    clusters.remove(index2);
+                    mClusters.remove(index2);
                 else
                     ++index2;
 
@@ -536,8 +544,8 @@ public class ClusterAnalyser {
             if(cluster1Merged && newCluster != null)
             {
                 // cluster has been replaced with a commbined one
-                clusters.remove(index1);
-                clusters.add(index1, newCluster);
+                mClusters.remove(index1);
+                mClusters.add(index1, newCluster);
             }
             else
             {
@@ -578,19 +586,17 @@ public class ClusterAnalyser {
         return false;
     }
 
-    private void demergeClusters(List<SvCluster> clusters)
+    private void demergeClusters(List<SvCluster> mergedClusters)
     {
         // de-merge any clusters which didn't form longer chains
-        int clusterCount = clusters.size();
-        for(int i = 0; i < clusterCount;)
-        {
-            SvCluster cluster = clusters.get(i);
+        int clusterCount = mergedClusters.size();
 
-            if (!cluster.hasSubClusters() || cluster.isFullyChained())
-            {
-                ++i;
+        for(int i = 0; i < clusterCount; ++i)
+        {
+            SvCluster cluster = mergedClusters.get(i);
+
+            if ( cluster.isFullyChained())
                 continue;
-            }
 
             int mainChainCount = cluster.getMaxChainCount();
             int maxSubClusterChainCount = 0;
@@ -601,14 +607,12 @@ public class ClusterAnalyser {
             }
 
             if(mainChainCount > maxSubClusterChainCount)
-            {
-                ++i;
                 continue;
-            }
 
+            // add the original clusters back in
             for(final SvCluster subCluster : cluster.getSubClusters())
             {
-                clusters.add(subCluster);
+                mClusters.add(subCluster);
             }
 
             if(mainChainCount > 0)
@@ -617,7 +621,7 @@ public class ClusterAnalyser {
                         cluster.getId(), mainChainCount, cluster.getSubClusters().size(), maxSubClusterChainCount);
             }
 
-            clusters.remove(i);
+            mClusters.remove(cluster);
         }
     }
 
