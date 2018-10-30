@@ -9,14 +9,17 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.isConsistentCluster;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcTypeCount;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_COMPLEX_CHAIN;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECIPROCAL_TRANS;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_CHAIN;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_INS;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.findCluster;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_SGL;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.findVariantById;
@@ -287,6 +290,13 @@ public class ClusterAnalyser {
             else if(calcTypeCount(cluster.getSVs(), INV) == 2)
             {
                 mClusteringMethods.markInversionPairTypes(cluster, logData, mSampleId);
+            }
+            else if(calcTypeCount(cluster.getSVs(), SGL) == 2)
+            {
+                if(cluster.getLinkedPairs().size() == 1 && cluster.getLinkedPairs().get(0).linkType() == LINK_TYPE_SGL)
+                {
+                    cluster.setResolved(true, RESOLVED_TYPE_SIMPLE_INS);
+                }
             }
 
             return;

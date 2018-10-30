@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getProximity;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.sameChrArm;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
@@ -337,9 +338,6 @@ public class LinkFinder
                         else
                             linkedPairs.add(index, newPair);
 
-                        // if(linkedPairs.size() > CLUSTER_SIZE_ANALYSIS_LIMIT * 100)
-                        //     linkedPairs.remove(linkedPairs.size()-1);
-
                         // if(newPair.length() < mUtils.getBaseDistance())
                         if(mLogVerbose && !var1.isReplicatedSv() && !var2.isReplicatedSv())
                         {
@@ -414,13 +412,24 @@ public class LinkFinder
             {
                 SvVarData var2 = cluster.getSVs().get(j);
 
+                if(var1.equals(var2, true))
+                    continue;
+
                 if(!var2.isNullBreakend() || var2.isNoneSegment())
                     continue;
 
-                if (!areSectionBreak(var1, var2, true, true))
+                if (!areSectionBreak(var1, var2, true, true) && !areLinkedSection(var1, var2, true, true))
+                {
+                    continue;
+                }
+
+                // allow if the length is within the DB-TI cutoff
+                long length = getProximity(var1, var2, true, true);
+
+                if(length > MIN_TEMPLATED_INSERTION_LENGTH)
                     continue;
 
-                // form a new DB from these 2 single breakends
+                // form a new  from these 2 single breakends
                 SvLinkedPair newPair = new SvLinkedPair(var1, var2, SvLinkedPair.LINK_TYPE_SGL, false, false);
 
                 // insert in order

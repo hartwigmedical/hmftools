@@ -25,6 +25,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_INT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECIPROCAL_TRANS;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_INS;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.findCluster;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcTypeCount;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_TELOMERE;
@@ -354,7 +355,7 @@ public class SvClusteringMethods {
         if(!cluster.isConsistent())
             return false;
 
-        if(cluster.isFullyChained())
+        if(cluster.isFullyChained() || cluster.isResolved())
             return true;
 
         // other wise check whether all remaining SVs are either in consistent chains
@@ -365,7 +366,6 @@ public class SvClusteringMethods {
                 return false;
         }
 
-        List<SvVarData> varList = Lists.newArrayList();
         for(final SvVarData var : cluster.getUnlinkedSVs())
         {
             if(!var.isLocal()) // so filters out cross arm, null breakends and translocation
@@ -377,7 +377,6 @@ public class SvClusteringMethods {
 
         return true;
     }
-
 
     private boolean mergeOnCommonArmLinks(List<SvCluster> clusters)
     {
@@ -718,7 +717,12 @@ public class SvClusteringMethods {
                 }
             }
         }
-        else if(cluster2.getResolvedType() != RESOLVED_TYPE_RECIPROCAL_TRANS)
+        else if(cluster2.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_TRANS
+            || cluster2.getResolvedType() == RESOLVED_TYPE_SIMPLE_INS)
+        {
+            return false;
+        }
+        else
         {
             List<SvArmGroup> armGroups1 = cluster1.getArmGroups();
             List<SvArmGroup> armGroups2 = cluster2.getArmGroups();

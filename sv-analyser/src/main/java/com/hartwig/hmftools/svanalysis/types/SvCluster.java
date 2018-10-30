@@ -65,6 +65,7 @@ public class SvCluster
     public static String RESOLVED_TYPE_DEL_EXT_TI = "DEL_Ext_TI";
     public static String RESOLVED_TYPE_DUP_INT_TI = "DUP_Int_TI";
     public static String RESOLVED_TYPE_DUP_EXT_TI = "DUP_Ext_TI";
+    public static String RESOLVED_TYPE_SIMPLE_INS = "SimpleIns";
 
     public static String RESOLVED_TYPE_SIMPLE_CHAIN = "SimpleChain";
     public static String RESOLVED_TYPE_COMPLEX_CHAIN = "ComplexChain";

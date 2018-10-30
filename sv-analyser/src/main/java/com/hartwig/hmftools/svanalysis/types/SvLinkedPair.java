@@ -31,18 +31,22 @@ public class SvLinkedPair {
         mIsInferred = true;
         mLinkInfo = "";
 
+        int length = (int) (first.position(firstLinkOnStart) - second.position(secondLinkOnStart));
+        mLinkLength = abs(length);
+
         if(mLinkType == LINK_TYPE_SGL)
         {
-            mLinkLength = (int)abs(first.position(true) - second.position(true));
+            if (mLinkLength < MIN_TEMPLATED_INSERTION_LENGTH)
+            {
+                mLinkLength = -mLinkLength;
+            }
         }
         else
         {
-            int length = (int) (first.position(firstLinkOnStart) - second.position(secondLinkOnStart));
-            mLinkLength = abs(length);
 
             if (mLinkType == LINK_TYPE_TI && mLinkLength < MIN_TEMPLATED_INSERTION_LENGTH)
             {
-                // re-label this as a DB
+                // re-label this as a deletion bridge
                 mLinkType = LINK_TYPE_DB;
                 mLinkLength = -mLinkLength;
             }
