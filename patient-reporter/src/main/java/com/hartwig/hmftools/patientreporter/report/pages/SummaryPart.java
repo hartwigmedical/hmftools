@@ -32,7 +32,8 @@ public final class SummaryPart {
                                 .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)),
                         cmp.horizontalList(cmp.text(
                                 "Genomic alterations (somatic variants, copy number changes, gene disruptions and gene fusions). Details can ve found on page 2.")
-                                .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER).setStyle(fontStyle().setFontSize(8))),
+                                .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
+                                .setStyle(fontStyle().setFontSize(8))),
                         cmp.verticalGap(10),
                         cmp.horizontalList(cmp.text("Tumor Purity").setStyle(tableHeaderStyle()),
                                 cmp.text(EvidencePage.impliedPurityString(report)).setStyle(dataTableStyle())),
@@ -56,7 +57,8 @@ public final class SummaryPart {
                 cmp.verticalList(cmp.horizontalList(cmp.text("Summary reported genomic alterations")
                                 .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)),
                         cmp.horizontalList(cmp.text("Whole genome sequencing based tumor characteristics. Details can be found on page 2. ")
-                                .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER).setStyle(fontStyle().setFontSize(8))),
+                                .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
+                                .setStyle(fontStyle().setFontSize(8))),
                         cmp.verticalGap(10),
                         cmp.text("SomaticVariants").setStyle(tableHeaderStyle()),
                         cmp.horizontalList(cmp.text("Number").setStyle(tableHeaderStyle()),
