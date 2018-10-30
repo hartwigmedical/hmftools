@@ -49,15 +49,15 @@ public class StructuralVariantAnalyzer {
 
     @NotNull
     public StructuralVariantAnalysis run(@NotNull final List<EnrichedStructuralVariant> variants) {
-        LOGGER.debug("annotating variants");
+        LOGGER.debug("Annotating variants");
         final List<StructuralVariantAnnotation> annotations = annotator.annotateVariants(variants);
 
         final List<StructuralVariantAnnotation> copy = Lists.newArrayList(annotations);
 
-        LOGGER.debug("calling process fusions");
+        LOGGER.debug("Calling process fusions");
         final List<GeneFusion> fusions = processFusions(copy);
 
-        LOGGER.debug("calling process disruptions");
+        LOGGER.debug("Calling process disruptions");
         final List<GeneDisruption> disruptions = processDisruptions(copy);
 
         return ImmutableStructuralVariantAnalysis.of(annotations, fusions, disruptions);

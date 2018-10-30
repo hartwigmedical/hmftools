@@ -4,7 +4,6 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
@@ -34,7 +33,7 @@ public final class GermlineVariantDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromVariants(@NotNull FittedPurityStatus fitStatus, @NotNull List<GermlineVariant> variants) {
+    public static JRDataSource fromVariants(@NotNull List<GermlineVariant> variants, boolean hasReliablePurityFit) {
         final DRDataSource variantDataSource = new DRDataSource(GENE_FIELD.getName(),
                 VARIANT_FIELD.getName(),
                 IMPACT_FIELD.getName(),
@@ -54,8 +53,8 @@ public final class GermlineVariantDataSource {
                     variant.hgvsProteinImpact(),
                     PatientReportFormat.readDepthField(variant),
                     variant.germlineStatus(),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyVaf),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, biallelic));
+                    PatientReportFormat.correctValueForFitReliability(ploidyVaf, hasReliablePurityFit),
+                    PatientReportFormat.correctValueForFitReliability(biallelic, hasReliablePurityFit));
         }
 
         return variantDataSource;

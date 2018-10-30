@@ -109,11 +109,11 @@ public class EnrichedSomaticVariantFactory {
             @NotNull String sequence) {
         if (variant.type().equals(VariantType.INDEL)) {
             return RepeatContextFactory.repeats(relativePosition + 1, sequence);
-        } else if (variant.type().equals(VariantType.SNP)) {
+        } else if (variant.type().equals(VariantType.SNP) || variant.type().equals(VariantType.MNP)) {
             Optional<RepeatContext> priorRepeat = RepeatContextFactory.repeats(relativePosition - 1, sequence);
-            Optional<RepeatContext> postRepeat = RepeatContextFactory.repeats(relativePosition + 1, sequence);
+            Optional<RepeatContext> postRepeat = RepeatContextFactory.repeats(relativePosition + variant.alt().length() , sequence);
             return max(priorRepeat, postRepeat);
-        } else {
+        }  else {
             return Optional.empty();
         }
     }

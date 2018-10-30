@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
-import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -25,7 +24,7 @@ public class SomaticVariantAnalyzerTest {
     private static final String WRONG_GENE = "WRONG";
 
     @Test
-    public void onlyReportsAndCountsRelevantVariants() throws IOException {
+    public void onlyReportsAndCountsRelevantVariants() {
         List<EnrichedSomaticVariant> variants =
                 Lists.newArrayList(builder().gene(RIGHT_GENE).canonicalCodingEffect(MISSENSE).worstCodingEffect(MISSENSE).build(),
                         builder().gene(RIGHT_GENE).canonicalCodingEffect(SYNONYMOUS).worstCodingEffect(SYNONYMOUS).build(),
@@ -40,20 +39,20 @@ public class SomaticVariantAnalyzerTest {
 //        SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants,
 //                Sets.newHashSet(RIGHT_GENE),
 //                Maps.newHashMap(),
-//                null, geneCopyNumbers, geneFusion);
+//                null, exomeGeneCopyNumbers, geneFusion);
 //
 //        assertEquals(2, analysis.tumorMutationalLoad());
-//        assertEquals(2, analysis.variantsToReport().size());
+//        assertEquals(2, analysis.reportableSomaticVariants().size());
 //
 //        Map<String, DriverCategory> driverCategoryMap = Maps.newHashMap();
 //        driverCategoryMap.put(RIGHT_GENE, DriverCategory.ONCO);
 //        SomaticVariantAnalysis analysisOnco = SomaticVariantAnalyzer.run(variants,
 //                Sets.newHashSet(RIGHT_GENE),
 //                driverCategoryMap,
-//                null, geneCopyNumbers, geneFusion);
+//                null, exomeGeneCopyNumbers, geneFusion);
 //
 //        assertEquals(2, analysisOnco.tumorMutationalLoad());
-//        assertEquals(1, analysisOnco.variantsToReport().size());
+//        assertEquals(1, analysisOnco.reportableSomaticVariants().size());
     }
 
     @NotNull

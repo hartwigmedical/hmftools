@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter.report;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestCopyNumberBuilder;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReportData;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testSampleReport;
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testSequencedReportData;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -18,24 +17,15 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
-import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
-import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.variant.Clonality;
-import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
-import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.BaseReportData;
@@ -43,17 +33,20 @@ import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableNotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
-import com.hartwig.hmftools.patientreporter.SequencedReportData;
+import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrial;
+import com.hartwig.hmftools.patientreporter.actionability.ImmutableClinicalTrial;
 import com.hartwig.hmftools.patientreporter.chord.ChordAnalysis;
 import com.hartwig.hmftools.patientreporter.chord.ImmutableChordAnalysis;
-import com.hartwig.hmftools.patientreporter.disruption.ImmutableReportableGeneDisruption;
-import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruption;
-import com.hartwig.hmftools.patientreporter.fusion.ImmutableReportableGeneFusion;
-import com.hartwig.hmftools.patientreporter.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineVariant;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableStudy;
+import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
+import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneFusion;
+import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
+import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
+import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableSomaticVariant;
+import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -71,35 +64,33 @@ public class PDFWriterTest {
     public void canGenerateSequenceReport() throws DRException, IOException {
         final double pathologyTumorPercentage = 0.6;
         final double impliedTumorPurity = 0.58;
+        final double averageTumorPloidy = 2.53;
         final int tumorMutationalLoad = 361;
         final double tumorMutationalBurden = 10.1;
         final double microsatelliteIndelsPerMb = 2.1;
 
         final BaseReportData baseReportData = testBaseReportData();
-        final SequencedReportData reporterData = testSequencedReportData();
-        final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity);
+        final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity, averageTumorPloidy);
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, fittedPurity);
-        final List<EvidenceItem> evidenceItems = createTestEvidenceItems();
-        final List<EnrichedSomaticVariant> somaticVariants = createTestSomaticVariants(purityAdjuster);
+        final List<EvidenceItem> clinicalEvidence = createTestClinicalEvidence();
+        final List<ClinicalTrial> clinicalTrials = createTestClinicalTrials();
+        final List<ReportableSomaticVariant> somaticVariants = createTestSomaticVariants(purityAdjuster);
         final List<GermlineVariant> germlineVariants = createTestGermlineVariants(purityAdjuster);
         final ChordAnalysis chordAnalysis = createTestChordAnalysis();
         final List<GeneCopyNumber> copyNumbers = createTestCopyNumbers();
         final List<ReportableGeneFusion> fusions = createTestFusions();
         final List<ReportableGeneDisruption> disruptions = createTestDisruptions();
 
-        final List<DriverCatalog> driverCatalog = Lists.newArrayList();
-        driverCatalog.addAll(OncoDrivers.drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), somaticVariants));
-        driverCatalog.addAll(TsgDrivers.drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), somaticVariants));
-
         final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
 
         final AnalysedPatientReport patientReport = ImmutableAnalysedPatientReport.of(sampleReport,
-                FittedPurityStatus.NORMAL,
                 fittedPurity.purity(),
-                evidenceItems,
+                true,
+                fittedPurity.ploidy(),
+                clinicalEvidence,
+                clinicalTrials,
                 somaticVariants,
-                driverCatalog,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
                 tumorMutationalBurden,
@@ -112,9 +103,9 @@ public class PDFWriterTest {
                 Resources.getResource("circos/circos_example.png").getPath(),
                 Optional.of("this is a test report and does not relate to any real CPCT patient"),
                 baseReportData.signaturePath(),
-                baseReportData.logoPath());
+                baseReportData.logoRVAPath());
 
-        final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport, reporterData);
+        final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport);
         assertNotNull(mainReport);
 
         if (WRITE_TO_PDF) {
@@ -123,7 +114,7 @@ public class PDFWriterTest {
     }
 
     @NotNull
-    private static List<EvidenceItem> createTestEvidenceItems() {
+    private static List<EvidenceItem> createTestClinicalEvidence() {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
         evidenceItems.add(ImmutableEvidenceItem.builder()
                 .event("TP53 p.Pro177_Cys182del")
@@ -147,62 +138,21 @@ public class PDFWriterTest {
                 .isOnLabel(true)
                 .build());
 
-        evidenceItems.add(ImmutableEvidenceItem.builder()
-                .event("TP53 p.Pro177_Cys182del")
-                .drug("Docetaxel")
-                .drugsType("Chemotherapy")
-                .level("D")
-                .response("Resistant")
-                .reference("variant:222")
-                .source(ActionabilitySource.CIVIC)
-                .isOnLabel(true)
-                .build());
-
-        evidenceItems.add(ImmutableEvidenceItem.builder()
-                .event("BRAF p.Val600Glu")
-                .drug("IMPemBra")
-                .drugsType("Trial")
-                .level("B")
-                .response("Response")
-                .reference("EXT8846 (NL54421.031.15)")
-                .source(ActionabilitySource.ICLUSION)
-                .isOnLabel(true)
-                .build());
-
-        evidenceItems.add(ImmutableEvidenceItem.builder()
-                .event("BRAF p.Val600Glu")
-                .drug("IMPemBra")
-                .drugsType("Trial")
-                .level("B")
-                .response("Response")
-                .reference("EXT8846 (NL54421.031.15)")
-                .source(ActionabilitySource.ICLUSION)
-                .isOnLabel(false)
-                .build());
-
-        evidenceItems.add(ImmutableEvidenceItem.builder()
-                .event("TP53 p.Pro177_Cys182del")
-                .drug("Docetaxel")
-                .drugsType("Chemotherapy")
-                .level("D")
-                .response("Resistant")
-                .reference("variant:222")
-                .source(ActionabilitySource.CIVIC)
-                .isOnLabel(false)
-                .build());
-
-        evidenceItems.add(ImmutableEvidenceItem.builder()
-                .event("BRAF p.Val600Glu")
-                .drug("IMPemBra")
-                .drugsType("Trial")
-                .level("B")
-                .response("Response")
-                .reference("EXT8846 (NL54421.031.15)")
-                .source(ActionabilitySource.ICLUSION)
-                .isOnLabel(true)
-                .build());
-
         return evidenceItems;
+    }
+
+    @NotNull
+    private static List<ClinicalTrial> createTestClinicalTrials() {
+        List<ClinicalTrial> trials = Lists.newArrayList();
+        trials.add(ImmutableClinicalTrial.builder()
+                .event("BRAF p.Val600Glu")
+                .acronym("IMPemBra")
+                .reference("EXT8846 (NL54421.031.15)")
+                .source(ActionabilitySource.ICLUSION)
+                .isOnLabel(true)
+                .level("C")
+                .build());
+        return trials;
     }
 
     @NotNull
@@ -248,57 +198,68 @@ public class PDFWriterTest {
     }
 
     @NotNull
-    private static FittedPurity createFittedPurity(double impliedPurity) {
+    private static FittedPurity createFittedPurity(double impliedPurity, double averageTumorPloidy) {
         return ImmutableFittedPurity.builder()
                 .purity(impliedPurity)
                 .diploidProportion(0)
                 .normFactor(0)
                 .score(0)
-                .ploidy(2)
+                .ploidy(averageTumorPloidy)
                 .somaticDeviation(0)
                 .build();
     }
 
     @NotNull
-    private static List<EnrichedSomaticVariant> createTestSomaticVariants(@NotNull final PurityAdjuster purityAdjuster) {
-        final EnrichedSomaticVariant variant1 = createSomaticVariantBuilder().gene("BRAF")
-                .canonicalHgvsCodingImpact("c.1799T>A")
-                .canonicalHgvsProteinImpact("p.Val600Glu")
-                .canonicalCodingEffect(CodingEffect.MISSENSE)
-                .type(VariantType.SNP)
+    private static List<ReportableSomaticVariant> createTestSomaticVariants(@NotNull final PurityAdjuster purityAdjuster) {
+        final ReportableSomaticVariant variant1 = ImmutableReportableSomaticVariant.builder()
+                .gene("BRAF")
+                .isDrupActionable(true)
+                .hgvsCodingImpact("c.1799T>A")
+                .hgvsProteinImpact("p.Val600Glu")
                 .hotspot(Hotspot.HOTSPOT)
                 .clonality(Clonality.CLONAL)
                 .alleleReadCount(18)
                 .totalReadCount(99)
                 .adjustedCopyNumber(4)
                 .minorAllelePloidy(1)
+                .biallelic(false)
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("7", 4, 0.18 / 0.99))
+                .driverCategory(DriverCategory.ONCO)
+                .driverLikelihood(1D)
                 .build();
 
-        final EnrichedSomaticVariant variant2 = createSomaticVariantBuilder().gene("TP53")
-                .canonicalHgvsCodingImpact("c.821_826delTTTGTG")
-                .canonicalHgvsProteinImpact("p.Val274_Cus275del")
-                .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
-                .type(VariantType.INDEL)
+        final ReportableSomaticVariant variant2 = ImmutableReportableSomaticVariant.builder()
+                .gene("TP53")
+                .isDrupActionable(false)
+                .hgvsCodingImpact("c.821_826delTTTGTG")
+                .hgvsProteinImpact("p.Val274_Cus275del")
+                .hotspot(Hotspot.NON_HOTSPOT)
                 .clonality(Clonality.CLONAL)
                 .alleleReadCount(20)
                 .totalReadCount(87)
                 .adjustedCopyNumber(3)
                 .minorAllelePloidy(0)
+                .biallelic(false)
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("17", 3, 0.20 / 0.87))
+                .driverCategory(DriverCategory.TSG)
+                .driverLikelihood(0.5)
                 .build();
 
-        final EnrichedSomaticVariant variant3 = createSomaticVariantBuilder().gene("MYC")
-                .canonicalHgvsCodingImpact("c.15_16delinsCA")
-                .canonicalHgvsProteinImpact("p.Val6Ile")
-                .canonicalCodingEffect(CodingEffect.MISSENSE)
-                .type(VariantType.MNP)
+        final ReportableSomaticVariant variant3 = ImmutableReportableSomaticVariant.builder()
+                .gene("MYC")
+                .isDrupActionable(false)
+                .hgvsCodingImpact("c.15_16delinsCA")
+                .hgvsProteinImpact("p.Val6Ile")
+                .hotspot(Hotspot.NON_HOTSPOT)
                 .clonality(Clonality.CLONAL)
                 .alleleReadCount(20)
                 .totalReadCount(88)
                 .adjustedCopyNumber(2)
                 .minorAllelePloidy(1)
+                .biallelic(false)
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("8", 2, 0.2 / 0.88))
+                .driverCategory(DriverCategory.ONCO)
+                .driverLikelihood(0.1)
                 .build();
 
         return Lists.newArrayList(variant1, variant2, variant3);
@@ -306,18 +267,20 @@ public class PDFWriterTest {
 
     @NotNull
     private static List<GeneCopyNumber> createTestCopyNumbers() {
-        final GeneCopyNumber copyNumber1 = createTestCopyNumberBuilder().chromosome("9")
-                .chromosomeBand("p21.3")
-                .gene("CDKN2A")
-                .minCopyNumber(0)
-                .maxCopyNumber(0)
-                .build();
-        final GeneCopyNumber copyNumber2 = createTestCopyNumberBuilder().chromosome("17")
+        final GeneCopyNumber copyNumber1 = createTestCopyNumberBuilder().chromosome("17")
                 .chromosomeBand("p13.1")
                 .gene("TP53")
                 .minCopyNumber(0)
                 .maxCopyNumber(2)
                 .build();
+
+        final GeneCopyNumber copyNumber2 = createTestCopyNumberBuilder().chromosome("9")
+                .chromosomeBand("p21.3")
+                .gene("CDKN2A")
+                .minCopyNumber(0)
+                .maxCopyNumber(0)
+                .build();
+
         final GeneCopyNumber copyNumber3 = createTestCopyNumberBuilder().chromosome("17")
                 .chromosomeBand("q12")
                 .gene("ERBB2")
@@ -433,7 +396,7 @@ public class PDFWriterTest {
                 NotAnalysableStudy.CPCT,
                 Optional.empty(),
                 testBaseReportData().signaturePath(),
-                testBaseReportData().logoPath());
+                testBaseReportData().logoRVAPath());
 
         return PDFWriter.generateNotAnalysableReport(patientReport);
     }
@@ -441,10 +404,5 @@ public class PDFWriterTest {
     @NotNull
     private static ImmutableReportableGeneDisruption.Builder createDisruptionBuilder() {
         return ImmutableReportableGeneDisruption.builder().firstAffectedExon(1);
-    }
-
-    @NotNull
-    private static ImmutableEnrichedSomaticVariant.Builder createSomaticVariantBuilder() {
-        return SomaticVariantTestBuilderFactory.createEnriched().filter("PASS");
     }
 }

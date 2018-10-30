@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.svanalysis.svgraph;
 
 public enum SimplificationType {
-    SimpleDeletion,
+    SimpleIndel,
     SimpleDuplication,
-    //Inversion,
+    TranslocationInsertion,
+    SimpleInversion,
     //BalancedDoubleStrandedBreakTranslocation,
     //SimpleInsertion,
-    //TranslocationInsertion,
     /**
      * Adjacent events which are linked together on the same chromatid
      */

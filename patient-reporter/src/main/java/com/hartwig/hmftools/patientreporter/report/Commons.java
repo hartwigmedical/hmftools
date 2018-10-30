@@ -28,7 +28,7 @@ public final class Commons {
 
     public static final int SECTION_VERTICAL_GAP = 25;
     public static final int HEADER_TO_TABLE_VERTICAL_GAP = 6;
-    public static final int HEADER_TO_DETAIL_VERTICAL_GAP = 8;
+    private static final int HEADER_TO_DETAIL_VERTICAL_GAP = 8;
 
     private static final String FONT = "Tinos";
     private static final String MONOSPACE_FONT = "Inconsolata";
@@ -76,14 +76,6 @@ public final class Commons {
     }
 
     @NotNull
-    public static StyleBuilder dataStyle() {
-        return fontStyle().setFontSize(8)
-                .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
-                .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE)
-                .setPadding(TABLE_PADDING);
-    }
-
-    @NotNull
     public static StyleBuilder dataTableStyle() {
         return dataStyle().setBorder(stl.pen1Point());
     }
@@ -96,11 +88,6 @@ public final class Commons {
     @NotNull
     public static StyleBuilder monospaceFontStyle() {
         return stl.style().setFontName(MONOSPACE_FONT);
-    }
-
-    @NotNull
-    public static JasperReportBuilder baseTable() {
-        return report().setColumnStyle(dataStyle()).setColumnTitleStyle(tableHeaderStyle()).highlightDetailEvenRows();
     }
 
     @NotNull
@@ -124,5 +111,13 @@ public final class Commons {
     public static String formattedDate(@Nullable final LocalDate date) {
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
         return date != null ? formatter.format(date) : "?";
+    }
+
+    @NotNull
+    private static StyleBuilder dataStyle() {
+        return fontStyle().setFontSize(8)
+                .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
+                .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE)
+                .setPadding(TABLE_PADDING);
     }
 }

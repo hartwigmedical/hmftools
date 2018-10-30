@@ -12,7 +12,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
+import com.hartwig.hmftools.common.variant.filter.ExcludeCNVFilter;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -60,17 +62,17 @@ public class StructuralVariantFactory {
     @NotNull
     private final List<StructuralVariant> results = Lists.newArrayList();
     @NotNull
-    private final VariantContextFilter filter;
+    private final CompoundFilter filter;
 
     public StructuralVariantFactory(boolean filterPassesOnly) {
-        final CompoundFilter filter = new CompoundFilter(true);
+        this(filterPassesOnly ? new PassingVariantFilter() : new AlwaysPassFilter());
+    }
 
-        if(filterPassesOnly) {
-            filter.add(new PassingVariantFilter());
-        }
-
-        filter.add(new ChromosomeFilter());
-        this.filter = filter;
+    public StructuralVariantFactory(@NotNull final VariantContextFilter filter) {
+        this.filter = new CompoundFilter(true);
+        this.filter.add(new ChromosomeFilter());
+        this.filter.add(new ExcludeCNVFilter());
+        this.filter.add(filter);
     }
 
     public void addVariantContext(@NotNull VariantContext context) {

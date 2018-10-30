@@ -28,40 +28,40 @@ public class BreakendConsistency {
     }
 
     /**
-     * @return notional ploidy of event
+     * @return notional copyNumber of event
      */
-    public double ploidy() {
+    public double copyNumber() {
         return nominalPloidy;
     }
 
     /**
-     * @return Difference in copy number between the flanking segment and the notional ploidy of the event
+     * @return Difference in copy number between the flanking segment and the notional copyNumber of the event
      */
     public double copyNumberDelta() {
-        return anchorPloidy() - referencePathPloidy() - ploidy();
+        return anchorCopyNumber() - referencePathCopyNumber() - copyNumber();
     }
 
     /**
-     * Difference in ploidy between event support and notional ploidy
+     * Difference in copyNumber between event support and notional copyNumber
      * @return
      */
     public double eventDelta() {
-        return ploidy() - sv.ploidy();
+        return copyNumber() - sv.ploidy();
     }
-    public double anchorPloidy() { return anchor == null ? 0 : anchor.ploidy(); }
-    public double referencePathPloidy() { return refPath == null ? 0 : refPath.ploidy(); }
+    public double anchorCopyNumber() { return anchor == null ? 0 : anchor.copyNumber(); }
+    public double referencePathCopyNumber() { return refPath == null ? 0 : refPath.copyNumber(); }
     public EnrichedStructuralVariant sv() { return sv; }
 
     /**
-     * Ploidy of other SVs. SVs in the opposite orientation have negative ploidy.
+     * Ploidy of other SVs. SVs in the opposite orientation have negative copyNumber.
      * @return
      */
-    public double otherSvPloidy() {
+    public double otherSvCopyNumber() {
         return alternateSvs.stream().mapToDouble(x -> x.ploidy()).sum()
             - oppositeOrientationSvs.stream().mapToDouble(x -> x.ploidy()).sum();
     }
     @Override
     public String toString() {
-        return String.format("%s ploidy: %.2f ∆cn: %.2f ∆sv: %.2f ∆other: %.2f", sv.id(), ploidy(), copyNumberDelta(), eventDelta(), otherSvPloidy());
+        return String.format("%s copyNumber: %.2f ∆cn: %.2f ∆sv: %.2f ∆other: %.2f", sv.id(), copyNumber(), copyNumberDelta(), eventDelta(), otherSvCopyNumber());
     }
 }

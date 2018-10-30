@@ -11,7 +11,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
@@ -120,34 +119,5 @@ public final class PatientReporterFileLoader {
     static ChordAnalysis loadChordFile(@NotNull String runDirectory, @NotNull String sample) throws IOException {
         final String chordDirectory = runDirectory + File.separator + CHORD_DIRECTORY;
         return ChordFile.loadChordFile(chordDirectory, sample);
-    }
-
-    @Nullable
-    public static PatientTumorLocation extractPatientTumorLocation(@NotNull List<PatientTumorLocation> patientTumorLocations,
-            @NotNull String sample) {
-        final String patientIdentifier = toPatientIdentifier(sample);
-
-        final List<PatientTumorLocation> matchingIdTumorLocations = patientTumorLocations.stream()
-                .filter(patientTumorLocation -> patientTumorLocation.patientIdentifier().equals(patientIdentifier))
-                .collect(Collectors.toList());
-
-        // KODU: We should never have more than one curated tumor location for a single patient.
-        assert matchingIdTumorLocations.size() < 2;
-
-        if (matchingIdTumorLocations.size() == 1) {
-            return matchingIdTumorLocations.get(0);
-        } else {
-            LOGGER.warn("Could not find patient " + patientIdentifier + " in clinical data!");
-            return null;
-        }
-    }
-
-    @NotNull
-    private static String toPatientIdentifier(@NotNull final String sample) {
-        if (sample.length() >= 12 && (sample.startsWith("CPCT") || sample.startsWith("DRUP"))) {
-            return sample.substring(0, 12);
-        }
-        // KODU: If we want to generate a report for non-CPCT/non-DRUP we assume patient and sample are identical.
-        return sample;
     }
 }

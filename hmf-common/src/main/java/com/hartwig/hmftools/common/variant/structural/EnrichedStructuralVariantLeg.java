@@ -21,4 +21,7 @@ public interface EnrichedStructuralVariantLeg extends StructuralVariantLeg {
 
     @Nullable
     CopyNumberMethod method();
+
+    @Nullable
+    String refGenomeContext();
 }

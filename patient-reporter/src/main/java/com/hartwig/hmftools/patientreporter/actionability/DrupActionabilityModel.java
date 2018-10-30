@@ -16,6 +16,7 @@ public abstract class DrupActionabilityModel {
 
     @NotNull
     public abstract Set<String> actionableGenes();
+
     @NotNull
     public abstract Map<String, DriverCategory> geneDriverCategoryMap();
 

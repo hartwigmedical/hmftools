@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svanalysis.svgraph;
 
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 import com.hartwig.hmftools.common.position.GenomeInterval;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
@@ -34,7 +36,7 @@ public class BgSegment implements GenomeInterval {
                 .maxStart(0)
                 .build());
     }
-    public double ploidy() {
+    public double copyNumber() {
         return _cn.averageTumorCopyNumber();
     }
     @Nullable
@@ -55,13 +57,21 @@ public class BgSegment implements GenomeInterval {
         return _cn.chromosome();
     }
 
+    public long length() { return _cn.length(); }
+
     @Override
     public long position() {
         return _cn.start();
     }
+
+    public long positionOf(int breakendOrientation) {
+        return breakendOrientation < 0 ? _cn.start() : _cn.end();
+    }
+
     private static boolean canMerge(BgSegment left, BgSegment right) {
         return left._cn.end() == right._cn.start() - 1 && left._cn.chromosome().equals(right._cn.chromosome());
     }
+
     public static BgSegment merge(BgSegment left, BgSegment right) {
         if (!canMerge(left, right)) {
             throw new IllegalArgumentException("Cannot merge segments");
@@ -78,7 +88,7 @@ public class BgSegment implements GenomeInterval {
 
     @Override
     public String toString() {
-        return String.format("%s:%d-%d CN:%f", chromosome(), startPosition(), endPosition(), ploidy());
+        return String.format("%s:%d-%d CN:%f", chromosome(), startPosition(), endPosition(), copyNumber());
     }
 
     private static PurpleCopyNumber merge(PurpleCopyNumber left, PurpleCopyNumber right) {
@@ -110,17 +120,25 @@ public class BgSegment implements GenomeInterval {
     }
 
     /**
-     * Adjusts the ploidy of the given segment by the given amount
+     * Adjusts the copyNumber of the given segment by the given amount
      * @param ploidy
      */
-    public void adjustPloidy(Double ploidy) {
-        // TODO: need to adjust BAF range: the added ploidy could be major or minor and we don't know
+    public void adjustCopyNumber(Double ploidy) {
+        // TODO: need to adjust BAF range: the added copyNumber could be major or minor and we don't know
         this._cn = ImmutablePurpleCopyNumber.builder().from(_cn)
                 .averageTumorCopyNumber(_cn.averageTumorCopyNumber() + ploidy)
                 .build();
     }
-    public double maxMajorPloidy() {
+    public double maxMajorCopyNumber() {
         // TODO use BAF range to calculate
-        return ploidy();
+        return copyNumber();
     }
+    public static Ordering<BgSegment> ByPloidy = new Ordering<BgSegment>() {
+        public int compare(BgSegment o1, BgSegment o2) {
+            return ComparisonChain.start()
+                    .compare(o1.copyNumber(), o2.copyNumber())
+                    .compare(o1.maxMajorCopyNumber(), o2.maxMajorCopyNumber())
+                    .result();
+        }
+    };
 }

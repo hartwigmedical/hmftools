@@ -14,13 +14,13 @@ import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class ReportableEvidenceItems {
+public final class ReportableEvidenceItemFactory {
 
-    private ReportableEvidenceItems() {
+    private ReportableEvidenceItemFactory() {
     }
 
     @NotNull
-    public static List<EvidenceItem> reportableEvidenceItems(@NotNull List<EvidenceItem> evidenceItems) {
+    public static List<EvidenceItem> filterEvidenceItemsForReporting(@NotNull List<EvidenceItem> evidenceItems) {
         Set<EvidenceItem> uniqueReportableItems = Sets.newHashSet();
         for (EvidenceItem evidence : evidenceItems) {
             if (!evidence.source().isTrialSource()) {
@@ -56,6 +56,7 @@ public final class ReportableEvidenceItems {
                 evidenceFiltered.add(highestOffLabel);
             }
         }
+
         return evidenceFiltered;
     }
 
@@ -77,10 +78,10 @@ public final class ReportableEvidenceItems {
     }
 
     @Nullable
-    private static EvidenceItem highest(@NotNull List<EvidenceItem> items, boolean checkForOnLabel) {
+    private static EvidenceItem highest(@NotNull List<EvidenceItem> items, boolean shouldBeOnLabel) {
         EvidenceItem highest = null;
         for (EvidenceItem item : items) {
-            if (item.isOnLabel() == checkForOnLabel) {
+            if (item.isOnLabel() == shouldBeOnLabel) {
                 if (highest == null || hasHigherEvidence(item, highest)) {
                     highest = item;
                 }

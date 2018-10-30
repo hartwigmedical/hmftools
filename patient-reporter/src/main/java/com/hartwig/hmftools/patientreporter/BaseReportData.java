@@ -27,6 +27,6 @@ public abstract class BaseReportData {
     @NotNull
     public abstract String signaturePath();
 
-   @NotNull
-    public abstract String logoPath();
+    @NotNull
+    public abstract String logoRVAPath();
 }

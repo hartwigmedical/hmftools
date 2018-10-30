@@ -16,6 +16,7 @@ import net.sf.dynamicreports.report.builder.style.PenBuilder;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class },
              allParameters = true)
 public abstract class SliderSection {
+
     private static final PenBuilder BORDER = stl.pen1Point();
     private static final int EDGE_PADDING = 7;
     private static final int INNER_PADDING = 2;

@@ -3,12 +3,12 @@ package com.hartwig.hmftools.patientreporter.qcfail;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
+import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.patientreporter.BaseReportData;
 import com.hartwig.hmftools.patientreporter.ImmutableNotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.PatientReporterFileLoader;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 
 import org.immutables.value.Value;
@@ -29,7 +29,7 @@ public abstract class NotAnalysableReporter {
         assert study != null;
 
         final PatientTumorLocation patientTumorLocation =
-                PatientReporterFileLoader.extractPatientTumorLocation(baseReportData().patientTumorLocations(), sample);
+                PatientTumorLocationFunctions.findPatientTumorLocationForSample(baseReportData().patientTumorLocations(), sample);
         final Lims lims = baseReportData().limsModel();
 
         final SampleReport sampleReport = ImmutableSampleReport.of(sample,
@@ -44,6 +44,6 @@ public abstract class NotAnalysableReporter {
                 reason,
                 study,
                 Optional.ofNullable(comments),
-                baseReportData().signaturePath(), baseReportData().logoPath());
+                baseReportData().signaturePath(), baseReportData().logoRVAPath());
     }
 }

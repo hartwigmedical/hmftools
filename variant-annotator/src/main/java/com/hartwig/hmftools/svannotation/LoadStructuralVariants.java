@@ -3,10 +3,10 @@ package com.hartwig.hmftools.svannotation;
 import static com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator.PON_FILTER_PASS;
 import static com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator.PON_FILTER_PON;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,13 +49,17 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 import htsjdk.variant.vcf.VCFCodec;
 
 public class LoadStructuralVariants {
 
+    // Let PON filtered SVs through since GRIDSS PON filtering is performed upstream
+    private static Set<String> ALLOWED_FILTERS = Sets.newHashSet( "INFERRED", PON_FILTER_PON, PON_FILTER_PASS);
     private static final Logger LOGGER = LogManager.getLogger(LoadStructuralVariants.class);
 
     private static final String SAMPLE = "sample";
@@ -65,6 +69,7 @@ public class LoadStructuralVariants {
     private static final String FUSION_PAIRS_CSV = "fusion_pairs_csv";
     private static final String PROMISCUOUS_FIVE_CSV = "promiscuous_five_csv";
     private static final String PROMISCUOUS_THREE_CSV = "promiscuous_three_csv";
+    private static final String REF_GENOME = "ref_genome";
 
     private static final String SOURCE_SVS_FROM_DB = "source_svs_from_db";
     private static final String LOG_DEBUG = "log_debug";
@@ -107,20 +112,15 @@ public class LoadStructuralVariants {
                 return;
             }
         } else {
-            LOGGER.info("reading VCF File");
-            // Let PON filtered SVs through since GRIDSS PON filtering is performed upstream
-            Set<String> allowableFilters = new HashSet<>();
-            allowableFilters.add("PASS");
-            allowableFilters.add(".");
-            allowableFilters.add("");
-            allowableFilters.add(PON_FILTER_PON);
-            allowableFilters.add(PON_FILTER_PASS);
-            final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE), false).stream()
-                    .filter(sv -> allowableFilters.contains(sv.filter()))
-                    .collect(Collectors.toList());
 
+            LOGGER.info("Loading indexed fasta reference file");
+            final String fastaFileLocation = cmd.getOptionValue(REF_GENOME);
+            final IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
+
+            LOGGER.info("reading VCF File");
+            final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE));
             LOGGER.info("enriching structural variants based on purple data");
-            svList = enrichStructuralVariants(variants, dbAccess, tumorSample);
+            svList = enrichStructuralVariants(indexedFastaSequenceFile, variants, dbAccess, tumorSample);
         }
 
         List<EnrichedStructuralVariant> updatedSVs = Lists.newArrayList();
@@ -220,8 +220,16 @@ public class LoadStructuralVariants {
     }
 
     @NotNull
-    private static List<StructuralVariant> readFromVcf(@NotNull String vcfFileLocation, final boolean filterOnPasses) throws IOException {
-        final StructuralVariantFactory factory = new StructuralVariantFactory(filterOnPasses);
+    private static List<StructuralVariant> readFromVcf(@NotNull String vcfFileLocation) throws IOException {
+
+
+        VariantContextFilter filter = variantContext -> {
+            final Set<String> filters = Sets.newHashSet(variantContext.getFilters());
+            filters.removeAll(ALLOWED_FILTERS);
+            return variantContext.isNotFiltered() || filters.isEmpty();
+        };
+
+        final StructuralVariantFactory factory = new StructuralVariantFactory(filter);
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcfFileLocation,
                 new VCFCodec(),
                 false)) {
@@ -231,7 +239,7 @@ public class LoadStructuralVariants {
     }
 
     @NotNull
-    private static List<EnrichedStructuralVariant> enrichStructuralVariants(@NotNull List<StructuralVariant> variants,
+    private static List<EnrichedStructuralVariant> enrichStructuralVariants( @NotNull final IndexedFastaSequenceFile indexedFastaSequenceFile, @NotNull List<StructuralVariant> variants,
             @NotNull DatabaseAccess dbAccess, @NotNull String tumorSample) {
         final PurityContext purityContext = dbAccess.readPurityContext(tumorSample);
 
@@ -244,8 +252,9 @@ public class LoadStructuralVariants {
                 : new PurityAdjuster(purityContext.gender(), purityContext.bestFit().purity(), purityContext.bestFit().normFactor());
 
         final List<PurpleCopyNumber> copyNumberList = dbAccess.readCopynumbers(tumorSample);
-        final Multimap<Chromosome, PurpleCopyNumber> copyNumbers = Multimaps.index(copyNumberList, x -> HumanChromosome.fromString(x.chromosome()));
-        return EnrichedStructuralVariantFactory.enrich(variants, purityAdjuster, copyNumbers);
+        final Multimap<Chromosome, PurpleCopyNumber> copyNumbers =
+                Multimaps.index(copyNumberList, x -> HumanChromosome.fromString(x.chromosome()));
+        return new EnrichedStructuralVariantFactory(indexedFastaSequenceFile, purityAdjuster, copyNumbers).enrich(variants);
     }
 
     @NotNull
@@ -264,6 +273,7 @@ public class LoadStructuralVariants {
         options.addOption(SOURCE_SVS_FROM_DB, false, "Skip annotations, including Ensemble DB data sync, for testing only)");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         options.addOption(SV_PON_FILE, true, "PON file for SVs");
+        options.addOption(REF_GENOME, true, "Path to the ref genome fasta file.");
         return options;
     }
 

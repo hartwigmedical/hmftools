@@ -22,7 +22,7 @@ public final class MicrosatelliteAnalyzer {
     private MicrosatelliteAnalyzer() {
     }
 
-    static double determineMicrosatelliteIndelsPerMb(@NotNull final List<EnrichedSomaticVariant> variants) {
+    static double determineMicrosatelliteIndelsPerMb(@NotNull List<EnrichedSomaticVariant> variants) {
         int indelCount = 0;
         for (EnrichedSomaticVariant variant : variants) {
             if (isPassIndel(variant) && repeatContextIsRelevant(variant.repeatCount(), variant.repeatSequence())) {
@@ -32,7 +32,7 @@ public final class MicrosatelliteAnalyzer {
         return (double) indelCount / NUMBER_OF_MB_PER_GENOME;
     }
 
-    private static boolean isPassIndel(@NotNull final SomaticVariant variant) {
+    private static boolean isPassIndel(@NotNull SomaticVariant variant) {
         return variant.type() == VariantType.INDEL && variant.ref().length() < 50 && variant.alt().length() < 50 && !variant.isFiltered();
     }
 

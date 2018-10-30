@@ -9,20 +9,17 @@ import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
-import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class CopyNumberEvidenceAnalyzer {
-    private static final double REL_GAIN = 3.0;
-    private static final double ABS_LOSS = 0.5;
 
     @NotNull
     private final List<ActionableCopyNumber> actionableCopyNumbers;
 
-    CopyNumberEvidenceAnalyzer(@NotNull final List<ActionableCopyNumber> actionableCopyNumbers) {
+    CopyNumberEvidenceAnalyzer(@NotNull List<ActionableCopyNumber> actionableCopyNumbers) {
         this.actionableCopyNumbers = actionableCopyNumbers;
     }
 
@@ -36,12 +33,12 @@ public class CopyNumberEvidenceAnalyzer {
     }
 
     @NotNull
-    public List<EvidenceItem> evidenceForCopyNumberEvent(@NotNull GeneCopyNumber geneCopyNumber, @Nullable String doidsPrimaryTumorLocation,
-            @NotNull CancerTypeAnalyzer cancerTypeAnalyzer, final double purplePloidy) {
-        Double minCopyValue = (double) Math.max(0, Math.round(geneCopyNumber.minCopyNumber()));
+    public List<EvidenceItem> evidenceForCopyNumber(@NotNull GeneCopyNumber geneCopyNumber, @Nullable String doidsPrimaryTumorLocation,
+            @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
+        // KODU: Assume the gene copy number has already been determined to be a significant event (LOSS or GAIN)
         for (ActionableCopyNumber actionableCopyNumber : actionableCopyNumbers) {
-            if (checkCNVType(minCopyValue, purplePloidy).equals(actionableCopyNumber.cnvType()) && actionableCopyNumber.gene()
+            if (checkCNVType(geneCopyNumber.value()).equals(actionableCopyNumber.cnvType()) && actionableCopyNumber.gene()
                     .equals(geneCopyNumber.gene())) {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableCopyNumber(actionableCopyNumber);
 
@@ -56,15 +53,8 @@ public class CopyNumberEvidenceAnalyzer {
     }
 
     @NotNull
-    private static String checkCNVType(final double copyNumber, final double purplePloidy) {
-        Double relativeCopyNumber = copyNumber / purplePloidy;
-        String CNVType = "";
-        if (Doubles.lessOrEqual(copyNumber, ABS_LOSS)) {
-            CNVType = "Deletion";
-        } else if (Doubles.greaterOrEqual(relativeCopyNumber, REL_GAIN)) {
-            CNVType = "Amplification";
-        }
-        return CNVType;
+    private static String checkCNVType(int copyNumber) {
+        return copyNumber <= 1 ? "Deletion" : "Amplification";
     }
 
     @NotNull

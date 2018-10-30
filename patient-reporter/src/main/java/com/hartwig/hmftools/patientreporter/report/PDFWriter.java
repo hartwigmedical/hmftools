@@ -13,7 +13,6 @@ import java.nio.file.Files;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableCircosPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableEvidencePage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableExplanationPage;
@@ -42,18 +41,17 @@ public class PDFWriter {
         this.reportDirectory = reportDirectory;
     }
 
-    public void writeSequenceReport(@NotNull final AnalysedPatientReport report, @NotNull final SequencedReportData reporterData)
-            throws IOException, DRException {
-        final JasperReportBuilder reportBuilder = generatePatientReport(report, reporterData);
+    public void writeSequenceReport(@NotNull AnalysedPatientReport report) throws IOException, DRException {
+        final JasperReportBuilder reportBuilder = generatePatientReport(report);
         writeReport(fileName(report.sampleReport().sampleId()), reportBuilder);
     }
 
-    public void writeNonSequenceableReport(@NotNull final NotAnalysedPatientReport report) throws IOException, DRException {
+    public void writeNonSequenceableReport(@NotNull NotAnalysedPatientReport report) throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generateNotAnalysableReport(report);
         writeReport(fileName(report.sampleReport().sampleId()), reportBuilder);
     }
 
-    private static void writeReport(@NotNull final String fileName, @NotNull final JasperReportBuilder report)
+    private static void writeReport(@NotNull String fileName, @NotNull JasperReportBuilder report)
             throws FileNotFoundException, DRException {
         if (Files.exists(new File(fileName).toPath())) {
             LOGGER.warn(" Could not write " + fileName + " as it already exists.");
@@ -64,19 +62,19 @@ public class PDFWriter {
     }
 
     @NotNull
-    private String fileName(@NotNull final String sample) {
+    private String fileName(@NotNull String sample) {
         return reportDirectory + File.separator + sample + "_hmf_report.pdf";
     }
 
     @VisibleForTesting
     @NotNull
-    static JasperReportBuilder generateNotAnalysableReport(@NotNull final NotAnalysedPatientReport report) {
+    static JasperReportBuilder generateNotAnalysableReport(@NotNull NotAnalysedPatientReport report) {
         // MIVO: hack to get page footers working; the footer band and noData bands are exclusive, see additional comment below for details
         final DRDataSource singleItemDataSource = new DRDataSource("item");
         singleItemDataSource.add(new Object());
 
         return report().pageFooter(cmp.pageXslashY())
-                .lastPageFooter(cmp.verticalList(logoRVAfooter(report.logoRVA())))
+                .lastPageFooter(cmp.verticalList(logoRVAFooter(report.logoRVAPath())))
                 .lastPageFooter(cmp.verticalList(signatureFooter(report.signaturePath()),
                         cmp.pageXslashY(),
                         cmp.text("End of report.").setStyle(stl.style().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
@@ -86,12 +84,11 @@ public class PDFWriter {
 
     @VisibleForTesting
     @NotNull
-    static JasperReportBuilder generatePatientReport(@NotNull final AnalysedPatientReport report,
-            @NotNull final SequencedReportData reporterData) {
+    static JasperReportBuilder generatePatientReport(@NotNull AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> totalReport = cmp.multiPageList()
                 .add(ImmutableEvidencePage.of(report).reportComponent())
                 .newPage()
-                .add(ImmutableFindingsPage.of(report, reporterData).reportComponent())
+                .add(ImmutableFindingsPage.of(report).reportComponent())
                 .newPage()
                 .add(ImmutableCircosPage.of(report.circosPath()).reportComponent())
                 .newPage()
@@ -110,7 +107,7 @@ public class PDFWriter {
         singleItemDataSource.add(new Object());
 
         return report().pageFooter(cmp.pageXslashY())
-                .lastPageFooter(cmp.verticalList(logoRVAfooter(report.logoRVA())))
+                .lastPageFooter(cmp.verticalList(logoRVAFooter(report.logoRVAPath())))
                 .lastPageFooter(cmp.verticalList(signatureFooter(report.signaturePath()),
                         cmp.pageXslashY(),
                         cmp.text("End of report.").setStyle(stl.style().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
@@ -119,15 +116,12 @@ public class PDFWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> logoRVAfooter(@NotNull final String logoPath) {
-        return cmp.horizontalList(cmp.horizontalGap(370),
-                cmp.xyList()
-                        .add(40, 5, cmp.image(logoPath)),
-                cmp.verticalGap(120));
+    private static ComponentBuilder<?, ?> logoRVAFooter(@NotNull String logoRVAPath) {
+        return cmp.horizontalList(cmp.horizontalGap(370), cmp.xyList().add(40, 5, cmp.image(logoRVAPath)), cmp.verticalGap(120));
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> signatureFooter(@NotNull final String signaturePath) {
+    private static ComponentBuilder<?, ?> signatureFooter(@NotNull String signaturePath) {
         return cmp.horizontalList(cmp.horizontalGap(370),
                 cmp.xyList()
                         .add(40, 5, cmp.image(signaturePath))

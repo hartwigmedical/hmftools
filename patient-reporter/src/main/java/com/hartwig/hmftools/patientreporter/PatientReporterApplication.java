@@ -98,7 +98,7 @@ public class PatientReporterApplication {
 
             final AnalysedPatientReport report =
                     reporter.run(cmd.getOptionValue(RUN_DIRECTORY), cmd.hasOption(DO_REPORT_GERMLINE), cmd.getOptionValue(COMMENTS));
-            pdfWriter.writeSequenceReport(report, reporterData);
+            pdfWriter.writeSequenceReport(report);
         } else {
             printUsageAndExit(options);
         }

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import static com.hartwig.hmftools.common.amber.qc.AmberQCStatus.PASS;
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTBREAKEND;
@@ -83,7 +82,9 @@ class StructuralVariantDAO {
                     .adjustedEndCopyNumber(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER)))
                     .adjustedEndCopyNumberChange(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE)))
                     .ploidy(getValueNotNull(record.getValue(STRUCTURALVARIANT.PLOIDY)))
-                    .type(isSingleBreakend ? StructuralVariantType.SGL : StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
+                    .type(isSingleBreakend
+                            ? StructuralVariantType.SGL
+                            : StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
                     .homology(record.getValue(STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE))
                     .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
                     .filter(record.getValue(STRUCTURALVARIANT.FILTER))
@@ -157,6 +158,7 @@ class StructuralVariantDAO {
                     .endOffset(record.getValue(STRUCTURALVARIANT.STARTINTERVALOFFSETEND))
                     .inexactHomologyOffsetStart(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETSTART))
                     .inexactHomologyOffsetEnd(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETEND))
+                    .refGenomeContext(record.getValue(STRUCTURALVARIANT.STARTREFCONTEXT))
                     .build();
 
             EnrichedStructuralVariantLeg end = null;
@@ -176,6 +178,7 @@ class StructuralVariantDAO {
                         .normalReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.ENDNORMALREFERENCEFRAGMENTCOUNT))
                         .startOffset(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETSTART))
                         .endOffset(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETEND))
+                        .refGenomeContext(record.getValue(STRUCTURALVARIANT.ENDREFCONTEXT))
                         .build();
             }
 
@@ -259,6 +262,8 @@ class StructuralVariantDAO {
                     STRUCTURALVARIANT.STARTLINKEDBY,
                     STRUCTURALVARIANT.ENDLINKEDBY,
                     STRUCTURALVARIANT.RECOVERED,
+                    STRUCTURALVARIANT.STARTREFCONTEXT,
+                    STRUCTURALVARIANT.ENDREFCONTEXT,
                     STRUCTURALVARIANT.MODIFIED);
             batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
             inserter.execute();
@@ -296,10 +301,10 @@ class StructuralVariantDAO {
                 variant.start().tumourReferenceFragmentCount(),
                 variant.start().normalVariantFragmentCount(),
                 variant.start().normalReferenceFragmentCount(),
-                variant.end() == null ? null : DatabaseUtil.decimal(variant.end().tumourVariantFragmentCount()),
-                variant.end() == null ? null : DatabaseUtil.decimal(variant.end().tumourReferenceFragmentCount()),
-                variant.end() == null ? null : DatabaseUtil.decimal(variant.end().normalVariantFragmentCount()),
-                variant.end() == null ? null : DatabaseUtil.decimal(variant.end().normalReferenceFragmentCount()),
+                variant.end() == null ? null : variant.end().tumourVariantFragmentCount(),
+                variant.end() == null ? null : variant.end().tumourReferenceFragmentCount(),
+                variant.end() == null ? null : variant.end().normalVariantFragmentCount(),
+                variant.end() == null ? null : variant.end().normalReferenceFragmentCount(),
                 variant.start().startOffset(),
                 variant.start().endOffset(),
                 variant.end() == null ? null : variant.end().startOffset(),
@@ -310,6 +315,8 @@ class StructuralVariantDAO {
                 variant.startLinkedBy(),
                 variant.endLinkedBy(),
                 variant.recovered(),
+                variant.start().refGenomeContext(),
+                variant.end() == null ? null : variant.end().refGenomeContext(),
                 timestamp);
     }
 

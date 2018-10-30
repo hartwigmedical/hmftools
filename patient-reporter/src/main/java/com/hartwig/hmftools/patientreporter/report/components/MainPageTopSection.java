@@ -27,34 +27,29 @@ public final class MainPageTopSection {
         return build(title,
                 report.sampleId(),
                 report.primaryTumorLocationString(),
-                report.cancerSubTypeString(),
-                "Pathology Tumor Percentage",
-                PatientReportFormat.formatNullablePercent(report.pathologyTumorPercentage()));
+                report.cancerSubTypeString());
     }
 
     @NotNull
     public static ComponentBuilder<?, ?> buildWithImpliedPurity(@NotNull final String title,
-            @NotNull final SampleReport report, @NotNull String purityString) {
+            @NotNull final SampleReport report) {
         return build(title,
                 report.sampleId(),
                 report.primaryTumorLocationString(),
-                report.cancerSubTypeString(),
-                "Implied Tumor Purity",
-                purityString);
+                report.cancerSubTypeString());
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> build(@NotNull String title, @NotNull String sample, @NotNull String primaryTumorLocation,
-            @NotNull String cancerSubType, @NotNull String tumorPercentageTitle, @NotNull String tumorPercentage) {
+            @NotNull String cancerSubType) {
         final ComponentBuilder<?, ?> mainDiagnosisInfo =
                 cmp.horizontalList(cmp.verticalList(cmp.text("Report Date").setStyle(tableHeaderStyle()),
                         cmp.currentDate().setPattern(DATE_TIME_FORMAT).setStyle(dataTableStyle())),
                         cmp.verticalList(cmp.text("Primary Tumor Location").setStyle(tableHeaderStyle()),
                                 cmp.text(primaryTumorLocation).setStyle(dataTableStyle())),
                         cmp.verticalList(cmp.text("Cancer Subtype").setStyle(tableHeaderStyle()),
-                                cmp.text(cancerSubType).setStyle(dataTableStyle())),
-                        cmp.verticalList(cmp.text(tumorPercentageTitle).setStyle(tableHeaderStyle()),
-                                cmp.text(tumorPercentage).setStyle(dataTableStyle()))).setHeight(32);
+                                cmp.text(cancerSubType).setStyle(dataTableStyle())));
+
         return cmp.verticalList(cmp.horizontalList(cmp.image(REPORT_LOGO_PATH).setWidth(42).setHeight(65),
                 cmp.text(title + " - " + sample)
                         .setStyle(fontStyle().bold().setFontSize(14).setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))

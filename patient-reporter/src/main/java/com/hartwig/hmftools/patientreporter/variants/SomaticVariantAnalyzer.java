@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -10,22 +9,18 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeMappingReading;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
 import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
-import com.hartwig.hmftools.patientreporter.actionability.ActionabilityVariantAnalyzer;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -41,61 +36,91 @@ public final class SomaticVariantAnalyzer {
     }
 
     @NotNull
-    public static SomaticVariantAnalysis run(@NotNull final List<EnrichedSomaticVariant> variants, @NotNull Set<String> genePanel,
-            @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap, @Nullable PatientTumorLocation patientTumorLocation,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull List<GeneFusion> fusions,
-            @NotNull ActionabilityAnalyzer actionabilityAnalyzerData, final double purplePloidy)
-            throws IOException {
-        final List<EnrichedSomaticVariant> variantsToReport =
-                variants.stream().filter(includeFilter(genePanel, driverCategoryPerGeneMap)).collect(Collectors.toList());
-        final double microsatelliteIndelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
-        final int tumorMutationalLoad = MutationalLoadAnalyzer.determineTumorMutationalLoad(variants);
-        final double tumorMutationalBurden = MutationalBurdenAnalyzer.determineTumorMutationalBurden(variants);
+    public static SomaticVariantAnalysis run(@NotNull List<EnrichedSomaticVariant> variants, @NotNull Set<String> genePanel,
+            @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap, @NotNull Set<String> drupActionableGenes,
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) {
+        double microsatelliteIndelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
+        int tumorMutationalLoad = MutationalLoadAnalyzer.determineTumorMutationalLoad(variants);
+        double tumorMutationalBurden = MutationalBurdenAnalyzer.determineTumorMutationalBurden(variants);
 
-        final List<DriverCatalog> driverCatalog = Lists.newArrayList();
+        List<DriverCatalog> driverCatalog = Lists.newArrayList();
         driverCatalog.addAll(OncoDrivers.drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), variants));
         driverCatalog.addAll(TsgDrivers.drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), variants));
 
-        final String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : Strings.EMPTY;
-        CancerTypeMappingReading cancerTypeMappingReading = CancerTypeMappingReading.readingFile();
-        String doidsPrimaryTumorLocation = cancerTypeMappingReading.doidsForPrimaryTumorLocation(primaryTumorLocation);
-        LOGGER.info("primaryTumorLocation: " + primaryTumorLocation);
-        LOGGER.info("cancerTypeMappingReading: " + cancerTypeMappingReading);
-        LOGGER.info("doid: " + doidsPrimaryTumorLocation);
+        List<EnrichedSomaticVariant> variantsToReport =
+                variants.stream().filter(includeFilter(genePanel, driverCategoryPerGeneMap)).collect(Collectors.toList());
 
-        Set<String> actionableGenesVariants = actionabilityAnalyzerData.variantAnalyzer().actionableGenes();
-        Set<String> actionableGenesCNVS = actionabilityAnalyzerData.cnvAnalyzer().actionableGenes();
-        Set<String> actionableFusions = actionabilityAnalyzerData.fusionAnalyzer().actionableGenes();
+        String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
+        Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant =
+                actionabilityAnalyzer.evidenceForSomaticVariants(variants, primaryTumorLocation);
 
-        LOGGER.info("evidencePerVariant items variants");
-        Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant = ActionabilityVariantAnalyzer.findEvidenceForVariants(
-                actionableGenesVariants,
-                variants,
-                doidsPrimaryTumorLocation,
-                actionabilityAnalyzerData);
+        // KODU: Add all variants with evidence that have not previously been added.
+        for (EnrichedSomaticVariant variantWithEvidence : evidencePerVariant.keySet()) {
+            if (!evidencePerVariant.get(variantWithEvidence).isEmpty() && !variantsToReport.contains(variantWithEvidence)) {
+                variantsToReport.add(variantWithEvidence);
+            }
+        }
 
-        LOGGER.info("evidencePerVariant items CNVs");
-        Map<GeneCopyNumber, List<EvidenceItem>> evidencePerVariantCNVs = ActionabilityVariantAnalyzer.findEvidenceForCopyNumber(
-                actionableGenesCNVS,
-                geneCopyNumbers,
-                doidsPrimaryTumorLocation,
-                actionabilityAnalyzerData,
-                purplePloidy);
+        List<ReportableSomaticVariant> reportableVariants =
+                toReportableSomaticVariants(variantsToReport, driverCatalog, driverCategoryPerGeneMap, drupActionableGenes);
 
-        LOGGER.info("evidencePerVariant items fusions");
-        Map<GeneFusion, List<EvidenceItem>> evidencePerFusion = ActionabilityVariantAnalyzer.findEvidenceForFusions(actionableFusions,
-                fusions,
-                doidsPrimaryTumorLocation,
-                actionabilityAnalyzerData);
-
-        return ImmutableSomaticVariantAnalysis.of(variantsToReport,
-                driverCatalog,
+        return ImmutableSomaticVariantAnalysis.of(reportableVariants,
+                toList(evidencePerVariant),
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
-                tumorMutationalBurden,
-                evidencePerVariant,
-                evidencePerVariantCNVs,
-                evidencePerFusion);
+                tumorMutationalBurden);
+    }
+
+    @NotNull
+    private static List<EvidenceItem> toList(@NotNull Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant) {
+        List<EvidenceItem> evidenceItemList = Lists.newArrayList();
+        for (List<EvidenceItem> items : evidencePerVariant.values()) {
+            evidenceItemList.addAll(items);
+        }
+        return evidenceItemList;
+    }
+
+    @NotNull
+    private static List<ReportableSomaticVariant> toReportableSomaticVariants(@NotNull List<EnrichedSomaticVariant> variants,
+            @NotNull List<DriverCatalog> driverCatalog, @NotNull Map<String, DriverCategory> driverCategoryPerGene,
+            @NotNull Set<String> drupActionableGenes) {
+        List<ReportableSomaticVariant> reportableVariants = Lists.newArrayList();
+        for (EnrichedSomaticVariant variant : variants) {
+            DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant);
+
+            reportableVariants.add(fromVariant(variant).isDrupActionable(drupActionableGenes.contains(variant.gene()))
+                    .driverCategory(driverCategoryPerGene.get(variant.gene()))
+                    .driverLikelihood(catalog != null ? catalog.driverLikelihood() : null)
+                    .build());
+        }
+
+        return reportableVariants;
+    }
+
+    @Nullable
+    private static DriverCatalog catalogEntryForVariant(@NotNull List<DriverCatalog> driverCatalogList, @NotNull SomaticVariant variant) {
+        for (DriverCatalog entry : driverCatalogList) {
+            if (entry.gene().equals(variant.gene())) {
+                return entry;
+            }
+        }
+        return null;
+    }
+
+    @NotNull
+    private static ImmutableReportableSomaticVariant.Builder fromVariant(@NotNull EnrichedSomaticVariant variant) {
+        return ImmutableReportableSomaticVariant.builder()
+                .gene(variant.gene())
+                .hgvsCodingImpact(variant.canonicalHgvsCodingImpact())
+                .hgvsProteinImpact(variant.canonicalHgvsProteinImpact())
+                .totalReadCount(variant.totalReadCount())
+                .alleleReadCount(variant.alleleReadCount())
+                .hotspot(variant.hotspot())
+                .clonality(variant.clonality())
+                .adjustedCopyNumber(variant.adjustedCopyNumber())
+                .adjustedVAF(variant.adjustedVAF())
+                .minorAllelePloidy(variant.minorAllelePloidy())
+                .biallelic(variant.biallelic());
     }
 
     @NotNull
@@ -116,7 +141,7 @@ public final class SomaticVariantAnalyzer {
             } else if (driverCategoryPerGeneMap.get(variant.gene()) == DriverCategory.ONCO) {
                 return ONCO_CODING_EFFECTS_TO_REPORT.contains(effect);
             } else {
-                // KODU: If a hgvsCodingImpact has uncertain driver category we should always report.
+                // KODU: If a variant has uncertain driver category we should always report.
                 return TSG_CODING_EFFECTS_TO_REPORT.contains(effect) || ONCO_CODING_EFFECTS_TO_REPORT.contains(effect);
             }
         };

@@ -4,14 +4,13 @@ import java.util.List;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrial;
 import com.hartwig.hmftools.patientreporter.chord.ChordAnalysis;
-import com.hartwig.hmftools.patientreporter.disruption.ReportableGeneDisruption;
-import com.hartwig.hmftools.patientreporter.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
+import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
+import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
+import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -25,19 +24,20 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @Override
     public abstract SampleReport sampleReport();
 
-    @NotNull
-    public abstract FittedPurityStatus fitStatus();
-
     public abstract double impliedPurity();
 
-    @NotNull
-    public abstract List<EvidenceItem> evidenceItems();
+    public abstract boolean hasReliablePurityFit();
+
+    public abstract double averageTumorPloidy();
 
     @NotNull
-    public abstract List<EnrichedSomaticVariant> somaticVariants();
+    public abstract List<EvidenceItem> clinicalEvidence();
 
     @NotNull
-    public abstract List<DriverCatalog> somaticVariantDriverCatalog();
+    public abstract List<ClinicalTrial> clinicalTrials();
+
+    @NotNull
+    public abstract List<ReportableSomaticVariant> somaticVariants();
 
     public abstract double microsatelliteIndelsPerMb();
 
@@ -75,5 +75,5 @@ public abstract class AnalysedPatientReport implements PatientReport {
 
     @NotNull
     @Override
-    public abstract String logoRVA();
+    public abstract String logoRVAPath();
 }

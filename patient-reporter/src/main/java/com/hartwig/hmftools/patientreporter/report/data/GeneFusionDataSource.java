@@ -11,9 +11,8 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
-import com.hartwig.hmftools.patientreporter.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
+import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -44,7 +43,7 @@ public final class GeneFusionDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromGeneFusions(@NotNull FittedPurityStatus fitStatus, @NotNull List<ReportableGeneFusion> fusions) {
+    public static JRDataSource fromGeneFusions(@NotNull List<ReportableGeneFusion> fusions, boolean hasReliablePurityFit) {
         final DRDataSource dataSource = new DRDataSource(FUSION_FIELD.getName(),
                 START_TRANSCRIPT_FIELD.getName(),
                 END_TRANSCRIPT_FIELD.getName(),
@@ -59,7 +58,7 @@ public final class GeneFusionDataSource {
                     fusion.geneEndTranscript(),
                     fusion.geneContextStart(),
                     fusion.geneContextEnd(),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, ploidyToCopiesString(fusion.ploidy())),
+                    PatientReportFormat.correctValueForFitReliability(ploidyToCopiesString(fusion.ploidy()), hasReliablePurityFit),
                     fusion.source());
         }
 
@@ -67,7 +66,7 @@ public final class GeneFusionDataSource {
     }
 
     @NotNull
-    private static String name(@NotNull ReportableGeneFusion fusion) {
+    public static String name(@NotNull ReportableGeneFusion fusion) {
         return fusion.geneStart() + " - " + fusion.geneEnd();
     }
 
@@ -99,7 +98,7 @@ public final class GeneFusionDataSource {
     }
 
     @NotNull
-    private static List<ReportableGeneFusion> sort(@NotNull List<ReportableGeneFusion> fusions) {
+    public static List<ReportableGeneFusion> sort(@NotNull List<ReportableGeneFusion> fusions) {
         return fusions.stream().sorted((fusion1, fusion2) -> {
             if (fusion1.geneStart().equals(fusion2.geneStart())) {
                 return fusion1.geneEnd().compareTo(fusion2.geneEnd());

@@ -3,10 +3,10 @@ package com.hartwig.hmftools.patientreporter.report.data;
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.copynumber.CopyNumberAlteration;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.jetbrains.annotations.NotNull;
@@ -27,30 +27,66 @@ public final class GeneCopyNumberDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromCopyNumbers(@NotNull FittedPurityStatus fitStatus, @NotNull final List<GeneCopyNumber> copyNumbers) {
+    public static FieldBuilder<?>[] copyNumberFields() {
+        return new FieldBuilder<?>[] { CHROMOSOME, CHROMOSOME_BAND, GENE_FIELD, GAIN_OR_LOSS_FIELD, COPY_NUMBER_FIELD };
+    }
+
+    @NotNull
+    public static JRDataSource fromCopyNumbers(@NotNull final List<GeneCopyNumber> copyNumbers, boolean hasReliablePurityFit) {
         final DRDataSource copyNumberDatasource = new DRDataSource(CHROMOSOME.getName(),
                 CHROMOSOME_BAND.getName(),
                 GENE_FIELD.getName(),
                 GAIN_OR_LOSS_FIELD.getName(),
                 COPY_NUMBER_FIELD.getName());
 
-        for (final GeneCopyNumber copyNumber : copyNumbers) {
+        for (GeneCopyNumber copyNumber : sort(copyNumbers)) {
             copyNumberDatasource.add(copyNumber.chromosome(),
                     copyNumber.chromosomeBand(),
                     copyNumber.gene(),
                     type(copyNumber),
-                    PatientReportFormat.correctValueForFitStatus(fitStatus, Integer.toString(copyNumber.value())));
+                    PatientReportFormat.correctValueForFitReliability(Integer.toString(copyNumber.value()), hasReliablePurityFit));
         }
         return copyNumberDatasource;
     }
 
     @NotNull
-    public static FieldBuilder<?>[] copyNumberFields() {
-        return new FieldBuilder<?>[] { CHROMOSOME, CHROMOSOME_BAND, GENE_FIELD, GAIN_OR_LOSS_FIELD, COPY_NUMBER_FIELD };
+    private static List<GeneCopyNumber> sort(@NotNull List<GeneCopyNumber> geneCopyNumbers) {
+        return geneCopyNumbers.stream().sorted((copyNumber1, copyNumber2) -> {
+            String location1 = zeroPrefixed(copyNumber1.chromosome() + copyNumber1.chromosomeBand());
+            String location2 = zeroPrefixed(copyNumber2.chromosome() + copyNumber2.chromosomeBand());
+
+            if (location1.equals(location2)) {
+                return copyNumber1.gene().compareTo(copyNumber2.gene());
+            } else {
+                return location1.compareTo(location2);
+            }
+        }).collect(Collectors.toList());
     }
 
     @NotNull
-    private static String type(@NotNull GeneCopyNumber geneCopyNumber) {
+    private static String zeroPrefixed(@NotNull String location) {
+        // KODU: First remove q or p arm if present.
+        int armStart = location.indexOf("q");
+        if (armStart < 0) {
+            armStart = location.indexOf("p");
+        }
+
+        String chromosome = armStart > 0 ? location.substring(0, armStart) : location;
+
+        try {
+            int chromosomeIndex = Integer.valueOf(chromosome);
+            if (chromosomeIndex < 10) {
+                return "0" + location;
+            } else {
+                return location;
+            }
+        } catch (NumberFormatException exception) {
+            return location;
+        }
+    }
+
+    @NotNull
+    public static String type(@NotNull GeneCopyNumber geneCopyNumber) {
         if (geneCopyNumber.alteration() == CopyNumberAlteration.GAIN) {
             return "gain";
         } else {

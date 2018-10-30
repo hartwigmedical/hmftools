@@ -44,14 +44,14 @@ public enum SimplificationFile {
         return new StringJoiner(DELIMITER, HEADER_PREFIX, "")
                 .add("uid")
                 .add("type")
-                .add("ploidy")
+                .add("segcn")
                 .add("svid")
                 .add("anchorcn")
                 .add("refcn")
-                .add("svploidy")
+                .add("svcn")
                 .add("deltacn")
-                .add("deltasv")
-                .add("othersvploidy")
+                .add("deltasvcn")
+                .add("othersvcn")
                 .toString();
     }
 
@@ -62,14 +62,14 @@ public enum SimplificationFile {
             list.add(new StringJoiner(DELIMITER)
                     .add(Integer.toString(id))
                     .add(String.valueOf(simplification.type()))
-                    .add(FORMAT.format(simplification.ploidy()))
+                    .add(FORMAT.format(simplification.copyNumber()))
                     .add(Integer.toString(bc.sv().primaryKey()))
-                    .add(FORMAT.format(bc.anchorPloidy()))
-                    .add(FORMAT.format(bc.referencePathPloidy()))
+                    .add(FORMAT.format(bc.anchorCopyNumber()))
+                    .add(FORMAT.format(bc.referencePathCopyNumber()))
                     .add(FORMAT.format(bc.sv().ploidy()))
                     .add(FORMAT.format(bc.copyNumberDelta()))
                     .add(FORMAT.format(bc.eventDelta()))
-                    .add(FORMAT.format(bc.otherSvPloidy()))
+                    .add(FORMAT.format(bc.otherSvCopyNumber()))
                     .toString());
         }
         return list;
