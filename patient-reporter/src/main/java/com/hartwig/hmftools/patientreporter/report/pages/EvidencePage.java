@@ -16,8 +16,6 @@ import com.hartwig.hmftools.patientreporter.report.Commons;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 import com.hartwig.hmftools.patientreporter.report.data.ClinicalTrialDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.EvidenceItemDataSource;
-import com.hartwig.hmftools.patientreporter.report.data.ImpliedTumorCharacteristicsSummaryDataSource;
-import com.hartwig.hmftools.patientreporter.report.data.TumorReportedGenomicAlterationsDataSource;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.immutables.value.Value;
@@ -40,9 +38,7 @@ public abstract class EvidencePage {
                 report().sampleReport(),
                 impliedPurityString(report())),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                summaryImpliedTumorCharacteristics(report()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                summaryReportedGenomicAlterations(report()),
+                SummaryPart.summaryData(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 evidenceItemReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -52,41 +48,6 @@ public abstract class EvidencePage {
     @NotNull
     public static String impliedPurityString(@NotNull AnalysedPatientReport report) {
         return report.hasReliablePurityFit() ? PatientReportFormat.formatPercent(report.impliedPurity()) : "[below detection threshold]";
-    }
-
-    @NotNull
-    private static ComponentBuilder<?, ?> summaryImpliedTumorCharacteristics(@NotNull AnalysedPatientReport report) {
-        final ComponentBuilder<?, ?> table =
-                cmp.subreport(monospaceBaseTable().fields(ImpliedTumorCharacteristicsSummaryDataSource.ImpliedTumorCharacteristicsSummaryFields())
-                        .columns(col.column("Tumor Purity", ImpliedTumorCharacteristicsSummaryDataSource.TUMOR_PURITY),
-                                col.column("Avg Tumor Ploidy", ImpliedTumorCharacteristicsSummaryDataSource.AVERAGE_TUMOR_PLOIDY),
-                                col.column("Mutational Load", ImpliedTumorCharacteristicsSummaryDataSource.MUTATIONAL_LOAD),
-                                col.column("Mutational Burden", ImpliedTumorCharacteristicsSummaryDataSource.MUTATIONAL_BURDEN),
-                                col.column("Microsatellite (in)stability",
-                                        ImpliedTumorCharacteristicsSummaryDataSource.MICROSATELLITE_INSTALBILITY),
-                                col.column("Implied tumor characteristics", ImpliedTumorCharacteristicsSummaryDataSource.HR_DEFICIENCY))
-                        .setDataSource(ImpliedTumorCharacteristicsSummaryDataSource.fromImpliedTumorCharacteristicsSummary(report)));
-        return cmp.verticalList(cmp.text("Implied tumor characteristics summary").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
-                table);
-    }
-
-    @NotNull
-    private static ComponentBuilder<?, ?> summaryReportedGenomicAlterations(@NotNull AnalysedPatientReport report) {
-        final ComponentBuilder<?, ?> table =
-                cmp.subreport(monospaceBaseTable().fields(TumorReportedGenomicAlterationsDataSource.TumorReportedGenomicAlterationsSummaryFields())
-                        .columns(col.column("Number of somatic variants",
-                                TumorReportedGenomicAlterationsDataSource.NUMBER_SOMATIC_VARIANTS),
-                                col.column("Somatic variants with driver likelihood > 0.8",
-                                        TumorReportedGenomicAlterationsDataSource.GENES_SOMATIC_VARIANTS_WITH_DRIVER_LIKELIHOOD),
-                                col.column("Genes with amplification", TumorReportedGenomicAlterationsDataSource.GENES_WITH_AMPLIFICATION),
-                                col.column("Genes with (partial) loss", TumorReportedGenomicAlterationsDataSource.GENES_WITH_LOSS),
-                                col.column("Fusion genes", TumorReportedGenomicAlterationsDataSource.FUSION_GENES),
-                                col.column("Disruption genes", TumorReportedGenomicAlterationsDataSource.DISRUPTION_GENES))
-                        .setDataSource(TumorReportedGenomicAlterationsDataSource.fromTumorReportedGenomicAlterationsSummary(report)));
-        return cmp.verticalList(cmp.text("Tumor reportable genomic alterations summary").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
-                table);
     }
 
     @NotNull
