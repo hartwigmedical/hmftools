@@ -155,10 +155,6 @@ public class RecoverStructuralVariants implements Closeable {
         List<VariantContext> recovered = findVariants(current.chromosome(), min, max);
         for (VariantContext potentialVariant : recovered) {
             final String alt = potentialVariant.getAlternateAllele(0).getDisplayString();
-            int orientation = orientation(alt);
-            if (orientation != expectedOrientation) {
-                continue;
-            }
 
             final String mateId = StructuralVariantFactory.mateId(potentialVariant);
             final String mateLocation = mateLocation(alt);
@@ -179,7 +175,7 @@ public class RecoverStructuralVariants implements Closeable {
                     ? StructuralVariantFactory.create(potentialVariant, mate)
                     : StructuralVariantFactory.createSingleBreakend(potentialVariant);
 
-            if (hasPotential(min, max, sv)) {
+            if (sv.start().orientation() == expectedOrientation && hasPotential(min, max, sv)) {
                 result.add(ImmutableRecoveredVariant.builder()
                         .context(potentialVariant)
                         .mate(mate)
@@ -301,27 +297,6 @@ public class RecoverStructuralVariants implements Closeable {
     @Nullable
     private static Long matePosition(@Nullable String mate) {
         return mate == null || !mate.contains(":") ? null : Long.valueOf(mate.split(":")[1]);
-    }
-
-    @VisibleForTesting
-    static int orientation(@NotNull final String alt) {
-        if (alt.charAt(0) == '.') {
-            return -1;
-        }
-
-        if (alt.charAt(alt.length() - 1) == '.') {
-            return 1;
-        }
-
-        if (alt.contains("[")) {
-            return 1;
-        }
-
-        if (alt.contains("]")) {
-            return -1;
-        }
-
-        return 0;
     }
 
     @VisibleForTesting

@@ -33,12 +33,6 @@ public class RecoverStructuralVariantsTest {
     }
 
     @Test
-    public void testOrientation() {
-        assertEquals(1, RecoverStructuralVariants.orientation("C[17:59493156["));
-        assertEquals(-1, RecoverStructuralVariants.orientation("]17:59493156]C"));
-    }
-
-    @Test
     public void testMate() {
         assertEquals("17:59493156", RecoverStructuralVariants.mateLocation("C[17:59493156["));
         assertEquals("17:59493156", RecoverStructuralVariants.mateLocation("]17:59493156]C"));
