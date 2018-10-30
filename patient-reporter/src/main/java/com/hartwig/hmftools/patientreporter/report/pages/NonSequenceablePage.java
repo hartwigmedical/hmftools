@@ -14,6 +14,7 @@ import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.report.Commons;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
+import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -85,8 +86,12 @@ public abstract class NonSequenceablePage {
             }
         }
 
-        return cmp.verticalList(cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12)).setHeight(20),
+        return cmp.verticalList(
+                cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12)).setHeight(20),
                 cmp.text(subTitle).setStyle(dataTableStyle().setFontSize(12)).setHeight(20),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.horizontalList(cmp.text("Pathology Tumor Percentage").setStyle(tableHeaderStyle()),
+                        cmp.text(PatientReportFormat.formatNullablePercent(sampleReport().pathologyTumorPercentage())).setStyle(dataTableStyle())),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text(message).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),

@@ -35,8 +35,7 @@ public abstract class EvidencePage {
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
         return cmp.verticalList(MainPageTopSection.buildWithImpliedPurity(Commons.TITLE_SEQUENCE,
-                report().sampleReport(),
-                impliedPurityString(report())),
+                report().sampleReport()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 SummaryPart.summaryData(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -46,7 +45,7 @@ public abstract class EvidencePage {
     }
 
     @NotNull
-    public static String impliedPurityString(@NotNull AnalysedPatientReport report) {
+    static String impliedPurityString(@NotNull AnalysedPatientReport report) {
         return report.hasReliablePurityFit() ? PatientReportFormat.formatPercent(report.impliedPurity()) : "[below detection threshold]";
     }
 

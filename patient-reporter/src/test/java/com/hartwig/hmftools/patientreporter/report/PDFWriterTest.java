@@ -150,6 +150,7 @@ public class PDFWriterTest {
                 .reference("EXT8846 (NL54421.031.15)")
                 .source(ActionabilitySource.ICLUSION)
                 .isOnLabel(true)
+                .level("C")
                 .build());
         return trials;
     }

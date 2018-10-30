@@ -50,14 +50,16 @@ public final class EvidenceItemDataSource {
         for (EvidenceItem evidenceItem : sort(evidenceItems)) {
             assert !evidenceItem.source().isTrialSource();
 
-            evidenceItemDataSource.add(evidenceItem.event(),
-                    evidenceItem.drug(),
-                    evidenceItem.drugsType(),
-                    evidenceItem.level(),
-                    evidenceItem.response(),
-                    evidenceItem.source().sourceName(),
-                    evidenceItem.reference(),
-                    evidenceItem.isOnLabel() ? "Yes" : "No");
+            if (evidenceItem.level().equals("A") || evidenceItem.level().equals("B")) {
+                evidenceItemDataSource.add(evidenceItem.event(),
+                        evidenceItem.drug(),
+                        evidenceItem.drugsType(),
+                        evidenceItem.level(),
+                        evidenceItem.response(),
+                        evidenceItem.source().sourceName(),
+                        evidenceItem.reference(),
+                        evidenceItem.isOnLabel() ? "Yes" : "No");
+            }
         }
         return evidenceItemDataSource;
     }

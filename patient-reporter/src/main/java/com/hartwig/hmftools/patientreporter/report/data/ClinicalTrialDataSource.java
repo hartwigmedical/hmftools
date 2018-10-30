@@ -46,14 +46,15 @@ public class ClinicalTrialDataSource {
         for (ClinicalTrial trial : sort(trials)) {
             assert trial.source().isTrialSource();
 
-            evidenceItemDataSource.add(trial.event(),
-                    trial.acronym(),
-                    trial.source().sourceName(),
-                    CCMOId(trial.reference()),
-                    trial.isOnLabel() ? "Yes" : "No",
-                    trial.reference());
+            if (trial.level().equals("A") || trial.level().equals("B")) {
+                evidenceItemDataSource.add(trial.event(),
+                        trial.acronym(),
+                        trial.source().sourceName(),
+                        CCMOId(trial.reference()),
+                        trial.isOnLabel() ? "Yes" : "No",
+                        trial.reference());
+            }
         }
-
         return evidenceItemDataSource;
     }
 
@@ -93,6 +94,6 @@ public class ClinicalTrialDataSource {
         // KODU: Expected format "EXT1 (CCMO)"
         String[] splitExtAndCCMO = reference.split("\\(");
         String ext = splitExtAndCCMO[0];
-        return ext.substring(3, ext.length()).trim();
+        return ext.substring(3).trim();
     }
 }
