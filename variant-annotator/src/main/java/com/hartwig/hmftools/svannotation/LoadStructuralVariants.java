@@ -3,6 +3,7 @@ package com.hartwig.hmftools.svannotation;
 import static com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator.PON_FILTER_PASS;
 import static com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator.PON_FILTER_PON;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -48,6 +49,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -67,6 +69,7 @@ public class LoadStructuralVariants {
     private static final String FUSION_PAIRS_CSV = "fusion_pairs_csv";
     private static final String PROMISCUOUS_FIVE_CSV = "promiscuous_five_csv";
     private static final String PROMISCUOUS_THREE_CSV = "promiscuous_three_csv";
+    private static final String REF_GENOME = "ref_genome";
 
     private static final String SOURCE_SVS_FROM_DB = "source_svs_from_db";
     private static final String LOG_DEBUG = "log_debug";
@@ -109,10 +112,15 @@ public class LoadStructuralVariants {
                 return;
             }
         } else {
+
+            LOGGER.info("Loading indexed fasta reference file");
+            final String fastaFileLocation = cmd.getOptionValue(REF_GENOME);
+            final IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
+
             LOGGER.info("reading VCF File");
             final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE));
             LOGGER.info("enriching structural variants based on purple data");
-            svList = enrichStructuralVariants(variants, dbAccess, tumorSample);
+            svList = enrichStructuralVariants(indexedFastaSequenceFile, variants, dbAccess, tumorSample);
         }
 
         List<EnrichedStructuralVariant> updatedSVs = Lists.newArrayList();
@@ -214,6 +222,7 @@ public class LoadStructuralVariants {
     @NotNull
     private static List<StructuralVariant> readFromVcf(@NotNull String vcfFileLocation) throws IOException {
 
+
         VariantContextFilter filter = variantContext -> {
             final Set<String> filters = Sets.newHashSet(variantContext.getFilters());
             filters.removeAll(ALLOWED_FILTERS);
@@ -230,7 +239,7 @@ public class LoadStructuralVariants {
     }
 
     @NotNull
-    private static List<EnrichedStructuralVariant> enrichStructuralVariants(@NotNull List<StructuralVariant> variants,
+    private static List<EnrichedStructuralVariant> enrichStructuralVariants( @NotNull final IndexedFastaSequenceFile indexedFastaSequenceFile, @NotNull List<StructuralVariant> variants,
             @NotNull DatabaseAccess dbAccess, @NotNull String tumorSample) {
         final PurityContext purityContext = dbAccess.readPurityContext(tumorSample);
 
@@ -245,7 +254,7 @@ public class LoadStructuralVariants {
         final List<PurpleCopyNumber> copyNumberList = dbAccess.readCopynumbers(tumorSample);
         final Multimap<Chromosome, PurpleCopyNumber> copyNumbers =
                 Multimaps.index(copyNumberList, x -> HumanChromosome.fromString(x.chromosome()));
-        return EnrichedStructuralVariantFactory.enrich(variants, purityAdjuster, copyNumbers);
+        return new EnrichedStructuralVariantFactory(indexedFastaSequenceFile, purityAdjuster, copyNumbers).enrich(variants);
     }
 
     @NotNull
@@ -264,6 +273,7 @@ public class LoadStructuralVariants {
         options.addOption(SOURCE_SVS_FROM_DB, false, "Skip annotations, including Ensemble DB data sync, for testing only)");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         options.addOption(SV_PON_FILE, true, "PON file for SVs");
+        options.addOption(REF_GENOME, true, "Path to the ref genome fasta file.");
         return options;
     }
 

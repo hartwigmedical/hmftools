@@ -158,6 +158,7 @@ class StructuralVariantDAO {
                     .endOffset(record.getValue(STRUCTURALVARIANT.STARTINTERVALOFFSETEND))
                     .inexactHomologyOffsetStart(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETSTART))
                     .inexactHomologyOffsetEnd(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETEND))
+                    .refGenomeContext(record.getValue(STRUCTURALVARIANT.STARTREFCONTEXT))
                     .build();
 
             EnrichedStructuralVariantLeg end = null;
@@ -177,6 +178,7 @@ class StructuralVariantDAO {
                         .normalReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.ENDNORMALREFERENCEFRAGMENTCOUNT))
                         .startOffset(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETSTART))
                         .endOffset(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETEND))
+                        .refGenomeContext(record.getValue(STRUCTURALVARIANT.ENDREFCONTEXT))
                         .build();
             }
 
@@ -260,6 +262,8 @@ class StructuralVariantDAO {
                     STRUCTURALVARIANT.STARTLINKEDBY,
                     STRUCTURALVARIANT.ENDLINKEDBY,
                     STRUCTURALVARIANT.RECOVERED,
+                    STRUCTURALVARIANT.STARTREFCONTEXT,
+                    STRUCTURALVARIANT.ENDREFCONTEXT,
                     STRUCTURALVARIANT.MODIFIED);
             batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
             inserter.execute();
@@ -311,6 +315,8 @@ class StructuralVariantDAO {
                 variant.startLinkedBy(),
                 variant.endLinkedBy(),
                 variant.recovered(),
+                variant.start().refGenomeContext(),
+                variant.end() == null ? null : variant.end().refGenomeContext(),
                 timestamp);
     }
 

@@ -233,7 +233,7 @@ abstract class PatientReporter {
         final Multimap<Chromosome, PurpleCopyNumber> copyNumberMap = Multimaps.fromRegions(copyNumberAnalysis.copyNumbers());
 
         final List<EnrichedStructuralVariant> enrichedStructuralVariants =
-                EnrichedStructuralVariantFactory.enrich(structuralVariants, purityAdjuster, copyNumberMap);
+                new EnrichedStructuralVariantFactory(purityAdjuster, copyNumberMap).enrich(structuralVariants);
 
         LOGGER.info("Analyzing structural variants...");
         final StructuralVariantAnalysis structuralVariantAnalysis = structuralVariantAnalyzer.run(enrichedStructuralVariants);

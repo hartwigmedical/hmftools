@@ -24,3 +24,7 @@ ALTER TABLE structuralVariant
     ADD endLinkedBy varchar(512),
     ADD vcfId varchar(255),
     ADD recovered BOOLEAN NOT NULL;
+
+ALTER TABLE structuralVariant
+    ADD startRefContext varchar(255),
+    ADD endRefContext varchar(255);

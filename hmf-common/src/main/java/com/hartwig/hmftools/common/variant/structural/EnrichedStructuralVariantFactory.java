@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.variant.structural;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -14,14 +15,32 @@ import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloi
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+import htsjdk.samtools.reference.ReferenceSequence;
+
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public final class EnrichedStructuralVariantFactory {
 
-    private EnrichedStructuralVariantFactory() {
+    private static final int DISTANCE = 10;
+    private final PurityAdjuster purityAdjuster;
+    private final Optional<IndexedFastaSequenceFile> reference;
+    private final Multimap<Chromosome, PurpleCopyNumber> copyNumbers;
+
+    public EnrichedStructuralVariantFactory(@NotNull final PurityAdjuster purityAdjuster, @NotNull final Multimap<Chromosome, PurpleCopyNumber> copyNumbers) {
+        this.purityAdjuster = purityAdjuster;
+        this.copyNumbers = copyNumbers;
+        this.reference = Optional.empty();
+    }
+
+    public EnrichedStructuralVariantFactory(@NotNull final IndexedFastaSequenceFile reference, @NotNull final PurityAdjuster purityAdjuster,
+            @NotNull final Multimap<Chromosome, PurpleCopyNumber> copyNumbers) {
+        this.purityAdjuster = purityAdjuster;
+        this.copyNumbers = copyNumbers;
+        this.reference = Optional.of(reference);
     }
 
     @NotNull
-    public static List<EnrichedStructuralVariant> enrich(@NotNull final List<StructuralVariant> variants,
-            @NotNull final PurityAdjuster purityAdjuster, @NotNull final Multimap<Chromosome, PurpleCopyNumber> copyNumbers) {
+    public List<EnrichedStructuralVariant> enrich(@NotNull final List<StructuralVariant> variants) {
         final StructuralVariantLegPloidyFactory<PurpleCopyNumber> ploidyFactory =
                 new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
 
@@ -29,11 +48,8 @@ public final class EnrichedStructuralVariantFactory {
         for (final StructuralVariant variant : variants) {
 
             final ImmutableEnrichedStructuralVariant.Builder builder = ImmutableEnrichedStructuralVariant.builder().from(variant);
-            final ImmutableEnrichedStructuralVariantLeg.Builder startBuilder =
-                    ImmutableEnrichedStructuralVariantLeg.builder().from(variant.start());
-            final StructuralVariantLeg variantEndLeg = variant.end();
-            final ImmutableEnrichedStructuralVariantLeg.Builder endBuilder =
-                    variantEndLeg == null ? null : ImmutableEnrichedStructuralVariantLeg.builder().from(variant.end());
+            final ImmutableEnrichedStructuralVariantLeg.Builder startBuilder = createBuilder(variant.start());
+            final ImmutableEnrichedStructuralVariantLeg.Builder endBuilder = createBuilder(variant.end());
 
             final List<StructuralVariantLegPloidy> ploidies = ploidyFactory.create(variant, copyNumbers);
             if (!ploidies.isEmpty()) {
@@ -62,6 +78,16 @@ public final class EnrichedStructuralVariantFactory {
         return result;
     }
 
+    private ImmutableEnrichedStructuralVariantLeg.Builder createBuilder(@Nullable StructuralVariantLeg leg) {
+        if (leg == null) {
+            return null;
+        }
+
+        final ImmutableEnrichedStructuralVariantLeg.Builder builder = ImmutableEnrichedStructuralVariantLeg.builder().from(leg);
+        reference.map(x -> context(leg.chromosome(), leg.position(), x)).ifPresent(builder::refGenomeContext);
+        return builder;
+    }
+
     @Nullable
     private static Double round(@Nullable Double value) {
         return value == null ? null : Math.round(value * 1000d) / 1000d;
@@ -87,5 +113,13 @@ public final class EnrichedStructuralVariantFactory {
         double rightCopyNumber = ploidy.rightCopyNumber().orElse(0D);
 
         return ploidy.orientation() == 1 ? leftCopyNumber - rightCopyNumber : rightCopyNumber - leftCopyNumber;
+    }
+
+    @Nullable
+    private String context(@NotNull final String chromosome, long position, @NotNull final IndexedFastaSequenceFile reference) {
+        final int chromosomeLength = reference.getSequenceDictionary().getSequence(chromosome).getSequenceLength();
+        final ReferenceSequence sequence =
+                reference.getSubsequenceAt(chromosome, Math.max(1, position - DISTANCE), Math.min(position + DISTANCE, chromosomeLength));
+        return sequence.getBaseString();
     }
 }
