@@ -21,9 +21,9 @@ public class TumorImpliedTumorCharacteristicsDataSource {
     @NotNull
     public static String interpretMSI(double microsatelliteIndicator) {
         if (microsatelliteIndicator > MicrosatelliteSection.MSI_THRESHOLD) {
-            return "Unstable";
+            return "MSI";
         } else {
-            return "Stable";
+            return "MSS";
         }
     }
 
