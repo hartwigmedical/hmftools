@@ -19,7 +19,7 @@ final class ReportingCopyNumberFilters {
     }
 
     @NotNull
-    static List<GeneCopyNumber> filterForReporting(@NotNull final List<GeneCopyNumber> geneCopyNumbers, @NotNull GeneModel panelGeneModel) {
+    static List<GeneCopyNumber> filterForReporting(@NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull GeneModel panelGeneModel) {
         return geneCopyNumbers.stream()
                 .filter(copyNumber -> includeInReport(copyNumber.value(),
                         panelGeneModel.isAmplificationReportable(copyNumber.gene()),
@@ -28,7 +28,7 @@ final class ReportingCopyNumberFilters {
     }
 
     @NotNull
-    static List<GeneCopyNumber> filterForSignificance(@NotNull final List<GeneCopyNumber> geneCopyNumbers, double averageTumorPloidy) {
+    static List<GeneCopyNumber> filterForSignificance(@NotNull List<GeneCopyNumber> geneCopyNumbers, double averageTumorPloidy) {
         return geneCopyNumbers.stream()
                 .filter(copyNumber -> isSignificant(averageTumorPloidy, copyNumber.value()))
                 .collect(Collectors.toList());
@@ -37,8 +37,8 @@ final class ReportingCopyNumberFilters {
     @VisibleForTesting
     static boolean includeInReport(double copyNumber, boolean isAmplificationReportable, boolean isDeletionReportable) {
         // KODU: Assume we only have significant events here.
-        return (Doubles.lessOrEqual(copyNumber, ABS_LOSS) && isDeletionReportable) ||
-                (Doubles.greaterThan(copyNumber, ABS_LOSS) && isAmplificationReportable);
+        return (Doubles.greaterThan(copyNumber, ABS_LOSS) && isAmplificationReportable) ||
+                (Doubles.lessOrEqual(copyNumber, ABS_LOSS) && isDeletionReportable);
 
     }
 

@@ -33,8 +33,9 @@ public class PatientReporterTest {
         final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(new TestAnnotator(),
                 reporterData.panelGeneModel().disruptionGeneIDPanel(),
                 testKnownFusionModel());
-        final PatientReporter algo = ImmutablePatientReporter.of(baseReportData, reporterData, svAnalyzer);
-        assertNotNull(algo.run(RUN_DIRECTORY, true, null));
+        final PatientReporter reporter = ImmutablePatientReporter.of(baseReportData, reporterData, svAnalyzer);
+
+        assertNotNull(reporter.run(RUN_DIRECTORY, true, null));
     }
 
     private static class TestAnnotator implements VariantAnnotator {

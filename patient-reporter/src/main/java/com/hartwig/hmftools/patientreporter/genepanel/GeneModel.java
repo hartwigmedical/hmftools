@@ -41,12 +41,12 @@ public abstract class GeneModel {
 
     @Value.Derived
     public boolean isDeletionReportable(@NotNull String gene) {
-        return significantlyDeletedGenes().keySet().contains(gene) || geneDriverCategoryMap().get(gene) != DriverCategory.ONCO;
+        return significantlyDeletedGenes().keySet().contains(gene) || geneDriverCategoryMap().get(gene) == DriverCategory.TSG;
     }
 
     @Value.Derived
     public boolean isAmplificationReportable(@NotNull String gene) {
-        return significantlyAmplifiedGenes().keySet().contains(gene) || geneDriverCategoryMap().get(gene) != DriverCategory.TSG;
+        return significantlyAmplifiedGenes().keySet().contains(gene) || geneDriverCategoryMap().get(gene) == DriverCategory.ONCO;
     }
 
     @Value.Derived
