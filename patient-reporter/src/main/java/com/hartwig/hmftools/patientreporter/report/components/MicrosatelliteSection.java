@@ -12,7 +12,6 @@ import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 public final class MicrosatelliteSection {
     private static final double MSI_THRESHOLD = 4D;
 
-    //MIVO: buffer at edges of slider bar for min/max values. e.g. value of 1 would put min=1 and max=99
     private static final int BUFFER = 3;
     private static final double START = 1E-2;
     private static final double END = 100;

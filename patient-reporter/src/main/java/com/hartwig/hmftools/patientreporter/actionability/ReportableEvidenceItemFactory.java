@@ -56,6 +56,7 @@ public final class ReportableEvidenceItemFactory {
                 evidenceFiltered.add(highestOffLabel);
             }
         }
+
         return evidenceFiltered;
     }
 
@@ -77,10 +78,10 @@ public final class ReportableEvidenceItemFactory {
     }
 
     @Nullable
-    private static EvidenceItem highest(@NotNull List<EvidenceItem> items, boolean checkForOnLabel) {
+    private static EvidenceItem highest(@NotNull List<EvidenceItem> items, boolean shouldBeOnLabel) {
         EvidenceItem highest = null;
         for (EvidenceItem item : items) {
-            if (item.isOnLabel() == checkForOnLabel) {
+            if (item.isOnLabel() == shouldBeOnLabel) {
                 if (highest == null || hasHigherEvidence(item, highest)) {
                     highest = item;
                 }

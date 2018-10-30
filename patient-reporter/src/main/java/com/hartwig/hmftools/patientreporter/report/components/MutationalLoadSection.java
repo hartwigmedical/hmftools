@@ -11,7 +11,6 @@ import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 public final class MutationalLoadSection {
     private static final int ML_THRESHOLD = 140;
 
-    //MIVO: buffer at edges of slider bar for min/max values. e.g. value of 1 would put min=1 and max=99
     private static final int BUFFER = 3;
     private static final int START = 1;
     private static final int END = 1000;

@@ -88,32 +88,6 @@ public abstract class FindingsPage {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> germlineVariantReport(@NotNull AnalysedPatientReport report) {
-        String noVariantsFoundText = report.hasGermlineAnalysis() ? "None" : "Reporting of HR-related germline variants is not available";
-        final ComponentBuilder<?, ?> table =
-                !report.germlineVariants().isEmpty() && report.hasGermlineAnalysis()
-                        ? cmp.subreport(monospaceBaseTable().fields(GermlineVariantDataSource.fields())
-                        .columns(col.column("Gene", GermlineVariantDataSource.GENE_FIELD),
-                                col.column("Variant", GermlineVariantDataSource.VARIANT_FIELD).setFixedWidth(90),
-                                col.column("Impact", GermlineVariantDataSource.IMPACT_FIELD).setFixedWidth(80),
-                                col.column("Read Depth", GermlineVariantDataSource.READ_DEPTH_FIELD),
-                                col.column("Germline Status", GermlineVariantDataSource.GERMLINE_STATUS_FIELD),
-                                col.column("Ploidy (VAF)", GermlineVariantDataSource.PLOIDY_VAF_FIELD).setFixedWidth(80),
-                                col.column("Biallelic", GermlineVariantDataSource.BIALLELIC_FIELD))
-                        .setDataSource(GermlineVariantDataSource.fromVariants(report.germlineVariants(), report.hasReliablePurityFit())))
-                        : cmp.text(noVariantsFoundText).setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
-
-        return cmp.verticalList(cmp.text("HR-Related Germline Variants").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
-                table);
-    }
-
-    @NotNull
-    private static ComponentBuilder<?, ?> chordReport(@NotNull AnalysedPatientReport report) {
-        return ChordSection.build(report.chordAnalysis().hrdValue(), report.hasReliablePurityFit());
-    }
-
-    @NotNull
     private static ComponentBuilder<?, ?> geneCopyNumberReport(@NotNull AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> table =
                 !report.geneCopyNumbers().isEmpty()
@@ -155,6 +129,32 @@ public abstract class FindingsPage {
         return cmp.verticalList(cmp.text("Somatic Gene Fusions").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
                 table);
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> germlineVariantReport(@NotNull AnalysedPatientReport report) {
+        String noVariantsFoundText = report.hasGermlineAnalysis() ? "None" : "Reporting of HR-related germline variants is not available";
+        final ComponentBuilder<?, ?> table =
+                !report.germlineVariants().isEmpty() && report.hasGermlineAnalysis()
+                        ? cmp.subreport(monospaceBaseTable().fields(GermlineVariantDataSource.fields())
+                        .columns(col.column("Gene", GermlineVariantDataSource.GENE_FIELD),
+                                col.column("Variant", GermlineVariantDataSource.VARIANT_FIELD).setFixedWidth(90),
+                                col.column("Impact", GermlineVariantDataSource.IMPACT_FIELD).setFixedWidth(80),
+                                col.column("Read Depth", GermlineVariantDataSource.READ_DEPTH_FIELD),
+                                col.column("Germline Status", GermlineVariantDataSource.GERMLINE_STATUS_FIELD),
+                                col.column("Ploidy (VAF)", GermlineVariantDataSource.PLOIDY_VAF_FIELD).setFixedWidth(80),
+                                col.column("Biallelic", GermlineVariantDataSource.BIALLELIC_FIELD))
+                        .setDataSource(GermlineVariantDataSource.fromVariants(report.germlineVariants(), report.hasReliablePurityFit())))
+                        : cmp.text(noVariantsFoundText).setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
+
+        return cmp.verticalList(cmp.text("HR-Related Germline Variants").setStyle(sectionHeaderStyle()),
+                cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
+                table);
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> chordReport(@NotNull AnalysedPatientReport report) {
+        return ChordSection.build(report.chordAnalysis().hrdValue(), report.hasReliablePurityFit());
     }
 
     @NotNull
