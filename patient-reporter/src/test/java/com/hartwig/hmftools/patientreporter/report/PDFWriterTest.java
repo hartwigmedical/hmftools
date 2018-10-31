@@ -389,7 +389,7 @@ public class PDFWriterTest {
 
     @NotNull
     private static JasperReportBuilder generateNotAnalysableCPCTReport(final double pathologyTumorEstimate,
-            @NotNull final NotAnalysableReason reason) throws IOException {
+            @NotNull final NotAnalysableReason reason) {
         final NotAnalysedPatientReport patientReport = ImmutableNotAnalysedPatientReport.of(testSampleReport(pathologyTumorEstimate),
                 reason,
                 NotAnalysableStudy.CPCT,

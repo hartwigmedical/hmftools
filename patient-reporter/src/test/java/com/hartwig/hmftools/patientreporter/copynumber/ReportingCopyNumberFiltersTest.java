@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.patientreporter.copynumber.ReportingCopyNumbe
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -24,13 +23,14 @@ public class ReportingCopyNumberFiltersTest {
         assertTrue(isSignificant(1, 0));
         assertTrue(isSignificant(2, 0));
         assertFalse(isSignificant(2, 1));
+
         assertFalse(isSignificant(2, 2));
         assertTrue(isSignificant(2, 20));
         assertFalse(isSignificant(10, 20));
     }
 
     @Test
-    public void canFilterForReportingCorrectly() throws IOException {
+    public void canFilterForReportingCorrectly() {
         GeneModel geneModel = testSequencedReportData().panelGeneModel();
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
 

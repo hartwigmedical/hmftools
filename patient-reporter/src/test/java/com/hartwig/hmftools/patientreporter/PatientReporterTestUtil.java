@@ -52,13 +52,13 @@ public final class PatientReporterTestUtil {
     }
 
     @NotNull
-    public static SampleReport testSampleReport(final double pathologyTumorPercentage) throws IOException {
+    public static SampleReport testSampleReport(final double pathologyTumorPercentage) {
         final String sample = "CPCT02991111T";
         return ImmutableSampleReport.of(sample,
                 ImmutablePatientTumorLocation.of("CPCT02991111", "Skin", "Melanoma"),
                 pathologyTumorPercentage,
-                LocalDate.parse("05-Jan-2016", FORMATTER),
-                LocalDate.parse("01-Jan-2016", FORMATTER),
+                LocalDate.parse("05-Jan-2018", FORMATTER),
+                LocalDate.parse("01-Jan-2018", FORMATTER),
                 "PREP013V23-QC037V20-SEQ008V25",
                 testBaseReportData().centerModel().getAddresseeStringForSample(sample));
     }
@@ -69,31 +69,43 @@ public final class PatientReporterTestUtil {
     }
 
     @NotNull
-    public static SequencedReportData testSequencedReportData() throws IOException {
-        DrupActionabilityModel drupActionabilityModel = testDrupActionabilityModel();
-        GeneModel geneModel = GeneModelFactory.create(drupActionabilityModel);
-        CompoundEnrichment compoundEnrichment = new CompoundEnrichment(HotspotEnrichment.fromHotspotsFile(HOTSPOT_TSV));
+    public static SequencedReportData testSequencedReportData() {
+        try {
+            DrupActionabilityModel drupActionabilityModel = testDrupActionabilityModel();
+            GeneModel geneModel = GeneModelFactory.create(drupActionabilityModel);
+            CompoundEnrichment compoundEnrichment = new CompoundEnrichment(HotspotEnrichment.fromHotspotsFile(HOTSPOT_TSV));
 
-        return ImmutableSequencedReportData.of(geneModel,
-                ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_PATH),
-                compoundEnrichment,
-                testKnownFusionModel(),
-                new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),
-                TreeMultimap.create());
+            return ImmutableSequencedReportData.of(geneModel,
+                    ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_PATH),
+                    compoundEnrichment,
+                    testKnownFusionModel(),
+                    new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),
+                    TreeMultimap.create());
+        } catch (IOException exception) {
+            throw new IllegalStateException("Could not generate test sequenced report data: " + exception.getMessage());
+        }
     }
 
     @NotNull
-    public static BaseReportData testBaseReportData() throws IOException {
-        final List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
-        final Lims lims = LimsFactory.empty();
-        final CenterModel centerModel = Center.readFromCSV(CENTER_CSV);
-        return ImmutableBaseReportData.of(patientTumorLocations, lims, centerModel, SIGNATURE_PATH, RVA_LOGO);
+    public static BaseReportData testBaseReportData() {
+        try {
+            final List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
+            final Lims lims = LimsFactory.empty();
+            final CenterModel centerModel = Center.readFromCSV(CENTER_CSV);
+            return ImmutableBaseReportData.of(patientTumorLocations, lims, centerModel, SIGNATURE_PATH, RVA_LOGO);
+        } catch (IOException exception) {
+            throw new IllegalStateException("Could not generate test base reporter data: " + exception.getMessage());
+        }
     }
 
     @NotNull
-    static KnownFusionsModel testKnownFusionModel() throws IOException {
-        return KnownFusionsModel.fromInputStreams(new FileInputStream(FUSION_PAIRS_CSV),
-                new FileInputStream(PROMISCUOUS_FIVE_CSV),
-                new FileInputStream(PROMISCUOUS_THREE_CSV));
+    static KnownFusionsModel testKnownFusionModel() {
+        try {
+            return KnownFusionsModel.fromInputStreams(new FileInputStream(FUSION_PAIRS_CSV),
+                    new FileInputStream(PROMISCUOUS_FIVE_CSV),
+                    new FileInputStream(PROMISCUOUS_THREE_CSV));
+        } catch (IOException exception) {
+            throw new IllegalStateException("Could not generate test known fusion model: " + exception.getMessage());
+        }
     }
 }

@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -48,13 +49,13 @@ public class ReportableEvidenceItemFactoryTest {
     @NotNull
     private static ImmutableEvidenceItem.Builder builder() {
         return ImmutableEvidenceItem.builder()
-                .event("")
-                .isOnLabel(false)
-                .response("")
-                .level("")
-                .drugsType("")
-                .drug("")
-                .reference("")
-                .source(ActionabilitySource.CIVIC);
+                .event(Strings.EMPTY)
+                .source(ActionabilitySource.CIVIC)
+                .reference(Strings.EMPTY)
+                .drug(Strings.EMPTY)
+                .drugsType(Strings.EMPTY)
+                .level(Strings.EMPTY)
+                .response(Strings.EMPTY)
+                .isOnLabel(false);
     }
 }

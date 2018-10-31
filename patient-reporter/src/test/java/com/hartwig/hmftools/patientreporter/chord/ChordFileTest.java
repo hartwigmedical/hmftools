@@ -11,6 +11,7 @@ import org.junit.Test;
 public class ChordFileTest {
 
     private static final String CHORD_FILE = Resources.getResource("test_run/chord/CPCT11111111T_chord_prediction.txt").getPath();
+
     private static final double EPSILON = 1.0e-10;
 
     @Test
