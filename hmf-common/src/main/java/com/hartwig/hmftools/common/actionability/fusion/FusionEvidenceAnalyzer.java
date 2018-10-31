@@ -11,13 +11,10 @@ import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class FusionEvidenceAnalyzer {
-    private static final Logger LOGGER = LogManager.getLogger(FusionEvidenceAnalyzer.class);
 
     @NotNull
     private final List<ActionableFusion> fusionPairs;
