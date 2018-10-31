@@ -16,6 +16,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
@@ -120,7 +121,7 @@ public class PDFWriterTest {
         evidenceItems.add(evidenceBuilder()
                 .event("BRAF p.Val600Glu")
                 .drug("Vemurafenib + Panitumumab + Dabrafenib")
-                .level("B")
+                .level(EvidenceLevel.LEVELE)
                 .response("Responsive")
                 .reference("variant:222")
                 .source(ActionabilitySource.CIVIC)

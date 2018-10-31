@@ -89,7 +89,7 @@ public abstract class NonSequenceablePage {
         return cmp.verticalList(cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12)).setHeight(20),
                 cmp.text(subTitle).setStyle(dataTableStyle().setFontSize(12)).setHeight(20),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.horizontalList(cmp.text("Pathology Tumor Percentage").setStyle(tableHeaderStyle()),
+                cmp.verticalList(cmp.text("Pathology Tumor Percentage").setStyle(tableHeaderStyle()),
                         cmp.text(PatientReportFormat.formatNullablePercent(sampleReport().pathologyTumorPercentage()))
                                 .setStyle(dataTableStyle())),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),

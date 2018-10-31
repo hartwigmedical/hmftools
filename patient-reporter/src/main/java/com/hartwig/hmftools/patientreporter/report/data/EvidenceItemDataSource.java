@@ -44,16 +44,15 @@ public final class EvidenceItemDataSource {
 
         for (EvidenceItem evidenceItem : sort(evidenceItems)) {
             assert !evidenceItem.source().isTrialSource();
+            assert evidenceItem.level().isReportedEvidenceItemLevel();
 
-            if (evidenceItem.level().equals("A") || evidenceItem.level().equals("B")) {
-                evidenceItemDataSource.add(evidenceItem.event(),
-                        evidenceItem.drug(),
-                        evidenceItem.level(),
-                        evidenceItem.response(),
-                        evidenceItem.source().sourceName(),
-                        evidenceItem.reference());
+            evidenceItemDataSource.add(evidenceItem.event(),
+                    evidenceItem.drug(),
+                    evidenceItem.level().levelEvidenceItem(),
+                    evidenceItem.response(),
+                    evidenceItem.source().sourceName(),
+                    evidenceItem.reference());
             }
-        }
         return evidenceItemDataSource;
     }
 
@@ -67,7 +66,7 @@ public final class EvidenceItemDataSource {
                     return item1.event().compareTo(item2.event());
                 }
             } else {
-                return item1.level().compareTo(item2.level());
+                return item1.level().levelEvidenceItem().compareTo(item2.level().levelEvidenceItem());
             }
         }).collect(Collectors.toList());
     }

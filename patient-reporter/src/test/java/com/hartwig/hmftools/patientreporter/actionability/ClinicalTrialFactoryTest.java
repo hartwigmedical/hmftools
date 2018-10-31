@@ -8,6 +8,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 
 import org.apache.logging.log4j.util.Strings;
@@ -39,7 +40,7 @@ public class ClinicalTrialFactoryTest {
     private static ImmutableEvidenceItem.Builder testEvidenceBuilder() {
         return ImmutableEvidenceItem.builder()
                 .source(ActionabilitySource.ICLUSION)
-                .level(Strings.EMPTY)
+                .level(EvidenceLevel.LEVELA)
                 .response(Strings.EMPTY)
                 .drugsType(Strings.EMPTY);
     }

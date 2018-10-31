@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 
 import org.apache.logging.log4j.util.Strings;
@@ -19,8 +20,8 @@ public class ReportableEvidenceItemFactoryTest {
 
     @Test
     public void higherLevelWorks() {
-        EvidenceItem item1 = builder().level("A").build();
-        EvidenceItem item2 = builder().level("B").build();
+        EvidenceItem item1 = builder().level(EvidenceLevel.LEVELA).build();
+        EvidenceItem item2 = builder().level(EvidenceLevel.LEVELB).build();
 
         assertTrue(ReportableEvidenceItemFactory.hasHigherEvidence(item1, item2));
         assertFalse(ReportableEvidenceItemFactory.hasHigherEvidence(item2, item1));
@@ -29,18 +30,18 @@ public class ReportableEvidenceItemFactoryTest {
 
     @Test
     public void canSelectHighest() {
-        EvidenceItem item1 = builder().level("A").isOnLabel(true).build();
-        EvidenceItem item2 = builder().level("B").isOnLabel(false).build();
-        EvidenceItem item3 = builder().level("C").isOnLabel(false).build();
+        EvidenceItem item1 = builder().level(EvidenceLevel.LEVELA).isOnLabel(true).build();
+        EvidenceItem item2 = builder().level(EvidenceLevel.LEVELB).isOnLabel(false).build();
+        EvidenceItem item3 = builder().level(EvidenceLevel.LEVELC).isOnLabel(false).build();
 
         EvidenceItem highestOffLabel = ReportableEvidenceItemFactory.highestOffLabel(Lists.newArrayList(item1, item2, item3));
         assertNotNull(highestOffLabel);
-        assertEquals("B", highestOffLabel.level());
+        assertEquals(EvidenceLevel.LEVELB, highestOffLabel.level());
 
 
         EvidenceItem highestOnLabel = ReportableEvidenceItemFactory.highestOnLabel(Lists.newArrayList(item1, item2, item3));
         assertNotNull(highestOnLabel);
-        assertEquals("A", highestOnLabel.level());
+        assertEquals(EvidenceLevel.LEVELA, highestOnLabel.level());
 
         EvidenceItem onLabelOnly = ReportableEvidenceItemFactory.highestOffLabel(Lists.newArrayList(item1));
         assertNull(onLabelOnly);
@@ -54,7 +55,7 @@ public class ReportableEvidenceItemFactoryTest {
                 .reference(Strings.EMPTY)
                 .drug(Strings.EMPTY)
                 .drugsType(Strings.EMPTY)
-                .level(Strings.EMPTY)
+                .level(EvidenceLevel.LEVELA)
                 .response(Strings.EMPTY)
                 .isOnLabel(false);
     }
