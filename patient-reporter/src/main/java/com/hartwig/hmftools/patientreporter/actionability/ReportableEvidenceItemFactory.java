@@ -23,7 +23,7 @@ public final class ReportableEvidenceItemFactory {
     public static List<EvidenceItem> filterEvidenceItemsForReporting(@NotNull List<EvidenceItem> evidenceItems) {
         Set<EvidenceItem> uniqueReportableItems = Sets.newHashSet();
         for (EvidenceItem evidence : evidenceItems) {
-            if (!evidence.source().isTrialSource()) {
+            if (filterNonTrial(evidence)) {
                 uniqueReportableItems.add(evidence);
             }
         }
@@ -63,6 +63,11 @@ public final class ReportableEvidenceItemFactory {
             }
         }
         return evidenceFilteredOnLevel;
+    }
+
+    @VisibleForTesting
+    static Boolean filterNonTrial (final EvidenceItem evidence) {
+        return !evidence.source().isTrialSource();
     }
 
     @VisibleForTesting

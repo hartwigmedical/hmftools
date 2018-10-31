@@ -29,20 +29,6 @@ public class ReportableEvidenceItemFactoryTest {
     }
 
     @Test
-    public void hasKnownLevel() {
-        EvidenceItem item1 = builder().level(EvidenceLevel.LEVEL_A).isOnLabel(true).build();
-        EvidenceItem item2 = builder().level(EvidenceLevel.LEVEL_B).isOnLabel(true).build();
-        EvidenceItem item3 = builder().level(EvidenceLevel.LEVEL_C).isOnLabel(false).build();
-        EvidenceItem item4 = builder().level(EvidenceLevel.LEVEL_D).isOnLabel(false).build();
-        EvidenceItem item5 = builder().level(EvidenceLevel.LEVEL_E).isOnLabel(false).build();
-        assertTrue(ReportableEvidenceItemFactory.selectLevelsAandB(item1));
-        assertTrue(ReportableEvidenceItemFactory.selectLevelsAandB(item2));
-        assertFalse(ReportableEvidenceItemFactory.selectLevelsAandB(item3));
-        assertFalse(ReportableEvidenceItemFactory.selectLevelsAandB(item4));
-        assertFalse(ReportableEvidenceItemFactory.selectLevelsAandB(item5));
-    }
-
-    @Test
     public void canSelectHighest() {
         EvidenceItem item1 = builder().level(EvidenceLevel.LEVEL_A).isOnLabel(true).build();
         EvidenceItem item2 = builder().level(EvidenceLevel.LEVEL_B).isOnLabel(false).build();
@@ -59,6 +45,32 @@ public class ReportableEvidenceItemFactoryTest {
 
         EvidenceItem onLabelOnly = ReportableEvidenceItemFactory.highestOffLabel(Lists.newArrayList(item1));
         assertNull(onLabelOnly);
+    }
+
+    @Test
+    public void isNotTrail() {
+        EvidenceItem item1 = builder().source(ActionabilitySource.ICLUSION).build();
+        EvidenceItem item2 = builder().source(ActionabilitySource.ONCOKB).build();
+        EvidenceItem item3 = builder().source(ActionabilitySource.CGI).build();
+        EvidenceItem item4 = builder().source(ActionabilitySource.CIVIC).build();
+        assertFalse(ReportableEvidenceItemFactory.filterNonTrial(item1));
+        assertTrue(ReportableEvidenceItemFactory.filterNonTrial(item2));
+        assertTrue(ReportableEvidenceItemFactory.filterNonTrial(item3));
+        assertTrue(ReportableEvidenceItemFactory.filterNonTrial(item4));
+    }
+
+    @Test
+    public void hasKnownLevel() {
+        EvidenceItem item1 = builder().level(EvidenceLevel.LEVEL_A).isOnLabel(true).build();
+        EvidenceItem item2 = builder().level(EvidenceLevel.LEVEL_B).isOnLabel(true).build();
+        EvidenceItem item3 = builder().level(EvidenceLevel.LEVEL_C).isOnLabel(false).build();
+        EvidenceItem item4 = builder().level(EvidenceLevel.LEVEL_D).isOnLabel(false).build();
+        EvidenceItem item5 = builder().level(EvidenceLevel.LEVEL_E).isOnLabel(false).build();
+        assertTrue(ReportableEvidenceItemFactory.selectLevelsAandB(item1));
+        assertTrue(ReportableEvidenceItemFactory.selectLevelsAandB(item2));
+        assertFalse(ReportableEvidenceItemFactory.selectLevelsAandB(item3));
+        assertFalse(ReportableEvidenceItemFactory.selectLevelsAandB(item4));
+        assertFalse(ReportableEvidenceItemFactory.selectLevelsAandB(item5));
     }
 
     @NotNull
