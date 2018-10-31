@@ -14,9 +14,9 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.report.Commons;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
+import com.hartwig.hmftools.patientreporter.report.components.SummaryPart;
 import com.hartwig.hmftools.patientreporter.report.data.ClinicalTrialDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.EvidenceItemDataSource;
-import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -27,7 +27,7 @@ import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 @Value.Immutable
 @Value.Style(passAnnotations = NotNull.class,
              allParameters = true)
-public abstract class EvidencePage {
+public abstract class EvidenceSummaryPage {
 
     @NotNull
     abstract AnalysedPatientReport report();
@@ -45,23 +45,16 @@ public abstract class EvidencePage {
     }
 
     @NotNull
-    static String impliedPurityString(@NotNull AnalysedPatientReport report) {
-        return report.hasReliablePurityFit() ? PatientReportFormat.formatPercent(report.impliedPurity()) : "[below detection threshold]";
-    }
-
-    @NotNull
     private static ComponentBuilder<?, ?> evidenceItemReport(@NotNull AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> table = report.clinicalEvidence().size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(EvidenceItemDataSource.evidenceItemFields())
                 .columns(col.column("Event", EvidenceItemDataSource.EVENT_FIELD).setFixedWidth(120),
                         col.column("Drug", EvidenceItemDataSource.DRUG_FIELD),
-                        col.column("Drugs type", EvidenceItemDataSource.DRUGS_TYPE_FIELD),
                         col.column("Level", EvidenceItemDataSource.LEVEL_FIELD),
                         col.column("Response", EvidenceItemDataSource.RESPONSE_FIELD),
                         col.column("Source", EvidenceItemDataSource.SOURCE_FIELD)
                                 .setHyperLink(hyperLink(EvidenceItemDataSource.sourceHyperlink()))
-                                .setStyle(linkStyle()),
-                        col.column("On-Label", EvidenceItemDataSource.ON_LABEL_FIELD))
+                                .setStyle(linkStyle()))
                 .setDataSource(EvidenceItemDataSource.fromEvidenceItems(report.clinicalEvidence())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
@@ -79,8 +72,7 @@ public abstract class EvidencePage {
                         col.column("Source", ClinicalTrialDataSource.SOURCE_FIELD)
                                 .setHyperLink(hyperLink(ClinicalTrialDataSource.sourceHyperlink()))
                                 .setStyle(linkStyle()),
-                        col.column("CCMO", ClinicalTrialDataSource.CCMO_FIELD),
-                        col.column("On-Label", ClinicalTrialDataSource.ON_LABEL_FIELD))
+                        col.column("CCMO", ClinicalTrialDataSource.CCMO_FIELD))
                 .setDataSource(ClinicalTrialDataSource.fromClinicalTrials(report.clinicalTrials())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 

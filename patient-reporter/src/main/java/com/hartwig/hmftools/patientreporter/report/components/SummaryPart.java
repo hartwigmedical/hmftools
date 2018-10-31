@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.report.pages;
+package com.hartwig.hmftools.patientreporter.report.components;
 
 import static com.hartwig.hmftools.patientreporter.report.Commons.dataTableStyle;
 import static com.hartwig.hmftools.patientreporter.report.Commons.fontStyle;
@@ -18,13 +18,16 @@ import org.jetbrains.annotations.NotNull;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 
-final class SummaryPart {
+public final class SummaryPart {
+
+    private SummaryPart() {
+    }
 
     @NotNull
-     static ComponentBuilder<?, ?> summaryData(@NotNull AnalysedPatientReport report) {
+    public static ComponentBuilder<?, ?> summaryData(@NotNull AnalysedPatientReport report) {
         String avgTumorPloidyString = new DecimalFormat("#.#").format(report.averageTumorPloidy());
 
-        final ComponentBuilder<?, ?> summaryReportedGenomicAlterations =
+        final ComponentBuilder<?, ?> tumorCharacteristicsPart =
                 cmp.verticalList(cmp.horizontalList(cmp.text("Tumor Characteristics")
                                 .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)),
                         cmp.horizontalList(cmp.text(
@@ -33,7 +36,7 @@ final class SummaryPart {
                                 .setStyle(fontStyle().setFontSize(8))),
                         cmp.verticalGap(10),
                         cmp.horizontalList(cmp.text("Tumor purity").setStyle(tableHeaderStyle()),
-                                cmp.text(EvidencePage.impliedPurityString(report)).setStyle(dataTableStyle())),
+                                cmp.text(impliedPurityString(report)).setStyle(dataTableStyle())),
                         cmp.horizontalList(cmp.text("Average tumor ploidy").setStyle(tableHeaderStyle()),
                                 cmp.text(PatientReportFormat.correctValueForFitReliability(avgTumorPloidyString,
                                         report.hasReliablePurityFit())).setStyle(dataTableStyle())),
@@ -44,7 +47,7 @@ final class SummaryPart {
                                 cmp.text(TumorImpliedTumorCharacteristicsDataSource.interpretMSI(report.microsatelliteIndelsPerMb()))
                                         .setStyle(dataTableStyle())));
 
-        final ComponentBuilder<?, ?> summaryImpliedTumorCharacteristics =
+        final ComponentBuilder<?, ?> genomicAlterationSummary =
                 cmp.verticalList(cmp.horizontalList(cmp.text("Genomic Alterations")
                                 .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)),
                         cmp.horizontalList(cmp.text(
@@ -69,8 +72,11 @@ final class SummaryPart {
                                 cmp.text(TumorReportedGenomicAlterationsDataSource.geneFusions(report.geneFusions()))
                                         .setStyle(dataTableStyle())));
 
-        return cmp.horizontalList(summaryImpliedTumorCharacteristics,
-                cmp.horizontalGap(40),
-                summaryReportedGenomicAlterations);
+        return cmp.horizontalList(genomicAlterationSummary, cmp.horizontalGap(40), tumorCharacteristicsPart);
+    }
+
+    @NotNull
+    private static String impliedPurityString(@NotNull AnalysedPatientReport report) {
+        return report.hasReliablePurityFit() ? PatientReportFormat.formatPercent(report.impliedPurity()) : "[below detection threshold]";
     }
 }

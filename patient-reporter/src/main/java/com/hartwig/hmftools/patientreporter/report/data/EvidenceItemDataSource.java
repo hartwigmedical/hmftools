@@ -20,11 +20,9 @@ public final class EvidenceItemDataSource {
 
     public static final FieldBuilder<?> EVENT_FIELD = field("event", String.class);
     public static final FieldBuilder<?> DRUG_FIELD = field("drug", String.class);
-    public static final FieldBuilder<?> DRUGS_TYPE_FIELD = field("drug type", String.class);
     public static final FieldBuilder<?> LEVEL_FIELD = field("level", String.class);
     public static final FieldBuilder<?> RESPONSE_FIELD = field("response", String.class);
     public static final FieldBuilder<?> SOURCE_FIELD = field("source", String.class);
-    public static final FieldBuilder<?> ON_LABEL_FIELD = field("on_label", String.class);
     private static final FieldBuilder<?> REFERENCE_FIELD = field("reference", String.class);
 
     private EvidenceItemDataSource() {
@@ -32,20 +30,17 @@ public final class EvidenceItemDataSource {
 
     @NotNull
     public static FieldBuilder<?>[] evidenceItemFields() {
-        return new FieldBuilder<?>[] { EVENT_FIELD, DRUG_FIELD, DRUGS_TYPE_FIELD, LEVEL_FIELD, RESPONSE_FIELD, SOURCE_FIELD, ON_LABEL_FIELD,
-                REFERENCE_FIELD };
+        return new FieldBuilder<?>[] { EVENT_FIELD, DRUG_FIELD, LEVEL_FIELD, RESPONSE_FIELD, SOURCE_FIELD, REFERENCE_FIELD };
     }
 
     @NotNull
     public static JRDataSource fromEvidenceItems(@NotNull List<EvidenceItem> evidenceItems) {
         final DRDataSource evidenceItemDataSource = new DRDataSource(EVENT_FIELD.getName(),
                 DRUG_FIELD.getName(),
-                DRUGS_TYPE_FIELD.getName(),
                 LEVEL_FIELD.getName(),
                 RESPONSE_FIELD.getName(),
                 SOURCE_FIELD.getName(),
-                REFERENCE_FIELD.getName(),
-                ON_LABEL_FIELD.getName());
+                REFERENCE_FIELD.getName());
 
         for (EvidenceItem evidenceItem : sort(evidenceItems)) {
             assert !evidenceItem.source().isTrialSource();
@@ -57,8 +52,7 @@ public final class EvidenceItemDataSource {
                         evidenceItem.level(),
                         evidenceItem.response(),
                         evidenceItem.source().sourceName(),
-                        evidenceItem.reference(),
-                        evidenceItem.isOnLabel() ? "Yes" : "No");
+                        evidenceItem.reference());
             }
         }
         return evidenceItemDataSource;
@@ -68,7 +62,11 @@ public final class EvidenceItemDataSource {
     private static List<EvidenceItem> sort(@NotNull List<EvidenceItem> evidenceItems) {
         return evidenceItems.stream().sorted((item1, item2) -> {
             if (item1.level().equals(item2.level())) {
-                return item1.event().compareTo(item2.event());
+                if (item1.event().equals(item2.event())) {
+                    return item1.drug().compareTo(item2.drug());
+                } else {
+                    return item1.event().compareTo(item2.event());
+                }
             } else {
                 return item1.level().compareTo(item2.level());
             }
