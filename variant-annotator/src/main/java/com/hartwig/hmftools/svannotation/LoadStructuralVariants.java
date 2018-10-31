@@ -66,6 +66,8 @@ public class LoadStructuralVariants {
     private static final String VCF_FILE = "vcf_file";
     private static final String ENSEMBL_DB = "ensembl_db";
     private static final String ENSEMBL_DB_LOCAL = "local_ensembl";
+    private static final String ENSEMBL_DB_USER = "ensembl_user";
+    private static final String ENSEMBL_DB_PASS = "ensembl_pass";
     private static final String FUSION_PAIRS_CSV = "fusion_pairs_csv";
     private static final String PROMISCUOUS_FIVE_CSV = "promiscuous_five_csv";
     private static final String PROMISCUOUS_THREE_CSV = "promiscuous_three_csv";
@@ -79,137 +81,175 @@ public class LoadStructuralVariants {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
+    public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException
+    {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
-        final String tumorSample = cmd.getOptionValue(SAMPLE);
+        final String sampleId = cmd.getOptionValue(SAMPLE);
 
-        LOGGER.info("annotating variants for sample({})", tumorSample);
+        LOGGER.info("annotating variants for sample({})", sampleId);
 
         final DatabaseAccess dbAccess = databaseAccess(cmd);
 
-        if (cmd.hasOption(LOG_DEBUG)) {
+        if (cmd.hasOption(LOG_DEBUG))
             Configurator.setRootLevel(Level.DEBUG);
-        }
 
-        SvPONAnnotator svPONAnnotator = null;
+        List<EnrichedStructuralVariant> enrichedVariants;
 
-        if (cmd.hasOption(SV_PON_FILE)) {
-            svPONAnnotator = new SvPONAnnotator();
-            svPONAnnotator.loadPonFile(cmd.getOptionValue(SV_PON_FILE));
-        }
+        if(cmd.hasOption(SOURCE_SVS_FROM_DB))
+        {
+            // optionally load existing SVs from the database rather than from VCF
+            enrichedVariants = dbAccess.readStructuralVariants(sampleId);
 
-        boolean sourceSVsFromDB = cmd.hasOption(SOURCE_SVS_FROM_DB);
-
-        List<EnrichedStructuralVariant> svList;
-
-        if (sourceSVsFromDB) {
-            svList = dbAccess.readStructuralVariants(tumorSample);
-
-            if (svList.isEmpty()) {
+            if (enrichedVariants.isEmpty())
+            {
                 LOGGER.info("no SVs loaded from DB");
                 return;
             }
-        } else {
 
-            LOGGER.info("Loading indexed fasta reference file");
-            final String fastaFileLocation = cmd.getOptionValue(REF_GENOME);
-            final IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
+            LOGGER.debug("sample({}) loaded {} SVs from DB", sampleId, enrichedVariants.size());
+        }
+        else
+        {
+            List<EnrichedStructuralVariant> svList = loadSVsFromFile(cmd, sampleId, dbAccess);
 
-            LOGGER.info("reading VCF File");
-            final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE));
-            LOGGER.info("enriching structural variants based on purple data");
-            svList = enrichStructuralVariants(indexedFastaSequenceFile, variants, dbAccess, tumorSample);
+            LOGGER.info("persisting {} SVs to database", svList.size());
+
+            dbAccess.writeStructuralVariants(sampleId, svList);
+
+            // re-read the data to get primaryId field as a foreign key for disruptions and fusions
+            enrichedVariants = dbAccess.readStructuralVariants(sampleId);;
         }
 
-        List<EnrichedStructuralVariant> updatedSVs = Lists.newArrayList();
+        DatabaseAccess ensembleDBConn = null;
 
-        if (svPONAnnotator != null && svPONAnnotator.hasEntries()) {
+        if (cmd.hasOption(ENSEMBL_DB_LOCAL))
+        {
+            // CHSH: The same credential work for both hmf and ensembl DBs
+            final String ensembleJdbcUrl = "jdbc:" + cmd.getOptionValue(ENSEMBL_DB);
+            final String ensembleUser = cmd.getOptionValue(ENSEMBL_DB_USER);
+            final String ensemblePassword = cmd.getOptionValue(ENSEMBL_DB_PASS);
 
-            for (EnrichedStructuralVariant variant : svList) {
-                boolean ponFiltered = false;
-                if (variant.end() != null) {
-                    int ponCount = svPONAnnotator.getPonOccurenceCount(variant.chromosome(true),
-                            variant.chromosome(false),
-                            variant.position(true),
-                            variant.position(false),
-                            variant.orientation(true),
-                            variant.orientation(false),
-                            variant.type().toString());
-                    ponFiltered = ponCount > 1;
-                }
-                String filterString = variant.filter();
-                assert filterString != null;
-                Set<String> filterSet = Stream.of(filterString.split(";"))
-                        .filter(s -> !s.equals("PASS"))
-                        .filter(s -> !s.equals("."))
-                        .filter(s -> !s.equals(""))
-                        .collect(Collectors.toSet());
-                if (ponFiltered) {
-                    filterSet.add(PON_FILTER_PON);
-                }
-                String filter = filterSet.size() == 0 ? "PASS" : filterSet.stream().sorted().collect(Collectors.joining(";"));
-                final ImmutableEnrichedStructuralVariant updatedSV =
-                        ImmutableEnrichedStructuralVariant.builder().from(variant).filter(filter).build();
-                updatedSVs.add(updatedSV);
+            LOGGER.debug("connecting to local ensembl DB: {}", cmd.getOptionValue(ENSEMBL_DB));
+
+            try
+            {
+                ensembleDBConn = new DatabaseAccess(ensembleUser, ensemblePassword, ensembleJdbcUrl);
             }
-        } else {
-            updatedSVs = svList;
-        }
-
-        LOGGER.info("persisting {} SVs to database", updatedSVs.size());
-
-        dbAccess.writeStructuralVariants(tumorSample, updatedSVs);
-
-        if (!sourceSVsFromDB) {
-            // NEVA: We read after we write to populate the primaryId field
-            final List<EnrichedStructuralVariant> enrichedVariants = dbAccess.readStructuralVariants(tumorSample);
-
-            DatabaseAccess ensembleDBConn = null;
-
-            if (cmd.hasOption(ENSEMBL_DB_LOCAL)) {
-
-                // CHSH: The same credential work for both hmf and ensembl DBs
-                final String ensembleJdbcUrl = "jdbc:" + cmd.getOptionValue(ENSEMBL_DB);
-                final String ensembleUser = cmd.getOptionValue(DB_USER);
-                final String ensemblePassword = cmd.getOptionValue(DB_PASS);
-
-                LOGGER.debug("connecting to local ensembl DB: {}", cmd.getOptionValue(ENSEMBL_DB));
-
-                try {
-                    ensembleDBConn = new DatabaseAccess(ensembleUser, ensemblePassword, ensembleJdbcUrl);
-                } catch (Exception e) {
-                    LOGGER.warn("Ensembl DB connection failed: {}", e.toString(), e.getMessage());
-                    return;
-                }
+            catch (SQLException e)
+            {
+                LOGGER.warn("Ensembl DB connection failed: {}", e.toString());
+                return;
             }
-
-            final VariantAnnotator annotator = ensembleDBConn != null
-                    ? new MySQLAnnotator(ensembleDBConn.context())
-                    : MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
-
-            LOGGER.info("loading Fusion data");
-            final KnownFusionsModel knownFusionsModel =
-                    KnownFusionsModel.fromInputStreams(new FileInputStream(cmd.getOptionValue(FUSION_PAIRS_CSV)),
-                            new FileInputStream(cmd.getOptionValue(PROMISCUOUS_FIVE_CSV)),
-                            new FileInputStream(cmd.getOptionValue(PROMISCUOUS_THREE_CSV)));
-
-            // TODO (KODU): Add potentially actionable genes, see also instantation in patient reporter.
-            final StructuralVariantAnalyzer analyzer = new StructuralVariantAnalyzer(annotator, tsgDriverGeneIDs(), knownFusionsModel);
-            LOGGER.info("analyzing structural variants for impact via disruptions and fusions");
-            final StructuralVariantAnalysis analysis = analyzer.run(enrichedVariants);
-
-            LOGGER.info("persisting annotations to database");
-            final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(dbAccess.context());
-            annotationDAO.write(analysis);
         }
+
+        final VariantAnnotator annotator = ensembleDBConn != null
+                ? new MySQLAnnotator(ensembleDBConn.context())
+                : MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
+
+        LOGGER.debug("loading fusion data");
+        final KnownFusionsModel knownFusionsModel =
+                KnownFusionsModel.fromInputStreams(new FileInputStream(cmd.getOptionValue(FUSION_PAIRS_CSV)),
+                        new FileInputStream(cmd.getOptionValue(PROMISCUOUS_FIVE_CSV)),
+                        new FileInputStream(cmd.getOptionValue(PROMISCUOUS_THREE_CSV)));
+
+        // TODO (KODU): Add potentially actionable genes, see also instantation in patient reporter.
+        final StructuralVariantAnalyzer analyzer = new StructuralVariantAnalyzer(annotator, tsgDriverGeneIDs(), knownFusionsModel);
+
+        LOGGER.debug("finding disruptions and fusions");
+        final StructuralVariantAnalysis analysis = analyzer.run(enrichedVariants);
+
+        LOGGER.debug("persisting annotations to database");
+        final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(dbAccess.context());
+        annotationDAO.write(analysis);
 
         LOGGER.info("run complete");
     }
 
+    private static List<EnrichedStructuralVariant> loadSVsFromFile(final CommandLine cmd, final String sampleId, DatabaseAccess dbAccess)
+    {
+        List<EnrichedStructuralVariant> svList = Lists.newArrayList();
+
+        try
+        {
+            LOGGER.debug("Loading indexed fasta reference file");
+            final String fastaFileLocation = cmd.getOptionValue(REF_GENOME);
+            final IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
+
+            LOGGER.debug("reading VCF File");
+            final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE));
+
+            LOGGER.debug("enriching structural variants based on purple data");
+            svList = enrichStructuralVariants(indexedFastaSequenceFile, variants, dbAccess, sampleId);
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to read ref genome file");
+            return svList;
+        }
+
+        if(cmd.hasOption(SV_PON_FILE))
+        {
+            svList = applyPONFilter(cmd.getOptionValue(SV_PON_FILE), svList);
+        }
+
+        return svList;
+    }
+
+    private static List<EnrichedStructuralVariant> applyPONFilter(final String ponFilename, List<EnrichedStructuralVariant> svList)
+    {
+        SvPONAnnotator svPONAnnotator = new SvPONAnnotator();
+        svPONAnnotator.loadPonFile(ponFilename);
+
+        if (!svPONAnnotator.hasEntries())
+            return svList;
+
+        List<EnrichedStructuralVariant> updatedSVs = Lists.newArrayList();
+
+        for (EnrichedStructuralVariant variant : svList)
+        {
+            boolean ponFiltered = false;
+            if (variant.end() != null)
+            {
+                int ponCount = svPONAnnotator.getPonOccurenceCount(variant.chromosome(true),
+                        variant.chromosome(false),
+                        variant.position(true),
+                        variant.position(false),
+                        variant.orientation(true),
+                        variant.orientation(false),
+                        variant.type().toString());
+                ponFiltered = ponCount > 1;
+            }
+
+            String filterString = variant.filter();
+            assert filterString != null;
+
+            Set<String> filterSet = Stream.of(filterString.split(";"))
+                    .filter(s -> !s.equals("PASS"))
+                    .filter(s -> !s.equals("."))
+                    .filter(s -> !s.equals(""))
+                    .collect(Collectors.toSet());
+
+            if (ponFiltered)
+            {
+                filterSet.add(PON_FILTER_PON);
+            }
+
+            String filter = filterSet.size() == 0 ? "PASS" : filterSet.stream().sorted().collect(Collectors.joining(";"));
+
+            final ImmutableEnrichedStructuralVariant updatedSV =
+                    ImmutableEnrichedStructuralVariant.builder().from(variant).filter(filter).build();
+
+            updatedSVs.add(updatedSV);
+        }
+
+        return updatedSVs;
+    }
+
     @NotNull
-    private static Set<String> tsgDriverGeneIDs() {
+    private static Set<String> tsgDriverGeneIDs()
+    {
         Set<String> tsgDriverGeneIDs = Sets.newHashSet();
         Map<String, HmfTranscriptRegion> allGenes = HmfGenePanelSupplier.allGenesMap();
 
@@ -220,9 +260,8 @@ public class LoadStructuralVariants {
     }
 
     @NotNull
-    private static List<StructuralVariant> readFromVcf(@NotNull String vcfFileLocation) throws IOException {
-
-
+    private static List<StructuralVariant> readFromVcf(@NotNull String vcfFileLocation) throws IOException
+    {
         VariantContextFilter filter = variantContext -> {
             final Set<String> filters = Sets.newHashSet(variantContext.getFilters());
             filters.removeAll(ALLOWED_FILTERS);
@@ -230,35 +269,42 @@ public class LoadStructuralVariants {
         };
 
         final StructuralVariantFactory factory = new StructuralVariantFactory(filter);
+
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcfFileLocation,
                 new VCFCodec(),
                 false)) {
             reader.iterator().forEach(factory::addVariantContext);
         }
+
         return factory.results();
     }
 
     @NotNull
-    private static List<EnrichedStructuralVariant> enrichStructuralVariants( @NotNull final IndexedFastaSequenceFile indexedFastaSequenceFile, @NotNull List<StructuralVariant> variants,
-            @NotNull DatabaseAccess dbAccess, @NotNull String tumorSample) {
-        final PurityContext purityContext = dbAccess.readPurityContext(tumorSample);
+    private static List<EnrichedStructuralVariant> enrichStructuralVariants(
+            @NotNull final IndexedFastaSequenceFile indexedFastaSequenceFile, @NotNull List<StructuralVariant> variants,
+            @NotNull DatabaseAccess dbAccess, @NotNull String sampleId)
+    {
+        final PurityContext purityContext = dbAccess.readPurityContext(sampleId);
 
-        if (purityContext == null) {
-            LOGGER.warn("Unable to retrieve purple data. Enrichment may be incomplete.");
+        if (purityContext == null)
+        {
+            LOGGER.warn("sample({} unable to retrieve purple data, enrichment may be incomplete", sampleId);
         }
 
         final PurityAdjuster purityAdjuster = purityContext == null
                 ? new PurityAdjuster(Gender.FEMALE, 1, 1)
                 : new PurityAdjuster(purityContext.gender(), purityContext.bestFit().purity(), purityContext.bestFit().normFactor());
 
-        final List<PurpleCopyNumber> copyNumberList = dbAccess.readCopynumbers(tumorSample);
+        final List<PurpleCopyNumber> copyNumberList = dbAccess.readCopynumbers(sampleId);
         final Multimap<Chromosome, PurpleCopyNumber> copyNumbers =
                 Multimaps.index(copyNumberList, x -> HumanChromosome.fromString(x.chromosome()));
+
         return new EnrichedStructuralVariantFactory(indexedFastaSequenceFile, purityAdjuster, copyNumbers).enrich(variants);
     }
 
     @NotNull
-    private static Options createBasicOptions() {
+    private static Options createBasicOptions()
+    {
         final Options options = new Options();
         options.addOption(VCF_FILE, true, "Path to the vcf file.");
         options.addOption(SAMPLE, true, "Tumor sample.");
@@ -269,6 +315,8 @@ public class LoadStructuralVariants {
         options.addOption(PROMISCUOUS_FIVE_CSV, true, "Path towards a CSV containing white-listed promiscuous 5' genes.");
         options.addOption(PROMISCUOUS_THREE_CSV, true, "Path towards a CSV containing white-listed promiscuous 3' genes.");
         options.addOption(ENSEMBL_DB, true, "Annotate structural variants using this Ensembl DB URI");
+        options.addOption(ENSEMBL_DB_PASS, true, "Ensembl DB password if required");
+        options.addOption(ENSEMBL_DB_USER, true, "Ensembl DB username if required");
         options.addOption(ENSEMBL_DB_LOCAL, false, "Connect to local Ensembl DB");
         options.addOption(SOURCE_SVS_FROM_DB, false, "Skip annotations, including Ensemble DB data sync, for testing only)");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
@@ -278,13 +326,15 @@ public class LoadStructuralVariants {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException {
+    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
+    {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
 
     @NotNull
-    private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException {
+    private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException
+    {
         final String userName = cmd.getOptionValue(DB_USER);
         final String password = cmd.getOptionValue(DB_PASS);
         final String databaseUrl = cmd.getOptionValue(DB_URL);

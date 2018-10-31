@@ -41,7 +41,8 @@ import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 import org.jooq.types.UInteger;
 
-public class MySQLAnnotator implements VariantAnnotator {
+public class MySQLAnnotator implements VariantAnnotator
+{
     private static final String ENTREZ_IDS = "ENTREZ_IDS";
     private static final String KARYOTYPE_BAND = "KARYOTYPE_BAND";
     private static final String CODING_START = "CODING_START";
@@ -213,8 +214,10 @@ public class MySQLAnnotator implements VariantAnnotator {
     }
 
     @Nullable
-    private Transcript buildTranscript(@NotNull GeneAnnotation parent, @NotNull Record transcript, long position,
-            @NotNull UInteger canonicalTranscriptId, boolean isForwardStrand) {
+    private Transcript buildTranscript(
+            @NotNull GeneAnnotation parent, @NotNull Record transcript, long position,
+            @NotNull UInteger canonicalTranscriptId, boolean isForwardStrand)
+    {
         final UInteger transcriptId = transcript.get(TRANSCRIPT.TRANSCRIPT_ID);
         final boolean canonical = transcriptId.equals(canonicalTranscriptId);
         final String transcriptStableId = transcript.get(TRANSCRIPT.STABLE_ID);
@@ -257,7 +260,9 @@ public class MySQLAnnotator implements VariantAnnotator {
             exonUpstreamPhase = exonLeft == null ? -1 : exonLeft.get(EXON.END_PHASE);
             exonDownstream = exonRight == null ? 0 : exonRight.get(EXON_TRANSCRIPT.RANK);
             exonDownstreamPhase = exonRight == null ? -1 : exonRight.get(EXON.PHASE);
-        } else {
+        }
+        else
+        {
             exonDownstream = exonLeft == null ? 0 : exonLeft.get(EXON_TRANSCRIPT.RANK);
             exonDownstreamPhase = exonLeft == null ? -1 : exonLeft.get(EXON.PHASE);
             exonUpstream = exonRight == null ? 0 : exonRight.get(EXON_TRANSCRIPT.RANK);
@@ -267,7 +272,9 @@ public class MySQLAnnotator implements VariantAnnotator {
         if (exonUpstream > 0 && exonDownstream == 0) {
             // NERA: past the last exon
             return null;
-        } else {
+        }
+        else
+        {
             UInteger codingStart = (UInteger) transcript.get(CODING_START);
             UInteger codingEnd = (UInteger) transcript.get(CODING_END);
             return new Transcript(parent,
