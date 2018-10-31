@@ -120,7 +120,7 @@ public class PDFWriterTest {
                 .event("TP53 p.Pro177_Cys182del")
                 .drug("Docetaxel")
                 .drugsType("Chemotherapy")
-                .level("D")
+                .level("A")
                 .response("Resistant")
                 .reference("variant:222")
                 .source(ActionabilitySource.CIVIC)

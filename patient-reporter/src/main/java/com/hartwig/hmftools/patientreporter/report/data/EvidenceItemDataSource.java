@@ -48,7 +48,6 @@ public final class EvidenceItemDataSource {
             if (evidenceItem.level().equals("A") || evidenceItem.level().equals("B")) {
                 evidenceItemDataSource.add(evidenceItem.event(),
                         evidenceItem.drug(),
-                        evidenceItem.drugsType(),
                         evidenceItem.level(),
                         evidenceItem.response(),
                         evidenceItem.source().sourceName(),
