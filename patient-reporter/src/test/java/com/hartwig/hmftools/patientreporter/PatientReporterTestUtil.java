@@ -3,10 +3,7 @@ package com.hartwig.hmftools.patientreporter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Locale;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.TreeMultimap;
@@ -14,7 +11,6 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.center.Center;
 import com.hartwig.hmftools.common.center.CenterModel;
-import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.lims.Lims;
@@ -33,7 +29,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public final class PatientReporterTestUtil {
 
     private static final String SIGNATURE_PATH = Resources.getResource("signature/signature_test.png").getPath();
-    private static final String RVA_LOGO = Resources.getResource("rva_logo/rva_logo_test.jpg").getPath();
+    private static final String RVA_LOGO_PATH = Resources.getResource("rva_logo/rva_logo_test.jpg").getPath();
 
     private static final String REF_GENOME_PATH = Resources.getResource("refgenome/ref.fasta").getPath();
 
@@ -46,21 +42,7 @@ public final class PatientReporterTestUtil {
     private static final String PROMISCUOUS_FIVE_CSV = Resources.getResource("csv/promiscuous_five.csv").getPath();
     private static final String PROMISCUOUS_THREE_CSV = Resources.getResource("csv/promiscuous_three.csv").getPath();
 
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
-
     private PatientReporterTestUtil() {
-    }
-
-    @NotNull
-    public static SampleReport testSampleReport(final double pathologyTumorPercentage) {
-        final String sample = "CPCT02991111T";
-        return ImmutableSampleReport.of(sample,
-                ImmutablePatientTumorLocation.of("CPCT02991111", "Skin", "Melanoma"),
-                pathologyTumorPercentage,
-                LocalDate.parse("05-Jan-2018", FORMATTER),
-                LocalDate.parse("01-Jan-2018", FORMATTER),
-                "PREP013V23-QC037V20-SEQ008V25",
-                testBaseReportData().centerModel().getAddresseeStringForSample(sample));
     }
 
     @NotNull
@@ -92,7 +74,7 @@ public final class PatientReporterTestUtil {
             final List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
             final Lims lims = LimsFactory.empty();
             final CenterModel centerModel = Center.readFromCSV(CENTER_CSV);
-            return ImmutableBaseReportData.of(patientTumorLocations, lims, centerModel, SIGNATURE_PATH, RVA_LOGO);
+            return ImmutableBaseReportData.of(patientTumorLocations, lims, centerModel, SIGNATURE_PATH, RVA_LOGO_PATH);
         } catch (IOException exception) {
             throw new IllegalStateException("Could not generate test base reporter data: " + exception.getMessage());
         }

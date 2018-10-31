@@ -1,18 +1,23 @@
 package com.hartwig.hmftools.patientreporter.report;
 
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReportData;
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testSampleReport;
 
 import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.Optional;
 
+import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableNotAnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableStudy;
 
@@ -27,6 +32,7 @@ public class PDFWriterTest {
     private static final boolean WRITE_TO_PDF = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
 
     @Test
     public void canGenerateSequenceReportForCOLO829() throws DRException, IOException {
@@ -83,9 +89,16 @@ public class PDFWriterTest {
     }
 
     @NotNull
-    private static JasperReportBuilder generateNotAnalysableCPCTReport(final double pathologyTumorEstimate,
-            @NotNull final NotAnalysableReason reason) {
-        NotAnalysedPatientReport patientReport = ImmutableNotAnalysedPatientReport.of(testSampleReport(pathologyTumorEstimate),
+    private static JasperReportBuilder generateNotAnalysableCPCTReport(double pathologyTumorEstimate, @NotNull NotAnalysableReason reason) {
+        SampleReport sampleReport = ImmutableSampleReport.of("CPCT02991111T",
+                ImmutablePatientTumorLocation.of("CPCT02991111", "Skin", "Melanoma"),
+                pathologyTumorEstimate,
+                LocalDate.parse("05-Jan-2018", DATE_FORMATTER),
+                LocalDate.parse("01-Jan-2018", DATE_FORMATTER),
+                "PREP013V23-QC037V20-SEQ008V25",
+                "HMF Testing Center");
+
+        NotAnalysedPatientReport patientReport = ImmutableNotAnalysedPatientReport.of(sampleReport,
                 reason,
                 NotAnalysableStudy.CPCT,
                 Optional.empty(),

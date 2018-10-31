@@ -2,9 +2,11 @@ package com.hartwig.hmftools.patientreporter.report;
 
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestCopyNumberBuilder;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReportData;
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testSampleReport;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
@@ -14,6 +16,7 @@ import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.gender.Gender;
@@ -26,6 +29,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.BaseReportData;
 import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrial;
 import com.hartwig.hmftools.patientreporter.actionability.ImmutableClinicalTrial;
@@ -45,12 +49,13 @@ import org.jetbrains.annotations.NotNull;
 
 final class ExampleAnalysisTestFactory {
 
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
+
     private ExampleAnalysisTestFactory() {
     }
 
     @NotNull
     static AnalysedPatientReport buildCOLO829() {
-        final double pathologyTumorPercentage = 0.8;
         final double impliedTumorPurity = 1D;
         final double averageTumorPloidy = 3.1;
         final int tumorMutationalLoad = 182;
@@ -70,7 +75,7 @@ final class ExampleAnalysisTestFactory {
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
 
-        final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
+        final SampleReport sampleReport = createCOLO829SampleReport();
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
                 fittedPurity.purity(),
@@ -96,7 +101,6 @@ final class ExampleAnalysisTestFactory {
 
     @NotNull
     static AnalysedPatientReport buildAnalysisWithAllTablesFilledIn() {
-        final double pathologyTumorPercentage = 0.8;
         final double impliedTumorPurity = 1D;
         final double averageTumorPloidy = 3.1;
         final int tumorMutationalLoad = 182;
@@ -116,7 +120,7 @@ final class ExampleAnalysisTestFactory {
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
 
-        final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
+        final SampleReport sampleReport = createCOLO829SampleReport();
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
                 fittedPurity.purity(),
@@ -138,6 +142,18 @@ final class ExampleAnalysisTestFactory {
                 Optional.of("this is a test report and does not relate to any real patient"),
                 baseReportData.signaturePath(),
                 baseReportData.logoRVAPath());
+    }
+
+    @NotNull
+    private static SampleReport createCOLO829SampleReport() {
+        final String sample = "COLO829T";
+        return ImmutableSampleReport.of(sample,
+                ImmutablePatientTumorLocation.of("COLO829", "Skin", "Melanoma"),
+                0.8,
+                LocalDate.parse("05-Jan-2018", DATE_FORMATTER),
+                LocalDate.parse("01-Jan-2018", DATE_FORMATTER),
+                "PREP013V23-QC037V20-SEQ008V25",
+                "HMF Testing Center");
     }
 
     @NotNull
