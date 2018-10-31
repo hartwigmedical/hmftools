@@ -56,15 +56,18 @@ public final class ReportableEvidenceItemFactory {
                 evidenceFiltered.add(highestOffLabel);
             }
         }
-
         List<EvidenceItem> evidenceFilteredOnLevel = Lists.newArrayList();
         for (EvidenceItem evidence: evidenceFiltered) {
-            if (evidence.level().isReportedEvidenceItemLevel()) {
+            if (selectLevelsAandB(evidence)) {
                 evidenceFilteredOnLevel.add(evidence);
             }
         }
-
         return evidenceFilteredOnLevel;
+    }
+
+    @VisibleForTesting
+    static Boolean selectLevelsAandB(final EvidenceItem evidenceFiltered){
+        return evidenceFiltered.level().isReportedEvidenceItemLevel();
     }
 
     @VisibleForTesting
