@@ -164,9 +164,11 @@ public class ClusterAnalyser {
                 findChains(cluster);
             }
 
+            /*
             // any clusters which were merged to resolve a collection of them, but
             // which did not lead to any longer chains, are now de-merged
             demergeClusters(mergedClusters);
+            */
 
             for(SvCluster cluster : mergedClusters)
             {
@@ -827,6 +829,9 @@ public class ClusterAnalyser {
         if(cluster2.isSimpleSVs() || (cluster2.getCount() == 2 && cluster2.isConsistent()))
             return;
 
+        boolean v1Start = be1.usesStart();
+        boolean v2Start = be2.usesStart();
+
         if(!var1.equals(var2))
         {
             // must be same cluster and part of the same chain
@@ -837,14 +842,18 @@ public class ClusterAnalyser {
                 return;
 
             final SvChain chain1 = cluster1.findChain(var1);
-            final SvChain chain2 = cluster2.findChain(var1);
+            final SvChain chain2 = cluster2.findChain(var2);
 
             if(chain1 == null || chain2 == null || chain1 != chain2)
                 return;
-        }
 
-        boolean v1Start = be1.usesStart();
-        boolean v2Start = be2.usesStart();
+            // check if a path can be walked between these 2 breakends along the chain
+            // without going back through this foldback point
+            if(!chain1.breakendsAreChained(var1, !v1Start, var2, !v2Start))
+            {
+                return;
+            }
+        }
 
         // check copy numbers match
         double cn1 = 0;

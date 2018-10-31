@@ -492,7 +492,6 @@ public class ChainFinder
             // for each of its ends (where the first BE is labelled 'first', and the second labelled 'last'),
             // search for the closest possible linking BE from another linked pair
             // for BEs to link they must be facing (like a TI)
-
             if(!chainLinkAdded)
             {
                 if(!partialChains.isEmpty())
@@ -505,6 +504,13 @@ public class ChainFinder
                         LOGGER.debug("sample({}) cluster({}) building from existing chain({}) with {} SVs",
                                 mSampleId, mCluster.getId(), currentChain.getId(), currentChain.getSvCount());
                     }
+
+                    for(final SvLinkedPair pair : currentChain.getLinkedPairs())
+                    {
+                        chainedPairs.add(pair);
+                        reduceRemainingLists(pair, unlinkedSvList, remainingStartLinks);
+                    }
+
                 }
                 else if(!remainingStartLinks.isEmpty())
                 {
@@ -559,12 +565,15 @@ public class ChainFinder
                 if(assemblyLink.isInferred())
                     break;
 
+                boolean addToStart = false;
                 if (currentChain.canAddLinkedPairToStart(assemblyLink))
                 {
+                    addToStart = true;
                     currentChain.addLink(assemblyLink, true);
                 }
                 else if (currentChain.canAddLinkedPairToEnd(assemblyLink))
                 {
+                    addToStart = false;
                     currentChain.addLink(assemblyLink, false);
                 }
                 else
@@ -573,7 +582,9 @@ public class ChainFinder
                     continue;
                 }
 
-                LOGGER.debug("adding assembly linked pair({}) to chain({})", assemblyLink.toString(), currentChain.getId());
+                LOGGER.debug("adding assembly linked pair({}) to chain({}) {}",
+                        assemblyLink.toString(), currentChain.getId(), addToStart ? "start" : "end");
+
                 remainingStartLinks.remove(index);
                 chainedPairs.add(assemblyLink);
                 reduceRemainingLists(assemblyLink, unlinkedSvList, remainingStartLinks);
@@ -610,8 +621,8 @@ public class ChainFinder
                 {
                     if (mLogVerbose)
                     {
-                        LOGGER.debug("adding linked pair({}) to chain({}) start with length({})",
-                                closestStartPair.toString(), currentChain.getId(), closestStartPair.length());
+                        LOGGER.debug("adding linked pair({}) to chain({}) start",
+                                closestStartPair.toString(), currentChain.getId());
                     }
 
                     // add this to the chain at the start
@@ -624,8 +635,8 @@ public class ChainFinder
                 {
                     if (mLogVerbose)
                     {
-                        LOGGER.debug("adding linked pair({}) to chain({}) end with length({})",
-                                closestLastPair.toString(), currentChain.getId(), closestLastPair.length());
+                        LOGGER.debug("adding linked pair({}) to chain({}) end",
+                                closestLastPair.toString(), currentChain.getId());
                     }
 
                     // add this to the chain at the start

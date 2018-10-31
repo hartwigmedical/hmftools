@@ -215,58 +215,6 @@ public class SvCluster
         return null;
     }
 
-    public final String linkingChromosome(boolean useStart)
-    {
-        if(isFullyChained())
-        {
-            return mChains.get(0).openChromosome(useStart);
-        }
-        else if(!mSubClusters.isEmpty())
-        {
-            return mSubClusters.get(0).linkingChromosome(useStart);
-        }
-
-        String chr = "";
-        for(final SvVarData var: mSVs)
-        {
-            if(var.isNullBreakend() && !useStart)
-                return "";
-
-            if(chr.isEmpty())
-                chr = var.chromosome(useStart);
-            else if(!chr.equals(var.chromosome(useStart)))
-                return "";
-        }
-
-        return chr;
-    }
-
-    public final String linkingArm(boolean useStart)
-    {
-        if(isFullyChained())
-        {
-            return mChains.get(0).openArm(useStart);
-        }
-        else if(!mSubClusters.isEmpty())
-        {
-            return mSubClusters.get(0).linkingArm(useStart);
-        }
-        // take the arm from the SVs if they're all the same
-        String arm = "";
-        for(final SvVarData var: mSVs)
-        {
-            if(var.isNullBreakend() && !useStart)
-                return "";
-
-            if(arm.isEmpty())
-                arm = var.arm(useStart);
-            else if(!arm.equals(var.arm(useStart)))
-                return "";
-        }
-
-        return arm;
-    }
-
     public void setChrCNData(Map<String, List<SvCNData>> map) { mChrCNDataMap = map; }
     public final Map<String, List<SvCNData>> getChrCNData() { return mChrCNDataMap; }
 
