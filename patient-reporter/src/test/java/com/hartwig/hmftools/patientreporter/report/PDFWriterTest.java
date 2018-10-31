@@ -48,6 +48,7 @@ import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableSomaticVariant;
 import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -116,26 +117,13 @@ public class PDFWriterTest {
     @NotNull
     private static List<EvidenceItem> createTestClinicalEvidence() {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
-        evidenceItems.add(ImmutableEvidenceItem.builder()
-                .event("TP53 p.Pro177_Cys182del")
-                .drug("Docetaxel")
-                .drugsType("Chemotherapy")
-                .level("A")
-                .response("Resistant")
+        evidenceItems.add(evidenceBuilder()
+                .event("BRAF p.Val600Glu")
+                .drug("Vemurafenib + Panitumumab + Dabrafenib")
+                .level("B")
+                .response("Responsive")
                 .reference("variant:222")
                 .source(ActionabilitySource.CIVIC)
-                .isOnLabel(false)
-                .build());
-
-        evidenceItems.add(ImmutableEvidenceItem.builder()
-                .event("CDK4 Amplification")
-                .drug("LEE011")
-                .drugsType("CDK4/6 inhibitor")
-                .level("C")
-                .response("Responsive")
-                .reference("")
-                .source(ActionabilitySource.CGI)
-                .isOnLabel(true)
                 .build());
 
         return evidenceItems;
@@ -151,6 +139,7 @@ public class PDFWriterTest {
                 .source(ActionabilitySource.ICLUSION)
                 .isOnLabel(true)
                 .build());
+
         return trials;
     }
 
@@ -398,6 +387,13 @@ public class PDFWriterTest {
                 testBaseReportData().logoRVAPath());
 
         return PDFWriter.generateNotAnalysableReport(patientReport);
+    }
+
+    @NotNull
+    private static ImmutableEvidenceItem.Builder evidenceBuilder() {
+        return ImmutableEvidenceItem.builder()
+                .drugsType(Strings.EMPTY)
+                .isOnLabel(false);
     }
 
     @NotNull
