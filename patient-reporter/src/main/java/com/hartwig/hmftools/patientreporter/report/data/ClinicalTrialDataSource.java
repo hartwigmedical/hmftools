@@ -46,14 +46,12 @@ public class ClinicalTrialDataSource {
         for (ClinicalTrial trial : sort(trials)) {
             assert trial.source().isTrialSource();
 
-            if (trial.level().equals("A") || trial.level().equals("B")) {
-                evidenceItemDataSource.add(trial.event(),
-                        trial.acronym(),
-                        trial.source().sourceName(),
-                        CCMOId(trial.reference()),
-                        trial.isOnLabel() ? "Yes" : "No",
-                        trial.reference());
-            }
+            evidenceItemDataSource.add(trial.event(),
+                    trial.acronym(),
+                    trial.source().sourceName(),
+                    CCMOId(trial.reference()),
+                    trial.isOnLabel() ? "Yes" : "No",
+                    trial.reference());
         }
         return evidenceItemDataSource;
     }
