@@ -53,6 +53,7 @@ public class ReportableEvidenceItemFactoryTest {
         EvidenceItem item2 = builder().source(ActionabilitySource.ONCOKB).build();
         EvidenceItem item3 = builder().source(ActionabilitySource.CGI).build();
         EvidenceItem item4 = builder().source(ActionabilitySource.CIVIC).build();
+
         assertFalse(ReportableEvidenceItemFactory.filterNonTrial(item1));
         assertTrue(ReportableEvidenceItemFactory.filterNonTrial(item2));
         assertTrue(ReportableEvidenceItemFactory.filterNonTrial(item3));
@@ -66,6 +67,7 @@ public class ReportableEvidenceItemFactoryTest {
         EvidenceItem item3 = builder().level(EvidenceLevel.LEVEL_C).isOnLabel(false).build();
         EvidenceItem item4 = builder().level(EvidenceLevel.LEVEL_D).isOnLabel(false).build();
         EvidenceItem item5 = builder().level(EvidenceLevel.LEVEL_E).isOnLabel(false).build();
+
         assertTrue(ReportableEvidenceItemFactory.selectLevelsAandB(item1));
         assertTrue(ReportableEvidenceItemFactory.selectLevelsAandB(item2));
         assertFalse(ReportableEvidenceItemFactory.selectLevelsAandB(item3));
