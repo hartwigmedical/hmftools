@@ -29,12 +29,12 @@ public final class MainPageTopSection {
     private static ComponentBuilder<?, ?> build(@NotNull String title, @NotNull String sample, @NotNull String primaryTumorLocation,
             @NotNull String cancerSubType) {
         final ComponentBuilder<?, ?> mainDiagnosisInfo =
-                cmp.horizontalList(cmp.verticalList(cmp.text("Report Date").setStyle(tableHeaderStyle()),
-                        cmp.currentDate().setPattern(DATE_TIME_FORMAT).setStyle(dataTableStyle())),
-                        cmp.verticalList(cmp.text("Primary Tumor Location").setStyle(tableHeaderStyle()),
-                                cmp.text(primaryTumorLocation).setStyle(dataTableStyle())),
-                        cmp.verticalList(cmp.text("Cancer Subtype").setStyle(tableHeaderStyle()),
-                                cmp.text(cancerSubType).setStyle(dataTableStyle())));
+                cmp.horizontalList(cmp.verticalList(cmp.text("Report Date").setStyle(tableHeaderStyle().setPadding(2)),
+                        cmp.currentDate().setPattern(DATE_TIME_FORMAT).setStyle(dataTableStyle().setPadding(2))),
+                        cmp.verticalList(cmp.text("Primary Tumor Location").setStyle(tableHeaderStyle().setPadding(2)),
+                                cmp.text(primaryTumorLocation).setStyle(dataTableStyle().setPadding(2))),
+                        cmp.verticalList(cmp.text("Cancer Subtype").setStyle(tableHeaderStyle().setPadding(2)),
+                                cmp.text(cancerSubType).setStyle(dataTableStyle().setPadding(2))));
 
         return cmp.verticalList(cmp.horizontalList(cmp.image(REPORT_LOGO_PATH).setWidth(42).setHeight(65),
                 cmp.text(title + " - " + sample)

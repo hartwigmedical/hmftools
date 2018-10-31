@@ -33,7 +33,8 @@ public final class Commons {
     private static final String FONT = "Tinos";
     private static final String MONOSPACE_FONT = "Inconsolata";
     private static final Color BORKIE_COLOR = new Color(221, 235, 247);
-    private static final int TABLE_PADDING = 1;
+    private static final int HEADER_TABLE_PADDING = 1;
+    private static final int DATA_TABLE_PADDING = 1;
 
     private static final int TEXT_HEADER_INDENT = 30;
     private static final int TEXT_DETAIL_INDENT = 40;
@@ -65,6 +66,17 @@ public final class Commons {
     }
 
     @NotNull
+    public static StyleBuilder mainPageHeaderStyle() {
+        return fontStyle().bold()
+                .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
+                .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE)
+                .setFontSize(10)
+                .setBorder(stl.pen1Point())
+                .setBackgroundColor(BORKIE_COLOR)
+                .setPadding(2);
+    }
+
+    @NotNull
     public static StyleBuilder tableHeaderStyle() {
         return fontStyle().bold()
                 .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
@@ -72,7 +84,17 @@ public final class Commons {
                 .setFontSize(10)
                 .setBorder(stl.pen1Point())
                 .setBackgroundColor(BORKIE_COLOR)
-                .setPadding(TABLE_PADDING);
+                .setPadding(HEADER_TABLE_PADDING);
+    }
+
+    @NotNull
+    public static StyleBuilder summaryHeaderStyle() {
+        return fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
+                .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE)
+                .setFontSize(8)
+                .setBorder(stl.pen1Point())
+                .setBackgroundColor(BORKIE_COLOR)
+                .setPadding(4);
     }
 
     @NotNull
@@ -118,6 +140,6 @@ public final class Commons {
         return fontStyle().setFontSize(8)
                 .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
                 .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE)
-                .setPadding(TABLE_PADDING);
+                .setPadding(DATA_TABLE_PADDING);
     }
 }
