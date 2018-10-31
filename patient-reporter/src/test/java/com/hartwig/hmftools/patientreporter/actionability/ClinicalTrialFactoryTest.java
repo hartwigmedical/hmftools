@@ -40,7 +40,7 @@ public class ClinicalTrialFactoryTest {
     private static ImmutableEvidenceItem.Builder testEvidenceBuilder() {
         return ImmutableEvidenceItem.builder()
                 .source(ActionabilitySource.ICLUSION)
-                .level(EvidenceLevel.LEVELA)
+                .level(EvidenceLevel.LEVEL_A)
                 .response(Strings.EMPTY)
                 .drugsType(Strings.EMPTY);
     }

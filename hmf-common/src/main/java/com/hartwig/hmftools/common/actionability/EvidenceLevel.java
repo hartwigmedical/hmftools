@@ -3,11 +3,11 @@ package com.hartwig.hmftools.common.actionability;
 import org.jetbrains.annotations.NotNull;
 
 public enum EvidenceLevel {
-    LEVELA("A", true),
-    LEVELB("B", true),
-    LEVELC("C", false),
-    LEVELD("D", false),
-    LEVELE("E", false);
+    LEVEL_A("A", true),
+    LEVEL_B("B", true),
+    LEVEL_C("C", false),
+    LEVEL_D("D", false),
+    LEVEL_E("E", false);
 
     @NotNull
     private final String levelEvidenceItem;
@@ -33,15 +33,15 @@ public enum EvidenceLevel {
     public static EvidenceLevel fromString(@NotNull String levelItem) {
         switch (levelItem.toUpperCase()) {
             case "A":
-                return LEVELA;
+                return LEVEL_A;
             case "B":
-                return LEVELB;
+                return LEVEL_B;
             case "C":
-                return LEVELC;
+                return LEVEL_C;
             case "D":
-                return LEVELD;
+                return LEVEL_D;
             case "E":
-                return LEVELE;
+                return LEVEL_E;
             default:
                     throw new IllegalArgumentException("Unrecognized evidence level item" + levelItem);
         }

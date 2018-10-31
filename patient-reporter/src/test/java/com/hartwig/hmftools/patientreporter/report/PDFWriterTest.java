@@ -121,7 +121,7 @@ public class PDFWriterTest {
         evidenceItems.add(evidenceBuilder()
                 .event("BRAF p.Val600Glu")
                 .drug("Vemurafenib + Panitumumab + Dabrafenib")
-                .level(EvidenceLevel.LEVELE)
+                .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
                 .reference("variant:222")
                 .source(ActionabilitySource.CIVIC)
