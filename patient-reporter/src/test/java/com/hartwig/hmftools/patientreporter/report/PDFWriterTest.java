@@ -52,7 +52,6 @@ public class PDFWriterTest {
         }
     }
 
-
     @Test
     public void canGenerateLowTumorPercentageReport() throws DRException, IOException {
         JasperReportBuilder report = generateNotAnalysableCPCTReport(0.1, NotAnalysableReason.LOW_TUMOR_PERCENTAGE);

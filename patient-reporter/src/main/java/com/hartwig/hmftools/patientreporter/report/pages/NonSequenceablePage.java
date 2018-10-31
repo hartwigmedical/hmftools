@@ -99,7 +99,7 @@ public abstract class NonSequenceablePage {
                         + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
                         + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The pathologie tumor percentage of this tumor sample is: " + PatientReportFormat.formatNullablePercent(
+                cmp.text("The tumor percentage estimated by Pathology UMC Utrecht is: " + PatientReportFormat.formatNullablePercent(
                         sampleReport().pathologyTumorPercentage())).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The biopsies evaluated for this sample have arrived on " + formattedDate(sampleReport().tumorArrivalDate())
