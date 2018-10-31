@@ -123,8 +123,8 @@ public class PDFWriterTest {
                 .drug("Dabrafenib")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
-                .reference("BRAF:V600E")
-                .source(ActionabilitySource.CGI)
+                .reference("V600E")
+                .source(ActionabilitySource.ONCOKB)
                 .build());
 
         evidenceItems.add(evidenceBuilder()
@@ -132,7 +132,7 @@ public class PDFWriterTest {
                 .drug("Dabrafenib + Trametinib")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
-                .reference("BRAF:V600E")
+                .reference("BRAF:V600E,V600K")
                 .source(ActionabilitySource.CGI)
                 .build());
 
@@ -141,7 +141,7 @@ public class PDFWriterTest {
                 .drug("Encorafenib + Binimetinib")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
-                .reference("TODO")
+                .reference("V600E")
                 .source(ActionabilitySource.ONCOKB)
                 .build());
 
@@ -150,8 +150,8 @@ public class PDFWriterTest {
                 .drug("Trametinib")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
-                .reference("V600E")
-                .source(ActionabilitySource.ONCOKB)
+                .reference("BRAF:V600E,V600K")
+                .source(ActionabilitySource.CGI)
                 .build());
 
         evidenceItems.add(evidenceBuilder()
@@ -159,7 +159,7 @@ public class PDFWriterTest {
                 .drug("Vemurafenib")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
-                .reference("BRAF:V600E")
+                .reference("BRAF:V600E,V600D,V600K,V600M,V600G,V600R")
                 .source(ActionabilitySource.CGI)
                 .build());
 
@@ -186,7 +186,7 @@ public class PDFWriterTest {
                 .drug("Bevacizumab")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
-                .reference("variant:399")
+                .reference("variant:12")
                 .source(ActionabilitySource.CIVIC)
                 .build());
 
@@ -195,8 +195,8 @@ public class PDFWriterTest {
                 .drug("Cetuximab")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
-                .reference("variant:12")
-                .source(ActionabilitySource.CIVIC)
+                .reference("BRAF:V600E")
+                .source(ActionabilitySource.CGI)
                 .build());
 
         evidenceItems.add(evidenceBuilder()
@@ -204,7 +204,7 @@ public class PDFWriterTest {
                 .drug("Encorafenib + Cetuximab")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
-                .reference("TODO")
+                .reference("variant:17")
                 .source(ActionabilitySource.CIVIC)
                 .build());
 
@@ -213,7 +213,7 @@ public class PDFWriterTest {
                 .drug("Irinotecan")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
-                .reference("TODO")
+                .reference("variant:399")
                 .source(ActionabilitySource.CIVIC)
                 .build());
 
@@ -221,8 +221,8 @@ public class PDFWriterTest {
                 .event("BRAF p.Val600Glu")
                 .drug("Oxaliplatin")
                 .level(EvidenceLevel.LEVEL_B)
-                .response("Resistant§")
-                .reference("TODO")
+                .response("Resistant")
+                .reference("variant:12")
                 .source(ActionabilitySource.CIVIC)
                 .build());
 
@@ -231,7 +231,7 @@ public class PDFWriterTest {
                 .drug("Panitumumab")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
-                .reference("TODO")
+                .reference("variant:17")
                 .source(ActionabilitySource.CIVIC)
                 .build());
 
@@ -240,7 +240,7 @@ public class PDFWriterTest {
                 .drug("RO4987655")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
-                .reference("TODO")
+                .reference("variant:17")
                 .source(ActionabilitySource.CIVIC)
                 .build());
 
@@ -249,7 +249,7 @@ public class PDFWriterTest {
                 .drug("Sorafenib")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
-                .reference("TODO")
+                .reference("variant:12")
                 .source(ActionabilitySource.CIVIC)
                 .build());
 
@@ -258,7 +258,7 @@ public class PDFWriterTest {
                 .drug("Trametinib + Dabrafenib")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
-                .reference("TODO")
+                .reference("variant:12")
                 .source(ActionabilitySource.CIVIC)
                 .build());
 
@@ -267,7 +267,7 @@ public class PDFWriterTest {
                 .drug("Trametinib + Panitumumab + Dabrafenib")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
-                .reference("TODO")
+                .reference("variant:12")
                 .source(ActionabilitySource.CIVIC)
                 .build());
 
@@ -276,16 +276,16 @@ public class PDFWriterTest {
                 .drug("Vemurafenib")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
-                .reference("TODO")
+                .reference("variant:17")
                 .source(ActionabilitySource.CIVIC)
                 .build());
 
         evidenceItems.add(evidenceBuilder()
                 .event("BRAF p.Val600Glu")
-                .drug("Vemurafenib + Panitumumab + Dabrafenib")
-                .level(EvidenceLevel.LEVEL_A)
+                .drug("Vemurafenib + Cetuximab + Irinotecan")
+                .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
-                .reference("TODO")
+                .reference("variant:12")
                 .source(ActionabilitySource.CIVIC)
                 .build());
 
@@ -294,7 +294,7 @@ public class PDFWriterTest {
                 .drug("Vemurafenib + Dabrafenib")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
-                .reference("TODO")
+                .reference("variant:12")
                 .source(ActionabilitySource.CIVIC)
                 .build());
 
@@ -303,7 +303,7 @@ public class PDFWriterTest {
                 .drug("EGFR mAB inhibitor")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
-                .reference("TODO")
+                .reference("PTEN:del")
                 .source(ActionabilitySource.CGI)
                 .build());
 
@@ -312,7 +312,7 @@ public class PDFWriterTest {
                 .drug("Everolimus")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
-                .reference("TODO")
+                .reference("variant:213")
                 .source(ActionabilitySource.CIVIC)
                 .build());
 
