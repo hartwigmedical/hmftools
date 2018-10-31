@@ -33,7 +33,6 @@ public class ClinicalTrialFactoryTest {
         assertEquals("reference", trial.get(0).reference());
         assertEquals(ActionabilitySource.ICLUSION, trial.get(0).source());
         assertFalse(trial.get(0).isOnLabel());
-
     }
 
     @NotNull
