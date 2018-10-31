@@ -13,8 +13,8 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.report.Commons;
+import com.hartwig.hmftools.patientreporter.report.components.GenomicSummarySection;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
-import com.hartwig.hmftools.patientreporter.report.components.SummaryPart;
 import com.hartwig.hmftools.patientreporter.report.data.ClinicalTrialDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.EvidenceItemDataSource;
 
@@ -34,10 +34,10 @@ public abstract class EvidenceSummaryPage {
 
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
-        return cmp.verticalList(MainPageTopSection.buildWithImpliedPurity(Commons.TITLE_SEQUENCE,
+        return cmp.verticalList(MainPageTopSection.build(Commons.TITLE_SEQUENCE,
                 report().sampleReport()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                SummaryPart.summaryData(report()),
+                GenomicSummarySection.build(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 evidenceItemReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),

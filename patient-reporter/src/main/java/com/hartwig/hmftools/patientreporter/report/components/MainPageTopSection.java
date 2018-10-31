@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.patientreporter.report.Commons.tableHeaderSty
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 
 import com.hartwig.hmftools.patientreporter.SampleReport;
-import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,21 +21,8 @@ public final class MainPageTopSection {
     private static final String REPORT_LOGO_PATH = "pdf/hartwig_logo.jpg";
 
     @NotNull
-    public static ComponentBuilder<?, ?> buildWithPathologyTumorPercentage(@NotNull final String title,
-            @NotNull final SampleReport report) {
-        return build(title,
-                report.sampleId(),
-                report.primaryTumorLocationString(),
-                report.cancerSubTypeString());
-    }
-
-    @NotNull
-    public static ComponentBuilder<?, ?> buildWithImpliedPurity(@NotNull final String title,
-            @NotNull final SampleReport report) {
-        return build(title,
-                report.sampleId(),
-                report.primaryTumorLocationString(),
-                report.cancerSubTypeString());
+    public static ComponentBuilder<?, ?> build(@NotNull String title, @NotNull SampleReport report) {
+        return build(title, report.sampleId(), report.primaryTumorLocationString(), report.cancerSubTypeString());
     }
 
     @NotNull

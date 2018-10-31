@@ -18,13 +18,13 @@ import org.jetbrains.annotations.NotNull;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 
-public final class SummaryPart {
+public final class GenomicSummarySection {
 
-    private SummaryPart() {
+    private GenomicSummarySection() {
     }
 
     @NotNull
-    public static ComponentBuilder<?, ?> summaryData(@NotNull AnalysedPatientReport report) {
+    public static ComponentBuilder<?, ?> build(@NotNull AnalysedPatientReport report) {
         String avgTumorPloidyString = new DecimalFormat("#.#").format(report.averageTumorPloidy());
 
         final ComponentBuilder<?, ?> tumorCharacteristicsPart =
