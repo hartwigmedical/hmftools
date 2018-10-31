@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -31,7 +32,9 @@ import com.hartwig.hmftools.patientreporter.actionability.ImmutableClinicalTrial
 import com.hartwig.hmftools.patientreporter.chord.ChordAnalysis;
 import com.hartwig.hmftools.patientreporter.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
+import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineVariant;
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
+import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableSomaticVariant;
@@ -62,8 +65,54 @@ final class ExampleAnalysisTestFactory {
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<ReportableSomaticVariant> somaticVariants = createCOLO829SomaticVariants(purityAdjuster);
         final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
-        final List<ReportableGeneFusion> fusions = createCOLO829Fusions();
-        final List<GermlineVariant> germlineVariants = createCOLO829GermlineVariants(purityAdjuster);
+        final List<ReportableGeneFusion> fusions = Lists.newArrayList();
+        final List<GermlineVariant> germlineVariants = Lists.newArrayList();
+        final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
+        final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
+
+        final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
+
+        return ImmutableAnalysedPatientReport.of(sampleReport,
+                fittedPurity.purity(),
+                true,
+                fittedPurity.ploidy(),
+                clinicalEvidence,
+                clinicalTrials,
+                somaticVariants,
+                microsatelliteIndelsPerMb,
+                tumorMutationalLoad,
+                tumorMutationalBurden,
+                chordAnalysis,
+                true,
+                germlineVariants,
+                copyNumbers,
+                fusions,
+                disruptions,
+                Resources.getResource("circos/circos_example.png").getPath(),
+                Optional.of("this is a test report and is based off COLO829"),
+                baseReportData.signaturePath(),
+                baseReportData.logoRVAPath());
+    }
+
+    @NotNull
+    static AnalysedPatientReport buildAnalysisWithAllTablesFilledIn() {
+        final double pathologyTumorPercentage = 0.8;
+        final double impliedTumorPurity = 1D;
+        final double averageTumorPloidy = 3.1;
+        final int tumorMutationalLoad = 182;
+        final double tumorMutationalBurden = 13.6;
+        final double microsatelliteIndelsPerMb = 0.1089;
+
+        final BaseReportData baseReportData = testBaseReportData();
+        final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity, averageTumorPloidy);
+
+        final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, fittedPurity);
+        final List<EvidenceItem> clinicalEvidence = createCOLO829ClinicalEvidence();
+        final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
+        final List<ReportableSomaticVariant> somaticVariants = createCOLO829SomaticVariants(purityAdjuster);
+        final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
+        final List<ReportableGeneFusion> fusions = createTestFusions();
+        final List<GermlineVariant> germlineVariants = createTestGermlineVariants(purityAdjuster);
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
 
@@ -393,62 +442,59 @@ final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<ReportableGeneFusion> createCOLO829Fusions() {
-        // KODU: Keep to be able to test actual fusions when needed.
-        //        ReportableGeneFusion fusion1 = ImmutableReportableGeneFusion.builder()
-        //                .geneStart("TMPRSS2")
-        //                .geneStartTranscript("ENST00000398585")
-        //                .geneContextStart("Intron 5")
-        //                .geneEnd("PNPLA7")
-        //                .geneEndTranscript("ENST00000406427")
-        //                .geneContextEnd("Intron 3")
-        //                .ploidy(0.4)
-        //                .source(KnownFusionsModel.CIVIC)
-        //                .build();
-        //
-        //        ReportableGeneFusion fusion2 = ImmutableReportableGeneFusion.builder()
-        //                .geneStart("CLCN6")
-        //                .geneStartTranscript("ENST00000346436")
-        //                .geneContextStart("Intron 1")
-        //                .geneEnd("BRAF")
-        //                .geneEndTranscript("ENST00000288602")
-        //                .geneContextEnd("Intron 8")
-        //                .ploidy(1D)
-        //                .source(KnownFusionsModel.ONCOKB)
-        //                .build();
-        //
-        //        return Lists.newArrayList(fusion1, fusion2);
-        return Lists.newArrayList();
+    private static List<ReportableGeneFusion> createTestFusions() {
+        ReportableGeneFusion fusion1 = ImmutableReportableGeneFusion.builder()
+                .geneStart("TMPRSS2")
+                .geneStartTranscript("ENST00000398585")
+                .geneContextStart("Intron 5")
+                .geneEnd("PNPLA7")
+                .geneEndTranscript("ENST00000406427")
+                .geneContextEnd("Intron 3")
+                .ploidy(0.4)
+                .source(KnownFusionsModel.CIVIC)
+                .build();
+
+        ReportableGeneFusion fusion2 = ImmutableReportableGeneFusion.builder()
+                .geneStart("CLCN6")
+                .geneStartTranscript("ENST00000346436")
+                .geneContextStart("Intron 1")
+                .geneEnd("BRAF")
+                .geneEndTranscript("ENST00000288602")
+                .geneContextEnd("Intron 8")
+                .ploidy(1D)
+                .source(KnownFusionsModel.ONCOKB)
+                .build();
+
+        return Lists.newArrayList(fusion1, fusion2);
+
     }
 
     @NotNull
-    private static List<GermlineVariant> createCOLO829GermlineVariants(@NotNull PurityAdjuster purityAdjuster) {
-        // KODU: Keep in case we need to generate germline variants for testing
-        //        List<GermlineVariant> germlineVariants = Lists.newArrayList();
-        //
-        //        int totalReads = 112;
-        //        int altReads = 67;
-        //        double adjustedCopyNumber = 3D;
-        //
-        //        double adjustedVAF =
-        //                purityAdjuster.purityAdjustedVAFWithHeterozygousNormal("13", adjustedCopyNumber, (double) altReads / (double) totalReads);
-        //
-        //        germlineVariants.add(ImmutableGermlineVariant.builder()
-        //                .passFilter(true)
-        //                .gene("BRCA2")
-        //                .hgvsCodingImpact("c.5946delT")
-        //                .hgvsProteinImpact("p.Ser1982fs")
-        //                .totalReadCount(totalReads)
-        //                .alleleReadCount(altReads)
-        //                .germlineStatus("HET")
-        //                .adjustedCopyNumber(adjustedCopyNumber)
-        //                .adjustedVAF(adjustedVAF)
-        //                .minorAllelePloidy(1D)
-        //                .biallelic(false)
-        //                .build());
-        //
-        //        return germlineVariants;
-        return Lists.newArrayList();
+    private static List<GermlineVariant> createTestGermlineVariants(@NotNull PurityAdjuster purityAdjuster) {
+        List<GermlineVariant> germlineVariants = Lists.newArrayList();
+
+        int totalReads = 112;
+        int altReads = 67;
+        double adjustedCopyNumber = 3D;
+
+        double adjustedVAF =
+                purityAdjuster.purityAdjustedVAFWithHeterozygousNormal("13", adjustedCopyNumber, (double) altReads / (double) totalReads);
+
+        germlineVariants.add(ImmutableGermlineVariant.builder()
+                .passFilter(true)
+                .gene("BRCA2")
+                .hgvsCodingImpact("c.5946delT")
+                .hgvsProteinImpact("p.Ser1982fs")
+                .totalReadCount(totalReads)
+                .alleleReadCount(altReads)
+                .germlineStatus("HET")
+                .adjustedCopyNumber(adjustedCopyNumber)
+                .adjustedVAF(adjustedVAF)
+                .minorAllelePloidy(1D)
+                .biallelic(false)
+                .build());
+
+        return germlineVariants;
     }
 
     @NotNull

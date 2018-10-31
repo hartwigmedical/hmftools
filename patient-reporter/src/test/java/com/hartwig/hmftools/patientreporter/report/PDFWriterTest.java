@@ -29,16 +29,29 @@ public class PDFWriterTest {
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
 
     @Test
-    public void canGenerateSequenceReport() throws DRException, IOException {
+    public void canGenerateSequenceReportForCOLO829() throws DRException, IOException {
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildCOLO829();
 
-        JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport);
-        assertNotNull(mainReport);
+        JasperReportBuilder report = PDFWriter.generatePatientReport(patientReport);
+        assertNotNull(report);
 
         if (WRITE_TO_PDF) {
-            mainReport.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "hmf_test_sequence_report.pdf"));
+            report.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "hmf_test_sequence_report.pdf"));
         }
     }
+
+    @Test
+    public void canGenerateSequenceReportForCompletelyFilledInReport() throws DRException, IOException {
+        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn();
+
+        JasperReportBuilder report = PDFWriter.generatePatientReport(patientReport);
+        assertNotNull(report);
+
+        if (WRITE_TO_PDF) {
+            report.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "hmf_test_sequence_report.pdf"));
+        }
+    }
+
 
     @Test
     public void canGenerateLowTumorPercentageReport() throws DRException, IOException {
