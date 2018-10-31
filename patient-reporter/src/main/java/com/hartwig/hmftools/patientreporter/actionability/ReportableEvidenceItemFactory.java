@@ -23,7 +23,7 @@ public final class ReportableEvidenceItemFactory {
     public static List<EvidenceItem> filterEvidenceItemsForReporting(@NotNull List<EvidenceItem> evidenceItems) {
         Set<EvidenceItem> uniqueReportableItems = Sets.newHashSet();
         for (EvidenceItem evidence : evidenceItems) {
-            if (!evidence.source().isTrialSource() && evidence.level().isReportedEvidenceItemLevel()) {
+            if (!evidence.source().isTrialSource()) {
                 uniqueReportableItems.add(evidence);
             }
         }
@@ -56,7 +56,15 @@ public final class ReportableEvidenceItemFactory {
                 evidenceFiltered.add(highestOffLabel);
             }
         }
-        return evidenceFiltered;
+
+        List<EvidenceItem> evidenceFilteredOnLevel = Lists.newArrayList();
+        for (EvidenceItem evidence: evidenceFiltered) {
+            if (evidence.level().isReportedEvidenceItemLevel()) {
+                evidenceFilteredOnLevel.add(evidence);
+            }
+        }
+
+        return evidenceFilteredOnLevel;
     }
 
     @VisibleForTesting
