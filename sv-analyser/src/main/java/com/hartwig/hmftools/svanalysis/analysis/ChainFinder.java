@@ -492,7 +492,7 @@ public class ChainFinder
             // for each of its ends (where the first BE is labelled 'first', and the second labelled 'last'),
             // search for the closest possible linking BE from another linked pair
             // for BEs to link they must be facing (like a TI)
-            if(!chainLinkAdded)
+            if(!chainLinkAdded || currentChain == null)
             {
                 if(!partialChains.isEmpty())
                 {
@@ -661,6 +661,8 @@ public class ChainFinder
                             mSampleId, mCluster.getId(), chainComplete ? "complete" : "partial", currentChain.getId(), currentChain.getLinkCount());
                     currentChain.logLinks();
                 }
+
+                currentChain = null;
 
                 if(chainComplete)
                     break;
