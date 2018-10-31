@@ -6,6 +6,8 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -47,8 +49,9 @@ public class CancerTypeAnalyzer {
         }
     }
 
+    @VisibleForTesting
     public boolean foundTumorLocation(@NotNull String tumorLocationKnowledgebase, @Nullable String doidsPrimaryTumorLocation) {
-        Boolean booleanValueRange = false;
+        boolean booleanValueRange = false;
         for (CancerTypeReading cancerTypeDoidKnowledgeBase : cancerTypeDoids) {
             if (tumorLocationKnowledgebase.equals(cancerTypeDoidKnowledgeBase.cancerType())) {
                 if (doidsPrimaryTumorLocation != null) {
