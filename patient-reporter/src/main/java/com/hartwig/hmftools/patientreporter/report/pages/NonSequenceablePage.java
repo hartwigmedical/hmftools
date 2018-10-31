@@ -89,10 +89,6 @@ public abstract class NonSequenceablePage {
         return cmp.verticalList(cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12)).setHeight(20),
                 cmp.text(subTitle).setStyle(dataTableStyle().setFontSize(12)).setHeight(20),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.verticalList(cmp.text("Pathology Tumor Percentage").setStyle(tableHeaderStyle()),
-                        cmp.text(PatientReportFormat.formatNullablePercent(sampleReport().pathologyTumorPercentage()))
-                                .setStyle(dataTableStyle())),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text(message).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The received biopsies for the tumor sample for this patient were inadequate to obtain a reliable sequencing "
@@ -102,6 +98,9 @@ public abstract class NonSequenceablePage {
                 cmp.text("When possible, please resubmit using the same " + study().studyName() + "-number. "
                         + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
                         + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text("The pathologie tumor percentage of this tumor sample is: " + PatientReportFormat.formatNullablePercent(
+                        sampleReport().pathologyTumorPercentage())).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The biopsies evaluated for this sample have arrived on " + formattedDate(sampleReport().tumorArrivalDate())
                         + " at " + Commons.HARTWIG_ADDRESS).setStyle(fontStyle()),
