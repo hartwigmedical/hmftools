@@ -71,11 +71,11 @@ public final class GenomicSummarySection {
                         cmp.text(PatientReportFormat.correctValueForFitReliability(avgTumorPloidyString, report.hasReliablePurityFit()))
                                 .setStyle(dataTableStyle())),
                 cmp.horizontalList(cmp.text("Tumor mutational load").setStyle(summaryHeaderStyle()),
-                        cmp.text(TumorImpliedTumorCharacteristicsDataSource.interpretMutationalLoad(report.tumorMutationalLoad()))
-                                .setStyle(dataTableStyle())),
+                        cmp.text(PatientReportFormat.correctValueForFitReliability(TumorImpliedTumorCharacteristicsDataSource.interpretMutationalLoad(
+                                report.tumorMutationalLoad()), report.hasReliablePurityFit())).setStyle(dataTableStyle())),
                 cmp.horizontalList(cmp.text("Microsatellite (in)stability").setStyle(summaryHeaderStyle()),
-                        cmp.text(TumorImpliedTumorCharacteristicsDataSource.interpretMSI(report.microsatelliteIndelsPerMb()))
-                                .setStyle(dataTableStyle())));
+                        cmp.text(PatientReportFormat.correctValueForFitReliability(TumorImpliedTumorCharacteristicsDataSource.interpretMSI(
+                                report.microsatelliteIndelsPerMb()),report.hasReliablePurityFit())).setStyle(dataTableStyle())));
 
         return cmp.horizontalList(genomicAlterationSummary, cmp.horizontalGap(40), tumorCharacteristicsPart);
     }
