@@ -24,4 +24,7 @@ public abstract class ClinicalTrial {
     public abstract String reference();
 
     public abstract boolean isOnLabel();
+
+    @NotNull
+    public abstract String cancerType();
 }

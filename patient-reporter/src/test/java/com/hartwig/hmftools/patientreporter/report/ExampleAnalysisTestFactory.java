@@ -165,6 +165,7 @@ final class ExampleAnalysisTestFactory {
                 .response("Responsive")
                 .reference("V600E")
                 .source(ActionabilitySource.ONCOKB)
+                .cancerType("Colorectal adenocarcinoma")
                 .build());
 
         evidenceItems.add(evidenceBuilder().event("BRAF p.Val600Glu")
@@ -173,6 +174,7 @@ final class ExampleAnalysisTestFactory {
                 .response("Responsive")
                 .reference("BRAF:V600E,V600K")
                 .source(ActionabilitySource.CGI)
+                .cancerType("Colorectal adenocarcinoma")
                 .build());
 
         evidenceItems.add(evidenceBuilder().event("BRAF p.Val600Glu")
@@ -181,6 +183,7 @@ final class ExampleAnalysisTestFactory {
                 .response("Responsive")
                 .reference("V600E")
                 .source(ActionabilitySource.ONCOKB)
+                .cancerType("Colorectal adenocarcinoma")
                 .build());
 
         evidenceItems.add(evidenceBuilder().event("BRAF p.Val600Glu")
@@ -189,6 +192,7 @@ final class ExampleAnalysisTestFactory {
                 .response("Responsive")
                 .reference("BRAF:V600E,V600K")
                 .source(ActionabilitySource.CGI)
+                .cancerType("Colorectal adenocarcinoma")
                 .build());
 
         evidenceItems.add(evidenceBuilder().event("BRAF p.Val600Glu")
@@ -197,6 +201,7 @@ final class ExampleAnalysisTestFactory {
                 .response("Responsive")
                 .reference("BRAF:V600E,V600D,V600K,V600M,V600G,V600R")
                 .source(ActionabilitySource.CGI)
+                .cancerType("Colorectal adenocarcinoma")
                 .build());
 
         evidenceItems.add(evidenceBuilder().event("BRAF p.Val600Glu")
@@ -205,6 +210,7 @@ final class ExampleAnalysisTestFactory {
                 .response("Responsive")
                 .reference("variant:17")
                 .source(ActionabilitySource.CIVIC)
+                .cancerType("Colorectal adenocarcinoma")
                 .build());
 
         evidenceItems.add(evidenceBuilder().event("BRAF p.Val600Glu")
@@ -213,6 +219,7 @@ final class ExampleAnalysisTestFactory {
                 .response("Responsive")
                 .reference("variant:17")
                 .source(ActionabilitySource.CIVIC)
+                .cancerType("Colorectal adenocarcinoma")
                 .build());
 
         evidenceItems.add(evidenceBuilder().event("BRAF p.Val600Glu")
@@ -221,6 +228,7 @@ final class ExampleAnalysisTestFactory {
                 .response("Resistant")
                 .reference("variant:12")
                 .source(ActionabilitySource.CIVIC)
+                .cancerType("Colorectal adenocarcinoma")
                 .build());
 
         evidenceItems.add(evidenceBuilder().event("BRAF p.Val600Glu")
@@ -229,6 +237,7 @@ final class ExampleAnalysisTestFactory {
                 .response("Resistant")
                 .reference("BRAF:V600E")
                 .source(ActionabilitySource.CGI)
+                .cancerType("Colorectal adenocarcinoma")
                 .build());
 
         evidenceItems.add(evidenceBuilder().event("BRAF p.Val600Glu")
@@ -237,6 +246,7 @@ final class ExampleAnalysisTestFactory {
                 .response("Responsive")
                 .reference("variant:17")
                 .source(ActionabilitySource.CIVIC)
+                .cancerType("Colorectal adenocarcinoma")
                 .build());
 
         evidenceItems.add(evidenceBuilder().event("BRAF p.Val600Glu")
@@ -245,6 +255,7 @@ final class ExampleAnalysisTestFactory {
                 .response("Resistant")
                 .reference("variant:399")
                 .source(ActionabilitySource.CIVIC)
+                .cancerType("Colorectal adenocarcinoma")
                 .build());
 
         evidenceItems.add(evidenceBuilder().event("BRAF p.Val600Glu")
@@ -253,6 +264,7 @@ final class ExampleAnalysisTestFactory {
                 .response("Resistant")
                 .reference("variant:12")
                 .source(ActionabilitySource.CIVIC)
+                .cancerType("Colorectal adenocarcinoma")
                 .build());
 
         evidenceItems.add(evidenceBuilder().event("BRAF p.Val600Glu")
@@ -261,6 +273,7 @@ final class ExampleAnalysisTestFactory {
                 .response("Resistant")
                 .reference("variant:17")
                 .source(ActionabilitySource.CIVIC)
+                .cancerType("Colorectal adenocarcinoma")
                 .build());
 
         evidenceItems.add(evidenceBuilder().event("BRAF p.Val600Glu")
@@ -269,6 +282,7 @@ final class ExampleAnalysisTestFactory {
                 .response("Responsive")
                 .reference("variant:17")
                 .source(ActionabilitySource.CIVIC)
+                .cancerType("Colorectal adenocarcinoma")
                 .build());
 
         evidenceItems.add(evidenceBuilder().event("BRAF p.Val600Glu")
@@ -277,6 +291,7 @@ final class ExampleAnalysisTestFactory {
                 .response("Responsive")
                 .reference("variant:12")
                 .source(ActionabilitySource.CIVIC)
+                .cancerType("Colorectal adenocarcinoma")
                 .build());
 
         evidenceItems.add(evidenceBuilder().event("BRAF p.Val600Glu")
@@ -285,6 +300,7 @@ final class ExampleAnalysisTestFactory {
                 .response("Responsive")
                 .reference("variant:12")
                 .source(ActionabilitySource.CIVIC)
+                .cancerType("Colorectal adenocarcinoma")
                 .build());
 
         evidenceItems.add(evidenceBuilder().event("BRAF p.Val600Glu")
@@ -293,6 +309,7 @@ final class ExampleAnalysisTestFactory {
                 .response("Responsive")
                 .reference("variant:12")
                 .source(ActionabilitySource.CIVIC)
+                .cancerType("Colorectal adenocarcinoma")
                 .build());
 
         evidenceItems.add(evidenceBuilder().event("BRAF p.Val600Glu")
@@ -301,6 +318,7 @@ final class ExampleAnalysisTestFactory {
                 .response("Resistant")
                 .reference("variant:17")
                 .source(ActionabilitySource.CIVIC)
+                .cancerType("Colorectal adenocarcinoma")
                 .build());
 
         evidenceItems.add(evidenceBuilder().event("BRAF p.Val600Glu")
@@ -309,6 +327,7 @@ final class ExampleAnalysisTestFactory {
                 .response("Responsive")
                 .reference("variant:12")
                 .source(ActionabilitySource.CIVIC)
+                .cancerType("Colorectal adenocarcinoma")
                 .build());
 
         evidenceItems.add(evidenceBuilder().event("BRAF p.Val600Glu")
@@ -317,14 +336,16 @@ final class ExampleAnalysisTestFactory {
                 .response("Responsive")
                 .reference("variant:12")
                 .source(ActionabilitySource.CIVIC)
+                .cancerType("Colorectal adenocarcinoma")
                 .build());
 
         evidenceItems.add(evidenceBuilder().event("PTEN Deletion")
                 .drug("EGFR mAB inhibitor")
-                .level(EvidenceLevel.LEVEL_B)
+                .level(EvidenceLevel.LEVEL_A)
                 .response("Resistant")
                 .reference("PTEN:del")
                 .source(ActionabilitySource.CGI)
+                .cancerType("Colorectal adenocarcinoma")
                 .build());
 
         evidenceItems.add(evidenceBuilder().event("PTEN Deletion")
@@ -333,6 +354,7 @@ final class ExampleAnalysisTestFactory {
                 .response("Responsive")
                 .reference("variant:213")
                 .source(ActionabilitySource.CIVIC)
+                .cancerType("Acute Myeloid Leukemia")
                 .build());
 
         return evidenceItems;
@@ -347,6 +369,7 @@ final class ExampleAnalysisTestFactory {
                 .reference("EXT8846 (NL54421.031.15)")
                 .source(ActionabilitySource.ICLUSION)
                 .isOnLabel(true)
+                .cancerType("a")
                 .build());
 
         trials.add(ImmutableClinicalTrial.builder()
@@ -355,6 +378,7 @@ final class ExampleAnalysisTestFactory {
                 .reference("EXT10151 (NL59299.042.17)")
                 .source(ActionabilitySource.ICLUSION)
                 .isOnLabel(true)
+                .cancerType("a")
                 .build());
 
         return trials;

@@ -89,7 +89,8 @@ public class SomaticVariantEvidenceAnalyzer {
                 .drug(actionableVariant.drug())
                 .drugsType(actionableVariant.drugsType())
                 .level(EvidenceLevel.fromString(actionableVariant.level()))
-                .response(actionableVariant.response());
+                .response(actionableVariant.response())
+                .cancerType(actionableVariant.cancerType());
     }
 
     @NotNull
@@ -100,6 +101,7 @@ public class SomaticVariantEvidenceAnalyzer {
                 .drug(actionableRange.drug())
                 .drugsType(actionableRange.drugsType())
                 .level(EvidenceLevel.fromString(actionableRange.level()))
-                .response(actionableRange.response());
+                .response(actionableRange.response())
+                .cancerType(actionableRange.cancerType());
     }
 }

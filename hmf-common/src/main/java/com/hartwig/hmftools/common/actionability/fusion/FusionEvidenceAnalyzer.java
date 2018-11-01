@@ -104,7 +104,8 @@ public class FusionEvidenceAnalyzer {
                 .drug(actionableFusionPair.drug())
                 .drugsType(actionableFusionPair.drugsType())
                 .level(EvidenceLevel.fromString(actionableFusionPair.level()))
-                .response(actionableFusionPair.response());
+                .response(actionableFusionPair.response())
+                .cancerType(actionableFusionPair.cancerType());
     }
 
     @NotNull
@@ -116,7 +117,8 @@ public class FusionEvidenceAnalyzer {
                 .drug(actionablePromiscuousThree.drug())
                 .drugsType(actionablePromiscuousThree.drugsType())
                 .level(EvidenceLevel.fromString(actionablePromiscuousThree.level()))
-                .response(actionablePromiscuousThree.response());
+                .response(actionablePromiscuousThree.response())
+                .cancerType(actionablePromiscuousThree.cancerType());
     }
 
     @NotNull
@@ -128,6 +130,7 @@ public class FusionEvidenceAnalyzer {
                 .drug(actionablePromiscuousFive.drug())
                 .drugsType(actionablePromiscuousFive.drugsType())
                 .level(EvidenceLevel.fromString(actionablePromiscuousFive.level()))
-                .response(actionablePromiscuousFive.response());
+                .response(actionablePromiscuousFive.response())
+                .cancerType(actionablePromiscuousFive.cancerType());
     }
 }

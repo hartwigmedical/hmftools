@@ -24,6 +24,7 @@ public class ClinicalTrialFactoryTest {
                 .source(ActionabilitySource.ICLUSION)
                 .reference("reference")
                 .isOnLabel(false)
+                .cancerType("Colorectal adenocarcinoma")
                 .build();
 
         List<ClinicalTrial> trial = ClinicalTrialFactory.extractTrials(Lists.newArrayList(item));

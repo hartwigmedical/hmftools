@@ -34,8 +34,7 @@ public abstract class EvidenceSummaryPage {
 
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
-        return cmp.verticalList(MainPageTopSection.build(Commons.TITLE_SEQUENCE,
-                report().sampleReport()),
+        return cmp.verticalList(MainPageTopSection.build(Commons.TITLE_SEQUENCE, report().sampleReport()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 GenomicSummarySection.build(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -49,12 +48,13 @@ public abstract class EvidenceSummaryPage {
         final ComponentBuilder<?, ?> table = report.clinicalEvidence().size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(EvidenceItemDataSource.evidenceItemFields())
                 .columns(col.column("Event", EvidenceItemDataSource.EVENT_FIELD).setFixedWidth(120),
-                        col.column("Drug", EvidenceItemDataSource.DRUG_FIELD).setFixedWidth(210),
+                        col.column("Drug", EvidenceItemDataSource.DRUG_FIELD).setFixedWidth(200),
                         col.column("Level", EvidenceItemDataSource.LEVEL_FIELD),
-                        col.column("Response", EvidenceItemDataSource.RESPONSE_FIELD),
+                        col.column("Response", EvidenceItemDataSource.RESPONSE_FIELD).setFixedWidth(50),
                         col.column("Source", EvidenceItemDataSource.SOURCE_FIELD)
                                 .setHyperLink(hyperLink(EvidenceItemDataSource.sourceHyperlink()))
-                                .setStyle(linkStyle()))
+                                .setStyle(linkStyle()),
+                        col.column("Cancer type", EvidenceItemDataSource.CANCER_TYPE_FIELD).setFixedWidth(120))
                 .setDataSource(EvidenceItemDataSource.fromEvidenceItems(report.clinicalEvidence())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
@@ -72,11 +72,12 @@ public abstract class EvidenceSummaryPage {
                         col.column("Source", ClinicalTrialDataSource.SOURCE_FIELD)
                                 .setHyperLink(hyperLink(ClinicalTrialDataSource.sourceHyperlink()))
                                 .setStyle(linkStyle()),
-                        col.column("CCMO", ClinicalTrialDataSource.CCMO_FIELD))
+                        col.column("CCMO", ClinicalTrialDataSource.CCMO_FIELD),
+                        col.column("Cancer type", ClinicalTrialDataSource.CANCER_TYPE_FIELD))
                 .setDataSource(ClinicalTrialDataSource.fromClinicalTrials(report.clinicalTrials())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        return cmp.verticalList(cmp.text("Clinical Trials").setStyle(sectionHeaderStyle()),
+        return cmp.verticalList(cmp.text("Clinical Trials (NL)").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
                 table);
     }

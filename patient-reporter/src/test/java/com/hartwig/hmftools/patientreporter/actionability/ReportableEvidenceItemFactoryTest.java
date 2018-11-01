@@ -85,6 +85,7 @@ public class ReportableEvidenceItemFactoryTest {
                 .drugsType(Strings.EMPTY)
                 .level(EvidenceLevel.LEVEL_A)
                 .response(Strings.EMPTY)
-                .isOnLabel(false);
+                .isOnLabel(false)
+                .cancerType(Strings.EMPTY);
     }
 }

@@ -66,6 +66,7 @@ public class CopyNumberEvidenceAnalyzer {
                 .drug(actionableCopyNumber.drug())
                 .drugsType(actionableCopyNumber.drugsType())
                 .level(EvidenceLevel.fromString(actionableCopyNumber.level()))
-                .response(actionableCopyNumber.response());
+                .response(actionableCopyNumber.response())
+                .cancerType(actionableCopyNumber.cancerType());
     }
 }
