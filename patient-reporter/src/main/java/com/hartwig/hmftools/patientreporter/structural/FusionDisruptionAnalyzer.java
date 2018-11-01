@@ -1,14 +1,15 @@
 package com.hartwig.hmftools.patientreporter.structural;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
 
 import org.jetbrains.annotations.NotNull;
@@ -33,16 +34,20 @@ public final class FusionDisruptionAnalyzer {
         Map<GeneFusion, List<EvidenceItem>> evidencePerFusion =
                 actionabilityAnalyzer.evidenceForFusions(structuralVariantAnalysis.fusions(), primaryTumorLocation);
 
-        for (GeneFusion actionableFusion : evidencePerFusion.keySet()) {
-            if (!evidencePerFusion.get(actionableFusion).isEmpty() && !fiveThreeCombinationExists(reportableFusions, actionableFusion)) {
-                reportableFusions.add(actionableFusion);
+        List<EvidenceItem> filteredEvidence = ReportableEvidenceItemFactory.reportableFlatList(evidencePerFusion);
+
+        // KODU: Add all fusions with filtered evidence that have not previously been added.
+        for (Map.Entry<GeneFusion, List<EvidenceItem>> entry : evidencePerFusion.entrySet()) {
+            GeneFusion fusion = entry.getKey();
+            if (!fiveThreeCombinationExists(reportableFusions, fusion) && !Collections.disjoint(entry.getValue(), filteredEvidence)) {
+                reportableFusions.add(fusion);
             }
         }
 
         return ImmutableFusionDisruptionAnalysis.builder()
                 .reportableFusions(ReportableGeneFusionFactory.toReportableGeneFusions(reportableFusions))
                 .reportableDisruptions(reportableDisruptions)
-                .evidenceItems(toList(evidencePerFusion))
+                .evidenceItems(filteredEvidence)
                 .build();
     }
 
@@ -55,14 +60,5 @@ public final class FusionDisruptionAnalyzer {
         }
 
         return false;
-    }
-
-    @NotNull
-    private static List<EvidenceItem> toList(@NotNull Map<GeneFusion, List<EvidenceItem>> evidencePerFusion) {
-        List<EvidenceItem> evidenceItemList = Lists.newArrayList();
-        for (List<EvidenceItem> items : evidencePerFusion.values()) {
-            evidenceItemList.addAll(items);
-        }
-        return evidenceItemList;
     }
 }

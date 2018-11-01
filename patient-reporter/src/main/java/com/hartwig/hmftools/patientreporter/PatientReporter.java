@@ -115,7 +115,7 @@ abstract class PatientReporter {
                 copyNumberAnalysis.fittedPurity().purity(),
                 copyNumberAnalysis.status() != FittedPurityStatus.NO_TUMOR,
                 copyNumberAnalysis.fittedPurity().ploidy(),
-                ReportableEvidenceItemFactory.filterEvidenceItemsForReporting(allEvidenceItems),
+                ReportableEvidenceItemFactory.extractClinicalEvidence(allEvidenceItems),
                 ClinicalTrialFactory.extractTrials(allEvidenceItems),
                 somaticVariantAnalysis.reportableSomaticVariants(),
                 somaticVariantAnalysis.microsatelliteIndelsPerMb(),
