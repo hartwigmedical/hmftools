@@ -9,7 +9,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 
 import org.apache.commons.cli.CommandLine;
@@ -32,26 +34,31 @@ import org.jooq.tools.StringUtils;
 public class HmfGenePanelBuilder {
 
     private static final Logger LOGGER = LogManager.getLogger(HmfGenePanelBuilder.class);
+    private static final Set<String> VERSIONS = Sets.newHashSet("37", "38");
 
     private static final String OUT_PATH = "out";
+    private static final String ENSEMBL_VERSION = "ensembl";
 
-    private static final String DATABASE = "homo_sapiens_core_89_37";
-    private static final String ENSEMBLDB_URL = "jdbc:mysql://ensembldb.ensembl.org:3337/" + DATABASE;
+    private static final String ENSEMBLDB_URL_37 = "jdbc:mysql://ensembldb.ensembl.org:3337/homo_sapiens_core_89_37";
+    private static final String ENSEMBLDB_URL_38 = "jdbc:mysql://ensembldb.ensembl.org:3306/homo_sapiens_core_89_38";
     private static final String DB_USER = "anonymous";
 
     public static void main(String[] args) throws ParseException, IOException, SQLException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final String outputFilePath = cmd.getOptionValue(OUT_PATH);
+        final String ensemblVersion = cmd.getOptionValue(ENSEMBL_VERSION);
 
-        if (outputFilePath == null) {
+        if (outputFilePath == null || !VERSIONS.contains(ensemblVersion)) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("HmfGenePanelBuilder", options);
             System.exit(1);
         }
 
-        LOGGER.info("Querying " + ENSEMBLDB_URL);
-        final Result<Record> queryResults = queryEnsembldb();
+        final String database = ensemblVersion.equals("37") ? ENSEMBLDB_URL_37 : ENSEMBLDB_URL_38;
+
+        LOGGER.info("Querying " + database);
+        final Result<Record> queryResults = queryEnsembldb(database);
         writeFile(cmd, queryResults);
         LOGGER.info("Written output to " + new File(outputFilePath).getAbsolutePath());
     }
@@ -60,6 +67,7 @@ public class HmfGenePanelBuilder {
     private static Options createOptions() {
         final Options options = new Options();
         options.addOption(OUT_PATH, true, "Path towards the tsv output file.");
+        options.addOption(ENSEMBL_VERSION, true, "Ensembl version to use. Must be either 37 or 38.");
         return options;
     }
 
@@ -76,10 +84,10 @@ public class HmfGenePanelBuilder {
     }
 
     @NotNull
-    private static Result<Record> queryEnsembldb() throws SQLException, IOException {
+    private static Result<Record> queryEnsembldb(@NotNull final String database) throws SQLException, IOException {
         // MIVO: disable annoying jooq self-ad message
         System.setProperty("org.jooq.no-logo", "true");
-        final Connection conn = DriverManager.getConnection(ENSEMBLDB_URL, DB_USER, "");
+        final Connection conn = DriverManager.getConnection(database, DB_USER, "");
         final DSLContext context = DSL.using(conn, SQLDialect.MYSQL);
         final String query = readEnsemblQuery();
         return context.fetch(query);
