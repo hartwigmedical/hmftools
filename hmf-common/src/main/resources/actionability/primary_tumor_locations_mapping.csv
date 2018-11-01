@@ -3,8 +3,6 @@ Adrenal,3953
 Biliary,4607
 Bone/Soft tissue,201;9253
 Breast,1612
-Choroid,12759
-CNS,3620;3070
 Colon/Rectum,9256;219
 CUP,UNMAPPED
 Double primary,UNMAPPED
@@ -19,7 +17,6 @@ Mesothelioma,1790
 Myeloid,4960
 Nervous system,3093
 NET,UNMAPPED
-Other,UNMAPPED
 Ovary,2394
 Pancreas,1793
 Penile,11615
