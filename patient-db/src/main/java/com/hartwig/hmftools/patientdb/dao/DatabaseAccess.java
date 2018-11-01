@@ -77,7 +77,7 @@ public class DatabaseAccess {
         System.setProperty("org.jooq.no-logo", "true");
         final Connection conn = DriverManager.getConnection(url, userName, password);
         final String catalog = conn.getCatalog();
-        LOGGER.info("Connecting to database {}", catalog);
+        LOGGER.debug("Connecting to database {}", catalog);
         this.context = DSL.using(conn, SQLDialect.MYSQL, settings(catalog));
 
         purityDAO = new PurityDAO(context);

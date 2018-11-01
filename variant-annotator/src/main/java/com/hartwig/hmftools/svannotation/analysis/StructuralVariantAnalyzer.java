@@ -69,7 +69,7 @@ public class StructuralVariantAnalyzer
 
     public final List<StructuralVariantAnnotation> findAnnotations(final List<EnrichedStructuralVariant> variants)
     {
-        LOGGER.debug("annotating variants with gene and transcript info");
+        LOGGER.debug("annotating {} variants with gene and transcript info", variants.size());
         return mGeneDataAnnotator.annotateVariants(variants);
     }
 
@@ -86,26 +86,30 @@ public class StructuralVariantAnalyzer
 
             for (final GeneAnnotation startGene : annotation.start())
             {
-                final boolean startUpstream = isUpstream(startGene);
+                boolean startUpstream = isUpstream(startGene);
 
                 for (final GeneAnnotation endGene : annotation.end())
                 {
-                    final boolean endUpstream = isUpstream(endGene);
+                    boolean endUpstream = isUpstream(endGene);
 
                     if (startUpstream == endUpstream)
                         continue;
 
-                    for (final Transcript t1 : intronic(startGene.transcripts()))
+                    for (final Transcript t1 : getIntronicTranscripts(startGene.transcripts()))
                     {
-                        for (final Transcript t2 : intronic(endGene.transcripts()))
+                        for (final Transcript t2 : getIntronicTranscripts(endGene.transcripts()))
                         {
                             if (!isPotentiallyRelevantFusion(t1, t2))
                                 continue;
 
                             if (startUpstream && t1.exonUpstreamPhase() == t2.exonDownstreamPhase())
+                            {
                                 fusions.add(Pair.of(t1, t2));
+                            }
                             else if (!startUpstream && t2.exonUpstreamPhase() == t1.exonDownstreamPhase())
+                            {
                                 fusions.add(Pair.of(t2, t1));
+                            }
                         }
                     }
                 }
@@ -117,7 +121,7 @@ public class StructuralVariantAnalyzer
         return toReportableGeneFusions(fusionsPerVariant);
     }
 
-    private static boolean isPotentiallyRelevantFusion(@NotNull Transcript t1, @NotNull Transcript t2)
+    private static boolean isPotentiallyRelevantFusion(final Transcript t1, final Transcript t2)
     {
         final boolean sameGene = t1.geneName().equals(t2.geneName());
 
@@ -246,17 +250,24 @@ public class StructuralVariantAnalyzer
         return disruptions;
     }
 
-    private static boolean transcriptsMatchKnownFusion(@NotNull final KnownFusionsModel fusionsModel, @NotNull final Transcript five,
-            @NotNull final Transcript three)
+    private static boolean transcriptsMatchKnownFusion(final KnownFusionsModel fusionsModel, final Transcript five, final Transcript three)
     {
+        if(fusionsModel.exactMatch(five.parent().synonyms(), three.parent().synonyms()))
+            return true;
 
-        return fusionsModel.exactMatch(five.parent().synonyms(), three.parent().synonyms())
-                || fusionsModel.intergenicPromiscuousMatch(five.parent().synonyms(), three.parent().synonyms())
-                || (fusionsModel.intragenicPromiscuousMatch(five.parent().synonyms(), three.parent().synonyms())
-                        && three.exonDownstream() - five.exonUpstream() > EXON_THRESHOLD);
+        if(fusionsModel.intergenicPromiscuousMatch(five.parent().synonyms(), three.parent().synonyms()))
+            return true;
+
+        if(fusionsModel.intragenicPromiscuousMatch(five.parent().synonyms(), three.parent().synonyms())
+        && three.exonDownstream() - five.exonUpstream() > EXON_THRESHOLD)
+        {
+            return true;
+        }
+
+        return false;
     }
 
-    private static boolean intronicDisruptionOnSameTranscript(@NotNull Transcript t1, @NotNull Transcript t2)
+    private static boolean intronicDisruptionOnSameTranscript(final Transcript t1, final Transcript t2)
     {
         final boolean sameTranscript = t1.transcriptId().equals(t2.transcriptId());
         final boolean bothIntronic = t1.isIntronic() && t2.isIntronic();
@@ -265,14 +276,13 @@ public class StructuralVariantAnalyzer
         return sameTranscript && bothIntronic && sameExonUpstream;
     }
 
-    private static boolean isUpstream(@NotNull GeneAnnotation gene)
+    private static boolean isUpstream(GeneAnnotation gene)
     {
         int orientation = gene.variant().orientation(gene.isStart());
         return gene.strand() * orientation > 0;
     }
 
-    @NotNull
-    private static List<Transcript> intronic(@NotNull List<Transcript> transcripts)
+    private static List<Transcript> getIntronicTranscripts(List<Transcript> transcripts)
     {
         return transcripts.stream().filter(Transcript::isIntronic).collect(Collectors.toList());
     }
@@ -292,7 +302,7 @@ public class StructuralVariantAnalyzer
         return (strand == 1 && position > codingEnd) || (strand == -1 && position < codingStart);
     }
 
-    private static boolean intragenic(@NotNull final Transcript upstream, @NotNull final Transcript downstream)
+    private static boolean intragenic(final Transcript upstream, final Transcript downstream)
     {
         return upstream.parent().synonyms().stream().anyMatch(downstream.parent().synonyms()::contains);
     }

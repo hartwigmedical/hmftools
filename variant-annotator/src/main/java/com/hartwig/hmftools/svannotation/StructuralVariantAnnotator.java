@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -213,10 +214,17 @@ public class StructuralVariantAnnotator
         if(mCmdLineArgs.hasOption(LOAD_ANNOTATIONS_FROM_FILE) && mCmdLineArgs.hasOption(DATA_OUTPUT_DIR))
         {
             annotations = loadAnnotations(enrichedVariants);
+
+            LOGGER.debug("loaded {} Ensembl annotations from file", annotations.size());
         }
         else
         {
-            annotations = analyzer.findAnnotations(enrichedVariants);
+            // TEMP: limit number searched
+
+            List<EnrichedStructuralVariant> subset = Lists.newArrayList(enrichedVariants.subList(0,10));
+            annotations = analyzer.findAnnotations(subset);
+
+            // annotations = analyzer.findAnnotations(enrichedVariants);
 
             // optionally persist to save having to look up this Ensembl data again
             if(mCmdLineArgs.hasOption(DATA_OUTPUT_DIR))
@@ -234,191 +242,6 @@ public class StructuralVariantAnnotator
         annotationDAO.write(analysis);
 
         return true;
-    }
-
-    private void writeAnnotations(final List<StructuralVariantAnnotation> annotations)
-    {
-        String outputFilename = mCmdLineArgs.getOptionValue(DATA_OUTPUT_DIR);
-
-        if(!outputFilename.endsWith("/"))
-            outputFilename += "/";
-
-        outputFilename += mSampleId + "_sv_ensembl_data.csv";
-
-        try
-        {
-            Path outputFile = Paths.get(outputFilename);
-
-            BufferedWriter writer = Files.newBufferedWriter(outputFile);
-
-            for(final StructuralVariantAnnotation annotation : annotations)
-            {
-                for(final GeneAnnotation geneAnnotation : annotation.annotations())
-                {
-                    writer.write(annotation.variant().id());
-
-                    // Gene info: isStart, geneName, geneStableId, geneStrand, synonyms, entrezIds, karyotypeBand
-                    writer.write(
-                            String.format(",%s,%s,%s,%d,%s,%s,%s",
-                                    geneAnnotation.isStart(),
-                                    geneAnnotation.geneName(),
-                                    geneAnnotation.stableId(),
-                                    geneAnnotation.strand(),
-                                    "synonyms",
-                                    "entrezIds",
-                                    geneAnnotation.karyotypeBand()));
-
-
-
-                    for(final Transcript transcript : geneAnnotation.transcripts())
-                    {
-                        // Transcript info: transcriptId,exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonMax, canonical, codingStart, codingEnd
-                        writer.write(
-                                String.format(",%s,%d,%d,%d,%d,%d,%s,%d,%d",
-                                        transcript.transcriptId(),
-                                        transcript.exonUpstream(),
-                                        transcript.exonUpstreamPhase(),
-                                        transcript.exonDownstream(),
-                                        transcript.exonDownstreamPhase(),
-                                        transcript.exonMax(),
-                                        transcript.isCanonical(),
-                                        transcript.codingStart(),
-                                        transcript.codingEnd()));
-
-                        writer.newLine();
-                    }
-                }
-            }
-        }
-        catch (final IOException e)
-        {
-            LOGGER.error("error writing gene annotations");
-        }
-    }
-
-    private final String getSampleGeneAnnotationsFilename()
-    {
-        String outputFilename = mCmdLineArgs.getOptionValue(DATA_OUTPUT_DIR);
-
-        if(!outputFilename.endsWith("/"))
-            outputFilename += "/";
-
-        return outputFilename + mSampleId + "sv_gene_annotations.csv";
-    }
-
-    private static int VAR_ID_COL_INDEX = 0;
-    private static int GENE_NAME_COL_INDEX = 2;
-    private static int TRANSCRIPT_ID_COL_INDEX = 10;
-
-    private final List<StructuralVariantAnnotation> loadAnnotations(List<EnrichedStructuralVariant> enrichedVariants)
-    {
-        List<StructuralVariantAnnotation> annotations = Lists.newArrayList();
-
-        final String filename = getSampleGeneAnnotationsFilename();
-
-        if (filename.isEmpty())
-            return annotations;
-
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            // skip field names
-            String line = fileReader.readLine();
-
-            if (line == null)
-            {
-                LOGGER.error("Empty copy number CSV file({})", filename);
-                return annotations;
-            }
-
-            int varIndex = 0;
-            EnrichedStructuralVariant currentVar = enrichedVariants.get(varIndex);
-            StructuralVariantAnnotation annotation = new StructuralVariantAnnotation(currentVar);
-
-            GeneAnnotation currentGene = null;
-            Transcript currentTranscript = null;
-
-            while ((line = fileReader.readLine()) != null)
-            {
-                // parse CSV data
-                String[] items = line.split(",");
-
-                int item = VAR_ID_COL_INDEX;
-
-                // check if still on the same variant
-                final String varId = items[item++];
-
-                if(!varId.equals(currentVar.id()))
-                {
-                    // done with current variant
-                    annotations.add(annotation);
-
-                    ++varIndex;
-
-                    if(varIndex >= enrichedVariants.size())
-                        break;
-
-                    currentVar = enrichedVariants.get(varIndex);
-                    annotation = new StructuralVariantAnnotation(currentVar);
-                }
-
-                // isStart, geneName, geneStableId, geneStrand, synonyms, entrezIds, karyotypeBand
-
-                final List<String> synonyms = Lists.newArrayList();
-                final List<Integer> entrezIds = Lists.newArrayList();
-
-                final String geneName = items[GENE_NAME_COL_INDEX];
-
-                if(currentGene != null && !currentGene.geneName().equals(geneName))
-                {
-                    // add to annotation and prepare a new one
-                    annotation.annotations().add(currentGene);
-                }
-
-                if(currentGene == null || !currentGene.geneName().equals(geneName))
-                {
-                    currentGene = new GeneAnnotation(
-                            currentVar,
-                            Boolean.parseBoolean(items[item++]),
-                            items[item++],
-                            items[item++],
-                            Integer.parseInt(items[item++]),
-                            synonyms,
-                            entrezIds,
-                            items[item++]);
-                }
-
-                final String transcriptId = items[TRANSCRIPT_ID_COL_INDEX];
-
-                if(currentTranscript != null && !currentTranscript.transcriptId().equals(transcriptId))
-                {
-                    currentGene.transcripts().add(currentTranscript);
-                }
-
-                if(currentTranscript == null || !currentTranscript.transcriptId().equals(transcriptId))
-                {
-                    // transcriptId, exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonMax, canonical, codingStart, codingEnd
-                    currentTranscript = new Transcript(
-                            currentGene,
-                            items[item++],
-                            Integer.parseInt(items[item++]),
-                            Integer.parseInt(items[item++]),
-                            Integer.parseInt(items[item++]),
-                            Integer.parseInt(items[item++]),
-                            Integer.parseInt(items[item++]),
-                            Boolean.parseBoolean(items[item++]),
-                            Long.parseLong(items[item++]),
-                            Long.parseLong(items[item++]));
-                }
-            }
-        }
-        catch(IOException e)
-        {
-            LOGGER.error("failed to load sample gene annotations({}): {}", filename, e.toString());
-        }
-
-        return annotations;
     }
 
     private List<EnrichedStructuralVariant> loadSVsFromFile()
@@ -558,6 +381,247 @@ public class StructuralVariantAnnotator
         return new EnrichedStructuralVariantFactory(indexedFastaSequenceFile, purityAdjuster, copyNumbers).enrich(variants);
     }
 
+    private void writeAnnotations(final List<StructuralVariantAnnotation> annotations)
+    {
+        String outputFilename = getSampleGeneAnnotationsFilename();
+
+        try
+        {
+            Path outputFile = Paths.get(outputFilename);
+
+            BufferedWriter writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
+
+            for(final StructuralVariantAnnotation annotation : annotations)
+            {
+                for(final GeneAnnotation geneAnnotation : annotation.annotations())
+                {
+                    String synonymnsStr = "";
+                    for(final String syn : geneAnnotation.synonyms())
+                    {
+                        if(!synonymnsStr.isEmpty())
+                            synonymnsStr += ";";
+
+                        synonymnsStr += syn;
+                    }
+
+                    String entrezIdsStr = "";
+                    for(final Integer eId : geneAnnotation.entrezIds())
+                    {
+                        if(!entrezIdsStr.isEmpty())
+                            entrezIdsStr += ";";
+
+                        entrezIdsStr += eId;
+                    }
+
+                    for(final Transcript transcript : geneAnnotation.transcripts())
+                    {
+                        writer.write(String.format("%d", annotation.variant().primaryKey()));
+
+                        // Gene info: isStart, geneName, geneStableId, geneStrand, synonyms, entrezIds, karyotypeBand
+                        writer.write(
+                                String.format(",%s,%s,%s,%d,%s,%s,%s",
+                                        geneAnnotation.isStart(),
+                                        geneAnnotation.geneName(),
+                                        geneAnnotation.stableId(),
+                                        geneAnnotation.strand(),
+                                        synonymnsStr,
+                                        entrezIdsStr,
+                                        geneAnnotation.karyotypeBand()));
+
+                        // Transcript info: transcriptId,exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonMax, canonical, codingStart, codingEnd
+                        writer.write(
+                                String.format(",%s,%d,%d,%d,%d,%d,%s,%d,%d",
+                                        transcript.transcriptId(),
+                                        transcript.exonUpstream(),
+                                        transcript.exonUpstreamPhase(),
+                                        transcript.exonDownstream(),
+                                        transcript.exonDownstreamPhase(),
+                                        transcript.exonMax(),
+                                        transcript.isCanonical(),
+                                        transcript.codingStart(),
+                                        transcript.codingEnd()));
+
+                        writer.newLine();
+                    }
+                }
+            }
+
+            writer.close();
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing gene annotations");
+        }
+    }
+
+    private final String getSampleGeneAnnotationsFilename()
+    {
+        String outputFilename = mCmdLineArgs.getOptionValue(DATA_OUTPUT_DIR);
+
+        if(!outputFilename.endsWith("/"))
+            outputFilename += "/";
+
+        return outputFilename + mSampleId + "_" + "sv_ensembl_data.csv";
+    }
+
+    private static int VAR_ID_COL_INDEX = 0;
+
+    // gene data: isStart, geneName, geneStableId, geneStrand, synonyms, entrezIds, karyotypeBand
+    private static int GENE_IS_START_COL_INDEX = 1;
+    private static int GENE_NAME_COL_INDEX = 2;
+    private static int GENE_STABLE_ID_COL_INDEX = 3;
+    private static int GENE_STRAND_INDEX = 4;
+    private static int GENE_SYNS_COL_INDEX = 5;
+    private static int GENE_EIDS_COL_INDEX = 6;
+    private static int GENE_KARYOTYPE_COL_INDEX = 7;
+
+    // transcript data: transcriptId, exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonMax, canonical, codingStart, codingEnd
+    private static int TRANSCRIPT_ID_COL_INDEX = 8;
+    private static int TRANSCRIPT_EUS_COL_INDEX = 9;
+    private static int TRANSCRIPT_EUP_COL_INDEX = 10;
+    private static int TRANSCRIPT_EDS_COL_INDEX = 11;
+    private static int TRANSCRIPT_EDP_COL_INDEX = 12;
+    private static int TRANSCRIPT_EMAX_COL_INDEX = 13;
+    private static int TRANSCRIPT_CAN_COL_INDEX = 14;
+    private static int TRANSCRIPT_CS_COL_INDEX = 15;
+    private static int TRANSCRIPT_CE_COL_INDEX = 16;
+
+    private final List<StructuralVariantAnnotation> loadAnnotations(List<EnrichedStructuralVariant> enrichedVariants)
+    {
+        List<StructuralVariantAnnotation> annotations = Lists.newArrayList();
+
+        final String filename = getSampleGeneAnnotationsFilename();
+
+        if (filename.isEmpty())
+            return annotations;
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+
+            String line = fileReader.readLine();
+
+            if (line == null)
+            {
+                LOGGER.error("Empty copy number CSV file({})", filename);
+                return annotations;
+            }
+
+            int varIndex = 0;
+            EnrichedStructuralVariant currentVar = enrichedVariants.get(varIndex);
+            StructuralVariantAnnotation annotation = new StructuralVariantAnnotation(currentVar);
+
+            GeneAnnotation currentGene = null;
+
+            int fileIndex = 0;
+
+            while (line != null)
+            {
+                // parse CSV data
+                String[] items = line.split(",");
+
+                // check if still on the same variant
+                final String varId = items[VAR_ID_COL_INDEX];
+
+                if(!varId.equals(currentVar.primaryKey().toString()))
+                {
+                    // done with current variant and gene
+                    annotation.annotations().add(currentGene);
+                    currentGene = null;
+                    annotations.add(annotation);
+
+                    ++varIndex;
+
+                    if(varIndex >= enrichedVariants.size())
+                    {
+                        LOGGER.warn("variants exhausted before file end, at index({}): fileVar({})", fileIndex, varId);
+                        break;
+                    }
+
+                    currentVar = enrichedVariants.get(varIndex);
+
+                    if(!varId.equals(currentVar.primaryKey().toString()))
+                    {
+                        LOGGER.warn("variant mismatch at index({}): currentVar({}) vs fileVar({})", fileIndex, currentVar.primaryKey(), varId);
+                        break;
+                    }
+
+                    annotation = new StructuralVariantAnnotation(currentVar);
+                }
+
+                // isStart, geneName, geneStableId, geneStrand, synonyms, entrezIds, karyotypeBand
+                final String geneName = items[GENE_NAME_COL_INDEX];
+
+                if(currentGene == null || !currentGene.geneName().equals(geneName))
+                {
+                    if(currentGene != null)
+                    {
+                        // add to annotation and prepare a new one
+                        annotation.annotations().add(currentGene);
+                    }
+
+                    String[] synonymsStr = items[GENE_SYNS_COL_INDEX].split(";");
+                    final List<String> synonyms = Lists.newArrayList(synonymsStr);
+
+                    String[] entrezIdStr = items[GENE_EIDS_COL_INDEX].split(";");
+
+                    final List<Integer> entrezIds = Lists.newArrayList();
+
+                    for (int i = 0; i < entrezIdStr.length; ++i)
+                    {
+                        if(!entrezIdStr[i].isEmpty())
+                            entrezIds.add(Integer.parseInt(entrezIdStr[i]));
+                    }
+
+                    currentGene = new GeneAnnotation(
+                            currentVar,
+                            Boolean.parseBoolean(items[GENE_IS_START_COL_INDEX]),
+                            geneName,
+                            items[GENE_STABLE_ID_COL_INDEX],
+                            Integer.parseInt(items[GENE_STRAND_INDEX]),
+                            synonyms,
+                            entrezIds,
+                            items[GENE_KARYOTYPE_COL_INDEX]);
+                }
+
+                final String transcriptId = items[TRANSCRIPT_ID_COL_INDEX];
+
+                // transcriptId, exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonMax, canonical, codingStart, codingEnd
+                Transcript transcript = new Transcript(
+                        currentGene,
+                        transcriptId,
+                        Integer.parseInt(items[TRANSCRIPT_EUS_COL_INDEX]),
+                        Integer.parseInt(items[TRANSCRIPT_EUP_COL_INDEX]),
+                        Integer.parseInt(items[TRANSCRIPT_EDS_COL_INDEX]),
+                        Integer.parseInt(items[TRANSCRIPT_EDP_COL_INDEX]),
+                        Integer.parseInt(items[TRANSCRIPT_EMAX_COL_INDEX]),
+                        Boolean.parseBoolean(items[TRANSCRIPT_CAN_COL_INDEX]),
+                        items[TRANSCRIPT_CS_COL_INDEX].equals("null") ? null : Long.parseLong(items[TRANSCRIPT_CS_COL_INDEX]),
+                        items[TRANSCRIPT_CE_COL_INDEX].equals("null") ? null : Long.parseLong(items[TRANSCRIPT_CE_COL_INDEX]));
+
+                currentGene.addTranscript(transcript);
+
+                line = fileReader.readLine();
+
+                if(line == null)
+                {
+                    // add the last annotation
+                    annotations.add(annotation);
+                    break;
+                }
+
+                ++fileIndex;
+            }
+
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to load sample gene annotations({}): {}", filename, e.toString());
+        }
+
+        return annotations;
+    }
+
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = createBasicOptions();
@@ -570,6 +634,8 @@ public class StructuralVariantAnnotator
 
         if(!svAnnotator.initialise())
             return;
+
+        svAnnotator.run();
 
         LOGGER.info("run complete");
     }
