@@ -34,14 +34,17 @@ public class StructuralVariantAnnotationDAO {
     }
 
     @SuppressWarnings("unchecked")
-    public void write(final StructuralVariantAnalysis analysis) {
+    public void write(final StructuralVariantAnalysis analysis)
+    {
         final Timestamp timestamp = new Timestamp(new Date().getTime());
 
         final Map<Transcript, Integer> id = Maps.newHashMap();
 
-        // NERA: load transcript annotations
-        for (final StructuralVariantAnnotation annotation : analysis.annotations()) {
-            for (final GeneAnnotation geneAnnotation : annotation.annotations()) {
+        // load transcript annotations
+        for (final StructuralVariantAnnotation annotation : analysis.annotations())
+        {
+            for (final GeneAnnotation geneAnnotation : annotation.annotations())
+            {
                 final InsertValuesStep13 inserter = context.insertInto(STRUCTURALVARIANTBREAKEND,
                         STRUCTURALVARIANTBREAKEND.MODIFIED,
                         STRUCTURALVARIANTBREAKEND.ISSTARTEND,
@@ -56,7 +59,9 @@ public class StructuralVariantAnnotationDAO {
                         STRUCTURALVARIANTBREAKEND.EXONRANKDOWNSTREAM,
                         STRUCTURALVARIANTBREAKEND.EXONPHASEDOWNSTREAM,
                         STRUCTURALVARIANTBREAKEND.EXONMAX);
-                for (final Transcript transcript : geneAnnotation.transcripts()) {
+
+                for (final Transcript transcript : geneAnnotation.transcripts())
+                {
                     inserter.values(timestamp,
                             geneAnnotation.isStart(),
                             transcript.parent().variant().primaryKey(),
@@ -73,7 +78,9 @@ public class StructuralVariantAnnotationDAO {
                 }
 
                 final List<UInteger> ids = inserter.returning(STRUCTURALVARIANTBREAKEND.ID).fetch().getValues(0, UInteger.class);
-                if (ids.size() != geneAnnotation.transcripts().size()) {
+
+                if (ids.size() != geneAnnotation.transcripts().size())
+                {
                     throw new RuntimeException("not all transcripts were inserted successfully");
                 }
 
@@ -83,21 +90,25 @@ public class StructuralVariantAnnotationDAO {
             }
         }
 
-        // NERA: load fusions
+        // load fusions
         final InsertValuesStep3 fusionInserter = context.insertInto(STRUCTURALVARIANTFUSION,
                 STRUCTURALVARIANTFUSION.ISREPORTED,
                 STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID,
                 STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID);
-        for (final GeneFusion fusion : analysis.fusions()) {
+
+        for (final GeneFusion fusion : analysis.fusions())
+        {
             fusionInserter.values(fusion.reportable(), id.get(fusion.upstreamLinkedAnnotation()), id.get(fusion.downstreamLinkedAnnotation()));
         }
         fusionInserter.execute();
 
-        // NERA: load disruptions
+        // load disruptions
         final InsertValuesStep2 disruptionInserter = context.insertInto(STRUCTURALVARIANTDISRUPTION,
                 STRUCTURALVARIANTDISRUPTION.ISREPORTED,
                 STRUCTURALVARIANTDISRUPTION.BREAKENDID);
-        for (final GeneDisruption disruption : analysis.disruptions()) {
+
+        for (final GeneDisruption disruption : analysis.disruptions())
+        {
             disruptionInserter.values(disruption.reportable(), id.get(disruption.linkedAnnotation()));
         }
         disruptionInserter.execute();

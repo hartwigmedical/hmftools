@@ -58,20 +58,23 @@ public class MySQLAnnotator implements VariantAnnotator
         return new MySQLAnnotator(url);
     }
 
-    private MySQLAnnotator(@NotNull String url) throws SQLException {
+    private MySQLAnnotator(@NotNull String url) throws SQLException
+    {
         System.setProperty("org.jooq.no-logo", "true");
         final Connection conn = DriverManager.getConnection(url);
         context = DSL.using(conn, SQLDialect.MYSQL);
         coordSystemId = findCoordSystemId();
     }
 
-    public MySQLAnnotator(@NotNull final DSLContext dbConnection) {
+    public MySQLAnnotator(@NotNull final DSLContext dbConnection)
+    {
         context = dbConnection;
         coordSystemId = findCoordSystemId();
     }
 
     @NotNull
-    private UInteger findCoordSystemId() {
+    private UInteger findCoordSystemId()
+    {
         return context.select(COORD_SYSTEM.COORD_SYSTEM_ID)
                 .from(COORD_SYSTEM)
                 .where(COORD_SYSTEM.VERSION.eq("GRCh37"))
@@ -83,28 +86,35 @@ public class MySQLAnnotator implements VariantAnnotator
 
     @Override
     @NotNull
-    public List<StructuralVariantAnnotation> annotateVariants(@NotNull List<EnrichedStructuralVariant> variants) {
+    public List<StructuralVariantAnnotation> annotateVariants(@NotNull List<EnrichedStructuralVariant> variants)
+    {
         return variants.stream().map(this::annotateVariant).collect(Collectors.toList());
     }
 
     @NotNull
-    private StructuralVariantAnnotation annotateVariant(@NotNull EnrichedStructuralVariant variant) {
+    private StructuralVariantAnnotation annotateVariant(@NotNull EnrichedStructuralVariant variant)
+    {
         final StructuralVariantAnnotation annotation = new StructuralVariantAnnotation(variant);
+
         annotation.annotations().addAll(annotateBreakend(variant, true, variant.start().chromosome(), variant.start().position()));
-        if (variant.end() != null) {
+
+        if (variant.end() != null)
+        {
             annotation.annotations().addAll(annotateBreakend(variant, false, variant.end().chromosome(), variant.end().position()));
         }
+
         return annotation;
     }
 
     @NotNull
-    private List<GeneAnnotation> annotateBreakend(@NotNull EnrichedStructuralVariant variant, final boolean isStart,
-            @NotNull String chromosome, final long position) {
+    private List<GeneAnnotation> annotateBreakend(@NotNull EnrichedStructuralVariant variant, final boolean isStart, @NotNull String chromosome, final long position)
+    {
         final List<GeneAnnotation> result = Lists.newArrayList();
 
         final Result<?> genes = queryGenesOnChromosomeAndPosition(chromosome, position);
 
-        for (final Record gene : genes) {
+        for (final Record gene : genes)
+        {
             final UInteger geneId = gene.get(GENE.GENE_ID);
             final String geneName = gene.get(XREF.DISPLAY_LABEL);
             final String geneStableId = gene.get(GENE.STABLE_ID);
@@ -130,32 +140,32 @@ public class MySQLAnnotator implements VariantAnnotator
                     .map(r -> r.get(XREF.DBPRIMARY_ACC))
                     .collect(Collectors.toList());
 
-            final GeneAnnotation geneAnnotation =
-                    new GeneAnnotation(variant, isStart, geneName, geneStableId, geneStrand, synonyms, entrezIds, karyotypeBand);
+            final GeneAnnotation geneAnnotation = new GeneAnnotation(variant, isStart, geneName, geneStableId, geneStrand, synonyms, entrezIds, karyotypeBand);
 
             final Result<?> transcripts = queryTranscripts(geneId);
 
-            for (final Record transcriptRecord : transcripts) {
+            for (final Record transcriptRecord : transcripts)
+            {
                 Transcript transcript = buildTranscript(geneAnnotation, transcriptRecord, position, canonicalTranscriptId, geneStrand > 0);
 
-                if (transcript != null) {
+                if (transcript != null)
                     geneAnnotation.addTranscript(transcript);
-                }
             }
 
-            if (!geneAnnotation.transcripts().isEmpty()) {
+            if (!geneAnnotation.transcripts().isEmpty())
                 result.add(geneAnnotation);
-            }
         }
 
         return result;
     }
 
     @NotNull
-    private Result<?> queryGenesOnChromosomeAndPosition(@NotNull String chromosome, long position) {
+    private Result<?> queryGenesOnChromosomeAndPosition(@NotNull String chromosome, long position)
+    {
         final int promoterDistance = 10000;
         final byte zero = 0;
         final Xref ENTREZ_XREF = XREF.as("entrez_xref");
+
         return context.select(GENE.GENE_ID,
                 XREF.DISPLAY_LABEL,
                 GENE.STABLE_ID,

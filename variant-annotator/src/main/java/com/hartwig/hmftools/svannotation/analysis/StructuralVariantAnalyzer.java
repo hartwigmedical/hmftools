@@ -32,43 +32,51 @@ public class StructuralVariantAnalyzer
     private static final int EXON_THRESHOLD = 1;
 
     @NotNull
-    private final VariantAnnotator annotator;
+    private final VariantAnnotator mGeneDataAnnotator;
     @NotNull
-    private final Set<String> disruptionGeneIDPanel;
+    private final Set<String> mDisruptionGeneIDPanel;
     @NotNull
-    private final KnownFusionsModel knownFusionsModel;
+    private final KnownFusionsModel mKnownFusionsModel;
 
     private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnalyzer.class);
 
-    public StructuralVariantAnalyzer(@NotNull final VariantAnnotator annotator, @NotNull Set<String> disruptionGeneIDPanel,
-            @NotNull final KnownFusionsModel knownFusionsModel)
+    public StructuralVariantAnalyzer(@NotNull final VariantAnnotator mGeneDataAnnotator, @NotNull Set<String> mDisruptionGeneIDPanel,
+            @NotNull final KnownFusionsModel mKnownFusionsModel)
     {
         // TODO (KODU) See if we can replace with a filter on gene name rather than gene ensembl ID.
-        this.annotator = annotator;
-        this.disruptionGeneIDPanel = disruptionGeneIDPanel;
-        this.knownFusionsModel = knownFusionsModel;
+        this.mGeneDataAnnotator = mGeneDataAnnotator;
+        this.mDisruptionGeneIDPanel = mDisruptionGeneIDPanel;
+        this.mKnownFusionsModel = mKnownFusionsModel;
     }
 
     @NotNull
+    @Deprecated
     public StructuralVariantAnalysis run(@NotNull final List<EnrichedStructuralVariant> variants)
     {
-        LOGGER.debug("annotating variants");
-        final List<StructuralVariantAnnotation> annotations = annotator.annotateVariants(variants);
+        LOGGER.debug("annotating variants with gene and transcript info");
+        final List<StructuralVariantAnnotation> annotations = mGeneDataAnnotator.annotateVariants(variants);
 
         final List<StructuralVariantAnnotation> copy = Lists.newArrayList(annotations);
 
         LOGGER.debug("processing fusions");
-        final List<GeneFusion> fusions = processFusions(copy);
+        final List<GeneFusion> fusions = findFusions(copy);
 
         LOGGER.debug("processing disruptions");
-        final List<GeneDisruption> disruptions = processDisruptions(copy);
+        final List<GeneDisruption> disruptions = findDisruptions(copy);
 
         return ImmutableStructuralVariantAnalysis.of(annotations, fusions, disruptions);
     }
 
-    @NotNull
-    private List<GeneFusion> processFusions(final List<StructuralVariantAnnotation> annotations)
+    public final List<StructuralVariantAnnotation> findAnnotations(final List<EnrichedStructuralVariant> variants)
     {
+        LOGGER.debug("annotating variants with gene and transcript info");
+        return mGeneDataAnnotator.annotateVariants(variants);
+    }
+
+    public final List<GeneFusion> findFusions(final List<StructuralVariantAnnotation> annotations)
+    {
+        LOGGER.debug("finding fusions");
+
         // left is upstream, right is downstream
         final List<List<Pair<Transcript, Transcript>>> fusionsPerVariant = Lists.newArrayList();
 
@@ -83,6 +91,7 @@ public class StructuralVariantAnalyzer
                 for (final GeneAnnotation endGene : annotation.end())
                 {
                     final boolean endUpstream = isUpstream(endGene);
+
                     if (startUpstream == endUpstream)
                         continue;
 
@@ -139,7 +148,7 @@ public class StructuralVariantAnalyzer
             {
                 final Transcript upstream = fusion.getLeft();
                 final Transcript downstream = fusion.getRight();
-                final boolean matchesKnownFusion = transcriptsMatchKnownFusion(knownFusionsModel, upstream, downstream);
+                final boolean matchesKnownFusion = transcriptsMatchKnownFusion(mKnownFusionsModel, upstream, downstream);
 
                 Boolean isPostCodingUpstream = postCoding(upstream);
                 Boolean isPostCodingDownstream = postCoding(downstream);
@@ -152,7 +161,7 @@ public class StructuralVariantAnalyzer
                         .reportable(reportable)
                         .upstreamLinkedAnnotation(upstream)
                         .downstreamLinkedAnnotation(downstream)
-                        .primarySource(knownFusionsModel.primarySource(upstream.parent().synonyms(), downstream.parent().synonyms()))
+                        .primarySource(mKnownFusionsModel.primarySource(upstream.parent().synonyms(), downstream.parent().synonyms()))
                         .build();
 
                 result.add(geneFusion);
@@ -189,9 +198,10 @@ public class StructuralVariantAnalyzer
         return reportableFusion;
     }
 
-    @NotNull
-    private List<GeneDisruption> processDisruptions(final List<StructuralVariantAnnotation> annotations)
+    public final List<GeneDisruption> findDisruptions(final List<StructuralVariantAnnotation> annotations)
     {
+        LOGGER.debug("finding disruptions");
+
         final List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
 
         for (final StructuralVariantAnnotation annotation : annotations)
@@ -223,7 +233,7 @@ public class StructuralVariantAnalyzer
                 for (final Transcript transcript : gene.transcripts())
                 {
                     final GeneDisruption disruption = ImmutableGeneDisruption.builder()
-                            .reportable(disruptionGeneIDPanel.stream().anyMatch(geneID -> gene.synonyms().contains(geneID))
+                            .reportable(mDisruptionGeneIDPanel.stream().anyMatch(geneID -> gene.synonyms().contains(geneID))
                                     && transcript.isCanonical())
                             .linkedAnnotation(transcript)
                             .build();
