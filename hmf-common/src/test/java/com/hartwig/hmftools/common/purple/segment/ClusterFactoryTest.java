@@ -31,7 +31,7 @@ public class ClusterFactoryTest {
 
     @Test
     public void testBoundaries() {
-        final List<ClusterVariantLeg> sv = variants(37383599, 37387153);
+        final List<SVSegment> sv = variants(37383599, 37387153);
         final List<PCFPosition> ratios = createRatioBreaks(36965001, 37381001, 37382001, 37384001, 37387001, 37389001);
         final List<CobaltRatio> cobalt = cobalt(37380001, true, false, true, true, true, true, true);
 
@@ -86,7 +86,7 @@ public class ClusterFactoryTest {
 
     @Test
     public void testDefaultClusterBounds() {
-        final ClusterVariantLeg sv = createSVPosition(15532);
+        final SVSegment sv = createSVPosition(15532);
         final List<Cluster> clusters = victim.cluster(Lists.newArrayList(sv), Collections.emptyList(), Collections.emptyList());
         assertEquals(1, clusters.size());
         assertVariantInCluster(clusters.get(0), 14002, 15532);
@@ -94,7 +94,7 @@ public class ClusterFactoryTest {
 
     @Test
     public void testClusterBoundsWithRatios() {
-        final List<ClusterVariantLeg> sv = variants(15532);
+        final List<SVSegment> sv = variants(15532);
         final List<CobaltRatio> ratios = createRatios();
         final List<Cluster> clusters = victim.cluster(sv, Collections.emptyList(), ratios);
         assertEquals(1, clusters.size());
@@ -103,7 +103,7 @@ public class ClusterFactoryTest {
 
     @Test
     public void testTwoSVInsideCluster() {
-        final List<ClusterVariantLeg> sv = variants(15532, 16771);
+        final List<SVSegment> sv = variants(15532, 16771);
         final List<Cluster> clusters = victim.cluster(sv, Collections.emptyList(), Collections.emptyList());
         assertEquals(1, clusters.size());
         assertVariantsInCluster(clusters.get(0), 14002, 15532, 16771);
@@ -111,7 +111,7 @@ public class ClusterFactoryTest {
 
     @Test
     public void testTwoSVOutsideCluster() {
-        final List<ClusterVariantLeg> sv = variants(15532, 17881);
+        final List<SVSegment> sv = variants(15532, 17881);
         final List<Cluster> clusters = victim.cluster(sv, Collections.emptyList(), Collections.emptyList());
         assertEquals(2, clusters.size());
         assertVariantInCluster(clusters.get(0), 14002, 15532);
@@ -120,7 +120,7 @@ public class ClusterFactoryTest {
 
     @Test
     public void testTwoSVInsideClusterWithRatio() {
-        final List<ClusterVariantLeg> sv = variants(15532, 18881);
+        final List<SVSegment> sv = variants(15532, 18881);
         final List<CobaltRatio> ratios = createRatios();
         final List<Cluster> clusters = victim.cluster(sv, Collections.emptyList(), ratios);
         assertEquals(1, clusters.size());
@@ -169,13 +169,11 @@ public class ClusterFactoryTest {
     }
 
     @NotNull
-    private static ClusterVariantLeg createSVPosition(long position) {
-        return ImmutableClusterVariantLeg.builder()
+    private static SVSegment createSVPosition(long position) {
+        return ImmutableSVSegment.builder()
                 .chromosome(CHROM)
                 .position(position)
                 .type(StructuralVariantType.BND)
-                .homology("")
-                .orientation((byte) 1)
                 .build();
     }
 
@@ -191,8 +189,8 @@ public class ClusterFactoryTest {
     }
 
     @NotNull
-    private static List<ClusterVariantLeg> variants(long... positions) {
-        final List<ClusterVariantLeg> result = Lists.newArrayList();
+    private static List<SVSegment> variants(long... positions) {
+        final List<SVSegment> result = Lists.newArrayList();
         for (long position : positions) {
             result.add(createSVPosition(position));
         }

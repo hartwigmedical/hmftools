@@ -7,17 +7,15 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class FusionEvidenceAnalyzer {
-    private static final Logger LOGGER = LogManager.getLogger(FusionEvidenceAnalyzer.class);
 
     @NotNull
     private final List<ActionableFusion> fusionPairs;
@@ -105,7 +103,7 @@ public class FusionEvidenceAnalyzer {
                 .source(ActionabilitySource.fromString(actionableFusionPair.source()))
                 .drug(actionableFusionPair.drug())
                 .drugsType(actionableFusionPair.drugsType())
-                .level(actionableFusionPair.level())
+                .level(EvidenceLevel.fromString(actionableFusionPair.level()))
                 .response(actionableFusionPair.response());
     }
 
@@ -117,7 +115,7 @@ public class FusionEvidenceAnalyzer {
                 .source(ActionabilitySource.fromString(actionablePromiscuousThree.source()))
                 .drug(actionablePromiscuousThree.drug())
                 .drugsType(actionablePromiscuousThree.drugsType())
-                .level(actionablePromiscuousThree.level())
+                .level(EvidenceLevel.fromString(actionablePromiscuousThree.level()))
                 .response(actionablePromiscuousThree.response());
     }
 
@@ -129,7 +127,7 @@ public class FusionEvidenceAnalyzer {
                 .source(ActionabilitySource.fromString(actionablePromiscuousFive.source()))
                 .drug(actionablePromiscuousFive.drug())
                 .drugsType(actionablePromiscuousFive.drugsType())
-                .level(actionablePromiscuousFive.level())
+                .level(EvidenceLevel.fromString(actionablePromiscuousFive.level()))
                 .response(actionablePromiscuousFive.response());
     }
 }

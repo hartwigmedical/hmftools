@@ -25,7 +25,7 @@ public abstract class EvidenceItem {
     public abstract String drugsType();
 
     @NotNull
-    public abstract String level();
+    public abstract EvidenceLevel level();
 
     @NotNull
     public abstract String response();

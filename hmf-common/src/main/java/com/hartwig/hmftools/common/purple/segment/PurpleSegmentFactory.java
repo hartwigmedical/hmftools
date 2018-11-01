@@ -7,28 +7,39 @@ import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.pcf.PCFPosition;
 import com.hartwig.hmftools.common.pcf.PCFSource;
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class PurpleSegmentFactory {
 
+    private final int windowSize;
     private final Map<Chromosome, GenomePosition> lengths;
     private final Map<Chromosome, GenomePosition> centromeres;
 
-    public PurpleSegmentFactory(final Map<Chromosome, GenomePosition> centromeres, final Map<Chromosome, GenomePosition> lengths) {
+    public PurpleSegmentFactory(final int windowSize, final Map<Chromosome, GenomePosition> centromeres, final Map<Chromosome, GenomePosition> lengths) {
+        this.windowSize = windowSize;
         this.centromeres = centromeres;
         this.lengths = lengths;
     }
 
+    public List<PurpleSegment> segment(@NotNull final List<StructuralVariant> variants,
+            @NotNull final Multimap<Chromosome, PCFPosition> pcfPositions, @NotNull ListMultimap<Chromosome, CobaltRatio> ratios) {
+        final Multimap<Chromosome, Cluster> clusterMap = new ClusterFactory(windowSize).cluster(variants, pcfPositions, ratios);
+        return segmentCluster(clusterMap);
+    }
+
     @NotNull
-    public List<PurpleSegment> segment(@NotNull final Multimap<Chromosome, Cluster> clusters) {
+    private List<PurpleSegment> segmentCluster(@NotNull final Multimap<Chromosome, Cluster> clusters) {
         final List<PurpleSegment> results = Lists.newArrayList();
         results.addAll(segmentMap(clusters).values());
         Collections.sort(results);
@@ -61,9 +72,9 @@ public final class PurpleSegmentFactory {
         for (final Cluster cluster : clusters) {
             boolean ratioSupport = !cluster.ratios().isEmpty();
 
-            final List<ClusterVariantLeg> variants = cluster.variants();
+            final List<SVSegment> variants = cluster.variants();
             if (!variants.isEmpty()) {
-                for (final ClusterVariantLeg variant : variants) {
+                for (final SVSegment variant : variants) {
                     if (variant.position() != segment.start()) {
                         result.add(setEnd(centromere, segment, (variant.position() - 1)));
                         segment = createFromCluster(cluster, variant, ratioSupport);
@@ -126,7 +137,7 @@ public final class PurpleSegmentFactory {
     }
 
     @NotNull
-    private static ModifiablePurpleSegment createFromCluster(@NotNull Cluster cluster, @NotNull ClusterVariantLeg variant,
+    private static ModifiablePurpleSegment createFromCluster(@NotNull Cluster cluster, @NotNull SVSegment variant,
             boolean ratioSupport) {
         return ModifiablePurpleSegment.create()
                 .setChromosome(cluster.chromosome())

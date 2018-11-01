@@ -45,11 +45,9 @@ class StructuralVariantImplied {
                 for (final CombinedRegion copyNumber : chromosomeCopyNumbers) {
                     if (implyCopyNumberFromSV(copyNumber)) {
                         final Optional<StructuralVariantLegPloidy> optionalStart =
-                                selector.select(GenomePositions.create(copyNumber.chromosome(), copyNumber.start()));
-
+                                select(copyNumber.chromosome(), copyNumber.start(), selector);
                         final Optional<StructuralVariantLegPloidy> optionalEnd =
-                                selector.select(GenomePositions.create(copyNumber.chromosome(), copyNumber.end() + 1));
-
+                                select(copyNumber.chromosome(), copyNumber.end() + 1, selector);
                         if (optionalStart.isPresent() || optionalEnd.isPresent()) {
                             svInferred = true;
                             inferCopyNumberFromStructuralVariants(copyNumber, optionalStart, optionalEnd);
@@ -68,6 +66,19 @@ class StructuralVariantImplied {
         }
 
         return copyNumbers;
+    }
+
+    @NotNull
+    private Optional<StructuralVariantLegPloidy> select(@NotNull final String chromosome, long position,
+            @NotNull final GenomePositionSelector<StructuralVariantLegPloidy> selector) {
+
+        final Optional<StructuralVariantLegPloidy> posOrientation =
+                selector.select(GenomePositions.create(chromosome, position - 1)).filter(x -> x.orientation() == 1);
+        if (posOrientation.isPresent()) {
+            return posOrientation;
+        }
+
+        return selector.select(GenomePositions.create(chromosome, position)).filter(x -> x.orientation() == -1);
     }
 
     private static void inferCopyNumberFromStructuralVariants(@NotNull final CombinedRegion region,

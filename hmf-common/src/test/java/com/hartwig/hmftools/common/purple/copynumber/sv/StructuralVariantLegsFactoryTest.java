@@ -88,7 +88,7 @@ public class StructuralVariantLegsFactoryTest {
     @Test
     public void testOpposingSign() {
         final StructuralVariant first = sv(100, 200, StructuralVariantType.DEL, 0.25, 0.4);
-        final StructuralVariant second = sv(200, 300, StructuralVariantType.BND, 0.25, 0.25);
+        final StructuralVariant second = sv(199, 300, StructuralVariantType.BND, 0.25, 0.25);
         final List<StructuralVariant> variants = Lists.newArrayList(first, second);
 
         final List<StructuralVariantLegs> legs = StructuralVariantLegsFactory.create(variants);

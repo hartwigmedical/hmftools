@@ -15,9 +15,6 @@ public abstract class ClinicalTrial {
     public abstract String event();
 
     @NotNull
-    public abstract String level();
-
-    @NotNull
     public abstract String acronym();
 
     @NotNull

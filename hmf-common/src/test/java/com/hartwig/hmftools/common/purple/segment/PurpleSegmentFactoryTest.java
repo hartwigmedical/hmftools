@@ -14,15 +14,15 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.pcf.ImmutablePCFPosition;
 import com.hartwig.hmftools.common.pcf.PCFSource;
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.position.GenomePositionFactory;
+import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class PurpleSegmentFactoryTest {
-    private static final GenomePosition CHROMOSOME_LENGTH = GenomePositionFactory.create("1", 10_000_000);
-    private static final GenomePosition CHROMOSOME_CENTROMERE = GenomePositionFactory.create("1", 10_000_001);
+    private static final GenomePosition CHROMOSOME_LENGTH = GenomePositions.create("1", 10_000_000);
+    private static final GenomePosition CHROMOSOME_CENTROMERE = GenomePositions.create("1", 10_000_001);
 
     @Test
     public void testEmpty() {
@@ -43,7 +43,8 @@ public class PurpleSegmentFactoryTest {
     @Test
     public void testSingleSVWithRatioSupport() {
         final Cluster cluster = addRatios(cluster(17002, 18881), 17050, 19000).build();
-        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, Lists.newArrayList(cluster));
+        final List<PurpleSegment> segments =
+                PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, Lists.newArrayList(cluster));
         assertEquals(2, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
         assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_LENGTH.position(), true, BND);
@@ -71,7 +72,8 @@ public class PurpleSegmentFactoryTest {
     @Test
     public void testRatiosOnly() {
         final Cluster cluster = addRatios(cluster(17002), 18881, 19000).build();
-        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, Lists.newArrayList(cluster));
+        final List<PurpleSegment> segments =
+                PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, Lists.newArrayList(cluster));
         assertEquals(2, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
         assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_LENGTH.position(), true, NONE);
@@ -116,13 +118,11 @@ public class PurpleSegmentFactoryTest {
     }
 
     @NotNull
-    private static ClusterVariantLeg variant(long position) {
-        return ImmutableClusterVariantLeg.builder()
+    private static SVSegment variant(long position) {
+        return ImmutableSVSegment.builder()
                 .chromosome(CHROMOSOME_LENGTH.chromosome())
                 .position(position)
-                .homology("")
                 .type(StructuralVariantType.BND)
-                .orientation((byte) 1)
                 .build();
     }
 }

@@ -34,8 +34,8 @@ public class StructuralVariantImpliedTest {
 
     @Test
     public void testNonSymmetricMultiPass() {
-        final StructuralVariant firstSV = sv(1001, 4001, StructuralVariantType.DEL, 0.25, 0.25);
-        final StructuralVariant secondSV = sv(2001, 3001, StructuralVariantType.DEL, 1 / 3d, 1 / 3d);
+        final StructuralVariant firstSV = sv(1000, 4001, StructuralVariantType.DEL, 0.25, 0.25);
+        final StructuralVariant secondSV = sv(2000, 3001, StructuralVariantType.DEL, 1 / 3d, 1 / 3d);
 
         final CombinedRegion firstCN = copyNumber(1, 1000, 40, SegmentSupport.NONE);
         final CombinedRegion secondCN = copyNumber(1001, 2000, 0, SegmentSupport.DEL);
@@ -58,8 +58,8 @@ public class StructuralVariantImpliedTest {
 
     @Test
     public void testSVSmoothing() {
-        final StructuralVariant firstSV = sv(1001, 4001, StructuralVariantType.DEL, 0.25, 0.25);
-        final StructuralVariant secondSV = sv(2001, 3001, StructuralVariantType.DEL, 1 / 3d, 1 / 3d);
+        final StructuralVariant firstSV = sv(1000, 4001, StructuralVariantType.DEL, 0.25, 0.25);
+        final StructuralVariant secondSV = sv(2000, 3001, StructuralVariantType.DEL, 1 / 3d, 1 / 3d);
 
         final CombinedRegion firstCN = copyNumber(1, 1000, 40, SegmentSupport.NONE);
         final CombinedRegion secondCN = copyNumber(1001, 2000, 0, SegmentSupport.DEL);
@@ -72,6 +72,7 @@ public class StructuralVariantImpliedTest {
 
         final StructuralVariantImplied victim = new StructuralVariantImplied(PURE);
         final List<CombinedRegion> result = victim.svImpliedCopyNumber(svs, copyNumbers).get(CHROMOSOME);
+
         assertEquals(4, result.size());
         assertEquals(40.00, result.get(0).tumorCopyNumber(), EPSILON);
         assertEquals(33.75, result.get(1).tumorCopyNumber(), EPSILON);

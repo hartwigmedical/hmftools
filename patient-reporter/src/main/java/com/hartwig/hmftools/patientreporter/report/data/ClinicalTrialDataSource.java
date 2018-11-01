@@ -23,7 +23,6 @@ public class ClinicalTrialDataSource {
     public static final FieldBuilder<?> TRIAL_FIELD = field("acronym", String.class);
     public static final FieldBuilder<?> SOURCE_FIELD = field("source", String.class);
     public static final FieldBuilder<?> CCMO_FIELD = field("ccmo", String.class);
-    public static final FieldBuilder<?> ON_LABEL_FIELD = field("on_label", String.class);
     private static final FieldBuilder<?> REFERENCE_FIELD = field("reference", String.class);
 
     private ClinicalTrialDataSource() {
@@ -31,7 +30,7 @@ public class ClinicalTrialDataSource {
 
     @NotNull
     public static FieldBuilder<?>[] clinicalTrialFields() {
-        return new FieldBuilder<?>[] { EVENT_FIELD, TRIAL_FIELD, SOURCE_FIELD, CCMO_FIELD, ON_LABEL_FIELD, REFERENCE_FIELD };
+        return new FieldBuilder<?>[] { EVENT_FIELD, TRIAL_FIELD, SOURCE_FIELD, CCMO_FIELD, REFERENCE_FIELD };
     }
 
     @NotNull
@@ -40,20 +39,16 @@ public class ClinicalTrialDataSource {
                 TRIAL_FIELD.getName(),
                 SOURCE_FIELD.getName(),
                 CCMO_FIELD.getName(),
-                ON_LABEL_FIELD.getName(),
                 REFERENCE_FIELD.getName());
 
         for (ClinicalTrial trial : sort(trials)) {
             assert trial.source().isTrialSource();
 
-            if (trial.level().equals("A") || trial.level().equals("B")) {
-                evidenceItemDataSource.add(trial.event(),
-                        trial.acronym(),
-                        trial.source().sourceName(),
-                        CCMOId(trial.reference()),
-                        trial.isOnLabel() ? "Yes" : "No",
-                        trial.reference());
-            }
+            evidenceItemDataSource.add(trial.event(),
+                    trial.acronym(),
+                    trial.source().sourceName(),
+                    CCMOId(trial.reference()),
+                    trial.reference());
         }
         return evidenceItemDataSource;
     }

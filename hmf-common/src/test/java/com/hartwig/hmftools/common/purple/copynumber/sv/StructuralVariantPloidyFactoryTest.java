@@ -37,7 +37,7 @@ public class StructuralVariantPloidyFactoryTest {
 
     @Test
     public void testSingleValidLeg() {
-        final StructuralVariantLeg start = createLeg(1001, 1, 0.25);
+        final StructuralVariantLeg start = createLeg(1000, 1, 0.25);
 
         final PurpleCopyNumber left = copyNumber(1, 1000, 4);
         final PurpleCopyNumber middle = copyNumber(1001, 2000, 3);
@@ -55,7 +55,7 @@ public class StructuralVariantPloidyFactoryTest {
 
     @Test
     public void testBothLegsValid() {
-        final StructuralVariantLeg start = createLeg(1001, 1, 0.25);
+        final StructuralVariantLeg start = createLeg(999, 1, 0.25);
         final StructuralVariantLeg end = createLeg(2001, -1, 0.25);
 
         final PurpleCopyNumber left = copyNumber(1, 1000, 4);
@@ -93,7 +93,7 @@ public class StructuralVariantPloidyFactoryTest {
 
     @Test
     public void testSelectCorrectOrAlternativeCopyNumberForLeg() {
-        final StructuralVariantLeg positiveLeg = createLeg(1001, 1, 0.25);
+        final StructuralVariantLeg positiveLeg = createLeg(1000, 1, 0.25);
         final StructuralVariantLeg negativeLeg = createLeg(2001, -1, 0.25);
         final PurpleCopyNumber left = copyNumber(1, 1000, 4);
         final PurpleCopyNumber middle = copyNumber(1001, 2000, 3);
@@ -108,7 +108,7 @@ public class StructuralVariantPloidyFactoryTest {
 
     @Test
     public void testPurityAdjustedPloidy() {
-        final StructuralVariantLeg leg = createLeg(1001, 1, 0.5);
+        final StructuralVariantLeg leg = createLeg(1000, 1, 0.5);
         final List<PurpleCopyNumber> copyNumbers = Lists.newArrayList(copyNumber(1, 1000, 2), copyNumber(1001, 200, 1));
 
         Optional<ModifiableStructuralVariantLegPloidy> purePloidy =

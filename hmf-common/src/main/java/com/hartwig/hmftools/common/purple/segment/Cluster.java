@@ -15,13 +15,13 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Modifiable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class Cluster implements GenomeRegion {
+abstract class Cluster implements GenomeRegion {
 
     @NotNull
     public abstract List<PCFPosition> pcfPositions();
 
     @NotNull
-    public abstract List<ClusterVariantLeg> variants();
+    public abstract List<SVSegment> variants();
 
     @NotNull
     public List<GenomePosition> ratios() {

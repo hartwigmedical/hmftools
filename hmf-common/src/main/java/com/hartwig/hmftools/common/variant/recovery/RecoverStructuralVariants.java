@@ -89,8 +89,8 @@ public class RecoverStructuralVariants implements Closeable {
         for (StructuralVariantLegPloidy svPloidy : svPloidies) {
             if (isUnbalanced(svPloidy)) {
                 final List<PurpleCopyNumber> chromosomeCopyNumbers = allCopyNumbers.get(HumanChromosome.fromString(svPloidy.chromosome()));
-                int index = indexOf(svPloidy.position(), chromosomeCopyNumbers);
-                if (index > 1) {
+                int index = indexOf(svPloidy.cnaPosition(), chromosomeCopyNumbers);
+                if (index > 0) {
                     final PurpleCopyNumber prev = chromosomeCopyNumbers.get(index - 1);
                     final PurpleCopyNumber next = index < chromosomeCopyNumbers.size() - 2 ? chromosomeCopyNumbers.get(index + 1) : null;
                     if (isSupportedByDepthWindowCounts(prev, next)) {
@@ -150,15 +150,11 @@ public class RecoverStructuralVariants implements Closeable {
     @NotNull
     private List<RecoveredVariant> recover(int expectedOrientation, long min, long max, @NotNull final PurpleCopyNumber current,
             @NotNull final PurpleCopyNumber prev) throws IOException {
-        List<RecoveredVariant> result = Lists.newArrayList();
+        final List<RecoveredVariant> result = Lists.newArrayList();
 
-        List<VariantContext> recovered = findVariants(current.chromosome(), min, max);
+        final List<VariantContext> recovered = findVariants(current.chromosome(), min, max);
         for (VariantContext potentialVariant : recovered) {
             final String alt = potentialVariant.getAlternateAllele(0).getDisplayString();
-            int orientation = orientation(alt);
-            if (orientation != expectedOrientation) {
-                continue;
-            }
 
             final String mateId = StructuralVariantFactory.mateId(potentialVariant);
             final String mateLocation = mateLocation(alt);
@@ -171,19 +167,14 @@ public class RecoverStructuralVariants implements Closeable {
                     Math.max(1, matePosition - uncertainty),
                     matePosition + uncertainty) : null;
 
-            final PurpleCopyNumber mateCopyNumber = mate == null || !allCopyNumbers.containsKey(mate.getContig())
-                    ? null
-                    : closest(mate.getStart(), allCopyNumbers.get(HumanChromosome.fromString(mate.getContig())));
-
             final StructuralVariant sv = mate != null
                     ? StructuralVariantFactory.create(potentialVariant, mate)
                     : StructuralVariantFactory.createSingleBreakend(potentialVariant);
 
-            if (hasPotential(min, max, sv)) {
+            if (sv.start().orientation() == expectedOrientation && hasPotential(min, max, sv)) {
                 result.add(ImmutableRecoveredVariant.builder()
                         .context(potentialVariant)
                         .mate(mate)
-                        .mateCopyNumber(mateCopyNumber)
                         .variant(sv)
                         .copyNumber(current)
                         .prevCopyNumber(prev)
@@ -304,31 +295,10 @@ public class RecoverStructuralVariants implements Closeable {
     }
 
     @VisibleForTesting
-    static int orientation(@NotNull final String alt) {
-        if (alt.charAt(0) == '.') {
-            return -1;
-        }
-
-        if (alt.charAt(alt.length() - 1) == '.') {
-            return 1;
-        }
-
-        if (alt.contains("[")) {
-            return 1;
-        }
-
-        if (alt.contains("]")) {
-            return -1;
-        }
-
-        return 0;
-    }
-
-    @VisibleForTesting
-    private static <T extends GenomeRegion> int indexOf(long start, @NotNull final List<T> regions) {
+    private static <T extends GenomeRegion> int indexOf(long cnaPosition, @NotNull final List<T> regions) {
         assert (!regions.isEmpty());
         for (int i = 0; i < regions.size(); i++) {
-            if (regions.get(i).start() == start) {
+            if (regions.get(i).start() == cnaPosition) {
                 return i;
             }
         }

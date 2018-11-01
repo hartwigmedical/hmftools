@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 
+import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderVersion;
@@ -26,10 +27,44 @@ public class StructuralVariantFactoryTest {
     @Test
     public void testSGL() {
         final String vcfEntry =
-                "2\t192614842\tgridss14_291648b\tT\tTCTCTGTGACTTGAATGCAAACATCCCAAAGAAGTTTCTGAGAATGCTTCTGTCTAGATTTTCTCTGAAGACAATCCCGTTTCCAACGAAATCCTCAAGGCTAGGCAAATATCCTCTTGCAGATTCCAGAAAAAGAGTGTTTCAAAACTGCTCCTTCAAAACGGTGGTTCAATTCTCTTAGTTGAGTACACACATCTCAAATAAGTTTCTGAGAATGCTTCTGTCTAG.\t2076.59\tPASS\tAS=0;ASQ=0;ASRP=0;ASSR=0;BA=1;BANRP=0;BANRPQ=0;BANSR=0;BANSRQ=0;BAQ=1002.16;BASRP=26;BASSR=14;BEALN=2:92296050|-|155M4I13M1I54M|6;BEID=asm14-297024;BEIDH=-1;BEIDL=0;BQ=2076.59;BSC=15;BSCQ=295.57;BUM=28;BUMQ=778.86;BVF=35;CAS=0;CASQ=0;CQ=2059.53;EVENT=gridss14_291648;IC=0;IQ=0;RAS=0;RASQ=0;REF=254;REFPAIR=88;RP=0;RPQ=0;SB=0.5862069;SC=1X;SR=0;SRQ=0;SVTYPE=BND;VF=0;BPI_AF=0.083743842364532;LOCAL_LINKED_BY=;REMOTE_LINKED_BY=\tGT:ASQ:ASRP:ASSR:BANRP:BANRPQ:BANSR:BANSRQ:BAQ:BASRP:BASSR:BQ:BSC:BSCQ:BUM:BUMQ:BVF:CASQ:IC:IQ:QUAL:RASQ:REF:REFPAIR:RP:RPQ:SR:SRQ:VF\t.:0:0:0:0:0:0:0:0:0:0:27.37:0:0:1:27.37:1:0:0:0:0:0:43:14:0:0:0:0:0\t.:0:0:0:0:0:0:0:1002.16:26:14:2049.22:15:295.57:27:751.49:34:0:0:0:0:0:211:74:0:0:0:0:0";
+                "2\t192614842\tgridss14_291648b\tT\tTCTCTACACAAG.\t2076.59\tPASS\tSVTYPE=BND\tGT\t./.";
 
         final StructuralVariant variant = StructuralVariantFactory.createSingleBreakend(codec.decode(vcfEntry));
         assertEquals(StructuralVariantType.SGL, variant.type());
+    }
+
+    @Test
+    public void testOrientation() {
+        final String line1 = "2\t321681\tbnd_W\tG\tG]17:198982]\t6\tPASS\tSVTYPE=BND\tGT\t./.";
+        final String line2 = "2\t321682\tbnd_V\tT\t]13:123456]T\t6\tPASS\tSVTYPE=BND\tGT\t./.";
+        final String line3 = "13\t123456\tbnd_U\tC\tC[2:321682[\t6\tPASS\tSVTYPE=BND\tGT\t./.";
+        final String line4 = "13\t123457\tbnd_X\tA\t[17:198983[A\t6\tPASS\tSVTYPE=BND\tGT\t./.";
+        final String line5 = "17\t198982\tbnd_Y\tA\tA]2:321681]\t6\tPASS\tSVTYPE=BND\tGT\t./.";
+        final String line6 = "17\t198983\tbnd_Z\tC\t[13:123457[C\t6\tPASS\tSVTYPE=BND\tGT\t./.";
+
+        VariantContext c1 = codec.decode(line1);
+        VariantContext c2 = codec.decode(line2);
+        VariantContext c3 = codec.decode(line3);
+        VariantContext c4 = codec.decode(line4);
+        VariantContext c5 = codec.decode(line5);
+        VariantContext c6 = codec.decode(line6);
+
+        StructuralVariant variant = StructuralVariantFactory.create(c1, c5);
+        final StructuralVariantLeg leg1 = variant.start();
+        final StructuralVariantLeg leg5 = variant.end();
+        variant = StructuralVariantFactory.create(c2, c3);
+        final StructuralVariantLeg leg2 = variant.start();
+        final StructuralVariantLeg leg3 = variant.end();
+        variant = StructuralVariantFactory.create(c4, c6);
+        final StructuralVariantLeg leg4 = variant.start();
+        final StructuralVariantLeg leg6 = variant.end();
+
+        assertEquals(1, leg1.orientation());
+        assertEquals(-1, leg2.orientation());
+        assertEquals(1, leg3.orientation());
+        assertEquals(-1, leg4.orientation());
+        assertEquals(1, leg5.orientation());
+        assertEquals(-1, leg6.orientation());
     }
 
     @NotNull

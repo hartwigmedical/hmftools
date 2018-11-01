@@ -7,14 +7,14 @@ import org.junit.Test;
 public class MicrosatelliteAnalyzerTest {
 
     @Test
-    public void testShortRepeatContextRelevance() {
+    public void shortRepeatContextRelevanceIsDeterminedCorrectly() {
         assertEquals(false, MicrosatelliteAnalyzer.repeatContextIsRelevant(4, "A"));
         assertEquals(true, MicrosatelliteAnalyzer.repeatContextIsRelevant(5, "A"));
         assertEquals(true, MicrosatelliteAnalyzer.repeatContextIsRelevant(100, "A"));
     }
 
     @Test
-    public void testLongRepeatContextRelevance() {
+    public void longRepeatContextRelevanceIsDeterminedCorrectly() {
         assertEquals(false, MicrosatelliteAnalyzer.repeatContextIsRelevant(3, "AT"));
         assertEquals(true, MicrosatelliteAnalyzer.repeatContextIsRelevant(4, "AT"));
         assertEquals(true, MicrosatelliteAnalyzer.repeatContextIsRelevant(100, "AT"));

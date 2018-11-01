@@ -39,13 +39,13 @@ public abstract class NonSequenceablePage {
     abstract NotAnalysableStudy study();
 
     @NotNull
-    public static NonSequenceablePage of(@NotNull final NotAnalysedPatientReport report) {
+    public static NonSequenceablePage of(@NotNull NotAnalysedPatientReport report) {
         return ImmutableNonSequenceablePage.of(report.sampleReport(), report.user(), report.reason(), report.study());
     }
 
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
-        return cmp.verticalList(MainPageTopSection.buildWithPathologyTumorPercentage(reason().title(), sampleReport()),
+        return cmp.verticalList(MainPageTopSection.build(reason().title(), sampleReport()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 mainPageNotAnalysableSection());
     }
@@ -86,12 +86,8 @@ public abstract class NonSequenceablePage {
             }
         }
 
-        return cmp.verticalList(
-                cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12)).setHeight(20),
+        return cmp.verticalList(cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12)).setHeight(20),
                 cmp.text(subTitle).setStyle(dataTableStyle().setFontSize(12)).setHeight(20),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.horizontalList(cmp.text("Pathology Tumor Percentage").setStyle(tableHeaderStyle()),
-                        cmp.text(PatientReportFormat.formatNullablePercent(sampleReport().pathologyTumorPercentage())).setStyle(dataTableStyle())),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text(message).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -103,13 +99,17 @@ public abstract class NonSequenceablePage {
                         + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
                         + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text("The tumor percentage estimated by Pathology UMC Utrecht is: " + PatientReportFormat.formatNullablePercent(
+                        sampleReport().pathologyTumorPercentage())).setStyle(fontStyle()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The biopsies evaluated for this sample have arrived on " + formattedDate(sampleReport().tumorArrivalDate())
                         + " at " + Commons.HARTWIG_ADDRESS).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("This report is generated and verified by: " + user() + " and is addressed at " + sampleReport().recipient())
                         .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The results on this report are based on tests that are performed under ISO/ICE-17025:2005 accreditation.").setStyle(fontStyle()),
+                cmp.text("The results on this report are based on tests that are performed under ISO/ICE-17025:2005 accreditation.")
+                        .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("For questions, please contact us via info@hartwigmedicalfoundation.nl").setStyle(fontStyle()));
     }

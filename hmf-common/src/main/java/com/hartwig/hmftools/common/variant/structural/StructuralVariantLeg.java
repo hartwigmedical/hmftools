@@ -48,5 +48,7 @@ public interface StructuralVariantLeg extends GenomeInterval {
     @Nullable
     Integer normalReferenceFragmentCount();
 
-
+    default long cnaPosition() {
+        return orientation() ==  -1 ? position() : position() + 1;
+    }
 }

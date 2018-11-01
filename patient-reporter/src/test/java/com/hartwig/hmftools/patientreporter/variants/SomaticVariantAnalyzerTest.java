@@ -1,14 +1,20 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testSequencedReportData;
+
+import static org.junit.Assert.assertEquals;
+
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -32,27 +38,27 @@ public class SomaticVariantAnalyzerTest {
                         builder().gene(WRONG_GENE).canonicalCodingEffect(MISSENSE).worstCodingEffect(MISSENSE).build(),
                         builder().gene(WRONG_GENE).canonicalCodingEffect(SYNONYMOUS).worstCodingEffect(SYNONYMOUS).build());
 
-        //TODO: create genecopyNumber list
-        List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
-        List<GeneFusion> geneFusion = Lists.newArrayList();
+        SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants,
+                Sets.newHashSet(RIGHT_GENE),
+                Maps.newHashMap(),
+                Sets.newHashSet(),
+                testSequencedReportData().actionabilityAnalyzer(),
+                null);
 
-//        SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants,
-//                Sets.newHashSet(RIGHT_GENE),
-//                Maps.newHashMap(),
-//                null, exomeGeneCopyNumbers, geneFusion);
-//
-//        assertEquals(2, analysis.tumorMutationalLoad());
-//        assertEquals(2, analysis.reportableSomaticVariants().size());
-//
-//        Map<String, DriverCategory> driverCategoryMap = Maps.newHashMap();
-//        driverCategoryMap.put(RIGHT_GENE, DriverCategory.ONCO);
-//        SomaticVariantAnalysis analysisOnco = SomaticVariantAnalyzer.run(variants,
-//                Sets.newHashSet(RIGHT_GENE),
-//                driverCategoryMap,
-//                null, exomeGeneCopyNumbers, geneFusion);
-//
-//        assertEquals(2, analysisOnco.tumorMutationalLoad());
-//        assertEquals(1, analysisOnco.reportableSomaticVariants().size());
+        assertEquals(2, analysis.tumorMutationalLoad());
+        assertEquals(2, analysis.reportableSomaticVariants().size());
+
+        Map<String, DriverCategory> driverCategoryMap = Maps.newHashMap();
+        driverCategoryMap.put(RIGHT_GENE, DriverCategory.ONCO);
+        SomaticVariantAnalysis analysisOnco = SomaticVariantAnalyzer.run(variants,
+                Sets.newHashSet(RIGHT_GENE),
+                driverCategoryMap,
+                Sets.newHashSet(),
+                testSequencedReportData().actionabilityAnalyzer(),
+                null);
+
+        assertEquals(2, analysisOnco.tumorMutationalLoad());
+        assertEquals(1, analysisOnco.reportableSomaticVariants().size());
     }
 
     @NotNull
