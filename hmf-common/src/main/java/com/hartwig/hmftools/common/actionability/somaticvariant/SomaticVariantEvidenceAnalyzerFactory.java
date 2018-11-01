@@ -6,6 +6,8 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hartwig.hmftools.common.actionability.util.MultiDrugCurator;
+
 import org.jetbrains.annotations.NotNull;
 
 public final class SomaticVariantEvidenceAnalyzerFactory {
@@ -45,7 +47,7 @@ public final class SomaticVariantEvidenceAnalyzerFactory {
                 .alt(values[4])
                 .source(values[5])
                 .reference(values[6])
-                .drug(values[7])
+                .drug(MultiDrugCurator.reformat(values[7]))
                 .drugsType(values[8])
                 .cancerType(values[9])
                 .level(values[11])
@@ -63,7 +65,7 @@ public final class SomaticVariantEvidenceAnalyzerFactory {
                 .end(Long.valueOf(values[4]))
                 .source(values[6])
                 .reference(values[7])
-                .drug(values[8])
+                .drug(MultiDrugCurator.reformat(values[8]))
                 .drugsType(values[9])
                 .cancerType(values[10])
                 .level(values[12])

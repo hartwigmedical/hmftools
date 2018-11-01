@@ -6,6 +6,8 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hartwig.hmftools.common.actionability.util.MultiDrugCurator;
+
 import org.jetbrains.annotations.NotNull;
 
 public final class CopyNumberEvidenceAnalyzerFactory {
@@ -35,7 +37,7 @@ public final class CopyNumberEvidenceAnalyzerFactory {
                 .cnvType(values[1])
                 .source(values[2])
                 .reference(values[3])
-                .drug(values[4])
+                .drug(MultiDrugCurator.reformat(values[4]))
                 .drugsType(values[5])
                 .cancerType(values[6])
                 .level(values[8])
