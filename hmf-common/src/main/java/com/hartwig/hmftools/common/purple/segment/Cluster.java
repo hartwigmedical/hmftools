@@ -21,7 +21,7 @@ abstract class Cluster implements GenomeRegion {
     public abstract List<PCFPosition> pcfPositions();
 
     @NotNull
-    public abstract List<ClusterVariantLeg> variants();
+    public abstract List<SVSegment> variants();
 
     @NotNull
     public List<GenomePosition> ratios() {

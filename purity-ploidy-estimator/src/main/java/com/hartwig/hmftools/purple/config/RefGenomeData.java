@@ -8,7 +8,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.position.GenomePositionFactory;
+import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.refgenome.RefGenome;
 
 import org.apache.commons.cli.CommandLine;
@@ -89,7 +89,7 @@ public interface RefGenomeData {
             final Chromosome chromosome = entry.getKey();
             final String contig = entry.getValue();
             if (longs.containsKey(chromosome)) {
-                result.put(chromosome, GenomePositionFactory.create(contig, longs.get(chromosome)));
+                result.put(chromosome, GenomePositions.create(contig, longs.get(chromosome)));
             }
 
         }

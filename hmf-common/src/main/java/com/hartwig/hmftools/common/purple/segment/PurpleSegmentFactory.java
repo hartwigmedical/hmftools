@@ -72,9 +72,9 @@ public final class PurpleSegmentFactory {
         for (final Cluster cluster : clusters) {
             boolean ratioSupport = !cluster.ratios().isEmpty();
 
-            final List<ClusterVariantLeg> variants = cluster.variants();
+            final List<SVSegment> variants = cluster.variants();
             if (!variants.isEmpty()) {
-                for (final ClusterVariantLeg variant : variants) {
+                for (final SVSegment variant : variants) {
                     if (variant.position() != segment.start()) {
                         result.add(setEnd(centromere, segment, (variant.position() - 1)));
                         segment = createFromCluster(cluster, variant, ratioSupport);
@@ -137,7 +137,7 @@ public final class PurpleSegmentFactory {
     }
 
     @NotNull
-    private static ModifiablePurpleSegment createFromCluster(@NotNull Cluster cluster, @NotNull ClusterVariantLeg variant,
+    private static ModifiablePurpleSegment createFromCluster(@NotNull Cluster cluster, @NotNull SVSegment variant,
             boolean ratioSupport) {
         return ModifiablePurpleSegment.create()
                 .setChromosome(cluster.chromosome())

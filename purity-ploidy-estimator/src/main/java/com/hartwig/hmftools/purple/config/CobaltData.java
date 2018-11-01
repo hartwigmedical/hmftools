@@ -19,7 +19,7 @@ import com.hartwig.hmftools.common.pcf.PCFFile;
 import com.hartwig.hmftools.common.pcf.PCFPosition;
 import com.hartwig.hmftools.common.pcf.PCFSource;
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.position.GenomePositionFactory;
+import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.apache.commons.cli.CommandLine;
@@ -115,7 +115,7 @@ public interface CobaltData {
         return lengths.stream()
                 .filter(x -> HumanChromosome.contains(x.chromosome()))
                 .collect(Collectors.toMap(x -> HumanChromosome.fromString(x.chromosome()),
-                        item -> GenomePositionFactory.create(item.chromosome(), item.length())));
+                        item -> GenomePositions.create(item.chromosome(), item.length())));
     }
 
 }

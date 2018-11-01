@@ -34,13 +34,13 @@ final class StructuralVariantLegsFactory {
     static List<StructuralVariantLegs> create(@NotNull final List<StructuralVariant> variants) {
         final List<ModifiableStructuralVariantLegs> result = createLegs(false, variants);
         final Multimap<GenomePosition, ModifiableStructuralVariantLegs> duplicates = findDuplicates(result);
+
         for (GenomePosition duplicatePosition : duplicates.keySet()) {
             final StructuralVariantLeg approvedLeg = reduce(duplicatePosition, duplicates.get(duplicatePosition));
             boolean match = false;
             for (ModifiableStructuralVariantLegs legs : duplicates.get(duplicatePosition)) {
                 Optional<StructuralVariantLeg> start = legs.start();
                 if (start.filter(x -> isDuplicate(duplicatePosition, x)).isPresent()) {
-                    assert start.isPresent();
                     if (start.get().equals(approvedLeg)) {
                         match = true;
                     } else {
@@ -50,7 +50,6 @@ final class StructuralVariantLegsFactory {
 
                 Optional<StructuralVariantLeg> end = legs.end();
                 if (end.filter(x -> isDuplicate(duplicatePosition, x)).isPresent()) {
-                    assert end.isPresent();
                     if (end.get().equals(approvedLeg)) {
                         match = true;
                     } else {
@@ -68,8 +67,7 @@ final class StructuralVariantLegsFactory {
     }
 
     @NotNull
-    private static StructuralVariantLeg reduce(@NotNull final GenomePosition position,
-            @NotNull final Collection<ModifiableStructuralVariantLegs> legs) {
+    private static StructuralVariantLeg reduce(@NotNull final GenomePosition position, @NotNull final Collection<ModifiableStructuralVariantLegs> legs) {
         final List<StructuralVariantLeg> leg = Lists.newArrayList();
         for (ModifiableStructuralVariantLegs modifiableStructuralVariantLegs : legs) {
             modifiableStructuralVariantLegs.start().filter(x -> isDuplicate(position, x)).ifPresent(leg::add);
@@ -80,7 +78,7 @@ final class StructuralVariantLegsFactory {
     }
 
     private static boolean isDuplicate(@NotNull final GenomePosition position, @NotNull final StructuralVariantLeg leg) {
-        return position.equals(GenomePositions.create(leg));
+        return position.equals(cnaPosition(leg));
     }
 
     @NotNull
@@ -119,12 +117,11 @@ final class StructuralVariantLegsFactory {
     }
 
     @NotNull
-    private static Multimap<GenomePosition, ModifiableStructuralVariantLegs> findDuplicates(
-            @NotNull final Collection<ModifiableStructuralVariantLegs> legs) {
+    private static Multimap<GenomePosition, ModifiableStructuralVariantLegs> findDuplicates(@NotNull final Collection<ModifiableStructuralVariantLegs> legs) {
         final ListMultimap<GenomePosition, ModifiableStructuralVariantLegs> result = ArrayListMultimap.create();
         for (ModifiableStructuralVariantLegs leg : legs) {
-            leg.start().ifPresent(x -> result.put(GenomePositions.create(x), leg));
-            leg.end().ifPresent(x -> result.put(GenomePositions.create(x), leg));
+            leg.start().ifPresent(x -> result.put(cnaPosition(x), leg));
+            leg.end().ifPresent(x -> result.put(cnaPosition(x), leg));
         }
 
         result.keySet().removeIf(key -> result.get(key).size() <= 1);
@@ -139,7 +136,7 @@ final class StructuralVariantLegsFactory {
 
             if (allowInserts || variant.type() != StructuralVariantType.INS) {
                 final Optional<StructuralVariantLeg> start = Optional.of(variant.start()).filter(x -> x.alleleFrequency() != null);
-                final Optional<StructuralVariantLeg> end = variant.end() == null ? Optional.empty() : Optional.of(variant.end()).filter(x -> x.alleleFrequency() != null);
+                final Optional<StructuralVariantLeg> end = Optional.ofNullable(variant.end()).filter(x -> x.alleleFrequency() != null);
 
                 if (start.isPresent() || end.isPresent()) {
                     final ModifiableStructuralVariantLegs legs = ModifiableStructuralVariantLegs.create().setStart(start).setEnd(end);
@@ -149,6 +146,11 @@ final class StructuralVariantLegsFactory {
         }
 
         return result;
+    }
+
+    @NotNull
+    private static GenomePosition cnaPosition(@NotNull final StructuralVariantLeg leg) {
+        return GenomePositions.create(leg.chromosome(), leg.cnaPosition());
     }
 
 }

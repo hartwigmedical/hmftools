@@ -25,9 +25,6 @@ interface RecoveredVariant {
     @Nullable
     VariantContext mate();
 
-    @Nullable
-    PurpleCopyNumber mateCopyNumber();
-
     @NotNull
     StructuralVariant variant();
 }
