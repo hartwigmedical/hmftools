@@ -19,7 +19,7 @@ public final class ReportableEvidenceItemFactory {
     }
 
     @NotNull
-    public static List<EvidenceItem> extractClinicalEvidence(@NotNull List<EvidenceItem> evidenceItems) {
+    public static List<EvidenceItem> extractNonTrials(@NotNull List<EvidenceItem> evidenceItems) {
         return evidenceItems.stream().filter(evidenceItem -> !evidenceItem.source().isTrialSource()).collect(Collectors.toList());
     }
 
