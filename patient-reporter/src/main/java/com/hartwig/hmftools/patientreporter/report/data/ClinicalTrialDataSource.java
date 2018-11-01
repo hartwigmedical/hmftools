@@ -25,6 +25,7 @@ public class ClinicalTrialDataSource {
     public static final FieldBuilder<?> CCMO_FIELD = field("ccmo", String.class);
     private static final FieldBuilder<?> REFERENCE_FIELD = field("reference", String.class);
     public static final FieldBuilder<?> CANCER_TYPE_FIELD = field("cancer type", String.class);
+    public static final FieldBuilder<?> IS_ONLABEL = field("is onlabel", String.class);
 
 
     private ClinicalTrialDataSource() {
@@ -32,7 +33,7 @@ public class ClinicalTrialDataSource {
 
     @NotNull
     public static FieldBuilder<?>[] clinicalTrialFields() {
-        return new FieldBuilder<?>[] { EVENT_FIELD, TRIAL_FIELD, SOURCE_FIELD, CCMO_FIELD, REFERENCE_FIELD, CANCER_TYPE_FIELD };
+        return new FieldBuilder<?>[] { EVENT_FIELD, TRIAL_FIELD, SOURCE_FIELD, CCMO_FIELD, REFERENCE_FIELD, CANCER_TYPE_FIELD, IS_ONLABEL };
     }
 
     @NotNull
@@ -42,7 +43,8 @@ public class ClinicalTrialDataSource {
                 SOURCE_FIELD.getName(),
                 CCMO_FIELD.getName(),
                 REFERENCE_FIELD.getName(),
-                CANCER_TYPE_FIELD.getName());
+                CANCER_TYPE_FIELD.getName(),
+                IS_ONLABEL.getName());
 
         for (ClinicalTrial trial : sort(trials)) {
             assert trial.source().isTrialSource();
@@ -52,7 +54,8 @@ public class ClinicalTrialDataSource {
                     trial.source().sourceName(),
                     CCMOId(trial.reference()),
                     trial.reference(),
-                    trial.cancerType());
+                    trial.cancerType(),
+                    trial.isOnLabel() ? "Yes" : "No");
         }
         return evidenceItemDataSource;
     }

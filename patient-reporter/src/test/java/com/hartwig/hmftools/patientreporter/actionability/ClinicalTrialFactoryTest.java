@@ -43,6 +43,7 @@ public class ClinicalTrialFactoryTest {
                 .source(ActionabilitySource.ICLUSION)
                 .level(EvidenceLevel.LEVEL_A)
                 .response(Strings.EMPTY)
-                .drugsType(Strings.EMPTY);
+                .drugsType(Strings.EMPTY)
+                .isOnLabel(true);
     }
 }

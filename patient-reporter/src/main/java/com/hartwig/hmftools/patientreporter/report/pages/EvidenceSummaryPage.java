@@ -48,13 +48,14 @@ public abstract class EvidenceSummaryPage {
         final ComponentBuilder<?, ?> table = report.clinicalEvidence().size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(EvidenceItemDataSource.evidenceItemFields())
                 .columns(col.column("Event", EvidenceItemDataSource.EVENT_FIELD).setFixedWidth(120),
-                        col.column("Drug", EvidenceItemDataSource.DRUG_FIELD).setFixedWidth(200),
+                        col.column("Drug", EvidenceItemDataSource.DRUG_FIELD).setFixedWidth(190),
                         col.column("Level", EvidenceItemDataSource.LEVEL_FIELD),
                         col.column("Response", EvidenceItemDataSource.RESPONSE_FIELD).setFixedWidth(50),
                         col.column("Source", EvidenceItemDataSource.SOURCE_FIELD)
                                 .setHyperLink(hyperLink(EvidenceItemDataSource.sourceHyperlink()))
                                 .setStyle(linkStyle()),
-                        col.column("Cancer type", EvidenceItemDataSource.CANCER_TYPE_FIELD).setFixedWidth(120))
+                        col.column("Cancer type", EvidenceItemDataSource.CANCER_TYPE_FIELD).setFixedWidth(120),
+                        col.column("On label", EvidenceItemDataSource.IS_ONLABEL))
                 .setDataSource(EvidenceItemDataSource.fromEvidenceItems(report.clinicalEvidence())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
@@ -73,7 +74,8 @@ public abstract class EvidenceSummaryPage {
                                 .setHyperLink(hyperLink(ClinicalTrialDataSource.sourceHyperlink()))
                                 .setStyle(linkStyle()),
                         col.column("CCMO", ClinicalTrialDataSource.CCMO_FIELD),
-                        col.column("Cancer type", ClinicalTrialDataSource.CANCER_TYPE_FIELD))
+                        col.column("Cancer type", ClinicalTrialDataSource.CANCER_TYPE_FIELD),
+                        col.column("On label", ClinicalTrialDataSource.IS_ONLABEL))
                 .setDataSource(ClinicalTrialDataSource.fromClinicalTrials(report.clinicalTrials())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
