@@ -164,11 +164,9 @@ public class ClusterAnalyser {
                 findChains(cluster);
             }
 
-            /*
             // any clusters which were merged to resolve a collection of them, but
             // which did not lead to any longer chains, are now de-merged
             demergeClusters(mergedClusters);
-            */
 
             for(SvCluster cluster : mergedClusters)
             {

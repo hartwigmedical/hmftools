@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_AR
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.isLocalOverlap;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_LOW_QUALITY;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_INT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_EXT_TI;
@@ -104,12 +105,8 @@ public class SvClusteringMethods {
     }
 
     public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
-    // public Map<String, Integer> getChrCopyNumberMap() { return mChrCopyNumberMap; }
     public int getNextClusterId() { return mNextClusterId++; }
     public void setSampleLohData(final Map<String, List<SvLOH>> data) { mSampleLohData = data; }
-
-    public long getDelDupCutoffLength() { return mDelDupCutoffLength; }
-
 
     public void clusterByBaseDistance(List<SvVarData> allVariants, List<SvCluster> clusters)
     {
@@ -216,6 +213,13 @@ public class SvClusteringMethods {
         // first apply replication rules since this can affect consistency
         for(SvCluster cluster : clusters)
         {
+            // check for sub-clonal / low-copy-number supported variants
+            if(cluster.getCount() == 1 && isLowQualityVariant(cluster.getSVs().get(0)))
+            {
+                cluster.setResolved(true, RESOLVED_LOW_QUALITY);
+                continue;
+            }
+
             applyCopyNumberReplication(sampleId, cluster);
         }
 
@@ -281,6 +285,13 @@ public class SvClusteringMethods {
                 cluster.addVariant(newVar);
             }
         }
+    }
+
+    public static double LOW_QUALITY_CN_CHANGE = 0.5;
+
+    public boolean isLowQualityVariant(final SvVarData var)
+    {
+        return var.copyNumberChange(true) < LOW_QUALITY_CN_CHANGE && var.copyNumberChange(false) < LOW_QUALITY_CN_CHANGE;
     }
 
     private void mergeOnLOHEvents(final String sampleId, List<SvCluster> clusters)

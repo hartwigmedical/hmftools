@@ -61,6 +61,7 @@ public class SvCluster
     // public static String RESOLVED_TYPE_RECIPROCAL_INV = "RecipInv";
 
     public static String RESOLVED_TYPE_NONE = "None";
+    public static String RESOLVED_LOW_QUALITY = "LowQual";
     public static String RESOLVED_TYPE_DEL_INT_TI = "DEL_Int_TI";
     public static String RESOLVED_TYPE_DEL_EXT_TI = "DEL_Ext_TI";
     public static String RESOLVED_TYPE_DUP_INT_TI = "DUP_Int_TI";
