@@ -3,9 +3,9 @@ package com.hartwig.hmftools.common.actionability.cnv;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.util.MultiDrugCurator;
 
 import org.jetbrains.annotations.NotNull;
@@ -19,9 +19,10 @@ public final class CopyNumberEvidenceAnalyzerFactory {
 
     @NotNull
     public static CopyNumberEvidenceAnalyzer loadFromFileCNVs(String fileCNVs) throws IOException {
-        final List<ActionableCopyNumber> CNVs = new ArrayList<>();
+        final List<ActionableCopyNumber> CNVs = Lists.newArrayList();
         final List<String> lineCNVs = Files.readAllLines(new File(fileCNVs).toPath());
 
+        // KODU: Skip header line
         for (String line : lineCNVs.subList(1, lineCNVs.size())) {
             CNVs.add(fromLineCNVs(line));
         }

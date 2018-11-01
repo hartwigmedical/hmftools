@@ -3,10 +3,10 @@ package com.hartwig.hmftools.common.actionability.cancertype;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -18,13 +18,13 @@ public class CancerTypeAnalyzer {
     @NotNull
     private final List<CancerTypeReading> cancerTypeDoids;
 
-    public CancerTypeAnalyzer(@NotNull final List<CancerTypeReading> cancerTypeDoids) {
+    public CancerTypeAnalyzer(@NotNull List<CancerTypeReading> cancerTypeDoids) {
         this.cancerTypeDoids = cancerTypeDoids;
     }
 
     @NotNull
-    public static CancerTypeAnalyzer loadFromFile(String fileCancerType) throws IOException {
-        final List<CancerTypeReading> cancerTypeWithDOID = new ArrayList<>();
+    public static CancerTypeAnalyzer loadFromFile(@NotNull String fileCancerType) throws IOException {
+        final List<CancerTypeReading> cancerTypeWithDOID = Lists.newArrayList();
         final List<String> lineCancerType = Files.readAllLines(new File(fileCancerType).toPath());
 
         for (int i = 1; i < lineCancerType.size(); i++) {

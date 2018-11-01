@@ -50,7 +50,7 @@ public final class FusionEvidenceAnalyzerFactory {
                 .gene(values[0])
                 .source(values[1])
                 .reference(values[2])
-                .drug(values[3])
+                .drug(MultiDrugCurator.reformat(values[3]))
                 .drugsType(values[4])
                 .cancerType(values[5])
                 .level(values[7])
