@@ -58,6 +58,8 @@ public class BachelorApplication {
     private static final String SAMPLE = "sample";
     private static final String LOG_DEBUG = "log_debug";
 
+    private static final String BACHELOR_DIR = "bachelor";
+
     private Map<String, Program> mProgramMap;
     private BufferedWriter mMainDataWriter;
     private BufferedWriter mBedFileWriter;
@@ -149,9 +151,6 @@ public class BachelorApplication {
         mOutputDir = cmd.getOptionValue(OUTPUT_DIR);
         mSampleId = cmd.getOptionValue(SAMPLE);
 
-        mIsBatchRun = cmd.hasOption(BATCH_DIRECTORY);
-        mIsSingleRun = cmd.hasOption(RUN_DIRECTORY);
-
         if(cmd.hasOption(BATCH_DIRECTORY))
         {
             mBatchDirectoy = cmd.getOptionValue(BATCH_DIRECTORY);
@@ -208,12 +207,13 @@ public class BachelorApplication {
                             .map(RunDirectory::new)
                             .collect(Collectors.toList());
 
-                    LOGGER.info("found {} batch directories", runDirectories.size());
+                    LOGGER.debug("found {} batch directories", runDirectories.size());
 
                     // add the filtered and passed SV entries for each file
                     for (final RunDirectory runDir : runDirectories)
                     {
-                        process(eligibility, runDir, runDir.getPatientID());
+                        Path bachDir = Paths.get(runDir.prefix() + "/" + BACHELOR_DIR);
+                        process(eligibility, new RunDirectory(bachDir), runDir.getPatientID());
                     }
                 }
                 catch (Exception e)
@@ -271,8 +271,8 @@ public class BachelorApplication {
         }
     }
 
-    private static Collection<EligibilityReport> processPurpleCNV(final String patient, final File cnv,
-            final BachelorEligibility eligibility) {
+    private static Collection<EligibilityReport> processPurpleCNV(final String patient, final File cnv, final BachelorEligibility eligibility)
+    {
         LOGGER.info("processing cnv: {}", cnv.getPath());
         try
         {
@@ -286,7 +286,8 @@ public class BachelorApplication {
         }
     }
 
-    private static Collection<EligibilityReport> processSV(final String patient, final File vcf, final BachelorEligibility eligibility) {
+    private static Collection<EligibilityReport> processSV(final String patient, final File vcf, final BachelorEligibility eligibility)
+    {
         LOGGER.info("processing sv: {}", vcf.getPath());
 
         final StructuralVariantFactory factory = new StructuralVariantFactory(true);

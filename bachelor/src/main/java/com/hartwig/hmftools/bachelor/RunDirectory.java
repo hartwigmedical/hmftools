@@ -11,34 +11,35 @@ import org.jetbrains.annotations.Nullable;
 
 class RunDirectory {
 
-    private final Path prefix;
-    private final File germline;
-    private final File somatic;
-    private final File copyNumber;
+    private final Path mSampleDir;
+    private final File mGermline;
+    private final File mSomatic;
+    private final File mCopyNumber;
     private final File structuralVariants;
 
     private String VCF_FILE_SUFFIX1 = "annotated.vcf";
     private String VCF_FILE_SUFFIX2 = "GoNLv5.vcf";
     private String VCF_FILE_SUFFIX3 = "annotated.vcf.gz";
 
-    RunDirectory(final Path runDirectory) {
-        prefix = runDirectory;
-        germline = findGermline();
-        somatic = findSomatic();
-        copyNumber = findCopyNumber();
+    RunDirectory(final Path runDirectory)
+    {
+        mSampleDir = runDirectory;
+        mGermline = findGermline();
+        mSomatic = findSomatic();
+        mCopyNumber = findCopyNumber();
         structuralVariants = findStructuralVariants();
     }
 
     public File germline() {
-        return germline;
+        return mGermline;
     }
 
     public File somatic() {
-        return somatic;
+        return mSomatic;
     }
 
     public File copyNumber() {
-        return copyNumber;
+        return mCopyNumber;
     }
 
     public File structuralVariants() {
@@ -46,7 +47,7 @@ class RunDirectory {
     }
 
     public Path prefix() {
-        return prefix;
+        return mSampleDir;
     }
 
     @Nullable
@@ -54,7 +55,7 @@ class RunDirectory {
     {
         try
         {
-            try (final Stream<Path> stream = Files.walk(prefix.toRealPath(), 1, FileVisitOption.FOLLOW_LINKS))
+            try (final Stream<Path> stream = Files.walk(mSampleDir.toRealPath(), 1, FileVisitOption.FOLLOW_LINKS))
             {
                 return stream.filter(p -> p.toString().endsWith(VCF_FILE_SUFFIX1)
                         || p.toString().endsWith(VCF_FILE_SUFFIX2)
@@ -75,7 +76,7 @@ class RunDirectory {
     {
         try
         {
-            try (final Stream<Path> stream = Files.walk(prefix, FileVisitOption.FOLLOW_LINKS))
+            try (final Stream<Path> stream = Files.walk(mSampleDir, FileVisitOption.FOLLOW_LINKS))
             {
                 return stream.filter(p -> p.toString().endsWith("post_processed_v2.2.vcf.gz"))
                         .map(Path::toFile)
@@ -94,7 +95,7 @@ class RunDirectory {
     {
         try
         {
-            try (final Stream<Path> stream = Files.walk(prefix, FileVisitOption.FOLLOW_LINKS))
+            try (final Stream<Path> stream = Files.walk(mSampleDir, FileVisitOption.FOLLOW_LINKS))
             {
                 return stream.filter(p -> p.toString().endsWith("purple.gene.cnv")).map(Path::toFile).findFirst().orElse(null);
             }
@@ -110,7 +111,7 @@ class RunDirectory {
     {
         try
         {
-            try (final Stream<Path> stream = Files.walk(prefix, FileVisitOption.FOLLOW_LINKS))
+            try (final Stream<Path> stream = Files.walk(mSampleDir, FileVisitOption.FOLLOW_LINKS))
             {
                 return stream.filter(p -> p.toString().endsWith("bpi.vcf")).map(Path::toFile).findFirst().orElse(null);
             }
@@ -123,7 +124,7 @@ class RunDirectory {
 
     String getPatientID()
     {
-        final String[] split = prefix.getFileName().toString().split("_");
+        final String[] split = mSampleDir.getFileName().toString().split("_");
         return split[split.length - 1];
     }
 }

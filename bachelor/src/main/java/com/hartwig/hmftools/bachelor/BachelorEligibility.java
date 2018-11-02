@@ -32,6 +32,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import nl.hartwigmedicalfoundation.bachelor.GeneIdentifier;
+import nl.hartwigmedicalfoundation.bachelor.HotspotLocation;
 import nl.hartwigmedicalfoundation.bachelor.OtherEffect;
 import nl.hartwigmedicalfoundation.bachelor.Program;
 import nl.hartwigmedicalfoundation.bachelor.ProgramPanel;
@@ -60,18 +61,24 @@ class BachelorEligibility {
     private final Set<HmfTranscriptRegion> variantLocationsToQuery = Sets.newHashSet();
 
     @NotNull
-    private static Map<String, HmfTranscriptRegion> makeGeneNameMap() {
+    private static Map<String, HmfTranscriptRegion> makeGeneNameMap()
+    {
         final Map<String, HmfTranscriptRegion> result = Maps.newHashMap();
-        for (final HmfTranscriptRegion region : ALL_GENES_BY_CHROMOSOME.values()) {
+
+        for (final HmfTranscriptRegion region : ALL_GENES_BY_CHROMOSOME.values())
+        {
             result.put(region.gene(), region);
         }
         return result;
     }
 
     @NotNull
-    private static Map<String, HmfTranscriptRegion> makeTranscriptMap() {
+    private static Map<String, HmfTranscriptRegion> makeTranscriptMap()
+    {
         final Map<String, HmfTranscriptRegion> result = Maps.newHashMap();
-        for (final HmfTranscriptRegion region : ALL_GENES_BY_CHROMOSOME.values()) {
+
+        for (final HmfTranscriptRegion region : ALL_GENES_BY_CHROMOSOME.values())
+        {
             result.put(region.transcriptID(), region);
         }
         return result;
@@ -81,47 +88,53 @@ class BachelorEligibility {
     }
 
     @NotNull
-    static BachelorEligibility fromMap(@NotNull Map<String, Program> input) {
+    static BachelorEligibility fromMap(@NotNull Map<String, Program> input)
+    {
         final BachelorEligibility result = new BachelorEligibility();
 
-        for (final Program program : input.values()) {
-
+        for (final Program program : input.values())
+        {
             final Multimap<String, String> geneToEnsemblMap = HashMultimap.create();
+
             program.getPanel()
                     .stream()
                     .map(ProgramPanel::getGene)
                     .flatMap(Collection::stream)
                     .forEach(g -> geneToEnsemblMap.put(g.getName(), g.getEnsembl()));
 
+
             // NOTE: copy number and SVs are untested/unverified for now, but leave in support for them
+            // NOTE: we are matching on transcript ID here but we only have canonical transcripts in our panel file
 
             // process copy number sections
             final List<Predicate<GeneCopyNumber>> cnvPredicates = Lists.newArrayList();
-            for (final ProgramPanel panel : program.getPanel()) {
+            final List<Predicate<HmfTranscriptRegion>> disruptionPredicates = Lists.newArrayList();
 
+            /*
+            for (final ProgramPanel panel : program.getPanel())
+            {
                 final List<GeneIdentifier> genes = panel.getGene();
 
                 if (panel.getEffect().contains(OtherEffect.HOMOZYGOUS_DELETION)) {
                     final Predicate<GeneCopyNumber> geneCopyNumberPredicate =
                             cnv -> genes.stream().anyMatch(g -> g.getEnsembl().equals(cnv.transcriptID()));
-                    // TODO: we are matching on transcript ID here but we only have canonical transcripts in our panel file
                     cnvPredicates.add(geneCopyNumberPredicate);
                 }
             }
 
             // process structural variant disruptions
-            final List<Predicate<HmfTranscriptRegion>> disruptionPredicates = Lists.newArrayList();
-            for (final ProgramPanel panel : program.getPanel()) {
-
+            for (final ProgramPanel panel : program.getPanel())
+            {
                 final List<GeneIdentifier> genes = panel.getGene();
 
-                if (panel.getEffect().contains(OtherEffect.GENE_DISRUPTION)) {
+                if (panel.getEffect().contains(OtherEffect.GENE_DISRUPTION))
+                {
                     final Predicate<HmfTranscriptRegion> disruptionPredicate =
                             sv -> genes.stream().anyMatch(g -> g.getEnsembl().equals(sv.transcriptID()));
-                    // TODO: we are matching on transcript ID here but we only have canonical transcripts in our panel file
                     disruptionPredicates.add(disruptionPredicate);
                 }
             }
+            */
 
             // process variants from vcf
             final List<Predicate<VariantModel>> panelPredicates = Lists.newArrayList();
@@ -129,9 +142,11 @@ class BachelorEligibility {
             List<String> requiredEffects = Lists.newArrayList();
             List<String> panelTranscripts = Lists.newArrayList();
 
-            for (final ProgramPanel panel : program.getPanel()) {
-
+            for (final ProgramPanel panel : program.getPanel())
+            {
                 final List<GeneIdentifier> genes = panel.getGene();
+
+                final List<HotspotLocation> hotspots = panel.getHotspot();
 
                 // take up a collection of the effects to search for
                 requiredEffects = panel.getSnpEffect().stream().map(SnpEffect::value).collect(Collectors.toList());
@@ -139,31 +154,62 @@ class BachelorEligibility {
 
                 final List<String> effects = requiredEffects;
 
+                /*
                 final Predicate<VariantModel> panelPredicate = v -> genes.stream()
                         .anyMatch(p -> v.sampleAnnotations()
                                 .stream()
                                 .anyMatch(a -> a.transcript().equals(p.getEnsembl()) && effects.stream()
                                         .anyMatch(x -> a.effects().contains(x))));
+                */
 
-                panelPredicates.add(panelPredicate);
+                final Predicate<VariantModel> effectsPredicate = v -> effects.stream()
+                        .anyMatch(p -> v.sampleAnnotations()
+                                .stream()
+                                .anyMatch(a -> a.effects().contains(p)));
+
+                Predicate<VariantModel> transcriptPredicate = v -> genes.stream()
+                        .anyMatch(p -> v.sampleAnnotations()
+                                .stream()
+                                .anyMatch(a -> a.transcript().equals(p.getEnsembl())));
+
+                transcriptPredicate = transcriptPredicate.and(effectsPredicate);
+
+                Predicate<VariantModel> hotspotPredicate = v -> hotspots.stream()
+                        .anyMatch(p -> v.context().getContig().equals(p.getChromosome())
+                                && v.context().getStart() == p.getPosition().intValue()
+                                && v.context().getReference().getBaseString().equals(p.getRef())
+                                && v.context().getAlleles().size() >= 2 && v.context().getAlleles().get(1).getBaseString().equals(p.getAlt()));
+
+                hotspotPredicate = hotspotPredicate.and(effectsPredicate);
+
+                final Predicate<VariantModel> combinedPredicate = transcriptPredicate.or(hotspotPredicate);
+
+                panelPredicates.add(combinedPredicate);
+                // panelPredicates.add(panelPredicate);
 
                 // update query targets
-                for (final GeneIdentifier g : genes) {
+                for (final GeneIdentifier g : genes)
+                {
                     final HmfTranscriptRegion region = ALL_TRANSCRIPT_IDS.get(g.getEnsembl());
-                    if (region == null) {
-                        final HmfTranscriptRegion namedRegion = ALL_GENES.get(g.getName());
-                        if (namedRegion == null) {
 
+                    if (region == null)
+                    {
+                        final HmfTranscriptRegion namedRegion = ALL_GENES.get(g.getName());
+
+                        if (namedRegion == null)
+                        {
                             LOGGER.warn("Program {} gene {} non-canonical transcript {} couldn't find region, transcript will be skipped",
-                                    program.getName(),
-                                    g.getName(),
-                                    g.getEnsembl());
+                                    program.getName(), g.getName(), g.getEnsembl());
 
                             // just skip this gene for now
-                        } else {
+                        }
+                        else
+                        {
                             result.variantLocationsToQuery.add(namedRegion);
                         }
-                    } else {
+                    }
+                    else
+                    {
                         result.variantLocationsToQuery.add(region);
                     }
                 }
@@ -175,18 +221,11 @@ class BachelorEligibility {
             final Predicate<VariantModel> inWhitelist = new WhitelistPredicate(geneToEnsemblMap, program.getWhitelist());
             final Predicate<VariantModel> snvPredicate = v -> inPanel.test(v) ? !inBlacklist.test(v) : inWhitelist.test(v);
 
-            final Predicate<GeneCopyNumber> copyNumberPredicate =
-                    cnv -> cnvPredicates.stream().anyMatch(p -> p.test(cnv)) && cnv.minCopyNumber() < MAX_COPY_NUMBER_FOR_LOSS;
-            final Predicate<HmfTranscriptRegion> disruptionPredicate =
-                    disruption -> disruptionPredicates.stream().anyMatch(p -> p.test(disruption));
+            final Predicate<GeneCopyNumber> copyNumberPredicate = cnv -> cnvPredicates.stream().anyMatch(p -> p.test(cnv)) && cnv.minCopyNumber() < MAX_COPY_NUMBER_FOR_LOSS;
 
-            BachelorProgram bachelorProgram = new BachelorProgram(program.getName(),
-                    snvPredicate,
-                    inWhitelist,
-                    copyNumberPredicate,
-                    disruptionPredicate,
-                    requiredEffects,
-                    panelTranscripts);
+            final Predicate<HmfTranscriptRegion> disruptionPredicate = disruption -> disruptionPredicates.stream().anyMatch(p -> p.test(disruption));
+
+            BachelorProgram bachelorProgram = new BachelorProgram(program.getName(), snvPredicate, inWhitelist, copyNumberPredicate, disruptionPredicate, requiredEffects, panelTranscripts);
 
             result.programs.add(bachelorProgram);
         }
@@ -195,16 +234,16 @@ class BachelorEligibility {
     }
 
     @NotNull
-    private Collection<EligibilityReport> processVariant(final VariantContext variant, final String patient, final String sample,
-            final EligibilityReport.ReportType type) {
-        if (variant.isFiltered()) {
+    private Collection<EligibilityReport> processVariant(final VariantContext variant, final String patient, final String sample, final EligibilityReport.ReportType type)
+    {
+        if (variant.isFiltered())
             return Collections.emptyList();
-        }
 
         // we will skip when an ALT is not present in the sample
         final Genotype genotype = variant.getGenotype(sample);
 
-        if (genotype == null || !(genotype.isHomVar() || genotype.isHet())) {
+        if (genotype == null || !(genotype.isHomVar() || genotype.isHet()))
+        {
             return Collections.emptyList();
         }
 
@@ -219,7 +258,8 @@ class BachelorEligibility {
 
         List<EligibilityReport> reportList = Lists.newArrayList();
 
-        if (matchingPrograms.size() > 0) {
+        if (matchingPrograms.size() > 0)
+        {
             // found a match, not collect up the details and write them to the output file
             LOGGER.debug("program match found, first entry({}) ", matchingPrograms.get(0));
         }
@@ -227,45 +267,52 @@ class BachelorEligibility {
         // search the list of annotations for the correct allele and transcript ID to write to the result file
         // this effectively reapplies the predicate conditions, so a refactor would be to drop the predicates and
         // just apply the search criteria once, and create a report for any full match
-        for (BachelorProgram program : programs) {
-
-            if (!program.vcfProcessor().test(sampleVariant)) {
+        for (BachelorProgram program : programs)
+        {
+            if (!program.vcfProcessor().test(sampleVariant))
                 continue;
-            }
 
             String programName = program.name();
 
             // found a match, not collect up the details and write them to the output file
-            LOGGER.debug("match found: program({}) ", programName);
+            LOGGER.debug("match found: program({}): var({}:{}) ref({}) alt({})",
+                    programName, sampleVariant.context().getContig(), sampleVariant.context().getStart(),
+                    sampleVariant.context().getReference().getBaseString(), sampleVariant.context().getAlleles().get(1).getBaseString());
 
-            for (int index = 0; index < sampleVariant.sampleAnnotations().size(); ++index) {
-
+            for (int index = 0; index < sampleVariant.sampleAnnotations().size(); ++index)
+            {
                 SnpEffAnnotation snpEff = sampleVariant.sampleAnnotations().get(index);
 
                 if(!snpEff.isTranscriptFeature())
                     continue;
 
                 // re-check that this variant is one that is relevant
-                if (!program.panelTranscripts().contains(snpEff.transcript())) {
+                /*if (!program.panelTranscripts().contains(snpEff.transcript()))
+                {
                     // LOGGER.debug("uninteresting transcript({})", snpEff.transcript());
                     continue;
-                }
+                }*/
 
                 boolean found = false;
-                for (String requiredEffect : program.requiredEffects()) {
-                    if (snpEff.effects().contains(requiredEffect)) {
+                for (String requiredEffect : program.requiredEffects())
+                {
+                    if (snpEff.effects().contains(requiredEffect))
+                    {
                         found = true;
                         break;
                     }
                 }
 
-                if (!found && !program.whitelist().test(sampleVariant)) {
-
-                    if (program.whitelist().test(sampleVariant)) {
+                if (!found && !program.whitelist().test(sampleVariant))
+                {
+                    if (program.whitelist().test(sampleVariant))
+                    {
                         // allow this whitelist through
-                        LOGGER.debug("unlisted effecta({}) but whitelisted variant", snpEff.effects());
-                    } else {
-                        LOGGER.debug("uninteresting effects({})", snpEff.effects());
+                        LOGGER.debug("unlisted effect({}) but whitelisted variant", snpEff.effects());
+                    }
+                    else
+                    {
+                        // LOGGER.debug("uninteresting effects({})", snpEff.effects());
                         continue;
                     }
                 }
@@ -310,12 +357,12 @@ class BachelorEligibility {
     }
 
     @NotNull
-    Collection<EligibilityReport> processVCF(final String patient, final String sample, final EligibilityReport.ReportType type,
-            final VCFFileReader reader) {
-
+    Collection<EligibilityReport> processVCF(final String patient, final String sample, final EligibilityReport.ReportType type, final VCFFileReader reader)
+    {
         final List<EligibilityReport> results = Lists.newArrayList();
 
-        for (final HmfTranscriptRegion region : variantLocationsToQuery) {
+        for (final HmfTranscriptRegion region : variantLocationsToQuery)
+        {
 
             // LOGGER.debug("chromosome({} start={} end={})", region.chromosome(), (int) region.geneStart(), (int) region.geneEnd());
 

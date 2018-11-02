@@ -6,7 +6,8 @@ import java.util.function.Predicate;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 
-public class BachelorProgram {
+public class BachelorProgram
+{
     private final String mName;
     private final Predicate<VariantModel> mVcfProcessor;
     private final Predicate<VariantModel> mWhiteList;
@@ -20,8 +21,8 @@ public class BachelorProgram {
 
     BachelorProgram(final String name, final Predicate<VariantModel> vcfProcessor, Predicate<VariantModel> whitelist,
             final Predicate<GeneCopyNumber> copyNumberProcessor, final Predicate<HmfTranscriptRegion> disruptionProcessor,
-            final List<String> requiredEffects, final List<String> panelTranscripts) {
-
+            final List<String> requiredEffects, final List<String> panelTranscripts)
+    {
         mName = name;
         mVcfProcessor = vcfProcessor;
         mWhiteList = whitelist;
@@ -38,19 +39,11 @@ public class BachelorProgram {
     public Predicate<VariantModel> vcfProcessor() { return mVcfProcessor; }
     public Predicate<VariantModel> whitelist() { return mWhiteList; }
 
-    public Predicate<GeneCopyNumber> copyNumberProcessor() {
-        return mCopyNumberProcessor;
-    }
+    public Predicate<GeneCopyNumber> copyNumberProcessor() { return mCopyNumberProcessor; }
 
-    public Predicate<HmfTranscriptRegion> disruptionProcessor() {
-        return mDisruptionProcessor;
-    }
+    public Predicate<HmfTranscriptRegion> disruptionProcessor() { return mDisruptionProcessor; }
 
-    public List<String> requiredEffects() {
-        return RequiredEffects;
-    }
+    public List<String> requiredEffects() { return RequiredEffects; }
 
-    public List<String> panelTranscripts() {
-        return PanelTranscripts;
-    }
+    public List<String> panelTranscripts() { return PanelTranscripts; }
 }

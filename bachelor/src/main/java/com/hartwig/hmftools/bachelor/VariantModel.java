@@ -20,7 +20,8 @@ public class VariantModel {
     private final List<SnpEffAnnotation> sampleAnnotations;
     private final List<String> rawAnnotations;
 
-    public VariantModel(@NotNull String sample, @NotNull VariantContext context) {
+    public VariantModel(@NotNull String sample, @NotNull VariantContext context)
+    {
         this.context = context;
         dbSNP = Lists.newArrayList(context.getID().split(",")).stream().filter(s -> s.startsWith("rs")).collect(Collectors.toSet());
         final List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(context);
@@ -29,6 +30,7 @@ public class VariantModel {
 
         final List<String> alleleList =
                 context.getGenotype(sample).getAlleles().stream().map(Allele::getBaseString).collect(Collectors.toList());
+
         sampleAnnotations = annotations.stream()
                 .filter(annotation -> alleleList.stream().anyMatch(allele -> allele.equals(annotation.allele())))
                 .collect(Collectors.toList());

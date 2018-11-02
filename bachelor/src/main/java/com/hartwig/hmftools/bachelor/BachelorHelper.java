@@ -25,7 +25,8 @@ class BachelorHelper {
     }
 
     @NotNull
-    public static Map<String, Program> loadXML(final Path path) throws IOException, SAXException {
+    public static Map<String, Program> loadXML(final Path path) throws IOException, SAXException
+    {
         final BachelorSchema schema = BachelorSchema.make();
 
         final List<Program> programs = Files.walk(path)
@@ -35,11 +36,16 @@ class BachelorHelper {
                 .collect(Collectors.toList());
 
         final Map<String, Program> result = Maps.newHashMap();
-        for (final Program p : programs) {
-            if (result.containsKey(p.getName())) {
+
+        for (final Program p : programs)
+        {
+            if (result.containsKey(p.getName()))
+            {
                 LOGGER.error("duplicate programs detected: {}", p.getName());
                 System.exit(1);
-            } else {
+            }
+            else
+                {
                 result.put(p.getName(), p);
             }
         }

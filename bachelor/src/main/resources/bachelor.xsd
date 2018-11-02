@@ -44,11 +44,19 @@
         </xsd:complexContent>
     </xsd:complexType>
 
+    <xsd:complexType name="hotspotLocation">
+        <xsd:attribute name="chromosome" type="xsd:string" use="required"/>
+        <xsd:attribute name="position" type="xsd:positiveInteger" use="required"/>
+        <xsd:attribute name="ref" type="xsd:string" use="required"/>
+        <xsd:attribute name="alt" type="xsd:string" use="required"/>
+    </xsd:complexType>
+
     <xsd:complexType name="ProgramPanel">
         <xsd:sequence>
             <xsd:choice>
                 <xsd:element name="Gene" type="geneIdentifier" maxOccurs="unbounded"/>
             </xsd:choice>
+            <xsd:element name="Hotspot" type="hotspotLocation" maxOccurs="unbounded"/>
             <xsd:element name="SnpEffect" type="snpEffect" minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="Effect" type="otherEffect" minOccurs="0" maxOccurs="unbounded"/>
         </xsd:sequence>
