@@ -82,11 +82,11 @@ public interface RefGenomeData {
             refGenome = automaticallyDetectedRefGenome.get();
             LOGGER.info("Detected ref genome: {}", refGenome);
             if (suppliedGenome.isPresent() && !suppliedGenome.get().equals(automaticallyDetectedRefGenome.get())) {
-                throw new ParseException("Parameter -" + REF_GENOME + " " + suppliedGenome.get() + " does not match detected ref genome.");
+                throw new ParseException("Parameter " + REF_GENOME + " " + suppliedGenome.get() + " does not match detected ref genome.");
             }
         } else if (suppliedGenome.isPresent()) {
             refGenome = suppliedGenome.get();
-            LOGGER.info("Using -{} parameter: {}", REF_GENOME, refGenome);
+            LOGGER.info("Using {} parameter: {}", REF_GENOME, refGenome);
         } else {
             throw new ParseException("Unable to detect ref genome. Please specify " + cmd.getOptionValue(REF_GENOME)
                     + " parameter as one of \"hg19\" or \"hg38\". ");
