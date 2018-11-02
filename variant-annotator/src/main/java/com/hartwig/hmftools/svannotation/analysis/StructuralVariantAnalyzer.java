@@ -1,31 +1,23 @@
 package com.hartwig.hmftools.svannotation.analysis;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableGeneDisruption;
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
 
-import org.apache.commons.lang3.tuple.Pair;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class StructuralVariantAnalyzer
 {
@@ -48,7 +40,6 @@ public class StructuralVariantAnalyzer
     }
 
     @NotNull
-    @Deprecated
     public StructuralVariantAnalysis run(final List<EnrichedStructuralVariant> variants)
     {
         LOGGER.debug("annotating variants with gene and transcript info");
@@ -69,6 +60,16 @@ public class StructuralVariantAnalyzer
     {
         LOGGER.debug("annotating {} variants with gene and transcript info", variants.size());
         return mGeneDataAnnotator.annotateVariants(variants);
+    }
+
+    public final List<GeneFusion> findFusions(final List<StructuralVariantAnnotation> annotations)
+    {
+        return mFusionAnalyser.findFusions(annotations);
+    }
+
+    public final List<GeneDisruption> findDisruptions(final List<StructuralVariantAnnotation> annotations)
+    {
+        return mDisruptionAnalyser.findDisruptions(annotations);
     }
 
     // common methods
