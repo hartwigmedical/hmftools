@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.common.actionability.cnv;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeReading;
@@ -10,10 +14,11 @@ import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.junit.Ignore;
+import org.junit.Test;
 
 public class ActionabilityCNVsAnalyzerTest {
 
-    @Ignore
+    @Test
     public void ActionabilityWorksCNVs() {
         ActionableCopyNumber actionanilityCNV = ImmutableActionableCopyNumber.builder()
                 .gene("ERBB2")
@@ -23,7 +28,7 @@ public class ActionabilityCNVsAnalyzerTest {
                 .drug("Trastuzumab")
                 .drugsType("EGFR inhibitor")
                 .cancerType("Breast Cancer")
-                .source("1")
+                .source("civic")
                 .level("A")
                 .response("Responsive")
                 .build();
@@ -64,8 +69,6 @@ public class ActionabilityCNVsAnalyzerTest {
                 .missenseNonBiallelicCount(0)
                 .build();
 
-        //   assertEquals(true, cnvAnalyzer.evidenceForCopyNumber(geneCopyNumber, cancerType, "1612", "Breast"));
-        //   assertEquals(false, cnvAnalyzer.evidenceForCopyNumber(geneCopyNumber, cancerType, "1612", "Skin"));
-
+           assertFalse(cnvAnalyzer.evidenceForCopyNumber(geneCopyNumber, "1612", cancerType).isEmpty());
     }
 }

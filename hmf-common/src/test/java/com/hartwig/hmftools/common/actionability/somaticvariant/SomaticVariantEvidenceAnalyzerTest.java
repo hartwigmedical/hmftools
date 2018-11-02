@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.common.actionability.somaticvariant;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeReading;
@@ -75,9 +79,7 @@ public class SomaticVariantEvidenceAnalyzerTest {
                 .mappability(0D)
                 .build();
 
-        //   assertEquals(false, analyzer.actionableVariants(variant, cancerType, "4159", "Skin"));
-        //   assertEquals(false, analyzer.actionableVariants(variant, cancerType, "4159", "Breast"));
-        //     assertEquals(true, analyzer.actionableRange(variant, cancerType, "4159", "Skin"));
-        //    assertEquals(false, analyzer.actionableRange(variant, cancerType, "4159", "Kidney"));
+        assertTrue(analyzer.evidenceForSomaticVariant(variant, "4159", cancerType).isEmpty());
+
     }
 }
