@@ -22,9 +22,7 @@ class Civic(variantsLocation: String, evidenceLocation: String, diseaseOntology:
 
     // KODU: This is a TP53 B-level evidence item that is dubious, so is filtered out.
     // KODU: See also https://civicdb.org/events/genes/45/summary/variants/222/summary/evidence/1481/summary#evidence
-    // LISC: This is a EGFR B level evidence item that is on basis of general mutation, so it is filtered out.
-    // LISC: See also https://civicdb.org/events/genes/19/summary/variants/442/summary/evidence/5923/summary#evidence
-    private val blacklistedEvidenceIds = setOf("1481", "442")
+    private val blacklistedEvidenceIds = setOf("1481")
 
     override val source = "civic"
     override val knownVariants by lazy { recordAnalyzer.knownVariants(listOf(this)).distinct() }
