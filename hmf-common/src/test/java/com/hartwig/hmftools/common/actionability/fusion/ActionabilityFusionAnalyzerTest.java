@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.actionability.fusion;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
@@ -19,7 +18,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ActionabilityFusionAnalyzerTest {
@@ -71,7 +69,6 @@ public class ActionabilityFusionAnalyzerTest {
                 createFusion("TMPRSS2", "ENST00000398585", 4, 5, "PNPLA7", "ENST00000406427", 2, 3, KnownFusionsModel.CIVIC, 0.4);
 
         assertTrue(analyzer.evidenceForFusion(fusion1, "4159", cancerType).isEmpty());
-
     }
 
     @NotNull
@@ -114,7 +111,4 @@ public class ActionabilityFusionAnalyzerTest {
                 .qualityScore(0)
                 .recovered(false);
     }
-
-
-
 }
