@@ -1,69 +1,69 @@
-cancerType,doids,detailedName
-Acute Lymphoid Leukemia,,
-All Solid Tumors,,
-All Tumors,162,cancer
-Anaplastic oligodendroglioma,,
-Any cancer type,162,cancer
-B cell lymphoma,707,B-cell lymphoma
-Billiary tract,4607,biliary tract cancer
-Bladder,11054,urinary bladder cancer
-Cervix,4362,cervical cancer
-Cervix squamous cell,,
-CNS Cancer,3620,central nervous system cancer
-Dedifferentiated Liposarcoma,3382,liposarcoma
-Dermatofibrosarcoma,,
-Desmoid Fibromatosis,,
-Embryonal Tumor,,
-Endometrial Hyperplasia,,
-Endometrium,1380,endometrial cancer
-Eosinophilic chronic leukemia,,
-Epithelioid Hemangioendothelioma,,
-Erdheim-Chester histiocytosis,,
-Esophagogastric Cancer,5041,esophageal cancer
-Female germ cell tumor,,
-Gastrointestinal stromal,9253,gastrointestinal stromal tumor
-Giant cell astrocytoma,3069,astrocytoma
-Glioblastoma,,
-Glioma,,
-Hairy-Cell leukemia,285,hairy cell leukemia
-Head an neck,11934,head and neck cancer
-Head an neck squamous,5520,head and neck squamous cell carcinoma
-Hematologic malignancies,,
-Hepatic carcinoma,686,liver carcinoma
-Hepatocellular Mixed Fibrolamellar Carcinoma,0080182,mixed fibrolamellar hepatocellular carcinoma
-Histiocytic Disorder,,
-Hyper eosinophilic advanced snydrome,,
-Inflammatory myofibroblastic,0050905,inflammatory myofibroblastic tumor
-Lagerhans cell histiocytosis,,
-Low-Grade Serous Ovarian Cancer,,
-Lung,1324,lung cancer
-Lung squamous cell,3907,lung squamous cell carcinoma
-Male germ cell tumor,,
-Malignant astrocytoma,,
-Malignant peripheral nerve sheat tumor,,
-Malignant rhabdoid tumor,,
-Megakaryoblastic leukemia,,
-Mesothelioma,1790,malignant mesothelioma
-Myelodisplasic proliferative syndrome,,
-Myelodisplasic syndrome,,
-Myelodysplasia,,
-Neuroendocrine,169,neuroendocrine tumor
-Non-small cell lung,3908,non-small cell lung carcinoma
-Ovary,2394,ovarian cancer
-Pancreas,1793,pancreatic cancer
-Pediatric glioma,,
-Pericytoma,,
-PTEN Harmatoma Tumor Syndrome,,
-Renal,263,kidney cancer
-Salivary glands,8850,salivary gland cancer
-"Skin Cancer, Non-Melanoma",,
-Soft Tissue Sarcoma,,
-Solid Tumor,,
-Solid tumors,,
-Stomach,10534,stomach cancer
-Thymic,3277,thymus cancer
-Thyroid,1781,thyroid cancer
-Urinary tract carcinoma,,
-Waldenström macroglobulinemia,,
-Waldenström's Macroglobulinemia,,
-Well-Differentiated Liposarcoma,3382,liposarcoma
+cancerType,doids
+Acute Lymphoid Leukemia,
+All Solid Tumors,
+All Tumors,162
+Anaplastic oligodendroglioma,
+Any cancer type,162
+B cell lymphoma,707
+Billiary tract,4607
+Bladder,11054
+Cervix,4362
+Cervix squamous cell,
+CNS Cancer,3620
+Dedifferentiated Liposarcoma,3382
+Dermatofibrosarcoma,
+Desmoid Fibromatosis,
+Embryonal Tumor,
+Endometrial Hyperplasia,
+Endometrium,1380
+Eosinophilic chronic leukemia,
+Epithelioid Hemangioendothelioma,
+Erdheim-Chester histiocytosis,
+Esophagogastric Cancer,
+Female germ cell tumor,
+Gastrointestinal stromal,9253
+Giant cell astrocytoma,3069
+Glioblastoma,
+Glioma,
+Hairy-Cell leukemia,285
+Head an neck,11934
+Head an neck squamous,5520
+Hematologic malignancies,
+Hepatic carcinoma,686
+Hepatocellular Mixed Fibrolamellar Carcinoma,0080182
+Histiocytic Disorder,
+Hyper eosinophilic advanced snydrome,
+Inflammatory myofibroblastic,0050905
+Lagerhans cell histiocytosis,
+Low-Grade Serous Ovarian Cancer,
+Lung,1324
+Lung squamous cell,3907
+Male germ cell tumor,
+Malignant astrocytoma,
+Malignant peripheral nerve sheat tumor,
+Malignant rhabdoid tumor,
+Megakaryoblastic leukemia,
+Mesothelioma,1790
+Myelodisplasic proliferative syndrome,
+Myelodisplasic syndrome,
+Myelodysplasia,
+Neuroendocrine,169
+Non-small cell lung,3908
+Ovary,2394
+Pancreas,1793
+Pediatric glioma,
+Pericytoma,
+PTEN Harmatoma Tumor Syndrome,
+Renal,263
+Salivary glands,8850
+"Skin Cancer, Non-Melanoma",
+Soft Tissue Sarcoma,
+Solid Tumor,
+Solid tumors,
+Stomach,10534
+Thymic,3277
+Thyroid,1781
+Urinary tract carcinoma,
+Waldenström macroglobulinemia,
+Waldenström's Macroglobulinemia,
+Well-Differentiated Liposarcoma,3382
