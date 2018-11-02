@@ -15,8 +15,13 @@ public final class CanonicalTranscriptFactory {
     }
 
     @NotNull
-    public static List<CanonicalTranscript> create() {
-        return create(HmfGenePanelSupplier.allGeneList());
+    public static List<CanonicalTranscript> create37() {
+        return create(HmfGenePanelSupplier.allGeneList37());
+    }
+
+    @NotNull
+    public static List<CanonicalTranscript> create38() {
+        return create(HmfGenePanelSupplier.allGeneList38());
     }
 
     @NotNull

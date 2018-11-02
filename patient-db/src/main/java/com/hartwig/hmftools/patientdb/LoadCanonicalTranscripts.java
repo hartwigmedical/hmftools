@@ -29,11 +29,9 @@ public class LoadCanonicalTranscripts {
         final CommandLine cmd = createCommandLine(args, options);
         final DatabaseAccess dbAccess = databaseAccess(cmd);
 
-        LOGGER.info("Reading gene panel");
-        final List<CanonicalTranscript> transcripts = CanonicalTranscriptFactory.create();
-
         LOGGER.info("Persisting transcripts to database");
-        dbAccess.writeCanonicalTranscripts(transcripts);
+        dbAccess.writeCanonicalTranscripts("GRCh37", CanonicalTranscriptFactory.create37());
+        dbAccess.writeCanonicalTranscripts("GRCh38", CanonicalTranscriptFactory.create38());
 
         LOGGER.info("Complete");
     }

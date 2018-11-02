@@ -250,7 +250,7 @@ public class HmfTranscriptRegionTest {
 
     @Test
     public void worksForRealBRAFCodon600() {
-        HmfTranscriptRegion braf = HmfGenePanelSupplier.allGenesMap().get("BRAF");
+        HmfTranscriptRegion braf = HmfGenePanelSupplier.allGenesMap37().get("BRAF");
 
         List<GenomeRegion> codon600 = braf.codonByIndex(600);
         assertNotNull(codon600);

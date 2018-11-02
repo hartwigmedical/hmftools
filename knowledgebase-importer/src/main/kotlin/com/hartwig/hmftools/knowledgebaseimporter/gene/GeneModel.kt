@@ -7,7 +7,7 @@ import org.apache.logging.log4j.LogManager
 
 class GeneModel() {
     companion object {
-        private val hmfGenePanel by lazy { HmfGenePanelSupplier.allGenesMap() }
+        private val hmfGenePanel by lazy { HmfGenePanelSupplier.allGenesMap37() }
         private val logger = LogManager.getLogger("GeneModel")
     }
 

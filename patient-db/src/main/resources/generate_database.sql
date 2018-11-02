@@ -555,6 +555,7 @@ DROP TABLE IF EXISTS canonicalTranscript;
 CREATE TABLE canonicalTranscript
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
+    assembly varchar(255) NOT NULL,
     gene varchar(255) NOT NULL,
     geneId varchar(255) NOT NULL,
     chromosomeBand varchar(255) NOT NULL,

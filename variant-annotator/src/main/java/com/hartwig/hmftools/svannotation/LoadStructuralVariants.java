@@ -211,7 +211,7 @@ public class LoadStructuralVariants {
     @NotNull
     private static Set<String> tsgDriverGeneIDs() {
         Set<String> tsgDriverGeneIDs = Sets.newHashSet();
-        Map<String, HmfTranscriptRegion> allGenes = HmfGenePanelSupplier.allGenesMap();
+        Map<String, HmfTranscriptRegion> allGenes = HmfGenePanelSupplier.allGenesMap37();
 
         for (String gene : DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet()) {
             tsgDriverGeneIDs.add(allGenes.get(gene).geneID());

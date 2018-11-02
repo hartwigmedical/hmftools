@@ -38,5 +38,4 @@ public enum Gender {
 
         return MALE;
     }
-
 }

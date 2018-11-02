@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CANONICALTRANSCRIPT;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Copynumber.COPYNUMBER;
 
 import java.sql.Timestamp;
 import java.util.Date;
@@ -13,6 +14,7 @@ import com.hartwig.hmftools.common.region.CanonicalTranscript;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep19;
+import org.jooq.InsertValuesStep20;
 
 class CanonicalTranscriptDAO {
 
@@ -23,12 +25,13 @@ class CanonicalTranscriptDAO {
         this.context = context;
     }
 
-    void write(@NotNull List<CanonicalTranscript> transcripts) {
+    void write(@NotNull final String assembly, @NotNull final List<CanonicalTranscript> transcripts) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
-        context.delete(CANONICALTRANSCRIPT).execute();
+        context.delete(CANONICALTRANSCRIPT).where(CANONICALTRANSCRIPT.ASSEMBLY.eq(assembly)).execute();
 
         for (List<CanonicalTranscript> split : Iterables.partition(transcripts, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep19 inserter = context.insertInto(CANONICALTRANSCRIPT,
+            InsertValuesStep20 inserter = context.insertInto(CANONICALTRANSCRIPT,
+                    CANONICALTRANSCRIPT.ASSEMBLY,
                     CANONICALTRANSCRIPT.GENE,
                     CANONICALTRANSCRIPT.GENEID,
                     CANONICALTRANSCRIPT.CHROMOSOMEBAND,
@@ -48,15 +51,16 @@ class CanonicalTranscriptDAO {
                     CANONICALTRANSCRIPT.CODINGBASES,
                     CANONICALTRANSCRIPT.STRAND,
                     CANONICALTRANSCRIPT.MODIFIED);
-            split.forEach(x -> addRecord(timestamp, inserter, x));
+            split.forEach(x -> addRecord(timestamp, inserter, assembly, x));
             inserter.execute();
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep19 inserter,
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep20 inserter, @NotNull final String assembly,
             @NotNull CanonicalTranscript transcript) {
         //noinspection unchecked
-        inserter.values(transcript.gene(),
+        inserter.values(assembly,
+                transcript.gene(),
                 transcript.geneID(),
                 transcript.chromosomeBand(),
                 transcript.chromosome(),

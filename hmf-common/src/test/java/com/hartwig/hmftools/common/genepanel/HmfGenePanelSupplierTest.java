@@ -17,7 +17,7 @@ public class HmfGenePanelSupplierTest {
 
     @Test
     public void allRegionsAreSortedCorrectly() {
-        final SortedSetMultimap<String, HmfTranscriptRegion> geneRegions = HmfGenePanelSupplier.allGenesPerChromosomeMap();
+        final SortedSetMultimap<String, HmfTranscriptRegion> geneRegions = HmfGenePanelSupplier.allGenesPerChromosomeMap37();
         for (final String chromosome : geneRegions.keySet()) {
             long start = 0;
             for (final HmfTranscriptRegion hmfTranscriptRegion : geneRegions.get(chromosome)) {
@@ -29,15 +29,15 @@ public class HmfGenePanelSupplierTest {
 
     @Test
     public void allGenesAreUnique() {
-        List<HmfTranscriptRegion> regionList = HmfGenePanelSupplier.allGeneList();
-        Map<String, HmfTranscriptRegion> regionsByGene = HmfGenePanelSupplier.allGenesMap();
+        List<HmfTranscriptRegion> regionList = HmfGenePanelSupplier.allGeneList37();
+        Map<String, HmfTranscriptRegion> regionsByGene = HmfGenePanelSupplier.allGenesMap37();
 
         assertEquals(regionList.size(), regionsByGene.values().size());
     }
 
     @Test
     public void verifyManuallyAddedGenesArePresent()  {
-        final List<String> allGenes = HmfGenePanelSupplier.allGeneList().stream().map(TranscriptRegion::gene).collect(Collectors.toList());
+        final List<String> allGenes = HmfGenePanelSupplier.allGeneList37().stream().map(TranscriptRegion::gene).collect(Collectors.toList());
         assertTrue(allGenes.contains("C11orf95"));
         assertTrue(allGenes.contains("CDKN2Ap14ARF"));
     }
