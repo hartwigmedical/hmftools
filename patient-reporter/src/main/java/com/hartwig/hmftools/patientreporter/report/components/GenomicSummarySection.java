@@ -8,8 +8,9 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Set;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource;
@@ -113,7 +114,7 @@ public final class GenomicSummarySection {
 
     @NotNull
     private static String somaticVariantsWithDriver(@NotNull List<ReportableSomaticVariant> variants) {
-        List<String> somaticVariants = Lists.newArrayList();
+        Set<String> somaticVariants = Sets.newHashSet();
         for (final ReportableSomaticVariant variant : SomaticVariantDataSource.sort(variants)) {
             if (SomaticVariantDataSource.driverField(variant).equals("High")) {
                 somaticVariants.add(variant.gene());
@@ -124,7 +125,7 @@ public final class GenomicSummarySection {
 
     @NotNull
     private static String amplificationGenes(@NotNull List<GeneCopyNumber> copyNumbers) {
-        List<String> geneCopyNumbersAmplification = Lists.newArrayList();
+        Set<String> geneCopyNumbersAmplification = Sets.newHashSet();
         for (GeneCopyNumber copyNumber : copyNumbers) {
             if (GeneCopyNumberDataSource.type(copyNumber).equals("gain")) {
                 geneCopyNumbersAmplification.add(copyNumber.gene());
@@ -135,7 +136,7 @@ public final class GenomicSummarySection {
 
     @NotNull
     private static String lossGenes(@NotNull List<GeneCopyNumber> copyNumbers) {
-        List<String> geneCopyNumbersLoss = Lists.newArrayList();
+        Set<String> geneCopyNumbersLoss = Sets.newHashSet();
         for (GeneCopyNumber copyNumber : copyNumbers) {
             if (GeneCopyNumberDataSource.type(copyNumber).equals("full loss") || GeneCopyNumberDataSource.type(copyNumber)
                     .equals("partial loss")) {
@@ -147,7 +148,7 @@ public final class GenomicSummarySection {
 
     @NotNull
     private static String geneFusions(@NotNull List<ReportableGeneFusion> fusions) {
-        List<String> geneFusions = Lists.newArrayList();
+        Set<String> geneFusions = Sets.newHashSet();
         for (ReportableGeneFusion fusion : GeneFusionDataSource.sort(fusions)) {
             geneFusions.add(GeneFusionDataSource.name(fusion));
         }
