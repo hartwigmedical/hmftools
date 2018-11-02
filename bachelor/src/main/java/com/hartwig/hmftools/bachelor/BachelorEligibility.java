@@ -49,11 +49,10 @@ import htsjdk.variant.vcf.VCFFileReader;
 
 class BachelorEligibility {
 
-    private static final double MAX_COPY_NUMBER_FOR_LOSS = 0.5;
-
     private static final Logger LOGGER = LogManager.getLogger(BachelorEligibility.class);
     private static final SortedSetMultimap<String, HmfTranscriptRegion> ALL_GENES_BY_CHROMOSOME =
             HmfGenePanelSupplier.allGenesPerChromosomeMap();
+
     private static final Map<String, HmfTranscriptRegion> ALL_GENES = makeGeneNameMap();
     private static final Map<String, HmfTranscriptRegion> ALL_TRANSCRIPT_IDS = makeTranscriptMap();
 
@@ -101,40 +100,6 @@ class BachelorEligibility {
                     .map(ProgramPanel::getGene)
                     .flatMap(Collection::stream)
                     .forEach(g -> geneToEnsemblMap.put(g.getName(), g.getEnsembl()));
-
-
-            // NOTE: copy number and SVs are untested/unverified for now, but leave in support for them
-            // NOTE: we are matching on transcript ID here but we only have canonical transcripts in our panel file
-
-            // process copy number sections
-            final List<Predicate<GeneCopyNumber>> cnvPredicates = Lists.newArrayList();
-            final List<Predicate<HmfTranscriptRegion>> disruptionPredicates = Lists.newArrayList();
-
-            /*
-            for (final ProgramPanel panel : program.getPanel())
-            {
-                final List<GeneIdentifier> genes = panel.getGene();
-
-                if (panel.getEffect().contains(OtherEffect.HOMOZYGOUS_DELETION)) {
-                    final Predicate<GeneCopyNumber> geneCopyNumberPredicate =
-                            cnv -> genes.stream().anyMatch(g -> g.getEnsembl().equals(cnv.transcriptID()));
-                    cnvPredicates.add(geneCopyNumberPredicate);
-                }
-            }
-
-            // process structural variant disruptions
-            for (final ProgramPanel panel : program.getPanel())
-            {
-                final List<GeneIdentifier> genes = panel.getGene();
-
-                if (panel.getEffect().contains(OtherEffect.GENE_DISRUPTION))
-                {
-                    final Predicate<HmfTranscriptRegion> disruptionPredicate =
-                            sv -> genes.stream().anyMatch(g -> g.getEnsembl().equals(sv.transcriptID()));
-                    disruptionPredicates.add(disruptionPredicate);
-                }
-            }
-            */
 
             // process variants from vcf
             final List<Predicate<VariantModel>> panelPredicates = Lists.newArrayList();
@@ -221,11 +186,7 @@ class BachelorEligibility {
             final Predicate<VariantModel> inWhitelist = new WhitelistPredicate(geneToEnsemblMap, program.getWhitelist());
             final Predicate<VariantModel> snvPredicate = v -> inPanel.test(v) ? !inBlacklist.test(v) : inWhitelist.test(v);
 
-            final Predicate<GeneCopyNumber> copyNumberPredicate = cnv -> cnvPredicates.stream().anyMatch(p -> p.test(cnv)) && cnv.minCopyNumber() < MAX_COPY_NUMBER_FOR_LOSS;
-
-            final Predicate<HmfTranscriptRegion> disruptionPredicate = disruption -> disruptionPredicates.stream().anyMatch(p -> p.test(disruption));
-
-            BachelorProgram bachelorProgram = new BachelorProgram(program.getName(), snvPredicate, inWhitelist, copyNumberPredicate, disruptionPredicate, requiredEffects, panelTranscripts);
+            BachelorProgram bachelorProgram = new BachelorProgram(program.getName(), snvPredicate, inWhitelist, requiredEffects, panelTranscripts);
 
             result.programs.add(bachelorProgram);
         }
@@ -380,110 +341,4 @@ class BachelorEligibility {
         return results;
     }
 
-    @NotNull
-    Collection<EligibilityReport> processCopyNumbers(final String patient, final List<GeneCopyNumber> copyNumbers) {
-        final List<EligibilityReport> results = Lists.newArrayList();
-        for (final GeneCopyNumber copyNumber : copyNumbers) {
-            // TODO: verify the germline check
-            final boolean isGermline = copyNumber.germlineHet2HomRegions() + copyNumber.germlineHomRegions() > 0;
-            final List<String> matchingPrograms = programs.stream()
-                    .filter(program -> program.copyNumberProcessor().test(copyNumber))
-                    .map(BachelorProgram::name)
-                    .collect(Collectors.toList());
-
-            final List<EligibilityReport> interimResults = matchingPrograms.stream()
-                    .map(p -> ImmutableEligibilityReport.builder()
-                            .patient(patient)
-                            .source(isGermline ? GERMLINE_DELETION : SOMATIC_DELETION)
-                            .program(p)
-                            .id("")
-                            .genes(copyNumber.gene())
-                            .chrom(copyNumber.chromosome())
-                            .pos(copyNumber.start())
-                            .ref("")
-                            .alts("")
-                            .effects("")
-                            .hgvsProtein("")
-                            .build())
-                    .collect(Collectors.toList());
-
-            results.addAll(interimResults);
-        }
-
-        return results;
-    }
-
-    private static int intron(final List<HmfExonRegion> exome, final GenomePosition position) {
-        for (int i = 0; i < exome.size() - 1; i++) {
-            if (position.position() > exome.get(i).end() && position.position() < exome.get(i + 1).start()) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    @NotNull
-    Collection<EligibilityReport> processStructuralVariants(final String patient, final List<StructuralVariant> structuralVariants) {
-        return structuralVariants.stream().flatMap(sv -> processStructuralVariant(patient, sv)).collect(Collectors.toList());
-    }
-
-    @NotNull
-    private Stream<EligibilityReport> processStructuralVariant(final String patient, final StructuralVariant structuralVariant) {
-        if (structuralVariant.end() != null) {
-            final GenomePosition start = GenomePositions.create(structuralVariant.chromosome(true), structuralVariant.position(true));
-            final GenomePosition end = GenomePositions.create(structuralVariant.chromosome(false), structuralVariant.position(false));
-
-            final List<EligibilityReport> results = Lists.newArrayList();
-            results.addAll(processStructuralVariant(patient, start, end, structuralVariant.type()));
-            results.addAll(processStructuralVariant(patient, end, start, structuralVariant.type()));
-            return results.stream();
-        } else {
-            return Stream.empty();
-        }
-    }
-
-    @NotNull
-    private Collection<EligibilityReport> processStructuralVariant(final String patient, final GenomePosition position,
-            final GenomePosition other, final StructuralVariantType svType) {
-        final List<EligibilityReport> results = Lists.newArrayList();
-
-        // TODO: can we do better than this performance wise? new map?
-        for (final HmfTranscriptRegion region : ALL_GENES_BY_CHROMOSOME.get(position.chromosome())) {
-
-            if (!region.contains(position)) {
-                continue;
-            }
-
-            // skip non-inversion intronic variants
-            if (region.contains(other) && svType != StructuralVariantType.INV) {
-                final int intronStart = intron(region.exome(), position);
-                final int intronEnd = intron(region.exome(), other);
-
-                // the variant is intronic in a gene -- we will filter it
-                if (intronStart >= 0 && intronStart == intronEnd) {
-                    continue;
-                }
-            }
-
-            programs.stream()
-                    .filter(p -> p.disruptionProcessor().test(region))
-                    .map(p -> ImmutableEligibilityReport.builder()
-                            .patient(patient)
-                            .source(SOMATIC_DISRUPTION)
-                            .program(p.name())
-                            .id("")
-                            .genes(region.gene())
-                            .chrom(region.chromosome())
-                            .pos(position.position())
-                            .ref("")
-                            .alts("")
-                            .effects("")
-                            .hgvsProtein("")
-                            .build())
-                    .forEach(results::add);
-
-        }
-
-        return results;
-    }
 }

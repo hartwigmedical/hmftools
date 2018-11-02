@@ -53,8 +53,6 @@ public class BachelorApplication {
     private static final String VALIDATE = "validate";
     private static final String GERMLINE = "germline";
     private static final String SOMATIC = "somatic";
-    private static final String COPYNUMBER = "copyNumber";
-    private static final String SV = "structuralVariants";
     private static final String SAMPLE = "sample";
     private static final String LOG_DEBUG = "log_debug";
 
@@ -73,8 +71,6 @@ public class BachelorApplication {
     private String mSampleId;
     private boolean mRunGermline;
     private boolean mRunSomatic;
-    private boolean mRunCopyNumber;
-    private boolean mRunStructuralVariants;
 
     public BachelorApplication()
     {
@@ -98,8 +94,6 @@ public class BachelorApplication {
         options.addOption(Option.builder(VALIDATE).required(false).desc("only validate the configs").build());
         options.addOption(Option.builder(GERMLINE).required(false).desc("process the germline file").build());
         options.addOption(Option.builder(SOMATIC).required(false).desc("process the somatic file").build());
-        options.addOption(Option.builder(COPYNUMBER).required(false).desc("process the copy number file").build());
-        options.addOption(Option.builder(SV).required(false).desc("process the sv file").build());
         options.addOption(Option.builder(SAMPLE).required(false).hasArg().desc("sample id").build());
         options.addOption(Option.builder(LOG_DEBUG).required(false).desc("Sets log level to Debug, off by default").build());
         return options;
@@ -175,8 +169,6 @@ public class BachelorApplication {
 
         mRunGermline = cmd.hasOption(GERMLINE);
         mRunSomatic = cmd.hasOption(SOMATIC);
-        mRunCopyNumber = cmd.hasOption(COPYNUMBER);
-        mRunStructuralVariants = cmd.hasOption(SV);
 
         return true;
     }
@@ -212,8 +204,8 @@ public class BachelorApplication {
                     // add the filtered and passed SV entries for each file
                     for (final RunDirectory runDir : runDirectories)
                     {
-                        Path bachDir = Paths.get(runDir.prefix() + "/" + BACHELOR_DIR);
-                        process(eligibility, new RunDirectory(bachDir), runDir.getPatientID());
+                        // Path bachDir = Paths.get(runDir.prefix() + "/" + BACHELOR_DIR);
+                        process(eligibility, runDir, runDir.getPatientID());
                     }
                 }
                 catch (Exception e)
@@ -271,47 +263,11 @@ public class BachelorApplication {
         }
     }
 
-    private static Collection<EligibilityReport> processPurpleCNV(final String patient, final File cnv, final BachelorEligibility eligibility)
-    {
-        LOGGER.info("processing cnv: {}", cnv.getPath());
-        try
-        {
-            final List<GeneCopyNumber> copyNumbers = GeneCopyNumberFile.read(cnv);
-            return eligibility.processCopyNumbers(patient, copyNumbers);
-        }
-        catch (final IOException e)
-        {
-            LOGGER.error("error with CNV file {}: {}", cnv.getPath(), e.getMessage());
-            return Collections.emptyList();
-        }
-    }
-
-    private static Collection<EligibilityReport> processSV(final String patient, final File vcf, final BachelorEligibility eligibility)
-    {
-        LOGGER.info("processing sv: {}", vcf.getPath());
-
-        final StructuralVariantFactory factory = new StructuralVariantFactory(true);
-        try {
-            try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcf.getPath(),
-                    new VCFCodec(),
-                    false)) {
-                reader.iterator().forEach(factory::addVariantContext);
-            }
-        } catch (IOException e) {
-            LOGGER.error("error with SV file {}: {}", vcf.getPath(), e.getMessage());
-            return Collections.emptyList();
-        }
-
-        return eligibility.processStructuralVariants(patient, factory.results());
-    }
-
     private void process(final BachelorEligibility eligibility, final RunDirectory run, final String sampleId)
     {
         final String patient = run.getPatientID();
         final boolean doGermline = run.germline() != null && mRunGermline;
         final boolean doSomatic = run.somatic() != null && mRunSomatic;
-        final boolean doCopyNumber = run.copyNumber() != null && mRunCopyNumber;
-        final boolean doStructuralVariants = run.structuralVariants() != null && mRunStructuralVariants;
 
         LOGGER.info("processing run for patient({}) from file({})", patient, run.prefix());
 
@@ -323,14 +279,6 @@ public class BachelorApplication {
         if (doSomatic)
         {
             result.addAll(processVCF(patient, false, run.somatic(), eligibility));
-        }
-        if (doCopyNumber)
-        {
-            result.addAll(processPurpleCNV(patient, run.copyNumber(), eligibility));
-        }
-        if (doStructuralVariants)
-        {
-            result.addAll(processSV(patient, run.structuralVariants(), eligibility));
         }
 
         if(result.isEmpty())
