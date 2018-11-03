@@ -56,7 +56,7 @@
             <xsd:choice>
                 <xsd:element name="Gene" type="geneIdentifier" maxOccurs="unbounded"/>
             </xsd:choice>
-            <xsd:element name="Hotspot" type="hotspotLocation" maxOccurs="unbounded"/>
+            <xsd:element name="Hotspot" type="hotspotLocation" minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="SnpEffect" type="snpEffect" minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="Effect" type="otherEffect" minOccurs="0" maxOccurs="unbounded"/>
         </xsd:sequence>

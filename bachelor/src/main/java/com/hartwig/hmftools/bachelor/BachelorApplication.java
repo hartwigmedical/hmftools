@@ -7,6 +7,7 @@ import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -55,6 +56,7 @@ public class BachelorApplication {
     private static final String SOMATIC = "somatic";
     private static final String SAMPLE = "sample";
     private static final String LOG_DEBUG = "log_debug";
+    private static final String BATCH_MAX_DIR = "max_batch_dir"; // only for testingt
 
     private static final String BACHELOR_DIR = "bachelor";
 
@@ -71,6 +73,7 @@ public class BachelorApplication {
     private String mSampleId;
     private boolean mRunGermline;
     private boolean mRunSomatic;
+    private int mMaxBatchDirectories;
 
     public BachelorApplication()
     {
@@ -80,6 +83,7 @@ public class BachelorApplication {
 
         mIsSingleRun = false;
         mIsBatchRun = false;
+        mMaxBatchDirectories = 0;
     }
 
     @NotNull
@@ -91,6 +95,7 @@ public class BachelorApplication {
         options.addOption(Option.builder(OUTPUT_DIR).required().hasArg().desc("output file").build());
         options.addOption(Option.builder(RUN_DIRECTORY).required(false).hasArg().desc("the run directory to look for inputs").build());
         options.addOption(Option.builder(BATCH_DIRECTORY).required(false).hasArg().desc("runs directory to batch process").build());
+        options.addOption(Option.builder(BATCH_MAX_DIR).required(false).hasArg().desc("Max batch directories to batch process").build());
         options.addOption(Option.builder(VALIDATE).required(false).desc("only validate the configs").build());
         options.addOption(Option.builder(GERMLINE).required(false).desc("process the germline file").build());
         options.addOption(Option.builder(SOMATIC).required(false).desc("process the somatic file").build());
@@ -148,6 +153,7 @@ public class BachelorApplication {
         if(cmd.hasOption(BATCH_DIRECTORY))
         {
             mBatchDirectoy = cmd.getOptionValue(BATCH_DIRECTORY);
+            mMaxBatchDirectories = Integer.parseInt(cmd.getOptionValue(BATCH_MAX_DIR, "0"));
             mIsBatchRun = true;
         }
         else if(cmd.hasOption(RUN_DIRECTORY))
@@ -202,10 +208,15 @@ public class BachelorApplication {
                     LOGGER.debug("found {} batch directories", runDirectories.size());
 
                     // add the filtered and passed SV entries for each file
-                    for (final RunDirectory runDir : runDirectories)
+                    for (int i = 0; i < runDirectories.size(); ++i)
                     {
+                        final RunDirectory runDir = runDirectories.get(i);
+
                         // Path bachDir = Paths.get(runDir.prefix() + "/" + BACHELOR_DIR);
                         process(eligibility, runDir, runDir.getPatientID());
+
+                        if(mMaxBatchDirectories > 0 && i >= mMaxBatchDirectories)
+                            break;
                     }
                 }
                 catch (Exception e)
@@ -322,11 +333,11 @@ public class BachelorApplication {
 
         try
         {
-            mMainDataWriter = Files.newBufferedWriter(Paths.get(mainFileName));
+            mMainDataWriter = Files.newBufferedWriter(Paths.get(mainFileName), StandardOpenOption.CREATE);
             mMainDataWriter.write(fileHeader());
             mMainDataWriter.newLine();
 
-            mBedFileWriter = Files.newBufferedWriter(Paths.get(bedFileName));
+            mBedFileWriter = Files.newBufferedWriter(Paths.get(bedFileName), StandardOpenOption.CREATE);
         }
         catch(IOException e)
         {
