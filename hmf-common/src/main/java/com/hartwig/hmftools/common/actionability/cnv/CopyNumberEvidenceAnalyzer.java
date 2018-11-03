@@ -40,11 +40,10 @@ public class CopyNumberEvidenceAnalyzer {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
         // KODU: Assume the gene copy number has already been determined to be a significant event (LOSS or GAIN)
         for (ActionableCopyNumber actionableCopyNumber : actionableCopyNumbers) {
-            if (checkCNVType(geneCopyNumber.value()).equals(actionableCopyNumber.cnvType()) && actionableCopyNumber.gene()
-                    .equals(geneCopyNumber.gene())) {
+            if (typeMatches(geneCopyNumber, actionableCopyNumber) && actionableCopyNumber.gene().equals(geneCopyNumber.gene())) {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableCopyNumber(actionableCopyNumber);
 
-                evidenceBuilder.event(geneCopyNumber.gene() + " " + actionableCopyNumber.cnvType());
+                evidenceBuilder.event(geneCopyNumber.gene() + " " + actionableCopyNumber.type().readableString());
                 evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionableCopyNumber.cancerType(),
                         doidsPrimaryTumorLocation));
 
@@ -54,9 +53,9 @@ public class CopyNumberEvidenceAnalyzer {
         return evidenceItems;
     }
 
-    @NotNull
-    private static String checkCNVType(int copyNumber) {
-        return copyNumber <= 1 ? "Deletion" : "Amplification";
+    private static boolean typeMatches(@NotNull GeneCopyNumber geneCopyNumber, @NotNull ActionableCopyNumber actionableCopyNumber) {
+        CopyNumberType geneType = geneCopyNumber.value() <= 1 ? CopyNumberType.DELETION : CopyNumberType.AMPLIFICATION;
+        return geneType == actionableCopyNumber.type();
     }
 
     @NotNull

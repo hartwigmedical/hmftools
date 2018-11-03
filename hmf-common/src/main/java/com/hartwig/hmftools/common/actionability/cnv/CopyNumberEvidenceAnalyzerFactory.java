@@ -35,7 +35,7 @@ public final class CopyNumberEvidenceAnalyzerFactory {
         final String[] values = line.split(DELIMITER);
         return ImmutableActionableCopyNumber.builder()
                 .gene(values[0])
-                .cnvType(values[1])
+                .type(CopyNumberType.fromString(values[1]))
                 .source(values[2])
                 .reference(values[3])
                 .drug(MultiDrugCurator.reformat(values[4]))
