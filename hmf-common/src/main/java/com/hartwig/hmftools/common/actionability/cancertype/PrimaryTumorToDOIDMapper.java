@@ -67,6 +67,10 @@ class PrimaryTumorToDOIDMapper {
 
     @Nullable
     public Set<String> findDoids(@NotNull String primaryTumorLocation) {
+        if (primaryTumorLocation.trim().isEmpty()) {
+            return null;
+        }
+
         Set<String> doids = doidsPerPrimaryTumor.get(primaryTumorLocation);
         if (doids == null) {
             LOGGER.warn("Could not resolve primary tumor location in DOID mapping: " + primaryTumorLocation);
