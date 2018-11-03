@@ -39,9 +39,9 @@ public final class ReportableEvidenceItemFactory {
 
     @NotNull
     private static List<EvidenceItem> filterForReporting(@NotNull List<EvidenceItem> evidenceItems) {
-        Map<Key, List<EvidenceItem>> itemsPerKey = Maps.newHashMap();
+        Map<EventDrugResponseKey, List<EvidenceItem>> itemsPerKey = Maps.newHashMap();
         for (EvidenceItem item : evidenceItems) {
-            Key key = new Key(item.event(), item.drug(), item.response());
+            EventDrugResponseKey key = new EventDrugResponseKey(item.event(), item.drug(), item.response());
             List<EvidenceItem> items = itemsPerKey.get(key);
             if (items == null) {
                 items = Lists.newArrayList();
@@ -51,7 +51,7 @@ public final class ReportableEvidenceItemFactory {
         }
 
         List<EvidenceItem> evidenceFiltered = Lists.newArrayList();
-        for (Map.Entry<Key, List<EvidenceItem>> entry : itemsPerKey.entrySet()) {
+        for (Map.Entry<EventDrugResponseKey, List<EvidenceItem>> entry : itemsPerKey.entrySet()) {
             List<EvidenceItem> itemsForKey = entry.getValue();
             EvidenceItem highestOnLabel = highestOnLabel(itemsForKey);
             EvidenceItem highestOffLabel = highestOffLabel(itemsForKey);
@@ -113,7 +113,7 @@ public final class ReportableEvidenceItemFactory {
         return highest;
     }
 
-    private static class Key {
+    private static class EventDrugResponseKey {
 
         @NotNull
         private final String event;
@@ -122,7 +122,7 @@ public final class ReportableEvidenceItemFactory {
         @NotNull
         private final String response;
 
-        private Key(@NotNull final String event, @NotNull final String drug, @NotNull final String response) {
+        private EventDrugResponseKey(@NotNull final String event, @NotNull final String drug, @NotNull final String response) {
             this.event = event;
             this.drug = drug;
             this.response = response;
@@ -136,7 +136,7 @@ public final class ReportableEvidenceItemFactory {
             if (o == null || getClass() != o.getClass()) {
                 return false;
             }
-            final Key key = (Key) o;
+            final EventDrugResponseKey key = (EventDrugResponseKey) o;
             return Objects.equals(event, key.event) && Objects.equals(drug, key.drug) && Objects.equals(response, key.response);
         }
 
