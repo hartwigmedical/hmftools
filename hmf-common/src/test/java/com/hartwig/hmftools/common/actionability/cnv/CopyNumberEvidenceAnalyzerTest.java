@@ -4,8 +4,7 @@ import static org.junit.Assert.assertFalse;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
-import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeReading;
-import com.hartwig.hmftools.common.actionability.cancertype.ImmutableCancerTypeReading;
+import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzerTestFactory;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
@@ -32,8 +31,7 @@ public class CopyNumberEvidenceAnalyzerTest {
 
         CopyNumberEvidenceAnalyzer cnvAnalyzer = new CopyNumberEvidenceAnalyzer(Lists.newArrayList(actionabilityCNV));
 
-        CancerTypeReading reading = ImmutableCancerTypeReading.builder().doidSet("1612").cancerType("Breast").build();
-        CancerTypeAnalyzer cancerType = new CancerTypeAnalyzer(Lists.newArrayList(reading));
+        CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzerTestFactory.buildWithOneCancerTypeMapping("Skin Melanoma", 4159);
 
         GeneCopyNumber geneCopyNumber = ImmutableGeneCopyNumber.builder()
                 .gene("ERBB2")
@@ -66,6 +64,6 @@ public class CopyNumberEvidenceAnalyzerTest {
                 .missenseNonBiallelicCount(0)
                 .build();
 
-           assertFalse(cnvAnalyzer.evidenceForCopyNumber(geneCopyNumber, "1612", cancerType).isEmpty());
+           assertFalse(cnvAnalyzer.evidenceForCopyNumber(geneCopyNumber, "Breast", cancerTypeAnalyzer).isEmpty());
     }
 }

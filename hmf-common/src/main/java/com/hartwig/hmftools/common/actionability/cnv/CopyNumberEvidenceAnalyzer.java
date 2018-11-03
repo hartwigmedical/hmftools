@@ -35,7 +35,7 @@ public class CopyNumberEvidenceAnalyzer {
     }
 
     @NotNull
-    public List<EvidenceItem> evidenceForCopyNumber(@NotNull GeneCopyNumber geneCopyNumber, @Nullable String doidsPrimaryTumorLocation,
+    public List<EvidenceItem> evidenceForCopyNumber(@NotNull GeneCopyNumber geneCopyNumber, @Nullable String primaryTumorLocation,
             @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
         // KODU: Assume the gene copy number has already been determined to be a significant event (LOSS or GAIN)
@@ -44,8 +44,8 @@ public class CopyNumberEvidenceAnalyzer {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableCopyNumber(actionableCopyNumber);
 
                 evidenceBuilder.event(geneCopyNumber.gene() + " " + actionableCopyNumber.type().readableString());
-                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionableCopyNumber.cancerType(),
-                        doidsPrimaryTumorLocation));
+                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableCopyNumber.cancerType(),
+                        primaryTumorLocation));
 
                 evidenceItems.add(evidenceBuilder.build());
             }

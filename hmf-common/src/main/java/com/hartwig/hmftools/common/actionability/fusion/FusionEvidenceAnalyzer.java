@@ -53,7 +53,7 @@ public class FusionEvidenceAnalyzer {
     }
 
     @NotNull
-    public List<EvidenceItem> evidenceForFusion(@NotNull GeneFusion geneFusion, @Nullable String doidsPrimaryTumorLocation,
+    public List<EvidenceItem> evidenceForFusion(@NotNull GeneFusion geneFusion, @Nullable String primaryTumorLocation,
             @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
 
@@ -63,7 +63,7 @@ public class FusionEvidenceAnalyzer {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionPairs(actionableFusion);
 
                 evidenceBuilder.event(actionableFusion.fiveGene() + " - " + actionableFusion.threeGene() + " fusion");
-                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionableFusion.cancerType(), doidsPrimaryTumorLocation));
+                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableFusion.cancerType(), primaryTumorLocation));
                 evidenceItems.add(evidenceBuilder.build());
             }
         }
@@ -74,8 +74,8 @@ public class FusionEvidenceAnalyzer {
 
                 evidenceBuilder.event(
                         actionablePromiscuousFive.gene() + " - " + geneFusion.downstreamLinkedAnnotation().geneName() + " fusion");
-                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionablePromiscuousFive.cancerType(),
-                        doidsPrimaryTumorLocation));
+                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionablePromiscuousFive.cancerType(),
+                        primaryTumorLocation));
 
                 evidenceItems.add(evidenceBuilder.build());
             }
@@ -87,8 +87,8 @@ public class FusionEvidenceAnalyzer {
 
                 evidenceBuilder.event(
                         geneFusion.upstreamLinkedAnnotation().geneName() + " - " + actionablePromiscuousThree.gene() + " fusion");
-                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionablePromiscuousThree.cancerType(),
-                        doidsPrimaryTumorLocation));
+                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionablePromiscuousThree.cancerType(),
+                        primaryTumorLocation));
 
                 evidenceItems.add(evidenceBuilder.build());
             }

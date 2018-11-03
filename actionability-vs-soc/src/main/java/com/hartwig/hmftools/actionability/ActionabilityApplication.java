@@ -64,7 +64,7 @@
 //        LOGGER.info("Cancer subtype from patient: " + cancerSubtype);
 //
 //        PrimaryTumorToDOIDMapping cancerTypeMappingReading = PrimaryTumorToDOIDMapping.createFromResource();
-//        String doidsPrimaryTumorLocation = cancerTypeMappingReading.doidsForPrimaryTumorLocation(primaryTumorLocation);
+//        String doidsPrimaryTumorLocation = cancerTypeMappingReading.findDoids(primaryTumorLocation);
 //        LOGGER.info("DOID: " + doidsPrimaryTumorLocation);
 //
 //        String fileCancerTumorsWithDOID = "/data/common/dbs/knowledgebases/output/knowledgebaseCancerTypes.tsv";

@@ -5,14 +5,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
-import com.hartwig.hmftools.common.actionability.cancertype.PrimaryTumorToDOIDMapping;
 import com.hartwig.hmftools.common.actionability.cnv.CopyNumberEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.cnv.CopyNumberEvidenceAnalyzerFactory;
 import com.hartwig.hmftools.common.actionability.fusion.FusionEvidenceAnalyzer;
@@ -40,13 +38,11 @@ public class ActionabilityAnalyzer {
     @NotNull
     private final SomaticVariantEvidenceAnalyzer variantAnalyzer;
     @NotNull
-    private final CopyNumberEvidenceAnalyzer cnvAnalyzer;
+    private final CopyNumberEvidenceAnalyzer copyNumberAnalyzer;
     @NotNull
     private final FusionEvidenceAnalyzer fusionAnalyzer;
     @NotNull
     private final CancerTypeAnalyzer cancerTypeAnalyzer;
-    @NotNull
-    private final PrimaryTumorToDOIDMapping primaryTumorToDOIDMapping;
 
     @NotNull
     public static ActionabilityAnalyzer fromKnowledgebase(@NotNull String knowledgebasePath) throws IOException {
@@ -67,18 +63,16 @@ public class ActionabilityAnalyzer {
         return new ActionabilityAnalyzer(variantAnalyzer,
                 cnvAnalyzer,
                 fusionAnalyzer,
-                cancerTypeAnalyzer,
-                PrimaryTumorToDOIDMapping.createFromResource());
+                cancerTypeAnalyzer);
     }
 
     private ActionabilityAnalyzer(@NotNull final SomaticVariantEvidenceAnalyzer variantAnalyzer,
-            @NotNull final CopyNumberEvidenceAnalyzer cnvAnalyzer, @NotNull final FusionEvidenceAnalyzer fusionAnalyzer,
-            @NotNull final CancerTypeAnalyzer cancerTypeAnalyzer, @NotNull final PrimaryTumorToDOIDMapping primaryTumorToDOIDMapping) {
+            @NotNull final CopyNumberEvidenceAnalyzer copyNumberAnalyzer, @NotNull final FusionEvidenceAnalyzer fusionAnalyzer,
+            @NotNull final CancerTypeAnalyzer cancerTypeAnalyzer) {
         this.variantAnalyzer = variantAnalyzer;
-        this.cnvAnalyzer = cnvAnalyzer;
+        this.copyNumberAnalyzer = copyNumberAnalyzer;
         this.fusionAnalyzer = fusionAnalyzer;
         this.cancerTypeAnalyzer = cancerTypeAnalyzer;
-        this.primaryTumorToDOIDMapping = primaryTumorToDOIDMapping;
     }
 
     @VisibleForTesting
@@ -90,7 +84,7 @@ public class ActionabilityAnalyzer {
     @VisibleForTesting
     @NotNull
     CopyNumberEvidenceAnalyzer cnvAnalyzer() {
-        return cnvAnalyzer;
+        return copyNumberAnalyzer;
     }
 
     @VisibleForTesting
@@ -108,11 +102,9 @@ public class ActionabilityAnalyzer {
                 .filter(variant -> variantAnalyzer.actionableGenes().contains(variant.gene()))
                 .collect(Collectors.toList());
 
-        String doidsPrimaryTumorLocation = doidForPrimaryTumorLocation(primaryTumorLocation);
-
-        for (EnrichedSomaticVariant actionableVariant : variantsOnActionableGenes) {
-            evidencePerVariant.put(actionableVariant,
-                    variantAnalyzer.evidenceForSomaticVariant(actionableVariant, doidsPrimaryTumorLocation, cancerTypeAnalyzer));
+        for (EnrichedSomaticVariant variant : variantsOnActionableGenes) {
+            evidencePerVariant.put(variant,
+                    variantAnalyzer.evidenceForSomaticVariant(variant, primaryTumorLocation, cancerTypeAnalyzer));
         }
 
         return evidencePerVariant;
@@ -125,14 +117,12 @@ public class ActionabilityAnalyzer {
 
         // TODO (KODU): Should also filter on significant event rather than assume caller has filtered already.
         List<GeneCopyNumber> geneCopyNumbersOnActionableGenes = geneCopyNumbers.stream()
-                .filter(geneCopyNumber -> cnvAnalyzer.actionableGenes().contains(geneCopyNumber.gene()))
+                .filter(geneCopyNumber -> copyNumberAnalyzer.actionableGenes().contains(geneCopyNumber.gene()))
                 .collect(Collectors.toList());
-
-        String doidsPrimaryTumorLocation = doidForPrimaryTumorLocation(primaryTumorLocation);
 
         for (GeneCopyNumber geneCopyNumber : geneCopyNumbersOnActionableGenes) {
             evidencePerCopyNumber.put(geneCopyNumber,
-                    cnvAnalyzer.evidenceForCopyNumber(geneCopyNumber, doidsPrimaryTumorLocation, cancerTypeAnalyzer));
+                    copyNumberAnalyzer.evidenceForCopyNumber(geneCopyNumber, primaryTumorLocation, cancerTypeAnalyzer));
         }
 
         return evidencePerCopyNumber;
@@ -148,12 +138,10 @@ public class ActionabilityAnalyzer {
                         || fusionAnalyzer.actionableGenes().contains(fusion.downstreamLinkedAnnotation().geneName()))
                 .collect(Collectors.toList());
 
-        String doidsPrimaryTumorLocation = doidForPrimaryTumorLocation(primaryTumorLocation);
-
         // TODO (KODU): Should reuse "favor canonical" rules from SV analyser here but have re-implemented for now.
         for (GeneFusion actionableFusion : uniqueGeneFusions(fusionsOnActionableGenes)) {
             evidencePerFusion.put(actionableFusion,
-                    fusionAnalyzer.evidenceForFusion(actionableFusion, doidsPrimaryTumorLocation, cancerTypeAnalyzer));
+                    fusionAnalyzer.evidenceForFusion(actionableFusion, primaryTumorLocation, cancerTypeAnalyzer));
         }
 
         return evidencePerFusion;
@@ -192,20 +180,6 @@ public class ActionabilityAnalyzer {
         // KODU: If there is no canonical-canonical fusion, return the first one arbitrarily.
         assert !fusions.isEmpty();
         return fusions.get(0);
-    }
-
-    @Nullable
-    private String doidForPrimaryTumorLocation(@Nullable String primaryTumorLocation) {
-        if (primaryTumorLocation == null) {
-            return null;
-        }
-
-        Set<String> doidsPrimaryTumorLocation = primaryTumorToDOIDMapping.doidsForPrimaryTumorLocation(primaryTumorLocation);
-
-        // TODO (KODU): Deal with sets of DOIDs. Also every non-null tumor location should return a DOID.
-        return doidsPrimaryTumorLocation != null && !doidsPrimaryTumorLocation.isEmpty()
-                ? doidsPrimaryTumorLocation.iterator().next()
-                : null;
     }
 
     private static class FiveThreePair {

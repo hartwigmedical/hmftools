@@ -46,7 +46,7 @@ public class SomaticVariantEvidenceAnalyzer {
     }
 
     @NotNull
-    public List<EvidenceItem> evidenceForSomaticVariant(@NotNull SomaticVariant variant, @Nullable String doidsPrimaryTumorLocation,
+    public List<EvidenceItem> evidenceForSomaticVariant(@NotNull SomaticVariant variant, @Nullable String primaryTumorLocation,
             @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
         for (ActionableSomaticVariant actionableVariant : actionableVariants) {
@@ -56,7 +56,7 @@ public class SomaticVariantEvidenceAnalyzer {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableVariant(actionableVariant);
 
                 evidenceBuilder.event(eventString(variant));
-                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionableVariant.cancerType(), doidsPrimaryTumorLocation));
+                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableVariant.cancerType(), primaryTumorLocation));
 
                 evidenceItems.add(evidenceBuilder.build());
             }
@@ -69,7 +69,7 @@ public class SomaticVariantEvidenceAnalyzer {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableRange(actionableRange);
 
                 evidenceBuilder.event(eventString(variant));
-                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionableRange.cancerType(), doidsPrimaryTumorLocation));
+                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableRange.cancerType(), primaryTumorLocation));
 
                 evidenceItems.add(evidenceBuilder.build());
             }

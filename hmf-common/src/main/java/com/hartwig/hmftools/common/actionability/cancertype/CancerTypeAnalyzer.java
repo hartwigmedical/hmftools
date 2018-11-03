@@ -3,73 +3,91 @@ package com.hartwig.hmftools.common.actionability.cancertype;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
-import org.apache.logging.log4j.util.Strings;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class CancerTypeAnalyzer {
-    private static final String DELIMITER = "\t";
+    private static final Logger LOGGER = LogManager.getLogger(CancerTypeAnalyzer.class);
+
+    private static final String LINE_DELIMITER = "\t";
+    private static final String DOID_DELIMITER = ";";
 
     @NotNull
-    private final List<CancerTypeReading> cancerTypeDoids;
+    private final List<CancerTypeToDOIDMappingEntry> cancerTypeMappings;
+    @NotNull
+    private final PrimaryTumorToDOIDMapping primaryTumorToDOIDMapping;
 
-    public CancerTypeAnalyzer(@NotNull List<CancerTypeReading> cancerTypeDoids) {
-        this.cancerTypeDoids = cancerTypeDoids;
+    public CancerTypeAnalyzer(@NotNull final List<CancerTypeToDOIDMappingEntry> cancerTypeMappings,
+            @NotNull final PrimaryTumorToDOIDMapping primaryTumorToDOIDMapping) {
+        this.cancerTypeMappings = cancerTypeMappings;
+        this.primaryTumorToDOIDMapping = primaryTumorToDOIDMapping;
     }
 
     @NotNull
-    public static CancerTypeAnalyzer loadFromFile(@NotNull String fileCancerType) throws IOException {
-        final List<CancerTypeReading> cancerTypeWithDOID = Lists.newArrayList();
-        final List<String> lineCancerType = Files.readAllLines(new File(fileCancerType).toPath());
+    public static CancerTypeAnalyzer loadFromFile(@NotNull String knowledgebaseCancerTypesPath) throws IOException {
+        final List<CancerTypeToDOIDMappingEntry> cancerTypeMappings = Lists.newArrayList();
+        final List<String> cancerTypeMappingLines = Files.readAllLines(new File(knowledgebaseCancerTypesPath).toPath());
 
-        for (int i = 1; i < lineCancerType.size(); i++) {
-            cancerTypeWithDOID.add(fromLine(lineCancerType.get(i)));
+        // KODU: Skip header line
+        for (String cancerTypeMappingLine : cancerTypeMappingLines.subList(1, cancerTypeMappingLines.size())) {
+            cancerTypeMappings.add(fromLine(cancerTypeMappingLine));
         }
-        return new CancerTypeAnalyzer(cancerTypeWithDOID);
+
+        return new CancerTypeAnalyzer(cancerTypeMappings, PrimaryTumorToDOIDMapping.createFromResource());
     }
 
     @NotNull
-    private static CancerTypeReading fromLine(@NotNull String line) {
-        final String[] values = line.split(DELIMITER);
-        String doidSetValue = emptyDoidSet(values);
-        return ImmutableCancerTypeReading.builder().cancerType(values[0]).doidSet(doidSetValue).build();
+    private static CancerTypeToDOIDMappingEntry fromLine(@NotNull String line) {
+        String[] values = line.split(LINE_DELIMITER);
+        return ImmutableCancerTypeToDOIDMappingEntry.builder().cancerType(values[0].trim()).doids(toDOIDSet(values[1].trim())).build();
     }
 
     @NotNull
-    private static String emptyDoidSet(@NotNull String[] value) {
-        try {
-            return value[1];
-        } catch (ArrayIndexOutOfBoundsException e) {
-            return Strings.EMPTY;
+    private static Set<Integer> toDOIDSet(@NotNull String doidValue) {
+        String[] values = doidValue.split(DOID_DELIMITER);
+        Set<Integer> doids = Sets.newHashSet();
+        for (String value : values) {
+            // KODU: Expected format is "Doid(value=NNN)"
+            String doid = value.substring(value.indexOf("=") + 1, value.indexOf(")"));
+            doids.add(Integer.valueOf(doid));
         }
+
+        return doids;
     }
 
-    @VisibleForTesting
-    public boolean foundTumorLocation(@NotNull String tumorLocationKnowledgebase, @Nullable String doidsPrimaryTumorLocation) {
-        boolean booleanValueRange = false;
-        for (CancerTypeReading cancerTypeDoidKnowledgeBase : cancerTypeDoids) {
-            if (tumorLocationKnowledgebase.equals(cancerTypeDoidKnowledgeBase.cancerType())) {
-                if (doidsPrimaryTumorLocation != null) {
-                    if (doidsPrimaryTumorLocation.contains(";")) {
-                        String[] multipleDoidsPrimaryTumorLocation = doidsPrimaryTumorLocation.split(";");
-                        if (cancerTypeDoidKnowledgeBase.doidSet().contains(multipleDoidsPrimaryTumorLocation[0])
-                                || cancerTypeDoidKnowledgeBase.doidSet().contains(multipleDoidsPrimaryTumorLocation[1])) {
-                            booleanValueRange = true;
-                        } else if (cancerTypeDoidKnowledgeBase.doidSet().contains(multipleDoidsPrimaryTumorLocation[0])
-                                && cancerTypeDoidKnowledgeBase.doidSet().contains(multipleDoidsPrimaryTumorLocation[1])) {
-                            booleanValueRange = true;
-                        }
-                    } else if (cancerTypeDoidKnowledgeBase.doidSet().contains(doidsPrimaryTumorLocation)) {
-                        booleanValueRange = true;
-                    }
-                }
+    public boolean isCancerTypeMatch(@NotNull String knowledgebaseCancerType, @Nullable String primaryTumorLocation) {
+        if (primaryTumorLocation == null) {
+            return false;
+        }
+
+        Set<Integer> doidsForPrimaryTumorLocation = primaryTumorToDOIDMapping.findDoids(primaryTumorLocation);
+        if (doidsForPrimaryTumorLocation == null) {
+            return false;
+        }
+
+        Set<Integer> doidsForCancerType = findDoidsForCancerType(knowledgebaseCancerType, cancerTypeMappings);
+        return doidsForCancerType != null && !Collections.disjoint(doidsForPrimaryTumorLocation, doidsForCancerType);
+    }
+
+    @Nullable
+    private static Set<Integer> findDoidsForCancerType(@NotNull String cancerType,
+            @NotNull List<CancerTypeToDOIDMappingEntry> cancerTypeMappings) {
+        for (CancerTypeToDOIDMappingEntry mapping : cancerTypeMappings) {
+            if (mapping.cancerType().equalsIgnoreCase(cancerType)) {
+                return mapping.doids();
             }
         }
-        return booleanValueRange;
+
+        LOGGER.warn("Could not resolve cancer type in DOID mapping: " + cancerType);
+        return null;
     }
 }

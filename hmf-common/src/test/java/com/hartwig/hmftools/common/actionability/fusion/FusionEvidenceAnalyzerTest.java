@@ -4,8 +4,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
-import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeReading;
-import com.hartwig.hmftools.common.actionability.cancertype.ImmutableCancerTypeReading;
+import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzerTestFactory;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariant;
@@ -61,13 +60,12 @@ public class FusionEvidenceAnalyzerTest {
         FusionEvidenceAnalyzer analyzer =
                 new FusionEvidenceAnalyzer((Lists.newArrayList(fusion)), Lists.newArrayList(five), Lists.newArrayList(three));
 
-        CancerTypeReading reading = ImmutableCancerTypeReading.builder().doidSet("4159").cancerType("Skin").build();
-        CancerTypeAnalyzer cancerType = new CancerTypeAnalyzer(Lists.newArrayList(reading));
+        CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzerTestFactory.buildWithOneCancerTypeMapping("Skin", 4159);
 
         GeneFusion fusion1 =
                 createFusion("TMPRSS2", "ENST00000398585", 4, 5, "PNPLA7", "ENST00000406427", 2, 3, KnownFusionsModel.CIVIC, 0.4);
 
-        assertTrue(analyzer.evidenceForFusion(fusion1, "4159", cancerType).isEmpty());
+        assertTrue(analyzer.evidenceForFusion(fusion1, "Skin", cancerTypeAnalyzer).isEmpty());
     }
 
     @NotNull

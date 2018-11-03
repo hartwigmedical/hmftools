@@ -63,7 +63,7 @@ public abstract class EvidenceSummaryPage {
         final ComponentBuilder<?, ?> table = items.size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(EvidenceItemDataSource.evidenceItemFields())
                 .columns(col.column("Event", EvidenceItemDataSource.EVENT_FIELD).setFixedWidth(120),
-                        col.column("Scope", EvidenceItemDataSource.SCOPE_FIELD),
+                        col.column("Biomarker", EvidenceItemDataSource.SCOPE_FIELD),
                         col.column("Drug", EvidenceItemDataSource.DRUG_FIELD).setFixedWidth(190),
                         col.column("Level", EvidenceItemDataSource.LEVEL_FIELD),
                         col.column("Response", EvidenceItemDataSource.RESPONSE_FIELD),

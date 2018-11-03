@@ -3,22 +3,30 @@ package com.hartwig.hmftools.common.actionability.cancertype;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Map;
+import java.util.Set;
+
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import org.junit.Test;
 
 public class CancerTypeAnalyzerTest {
 
     @Test
-    public void canFindDoids() {
-        CancerTypeReading cancerTypeReading = ImmutableCancerTypeReading.builder()
-                .cancerType("Lung")
-                .doidSet("1324")
-                .build();
+    public void canMatchDOIDToPrimaryTumorLocation() {
+        CancerTypeToDOIDMappingEntry cancerTypeToDOIDMappingEntry =
+                ImmutableCancerTypeToDOIDMappingEntry.builder().cancerType("NSCLC").addDoids(10).build();
 
-        CancerTypeAnalyzer cancerTypeAnalyzer = new CancerTypeAnalyzer(Lists.newArrayList(cancerTypeReading));
-        assertFalse(cancerTypeAnalyzer.foundTumorLocation("Skin Melanoma", "1324"));
-        assertTrue(cancerTypeAnalyzer.foundTumorLocation("Lung", "1324"));
-        assertFalse(cancerTypeAnalyzer.foundTumorLocation("Lung Cancer: Non-Small Cell", "1324"));
+        Map<String, Set<Integer>> primaryTumorLocationMappings = Maps.newHashMap();
+        primaryTumorLocationMappings.put("Lung", Sets.newHashSet(10));
+
+        CancerTypeAnalyzer cancerTypeAnalyzer = new CancerTypeAnalyzer(Lists.newArrayList(cancerTypeToDOIDMappingEntry),
+                new PrimaryTumorToDOIDMapping(primaryTumorLocationMappings));
+
+        assertFalse(cancerTypeAnalyzer.isCancerTypeMatch("Skin", "Lung"));
+        assertFalse(cancerTypeAnalyzer.isCancerTypeMatch("Lung", "Lung"));
+        assertTrue(cancerTypeAnalyzer.isCancerTypeMatch("NSCLC", "Lung"));
     }
 }

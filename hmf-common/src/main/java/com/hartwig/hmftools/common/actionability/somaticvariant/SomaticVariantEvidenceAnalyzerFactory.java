@@ -18,17 +18,19 @@ public final class SomaticVariantEvidenceAnalyzerFactory {
     }
 
     @NotNull
-    public static SomaticVariantEvidenceAnalyzer loadFromFileVariantsAndFileRanges(String fileVariants, String fileRanges)
+    public static SomaticVariantEvidenceAnalyzer loadFromFileVariantsAndFileRanges(@NotNull String fileVariants, @NotNull String fileRanges)
             throws IOException {
         final List<ActionableSomaticVariant> variants = new ArrayList<>();
         final List<ActionableRange> ranges = new ArrayList<>();
         final List<String> lineVariants = Files.readAllLines(new File(fileVariants).toPath());
         final List<String> lineRanges = Files.readAllLines(new File(fileRanges).toPath());
 
+        // KODU: Skip header line
         for (String lineVariant : lineVariants.subList(1, lineVariants.size())) {
             variants.add(fromLineVariants(lineVariant));
         }
 
+        // KODU: Skip header line
         for (String lineRange : lineRanges.subList(1, lineRanges.size())) {
             ranges.add(fromLineRanges(lineRange));
         }
