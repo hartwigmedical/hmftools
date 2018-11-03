@@ -57,7 +57,7 @@ public abstract class ExplanationPage {
                                 + "with a hyperlink to the specific evidence items. NOTE: If a certain evidence item or drug-biomarker "
                                 + "is missing from the knowledgebases it will also not be included in this report.",
                         "More information on (CGI) biomarkers can be found on https://www.cancergenomeinterpreter.org/biomarkers",
-                        "Clinical trials are matched against the Iclusion database (https://iclusion.org) including "
+                        "Clinical trials are matched against the iClusion database (https://iclusion.org) including "
                                 + "a link to the specific trial."));
     }
 
