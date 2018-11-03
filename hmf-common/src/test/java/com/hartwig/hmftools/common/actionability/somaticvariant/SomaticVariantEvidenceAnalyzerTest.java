@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.actionability.somaticvariant;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
@@ -50,11 +48,10 @@ public class SomaticVariantEvidenceAnalyzerTest {
                 .response("Resistant")
                 .build();
 
-        CancerTypeReading reading = ImmutableCancerTypeReading.builder().doidSet("4159").cancerType("Skin").build();
-
         SomaticVariantEvidenceAnalyzer analyzer =
                 new SomaticVariantEvidenceAnalyzer(Lists.newArrayList(actionableSomaticVariant), Lists.newArrayList(actionableRange));
 
+        CancerTypeReading reading = ImmutableCancerTypeReading.builder().doidSet("4159").cancerType("Skin").build();
         CancerTypeAnalyzer cancerType = new CancerTypeAnalyzer(Lists.newArrayList(reading));
 
         SomaticVariant variant = ImmutableSomaticVariantImpl.builder()
@@ -80,6 +77,5 @@ public class SomaticVariantEvidenceAnalyzerTest {
                 .build();
 
         assertTrue(analyzer.evidenceForSomaticVariant(variant, "4159", cancerType).isEmpty());
-
     }
 }

@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.common.actionability.cnv;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
@@ -13,16 +11,15 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
-public class ActionabilityCNVsAnalyzerTest {
+public class CopyNumberEvidenceAnalyzerTest {
 
     @Test
-    public void ActionabilityWorksCNVs() {
-        ActionableCopyNumber actionanilityCNV = ImmutableActionableCopyNumber.builder()
+    public void actionabilityWorksForCNVs() {
+        ActionableCopyNumber actionabilityCNV = ImmutableActionableCopyNumber.builder()
                 .gene("ERBB2")
-                .cnvType("Amplification")
+                .type(CopyNumberType.AMPLIFICATION)
                 .source("oncoKb")
                 .reference("ERBB2:amp")
                 .drug("Trastuzumab")
@@ -33,9 +30,9 @@ public class ActionabilityCNVsAnalyzerTest {
                 .response("Responsive")
                 .build();
 
-        CancerTypeReading reading = ImmutableCancerTypeReading.builder().doidSet("1612").cancerType("Breast").build();
+        CopyNumberEvidenceAnalyzer cnvAnalyzer = new CopyNumberEvidenceAnalyzer(Lists.newArrayList(actionabilityCNV));
 
-        CopyNumberEvidenceAnalyzer cnvAnalyzer = new CopyNumberEvidenceAnalyzer(Lists.newArrayList(actionanilityCNV));
+        CancerTypeReading reading = ImmutableCancerTypeReading.builder().doidSet("1612").cancerType("Breast").build();
         CancerTypeAnalyzer cancerType = new CancerTypeAnalyzer(Lists.newArrayList(reading));
 
         GeneCopyNumber geneCopyNumber = ImmutableGeneCopyNumber.builder()

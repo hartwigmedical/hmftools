@@ -20,20 +20,20 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class ActionabilityFusionAnalyzerTest {
+public class FusionEvidenceAnalyzerTest {
 
     @Test
     public void actionabilityWorksFusions() {
         ActionableFusion fusion = ImmutableActionableFusion.builder()
+                .fiveGene("BCR")
+                .threeGene("ABL1")
                 .cancerType("Acute lymphoblastic leukemia")
                 .drug("Dasatinib")
                 .drugsType("BCR-ABL inhibitor")
-                .fiveGene("BCR")
                 .level("A")
                 .reference("BCR__ABL1")
                 .response("Responsive")
                 .source("CGI")
-                .threeGene("ABL1")
                 .build();
 
         ActionablePromiscuousFive five = ImmutableActionablePromiscuousFive.builder()
@@ -58,11 +58,10 @@ public class ActionabilityFusionAnalyzerTest {
                 .source("cgi")
                 .build();
 
-        CancerTypeReading reading = ImmutableCancerTypeReading.builder().doidSet("4159").cancerType("Skin").build();
-
         FusionEvidenceAnalyzer analyzer =
                 new FusionEvidenceAnalyzer((Lists.newArrayList(fusion)), Lists.newArrayList(five), Lists.newArrayList(three));
 
+        CancerTypeReading reading = ImmutableCancerTypeReading.builder().doidSet("4159").cancerType("Skin").build();
         CancerTypeAnalyzer cancerType = new CancerTypeAnalyzer(Lists.newArrayList(reading));
 
         GeneFusion fusion1 =
