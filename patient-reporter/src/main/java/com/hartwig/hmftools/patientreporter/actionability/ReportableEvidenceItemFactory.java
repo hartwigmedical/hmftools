@@ -80,7 +80,7 @@ public final class ReportableEvidenceItemFactory {
 
     @VisibleForTesting
     static boolean hasReportableEvidenceLevel(@NotNull EvidenceItem evidence) {
-        return evidence.level().isReportedEvidenceItemLevel();
+        return evidence.level().includeInReport();
     }
 
     @VisibleForTesting

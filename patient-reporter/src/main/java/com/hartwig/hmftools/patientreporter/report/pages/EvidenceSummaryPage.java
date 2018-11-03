@@ -11,6 +11,9 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
+import java.util.List;
+
+import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.report.Commons;
 import com.hartwig.hmftools.patientreporter.report.components.GenomicSummarySection;
@@ -38,28 +41,40 @@ public abstract class EvidenceSummaryPage {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 GenomicSummarySection.build(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                evidenceItemReport(report()),
+                tumorSpecificClinicalEvidence(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                clinicalTrialReport(report()));
+                clinicalTrialReport(report()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                offLabelClinicalEvidence(report()));
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> evidenceItemReport(@NotNull AnalysedPatientReport report) {
-        final ComponentBuilder<?, ?> table = report.tumorLocationSpecificEvidence().size() > 0
+    private static ComponentBuilder<?, ?> tumorSpecificClinicalEvidence(@NotNull AnalysedPatientReport report) {
+        return evidenceItemReport(report.tumorSpecificEvidence(), "Tumor Specific Clinical Evidence");
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> offLabelClinicalEvidence(@NotNull AnalysedPatientReport report) {
+        return evidenceItemReport(report.offLabelEvidence(), "Off-label Clinical Evidence");
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> evidenceItemReport(@NotNull List<EvidenceItem> items, @NotNull String title) {
+        final ComponentBuilder<?, ?> table = items.size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(EvidenceItemDataSource.evidenceItemFields())
                 .columns(col.column("Event", EvidenceItemDataSource.EVENT_FIELD).setFixedWidth(120),
+                        col.column("Scope", EvidenceItemDataSource.SCOPE_FIELD),
                         col.column("Drug", EvidenceItemDataSource.DRUG_FIELD).setFixedWidth(190),
                         col.column("Level", EvidenceItemDataSource.LEVEL_FIELD),
-                        col.column("Response", EvidenceItemDataSource.RESPONSE_FIELD).setFixedWidth(50),
+                        col.column("Response", EvidenceItemDataSource.RESPONSE_FIELD),
                         col.column("Source", EvidenceItemDataSource.SOURCE_FIELD)
                                 .setHyperLink(hyperLink(EvidenceItemDataSource.sourceHyperlink()))
                                 .setStyle(linkStyle()),
-                        col.column("Cancer type", EvidenceItemDataSource.CANCER_TYPE_FIELD).setFixedWidth(120),
-                        col.column("On label", EvidenceItemDataSource.IS_ONLABEL))
-                .setDataSource(EvidenceItemDataSource.fromEvidenceItems(report.tumorLocationSpecificEvidence())))
+                        col.column("Cancer type", EvidenceItemDataSource.CANCER_TYPE_FIELD))
+                .setDataSource(EvidenceItemDataSource.fromEvidenceItems(items)))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        return cmp.verticalList(cmp.text("Clinical Evidence").setStyle(sectionHeaderStyle()),
+        return cmp.verticalList(cmp.text(title).setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
                 table);
     }

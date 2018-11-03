@@ -31,7 +31,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract double averageTumorPloidy();
 
     @NotNull
-    public abstract List<EvidenceItem> tumorLocationSpecificEvidence();
+    public abstract List<EvidenceItem> tumorSpecificEvidence();
 
     @NotNull
     public abstract List<ClinicalTrial> clinicalTrials();
