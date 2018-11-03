@@ -13,10 +13,14 @@ import com.google.common.collect.Sets;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 class PrimaryTumorToDOIDMapper {
+
+    private static final Logger LOGGER = LogManager.getLogger(PrimaryTumorToDOIDMapper.class);
 
     private static final InputStream TUMOR_LOCATION_MAPPING_RESOURCE =
             PrimaryTumorToDOIDMapper.class.getResourceAsStream("/actionability/primary_tumor_locations_mapping.csv");
@@ -63,6 +67,10 @@ class PrimaryTumorToDOIDMapper {
 
     @Nullable
     public Set<String> findDoids(@NotNull String primaryTumorLocation) {
-        return doidsPerPrimaryTumor.get(primaryTumorLocation);
+        Set<String> doids = doidsPerPrimaryTumor.get(primaryTumorLocation);
+        if (doids == null) {
+            LOGGER.warn("Could not resolve primary tumor location in DOID mapping: " + primaryTumorLocation);
+        }
+        return doids;
     }
 }
