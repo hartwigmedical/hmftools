@@ -13,10 +13,10 @@ public final class ClinicalTrialFactory {
     }
 
     @NotNull
-    public static List<ClinicalTrial> extractTrials(@NotNull List<EvidenceItem> evidenceItems) {
+    public static List<ClinicalTrial> extractOnLabelTrials(@NotNull List<EvidenceItem> evidenceItems) {
         List<ClinicalTrial> trials = Lists.newArrayList();
         for (EvidenceItem evidence : evidenceItems) {
-            if (evidence.source().isTrialSource()) {
+            if (evidence.source().isTrialSource() && evidence.isOnLabel()) {
                 trials.add(toClinicalTrial(evidence));
             }
         }

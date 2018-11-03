@@ -120,7 +120,7 @@ abstract class PatientReporter {
                 copyNumberAnalysis.status() != FittedPurityStatus.NO_TUMOR,
                 copyNumberAnalysis.fittedPurity().ploidy(),
                 nonTrials.stream().filter(EvidenceItem::isOnLabel).collect(Collectors.toList()),
-                ClinicalTrialFactory.extractTrials(allEvidenceItems),
+                ClinicalTrialFactory.extractOnLabelTrials(allEvidenceItems),
                 nonTrials.stream().filter(item -> !item.isOnLabel()).collect(Collectors.toList()),
                 somaticVariantAnalysis.reportableSomaticVariants(),
                 somaticVariantAnalysis.microsatelliteIndelsPerMb(),
