@@ -166,7 +166,6 @@ public class SvSampleAnalyser {
 
         mPc4.start();
         mAnalyser.findLinksAndChains();
-        mAnalyser.markFoldbacks();
         // mClusteringMethods.logInversionPairData(mSampleId, mClusters);
         mPc4.stop();
 
@@ -355,7 +354,7 @@ public class SvSampleAnalyser {
                                     cluster.getDesc(), cluster.isResolved(), cluster.getResolvedType(), cluster.getConsistencyCount(), cluster.getChromosomalArmCount()));
 
                     // linked pair info
-                    final SvLinkedPair startLP = cluster.getLinkedPair(var, true);
+                    final SvLinkedPair startLP = var.getLinkedPair(true) != null ? var.getLinkedPair(true) : cluster.getLinkedPair(var, true);
                     String startLinkStr = "0,,-1,";
                     String assemblyMatchStart = var.getAssemblyMatchType(true);
                     if(startLP != null)
@@ -365,7 +364,7 @@ public class SvSampleAnalyser {
                                 startLP.linkType(), startLP.length(), startLP.getInfo());
                     }
 
-                    final SvLinkedPair endLP = cluster.getLinkedPair(var, false);
+                    final SvLinkedPair endLP = var.getLinkedPair(false) != null ? var.getLinkedPair(false) : cluster.getLinkedPair(var, false);
                     String endLinkStr = "0,,-1,";
                     String assemblyMatchEnd = var.getAssemblyMatchType(false);
                     if(endLP != null)

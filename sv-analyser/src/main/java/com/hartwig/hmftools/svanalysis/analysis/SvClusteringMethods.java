@@ -32,6 +32,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcTypeCount
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_TELOMERE;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.ASSEMBLY_TYPE_EQV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_OVERLAP;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveLinkedAssemblies;
@@ -127,6 +128,14 @@ public class SvClusteringMethods {
             // first remove the current SV from consideration
             newCluster.addVariant(currentVar);
             unassignedVariants.remove(currentIndex); // index will remain the same and so point to the next item
+
+            // exceptions to proximity clustering
+            if(isEquivSingleBreakend(currentVar))
+            {
+                newCluster.setResolved(true, RESOLVED_LOW_QUALITY);
+                clusters.add(newCluster);
+                continue;
+            }
 
             // and then search for all other linked ones
             findLinkedSVsByDistance(newCluster, unassignedVariants, true);
@@ -292,6 +301,15 @@ public class SvClusteringMethods {
     public boolean isLowQualityVariant(final SvVarData var)
     {
         return var.copyNumberChange(true) < LOW_QUALITY_CN_CHANGE && var.copyNumberChange(false) < LOW_QUALITY_CN_CHANGE;
+    }
+
+    public boolean isEquivSingleBreakend(final SvVarData var)
+    {
+        if(!var.isNullBreakend())
+            return false;
+
+        return  (var.getAssemblyData(true).contains(ASSEMBLY_TYPE_EQV)
+                || var.getAssemblyData(false).contains(ASSEMBLY_TYPE_EQV));
     }
 
     private void mergeOnLOHEvents(final String sampleId, List<SvCluster> clusters)

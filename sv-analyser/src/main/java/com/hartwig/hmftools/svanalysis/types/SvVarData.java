@@ -58,6 +58,8 @@ public class SvVarData
     private SvGeneData mStartGeneData;
     private SvGeneData mEndGeneData;
 
+    private SvLinkedPair mStartLink;
+    private SvLinkedPair mEndLink;
     private List<String> mStartTempInsertionAssemblies;
     private List<String> mStartDsbAssemblies;
     private List<String> mStartOtherAssemblies;
@@ -67,12 +69,13 @@ public class SvVarData
     private String mStartAssemblyMatchType;
     private String mEndAssemblyMatchType;
     private boolean mIsReplicatedSv;
-    private final SvVarData mReplicatedSv;
+    private SvVarData mReplicatedSv;
     private int mReplicatedCount;
 
     public static String ASSEMBLY_TYPE_DSB = "dsb";
     public static String ASSEMBLY_TYPE_TI = "asm";
     public static String ASSEMBLY_TYPE_OTHER = "bpb";
+    public static String ASSEMBLY_TYPE_EQV = "eqv";
 
     public static String RELATION_TYPE_NEIGHBOUR = "NHBR";
     public static String RELATION_TYPE_OVERLAP = "OVRL";
@@ -85,6 +88,14 @@ public class SvVarData
     {
         mId = svData.id();
         mSVData = svData;
+
+        init();
+
+        setAssemblyData(mSVData.startLinkedBy(), mSVData.endLinkedBy());
+    }
+
+    private void init()
+    {
         mNoneSegment = false;
         mStartArm = "";
         mEndArm = "";
@@ -98,7 +109,6 @@ public class SvVarData
         mNearestSvDistance = -1;
         mNearestSvRelation = "";
 
-        setAssemblyData(mSVData.startLinkedBy(), mSVData.endLinkedBy());
         mIsReplicatedSv = false;
         mReplicatedSv = null;
         mReplicatedCount = 0;
@@ -110,6 +120,9 @@ public class SvVarData
         mTransLength = 0;
         mTransSvLinks = "";
 
+        mStartLink = null;
+        mEndLink = null;
+
         mFoldbackLinkStart = "";
         mFoldbackLinkEnd = "";
         mFoldbackLenStart = -1;
@@ -117,6 +130,7 @@ public class SvVarData
 
         mStartGeneData = null;
         mEndGeneData = null;
+
     }
 
     public static SvVarData from(final EnrichedStructuralVariant enrichedSV)
@@ -147,6 +161,8 @@ public class SvVarData
 
     public SvVarData(final SvVarData other)
     {
+        init();
+
         mId = other.getSvData().id() + "r";
         mSVData = other.getSvData();
         mNoneSegment = other.isNoneSegment();
@@ -264,6 +280,16 @@ public class SvVarData
     public boolean isDupBreakend(boolean useStart) { return useStart ? mDupBEStart : mDupBEEnd; }
     public void setIsDupBEStart(boolean toggle) { mDupBEStart = toggle; }
     public void setIsDupBEEnd(boolean toggle) { mDupBEEnd = toggle; }
+
+    public final SvLinkedPair getLinkedPair(boolean isStart) { return isStart ? mStartLink : mEndLink; }
+
+    public void setLinkedPair(final SvLinkedPair link, boolean isStart)
+    {
+        if(isStart)
+            mStartLink = link;
+        else
+            mEndLink = link;
+    }
 
     public String getFoldbackLink(boolean useStart) { return useStart ? mFoldbackLinkStart : mFoldbackLinkEnd; }
     public int getFoldbackLen(boolean useStart) { return useStart ? mFoldbackLenStart : mFoldbackLenEnd; }

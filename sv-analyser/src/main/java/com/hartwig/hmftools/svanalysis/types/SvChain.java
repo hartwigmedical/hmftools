@@ -394,6 +394,8 @@ public class SvChain {
 
     public boolean breakendsAreChained(final SvVarData var1, boolean v1Start, final SvVarData var2, boolean v2Start)
     {
+        // the 2 bool passed in are the ends which are linked through the chain
+
         // check whether these breakends face towards each other in the chain
         boolean be1FacesUp = false; // 'up' here means towards a higher index
         int be1Index = -1;
@@ -408,8 +410,8 @@ public class SvChain {
             {
                 be1Index = i;
 
-                // if start links to preceding then end is facing up
-                be2FacesUp = mSvLinkToPrecedingOnStart.get(i) != v1Start;
+                // if start links to preceding then end is facing up, so true if is checking the end
+                be1FacesUp = mSvLinkToPrecedingOnStart.get(i) != v1Start;
             }
             else if(var.equals(var2, true))
             {

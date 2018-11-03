@@ -140,6 +140,8 @@ public class LinkFinder
                         newPair.setIsInferred(false);
                         var1.setAssemblyMatchType(ASSEMBLY_MATCH_MATCHED, v1Start);
                         var2.setAssemblyMatchType(ASSEMBLY_MATCH_MATCHED, v2Start);
+                        var1.setLinkedPair(newPair, v1Start);
+                        var2.setLinkedPair(newPair, v1Start);
 
                         linkedPairs.add(newPair);
 

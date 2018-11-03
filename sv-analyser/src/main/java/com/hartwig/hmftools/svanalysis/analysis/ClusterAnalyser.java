@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMP
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.findCluster;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_SGL;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
@@ -139,6 +140,9 @@ public class ClusterAnalyser {
 
             cluster.logDetails();
         }
+
+        // INVs and other SV-pairs which make foldbacks are now used in the inconsistent clustering logic
+        markFoldbacks();
 
         // now look at merging unresolved & inconsistent clusters where they share the same chromosomal arms
         List<SvCluster> mergedClusters = mergeInconsistentClusters();
@@ -491,7 +495,7 @@ public class ClusterAnalyser {
                     continue;
                 }
 
-                boolean foundConnection = !isConsistent1 && !isConsistent2 && canMergeClustersOnOverlaps(cluster1, cluster2);
+                boolean foundConnection = !isConsistent1 && !isConsistent2 && canMergeClustersOnFoldbacks(cluster1, cluster2);
 
                 if(!foundConnection && hasLongDelDup1)
                     foundConnection = mClusteringMethods.canMergeClustersOnLongDelDups(cluster1, cluster2);
@@ -581,6 +585,47 @@ public class ClusterAnalyser {
 
                 return true;
             }
+        }
+
+        return false;
+    }
+
+    private boolean canMergeClustersOnFoldbacks(SvCluster cluster1, SvCluster cluster2)
+    {
+        // checks for overlapping breakends in inconsistent matching arms
+        final List<SvArmGroup> armGroups1 = cluster1.getArmGroups();
+        final List<SvArmGroup> armGroups2 = cluster2.getArmGroups();
+
+        for (SvArmGroup armGroup1 : armGroups1)
+        {
+            if(!hasFoldback(armGroup1.getSVs()))
+                continue;
+
+            for (SvArmGroup armGroup2 : armGroups2)
+            {
+                if(!armGroup1.matches(armGroup2))
+                    continue;
+
+                if(!hasFoldback(armGroup2.getSVs()))
+                    continue;
+
+                // for now merge any inconsistent arm
+                LOGGER.debug("inconsistent cluster({}) and cluster({}) both have foldbacks on chrArm({})",
+                        cluster1.getId(), cluster2.getId(), armGroup1.id());
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean hasFoldback(final List<SvVarData> svList)
+    {
+        for(final SvVarData var : svList)
+        {
+            if(!var.getFoldbackLink(true).isEmpty() || !var.getFoldbackLink(false).isEmpty())
+                return true;
         }
 
         return false;
@@ -800,6 +845,8 @@ public class ClusterAnalyser {
                 final SvBreakend prevBreakend = breakendList.get(i - 1);
 
                 checkFoldbackBreakends(breakend, prevBreakend);
+
+                checkReplicatedBreakendFoldback(breakend);
             }
         }
     }
@@ -822,10 +869,19 @@ public class ClusterAnalyser {
         if(cluster1.isSimpleSVs() || (cluster1.getCount() == 2 && cluster1.isConsistent()))
             return;
 
-        final SvCluster cluster2 = findCluster(var2, mClusters);
+        SvCluster cluster2 = null;
 
-        if(cluster2.isSimpleSVs() || (cluster2.getCount() == 2 && cluster2.isConsistent()))
-            return;
+        if(var1.equals(var2))
+        {
+            cluster2 = cluster1;
+        }
+        else
+        {
+            cluster2 = findCluster(var2, mClusters);
+
+            if (cluster2.isSimpleSVs() || (cluster2.getCount() == 2 && cluster2.isConsistent()))
+                return;
+        }
 
         boolean v1Start = be1.usesStart();
         boolean v2Start = be2.usesStart();
@@ -908,6 +964,42 @@ public class ClusterAnalyser {
         {
             LOGGER.debug(String.format("cluster(%s) foldback be1(%s) be2(%s) length(%d) copyNumber(%.3f)",
                     cluster1.getId(), be1.toString(), be2.toString(), length, cn1));
+        }
+    }
+
+    private void checkReplicatedBreakendFoldback(SvBreakend be)
+    {
+        // a special case where one ends of an SV connects to both ends of a single other variant
+        // during a replication event and in doing so forms a foldback
+        final SvVarData var = be.getSV();
+
+        if(var.type() != BND || var.getReplicatedCount() != 2)
+            return;
+
+        if(!var.getAssemblyMatchType(true).equals(ASSEMBLY_MATCH_MATCHED)
+        && !var.getAssemblyMatchType(false).equals(ASSEMBLY_MATCH_MATCHED))
+        {
+            return;
+        }
+
+        // check if the replicated SV has the same linked pairing
+        // or if the variant forms both ends of the cluster's chain
+        final SvCluster cluster = findCluster(var, mClusters);
+        if(cluster == null)
+            return;
+
+        for(final SvChain chain : cluster.getChains())
+        {
+            if(chain.getFirstSV().equals(var, true)
+            && chain.getLastSV().equals(var, true)
+            && chain.firstLinkOpenOnStart() == chain.lastLinkOpenOnStart())
+            {
+                var.setFoldbackLink(true, var.id(), 0);
+                var.setFoldbackLink(false, var.id(), 0);
+
+                LOGGER.debug(String.format("cluster(%s) foldback translocation SV(%s) with self",
+                        cluster.getId(), var.posId()));
+            }
         }
     }
 
