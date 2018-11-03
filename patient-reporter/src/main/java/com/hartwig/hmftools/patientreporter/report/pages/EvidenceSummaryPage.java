@@ -69,8 +69,7 @@ public abstract class EvidenceSummaryPage {
                         col.column("Response", EvidenceItemDataSource.RESPONSE_FIELD),
                         col.column("Source", EvidenceItemDataSource.SOURCE_FIELD)
                                 .setHyperLink(hyperLink(EvidenceItemDataSource.sourceHyperlink()))
-                                .setStyle(linkStyle()),
-                        col.column("Cancer type", EvidenceItemDataSource.CANCER_TYPE_FIELD))
+                                .setStyle(linkStyle()))
                 .setDataSource(EvidenceItemDataSource.fromEvidenceItems(items)))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
@@ -88,9 +87,7 @@ public abstract class EvidenceSummaryPage {
                         col.column("Source", ClinicalTrialDataSource.SOURCE_FIELD)
                                 .setHyperLink(hyperLink(ClinicalTrialDataSource.sourceHyperlink()))
                                 .setStyle(linkStyle()),
-                        col.column("CCMO", ClinicalTrialDataSource.CCMO_FIELD),
-                        col.column("Cancer type", ClinicalTrialDataSource.CANCER_TYPE_FIELD),
-                        col.column("On label", ClinicalTrialDataSource.IS_ONLABEL))
+                        col.column("CCMO", ClinicalTrialDataSource.CCMO_FIELD))
                 .setDataSource(ClinicalTrialDataSource.fromClinicalTrials(report.clinicalTrials())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 

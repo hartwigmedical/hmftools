@@ -24,7 +24,6 @@ public final class EvidenceItemDataSource {
     public static final FieldBuilder<?> LEVEL_FIELD = field("level", String.class);
     public static final FieldBuilder<?> RESPONSE_FIELD = field("response", String.class);
     public static final FieldBuilder<?> SOURCE_FIELD = field("source", String.class);
-    public static final FieldBuilder<?> CANCER_TYPE_FIELD = field("cancer type", String.class);
     private static final FieldBuilder<?> REFERENCE_FIELD = field("reference", String.class);
 
     private EvidenceItemDataSource() {
@@ -32,8 +31,7 @@ public final class EvidenceItemDataSource {
 
     @NotNull
     public static FieldBuilder<?>[] evidenceItemFields() {
-        return new FieldBuilder<?>[] { EVENT_FIELD, SCOPE_FIELD, DRUG_FIELD, LEVEL_FIELD, RESPONSE_FIELD, SOURCE_FIELD,
-                CANCER_TYPE_FIELD, REFERENCE_FIELD };
+        return new FieldBuilder<?>[] { EVENT_FIELD, SCOPE_FIELD, DRUG_FIELD, LEVEL_FIELD, RESPONSE_FIELD, SOURCE_FIELD, REFERENCE_FIELD };
     }
 
     @NotNull
@@ -44,7 +42,6 @@ public final class EvidenceItemDataSource {
                 LEVEL_FIELD.getName(),
                 RESPONSE_FIELD.getName(),
                 SOURCE_FIELD.getName(),
-                CANCER_TYPE_FIELD.getName(),
                 REFERENCE_FIELD.getName());
 
         for (EvidenceItem evidenceItem : sort(evidenceItems)) {
@@ -57,7 +54,6 @@ public final class EvidenceItemDataSource {
                     evidenceItem.level().readableString(),
                     evidenceItem.response(),
                     evidenceItem.source().sourceName(),
-                    evidenceItem.cancerType(),
                     evidenceItem.reference());
         }
         return evidenceItemDataSource;
