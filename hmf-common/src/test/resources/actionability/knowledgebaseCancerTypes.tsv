@@ -1,2 +1,3 @@
 cancerType	doidSet
-Non-Small Cell Lung Cancer	Doid(value=3908);Doid(value=6482);Doid(value=0050872);Doid(value=3910);Doid(value=0080303);Doid(value=0080304);Doid(value=3907);Doid(value=0080305);Doid(value=0080306);Doid(value=5583);Doid(value=7267);Doid(value=7168);Doid(value=7169);Doid(value=7045);Doid(value=0080184);Doid(value=6510);Doid(value=0080185);Doid(value=0080186);Doid(value=5588);Doid(value=4556);Doid(value=7207);Doid(value=6658);Doid(value=4926);Doid(value=4829);Doid(value=7480);Doid(value=850);Doid(value=0050687);Doid(value=0050686);Doid(value=0050615);Doid(value=162);Doid(value=1579);Doid(value=0050161);Doid(value=1324);Doid(value=14566);Doid(value=4);Doid(value=3905);Doid(value=7);Doid(value=305)
+Lung	Doid(value=3908);Doid(value=6482);
+Some other Cancer

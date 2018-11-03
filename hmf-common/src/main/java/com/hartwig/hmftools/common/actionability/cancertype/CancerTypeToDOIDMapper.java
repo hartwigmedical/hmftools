@@ -48,7 +48,8 @@ class CancerTypeToDOIDMapper {
     @NotNull
     private static CancerTypeToDOIDMappingEntry fromLine(@NotNull String line) {
         String[] values = line.split(LINE_DELIMITER);
-        return ImmutableCancerTypeToDOIDMappingEntry.builder().cancerType(values[0].trim()).doids(toDOIDSet(values[1].trim())).build();
+        Set<String> doids = values.length > 1 ? toDOIDSet(values[1].trim()) : Sets.newHashSet();
+        return ImmutableCancerTypeToDOIDMappingEntry.builder().cancerType(values[0].trim()).doids(doids).build();
     }
 
     @NotNull
