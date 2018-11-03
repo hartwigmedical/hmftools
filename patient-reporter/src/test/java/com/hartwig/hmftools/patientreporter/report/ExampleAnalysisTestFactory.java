@@ -67,8 +67,9 @@ final class ExampleAnalysisTestFactory {
         final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity, averageTumorPloidy);
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, fittedPurity);
-        final List<EvidenceItem> clinicalEvidence = createCOLO829ClinicalEvidence();
+        final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
+        final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
         final List<ReportableSomaticVariant> somaticVariants = createCOLO829SomaticVariants(purityAdjuster);
         final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
         final List<ReportableGeneFusion> fusions = Lists.newArrayList();
@@ -82,8 +83,9 @@ final class ExampleAnalysisTestFactory {
                 fittedPurity.purity(),
                 true,
                 fittedPurity.ploidy(),
-                clinicalEvidence,
+                tumorLocationSpecificEvidence,
                 clinicalTrials,
+                offLabelEvidence,
                 somaticVariants,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
@@ -112,8 +114,9 @@ final class ExampleAnalysisTestFactory {
         final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity, averageTumorPloidy);
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, fittedPurity);
-        final List<EvidenceItem> clinicalEvidence = createCOLO829ClinicalEvidence();
+        final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
+        final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
         final List<ReportableSomaticVariant> somaticVariants = createCOLO829SomaticVariants(purityAdjuster);
         final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
         final List<ReportableGeneFusion> fusions = createTestFusions();
@@ -127,8 +130,9 @@ final class ExampleAnalysisTestFactory {
                 fittedPurity.purity(),
                 true,
                 fittedPurity.ploidy(),
-                clinicalEvidence,
+                tumorLocationSpecificEvidence,
                 clinicalTrials,
+                offLabelEvidence,
                 somaticVariants,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
@@ -158,7 +162,7 @@ final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<EvidenceItem> createCOLO829ClinicalEvidence() {
+    private static List<EvidenceItem> createCOLO829TumorSpecificEvidence() {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
         evidenceItems.add(evidenceBuilder().event("BRAF p.Val600Glu")
                 .drug("Dabrafenib")
@@ -405,6 +409,11 @@ final class ExampleAnalysisTestFactory {
                 .build());
 
         return trials;
+    }
+
+    @NotNull
+    private static List<EvidenceItem> createCOLO829OffLabelEvidence() {
+        return Lists.newArrayList();
     }
 
     @NotNull

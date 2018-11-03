@@ -31,10 +31,13 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract double averageTumorPloidy();
 
     @NotNull
-    public abstract List<EvidenceItem> clinicalEvidence();
+    public abstract List<EvidenceItem> tumorLocationSpecificEvidence();
 
     @NotNull
     public abstract List<ClinicalTrial> clinicalTrials();
+
+    @NotNull
+    public abstract List<EvidenceItem> offLabelEvidence();
 
     @NotNull
     public abstract List<ReportableSomaticVariant> somaticVariants();

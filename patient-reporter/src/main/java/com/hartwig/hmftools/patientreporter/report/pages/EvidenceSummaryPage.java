@@ -45,7 +45,7 @@ public abstract class EvidenceSummaryPage {
 
     @NotNull
     private static ComponentBuilder<?, ?> evidenceItemReport(@NotNull AnalysedPatientReport report) {
-        final ComponentBuilder<?, ?> table = report.clinicalEvidence().size() > 0
+        final ComponentBuilder<?, ?> table = report.tumorLocationSpecificEvidence().size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(EvidenceItemDataSource.evidenceItemFields())
                 .columns(col.column("Event", EvidenceItemDataSource.EVENT_FIELD).setFixedWidth(120),
                         col.column("Drug", EvidenceItemDataSource.DRUG_FIELD).setFixedWidth(190),
@@ -56,7 +56,7 @@ public abstract class EvidenceSummaryPage {
                                 .setStyle(linkStyle()),
                         col.column("Cancer type", EvidenceItemDataSource.CANCER_TYPE_FIELD).setFixedWidth(120),
                         col.column("On label", EvidenceItemDataSource.IS_ONLABEL))
-                .setDataSource(EvidenceItemDataSource.fromEvidenceItems(report.clinicalEvidence())))
+                .setDataSource(EvidenceItemDataSource.fromEvidenceItems(report.tumorLocationSpecificEvidence())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Clinical Evidence").setStyle(sectionHeaderStyle()),
