@@ -80,7 +80,7 @@
 //                && Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
 //            SomaticVariantEvidenceAnalyzer analyzer =
 //                    SomaticVariantEvidenceAnalyzer.loadFromFileVariantsAndFileRanges(fileActionabilityVariants, fileActionabilityRanges);
-//            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
+//            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.createFromKnowledgeBase(fileCancerTumorsWithDOID);
 //
 //            Set<String> actionableGenesVariants = analyzer.actionableGenes();
 //            LOGGER.info(actionableGenesVariants.size() + " actionable genes found for variants (and ranges)");
@@ -118,7 +118,7 @@
 //        LOGGER.info("CNVs: " + exomeGeneCopyNumbers.size());
 //        if (Files.exists(new File(fileActionabilityCNVs).toPath()) && Files.exists(new File(fileCancerTumorsWithDOID).toPath())) {
 //            CopyNumberEvidenceAnalyzer analyzerCNVs = CopyNumberEvidenceAnalyzer.loadFromFileCNVs(fileActionabilityCNVs);
-//            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
+//            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.createFromKnowledgeBase(fileCancerTumorsWithDOID);
 //
 //            Set<String> actionableGenesCNVS = analyzerCNVs.actionableGenes();
 //            LOGGER.info(actionableGenesCNVS.size() + " actionable genes found for cnvs");
@@ -152,7 +152,7 @@
 //        //
 //        //            FusionEvidenceAnalyzer analyzerFusion = FusionEvidenceAnalyzer.loadFromFileFusions(fileActionabilityFusionPairs,
 //        //                    fileActionabilityPromiscuousFive, fileActionabilityPromiscuousThree);
-//        //            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.loadFromFile(fileCancerTumorsWithDOID);
+//        //            CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.createFromKnowledgeBase(fileCancerTumorsWithDOID);
 //        //
 //        //
 //        //        } else if (!Files.exists(new File(fileActionabilityFusionPairs).toPath())) {

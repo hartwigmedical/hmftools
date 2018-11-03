@@ -6,10 +6,10 @@ import java.io.IOException;
 
 import org.junit.Test;
 
-public class PrimaryTumorToDOIDMappingTest {
+public class PrimaryTumorToDOIDMapperTest {
 
     @Test
     public void canCreateProductionResource() throws IOException {
-        assertNotNull(PrimaryTumorToDOIDMapping.createFromResource());
+        assertNotNull(PrimaryTumorToDOIDMapper.createFromResource());
     }
 }

@@ -58,7 +58,7 @@ public class ActionabilityAnalyzer {
                 basePath + ACTIONABLE_PROMISCUOUS_THREE_FILE);
 
         CancerTypeAnalyzer cancerTypeAnalyzer =
-                CancerTypeAnalyzer.loadFromFile(knowledgebasePath + File.separator + CANCER_TYPE_DOID_MAPPING_FILE);
+                CancerTypeAnalyzer.createFromKnowledgeBase(knowledgebasePath + File.separator + CANCER_TYPE_DOID_MAPPING_FILE);
 
         return new ActionabilityAnalyzer(variantAnalyzer,
                 cnvAnalyzer,

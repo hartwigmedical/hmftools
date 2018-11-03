@@ -16,10 +16,10 @@ import org.apache.commons.csv.CSVRecord;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class PrimaryTumorToDOIDMapping {
+class PrimaryTumorToDOIDMapper {
 
     private static final InputStream TUMOR_LOCATION_MAPPING_RESOURCE =
-            PrimaryTumorToDOIDMapping.class.getResourceAsStream("/actionability/primary_tumor_locations_mapping.csv");
+            PrimaryTumorToDOIDMapper.class.getResourceAsStream("/actionability/primary_tumor_locations_mapping.csv");
 
     private static final String DOID_SEPARATOR = ";";
     private static final String NO_DOIDS_PRESENT = "UNMAPPED";
@@ -28,7 +28,7 @@ class PrimaryTumorToDOIDMapping {
     private final Map<String, Set<String>> doidsPerPrimaryTumor;
 
     @NotNull
-    public static PrimaryTumorToDOIDMapping createFromResource() throws IOException {
+    public static PrimaryTumorToDOIDMapper createFromResource() throws IOException {
         final CSVParser parser = CSVParser.parse(TUMOR_LOCATION_MAPPING_RESOURCE, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
         Map<String, Set<String>> doidsPerPrimaryTumor = Maps.newHashMap();
         for (final CSVRecord record : parser) {
@@ -38,11 +38,11 @@ class PrimaryTumorToDOIDMapping {
             doidsPerPrimaryTumor.put(primaryTumorLocation, toSet(doids));
         }
 
-        return new PrimaryTumorToDOIDMapping(doidsPerPrimaryTumor);
+        return new PrimaryTumorToDOIDMapper(doidsPerPrimaryTumor);
     }
 
     @VisibleForTesting
-    PrimaryTumorToDOIDMapping(@NotNull final Map<String, Set<String>> doidsPerPrimaryTumor) {
+    PrimaryTumorToDOIDMapper(@NotNull final Map<String, Set<String>> doidsPerPrimaryTumor) {
         this.doidsPerPrimaryTumor = doidsPerPrimaryTumor;
     }
 
