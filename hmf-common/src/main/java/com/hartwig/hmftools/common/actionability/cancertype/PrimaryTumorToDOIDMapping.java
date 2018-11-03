@@ -25,44 +25,44 @@ class PrimaryTumorToDOIDMapping {
     private static final String NO_DOIDS_PRESENT = "UNMAPPED";
 
     @NotNull
-    private final Map<String, Set<Integer>> doidsPerPrimaryTumor;
+    private final Map<String, Set<String>> doidsPerPrimaryTumor;
 
     @NotNull
     public static PrimaryTumorToDOIDMapping createFromResource() throws IOException {
         final CSVParser parser = CSVParser.parse(TUMOR_LOCATION_MAPPING_RESOURCE, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
-        Map<String, Set<Integer>> doidsPerPrimaryTumor = Maps.newHashMap();
+        Map<String, Set<String>> doidsPerPrimaryTumor = Maps.newHashMap();
         for (final CSVRecord record : parser) {
             final String primaryTumorLocation = record.get("primaryTumorLocation");
             final String doids = record.get("doids");
 
-            doidsPerPrimaryTumor.put(primaryTumorLocation, toIntegerSet(doids));
+            doidsPerPrimaryTumor.put(primaryTumorLocation, toSet(doids));
         }
 
         return new PrimaryTumorToDOIDMapping(doidsPerPrimaryTumor);
     }
 
     @VisibleForTesting
-    PrimaryTumorToDOIDMapping(@NotNull final Map<String, Set<Integer>> doidsPerPrimaryTumor) {
+    PrimaryTumorToDOIDMapping(@NotNull final Map<String, Set<String>> doidsPerPrimaryTumor) {
         this.doidsPerPrimaryTumor = doidsPerPrimaryTumor;
     }
 
     @NotNull
-    private static Set<Integer> toIntegerSet(@NotNull String doidsString) {
+    private static Set<String> toSet(@NotNull String doidsString) {
         if (doidsString.equals(NO_DOIDS_PRESENT)) {
             return Sets.newHashSet();
         }
 
-        Set<Integer> doids = Sets.newHashSet();
+        Set<String> doids = Sets.newHashSet();
         String[] values = doidsString.split(DOID_SEPARATOR);
 
         for (String value : values) {
-            doids.add(Integer.valueOf(value.trim()));
+            doids.add(value.trim());
         }
         return doids;
     }
 
     @Nullable
-    public Set<Integer> findDoids(@NotNull String primaryTumorLocation) {
+    public Set<String> findDoids(@NotNull String primaryTumorLocation) {
         return doidsPerPrimaryTumor.get(primaryTumorLocation);
     }
 }

@@ -17,10 +17,10 @@ public class CancerTypeAnalyzerTest {
     @Test
     public void canMatchDOIDToPrimaryTumorLocation() {
         CancerTypeToDOIDMappingEntry cancerTypeToDOIDMappingEntry =
-                ImmutableCancerTypeToDOIDMappingEntry.builder().cancerType("NSCLC").addDoids(10).build();
+                ImmutableCancerTypeToDOIDMappingEntry.builder().cancerType("NSCLC").addDoids("0010").build();
 
-        Map<String, Set<Integer>> primaryTumorLocationMappings = Maps.newHashMap();
-        primaryTumorLocationMappings.put("Lung", Sets.newHashSet(10));
+        Map<String, Set<String>> primaryTumorLocationMappings = Maps.newHashMap();
+        primaryTumorLocationMappings.put("Lung", Sets.newHashSet("0010"));
 
         CancerTypeAnalyzer cancerTypeAnalyzer = new CancerTypeAnalyzer(Lists.newArrayList(cancerTypeToDOIDMappingEntry),
                 new PrimaryTumorToDOIDMapping(primaryTumorLocationMappings));

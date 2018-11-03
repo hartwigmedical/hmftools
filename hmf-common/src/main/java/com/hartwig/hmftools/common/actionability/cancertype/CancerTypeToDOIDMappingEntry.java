@@ -15,5 +15,5 @@ abstract class CancerTypeToDOIDMappingEntry {
     abstract String cancerType();
 
     @NotNull
-    abstract Set<Integer> doids();
+    abstract Set<String> doids();
 }

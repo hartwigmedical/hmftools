@@ -12,7 +12,7 @@ public final class CancerTypeAnalyzerTestFactory {
     }
 
     @NotNull
-    public static CancerTypeAnalyzer buildWithOneCancerTypeMapping(@NotNull String cancerType, int doid) {
+    public static CancerTypeAnalyzer buildWithOneCancerTypeMapping(@NotNull String cancerType, @NotNull String doid) {
         CancerTypeToDOIDMappingEntry cancerTypeToDOIDMappingEntry =
                 ImmutableCancerTypeToDOIDMappingEntry.builder().cancerType(cancerType).addDoids(doid).build();
 

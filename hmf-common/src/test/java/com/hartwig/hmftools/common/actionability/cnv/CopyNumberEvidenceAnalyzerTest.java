@@ -31,7 +31,7 @@ public class CopyNumberEvidenceAnalyzerTest {
 
         CopyNumberEvidenceAnalyzer cnvAnalyzer = new CopyNumberEvidenceAnalyzer(Lists.newArrayList(actionabilityCNV));
 
-        CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzerTestFactory.buildWithOneCancerTypeMapping("Skin Melanoma", 4159);
+        CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzerTestFactory.buildWithOneCancerTypeMapping("Skin Melanoma", "4159");
 
         GeneCopyNumber geneCopyNumber = ImmutableGeneCopyNumber.builder()
                 .gene("ERBB2")

@@ -50,7 +50,7 @@ public class SomaticVariantEvidenceAnalyzerTest {
         SomaticVariantEvidenceAnalyzer analyzer =
                 new SomaticVariantEvidenceAnalyzer(Lists.newArrayList(actionableSomaticVariant), Lists.newArrayList(actionableRange));
 
-        CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzerTestFactory.buildWithOneCancerTypeMapping("Skin Melanoma", 4159);
+        CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzerTestFactory.buildWithOneCancerTypeMapping("Skin Melanoma", "4159");
 
         SomaticVariant variant = ImmutableSomaticVariantImpl.builder()
                 .chromosome("7")

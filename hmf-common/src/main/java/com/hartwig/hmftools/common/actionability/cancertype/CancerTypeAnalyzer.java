@@ -52,13 +52,13 @@ public class CancerTypeAnalyzer {
     }
 
     @NotNull
-    private static Set<Integer> toDOIDSet(@NotNull String doidValue) {
+    private static Set<String> toDOIDSet(@NotNull String doidValue) {
         String[] values = doidValue.split(DOID_DELIMITER);
-        Set<Integer> doids = Sets.newHashSet();
+        Set<String> doids = Sets.newHashSet();
         for (String value : values) {
             // KODU: Expected format is "Doid(value=NNN)"
             String doid = value.substring(value.indexOf("=") + 1, value.indexOf(")"));
-            doids.add(Integer.valueOf(doid));
+            doids.add(doid.trim());
         }
 
         return doids;
@@ -69,17 +69,17 @@ public class CancerTypeAnalyzer {
             return false;
         }
 
-        Set<Integer> doidsForPrimaryTumorLocation = primaryTumorToDOIDMapping.findDoids(primaryTumorLocation);
+        Set<String> doidsForPrimaryTumorLocation = primaryTumorToDOIDMapping.findDoids(primaryTumorLocation);
         if (doidsForPrimaryTumorLocation == null) {
             return false;
         }
 
-        Set<Integer> doidsForCancerType = findDoidsForCancerType(knowledgebaseCancerType, cancerTypeMappings);
+        Set<String> doidsForCancerType = findDoidsForCancerType(knowledgebaseCancerType, cancerTypeMappings);
         return doidsForCancerType != null && !Collections.disjoint(doidsForPrimaryTumorLocation, doidsForCancerType);
     }
 
     @Nullable
-    private static Set<Integer> findDoidsForCancerType(@NotNull String cancerType,
+    private static Set<String> findDoidsForCancerType(@NotNull String cancerType,
             @NotNull List<CancerTypeToDOIDMappingEntry> cancerTypeMappings) {
         for (CancerTypeToDOIDMappingEntry mapping : cancerTypeMappings) {
             if (mapping.cancerType().equalsIgnoreCase(cancerType)) {
