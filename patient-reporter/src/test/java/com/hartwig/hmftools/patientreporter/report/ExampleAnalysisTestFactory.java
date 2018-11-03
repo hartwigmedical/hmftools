@@ -14,6 +14,7 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
@@ -589,7 +590,7 @@ final class ExampleAnalysisTestFactory {
 
     @NotNull
     private static ImmutableEvidenceItem.Builder evidenceBuilder() {
-        return ImmutableEvidenceItem.builder().drugsType(Strings.EMPTY).isOnLabel(false);
+        return ImmutableEvidenceItem.builder().drugsType(Strings.EMPTY).isOnLabel(false).scope(EvidenceScope.SPECIFIC);
     }
 
     @NotNull

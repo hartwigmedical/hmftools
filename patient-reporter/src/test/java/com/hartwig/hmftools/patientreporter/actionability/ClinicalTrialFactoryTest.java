@@ -9,6 +9,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 
 import org.apache.logging.log4j.util.Strings;
@@ -44,6 +45,7 @@ public class ClinicalTrialFactoryTest {
                 .level(EvidenceLevel.LEVEL_A)
                 .response(Strings.EMPTY)
                 .drugsType(Strings.EMPTY)
+                .scope(EvidenceScope.SPECIFIC)
                 .isOnLabel(true);
     }
 }

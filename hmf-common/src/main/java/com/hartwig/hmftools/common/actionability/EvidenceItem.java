@@ -34,4 +34,7 @@ public abstract class EvidenceItem {
 
     @NotNull
     public abstract String cancerType();
+
+    @NotNull
+    public abstract EvidenceScope scope();
 }

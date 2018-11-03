@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
@@ -105,7 +106,8 @@ public class FusionEvidenceAnalyzer {
                 .drugsType(actionableFusionPair.drugsType())
                 .level(EvidenceLevel.fromString(actionableFusionPair.level()))
                 .response(actionableFusionPair.response())
-                .cancerType(actionableFusionPair.cancerType());
+                .cancerType(actionableFusionPair.cancerType())
+                .scope(EvidenceScope.SPECIFIC);
     }
 
     @NotNull
@@ -118,7 +120,8 @@ public class FusionEvidenceAnalyzer {
                 .drugsType(actionablePromiscuousThree.drugsType())
                 .level(EvidenceLevel.fromString(actionablePromiscuousThree.level()))
                 .response(actionablePromiscuousThree.response())
-                .cancerType(actionablePromiscuousThree.cancerType());
+                .cancerType(actionablePromiscuousThree.cancerType())
+                .scope(EvidenceScope.SPECIFIC);
     }
 
     @NotNull
@@ -131,6 +134,7 @@ public class FusionEvidenceAnalyzer {
                 .drugsType(actionablePromiscuousFive.drugsType())
                 .level(EvidenceLevel.fromString(actionablePromiscuousFive.level()))
                 .response(actionablePromiscuousFive.response())
-                .cancerType(actionablePromiscuousFive.cancerType());
+                .cancerType(actionablePromiscuousFive.cancerType())
+                .scope(EvidenceScope.SPECIFIC);
     }
 }

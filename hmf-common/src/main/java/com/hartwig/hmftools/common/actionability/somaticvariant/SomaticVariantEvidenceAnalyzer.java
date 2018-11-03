@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -78,7 +79,10 @@ public class SomaticVariantEvidenceAnalyzer {
 
     @NotNull
     private static String eventString(@NotNull SomaticVariant variant) {
-        return variant.gene() + " " + variant.canonicalHgvsProteinImpact();
+        String description = variant.canonicalCodingEffect() == CodingEffect.SPLICE
+                ? variant.canonicalHgvsCodingImpact()
+                : variant.canonicalHgvsProteinImpact();
+        return variant.gene() + " " + description;
     }
 
     @NotNull
@@ -90,7 +94,8 @@ public class SomaticVariantEvidenceAnalyzer {
                 .drugsType(actionableVariant.drugsType())
                 .level(EvidenceLevel.fromString(actionableVariant.level()))
                 .response(actionableVariant.response())
-                .cancerType(actionableVariant.cancerType());
+                .cancerType(actionableVariant.cancerType())
+                .scope(EvidenceScope.SPECIFIC);
     }
 
     @NotNull
@@ -102,6 +107,7 @@ public class SomaticVariantEvidenceAnalyzer {
                 .drugsType(actionableRange.drugsType())
                 .level(EvidenceLevel.fromString(actionableRange.level()))
                 .response(actionableRange.response())
-                .cancerType(actionableRange.cancerType());
+                .cancerType(actionableRange.cancerType())
+                .scope(EvidenceScope.BROAD);
     }
 }
