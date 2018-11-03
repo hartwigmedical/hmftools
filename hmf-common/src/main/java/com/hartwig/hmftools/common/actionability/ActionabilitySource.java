@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.actionability;
 import org.jetbrains.annotations.NotNull;
 
 public enum ActionabilitySource {
-    ICLUSION("Iclusion", true),
+    ICLUSION("iClusion", true),
     ONCOKB("OncoKb", false),
     CIVIC("CiViC", false),
     CGI("CGI", false);
