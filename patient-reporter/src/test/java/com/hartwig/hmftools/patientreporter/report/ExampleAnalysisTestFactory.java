@@ -97,7 +97,7 @@ final class ExampleAnalysisTestFactory {
                 fusions,
                 disruptions,
                 Resources.getResource("circos/circos_example.png").getPath(),
-                Optional.of("this is a test report and is based of COLO829"),
+                Optional.of("this is a test report and is based off COLO829"),
                 baseReportData.signaturePath(),
                 baseReportData.logoRVAPath());
     }
