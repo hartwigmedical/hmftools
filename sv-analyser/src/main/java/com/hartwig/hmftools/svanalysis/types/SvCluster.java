@@ -31,6 +31,8 @@ public class SvCluster
     private int mConsistencyCount;
     private boolean mIsConsistent; // follows from telomere to centromere to telomore
     private String mDesc;
+    private Map<String, Integer> mTypeCountMap;
+
     private boolean mRequiresRecalc;
     private List<String> mAnnotationList;
 
@@ -79,6 +81,7 @@ public class SvCluster
         mSVs = Lists.newArrayList();
         mUniqueBreakends = Lists.newArrayList();
         mArmGroups = Lists.newArrayList();
+        mTypeCountMap = new HashMap();
 
         // annotation info
         mDesc = "";
@@ -126,7 +129,21 @@ public class SvCluster
         mLengthOverride = 0;
 
         if(var.isReplicatedSv())
+        {
             mHasReplicatedSVs = true;
+        }
+        else
+        {
+            String typeStr = var.typeStr();
+            if(mTypeCountMap.containsKey(typeStr))
+            {
+                mTypeCountMap.replace(typeStr, mTypeCountMap.get(typeStr) + 1);
+            }
+            else
+            {
+                mTypeCountMap.put(typeStr, 1);
+            }
+        }
 
         // keep track of all SVs in their respective chromosomal arms
         for(int be = SVI_START; be <= SVI_END; ++be)
@@ -393,25 +410,8 @@ public class SvCluster
         // the following map-based naming convention leads
         // to a predictable ordering of types: INV, CRS, BND, DEL and DUP
         String clusterTypeStr = "";
-        Map<String, Integer> typeMap = new HashMap<>();
 
-        for(final SvVarData var : mSVs)
-        {
-            if(var.isReplicatedSv())
-                continue;
-
-            String typeStr = var.typeStr();
-            if(typeMap.containsKey(typeStr))
-            {
-                typeMap.replace(typeStr, typeMap.get(typeStr) + 1);
-            }
-            else
-            {
-                typeMap.put(typeStr, 1);
-            }
-        }
-
-        for(Map.Entry<String, Integer> entry : typeMap.entrySet())
+        for(Map.Entry<String, Integer> entry : mTypeCountMap.entrySet())
         {
             if(!clusterTypeStr.isEmpty())
             {
@@ -423,6 +423,12 @@ public class SvCluster
         }
 
         return clusterTypeStr;
+    }
+
+    public int getTypeCount(StructuralVariantType type)
+    {
+        Integer typeCount = mTypeCountMap.get(type.toString());
+        return typeCount != null ? typeCount : 0;
     }
 
     public boolean hasLinkingLineElements()

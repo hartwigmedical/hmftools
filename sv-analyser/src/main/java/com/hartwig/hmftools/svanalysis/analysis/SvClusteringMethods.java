@@ -141,7 +141,7 @@ public class SvClusteringMethods {
             findLinkedSVsByDistance(newCluster, unassignedVariants, true);
 
             // check for invalid clusters - currently just overlapping DELs
-            if(newCluster.getCount() > 1 && newCluster.getCount() == calcTypeCount(newCluster.getSVs(), DEL))
+            if(newCluster.getCount() > 1 && newCluster.getCount() == newCluster.getTypeCount(DEL))
             {
                 addDelGroupClusters(clusters, newCluster);
             }
@@ -1204,7 +1204,7 @@ public class SvClusteringMethods {
 
         for (final SvCluster cluster : clusters)
         {
-            if (cluster.getUniqueSvCount() != 2 || calcTypeCount(cluster.getSVs(), INV) != 2)
+            if (cluster.getUniqueSvCount() != 2 || cluster.getTypeCount(INV) != 2)
                 continue;
 
             if (!cluster.isConsistent())
