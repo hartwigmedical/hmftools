@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.patientdb;
 
 import java.sql.SQLException;
-import java.util.List;
 
-import com.hartwig.hmftools.common.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.region.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 

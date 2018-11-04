@@ -6,7 +6,6 @@ import java.util.Map;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;

@@ -22,7 +22,6 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep14;
 import org.jooq.InsertValuesStep16;
 import org.jooq.InsertValuesStepN;
 import org.jooq.Record;

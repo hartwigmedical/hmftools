@@ -6,14 +6,11 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 
 import org.jetbrains.annotations.NotNull;
 

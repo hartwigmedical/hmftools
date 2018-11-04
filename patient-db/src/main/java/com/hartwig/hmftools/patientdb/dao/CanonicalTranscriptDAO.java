@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CANONICALTRANSCRIPT;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Copynumber.COPYNUMBER;
 
 import java.sql.Timestamp;
 import java.util.Date;
@@ -13,7 +12,6 @@ import com.hartwig.hmftools.common.region.CanonicalTranscript;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep19;
 import org.jooq.InsertValuesStep20;
 
 class CanonicalTranscriptDAO {

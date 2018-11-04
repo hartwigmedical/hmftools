@@ -12,9 +12,7 @@ import static org.junit.Assert.assertEquals;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
-
 
 public class GermlineStatusFactoryTest {
 

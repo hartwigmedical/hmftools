@@ -289,7 +289,7 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private static PurpleStructuralVariantSupplier structuralVariants(@NotNull final ConfigSupplier configSupplier) throws IOException {
+    private static PurpleStructuralVariantSupplier structuralVariants(@NotNull final ConfigSupplier configSupplier) {
         final CommonConfig commonConfig = configSupplier.commonConfig();
         final StructuralVariantConfig svConfig = configSupplier.structuralVariantConfig();
         if (svConfig.file().isPresent()) {

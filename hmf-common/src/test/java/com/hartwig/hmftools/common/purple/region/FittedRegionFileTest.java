@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.purple.region;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Random;
-import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 

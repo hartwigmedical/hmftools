@@ -7,7 +7,6 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import io.reactivex.Observable
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
-import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
