@@ -259,6 +259,11 @@ public class SvVarData
         return (int)round(copyNumberChange(useStart));
     }
 
+    public boolean hasInconsistentCopyNumberChange()
+    {
+        return round(copyNumberChange(true)) != round(copyNumberChange(false));
+    }
+
     public long getNearestSvDistance() { return mNearestSvDistance; }
     public void setNearestSvDistance(long distance) { mNearestSvDistance = distance; }
     public String getNearestSvRelation() { return mNearestSvRelation; }

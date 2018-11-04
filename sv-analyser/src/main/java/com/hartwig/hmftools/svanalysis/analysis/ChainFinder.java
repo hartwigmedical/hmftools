@@ -7,6 +7,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getProximity;
@@ -604,6 +605,18 @@ public class ChainFinder
             SvLinkedPair closestStartPair = findNextLinkedPair(requiredLinks, unlinkedSvList, chainFirstSV, chainFirstUnlinkedOnStart);
             SvLinkedPair closestLastPair = findNextLinkedPair(requiredLinks, unlinkedSvList, chainLastSV, chainLastUnlinkedOnStart);
 
+            if(closestStartPair == null && closestLastPair == null && !chainsList.isEmpty()
+            && unlinkedSvList.size() == 1 && unlinkedSvList.get(0).type() == SGL)
+            {
+                closestStartPair = findInconsistentSvAndSingleLink(currentChain, unlinkedSvList.get(0), true);
+
+                if(closestStartPair == null)
+                {
+                    // form a link from these 2 variants
+                    closestLastPair = findInconsistentSvAndSingleLink(currentChain, unlinkedSvList.get(0), false);
+                }
+            }
+
             if(closestStartPair != null || closestLastPair != null)
             {
                 chainLinkAdded = true;
@@ -738,11 +751,37 @@ public class ChainFinder
                     continue;
 
                 newPair = testPair;
-
             }
         }
 
         return newPair;
+    }
+
+    private final SvLinkedPair findInconsistentSvAndSingleLink(final SvChain chain, final SvVarData soloVar, boolean checkChainStart)
+    {
+        // look for a single variant with inconsistent CN change in this cluster
+        // for potential pairing with a solo single
+        SvVarData inconsistentVar = null;
+        boolean inconsistentVarOpenOnStart = false;
+
+        if(checkChainStart && chain.getFirstSV().hasInconsistentCopyNumberChange())
+        {
+            inconsistentVar = chain.getFirstSV();
+            inconsistentVarOpenOnStart = chain.firstLinkOpenOnStart();
+        }
+        else if(!checkChainStart && chain.getLastSV().hasInconsistentCopyNumberChange())
+        {
+            inconsistentVar = chain.getLastSV();
+            inconsistentVarOpenOnStart = chain.lastLinkOpenOnStart();
+        }
+
+        if(inconsistentVar == null)
+            return null;
+
+        LOGGER.info("cluster({}) chain({}) inconsistentSv({}) joined to solo-single({})",
+                mCluster.getId(), chain.getId(), inconsistentVar.id(), soloVar.id());
+
+        return new SvLinkedPair(inconsistentVar, soloVar, LINK_TYPE_TI, inconsistentVarOpenOnStart, false);
     }
 
     private static void reduceRemainingLists(final SvLinkedPair newPair, List<SvVarData> unlinkedSvList, List<SvLinkedPair> remainingPairs)
