@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.patientreporter.copynumber;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 
 import org.jetbrains.annotations.NotNull;
@@ -36,11 +37,13 @@ public final class CopyNumberAnalyzer {
         Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
                 actionabilityAnalyzer.evidenceForCopyNumbers(significantCopyNumbers, primaryTumorLocation);
 
-        // KODU: Add gene copy numbers for which evidence has been found but which were not selected yet.
-        for (GeneCopyNumber actionableGeneCopyNumber : evidencePerGeneCopyNumber.keySet()) {
-            if (!evidencePerGeneCopyNumber.get(actionableGeneCopyNumber).isEmpty() && !reportableGeneCopyNumbers.contains(
-                    actionableGeneCopyNumber)) {
-                reportableGeneCopyNumbers.add(actionableGeneCopyNumber);
+        List<EvidenceItem> filteredEvidence = ReportableEvidenceItemFactory.reportableFlatList(evidencePerGeneCopyNumber);
+
+        // KODU: Add gene copy numbers for which filtered evidence has been found but which were not selected yet.
+        for (Map.Entry<GeneCopyNumber, List<EvidenceItem>> entry : evidencePerGeneCopyNumber.entrySet()) {
+            GeneCopyNumber geneCopyNumber = entry.getKey();
+            if (!Collections.disjoint(entry.getValue(), filteredEvidence) && !reportableGeneCopyNumbers.contains(geneCopyNumber)) {
+                reportableGeneCopyNumbers.add(geneCopyNumber);
             }
         }
 
@@ -52,16 +55,7 @@ public final class CopyNumberAnalyzer {
                 .copyNumbers(purpleCopyNumbers)
                 .exomeGeneCopyNumbers(exomeGeneCopyNumbers)
                 .reportableGeneCopyNumbers(reportableGeneCopyNumbers)
-                .evidenceItems(toList(evidencePerGeneCopyNumber))
+                .evidenceItems(filteredEvidence)
                 .build();
-    }
-
-    @NotNull
-    private static List<EvidenceItem> toList(@NotNull Map<GeneCopyNumber, List<EvidenceItem>> evidencePerCopyNumber) {
-        List<EvidenceItem> evidenceItemList = Lists.newArrayList();
-        for (List<EvidenceItem> items : evidencePerCopyNumber.values()) {
-            evidenceItemList.addAll(items);
-        }
-        return evidenceItemList;
     }
 }

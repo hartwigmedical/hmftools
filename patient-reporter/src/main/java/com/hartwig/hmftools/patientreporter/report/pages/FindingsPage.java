@@ -44,6 +44,8 @@ public abstract class FindingsPage {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 geneFusionReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
+                geneDisruptionReport(report()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
                 germlineVariantReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 chordReport(report()),
@@ -52,9 +54,7 @@ public abstract class FindingsPage {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 tumorMutationalLoadReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                tumorMutationalBurdenReport(report()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                geneDisruptionReport(report()));
+                tumorMutationalBurdenReport(report()));
     }
 
     @NotNull

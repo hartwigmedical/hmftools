@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,6 +19,7 @@ import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -54,10 +56,13 @@ public final class SomaticVariantAnalyzer {
         Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant =
                 actionabilityAnalyzer.evidenceForSomaticVariants(variants, primaryTumorLocation);
 
-        // KODU: Add all variants with evidence that have not previously been added.
-        for (EnrichedSomaticVariant variantWithEvidence : evidencePerVariant.keySet()) {
-            if (!evidencePerVariant.get(variantWithEvidence).isEmpty() && !variantsToReport.contains(variantWithEvidence)) {
-                variantsToReport.add(variantWithEvidence);
+        List<EvidenceItem> filteredEvidence = ReportableEvidenceItemFactory.reportableFlatList(evidencePerVariant);
+
+        // KODU: Add all variants with filtered evidence that have not previously been added.
+        for (Map.Entry<EnrichedSomaticVariant, List<EvidenceItem>> entry : evidencePerVariant.entrySet()) {
+            EnrichedSomaticVariant variant = entry.getKey();
+            if (!variantsToReport.contains(variant) && !Collections.disjoint(entry.getValue(), filteredEvidence)) {
+                variantsToReport.add(variant);
             }
         }
 
@@ -65,19 +70,10 @@ public final class SomaticVariantAnalyzer {
                 toReportableSomaticVariants(variantsToReport, driverCatalog, driverCategoryPerGeneMap, drupActionableGenes);
 
         return ImmutableSomaticVariantAnalysis.of(reportableVariants,
-                toList(evidencePerVariant),
+                filteredEvidence,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
                 tumorMutationalBurden);
-    }
-
-    @NotNull
-    private static List<EvidenceItem> toList(@NotNull Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant) {
-        List<EvidenceItem> evidenceItemList = Lists.newArrayList();
-        for (List<EvidenceItem> items : evidencePerVariant.values()) {
-            evidenceItemList.addAll(items);
-        }
-        return evidenceItemList;
     }
 
     @NotNull

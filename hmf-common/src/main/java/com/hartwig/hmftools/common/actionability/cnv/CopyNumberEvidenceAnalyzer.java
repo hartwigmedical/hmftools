@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -34,18 +35,17 @@ public class CopyNumberEvidenceAnalyzer {
     }
 
     @NotNull
-    public List<EvidenceItem> evidenceForCopyNumber(@NotNull GeneCopyNumber geneCopyNumber, @Nullable String doidsPrimaryTumorLocation,
+    public List<EvidenceItem> evidenceForCopyNumber(@NotNull GeneCopyNumber geneCopyNumber, @Nullable String primaryTumorLocation,
             @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
         // KODU: Assume the gene copy number has already been determined to be a significant event (LOSS or GAIN)
         for (ActionableCopyNumber actionableCopyNumber : actionableCopyNumbers) {
-            if (checkCNVType(geneCopyNumber.value()).equals(actionableCopyNumber.cnvType()) && actionableCopyNumber.gene()
-                    .equals(geneCopyNumber.gene())) {
+            if (typeMatches(geneCopyNumber, actionableCopyNumber) && actionableCopyNumber.gene().equals(geneCopyNumber.gene())) {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableCopyNumber(actionableCopyNumber);
 
-                evidenceBuilder.event(geneCopyNumber.gene() + " " + actionableCopyNumber.cnvType());
-                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionableCopyNumber.cancerType(),
-                        doidsPrimaryTumorLocation));
+                evidenceBuilder.event(geneCopyNumber.gene() + " " + actionableCopyNumber.type().readableString());
+                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableCopyNumber.cancerType(),
+                        primaryTumorLocation));
 
                 evidenceItems.add(evidenceBuilder.build());
             }
@@ -53,9 +53,9 @@ public class CopyNumberEvidenceAnalyzer {
         return evidenceItems;
     }
 
-    @NotNull
-    private static String checkCNVType(int copyNumber) {
-        return copyNumber <= 1 ? "Deletion" : "Amplification";
+    private static boolean typeMatches(@NotNull GeneCopyNumber geneCopyNumber, @NotNull ActionableCopyNumber actionableCopyNumber) {
+        CopyNumberType geneType = geneCopyNumber.value() <= 1 ? CopyNumberType.DELETION : CopyNumberType.AMPLIFICATION;
+        return geneType == actionableCopyNumber.type();
     }
 
     @NotNull
@@ -66,6 +66,8 @@ public class CopyNumberEvidenceAnalyzer {
                 .drug(actionableCopyNumber.drug())
                 .drugsType(actionableCopyNumber.drugsType())
                 .level(EvidenceLevel.fromString(actionableCopyNumber.level()))
-                .response(actionableCopyNumber.response());
+                .response(actionableCopyNumber.response())
+                .cancerType(actionableCopyNumber.cancerType())
+                .scope(EvidenceScope.SPECIFIC);
     }
 }

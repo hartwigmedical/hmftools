@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.common.actionability.somaticvariant;
 
+import static org.junit.Assert.assertTrue;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
-import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeReading;
-import com.hartwig.hmftools.common.actionability.cancertype.ImmutableCancerTypeReading;
+import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzerTestFactory;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
@@ -46,12 +47,10 @@ public class SomaticVariantEvidenceAnalyzerTest {
                 .response("Resistant")
                 .build();
 
-        CancerTypeReading reading = ImmutableCancerTypeReading.builder().doidSet("4159").cancerType("Skin").build();
-
         SomaticVariantEvidenceAnalyzer analyzer =
                 new SomaticVariantEvidenceAnalyzer(Lists.newArrayList(actionableSomaticVariant), Lists.newArrayList(actionableRange));
 
-        CancerTypeAnalyzer cancerType = new CancerTypeAnalyzer(Lists.newArrayList(reading));
+        CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzerTestFactory.buildWithOneCancerTypeMapping("Skin Melanoma", "4159");
 
         SomaticVariant variant = ImmutableSomaticVariantImpl.builder()
                 .chromosome("7")
@@ -75,9 +74,6 @@ public class SomaticVariantEvidenceAnalyzerTest {
                 .mappability(0D)
                 .build();
 
-        //   assertEquals(false, analyzer.actionableVariants(variant, cancerType, "4159", "Skin"));
-        //   assertEquals(false, analyzer.actionableVariants(variant, cancerType, "4159", "Breast"));
-        //     assertEquals(true, analyzer.actionableRange(variant, cancerType, "4159", "Skin"));
-        //    assertEquals(false, analyzer.actionableRange(variant, cancerType, "4159", "Kidney"));
+        assertTrue(analyzer.evidenceForSomaticVariant(variant, "Skin", cancerTypeAnalyzer).isEmpty());
     }
 }

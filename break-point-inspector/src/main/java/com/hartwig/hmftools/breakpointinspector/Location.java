@@ -15,7 +15,7 @@ public class Location implements Comparable<Location> {
     private final int referenceIndex;
     private final int position;
 
-    public Location(@NotNull final String referenceName, final int referenceIndex, final int position) {
+    private Location(@NotNull final String referenceName, final int referenceIndex, final int position) {
         this.referenceName = referenceName;
         this.referenceIndex = referenceIndex;
         this.position = position;

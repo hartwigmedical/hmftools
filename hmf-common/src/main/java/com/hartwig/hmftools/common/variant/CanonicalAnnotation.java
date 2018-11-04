@@ -26,7 +26,7 @@ class CanonicalAnnotation {
     CanonicalAnnotation() {
         this.driverCatalogGenes = asSet(DndsDriverGeneLikelihoodSupplier.tsgLikelihood());
         this.driverCatalogGenes.addAll(asSet(DndsDriverGeneLikelihoodSupplier.oncoLikelihood()));
-        this.canonicalTranscriptGeneMap = CanonicalTranscriptFactory.create()
+        this.canonicalTranscriptGeneMap = CanonicalTranscriptFactory.create37()
                 .stream()
                 .collect(Collectors.toMap(TranscriptRegion::transcriptID, TranscriptRegion::gene));
     }

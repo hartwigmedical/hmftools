@@ -13,7 +13,7 @@ abstract class ActionableCopyNumber {
     public abstract String gene();
 
     @NotNull
-    public abstract String cnvType();
+    public abstract CopyNumberType type();
 
     @NotNull
     public abstract String source();

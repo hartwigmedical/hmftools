@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -38,6 +39,7 @@ import com.hartwig.hmftools.patientreporter.chord.ChordAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
+import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalysis;
@@ -111,12 +113,15 @@ abstract class PatientReporter {
                 baseReportData().limsModel().labProceduresForSample(tumorSample),
                 baseReportData().centerModel().getAddresseeStringForSample(tumorSample));
 
+        final List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItems);
+
         return ImmutableAnalysedPatientReport.of(sampleReport,
                 copyNumberAnalysis.fittedPurity().purity(),
                 copyNumberAnalysis.status() != FittedPurityStatus.NO_TUMOR,
                 copyNumberAnalysis.fittedPurity().ploidy(),
-                ReportableEvidenceItemFactory.filterEvidenceItemsForReporting(allEvidenceItems),
-                ClinicalTrialFactory.extractTrials(allEvidenceItems),
+                nonTrials.stream().filter(EvidenceItem::isOnLabel).collect(Collectors.toList()),
+                ClinicalTrialFactory.extractOnLabelTrials(allEvidenceItems),
+                nonTrials.stream().filter(item -> !item.isOnLabel()).collect(Collectors.toList()),
                 somaticVariantAnalysis.reportableSomaticVariants(),
                 somaticVariantAnalysis.microsatelliteIndelsPerMb(),
                 somaticVariantAnalysis.tumorMutationalLoad(),
@@ -141,6 +146,9 @@ abstract class PatientReporter {
 
         LOGGER.info("Loading purple data for sample " + sample);
         final PurityContext purityContext = PatientReporterFileLoader.loadPurity(runDirectory, sample);
+        LOGGER.info(" Purple purity " + PatientReportFormat.formatPercent(purityContext.bestFit().purity()));
+        LOGGER.info(" Purple average tumor ploidy: " + purityContext.bestFit().ploidy());
+        LOGGER.info(" Purple status " + purityContext.status());
 
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterFileLoader.loadPurpleCopyNumbers(runDirectory, sample);
         LOGGER.info(" " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);

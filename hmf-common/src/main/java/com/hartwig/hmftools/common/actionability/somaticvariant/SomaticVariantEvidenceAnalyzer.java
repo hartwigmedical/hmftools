@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -45,7 +46,7 @@ public class SomaticVariantEvidenceAnalyzer {
     }
 
     @NotNull
-    public List<EvidenceItem> evidenceForSomaticVariant(@NotNull SomaticVariant variant, @Nullable String doidsPrimaryTumorLocation,
+    public List<EvidenceItem> evidenceForSomaticVariant(@NotNull SomaticVariant variant, @Nullable String primaryTumorLocation,
             @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
         for (ActionableSomaticVariant actionableVariant : actionableVariants) {
@@ -55,7 +56,7 @@ public class SomaticVariantEvidenceAnalyzer {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableVariant(actionableVariant);
 
                 evidenceBuilder.event(eventString(variant));
-                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionableVariant.cancerType(), doidsPrimaryTumorLocation));
+                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableVariant.cancerType(), primaryTumorLocation));
 
                 evidenceItems.add(evidenceBuilder.build());
             }
@@ -68,7 +69,7 @@ public class SomaticVariantEvidenceAnalyzer {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableRange(actionableRange);
 
                 evidenceBuilder.event(eventString(variant));
-                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionableRange.cancerType(), doidsPrimaryTumorLocation));
+                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableRange.cancerType(), primaryTumorLocation));
 
                 evidenceItems.add(evidenceBuilder.build());
             }
@@ -78,7 +79,10 @@ public class SomaticVariantEvidenceAnalyzer {
 
     @NotNull
     private static String eventString(@NotNull SomaticVariant variant) {
-        return variant.gene() + " " + variant.canonicalHgvsProteinImpact();
+        String description = variant.canonicalCodingEffect() == CodingEffect.SPLICE
+                ? variant.canonicalHgvsCodingImpact()
+                : variant.canonicalHgvsProteinImpact();
+        return variant.gene() + " " + description;
     }
 
     @NotNull
@@ -89,7 +93,9 @@ public class SomaticVariantEvidenceAnalyzer {
                 .drug(actionableVariant.drug())
                 .drugsType(actionableVariant.drugsType())
                 .level(EvidenceLevel.fromString(actionableVariant.level()))
-                .response(actionableVariant.response());
+                .response(actionableVariant.response())
+                .cancerType(actionableVariant.cancerType())
+                .scope(EvidenceScope.SPECIFIC);
     }
 
     @NotNull
@@ -100,6 +106,8 @@ public class SomaticVariantEvidenceAnalyzer {
                 .drug(actionableRange.drug())
                 .drugsType(actionableRange.drugsType())
                 .level(EvidenceLevel.fromString(actionableRange.level()))
-                .response(actionableRange.response());
+                .response(actionableRange.response())
+                .cancerType(actionableRange.cancerType())
+                .scope(EvidenceScope.BROAD);
     }
 }

@@ -28,7 +28,7 @@ public final class ChordSection {
     }
 
     @NotNull
-    public static String interpret(double chordHrdScore, boolean hasReliablePurityFit) {
+    private static String interpret(double chordHrdScore, boolean hasReliablePurityFit) {
         String hrdScoreString = new DecimalFormat("#.##").format(chordHrdScore);
         return PatientReportFormat.correctValueForFitReliability(hrdScoreString, hasReliablePurityFit);
     }

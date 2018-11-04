@@ -15,13 +15,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.cobalt.CobaltRatio;
-import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
@@ -46,7 +43,6 @@ import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactoryV2;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFile;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
-import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -114,9 +110,6 @@ public class PurityPloidyEstimateApplication {
             final String outputDirectory = config.outputDirectory();
             final String tumorSample = config.tumorSample();
 
-            // JOBA: Read Gene Panel
-            final List<HmfTranscriptRegion> genePanel = HmfGenePanelSupplier.allGeneList();
-
             // JOBA: Load Amber Data
             final Gender amberGender = configSupplier.amberData().gender();
             final Multimap<Chromosome, AmberBAF> bafs = configSupplier.amberData().bafs();
@@ -173,7 +166,8 @@ public class PurityPloidyEstimateApplication {
                         final List<ObservedRegion> recoveredObservedRegions = segmentation.createSegments(structuralVariants.variants());
 
                         LOGGER.info("Recalculating copy number");
-                        fittedRegions = fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions);
+                        fittedRegions =
+                                fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions);
                         copyNumberFactory.invoke(fittedRegions, structuralVariants.variants());
                     }
                 }
@@ -197,8 +191,10 @@ public class PurityPloidyEstimateApplication {
             final List<PurityAdjustedSomaticVariant> enrichedSomatics =
                     new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers, enrichedFittedRegions).create(allSomatics);
 
-            final List<GeneCopyNumber> geneCopyNumbers =
-                    GeneCopyNumberFactory.geneCopyNumbers(genePanel, copyNumbers, germlineDeletions, enrichedSomatics);
+            final List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFactory.geneCopyNumbers(configSupplier.refGenomeConfig().genePanel(),
+                    copyNumbers,
+                    germlineDeletions,
+                    enrichedSomatics);
 
             LOGGER.info("Generating QC Stats");
             final PurpleQC qcChecks = PurpleQCFactory.create(bestFit.fit(), copyNumbers, amberGender, cobaltGender, geneCopyNumbers);
@@ -293,7 +289,7 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private static PurpleStructuralVariantSupplier structuralVariants(@NotNull final ConfigSupplier configSupplier) throws IOException {
+    private static PurpleStructuralVariantSupplier structuralVariants(@NotNull final ConfigSupplier configSupplier) {
         final CommonConfig commonConfig = configSupplier.commonConfig();
         final StructuralVariantConfig svConfig = configSupplier.structuralVariantConfig();
         if (svConfig.file().isPresent()) {

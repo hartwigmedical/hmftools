@@ -107,8 +107,8 @@ public class DatabaseAccess {
                 : null;
     }
 
-    public void writeCanonicalTranscripts(@NotNull final List<CanonicalTranscript> transcripts) {
-        canonicalTranscriptDAO.write(transcripts);
+    public void writeCanonicalTranscripts(@NotNull final String assembly, @NotNull final List<CanonicalTranscript> transcripts) {
+        canonicalTranscriptDAO.write(assembly, transcripts);
     }
 
     public void writePurity(@NotNull final String sampleId, @NotNull final PurityContext context, @NotNull final PurpleQC checks) {

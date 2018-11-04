@@ -3,12 +3,11 @@ package com.hartwig.hmftools.patientreporter.actionability;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 
 import org.jetbrains.annotations.NotNull;
@@ -20,17 +19,29 @@ public final class ReportableEvidenceItemFactory {
     }
 
     @NotNull
-    public static List<EvidenceItem> filterEvidenceItemsForReporting(@NotNull List<EvidenceItem> evidenceItems) {
-        Set<EvidenceItem> uniqueReportableItems = Sets.newHashSet();
-        for (EvidenceItem evidence : evidenceItems) {
-            if (filterNonTrial(evidence)) {
-                uniqueReportableItems.add(evidence);
-            }
-        }
+    public static List<EvidenceItem> extractNonTrials(@NotNull List<EvidenceItem> evidenceItems) {
+        return evidenceItems.stream().filter(evidenceItem -> !evidenceItem.source().isTrialSource()).collect(Collectors.toList());
+    }
 
-        Map<Key, List<EvidenceItem>> itemsPerKey = Maps.newHashMap();
-        for (EvidenceItem item : uniqueReportableItems) {
-            Key key = new Key(item.event(), item.drug(), item.response());
+    @NotNull
+    public static List<EvidenceItem> reportableFlatList(@NotNull Map<?, List<EvidenceItem>> evidenceItemMap) {
+        return filterForReporting(toList(evidenceItemMap));
+    }
+
+    @NotNull
+    private static List<EvidenceItem> toList(@NotNull Map<?, List<EvidenceItem>> evidenceItemMap) {
+        List<EvidenceItem> evidenceItemList = Lists.newArrayList();
+        for (List<EvidenceItem> items : evidenceItemMap.values()) {
+            evidenceItemList.addAll(items);
+        }
+        return evidenceItemList;
+    }
+
+    @NotNull
+    private static List<EvidenceItem> filterForReporting(@NotNull List<EvidenceItem> evidenceItems) {
+        Map<EventDrugResponseKey, List<EvidenceItem>> itemsPerKey = Maps.newHashMap();
+        for (EvidenceItem item : evidenceItems) {
+            EventDrugResponseKey key = new EventDrugResponseKey(item.event(), item.drug(), item.response());
             List<EvidenceItem> items = itemsPerKey.get(key);
             if (items == null) {
                 items = Lists.newArrayList();
@@ -40,7 +51,7 @@ public final class ReportableEvidenceItemFactory {
         }
 
         List<EvidenceItem> evidenceFiltered = Lists.newArrayList();
-        for (Map.Entry<Key, List<EvidenceItem>> entry : itemsPerKey.entrySet()) {
+        for (Map.Entry<EventDrugResponseKey, List<EvidenceItem>> entry : itemsPerKey.entrySet()) {
             List<EvidenceItem> itemsForKey = entry.getValue();
             EvidenceItem highestOnLabel = highestOnLabel(itemsForKey);
             EvidenceItem highestOffLabel = highestOffLabel(itemsForKey);
@@ -56,23 +67,20 @@ public final class ReportableEvidenceItemFactory {
                 evidenceFiltered.add(highestOffLabel);
             }
         }
+
         List<EvidenceItem> evidenceFilteredOnLevel = Lists.newArrayList();
-        for (EvidenceItem evidence: evidenceFiltered) {
-            if (selectLevelsAandB(evidence)) {
+        for (EvidenceItem evidence : evidenceFiltered) {
+            if (hasReportableEvidenceLevel(evidence)) {
                 evidenceFilteredOnLevel.add(evidence);
             }
         }
+
         return evidenceFilteredOnLevel;
     }
 
     @VisibleForTesting
-    static Boolean filterNonTrial (final EvidenceItem evidence) {
-        return !evidence.source().isTrialSource();
-    }
-
-    @VisibleForTesting
-    static Boolean selectLevelsAandB(final EvidenceItem evidenceFiltered){
-        return evidenceFiltered.level().isReportedEvidenceItemLevel();
+    static boolean hasReportableEvidenceLevel(@NotNull EvidenceItem evidence) {
+        return evidence.level().includeInReport();
     }
 
     @VisibleForTesting
@@ -105,7 +113,7 @@ public final class ReportableEvidenceItemFactory {
         return highest;
     }
 
-    private static class Key {
+    private static class EventDrugResponseKey {
 
         @NotNull
         private final String event;
@@ -114,7 +122,7 @@ public final class ReportableEvidenceItemFactory {
         @NotNull
         private final String response;
 
-        private Key(@NotNull final String event, @NotNull final String drug, @NotNull final String response) {
+        private EventDrugResponseKey(@NotNull final String event, @NotNull final String drug, @NotNull final String response) {
             this.event = event;
             this.drug = drug;
             this.response = response;
@@ -128,7 +136,7 @@ public final class ReportableEvidenceItemFactory {
             if (o == null || getClass() != o.getClass()) {
                 return false;
             }
-            final Key key = (Key) o;
+            final EventDrugResponseKey key = (EventDrugResponseKey) o;
             return Objects.equals(event, key.event) && Objects.equals(drug, key.drug) && Objects.equals(response, key.response);
         }
 

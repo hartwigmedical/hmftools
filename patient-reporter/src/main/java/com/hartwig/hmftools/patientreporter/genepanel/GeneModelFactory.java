@@ -23,7 +23,7 @@ public final class GeneModelFactory {
         Map<String, HmfTranscriptRegion> somaticVariantDriverGenePanel = Maps.newHashMap();
         Map<String, DriverCategory> geneDriverCategoryMap = Maps.newHashMap();
 
-        Map<String, HmfTranscriptRegion> geneMap = HmfGenePanelSupplier.allGenesMap();
+        Map<String, HmfTranscriptRegion> geneMap = HmfGenePanelSupplier.allGenesMap37();
 
         for (String oncoGene : DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet()) {
             somaticVariantDriverGenePanel.put(oncoGene, fetchGeneDefinition(oncoGene, geneMap));

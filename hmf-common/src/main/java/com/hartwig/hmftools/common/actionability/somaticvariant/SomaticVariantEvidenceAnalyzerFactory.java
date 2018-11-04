@@ -6,6 +6,8 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hartwig.hmftools.common.actionability.util.MultiDrugCurator;
+
 import org.jetbrains.annotations.NotNull;
 
 public final class SomaticVariantEvidenceAnalyzerFactory {
@@ -16,17 +18,19 @@ public final class SomaticVariantEvidenceAnalyzerFactory {
     }
 
     @NotNull
-    public static SomaticVariantEvidenceAnalyzer loadFromFileVariantsAndFileRanges(String fileVariants, String fileRanges)
+    public static SomaticVariantEvidenceAnalyzer loadFromFileVariantsAndFileRanges(@NotNull String fileVariants, @NotNull String fileRanges)
             throws IOException {
         final List<ActionableSomaticVariant> variants = new ArrayList<>();
         final List<ActionableRange> ranges = new ArrayList<>();
         final List<String> lineVariants = Files.readAllLines(new File(fileVariants).toPath());
         final List<String> lineRanges = Files.readAllLines(new File(fileRanges).toPath());
 
+        // KODU: Skip header line
         for (String lineVariant : lineVariants.subList(1, lineVariants.size())) {
             variants.add(fromLineVariants(lineVariant));
         }
 
+        // KODU: Skip header line
         for (String lineRange : lineRanges.subList(1, lineRanges.size())) {
             ranges.add(fromLineRanges(lineRange));
         }
@@ -45,7 +49,7 @@ public final class SomaticVariantEvidenceAnalyzerFactory {
                 .alt(values[4])
                 .source(values[5])
                 .reference(values[6])
-                .drug(values[7])
+                .drug(MultiDrugCurator.reformat(values[7]))
                 .drugsType(values[8])
                 .cancerType(values[9])
                 .level(values[11])
@@ -63,7 +67,7 @@ public final class SomaticVariantEvidenceAnalyzerFactory {
                 .end(Long.valueOf(values[4]))
                 .source(values[6])
                 .reference(values[7])
-                .drug(values[8])
+                .drug(MultiDrugCurator.reformat(values[8]))
                 .drugsType(values[9])
                 .cancerType(values[10])
                 .level(values[12])

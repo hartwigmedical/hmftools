@@ -45,16 +45,20 @@ public abstract class ExplanationPage {
                                 + "are generally the canonical transcripts as defined by Ensembl.",
                         "Variant detection in samples with lower tumor content is less sensitive. "
                                 + "In case of a low tumor purity (below 20%) likelihood of failing to detect potential variants increases.",
-                        "The implied tumor purity is the percentage of tumor cells in the biopsy based on analysis of "
+                        "The (implied) tumor purity is the percentage of tumor cells in the biopsy based on analysis of "
                                 + "whole genome data."));
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> evidenceExplanationSection() {
         return toList("Details on the reported clinical evidence",
-                Lists.newArrayList("CGI, OncoKb and CiViC are used to annotate variants of all types with clinical evidence.",
+                Lists.newArrayList(
+                        "The CGI, OncoKb and CiViC knowledgebases are used to annotate variants of all types with clinical evidence, "
+                                + "with a hyperlink to the specific evidence items. NOTE: If a certain evidence item or drug-biomarker "
+                                + "is missing from the knowledgebases it will also not be included in this report.",
                         "More information on (CGI) biomarkers can be found on https://www.cancergenomeinterpreter.org/biomarkers",
-                        "Clinical trials are matched against the iclusion database (https://iclusion.org)"));
+                        "Clinical trials are matched against the iClusion database (https://iclusion.org) including "
+                                + "a link to the specific trial."));
     }
 
     @NotNull
@@ -67,9 +71,11 @@ public abstract class ExplanationPage {
                                 + "proportion of A’s and B’s (e.g. AAABB for 3 copies of A, and 2 copies of B). "
                                 + "The copy number is the sum of A’s and B’s. The VAF value is to the alternative allele "
                                 + "frequency after correction for tumor purity.",
-                        "The 'Biallelic' field indicates whether the variant is present across all alleles in the tumor.",
+                        "The 'Biallelic' field indicates whether the variant is present across all alleles in the tumor "
+                                + "(and is including variants with loss-of-heterozygosity).",
                         "The 'Driver' field is based on the driver probability calculated based on the HMF database. "
-                                + "A variant with High driver likelihood is likely to be positively selected for."));
+                                + "A variant in a gene with High driver likelihood is likely to be positively selected for during the "
+                                + "oncogenic process."));
     }
 
     @NotNull

@@ -17,19 +17,25 @@ public final class HmfGenePanelSupplier {
     }
 
     @NotNull
-    public static SortedSetMultimap<String, HmfTranscriptRegion> allGenesPerChromosomeMap() {
-        return toSortedMap(allGeneList());
+    public static SortedSetMultimap<String, HmfTranscriptRegion> allGenesPerChromosomeMap37() {
+        return toSortedMap(allGeneList37());
     }
 
     @NotNull
-    public static List<HmfTranscriptRegion> allGeneList() {
-        final InputStream inputStream = HmfGenePanelSupplier.class.getResourceAsStream("/genepanel/all_genes.tsv");
+    public static List<HmfTranscriptRegion> allGeneList37() {
+        final InputStream inputStream = HmfGenePanelSupplier.class.getResourceAsStream("/genepanel/all_genes.37.tsv");
         return HmfGenomeFileLoader.fromInputStream(inputStream);
     }
 
     @NotNull
-    public static Map<String, HmfTranscriptRegion> allGenesMap() {
-        List<HmfTranscriptRegion> regions = allGeneList();
+    public static List<HmfTranscriptRegion> allGeneList38() {
+        final InputStream inputStream = HmfGenePanelSupplier.class.getResourceAsStream("/genepanel/all_genes.38.tsv");
+        return HmfGenomeFileLoader.fromInputStream(inputStream);
+    }
+
+    @NotNull
+    public static Map<String, HmfTranscriptRegion> allGenesMap37() {
+        List<HmfTranscriptRegion> regions = allGeneList37();
         Map<String, HmfTranscriptRegion> geneMap = Maps.newHashMap();
         for (HmfTranscriptRegion region : regions) {
             assert !geneMap.containsKey(region.gene());

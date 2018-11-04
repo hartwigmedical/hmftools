@@ -50,9 +50,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 class BachelorEligibility {
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorEligibility.class);
-    private static final SortedSetMultimap<String, HmfTranscriptRegion> ALL_GENES_BY_CHROMOSOME =
-            HmfGenePanelSupplier.allGenesPerChromosomeMap();
-
+    private static final SortedSetMultimap<String, HmfTranscriptRegion> ALL_GENES_BY_CHROMOSOME = HmfGenePanelSupplier.allGenesPerChromosomeMap37();
     private static final Map<String, HmfTranscriptRegion> ALL_GENES = makeGeneNameMap();
     private static final Map<String, HmfTranscriptRegion> ALL_TRANSCRIPT_IDS = makeTranscriptMap();
 

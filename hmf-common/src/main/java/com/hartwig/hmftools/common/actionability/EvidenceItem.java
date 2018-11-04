@@ -31,4 +31,10 @@ public abstract class EvidenceItem {
     public abstract String response();
 
     public abstract boolean isOnLabel();
+
+    @NotNull
+    public abstract String cancerType();
+
+    @NotNull
+    public abstract EvidenceScope scope();
 }

@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
@@ -52,7 +53,7 @@ public class FusionEvidenceAnalyzer {
     }
 
     @NotNull
-    public List<EvidenceItem> evidenceForFusion(@NotNull GeneFusion geneFusion, @Nullable String doidsPrimaryTumorLocation,
+    public List<EvidenceItem> evidenceForFusion(@NotNull GeneFusion geneFusion, @Nullable String primaryTumorLocation,
             @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
 
@@ -62,7 +63,7 @@ public class FusionEvidenceAnalyzer {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionPairs(actionableFusion);
 
                 evidenceBuilder.event(actionableFusion.fiveGene() + " - " + actionableFusion.threeGene() + " fusion");
-                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionableFusion.cancerType(), doidsPrimaryTumorLocation));
+                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableFusion.cancerType(), primaryTumorLocation));
                 evidenceItems.add(evidenceBuilder.build());
             }
         }
@@ -73,8 +74,8 @@ public class FusionEvidenceAnalyzer {
 
                 evidenceBuilder.event(
                         actionablePromiscuousFive.gene() + " - " + geneFusion.downstreamLinkedAnnotation().geneName() + " fusion");
-                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionablePromiscuousFive.cancerType(),
-                        doidsPrimaryTumorLocation));
+                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionablePromiscuousFive.cancerType(),
+                        primaryTumorLocation));
 
                 evidenceItems.add(evidenceBuilder.build());
             }
@@ -86,8 +87,8 @@ public class FusionEvidenceAnalyzer {
 
                 evidenceBuilder.event(
                         geneFusion.upstreamLinkedAnnotation().geneName() + " - " + actionablePromiscuousThree.gene() + " fusion");
-                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.foundTumorLocation(actionablePromiscuousThree.cancerType(),
-                        doidsPrimaryTumorLocation));
+                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionablePromiscuousThree.cancerType(),
+                        primaryTumorLocation));
 
                 evidenceItems.add(evidenceBuilder.build());
             }
@@ -104,7 +105,9 @@ public class FusionEvidenceAnalyzer {
                 .drug(actionableFusionPair.drug())
                 .drugsType(actionableFusionPair.drugsType())
                 .level(EvidenceLevel.fromString(actionableFusionPair.level()))
-                .response(actionableFusionPair.response());
+                .response(actionableFusionPair.response())
+                .cancerType(actionableFusionPair.cancerType())
+                .scope(EvidenceScope.SPECIFIC);
     }
 
     @NotNull
@@ -116,7 +119,9 @@ public class FusionEvidenceAnalyzer {
                 .drug(actionablePromiscuousThree.drug())
                 .drugsType(actionablePromiscuousThree.drugsType())
                 .level(EvidenceLevel.fromString(actionablePromiscuousThree.level()))
-                .response(actionablePromiscuousThree.response());
+                .response(actionablePromiscuousThree.response())
+                .cancerType(actionablePromiscuousThree.cancerType())
+                .scope(EvidenceScope.SPECIFIC);
     }
 
     @NotNull
@@ -128,6 +133,8 @@ public class FusionEvidenceAnalyzer {
                 .drug(actionablePromiscuousFive.drug())
                 .drugsType(actionablePromiscuousFive.drugsType())
                 .level(EvidenceLevel.fromString(actionablePromiscuousFive.level()))
-                .response(actionablePromiscuousFive.response());
+                .response(actionablePromiscuousFive.response())
+                .cancerType(actionablePromiscuousFive.cancerType())
+                .scope(EvidenceScope.SPECIFIC);
     }
 }

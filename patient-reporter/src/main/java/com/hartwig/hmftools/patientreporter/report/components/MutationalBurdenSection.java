@@ -29,7 +29,7 @@ public final class MutationalBurdenSection {
     }
 
     @NotNull
-    public static String interpret(double tumorMutationalBurden, boolean hasReliablePurityFit) {
+    private static String interpret(double tumorMutationalBurden, boolean hasReliablePurityFit) {
         return PatientReportFormat.correctValueForFitReliability(new DecimalFormat("#.#").format(tumorMutationalBurden),
                 hasReliablePurityFit) + " variants per Mb.";
     }

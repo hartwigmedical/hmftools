@@ -30,7 +30,7 @@ public class ClinicalTrialDataSource {
 
     @NotNull
     public static FieldBuilder<?>[] clinicalTrialFields() {
-        return new FieldBuilder<?>[] { EVENT_FIELD, TRIAL_FIELD, SOURCE_FIELD, CCMO_FIELD, REFERENCE_FIELD };
+        return new FieldBuilder<?>[] { EVENT_FIELD, TRIAL_FIELD, SOURCE_FIELD, CCMO_FIELD, REFERENCE_FIELD};
     }
 
     @NotNull

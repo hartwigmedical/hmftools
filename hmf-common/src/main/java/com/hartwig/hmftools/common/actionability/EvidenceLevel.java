@@ -10,28 +10,28 @@ public enum EvidenceLevel {
     LEVEL_E("E", false);
 
     @NotNull
-    private final String levelEvidenceItem;
+    private final String readableString;
 
-    private final boolean isReportedEvidenceItemLevel;
+    private final boolean includeForReporting;
 
-    EvidenceLevel(@NotNull final String levelEvidenceItem, final boolean isReportedEvidenceItemLevel) {
-        this.levelEvidenceItem = levelEvidenceItem;
-        this.isReportedEvidenceItemLevel = isReportedEvidenceItemLevel;
+    EvidenceLevel(@NotNull final String readableString, final boolean includeForReporting) {
+        this.readableString = readableString;
+        this.includeForReporting = includeForReporting;
 
     }
 
     @NotNull
-    public String levelEvidenceItem() {
-        return levelEvidenceItem;
+    public String readableString() {
+        return readableString;
     }
 
-    public boolean isReportedEvidenceItemLevel() {
-        return isReportedEvidenceItemLevel;
+    public boolean includeInReport() {
+        return includeForReporting;
     }
 
     @NotNull
-    public static EvidenceLevel fromString(@NotNull String levelItem) {
-        switch (levelItem.toUpperCase()) {
+    public static EvidenceLevel fromString(@NotNull String level) {
+        switch (level.toUpperCase()) {
             case "A":
                 return LEVEL_A;
             case "B":
@@ -43,7 +43,7 @@ public enum EvidenceLevel {
             case "E":
                 return LEVEL_E;
             default:
-                    throw new IllegalArgumentException("Unrecognized evidence level item" + levelItem);
+                    throw new IllegalArgumentException("Unrecognized evidence level item: " + level);
         }
     }
 }

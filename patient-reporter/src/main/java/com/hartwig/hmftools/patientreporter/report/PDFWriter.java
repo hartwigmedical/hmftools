@@ -54,10 +54,10 @@ public class PDFWriter {
     private static void writeReport(@NotNull String fileName, @NotNull JasperReportBuilder report)
             throws FileNotFoundException, DRException {
         if (Files.exists(new File(fileName).toPath())) {
-            LOGGER.warn(" Could not write " + fileName + " as it already exists.");
+            LOGGER.warn("Could not write " + fileName + " as it already exists.");
         } else {
             report.toPdf(new FileOutputStream(fileName));
-            LOGGER.info(" Created patient report at " + fileName);
+            LOGGER.info("Created patient report at " + fileName);
         }
     }
 

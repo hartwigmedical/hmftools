@@ -1,25 +1,22 @@
 primaryTumorLocation,doids
 Adrenal,3953
-Biliary,4607
-Bone/Soft tissue,201;9253
+Biliary,4607;4947
+Bone/Soft tissue,201;1115;3347
 Breast,1612
-Choroid,12759
-CNS,3620;3070
 Colon/Rectum,9256;219
 CUP,UNMAPPED
 Double primary,UNMAPPED
 Esophagus,5041;4944
-Eye,UNMAPPED
-Head and neck,11934;8618
-Kidney,263;8411
+Eye,2174
+Head and neck,11934
+Kidney,4450;263
 Liver,3571
-Lung,1324
-Lymphoid,0060058
+Lung,1324;3908;5409
+Lymphoid,60058
 Mesothelioma,1790
-Myeloid,4960
-Nervous system,3093
-NET,UNMAPPED
-Other,UNMAPPED
+Myeloid,70004
+Nervous system,3093;1319
+NET,169;1800;4434;1798;5410
 Ovary,2394
 Pancreas,1793
 Penile,11615
@@ -32,5 +29,5 @@ Thymus,3277
 Thyroid,1781
 Unknown,UNMAPPED
 Urinary tract,3996
-Uterus,363
-Vulva,1245
+Uterus,363;1380
+Vulva,1245;119

@@ -19,6 +19,7 @@ import net.sf.jasperreports.engine.JRDataSource;
 public final class EvidenceItemDataSource {
 
     public static final FieldBuilder<?> EVENT_FIELD = field("event", String.class);
+    public static final FieldBuilder<?> SCOPE_FIELD = field("scope", String.class);
     public static final FieldBuilder<?> DRUG_FIELD = field("drug", String.class);
     public static final FieldBuilder<?> LEVEL_FIELD = field("level", String.class);
     public static final FieldBuilder<?> RESPONSE_FIELD = field("response", String.class);
@@ -30,12 +31,13 @@ public final class EvidenceItemDataSource {
 
     @NotNull
     public static FieldBuilder<?>[] evidenceItemFields() {
-        return new FieldBuilder<?>[] { EVENT_FIELD, DRUG_FIELD, LEVEL_FIELD, RESPONSE_FIELD, SOURCE_FIELD, REFERENCE_FIELD };
+        return new FieldBuilder<?>[] { EVENT_FIELD, SCOPE_FIELD, DRUG_FIELD, LEVEL_FIELD, RESPONSE_FIELD, SOURCE_FIELD, REFERENCE_FIELD };
     }
 
     @NotNull
     public static JRDataSource fromEvidenceItems(@NotNull List<EvidenceItem> evidenceItems) {
         final DRDataSource evidenceItemDataSource = new DRDataSource(EVENT_FIELD.getName(),
+                SCOPE_FIELD.getName(),
                 DRUG_FIELD.getName(),
                 LEVEL_FIELD.getName(),
                 RESPONSE_FIELD.getName(),
@@ -44,15 +46,16 @@ public final class EvidenceItemDataSource {
 
         for (EvidenceItem evidenceItem : sort(evidenceItems)) {
             assert !evidenceItem.source().isTrialSource();
-            assert evidenceItem.level().isReportedEvidenceItemLevel();
+            assert evidenceItem.level().includeInReport();
 
             evidenceItemDataSource.add(evidenceItem.event(),
+                    evidenceItem.scope().readableString(),
                     evidenceItem.drug(),
-                    evidenceItem.level().levelEvidenceItem(),
+                    evidenceItem.level().readableString(),
                     evidenceItem.response(),
                     evidenceItem.source().sourceName(),
                     evidenceItem.reference());
-            }
+        }
         return evidenceItemDataSource;
     }
 
@@ -66,7 +69,7 @@ public final class EvidenceItemDataSource {
                     return item1.event().compareTo(item2.event());
                 }
             } else {
-                return item1.level().levelEvidenceItem().compareTo(item2.level().levelEvidenceItem());
+                return item1.level().readableString().compareTo(item2.level().readableString());
             }
         }).collect(Collectors.toList());
     }
