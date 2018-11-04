@@ -74,7 +74,7 @@ public abstract class ExplanationPage {
                         "The 'Biallelic' field indicates whether the variant is present across all alleles in the tumor "
                                 + "(and is including variants with loss-of-heterozygosity).",
                         "The 'Driver' field is based on the driver probability calculated based on the HMF database. "
-                                + "A variant with High driver likelihood is likely to be positively selected for during the "
+                                + "A variant in a gene with High driver likelihood is likely to be positively selected for during the "
                                 + "oncogenic process."));
     }
 
