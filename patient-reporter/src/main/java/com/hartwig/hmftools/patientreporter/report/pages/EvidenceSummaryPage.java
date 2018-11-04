@@ -41,7 +41,7 @@ public abstract class EvidenceSummaryPage {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 GenomicSummarySection.build(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                tumorSpecificClinicalEvidence(report()),
+                tumorTypeSpecificEvidence(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 clinicalTrialReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -49,13 +49,13 @@ public abstract class EvidenceSummaryPage {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> tumorSpecificClinicalEvidence(@NotNull AnalysedPatientReport report) {
-        return evidenceItemReport(report.tumorSpecificEvidence(), "Tumor Specific Clinical Evidence");
+    private static ComponentBuilder<?, ?> tumorTypeSpecificEvidence(@NotNull AnalysedPatientReport report) {
+        return evidenceItemReport(report.tumorSpecificEvidence(), "Tumor Type Specific Evidence");
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> offLabelClinicalEvidence(@NotNull AnalysedPatientReport report) {
-        return evidenceItemReport(report.offLabelEvidence(), "Off-label Clinical Evidence");
+        return evidenceItemReport(report.offLabelEvidence(), "Evidence On Other Tumor Types");
     }
 
     @NotNull
@@ -63,7 +63,7 @@ public abstract class EvidenceSummaryPage {
         final ComponentBuilder<?, ?> table = items.size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(EvidenceItemDataSource.evidenceItemFields())
                 .columns(col.column("Event", EvidenceItemDataSource.EVENT_FIELD).setFixedWidth(120),
-                        col.column("Biomarker", EvidenceItemDataSource.SCOPE_FIELD),
+                        col.column("Match", EvidenceItemDataSource.SCOPE_FIELD),
                         col.column("Drug", EvidenceItemDataSource.DRUG_FIELD).setFixedWidth(190),
                         col.column("Level", EvidenceItemDataSource.LEVEL_FIELD),
                         col.column("Response", EvidenceItemDataSource.RESPONSE_FIELD),
