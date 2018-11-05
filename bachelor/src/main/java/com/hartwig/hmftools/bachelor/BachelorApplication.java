@@ -301,10 +301,14 @@ public class BachelorApplication {
         {
             for (final EligibilityReport r : result)
             {
-                mMainDataWriter.write(String.format("%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s,%s,%d,%s",
-                        sampleId, r.source().toString(), r.program(), r.id(), r.genes(), r.transcriptId(),
-                        r.chrom(), r.pos(), r.ref(), r.alts(), r.effects(), r.annotations(),
-                        r.hgvsProtein(), r.isHomozygous(), r.phredScore(), r.hgvsCoding()));
+                mMainDataWriter.write(String.format("%s,%s,%s,%s,%s,%s",
+                        sampleId, r.source().toString(), r.program(), r.id(), r.genes(), r.transcriptId()));
+
+                mMainDataWriter.write(String.format(",%s,%d,%s,%s,%s,%s",
+                        r.chrom(), r.pos(), r.ref(), r.alts(), r.effects(), r.annotations()));
+
+                mMainDataWriter.write(String.format(",%s,%s,%d,%s,%s",
+                        r.hgvsProtein(), r.isHomozygous(), r.phredScore(), r.hgvsCoding(), r.matchType()));
 
                 mMainDataWriter.newLine();
 
@@ -349,7 +353,7 @@ public class BachelorApplication {
     {
         return String.join(",",
                 Arrays.asList("SAMPLEID", "SOURCE", "PROGRAM", "ID", "GENE", "TRANSCRIPT_ID", "CHROM", "POS",
-                        "REF", "ALTS", "EFFECTS",  "ANNOTATIONS", "HGVS_PROTEIN", "IS_HOMOZYGOUS", "PHRED_SCORE", "HGVS_CODING"));
+                        "REF", "ALTS", "EFFECTS",  "ANNOTATIONS", "HGVS_PROTEIN", "IS_HOMOZYGOUS", "PHRED_SCORE", "HGVS_CODING", "MATCH_TYPE"));
     }
 
     public static void main(final String... args)

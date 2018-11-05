@@ -18,8 +18,17 @@ abstract class EligibilityReport {
         SOMATIC_DISRUPTION
     }
 
+    enum MatchType {
+        NONE,
+        GENE_TRANSCRIPT,
+        HOTSPOT_LOCATION,
+        WHITELIST
+    }
+
     @NotNull
     public abstract ReportType source();
+
+    public abstract MatchType matchType();
 
     @NotNull
     public abstract String program();

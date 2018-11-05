@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.bachelor;
 
+import static com.hartwig.hmftools.bachelor.EligibilityReport.MatchType.GENE_TRANSCRIPT;
+import static com.hartwig.hmftools.bachelor.EligibilityReport.MatchType.HOTSPOT_LOCATION;
+import static com.hartwig.hmftools.bachelor.EligibilityReport.MatchType.NONE;
+import static com.hartwig.hmftools.bachelor.EligibilityReport.MatchType.WHITELIST;
 import static com.hartwig.hmftools.bachelor.EligibilityReport.ReportType.GERMLINE_DELETION;
 import static com.hartwig.hmftools.bachelor.EligibilityReport.ReportType.SOMATIC_DELETION;
 import static com.hartwig.hmftools.bachelor.EligibilityReport.ReportType.SOMATIC_DISRUPTION;
@@ -104,26 +108,26 @@ class BachelorEligibility {
 
             List<String> requiredEffects = Lists.newArrayList();
             List<String> panelTranscripts = Lists.newArrayList();
+            List<HotspotLocation> hotspots = Lists.newArrayList();
 
             for (final ProgramPanel panel : program.getPanel())
             {
                 final List<GeneIdentifier> genes = panel.getGene();
 
-                final List<HotspotLocation> hotspots = panel.getHotspot();
-
                 // take up a collection of the effects to search for
+                hotspots = panel.getHotspot();
                 requiredEffects = panel.getSnpEffect().stream().map(SnpEffect::value).collect(Collectors.toList());
                 panelTranscripts = genes.stream().map(GeneIdentifier::getEnsembl).collect(Collectors.toList());
 
-                final List<String> effects = requiredEffects;
 
                 /*
+                final List<String> effects = requiredEffects;
+
                 final Predicate<VariantModel> panelPredicate = v -> genes.stream()
                         .anyMatch(p -> v.sampleAnnotations()
                                 .stream()
                                 .anyMatch(a -> a.transcript().equals(p.getEnsembl()) && effects.stream()
                                         .anyMatch(x -> a.effects().contains(x))));
-                */
 
                 final Predicate<VariantModel> effectsPredicate = v -> effects.stream()
                         .anyMatch(p -> v.sampleAnnotations()
@@ -148,7 +152,9 @@ class BachelorEligibility {
                 final Predicate<VariantModel> combinedPredicate = transcriptPredicate.or(hotspotPredicate);
 
                 panelPredicates.add(combinedPredicate);
-                // panelPredicates.add(panelPredicate);
+
+                panelPredicates.add(effectsPredicate);
+                */
 
                 // update query targets
                 for (final GeneIdentifier g : genes)
@@ -178,13 +184,15 @@ class BachelorEligibility {
                 }
             }
 
-            final Predicate<VariantModel> inPanel = v -> panelPredicates.stream().anyMatch(p -> p.test(v));
+            // final Predicate<VariantModel> inPanel = v -> panelPredicates.stream().anyMatch(p -> p.test(v));
+            final Predicate<VariantModel> inPanel = v -> true; // manually checked for each variant since too difficult to express as a predicate
 
             final Predicate<VariantModel> inBlacklist = new BlacklistPredicate(geneToEnsemblMap.values(), program.getBlacklist());
             final Predicate<VariantModel> inWhitelist = new WhitelistPredicate(geneToEnsemblMap, program.getWhitelist());
-            final Predicate<VariantModel> snvPredicate = v -> inPanel.test(v) ? !inBlacklist.test(v) : inWhitelist.test(v);
+            // final Predicate<VariantModel> snvPredicate = v -> inPanel.test(v) ? !inBlacklist.test(v) : inWhitelist.test(v);
+            final Predicate<VariantModel> snvPredicate = v -> !inBlacklist.test(v);
 
-            BachelorProgram bachelorProgram = new BachelorProgram(program.getName(), snvPredicate, inWhitelist, requiredEffects, panelTranscripts);
+            BachelorProgram bachelorProgram = new BachelorProgram(program.getName(), snvPredicate, inWhitelist, requiredEffects, panelTranscripts, hotspots);
 
             result.programs.add(bachelorProgram);
         }
@@ -217,100 +225,134 @@ class BachelorEligibility {
 
         List<EligibilityReport> reportList = Lists.newArrayList();
 
-        if (matchingPrograms.size() > 0)
-        {
-            // found a match, not collect up the details and write them to the output file
-            LOGGER.debug("program match found, first entry({}) ", matchingPrograms.get(0));
-        }
-
         // search the list of annotations for the correct allele and transcript ID to write to the result file
-        // this effectively reapplies the predicate conditions, so a refactor would be to drop the predicates and
-        // just apply the search criteria once, and create a report for any full match
         for (BachelorProgram program : programs)
         {
-            if (!program.vcfProcessor().test(sampleVariant))
-                continue;
+            final List<String> requiredEffects = program.requiredEffects();
+            final List<String> geneTranscripts = program.panelTranscripts();
+            final List<HotspotLocation> hotspots = program.hotspots();
 
-            String programName = program.name();
+            // if (!program.vcfProcessor().test(sampleVariant))
+            //     continue;
 
-            // found a match, not collect up the details and write them to the output file
-            LOGGER.debug("match found: program({}): var({}:{}) ref({}) alt({})",
-                    programName, sampleVariant.context().getContig(), sampleVariant.context().getStart(),
-                    sampleVariant.context().getReference().getBaseString(), sampleVariant.context().getAlleles().get(1).getBaseString());
+            // check the sub-conditions now - hotspot locations and gene-transcript IDs
 
-            for (int index = 0; index < sampleVariant.sampleAnnotations().size(); ++index)
+            EligibilityReport.MatchType matchType = NONE;
+
+            // first check the transcript
+            SnpEffAnnotation relevantSnpEff = null;
+            String annotationsStr = "";
+
+            for (int i = 0; i < sampleVariant.sampleAnnotations().size(); ++i)
             {
-                SnpEffAnnotation snpEff = sampleVariant.sampleAnnotations().get(index);
+                final SnpEffAnnotation snpEff = sampleVariant.sampleAnnotations().get(i);
 
-                if(!snpEff.isTranscriptFeature())
+                if (!snpEff.isTranscriptFeature())
                     continue;
 
-                // re-check that this variant is one that is relevant
-                /*if (!program.panelTranscripts().contains(snpEff.transcript()))
+                if (geneTranscripts.contains(snpEff.transcript()))
                 {
-                    // LOGGER.debug("uninteresting transcript({})", snpEff.transcript());
-                    continue;
-                }*/
-
-                boolean found = false;
-                for (String requiredEffect : program.requiredEffects())
-                {
-                    if (snpEff.effects().contains(requiredEffect))
+                    for (String requiredEffect : requiredEffects)
                     {
-                        found = true;
-                        break;
+                        if (snpEff.effects().contains(requiredEffect))
+                        {
+                            LOGGER.debug("match found: program({}): var({}:{}) ref({}) alt({}) on effect({}) and transcript({})",
+                                    program.name(), sampleVariant.context().getContig(), sampleVariant.context().getStart(),
+                                    sampleVariant.context().getReference().getBaseString(), sampleVariant.context().getAlleles().get(1).getBaseString(),
+                                    snpEff.effects(), snpEff.transcript());
+
+                            matchType = GENE_TRANSCRIPT;
+                            relevantSnpEff = snpEff;
+                            annotationsStr = sampleVariant.rawAnnotations().get(i);
+                            break;
+                        }
                     }
                 }
 
-                if (!found && !program.whitelist().test(sampleVariant))
+                if (matchType == GENE_TRANSCRIPT)
+                    break;
+            }
+
+            // then check the hotspot location
+
+            if(matchType == NONE && program.whitelist().test(sampleVariant))
+            {
+                matchType = WHITELIST;
+            }
+
+            if(matchType == NONE)
+            {
+                for (final HotspotLocation hotspot : hotspots)
                 {
-                    if (program.whitelist().test(sampleVariant))
+                    if (variant.getStart() != hotspot.getPosition().intValue() || !variant.getContig().equals(hotspot.getChromosome()))
+                        continue;
+
+                    if (!variant.getReference().getBaseString().equals(hotspot.getRef())
+                    || variant.getAlleles().size() < 2 || !variant.getAlleles().get(1).getBaseString().equals(hotspot.getAlt()))
                     {
-                        // allow this whitelist through
-                        LOGGER.debug("unlisted effect({}) but whitelisted variant", snpEff.effects());
-                    }
-                    else
-                    {
-                        // LOGGER.debug("uninteresting effects({})", snpEff.effects());
                         continue;
                     }
+
+                    matchType = HOTSPOT_LOCATION;
+
+                    LOGGER.debug("match found: program({}): var({}:{}) ref({}) alt({}) on hotspot location",
+                            program.name(), sampleVariant.context().getContig(), sampleVariant.context().getStart(),
+                            sampleVariant.context().getReference().getBaseString(), sampleVariant.context() .getAlleles() .get(1) .getBaseString());
                 }
-
-                // now we have the correct allele and transcript ID as required by the XML
-                // so write a complete record to the output file
-                LOGGER.debug("matched allele({}) transcriptId({}) effect({})", snpEff.allele(), snpEff.transcript(), snpEff.effects());
-
-                final String annotationsStr = sampleVariant.rawAnnotations().get(index);
-
-                boolean isHomozygous = variant.getGenotype(0).isHom();
-                int phredScore = variant.getGenotype(0).getPL().length >= 1 ? variant.getGenotype(0).getPL()[0] : 0;
-
-                EligibilityReport report = ImmutableEligibilityReport.builder()
-                        .patient(patient)
-                        .source(type)
-                        .program(programName)
-                        .id(variant.getID())
-                        .genes(snpEff.gene())
-                        .transcriptId(snpEff.transcript())
-                        .chrom(variant.getContig())
-                        .pos(variant.getStart())
-                        .ref(variant.getReference().toString())
-                        .alts(snpEff.allele())
-                        .effects(snpEff.effects())
-                        .annotations(annotationsStr)
-                        .hgvsProtein(snpEff.hgvsProtein())
-                        .hgvsCoding(snpEff.hgvsCoding())
-                        .isHomozygous(isHomozygous)
-                        .phredScore(phredScore)
-                        .build();
-
-                reportList.add(report);
             }
+
+            if(matchType == HOTSPOT_LOCATION || matchType == WHITELIST)
+            {
+                // select the first relevant feature
+                for (int i = 0; i < sampleVariant.sampleAnnotations().size(); ++i)
+                {
+                    final SnpEffAnnotation snpEff = sampleVariant.sampleAnnotations().get(i);
+
+                    if (!snpEff.isTranscriptFeature())
+                        continue;
+
+                    relevantSnpEff = snpEff;
+                    annotationsStr = sampleVariant.rawAnnotations().get(i);
+                    break;
+                }
+            }
+
+            if (matchType == NONE)
+            {
+                continue;
+            }
+
+            boolean isHomozygous = variant.getGenotype(0).isHom();
+            int phredScore = variant.getGenotype(0).getPL().length >= 1 ? variant.getGenotype(0).getPL()[0] : 0;
+
+            EligibilityReport report = ImmutableEligibilityReport.builder()
+                    .patient(patient)
+                    .source(type)
+                    .program(program.name())
+                    .matchType(matchType)
+                    .id(variant.getID())
+                    .genes(relevantSnpEff.gene())
+                    .transcriptId(relevantSnpEff.transcript())
+                    .chrom(variant.getContig())
+                    .pos(variant.getStart())
+                    .ref(variant.getReference().toString())
+                    .alts(relevantSnpEff.allele())
+                    .effects(relevantSnpEff.effects())
+                    .annotations(annotationsStr)
+                    .hgvsProtein(relevantSnpEff.hgvsProtein())
+                    .hgvsCoding(relevantSnpEff.hgvsCoding())
+                    .isHomozygous(isHomozygous)
+                    .phredScore(phredScore)
+                    .build();
+
+            reportList.add(report);
         }
 
+        /*
         if (!reportList.isEmpty()) {
             LOGGER.debug("writing {} matched reports", reportList.size());
         }
+        */
 
         return reportList;
     }
