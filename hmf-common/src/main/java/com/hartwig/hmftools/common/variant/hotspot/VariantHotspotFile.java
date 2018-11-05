@@ -7,6 +7,8 @@ import java.util.List;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -18,16 +20,18 @@ public final class VariantHotspotFile {
     }
 
     @NotNull
-    public static Multimap<String, VariantHotspot> read(@NotNull final String fileName) throws IOException {
+    public static Multimap<Chromosome, VariantHotspot> read(@NotNull final String fileName) throws IOException {
         return fromLines(Files.readAllLines(new File(fileName).toPath()));
     }
 
     @NotNull
-    private static Multimap<String, VariantHotspot> fromLines(@NotNull List<String> lines) {
-        Multimap<String, VariantHotspot> result = ArrayListMultimap.create();
+    private static Multimap<Chromosome, VariantHotspot> fromLines(@NotNull List<String> lines) {
+        Multimap<Chromosome, VariantHotspot> result = ArrayListMultimap.create();
         for (String line : lines) {
             VariantHotspot position = fromString(line);
-            result.put(position.chromosome(), position);
+            if (HumanChromosome.contains(position.chromosome())) {
+                result.put(HumanChromosome.fromString(position.chromosome()), position);
+            }
         }
 
         return result;
