@@ -30,20 +30,35 @@ public final class PileupFile {
         int cCount = 0;
         int insertions = 0;
         int deletions = 0;
+        int inframeInsertions = 0;
+        int inframeDeletions = 0;
+        int indelSize = 0;
 
         if (values.length >= 5) {
             final String readBases = values[4];
             for (int i = 0; i < readBases.length(); i++) {
                 switch (Character.toUpperCase(readBases.charAt(i))) {
                     case '+':
+                        if (i > 0 && isRef(readBases.charAt(i-1))) {
+                            referenceCount--;
+                        }
                         insertions++;
-                        i += indelStringSize(i + 1, readBases);
-                        referenceCount--;
+                        indelSize = indelSize(i + 1, readBases);
+                        if (inframe(indelSize)) {
+                            inframeInsertions++;
+                        }
+                        i += indelSize + Integer.toString(indelSize).length();
                         break;
                     case '-':
+                        if (i > 0 && isRef(readBases.charAt(i-1))) {
+                            referenceCount--;
+                        }
                         deletions++;
-                        i += indelStringSize(i + 1, readBases);
-                        referenceCount--;
+                        indelSize = indelSize(i + 1, readBases);
+                        if (inframe(indelSize)) {
+                            inframeDeletions++;
+                        }
+                        i += indelSize + Integer.toString(indelSize).length();
                         break;
                     case '^':
                         i++;
@@ -79,19 +94,29 @@ public final class PileupFile {
                 .aMismatchCount(aCount)
                 .tMismatchCount(tCount)
                 .cMismatchCount(cCount)
+                .inframeInsertions(inframeInsertions)
                 .insertions(insertions)
+                .inframeDeletions(inframeDeletions)
                 .deletions(deletions)
                 .build();
     }
 
     @VisibleForTesting
-    static int indelStringSize(int indelIndex, @NotNull final String text) {
+    static int indelSize(int indelIndex, @NotNull final String text) {
         for (int i = indelIndex + 1; i < text.length(); i++) {
             if (!Character.isDigit(text.charAt(i))) {
-                return i - indelIndex + Integer.valueOf(text.substring(indelIndex, i));
+                return Integer.valueOf(text.substring(indelIndex, i));
             }
         }
 
         return Integer.valueOf(text.substring(indelIndex, text.length()));
+    }
+
+    static boolean inframe(int indelSize) {
+        return indelSize % 3 == 0;
+    }
+
+    static boolean isRef(char base) {
+        return base == ',' || base == '.';
     }
 }

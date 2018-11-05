@@ -27,10 +27,18 @@ public interface Pileup extends GenomePosition {
 
     int insertions();
 
+    int inframeInsertions();
+
     int deletions();
+
+    int inframeDeletions();
 
     default int indels() {
         return insertions() + deletions();
+    }
+
+    default int inframeIndels() {
+        return inframeInsertions() + inframeDeletions();
     }
 
     default int mismatchCount(char base) {
