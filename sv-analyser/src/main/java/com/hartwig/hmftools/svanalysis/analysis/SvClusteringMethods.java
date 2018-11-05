@@ -82,9 +82,17 @@ public class SvClusteringMethods {
     private boolean mFoldbackColsLogged;
     private boolean mInversionPairColsLogged;
 
-    private static final double REF_BASE_LENGTH = 10000000D;
-    public static final int MAX_SIMPLE_DUP_DEL_CUTOFF = 5000000;
-    public static final int MIN_SIMPLE_DUP_DEL_CUTOFF = 100000;
+    private static double REF_BASE_LENGTH = 10000000D;
+    public static int MAX_SIMPLE_DUP_DEL_CUTOFF = 5000000;
+    public static int MIN_SIMPLE_DUP_DEL_CUTOFF = 100000;
+
+    public static String CLUSTER_REASON_PROXIMITY = "Proximity";
+    public static String CLUSTER_REASON_LOH = "LOH";
+    public static String CLUSTER_REASON_COMMON_ARMS = "CommonArms";
+    public static String CLUSTER_REASON_FOLDBACKS = "Foldback";
+    public static String CLUSTER_REASON_SOLO_SINGLE = "SoloSingle";
+    public static String CLUSTER_REASON_INV_OVERLAP = "InvOverlap";
+    public static String CLUSTER_REASON_LONG_DEL_DUP = "LongDelDup";
 
     public SvClusteringMethods(final SvUtilities clusteringUtils)
     {
@@ -187,11 +195,17 @@ public class SvClusteringMethods {
         {
             SvVarData currentVar = unassignedVariants.get(currentIndex);
 
+            if(isEquivSingleBreakend(currentVar))
+            {
+                ++currentIndex;
+                continue;
+            }
+
             // compare with all other SVs in this cluster
             boolean matched = false;
             for (SvVarData otherVar : cluster.getSVs())
             {
-                // test each possible linkage
+                    // test each possible linkage
                 if (!mUtils.areVariantsLinkedByDistance(currentVar, otherVar))
                     continue;
 
@@ -199,6 +213,11 @@ public class SvClusteringMethods {
                     continue;
 
                 cluster.addVariant(currentVar);
+                currentVar.addClusterReason(CLUSTER_REASON_PROXIMITY, otherVar.id());
+
+                if(otherVar.getClusterReason().isEmpty())
+                    otherVar.addClusterReason(CLUSTER_REASON_PROXIMITY, currentVar.id());
+
                 matched = true;
                 break;
             }
@@ -308,6 +327,9 @@ public class SvClusteringMethods {
         if(!var.isNullBreakend())
             return false;
 
+        if(var.isDupBreakend(true) || var.isDupBreakend(false))
+            return true;
+
         return  (var.getAssemblyData(true).contains(ASSEMBLY_TYPE_EQV)
                 || var.getAssemblyData(false).contains(ASSEMBLY_TYPE_EQV));
     }
@@ -328,44 +350,50 @@ public class SvClusteringMethods {
             if(lohEvent.StartSV.isEmpty() || lohEvent.EndSV.isEmpty() || lohEvent.StartSV.equals("0") || lohEvent.EndSV.equals("0"))
                 continue;
 
-            SvCluster startCluster = findClusterFromVariantId(lohEvent.StartSV, clusters);
-            SvCluster endCluster = findClusterFromVariantId(lohEvent.EndSV, clusters);
+            SvCluster lohClusterStart = null;
+            SvVarData lohSvStart = null;
+            SvCluster lohClusterEnd = null;
+            SvVarData lohSvEnd = null;
 
-            if(startCluster == null)
+            for(SvCluster cluster : clusters)
             {
-                LOGGER.error("sample({}) start varId({}) not found in any cluster", sampleId, lohEvent.StartSV);
+                for(final SvVarData var : cluster.getSVs())
+                {
+                    if(var.id().equals(lohEvent.StartSV))
+                    {
+                        lohClusterStart = cluster;
+                        lohSvStart = var;
+                    }
+                    if(var.id().equals(lohEvent.EndSV))
+                    {
+                        lohClusterEnd = cluster;
+                        lohSvEnd = var;
+                    }
+
+                    if(lohSvStart != null && lohSvEnd != null)
+                        break;
+                }
+            }
+
+            if(lohClusterEnd == null || lohClusterStart == null)
+            {
+                // LOGGER.error("sample({}) start varId({}) not found in any cluster", sampleId, lohEvent.StartSV);
                 continue;
             }
-            else if(endCluster == null)
-            {
-                LOGGER.error("sample({}) end varId({}) not found in any cluster", sampleId, lohEvent.EndSV);
-                continue;
-            }
 
-            if(startCluster == endCluster)
+            if(lohClusterStart == lohClusterEnd)
                 continue;
 
             LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on LOH event(sv1={} sv2={} len={})",
-                    startCluster.getId(), startCluster.getCount(), endCluster.getId(), endCluster.getCount(),
+                    lohClusterStart.getId(), lohClusterStart.getUniqueSvCount(), lohClusterEnd.getId(), lohClusterEnd.getCount(),
                     lohEvent.StartSV, lohEvent.EndSV, lohEvent.Length);
 
-            startCluster.mergeOtherCluster(endCluster);
-            clusters.remove(endCluster);
-        }
-    }
+            lohSvStart.addClusterReason(CLUSTER_REASON_LOH, lohSvEnd.id());
+            lohSvEnd.addClusterReason(CLUSTER_REASON_LOH, lohSvStart.id());
 
-    private SvCluster findClusterFromVariantId(final String varId, List<SvCluster> clusters)
-    {
-        for(SvCluster cluster : clusters)
-        {
-            for(final SvVarData var : cluster.getSVs())
-            {
-                if(var.id().equals(varId))
-                    return cluster;
-            }
+            lohClusterStart.mergeOtherCluster(lohClusterEnd);
+            clusters.remove(lohClusterEnd);
         }
-
-        return null;
     }
 
     public static boolean isSmallConsistentCluster(final SvCluster cluster)
@@ -378,13 +406,13 @@ public class SvClusteringMethods {
 
     public static boolean isConsistentCluster(final SvCluster cluster)
     {
-        if(cluster.isSimpleSVs())
+        if(cluster.isSimpleSVs() || cluster.isResolved())
             return true;
 
         if(!cluster.isConsistent())
             return false;
 
-        if(cluster.isFullyChained() || cluster.isResolved())
+        if(cluster.isFullyChained())
             return true;
 
         // other wise check whether all remaining SVs are either in consistent chains
@@ -457,7 +485,7 @@ public class SvClusteringMethods {
 
                 for(final SvVarData var1 : cluster1.getSVs())
                 {
-                    if (var1.isLocal() || var1.isReplicatedSv())
+                    if (var1.isLocal() || var1.isReplicatedSv() || var1.isNullBreakend())
                         continue;
 
                     if (var1.isLineElement(true) || var1.isLineElement(false))
@@ -465,7 +493,7 @@ public class SvClusteringMethods {
 
                     for (final SvVarData var2 : cluster2.getSVs())
                     {
-                        if (var2.isLocal() || var2.isReplicatedSv())
+                        if (var2.isLocal() || var2.isReplicatedSv() || var2.isNullBreakend())
                             continue;
 
                         if (var2.isLineElement(true) || var2.isLineElement(false))
@@ -475,12 +503,18 @@ public class SvClusteringMethods {
                         && var1.arm(true).equals(var2.arm(true)) && var1.arm(false).equals(var2.arm(false)))
                         {
                             commonLinkingSvFound = true;
+
+                            var1.addClusterReason(CLUSTER_REASON_COMMON_ARMS, var2.id());
+                            var2.addClusterReason(CLUSTER_REASON_COMMON_ARMS, var1.id());
                             break;
                         }
                         else if (var1.chromosome(true).equals(var2.chromosome(false)) && var1.chromosome(false).equals(var2.chromosome(true))
                                 && var1.arm(true).equals(var2.arm(false)) && var1.arm(false).equals(var2.arm(true)))
                         {
                             commonLinkingSvFound = true;
+
+                            var1.addClusterReason(CLUSTER_REASON_COMMON_ARMS, var2.id());
+                            var2.addClusterReason(CLUSTER_REASON_COMMON_ARMS, var1.id());
                             break;
                         }
                     }
@@ -495,7 +529,7 @@ public class SvClusteringMethods {
                 if(commonLinkingSvFound)
                 {
                     LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on common arms({})",
-                            cluster1.getId(), cluster1.getCount(), cluster2.getId(), cluster2.getCount(), commonArms);
+                            cluster1.getId(), cluster1.getUniqueSvCount(), cluster2.getId(), cluster2.getUniqueSvCount(), commonArms);
 
                     cluster1.mergeOtherCluster(cluster2);
                     clusters.remove(index2);
@@ -550,18 +584,26 @@ public class SvClusteringMethods {
                 {
                     for(SvArmGroup armGroup2 : armGroups2)
                     {
-                        if (checkOverlaps && armGroupsHaveOverlappingSVs(armGroup1, armGroup2, true))
+                        if (checkOverlaps)
                         {
-                            LOGGER.debug("arm({} svs={}) overlaps with arm({} svs={})",
-                                    armGroup1.posId(), armGroup1.getCount(), armGroup2.posId(), armGroup2.getCount());
+                            final SvVarData linkingVar = armGroupsHaveOverlappingSVs(armGroup1, armGroup2, true);
 
-                            canMergeArms = true;
-                            break;
+                            if(linkingVar != null)
+                            {
+                                LOGGER.debug("arm({} svs={}) overlaps with arm({} svs={}) on SV({})",
+                                        armGroup1.posId(), armGroup1.getCount(), armGroup2.posId(), armGroup2.getCount(), linkingVar);
+
+                                linkingVar.addClusterReason(CLUSTER_REASON_INV_OVERLAP, "");
+
+                                canMergeArms = true;
+                                break;
+                            }
                         }
-                        else if (checkSingleLinks && armGroupsHaveLinkingSVs(armGroup1, armGroup2))
+
+                        if (!canMergeArms && checkSingleLinks && armGroupsHaveLinkingSVs(armGroup1, armGroup2))
                         {
-                            LOGGER.debug("arm({} svs={}) has linking SVs with arm({} svs={})",
-                                    armGroup1.posId(), armGroup1.getCount(), armGroup2.posId(), armGroup2.getCount());
+                            LOGGER.debug("cluster({}) arm({} svs={}) has linking SVs with cluster({}) arm({} svs={})",
+                                    cluster1.getId(), armGroup1.posId(), armGroup1.getCount(), cluster2.getId(), armGroup2.posId(), armGroup2.getCount());
 
                             canMergeArms = true;
                             break;
@@ -604,10 +646,10 @@ public class SvClusteringMethods {
         return false;
     }
 
-    private boolean armGroupsHaveOverlappingSVs(final SvArmGroup group1, final SvArmGroup group2, boolean reqInversion)
+    private final SvVarData armGroupsHaveOverlappingSVs(final SvArmGroup group1, final SvArmGroup group2, boolean reqInversion)
     {
         if(!group1.chromosome().equals(group2.chromosome()) || !group1.arm().equals(group2.arm()))
-            return false;
+            return null;
 
         // check for an overlapping INV from one cluster to another
         boolean hasOverlap = false;
@@ -646,19 +688,12 @@ public class SvClusteringMethods {
                 if ((var.position(true) >= checkGroup.posStart() && var.position(true) <= checkGroup.posEnd())
                 || (var.position(false) >= checkGroup.posStart() && var.position(false) <= checkGroup.posEnd()))
                 {
-                    hasOverlap = true;
-                    break;
+                    return var;
                 }
             }
-
-            if(hasOverlap)
-                break;
         }
 
-        if(!hasOverlap)
-            return false;
-
-        return true;
+        return null;
     }
 
     private boolean mergeLongDupsDels(List<SvCluster> clusters)
@@ -673,12 +708,24 @@ public class SvClusteringMethods {
         {
             SvCluster cluster1 = clusters.get(index1);
 
+            if(cluster1.isResolved())
+            {
+                ++index1;
+                continue;
+            }
+
             boolean hasLongDelDup1 = clusterHasLongDelDup(cluster1);
 
             int index2 = index1 + 1;
             while(index2 < clusters.size())
             {
                 SvCluster cluster2 = clusters.get(index2);
+
+                if(cluster2.isResolved())
+                {
+                    ++index2;
+                    continue;
+                }
 
                 boolean hasLongDelDup2 = clusterHasLongDelDup(cluster2);
 
@@ -687,6 +734,12 @@ public class SvClusteringMethods {
                 {
                     cluster1.mergeOtherCluster(cluster2);
                     clusters.remove(index2);
+
+                    if(hasLongDelDup1)
+                        addClusterReason(cluster2, cluster1, CLUSTER_REASON_LONG_DEL_DUP);
+
+                    if(hasLongDelDup2)
+                        addClusterReason(cluster1, cluster2, CLUSTER_REASON_LONG_DEL_DUP);
                 }
                 else
                 {
@@ -699,6 +752,17 @@ public class SvClusteringMethods {
         }
 
         return clusters.size() < initClusterCount;
+    }
+
+    public static void addClusterReason(SvCluster mergedCluster, SvCluster mergingCluster, final String reason)
+    {
+        final String otherId = mergingCluster.getCount() == 1 ? mergingCluster.getSVs().get(0).id() : "";
+
+        for(SvVarData var : mergedCluster.getSVs())
+        {
+            var.addClusterReason(reason, otherId);
+        }
+
     }
 
     public boolean clusterHasLongDelDup(final SvCluster cluster)
@@ -760,11 +824,14 @@ public class SvClusteringMethods {
             {
                 for (SvArmGroup armGroup2 : armGroups2)
                 {
-                    if (armGroupsHaveOverlappingSVs(armGroup1, armGroup2, false))
-                    {
-                        LOGGER.debug("long DUP-DEL arm({} svs={}) overlaps with arm({} svs={})",
-                                armGroup1.posId(), armGroup1.getCount(), armGroup2.posId(), armGroup2.getCount());
+                    final SvVarData linkingVar = armGroupsHaveOverlappingSVs(armGroup1, armGroup2, false);
 
+                    if(linkingVar != null)
+                    {
+                        LOGGER.debug("long DUP-DEL arm({} svs={}) overlaps with arm({} svs={}) on SV({})",
+                                armGroup1.posId(), armGroup1.getCount(), armGroup2.posId(), armGroup2.getCount(), linkingVar.id());
+
+                        linkingVar.addClusterReason(CLUSTER_REASON_LONG_DEL_DUP, "");
                         return true;
                     }
                 }

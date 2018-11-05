@@ -119,7 +119,8 @@ public class ExternalSVAnnotator {
 
         var.setPonCount(Integer.parseInt(svValues.get(FIELD_INDEX_PON_COUNT)));
         var.setPonRegionCount(Integer.parseInt(svValues.get(FIELD_INDEX_PON_REGION_COUNT)));
-        var.setLineElements(svValues.get(FIELD_INDEX_LE_START), svValues.get(FIELD_INDEX_LE_END));
+        var.setLineElement(svValues.get(FIELD_INDEX_LE_START), true);
+        var.setLineElement(svValues.get(FIELD_INDEX_LE_END), false);
         var.setFragileSites(svValues.get(FIELD_INDEX_FS_START), svValues.get(FIELD_INDEX_FS_END));
     }
 }

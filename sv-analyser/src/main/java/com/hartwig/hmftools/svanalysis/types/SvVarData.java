@@ -47,6 +47,8 @@ public class SvVarData
     private int mTransLength;
     private String mTransSvLinks;
 
+    private String mClusterReason;
+
     private String mFoldbackLinkStart;
     private String mFoldbackLinkEnd;
     private int mFoldbackLenStart;
@@ -120,6 +122,8 @@ public class SvVarData
         mTransLength = 0;
         mTransSvLinks = "";
 
+        mClusterReason = "";
+
         mStartLink = null;
         mEndLink = null;
 
@@ -183,6 +187,7 @@ public class SvVarData
         mDupBEEnd = other.isDupBreakend(false);
         mIsReplicatedSv = true;
         mReplicatedSv = other;
+        mClusterReason = other.getClusterReason();
     }
 
     public final String id() { return mId; }
@@ -232,6 +237,19 @@ public class SvVarData
         return abs(position(false) - position(true));
     }
 
+    public void addClusterReason(final String reason, final String otherId)
+    {
+        if(!mClusterReason.isEmpty())
+            mClusterReason += ";";
+
+        mClusterReason += reason;
+
+        if(!otherId.isEmpty())
+            mClusterReason += "_" + otherId;
+    }
+
+    public final String getClusterReason() { return mClusterReason; }
+
     public boolean isReplicatedSv() { return mIsReplicatedSv; }
     public final SvVarData getReplicatedSv() { return mReplicatedSv; }
     public int getReplicatedCount() { return mReplicatedCount; }
@@ -278,7 +296,14 @@ public class SvVarData
     public void setFragileSites(String typeStart, String typeEnd) { mStartFragileSite = typeStart; mEndFragileSite = typeEnd; }
     public String isFragileSite(boolean useStart) { return useStart ? mStartFragileSite : mEndFragileSite; }
 
-    public void setLineElements(String typeStart, String typeEnd) { mStartLineElement = typeStart; mEndLineElement = typeEnd; }
+    public void setLineElement(String type, boolean isStart)
+    {
+        if(isStart)
+            mStartLineElement = type;
+        else
+            mEndLineElement = type;
+    }
+
     public boolean isLineElement(boolean useStart) { return useStart ? !mStartLineElement.equals(NO_LINE_ELEMENT) : !mEndLineElement.equals(NO_LINE_ELEMENT); }
     public final String getLineElement(boolean useStart) { return useStart ? mStartLineElement : mEndLineElement; }
 

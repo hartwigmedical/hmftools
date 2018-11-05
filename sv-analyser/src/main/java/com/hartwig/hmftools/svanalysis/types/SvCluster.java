@@ -119,6 +119,9 @@ public class SvCluster
 
     public List<SvVarData> getSVs() { return mSVs; }
 
+    // private static String LOG_SPECIFIC_VAR_ID = "106963";
+    private static String LOG_SPECIFIC_VAR_ID = "";
+
     public void addVariant(final SvVarData var)
     {
         mSVs.add(var);
@@ -127,6 +130,11 @@ public class SvCluster
         mIsResolved = false;
         mResolvedType = RESOLVED_TYPE_NONE;
         mLengthOverride = 0;
+
+        if(!LOG_SPECIFIC_VAR_ID.isEmpty() && var.id().equals(LOG_SPECIFIC_VAR_ID))
+        {
+            LOGGER.debug("spec var");
+        }
 
         if(var.isReplicatedSv())
         {

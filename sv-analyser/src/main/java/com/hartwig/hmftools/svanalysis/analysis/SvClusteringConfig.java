@@ -5,7 +5,7 @@ import org.apache.commons.cli.Options;
 
 public class SvClusteringConfig {
 
-    final public int ClusterBaseDistance;
+    final public int ProximityDistance;
     final public String OutputCsvPath;
     final public String SvPONFile;
     final public String FragileSiteFile;
@@ -37,7 +37,7 @@ public class SvClusteringConfig {
     public SvClusteringConfig(final CommandLine cmd, final String sampleId)
     {
         OutputCsvPath = cmd.getOptionValue(DATA_OUTPUT_PATH);
-        ClusterBaseDistance = Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE, "0"));
+        ProximityDistance = Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE, "0"));
         UseCombinedOutputFile = sampleId.isEmpty() || sampleId.equals("*");
         SvPONFile = cmd.getOptionValue(SV_PON_FILE, "");
         FragileSiteFile = cmd.getOptionValue(FRAGILE_SITE_FILE, "");

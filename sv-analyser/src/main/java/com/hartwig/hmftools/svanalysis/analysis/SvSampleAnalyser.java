@@ -2,7 +2,6 @@ package com.hartwig.hmftools.svanalysis.analysis;
 
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.isSmallConsistentCluster;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChrFromChrArm;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_ASMB_ONLY;
 
 import com.google.common.collect.Lists;
@@ -67,7 +66,7 @@ public class SvSampleAnalyser {
     public SvSampleAnalyser(final SvClusteringConfig config)
     {
         mConfig = config;
-        mClusteringUtils = new SvUtilities(mConfig.ClusterBaseDistance);
+        mClusteringUtils = new SvUtilities(mConfig.ProximityDistance);
         mClusteringMethods = new SvClusteringMethods(mClusteringUtils);
         mAnalyser = new ClusterAnalyser(config, mClusteringUtils, mClusteringMethods);
 
@@ -147,6 +146,7 @@ public class SvSampleAnalyser {
         // mClusteringMethods.createCopyNumberSegments();
         mClusteringMethods.annotateNearestSvData();
         mClusteringMethods.setSimpleVariantLengths(mSampleId);
+        mLineElementAnnotator.setSuspectedLineElements(mClusteringMethods.getChrBreakendMap(), mConfig.ProximityDistance);
         mPc2.stop();
 
         mPc3.start();
@@ -205,7 +205,8 @@ public class SvSampleAnalyser {
             {
                 mSvPONAnnotator.setPonOccurenceCount(var);
                 var.setFragileSites(mFragileSiteAnnotator.isFragileSite(var, true), mFragileSiteAnnotator.isFragileSite(var, false));
-                var.setLineElements(mLineElementAnnotator.isLineElement(var, true), mLineElementAnnotator.isLineElement(var, false));
+                var.setLineElement(mLineElementAnnotator.isLineElement(var, true), true);
+                var.setLineElement(mLineElementAnnotator.isLineElement(var, false), false);
             }
 
             // exclude PON
@@ -259,7 +260,7 @@ public class SvSampleAnalyser {
                 mFileWriter = writer;
 
                 // definitional fields
-                writer.write("SampleId,Id,Type,ClusterId,SubClusterId,ClusterCount,Ploidy");
+                writer.write("SampleId,Id,Type,ClusterId,SubClusterId,ClusterCount,ClusterReason,Ploidy");
 
                 // position and copy number
                 writer.write(",ChrStart,PosStart,OrientStart,ArmStart,AdjAFStart,AdjCNStart,AdjCNChgStart");
@@ -326,8 +327,9 @@ public class SvSampleAnalyser {
                     ++svCount;
 
                     writer.write(
-                            String.format("%s,%s,%s,%d,%d,%d,%.2f",
-                                    mSampleId, var.id(), var.typeStr(), cluster.getId(), subCluster.getId(), clusterSvCount, dbData.ploidy()));
+                            String.format("%s,%s,%s,%d,%d,%d,%s,%.2f",
+                                    mSampleId, var.id(), var.typeStr(), cluster.getId(), subCluster.getId(),
+                                    clusterSvCount, var.getClusterReason(), dbData.ploidy()));
 
                     writer.write(
                             String.format(",%s,%d,%d,%s,%.2f,%.2f,%.2f,%s,%d,%d,%s,%.2f,%.2f,%.2f",
@@ -345,7 +347,7 @@ public class SvSampleAnalyser {
                     writer.write(
                             String.format(",%s,%s,%s,%s,%s,%s,%s",
                                     var.isFragileSite(true), var.isFragileSite(false),
-                                    var.isLineElement(true), var.isLineElement(false),
+                                    var.getLineElement(true), var.getLineElement(false),
                                     var.isDupBreakend(true), var.isDupBreakend(false),
                                     mClusteringMethods.getChrArmData(var)));
 

@@ -11,6 +11,9 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_FOLDBACKS;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_SOLO_SINGLE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.addClusterReason;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.isConsistentCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_COMPLEX_CHAIN;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_CHAIN;
@@ -475,6 +478,12 @@ public class ClusterAnalyser {
         {
             SvCluster cluster1 = mClusters.get(index1);
 
+            if(cluster1.isResolved())
+            {
+                ++index1;
+                continue;
+            }
+
             boolean isConsistent1 = isConsistentCluster(cluster1);
             boolean hasLongDelDup1 = mClusteringMethods.clusterHasLongDelDup(cluster1);
             boolean hasOpenSingle1 = hasOneOpenSingleVariant(cluster1);
@@ -494,9 +503,22 @@ public class ClusterAnalyser {
             {
                 SvCluster cluster2 = mClusters.get(index2);
 
+                if(cluster2.isResolved())
+                {
+                    ++index2;
+                    continue;
+                }
+
                 boolean isConsistent2 = isConsistentCluster(cluster2);
 
-                boolean foundConnection = !isConsistent1 && !isConsistent2 && canMergeClustersOnFoldbacks(cluster1, cluster2);
+                boolean foundConnection = false;
+
+                if(!isConsistent1 && !isConsistent2 && canMergeClustersOnFoldbacks(cluster1, cluster2))
+                {
+                    foundConnection = true;
+                    addClusterReason(cluster1, cluster2, CLUSTER_REASON_FOLDBACKS);
+                    addClusterReason(cluster2, cluster1, CLUSTER_REASON_FOLDBACKS);
+                }
 
                 if(!foundConnection && hasLongDelDup1)
                 {
@@ -513,23 +535,28 @@ public class ClusterAnalyser {
                     boolean hasOpenSingle2 = hasOneOpenSingleVariant(cluster2);
                     boolean isSoloSingle2 = cluster2.getCount() == 1 && cluster2.getSVs().get(0).type() == SGL;
 
-                    if(hasOpenSingle1 && isSoloSingle2)
-                        foundConnection = canMergeOpenSingles(cluster1, cluster2);
-
-                    if(!foundConnection && hasOpenSingle2 && isSoloSingle1)
-                        foundConnection = canMergeOpenSingles(cluster2, cluster1);
-
-                    if(!foundConnection)
+                    if(hasOpenSingle1 && isSoloSingle2 && canMergeOpenSingles(cluster1, cluster2))
                     {
-                        if(isSoloSingle1)
-                        {
-                            foundConnection = isSingleClosestTI(cluster2, cluster2.getSVs().get(0));
-                        }
+                        foundConnection = true;
+                        addClusterReason(cluster2, cluster1, CLUSTER_REASON_SOLO_SINGLE);
+                    }
 
-                        if(!foundConnection && isSoloSingle2)
-                        {
-                            foundConnection = isSingleClosestTI(cluster1, cluster2.getSVs().get(0));
-                        }
+                    if(!foundConnection && hasOpenSingle2 && isSoloSingle1 && canMergeOpenSingles(cluster2, cluster1))
+                    {
+                        foundConnection = true;
+                        addClusterReason(cluster1, cluster2, CLUSTER_REASON_SOLO_SINGLE);
+                    }
+
+                    if(!foundConnection && isSoloSingle1 && isSingleClosestTI(cluster2, cluster2.getSVs().get(0)))
+                    {
+                        foundConnection = true;
+                        addClusterReason(cluster1, cluster2, CLUSTER_REASON_SOLO_SINGLE);
+                    }
+
+                    if(!foundConnection && isSoloSingle2 && isSingleClosestTI(cluster1, cluster2.getSVs().get(0)))
+                    {
+                        foundConnection = true;
+                        addClusterReason(cluster2, cluster1, CLUSTER_REASON_SOLO_SINGLE);
                     }
                 }
 
@@ -588,36 +615,6 @@ public class ClusterAnalyser {
         }
 
         return mergedClusters;
-    }
-
-    private boolean canMergeClustersOnOverlaps(SvCluster cluster1, SvCluster cluster2)
-    {
-        // checks for overlapping breakends in inconsistent matching arms
-        final List<SvArmGroup> armGroups1 = cluster1.getArmGroups();
-        final List<SvArmGroup> armGroups2 = cluster2.getArmGroups();
-
-        for (SvArmGroup armGroup1 : armGroups1)
-        {
-            if(armGroup1.isConsistent())
-                continue;
-
-            for (SvArmGroup armGroup2 : armGroups2)
-            {
-                if(armGroup2.isConsistent())
-                    continue;
-
-                if(!armGroup1.matches(armGroup2))
-                    continue;
-
-                // for now merge any inconsistent arm
-                LOGGER.debug("inconsistent cluster({}) and cluster({}) linked on chrArm({})",
-                        cluster1.getId(), cluster2.getId(), armGroup1.id());
-
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private boolean hasOneOpenSingleVariant(final SvCluster cluster)
@@ -721,9 +718,9 @@ public class ClusterAnalyser {
         return false;
     }
 
-    private boolean canMergeClustersOnFoldbacks(SvCluster cluster1, SvCluster cluster2)
+    private boolean canMergeClustersOnFoldbacks(final SvCluster cluster1, final SvCluster cluster2)
     {
-        // checks for overlapping breakends in inconsistent matching arms
+        // checks for matching arms that both have foldbacks
         final List<SvArmGroup> armGroups1 = cluster1.getArmGroups();
         final List<SvArmGroup> armGroups2 = cluster2.getArmGroups();
 

@@ -1,13 +1,17 @@
 package com.hartwig.hmftools.svanalysis.annotators;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionFactory;
+import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
 import org.apache.logging.log4j.LogManager;
@@ -15,9 +19,10 @@ import org.apache.logging.log4j.Logger;
 
 public class LineElementAnnotator {
 
-    public static final String KNOWN_LINE_ELEMENT = "true";
-    public static final String IDENTIFIED_LINE_ELEMENT = "ident";
-    public static final String NO_LINE_ELEMENT = "false";
+    public static final String KNOWN_LINE_ELEMENT = "Known";
+    public static final String IDENTIFIED_LINE_ELEMENT = "Ident";
+    public static final String NO_LINE_ELEMENT = "None";
+    public static final String SUSPECTED_LINE_ELEMENT = "Suspect";
 
     private static final String CSV_LE_TYPE_IDENTIFIED = "Identified";
 
@@ -109,6 +114,94 @@ public class LineElementAnnotator {
         }
 
         return NO_LINE_ELEMENT;
+    }
+
+    public void setSuspectedLineElements(final Map<String, List<SvBreakend>> chrBreakendMap, int proximityLength)
+    {
+        // if there are 3 or more BNDs within the standard proximity window and they connect to 2 or more other arms,
+        // classify these as suspected LINE elements
+        for(Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+        {
+            // final String chromosome = entry.getKey();
+
+            List<SvBreakend> breakendList = entry.getValue();
+
+            List<Long> positions = Lists.newArrayList();
+            List<SvBreakend> potentialLineSVs = Lists.newArrayList();
+
+            boolean isLineGroup = false;
+
+            for (final SvBreakend breakend : breakendList)
+            {
+                long newPosition = breakend.position();
+
+                // remove earlier breakends which are now too far from the current one
+                int index = 0;
+                while(index < positions.size())
+                {
+                    if(newPosition - positions.get(0) <= proximityLength)
+                        break;
+
+                    positions.remove(index);
+                    potentialLineSVs.remove(index);
+                    isLineGroup = false; // require reassessment below
+                }
+
+                positions.add(newPosition);
+                potentialLineSVs.add(breakend);
+
+                if(positions.size() < 3)
+                {
+                    isLineGroup = false;
+                    continue;
+                }
+
+                if(!isLineGroup)
+                {
+                    boolean hasMultipleRemoteArms = false;
+                    int bndCount = 0;
+                    String currentOtherChr = "";
+                    for (final SvBreakend lineBreakend : potentialLineSVs)
+                    {
+                        if (lineBreakend.getSV().type() == BND)
+                        {
+                            ++bndCount;
+
+                            final String otherChr = lineBreakend.getSV().chromosome(!lineBreakend.usesStart());
+
+                            if (currentOtherChr.isEmpty())
+                            {
+                                currentOtherChr = otherChr;
+                            }
+                            else if (currentOtherChr.equals(otherChr))
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                hasMultipleRemoteArms = true;
+                            }
+                        }
+
+                        if (bndCount >= 3 && hasMultipleRemoteArms)
+                        {
+                            isLineGroup = true;
+                            break;
+                        }
+                    }
+                }
+
+                if(isLineGroup)
+                {
+                    for (SvBreakend lineBreakend : potentialLineSVs)
+                    {
+                        if(!lineBreakend.getSV().isLineElement(lineBreakend.usesStart()))
+                            lineBreakend.getSV().setLineElement(SUSPECTED_LINE_ELEMENT, lineBreakend.usesStart());
+                    }
+                }
+            }
+        }
+
     }
 
 }
