@@ -188,15 +188,19 @@ public class ClusterAnalyser {
                 findChains(cluster);
             }
 
+            /*
             // any clusters which were merged to resolve a collection of them, but
             // which did not lead to any longer chains, are now de-merged
             demergeClusters(mergedClusters);
+            */
 
             for(SvCluster cluster : mergedClusters)
             {
                 cacheFinalLinkedPairs(cluster);
 
                 setClusterResolvedState(cluster);
+
+                cluster.logDetails();
             }
         }
 
@@ -204,9 +208,6 @@ public class ClusterAnalyser {
 
         for(SvCluster cluster : mClusters)
         {
-            if(cluster.hasSubClusters()) // these haven't been logged
-                cluster.logDetails();
-
             mLinkFinder.resolveTransitiveSVs(mSampleId, cluster);
             // cacheFinalLinkedPairs(cluster);
 
@@ -812,12 +813,16 @@ public class ClusterAnalyser {
         // de-merge any clusters which didn't form longer chains
         int clusterCount = mergedClusters.size();
 
-        for(int i = 0; i < clusterCount; ++i)
+        int index = 0;
+        while(index < mergedClusters.size())
         {
-            SvCluster cluster = mergedClusters.get(i);
+            SvCluster cluster = mergedClusters.get(index);
 
             if (cluster.isFullyChained())
+            {
+                ++index;
                 continue;
+            }
 
             int mainChainCount = cluster.getMaxChainCount();
             int maxSubClusterChainCount = 0;
@@ -828,7 +833,10 @@ public class ClusterAnalyser {
             }
 
             if(mainChainCount > maxSubClusterChainCount)
+            {
+                ++index;
                 continue;
+            }
 
             // add the original clusters back in
             for(final SvCluster subCluster : cluster.getSubClusters())
@@ -848,6 +856,7 @@ public class ClusterAnalyser {
             }
 
             mClusters.remove(cluster);
+            mergedClusters.remove(index);
         }
     }
 

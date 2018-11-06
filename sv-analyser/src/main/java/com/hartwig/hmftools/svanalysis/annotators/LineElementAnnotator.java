@@ -19,16 +19,21 @@ import org.apache.logging.log4j.Logger;
 
 public class LineElementAnnotator {
 
-    public static final String KNOWN_LINE_ELEMENT = "Known";
-    public static final String IDENTIFIED_LINE_ELEMENT = "Ident";
-    public static final String NO_LINE_ELEMENT = "None";
-    public static final String SUSPECTED_LINE_ELEMENT = "Suspect";
+    public static String KNOWN_LINE_ELEMENT = "Known";
+    public static String IDENTIFIED_LINE_ELEMENT = "Ident";
+    public static String NO_LINE_ELEMENT = "None";
+    public static String SUSPECTED_LINE_ELEMENT = "Suspect";
 
-    private static final String CSV_LE_TYPE_IDENTIFIED = "Identified";
+    private static String CSV_LE_TYPE_IDENTIFIED = "Identified";
 
     private List<GenomeRegion> mKnownLineElements;
     private List<GenomeRegion> mIdentifiedLineElements;
-    private static final int PERMITTED_DISTANCE = 5000;
+    private static int PERMITTED_DISTANCE = 5000;
+
+    private static int POLY_A_T_LENGTH = 5;
+
+    private String mPolyAMotif;
+    private String mPolyTMotif;
 
     private static final Logger LOGGER = LogManager.getLogger(FragileSiteAnnotator.class);
 
@@ -36,6 +41,14 @@ public class LineElementAnnotator {
     {
         mKnownLineElements = Lists.newArrayList();
         mIdentifiedLineElements = Lists.newArrayList();
+
+        mPolyAMotif = "";
+        mPolyTMotif = "";
+        for(int i = 0; i < POLY_A_T_LENGTH; ++i)
+        {
+            mPolyTMotif += "T";
+            mPolyAMotif += "A";
+        }
     }
 
     public void loadLineElementsFile(final String filename)
@@ -160,14 +173,21 @@ public class LineElementAnnotator {
                 {
                     boolean hasMultipleRemoteArms = false;
                     int bndCount = 0;
+                    boolean hasPolyATMotify = false;
+
                     String currentOtherChr = "";
                     for (final SvBreakend lineBreakend : potentialLineSVs)
                     {
-                        if (lineBreakend.getSV().type() == BND)
+                        final SvVarData var = breakend.getSV();
+
+                        if (var.type() == BND)
                         {
                             ++bndCount;
 
-                            final String otherChr = lineBreakend.getSV().chromosome(!lineBreakend.usesStart());
+                            if(var.getSvData().insertSequence().contains(mPolyAMotif) || var.getSvData().insertSequence().contains(mPolyTMotif))
+                                hasPolyATMotify = true;
+
+                            final String otherChr = var.chromosome(!lineBreakend.usesStart());
 
                             if (currentOtherChr.isEmpty())
                             {
@@ -183,7 +203,7 @@ public class LineElementAnnotator {
                             }
                         }
 
-                        if (bndCount >= 3 && hasMultipleRemoteArms)
+                        if (bndCount >= 3 && hasMultipleRemoteArms && hasPolyATMotify)
                         {
                             isLineGroup = true;
                             break;
