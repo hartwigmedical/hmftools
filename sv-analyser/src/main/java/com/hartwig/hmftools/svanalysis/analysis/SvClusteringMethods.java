@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSecti
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areSectionBreak;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.isLocalOverlap;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
@@ -422,14 +423,6 @@ public class SvClusteringMethods {
         }
     }
 
-    public static boolean isSmallConsistentCluster(final SvCluster cluster)
-    {
-        if(cluster.getUniqueSvCount() > SMALL_CLUSTER_SIZE)
-            return false;
-
-        return isConsistentCluster(cluster);
-    }
-
     public static boolean isConsistentCluster(final SvCluster cluster)
     {
         if(cluster.isSimpleSVs() || cluster.isResolved())
@@ -479,7 +472,7 @@ public class SvClusteringMethods {
                 continue;
             }
 
-            if(isSmallConsistentCluster(cluster1))
+            if(isConsistentCluster(cluster1))
             {
                 // skip balanced inversion & translocations
                 ++index1;
@@ -498,7 +491,7 @@ public class SvClusteringMethods {
                     continue;
                 }
 
-                if(isSmallConsistentCluster(cluster2))
+                if(isConsistentCluster(cluster2))
                 {
                     // skip balanced inversion & translocations
                     ++index2;
@@ -580,7 +573,7 @@ public class SvClusteringMethods {
         {
             SvCluster cluster1 = clusters.get(index1);
 
-            if(isSmallConsistentCluster(cluster1) || cluster1.getTypeCount(INV) == 0)
+            if(isConsistentCluster(cluster1) || cluster1.getTypeCount(INV) == 0)
             {
                 ++index1;
                 continue;
@@ -593,7 +586,7 @@ public class SvClusteringMethods {
             {
                 SvCluster cluster2 = clusters.get(index2);
 
-                if(isSmallConsistentCluster(cluster2))
+                if(isConsistentCluster(cluster2))
                 {
                     ++index2;
                     continue;
@@ -611,8 +604,9 @@ public class SvClusteringMethods {
 
                         if(linkingVar != null)
                         {
-                            LOGGER.debug("arm({} svs={}) overlaps with arm({} svs={}) on SV({})",
-                                    armGroup1.posId(), armGroup1.getCount(), armGroup2.posId(), armGroup2.getCount(), linkingVar);
+                            LOGGER.debug("cluster({}) arm({} svs={}) overlaps with cluster({}) arm({} svs={}) on inversion({})",
+                                    cluster1.getId(), armGroup1.posId(), armGroup1.getCount(),
+                                    cluster2.getId(), armGroup2.posId(), armGroup2.getCount(), linkingVar.id());
 
                             linkingVar.addClusterReason(CLUSTER_REASON_INV_OVERLAP, "");
 
@@ -1111,6 +1105,7 @@ public class SvClusteringMethods {
     public void annotateNearestSvData()
     {
         // mark each SV's nearest other SV and its relationship - neighbouring or overlapping
+        // and any duplicate breakends as well
         for(Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
         {
             List<SvBreakend> breakendList = entry.getValue();
@@ -1137,6 +1132,12 @@ public class SvClusteringMethods {
                     long distance = nextBreakend.position() - breakend.position();
                     if(closestDistance < 0 || distance < closestDistance)
                         closestDistance = distance;
+
+                    if(distance <= PERMITED_DUP_BE_DISTANCE && breakend.orientation() == nextBreakend.orientation())
+                    {
+                        var.setIsDupBreakend(true, breakend.usesStart());
+                        nextBreakend.getSV().setIsDupBreakend(true, nextBreakend.usesStart());
+                    }
                 }
 
                 if(closestDistance >= 0 && (var.getNearestSvDistance() == -1 || closestDistance < var.getNearestSvDistance()))

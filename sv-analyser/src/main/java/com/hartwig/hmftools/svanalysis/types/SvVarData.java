@@ -322,8 +322,14 @@ public class SvVarData
     public final String getLineElement(boolean useStart) { return useStart ? mStartLineElement : mEndLineElement; }
 
     public boolean isDupBreakend(boolean useStart) { return useStart ? mDupBEStart : mDupBEEnd; }
-    public void setIsDupBEStart(boolean toggle) { mDupBEStart = toggle; }
-    public void setIsDupBEEnd(boolean toggle) { mDupBEEnd = toggle; }
+
+    public void setIsDupBreakend(boolean toggle, boolean isStart)
+    {
+        if(isStart)
+            mDupBEStart = toggle;
+        else
+            mDupBEEnd = toggle;
+    }
 
     public final SvLinkedPair getLinkedPair(boolean isStart) { return isStart ? mStartLink : mEndLink; }
 

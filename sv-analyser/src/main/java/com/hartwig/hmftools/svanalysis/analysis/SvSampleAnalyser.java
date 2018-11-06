@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
-import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.isSmallConsistentCluster;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.isConsistentCluster;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_ASMB_ONLY;
 
@@ -428,11 +428,11 @@ public class SvSampleAnalyser {
 
         for(final SvCluster cluster : mClusters)
         {
-            boolean isSmallConsistent = isSmallConsistentCluster(cluster);
+            boolean isConsistent = isConsistentCluster(cluster);
 
             Map<String, Integer> targetMap;
 
-            if(isSmallConsistent)
+            if(isConsistent)
             {
                 ++simpleClusterCount;
                 targetMap = armSimpleClusterCount;

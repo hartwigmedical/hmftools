@@ -37,7 +37,6 @@ public class SvCluster
     private List<String> mAnnotationList;
 
     private List<SvVarData> mSVs;
-    private List<SvBreakend> mUniqueBreakends; // for duplicate BE searches
     private List<SvChain> mChains; // pairs of SVs linked into chains
     private List<SvLinkedPair> mLinkedPairs; // final set after chaining and linking
     private List<SvLinkedPair> mInferredLinkedPairs; // forming a TI or DB
@@ -79,7 +78,6 @@ public class SvCluster
     {
         mClusterId = clusterId;
         mSVs = Lists.newArrayList();
-        mUniqueBreakends = Lists.newArrayList();
         mArmGroups = Lists.newArrayList();
         mTypeCountMap = new HashMap();
 
@@ -190,8 +188,16 @@ public class SvCluster
         }
     }
 
+    // private static String SPECIFIC_CLUSTER_ID = "";
+    private static int SPECIFIC_CLUSTER_ID = 158;
+
     public void mergeOtherCluster(final SvCluster other)
     {
+        if(mClusterId == SPECIFIC_CLUSTER_ID)
+        {
+            LOGGER.debug("spec cluster");
+        }
+
         /*if(hasLinkingLineElements() != other.hasLinkingLineElements())
         {
             LOGGER.info("cluster({}) and cluster({}) line element mismatch", getId(), other.getId());
@@ -487,81 +493,6 @@ public class SvCluster
             updateClusterDetails();
 
         return (mMaxCopyNumber > mMinCopyNumber && mMinCopyNumber > 0);
-    }
-
-    public void setUniqueBreakends()
-    {
-        // group any matching BEs (same position and orientation)
-        for (final SvVarData var : mSVs)
-        {
-            if(var.type() == StructuralVariantType.INS)
-                continue;
-
-            if(var.isReplicatedSv())
-                continue;
-
-            addVariantToUniqueBreakends(var);
-        }
-
-        // cache this against the SV
-        for (SvVarData var : mSVs)
-        {
-            if(var.type() == StructuralVariantType.INS)
-                continue;
-
-            for(final SvBreakend breakend : mUniqueBreakends)
-            {
-                if(variantMatchesBreakend(var, breakend, true, PERMITED_DUP_BE_DISTANCE) && breakend.getCount() > 1)
-                    var.setIsDupBEStart(true);
-
-                if(variantMatchesBreakend(var, breakend, false, PERMITED_DUP_BE_DISTANCE) && breakend.getCount() > 1)
-                {
-                    if(var.type() == StructuralVariantType.INV && var.position(false) - var.position(true) <= PERMITED_DUP_BE_DISTANCE)
-                    {
-                        // avoid setting both end of an INV as duplicate if they match
-                        continue;
-                    }
-
-                    var.setIsDupBEEnd(true);
-                }
-            }
-        }
-    }
-
-    private void addVariantToUniqueBreakends(final SvVarData var)
-    {
-        for(int be = SVI_START; be <= SVI_END; ++be)
-        {
-            boolean useStart = isStart(be);
-
-            if(var.type() == StructuralVariantType.INV && var.position(false) - var.position(true) <= PERMITED_DUP_BE_DISTANCE)
-            {
-                // avoid setting both end of an INV as duplicate if they match
-                if(!useStart)
-                    continue;
-            }
-
-            // ignore the null breakends
-            if(var.isNullBreakend() && !useStart)
-                continue;
-
-            boolean found = false;
-            for(SvBreakend breakend : mUniqueBreakends)
-            {
-                if (variantMatchesBreakend(var, breakend, useStart, PERMITED_DUP_BE_DISTANCE))
-                {
-                    breakend.addToCount(1);
-                    found = true;
-                    break;
-                }
-            }
-
-            if(!found)
-            {
-                // add a new entry
-                mUniqueBreakends.add(new SvBreakend(var.chromosome(useStart), var.position(useStart), var.orientation(useStart)));
-            }
-        }
     }
 
     public final SvLinkedPair getLinkedPair(final SvVarData var, boolean useStart)

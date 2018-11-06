@@ -115,8 +115,6 @@ public class ClusterAnalyser {
     {
         for(SvCluster cluster : mClusters)
         {
-            cluster.setUniqueBreakends();
-
             if(cluster.isSimpleSingleSV())
                 continue;
 
