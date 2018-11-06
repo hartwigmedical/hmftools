@@ -639,5 +639,14 @@ CREATE TABLE driverCatalog
     INDEX(gene)
 );
 
+CREATE TABLE chord
+(   sampleId varchar(255) NOT NULL,
+    BRCA1Value DOUBLE PRECISION NOT NULL,
+    noneValue DOUBLE PRECISION NOT NULL,
+    BRCA2Value DOUBLE PRECISION NOT NULL,
+    hrdValue DOUBLE PRECISION NOT NULL,
+    predictedResponseValue DOUBLE PRECISION NOT NULL,
+    PRIMARY KEY (sampleId)
+);
 
 SET FOREIGN_KEY_CHECKS = 1;
