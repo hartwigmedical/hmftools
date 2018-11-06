@@ -9,9 +9,30 @@ public class PileupFileTest {
     @Test
     public void testIndelSize() {
         final String text = ".$......+2AG.+3AGA.+11AAAAAAAAAAAAGGG";
-        assertEquals(3, PileupFile.indelStringSize(9, text));
-        assertEquals(4, PileupFile.indelStringSize(14, text));
-        assertEquals(13, PileupFile.indelStringSize(20, text));
+        assertEquals(2, PileupFile.indelSize(9, text));
+        assertEquals(3, PileupFile.indelSize(14, text));
+        assertEquals(11, PileupFile.indelSize(20, text));
+    }
+
+    @Test
+    public void testAltIndel() {
+        final String line =
+                "6\t106556396\tC\t73\t,.,,,,,.,..,.,,,,+1t.+1T..,....,+1t,+1t.,+1t.,+1t,+1t...,+3ttt,-1t..,+2tt.......+1T.+1T,+1t,+1t,+2tt,+1tt+1t..+1T,-2tt.+1T.+1T.+2TT,,+1t.t+1t...+2TT.+1T,-3ttt...-1T.+1T.";
+        final Pileup pileup = PileupFile.fromString(line);
+
+        assertEquals("C", pileup.referenceBase());
+        assertEquals(73, pileup.readCount());
+        assertEquals(44, pileup.referenceCount());
+        assertEquals(0, pileup.gMismatchCount());
+        assertEquals(0, pileup.aMismatchCount());
+        assertEquals(2, pileup.tMismatchCount());
+        assertEquals(0, pileup.cMismatchCount());
+        assertEquals(25, pileup.insertions());
+        assertEquals(4, pileup.deletions());
+        assertEquals(29, pileup.indels());
+        assertEquals(1, pileup.inframeInsertions());
+        assertEquals(1, pileup.inframeDeletions());
+        assertEquals(2, pileup.inframeIndels());
     }
 
     @Test
@@ -71,7 +92,7 @@ public class PileupFileTest {
         assertEquals(200, pileup.position());
         assertEquals("A", pileup.referenceBase());
         assertEquals(20, pileup.readCount());
-        assertEquals(17, pileup.referenceCount());
+        assertEquals(18, pileup.referenceCount());
         assertEquals(0, pileup.gMismatchCount());
         assertEquals(0, pileup.aMismatchCount());
         assertEquals(0, pileup.tMismatchCount());
