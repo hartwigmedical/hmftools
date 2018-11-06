@@ -769,7 +769,7 @@ public class ClusterAnalyser {
 
         for (SvArmGroup armGroup1 : armGroups1)
         {
-            if(!hasFoldback(armGroup1.getSVs()))
+            if(!hasFoldback(armGroup1.getSVs(), armGroup1.chromosome(), armGroup1.arm()))
                 continue;
 
             for (SvArmGroup armGroup2 : armGroups2)
@@ -777,7 +777,7 @@ public class ClusterAnalyser {
                 if(!armGroup1.matches(armGroup2))
                     continue;
 
-                if(!hasFoldback(armGroup2.getSVs()))
+                if(!hasFoldback(armGroup2.getSVs(), armGroup2.chromosome(), armGroup2.arm()))
                     continue;
 
                 // for now merge any inconsistent arm
@@ -791,12 +791,17 @@ public class ClusterAnalyser {
         return false;
     }
 
-    private boolean hasFoldback(final List<SvVarData> svList)
+    private boolean hasFoldback(final List<SvVarData> svList, final String chromosome, final String arm)
     {
         for(final SvVarData var : svList)
         {
-            if(!var.getFoldbackLink(true).isEmpty() || !var.getFoldbackLink(false).isEmpty())
-                return true;
+            for(int be = SVI_START; be <= SVI_END; ++be)
+            {
+                boolean useStart = isStart(be);
+
+                if (var.chromosome(useStart).equals(chromosome) && var.arm(useStart).equals(arm) && !var.getFoldbackLink(useStart).isEmpty())
+                    return true;
+            }
         }
 
         return false;

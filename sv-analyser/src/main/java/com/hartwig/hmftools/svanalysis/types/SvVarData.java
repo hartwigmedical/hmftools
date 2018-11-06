@@ -24,8 +24,6 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import sun.util.locale.provider.LocaleServiceProviderPool;
-
 public class SvVarData
 {
     private final String mId; // sourced from either VCF or DB
@@ -246,6 +244,9 @@ public class SvVarData
 
     public void addClusterReason(final String reason, final String otherId)
     {
+        if(mClusterReason.contains(reason))
+            return;
+
         if(!mClusterReason.isEmpty())
             mClusterReason += ";";
 
