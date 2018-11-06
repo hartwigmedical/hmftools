@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.chord.ChordAnalysis;
 
 import org.junit.Test;
 

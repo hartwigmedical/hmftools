@@ -6,7 +6,7 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrial;
-import com.hartwig.hmftools.patientreporter.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;

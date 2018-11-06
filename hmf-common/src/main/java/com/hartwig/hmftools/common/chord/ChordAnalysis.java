@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.chord;
+package com.hartwig.hmftools.common.chord;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

@@ -6,6 +6,8 @@ import java.nio.file.Files;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 
 import org.jetbrains.annotations.NotNull;
 
