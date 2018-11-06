@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.pileup;
 
+import java.util.Map;
+
 import com.hartwig.hmftools.common.position.GenomePosition;
 
 import org.immutables.value.Value;
@@ -25,13 +27,25 @@ public interface Pileup extends GenomePosition {
 
     int cMismatchCount();
 
-    int insertions();
+    Map<String, Integer> insertionCounts();
 
-    int inframeInsertions();
+    Map<String, Integer> deletionCounts();
 
-    int deletions();
+    default int insertions() {
+        return insertionCounts().values().stream().mapToInt(x -> x).sum();
+    }
 
-    int inframeDeletions();
+    default int inframeInsertions() {
+        return insertionCounts().entrySet().stream().filter(x -> (x.getKey().length() - 1) % 3 == 0).mapToInt(Map.Entry::getValue).sum();
+    }
+
+    default int deletions() {
+        return deletionCounts().values().stream().mapToInt(x -> x).sum();
+    }
+
+    default int inframeDeletions() {
+        return deletionCounts().entrySet().stream().filter(x -> (x.getKey().length() - 1) % 3 == 0).mapToInt(Map.Entry::getValue).sum();
+    }
 
     default int indels() {
         return insertions() + deletions();

@@ -33,6 +33,8 @@ public class PileupFileTest {
         assertEquals(1, pileup.inframeInsertions());
         assertEquals(1, pileup.inframeDeletions());
         assertEquals(2, pileup.inframeIndels());
+        assertEquals(2, (int) pileup.insertionCounts().get("TT"));
+        assertEquals(18, (int) pileup.insertionCounts().get("CT"));
     }
 
     @Test
@@ -49,6 +51,7 @@ public class PileupFileTest {
         assertEquals(3, pileup.insertions());
         assertEquals(0, pileup.deletions());
         assertEquals(3, pileup.indels());
+        assertEquals(3, (int) pileup.insertionCounts().get("AAG"));
     }
 
     @Test
@@ -83,6 +86,7 @@ public class PileupFileTest {
         assertEquals(0, pileup.insertions());
         assertEquals(2, pileup.deletions());
         assertEquals(2, pileup.indels());
+        assertEquals(2, (int) pileup.deletionCounts().get("ACACC"));
     }
 
     @Test
