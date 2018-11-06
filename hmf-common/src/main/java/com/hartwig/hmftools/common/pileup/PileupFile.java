@@ -4,9 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Maps;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -21,6 +24,10 @@ public final class PileupFile {
 
     @NotNull
     public static Pileup fromString(@NotNull final String line) {
+
+        final Map<String, Integer> insertionMap = Maps.newHashMap();
+        final Map<String, Integer> deletionMap = Maps.newHashMap();
+
         String[] values = line.split(DELIMITER);
 
         int referenceCount = 0;
@@ -28,37 +35,35 @@ public final class PileupFile {
         int aCount = 0;
         int tCount = 0;
         int cCount = 0;
-        int insertions = 0;
-        int deletions = 0;
-        int inframeInsertions = 0;
-        int inframeDeletions = 0;
-        int indelSize = 0;
+        String indel;
+        char prevBase;
 
         if (values.length >= 5) {
+            final String referenceString = values[2];
+            final char refBase = referenceString.charAt(0);
             final String readBases = values[4];
+
             for (int i = 0; i < readBases.length(); i++) {
                 switch (Character.toUpperCase(readBases.charAt(i))) {
                     case '+':
-                        if (i > 0 && isRef(readBases.charAt(i-1))) {
+                        prevBase = Character.toUpperCase(readBases.charAt(i -1));
+                        if (isRef(prevBase)) {
+                            prevBase = refBase;
                             referenceCount--;
                         }
-                        insertions++;
-                        indelSize = indelSize(i + 1, readBases);
-                        if (inframe(indelSize)) {
-                            inframeInsertions++;
-                        }
-                        i += indelSize + Integer.toString(indelSize).length();
+                        indel = indel(i, readBases);
+                        insertionMap.merge(prevBase + indel, 1, (x, y) -> x + y);
+                        i += indel.length() + Integer.toString(indel.length()).length();
                         break;
                     case '-':
-                        if (i > 0 && isRef(readBases.charAt(i-1))) {
+                        prevBase = Character.toUpperCase(readBases.charAt(i -1));
+                        if (isRef(prevBase)) {
+                            prevBase = refBase;
                             referenceCount--;
                         }
-                        deletions++;
-                        indelSize = indelSize(i + 1, readBases);
-                        if (inframe(indelSize)) {
-                            inframeDeletions++;
-                        }
-                        i += indelSize + Integer.toString(indelSize).length();
+                        indel = indel(i, readBases);
+                        deletionMap.merge(prevBase + indel, 1, (x, y) -> x + y);
+                        i += indel.length() + Integer.toString(indel.length()).length();
                         break;
                     case '^':
                         i++;
@@ -94,11 +99,17 @@ public final class PileupFile {
                 .aMismatchCount(aCount)
                 .tMismatchCount(tCount)
                 .cMismatchCount(cCount)
-                .inframeInsertions(inframeInsertions)
-                .insertions(insertions)
-                .inframeDeletions(inframeDeletions)
-                .deletions(deletions)
+                .insertionCounts(insertionMap)
+                .deletionCounts(deletionMap)
                 .build();
+    }
+
+    @NotNull
+    private static String indel(int index, String readBases) {
+        int indelSize = indelSize(index + 1, readBases);
+        int indelStart = index + 1 + Integer.toString(indelSize).length();
+        int indelEnd = indelStart + indelSize;
+        return readBases.substring(indelStart, indelEnd).toUpperCase();
     }
 
     @VisibleForTesting
