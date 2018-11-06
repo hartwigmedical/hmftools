@@ -31,20 +31,5 @@ public class ChordFileReaderTest {
         assertEquals(HRD, chordAnalysis.hrdValue(), EPSILON);
         assertEquals(PREDICTED_RESPONSE, chordAnalysis.predictedResponseValue(), EPSILON);
 
-        double brca1 = chordAnalysis.BRCA1Value();
-        assertEquals(BRCA1, brca1, EPSILON);
-
-        double none = chordAnalysis.noneValue();
-        assertEquals(NONE, none, EPSILON);
-
-        double brca2 = chordAnalysis.BRCA2Value();
-        assertEquals(BRCA2, brca2, EPSILON);
-
-        double hrd = chordAnalysis.hrdValue();
-        assertEquals(HRD, hrd, EPSILON);
-
-        double predicted_response = chordAnalysis.predictedResponseValue();
-        assertEquals(PREDICTED_RESPONSE, predicted_response, EPSILON);
-
     }
 }
