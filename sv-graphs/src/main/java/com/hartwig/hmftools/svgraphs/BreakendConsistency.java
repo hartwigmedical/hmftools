@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.svgraph;
+package com.hartwig.hmftools.svgraphs;
 
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import org.jetbrains.annotations.NotNull;

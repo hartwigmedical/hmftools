@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.svgraph;
+package com.hartwig.hmftools.svgraphs;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

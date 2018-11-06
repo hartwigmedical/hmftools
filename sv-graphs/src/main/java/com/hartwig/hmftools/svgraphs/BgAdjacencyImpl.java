@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.svgraph;
+package com.hartwig.hmftools.svgraphs;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

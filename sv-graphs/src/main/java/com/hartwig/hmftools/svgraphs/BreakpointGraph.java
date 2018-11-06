@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.svgraph;
+package com.hartwig.hmftools.svgraphs;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.svgraph;
+package com.hartwig.hmftools.svgraphs;
 
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;

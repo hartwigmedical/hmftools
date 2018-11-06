@@ -30,6 +30,7 @@
         <module>hmf-id-generator</module>
         <module>portal-data-converter</module>
         <module>sv-analyser</module>
+        <module>sv-graphs</module>
         <module>knowledgebase-importer</module>
         <module>data_analyser</module>
         <module>actionability-vs-soc</module>
@@ -53,6 +54,7 @@
         <hmf-patient-db.version>3.12</hmf-patient-db.version>
         <hmf-variant-annotation.version>1.6</hmf-variant-annotation.version>
         <hmf-sv-analyser.version>1.0</hmf-sv-analyser.version>
+        <hmf-sv-graphs.version>1.0</hmf-sv-graphs.version>
 
         <immutables.version>2.4.4</immutables.version>
         <htsjdk.version>2.12.0</htsjdk.version>
@@ -166,6 +168,11 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>sv-analyser</artifactId>
                 <version>${hmf-sv-analyser.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>sv-graphs</artifactId>
+                <version>${hmf-sv-graphs.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>

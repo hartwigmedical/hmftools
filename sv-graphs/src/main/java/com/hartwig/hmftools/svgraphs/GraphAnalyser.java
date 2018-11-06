@@ -1,14 +1,13 @@
-package com.hartwig.hmftools.svanalysis;
+package com.hartwig.hmftools.svgraphs;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.variant.structural.*;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.svanalysis.analysis.SvClusteringConfig;
-import com.hartwig.hmftools.svanalysis.svgraph.BreakpointGraph;
-import com.hartwig.hmftools.svanalysis.svgraph.Simplification;
-import com.hartwig.hmftools.svanalysis.svgraph.SimplificationFile;
+import com.hartwig.hmftools.svgraphs.BreakpointGraph;
+import com.hartwig.hmftools.svgraphs.Simplification;
+import com.hartwig.hmftools.svgraphs.SimplificationFile;
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -49,8 +48,6 @@ public class GraphAnalyser {
         if(tumorSample == null || tumorSample.equals("*")) {
             tumorSample = "";
         }
-
-        SvClusteringConfig clusteringConfig = new SvClusteringConfig(cmd, tumorSample);
 
         List<String> samplesList = Lists.newArrayList();
 
@@ -122,8 +119,6 @@ public class GraphAnalyser {
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(OUTPUT_DIRECTORY, true, "output directory containing reduced breakpoint graphs");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
-
-        SvClusteringConfig.addCmdLineArgs(options);
 
         return options;
     }

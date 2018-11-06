@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.svgraph;
+package com.hartwig.hmftools.svgraphs;
 
 import com.google.common.collect.Lists;
 import org.jetbrains.annotations.NotNull;
