@@ -119,11 +119,17 @@ public class SvCluster
 
     public List<SvVarData> getSVs() { return mSVs; }
 
-    // private static String LOG_SPECIFIC_VAR_ID = "106963";
+    // private static String LOG_SPECIFIC_VAR_ID = "83211";
     private static String LOG_SPECIFIC_VAR_ID = "";
 
     public void addVariant(final SvVarData var)
     {
+        if(mSVs.contains(var))
+        {
+            LOGGER.error("cluster({}) attempting to add SV again", mClusterId, var.id());
+            return;
+        }
+
         mSVs.add(var);
         mUnchainedSVs.add(var);
         mRequiresRecalc = true;
@@ -186,6 +192,11 @@ public class SvCluster
 
     public void mergeOtherCluster(final SvCluster other)
     {
+        /*if(hasLinkingLineElements() != other.hasLinkingLineElements())
+        {
+            LOGGER.info("cluster({}) and cluster({}) line element mismatch", getId(), other.getId());
+        }*/
+
         // just add the other cluster's variants - no preservation of links or chains
         if(other.getCount() > getCount())
         {
@@ -443,7 +454,7 @@ public class SvCluster
     {
         for (final SvVarData var : mSVs)
         {
-            if(var.isTranslocation() && (var.isLineElement(true) || var.isLineElement(false)))
+            if(var.isTranslocation() && var.inLineElement())
                 return true;
         }
 

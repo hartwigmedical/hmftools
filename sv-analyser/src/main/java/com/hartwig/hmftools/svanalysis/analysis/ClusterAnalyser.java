@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSecti
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_FOLDBACKS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_SOLO_SINGLE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.addClusterReason;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.checkClusterDuplicates;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.isConsistentCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_COMPLEX_CHAIN;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_CHAIN;
@@ -147,15 +148,27 @@ public class ClusterAnalyser {
         markFoldbacks();
 
         // now look at merging unresolved & inconsistent clusters where they share the same chromosomal arms
-        List<SvCluster> mergedClusters = mergeInconsistentClusters();
+        List<SvCluster> mergedClusters = Lists.newArrayList();
 
-        if(!mergedClusters.isEmpty())
+        mergedClusters = mergeInconsistentClusters(mergedClusters);
+        boolean foundMerges = !mergedClusters.isEmpty();
+
+        while(foundMerges)
         {
-            mergedClusters.addAll(mergeInconsistentClusters());
+            List<SvCluster> newMergedClusters = mergeInconsistentClusters(mergedClusters);
+            foundMerges = !newMergedClusters.isEmpty();
+
+            for(SvCluster cluster : newMergedClusters)
+            {
+                if(!mergedClusters.contains(cluster))
+                    mergedClusters.add(cluster);
+            }
         }
 
         if(!mergedClusters.isEmpty())
         {
+            checkClusterDuplicates(mergedClusters);
+
             for(SvCluster cluster : mergedClusters)
             {
                 cluster.setDesc(cluster.getClusterTypesAsString());
@@ -186,6 +199,8 @@ public class ClusterAnalyser {
                 setClusterResolvedState(cluster);
             }
         }
+
+        // checkClusterDuplicates(mClusters);
 
         for(SvCluster cluster : mClusters)
         {
@@ -466,7 +481,7 @@ public class ClusterAnalyser {
         }
     }
 
-    private List<SvCluster> mergeInconsistentClusters()
+    private List<SvCluster> mergeInconsistentClusters(List<SvCluster> existingMergedClusters)
     {
         // it's possible that to resolve arms and more complex arrangements, clusters not merged
         // by proximity of overlaps must be put together to solve inconsistencies (ie loose ends)
@@ -574,7 +589,21 @@ public class ClusterAnalyser {
                             cluster1.getId(), cluster1.getCount(), cluster2.getId(), cluster2.getCount());
 
                     cluster2Merged = true;
-                    cluster1.addSubCluster(cluster2);
+
+                    if(cluster2.hasSubClusters())
+                    {
+                        for(SvCluster subCluster : cluster2.getSubClusters())
+                        {
+                            cluster1.addSubCluster(subCluster);
+                        }
+
+                        existingMergedClusters.remove(cluster2);
+                    }
+                    else
+                    {
+                        cluster1.addSubCluster(cluster2);
+                    }
+
                     setClusterArmBoundaries(cluster1);
                 }
                 else
@@ -588,7 +617,21 @@ public class ClusterAnalyser {
                             newCluster.getId(), cluster1.getId(), cluster1.getCount(), cluster2.getId(), cluster2.getCount());
 
                     newCluster.addSubCluster(cluster1);
-                    newCluster.addSubCluster(cluster2);
+
+                    if(cluster2.hasSubClusters())
+                    {
+                        for(SvCluster subCluster : cluster2.getSubClusters())
+                        {
+                            newCluster.addSubCluster(subCluster);
+                        }
+
+                        existingMergedClusters.remove(cluster2);
+                    }
+                    else
+                    {
+                        newCluster.addSubCluster(cluster2);
+                    }
+
                     mergedClusters.add(newCluster);
                     setClusterArmBoundaries(newCluster);
                 }
@@ -768,7 +811,7 @@ public class ClusterAnalyser {
         {
             SvCluster cluster = mergedClusters.get(i);
 
-            if ( cluster.isFullyChained())
+            if (cluster.isFullyChained())
                 continue;
 
             int mainChainCount = cluster.getMaxChainCount();
@@ -785,6 +828,11 @@ public class ClusterAnalyser {
             // add the original clusters back in
             for(final SvCluster subCluster : cluster.getSubClusters())
             {
+                if(mClusters.contains(subCluster))
+                {
+                    continue;
+                }
+
                 mClusters.add(subCluster);
             }
 

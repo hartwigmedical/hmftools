@@ -21,6 +21,11 @@ import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariant
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import sun.util.locale.provider.LocaleServiceProviderPool;
+
 public class SvVarData
 {
     private final String mId; // sourced from either VCF or DB
@@ -85,6 +90,8 @@ public class SvVarData
     // iterators for start and end data
     public static int SVI_START = 0;
     public static int SVI_END = 1;
+
+    private static final Logger LOGGER = LogManager.getLogger(SvVarData.class);
 
     public SvVarData(final StructuralVariantData svData)
     {
@@ -246,6 +253,11 @@ public class SvVarData
 
         if(!otherId.isEmpty())
             mClusterReason += "_" + otherId;
+
+        if(otherId.equals(mId))
+        {
+            LOGGER.warn("SV({}) reason({}) setting to own ID", mId, reason);
+        }
     }
 
     public final String getClusterReason() { return mClusterReason; }
@@ -305,6 +317,7 @@ public class SvVarData
     }
 
     public boolean isLineElement(boolean useStart) { return useStart ? !mStartLineElement.equals(NO_LINE_ELEMENT) : !mEndLineElement.equals(NO_LINE_ELEMENT); }
+    public boolean inLineElement() { return isLineElement(true) || isLineElement(false); }
     public final String getLineElement(boolean useStart) { return useStart ? mStartLineElement : mEndLineElement; }
 
     public boolean isDupBreakend(boolean useStart) { return useStart ? mDupBEStart : mDupBEEnd; }

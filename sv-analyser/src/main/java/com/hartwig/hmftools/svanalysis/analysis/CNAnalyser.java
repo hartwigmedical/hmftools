@@ -468,7 +468,7 @@ public class CNAnalyser {
 
             if(isLohSection)
             {
-                if(minCN >= MIN_LOH_CN || cnData.segEnd().equals(CN_SEG_TELOMERE) || reset)
+                if(minCN >= MIN_LOH_CN || reset)
                 {
                     if(lohOnStartTelomere || totalLoss)
                     {
@@ -483,6 +483,11 @@ public class CNAnalyser {
                         ++lohSectionCount;
                     }
 
+                    reset = true;
+                }
+                else if(cnData.segEnd().equals(CN_SEG_TELOMERE))
+                {
+                    // rest of arm was lost so no linking SV for LOH section
                     reset = true;
                 }
                 else if(cnData.copyNumber() < 0.5)
