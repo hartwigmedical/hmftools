@@ -205,7 +205,7 @@ public class StructuralVariantAnnotator
             return false;
         }
 
-        // TODO (KODU): Add potentially actionable genes, see also instantation in patient reporter.
+        // TODO (KODU): Add potentially actionable genes, see also instantiation in patient reporter.
         final StructuralVariantAnalyzer analyzer = new StructuralVariantAnalyzer(annotator, tsgDriverGeneIDs(), knownFusionsModel);
 
         // final StructuralVariantAnalysis analysis = analyzer.run(enrichedVariants);
@@ -221,10 +221,12 @@ public class StructuralVariantAnnotator
         {
             // TEMP: limit number searched
 
-            List<EnrichedStructuralVariant> subset = Lists.newArrayList(enrichedVariants.subList(0,10));
-            annotations = analyzer.findAnnotations(subset);
+            //List<EnrichedStructuralVariant> subset = Lists.newArrayList(enrichedVariants.subList(0,10));
+            //annotations = analyzer.findAnnotations(subset);
 
-            // annotations = analyzer.findAnnotations(enrichedVariants);
+            annotations = analyzer.findAnnotations(enrichedVariants);
+
+            LOGGER.debug("matched {} annotations from Ensembl database", annotations.size());
 
             // optionally persist to save having to look up this Ensembl data again
             if(mCmdLineArgs.hasOption(DATA_OUTPUT_DIR))
@@ -525,10 +527,16 @@ public class StructuralVariantAnnotator
 
                 if(!varId.equals(currentVar.primaryKey().toString()))
                 {
-                    // done with current variant and gene
-                    annotation.annotations().add(currentGene);
-                    currentGene = null;
-                    annotations.add(annotation);
+                    if(annotation != null)
+                    {
+                        // done with current variant and gene
+                        if(currentGene != null)
+                            annotation.annotations().add(currentGene);
+
+                        annotations.add(annotation);
+
+                        currentGene = null;
+                    }
 
                     ++varIndex;
 
@@ -539,11 +547,16 @@ public class StructuralVariantAnnotator
                     }
 
                     currentVar = enrichedVariants.get(varIndex);
+                    annotation = null;
 
                     if(!varId.equals(currentVar.primaryKey().toString()))
                     {
-                        LOGGER.warn("variant mismatch at index({}): currentVar({}) vs fileVar({})", fileIndex, currentVar.primaryKey(), varId);
-                        break;
+                        // it's possible that the SV has no ensembl data, in which it needs to be skipped over
+                        LOGGER.debug("variant mismatch at index({}): currentVar({}) vs fileVar({}), skipping SV", fileIndex, currentVar.primaryKey(), varId);
+                        continue;
+
+                        // LOGGER.warn("variant mismatch at index({}): currentVar({}) vs fileVar({})", fileIndex, currentVar.primaryKey(), varId);
+                        // break;
                     }
 
                     annotation = new StructuralVariantAnnotation(currentVar);
