@@ -265,11 +265,7 @@ public class SvClusteringMethods {
 
         while(foundMerges && iterations < 5)
         {
-            foundMerges = mergeOnCommonArmLinks(clusters);
-
-            if(mergeOnOverlappingInvDupDels(clusters))
-                foundMerges = true;
-
+            foundMerges = mergeOnOverlappingInvDupDels(clusters);
             ++iterations;
         }
 
@@ -452,111 +448,6 @@ public class SvClusteringMethods {
         return true;
     }
 
-    private boolean mergeOnCommonArmLinks(List<SvCluster> clusters)
-    {
-        // merge any clusters which have the same inter-arm links and return true if merges were found
-        int initClusterCount = clusters.size();
-
-        int index1 = 0;
-        while(index1 < clusters.size())
-        {
-            SvCluster cluster1 = clusters.get(index1);
-
-            List<SvArmGroup> armGroups1 = cluster1.getArmGroups();
-
-            if (armGroups1.size() == 1)
-            {
-                ++index1;
-                continue;
-            }
-
-            if(isConsistentCluster(cluster1))
-            {
-                // skip balanced inversion & translocations
-                ++index1;
-                continue;
-            }
-
-            int index2 = index1 + 1;
-            while(index2 < clusters.size())
-            {
-                SvCluster cluster2 = clusters.get(index2);
-                List<SvArmGroup> armGroups2 = cluster2.getArmGroups();
-
-                if(armGroups2.size() == 1)
-                {
-                    ++index2;
-                    continue;
-                }
-
-                if(isConsistentCluster(cluster2))
-                {
-                    // skip balanced inversion & translocations
-                    ++index2;
-                    continue;
-                }
-
-                // look at all SVs which span 2 arms (either same chromosome or not) and match in both clusters, ignoring those in line elements
-                boolean commonLinkingSvFound = false;
-                String commonArms = "";
-
-                for(final SvVarData var1 : cluster1.getSVs())
-                {
-                    if (var1.isLocal() || var1.isReplicatedSv() || var1.isNullBreakend() || var1.inLineElement())
-                        continue;
-
-                    for (final SvVarData var2 : cluster2.getSVs())
-                    {
-                        if (var2.isLocal() || var2.isReplicatedSv() || var2.isNullBreakend() || var2.inLineElement())
-                            continue;
-
-                        if (var1.chromosome(true).equals(var2.chromosome(true)) && var1.chromosome(false).equals(var2.chromosome(false))
-                        && var1.arm(true).equals(var2.arm(true)) && var1.arm(false).equals(var2.arm(false)))
-                        {
-                            commonLinkingSvFound = true;
-
-                            var1.addClusterReason(CLUSTER_REASON_COMMON_ARMS, var2.id());
-                            var2.addClusterReason(CLUSTER_REASON_COMMON_ARMS, var1.id());
-                            break;
-                        }
-                        else if (var1.chromosome(true).equals(var2.chromosome(false)) && var1.chromosome(false).equals(var2.chromosome(true))
-                                && var1.arm(true).equals(var2.arm(false)) && var1.arm(false).equals(var2.arm(true)))
-                        {
-                            commonLinkingSvFound = true;
-
-                            var1.addClusterReason(CLUSTER_REASON_COMMON_ARMS, var2.id());
-                            var2.addClusterReason(CLUSTER_REASON_COMMON_ARMS, var1.id());
-                            break;
-                        }
-                    }
-
-                    if(commonLinkingSvFound)
-                    {
-                        commonArms = makeChrArmStr(var1.chromosome(true), var1.arm(true)) + " - " + makeChrArmStr(var1.chromosome(false), var1.arm(false));
-                        break;
-                    }
-                }
-
-                if(commonLinkingSvFound)
-                {
-                    LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on common arms({})",
-                            cluster1.getId(), cluster1.getUniqueSvCount(), cluster2.getId(), cluster2.getUniqueSvCount(), commonArms);
-
-                    cluster1.mergeOtherCluster(cluster2);
-                    clusters.remove(index2);
-                    continue;
-                }
-
-                ++index2;
-                continue;
-            }
-
-            ++index1;
-        }
-
-        return clusters.size() < initClusterCount;
-    }
-
     private void markClusterInversions(final SvCluster cluster)
     {
         if(isConsistentCluster(cluster) || cluster.getTypeCount(INV) == 0)
@@ -584,7 +475,7 @@ public class SvClusteringMethods {
         {
             SvCluster cluster1 = clusters.get(index1);
 
-            if(isConsistentCluster(cluster1) || cluster1.getInversions().isEmpty() && cluster1.getLongDelDups().isEmpty())
+            if(isConsistentCluster(cluster1) || (cluster1.getInversions().isEmpty() && cluster1.getLongDelDups().isEmpty()))
             {
                 ++index1;
                 continue;
@@ -599,7 +490,7 @@ public class SvClusteringMethods {
             {
                 SvCluster cluster2 = clusters.get(index2);
 
-                if(isConsistentCluster(cluster2) || cluster2.getInversions().isEmpty() && cluster2.getLongDelDups().isEmpty())
+                if(isConsistentCluster(cluster2) || (cluster2.getInversions().isEmpty() && cluster2.getLongDelDups().isEmpty()))
                 {
                     ++index2;
                     continue;

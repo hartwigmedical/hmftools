@@ -235,10 +235,7 @@ public class SvCluster
                     getId(), getCount(), other.getId(), other.getCount());
         }
 
-        for(final SvVarData var : other.getSVs())
-        {
-            addVariant(var);
-        }
+        addVariantLists(other);
     }
 
     public void removeReplicatedSvs()
@@ -358,21 +355,26 @@ public class SvCluster
         }
 
         // merge the second cluster into the first
-        for(final SvVarData var : cluster.getSVs())
-        {
-            addVariant(var);
-        }
-
-        mAssemblyLinkedPairs.addAll(cluster.getAssemblyLinkedPairs());
-        mInferredLinkedPairs.addAll(cluster.getInferredLinkedPairs());
-        mInversions.addAll(cluster.getInversions());
-        mFoldbacks.addAll(cluster.getFoldbacks());
-        mLongDelDups.addAll(cluster.getLongDelDups());
+        addVariantLists(cluster);
 
         for(SvChain chain : cluster.getChains())
         {
             addChain(chain);
         }
+    }
+
+    private void addVariantLists(final SvCluster other)
+    {
+        for(final SvVarData var : other.getSVs())
+        {
+            addVariant(var);
+        }
+
+        mAssemblyLinkedPairs.addAll(other.getAssemblyLinkedPairs());
+        mInferredLinkedPairs.addAll(other.getInferredLinkedPairs());
+        mInversions.addAll(other.getInversions());
+        mFoldbacks.addAll(other.getFoldbacks());
+        mLongDelDups.addAll(other.getLongDelDups());
     }
 
     public int getMaxChainCount()

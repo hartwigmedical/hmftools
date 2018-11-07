@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_COMMON_ARMS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_FOLDBACKS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_SOLO_SINGLE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.addClusterReason;
@@ -499,11 +500,11 @@ public class ClusterAnalyser {
             }
 
             boolean isConsistent1 = isConsistentCluster(cluster1);
-            boolean hasLongDelDup1 = mClusteringMethods.clusterHasLongDelDup(cluster1);
+            // boolean hasLongDelDup1 = mClusteringMethods.clusterHasLongDelDup(cluster1);
             boolean hasOpenSingle1 = hasOneOpenSingleVariant(cluster1);
             boolean isSoloSingle1 = cluster1.getCount() == 1 && cluster1.getSVs().get(0).type() == SGL;
 
-            if(isConsistent1 && !hasLongDelDup1 && !hasOpenSingle1 && !isSoloSingle1)
+            if(isConsistent1  && !hasOpenSingle1 && !isSoloSingle1) // && !hasLongDelDup1
             {
                 ++index1;
                 continue;
@@ -527,9 +528,12 @@ public class ClusterAnalyser {
 
                 boolean foundConnection = false;
 
-                if(!isConsistent1 && !isConsistent2 && canMergeClustersOnFoldbacks(cluster1, cluster2))
+                if(!isConsistent1 && !isConsistent2)
                 {
-                    foundConnection = true;
+                    foundConnection = canMergeClustersOnFoldbacks(cluster1, cluster2);
+
+                    if(!foundConnection)
+                        foundConnection = canMergeClustersOnCommonArms(cluster1, cluster2);
                 }
 
                 /*
@@ -804,51 +808,91 @@ public class ClusterAnalyser {
         }
 
         return false;
+    }
 
-        /*
-        // checks for matching arms that both have foldbacks
-        final List<SvArmGroup> armGroups1 = cluster1.getArmGroups();
-        final List<SvArmGroup> armGroups2 = cluster2.getArmGroups();
+    private boolean canMergeClustersOnCommonArms(final SvCluster cluster1, final SvCluster cluster2)
+    {
+        // merge if the 2 clusters have BNDs linking the same 2 arms, but not included any BNDs in the middle
+        // of chains or those in line elements
+        if(cluster1.getTypeCount(BND) == 0 || cluster2.getTypeCount(BND) == 0)
+            return false;
 
-        for (SvArmGroup armGroup1 : armGroups1)
+        int matchedArms = 0;
+        String linkedSvStr = "";
+
+        for(final SvArmGroup armGroup1 : cluster1.getArmGroups())
         {
-            if(!hasFoldback(armGroup1.getSVs(), armGroup1.chromosome(), armGroup1.arm()))
-                continue;
-
-            for (SvArmGroup armGroup2 : armGroups2)
+            for(final SvArmGroup armGroup2 : cluster2.getArmGroups())
             {
                 if(!armGroup1.matches(armGroup2))
                     continue;
 
-                if(!hasFoldback(armGroup2.getSVs(), armGroup2.chromosome(), armGroup2.arm()))
-                    continue;
+                // check that the BNDs in these 2 common arm links are either unlinked or the ends of chains
+                final SvVarData linkingVar1 = hasUnlinkedTranslocation(cluster1, armGroup1);
+                final SvVarData linkingVar2 = hasUnlinkedTranslocation(cluster2, armGroup2);
 
-                // for now merge any inconsistent arm
-                LOGGER.debug("inconsistent cluster({}) and cluster({}) both have foldbacks on chrArm({})",
-                        cluster1.getId(), cluster2.getId(), armGroup1.id());
+                if(linkingVar1 != null && linkingVar2 != null)
+                {
+                    ++matchedArms;
 
-                return true;
+                    if(linkedSvStr.isEmpty())
+                    {
+                        linkedSvStr = armGroup1.id() + "_" + linkingVar1.id() + "_" + linkingVar2.id();
+                    }
+                    else
+                    {
+                        linkedSvStr += "_" + armGroup1.id();
+
+                        if(!linkedSvStr.contains(linkingVar1.id()))
+                            linkedSvStr += "_" + linkingVar1.id();
+
+                        if(!linkedSvStr.contains(linkingVar2.id()))
+                            linkedSvStr += "_" + linkingVar2.id();
+                    }
+
+                    if(matchedArms >= 2)
+                    {
+                        LOGGER.debug("cluster({}) and cluster({}) have common links({})",
+                                cluster1.getId(), cluster2.getId(), linkedSvStr);
+
+                        addClusterReason(cluster1, CLUSTER_REASON_COMMON_ARMS, linkedSvStr);
+                        addClusterReason(cluster2, CLUSTER_REASON_COMMON_ARMS, linkedSvStr);
+                        return true;
+                    }
+                }
             }
         }
-        return false;
 
-        */
+        return false;
     }
 
-    private boolean hasFoldback(final List<SvVarData> svList, final String chromosome, final String arm)
+    private final SvVarData hasUnlinkedTranslocation(final SvCluster cluster, final SvArmGroup armGroup)
     {
-        for(final SvVarData var : svList)
-        {
-            for(int be = SVI_START; be <= SVI_END; ++be)
-            {
-                boolean useStart = isStart(be);
+        final List<SvVarData> unlinkedSVs = cluster.getUnlinkedSVs();
+        final List<SvChain> chains = cluster.getChains();
 
-                if (var.chromosome(useStart).equals(chromosome) && var.arm(useStart).equals(arm) && !var.getFoldbackLink(useStart).isEmpty())
-                    return true;
+        for(final SvVarData var : armGroup.getSVs())
+        {
+            if(var.type() != BND || var.inLineElement() || var.isReplicatedSv())
+                continue;
+
+            if(unlinkedSVs.contains(var))
+                return var;
+
+            for(final SvChain chain : chains)
+            {
+                if(chain.getFirstSV().equals(var, true) && var.chromosome(chain.firstLinkOpenOnStart()).equals(armGroup.chromosome()))
+                {
+                    return var;
+                }
+                else if(chain.getLastSV().equals(var, true) && var.chromosome(chain.lastLinkOpenOnStart()).equals(armGroup.chromosome()))
+                {
+                    return var;
+                }
             }
         }
 
-        return false;
+        return null;
     }
 
     private void demergeClusters(List<SvCluster> mergedClusters)
