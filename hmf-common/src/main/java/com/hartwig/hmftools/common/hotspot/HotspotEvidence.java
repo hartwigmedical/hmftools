@@ -19,6 +19,8 @@ public interface HotspotEvidence extends GenomePosition {
     @NotNull
     String alt();
 
+    int qualityScore();
+
     int tumorEvidence();
 
     int tumorReads();

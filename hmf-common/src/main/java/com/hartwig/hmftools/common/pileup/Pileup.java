@@ -56,12 +56,12 @@ public abstract class Pileup implements GenomePosition {
         return scoreMap().getOrDefault("+" + insert, 0);
     }
 
-    public int deleteCount(@NotNull final String insert) {
-        return countMap().getOrDefault("-" + insert, 0);
+    public int deleteCount(@NotNull final String delete) {
+        return countMap().getOrDefault("-" + delete, 0);
     }
 
-    public int deleteScore(@NotNull final String insert) {
-        return scoreMap().getOrDefault("-" + insert, 0);
+    public int deleteScore(@NotNull final String delete) {
+        return scoreMap().getOrDefault("-" + delete, 0);
     }
 
     public int referenceCount() {

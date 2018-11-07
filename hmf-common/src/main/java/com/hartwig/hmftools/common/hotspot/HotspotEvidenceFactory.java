@@ -5,6 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
@@ -57,6 +58,7 @@ public class HotspotEvidenceFactory {
                             .type(HotspotEvidenceType.fromVariantHotspot(hotspot))
                             .alt(hotspot.alt())
                             .ref(hotspot.ref())
+                            .qualityScore(qualityScore(tumorPileup, hotspot))
                             .tumorEvidence(tumorEvidence)
                             .tumorReads(tumorPileup.readCount())
                             .normalEvidence(optionalNormalPileup.map(x -> evidence(x, hotspot)).orElse(0))
@@ -67,6 +69,23 @@ public class HotspotEvidenceFactory {
         }
 
         return result;
+    }
+
+    @VisibleForTesting
+    static int qualityScore(@NotNull final Pileup tumor, @NotNull final VariantHotspot hotspot) {
+        if (hotspot.isSNV()) {
+            return tumor.mismatchCount(hotspot.alt().charAt(0));
+        }
+
+        if (hotspot.isInsert()) {
+            return tumor.insertCount(hotspot.alt());
+        }
+
+        if (hotspot.isDelete()) {
+            return tumor.deleteCount(hotspot.ref());
+        }
+
+        return 0;
     }
 
     @NotNull
@@ -95,6 +114,7 @@ public class HotspotEvidenceFactory {
         for (final String insert : tumor.inframeInserts()) {
             result.add(builder.ref(tumor.referenceBase())
                     .alt(insert)
+                    .qualityScore(tumor.insertScore(insert))
                     .tumorEvidence(tumor.insertCount(insert))
                     .tumorReads(tumor.readCount())
                     .normalEvidence(normal.map(x -> x.insertCount(insert)).orElse(0))
@@ -105,6 +125,7 @@ public class HotspotEvidenceFactory {
         for (final String del : tumor.inframeInserts()) {
             result.add(builder.alt(tumor.referenceBase())
                     .ref(del)
+                    .qualityScore(tumor.deleteScore(del))
                     .tumorEvidence(tumor.deleteCount(del))
                     .tumorReads(tumor.readCount())
                     .normalEvidence(normal.map(x -> x.deleteCount(del)).orElse(0))
