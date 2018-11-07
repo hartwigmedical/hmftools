@@ -20,7 +20,7 @@ class ChordDAO {
         deleteChordForSample(sample);
 
         Double BRCA1 = chordAnalysis.BRCA1Value();
-        Double none = chordAnalysis.noneValue();
+        Double nothing = chordAnalysis.noneValue();
         Double BRCA2 = chordAnalysis.BRCA2Value();
         Double hrd = chordAnalysis.hrdValue();
         Double predictedResponseValue = chordAnalysis.predictedResponseValue();
@@ -28,14 +28,14 @@ class ChordDAO {
         context.insertInto(
                 CHORD,
                 CHORD.SAMPLEID,
-                CHORD.BRCA1VALUE,
-                CHORD.NONEVALUE,
-                CHORD.BRCA2VALUE,
-                CHORD.HRDVALUE,
-                CHORD.PREDICTEDRESPONSEVALUE)
+                CHORD.BRCA1,
+                CHORD.NOTHING,
+                CHORD.BRCA2,
+                CHORD.HRD,
+                CHORD.PREDICTEDRESPONSE)
                 .values(sample,
                         DatabaseUtil.decimal(BRCA1),
-                        DatabaseUtil.decimal(none),
+                        DatabaseUtil.decimal(nothing),
                         DatabaseUtil.decimal(BRCA2),
                         DatabaseUtil.decimal(hrd),
                         DatabaseUtil.decimal(predictedResponseValue))
