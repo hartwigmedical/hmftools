@@ -29,6 +29,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.findVariantById;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_INFER_ONLY;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveSameChrArms;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 import java.util.HashMap;
@@ -817,48 +818,27 @@ public class ClusterAnalyser {
         if(cluster1.getTypeCount(BND) == 0 || cluster2.getTypeCount(BND) == 0)
             return false;
 
-        int matchedArms = 0;
-        String linkedSvStr = "";
+        // int matchedArms = 0;
+        // String linkedSvStr = "";
 
-        for(final SvArmGroup armGroup1 : cluster1.getArmGroups())
+        // check that the BNDs in these 2 common arm links are either unlinked or the ends of chains
+        final List<SvVarData> bndList1 = getUnlinkedTranslocation(cluster1);
+        final List<SvVarData> bndList2 = getUnlinkedTranslocation(cluster2);
+
+        for (final SvVarData var1 : bndList1)
         {
-            for(final SvArmGroup armGroup2 : cluster2.getArmGroups())
+            for (final SvVarData var2 : bndList2)
             {
-                if(!armGroup1.matches(armGroup2))
-                    continue;
-
-                // check that the BNDs in these 2 common arm links are either unlinked or the ends of chains
-                final SvVarData linkingVar1 = hasUnlinkedTranslocation(cluster1, armGroup1);
-                final SvVarData linkingVar2 = hasUnlinkedTranslocation(cluster2, armGroup2);
-
-                if(linkingVar1 != null && linkingVar2 != null)
+                if(haveSameChrArms(var1, var2))
                 {
-                    ++matchedArms;
+                    LOGGER.debug("cluster({}) and cluster({}) have common links with SV({}) and SV({})",
+                            cluster1.getId(), cluster2.getId(), var1.posId(), var2.posId());
 
-                    if(linkedSvStr.isEmpty())
-                    {
-                        linkedSvStr = armGroup1.id() + "_" + linkingVar1.id() + "_" + linkingVar2.id();
-                    }
-                    else
-                    {
-                        linkedSvStr += "_" + armGroup1.id();
+                    final String commonArms = var1.id() + "_" + var2.id();
 
-                        if(!linkedSvStr.contains(linkingVar1.id()))
-                            linkedSvStr += "_" + linkingVar1.id();
-
-                        if(!linkedSvStr.contains(linkingVar2.id()))
-                            linkedSvStr += "_" + linkingVar2.id();
-                    }
-
-                    if(matchedArms >= 2)
-                    {
-                        LOGGER.debug("cluster({}) and cluster({}) have common links({})",
-                                cluster1.getId(), cluster2.getId(), linkedSvStr);
-
-                        addClusterReason(cluster1, CLUSTER_REASON_COMMON_ARMS, linkedSvStr);
-                        addClusterReason(cluster2, CLUSTER_REASON_COMMON_ARMS, linkedSvStr);
-                        return true;
-                    }
+                    addClusterReason(cluster1, CLUSTER_REASON_COMMON_ARMS, commonArms);
+                    addClusterReason(cluster2, CLUSTER_REASON_COMMON_ARMS, commonArms);
+                    return true;
                 }
             }
         }
@@ -866,33 +846,32 @@ public class ClusterAnalyser {
         return false;
     }
 
-    private final SvVarData hasUnlinkedTranslocation(final SvCluster cluster, final SvArmGroup armGroup)
+    private final List<SvVarData> getUnlinkedTranslocation(final SvCluster cluster)
     {
-        final List<SvVarData> unlinkedSVs = cluster.getUnlinkedSVs();
-        final List<SvChain> chains = cluster.getChains();
+        List<SvVarData> bndList = Lists.newArrayList();
 
-        for(final SvVarData var : armGroup.getSVs())
+        for(final SvVarData var : cluster.getUnlinkedSVs())
         {
-            if(var.type() != BND || var.inLineElement() || var.isReplicatedSv())
-                continue;
-
-            if(unlinkedSVs.contains(var))
-                return var;
-
-            for(final SvChain chain : chains)
+            if(var.type() == BND && !var.inLineElement() && !var.isReplicatedSv())
             {
-                if(chain.getFirstSV().equals(var, true) && var.chromosome(chain.firstLinkOpenOnStart()).equals(armGroup.chromosome()))
-                {
-                    return var;
-                }
-                else if(chain.getLastSV().equals(var, true) && var.chromosome(chain.lastLinkOpenOnStart()).equals(armGroup.chromosome()))
-                {
-                    return var;
-                }
+                bndList.add(var);
             }
         }
 
-        return null;
+        for(final SvChain chain : cluster.getChains())
+        {
+            if(chain.getFirstSV().type() == BND && !chain.getFirstSV().inLineElement())
+            {
+                bndList.add(chain.getFirstSV());
+            }
+
+            if(chain.getLastSV().type() == BND && !chain.getLastSV().inLineElement())
+            {
+                bndList.add(chain.getLastSV());
+            }
+        }
+
+        return bndList;
     }
 
     private void demergeClusters(List<SvCluster> mergedClusters)

@@ -3,8 +3,13 @@ package com.hartwig.hmftools.svanalysis;
 import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_STRING;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -43,8 +48,8 @@ public class ResultsChecker
     private static String COL_CLUSTER_COUNT = "ClusterCount";
     private static String COL_CHAIN_ID = "ChainId";
 
-    private List<List<String>> mSourceFileData;
-    private List<List<String>> mValidateFileData;
+    private List<List<String>> mSourceFileData; // the values to check against
+    private List<List<String>> mValidateFileData; // the values to check
 
     private static String SOURCE_FILENAME = "sv_check_src_filename";
     private static String VALIDATE_FILENAME = "sv_check_val_filename";
@@ -55,6 +60,9 @@ public class ResultsChecker
     private String mSourceFileName;
     private String mValidateFileName;
     private List<String> mSamplesList;
+
+    private BufferedWriter mMismatchWriter;
+    private String mOutputDir;
 
     private List<String> mIdColumns; // by name
     private List<String> mCheckColumns; // by name
@@ -79,6 +87,8 @@ public class ResultsChecker
         mAllRecordsMatch = false;
         mBreakOnMismatch = true;
         mChecksEnabled = false;
+        mOutputDir = "";
+        mMismatchWriter = null;
     }
 
     public void setLogMismatches(boolean toggle) { mLogMismatches = toggle; }
@@ -92,12 +102,13 @@ public class ResultsChecker
         options.addOption(CHECK_ENABLED, true, "Enabled=ON, Disable=OFF or not present");
     }
 
-    public boolean loadConfig(final CommandLine cmd, final List<String> samplesList)
+    public boolean loadConfig(final CommandLine cmd, final List<String> samplesList, final String outputDir)
     {
         mSourceFileName = cmd.getOptionValue(SOURCE_FILENAME);
         mValidateFileName = cmd.getOptionValue(VALIDATE_FILENAME);
         mSamplesList.addAll(samplesList);
         mChecksEnabled = cmd.hasOption(CHECK_ENABLED) ? cmd.getOptionValue(CHECK_ENABLED).equals("ON") : false;
+        mOutputDir = outputDir;
 
         return mChecksEnabled;
     }
@@ -250,10 +261,18 @@ public class ResultsChecker
         // columns.add(COL_CLUSTER_ID);
         // columns.add(COL_CLUSTER_COUNT);
         mCheckColumns.add(COL_CHAIN_ID);
+
+        // other candidates:
+        // AsmbMatchStart,AsmbMatchEnd
+        // FoldbackLnkStart,FoldbackLenStart,FoldbackLnkEnd,FoldbackLenEnd
+        // LEStart,LEEnd - for Suspect Line elements
+        // LnkSvStart,LnkTypeStart,LnkLenStart,LnkInfoStart,LnkSvEnd,LnkTypeEnd,LnkLenEnd,LnkInfoEnd
     }
 
     public boolean runChecks()
     {
+        // walk through the 2 datasets together, matching each SV on either ID or positional data
+        // and the checking that the required fields match, logging any discrepancies
         if(mCheckColumns.isEmpty())
             return true;
 
@@ -261,7 +280,6 @@ public class ResultsChecker
 
         int sourceIndex = 0;
         int validateIndex = 0;
-
         int mismatchCount = 0;
 
         while(sourceIndex < mSourceFileData.size())
@@ -313,7 +331,7 @@ public class ResultsChecker
 
             validateIndex = currentValidateIndex;
 
-            if(!checkColumMatches(sourceItems, validateItems))
+            if(!checkFieldMatches(sourceItems, validateItems))
             {
                 mAllRecordsMatch = false;
 
@@ -330,10 +348,18 @@ public class ResultsChecker
         else
             LOGGER.warn("mismatchCount({}) v {} source records", mismatchCount, mSourceFileData.size());
 
+        try
+        {
+            if (mMismatchWriter != null)
+                mMismatchWriter.close();
+        }
+        catch(IOException e) { }
+
+
         return mAllRecordsMatch;
     }
 
-    private boolean checkColumMatches(final List<String> sourceItems, final List<String> validateItems)
+    private boolean checkFieldMatches(final List<String> sourceItems, final List<String> validateItems)
     {
         for(int i = 0; i < mCheckColumns.size(); ++i)
         {
@@ -342,10 +368,12 @@ public class ResultsChecker
 
             if(!sourceItems.get(sourceIndex).equals(validateItems.get(validateIndex)))
             {
+                final String fieldName = mCheckColumns.get(i);
+
+                writeMismatchData(sourceItems, validateItems, fieldName, sourceItems.get(sourceIndex), validateItems.get(validateIndex));
+
                 if(mLogMismatches)
                 {
-                    final String fieldName = mCheckColumns.get(i);
-
                     LOGGER.debug("mismatch: sample({}) var({}) field({}) values({} vs {})",
                             sourceItems.get(COL_SAMPLE_ID_INDEX), sourceItems.get(COL_VAR_ID_INDEX),
                             fieldName, sourceItems.get(sourceIndex), validateItems.get(validateIndex));
@@ -366,6 +394,65 @@ public class ResultsChecker
         }
 
         return true;
+    }
+
+    private void writeMismatchData(final List<String> sourceItems, final List<String> validateItems,
+            final String fieldName, final String sourceValue, final String validateValue)
+    {
+        try
+        {
+            BufferedWriter writer = null;
+
+            if(mMismatchWriter != null)
+            {
+                // check if can continue appending to an existing file
+                writer = mMismatchWriter;
+            }
+            else
+            {
+                String outputFileName = mOutputDir;
+
+                if(!outputFileName.endsWith("/"))
+                    outputFileName += "/";
+
+                outputFileName += "sva_result_mismatches.csv";
+
+                Path outputFile = Paths.get(outputFileName);
+
+                writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
+                mMismatchWriter = writer;
+
+                // definitional fields
+                writer.write("SampleId,SourceId,CheckId");
+
+                if(mIdColumns.size() > 1)
+                {
+                    for(final String idCol : mIdColumns)
+                        writer.write(String.format(",%s", idCol));
+                }
+
+                writer.write(",Field,SourceValue,CheckValue");
+                writer.newLine();
+            }
+
+            writer.write(String.format(",%s,%s,%s",
+                    sourceItems.get(COL_SAMPLE_ID_INDEX), sourceItems.get(COL_VAR_ID_INDEX), validateItems.get(COL_VAR_ID_INDEX)));
+
+            if(mIdColumns.size() > 1)
+            {
+                for(int idColIndex : mSourceIdColumns)
+                    writer.write(String.format(",%s", sourceItems.get(idColIndex)));
+            }
+
+            writer.write(String.format(",%s,%s,%s", fieldName, sourceValue, validateValue));
+            writer.newLine();
+
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing to outputFile: {}", e.toString());
+        }
+
     }
 
 }

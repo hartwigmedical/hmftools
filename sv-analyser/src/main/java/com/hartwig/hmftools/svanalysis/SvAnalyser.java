@@ -153,7 +153,7 @@ public class SvAnalyser {
             ResultsChecker resultsChecker = new ResultsChecker();
             resultsChecker.setLogMismatches(cmd.hasOption(LOG_DEBUG));
 
-            if(resultsChecker.loadConfig(cmd, samplesList))
+            if(resultsChecker.loadConfig(cmd, samplesList, cmd.getOptionValue(DATA_OUTPUT_PATH)))
             {
                 resultsChecker.setIdColumns(true);
                 resultsChecker.addDefaultColumnsToCheck();

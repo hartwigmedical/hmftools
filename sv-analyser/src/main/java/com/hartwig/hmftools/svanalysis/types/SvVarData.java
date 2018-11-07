@@ -512,4 +512,21 @@ public class SvVarData
         return null;
     }
 
+    public static boolean haveSameChrArms(final SvVarData var1, final SvVarData var2)
+    {
+        // tests if 2 variants (including BNDs) link the same 2 chromosomal arms
+        if(var1.chromosome(true).equals(var2.chromosome(true)) && var1.chromosome(false).equals(var2.chromosome(false))
+        && var1.arm(true).equals(var2.arm(true)) && var1.arm(false).equals(var2.arm(false)))
+        {
+            return true;
+        }
+        else if(var1.chromosome(true).equals(var2.chromosome(false)) && var1.chromosome(false).equals(var2.chromosome(true))
+        && var1.arm(true).equals(var2.arm(false)) && var1.arm(false).equals(var2.arm(true)))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
 }
