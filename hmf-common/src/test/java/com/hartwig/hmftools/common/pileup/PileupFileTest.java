@@ -2,7 +2,9 @@ package com.hartwig.hmftools.common.pileup;
 
 import static org.junit.Assert.assertEquals;
 
-import org.junit.Ignore;
+import java.util.Map;
+
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class PileupFileTest {
@@ -149,4 +151,18 @@ public class PileupFileTest {
             assertEquals(i, PileupFile.qualityScore(i, qualities));
         }
     }
+
+    @NotNull
+    public static Pileup create(@NotNull final String chromosome, final long position, int readCount, @NotNull final String ref,
+            @NotNull final Map<String, Integer> counts, @NotNull final Map<String, Integer> score) {
+        return ImmutablePileup.builder()
+                .chromosome(chromosome)
+                .position(position)
+                .readCount(readCount)
+                .referenceBase(ref)
+                .countMap(counts)
+                .scoreMap(score)
+                .build();
+    }
+
 }

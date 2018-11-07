@@ -38,7 +38,7 @@ public class HotspotEvidenceFactory {
     }
 
     @NotNull
-    public List<HotspotEvidence> hotspotEvidence(@NotNull final List<Pileup> tumor, @NotNull final List<Pileup> normal) {
+    private List<HotspotEvidence> hotspotEvidence(@NotNull final List<Pileup> tumor, @NotNull final List<Pileup> normal) {
         final List<HotspotEvidence> result = Lists.newArrayList();
 
         final GenomePositionSelector<Pileup> tumorSelector = GenomePositionSelectorFactory.create(Multimaps.fromPositions(tumor));
@@ -48,22 +48,11 @@ public class HotspotEvidenceFactory {
 
             final Optional<Pileup> optionalTumorPileup = tumorSelector.select(hotspot);
             if (optionalTumorPileup.isPresent()) {
-
                 final Pileup tumorPileup = optionalTumorPileup.get();
                 int tumorEvidence = evidence(tumorPileup, hotspot);
                 if (tumorEvidence > 0) {
                     final Optional<Pileup> optionalNormalPileup = normalSelector.select(hotspot);
-                    result.add(ImmutableHotspotEvidence.builder()
-                            .from(hotspot)
-                            .type(HotspotEvidenceType.fromVariantHotspot(hotspot))
-                            .alt(hotspot.alt())
-                            .ref(hotspot.ref())
-                            .qualityScore(qualityScore(tumorPileup, hotspot))
-                            .tumorEvidence(tumorEvidence)
-                            .tumorReads(tumorPileup.readCount())
-                            .normalEvidence(optionalNormalPileup.map(x -> evidence(x, hotspot)).orElse(0))
-                            .normalReads(optionalNormalPileup.map(Pileup::readCount).orElse(0))
-                            .build());
+                    result.add(fromHotspot(hotspot, tumorPileup, optionalNormalPileup));
                 }
             }
         }
@@ -71,25 +60,25 @@ public class HotspotEvidenceFactory {
         return result;
     }
 
-    @VisibleForTesting
-    static int qualityScore(@NotNull final Pileup tumor, @NotNull final VariantHotspot hotspot) {
-        if (hotspot.isSNV()) {
-            return tumor.mismatchCount(hotspot.alt().charAt(0));
-        }
-
-        if (hotspot.isInsert()) {
-            return tumor.insertCount(hotspot.alt());
-        }
-
-        if (hotspot.isDelete()) {
-            return tumor.deleteCount(hotspot.ref());
-        }
-
-        return 0;
+    @NotNull
+    static HotspotEvidence fromHotspot(@NotNull final VariantHotspot hotspot, @NotNull final Pileup tumor, @NotNull final Optional<Pileup> normal) {
+        int tumorEvidence = evidence(tumor, hotspot);
+        assert (tumorEvidence > 0);
+        return ImmutableHotspotEvidence.builder()
+                .from(hotspot)
+                .type(HotspotEvidenceType.fromVariantHotspot(hotspot))
+                .alt(hotspot.alt())
+                .ref(hotspot.ref())
+                .qualityScore(qualityScore(tumor, hotspot))
+                .tumorEvidence(tumorEvidence)
+                .tumorReads(tumor.readCount())
+                .normalEvidence(normal.map(x -> evidence(x, hotspot)).orElse(0))
+                .normalReads(normal.map(Pileup::readCount).orElse(0))
+                .build();
     }
 
     @NotNull
-    public List<HotspotEvidence> inframeIndelEvidence(@NotNull final List<Pileup> tumor, @NotNull final List<Pileup> normal) {
+    private List<HotspotEvidence> inframeIndelEvidence(@NotNull final List<Pileup> tumor, @NotNull final List<Pileup> normal) {
         final List<HotspotEvidence> result = Lists.newArrayList();
 
         final GenomePositionSelector<Pileup> normalSelector = GenomePositionSelectorFactory.create(Multimaps.fromPositions(normal));
@@ -103,7 +92,7 @@ public class HotspotEvidenceFactory {
     }
 
     @NotNull
-    private List<HotspotEvidence> inframeIndelEvidence(@NotNull final Pileup tumor, @NotNull final Optional<Pileup> normal) {
+    static List<HotspotEvidence> inframeIndelEvidence(@NotNull final Pileup tumor, @NotNull final Optional<Pileup> normal) {
         final List<HotspotEvidence> result = Lists.newArrayList();
 
         final ImmutableHotspotEvidence.Builder builder = ImmutableHotspotEvidence.builder()
@@ -122,7 +111,7 @@ public class HotspotEvidenceFactory {
                     .build());
         }
 
-        for (final String del : tumor.inframeInserts()) {
+        for (final String del : tumor.inframeDeletes()) {
             result.add(builder.alt(tumor.referenceBase())
                     .ref(del)
                     .qualityScore(tumor.deleteScore(del))
@@ -136,7 +125,7 @@ public class HotspotEvidenceFactory {
         return result;
     }
 
-    private int evidence(@NotNull final Pileup pileup, @NotNull VariantHotspot hotspot) {
+    private static int evidence(@NotNull final Pileup pileup, @NotNull final VariantHotspot hotspot) {
 
         if (hotspot.isSNV()) {
             return pileup.mismatchCount(hotspot.alt().charAt(0));
@@ -147,7 +136,24 @@ public class HotspotEvidenceFactory {
         }
 
         if (hotspot.isDelete()) {
-            return pileup.insertCount(hotspot.ref());
+            return pileup.deleteCount(hotspot.ref());
+        }
+
+        return 0;
+    }
+
+    @VisibleForTesting
+    static int qualityScore(@NotNull final Pileup tumor, @NotNull final VariantHotspot hotspot) {
+        if (hotspot.isSNV()) {
+            return tumor.mismatchScore(hotspot.alt().charAt(0));
+        }
+
+        if (hotspot.isInsert()) {
+            return tumor.insertScore(hotspot.alt());
+        }
+
+        if (hotspot.isDelete()) {
+            return tumor.deleteScore(hotspot.ref());
         }
 
         return 0;
