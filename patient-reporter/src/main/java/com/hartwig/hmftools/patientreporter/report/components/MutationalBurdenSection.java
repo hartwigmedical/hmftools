@@ -30,8 +30,9 @@ public final class MutationalBurdenSection {
 
     @NotNull
     private static String interpret(double tumorMutationalBurden, boolean hasReliablePurityFit) {
-        return PatientReportFormat.correctValueForFitReliability(new DecimalFormat("#.#").format(tumorMutationalBurden),
-                hasReliablePurityFit) + " variants per Mb.";
+        String formatting = PatientReportFormat.correctValueForFitReliability(new DecimalFormat("#.#").format(tumorMutationalBurden),
+                hasReliablePurityFit);
+        return formatting.equals("N/A") ? formatting : formatting + " variants per Mb.";
     }
 
     private static int computeGraphValue(double value) {
