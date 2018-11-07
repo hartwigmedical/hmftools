@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.pileup;
 
 import static org.junit.Assert.assertEquals;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class PileupFileTest {
@@ -27,14 +28,13 @@ public class PileupFileTest {
         assertEquals(0, pileup.aMismatchCount());
         assertEquals(2, pileup.tMismatchCount());
         assertEquals(0, pileup.cMismatchCount());
-        assertEquals(25, pileup.insertions());
-        assertEquals(4, pileup.deletions());
-        assertEquals(29, pileup.indels());
-        assertEquals(1, pileup.inframeInsertions());
-        assertEquals(1, pileup.inframeDeletions());
-        assertEquals(2, pileup.inframeIndels());
-        assertEquals(2, (int) pileup.insertionCounts().get("TT"));
-        assertEquals(18, (int) pileup.insertionCounts().get("CT"));
+        assertEquals(25, pileup.insertCount());
+        assertEquals(4, pileup.deleteCount());
+        assertEquals(29, pileup.indelCount());
+        assertEquals(1, pileup.inframeInserts().size());
+        assertEquals(1, pileup.deleteCount("CTTT"));
+        assertEquals(2, pileup.insertCount("TT"));
+        assertEquals(18, pileup.insertCount("CT"));
     }
 
     @Test
@@ -48,10 +48,10 @@ public class PileupFileTest {
         assertEquals(0, pileup.aMismatchCount());
         assertEquals(0, pileup.tMismatchCount());
         assertEquals(0, pileup.cMismatchCount());
-        assertEquals(3, pileup.insertions());
-        assertEquals(0, pileup.deletions());
-        assertEquals(3, pileup.indels());
-        assertEquals(3, (int) pileup.insertionCounts().get("AAG"));
+        assertEquals(3, pileup.insertCount());
+        assertEquals(0, pileup.deleteCount());
+        assertEquals(3, pileup.indelCount());
+        assertEquals(3, pileup.insertCount("AAG"));
     }
 
     @Test
@@ -66,9 +66,9 @@ public class PileupFileTest {
         assertEquals(0, pileup.aMismatchCount());
         assertEquals(0, pileup.tMismatchCount());
         assertEquals(0, pileup.cMismatchCount());
-        assertEquals(3, pileup.insertions());
-        assertEquals(0, pileup.deletions());
-        assertEquals(3, pileup.indels());
+        assertEquals(3, pileup.insertCount());
+        assertEquals(0, pileup.deleteCount());
+        assertEquals(3, pileup.indelCount());
     }
 
     @Test
@@ -83,10 +83,10 @@ public class PileupFileTest {
         assertEquals(0, pileup.aMismatchCount());
         assertEquals(0, pileup.tMismatchCount());
         assertEquals(0, pileup.cMismatchCount());
-        assertEquals(0, pileup.insertions());
-        assertEquals(2, pileup.deletions());
-        assertEquals(2, pileup.indels());
-        assertEquals(2, (int) pileup.deletionCounts().get("ACACC"));
+        assertEquals(0, pileup.insertCount());
+        assertEquals(2, pileup.deleteCount());
+        assertEquals(2, pileup.indelCount());
+        assertEquals(2, pileup.deleteCount("ACACC"));
     }
 
     @Test
@@ -101,8 +101,52 @@ public class PileupFileTest {
         assertEquals(0, pileup.aMismatchCount());
         assertEquals(0, pileup.tMismatchCount());
         assertEquals(1, pileup.cMismatchCount());
-        assertEquals(0, pileup.insertions());
-        assertEquals(2, pileup.deletions());
-        assertEquals(2, pileup.indels());
+        assertEquals(0, pileup.insertCount());
+        assertEquals(2, pileup.deleteCount());
+        assertEquals(2, pileup.indelCount());
+    }
+
+    @Test
+    public void testQualScore() {
+        assertEquals(0, PileupFile.qualityScore(0, "!"));
+        assertEquals(2, PileupFile.qualityScore(0, "#"));
+        assertEquals(3, PileupFile.qualityScore(0, "$"));
+
+        final String line = "seq3\t200\tG\t12\t.,AaTtCc.+1Tt+1t.-1TT-1t^~\t!$#$##!!#$$#";
+        final Pileup pileup = PileupFile.fromString(line);
+        assertEquals(2, pileup.referenceCount());
+        assertEquals(3, pileup.referenceScore());
+
+        assertEquals(0, pileup.mismatchCount('G'));
+        assertEquals(0, pileup.mismatchScore('G'));
+
+        assertEquals(2, pileup.mismatchCount('A'));
+        assertEquals(5, pileup.mismatchScore('A'));
+
+        assertEquals(4, pileup.mismatchCount('T'));
+        assertEquals(9, pileup.mismatchScore('T'));
+
+        assertEquals(2, pileup.mismatchCount('C'));
+        assertEquals(0, pileup.mismatchScore('C'));
+
+        assertEquals(1, pileup.insertCount("GT"));
+        assertEquals(2, pileup.insertScore("GT"));
+
+        assertEquals(1, pileup.insertCount("TT"));
+        assertEquals(3, pileup.insertScore("TT"));
+
+        assertEquals(1, pileup.deleteCount("GT"));
+        assertEquals(3, pileup.deleteScore("GT"));
+
+        assertEquals(1, pileup.deleteCount("TT"));
+        assertEquals(2, pileup.deleteScore("TT"));
+    }
+
+    @Test
+    public void testQualScoreInterpreation() {
+        final String qualities = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+        for (int i = 0; i < qualities.length(); i++) {
+            assertEquals(i, PileupFile.qualityScore(i, qualities));
+        }
     }
 }

@@ -12,15 +12,28 @@ import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.pileup.Pileup;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
+import com.hartwig.hmftools.common.position.GenomePositions;
 
 import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class HotspotEvidenceFactory {
 
     private final LinkedHashSet<VariantHotspot> hotspots;
 
     public HotspotEvidenceFactory(final ListMultimap<Chromosome, VariantHotspot> hotspots) {
         this.hotspots = new LinkedHashSet<>(hotspots.values());
+    }
+
+    @NotNull
+    public List<HotspotEvidence> evidence(@NotNull final List<Pileup> tumor, @NotNull final List<Pileup> normal) {
+        final List<HotspotEvidence> result = Lists.newArrayList();
+
+        result.addAll(hotspotEvidence(tumor, normal));
+        result.addAll(inframeIndelEvidence(tumor, normal));
+
+        Collections.sort(result);
+        return result;
     }
 
     @NotNull
@@ -53,7 +66,52 @@ public class HotspotEvidenceFactory {
             }
         }
 
-        Collections.sort(result);
+        return result;
+    }
+
+    @NotNull
+    public List<HotspotEvidence> inframeIndelEvidence(@NotNull final List<Pileup> tumor, @NotNull final List<Pileup> normal) {
+        final List<HotspotEvidence> result = Lists.newArrayList();
+
+        final GenomePositionSelector<Pileup> normalSelector = GenomePositionSelectorFactory.create(Multimaps.fromPositions(normal));
+        for (Pileup pileup : tumor) {
+            result.addAll(inframeIndelEvidence(pileup,
+                    normalSelector.select(GenomePositions.create(pileup.chromosome(), pileup.position()))));
+
+        }
+
+        return result;
+    }
+
+    @NotNull
+    private List<HotspotEvidence> inframeIndelEvidence(@NotNull final Pileup tumor, @NotNull final Optional<Pileup> normal) {
+        final List<HotspotEvidence> result = Lists.newArrayList();
+
+        final ImmutableHotspotEvidence.Builder builder = ImmutableHotspotEvidence.builder()
+                .chromosome(tumor.chromosome())
+                .type(HotspotEvidenceType.INFRAME)
+                .position(tumor.position());
+
+        for (final String insert : tumor.inframeInserts()) {
+            result.add(builder.ref(tumor.referenceBase())
+                    .alt(insert)
+                    .tumorEvidence(tumor.insertCount(insert))
+                    .tumorReads(tumor.readCount())
+                    .normalEvidence(normal.map(x -> x.insertCount(insert)).orElse(0))
+                    .normalReads(normal.map(Pileup::readCount).orElse(0))
+                    .build());
+        }
+
+        for (final String del : tumor.inframeInserts()) {
+            result.add(builder.alt(tumor.referenceBase())
+                    .ref(del)
+                    .tumorEvidence(tumor.deleteCount(del))
+                    .tumorReads(tumor.readCount())
+                    .normalEvidence(normal.map(x -> x.deleteCount(del)).orElse(0))
+                    .normalReads(normal.map(Pileup::readCount).orElse(0))
+                    .build());
+        }
+
         return result;
     }
 
@@ -64,11 +122,11 @@ public class HotspotEvidenceFactory {
         }
 
         if (hotspot.isInsert()) {
-            return pileup.insertionCounts().getOrDefault(hotspot.alt(), 0);
+            return pileup.insertCount(hotspot.alt());
         }
 
         if (hotspot.isDelete()) {
-            return pileup.deletionCounts().getOrDefault(hotspot.ref(), 0);
+            return pileup.insertCount(hotspot.ref());
         }
 
         return 0;

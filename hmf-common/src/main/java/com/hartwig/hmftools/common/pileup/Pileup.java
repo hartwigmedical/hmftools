@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.common.pileup;
 
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.position.GenomePosition;
 
@@ -10,63 +12,102 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface Pileup extends GenomePosition {
+public abstract class Pileup implements GenomePosition {
 
-    int readCount();
+    public abstract int readCount();
 
     @NotNull
-    String referenceBase();
+    public abstract String referenceBase();
 
-    int referenceCount();
 
-    int gMismatchCount();
-
-    int aMismatchCount();
-
-    int tMismatchCount();
-
-    int cMismatchCount();
-
-    Map<String, Integer> insertionCounts();
-
-    Map<String, Integer> deletionCounts();
-
-    default int insertions() {
-        return insertionCounts().values().stream().mapToInt(x -> x).sum();
+    @NotNull
+    public Set<String> inserts() {
+        return countMap().keySet().stream().filter(x -> x.startsWith("+")).map(x -> x.substring(1)).collect(Collectors.toSet());
     }
 
-    default int inframeInsertions() {
-        return insertionCounts().entrySet().stream().filter(x -> (x.getKey().length() - 1) % 3 == 0).mapToInt(Map.Entry::getValue).sum();
+    @NotNull
+    public Set<String> inframeInserts() {
+        return inserts().stream().filter(Pileup::inframe).collect(Collectors.toSet());
     }
 
-    default int deletions() {
-        return deletionCounts().values().stream().mapToInt(x -> x).sum();
+    @NotNull
+    public Set<String> deletes() {
+        return countMap().keySet().stream().filter(x -> x.startsWith("-")).map(x -> x.substring(1)).collect(Collectors.toSet());
     }
 
-    default int inframeDeletions() {
-        return deletionCounts().entrySet().stream().filter(x -> (x.getKey().length() - 1) % 3 == 0).mapToInt(Map.Entry::getValue).sum();
+    @NotNull
+    public Set<String> inframeDeletes() {
+        return deletes().stream().filter(Pileup::inframe).collect(Collectors.toSet());
     }
 
-    default int indels() {
-        return insertions() + deletions();
+    public int mismatchCount(char base) {
+        return String.valueOf(base).equals(referenceBase()) ? 0 : countMap().getOrDefault(String.valueOf(base), 0);
     }
 
-    default int inframeIndels() {
-        return inframeInsertions() + inframeDeletions();
+    public int mismatchScore(char base) {
+        return String.valueOf(base).equals(referenceBase()) ? 0 : scoreMap().getOrDefault(String.valueOf(base), 0);
     }
 
-    default int mismatchCount(char base) {
-        switch (Character.toUpperCase(base)) {
-            case 'G':
-                return gMismatchCount();
-            case 'A':
-                return aMismatchCount();
-            case 'T':
-                return tMismatchCount();
-            case 'C':
-                return cMismatchCount();
-            default:
-                return 0;
-        }
+    public int insertCount(@NotNull final String insert) {
+        return countMap().getOrDefault("+" + insert, 0);
     }
+
+    public int insertScore(@NotNull final String insert) {
+        return scoreMap().getOrDefault("+" + insert, 0);
+    }
+
+    public int deleteCount(@NotNull final String insert) {
+        return countMap().getOrDefault("-" + insert, 0);
+    }
+
+    public int deleteScore(@NotNull final String insert) {
+        return scoreMap().getOrDefault("-" + insert, 0);
+    }
+
+    public int referenceCount() {
+        return countMap().getOrDefault(String.valueOf(referenceBase()), 0);
+    }
+
+    public int referenceScore() {
+        return scoreMap().getOrDefault(String.valueOf(referenceBase()), 0);
+    }
+
+    public int gMismatchCount() {
+        return mismatchCount('G');
+    }
+
+    public int aMismatchCount() {
+        return mismatchCount('A');
+    }
+
+    public int tMismatchCount() {
+        return mismatchCount('T');
+    }
+
+    public int cMismatchCount() {
+        return mismatchCount('C');
+    }
+
+    public int insertCount() {
+        return countMap().entrySet().stream().filter(x -> x.getKey().startsWith("+")).mapToInt(Map.Entry::getValue).sum();
+    }
+
+
+    public int deleteCount() {
+        return countMap().entrySet().stream().filter(x -> x.getKey().startsWith("-")).mapToInt(Map.Entry::getValue).sum();
+    }
+
+    public int indelCount() {
+        return insertCount() + deleteCount();
+    }
+
+    private static boolean inframe(@NotNull final String indel) {
+        return (indel.length() - 1) % 3 == 0;
+    }
+
+    @NotNull
+    protected abstract Map<String, Integer> countMap();
+
+    @NotNull
+    protected abstract Map<String, Integer> scoreMap();
 }
