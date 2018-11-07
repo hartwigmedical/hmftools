@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordFileReader;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
-import com.hartwig.hmftools.common.io.path.PathPrefixSuffixFinder;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -46,8 +45,6 @@ public final class PatientReporterFileLoader {
     private static final String SOMATIC_VCF_EXTENSION_V3 = "_post_processed_v2.2.vcf.gz";
     private static final String SOMATIC_VCF_EXTENSION_V4 = "_post_processed.vcf.gz";
     private static final String BACHELOR_DIRECTORY = "bachelor";
-    private static final String CHORD_DIRECTORY = "chord";
-    private static final String CHORD_EXTENSION = "_chord_prediction.txt";
 
     private PatientReporterFileLoader() {
     }
@@ -119,8 +116,6 @@ public final class PatientReporterFileLoader {
 
     @NotNull
     static ChordAnalysis loadChordFile(@NotNull String runDirectory, @NotNull String sample) throws IOException {
-        final String chordDirectory = runDirectory + File.separator + CHORD_DIRECTORY;
-        String filePath = PathPrefixSuffixFinder.build().findPath(chordDirectory, sample, CHORD_EXTENSION).toString();
-        return ChordFileReader.read(filePath);
+        return ChordFileReader.read(ChordFileReader.generateFilename(runDirectory, sample));
     }
 }
