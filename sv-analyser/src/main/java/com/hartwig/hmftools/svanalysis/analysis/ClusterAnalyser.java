@@ -16,11 +16,11 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUST
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.addClusterReason;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.checkClusterDuplicates;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.isConsistentCluster;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_COMPLEX_CHAIN;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_CHAIN;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_INS;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.findCluster;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_SGL;
@@ -530,10 +530,9 @@ public class ClusterAnalyser {
                 if(!isConsistent1 && !isConsistent2 && canMergeClustersOnFoldbacks(cluster1, cluster2))
                 {
                     foundConnection = true;
-                    addClusterReason(cluster1, cluster2, CLUSTER_REASON_FOLDBACKS);
-                    addClusterReason(cluster2, cluster1, CLUSTER_REASON_FOLDBACKS);
                 }
 
+                /*
                 if(!foundConnection && hasLongDelDup1)
                 {
                     foundConnection = mClusteringMethods.canMergeClustersOnLongDelDups(cluster1, cluster2);
@@ -543,6 +542,7 @@ public class ClusterAnalyser {
                 {
                     foundConnection = mClusteringMethods.canMergeClustersOnLongDelDups(cluster2, cluster1);
                 }
+                */
 
                 if(!foundConnection)
                 {
@@ -552,25 +552,25 @@ public class ClusterAnalyser {
                     if(hasOpenSingle1 && isSoloSingle2 && canMergeOpenSingles(cluster1, cluster2))
                     {
                         foundConnection = true;
-                        addClusterReason(cluster2, cluster1, CLUSTER_REASON_SOLO_SINGLE);
+                        addClusterReason(cluster2, CLUSTER_REASON_SOLO_SINGLE, "");
                     }
 
                     if(!foundConnection && hasOpenSingle2 && isSoloSingle1 && canMergeOpenSingles(cluster2, cluster1))
                     {
                         foundConnection = true;
-                        addClusterReason(cluster1, cluster2, CLUSTER_REASON_SOLO_SINGLE);
+                        addClusterReason(cluster1, CLUSTER_REASON_SOLO_SINGLE, "");
                     }
 
                     if(!foundConnection && isSoloSingle1 && isSingleClosestTI(cluster2, cluster2.getSVs().get(0)))
                     {
                         foundConnection = true;
-                        addClusterReason(cluster1, cluster2, CLUSTER_REASON_SOLO_SINGLE);
+                        addClusterReason(cluster1, CLUSTER_REASON_SOLO_SINGLE, "");
                     }
 
                     if(!foundConnection && isSoloSingle2 && isSingleClosestTI(cluster1, cluster2.getSVs().get(0)))
                     {
                         foundConnection = true;
-                        addClusterReason(cluster2, cluster1, CLUSTER_REASON_SOLO_SINGLE);
+                        addClusterReason(cluster2, CLUSTER_REASON_SOLO_SINGLE, "");
                     }
                 }
 
@@ -762,6 +762,50 @@ public class ClusterAnalyser {
 
     private boolean canMergeClustersOnFoldbacks(final SvCluster cluster1, final SvCluster cluster2)
     {
+        final List<SvVarData> cluster1Foldbacks = cluster1.getFoldbacks();
+        final List<SvVarData> cluster2Foldbacks = cluster2.getFoldbacks();
+
+        for (final SvVarData var1 : cluster1Foldbacks)
+        {
+            if (var1.inLineElement())
+                continue;
+
+            for (int be1 = SVI_START; be1 <= SVI_END; ++be1)
+            {
+                boolean v1Start = isStart(be1);
+
+                if(be1 == SVI_END && var1.type() != BND)
+                    continue;
+
+                for (final SvVarData var2 : cluster2Foldbacks)
+                {
+                    for (int be2 = SVI_START; be2 <= SVI_END; ++be2)
+                    {
+                        boolean v2Start = isStart(be2);
+
+                        if (be2 == SVI_END && var2.type() != BND)
+                            continue;
+
+                        if (var2.inLineElement())
+                            continue;
+
+                        if (!var1.chromosome(v1Start).equals(var2.chromosome(v2Start)) || !var1.arm(v1Start).equals(var2.arm(v2Start)))
+                            continue;
+
+                        LOGGER.debug("cluster({}) SV({}) and cluster({}) SV({}) have foldbacks on same arm",
+                                cluster1.getId(), var1.posId(), cluster2.getId(), var2.posId());
+
+                        addClusterReason(cluster1, CLUSTER_REASON_FOLDBACKS, var2.id());
+                        addClusterReason(cluster2, CLUSTER_REASON_FOLDBACKS, var1.id());
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+
+        /*
         // checks for matching arms that both have foldbacks
         final List<SvArmGroup> armGroups1 = cluster1.getArmGroups();
         final List<SvArmGroup> armGroups2 = cluster2.getArmGroups();
@@ -786,8 +830,9 @@ public class ClusterAnalyser {
                 return true;
             }
         }
-
         return false;
+
+        */
     }
 
     private boolean hasFoldback(final List<SvVarData> svList, final String chromosome, final String arm)
@@ -1052,7 +1097,7 @@ public class ClusterAnalyser {
             return;
 
         // skip unclustered DELs & DUPs, reciprocal INV or reciprocal BNDs
-        final SvCluster cluster1 = findCluster(var1, mClusters);
+        final SvCluster cluster1 = var1.getCluster();
 
         if(cluster1.isSimpleSVs() || (cluster1.getCount() == 2 && cluster1.isConsistent()))
             return;
@@ -1065,7 +1110,7 @@ public class ClusterAnalyser {
         }
         else
         {
-            cluster2 = findCluster(var2, mClusters);
+            cluster2 = var2.getCluster();
 
             if (cluster2.isSimpleSVs() || (cluster2.getCount() == 2 && cluster2.isConsistent()))
                 return;
@@ -1172,7 +1217,7 @@ public class ClusterAnalyser {
 
         // check if the replicated SV has the same linked pairing
         // or if the variant forms both ends of the cluster's chain
-        final SvCluster cluster = findCluster(var, mClusters);
+        final SvCluster cluster = var.getCluster();
         if(cluster == null)
             return;
 

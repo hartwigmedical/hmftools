@@ -30,7 +30,7 @@ public class LineElementAnnotator {
     private List<GenomeRegion> mIdentifiedLineElements;
     private static int PERMITTED_DISTANCE = 5000;
 
-    private static int POLY_A_T_LENGTH = 5;
+    private static int POLY_A_T_LENGTH = 8;
 
     private String mPolyAMotif;
     private String mPolyTMotif;
@@ -178,14 +178,17 @@ public class LineElementAnnotator {
                     String currentOtherChr = "";
                     for (final SvBreakend lineBreakend : potentialLineSVs)
                     {
-                        final SvVarData var = breakend.getSV();
+                        final SvVarData var = lineBreakend.getSV();
 
                         if (var.type() == BND)
                         {
                             ++bndCount;
 
-                            if(var.getSvData().insertSequence().contains(mPolyAMotif) || var.getSvData().insertSequence().contains(mPolyTMotif))
-                                hasPolyATMotify = true;
+                            if(!hasPolyATMotify)
+                            {
+                                if (var.getSvData().insertSequence().contains(mPolyAMotif) || var.getSvData().insertSequence() .contains(mPolyTMotif))
+                                    hasPolyATMotify = true;
+                            }
 
                             final String otherChr = var.chromosome(!lineBreakend.usesStart());
 
@@ -215,8 +218,12 @@ public class LineElementAnnotator {
                 {
                     for (SvBreakend lineBreakend : potentialLineSVs)
                     {
-                        if(!lineBreakend.getSV().isLineElement(lineBreakend.usesStart()))
-                            lineBreakend.getSV().setLineElement(SUSPECTED_LINE_ELEMENT, lineBreakend.usesStart());
+                        final SvVarData var = lineBreakend.getSV();
+                        if(!var.isLineElement(lineBreakend.usesStart()))
+                        {
+                            LOGGER.debug("var({}) marked as suspect line element", var.posId());
+                            var.setLineElement(SUSPECTED_LINE_ELEMENT, lineBreakend.usesStart());
+                        }
                     }
                 }
             }

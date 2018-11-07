@@ -27,8 +27,6 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_INT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECIPROCAL_TRANS;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_INS;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.findCluster;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcTypeCount;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_TELOMERE;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
@@ -252,6 +250,9 @@ public class SvClusteringMethods {
             }
 
             applyCopyNumberReplication(sampleId, cluster);
+
+            markClusterLongDelDups(cluster);
+            markClusterInversions(cluster);
         }
 
         int initClusterCount = clusters.size();
@@ -266,10 +267,7 @@ public class SvClusteringMethods {
         {
             foundMerges = mergeOnCommonArmLinks(clusters);
 
-            if(mergeOnOverlappingInversion(clusters))
-                foundMerges = true;
-
-            if(mergeLongDupsDels(clusters))
+            if(mergeOnOverlappingInvDupDels(clusters))
                 foundMerges = true;
 
             ++iterations;
@@ -559,10 +557,23 @@ public class SvClusteringMethods {
         return clusters.size() < initClusterCount;
     }
 
-    private boolean mergeOnOverlappingInversion(List<SvCluster> clusters)
+    private void markClusterInversions(final SvCluster cluster)
     {
-        // merge any overlapping complex clusters and return true if merges were found
-        // ignore simple SVs and simple, consistent cluster-2s
+        if(isConsistentCluster(cluster) || cluster.getTypeCount(INV) == 0)
+            return;
+
+        for (final SvVarData var : cluster.getSVs())
+        {
+            if(var.type() != INV || var.inLineElement())
+                continue;
+
+            cluster.registerInversion(var);
+        }
+    }
+
+    private boolean mergeOnOverlappingInvDupDels(List<SvCluster> clusters)
+    {
+        // merge any clusters with overlapping inversions, long dels or long dups on the same arm
         int initClusterCount = clusters.size();
 
         final List<StructuralVariantType> requiredTypes = Lists.newArrayList();
@@ -573,61 +584,73 @@ public class SvClusteringMethods {
         {
             SvCluster cluster1 = clusters.get(index1);
 
-            if(isConsistentCluster(cluster1) || cluster1.getTypeCount(INV) == 0)
+            if(isConsistentCluster(cluster1) || cluster1.getInversions().isEmpty() && cluster1.getLongDelDups().isEmpty())
             {
                 ++index1;
                 continue;
             }
 
-            List<SvArmGroup> armGroups1 = cluster1.getArmGroups();
+            List<SvVarData> cluster1Svs = Lists.newArrayList();
+            cluster1Svs.addAll(cluster1.getLongDelDups());
+            cluster1Svs.addAll(cluster1.getInversions());
 
             int index2 = index1 + 1;
             while(index2 < clusters.size())
             {
                 SvCluster cluster2 = clusters.get(index2);
 
-                if(isConsistentCluster(cluster2))
+                if(isConsistentCluster(cluster2) || cluster2.getInversions().isEmpty() && cluster2.getLongDelDups().isEmpty())
                 {
                     ++index2;
                     continue;
                 }
 
-                List<SvArmGroup> armGroups2 = cluster2.getArmGroups();
+                List<SvVarData> cluster2Svs = Lists.newArrayList();
+                cluster2Svs.addAll(cluster2.getLongDelDups());
+                cluster2Svs.addAll(cluster2.getInversions());
 
-                boolean canMergeArms = false;
+                boolean canMergeClusters = false;
 
-                for(SvArmGroup armGroup1 : armGroups1)
+                for (final SvVarData var1 : cluster1Svs)
                 {
-                    for(SvArmGroup armGroup2 : armGroups2)
+                    if (var1.inLineElement())
+                        continue;
+
+                    for (final SvVarData var2 : cluster2Svs)
                     {
-                        final SvVarData linkingVar = armGroupsHaveOverlappingSVs(armGroup1, armGroup2, requiredTypes);
+                        if (var2.inLineElement())
+                            continue;
 
-                        if(linkingVar != null)
-                        {
-                            LOGGER.debug("cluster({}) arm({} svs={}) overlaps with cluster({}) arm({} svs={}) on inversion({})",
-                                    cluster1.getId(), armGroup1.posId(), armGroup1.getCount(),
-                                    cluster2.getId(), armGroup2.posId(), armGroup2.getCount(), linkingVar.id());
+                        if(!var1.chromosome(true).equals(var2.chromosome(true)))
+                            continue;
 
-                            linkingVar.addClusterReason(CLUSTER_REASON_INV_OVERLAP, "");
+                        if(var1.position(false) < var2.position(true) || var1.position(true) > var2.position(false))
+                            continue;
 
-                            canMergeArms = true;
-                            break;
-                        }
+                        LOGGER.debug("cluster({}) SV({} {}) and cluster({}) SV({} {}) have inversion or longDelDup overlap",
+                                cluster1.getId(), var1.posId(), var1.type(), cluster2.getId(), var2.posId(), var2.type());
+
+                        var1.addClusterReason(var2.type() == INV ? CLUSTER_REASON_INV_OVERLAP : CLUSTER_REASON_LONG_DEL_DUP, var2.id());
+                        var2.addClusterReason(var1.type() == INV ? CLUSTER_REASON_INV_OVERLAP : CLUSTER_REASON_LONG_DEL_DUP, var1.id());
+
+                        canMergeClusters = true;
+                        break;
                     }
 
-                    if(canMergeArms)
+
+                    if(canMergeClusters)
                         break;
                 }
 
-                if(!canMergeArms)
+                if(canMergeClusters)
+                {
+                    cluster1.mergeOtherCluster(cluster2);
+                    clusters.remove(index2);
+                }
+                else
                 {
                     ++index2;
-                    continue;
                 }
-
-                // merge the second cluster into the first
-                cluster1.mergeOtherCluster(cluster2);
-                clusters.remove(index2);
             }
 
             ++index1;
@@ -635,6 +658,7 @@ public class SvClusteringMethods {
 
         return clusters.size() < initClusterCount;
     }
+
 
     private final SvVarData armGroupsHaveOverlappingSVs(final SvArmGroup overlappingGroup, final SvArmGroup otherGroup, final List<StructuralVariantType> requiredTypes)
     {
@@ -672,73 +696,44 @@ public class SvClusteringMethods {
         return null;
     }
 
-    private boolean mergeLongDupsDels(List<SvCluster> clusters)
+    public static void addClusterReason(SvCluster mergedCluster, final String reason, final String linkingVarId)
     {
-        if(mDelDupCutoffLength == 0)
-            return false;
-
-        int initClusterCount = clusters.size();
-
-        int index1 = 0;
-        while(index1 < clusters.size())
-        {
-            SvCluster cluster1 = clusters.get(index1);
-
-            if(cluster1.isResolved())
-            {
-                ++index1;
-                continue;
-            }
-
-            boolean hasLongDelDup1 = clusterHasLongDelDup(cluster1);
-
-            int index2 = index1 + 1;
-            while(index2 < clusters.size())
-            {
-                SvCluster cluster2 = clusters.get(index2);
-
-                if(cluster2.isResolved())
-                {
-                    ++index2;
-                    continue;
-                }
-
-                boolean hasLongDelDup2 = clusterHasLongDelDup(cluster2);
-
-                if((hasLongDelDup1 && canMergeClustersOnLongDelDups(cluster1, cluster2))
-                || (hasLongDelDup2 && canMergeClustersOnLongDelDups(cluster2, cluster1)))
-                {
-                    cluster1.mergeOtherCluster(cluster2);
-                    clusters.remove(index2);
-
-                    if(hasLongDelDup1)
-                        addClusterReason(cluster2, cluster1, CLUSTER_REASON_LONG_DEL_DUP);
-
-                    if(hasLongDelDup2)
-                        addClusterReason(cluster1, cluster2, CLUSTER_REASON_LONG_DEL_DUP);
-                }
-                else
-                {
-                    ++index2;
-                    continue;
-                }
-            }
-
-            ++index1;
-        }
-
-        return clusters.size() < initClusterCount;
-    }
-
-    public static void addClusterReason(SvCluster mergedCluster, SvCluster mergingCluster, final String reason)
-    {
-        final String otherId = mergingCluster.getCount() == 1 ? mergingCluster.getSVs().get(0).id() : "";
-
         for(SvVarData var : mergedCluster.getSVs())
         {
-            var.addClusterReason(reason, otherId);
+            var.addClusterReason(reason, linkingVarId);
+        }
+    }
+
+    private void markClusterLongDelDups(final SvCluster cluster)
+    {
+        if(cluster.isSimpleSVs())
+        {
+            for(final SvVarData var : cluster.getSVs())
+            {
+                if((var.type() == DUP || var.type() == DEL) && var.length() >= mDelDupCutoffLength)
+                {
+                    cluster.registerLongDelDup(var);
+                }
+            }
+
+            return;
         }
 
+        if(cluster.isResolved() )
+        {
+            if(cluster.getResolvedType() == RESOLVED_TYPE_DEL_EXT_TI
+            || cluster.getResolvedType() == RESOLVED_TYPE_DUP_INT_TI
+            ||cluster.getResolvedType() == RESOLVED_TYPE_DUP_EXT_TI)
+            {
+                if (cluster.getLengthOverride() >= mDelDupCutoffLength)
+                {
+                    for (final SvVarData var : cluster.getSVs())
+                    {
+                        cluster.registerLongDelDup(var);
+                    }
+                }
+            }
+        }
     }
 
     public boolean clusterHasLongDelDup(final SvCluster cluster)
@@ -867,8 +862,6 @@ public class SvClusteringMethods {
             if(!qArmHasInversions)
                 ++simpleArmCount;
 
-            int armCount = 0;
-
             for(final SvBreakend breakend : breakendList)
             {
                 if(!breakend.usesStart() || !(breakend.getSV().type() == DEL || breakend.getSV().type() == DUP))
@@ -889,7 +882,6 @@ public class SvClusteringMethods {
                 }
 
                 lengthsList.add(var.length());
-                ++armCount;
             }
 
             // LOGGER.debug("sample({}) chr({}) svCount({} delDups({})", sampleId, chromosome, breakendList.size(), armCount);
@@ -1198,12 +1190,12 @@ public class SvClusteringMethods {
             return;
 
         // skip unclustered DELs & DUPs, reciprocal INV or reciprocal BNDs
-        final SvCluster cluster1 = findCluster(var1, clusters);
+        final SvCluster cluster1 = var1.getCluster();
 
         if(cluster1.isSimpleSVs() || (cluster1.getCount() == 2 && cluster1.isConsistent()))
             return;
 
-        final SvCluster cluster2 = findCluster(var2, clusters);
+        final SvCluster cluster2 = var2.getCluster();
 
         if(cluster2.isSimpleSVs() || (cluster2.getCount() == 2 && cluster2.isConsistent()))
             return;

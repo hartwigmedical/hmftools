@@ -153,7 +153,6 @@ public class SvSampleAnalyser {
         mClusteringMethods.clusterByBaseDistance(mAllVariants, mClusters);
         mAnalyser.setClusterData(mSampleId, mClusters);
         mAnalyser.findSimpleCompleteChains();
-        // mClusteringMethods.reportPotentialFoldbacks(mSampleId, mClusters);
         mClusteringMethods.mergeClusters(mSampleId, mClusters);
         mPc3.stop();
 

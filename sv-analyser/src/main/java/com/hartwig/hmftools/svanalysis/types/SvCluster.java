@@ -53,9 +53,14 @@ public class SvCluster
     private Map<String, List<SvCNData>> mChrCNDataMap;
     private boolean mHasReplicatedSVs;
 
+    // cached lists of identified special cases
+    private List<SvVarData> mLongDelDups;
+    private List<SvVarData> mFoldbacks;
+    private List<SvVarData> mLineElements;
+    private List<SvVarData> mInversions;
+
     private int mMinCopyNumber;
     private int mMaxCopyNumber;
-
 
     public static String RESOLVED_TYPE_SIMPLE_SV = "SimpleSV";
     public static String RESOLVED_TYPE_RECIPROCAL_TRANS = "RecipTrans";
@@ -100,6 +105,11 @@ public class SvCluster
         mIsFullyChained = false;
         mUnchainedSVs = Lists.newArrayList();
 
+        mLongDelDups = Lists.newArrayList();
+        mFoldbacks = Lists.newArrayList();
+        mLineElements = Lists.newArrayList();
+        mInversions = Lists.newArrayList();
+
         mSubClusters = Lists.newArrayList();
         mChrCNDataMap = null;
         mHasReplicatedSVs = false;
@@ -129,6 +139,13 @@ public class SvCluster
         }
 
         mSVs.add(var);
+        var.setCluster(this);
+
+        if(var.inLineElement())
+        {
+            mLineElements.add(var);
+        }
+
         mUnchainedSVs.add(var);
         mRequiresRecalc = true;
         mIsResolved = false;
@@ -348,6 +365,9 @@ public class SvCluster
 
         mAssemblyLinkedPairs.addAll(cluster.getAssemblyLinkedPairs());
         mInferredLinkedPairs.addAll(cluster.getInferredLinkedPairs());
+        mInversions.addAll(cluster.getInversions());
+        mFoldbacks.addAll(cluster.getFoldbacks());
+        mLongDelDups.addAll(cluster.getLongDelDups());
 
         for(SvChain chain : cluster.getChains())
         {
@@ -416,10 +436,42 @@ public class SvCluster
         else
         {
             double chainedPerc = 1 - (getUnlinkedSVs().size()/mSVs.size());
-            LOGGER.info(String.format("cluster(%d) complex SVs(%d rep=%d) desc(%s) arms(%d) consistency(%d) chains(%d perc=%.2f) replic(%s)",
-                    getId(), getUniqueSvCount(), getCount(), getDesc(), getChromosomalArmCount(), getConsistencyCount(),
-                    mChains.size(), chainedPerc, mHasReplicatedSVs));
 
+            String otherInfo = "";
+
+            if(!mFoldbacks.isEmpty())
+            {
+                otherInfo += String.format("foldbacks=%d", mFoldbacks.size());
+            }
+
+            if(!mLineElements.isEmpty())
+            {
+                if(!otherInfo.isEmpty())
+                    otherInfo += " ";
+
+                otherInfo += String.format("line=%d", mLineElements.size());
+            }
+
+            if(!mLongDelDups.isEmpty())
+            {
+                if(!otherInfo.isEmpty())
+                    otherInfo += " ";
+
+                otherInfo += String.format("longDelDup=%d", mLongDelDups.size());
+            }
+
+            if(!mInversions.isEmpty())
+            {
+                if(!otherInfo.isEmpty())
+                    otherInfo += " ";
+
+                otherInfo += String.format("inv=%d", mInversions.size());
+            }
+
+            LOGGER.info(String.format("cluster(%d) complex SVs(%d rep=%d) desc(%s res=%s) arms(%d) consis(%d) chains(%d perc=%.2f) replic(%s) %s",
+                    getId(), getUniqueSvCount(), getCount(), getDesc(), mResolvedType,
+                    getChromosomalArmCount(), getConsistencyCount(),
+                    mChains.size(), chainedPerc, mHasReplicatedSVs, otherInfo));
         }
     }
 
@@ -456,9 +508,37 @@ public class SvCluster
         return typeCount != null ? typeCount : 0;
     }
 
+    public final List<SvVarData> getLongDelDups() { return mLongDelDups; }
+    public final List<SvVarData> getFoldbacks() { return mFoldbacks; }
+    public final List<SvVarData> getInversions() { return mInversions; }
+
+    public void registerFoldback(final SvVarData var)
+    {
+        if(!mFoldbacks.contains(var))
+            mFoldbacks.add(var);
+    }
+
+    public void deregisterFoldback(final SvVarData var)
+    {
+        if(mFoldbacks.contains(var))
+            mFoldbacks.remove(var);
+    }
+
+    public void registerInversion(final SvVarData var)
+    {
+        if(!mInversions.contains(var))
+            mInversions.add(var);
+    }
+
+    public void registerLongDelDup(final SvVarData var)
+    {
+        if(!mLongDelDups.contains(var))
+            mLongDelDups.add(var);
+    }
+
     public boolean hasLinkingLineElements()
     {
-        for (final SvVarData var : mSVs)
+        for (final SvVarData var : mLineElements)
         {
             if(var.isTranslocation() && var.inLineElement())
                 return true;
@@ -517,17 +597,6 @@ public class SvCluster
         {
             if(chain.hasLinkedPair(pair))
                 return chain;
-        }
-
-        return null;
-    }
-
-    public static final SvCluster findCluster(final SvVarData var, final List<SvCluster> clusters)
-    {
-        for(final SvCluster cluster : clusters)
-        {
-            if(cluster.getSVs().contains(var))
-                return cluster;
         }
 
         return null;

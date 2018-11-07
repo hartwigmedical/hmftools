@@ -50,6 +50,7 @@ public class SvVarData
     private int mTransLength;
     private String mTransSvLinks;
 
+    private SvCluster mCluster;
     private String mClusterReason;
 
     private String mFoldbackLinkStart;
@@ -128,6 +129,7 @@ public class SvVarData
         mTransSvLinks = "";
 
         mClusterReason = "";
+        mCluster = null;
 
         mStartLink = null;
         mEndLink = null;
@@ -193,6 +195,7 @@ public class SvVarData
         mIsReplicatedSv = true;
         mReplicatedSv = other;
         mClusterReason = other.getClusterReason();
+        mCluster = other.getCluster();
     }
 
     public final String id() { return mId; }
@@ -233,6 +236,9 @@ public class SvVarData
         mStartArm = start;
         mEndArm = end;
     }
+
+    public final SvCluster getCluster() { return mCluster; }
+    public void setCluster(final SvCluster cluster) { mCluster = cluster; }
 
     public final long length()
     {
@@ -354,6 +360,18 @@ public class SvVarData
         {
             mFoldbackLinkEnd = link;
             mFoldbackLenEnd = len;
+        }
+
+        if(mCluster != null)
+        {
+            if (mFoldbackLinkStart.isEmpty() && mFoldbackLinkEnd.isEmpty())
+            {
+                mCluster.deregisterFoldback(this);
+            }
+            else
+            {
+                mCluster.registerFoldback(this);
+            }
         }
     }
 
