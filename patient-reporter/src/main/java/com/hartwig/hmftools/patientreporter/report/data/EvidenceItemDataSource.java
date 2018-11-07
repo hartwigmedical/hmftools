@@ -85,7 +85,8 @@ public final class EvidenceItemDataSource {
                 switch (source.toLowerCase()) {
                     case "oncokb":
                         String[] geneId = gene.split(" ");
-                        return "http://oncokb.org/#/gene/" + geneId[0] + "/alteration/" + reference;
+                        String referenceFormatting = reference.replace(" ", "%20");
+                        return "http://oncokb.org/#/gene/" + geneId[0] + "/alteration/" + referenceFormatting;
                     case "cgi":
                         return "https://www.cancergenomeinterpreter.org/biomarkers";
                     case "civic":

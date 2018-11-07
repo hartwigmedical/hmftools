@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
@@ -71,6 +72,8 @@ public class DatabaseAccess {
     private final CanonicalTranscriptDAO canonicalTranscriptDAO;
     @NotNull
     private final PotentiallyActionableItemsDAO potentiallyActionableItemsDAO;
+    @NotNull
+    private final ChordDAO chordDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // MIVO: disable annoying jooq self-ad message
@@ -92,6 +95,7 @@ public class DatabaseAccess {
         metricDAO = new MetricDAO(context);
         potentiallyActionableItemsDAO = new PotentiallyActionableItemsDAO(context);
         driverCatalogDAO = new DriverCatalogDAO(context);
+        chordDAO = new ChordDAO(context);
     }
 
     @NotNull
@@ -226,6 +230,10 @@ public class DatabaseAccess {
         metricDAO.writeMetrics(sample, metrics);
     }
 
+    public void writeChord(@NotNull String sample, @NotNull ChordAnalysis chordAnalysis) {
+        chordDAO.writeChord(sample, chordAnalysis);
+    }
+
     public void clearCpctEcrf() {
         ecrfDAO.clearCpct();
     }
@@ -274,6 +282,9 @@ public class DatabaseAccess {
 
         LOGGER.info("Deleting metric data for sample: " + sample);
         metricDAO.deleteMetricForSample(sample);
+
+        LOGGER.info("Deleting chord data for sample: " + sample);
+        chordDAO.deleteChordForSample(sample);
 
         LOGGER.info("Deleting purity data for sample: " + sample);
         purityDAO.deletePurityForSample(sample);
