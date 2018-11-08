@@ -53,6 +53,18 @@ public abstract class GradientBar {
     }
 
     @NotNull
+    public static GradientBar ofOnlyMarker(@NotNull final Color startColor, @NotNull final Color endColor, @NotNull final String startText,
+            @NotNull final String endText,final int markerPosition) {
+        return ImmutableGradientBar.builder()
+                .startColor(startColor)
+                .endColor(endColor)
+                .startText(startText)
+                .endText(endText)
+                .marker(Optional.of(ImmutablePair.of(markerPosition, Strings.EMPTY)))
+                .build();
+    }
+
+    @NotNull
     public static GradientBar of(@NotNull final Color startColor, @NotNull final Color endColor, @NotNull final String startText,
             @NotNull final String endText, final int value, final int markerPosition) {
         return ImmutableGradientBar.builder()

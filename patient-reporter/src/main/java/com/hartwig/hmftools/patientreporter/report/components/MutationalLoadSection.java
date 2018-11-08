@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 
 public final class MutationalLoadSection {
-    public static final int ML_THRESHOLD = 140;
+    private static final int ML_THRESHOLD = 140;
 
     private static final int BUFFER = 3;
     private static final int START = 1;
@@ -23,7 +23,7 @@ public final class MutationalLoadSection {
         final int graphValue = computeGraphValue(mutationalLoad);
         final int markerValue = computeGraphValue(ML_THRESHOLD);
         final GradientBar gradient = formattedMutationalLoad.equals("N/A") ?
-                ImmutableGradientBar.of(new Color(239, 229, 203), new Color(159, 163, 193), "Low", "High", 0, markerValue) :
+                ImmutableGradientBar.ofOnlyMarker(new Color(239, 229, 203), new Color(159, 163, 193), "Low", "High", markerValue) :
                 ImmutableGradientBar.of(new Color(239, 229, 203), new Color(159, 163, 193), "Low", "High", graphValue, markerValue);
 
 

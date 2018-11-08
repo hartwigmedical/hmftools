@@ -26,8 +26,8 @@ public final class MicrosatelliteSection {
         final int markerValue = computeGraphValue(MSI_THRESHOLD);
 
         final GradientBar gradient = formattedMicrosatelliteIndicator.equals("N/A")
-                ? ImmutableGradientBar.of(new Color(239, 239, 239),
-                new Color(171, 191, 171), "MSS", "MSI", 0, markerValue)
+                ? ImmutableGradientBar.ofOnlyMarker(new Color(239, 239, 239),
+                new Color(171, 191, 171), "MSS", "MSI", markerValue)
                 : ImmutableGradientBar.of(new Color(239, 239, 239), new Color(171, 191, 171), "MSS", "MSI", graphValue, markerValue);
         final SliderSection sliderSection = ImmutableSliderSection.of("Microsatellite Status",
                 interpret(microsatelliteIndicator, formattedMicrosatelliteIndicator),
