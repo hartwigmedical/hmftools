@@ -33,7 +33,7 @@ public class HotspotEvidenceVCF {
 
     public void write(@NotNull final String filename, @NotNull final List<HotspotEvidence> evidence) {
         final VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(filename)
-                .setOutputFileType(VariantContextWriterBuilder.OutputType.VCF)
+//                .setOutputFileType(VariantContextWriterBuilder.OutputType.VCF)
                 .modifyOption(Options.INDEX_ON_THE_FLY, false)
                 .build();
 
