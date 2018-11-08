@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 
 public final class MutationalLoadSection {
-    private static final int ML_THRESHOLD = 140;
+    public static final int ML_THRESHOLD = 140;
 
     private static final int BUFFER = 3;
     private static final int START = 1;
