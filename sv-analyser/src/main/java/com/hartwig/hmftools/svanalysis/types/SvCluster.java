@@ -72,7 +72,10 @@ public class SvCluster
     public static String RESOLVED_TYPE_DEL_EXT_TI = "DEL_Ext_TI";
     public static String RESOLVED_TYPE_DUP_INT_TI = "DUP_Int_TI";
     public static String RESOLVED_TYPE_DUP_EXT_TI = "DUP_Ext_TI";
-    public static String RESOLVED_TYPE_SIMPLE_INS = "SimpleIns";
+    public static String RESOLVED_TYPE_SGL_PAIR_INS = "SglPair_INS";
+    public static String RESOLVED_TYPE_SGL_PAIR_DEL = "SglPair_DEL";
+    public static String RESOLVED_TYPE_SGL_PAIR_DUP = "SglPair_DUP";
+    public static String RESOLVED_TYPE_SGL_PLUS_INCONSISTENT = "SglPlusInc";
 
     public static String RESOLVED_TYPE_SIMPLE_CHAIN = "SimpleChain";
     public static String RESOLVED_TYPE_COMPLEX_CHAIN = "ComplexChain";
@@ -432,7 +435,7 @@ public class SvCluster
 
         if(isSimpleSingleSV())
         {
-            LOGGER.info("cluster({}) simple svCount({}) desc({}) armCount({}) consistency({}) ",
+            LOGGER.debug("cluster({}) simple svCount({}) desc({}) armCount({}) consistency({}) ",
                     getId(), getCount(), getDesc(), getChromosomalArmCount(), getConsistencyCount());
         }
         else
@@ -470,7 +473,7 @@ public class SvCluster
                 otherInfo += String.format("inv=%d", mInversions.size());
             }
 
-            LOGGER.info(String.format("cluster(%d) complex SVs(%d rep=%d) desc(%s res=%s) arms(%d) consis(%d) chains(%d perc=%.2f) replic(%s) %s",
+            LOGGER.debug(String.format("cluster(%d) complex SVs(%d rep=%d) desc(%s res=%s) arms(%d) consis(%d) chains(%d perc=%.2f) replic(%s) %s",
                     getId(), getUniqueSvCount(), getCount(), getDesc(), mResolvedType,
                     getChromosomalArmCount(), getConsistencyCount(),
                     mChains.size(), chainedPerc, mHasReplicatedSVs, otherInfo));

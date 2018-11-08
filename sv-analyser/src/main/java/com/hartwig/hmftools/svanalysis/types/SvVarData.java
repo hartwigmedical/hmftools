@@ -61,9 +61,6 @@ public class SvVarData
     private long mNearestSvDistance;
     private String mNearestSvRelation;
 
-    private SvGeneData mStartGeneData;
-    private SvGeneData mEndGeneData;
-
     private SvLinkedPair mStartLink;
     private SvLinkedPair mEndLink;
     private List<String> mStartTempInsertionAssemblies;
@@ -138,10 +135,6 @@ public class SvVarData
         mFoldbackLinkEnd = "";
         mFoldbackLenStart = -1;
         mFoldbackLenEnd = -1;
-
-        mStartGeneData = null;
-        mEndGeneData = null;
-
     }
 
     public static SvVarData from(final EnrichedStructuralVariant enrichedSV)
@@ -217,9 +210,17 @@ public class SvVarData
 
     public final String posId()
     {
-        return String.format("id(%s) position(%s:%d:%d -> %s:%d:%d)",
-                id(), chromosome(true), orientation(true), position(true),
-                chromosome(false), orientation(false), position(false));
+        if(isNullBreakend())
+        {
+            return String.format("id(%s) pos(%s:%d:%d)",
+                    id(), chromosome(true), orientation(true), position(true));
+        }
+        else
+        {
+            return String.format("id(%s) pos(%s:%d:%d -> %s:%d:%d)",
+                    id(), chromosome(true), orientation(true), position(true),
+                    chromosome(false), orientation(false), position(false));
+        }
     }
 
     public final String posId(boolean useStart)
@@ -296,9 +297,10 @@ public class SvVarData
         return (int)round(copyNumberChange(useStart));
     }
 
-    public boolean hasInconsistentCopyNumberChange()
+    public boolean hasInconsistentCopyNumberChange(boolean useStart)
     {
-        return round(copyNumberChange(true)) != round(copyNumberChange(false));
+        return mSVData.ploidy() - copyNumberChange(useStart) > 0.8;
+        // return round(copyNumberChange(true)) != round(copyNumberChange(false));
     }
 
     public long getNearestSvDistance() { return mNearestSvDistance; }
@@ -373,17 +375,6 @@ public class SvVarData
                 mCluster.registerFoldback(this);
             }
         }
-    }
-
-    public final SvGeneData getStartGeneData() { return mStartGeneData; }
-    public final SvGeneData getEndGeneData() { return mEndGeneData; }
-
-    public void setGeneData(final SvGeneData gd, boolean isStart)
-    {
-        if(isStart)
-            mStartGeneData = gd;
-        else
-            mEndGeneData = gd;
     }
 
     public final String typeStr()

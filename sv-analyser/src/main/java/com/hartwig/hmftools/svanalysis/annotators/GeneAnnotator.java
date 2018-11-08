@@ -24,8 +24,6 @@ public class GeneAnnotator {
 
     private Map<String, List<SvGeneData>> mSampleGeneData;
 
-//    public static final String KNOWN_FS = "true";
-
     private static final Logger LOGGER = LogManager.getLogger(GeneAnnotator.class);
 
     public GeneAnnotator ()
@@ -42,9 +40,7 @@ public class GeneAnnotator {
 
             BufferedReader fileReader = new BufferedReader(new FileReader(filename));
 
-            String line;
-
-            line = fileReader.readLine(); // skip headers
+            String line = fileReader.readLine(); // skip headers
 
             int geneDataCount = 0;
             while ((line = fileReader.readLine()) != null) {
@@ -111,12 +107,12 @@ public class GeneAnnotator {
                 if(geneData.startCNRegion() == var.position(useStart) && var.orientation(useStart) == 1)
                 {
                     geneData.addSvData(var, true);
-                    var.setGeneData(geneData, useStart);
+                    //var.setGeneData(geneData, useStart);
                 }
                 else if(geneData.endCNRegion() == var.position(useStart) && var.orientation(useStart) == -1)
                 {
                     geneData.addSvData(var, false);
-                    var.setGeneData(geneData, useStart);
+                    //var.setGeneData(geneData, useStart);
                 }
             }
         }

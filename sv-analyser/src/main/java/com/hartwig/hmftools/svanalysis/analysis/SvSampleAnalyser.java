@@ -290,9 +290,6 @@ public class SvSampleAnalyser {
                 // transitive info
                 // writer.write(",TransType,TransLen,TransSvLinks");
 
-                // gene info
-                // writer.write(",GeneStart,GeneDriverStart,GeneTypeStart,GeneEnd,GeneDriverEnd,GeneTypeEnd");
-
                 writer.newLine();
             }
 

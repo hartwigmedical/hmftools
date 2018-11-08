@@ -764,12 +764,12 @@ public class ChainFinder
         SvVarData inconsistentVar = null;
         boolean inconsistentVarOpenOnStart = false;
 
-        if(checkChainStart && chain.getFirstSV().hasInconsistentCopyNumberChange())
+        if(checkChainStart && chain.getFirstSV().hasInconsistentCopyNumberChange(chain.firstLinkOpenOnStart()))
         {
             inconsistentVar = chain.getFirstSV();
             inconsistentVarOpenOnStart = chain.firstLinkOpenOnStart();
         }
-        else if(!checkChainStart && chain.getLastSV().hasInconsistentCopyNumberChange())
+        else if(!checkChainStart && chain.getLastSV().hasInconsistentCopyNumberChange(chain.lastLinkOpenOnStart()))
         {
             inconsistentVar = chain.getLastSV();
             inconsistentVarOpenOnStart = chain.lastLinkOpenOnStart();

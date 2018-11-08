@@ -17,10 +17,11 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUST
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.addClusterReason;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.checkClusterDuplicates;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.isConsistentCluster;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_COMPLEX_CHAIN;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DEL;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DUP;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_CHAIN;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_INS;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_INS;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvCNData;
@@ -330,7 +332,23 @@ public class ClusterAnalyser {
             {
                 if(cluster.getLinkedPairs().size() == 1 && cluster.getLinkedPairs().get(0).linkType() == LINK_TYPE_SGL)
                 {
-                    cluster.setResolved(true, RESOLVED_TYPE_SIMPLE_INS);
+                    cluster.setResolved(true, RESOLVED_TYPE_SGL_PAIR_INS);
+                }
+                else
+                {
+                    final SvVarData var1 = cluster.getSVs().get(0);
+                    final SvVarData var2 = cluster.getSVs().get(1);
+
+                    if(var1.orientation(true) != var2.orientation(true))
+                    {
+                        boolean ssFirst = var1.position(true) < var2.position(true);
+                        boolean ssPosOrientation = var1.orientation(true) == 1;
+
+                        if(ssFirst == ssPosOrientation)
+                            cluster.setResolved(true, RESOLVED_TYPE_SGL_PAIR_DEL);
+                        else
+                            cluster.setResolved(true, RESOLVED_TYPE_SGL_PAIR_DUP);
+                    }
                 }
             }
 

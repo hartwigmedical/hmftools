@@ -131,12 +131,10 @@ public class LineElementAnnotator {
 
     public void setSuspectedLineElements(final Map<String, List<SvBreakend>> chrBreakendMap, int proximityLength)
     {
-        // if there are 3 or more BNDs within the standard proximity window and they connect to 2 or more other arms,
-        // classify these as suspected LINE elements
+        // if there are 2 or more BNDs within the standard proximity window and they connect to 2 or more other arms,
+        // and have the Poly A or T motif, then classify these as suspected LINE elements
         for(Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
         {
-            // final String chromosome = entry.getKey();
-
             List<SvBreakend> breakendList = entry.getValue();
 
             List<Long> positions = Lists.newArrayList();
@@ -174,8 +172,8 @@ public class LineElementAnnotator {
                     boolean hasMultipleRemoteArms = false;
                     int bndCount = 0;
                     boolean hasPolyATMotify = false;
-
                     String currentOtherChr = "";
+
                     for (final SvBreakend lineBreakend : potentialLineSVs)
                     {
                         final SvVarData var = lineBreakend.getSV();
@@ -206,7 +204,7 @@ public class LineElementAnnotator {
                             }
                         }
 
-                        if (bndCount >= 3 && hasMultipleRemoteArms && hasPolyATMotify)
+                        if (bndCount >= 2 && hasMultipleRemoteArms && hasPolyATMotify)
                         {
                             isLineGroup = true;
                             break;
