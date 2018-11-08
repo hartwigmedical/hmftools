@@ -17,11 +17,11 @@ public final class ChordSection {
 
     @NotNull
     public static ComponentBuilder<?, ?> build(double chordHrdScore, boolean hasReliablePurityFit) {
-        String format =
+        String formatChordHrdScore =
                 PatientReportFormat.correctValueForFitReliability(new DecimalFormat("#.##").format(chordHrdScore), hasReliablePurityFit);
         final int graphValue = computeGraphValue(chordHrdScore);
 
-        final GradientBar gradient = format.equals("N/A") ?
+        final GradientBar gradient = formatChordHrdScore.equals("N/A") ?
                 ImmutableGradientBar.of(new Color(214, 234, 248), new Color(174, 214, 241), "Low", "High", 0) :
                 ImmutableGradientBar.of(new Color(214, 234, 248), new Color(174, 214, 241), "Low", "High", graphValue);
 
