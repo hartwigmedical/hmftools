@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.pileup;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Map;
+import java.util.stream.IntStream;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -143,6 +144,15 @@ public class PileupFileTest {
         assertEquals(1, pileup.deleteCount("TT"));
         assertEquals(2, pileup.deleteScore("TT"));
     }
+
+    @Test
+    public void handleAsterisks() {
+        final String line = "X\t152814262\tC\t13\t.,*,...,.....\t!\"#$%&'()*+,-";
+        final int expectedQuality = IntStream.range(0, 13).sum() - 2;
+        final Pileup pileup = PileupFile.fromString(line);
+        assertEquals(expectedQuality, pileup.referenceScore());
+    }
+
 
     @Test
     public void testQualScoreInterpreation() {

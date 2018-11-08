@@ -79,9 +79,16 @@ public final class PileupFile {
                     case '^':
                         i++;
                         break;
+                    case '*':
+                        actualReadCount++;
+                        break;
                     default:
                 }
             }
+        }
+
+        if (expectedReadCount != actualReadCount) {
+            System.out.println(line);
         }
 
         return ImmutablePileup.builder()
