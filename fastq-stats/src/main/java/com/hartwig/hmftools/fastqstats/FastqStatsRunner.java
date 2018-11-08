@@ -171,6 +171,11 @@ public final class FastqStatsRunner {
 
     @VisibleForTesting
     static int getThreadCount(@Nullable final String threadCountArg) {
+        final int availableThreads = Runtime.getRuntime().availableProcessors();
+        if (threadCountArg == null) {
+            return availableThreads;
+        }
+
         try {
             final int numThreads = Integer.parseInt(threadCountArg);
             if (numThreads <= 0) {
@@ -178,7 +183,6 @@ public final class FastqStatsRunner {
             }
             return numThreads;
         } catch (NumberFormatException e) {
-            final int availableThreads = Runtime.getRuntime().availableProcessors();
             LOGGER.info("Couldn't parse thread count parameter > 0; using default value: " + availableThreads + ".");
             return availableThreads;
         }
