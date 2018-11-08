@@ -39,7 +39,7 @@ abstract class GradientBarCustomizer implements DRIChartCustomizer {
     @NotNull
     abstract String endText();
 
-    abstract int value();
+    abstract Optional<Pair<Integer, String>> value();
 
     @NotNull
     abstract Optional<Pair<Integer, String>> marker();
@@ -50,11 +50,11 @@ abstract class GradientBarCustomizer implements DRIChartCustomizer {
         chart.getLegend().setVisible(false);
         customizePlotOrientationAndAxis(chart.getCategoryPlot());
         marker().ifPresent(pair -> addValueMarker(chart.getCategoryPlot(), pair.getKey(), pair.getValue()));
-        addValuePointer(chart.getCategoryPlot(), value());
+        value().ifPresent(pair -> addValuePointer(chart.getCategoryPlot(), pair.getKey()));
         addStartEndLabels(chart.getCategoryPlot(), startText(), endText());
     }
 
-    private static void addValuePointer(@NotNull final CategoryPlot categoryPlot, final int position) {
+    private static void addValuePointer(@NotNull final CategoryPlot categoryPlot, final Integer position) {
         final Object category = categoryPlot.getCategories().get(0);
         if (category instanceof Comparable) {
             final Comparable categoryKey = (Comparable) category;

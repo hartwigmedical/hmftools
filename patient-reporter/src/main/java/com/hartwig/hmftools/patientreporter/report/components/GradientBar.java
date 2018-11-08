@@ -35,7 +35,7 @@ public abstract class GradientBar {
     abstract String endText();
 
     @NotNull
-    abstract Integer value();
+    abstract Optional<Pair<Integer, String>> value();
 
     @NotNull
     abstract Optional<Pair<Integer, String>> marker();
@@ -48,7 +48,7 @@ public abstract class GradientBar {
                 .endColor(endColor)
                 .startText(startText)
                 .endText(endText)
-                .value(value)
+                .value(Optional.of(ImmutablePair.of(value, Strings.EMPTY)))
                 .build();
     }
 
@@ -60,8 +60,19 @@ public abstract class GradientBar {
                 .endColor(endColor)
                 .startText(startText)
                 .endText(endText)
-                .value(value)
+                .value(Optional.of(ImmutablePair.of(value, Strings.EMPTY)))
                 .marker(Optional.of(ImmutablePair.of(markerPosition, Strings.EMPTY)))
+                .build();
+    }
+
+    @NotNull
+    public static GradientBar of(@NotNull final Color startColor, @NotNull final Color endColor, @NotNull final String startText,
+            @NotNull final String endText) {
+        return ImmutableGradientBar.builder()
+                .startColor(startColor)
+                .endColor(endColor)
+                .startText(startText)
+                .endText(endText)
                 .build();
     }
 

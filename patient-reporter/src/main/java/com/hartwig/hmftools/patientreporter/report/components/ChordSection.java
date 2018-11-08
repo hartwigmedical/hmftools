@@ -22,7 +22,7 @@ public final class ChordSection {
         final int graphValue = computeGraphValue(chordHrdScore);
 
         final GradientBar gradient = formatChordHrdScore.equals("N/A") ?
-                ImmutableGradientBar.of(new Color(214, 234, 248), new Color(174, 214, 241), "Low", "High", 0) :
+                ImmutableGradientBar.of(new Color(214, 234, 248), new Color(174, 214, 241), "Low", "High") :
                 ImmutableGradientBar.of(new Color(214, 234, 248), new Color(174, 214, 241), "Low", "High", graphValue);
 
         final SliderSection sliderSection =

@@ -27,8 +27,7 @@ public final class MutationalBurdenSection {
                 formattingTumorMutationalBurdenIndicator.equals("N/A") ? ImmutableGradientBar.of(new Color(253, 235, 208),
                         new Color(248, 196, 113),
                         "Low",
-                        "High",
-                        0) : ImmutableGradientBar.of(new Color(253, 235, 208), new Color(248, 196, 113), "Low", "High", graphValue);
+                        "High") : ImmutableGradientBar.of(new Color(253, 235, 208), new Color(248, 196, 113), "Low", "High", graphValue);
         final SliderSection sliderSection = ImmutableSliderSection.of("Tumor Mutational Burden",
                 interpret(formattingTumorMutationalBurdenIndicator),
                 description(),
