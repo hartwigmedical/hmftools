@@ -24,7 +24,7 @@ public class SvUtilities {
     private int mClusterBaseDistance;
 
     private static final Map<String, GenomeRegion> CENTROMERES = Centromeres.grch37();
-    final Map<String,Integer> CHROMOSOME_LENGTHS = ChromosomeLengths.getChromosomeLengths();
+    public static final Map<String,Integer> CHROMOSOME_LENGTHS = ChromosomeLengths.getChromosomeLengths();
 
     public static String CHROMOSOME_ARM_P = "P"; // short arm, and lower position
     public static String CHROMOSOME_ARM_Q = "Q";
@@ -53,7 +53,7 @@ public class SvUtilities {
 
     public int getBaseDistance() { return mClusterBaseDistance; }
 
-    public final String getChromosomalArm(final String chromosome, final long position)
+    public static final String getChromosomalArm(final String chromosome, final long position)
     {
         final GenomeRegion region = CENTROMERES.get(chromosome);
 
@@ -68,7 +68,7 @@ public class SvUtilities {
             return CHROMOSOME_ARM_CENTROMERE;
     }
 
-    public long getChromosomalArmLength(final String chromosome, final String armType)
+    public static long getChromosomalArmLength(final String chromosome, final String armType)
     {
         final GenomeRegion region = CENTROMERES.get(chromosome);
 
@@ -266,26 +266,6 @@ public class SvUtilities {
             return 0;
 
         return Math.abs((int)v1.position(v1Start) - (int)v2.position(v2Start));
-    }
-
-    public static boolean isFromCentromere(final SvVarData var)
-    {
-        return (var.orientation(true) == 1) == (var.getStartArm() == CHROMOSOME_ARM_Q);
-    }
-
-    public static boolean isFromTelomere(final SvVarData var)
-    {
-        return (var.orientation(true) == 1) == (var.getStartArm() == CHROMOSOME_ARM_P);
-    }
-
-    public static boolean isToCentromere(final SvVarData var)
-    {
-        return (var.orientation(false) == -1) == (var.getStartArm() == CHROMOSOME_ARM_P);
-    }
-
-    public static boolean isToTelomere(final SvVarData var)
-    {
-        return (var.orientation(false) == -1) == (var.getStartArm() == CHROMOSOME_ARM_Q);
     }
 
     public static boolean sameChrArm(final SvVarData v1, final SvVarData v2, boolean v1Start, boolean v2Start)

@@ -10,7 +10,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser;
@@ -29,17 +31,15 @@ public class ResultsChecker
     private boolean mAllRecordsMatch;
 
     // id columns
-    private static String COL_SAMPLE_ID = "SampleId";
-    private static String COL_VAR_ID = "Id";
-    private static String COL_CHR_START = "ChrStart";
-    private static String COL_CHR_END = "ChrEnd";
-    private static String COL_POS_START = "PosStart";
-    private static String COL_POS_END = "PosEnd";
-    private static String COL_TYPE = "Type";
-    private static String COL_ORIENT_START = "OrientStart";
-    private static String COL_ORIENT_END = "OrientEnd";
     private static int COL_SAMPLE_ID_INDEX = 0;
     private static int COL_VAR_ID_INDEX = 1;
+    private static int COL_TYPE_INDEX = 2;
+    private static int COL_CHR_START_INDEX = 3;
+    private static int COL_POS_START_INDEX = 4;
+    private static int COL_ORIENT_START_INDEX = 5;
+    private static int COL_CHR_END_INDEX = 6;
+    private static int COL_POS_END_INDEX = 7;
+    private static int COL_ORIENT_END_INDEX = 8;
 
     // default columns to check by name
     private static String COL_CLUSTER_ID = "ClusterId";
@@ -48,51 +48,49 @@ public class ResultsChecker
     private static String COL_CLUSTER_COUNT = "ClusterCount";
     private static String COL_CHAIN_ID = "ChainId";
 
-    private List<List<String>> mSourceFileData; // the values to check against
-    private List<List<String>> mValidateFileData; // the values to check
+    private Map<String, List<List<String>>> mSampleSourceData; // the values to check against, keyed by sampleId
+    private Map<String, List<List<String>>> mSampleValidateData; // the values to check
 
     private static String SOURCE_FILENAME = "sv_check_src_filename";
     private static String VALIDATE_FILENAME = "sv_check_val_filename";
     private static String SAMPLE_ID = "sv_check_sample";
     private static String CHECK_ENABLED = "sv_check_enabled";
+    private static String BREAK_ON_MISMATCH = "sv_check_break_on_mismatch";
 
     private boolean mChecksEnabled;
     private String mSourceFileName;
     private String mValidateFileName;
     private List<String> mSamplesList;
+    private boolean mMatchOnSvIds;
 
     private BufferedWriter mMismatchWriter;
     private String mOutputDir;
 
-    private List<String> mIdColumns; // by name
+    private List<Integer> mIdColumns; // by name
     private List<String> mCheckColumns; // by name
-    private List<Integer> mSourceIdColumns;
-    private List<Integer> mValidateIdColumns;
     private List<Integer> mSourceCheckColumns; // by index into the source file
     private List<Integer> mValidateCheckColumns; // by index into the validation file
 
 
     public ResultsChecker()
     {
-        mSourceIdColumns = Lists.newArrayList();
-        mValidateIdColumns = Lists.newArrayList();
         mIdColumns = Lists.newArrayList();
         mCheckColumns= Lists.newArrayList();
         mSourceCheckColumns = Lists.newArrayList();
         mValidateCheckColumns = Lists.newArrayList();
-        mSourceFileData = Lists.newArrayList();
-        mValidateFileData = Lists.newArrayList();
+        mSampleSourceData = new HashMap();
+        mSampleValidateData = new HashMap();
         mSamplesList = Lists.newArrayList();
         mLogMismatches = false;
         mAllRecordsMatch = false;
-        mBreakOnMismatch = true;
+        mBreakOnMismatch = false;
         mChecksEnabled = false;
+        mMatchOnSvIds = false;
         mOutputDir = "";
         mMismatchWriter = null;
     }
 
     public void setLogMismatches(boolean toggle) { mLogMismatches = toggle; }
-    public void setBreakOnMismatch(boolean toggle) { mBreakOnMismatch = toggle; }
 
     public static void addCmdLineArgs(Options options)
     {
@@ -100,15 +98,36 @@ public class ResultsChecker
         options.addOption(SOURCE_FILENAME, true, "File to check against");
         options.addOption(SAMPLE_ID, true, "Optional - specific sample");
         options.addOption(CHECK_ENABLED, true, "Enabled=ON, Disable=OFF or not present");
+        options.addOption(BREAK_ON_MISMATCH, false, "Exit run on first mismatch");
     }
 
     public boolean loadConfig(final CommandLine cmd, final List<String> samplesList, final String outputDir)
     {
         mSourceFileName = cmd.getOptionValue(SOURCE_FILENAME);
-        mValidateFileName = cmd.getOptionValue(VALIDATE_FILENAME);
+
+        if(!cmd.hasOption(VALIDATE_FILENAME))
+        {
+            if(samplesList.size() != 1)
+            {
+                return false;
+            }
+
+            mValidateFileName = outputDir + samplesList.get(0) + ".csv";
+        }
+        else
+        {
+            mValidateFileName = cmd.getOptionValue(VALIDATE_FILENAME);
+        }
+
         mSamplesList.addAll(samplesList);
         mChecksEnabled = cmd.hasOption(CHECK_ENABLED) ? cmd.getOptionValue(CHECK_ENABLED).equals("ON") : false;
+        mBreakOnMismatch = cmd.hasOption(BREAK_ON_MISMATCH);
         mOutputDir = outputDir;
+
+        if(!samplesList.isEmpty())
+        {
+            LOGGER.debug("checking {} specific samples", samplesList.size());
+        }
 
         return mChecksEnabled;
     }
@@ -118,17 +137,17 @@ public class ResultsChecker
         if(mSourceFileName.isEmpty() || mValidateFileName.isEmpty())
             return false;
 
-        if(!loadDataFile(mSourceFileName, mSourceIdColumns, mSourceCheckColumns, mSourceFileData))
+        if(!loadDataFile(mSourceFileName, mSourceCheckColumns, mSampleSourceData))
         {
             return false;
         }
 
-        if(!loadDataFile(mSourceFileName, mValidateIdColumns, mValidateCheckColumns, mValidateFileData))
+        if(!loadDataFile(mValidateFileName, mValidateCheckColumns, mSampleValidateData))
         {
             return false;
         }
 
-        if(mSourceFileData.isEmpty() || mValidateFileData.isEmpty())
+        if(mSampleSourceData.isEmpty() || mSampleValidateData.isEmpty())
         {
             mChecksEnabled = false;
             return false;
@@ -139,7 +158,7 @@ public class ResultsChecker
 
     private int MIN_COLUMN_COUNT = 5;
 
-    private boolean loadDataFile(final String filename, final List<Integer> idColumns, final List<Integer> checkColumns, final List<List<String>> dataList)
+    private boolean loadDataFile(final String filename, final List<Integer> checkColumns, final Map<String, List<List<String>>> sampleDataMap)
     {
         if (filename == null || filename.isEmpty())
             return false;
@@ -163,8 +182,6 @@ public class ResultsChecker
             int fieldCount = fieldNames.length;
 
             // check for required columns and extract their indices for use during the matching routine
-            List<String> idColumnsNames = Lists.newArrayList();
-            idColumnsNames.addAll(mIdColumns);
             List<String> checkColumnsNames = Lists.newArrayList();
             checkColumnsNames.addAll(mCheckColumns);
 
@@ -172,23 +189,22 @@ public class ResultsChecker
             {
                 final String fieldName = fieldNames[i];
 
-                if(idColumnsNames.contains(fieldName))
-                {
-                    idColumnsNames.remove(fieldName);
-                    idColumns.add(i);
-                }
-                else if(checkColumnsNames.contains(fieldName))
+                if(checkColumnsNames.contains(fieldName))
                 {
                     checkColumnsNames.remove(fieldName);
                     checkColumns.add(i);
                 }
             }
 
-            if(!checkColumnsNames.isEmpty() || !idColumnsNames.isEmpty())
+            if(!checkColumnsNames.isEmpty())
             {
-                LOGGER.error("not all required columns were matched");
+                LOGGER.error("not all required columns to chekc were found");
                 return false;
             }
+
+            String currentSample = "";
+            List<List<String>> sampleDataList = null;
+            int rowCount = 0;
 
             while ((line = fileReader.readLine()) != null)
             {
@@ -201,11 +217,19 @@ public class ResultsChecker
                     continue;
                 }
 
-                if(!mSamplesList.isEmpty())
+                final String sampleId = items[COL_SAMPLE_ID_INDEX];
+
+                if(currentSample.isEmpty() || !currentSample.equals(sampleId))
                 {
-                    final String sampleId = items[COL_SAMPLE_ID_INDEX];
-                    if(!mSamplesList.contains(sampleId))
-                        continue;
+                    if (!mSamplesList.isEmpty())
+                    {
+                        if (!mSamplesList.contains(sampleId))
+                            continue;
+                    }
+
+                    sampleDataList = Lists.newArrayList();
+                    sampleDataMap.put(sampleId, sampleDataList);
+                    currentSample = sampleId;
                 }
 
                 List<String> dataValues = Lists.newArrayList();
@@ -215,16 +239,17 @@ public class ResultsChecker
                     dataValues.add(items[i]);
                 }
 
-                dataList.add(dataValues);
+                sampleDataList.add(dataValues);
+                ++rowCount;
             }
 
             if(invalidRowCount > 0)
             {
-                LOGGER.warn("loaded {} data sets, invalid rows({})", dataList.size(), invalidRowCount);
+                LOGGER.info("loaded {} samples, {} records, invalid rows({})", sampleDataMap.size(), rowCount, invalidRowCount);
                 return false;
             }
 
-            LOGGER.debug("loaded {} data sets", dataList.size());
+            LOGGER.warn("loaded {} samples, {} records", sampleDataMap.size(), rowCount);
             return true;
         }
         catch (IOException exception)
@@ -236,21 +261,23 @@ public class ResultsChecker
 
     public void setIdColumns(boolean matchOnPosition)
     {
-        mIdColumns.add(COL_SAMPLE_ID);
+        mIdColumns.add(COL_SAMPLE_ID_INDEX);
 
         if(matchOnPosition)
         {
-            mIdColumns.add(COL_CHR_START);
-            mIdColumns.add(COL_CHR_END);
-            mIdColumns.add(COL_POS_START);
-            mIdColumns.add(COL_POS_END);
-            mIdColumns.add(COL_ORIENT_START);
-            mIdColumns.add(COL_ORIENT_END);
-            mIdColumns.add(COL_TYPE);
+            mMatchOnSvIds = false;
+            mIdColumns.add(COL_CHR_START_INDEX);
+            mIdColumns.add(COL_CHR_END_INDEX);
+            mIdColumns.add(COL_POS_START_INDEX);
+            mIdColumns.add(COL_POS_END_INDEX);
+            mIdColumns.add(COL_ORIENT_START_INDEX);
+            mIdColumns.add(COL_ORIENT_END_INDEX);
+            mIdColumns.add(COL_TYPE_INDEX);
         }
         else
         {
-            mIdColumns.add(COL_VAR_ID);
+            mMatchOnSvIds = true;
+            mIdColumns.add(COL_VAR_ID_INDEX);
         }
     }
 
@@ -282,71 +309,87 @@ public class ResultsChecker
         int validateIndex = 0;
         int mismatchCount = 0;
 
-        while(sourceIndex < mSourceFileData.size())
+        for(final Map.Entry<String, List<List<String>>> entry : mSampleSourceData.entrySet())
         {
-            if(validateIndex >= mValidateFileData.size())
-                break;
+            final String sampleId = entry.getKey();
+            final List<List<String>> sourceData = entry.getValue();
 
-            List<String> sourceItems = mSourceFileData.get(sourceIndex);
-            List<String> validateItems = null;
+            final List<List<String>> validateData = mSampleValidateData.get(sampleId);
 
-            // check that the next validate record matches and if not find it
-            int currentValidateIndex = validateIndex;
-            boolean matchFound = false;
-            boolean indexReset = (validateIndex == 0);
-            while(currentValidateIndex < mValidateFileData.size())
+            if(validateData == null)
             {
-                validateItems = mSourceFileData.get(currentValidateIndex);
-
-                if(recordsMatch(sourceItems, validateItems))
-                {
-                    matchFound = true;
-                    break;
-                }
-
-                ++currentValidateIndex;
-
-                // break once back around to the start
-                if(indexReset && currentValidateIndex == validateIndex)
-                    break;
-
-                if(currentValidateIndex >= mValidateFileData.size() && !indexReset)
-                {
-                    // reset the search index to zero and continuing look for a record match
-                    currentValidateIndex = 0;
-                    indexReset = true;
-                }
-            }
-
-            if(!matchFound)
-            {
-                LOGGER.debug("source record({}) not matched", sourceIndex);
-
-                if(mBreakOnMismatch)
-                    break;
-
-                ++sourceIndex;
+                LOGGER.error("sampleId({}) not found in validate data", sampleId);
+                mAllRecordsMatch = false;
                 continue;
             }
 
-            validateIndex = currentValidateIndex;
-
-            if(!checkFieldMatches(sourceItems, validateItems))
+            while (sourceIndex < sourceData.size())
             {
-                mAllRecordsMatch = false;
-
-                if(mBreakOnMismatch)
+                if (validateIndex >= validateData.size())
                     break;
-            }
 
-            ++sourceIndex;
-            ++validateIndex;
+                List<String> sourceItems = sourceData.get(sourceIndex);
+                List<String> validateItems = null;
+
+                // check that the next validate record matches and if not find it
+                int currentValidateIndex = validateIndex;
+                boolean matchFound = false;
+                boolean indexReset = (validateIndex == 0);
+                while (currentValidateIndex < validateData.size())
+                {
+                    validateItems = validateData.get(currentValidateIndex);
+
+                    if (recordsMatch(sourceItems, validateItems))
+                    {
+                        matchFound = true;
+                        break;
+                    }
+
+                    ++currentValidateIndex;
+
+                    // break once back around to the start
+                    if (indexReset && currentValidateIndex == validateIndex)
+                        break;
+
+                    if (currentValidateIndex >= validateData.size() && !indexReset)
+                    {
+                        // reset the search index to zero and continuing look for a record match
+                        currentValidateIndex = 0;
+                        indexReset = true;
+                    }
+                }
+
+                if (!matchFound)
+                {
+                    LOGGER.debug("source record({}) not matched", sourceIndex);
+
+                    if (mBreakOnMismatch)
+                        break;
+
+                    ++sourceIndex;
+                    continue;
+                }
+
+                validateIndex = currentValidateIndex;
+
+                if (!checkFieldMatches(sourceItems, validateItems))
+                {
+                    mAllRecordsMatch = false;
+                    ++mismatchCount;
+
+                    if (mBreakOnMismatch)
+                        break;
+                }
+
+                ++sourceIndex;
+                ++validateIndex;
+            }
         }
 
         if(mAllRecordsMatch)
             LOGGER.debug("all results successfully validated");
         else
-            LOGGER.warn("mismatchCount({}) v {} source records", mismatchCount, mSourceFileData.size());
+            LOGGER.warn("mismatchCount({})", mismatchCount);
 
         try
         {
@@ -374,7 +417,7 @@ public class ResultsChecker
 
                 if(mLogMismatches)
                 {
-                    LOGGER.debug("mismatch: sample({}) var({}) field({}) values({} vs {})",
+                    LOGGER.debug("mismatch: sample({}) var({}) field({}) source({}) vs check({})",
                             sourceItems.get(COL_SAMPLE_ID_INDEX), sourceItems.get(COL_VAR_ID_INDEX),
                             fieldName, sourceItems.get(sourceIndex), validateItems.get(validateIndex));
                 }
@@ -423,28 +466,35 @@ public class ResultsChecker
                 mMismatchWriter = writer;
 
                 // definitional fields
-                writer.write("SampleId,SourceId,CheckId");
-
-                if(mIdColumns.size() > 1)
+                if(mMatchOnSvIds)
                 {
-                    for(final String idCol : mIdColumns)
-                        writer.write(String.format(",%s", idCol));
+                    writer.write("SampleId,SvId");
+                }
+                else
+                {
+                    writer.write("SampleId,Type,ChrStart,PosStart,OrientStart,ChrEnd,PosEnd,OrientEnd,SourceId,CheckId");
                 }
 
                 writer.write(",Field,SourceValue,CheckValue");
                 writer.newLine();
             }
+            writer.write(String.format("%s", sourceItems.get(COL_SAMPLE_ID_INDEX)));
 
-            writer.write(String.format(",%s,%s,%s",
-                    sourceItems.get(COL_SAMPLE_ID_INDEX), sourceItems.get(COL_VAR_ID_INDEX), validateItems.get(COL_VAR_ID_INDEX)));
-
-            if(mIdColumns.size() > 1)
+            if(mMatchOnSvIds)
             {
-                for(int idColIndex : mSourceIdColumns)
-                    writer.write(String.format(",%s", sourceItems.get(idColIndex)));
+                writer.write(String.format(",%s", sourceItems.get(COL_VAR_ID_INDEX)));
+            }
+            else
+            {
+                for(int i = 1; i < mIdColumns.size(); ++i)
+                    writer.write(String.format(",%s", sourceItems.get(i)));
+
+                writer.write(String.format(",%s,%s",
+                        sourceItems.get(COL_VAR_ID_INDEX), validateItems.get(COL_VAR_ID_INDEX)));
             }
 
             writer.write(String.format(",%s,%s,%s", fieldName, sourceValue, validateValue));
+
             writer.newLine();
 
         }

@@ -259,21 +259,22 @@ public class SvSampleAnalyser {
                 mFileWriter = writer;
 
                 // definitional fields
-                writer.write("SampleId,Id,Type,ClusterId,SubClusterId,ClusterCount,ClusterReason,Ploidy");
+                writer.write("SampleId,Id,Type,ChrStart,PosStart,OrientStart,ChrEnd,PosEnd,OrientEnd");
 
                 // position and copy number
-                writer.write(",ChrStart,PosStart,OrientStart,ArmStart,AdjAFStart,AdjCNStart,AdjCNChgStart");
+                writer.write(",ArmStart,AdjAFStart,AdjCNStart,AdjCNChgStart,ArmEnd,AdjAFEnd,AdjCNEnd,AdjCNChgEnd,Ploidy");
 
-                writer.write(",ChrEnd,PosEnd,OrientEnd,ArmEnd,AdjAFEnd,AdjCNEnd,AdjCNChgEnd");
+                // cluster info
+                writer.write(",ClusterId,SubClusterId,ClusterCount,ClusterReason");
+
+                // cluster-level info
+                writer.write(",ClusterDesc,IsResolved,ResolvedType,Consistency,ArmCount");
 
                 // SV info
                 writer.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,PONCount,QualScore");
 
                 // location attributes
                 writer.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd");
-
-                // cluster-level info
-                writer.write(",ClusterDesc,IsResolved,ResolvedType,Consistency,ArmCount");
 
                 // linked pair info
                 writer.write(",LnkSvStart,LnkTypeStart,LnkLenStart,LnkInfoStart,LnkSvEnd,LnkTypeEnd,LnkLenEnd,LnkInfoEnd");
@@ -296,115 +297,120 @@ public class SvSampleAnalyser {
             int lineCount = 0;
             int svCount = 0;
 
-            for(final SvCluster cluster : mClusters)
+            for(final SvVarData var : mAllVariants)
             {
+                final SvCluster cluster = var.getCluster();
+
+                if(cluster == null)
+                {
+                    LOGGER.error("SV({}) not assigned to any cluster", var.posId());
+                    continue;
+                }
+
                 int clusterSvCount = cluster.getUniqueSvCount();
 
-                for (final SvVarData var : cluster.getSVs())
+                SvCluster subCluster = cluster;
+                if(cluster.hasSubClusters())
                 {
-                    if(var.isReplicatedSv())
-                        continue;
-
-                    SvCluster subCluster = cluster;
-                    if(cluster.hasSubClusters())
+                    for(final SvCluster sc : cluster.getSubClusters())
                     {
-                        for(final SvCluster sc : cluster.getSubClusters())
+                        if(sc.getSVs().contains(var))
                         {
-                            if(sc.getSVs().contains(var))
-                            {
-                                subCluster = sc;
-                                break;
-                            }
+                            subCluster = sc;
+                            break;
                         }
                     }
+                }
 
-                    final StructuralVariantData dbData = var.getSvData();
+                final StructuralVariantData dbData = var.getSvData();
 
-                    ++svCount;
+                ++svCount;
 
-                    writer.write(
-                            String.format("%s,%s,%s,%d,%d,%d,%s,%.2f",
-                                    mSampleId, var.id(), var.typeStr(), cluster.getId(), subCluster.getId(),
-                                    clusterSvCount, var.getClusterReason(), dbData.ploidy()));
+                writer.write(
+                        String.format("%s,%s,%s,%s,%d,%d,%s,%d,%d",
+                                mSampleId, var.id(), var.typeStr(),
+                                var.chromosome(true), var.position(true), var.orientation(true),
+                                var.chromosome(false), var.position(false), var.orientation(false)));
 
-                    writer.write(
-                            String.format(",%s,%d,%d,%s,%.2f,%.2f,%.2f,%s,%d,%d,%s,%.2f,%.2f,%.2f",
-                                    var.chromosome(true), var.position(true), var.orientation(true), var.getStartArm(),
-                                    dbData.adjustedStartAF(), dbData.adjustedStartCopyNumber(), dbData.adjustedStartCopyNumberChange(),
-                                    var.chromosome(false), var.position(false), var.orientation(false), var.getEndArm(),
-                                    dbData.adjustedEndAF(), dbData.adjustedEndCopyNumber(), dbData.adjustedEndCopyNumberChange()));
+                writer.write(
+                        String.format(",%s,%.2f,%.2f,%.2f,%s,%.2f,%.2f,%.2f,%.2f",
+                                var.arm(true), dbData.adjustedStartAF(), dbData.adjustedStartCopyNumber(), dbData.adjustedStartCopyNumberChange(),
+                                var.arm(false), dbData.adjustedEndAF(), dbData.adjustedEndCopyNumber(), dbData.adjustedEndCopyNumberChange(), dbData.ploidy()));
 
-                    writer.write(
-                            String.format(",%s,%d,%d,%s,%s,%d,%.0f",
-                                    dbData.insertSequence().isEmpty() && var.type() != StructuralVariantType.INS ? dbData.homology() : "",
-                                    dbData.inexactHomologyOffsetStart(), dbData.inexactHomologyOffsetEnd(),
-                                    dbData.insertSequence(), dbData.imprecise(), var.getPonCount(), dbData.qualityScore()));
+                writer.write(
+                        String.format(",%d,%d,%d,%s",
+                                cluster.getId(), subCluster.getId(), clusterSvCount, var.getClusterReason()));
 
-                    writer.write(
-                            String.format(",%s,%s,%s,%s,%s,%s,%s",
-                                    var.isFragileSite(true), var.isFragileSite(false),
-                                    var.getLineElement(true), var.getLineElement(false),
-                                    var.isDupBreakend(true), var.isDupBreakend(false),
-                                    mClusteringMethods.getChrArmData(var)));
+                writer.write(
+                        String.format(",%s,%s,%s,%d,%d",
+                                cluster.getDesc(), cluster.isResolved(), cluster.getResolvedType(), cluster.getConsistencyCount(), cluster.getChromosomalArmCount()));
 
-                    writer.write(
-                            String.format(",%s,%s,%s,%d,%d",
-                                    cluster.getDesc(), cluster.isResolved(), cluster.getResolvedType(), cluster.getConsistencyCount(), cluster.getChromosomalArmCount()));
+                writer.write(
+                        String.format(",%s,%d,%d,%s,%s,%d,%.0f",
+                                dbData.insertSequence().isEmpty() && var.type() != StructuralVariantType.INS ? dbData.homology() : "",
+                                dbData.inexactHomologyOffsetStart(), dbData.inexactHomologyOffsetEnd(),
+                                dbData.insertSequence(), dbData.imprecise(), var.getPonCount(), dbData.qualityScore()));
 
-                    // linked pair info
-                    final SvLinkedPair startLP = var.getLinkedPair(true) != null ? var.getLinkedPair(true) : cluster.getLinkedPair(var, true);
-                    String startLinkStr = "0,,-1,";
-                    String assemblyMatchStart = var.getAssemblyMatchType(true);
-                    if(startLP != null)
-                    {
-                        startLinkStr = String.format("%s,%s,%d,%s",
-                                startLP.first().equals(var, true) ? startLP.second().origId() : startLP.first().origId(),
-                                startLP.linkType(), startLP.length(), startLP.getInfo());
-                    }
+                writer.write(
+                        String.format(",%s,%s,%s,%s,%s,%s,%s",
+                                var.isFragileSite(true), var.isFragileSite(false),
+                                var.getLineElement(true), var.getLineElement(false),
+                                var.isDupBreakend(true), var.isDupBreakend(false),
+                                mClusteringMethods.getChrArmData(var)));
 
-                    final SvLinkedPair endLP = var.getLinkedPair(false) != null ? var.getLinkedPair(false) : cluster.getLinkedPair(var, false);
-                    String endLinkStr = "0,,-1,";
-                    String assemblyMatchEnd = var.getAssemblyMatchType(false);
-                    if(endLP != null)
-                    {
-                        endLinkStr = String.format("%s,%s,%d,%s",
-                                endLP.first().equals(var, true) ? endLP.second().origId() : endLP.first().origId(),
-                                endLP.linkType(), endLP.length(), endLP.getInfo());
-                    }
+                // linked pair info
+                final SvLinkedPair startLP = var.getLinkedPair(true) != null ? var.getLinkedPair(true) : cluster.getLinkedPair(var, true);
+                String startLinkStr = "0,,-1,";
+                String assemblyMatchStart = var.getAssemblyMatchType(true);
+                if(startLP != null)
+                {
+                    startLinkStr = String.format("%s,%s,%d,%s",
+                            startLP.first().equals(var, true) ? startLP.second().origId() : startLP.first().origId(),
+                            startLP.linkType(), startLP.length(), startLP.getInfo());
+                }
 
-                    if(assemblyMatchStart.equals(ASSEMBLY_MATCH_ASMB_ONLY) || assemblyMatchEnd.equals(ASSEMBLY_MATCH_ASMB_ONLY))
-                    {
-                        LOGGER.debug("sample({}) var({}) has unlinked assembly TIs", mSampleId, var.posId());
-                    }
+                final SvLinkedPair endLP = var.getLinkedPair(false) != null ? var.getLinkedPair(false) : cluster.getLinkedPair(var, false);
+                String endLinkStr = "0,,-1,";
+                String assemblyMatchEnd = var.getAssemblyMatchType(false);
+                if(endLP != null)
+                {
+                    endLinkStr = String.format("%s,%s,%d,%s",
+                            endLP.first().equals(var, true) ? endLP.second().origId() : endLP.first().origId(),
+                            endLP.linkType(), endLP.length(), endLP.getInfo());
+                }
 
-                    // assembly info
-                    writer.write(String.format(",%s,%s,%s,%s,%s,%s",
-                            startLinkStr, endLinkStr, var.getAssemblyData(true), var.getAssemblyData(false), assemblyMatchStart, assemblyMatchEnd));
+                if(assemblyMatchStart.equals(ASSEMBLY_MATCH_ASMB_ONLY) || assemblyMatchEnd.equals(ASSEMBLY_MATCH_ASMB_ONLY))
+                {
+                    LOGGER.debug("sample({}) var({}) has unlinked assembly TIs", mSampleId, var.posId());
+                }
 
-                    // chain info
-                    final SvChain chain = cluster.findChain(var);
-                    String chainStr = ",0,0,";
+                // assembly info
+                writer.write(String.format(",%s,%s,%s,%s,%s,%s",
+                        startLinkStr, endLinkStr, var.getAssemblyData(true), var.getAssemblyData(false), assemblyMatchStart, assemblyMatchEnd));
 
-                    if(chain != null)
-                    {
-                        chainStr = String.format(",%d,%d,%s", chain.getId(), chain.getUniqueSvCount(), chain.getSvIndices(var));
-                    }
+                // chain info
+                final SvChain chain = cluster.findChain(var);
+                String chainStr = ",0,0,";
 
-                    writer.write(chainStr);
+                if(chain != null)
+                {
+                    chainStr = String.format(",%d,%d,%s", chain.getId(), chain.getUniqueSvCount(), chain.getSvIndices(var));
+                }
 
-                    writer.write(String.format(",%d,%s,%s,%d,%s,%d",
-                            var.getNearestSvDistance(), var.getNearestSvRelation(),
-                            var.getFoldbackLink(true), var.getFoldbackLen(true), var.getFoldbackLink(false), var.getFoldbackLen(false)));
+                writer.write(chainStr);
 
-                    // writer.write(String.format(",%s,%d,%s", var.getTransType(), var.getTransLength(), var.getTransSvLinks()));
+                writer.write(String.format(",%d,%s,%s,%d,%s,%d",
+                        var.getNearestSvDistance(), var.getNearestSvRelation(),
+                        var.getFoldbackLink(true), var.getFoldbackLen(true), var.getFoldbackLink(false), var.getFoldbackLen(false)));
 
-                    ++lineCount;
-                    writer.newLine();
+                // writer.write(String.format(",%s,%d,%s", var.getTransType(), var.getTransLength(), var.getTransSvLinks()));
 
-                    if(svCount != lineCount)
-                    {
-                        LOGGER.error("inconsistent output");
-                    }
+                ++lineCount;
+                writer.newLine();
+
+                if(svCount != lineCount)
+                {
+                    LOGGER.error("inconsistent output");
                 }
             }
 
@@ -499,16 +505,4 @@ public class SvSampleAnalyser {
         mAnalyser.logStats();
     }
 
-    public List<SvCluster> getClusters() { return mClusters; }
-
-    private final SvVarData getSvData(final EnrichedStructuralVariant variant)
-    {
-        for(final SvVarData svData : mAllVariants)
-        {
-            if(svData.id() == variant.id())
-                return svData;
-        }
-
-        return null;
-    }
 }

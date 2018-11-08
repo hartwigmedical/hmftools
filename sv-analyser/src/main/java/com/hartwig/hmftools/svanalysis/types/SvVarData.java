@@ -170,8 +170,8 @@ public class SvVarData
         mId = other.getSvData().id() + "r";
         mSVData = other.getSvData();
         mNoneSegment = other.isNoneSegment();
-        mStartArm = other.getStartArm();
-        mEndArm = other.getEndArm();
+        mStartArm = other.arm(true);
+        mEndArm = other.arm(false);
         mPonCount = other.getPonCount();
         mPonRegionCount = other.getPonRegionCount();
         mStartFragileSite = other.isFragileSite(true);
@@ -230,8 +230,6 @@ public class SvVarData
     }
 
     public final String arm(boolean isStart) { return isStart ? mStartArm : mEndArm; }
-    public final String getStartArm() { return mStartArm; }
-    public final String getEndArm() { return mEndArm; }
     public void setChromosomalArms(final String start, final String end)
     {
         mStartArm = start;
