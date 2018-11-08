@@ -17,25 +17,32 @@ public final class MutationalLoadSection {
 
     @NotNull
     public static ComponentBuilder<?, ?> build(int mutationalLoad, boolean hasReliablePurityFit) {
+        final String formattedMutationalLoad =
+                PatientReportFormat.correctValueForFitReliability(Integer.toString(mutationalLoad), hasReliablePurityFit);
+
         final int graphValue = computeGraphValue(mutationalLoad);
         final int markerValue = computeGraphValue(ML_THRESHOLD);
-        final GradientBar gradient =
+        final GradientBar gradient = formattedMutationalLoad.equals("N/A") ?
+                ImmutableGradientBar.of(new Color(239, 229, 203), new Color(159, 163, 193), "Low", "High", 0, markerValue) :
                 ImmutableGradientBar.of(new Color(239, 229, 203), new Color(159, 163, 193), "Low", "High", graphValue, markerValue);
+
+
         final SliderSection sliderSection = ImmutableSliderSection.of("Tumor Mutational Load",
-                interpret(mutationalLoad, hasReliablePurityFit),
+                interpret(mutationalLoad, formattedMutationalLoad),
                 description(),
                 gradient);
         return sliderSection.build();
     }
 
     @NotNull
-    private static String interpret(int mutationalLoad, boolean hasReliablePurityFit) {
-        final String formattedMutationalLoad =
-                PatientReportFormat.correctValueForFitReliability(Integer.toString(mutationalLoad), hasReliablePurityFit);
-        if (mutationalLoad > ML_THRESHOLD) {
+    private static String interpret(int mutationalLoad, String formattedMutationalLoad) {
+
+        if (mutationalLoad > ML_THRESHOLD && !formattedMutationalLoad.equals("N/A")) {
             return "High (" + formattedMutationalLoad + ")";
-        } else {
+        } else if (mutationalLoad < ML_THRESHOLD && !formattedMutationalLoad.equals("N/A")){
             return "Low (" + formattedMutationalLoad + ")";
+        } else {
+            return "N/A";
         }
     }
 
