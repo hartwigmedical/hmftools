@@ -92,7 +92,10 @@ public class FusionEvidenceAnalyzerTest {
                 .build();
         GeneAnnotation upstreamGene =
                 new GeneAnnotation(variant, isUpstream, gene, Strings.EMPTY, 1, Lists.newArrayList(), Lists.newArrayList(), Strings.EMPTY);
-        return new Transcript(upstreamGene, transcript, exonUpstream, -1, exonDownstream, -1, 10, true, null, null);
+
+        return new Transcript(upstreamGene, transcript,
+                exonUpstream, -1, exonDownstream, -1, 0, 0,
+                10, true, null, null);
     }
 
     @NotNull

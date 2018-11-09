@@ -61,7 +61,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.tribble.AbstractFeatureReader;
@@ -80,7 +79,6 @@ public class StructuralVariantAnnotator
     private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
     private static final String ENSEMBL_DB = "ensembl_db";
-    private static final String ENSEMBL_DB_LOCAL = "local_ensembl";
     private static final String ENSEMBL_DB_USER = "ensembl_user";
     private static final String ENSEMBL_DB_PASS = "ensembl_pass";
     private static final String FUSION_PAIRS_CSV = "fusion_pairs_csv";
@@ -91,12 +89,16 @@ public class StructuralVariantAnnotator
 
     private static final String SOURCE_SVS_FROM_DB = "source_svs_from_db";
     private static final String LOAD_ANNOTATIONS_FROM_FILE = "load_annotations";
+    private static final String SKIP_DB_UPLOAD = "skip_db_upload";
+    private static final String WRITE_RESULTS_FILE = "write_results_file";
     private static final String LOG_DEBUG = "log_debug";
     private static final String SV_PON_FILE = "sv_pon_file";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
+
+    private static final String TEST_SV_LIMIT = "test_limit_sv_count";
 
     private String mSampleId;
 
@@ -164,31 +166,38 @@ public class StructuralVariantAnnotator
 
         DatabaseAccess ensembleDBConn = null;
         VariantAnnotator annotator = null;
-        try
+
+        if(mCmdLineArgs.hasOption(ENSEMBL_DB))
         {
-            if (mCmdLineArgs.hasOption(ENSEMBL_DB_LOCAL))
+            try
             {
-                // CHSH: The same credential work for both hmf and ensembl DBs
-                final String ensembleJdbcUrl = "jdbc:" + mCmdLineArgs.getOptionValue(ENSEMBL_DB);
-                final String ensembleUser = mCmdLineArgs.getOptionValue(ENSEMBL_DB_USER);
-                final String ensemblePassword = mCmdLineArgs.getOptionValue(ENSEMBL_DB_PASS);
+                final String ensembleUrl = "jdbc:" + mCmdLineArgs.getOptionValue(ENSEMBL_DB);
+                final String ensembleUser = mCmdLineArgs.getOptionValue(ENSEMBL_DB_USER, "");
+                final String ensemblePassword = mCmdLineArgs.getOptionValue(ENSEMBL_DB_PASS, "");
 
-                LOGGER.debug("connecting to local ensembl DB: {}", mCmdLineArgs.getOptionValue(ENSEMBL_DB));
+                LOGGER.debug("connecting to ensembl DB: {}", ensembleUrl);
 
-                ensembleDBConn = new DatabaseAccess(ensembleUser, ensemblePassword, ensembleJdbcUrl);
+                if (!ensembleUser.isEmpty() && !ensemblePassword.isEmpty())
+                {
+                    ensembleDBConn = new DatabaseAccess(ensembleUser, ensemblePassword, ensembleUrl);
+                    annotator = new MySQLAnnotator(ensembleDBConn.context());
+                }
+                else
+                {
+                    MySQLAnnotator.make(ensembleUrl);
+                }
+            } catch (SQLException e)
+            {
+                LOGGER.warn("Ensembl DB connection failed: {}", e.toString());
+                return false;
             }
-
-            annotator = ensembleDBConn != null
-                    ? new MySQLAnnotator(ensembleDBConn.context())
-                    : MySQLAnnotator.make("jdbc:" + mCmdLineArgs.getOptionValue(ENSEMBL_DB));
         }
-        catch (SQLException e)
+        else
         {
-            LOGGER.warn("Ensembl DB connection failed: {}", e.toString());
-            return false;
+            annotator = new NullAnnotator();
         }
 
-        LOGGER.debug("loading fusion data");
+        LOGGER.debug("loading known fusion data");
         KnownFusionsModel knownFusionsModel = null;
 
         try
@@ -217,14 +226,19 @@ public class StructuralVariantAnnotator
 
             LOGGER.debug("loaded {} Ensembl annotations from file", annotations.size());
         }
-        else
+        else if(annotator != null)
         {
-            // TEMP: limit number searched
+            int testSvLimit = Integer.parseInt(mCmdLineArgs.getOptionValue(TEST_SV_LIMIT, "0"));
 
-            //List<EnrichedStructuralVariant> subset = Lists.newArrayList(enrichedVariants.subList(0,10));
-            //annotations = analyzer.findAnnotations(subset);
-
-            annotations = analyzer.findAnnotations(enrichedVariants);
+            if(testSvLimit > 0)
+            {
+                List<EnrichedStructuralVariant> subset = Lists.newArrayList(enrichedVariants.subList(0, testSvLimit));
+                annotations = analyzer.findAnnotations(subset);
+            }
+            else
+            {
+                annotations = analyzer.findAnnotations(enrichedVariants);
+            }
 
             LOGGER.debug("matched {} annotations from Ensembl database", annotations.size());
 
@@ -232,16 +246,35 @@ public class StructuralVariantAnnotator
             if(mCmdLineArgs.hasOption(DATA_OUTPUT_DIR))
                 writeAnnotations(annotations);
         }
+        else
+        {
+            LOGGER.error("Ensemble data not loaded from DB nor file");
+            return false;
+        }
 
         LOGGER.debug("finding disruptions and fusions");
         final List<GeneFusion> fusions = analyzer.findFusions(annotations);
         final List<GeneDisruption> disruptions = analyzer.findDisruptions(annotations);
 
+        LOGGER.debug("found {} disruptions and {} fusions", disruptions.size(), fusions.size());
+
         final StructuralVariantAnalysis analysis = ImmutableStructuralVariantAnalysis.of(annotations, fusions, disruptions);
 
-        LOGGER.debug("persisting annotations to database");
-        final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(mDbAccess.context());
-        annotationDAO.write(analysis);
+        if(mCmdLineArgs.hasOption(WRITE_RESULTS_FILE))
+        {
+            writeFusions(analysis.fusions());
+            // writeDisruptions(analysis.disruptions());
+        }
+
+        if(!mCmdLineArgs.hasOption(SKIP_DB_UPLOAD))
+        {
+            LOGGER.debug("persisting annotations to database");
+            final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(mDbAccess.context());
+
+            annotationDAO.deleteAnnotationsForSample(mSampleId);
+            annotationDAO.write(analysis, mSampleId);
+
+        }
 
         return true;
     }
@@ -385,6 +418,8 @@ public class StructuralVariantAnnotator
 
     private void writeAnnotations(final List<StructuralVariantAnnotation> annotations)
     {
+        LOGGER.debug("writing {} annotations to file", annotations.size());
+
         String outputFilename = getSampleGeneAnnotationsFilename();
 
         try
@@ -395,6 +430,12 @@ public class StructuralVariantAnnotator
 
             for(final StructuralVariantAnnotation annotation : annotations)
             {
+                if(annotation.annotations().isEmpty())
+                {
+                    // LOGGER.debug("SV({}) has no annotations", annotation.variant().primaryKey());
+                    continue;
+                }
+
                 for(final GeneAnnotation geneAnnotation : annotation.annotations())
                 {
                     String synonymnsStr = "";
@@ -430,14 +471,16 @@ public class StructuralVariantAnnotator
                                         entrezIdsStr,
                                         geneAnnotation.karyotypeBand()));
 
-                        // Transcript info: transcriptId,exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonMax, canonical, codingStart, codingEnd
+                        // Transcript info: transcriptId,exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonStart, exonEnd, exonMax, canonical, codingStart, codingEnd
                         writer.write(
-                                String.format(",%s,%d,%d,%d,%d,%d,%s,%d,%d",
+                                String.format(",%s,%d,%d,%d,%d,%d,%d,%d,%s,%d,%d",
                                         transcript.transcriptId(),
                                         transcript.exonUpstream(),
                                         transcript.exonUpstreamPhase(),
                                         transcript.exonDownstream(),
                                         transcript.exonDownstreamPhase(),
+                                        transcript.exonStart(),
+                                        transcript.exonEnd(),
                                         transcript.exonMax(),
                                         transcript.isCanonical(),
                                         transcript.codingStart(),
@@ -455,6 +498,105 @@ public class StructuralVariantAnnotator
             LOGGER.error("error writing gene annotations");
         }
     }
+
+    private void writeFusions(final List<GeneFusion> fusions)
+    {
+        if(fusions.isEmpty())
+            return;
+
+        String outputFilename = mCmdLineArgs.getOptionValue(DATA_OUTPUT_DIR);
+
+        if(!outputFilename.endsWith("/"))
+            outputFilename += "/";
+
+        outputFilename += mSampleId + "_" + "sv_fusions.csv";
+
+        try
+        {
+            Path outputFile = Paths.get(outputFilename);
+
+            BufferedWriter writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
+
+            writer.write("SampleId");
+            writer.write(",StartSvId,StartChr,StartPos,StartOrient,StartType");
+            writer.write(",StartGene,StartTranscript,StartRegionType,StartExon,StartPhase,StartExonStart,StartExonEnd,StartCodingStart,StartCodingEnd");
+            writer.write(",EndSvId,EndChr,EndPos,EndOrient,EndType");
+            writer.write(",EndGene,EndTranscript,EndRegionType,EndExon,EndPhase,EndExonStart,EndExonEnd,EndCodingStart,EndCodingEnd");
+            writer.newLine();
+
+            for(final GeneFusion fusion : fusions)
+            {
+                final Transcript startTrans = fusion.upstreamLinkedAnnotation();
+                final Transcript endTrans = fusion.downstreamLinkedAnnotation();
+
+                boolean startUsesStart = startTrans.parent().isStart();
+                boolean endUsesStart = endTrans.parent().isStart();
+
+                final EnrichedStructuralVariant startVar = startTrans.parent().variant();
+                final EnrichedStructuralVariant endVar = endTrans.parent().variant();
+
+                writer.write(String.format("%s", mSampleId));
+
+                // write upstream SV, transcript and exon info
+                writer.write(
+                        String.format(",%d,%s,%d,%d,%s",
+                                startVar.primaryKey(), startVar.chromosome(startUsesStart), startVar.position(startUsesStart), startVar.orientation(startUsesStart), startVar.type()));
+
+                writer.write(
+                        String.format(",%s,%s,%s,%d,%d,%d,%d,%d,%d",
+                                startTrans.parent().geneName(), startTrans.transcriptId(), startTrans.getRegionType(), startTrans.exonUpstream(), startTrans.exonUpstreamPhase(),
+                                startTrans.exonStart(), startTrans.exonEnd(),
+                                startTrans.codingStart() != null ? startTrans.codingStart() : 0,
+                                startTrans.codingEnd() != null ? startTrans.codingEnd() : 0));
+
+                writer.write(
+                        String.format(",%d,%s,%d,%d,%s",
+                                endVar.primaryKey(), endVar.chromosome(endUsesStart), endVar.position(endUsesStart), endVar.orientation(endUsesStart), endVar.type()));
+
+                writer.write(
+                        String.format(",%s,%s,%s,%d,%d,%d,%d,%d,%d",
+                                endTrans.parent().geneName(), endTrans.transcriptId(), endTrans.getRegionType(), endTrans.exonUpstream(), endTrans.exonUpstreamPhase(),
+                                endTrans.exonStart(), endTrans.exonEnd(),
+                                endTrans.codingStart() != null ? endTrans.codingStart() : 0,
+                                endTrans.codingEnd() != null ? endTrans.codingEnd() : 0));
+
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing gene annotations");
+        }
+    }
+
+    private void writeDisruptions(final List<GeneDisruption> disruptions)
+    {
+        if(disruptions.isEmpty())
+            return;
+
+        String outputFilename = mCmdLineArgs.getOptionValue(DATA_OUTPUT_DIR);
+
+        if(!outputFilename.endsWith("/"))
+            outputFilename += "/";
+
+        outputFilename += mSampleId + "_" + "sv_disruption.csv";
+
+        try
+        {
+            Path outputFile = Paths.get(outputFilename);
+
+            BufferedWriter writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
+
+            writer.close();
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing gene annotations");
+        }
+    }
+
 
     private final String getSampleGeneAnnotationsFilename()
     {
@@ -477,16 +619,18 @@ public class StructuralVariantAnnotator
     private static int GENE_EIDS_COL_INDEX = 6;
     private static int GENE_KARYOTYPE_COL_INDEX = 7;
 
-    // transcript data: transcriptId, exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonMax, canonical, codingStart, codingEnd
+    // transcript data: transcriptId, exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonStart, exonEnd, exonMax, canonical, codingStart, codingEnd
     private static int TRANSCRIPT_ID_COL_INDEX = 8;
     private static int TRANSCRIPT_EUS_COL_INDEX = 9;
     private static int TRANSCRIPT_EUP_COL_INDEX = 10;
     private static int TRANSCRIPT_EDS_COL_INDEX = 11;
     private static int TRANSCRIPT_EDP_COL_INDEX = 12;
-    private static int TRANSCRIPT_EMAX_COL_INDEX = 13;
-    private static int TRANSCRIPT_CAN_COL_INDEX = 14;
-    private static int TRANSCRIPT_CS_COL_INDEX = 15;
-    private static int TRANSCRIPT_CE_COL_INDEX = 16;
+    private static int TRANSCRIPT_ESTART_COL_INDEX = 13;
+    private static int TRANSCRIPT_EEND_COL_INDEX = 14;
+    private static int TRANSCRIPT_EMAX_COL_INDEX = 15;
+    private static int TRANSCRIPT_CAN_COL_INDEX = 16;
+    private static int TRANSCRIPT_CS_COL_INDEX = 17;
+    private static int TRANSCRIPT_CE_COL_INDEX = 18;
 
     private final List<StructuralVariantAnnotation> loadAnnotations(List<EnrichedStructuralVariant> enrichedVariants)
     {
@@ -505,7 +649,7 @@ public class StructuralVariantAnnotator
 
             if (line == null)
             {
-                LOGGER.error("Empty copy number CSV file({})", filename);
+                LOGGER.error("empty copy number CSV file({})", filename);
                 return annotations;
             }
 
@@ -552,11 +696,8 @@ public class StructuralVariantAnnotator
                     if(!varId.equals(currentVar.primaryKey().toString()))
                     {
                         // it's possible that the SV has no ensembl data, in which it needs to be skipped over
-                        LOGGER.debug("variant mismatch at index({}): currentVar({}) vs fileVar({}), skipping SV", fileIndex, currentVar.primaryKey(), varId);
+                        // LOGGER.debug("variant mismatch at index({}): currentVar({}) vs fileVar({}), skipping SV", fileIndex, currentVar.primaryKey(), varId);
                         continue;
-
-                        // LOGGER.warn("variant mismatch at index({}): currentVar({}) vs fileVar({})", fileIndex, currentVar.primaryKey(), varId);
-                        // break;
                     }
 
                     annotation = new StructuralVariantAnnotation(currentVar);
@@ -607,6 +748,8 @@ public class StructuralVariantAnnotator
                         Integer.parseInt(items[TRANSCRIPT_EUP_COL_INDEX]),
                         Integer.parseInt(items[TRANSCRIPT_EDS_COL_INDEX]),
                         Integer.parseInt(items[TRANSCRIPT_EDP_COL_INDEX]),
+                        Long.parseLong(items[TRANSCRIPT_ESTART_COL_INDEX]),
+                        Long.parseLong(items[TRANSCRIPT_EEND_COL_INDEX]),
                         Integer.parseInt(items[TRANSCRIPT_EMAX_COL_INDEX]),
                         Boolean.parseBoolean(items[TRANSCRIPT_CAN_COL_INDEX]),
                         items[TRANSCRIPT_CS_COL_INDEX].equals("null") ? null : Long.parseLong(items[TRANSCRIPT_CS_COL_INDEX]),
@@ -668,13 +811,18 @@ public class StructuralVariantAnnotator
         options.addOption(ENSEMBL_DB, true, "Annotate structural variants using this Ensembl DB URI");
         options.addOption(ENSEMBL_DB_PASS, true, "Ensembl DB password if required");
         options.addOption(ENSEMBL_DB_USER, true, "Ensembl DB username if required");
-        options.addOption(ENSEMBL_DB_LOCAL, false, "Connect to local Ensembl DB");
-        options.addOption(SOURCE_SVS_FROM_DB, false, "Skip annotations, including Ensemble DB data sync, for testing only)");
-        options.addOption(LOAD_ANNOTATIONS_FROM_FILE, false, "Load existing annotations previously written to file");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         options.addOption(SV_PON_FILE, true, "PON file for SVs");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file.");
         options.addOption(DATA_OUTPUT_DIR, true, "Path to persist annotations to file");
+
+        // testing options
+        options.addOption(SOURCE_SVS_FROM_DB, false, "Skip annotations, including Ensemble DB data sync, for testing only)");
+        options.addOption(LOAD_ANNOTATIONS_FROM_FILE, false, "Load existing annotations previously written to file");
+        options.addOption(SKIP_DB_UPLOAD, false, "Skip uploading fusions and disruptions to database, off by default");
+        options.addOption(WRITE_RESULTS_FILE, false, "Write fusions and disruptions to file, off by default");
+        options.addOption(TEST_SV_LIMIT, true, "Optional: only analyser X variants to save processing time");
+
         return options;
     }
 

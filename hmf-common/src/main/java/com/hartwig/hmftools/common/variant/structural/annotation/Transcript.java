@@ -14,15 +14,27 @@ public class Transcript {
     private final int exonDownstream;
     private final int exonDownstreamPhase;
     private final int exonMax;
+
+    private final long exonStart;
+    private final long exonEnd;
+
     private final boolean canonical;
+
     @Nullable
     private final Long codingStart;
+
     @Nullable
     private final Long codingEnd;
 
-    public Transcript(@NotNull final GeneAnnotation parent, @NotNull final String transcriptId, final int exonUpstream,
-            final int exonUpstreamPhase, final int exonDownstream, final int exonDownstreamPhase, final int exonMax,
-            final boolean canonical, @Nullable final Long codingStart, @Nullable final Long codingEnd) {
+    public static String TRANS_REGION_TYPE_PROMOTOR = "Promotor";
+    public static String TRANS_REGION_TYPE_EXONIC = "Exonic";
+    public static String TRANS_REGION_TYPE_INTRONIC = "Intronic";
+
+    public Transcript(@NotNull final GeneAnnotation parent, @NotNull final String transcriptId,
+            final int exonUpstream, final int exonUpstreamPhase, final int exonDownstream, final int exonDownstreamPhase,
+            final long exonStart, final long exonEnd,
+            final int exonMax, final boolean canonical, @Nullable final Long codingStart, @Nullable final Long codingEnd)
+    {
         this.parent = parent;
         this.transcriptId = transcriptId;
         this.exonUpstream = exonUpstream;
@@ -30,6 +42,8 @@ public class Transcript {
         this.exonDownstream = exonDownstream;
         this.exonDownstreamPhase = exonDownstreamPhase;
         this.exonMax = exonMax;
+        this.exonStart = exonStart;
+        this.exonEnd = exonEnd;
         this.canonical = canonical;
         this.codingStart = codingStart;
         this.codingEnd = codingEnd;
@@ -52,6 +66,17 @@ public class Transcript {
         return exonUpstream > 0 && (exonDownstream - exonUpstream) == 1;
     }
 
+    public final String getRegionType()
+    {
+        if(isIntronic())
+            return TRANS_REGION_TYPE_INTRONIC;
+
+        if(isExonic())
+            return TRANS_REGION_TYPE_EXONIC;
+
+        return TRANS_REGION_TYPE_PROMOTOR;
+    }
+
     public boolean isCanonical() {
         return canonical;
     }
@@ -69,22 +94,20 @@ public class Transcript {
     public int exonUpstream() {
         return exonUpstream;
     }
-
-    public int exonUpstreamPhase() {
-        return exonUpstreamPhase;
+    public int exonUpstreamPhase() { return exonUpstreamPhase; }
+    public long exonStart() {
+        return exonStart;
     }
+    public long exonEnd() { return exonEnd; }
 
     public int exonDownstream() {
         return exonDownstream;
     }
-
     public int exonDownstreamPhase() {
         return exonDownstreamPhase;
     }
 
-    public int exonMax() {
-        return exonMax;
-    }
+    public int exonMax() { return exonMax; }
 
     @Nullable
     public Long codingStart() {
@@ -94,5 +117,10 @@ public class Transcript {
     @Nullable
     public Long codingEnd() {
         return codingEnd;
+    }
+
+    public final String toString()
+    {
+        return parent.geneName() + " " + transcriptId;
     }
 }

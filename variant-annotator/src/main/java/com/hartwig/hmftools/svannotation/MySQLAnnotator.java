@@ -232,7 +232,7 @@ public class MySQLAnnotator implements VariantAnnotator
         final boolean canonical = transcriptId.equals(canonicalTranscriptId);
         final String transcriptStableId = transcript.get(TRANSCRIPT.STABLE_ID);
 
-        final Record exonLeft = context.select(EXON_TRANSCRIPT.RANK, EXON.PHASE, EXON.END_PHASE)
+        final Record exonLeft = context.select(EXON_TRANSCRIPT.RANK, EXON.PHASE, EXON.END_PHASE, EXON.SEQ_REGION_START, EXON.SEQ_REGION_END)
                 .from(EXON_TRANSCRIPT)
                 .innerJoin(EXON)
                 .on(EXON.EXON_ID.eq(EXON_TRANSCRIPT.EXON_ID))
@@ -242,7 +242,7 @@ public class MySQLAnnotator implements VariantAnnotator
                 .limit(1)
                 .fetchOne();
 
-        final Record exonRight = context.select(EXON_TRANSCRIPT.RANK, EXON.PHASE, EXON.END_PHASE)
+        final Record exonRight = context.select(EXON_TRANSCRIPT.RANK, EXON.PHASE, EXON.END_PHASE, EXON.SEQ_REGION_START, EXON.SEQ_REGION_END)
                 .from(EXON_TRANSCRIPT)
                 .innerJoin(EXON)
                 .on(EXON.EXON_ID.eq(EXON_TRANSCRIPT.EXON_ID))
@@ -265,9 +265,11 @@ public class MySQLAnnotator implements VariantAnnotator
         final int exonDownstream;
         final int exonDownstreamPhase;
 
-        if (isForwardStrand) {
+        if (isForwardStrand)
+        {
             exonUpstream = exonLeft == null ? 0 : exonLeft.get(EXON_TRANSCRIPT.RANK);
             exonUpstreamPhase = exonLeft == null ? -1 : exonLeft.get(EXON.END_PHASE);
+
             exonDownstream = exonRight == null ? 0 : exonRight.get(EXON_TRANSCRIPT.RANK);
             exonDownstreamPhase = exonRight == null ? -1 : exonRight.get(EXON.PHASE);
         }
@@ -275,24 +277,38 @@ public class MySQLAnnotator implements VariantAnnotator
         {
             exonDownstream = exonLeft == null ? 0 : exonLeft.get(EXON_TRANSCRIPT.RANK);
             exonDownstreamPhase = exonLeft == null ? -1 : exonLeft.get(EXON.PHASE);
+
             exonUpstream = exonRight == null ? 0 : exonRight.get(EXON_TRANSCRIPT.RANK);
             exonUpstreamPhase = exonRight == null ? -1 : exonRight.get(EXON.END_PHASE);
         }
 
-        if (exonUpstream > 0 && exonDownstream == 0) {
-            // NERA: past the last exon
+        if (exonUpstream > 0 && exonDownstream == 0)
+        {
+            // past the last exon
             return null;
         }
         else
         {
             UInteger codingStart = (UInteger) transcript.get(CODING_START);
             UInteger codingEnd = (UInteger) transcript.get(CODING_END);
+
+            long exonStart = 0;
+            long exonEnd = 0;
+
+            if(exonUpstream == exonDownstream && exonRight != null)
+            {
+                exonStart = ((UInteger)exonRight.get(EXON.SEQ_REGION_START)).longValue();
+                exonEnd = ((UInteger)exonRight.get(EXON.SEQ_REGION_END)).longValue();
+            }
+
             return new Transcript(parent,
                     transcriptStableId,
                     exonUpstream,
                     exonUpstreamPhase,
                     exonDownstream,
                     exonDownstreamPhase,
+                    exonStart,
+                    exonEnd,
                     exonMax,
                     canonical,
                     codingStart != null ? codingStart.longValue() : null,

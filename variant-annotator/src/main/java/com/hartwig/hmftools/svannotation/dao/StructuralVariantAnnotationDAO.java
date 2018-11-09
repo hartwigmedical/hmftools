@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svannotation.dao;
 
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTBREAKEND;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTDISRUPTION;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTFUSION;
@@ -20,8 +21,11 @@ import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep13;
+import org.jooq.InsertValuesStep14;
 import org.jooq.InsertValuesStep2;
 import org.jooq.InsertValuesStep3;
+import org.jooq.InsertValuesStep4;
+import org.jooq.InsertValuesStep5;
 import org.jooq.types.UInteger;
 
 public class StructuralVariantAnnotationDAO {
@@ -33,8 +37,17 @@ public class StructuralVariantAnnotationDAO {
         this.context = context;
     }
 
+    public void deleteAnnotationsForSample(final String sampleId)
+    {
+        context.delete(STRUCTURALVARIANTFUSION).where(STRUCTURALVARIANTFUSION.SAMPLEID.eq(sampleId)).execute();
+
+        context.delete(STRUCTURALVARIANTDISRUPTION).where(STRUCTURALVARIANTDISRUPTION.SAMPLEID.eq(sampleId)).execute();
+
+        context.delete(STRUCTURALVARIANTBREAKEND).where(STRUCTURALVARIANTBREAKEND.SAMPLEID.eq(sampleId)).execute();
+    }
+
     @SuppressWarnings("unchecked")
-    public void write(final StructuralVariantAnalysis analysis)
+    public void write(final StructuralVariantAnalysis analysis, final String sampleId)
     {
         final Timestamp timestamp = new Timestamp(new Date().getTime());
 
@@ -45,8 +58,9 @@ public class StructuralVariantAnnotationDAO {
         {
             for (final GeneAnnotation geneAnnotation : annotation.annotations())
             {
-                final InsertValuesStep13 inserter = context.insertInto(STRUCTURALVARIANTBREAKEND,
+                final InsertValuesStep14 inserter = context.insertInto(STRUCTURALVARIANTBREAKEND,
                         STRUCTURALVARIANTBREAKEND.MODIFIED,
+                        STRUCTURALVARIANTBREAKEND.SAMPLEID,
                         STRUCTURALVARIANTBREAKEND.ISSTARTEND,
                         STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID,
                         STRUCTURALVARIANTBREAKEND.GENE,
@@ -63,6 +77,7 @@ public class StructuralVariantAnnotationDAO {
                 for (final Transcript transcript : geneAnnotation.transcripts())
                 {
                     inserter.values(timestamp,
+                            sampleId,
                             geneAnnotation.isStart(),
                             transcript.parent().variant().primaryKey(),
                             geneAnnotation.geneName(),
@@ -91,25 +106,38 @@ public class StructuralVariantAnnotationDAO {
         }
 
         // load fusions
-        final InsertValuesStep3 fusionInserter = context.insertInto(STRUCTURALVARIANTFUSION,
+        final InsertValuesStep5 fusionInserter = context.insertInto(STRUCTURALVARIANTFUSION,
+                STRUCTURALVARIANTFUSION.MODIFIED,
+                STRUCTURALVARIANTFUSION.SAMPLEID,
                 STRUCTURALVARIANTFUSION.ISREPORTED,
                 STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID,
                 STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID);
 
         for (final GeneFusion fusion : analysis.fusions())
         {
-            fusionInserter.values(fusion.reportable(), id.get(fusion.upstreamLinkedAnnotation()), id.get(fusion.downstreamLinkedAnnotation()));
+            fusionInserter.values(
+                    timestamp,
+                    sampleId,
+                    fusion.reportable(),
+                    id.get(fusion.upstreamLinkedAnnotation()),
+                    id.get(fusion.downstreamLinkedAnnotation()));
         }
         fusionInserter.execute();
 
         // load disruptions
-        final InsertValuesStep2 disruptionInserter = context.insertInto(STRUCTURALVARIANTDISRUPTION,
+        final InsertValuesStep4 disruptionInserter = context.insertInto(STRUCTURALVARIANTDISRUPTION,
+                STRUCTURALVARIANTFUSION.MODIFIED,
+                STRUCTURALVARIANTFUSION.SAMPLEID,
                 STRUCTURALVARIANTDISRUPTION.ISREPORTED,
                 STRUCTURALVARIANTDISRUPTION.BREAKENDID);
 
         for (final GeneDisruption disruption : analysis.disruptions())
         {
-            disruptionInserter.values(disruption.reportable(), id.get(disruption.linkedAnnotation()));
+            disruptionInserter.values(
+                    timestamp,
+                    sampleId,
+                    disruption.reportable(),
+                    id.get(disruption.linkedAnnotation()));
         }
         disruptionInserter.execute();
     }

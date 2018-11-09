@@ -512,6 +512,7 @@ DROP TABLE IF EXISTS structuralVariantBreakend;
 CREATE TABLE structuralVariantBreakend
 (   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
     structuralVariantId INT NOT NULL,
     isStartEnd BOOLEAN NOT NULL,
     gene VARCHAR(512) NOT NULL, # length here comes from ensembl db schema
@@ -534,6 +535,8 @@ CREATE TABLE structuralVariantBreakend
 DROP TABLE IF EXISTS structuralVariantDisruption;
 CREATE TABLE structuralVariantDisruption
 (   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
     breakendId INT UNSIGNED NOT NULL,
     isReported BOOLEAN NOT NULL,
     PRIMARY KEY (id),
@@ -543,6 +546,8 @@ CREATE TABLE structuralVariantDisruption
 DROP TABLE IF EXISTS structuralVariantFusion;
 CREATE TABLE structuralVariantFusion
 (   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
     fivePrimeBreakendId INT UNSIGNED NOT NULL,
     threePrimeBreakendId INT UNSIGNED NOT NULL,
     isReported BOOLEAN NOT NULL,
@@ -639,6 +644,7 @@ CREATE TABLE driverCatalog
     INDEX(gene)
 );
 
+DROP TABLE IF EXISTS chord;
 CREATE TABLE chord
 (   sampleId varchar(255) NOT NULL,
     BRCA1Value DOUBLE PRECISION NOT NULL,

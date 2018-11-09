@@ -320,7 +320,9 @@ class StructuralVariantDAO {
                 timestamp);
     }
 
-    void deleteStructuralVariantsForSample(@NotNull String sample) {
+    void deleteStructuralVariantsForSample(@NotNull String sample)
+    {
+        /*
         context.delete(STRUCTURALVARIANTDISRUPTION)
                 .where(STRUCTURALVARIANTDISRUPTION.BREAKENDID.in(selectBreakendsForSample(sample)))
                 .execute();
@@ -328,6 +330,7 @@ class StructuralVariantDAO {
                 .where(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID.in(selectBreakendsForSample(sample)))
                 .execute();
         context.delete(STRUCTURALVARIANTBREAKEND).where(STRUCTURALVARIANTBREAKEND.ID.in(selectBreakendsForSample(sample))).execute();
+        */
 
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
     }

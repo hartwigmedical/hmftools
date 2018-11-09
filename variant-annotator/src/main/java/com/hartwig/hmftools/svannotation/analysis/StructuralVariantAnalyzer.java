@@ -75,9 +75,9 @@ public class StructuralVariantAnalyzer
     // common methods
     public static boolean intronicDisruptionOnSameTranscript(final Transcript t1, final Transcript t2)
     {
-        final boolean sameTranscript = t1.transcriptId().equals(t2.transcriptId());
-        final boolean bothIntronic = t1.isIntronic() && t2.isIntronic();
-        final boolean sameExonUpstream = t1.exonUpstream() == t2.exonUpstream();
+        boolean sameTranscript = t1.transcriptId().equals(t2.transcriptId());
+        boolean bothIntronic = t1.isIntronic() && t2.isIntronic();
+        boolean sameExonUpstream = t1.exonUpstream() == t2.exonUpstream();
 
         return sameTranscript && bothIntronic && sameExonUpstream;
     }

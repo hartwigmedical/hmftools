@@ -56,24 +56,53 @@ public class SvFusionAnalyser
                     if (startUpstream == endUpstream)
                         continue;
 
-                    final List<Transcript> transcripts1 = getIntronicTranscripts(startGene.transcripts());
+                    // final List<Transcript> transcripts1 = getIntronicTranscripts(startGene.transcripts());
 
-                    for (final Transcript t1 : transcripts1)
+                    for (final Transcript startTrans : startGene.transcripts())
                     {
-                        final List<Transcript> transcripts2 = getIntronicTranscripts(endGene.transcripts());
+                        if(startTrans.isPromoter())
+                            continue;
 
-                        for (final Transcript t2 : transcripts2)
+                        for (final Transcript endTrans : endGene.transcripts())
                         {
-                            if (!isPotentiallyRelevantFusion(t1, t2))
+                            if(endTrans.isPromoter())
                                 continue;
 
-                            if (startUpstream && t1.exonUpstreamPhase() == t2.exonDownstreamPhase())
+                            if (!isPotentiallyRelevantFusion(startTrans, endTrans))
+                                continue;
+
+                            if(startTrans.isIntronic())
                             {
-                                fusions.add(Pair.of(t1, t2));
+                                // Intron -> Intron and Intron -> Exon are both fine if phased
+                                if (startUpstream && startTrans.exonUpstreamPhase() == endTrans.exonDownstreamPhase())
+                                {
+                                    addFusion(fusions, startTrans, endTrans);
+                                }
+                                else if (!startUpstream && endTrans.exonUpstreamPhase() == startTrans.exonDownstreamPhase())
+                                {
+                                    addFusion(fusions, endTrans, startTrans);
+                                }
                             }
-                            else if (!startUpstream && t2.exonUpstreamPhase() == t1.exonDownstreamPhase())
+                            else if(startTrans.isExonic())
                             {
-                                fusions.add(Pair.of(t2, t1));
+                                if(endTrans.isExonic())
+                                {
+                                    if(exonToExonInPhase(startTrans, startUpstream, endTrans, endUpstream))
+                                    {
+                                        addFusion(fusions, startTrans, endTrans);
+                                    }
+                                    else if(exonToExonInPhase(endTrans, endUpstream, startTrans, startUpstream))
+                                    {
+                                        addFusion(fusions, endTrans, startTrans);
+                                    }
+                                }
+
+                                // Exon -> Intron is invalid
+
+                            }
+                            else
+                            {
+                                // UTR region fusions not handled yet
                             }
                         }
                     }
@@ -84,6 +113,56 @@ public class SvFusionAnalyser
         }
 
         return toReportableGeneFusions(fusionsPerVariant);
+    }
+
+    private static boolean exonToExonInPhase(final Transcript startTrans, boolean startUpstream, final Transcript endTrans, boolean endUpstream)
+    {
+        // check phasing and offset since exon start or coding start
+        int calcStartPhase = calcPositionPhasing(startTrans, startUpstream);
+        int calcEndPhase = calcPositionPhasing(endTrans, endUpstream);
+
+        return calcStartPhase == calcEndPhase;
+    }
+
+    private static int calcPositionPhasing(final Transcript transcript, boolean isUpstream)
+    {
+        // if the exon is completely translated, then determine bases since start of exon
+        long position = transcript.parent().variant().position(transcript.parent().isStart());
+
+        long exonOffset = 0;
+
+        if(transcript.codingStart() != null && position <= transcript.codingStart())
+        {
+            exonOffset = -1;
+        }
+        else if(transcript.codingStart() != null && position > transcript.codingStart())
+        {
+            exonOffset = position - transcript.codingStart();
+        }
+        if(transcript.codingEnd() != null && position >= transcript.codingEnd())
+        {
+            exonOffset = -1;
+        }
+        else if(transcript.codingEnd() != null && position < transcript.codingEnd())
+        {
+            exonOffset = position - transcript.exonStart();
+        }
+
+        int phasing = isUpstream ? transcript.exonUpstreamPhase() : transcript.exonDownstreamPhase();
+
+        int combinedPhasing = (int)(phasing + exonOffset);
+        int adjustedPhase = (combinedPhasing % 3);
+
+        return adjustedPhase;
+    }
+
+    private void addFusion(List<Pair<Transcript, Transcript>> fusions, final Transcript startTrans, final Transcript endTrans)
+    {
+        LOGGER.debug("adding fusion between start SV({}) trans({}) and end SV({}) trans({})",
+                startTrans.parent().variant().primaryKey(), startTrans.toString(),
+                endTrans.parent().variant().primaryKey(), endTrans.toString());
+
+        fusions.add(Pair.of(startTrans, endTrans));
     }
 
     private static boolean isPotentiallyRelevantFusion(final Transcript t1, final Transcript t2)
