@@ -58,7 +58,7 @@ class BAFFactory {
     }
 
     private static boolean isValidPileup(@NotNull final Pileup pileup) {
-        return pileup.indels() == 0 && pileup.readCount() > 0;
+        return pileup.indelCount() == 0 && pileup.readCount() > 0;
     }
 
     private static boolean isValidBAF(@NotNull final AmberBAF baf) {

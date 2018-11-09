@@ -34,6 +34,7 @@
         <module>knowledgebase-importer</module>
         <module>data_analyser</module>
         <module>actionability-vs-soc</module>
+        <module>hotspot-caller</module>
     </modules>
 
     <properties>
@@ -51,7 +52,7 @@
         <hmf-gene-panel.version>local-SNAPSHOT</hmf-gene-panel.version>
         <hmf-api-clients.version>local-SNAPSHOT</hmf-api-clients.version>
         <hmf-extensions.version>local-SNAPSHOT</hmf-extensions.version>
-        <hmf-patient-db.version>3.12</hmf-patient-db.version>
+        <hmf-patient-db.version>3.13</hmf-patient-db.version>
         <hmf-variant-annotation.version>1.6</hmf-variant-annotation.version>
         <hmf-sv-analyser.version>1.0</hmf-sv-analyser.version>
         <hmf-sv-graphs.version>1.0</hmf-sv-graphs.version>

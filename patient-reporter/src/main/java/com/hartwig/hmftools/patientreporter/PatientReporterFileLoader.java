@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.chord.ChordFileReader;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
@@ -22,7 +23,6 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
-import com.hartwig.hmftools.patientreporter.chord.ChordFile;
 import com.hartwig.hmftools.patientreporter.germline.BachelorFile;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 
@@ -45,7 +45,6 @@ public final class PatientReporterFileLoader {
     private static final String SOMATIC_VCF_EXTENSION_V3 = "_post_processed_v2.2.vcf.gz";
     private static final String SOMATIC_VCF_EXTENSION_V4 = "_post_processed.vcf.gz";
     private static final String BACHELOR_DIRECTORY = "bachelor";
-    private static final String CHORD_DIRECTORY = "chord";
 
     private PatientReporterFileLoader() {
     }
@@ -117,7 +116,6 @@ public final class PatientReporterFileLoader {
 
     @NotNull
     static ChordAnalysis loadChordFile(@NotNull String runDirectory, @NotNull String sample) throws IOException {
-        final String chordDirectory = runDirectory + File.separator + CHORD_DIRECTORY;
-        return ChordFile.loadChordFile(chordDirectory, sample);
+        return ChordFileReader.read(ChordFileReader.generateFilename(runDirectory, sample));
     }
 }

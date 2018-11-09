@@ -5,13 +5,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class PileupFile {
 
@@ -25,18 +25,17 @@ public final class PileupFile {
     @NotNull
     public static Pileup fromString(@NotNull final String line) {
 
-        final Map<String, Integer> insertionMap = Maps.newHashMap();
-        final Map<String, Integer> deletionMap = Maps.newHashMap();
+        final Map<String, Integer> countMap = Maps.newHashMap();
+        final Map<String, Integer> qualityMap = Maps.newHashMap();
 
-        String[] values = line.split(DELIMITER);
+        final String[] values = line.split(DELIMITER);
+        final int expectedReadCount = Integer.valueOf(values[3]);
 
-        int referenceCount = 0;
-        int gCount = 0;
-        int aCount = 0;
-        int tCount = 0;
-        int cCount = 0;
+        int actualReadCount = 0;
         String indel;
         char prevBase;
+
+        String qualityBases = values.length > 5 ? values[5] : null;
 
         if (values.length >= 5) {
             final String referenceString = values[2];
@@ -44,64 +43,71 @@ public final class PileupFile {
             final String readBases = values[4];
 
             for (int i = 0; i < readBases.length(); i++) {
-                switch (Character.toUpperCase(readBases.charAt(i))) {
+                char base = Character.toUpperCase(readBases.charAt(i));
+                switch (base) {
                     case '+':
-                        prevBase = Character.toUpperCase(readBases.charAt(i -1));
+                    case '-':
+                        prevBase = Character.toUpperCase(readBases.charAt(i - 1));
                         if (isRef(prevBase)) {
                             prevBase = refBase;
-                            referenceCount--;
+                            countMap.merge(String.valueOf(refBase), -1, (oldValue, value) -> Math.max(0, oldValue + value));
+                            qualityMap.merge(String.valueOf(refBase),
+                                    -qualityScore(actualReadCount - 1, qualityBases),
+                                    (oldValue, value) -> Math.max(0, oldValue + value));
                         }
                         indel = indel(i, readBases);
-                        insertionMap.merge(prevBase + indel, 1, (x, y) -> x + y);
+                        qualityMap.merge(String.valueOf(base) + prevBase + indel,
+                                qualityScore(actualReadCount - 1, qualityBases),
+                                (oldValue, value) -> oldValue + value);
+                        countMap.merge(String.valueOf(base) + prevBase + indel, 1, (oldValue, value) -> oldValue + value);
                         i += indel.length() + Integer.toString(indel.length()).length();
                         break;
-                    case '-':
-                        prevBase = Character.toUpperCase(readBases.charAt(i -1));
-                        if (isRef(prevBase)) {
-                            prevBase = refBase;
-                            referenceCount--;
-                        }
-                        indel = indel(i, readBases);
-                        deletionMap.merge(prevBase + indel, 1, (x, y) -> x + y);
-                        i += indel.length() + Integer.toString(indel.length()).length();
+                    case ',':
+                    case '.':
+                        countMap.merge(String.valueOf(refBase), 1, (oldValue, value) -> oldValue + value);
+                        qualityMap.merge(String.valueOf(refBase), qualityScore(actualReadCount, qualityBases), (x, y) -> x + y);
+                        actualReadCount++;
+                        break;
+                    case 'G':
+                    case 'A':
+                    case 'T':
+                    case 'C':
+                        countMap.merge(String.valueOf(base), 1, (x, y) -> x + y);
+                        qualityMap.merge(String.valueOf(base), qualityScore(actualReadCount, qualityBases), (x, y) -> x + y);
+                        actualReadCount++;
                         break;
                     case '^':
                         i++;
                         break;
-                    case ',':
-                    case '.':
-                        referenceCount++;
-                        break;
-                    case 'G':
-                        gCount++;
-                        break;
-                    case 'A':
-                        aCount++;
-                        break;
-                    case 'T':
-                        tCount++;
-                        break;
-                    case 'C':
-                        cCount++;
+                    case '*':
+                        actualReadCount++;
                         break;
                     default:
                 }
             }
         }
 
+        if (expectedReadCount != actualReadCount) {
+            System.out.println(line);
+        }
+
         return ImmutablePileup.builder()
                 .chromosome(values[0])
                 .position(Long.valueOf(values[1]))
                 .referenceBase(values[2])
-                .readCount(Integer.valueOf(values[3]))
-                .referenceCount(referenceCount)
-                .gMismatchCount(gCount)
-                .aMismatchCount(aCount)
-                .tMismatchCount(tCount)
-                .cMismatchCount(cCount)
-                .insertionCounts(insertionMap)
-                .deletionCounts(deletionMap)
+                .readCount(expectedReadCount)
+                .scoreMap(qualityMap)
+                .countMap(countMap)
                 .build();
+    }
+
+    @VisibleForTesting
+    static int qualityScore(int index, @Nullable final String quality) {
+        if (quality == null || index >= quality.length()) {
+            return 0;
+        }
+
+        return (int) quality.charAt(index) - 33;
     }
 
     @NotNull
@@ -123,11 +129,7 @@ public final class PileupFile {
         return Integer.valueOf(text.substring(indelIndex, text.length()));
     }
 
-    static boolean inframe(int indelSize) {
-        return indelSize % 3 == 0;
-    }
-
-    static boolean isRef(char base) {
+    private static boolean isRef(char base) {
         return base == ',' || base == '.';
     }
 }

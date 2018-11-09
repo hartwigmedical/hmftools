@@ -21,11 +21,11 @@ public final class ChordFileReader {
     private static final String CHORD_EXTENSION = "_chord_prediction.txt";
     private static final String VALUE_SEPARATOR = "\t";
 
-    private static final int BRCA1 = 1;
-    private static final int NONE = 2;
-    private static final int BRCA2 = 3;
-    private static final int HRD = 4;
-    private static final int PREDICTED_RESPONSE = 5;
+    private static final int BRCA1_COLUMN = 1;
+    private static final int NONE_COLUMN = 2;
+    private static final int BRCA2_COLUMN = 3;
+    private static final int HRD_COLUMN = 4;
+    private static final int PREDICTED_RESPONSE_COLUMN = 5;
 
     private ChordFileReader() {
     }
@@ -49,11 +49,11 @@ public final class ChordFileReader {
     private static ImmutableChordAnalysis.Builder appendChordValues(@NotNull ImmutableChordAnalysis.Builder builder,
             @NotNull String filePath) throws IOException {
         String[] values = findValuesLine(filePath).split(VALUE_SEPARATOR);
-        builder.BRCA1Value(Double.valueOf(values[BRCA1]));
-        builder.noneValue(Double.valueOf(values[NONE]));
-        builder.BRCA2Value(Double.valueOf(values[BRCA2]));
-        builder.hrdValue(Double.valueOf(values[HRD]));
-        builder.predictedResponseValue(Double.valueOf(values[PREDICTED_RESPONSE]));
+        builder.BRCA1Value(Double.valueOf(values[BRCA1_COLUMN]));
+        builder.noneValue(Double.valueOf(values[NONE_COLUMN]));
+        builder.BRCA2Value(Double.valueOf(values[BRCA2_COLUMN]));
+        builder.hrdValue(Double.valueOf(values[HRD_COLUMN]));
+        builder.predictedResponseValue(Double.valueOf(values[PREDICTED_RESPONSE_COLUMN]));
         return builder;
     }
 

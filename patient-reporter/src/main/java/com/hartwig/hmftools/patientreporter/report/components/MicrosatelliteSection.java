@@ -18,27 +18,33 @@ public final class MicrosatelliteSection {
 
     @NotNull
     public static ComponentBuilder<?, ?> build(double microsatelliteIndicator, boolean hasReliablePurityFit) {
+        final String formattedMicrosatelliteIndicator =
+                PatientReportFormat.correctValueForFitReliability(new DecimalFormat("#.####").format(microsatelliteIndicator),
+                        hasReliablePurityFit);
+
         final int graphValue = computeGraphValue(microsatelliteIndicator);
         final int markerValue = computeGraphValue(MSI_THRESHOLD);
 
-        final GradientBar gradient =
-                ImmutableGradientBar.of(new Color(239, 239, 239), new Color(171, 191, 171), "MSS", "MSI", graphValue, markerValue);
+        final GradientBar gradient = formattedMicrosatelliteIndicator.equals("N/A")
+                ? ImmutableGradientBar.ofOnlyMarker(new Color(239, 239, 239),
+                new Color(171, 191, 171), "MSS", "MSI", markerValue)
+                : ImmutableGradientBar.of(new Color(239, 239, 239), new Color(171, 191, 171), "MSS", "MSI", graphValue, markerValue);
         final SliderSection sliderSection = ImmutableSliderSection.of("Microsatellite Status",
-                interpret(microsatelliteIndicator, hasReliablePurityFit),
+                interpret(microsatelliteIndicator, formattedMicrosatelliteIndicator),
                 description(),
                 gradient);
         return sliderSection.build();
     }
 
     @NotNull
-    private static String interpret(double microsatelliteIndicator, boolean hasReliablePurityFit) {
-        final String formattedMicrosatelliteIndicator =
-                PatientReportFormat.correctValueForFitReliability(new DecimalFormat("#.####").format(microsatelliteIndicator),
-                        hasReliablePurityFit);
-        if (microsatelliteIndicator > MSI_THRESHOLD) {
+    private static String interpret(double microsatelliteIndicator, String formattedMicrosatelliteIndicator) {
+
+        if (microsatelliteIndicator > MSI_THRESHOLD && !formattedMicrosatelliteIndicator.equals("N/A")) {
             return "Unstable (" + formattedMicrosatelliteIndicator + ")";
-        } else {
+        } else if (microsatelliteIndicator < MSI_THRESHOLD && !formattedMicrosatelliteIndicator.equals("N/A")) {
             return "Stable (" + formattedMicrosatelliteIndicator + ")";
+        } else {
+            return "N/A";
         }
     }
 

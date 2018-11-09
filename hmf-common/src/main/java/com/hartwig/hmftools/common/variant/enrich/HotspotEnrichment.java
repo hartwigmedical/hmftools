@@ -10,8 +10,8 @@ import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
+import com.hartwig.hmftools.common.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.hotspot.VariantHotspotFile;
 
 import org.jetbrains.annotations.NotNull;
 

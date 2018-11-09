@@ -6,9 +6,9 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.hotspot.ImmutableVariantHotspot;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspot;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

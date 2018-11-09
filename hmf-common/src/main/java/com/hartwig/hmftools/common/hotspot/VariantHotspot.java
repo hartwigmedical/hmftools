@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.hotspot;
+package com.hartwig.hmftools.common.hotspot;
 
 import java.util.function.Predicate;
 
@@ -23,5 +23,21 @@ public interface VariantHotspot extends GenomePosition, Predicate<SomaticVariant
     default boolean test(SomaticVariant variant) {
         return ref().equals(variant.ref()) && alt().equals(variant.alt()) && chromosome().equals(variant.chromosome())
                 && position() == variant.position();
+    }
+
+    default boolean isSNV() {
+        return ref().length() == 1 && alt().length() == 1;
+    }
+
+    default boolean isMNV() {
+        return ref().length() == alt().length() && ref().length() != 1;
+    }
+
+    default boolean isInsert() {
+        return ref().length() == 1 && alt().length() > 1;
+    }
+
+    default boolean isDelete() {
+        return alt().length() == 1 && ref().length() > 1;
     }
 }

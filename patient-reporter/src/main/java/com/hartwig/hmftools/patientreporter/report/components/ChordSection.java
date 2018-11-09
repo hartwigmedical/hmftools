@@ -17,9 +17,13 @@ public final class ChordSection {
 
     @NotNull
     public static ComponentBuilder<?, ?> build(double chordHrdScore, boolean hasReliablePurityFit) {
+        String formatChordHrdScore =
+                PatientReportFormat.correctValueForFitReliability(new DecimalFormat("#.##").format(chordHrdScore), hasReliablePurityFit);
         final int graphValue = computeGraphValue(chordHrdScore);
 
-        final GradientBar gradient = ImmutableGradientBar.of(new Color(214, 234, 248), new Color(174, 214, 241), "Low", "High", graphValue);
+        final GradientBar gradient = formatChordHrdScore.equals("N/A") ?
+                ImmutableGradientBar.of(new Color(214, 234, 248), new Color(174, 214, 241), "Low", "High") :
+                ImmutableGradientBar.of(new Color(214, 234, 248), new Color(174, 214, 241), "Low", "High", graphValue);
 
         final SliderSection sliderSection =
                 ImmutableSliderSection.of("HR-Deficiency Score", interpret(chordHrdScore, hasReliablePurityFit), description(), gradient);
@@ -29,8 +33,7 @@ public final class ChordSection {
 
     @NotNull
     private static String interpret(double chordHrdScore, boolean hasReliablePurityFit) {
-        String hrdScoreString = new DecimalFormat("#.##").format(chordHrdScore);
-        return PatientReportFormat.correctValueForFitReliability(hrdScoreString, hasReliablePurityFit);
+        return PatientReportFormat.correctValueForFitReliability(new DecimalFormat("#.##").format(chordHrdScore), hasReliablePurityFit);
     }
 
     private static int computeGraphValue(final double value) {

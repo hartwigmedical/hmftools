@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordFileReader;
 
 import org.junit.Test;
 
@@ -17,7 +18,7 @@ public class ChordFileTest {
 
     @Test
     public void canReadTestChordPrediction() throws IOException {
-        ChordAnalysis chordValues = ChordFile.fromFile(CHORD_FILE);
+        ChordAnalysis chordValues = ChordFileReader.read(CHORD_FILE);
 
         assertEquals(0.023, chordValues.hrdValue(), EPSILON);
     }

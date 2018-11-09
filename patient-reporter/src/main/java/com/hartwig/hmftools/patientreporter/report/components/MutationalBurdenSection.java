@@ -17,11 +17,19 @@ public final class MutationalBurdenSection {
 
     @NotNull
     public static ComponentBuilder<?, ?> build(double tumorMutationalBurdenIndicator, boolean hasReliablePurityFit) {
+        String formattingTumorMutationalBurdenIndicator =
+                PatientReportFormat.correctValueForFitReliability(new DecimalFormat("#.#").format(tumorMutationalBurdenIndicator),
+                        hasReliablePurityFit);
+
         final int graphValue = computeGraphValue(tumorMutationalBurdenIndicator);
 
-        final GradientBar gradient = ImmutableGradientBar.of(new Color(253, 235, 208), new Color(248, 196, 113), "Low", "High", graphValue);
+        final GradientBar gradient =
+                formattingTumorMutationalBurdenIndicator.equals("N/A") ? ImmutableGradientBar.of(new Color(253, 235, 208),
+                        new Color(248, 196, 113),
+                        "Low",
+                        "High") : ImmutableGradientBar.of(new Color(253, 235, 208), new Color(248, 196, 113), "Low", "High", graphValue);
         final SliderSection sliderSection = ImmutableSliderSection.of("Tumor Mutational Burden",
-                interpret(tumorMutationalBurdenIndicator, hasReliablePurityFit),
+                interpret(formattingTumorMutationalBurdenIndicator),
                 description(),
                 gradient);
 
@@ -29,9 +37,10 @@ public final class MutationalBurdenSection {
     }
 
     @NotNull
-    private static String interpret(double tumorMutationalBurden, boolean hasReliablePurityFit) {
-        return PatientReportFormat.correctValueForFitReliability(new DecimalFormat("#.#").format(tumorMutationalBurden),
-                hasReliablePurityFit) + " variants per Mb.";
+    private static String interpret(String formattingTumorMutationalBurdenIndicator) {
+        return formattingTumorMutationalBurdenIndicator.equals("N/A")
+                ? formattingTumorMutationalBurdenIndicator
+                : formattingTumorMutationalBurdenIndicator + " variants per Mb.";
     }
 
     private static int computeGraphValue(double value) {

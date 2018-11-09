@@ -166,13 +166,13 @@ public class AlleleDepthLoader {
                 matched = true;
                 bachRecord.setRefCount(pileup.referenceCount());
 
-                if (pileup.insertions() > 0)
+                if (pileup.insertCount() > 0)
                 {
-                    bachRecord.setAltCount(pileup.insertions());
+                    bachRecord.setAltCount(pileup.insertCount());
                 }
-                else if (pileup.deletions() > 0)
+                else if (pileup.deleteCount() > 0)
                 {
-                    bachRecord.setAltCount(pileup.deletions());
+                    bachRecord.setAltCount(pileup.deleteCount());
                 }
                 else if (bachRecord.alts().length() == bachRecord.ref().length() && bachRecord.alts().length() == 1)
                 {
