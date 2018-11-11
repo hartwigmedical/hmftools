@@ -5,14 +5,11 @@ import static org.junit.Assert.assertEquals;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.pileup.Pileup;
@@ -37,7 +34,6 @@ public class HotspotEvidenceFactoryTest {
         normalCount = Maps.newHashMap();
         tumorCount = Maps.newHashMap();
         tumorQuality = Maps.newHashMap();
-
     }
 
     private void putBase(@NotNull final String base, int tumorCount, int tumourQuality, int normalCount) {

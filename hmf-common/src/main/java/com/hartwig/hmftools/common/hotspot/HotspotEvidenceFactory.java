@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.hotspot;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -17,6 +16,8 @@ import com.hartwig.hmftools.common.pileup.Pileup;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.position.GenomePositions;
+import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -57,11 +58,26 @@ public class HotspotEvidenceFactory {
 
             final Optional<Pileup> optionalTumorPileup = tumorSelector.select(hotspot);
             if (optionalTumorPileup.isPresent()) {
-                final Pileup tumorPileup = optionalTumorPileup.get();
-                int tumorEvidence = evidence(tumorPileup, hotspot);
-                if (tumorEvidence > 0) {
-                    final Optional<Pileup> optionalNormalPileup = normalSelector.select(hotspot);
-                    result.add(fromHotspot(tumorEvidence, hotspot, tumorPileup, optionalNormalPileup));
+
+                if (hotspot.isMNV()) {
+                    final GenomeRegion mnvRegion = GenomeRegionFactory.create(hotspot.chromosome(),
+                            hotspot.position(),
+                            hotspot.position() + hotspot.ref().length() - 1);
+
+                    final MNVEvidence tumorMnvEvidence = new MNVEvidence(hotspot);
+                    tumorSelector.select(mnvRegion, tumorMnvEvidence);
+                    if (tumorMnvEvidence.evidence() > 0) {
+                        final MNVEvidence normalMnvEvidence = new MNVEvidence(hotspot);
+                        tumorSelector.select(mnvRegion, normalMnvEvidence);
+                        result.add(fromMNV(hotspot, tumorMnvEvidence, normalMnvEvidence));
+                    }
+                } else {
+                    final Pileup tumorPileup = optionalTumorPileup.get();
+                    int tumorEvidence = evidence(tumorPileup, hotspot);
+                    if (tumorEvidence > 0) {
+                        final Optional<Pileup> optionalNormalPileup = normalSelector.select(hotspot);
+                        result.add(fromHotspot(tumorEvidence, hotspot, tumorPileup, optionalNormalPileup));
+                    }
                 }
             }
         }
@@ -82,6 +98,22 @@ public class HotspotEvidenceFactory {
                 .tumorReads(tumor.readCount())
                 .normalEvidence(normal.map(x -> evidence(x, hotspot)).orElse(0))
                 .normalReads(normal.map(Pileup::readCount).orElse(0))
+                .build();
+    }
+
+    @NotNull
+    private static HotspotEvidence fromMNV(@NotNull final VariantHotspot hotspot, @NotNull final MNVEvidence tumor,
+            @NotNull final MNVEvidence normal) {
+        return ImmutableHotspotEvidence.builder()
+                .from(hotspot)
+                .type(HotspotEvidenceType.MNV)
+                .alt(hotspot.alt())
+                .ref(hotspot.ref())
+                .qualityScore(tumor.score())
+                .tumorEvidence(tumor.evidence())
+                .tumorReads(tumor.reads())
+                .normalEvidence(normal.evidence())
+                .normalReads(normal.reads())
                 .build();
     }
 
