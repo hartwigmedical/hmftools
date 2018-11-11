@@ -117,10 +117,10 @@ public class SvSampleAnalyser {
 
     public void loadFromDatabase(final String sampleId, final List<SvVarData> variants)
     {
+        clearState();
+
         if (variants.isEmpty())
             return;
-
-        clearState();
 
         mSampleId = sampleId;
         mAllVariants = Lists.newArrayList(variants);

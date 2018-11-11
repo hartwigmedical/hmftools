@@ -81,7 +81,6 @@ public class SvClusteringMethods {
     private long mDelDupCutoffLength;
 
     private boolean mFoldbackColsLogged;
-    private boolean mInversionPairColsLogged;
 
     private static double REF_BASE_LENGTH = 10000000D;
     public static int MAX_SIMPLE_DUP_DEL_CUTOFF = 5000000;
@@ -111,7 +110,6 @@ public class SvClusteringMethods {
         mChrCNDataMap = new HashMap();
         mSampleLohData = null;
         mFoldbackColsLogged = false;
-        mInversionPairColsLogged = false;
     }
 
     public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
@@ -628,6 +626,7 @@ public class SvClusteringMethods {
         // 2 x cluster-1s with SGLs that are each other's nearest neighbours
         //
         // use the chr-breakend map to walk through and find the closest links
+        // only apply a rule between the 2 closest breakends at the exclusions of the cluster on their other end
 
         boolean foundMerges = false;
 
@@ -649,37 +648,59 @@ public class SvClusteringMethods {
 
                 // now look for a proximate cluster with either another solo single or needing one to be resolved
                 // check previous and next breakend's cluster
-                for(int j = 0; j < 2; ++j)
+                SvBreakend prevBreakend = (i > 0) ? breakendList.get(i - 1) : null;
+                SvBreakend nextBreakend = (i < breakendCount - 1) ? breakendList.get(i + 1) : null;
+
+                // additionally check that breakend after the next one isn't a closer SGL to the next breakend,
+                // which would invalidate this one being the nearest neighbour
+                long prevProximity = prevBreakend != null ? abs(breakend.position() - prevBreakend.position()) : -1;
+                long nextProximity = nextBreakend != null ? abs(breakend.position() - nextBreakend.position()) : -1;
+
+                if(nextBreakend != null && i < breakendCount - 2)
                 {
-                    SvBreakend otherBreakend = null;
+                    final SvBreakend followingBreakend = breakendList.get(i + 2);
+                    final SvCluster followingCluster = followingBreakend.getSV().getCluster();
 
-                    if(j == 0 && i > 0)
+                    if(followingCluster.getCount() == 1 && followingBreakend.getSV().type() == SGL && !followingCluster.isResolved())
                     {
-                        otherBreakend = breakendList.get(i - 1);
-                    }
-                    else if(j == 1 && i < breakendCount - 1)
-                    {
-                        otherBreakend = breakendList.get(i + 1);
-                    }
-                    else
-                    {
-                        continue;
-                    }
+                        long followingProximity = abs(nextBreakend.position() - followingBreakend.position());
 
-                    SvVarData otherVar = otherBreakend.getSV();
-                    final SvCluster otherCluster = otherVar.getCluster();
-
-                    final String resolvedType = canResolveWithSoloSingle(otherCluster, cluster);
-
-                    if(!resolvedType.equals(RESOLVED_TYPE_NONE))
-                    {
-                        otherCluster.mergeOtherCluster(cluster);
-                        otherCluster.setResolved(true, resolvedType);
-
-                        clusters.remove(cluster);
-                        foundMerges = true;
-                        break;
+                        if (followingProximity < nextProximity)
+                            nextBreakend = null;
                     }
+                }
+
+                if(nextBreakend == null && prevBreakend == null)
+                    continue;
+
+                SvBreakend otherBreakend = null;
+
+                if(nextBreakend != null && prevBreakend != null)
+                {
+                    otherBreakend = nextProximity < prevProximity ? nextBreakend : prevBreakend;
+                }
+                else if(nextBreakend != null)
+                {
+                    otherBreakend = nextBreakend;
+                }
+                else
+                {
+                    otherBreakend = prevBreakend;
+                }
+
+                SvVarData otherVar = otherBreakend.getSV();
+                final SvCluster otherCluster = otherVar.getCluster();
+
+                final String resolvedType = canResolveWithSoloSingle(otherCluster, cluster);
+
+                if(!resolvedType.equals(RESOLVED_TYPE_NONE))
+                {
+                    otherCluster.mergeOtherCluster(cluster);
+                    otherCluster.setResolved(true, resolvedType);
+
+                    clusters.remove(cluster);
+                    foundMerges = true;
+                    break;
                 }
             }
         }
@@ -1251,7 +1272,7 @@ public class SvClusteringMethods {
         }
         else
         {
-            LOGGER.error("sample({}) ids({} & {}) must be one or the other", sampleId, var1.id(), var2.id());
+            LOGGER.error("sample({}) ids({} & {}) neither TI nor DB", sampleId, var1.id(), var2.id());
             return;
         }
 
@@ -1522,7 +1543,8 @@ public class SvClusteringMethods {
 
         if(lp1 == null && lp2 == null)
         {
-            LOGGER.warn("cluster({} {}) has no linked pairs", cluster.getId(), cluster.getDesc());
+            // can be a a DEL enclosing a DUP for example
+            // LOGGER.debug("cluster({} {}) has no linked pairs", cluster.getId(), cluster.getDesc());
             return false;
         }
 

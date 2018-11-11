@@ -38,7 +38,7 @@ public class LinkFinder
 
     public static int MIN_TEMPLATED_INSERTION_LENGTH = 30;
     private static int MAX_TEMPLATED_INSERTION_LENGTH = 500;
-    public static int CLUSTER_SIZE_ANALYSIS_LIMIT = 200;
+    public static int CLUSTER_SIZE_ANALYSIS_LIMIT = 500;
 
     public static String TRANS_TYPE_TRANS = "TRANS";
     public static String TRANS_TYPE_SPAN = "SPAN";
@@ -168,9 +168,6 @@ public class LinkFinder
 
         if(!v1.chromosome(v1Start).equals(v2.chromosome(v2Start)))
             return false;
-
-        // if(!sameChrArm(v1, v2, v1Start, v2Start))
-        //     return false;
 
         // start apart and heading towards each other
         long pos1 = v1.position(v1Start);

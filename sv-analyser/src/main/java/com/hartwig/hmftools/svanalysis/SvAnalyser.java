@@ -114,6 +114,9 @@ public class SvAnalyser {
                 ++count;
                 List<SvVarData> svVarData = queryStructuralVariantData(dbAccess, sample);
 
+                if(svVarData.isEmpty())
+                    continue;
+
                 LOGGER.info("sample({}) processing {} SVs, totalProcessed({})", sample, svVarData.size(), count);
 
                 if (cmd.hasOption(INCLUDE_NONE_SEGMENTS))
