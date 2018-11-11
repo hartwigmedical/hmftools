@@ -6,12 +6,10 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.annotators.ExternalSVAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator;
-import com.hartwig.hmftools.svanalysis.annotators.GeneAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
@@ -51,7 +49,6 @@ public class SvSampleAnalyser {
     LineElementAnnotator mLineElementAnnotator;
     ExternalSVAnnotator mExternalAnnotator;
     SvClusteringMethods mClusteringMethods;
-    GeneAnnotator mGeneAnnotator;
     CNAnalyser mCnAnalyser;
 
     PerformanceCounter mPerfCounter;
@@ -83,9 +80,6 @@ public class SvSampleAnalyser {
 
         mExternalAnnotator = new ExternalSVAnnotator();
         mExternalAnnotator.loadFile(mConfig.ExternalAnnotationsFile);
-
-        mGeneAnnotator = new GeneAnnotator();
-        mGeneAnnotator.loadGeneDriverFile(mConfig.GeneDataFile);
 
         mCnAnalyser = null;
         if(!mConfig.LOHDataFile.isEmpty())
@@ -169,16 +163,6 @@ public class SvSampleAnalyser {
         mPc4.stop();
 
         logSampleClusterInfo();
-
-        if(mGeneAnnotator.hasData())
-        {
-            for (SvVarData var : mAllVariants)
-            {
-                mGeneAnnotator.addGeneData(mSampleId, var);
-            }
-
-            mGeneAnnotator.reportGeneMatchData(mSampleId);
-        }
 
         mPc5.start();
 

@@ -778,8 +778,15 @@ public class ChainFinder
         if(inconsistentVar == null)
             return null;
 
-        LOGGER.info("cluster({}) chain({}) inconsistentSv({}) joined to solo-single({})",
-                mCluster.getId(), chain.getId(), inconsistentVar.id(), soloVar.id());
+        double cnInconsistency = inconsistentVar.getSvData().ploidy() - inconsistentVar.copyNumberChange(inconsistentVarOpenOnStart);
+
+        if(round(cnInconsistency) != round(soloVar.copyNumberChange(true)))
+            return null;
+
+        LOGGER.debug(String.format("cluster(%s) chain(%d) inconsistentSv(%s cnChg=%.2f ploidy=%.2f) joined to solo-single(%s chChg%.2f)",
+                mCluster.getId(), chain.getId(),
+                inconsistentVar.id(), inconsistentVar.getSvData().ploidy(), inconsistentVar.copyNumberChange(inconsistentVarOpenOnStart),
+                soloVar.id(), soloVar.copyNumberChange(true)));
 
         return new SvLinkedPair(inconsistentVar, soloVar, LINK_TYPE_TI, inconsistentVarOpenOnStart, false);
     }

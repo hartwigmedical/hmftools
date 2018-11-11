@@ -584,42 +584,6 @@ public class SvClusteringMethods {
         return clusters.size() < initClusterCount;
     }
 
-    private final SvVarData armGroupsHaveOverlappingSVs(final SvArmGroup overlappingGroup, final SvArmGroup otherGroup, final List<StructuralVariantType> requiredTypes)
-    {
-        // returns true if the first group has a variant of the correct type which overlaps any non-line element in the second group
-        if(!overlappingGroup.chromosome().equals(otherGroup.chromosome()) || !overlappingGroup.arm().equals(otherGroup.arm()))
-            return null;
-
-        // check for an overlapping INV from one cluster to another
-        for (final SvVarData var : overlappingGroup.getSVs())
-        {
-            if(!requiredTypes.contains(var.type()))
-                continue;
-
-            for (final SvVarData checkVar : otherGroup.getSVs())
-            {
-                if (checkVar.inLineElement())
-                    continue;
-
-                for (int be = SVI_START; be <= SVI_END; ++be)
-                {
-                    boolean useStart = isStart(be);
-
-                    if (!checkVar.chromosome(useStart).equals(overlappingGroup.chromosome()))
-                        continue;
-
-                    // check if breakend falls within the overlapping var
-                    if (checkVar.position(useStart) >= var.position(true) && checkVar.position(useStart) <= var.position(false))
-                    {
-                        return var;
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-
     private boolean mergeOnUnresolvedSingles(List<SvCluster> clusters)
     {
         // merge clusters with 1 or 2 unresolved singles with the following rules:

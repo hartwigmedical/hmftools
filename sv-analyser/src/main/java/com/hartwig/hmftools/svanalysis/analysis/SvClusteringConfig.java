@@ -31,9 +31,6 @@ public class SvClusteringConfig {
     private static final String USE_GRIDSS = "use_gridss";
     private static final String LOG_VERBOSE = "log_verbose";
 
-
-    public static final int DEFAULT_BASE_DISTANCE = 100000;
-
     public SvClusteringConfig(final CommandLine cmd, final String sampleId)
     {
         OutputCsvPath = cmd.getOptionValue(DATA_OUTPUT_PATH);
