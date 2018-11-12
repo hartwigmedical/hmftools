@@ -469,6 +469,11 @@ public class StructuralVariantAnnotator
 
                         boolean isStart = geneAnnotation.isStart();
 
+                        if(transcript.codingBases() < 0)
+                        {
+                            LOGGER.error("invalid coding bases");
+                        }
+
                         writer.write(String.format("%d,%s,%d,%d",
                                 var.primaryKey(), var.chromosome(isStart), var.position(isStart), var.orientation(isStart)));
 

@@ -359,9 +359,9 @@ public class MySQLAnnotator implements VariantAnnotator
                 }
             }
 
-            LOGGER.debug("transcript({}) exon({}: {} - {}) coding({} - {}) position({}) coding(pos={} total={}) region(coding={} ended={})",
-                    transcriptId, exon.get(EXON_TRANSCRIPT.RANK), exonStart, exonEnd, codingStart, codingEnd, position,
-                    codingBases, totalCodingBases, inCodingRegion, codingRegionEnded);
+            LOGGER.debug("transcript({}:{}) exon({}: {} - {}) coding({} - {}) position({}) coding(pos={} total={}) region(coding={} ended={})",
+                    transcriptId, transcriptStableId, exon.get(EXON_TRANSCRIPT.RANK), exonStart, exonEnd,
+                    codingStart, codingEnd, position, codingBases, totalCodingBases, inCodingRegion, codingRegionEnded);
 
             if(codingBases < 0 || totalCodingBases < 0)
             {
