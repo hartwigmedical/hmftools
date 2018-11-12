@@ -126,6 +126,7 @@ public class GenomePositionSelectorTest {
         assertRegion(listSelector, region1, inRegion1a, inRegion1b, inRegion1c);
         assertRegion(listSelector, region2, inRegion2);
         assertRegion(listSelector, region3, inRegion3);
+        assertRegion(listSelector, GenomeRegionFactory.create(afterRegion3.chromosome(), inRegion3.position(), afterRegion3.position()), inRegion3, afterRegion3);
     }
 
     @Test
@@ -134,6 +135,7 @@ public class GenomePositionSelectorTest {
         assertRegion(listSelector, region1, inRegion1a, inRegion1b, inRegion1c);
         assertRegion(listSelector, region1, inRegion1a, inRegion1b, inRegion1c);
         assertRegion(listSelector, region3, inRegion3);
+        assertRegion(listSelector, GenomeRegionFactory.create(afterRegion3.chromosome(), inRegion3.position(), afterRegion3.position()), inRegion3, afterRegion3);
     }
 
     @Test

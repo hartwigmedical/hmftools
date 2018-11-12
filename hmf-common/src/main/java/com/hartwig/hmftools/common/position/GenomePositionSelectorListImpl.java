@@ -51,7 +51,7 @@ class GenomePositionSelectorListImpl<P extends GenomePosition> implements Genome
         // Line up index to start
         select(GenomePositions.create(region.chromosome(), region.start()));
 
-        while (compare(current(), region) == 0 && index < positions.size()) {
+        while (index < positions.size() && compare(current(), region) == 0) {
             handler.accept(current());
             index++;
         }
