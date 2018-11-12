@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.common.variant;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -25,20 +28,18 @@ public class PurityAdjustedSomaticVariantFactory {
 
     public PurityAdjustedSomaticVariantFactory(@NotNull PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
             @NotNull final List<FittedRegion> fittedRegions) {
-        this.purityAdjuster = purityAdjuster;
-        this.copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers);
-        this.fittedRegionSelector = GenomeRegionSelectorFactory.create(fittedRegions);
+        this(purityAdjuster, Multimaps.fromRegions(copyNumbers), Multimaps.fromRegions(fittedRegions));
     }
 
     public PurityAdjustedSomaticVariantFactory(@NotNull PurityAdjuster purityAdjuster,
-            @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers, @NotNull final Multimap<String, FittedRegion> fittedRegions) {
+            @NotNull final Multimap<Chromosome, PurpleCopyNumber> copyNumbers, @NotNull final Multimap<Chromosome, FittedRegion> fittedRegions) {
         this.purityAdjuster = purityAdjuster;
-        this.copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers);
-        this.fittedRegionSelector = GenomeRegionSelectorFactory.create(fittedRegions);
+        this.copyNumberSelector = GenomeRegionSelectorFactory.createImproved(copyNumbers);
+        this.fittedRegionSelector = GenomeRegionSelectorFactory.createImproved(fittedRegions);
     }
 
     @NotNull
-    public List<PurityAdjustedSomaticVariant> create(@NotNull List<SomaticVariant> variants) {
+    public List<PurityAdjustedSomaticVariant> create(@NotNull final List<SomaticVariant> variants) {
         final List<PurityAdjustedSomaticVariant> result = Lists.newArrayList();
 
         for (SomaticVariant variant : variants) {

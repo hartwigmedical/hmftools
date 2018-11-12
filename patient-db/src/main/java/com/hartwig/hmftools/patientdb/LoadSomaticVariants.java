@@ -7,7 +7,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
@@ -107,11 +108,8 @@ public class LoadSomaticVariants {
                 ? new PurityAdjuster(Gender.FEMALE, 1, 1)
                 : new PurityAdjuster(purityContext.gender(), purityContext.bestFit().purity(), purityContext.bestFit().normFactor());
 
-        final Multimap<String, PurpleCopyNumber> copyNumbers =
-                Multimaps.index(dbAccess.readCopynumbers(sample), PurpleCopyNumber::chromosome);
-
-        final Multimap<String, FittedRegion> copyNumberRegions =
-                Multimaps.index(dbAccess.readCopyNumberRegions(sample), FittedRegion::chromosome);
+        final Multimap<Chromosome, PurpleCopyNumber> copyNumbers = Multimaps.fromRegions(dbAccess.readCopynumbers(sample));
+        final Multimap<Chromosome, FittedRegion> copyNumberRegions = Multimaps.fromRegions(dbAccess.readCopyNumberRegions(sample));
 
         LOGGER.info("Incorporating purple purity");
         final PurityAdjustedSomaticVariantFactory purityAdjustmentFactory =

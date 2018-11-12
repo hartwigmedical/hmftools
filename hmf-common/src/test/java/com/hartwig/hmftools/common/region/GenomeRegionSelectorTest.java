@@ -7,8 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimaps;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +18,6 @@ public class GenomeRegionSelectorTest {
 
     private GenomeRegionSelector<GenomeRegion> standardSelector;
     private GenomeRegionSelector<GenomeRegion> chromosomeSelector;
-    private GenomeRegionSelector<GenomeRegion> chromosomeSelectorImproved;
 
     private final GenomeRegion region1 = GenomeRegionFactory.create("1", 1, 100);
     private final GenomeRegion region2 = GenomeRegionFactory.create("1", 101, 200);
@@ -31,15 +29,14 @@ public class GenomeRegionSelectorTest {
     public void setup() {
         final List<GenomeRegion> regions = Lists.newArrayList(region1, region2, region3, region4, region5);
         standardSelector = GenomeRegionSelectorFactory.create(regions);
-        chromosomeSelector = GenomeRegionSelectorFactory.create(Multimaps.index(regions, GenomeRegion::chromosome));
-        chromosomeSelectorImproved = GenomeRegionSelectorFactory.createImproved(Multimaps.index(regions, x -> HumanChromosome.fromString(x.chromosome())));
+        chromosomeSelector = GenomeRegionSelectorFactory.createImproved(Multimaps.fromRegions(regions));
     }
 
     @Test
     public void testDifferentContigStyle() {
-        assertSelection(region1, createPosition("chr1", 1), chromosomeSelectorImproved);
-        assertSelection(region1, createPosition("1", 10), chromosomeSelectorImproved);
-        assertSelection(region1, createPosition("chr1", 100), chromosomeSelectorImproved);
+        assertSelection(region1, createPosition("chr1", 1), chromosomeSelector);
+        assertSelection(region1, createPosition("1", 10), chromosomeSelector);
+        assertSelection(region1, createPosition("chr1", 100), chromosomeSelector);
     }
 
     @Test
@@ -94,7 +91,8 @@ public class GenomeRegionSelectorTest {
         assertSelection(expected, position, standardSelector);
     }
 
-    private static void assertSelection(@NotNull final GenomeRegion expected, @NotNull final GenomePosition position,@NotNull final  GenomeRegionSelector<GenomeRegion> selector) {
+    private static void assertSelection(@NotNull final GenomeRegion expected, @NotNull final GenomePosition position,
+            @NotNull final GenomeRegionSelector<GenomeRegion> selector) {
         Optional<GenomeRegion> chromRegion = selector.select(position);
         assertTrue(chromRegion.isPresent());
         assertEquals(expected, chromRegion.get());

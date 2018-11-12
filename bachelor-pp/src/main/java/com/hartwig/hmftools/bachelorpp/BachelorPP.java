@@ -14,8 +14,9 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.bachelorpp.types.BachelorGermlineVariant;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
@@ -254,8 +255,8 @@ public class BachelorPP {
         }
 
         final PurityContext purityContext;
-        final Multimap<String, PurpleCopyNumber> copyNumbers;
-        final Multimap<String, FittedRegion> copyNumberRegions;
+        final Multimap<Chromosome, PurpleCopyNumber> copyNumbers;
+        final Multimap<Chromosome, FittedRegion> copyNumberRegions;
 
         if(cmd.hasOption(PURPLE_DATA_DIRECTORY))
         {
@@ -269,11 +270,11 @@ public class BachelorPP {
 
                 List<PurpleCopyNumber> copyNumberData = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilename(purplePath, sampleId));
 
-                copyNumbers = Multimaps.index(copyNumberData, PurpleCopyNumber::chromosome);
+                copyNumbers = Multimaps.fromRegions(copyNumberData);
 
                 List<FittedRegion> fittedRegionData = FittedRegionFile.read(FittedRegionFile.generateFilename(purplePath, sampleId));
 
-                copyNumberRegions = Multimaps.index(fittedRegionData, FittedRegion::chromosome);
+                copyNumberRegions = Multimaps.fromRegions(fittedRegionData);
             }
             catch (IOException e)
             {
@@ -292,9 +293,9 @@ public class BachelorPP {
                 LOGGER.warn("failed to read purity data");
             }
 
-            copyNumbers = Multimaps.index(dbAccess.readCopynumbers(sampleId), PurpleCopyNumber::chromosome);
+            copyNumbers = Multimaps.fromRegions(dbAccess.readCopynumbers(sampleId));
 
-            copyNumberRegions = Multimaps.index(dbAccess.readCopyNumberRegions(sampleId), FittedRegion::chromosome);
+            copyNumberRegions = Multimaps.fromRegions(dbAccess.readCopyNumberRegions(sampleId));
         }
 
 
