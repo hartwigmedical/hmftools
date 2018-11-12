@@ -96,7 +96,7 @@ public class HotspotEvidenceFactoryTest {
         assertEquals("G", result.get(0).ref());
         assertEquals("GTTT", result.get(0).alt());
         assertEquals(0, result.get(0).normalReads());
-        assertEquals(0, result.get(0).normalEvidence());
+        assertEquals(0, result.get(0).normalAltCount());
 
         putBase("-GACC", 8, 18, 6);
         tumor = tumor(10);
@@ -106,9 +106,9 @@ public class HotspotEvidenceFactoryTest {
         assertEquals("GACC", result.get(1).ref());
         assertEquals("G", result.get(1).alt());
         assertEquals(10, result.get(1).tumorReads());
-        assertEquals(8, result.get(1).tumorEvidence());
+        assertEquals(8, result.get(1).tumorAltCount());
         assertEquals(5, result.get(1).normalReads());
-        assertEquals(6, result.get(1).normalEvidence());
+        assertEquals(6, result.get(1).normalAltCount());
     }
 
     @Test
@@ -146,9 +146,9 @@ public class HotspotEvidenceFactoryTest {
         assertEquals(ref, victim.ref());
         assertEquals(alt, victim.alt());
         assertEquals((int) tumorQuality.get(key), victim.qualityScore());
-        assertEquals((int) tumorCount.get(key), victim.tumorEvidence());
+        assertEquals((int) tumorCount.get(key), victim.tumorAltCount());
         assertEquals(tumorReads, victim.tumorReads());
-        assertEquals((int) normalCount.get(key), victim.normalEvidence());
+        assertEquals((int) normalCount.get(key), victim.normalAltCount());
         assertEquals(normalReads, victim.normalReads());
 
         final HotspotEvidence victim2 = factory.evidence(Lists.newArrayList(tumor), Collections.emptyList()).get(0);
@@ -156,9 +156,9 @@ public class HotspotEvidenceFactoryTest {
         assertEquals(ref, victim2.ref());
         assertEquals(alt, victim2.alt());
         assertEquals((int) tumorQuality.get(key), victim2.qualityScore());
-        assertEquals((int) tumorCount.get(key), victim2.tumorEvidence());
+        assertEquals((int) tumorCount.get(key), victim2.tumorAltCount());
         assertEquals(tumorReads, victim2.tumorReads());
-        assertEquals(0, victim2.normalEvidence());
+        assertEquals(0, victim2.normalAltCount());
         assertEquals(0, victim2.normalReads());
     }
 

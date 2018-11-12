@@ -8,28 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface HotspotEvidence extends GenomePosition {
-
-    @NotNull
-    HotspotEvidenceType type();
-
+interface RefPosition extends GenomePosition {
     @NotNull
     String ref();
-
-    @NotNull
-    String alt();
-
-    int qualityScore();
-
-    int tumorRefCount();
-
-    int tumorAltCount();
-
-    int tumorReads();
-
-    int normalRefCount();
-
-    int normalAltCount();
-
-    int normalReads();
 }

@@ -7,7 +7,8 @@ import com.hartwig.hmftools.common.pileup.Pileup;
 class MNVEvidence implements Consumer<Pileup> {
 
     private int reads = Integer.MAX_VALUE;
-    private int evidence = Integer.MAX_VALUE;
+    private int refCount = Integer.MAX_VALUE;
+    private int altCount = Integer.MAX_VALUE;
     private int score = Integer.MAX_VALUE;
 
     private final VariantHotspot mnv;
@@ -20,8 +21,12 @@ class MNVEvidence implements Consumer<Pileup> {
         return reads;
     }
 
-    public int evidence() {
-        return evidence == Integer.MAX_VALUE ? 0 : evidence;
+    public int altCount() {
+        return altCount == Integer.MAX_VALUE ? 0 : altCount;
+    }
+
+    public int refCount() {
+        return refCount == Integer.MAX_VALUE ? 0 : refCount;
     }
 
     public int score() {
@@ -33,7 +38,8 @@ class MNVEvidence implements Consumer<Pileup> {
         int positionOffset = (int) (pileup.position() - mnv.position());
 
         char alt = mnv.alt().charAt(positionOffset);
-        evidence = Math.min(evidence, pileup.mismatchCount(alt));
+        refCount = Math.min(refCount, pileup.referenceCount());
+        altCount = Math.min(altCount, pileup.mismatchCount(alt));
         score = Math.min(score, pileup.mismatchScore(alt));
         reads = Math.min(reads, pileup.readCount());
     }

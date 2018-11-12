@@ -66,7 +66,7 @@ public class HotspotEvidenceFactory {
 
                     final MNVEvidence tumorMnvEvidence = new MNVEvidence(hotspot);
                     tumorSelector.select(mnvRegion, tumorMnvEvidence);
-                    if (tumorMnvEvidence.evidence() > 0) {
+                    if (tumorMnvEvidence.altCount() > 0) {
                         final MNVEvidence normalMnvEvidence = new MNVEvidence(hotspot);
                         normalSelector.select(mnvRegion, normalMnvEvidence);
                         result.add(fromMNV(hotspot, tumorMnvEvidence, normalMnvEvidence));
@@ -94,9 +94,11 @@ public class HotspotEvidenceFactory {
                 .alt(hotspot.alt())
                 .ref(hotspot.ref())
                 .qualityScore(qualityScore(tumor, hotspot))
-                .tumorEvidence(tumorEvidence)
+                .tumorRefCount(tumor.referenceCount())
+                .tumorAltCount(tumorEvidence)
                 .tumorReads(tumor.readCount())
-                .normalEvidence(normal.map(x -> evidence(x, hotspot)).orElse(0))
+                .normalRefCount(normal.map(Pileup::referenceCount).orElse(0))
+                .normalAltCount(normal.map(x -> evidence(x, hotspot)).orElse(0))
                 .normalReads(normal.map(Pileup::readCount).orElse(0))
                 .build();
     }
@@ -110,9 +112,11 @@ public class HotspotEvidenceFactory {
                 .alt(hotspot.alt())
                 .ref(hotspot.ref())
                 .qualityScore(tumor.score())
-                .tumorEvidence(tumor.evidence())
+                .tumorRefCount(tumor.refCount())
+                .tumorAltCount(tumor.altCount())
                 .tumorReads(tumor.reads())
-                .normalEvidence(normal.evidence())
+                .normalRefCount(normal.refCount())
+                .normalAltCount(normal.altCount())
                 .normalReads(normal.reads())
                 .build();
     }
@@ -144,9 +148,11 @@ public class HotspotEvidenceFactory {
             result.add(builder.ref(tumor.referenceBase())
                     .alt(insert)
                     .qualityScore(tumor.insertScore(insert))
-                    .tumorEvidence(tumor.insertCount(insert))
+                    .tumorRefCount(tumor.referenceCount())
+                    .tumorAltCount(tumor.insertCount(insert))
                     .tumorReads(tumor.readCount())
-                    .normalEvidence(normal.map(x -> x.insertCount(insert)).orElse(0))
+                    .normalRefCount(normal.map(Pileup::referenceCount).orElse(0))
+                    .normalAltCount(normal.map(x -> x.insertCount(insert)).orElse(0))
                     .normalReads(normal.map(Pileup::readCount).orElse(0))
                     .build());
         }
@@ -155,9 +161,11 @@ public class HotspotEvidenceFactory {
             result.add(builder.alt(tumor.referenceBase())
                     .ref(del)
                     .qualityScore(tumor.deleteScore(del))
-                    .tumorEvidence(tumor.deleteCount(del))
+                    .tumorAltCount(tumor.deleteCount(del))
                     .tumorReads(tumor.readCount())
-                    .normalEvidence(normal.map(x -> x.deleteCount(del)).orElse(0))
+                    .tumorRefCount(tumor.referenceCount())
+                    .normalRefCount(normal.map(Pileup::referenceCount).orElse(0))
+                    .normalAltCount(normal.map(x -> x.deleteCount(del)).orElse(0))
                     .normalReads(normal.map(Pileup::readCount).orElse(0))
                     .build());
         }
